@@ -7,6 +7,7 @@
 
 <script lang="ts">
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
+import { VCButton } from '@vuecs/button';
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
@@ -25,9 +26,10 @@ class FormInputListItemValidator extends Container<{ name: string }> {
 
 export default defineComponent({
     components: {
-        VCFormInput, 
-        VCFormGroup, 
-        IFieldValidation, 
+        VCFormInput,
+        VCFormGroup,
+        VCButton,
+        IFieldValidation,
     },
     props: {
         name: {
@@ -72,14 +74,15 @@ export default defineComponent({
                 @change="handleUpdated"
             >
                 <template #groupAppend>
-                    <button
+                    <VCButton
                         :disabled="disabled"
                         type="button"
-                        class="btn btn-xs btn-warning"
+                        size="sm"
+                        color="warning"
                         @click.prevent="handleDeleted"
                     >
                         <VCIcon name="fa6-solid:minus" />
-                    </button>
+                    </VCButton>
                 </template>
             </VCFormInput>
         </VCFormGroup>

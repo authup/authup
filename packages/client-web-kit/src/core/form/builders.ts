@@ -314,6 +314,7 @@ export function buildFormSubmit(input: FormSubmitOptionsInput): VNodeChild {
         {
             type: input.type ?? resolved.type,
             color: resolved.color,
+            size: 'sm',
             loading: resolved.loading,
             disabled: resolved.disabled,
             // `mt-3` matches the `mb-3` inter-group spacing applied to
@@ -321,7 +322,7 @@ export function buildFormSubmit(input: FormSubmitOptionsInput): VNodeChild {
             // override), so the submit button sits at one consistent
             // gap below the last form field instead of butting up
             // against it.
-            class: 'btn-xs mt-3',
+            class: 'mt-3',
             iconLeft,
             onClick: () => { void input.submit(); },
         },

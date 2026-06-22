@@ -327,9 +327,12 @@ export default defineComponent({
                             :key="key"
                             class="a-login-provider-item"
                         >
-                            <a
+                            <VCButton
+                                tag="a"
                                 :href="buildIdentityProviderURL(item.id)"
-                                class="btn btn-dark btn-xs p-2 a-login-provider-box bg-fg"
+                                size="sm"
+                                color="neutral"
+                                class="p-2 a-login-provider-box bg-fg"
                             >
                                 <div class="flex flex-col">
                                     <div class="text-center mb-1">
@@ -342,7 +345,7 @@ export default defineComponent({
                                         {{ item.name }}
                                     </div>
                                 </div>
-                            </a>
+                            </VCButton>
                         </div>
                     </div>
                 </template>

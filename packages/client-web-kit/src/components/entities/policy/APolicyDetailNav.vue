@@ -7,10 +7,12 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import { VCButton } from '@vuecs/button';
 import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { useTranslation } from '../../../core';
 
 export default defineComponent({
+    components: { VCButton },
     props: {
         policyId: {
             type: String,
@@ -34,13 +36,15 @@ export default defineComponent({
 });
 </script>
 <template>
-    <button
+    <VCButton
         type="button"
-        class="btn btn-xs btn-outline-info"
+        size="sm"
+        color="info"
+        variant="outline"
         :title="viewPolicyDetails"
         :aria-label="viewPolicyDetails"
         @click="handleClick"
     >
         <VCIcon name="fa6-solid:eye" />
-    </button>
+    </VCButton>
 </template>

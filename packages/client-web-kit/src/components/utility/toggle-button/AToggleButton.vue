@@ -7,6 +7,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import { VCButton } from '@vuecs/button';
 import {
     TranslatorTranslationActionKey,
     TranslatorTranslationCommonKey,
@@ -15,6 +16,7 @@ import {
 import { useTranslations } from '../../../core';
 
 export default defineComponent({
+    components: { VCButton },
     props: {
         value: {
             type: Boolean,
@@ -52,14 +54,11 @@ export default defineComponent({
 });
 </script>
 <template>
-    <button
+    <VCButton
         type="button"
         :aria-label="isBusy ? translations.processing : (value ? translations.remove : translations.add)"
-        :class="['btn btn-xs', {
-            'btn-dark': isBusy,
-            'btn-success': !isBusy && !value,
-            'btn-danger': !isBusy && value,
-        }]"
+        size="sm"
+        :color="isBusy ? 'neutral' : (value ? 'error' : 'success')"
         :disabled="isBusy"
         @click="handleClick"
     >
@@ -67,5 +66,5 @@ export default defineComponent({
             aria-hidden="true"
             :name="isBusy ? 'fa6-solid:question' : (value ? 'fa6-solid:minus' : 'fa6-solid:plus')"
         />
-    </button>
+    </VCButton>
 </template>

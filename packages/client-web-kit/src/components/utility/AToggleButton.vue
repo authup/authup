@@ -6,6 +6,7 @@
   -->
 <script lang="ts">
 import { computed, defineComponent } from 'vue';
+import { VCButton } from '@vuecs/button';
 import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { useTranslationsForNamespace } from '../../core';
 
@@ -23,6 +24,7 @@ import { useTranslationsForNamespace } from '../../core';
  */
 export default defineComponent({
     name: 'AToggleButton',
+    components: { VCButton },
     props: {
         value: { type: Boolean, default: false },
         isBusy: { type: Boolean, default: false },
@@ -55,17 +57,13 @@ export default defineComponent({
 </script>
 
 <template>
-    <button
+    <VCButton
         type="button"
-        class="btn btn-xs"
+        size="sm"
+        :color="isBusy ? 'neutral' : (value ? 'error' : 'success')"
         :aria-label="ariaLabel"
         :aria-busy="isBusy ? 'true' : 'false'"
         :aria-pressed="value ? 'true' : 'false'"
-        :class="{
-            'btn-dark': isBusy,
-            'btn-success': !isBusy && !value,
-            'btn-danger': !isBusy && value,
-        }"
         :disabled="isBusy"
         @click.prevent="toggle"
     >
@@ -73,5 +71,5 @@ export default defineComponent({
             aria-hidden="true"
             :name="isBusy ? 'fa6-solid:question' : (value ? 'fa6-solid:minus' : 'fa6-solid:plus')"
         />
-    </button>
+    </VCButton>
 </template>

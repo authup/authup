@@ -7,6 +7,7 @@
 
 import { REALM_MASTER_NAME } from '@authup/core-kit';
 import type { Realm } from '@authup/core-kit';
+import { VCButton } from '@vuecs/button';
 import { computed, resolveComponent } from 'vue';
 import type { PropType } from 'vue';
 
@@ -31,25 +32,24 @@ export default defineNuxtComponent({
 
         return () => {
             if (canCheck.value) {
-                return h('button', {
-                    class: {
-                        'btn btn-xs btn-primary': canCheck.value,
-                        'btn btn-xs btn-danger': !canCheck.value,
-                    },
+                return h(VCButton, {
+                    size: 'sm',
+                    color: 'primary',
                     onClick($event: any) {
                         $event.preventDefault();
 
                         emit('update:modelValue', props.entity.id);
                     },
-                }, [
-                    h(VCIcon, { name: canCheck.value ? 'fa6-solid:check' : 'fa6-solid:xmark' }),
+                }, () => [
+                    h(VCIcon, { name: 'fa6-solid:check' }),
                 ]);
             }
 
-            return h('button', {
-                class: 'btn btn-xs btn-disabled btn-success',
+            return h(VCButton, {
+                size: 'sm',
+                color: 'success',
                 disabled: true,
-            }, [
+            }, () => [
                 h(VCIcon, { name: 'fa6-solid:check' }),
             ]);
         };

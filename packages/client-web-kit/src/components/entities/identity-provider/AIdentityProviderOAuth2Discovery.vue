@@ -25,6 +25,7 @@ import {
 } from 'vue';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { VCAlert } from '@vuecs/elements';
+import { VCButton } from '@vuecs/button';
 import { IFieldValidation } from '@ilingo/validup-vue';
 import { useTranslations, useTranslator } from '../../../core';
 
@@ -44,6 +45,7 @@ export default defineComponent({
         VCFormGroup,
         VCFormInput,
         VCAlert,
+        VCButton,
         IFieldValidation,
     },
     emits: ['lookup', 'failed'],
@@ -145,9 +147,11 @@ export default defineComponent({
         >
             {{ message }}
         </VCAlert>
-        <button
+        <VCButton
             type="button"
-            class="btn btn-xs btn-primary mb-1"
+            size="sm"
+            color="primary"
+            class="mb-1"
             :disabled="isDisabled"
             @click.prevent="lookup"
         >
@@ -155,6 +159,6 @@ export default defineComponent({
                 name="fa6-solid:magnifying-glass"
                 class="pe-1"
             /> {{ translations.lookup }}
-        </button>
+        </VCButton>
     </div>
 </template>

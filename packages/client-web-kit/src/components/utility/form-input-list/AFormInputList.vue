@@ -20,10 +20,15 @@ import {
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import { VCAlert } from '@vuecs/elements';
+import { VCButton } from '@vuecs/button';
 import { useTranslations } from '../../../core';
 
 export default defineComponent({
-    components: { AFormInputListItem, VCAlert },
+    components: {
+        AFormInputListItem, 
+        VCAlert, 
+        VCButton, 
+    },
     props: {
         names: {
             type: Array as PropType<string[]>,
@@ -147,14 +152,15 @@ export default defineComponent({
                 </slot>
             </div>
             <div class="ms-auto">
-                <button
-                    class="btn btn-xs btn-primary"
+                <VCButton
+                    size="sm"
+                    color="primary"
                     type="button"
                     :disabled="!canAdd"
                     @click.prevent="add()"
                 >
                     <VCIcon name="fa6-solid:plus" /> {{ translationsAction.add }}
-                </button>
+                </VCButton>
             </div>
         </div>
         <div class="flex flex-col gap-1">

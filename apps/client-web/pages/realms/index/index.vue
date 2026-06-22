@@ -1,5 +1,6 @@
 <script lang="ts">
 import { VCTimeago } from '@vuecs/timeago';
+import { VCButton } from '@vuecs/button';
 import type { Realm } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
@@ -23,6 +24,7 @@ export default defineComponent({
         AEntityDelete,
         ARealms,
         VCTimeago,
+        VCButton,
     },
     emits: ['deleted'],
     setup(_props, { emit }) {
@@ -104,13 +106,15 @@ export default defineComponent({
                     <VCTimeago :datetime="row.updated_at" />
                 </template>
                 <template #cell-options="{ row }: { row: any }">
-                    <button
+                    <VCButton
                         v-if="realmManagementId !== row.id"
-                        class="btn btn-xs btn-primary me-1"
+                        size="sm"
+                        color="primary"
+                        class="me-1"
                         @click.prevent="setRealmManagement(row)"
                     >
                         <VCIcon name="fa6-solid:check" />
-                    </button>
+                    </VCButton>
                     <NuxtLink
                         :to="'/realms/'+ row.id"
                         class="btn btn-xs btn-outline-primary me-1"
