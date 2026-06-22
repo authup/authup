@@ -4,10 +4,10 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import type { FormInputBuildOptionsInput } from '../../../core';
-import { buildFormInputText, hasNormalizedSlot, normalizeSlot  } from '../../../core';
+import { hasNormalizedSlot, normalizeSlot } from '../../../core';
 import type { VNodeChild } from 'vue';
 import { h, resolveComponent } from 'vue';
+import { VCFormInput } from '@vuecs/forms';
 import { ListSearchSlotName } from './constants';
 import type { SearchOptionsInput } from './type';
 
@@ -43,27 +43,6 @@ export function buildListSearch(
         iconContent = normalizeSlot(ListSearchSlotName.ICON, {}, ctx.slots);
     }
 
-    const options: FormInputBuildOptionsInput = {};
-
-    if (ctx.icon) {
-        const VCIcon = resolveComponent('VCIcon');
-        if (ctx.iconPosition === 'start') {
-            options.groupPrepend = true;
-            if (iconContent) {
-                options.groupPrependContent = iconContent;
-            } else {
-                options.groupPrependContent = h(VCIcon, { name: ctx.iconClass });
-            }
-        } else {
-            options.groupAppend = true;
-            if (iconContent) {
-                options.groupAppendContent = iconContent;
-            } else {
-                options.groupAppendContent = h(VCIcon, { name: ctx.iconClass });
-            }
-        }
-    }
-
     const handle = debounce((text: string) => {
         if (!ctx.load || ctx.meta?.busy || ctx.busy) {
             return Promise.resolve();
@@ -75,10 +54,27 @@ export function buildListSearch(
         });
     });
 
-    return buildFormInputText({
+    const props: Record<string, any> = {
         type: 'text',
-        onChange: (text: string) => handle(text),
-        props: { placeholder: '...' },
-        ...options,
-    });
+        modelValue: '',
+        'onUpdate:modelValue': (text: string) => handle(text),
+        placeholder: '...',
+    };
+
+    const slots: Record<string, () => VNodeChild> = {};
+
+    if (ctx.icon) {
+        const VCIcon = resolveComponent('VCIcon');
+        const iconNode = () => iconContent ?? h(VCIcon, { name: ctx.iconClass });
+
+        if (ctx.iconPosition === 'start') {
+            props.groupPrepend = true;
+            slots.groupPrepend = iconNode;
+        } else {
+            props.groupAppend = true;
+            slots.groupAppend = iconNode;
+        }
+    }
+
+    return h(VCFormInput, props, slots);
 }

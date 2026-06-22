@@ -175,8 +175,8 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
         icons: [fontAwesome()],
         defaults: {
             // Wire authup's translator + icon choices into vuecs's
-            // DefaultsManager so `useSubmitButton()` / `buildFormSubmit()`
-            // resolve to locale-reactive labels with no per-call work.
+            // DefaultsManager so `useSubmitButton()` resolves to
+            // locale-reactive labels with no per-call work.
             // Mirrors the Nuxt plugin in apps/client-web/plugins/vuecs.ts.
             submitButton,
         },

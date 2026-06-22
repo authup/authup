@@ -14,8 +14,8 @@ import { useTranslation } from '../translator';
  * Build the `submitButton` defaults for @vuecs/forms's
  * `useSubmitButton()` composable, wired to authup's translator. Pass into
  * `app.use(vuecs, { defaults: { submitButton: ... } })` once at app
- * bootstrap so `useSubmitButton()` / `buildFormSubmit()` pick up
- * locale-reactive labels without per-call work.
+ * bootstrap so `useSubmitButton()` picks up locale-reactive labels
+ * without per-call work.
  *
  * MUST be called within an injection context (component setup or a Nuxt
  * plugin's `setup()`) — `useTranslation` reads the live locale provider
