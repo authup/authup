@@ -340,15 +340,6 @@
     .container       { @apply mx-auto w-full max-w-screen-lg px-4; }
     .container-fluid { @apply w-full px-4; }
 
-    /* Alerts --------------------------------------------------------- */
-    .alert         { @apply relative mb-3 rounded-md border px-4 py-3; }
-    .alert-sm      { @apply px-3 py-2 text-sm; }
-    .alert-primary { @apply border-primary-200 bg-primary-50 text-primary-700; }
-    .alert-success { @apply border-success-200 bg-success-50 text-success-700; }
-    .alert-warning { @apply border-warning-200 bg-warning-50 text-warning-700; }
-    .alert-danger  { @apply border-error-200   bg-error-50   text-error-700; }
-    .alert-info    { @apply border-info-200    bg-info-50    text-info-700; }
-
     /* Navbar — bootstrap's navbar components ------------------------- */
     .navbar          { @apply flex flex-wrap items-center justify-between; }
     .navbar-nav      { @apply flex flex-col list-none; }
@@ -396,15 +387,6 @@
     }
     .vc-pagination > :last-child .vc-pagination-link {
         @apply !rounded-r-md;
-    }
-
-    /* Form validation visual states. Bootstrap had `.is-valid` /
-       `.is-invalid` classes for green/red field highlights;
-       AIdentityProviderOAuth2Discovery uses `.is-valid` to confirm a
-       successful discovery URL lookup. Keep just `.is-valid` for now —
-       `.is-invalid` would shadow IVuelidate's own severity styling. */
-    .is-valid {
-        @apply border-success-600 ring-1 ring-success-500;
     }
 
     /* Dropdowns — Bootstrap-style toggle/menu used by

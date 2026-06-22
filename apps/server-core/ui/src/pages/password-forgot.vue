@@ -8,12 +8,17 @@
 import { AAuthShell, APasswordForgotForm, useTranslations } from '@authup/client-web-kit';
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { VCAlert } from '@vuecs/elements';
 import { defineComponent } from 'vue';
 import { useBasePath } from '../base-path';
 import { injectPayload } from '../di';
 
 export default defineComponent({
-    components: { AAuthShell, APasswordForgotForm },
+    components: {
+        AAuthShell, 
+        APasswordForgotForm, 
+        VCAlert, 
+    },
     setup() {
         const payload = injectPayload<{
             features?: StatusResponseFeatures,
@@ -67,11 +72,13 @@ export default defineComponent({
                 <a :href="resetPath">{{ translations.resetPassword }}</a>
             </div>
         </template>
-        <div
+        <VCAlert
             v-else
-            class="alert alert-warning"
+            color="warning"
+            variant="soft"
+            class="mb-3"
         >
             {{ translations.workflowDisabled }}
-        </div>
+        </VCAlert>
     </AAuthShell>
 </template>

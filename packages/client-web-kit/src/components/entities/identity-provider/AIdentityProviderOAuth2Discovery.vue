@@ -24,6 +24,7 @@ import {
     ref,
 } from 'vue';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
+import { VCAlert } from '@vuecs/elements';
 import { IFieldValidation } from '@ilingo/validup-vue';
 import { useTranslations, useTranslator } from '../../../core';
 
@@ -40,9 +41,10 @@ class DiscoveryUrlValidator extends Container<{ url: string }> {
 
 export default defineComponent({
     components: {
-        VCFormGroup, 
-        VCFormInput, 
-        IFieldValidation, 
+        VCFormGroup,
+        VCFormInput,
+        VCAlert,
+        IFieldValidation,
     },
     emits: ['lookup', 'failed'],
     setup(_, setup) {
@@ -129,17 +131,20 @@ export default defineComponent({
                 </template>
                 <VCFormInput
                     v-model="v.fields.url.$model.value"
-                    :class="{ 'is-valid': lookupValid }"
+                    :class="{ 'border-success-600 ring-1 ring-success-500': lookupValid }"
                     placeholder="https://example.com/.well-known/openid-configuration"
                 />
             </VCFormGroup>
         </IFieldValidation>
-        <div
+        <VCAlert
             v-if="message"
-            class="alert alert-sm alert-warning"
+            color="warning"
+            variant="soft"
+            size="sm"
+            class="mb-3"
         >
             {{ message }}
-        </div>
+        </VCAlert>
         <button
             type="button"
             class="btn btn-xs btn-primary mb-1"

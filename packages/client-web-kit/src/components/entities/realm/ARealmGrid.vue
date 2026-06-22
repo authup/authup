@@ -16,9 +16,11 @@ import {
     TranslatorTranslationCommonKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
+import { VCAlert } from '@vuecs/elements';
 import { injectHTTPClient, useTranslations } from '../../../core';
 
 export default defineComponent({
+    components: { VCAlert },
     props: {
         // When exactly one realm is available, emit `select` for it
         // immediately instead of rendering a single-tile chooser. Lets the
@@ -150,12 +152,14 @@ export default defineComponent({
 </script>
 <template>
     <div class="a-realm-select">
-        <div
+        <VCAlert
             v-if="error"
-            class="alert alert-danger a-realm-select-alert"
+            color="error"
+            variant="soft"
+            class="a-realm-select-alert"
         >
             {{ error }}
-        </div>
+        </VCAlert>
 
         <div
             v-if="!loaded || busy || redirecting"

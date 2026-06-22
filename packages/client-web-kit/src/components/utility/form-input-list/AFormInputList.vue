@@ -19,10 +19,11 @@ import {
     TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
+import { VCAlert } from '@vuecs/elements';
 import { useTranslations } from '../../../core';
 
 export default defineComponent({
-    components: { AFormInputListItem },
+    components: { AFormInputListItem, VCAlert },
     props: {
         names: {
             type: Array as PropType<string[]>,
@@ -159,9 +160,14 @@ export default defineComponent({
         <div class="flex flex-col gap-1">
             <template v-if="items.length === 0">
                 <slot name="noItems">
-                    <div class="alert alert-sm alert-info">
+                    <VCAlert
+                        color="info"
+                        variant="soft"
+                        size="sm"
+                        class="mb-3"
+                    >
                         {{ translationsDefault.noItems }}
-                    </div>
+                    </VCAlert>
                 </slot>
             </template>
             <template

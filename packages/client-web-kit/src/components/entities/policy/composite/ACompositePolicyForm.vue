@@ -20,6 +20,7 @@ import {
 import { useTranslations } from '../../../../core';
 import { onChange, useUpdatedAt } from '../../../../composables';
 import APolicyPicker from '../APolicyPicker.vue';
+import { VCAlert } from '@vuecs/elements';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({
@@ -27,6 +28,7 @@ export default defineComponent({
         APolicyChildrenPicker: APolicyPicker,
         VCFormGroup,
         VCFormSelect,
+        VCAlert,
 
         IFieldValidation,
     },
@@ -195,9 +197,14 @@ export default defineComponent({
                     :placeholder="translations.optionNoneUnanimous"
                     @update:model-value="handleDecisionStrategyUpdated"
                 />
-                <div class="alert alert-sm alert-info mt-1 mb-0">
+                <VCAlert
+                    color="info"
+                    variant="soft"
+                    size="sm"
+                    class="mt-1 mb-0"
+                >
                     {{ decisionStrategyHint }}
-                </div>
+                </VCAlert>
             </VCFormGroup>
         </IFieldValidation>
         <IFieldValidation

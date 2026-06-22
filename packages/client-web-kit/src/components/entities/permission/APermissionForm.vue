@@ -46,6 +46,7 @@ import {
     defineEntityVEmitOptions,
 } from '../../utility';
 import { ARealmPicker } from '../realm';
+import { VCAlert } from '@vuecs/elements';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({
@@ -57,6 +58,7 @@ export default defineComponent({
         VCFormInput,
         VCFormSelect,
         VCFormTextarea,
+        VCAlert,
 
         IFieldValidation,
     },
@@ -277,9 +279,14 @@ export default defineComponent({
                     :options="decisionStrategyOptions"
                     :placeholder="translationsClient.optionNoneUnanimous"
                 />
-                <div class="alert alert-sm alert-info mt-1 mb-0">
+                <VCAlert
+                    color="info"
+                    variant="soft"
+                    size="sm"
+                    class="mt-1 mb-0"
+                >
                     {{ decisionStrategyHint }}
-                </div>
+                </VCAlert>
             </VCFormGroup>
         </IFieldValidation>
 

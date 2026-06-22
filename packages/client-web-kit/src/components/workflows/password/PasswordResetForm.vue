@@ -23,6 +23,7 @@ import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
 import { VCButton } from '@vuecs/button';
+import { VCAlert } from '@vuecs/elements';
 import { VCFormGroup, VCFormInput, useSubmitButton } from '@vuecs/forms';
 import { IFieldValidation } from '@ilingo/validup-vue';
 import { injectHTTPClient, useTranslations, wrapFnWithBusyState } from '../../../core';
@@ -43,6 +44,7 @@ class PasswordResetValidator extends Container<{
 export default defineComponent({
     components: {
         VCButton,
+        VCAlert,
         VCFormGroup,
         VCFormInput,
         IFieldValidation,
@@ -148,22 +150,26 @@ export default defineComponent({
             </h1>
         </div>
 
-        <div
+        <VCAlert
             v-if="finished"
-            class="alert alert-success"
+            color="success"
+            variant="soft"
+            class="mb-3"
         >
             {{ translations.passwordResetDone }}
-        </div>
+        </VCAlert>
         <form
             v-else
             @submit.prevent="submit"
         >
-            <div
+            <VCAlert
                 v-if="error"
-                class="alert alert-danger"
+                color="error"
+                variant="soft"
+                class="mb-3"
             >
                 {{ error }}
-            </div>
+            </VCAlert>
 
             <IFieldValidation
                 v-slot="{ value }"

@@ -22,6 +22,7 @@ import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
 import { VCButton } from '@vuecs/button';
+import { VCAlert } from '@vuecs/elements';
 import { VCFormGroup, VCFormInput, useSubmitButton } from '@vuecs/forms';
 import type { LinkProperties } from '@vuecs/link';
 import { IFieldValidation } from '@ilingo/validup-vue';
@@ -39,6 +40,7 @@ export default defineComponent({
     components: {
         AAuthBackLink,
         VCButton,
+        VCAlert,
         VCFormGroup,
         VCFormInput,
         IFieldValidation,
@@ -126,22 +128,26 @@ export default defineComponent({
             </h1>
         </div>
 
-        <div
+        <VCAlert
             v-if="sent"
-            class="alert alert-info"
+            color="info"
+            variant="soft"
+            class="mb-3"
         >
             {{ translations.checkEmailReset }}
-        </div>
+        </VCAlert>
         <form
             v-else
             @submit.prevent="submit"
         >
-            <div
+            <VCAlert
                 v-if="error"
-                class="alert alert-danger"
+                color="error"
+                variant="soft"
+                class="mb-3"
             >
                 {{ error }}
-            </div>
+            </VCAlert>
 
             <IFieldValidation
                 v-slot="{ value }"
