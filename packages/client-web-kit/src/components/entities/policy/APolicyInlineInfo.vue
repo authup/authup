@@ -9,6 +9,7 @@
 import type { Policy } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
+import { VCBadge } from '@vuecs/elements';
 import {
     TranslatorTranslationCommonKey,
     TranslatorTranslationNamespace,
@@ -18,7 +19,11 @@ import APolicyTypeBadge from './APolicyTypeBadge.vue';
 import APolicyDetailNav from './APolicyDetailNav.vue';
 
 export default defineComponent({
-    components: { APolicyTypeBadge, APolicyDetailNav },
+    components: {
+        APolicyTypeBadge, 
+        APolicyDetailNav, 
+        VCBadge, 
+    },
     props: {
         entity: {
             type: Object as PropType<Policy>,
@@ -44,10 +49,13 @@ export default defineComponent({
 </script>
 <template>
     <APolicyTypeBadge :type="entity.type" />
-    <span
+    <VCBadge
         v-if="entity.invert"
-        class="badge bg-warning-500"
-    >{{ translations.inverted }}</span>
+        color="warning"
+        variant="solid"
+    >
+        {{ translations.inverted }}
+    </VCBadge>
     <APolicyDetailNav
         :policy-id="entity.id"
         @click="handleDetail"
