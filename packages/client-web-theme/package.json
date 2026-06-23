@@ -50,7 +50,7 @@
   "homepage": "https://github.com/authup/authup#readme",
   "dependencies": {
     "@authup/client-web-kit-theme": "^1.0.0-beta.49",
-    "@vuecs/design": "^1.0.4",
+    "@vuecs/design": "^1.0.6",
     "@vuecs/theme-tailwind": "^4.0.0"
   },
   "peerDependencies": {

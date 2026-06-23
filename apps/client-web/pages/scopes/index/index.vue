@@ -90,10 +90,7 @@ export default defineComponent({
             },
         ]);
 
-        // Workaround for tada5hi/vuecs#1649: @vuecs/button 1.1.0 narrows VCButton's
-        // `$props.as` to `string` (its `Defaults` param), so vue-tsc rejects a
-        // component here though NuxtLink renders fine. Drop the cast when fixed.
-        const NuxtLink = resolveComponent('NuxtLink') as string;
+        const NuxtLink = resolveComponent('NuxtLink');
 
         return {
             columns,

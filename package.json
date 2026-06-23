@@ -76,6 +76,6 @@
         "typeorm": "0.3.28",
         "vue": "3.5.38",
         "validup": "^0.5.1",
-        "@vuecs/core": "3.2.1"
+        "@vuecs/core": "3.2.2"
     }
 }
