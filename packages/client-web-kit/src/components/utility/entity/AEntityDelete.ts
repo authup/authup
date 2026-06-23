@@ -10,16 +10,16 @@ import type {
     Component,
     PropType,
     VNodeArrayChildren,
-    VNodeProps,
 } from 'vue';
 import {
-    defineComponent, 
+    defineComponent,
     getCurrentInstance,
     h,
     mergeProps,
-    ref, 
+    ref,
     resolveDynamicComponent,
 } from 'vue';
+import { VCButton } from '@vuecs/button';
 import type { EntityType } from '@authup/core-kit';
 import type { IEntityAPISlim } from '@authup/core-http-kit';
 import { TranslatorTranslationActionKey, TranslatorTranslationNamespace } from '@authup/i18n';
@@ -53,6 +53,11 @@ const AEntityDelete = defineComponent({
         entityType: {
             type: String as PropType<`${EntityType}`>,
             required: true,
+        },
+
+        disabled: {
+            type: Boolean,
+            default: false,
         },
 
         hint: {
@@ -93,22 +98,41 @@ const AEntityDelete = defineComponent({
             key: TranslatorTranslationActionKey.DELETE,
         });
 
-        const render = () => {
-            let tag : Component | string = 'button';
-            const data : VNodeProps = {};
+        const onClick = ($event: any) => {
+            $event.preventDefault();
 
-            switch (props.elementType) {
-                case ElementType.LINK:
-                    tag = 'a';
-                    break;
-                case ElementType.DROP_DOWN_ITEM:
-                    if (
-                        instance &&
-                        typeof instance.appContext.app.component('VCDropdownMenuItem') !== 'undefined'
-                    ) {
-                        tag = resolveDynamicComponent('VCDropdownMenuItem') as Component;
-                    }
-                    break;
+            return submit.apply(null);
+        };
+
+        const render = () => {
+            const isDisabled = busy.value || props.disabled;
+
+            // Default button form: a danger-outline <VCButton>. The delete
+            // action is inherently destructive, so the styling is baked in
+            // rather than passed per call site (was `btn btn-xs btn-outline-danger`).
+            if (props.elementType === ElementType.BUTTON) {
+                return h(
+                    VCButton,
+                    {
+                        size: 'sm',
+                        color: 'error',
+                        variant: 'outline',
+                        iconLeft: props.elementIcon || undefined,
+                        label: props.withText ? translation.value : undefined,
+                        disabled: isDisabled,
+                        onClick,
+                    },
+                );
+            }
+
+            let tag : Component | string = 'a';
+            if (props.elementType === ElementType.DROP_DOWN_ITEM) {
+                if (
+                    instance &&
+                    typeof instance.appContext.app.component('VCDropdownMenuItem') !== 'undefined'
+                ) {
+                    tag = resolveDynamicComponent('VCDropdownMenuItem') as Component;
+                }
             }
 
             let icon : VNodeArrayChildren = [];
@@ -131,13 +155,9 @@ const AEntityDelete = defineComponent({
             return h(
                 tag as string,
                 mergeProps({
-                    disabled: busy.value,
-                    onClick($event: any) {
-                        $event.preventDefault();
-
-                        return submit.apply(null);
-                    },
-                }, data),
+                    disabled: isDisabled,
+                    onClick,
+                }),
                 [
                     icon,
                     text,

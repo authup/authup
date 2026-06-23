@@ -15,6 +15,7 @@ import {
     onUnmounted,
     ref,
 } from 'vue';
+import { VCButton } from '@vuecs/button';
 import { TranslatorTranslationActionKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { useTranslations } from '../../../core';
 import APermissionPolicyAssignment from './APermissionPolicyAssignment.vue';
@@ -24,10 +25,11 @@ import APolicySummary from '../policy/APolicySummary.vue';
 
 export default defineComponent({
     components: {
-        APolicies, 
-        APermissionPolicyAssignment, 
-        APolicyInlineInfo, 
-        APolicySummary, 
+        APolicies,
+        APermissionPolicyAssignment,
+        APolicyInlineInfo,
+        APolicySummary,
+        VCButton,
     },
     props: {
         entityId: {
@@ -137,13 +139,14 @@ export default defineComponent({
                             <APolicySummary :entity="detailPolicy" />
                         </div>
                         <div class="modal-footer">
-                            <button
+                            <VCButton
                                 type="button"
-                                class="btn btn-secondary btn-xs"
+                                size="sm"
+                                color="neutral"
+                                variant="soft"
+                                :label="translationsAction.close"
                                 @click="detailPolicy = null"
-                            >
-                                {{ translationsAction.close }}
-                            </button>
+                            />
                         </div>
                     </div>
                 </div>

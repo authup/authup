@@ -14,7 +14,7 @@ import {
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { TableColumn } from '@vuecs/table';
-import { defineComponent } from 'vue';
+import { defineComponent, resolveComponent } from 'vue';
 
 export default defineComponent({
     components: {
@@ -64,6 +64,8 @@ export default defineComponent({
             },
         ];
 
+        const NuxtLink = resolveComponent('NuxtLink');
+
         return {
             columns,
             hasEditPermission,
@@ -71,6 +73,7 @@ export default defineComponent({
             handleDeleted,
             realmManagementId,
             setRealmManagement: store.setRealmManagement,
+            NuxtLink,
         };
     },
 });
@@ -115,15 +118,18 @@ export default defineComponent({
                     >
                         <VCIcon name="fa6-solid:check" />
                     </VCButton>
-                    <NuxtLink
+                    <VCButton
+                        :as="NuxtLink"
                         :to="'/realms/'+ row.id"
-                        class="btn btn-xs btn-outline-primary me-1"
+                        size="sm"
+                        color="primary"
+                        variant="outline"
+                        class="me-1"
                         :disabled="!hasEditPermission"
                     >
                         <VCIcon name="fa6-solid:bars" />
-                    </NuxtLink>
+                    </VCButton>
                     <AEntityDelete
-                        class="btn btn-xs btn-outline-danger"
                         :entity-id="row.id"
                         entity-type="realm"
                         :with-text="false"

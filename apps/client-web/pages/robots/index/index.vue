@@ -15,7 +15,7 @@ import {
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
 import type { TableColumn } from '@vuecs/table';
-import { computed, defineComponent } from 'vue';
+import { computed, defineComponent, resolveComponent } from 'vue';
 
 export default defineComponent({
     components: {
@@ -80,12 +80,15 @@ export default defineComponent({
             },
         ]);
 
+        const NuxtLink = resolveComponent('NuxtLink');
+
         return {
             columns,
             hasEditPermission,
             hasDropPermission,
             handleDeleted,
             query,
+            NuxtLink,
         };
     },
 });
@@ -122,15 +125,18 @@ export default defineComponent({
                     <VCTimeago :datetime="row.updated_at" />
                 </template>
                 <template #cell-options="{ row }: { row: any }">
-                    <NuxtLink
+                    <VCButton
+                        :as="NuxtLink"
                         :to="'/robots/'+ row.id"
-                        class="btn btn-xs btn-outline-primary me-1"
+                        size="sm"
+                        color="primary"
+                        variant="outline"
+                        class="me-1"
                         :disabled="!hasEditPermission"
                     >
                         <VCIcon name="fa6-solid:bars" />
-                    </NuxtLink>
+                    </VCButton>
                     <AEntityDelete
-                        class="btn btn-xs btn-outline-danger"
                         :entity-id="row.id"
                         entity-type="robot"
                         :with-text="false"
