@@ -15,6 +15,7 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
+import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type {
     Permission, 
     PermissionPolicy, 
@@ -31,10 +32,10 @@ export class PermissionPolicyEntity implements PermissionPolicy {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @CreateDateColumn()
+    @CreateDateColumn({ transformer: dateToISOStringTransformer })
     created_at: string;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
     updated_at: string;
 
     // ------------------------------------------------------------------

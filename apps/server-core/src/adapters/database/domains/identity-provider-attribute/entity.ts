@@ -15,6 +15,7 @@ import {
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
+import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type { IdentityProvider, IdentityProviderAttribute, Realm } from '@authup/core-kit';
 import {
     deserialize,
@@ -71,9 +72,9 @@ export class IdentityProviderAttributeEntity implements IdentityProviderAttribut
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn()
+    @CreateDateColumn({ transformer: dateToISOStringTransformer })
     created_at: string;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
     updated_at: string;
 }

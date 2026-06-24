@@ -15,6 +15,7 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
+import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type {
     IdentityProviderMappingSyncMode, 
     IdentityProviderPermissionMapping,
@@ -58,11 +59,11 @@ export class IdentityProviderPermissionMappingEntity implements IdentityProvider
     })
     value_is_regex: boolean;
 
-    @CreateDateColumn()
-    created_at: Date;
+    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    created_at: string;
 
-    @UpdateDateColumn()
-    updated_at: Date;
+    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    updated_at: string;
 
     // -----------------------------------------------
 

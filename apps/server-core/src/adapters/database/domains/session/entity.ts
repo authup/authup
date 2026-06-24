@@ -15,6 +15,7 @@ import {
     PrimaryGeneratedColumn, 
     UpdateDateColumn,
 } from 'typeorm';
+import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type {
     Client, 
     Realm, 
@@ -82,10 +83,10 @@ export class SessionEntity implements Session {
     })
     seen_at: string | null;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
     updated_at: string;
 
-    @CreateDateColumn()
+    @CreateDateColumn({ transformer: dateToISOStringTransformer })
     created_at: string;
 
     // ------------------------------------------------------------------

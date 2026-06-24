@@ -14,7 +14,7 @@ export interface IdentityProviderAttributeMapping extends IdentityProviderBaseMa
 
     target_value: string | null;
 
-    created_at: Date;
+    created_at: string;
 
-    updated_at: Date;
+    updated_at: string;
 }

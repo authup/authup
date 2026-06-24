@@ -12,6 +12,7 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
+import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type { Realm } from '@authup/core-kit';
 
 @Entity({ name: 'auth_realms' })
@@ -46,9 +47,9 @@ export class RealmEntity implements Realm {
     })
     built_in: boolean;
 
-    @CreateDateColumn()
+    @CreateDateColumn({ transformer: dateToISOStringTransformer })
     created_at: string;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
     updated_at: string;
 }

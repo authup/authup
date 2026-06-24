@@ -16,6 +16,7 @@ import {
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
+import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type { DecisionStrategy } from '@authup/kit';
 import type { Client, Realm } from '@authup/core-kit';
 import { RealmEntity } from '../realm/index.ts';
@@ -88,9 +89,9 @@ export class PermissionEntity {
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn()
+    @CreateDateColumn({ transformer: dateToISOStringTransformer })
     created_at: string;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
     updated_at: string;
 }
