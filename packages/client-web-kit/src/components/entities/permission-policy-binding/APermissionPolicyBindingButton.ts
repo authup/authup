@@ -17,9 +17,15 @@ import {
     toRef,
     watch,
 } from 'vue';
+import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
 import { TranslatorTranslationActionKey, TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { SlotName, injectHTTPClient, useTranslation } from '../../../core';
+import { 
+    DEFAULT_BUTTON_SIZE, 
+    SlotName, 
+    injectHTTPClient, 
+    useTranslation, 
+} from '../../../core';
 import { hasOwnProperty } from '@authup/kit';
 import { APolicies } from '../policy/APolicies';
 import APolicyInlineInfo from '../policy/APolicyInlineInfo.vue';
@@ -36,6 +42,10 @@ export const APermissionPolicyBindingButton = defineComponent({
         entity: {
             type: Object as PropType<PermissionBindingEntity>,
             required: true,
+        },
+        size: {
+            type: String as PropType<ButtonSize>,
+            default: DEFAULT_BUTTON_SIZE,
         },
     },
     emits: ['updated', 'failed'],
@@ -128,7 +138,7 @@ export const APermissionPolicyBindingButton = defineComponent({
             }
 
             children.push(h(VCButton, {
-                size: 'sm',
+                size: props.size,
                 color: triggerColor,
                 variant: triggerVariant,
                 iconLeft: 'fa6-solid:gear',
@@ -162,7 +172,7 @@ export const APermissionPolicyBindingButton = defineComponent({
                     modalFooter = [
                         h(VCButton, {
                             type: 'button',
-                            size: 'sm',
+                            size: props.size,
                             color: 'neutral',
                             variant: 'outline',
                             iconLeft: 'fa6-solid:arrow-left',
@@ -197,7 +207,7 @@ export const APermissionPolicyBindingButton = defineComponent({
                                 }),
                                 h('div', { class: 'ms-auto' }, [
                                     h(VCButton, {
-                                        size: 'sm',
+                                        size: props.size,
                                         color: selectColor,
                                         variant: selectVariant,
                                         iconLeft: isSelected ? 'fa6-solid:check' : 'fa6-solid:plus',
@@ -219,7 +229,7 @@ export const APermissionPolicyBindingButton = defineComponent({
                         currentPolicyId.value ?
                             h(VCButton, {
                                 type: 'button',
-                                size: 'sm',
+                                size: props.size,
                                 color: 'warning',
                                 label: translationReset.value,
                                 disabled: busy.value,
@@ -230,7 +240,7 @@ export const APermissionPolicyBindingButton = defineComponent({
                             undefined,
                         h(VCButton, {
                             type: 'button',
-                            size: 'sm',
+                            size: props.size,
                             color: 'neutral',
                             variant: 'soft',
                             label: translationClose.value,

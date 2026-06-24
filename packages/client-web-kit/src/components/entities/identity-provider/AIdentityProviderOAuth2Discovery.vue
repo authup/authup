@@ -17,6 +17,7 @@ import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import { z } from 'zod';
+import type { PropType } from 'vue';
 import {
     computed,
     defineComponent,
@@ -25,9 +26,10 @@ import {
 } from 'vue';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { VCAlert } from '@vuecs/elements';
+import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
 import { IFieldValidation } from '@ilingo/validup-vue';
-import { useTranslations, useTranslator } from '../../../core';
+import { DEFAULT_BUTTON_SIZE, useTranslations, useTranslator } from '../../../core';
 
 // Standalone form (not a registered child) — uses its own URL
 // validator since `@authup/core-kit` doesn't ship a "discovery URL"
@@ -47,6 +49,12 @@ export default defineComponent({
         VCAlert,
         VCButton,
         IFieldValidation,
+    },
+    props: {
+        size: {
+            type: String as PropType<ButtonSize>,
+            default: DEFAULT_BUTTON_SIZE,
+        },
     },
     emits: ['lookup', 'failed'],
     setup(_, setup) {
@@ -149,7 +157,7 @@ export default defineComponent({
         </VCAlert>
         <VCButton
             type="button"
-            size="sm"
+            :size="size"
             color="primary"
             class="mb-1"
             :disabled="isDisabled"

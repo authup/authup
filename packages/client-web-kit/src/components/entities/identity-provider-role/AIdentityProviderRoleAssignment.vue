@@ -11,12 +11,13 @@ import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import { TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { assignFormProperties, useTranslations } from '../../../core';
+import { DEFAULT_BUTTON_SIZE, assignFormProperties, useTranslations } from '../../../core';
 import { z } from 'zod';
 import type { PropType } from 'vue';
 import { defineComponent, reactive, ref } from 'vue';
 import type { IdentityProviderRoleMapping, Role } from '@authup/core-kit';
 import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
+import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
 import { IFieldValidation } from '@ilingo/validup-vue';
 import {
@@ -62,6 +63,10 @@ export default defineComponent({
         entityId: {
             type: String,
             required: true,
+        },
+        size: {
+            type: String as PropType<ButtonSize>,
+            default: DEFAULT_BUTTON_SIZE,
         },
     },
     emits: defineEntityVEmitOptions<IdentityProviderRoleMapping>(),
@@ -147,7 +152,7 @@ export default defineComponent({
         <div class="flex flex-row">
             <div class="me-2">
                 <VCButton
-                    size="sm"
+                    :size="size"
                     color="neutral"
                     @click.prevent="toggleDisplay()"
                 >
@@ -164,7 +169,7 @@ export default defineComponent({
             </div>
             <div class="ms-auto">
                 <VCButton
-                    size="sm"
+                    :size="size"
                     :color="manager.data.value ? 'neutral' : 'primary'"
                     @click="handleSaveOrCreate"
                 >
@@ -172,7 +177,7 @@ export default defineComponent({
                 </VCButton>
                 <VCButton
                     v-if="manager.data.value"
-                    size="sm"
+                    :size="size"
                     color="error"
                     class="ms-1"
                     :disabled="manager.busy.value"

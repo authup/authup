@@ -8,6 +8,7 @@
 <script lang="ts">
 /* global document, KeyboardEvent */
 import type { Policy } from '@authup/core-kit';
+import type { PropType } from 'vue';
 import {
     computed,
     defineComponent,
@@ -15,9 +16,10 @@ import {
     onUnmounted,
     ref,
 } from 'vue';
+import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
 import { TranslatorTranslationActionKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { useTranslations } from '../../../core';
+import { DEFAULT_BUTTON_SIZE, useTranslations } from '../../../core';
 import APermissionPolicyAssignment from './APermissionPolicyAssignment.vue';
 import { APolicies } from '../policy';
 import APolicyInlineInfo from '../policy/APolicyInlineInfo.vue';
@@ -35,6 +37,10 @@ export default defineComponent({
         entityId: {
             type: String,
             required: true,
+        },
+        size: {
+            type: String as PropType<ButtonSize>,
+            default: DEFAULT_BUTTON_SIZE,
         },
     },
     setup(props, { slots }) {
@@ -141,7 +147,7 @@ export default defineComponent({
                         <div class="modal-footer">
                             <VCButton
                                 type="button"
-                                size="sm"
+                                :size="size"
                                 color="neutral"
                                 variant="soft"
                                 :label="translationsAction.close"

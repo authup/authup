@@ -5,18 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { h, resolveComponent } from 'vue';
+import { h } from 'vue';
+import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
+import { DEFAULT_BUTTON_SIZE } from '../../../core';
 
 type ToggleButtonOptions = {
     value: boolean,
     isBusy: boolean,
-    changed: (value: boolean) => void
+    changed: (value: boolean) => void,
+    size?: ButtonSize,
 };
 export function renderToggleButton(
     options: ToggleButtonOptions,
 ) {
-    const VCIcon = resolveComponent('VCIcon');
     let iconName: string;
     let color: 'neutral' | 'error' | 'success';
     if (options.isBusy) {
@@ -31,15 +33,14 @@ export function renderToggleButton(
     }
 
     return h(VCButton, {
-        size: 'sm',
+        size: options.size ?? DEFAULT_BUTTON_SIZE,
         color,
+        iconLeft: iconName,
         disabled: options.isBusy,
         onClick($event: any) {
             $event.preventDefault();
 
             options.changed(!options.value);
         },
-    }, () => [
-        h(VCIcon, { name: iconName }),
-    ]);
+    });
 }

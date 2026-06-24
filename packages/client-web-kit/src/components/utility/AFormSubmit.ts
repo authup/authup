@@ -5,9 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { PropType } from 'vue';
 import { defineComponent, h } from 'vue';
+import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
 import { useSubmitButton } from '@vuecs/forms';
+import { DEFAULT_BUTTON_SIZE } from '../../core';
 
 /**
  * Submit button for entity forms. Reactive label / icon / color swap
@@ -31,6 +34,10 @@ export const AFormSubmit = defineComponent({
             type: Boolean,
             default: false,
         },
+        size: {
+            type: String as PropType<ButtonSize>,
+            default: DEFAULT_BUTTON_SIZE,
+        },
     },
     emits: ['submit'],
     setup(props, { emit }) {
@@ -42,7 +49,7 @@ export const AFormSubmit = defineComponent({
 
         return () => h(VCButton, {
             ...submitButton.value,
-            size: 'sm',
+            size: props.size,
             // `mt-3` matches the inter-group `mb-3` spacing so the button
             // sits one consistent gap below the last form field.
             class: 'mt-3',

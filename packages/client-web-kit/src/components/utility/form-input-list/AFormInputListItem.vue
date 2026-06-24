@@ -7,13 +7,16 @@
 
 <script lang="ts">
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
+import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import { z } from 'zod';
+import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
 import { IFieldValidation } from '@ilingo/validup-vue';
+import { DEFAULT_BUTTON_SIZE } from '../../../core';
 
 // Per-row input validator — local because there's no
 // "list item name" entity in core-kit.
@@ -39,6 +42,10 @@ export default defineComponent({
         disabled: {
             type: Boolean,
             default: false,
+        },
+        size: {
+            type: String as PropType<ButtonSize>,
+            default: DEFAULT_BUTTON_SIZE,
         },
     },
     emits: ['updated', 'deleted'],
@@ -77,7 +84,7 @@ export default defineComponent({
                     <VCButton
                         :disabled="disabled"
                         type="button"
-                        size="sm"
+                        :size="size"
                         color="warning"
                         @click.prevent="handleDeleted"
                     >

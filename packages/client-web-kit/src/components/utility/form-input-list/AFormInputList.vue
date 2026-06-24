@@ -20,8 +20,9 @@ import {
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import { VCAlert } from '@vuecs/elements';
+import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
-import { useTranslations } from '../../../core';
+import { DEFAULT_BUTTON_SIZE, useTranslations } from '../../../core';
 
 export default defineComponent({
     components: {
@@ -41,6 +42,10 @@ export default defineComponent({
         maxItems: {
             type: Number,
             default: 100,
+        },
+        size: {
+            type: String as PropType<ButtonSize>,
+            default: DEFAULT_BUTTON_SIZE,
         },
     },
     emits: ['changed'],
@@ -153,7 +158,7 @@ export default defineComponent({
             </div>
             <div class="ms-auto">
                 <VCButton
-                    size="sm"
+                    :size="size"
                     color="primary"
                     type="button"
                     :disabled="!canAdd"
