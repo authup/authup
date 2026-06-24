@@ -113,11 +113,10 @@ export default defineComponent({
                         v-if="realmManagementId !== row.id"
                         size="sm"
                         color="primary"
-                        class="me-1"
+                        icon-left="fa6-solid:check"
+                        class="me-1 border border-transparent"
                         @click.prevent="setRealmManagement(row)"
-                    >
-                        <VCIcon name="fa6-solid:check" />
-                    </VCButton>
+                    />
                     <VCButton
                         :as="NuxtLink"
                         :to="'/realms/'+ row.id"
@@ -126,9 +125,8 @@ export default defineComponent({
                         variant="outline"
                         class="me-1"
                         :disabled="!hasEditPermission"
-                    >
-                        <VCIcon name="fa6-solid:bars" />
-                    </VCButton>
+                        icon-left="fa6-solid:bars"
+                    />
                     <AEntityDelete
                         :entity-id="row.id"
                         entity-type="realm"

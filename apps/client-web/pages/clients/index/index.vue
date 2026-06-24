@@ -182,9 +182,8 @@ export default defineComponent({
                         variant="outline"
                         class="me-1"
                         :disabled="!hasEditPermission"
-                    >
-                        <VCIcon name="fa6-solid:bars" />
-                    </VCButton>
+                        icon-left="fa6-solid:bars"
+                    />
                     <AEntityDelete
                         :entity-id="row.id"
                         entity-type="client"
