@@ -261,16 +261,14 @@
 }
 
 /* ------------------------------------------------------------------
-   Bootstrap-compat layer
-   Provides the Bootstrap-shaped utility / component class names that
-   authup's pre-Tailwind templates still reference. Each rule `@apply`s
-   Tailwind utilities — same visual contract, no `bootstrap` dep, and
-   the rules disappear automatically when the last caller is rewritten
-   to a `<VC*>` component.
-
-   Scope is intentionally narrow: only what the authup codebase actually
-   uses today. Don't add Bootstrap utilities that have no live caller —
-   `grep -rn 'class="[^"]*<token>'` first.
+   vuecs component overrides
+   The Bootstrap-compat shims (`.btn` / `.alert` / `.badge` / `.nav` /
+   `.row` / `.col` / `.dropdown*` / `.modal*`) that authup's pre-Tailwind
+   templates relied on have all been retired — every call site now
+   renders a `<VC*>` component. What remains is a thin override of a
+   vuecs component's baked theme classes (only what differs from
+   theme-tailwind). Don't reintroduce Bootstrap-shaped class names here;
+   reach for the matching `<VC*>` component instead.
    ------------------------------------------------------------------ */
 @layer components {
     /* Pagination — override theme-tailwind's per-button rounded-md to a
@@ -288,49 +286,6 @@
     .vc-pagination > :last-child .vc-pagination-link {
         @apply !rounded-r-md;
     }
-
-    /* Dropdowns — Bootstrap-style toggle/menu used by
-       LanguageSwitcherDropdown (in the header gadgets) and any other
-       legacy markup. The `hidden` on `.dropdown-menu` is load-bearing:
-       without it, the menu renders inline below the toggle and the
-       page header balloons by ~80px because the list-of-locales sits
-       always-visible inside the navbar. The toggle's click handler
-       (see LanguageSwitcherDropdown.ts) flips `.show` on the menu.
-
-       `.dropdown` is the positioned ancestor: the menu is
-       `position: absolute`, so without a relatively-positioned wrapper
-       it anchors to the initial containing block (viewport) at its
-       static position. In the top-right gadget cluster that static
-       position is flush against the right edge, so the menu's `min-w-40`
-       width spills off-screen. `.dropdown { relative }` + `top-full
-       left-0` anchors the menu under its toggle; `.dropdown-menu-end`
-       right-aligns it so a toggle sitting at the header's right edge
-       opens leftward and stays fully on-screen. */
-    .dropdown { @apply relative; }
-    .dropdown-toggle { @apply cursor-pointer; }
-    .dropdown-menu {
-        @apply absolute top-full left-0 z-50 hidden min-w-40 rounded-md
-               border border-border bg-bg py-1 shadow-md;
-    }
-    .dropdown-menu-end { @apply left-auto right-0; }
-    .dropdown-menu.show { @apply block; }
-    .dropdown-item {
-        @apply block w-full cursor-pointer border-0 bg-transparent
-               px-3 py-1 text-left text-sm text-fg hover:bg-bg-muted;
-    }
-    .dropdown-item.active {
-        @apply bg-primary-600 text-on-primary hover:bg-primary-700;
-    }
-
-    /* Modal — minimal classic-Bootstrap chrome ----------------------- */
-    .modal-backdrop { @apply fixed inset-0 z-40 bg-black/50; }
-    .modal          { @apply fixed inset-0 z-50 overflow-y-auto; }
-    .modal-dialog   { @apply mx-auto my-8 w-full max-w-lg; }
-    .modal-content  { @apply rounded-md border border-border bg-bg shadow-lg; }
-    .modal-header   { @apply flex items-center justify-between border-b border-border px-4 py-3; }
-    .modal-title    { @apply font-semibold; }
-    .modal-body     { @apply px-4 py-3; }
-    .modal-footer   { @apply flex items-center justify-end gap-2 border-t border-border px-4 py-3; }
 
 }
 

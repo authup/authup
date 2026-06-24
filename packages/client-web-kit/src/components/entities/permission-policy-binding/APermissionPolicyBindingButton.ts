@@ -8,23 +8,27 @@
 import type { EntityTypeMap, PermissionRelation, Policy } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import {
-    Teleport,
     defineComponent,
     h,
-    onMounted,
-    onUnmounted,
     ref,
     toRef,
     watch,
 } from 'vue';
 import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
+import { VCIcon } from '@vuecs/icon';
+import {
+    VCModal,
+    VCModalClose,
+    VCModalContent,
+    VCModalTitle,
+} from '@vuecs/overlays';
 import { TranslatorTranslationActionKey, TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { 
-    DEFAULT_BUTTON_SIZE, 
-    SlotName, 
-    injectHTTPClient, 
-    useTranslation, 
+import {
+    DEFAULT_BUTTON_SIZE,
+    SlotName,
+    injectHTTPClient,
+    useTranslation,
 } from '../../../core';
 import { hasOwnProperty } from '@authup/kit';
 import { APolicies } from '../policy/APolicies';
@@ -55,30 +59,15 @@ export const APermissionPolicyBindingButton = defineComponent({
         const modalOpen = ref(false);
         const busy = ref(false);
         const currentPolicyId = ref<string | null>(props.entity.policy_id);
+        // The detail view is a nested modal: Escape / outside-click close it
+        // back to the list (handled by the inner VCModalContent), and another
+        // Escape then closes the outer list modal.
         const detailPolicy = ref<Policy | null>(null);
 
         const entityRef = toRef(props, 'entity');
         watch(entityRef, (val) => {
             currentPolicyId.value = val.policy_id;
         }, { deep: true });
-
-        const handleKeydown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                if (detailPolicy.value) {
-                    detailPolicy.value = null;
-                } else if (modalOpen.value) {
-                    modalOpen.value = false;
-                }
-            }
-        };
-
-        onMounted(() => {
-            document.addEventListener('keydown', handleKeydown);
-        });
-
-        onUnmounted(() => {
-            document.removeEventListener('keydown', handleKeydown);
-        });
 
         const handlePolicySelect = async (policyId: string | null) => {
             if (busy.value) return;
@@ -103,8 +92,6 @@ export const APermissionPolicyBindingButton = defineComponent({
             }
         };
 
-        const modalTitleId = `policy-modal-title-${props.entity.id}`;
-
         const translationJunctionPolicy = useTranslation({
             namespace: TranslatorTranslationNamespace.CLIENT,
             key: TranslatorTranslationClientKey.JUNCTION_POLICY,
@@ -125,9 +112,105 @@ export const APermissionPolicyBindingButton = defineComponent({
             key: TranslatorTranslationActionKey.CLOSE,
         });
 
-        return () => {
-            const children = [];
+        const renderCloseIcon = () => h(VCModalClose, {
+            class: 'text-fg-muted hover:text-fg',
+            'aria-label': translationClose.value,
+        }, () => h(VCIcon, { name: 'fa6-solid:xmark' }));
 
+        const renderListContent = () => [
+            h('div', { class: 'flex items-center justify-between gap-2' }, [
+                h(VCModalTitle, () => translationJunctionPolicy.value),
+                renderCloseIcon(),
+            ]),
+            h(APolicies, { query: { filters: { parent_id: null } } }, {
+                [SlotName.ITEM]: (slotProps: { data: Policy }) => {
+                    const isSelected = currentPolicyId.value === slotProps.data.id;
+
+                    let selectColor: 'neutral' | 'success' = 'neutral';
+                    let selectVariant: 'solid' | 'soft' = 'soft';
+                    if (busy.value) {
+                        selectVariant = 'solid';
+                    } else if (isSelected) {
+                        selectColor = 'success';
+                        selectVariant = 'solid';
+                    }
+
+                    return [
+                        h('div', [slotProps.data.name]),
+                        h(APolicyInlineInfo, {
+                            entity: slotProps.data,
+                            onDetail: (policy: Policy) => {
+                                detailPolicy.value = policy;
+                            },
+                        }),
+                        h('div', { class: 'ms-auto' }, [
+                            h(VCButton, {
+                                size: props.size,
+                                color: selectColor,
+                                variant: selectVariant,
+                                iconLeft: isSelected ? 'fa6-solid:check' : 'fa6-solid:plus',
+                                disabled: busy.value,
+                                onClick(e: Event) {
+                                    e.preventDefault();
+                                    if (isSelected) {
+                                        handlePolicySelect(null);
+                                    } else {
+                                        handlePolicySelect(slotProps.data.id);
+                                    }
+                                },
+                            }),
+                        ]),
+                    ];
+                },
+            }),
+            h('div', { class: 'flex items-center justify-end gap-2' }, [
+                currentPolicyId.value ?
+                    h(VCButton, {
+                        type: 'button',
+                        size: props.size,
+                        color: 'warning',
+                        label: translationReset.value,
+                        disabled: busy.value,
+                        onClick() {
+                            handlePolicySelect(null);
+                        },
+                    }) :
+                    undefined,
+                h(VCButton, {
+                    type: 'button',
+                    size: props.size,
+                    color: 'neutral',
+                    variant: 'soft',
+                    label: translationClose.value,
+                    onClick() {
+                        modalOpen.value = false;
+                    },
+                }),
+            ]),
+        ];
+
+        const renderDetailContent = (policy: Policy) => [
+            h('div', { class: 'flex items-center justify-between gap-2' }, [
+                h(VCModalTitle, () => policy.name),
+                renderCloseIcon(),
+            ]),
+            h(APolicySummary, { entity: policy }),
+            h('div', { class: 'flex items-center justify-end gap-2' }, [
+                h(VCButton, {
+                    type: 'button',
+                    size: props.size,
+                    color: 'neutral',
+                    variant: 'outline',
+                    iconLeft: 'fa6-solid:arrow-left',
+                    label: translationBack.value,
+                    onClick() {
+                        detailPolicy.value = null;
+                    },
+                }),
+            ]),
+        ];
+
+        return () => {
             let triggerColor: 'neutral' | 'primary' = 'neutral';
             let triggerVariant: 'solid' | 'soft' = 'soft';
             if (busy.value) {
@@ -137,160 +220,41 @@ export const APermissionPolicyBindingButton = defineComponent({
                 triggerVariant = 'solid';
             }
 
-            children.push(h(VCButton, {
-                size: props.size,
-                color: triggerColor,
-                variant: triggerVariant,
-                iconLeft: 'fa6-solid:gear',
-                disabled: busy.value,
-                onClick(e: Event) {
-                    e.preventDefault();
-                    modalOpen.value = true;
-                },
-            }));
-
-            if (modalOpen.value) {
-                const backdrop = h('div', {
-                    class: 'modal-backdrop fade show',
-                    onClick() {
-                        if (detailPolicy.value) {
+            return h('span', [
+                h(VCButton, {
+                    size: props.size,
+                    color: triggerColor,
+                    variant: triggerVariant,
+                    iconLeft: 'fa6-solid:gear',
+                    disabled: busy.value,
+                    onClick(e: Event) {
+                        e.preventDefault();
+                        modalOpen.value = true;
+                    },
+                }),
+                h(VCModal, {
+                    open: modalOpen.value,
+                    'onUpdate:open': (value: boolean) => {
+                        modalOpen.value = value;
+                    },
+                }, {
+                    default: () => (modalOpen.value ?
+                        h(VCModalContent, null, { default: () => renderListContent() }) :
+                        undefined),
+                }),
+                h(VCModal, {
+                    open: !!detailPolicy.value,
+                    'onUpdate:open': (value: boolean) => {
+                        if (!value) {
                             detailPolicy.value = null;
-                        } else {
-                            modalOpen.value = false;
                         }
                     },
-                });
-
-                let modalTitle: string;
-                let modalBody;
-                let modalFooter;
-
-                if (detailPolicy.value) {
-                    const policy = detailPolicy.value;
-                    modalTitle = policy.name;
-                    modalBody = h(APolicySummary, { entity: policy });
-                    modalFooter = [
-                        h(VCButton, {
-                            type: 'button',
-                            size: props.size,
-                            color: 'neutral',
-                            variant: 'outline',
-                            iconLeft: 'fa6-solid:arrow-left',
-                            label: translationBack.value,
-                            onClick() {
-                                detailPolicy.value = null;
-                            },
-                        }),
-                    ];
-                } else {
-                    modalTitle = translationJunctionPolicy.value;
-                    modalBody = h(APolicies, { query: { filters: { parent_id: null } } }, {
-                        [SlotName.ITEM]: (slotProps: { data: Policy }) => {
-                            const isSelected = currentPolicyId.value === slotProps.data.id;
-
-                            let selectColor: 'neutral' | 'success' = 'neutral';
-                            let selectVariant: 'solid' | 'soft' = 'soft';
-                            if (busy.value) {
-                                selectVariant = 'solid';
-                            } else if (isSelected) {
-                                selectColor = 'success';
-                                selectVariant = 'solid';
-                            }
-
-                            return [
-                                h('div', [slotProps.data.name]),
-                                h(APolicyInlineInfo, {
-                                    entity: slotProps.data,
-                                    onDetail: (policy: Policy) => {
-                                        detailPolicy.value = policy;
-                                    },
-                                }),
-                                h('div', { class: 'ms-auto' }, [
-                                    h(VCButton, {
-                                        size: props.size,
-                                        color: selectColor,
-                                        variant: selectVariant,
-                                        iconLeft: isSelected ? 'fa6-solid:check' : 'fa6-solid:plus',
-                                        disabled: busy.value,
-                                        onClick(e: Event) {
-                                            e.preventDefault();
-                                            if (isSelected) {
-                                                handlePolicySelect(null);
-                                            } else {
-                                                handlePolicySelect(slotProps.data.id);
-                                            }
-                                        },
-                                    }),
-                                ]),
-                            ];
-                        },
-                    });
-                    modalFooter = [
-                        currentPolicyId.value ?
-                            h(VCButton, {
-                                type: 'button',
-                                size: props.size,
-                                color: 'warning',
-                                label: translationReset.value,
-                                disabled: busy.value,
-                                onClick() {
-                                    handlePolicySelect(null);
-                                },
-                            }) :
-                            undefined,
-                        h(VCButton, {
-                            type: 'button',
-                            size: props.size,
-                            color: 'neutral',
-                            variant: 'soft',
-                            label: translationClose.value,
-                            onClick() {
-                                modalOpen.value = false;
-                            },
-                        }),
-                    ];
-                }
-
-                const modal = h('div', {
-                    class: 'modal fade show d-block',
-                    tabindex: '-1',
-                    role: 'dialog',
-                    'aria-modal': 'true',
-                    'aria-labelledby': modalTitleId,
-                }, [
-                    h('div', {
-                        class: 'modal-dialog',
-                        role: 'document',
-                        onClick(e: Event) {
-                            e.stopPropagation();
-                        },
-                    }, [
-                        h('div', { class: 'modal-content' }, [
-                            h('div', { class: 'modal-header' }, [
-                                h('h5', { class: 'modal-title', id: modalTitleId }, modalTitle),
-                                h('button', {
-                                    type: 'button',
-                                    class: 'btn-close',
-                                    'aria-label': translationClose.value,
-                                    onClick() {
-                                        if (detailPolicy.value) {
-                                            detailPolicy.value = null;
-                                        } else {
-                                            modalOpen.value = false;
-                                        }
-                                    },
-                                }),
-                            ]),
-                            h('div', { class: 'modal-body' }, [modalBody]),
-                            h('div', { class: 'modal-footer' }, modalFooter),
-                        ]),
-                    ]),
-                ]);
-
-                children.push(h(Teleport, { to: 'body' }, [backdrop, modal]));
-            }
-
-            return h('span', children);
+                }, {
+                    default: () => (detailPolicy.value ?
+                        h(VCModalContent, null, { default: () => renderDetailContent(detailPolicy.value as Policy) }) :
+                        undefined),
+                }),
+            ]);
         };
     },
 });

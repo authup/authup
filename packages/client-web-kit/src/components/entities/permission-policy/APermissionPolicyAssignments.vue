@@ -6,18 +6,22 @@
 -->
 
 <script lang="ts">
-/* global document, KeyboardEvent */
 import type { Policy } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import {
     computed,
     defineComponent,
-    onMounted,
-    onUnmounted,
     ref,
 } from 'vue';
 import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
+import { VCIcon } from '@vuecs/icon';
+import {
+    VCModal,
+    VCModalClose,
+    VCModalContent,
+    VCModalTitle,
+} from '@vuecs/overlays';
 import { TranslatorTranslationActionKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { DEFAULT_BUTTON_SIZE, useTranslations } from '../../../core';
 import APermissionPolicyAssignment from './APermissionPolicyAssignment.vue';
@@ -32,6 +36,11 @@ export default defineComponent({
         APolicyInlineInfo,
         APolicySummary,
         VCButton,
+        VCIcon,
+        VCModal,
+        VCModalContent,
+        VCModalTitle,
+        VCModalClose,
     },
     props: {
         entityId: {
@@ -53,26 +62,12 @@ export default defineComponent({
 
         const detailPolicy = ref<Policy | null>(null);
 
-        const handleKeydown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && detailPolicy.value) {
-                detailPolicy.value = null;
-            }
-        };
-
-        onMounted(() => {
-            document.addEventListener('keydown', handleKeydown);
-        });
-
-        onUnmounted(() => {
-            document.removeEventListener('keydown', handleKeydown);
-        });
-
         const forwardedSlots = computed(() => Object.fromEntries(Object.entries(slots).filter(([name]) => name !== 'item')));
 
         return {
-            detailPolicy, 
-            forwardedSlots, 
-            translationsAction, 
+            detailPolicy,
+            forwardedSlots,
+            translationsAction,
         };
     },
 });
@@ -106,57 +101,32 @@ export default defineComponent({
             </template>
         </APolicies>
 
-        <Teleport
-            v-if="detailPolicy"
-            to="body"
+        <VCModal
+            :open="!!detailPolicy"
+            @update:open="(value) => { if (!value) { detailPolicy = null; } }"
         >
-            <div
-                class="modal-backdrop fade show"
-                @click="detailPolicy = null"
-            />
-            <div
-                class="modal fade show block"
-                tabindex="-1"
-                role="dialog"
-                aria-modal="true"
-                :aria-labelledby="`policy-detail-modal-${detailPolicy.id}`"
-            >
-                <div
-                    class="modal-dialog"
-                    role="document"
-                    @click.stop
-                >
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5
-                                :id="`policy-detail-modal-${detailPolicy.id}`"
-                                class="modal-title"
-                            >
-                                {{ detailPolicy.name }}
-                            </h5>
-                            <button
-                                type="button"
-                                class="btn-close"
-                                :aria-label="translationsAction.close"
-                                @click="detailPolicy = null"
-                            />
-                        </div>
-                        <div class="modal-body">
-                            <APolicySummary :entity="detailPolicy" />
-                        </div>
-                        <div class="modal-footer">
-                            <VCButton
-                                type="button"
-                                :size="size"
-                                color="neutral"
-                                variant="soft"
-                                :label="translationsAction.close"
-                                @click="detailPolicy = null"
-                            />
-                        </div>
-                    </div>
+            <VCModalContent v-if="detailPolicy">
+                <div class="flex items-center justify-between gap-2">
+                    <VCModalTitle>{{ detailPolicy.name }}</VCModalTitle>
+                    <VCModalClose
+                        class="text-fg-muted hover:text-fg"
+                        :aria-label="translationsAction.close"
+                    >
+                        <VCIcon name="fa6-solid:xmark" />
+                    </VCModalClose>
                 </div>
-            </div>
-        </Teleport>
+                <APolicySummary :entity="detailPolicy" />
+                <div class="flex items-center justify-end gap-2">
+                    <VCButton
+                        type="button"
+                        :size="size"
+                        color="neutral"
+                        variant="soft"
+                        :label="translationsAction.close"
+                        @click="detailPolicy = null"
+                    />
+                </div>
+            </VCModalContent>
+        </VCModal>
     </div>
 </template>
