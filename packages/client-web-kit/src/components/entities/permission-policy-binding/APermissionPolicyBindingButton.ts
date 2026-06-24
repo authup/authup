@@ -236,6 +236,12 @@ export const APermissionPolicyBindingButton = defineComponent({
                     open: modalOpen.value,
                     'onUpdate:open': (value: boolean) => {
                         modalOpen.value = value;
+                        // Closing the list also discards any open detail view —
+                        // the detail is a sibling VCModal, so clear its state on
+                        // the same close path to keep the two modals in sync.
+                        if (!value) {
+                            detailPolicy.value = null;
+                        }
                     },
                 }, {
                     default: () => (modalOpen.value ?
