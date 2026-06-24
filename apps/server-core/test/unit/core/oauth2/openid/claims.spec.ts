@@ -55,22 +55,12 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
             expect(result.preferred_username).toBe('my-client');
         });
 
-        it('should transform Date updated_at to unix timestamp in seconds per OIDC §5.1', () => {
-            const date = new Date('2025-01-15T12:00:00Z');
-            const client = {
-                name: 'c',
-                updated_at: date, 
-            } as Client;
-            const result = builder.fromClient(client);
-            expect(result.updated_at).toBe(Math.floor(date.getTime() / 1000));
-        });
-
         it('should transform string updated_at to unix timestamp in seconds per OIDC §5.1', () => {
             const dateStr = '2025-01-15T12:00:00Z';
             const client = {
                 name: 'c',
-                updated_at: dateStr, 
-            } as unknown as Client;
+                updated_at: dateStr,
+            } as Client;
             const result = builder.fromClient(client);
             expect(result.updated_at).toBe(Math.floor(new Date(dateStr).getTime() / 1000));
         });
@@ -92,14 +82,14 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
             expect(result.preferred_username).toBe('my-robot');
         });
 
-        it('should transform Date updated_at to unix timestamp in seconds per OIDC §5.1', () => {
-            const date = new Date('2025-06-01T00:00:00Z');
+        it('should transform string updated_at to unix timestamp in seconds per OIDC §5.1', () => {
+            const dateStr = '2025-06-01T00:00:00Z';
             const robot = {
                 name: 'r',
-                updated_at: date, 
+                updated_at: dateStr,
             } as Robot;
             const result = builder.fromRobot(robot);
-            expect(result.updated_at).toBe(Math.floor(date.getTime() / 1000));
+            expect(result.updated_at).toBe(Math.floor(new Date(dateStr).getTime() / 1000));
         });
 
         it('should not have email or family_name', () => {
@@ -132,17 +122,17 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
             expect(result.email_verified).toBe(true);
         });
 
-        it('should transform Date updated_at to unix timestamp in seconds per OIDC §5.1', () => {
-            const date = new Date('2025-03-01T10:30:00Z');
+        it('should transform string updated_at to unix timestamp in seconds per OIDC §5.1', () => {
+            const dateStr = '2025-03-01T10:30:00Z';
             const user = {
                 name: 'u',
-                updated_at: date, 
+                updated_at: dateStr,
             } as User;
             const result = builder.fromUser(user);
-            expect(result.updated_at).toBe(Math.floor(date.getTime() / 1000));
+            expect(result.updated_at).toBe(Math.floor(new Date(dateStr).getTime() / 1000));
         });
 
-        it('should pass through non-Date non-string updated_at', () => {
+        it('should pass through non-string updated_at', () => {
             const user = {
                 name: 'u',
                 updated_at: 1234567890, 
