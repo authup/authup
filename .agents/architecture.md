@@ -712,20 +712,42 @@ if (!validated.realm_id && actor.identity) {
 
 To create a global entity (`realm_id: null`), the caller must explicitly pass `realm_id: null`. The policy engine controls whether the actor is authorized to do so.
 
-### Policy-Based Access Control
+### Realm reach is a coarse `realm_scope` enum on the grant (NOT a policy)
 
-There is no special "master realm" bypass. Access control is entirely policy-driven:
+There is no special "master realm" bypass, and realm reach is **not** a policy. Each
+permission-junction row (`role/user/client/robot_permission`) carries a `realm_scope`
+enum column (`@authup/access` `RealmScope`), a coarse, **actor-relative** reach with a
+total order and a fail-closed default:
 
-- `system.realm-match` policy with `attribute_null_match_all: true` allows any realm to access global entities (`realm_id: null`)
-- `system.realm-match` policy with `identity_master_match_all: false` — no special master realm privileges
-- `system.realm-bound` policy (ATTRIBUTES type: `{ realm_id: { $ne: null } }`) restricts actors to realm-scoped entities only
+| `realm_scope` | matches resource realm `R` vs actor realm `A` | who |
+|---|---|---|
+| **`own`** (default) | `R === A` only — own realm, not null, not other realms | safe default; `realm_admin` writes |
+| **`own_or_null`** | `R === A` or `R === null` (global/null resources) | `realm_admin` reads (use global building blocks) |
+| **`any`** | always — any realm incl. null | `admin` |
+
+It is enforced inside the server-core `PermissionBindingPolicyEvaluator` (a separate
+factor, ANDed with the junction's `policy_id` policies), and **only when the resource
+carries a `realm_id` attribute** — entity resources are gated; junction rows (which have
+no `realm_id`, only `owner_realm_id`/`permission_realm_id`) neutral-pass, exactly as the
+old realm-match did when no realm key was present. A **realm-less / anonymous** actor can
+never satisfy `own`/`own_or_null` (only `any`), and the factor is skipped entirely on
+`preEvaluate` / gate checks (no ATTRIBUTES). Merge across an actor's grants = ordered
+**MAX** (most permissive wins), so an admin's `any` dominates a stray `own` grant.
+`policy_id` remains for **additional** restrictions ANDed on top (e.g. a specific
+realm-id allowlist via an `ATTRIBUTES` policy `{ realm_id: { $in: [...] } }`).
+
+**Propagation CAPs, not inherits**: a creator may only stamp a `realm_scope` ≤ its own
+ceiling for that permission; only an `any`-scoped actor may set an explicit `policy_id`
+(a restricted actor's explicit `policy_id` on create/update is ignored — no widen via
+attach/detach). `isSuperset` additionally requires the parent's `realm_scope` ≥ the
+child's per permission.
 
 ### Admin Roles
 
-| Role | Scope | Junction Policy |
+| Role | Scope | Realm reach (junction `realm_scope`) |
 |------|-------|-----------------|
-| `admin` | All permissions, no restrictions | None |
-| `realm_admin` | All permissions except `realm_create`, `realm_update`, `realm_delete` | `system.realm-bound` on each role-permission entry |
+| `admin` | All permissions, no restrictions | `any` — acts on all realms + `null` global, **from an identity in ANY realm** |
+| `realm_admin` | All permissions except `realm_create`, `realm_update`, `realm_delete` | `own_or_null` (reads) / `own` (direct entity CUD) |
 
 ### Nested Route Mounting
 
@@ -746,7 +768,7 @@ This applies to the six controllers that read realm context: `client`, `robot`, 
 
 **Route-realm precedence (writes)**: controllers call `applyRouteRealmIDToBody(event, data)` at the top of `add`/`edit`/`put` (and inside `IdentityProviderController.write()`). When the route has `:realmId`, the helper overwrites `data.realm_id` with the route value — *route wins silently over body* (no `BadRequestError` for mismatch; the body value is simply discarded).
 
-**Permission model is unchanged**. `system.realm-match` still evaluates against the resolved `entity.realm_id`. Mounting `/realms/:realmId/users` does not grant cross-realm write access; an admin-in-master cannot create users in another realm regardless of which prefix is used. The dual mount is a routing convenience, not an authorization shortcut.
+**Permission model**: the `realm_scope` enum evaluates against the resolved `entity.realm_id`. Mounting `/realms/:realmId/users` does not by itself grant cross-realm write access — the dual mount is a routing convenience, not an authorization shortcut. The global `admin` role (`realm_scope: any`) **can** act cross-realm from any realm; a `realm_admin` (`own`/`own_or_null`) cannot. (Route-realm precedence still applies to the body `realm_id`.)
 
 **`RealmController` is unaffected**: the middleware is mounted at `/realms/:realmId/:nested` (not just `/realms/:realmId`) so it only fires when there's at least one path segment after `:realmId`. Bare realm CRUD routes (`GET/POST/PUT/DELETE /realms/:id`) and sub-resource routes that belong to `RealmController` itself (`/realms/:id/.well-known/openid-configuration`, `/realms/:id/jwks`, `/realms/:id/jwks/:keyId`) are not intercepted. This is important for `PUT /realms/:id` upsert semantics — an unknown realm name in the path is a valid "create" intent, not a lookup miss.
 
@@ -760,14 +782,20 @@ Permissions reference policies through a junction table (`auth_permission_polici
 Layer 1: Permission-level policies (from auth_permission_policies)
   └── system.default (composite, UNANIMOUS)
         ├── system.identity
-        ├── system.permission-binding
-        └── system.realm-match
+        └── system.permission-binding   (also enforces the realm_scope enum + Layer-2 policy)
 
-Layer 2: Junction-level policy (from role-permission.policy_id, user-permission.policy_id, etc.)
-  └── e.g. system.realm-bound
+Layer 2: per-grant junction (from role-permission.policy_id + realm_scope, etc.)
+  ├── realm_scope enum  (coarse realm reach — own / own_or_null / any)
+  └── policy_id policy  (optional additional ATTRIBUTES/IDENTITY restriction)
 ```
 
-Both layers must pass for access to be granted. Layer 1 is evaluated by the `PermissionEvaluator` in `@authup/access`. Layer 2 is evaluated by the server-core `PermissionBindingPolicyEvaluator`.
+Both layers must pass for access to be granted. Layer 1 is evaluated by the
+`PermissionEvaluator` in `@authup/access`. The server-core `PermissionBindingPolicyEvaluator`
+(invoked via `system.permission-binding`) loads the actor's grants, folds their `realm_scope`
+by ordered-MAX and matches it against the resource `realm_id` (when present), and evaluates
+the merged `policy_id` policies — both must pass. The baseline `system.realm-match` child and
+the `system.realm-bound` / `system.realm-or-global` policies were **removed** in favour of the
+enum; the `REALM_MATCH` policy *type* is retained for user-defined actor-relative policies.
 
 ### PermissionBinding Type
 

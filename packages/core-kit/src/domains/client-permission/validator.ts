@@ -34,5 +34,11 @@ export class ClientPermissionValidator extends Container<
             { optional: true },
             createValidator(z.uuid().nullable()),
         );
+
+        this.mount(
+            'realm_scope',
+            { optional: true },
+            createValidator(z.enum(['own', 'own_or_null', 'any'])),
+        );
     }
 }

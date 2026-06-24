@@ -30,7 +30,6 @@ export default defineComponent({
         const form = reactive({
             attribute_name_strict: false,
             attribute_null_match_all: false,
-            identity_master_match_all: false,
             attribute_name: [] as string[],
         });
 
@@ -128,28 +127,6 @@ export default defineComponent({
                         <template #label="iProps">
                             <label :for="iProps.id">
                                 <ITranslateT path="authupClient.realmMatchNullMatchAllHint">
-                                    <template #br>
-                                        <br>
-                                    </template>
-                                </ITranslateT>
-                            </label>
-                        </template>
-                    </VCFormSwitch>
-                </VCFormGroup>
-            </IFieldValidation>
-            <IFieldValidation
-                v-slot="{ value }"
-                :field="v.fields.identity_master_match_all"
-            >
-                <VCFormGroup :validation="value">
-                    <VCFormSwitch
-                        v-model="v.fields.identity_master_match_all.$model.value"
-                        :label="true"
-                        @change="handleUpdated"
-                    >
-                        <template #label="iProps">
-                            <label :for="iProps.id">
-                                <ITranslateT path="authupClient.realmMatchMasterMatchAllHint">
                                     <template #br>
                                         <br>
                                     </template>

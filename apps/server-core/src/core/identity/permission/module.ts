@@ -9,7 +9,13 @@ import type {
     IdentityPolicyData,
     PermissionPolicyBinding,
 } from '@authup/access';
-import { isPermissionPolicyBindingEqual, mergePermissionPolicyBindings } from '@authup/access';
+import {
+    RealmScope,
+    compareRealmScope,
+    isPermissionPolicyBindingEqual,
+    maxRealmScope,
+    mergePermissionPolicyBindings,
+} from '@authup/access';
 import type { Policy } from '@authup/core-kit';
 import { isPolicy } from '@authup/core-kit';
 import type { IClientRepository } from '../../entities/client/types.ts';
@@ -20,6 +26,7 @@ import type { IIdentityRoleProvider } from '../role/types.ts';
 import type {
     IIdentityPermissionProvider,
     IdentityPermissionProviderContext,
+    ResolveJunctionGrantResult,
     ResolveJunctionPolicyOptions,
 } from './types.ts';
 
@@ -64,15 +71,23 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             ) {
                 return false;
             }
+
+            // Realm reach: the parent must own a scope at least as permissive as
+            // the child's (ordinal comparison only — never scopeMatches here, the
+            // role child carries no actor realm). Merged bindings always carry a
+            // coerced realm_scope (default own), so this never over-passes on undefined.
+            if (compareRealmScope(parentItem.realm_scope, childItem.realm_scope) < 0) {
+                return false;
+            }
         }
 
         return true;
     }
 
-    async resolveJunctionPolicy(
+    async resolveJunctionGrant(
         identity: IdentityPolicyData,
         options: ResolveJunctionPolicyOptions,
-    ): Promise<Policy | undefined> {
+    ): Promise<ResolveJunctionGrantResult> {
         const bindings = await this.getFor(identity);
         const matching = bindings.filter((b) => {
             if (b.permission.name !== options.name) {
@@ -95,19 +110,21 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         });
 
         if (matching.length === 0) {
-            return undefined;
+            return { realmScope: RealmScope.OWN };
         }
 
         const merged = mergePermissionPolicyBindings(matching);
+        const realmScope = maxRealmScope(merged.map((b) => b.realm_scope));
 
+        let policy: Policy | undefined;
         if (merged.length > 0 && merged[0].policies && merged[0].policies.length > 0) {
-            const policy = merged[0].policies[0];
-            if (isPolicy(policy)) {
-                return policy;
+            const candidate = merged[0].policies[0];
+            if (isPolicy(candidate)) {
+                policy = candidate;
             }
         }
 
-        return undefined;
+        return { policy, realmScope };
     }
 
     async getFor(identity: IdentityPolicyData) : Promise<PermissionPolicyBinding[]> {

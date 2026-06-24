@@ -46,6 +46,13 @@ export class ClientPermissionEntity implements ClientPermission {
     @JoinColumn({ name: 'policy_id' })
     policy: Policy | null;
 
+    @Column({
+        type: 'varchar',
+        length: 50,
+        default: 'own',
+    })
+    realm_scope: 'own' | 'own_or_null' | 'any';
+
     @Column()
     client_id: string;
 

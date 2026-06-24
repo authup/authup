@@ -7,8 +7,10 @@
 
 import type { Policy } from '@authup/core-kit';
 import type { IdentityPolicyData, PermissionPolicyBinding } from '@authup/access';
+import { RealmScope } from '@authup/access';
 import type {
     IIdentityPermissionProvider,
+    ResolveJunctionGrantResult,
     ResolveJunctionPolicyOptions,
 } from '../../../../src/core/identity/permission/types.ts';
 
@@ -18,6 +20,8 @@ export class FakeIdentityPermissionProvider implements IIdentityPermissionProvid
     private bindings: PermissionPolicyBinding[] = [];
 
     private junctionPolicy: Policy | undefined;
+
+    private junctionRealmScope: RealmScope = RealmScope.ANY;
 
     setSuperset(value: boolean) {
         this.supersetResult = value;
@@ -31,6 +35,10 @@ export class FakeIdentityPermissionProvider implements IIdentityPermissionProvid
         this.junctionPolicy = policy;
     }
 
+    setJunctionRealmScope(scope: RealmScope) {
+        this.junctionRealmScope = scope;
+    }
+
     async getFor(_identity: IdentityPolicyData): Promise<PermissionPolicyBinding[]> {
         return this.bindings;
     }
@@ -39,10 +47,13 @@ export class FakeIdentityPermissionProvider implements IIdentityPermissionProvid
         return this.supersetResult;
     }
 
-    async resolveJunctionPolicy(
+    async resolveJunctionGrant(
         _identity: IdentityPolicyData,
         _options: ResolveJunctionPolicyOptions,
-    ): Promise<Policy | undefined> {
-        return this.junctionPolicy;
+    ): Promise<ResolveJunctionGrantResult> {
+        return {
+            policy: this.junctionPolicy,
+            realmScope: this.junctionRealmScope,
+        };
     }
 }

@@ -15,6 +15,13 @@ export interface PermissionRelation {
 
     policy: Policy | null;
 
+    /**
+     * Coarse, actor-relative realm reach of this grant. Fail-closed default `own`.
+     * Mirrors the `RealmScope` enum in `@authup/access` (single logic source of
+     * truth); the three string values must agree.
+     */
+    realm_scope: 'own' | 'own_or_null' | 'any';
+
     permission_id: Permission['id'];
 
     permission: Permission;

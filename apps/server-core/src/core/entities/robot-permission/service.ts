@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import {
+    BuiltInPolicyType, 
+    PolicyData, 
+    RealmScope, 
+    minRealmScope,
+} from '@authup/access';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
 import { PermissionName, RobotPermissionValidator } from '@authup/core-kit';
@@ -99,12 +104,8 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
             validated.robot_realm_id = validated.robot.realm_id;
         }
 
-        if (
-            validated.permission &&
-            actor.identity &&
-            typeof validated.policy_id === 'undefined'
-        ) {
-            const junctionPolicy = await this.identityPermissionProvider.resolveJunctionPolicy(
+        if (validated.permission && actor.identity) {
+            const grant = await this.identityPermissionProvider.resolveJunctionGrant(
                 {
                     type: actor.identity.type,
                     id: actor.identity.data.id,
@@ -115,8 +116,13 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
                     clientId: validated.permission.client_id,
                 },
             );
-            if (junctionPolicy) {
-                validated.policy_id = junctionPolicy.id;
+
+            // CAP the grant's realm reach to the actor's own ceiling; default `own`.
+            validated.realm_scope = minRealmScope(validated.realm_scope ?? RealmScope.OWN, grant.realmScope);
+
+            // Only an unrestricted (`any`) actor may set policy_id explicitly.
+            if (grant.realmScope !== RealmScope.ANY) {
+                validated.policy_id = grant.policy ? grant.policy.id : null;
             }
         }
 
@@ -143,8 +149,34 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
             throw new EntityNotFoundError();
         }
 
+        let actorScope: RealmScope = RealmScope.ANY;
+        if (actor.identity) {
+            actorScope = RealmScope.OWN;
+            const lookup: Record<string, any> = { permission_id: entity.permission_id };
+            await this.repository.validateJoinColumns(lookup);
+            if (lookup.permission) {
+                const grant = await this.identityPermissionProvider.resolveJunctionGrant(
+                    { type: actor.identity.type, id: actor.identity.data.id },
+                    {
+                        name: lookup.permission.name,
+                        realmId: lookup.permission.realm_id,
+                        clientId: lookup.permission.client_id,
+                    },
+                );
+                actorScope = grant.realmScope;
+            }
+        }
+
         const updateData: Record<string, any> = {};
-        if (Object.prototype.hasOwnProperty.call(data, 'policy_id')) {
+
+        if (Object.prototype.hasOwnProperty.call(data, 'realm_scope')) {
+            updateData.realm_scope = minRealmScope(data.realm_scope ?? RealmScope.OWN, actorScope);
+        }
+
+        if (
+            Object.prototype.hasOwnProperty.call(data, 'policy_id') &&
+            actorScope === RealmScope.ANY
+        ) {
             updateData.policy_id = data.policy_id;
         }
 

@@ -58,19 +58,6 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
             };
         }
 
-        const identityMasterMatchAll = policy.identity_master_match_all ?? true;
-        if (
-            identityMasterMatchAll &&
-            identity.realmName &&
-            identity.realmName === 'master'
-        ) {
-            // Master-match-all is a privileged-actor override — do NOT apply
-            // `invert`. Inverting would deny master access whenever the policy
-            // is configured as a denylist, which is the opposite of the flag's
-            // intent.
-            return { success: true };
-        }
-
         let keys : string[];
         if (policy.attribute_name) {
             if (Array.isArray(policy.attribute_name)) {

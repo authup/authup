@@ -6,7 +6,7 @@
  */
 
 import type { Identity } from '@authup/core-kit';
-import { IdentityType, REALM_MASTER_NAME } from '@authup/core-kit';
+import { IdentityType } from '@authup/core-kit';
 import { UnauthorizedError } from '@authup/errors';
 import type { IAppEvent } from 'routup';
 
@@ -72,8 +72,4 @@ export function useRequestIdentityOrFail(event: IAppEvent) : RequestIdentity {
     }
 
     return identity;
-}
-
-export function isRequestIdentityMasterRealmMember(input: RequestIdentity) : boolean {
-    return input.realmName === REALM_MASTER_NAME;
 }

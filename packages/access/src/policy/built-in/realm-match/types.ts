@@ -29,11 +29,5 @@ export interface RealmMatchPolicy extends BasePolicy {
      * Determines if resources with null realm-id/name value should match all identity realms.
      * If true, any identity realm can access resources with null realm-id/name values.
      */
-    attribute_null_match_all?: boolean,
-
-    /**
-     * Specifies whether the master realm of an identity should match all realm-id/name attributes, including null.
-     * If true, the master realm can access any resource regardless of its realm value.
-     */
-    identity_master_match_all?: boolean
+    attribute_null_match_all?: boolean
 }

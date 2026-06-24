@@ -54,7 +54,6 @@ export const TranslatorTranslationClientFrench : NamespaceTranslations<`${Transl
 
     [TranslatorTranslationClientKey.REALM_MATCH_STRICT_HINT]: 'Ne correspondre que si l\'attribut est strictement égal au nom ?',
     [TranslatorTranslationClientKey.REALM_MATCH_NULL_MATCH_ALL_HINT]: 'Détermine si les ressources dont la valeur realm-id/nom est nulle correspondent à tous les realms d\'identité.{br}Si activé, tout realm d\'identité peut accéder aux ressources dont les valeurs realm-id/nom sont nulles.',
-    [TranslatorTranslationClientKey.REALM_MATCH_MASTER_MATCH_ALL_HINT]: 'Indique si le realm maître d\'une identité correspond à tous les attributs realm-id/nom, y compris nuls.{br}Si activé, le realm maître peut accéder à toute ressource quelle que soit la valeur de son realm.',
 
     [TranslatorTranslationClientKey.ENABLE_STARTTLS_HINT]: 'Activer le processus StartTLS ?',
     [TranslatorTranslationClientKey.PASSWORD_MUST_MATCH]: 'Doit correspondre au mot de passe.',

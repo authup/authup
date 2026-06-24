@@ -7,6 +7,7 @@
 
 import { DecisionStrategy } from '@authup/kit';
 import type { BasePolicy } from '../../policy';
+import { maxRealmScope } from '../realm-scope.ts';
 import type { PermissionPolicyBinding } from '../types';
 import { buildPermissionKey } from './key';
 
@@ -35,7 +36,12 @@ export function mergePermissionPolicyBindings(input: PermissionPolicyBinding[]) 
         const first = group[0]!;
 
         if (group.length === 1) {
-            output.push(first);
+            // Carry an explicit, coerced realm_scope so downstream consumers
+            // (evaluator, isSuperset) never see undefined (fail-closed default).
+            output.push({
+                ...first,
+                realm_scope: maxRealmScope([first.realm_scope]),
+            });
             continue;
         }
 
@@ -76,6 +82,10 @@ export function mergePermissionPolicyBindings(input: PermissionPolicyBinding[]) 
                 decision_strategy: DecisionStrategy.AFFIRMATIVE,
             },
             policies: mergedPolicies,
+            // Realm reach folds by ordered-MAX (most permissive wins) — a separate
+            // algebra from the AFFIRMATIVE policy composite above, independent of the
+            // fail-open "any binding without policies => unrestricted" policy rule.
+            realm_scope: maxRealmScope(group.map((element) => element.realm_scope)),
         });
     }
 

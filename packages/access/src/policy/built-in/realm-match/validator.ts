@@ -56,16 +56,6 @@ export class RealmMatchPolicyValidator extends Container<RealmMatchPolicy> {
         );
 
         this.mount(
-            'identity_master_match_all',
-            createValidator(
-                z.boolean()
-                    .or(z.null())
-                    .or(z.undefined())
-                    .optional(),
-            ),
-        );
-
-        this.mount(
             'invert',
             createValidator(
                 z.boolean()

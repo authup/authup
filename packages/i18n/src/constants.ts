@@ -73,7 +73,6 @@ export enum TranslatorTranslationClientKey {
 
     REALM_MATCH_STRICT_HINT = 'realmMatchStrictHint',
     REALM_MATCH_NULL_MATCH_ALL_HINT = 'realmMatchNullMatchAllHint',
-    REALM_MATCH_MASTER_MATCH_ALL_HINT = 'realmMatchMasterMatchAllHint',
 
     ENABLE_STARTTLS_HINT = 'enableStartTlsHint',
     PASSWORD_MUST_MATCH = 'passwordMustMatch',

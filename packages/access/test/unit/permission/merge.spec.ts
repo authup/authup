@@ -8,7 +8,7 @@
 import { describe, expect, it } from 'vitest';
 import type { PermissionPolicyBinding } from '../../../src';
 import { DecisionStrategy } from '@authup/kit';
-import { BuiltInPolicyType, mergePermissionPolicyBindings } from '../../../src';
+import { BuiltInPolicyType, RealmScope, mergePermissionPolicyBindings } from '../../../src';
 
 describe('src/permission/helpers/merge', () => {
     it('should return single item unchanged', () => {
@@ -163,5 +163,53 @@ describe('src/permission/helpers/merge', () => {
         const result = mergePermissionPolicyBindings(items);
         expect(result).toHaveLength(1);
         expect(result[0].policies).toBeUndefined();
+    });
+
+    it('should fold realm_scope by ordered-MAX across grants', () => {
+        const items: PermissionPolicyBinding[] = [
+            {
+                permission: { name: 'user_read' },
+                policies: [{ type: BuiltInPolicyType.IDENTITY }],
+                realm_scope: RealmScope.OWN,
+            },
+            {
+                permission: { name: 'user_read' },
+                policies: [{ type: BuiltInPolicyType.REALM_MATCH }],
+                realm_scope: RealmScope.ANY,
+            },
+        ];
+
+        const result = mergePermissionPolicyBindings(items);
+        expect(result).toHaveLength(1);
+        expect(result[0].realm_scope).toBe(RealmScope.ANY);
+    });
+
+    it('should coerce a missing realm_scope to own on a single binding', () => {
+        const items: PermissionPolicyBinding[] = [
+            { permission: { name: 'user_read' } },
+        ];
+
+        const result = mergePermissionPolicyBindings(items);
+        expect(result[0].realm_scope).toBe(RealmScope.OWN);
+    });
+
+    it('should fold realm_scope independently of the fail-open policy merge', () => {
+        // {any, no-policy} + {own, policy} => scope MAX = any, policies undefined (fail-open).
+        const items: PermissionPolicyBinding[] = [
+            {
+                permission: { name: 'user_read' },
+                realm_scope: RealmScope.ANY,
+            },
+            {
+                permission: { name: 'user_read' },
+                policies: [{ type: BuiltInPolicyType.IDENTITY }],
+                realm_scope: RealmScope.OWN,
+            },
+        ];
+
+        const result = mergePermissionPolicyBindings(items);
+        expect(result).toHaveLength(1);
+        expect(result[0].policies).toBeUndefined();
+        expect(result[0].realm_scope).toBe(RealmScope.ANY);
     });
 });

@@ -5,13 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import {
+    BuiltInPolicyType, 
+    PolicyData, 
+    RealmScope, 
+    minRealmScope,
+} from '@authup/access';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
-import { 
-    PermissionName, 
-    ROLE_ADMIN_NAME, 
-    RolePermissionValidator, 
+import {
+    PermissionName,
+    RolePermissionValidator,
 } from '@authup/core-kit';
 import type { RolePermission } from '@authup/core-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
@@ -92,25 +96,20 @@ export class RolePermissionService extends AbstractEntityService implements IRol
         if (validated.permission) {
             validated.permission_realm_id = validated.permission.realm_id;
 
-            if (!validated.role || validated.role.name !== ROLE_ADMIN_NAME) {
-                await actor.permissionEvaluator.preEvaluate({
-                    name: validated.permission.name,
-                    realmId: validated.permission.realm_id,
-                    clientId: validated.permission.client_id,
-                });
-            }
+            // Q4: the superset gate runs uniformly — no ROLE_ADMIN_NAME bypass.
+            await actor.permissionEvaluator.preEvaluate({
+                name: validated.permission.name,
+                realmId: validated.permission.realm_id,
+                clientId: validated.permission.client_id,
+            });
         }
 
         if (validated.role) {
             validated.role_realm_id = validated.role.realm_id;
         }
 
-        if (
-            validated.permission &&
-            actor.identity &&
-            typeof validated.policy_id === 'undefined'
-        ) {
-            const junctionPolicy = await this.identityPermissionProvider.resolveJunctionPolicy(
+        if (validated.permission && actor.identity) {
+            const grant = await this.identityPermissionProvider.resolveJunctionGrant(
                 {
                     type: actor.identity.type,
                     id: actor.identity.data.id,
@@ -121,8 +120,16 @@ export class RolePermissionService extends AbstractEntityService implements IRol
                     clientId: validated.permission.client_id,
                 },
             );
-            if (junctionPolicy) {
-                validated.policy_id = junctionPolicy.id;
+
+            // CAP the grant's realm reach to the actor's own ceiling (a creator may
+            // not grant broader than it holds); default to the most restrictive `own`.
+            validated.realm_scope = minRealmScope(validated.realm_scope ?? RealmScope.OWN, grant.realmScope);
+
+            // Only an unrestricted (`any`) actor may set policy_id explicitly; a
+            // restricted actor silently inherits its own grant's policy (cannot
+            // attach an unowned policy nor detach to widen).
+            if (grant.realmScope !== RealmScope.ANY) {
+                validated.policy_id = grant.policy ? grant.policy.id : null;
             }
         }
 
@@ -149,8 +156,41 @@ export class RolePermissionService extends AbstractEntityService implements IRol
             throw new EntityNotFoundError();
         }
 
+        // Resolve the actor's ceiling for this junction's permission (the existing
+        // entity only carries scalar FKs — load the permission relation to derive it).
+        // No actor identity (system context) is not realm-gated here; the operation is
+        // still authorized by the evaluate() below.
+        let actorScope: RealmScope = RealmScope.ANY;
+        if (actor.identity) {
+            actorScope = RealmScope.OWN;
+            const lookup: Record<string, any> = { permission_id: entity.permission_id };
+            await this.repository.validateJoinColumns(lookup);
+            if (lookup.permission) {
+                const grant = await this.identityPermissionProvider.resolveJunctionGrant(
+                    { type: actor.identity.type, id: actor.identity.data.id },
+                    {
+                        name: lookup.permission.name,
+                        realmId: lookup.permission.realm_id,
+                        clientId: lookup.permission.client_id,
+                    },
+                );
+                actorScope = grant.realmScope;
+            }
+        }
+
         const updateData: Record<string, any> = {};
-        if (Object.prototype.hasOwnProperty.call(data, 'policy_id')) {
+
+        if (Object.prototype.hasOwnProperty.call(data, 'realm_scope')) {
+            // CAP to the actor's ceiling — a restricted actor may narrow but never widen.
+            updateData.realm_scope = minRealmScope(data.realm_scope ?? RealmScope.OWN, actorScope);
+        }
+
+        // Only an unrestricted (`any`) actor may change policy_id (incl. detaching to
+        // null); a restricted actor's policy_id change is silently ignored.
+        if (
+            Object.prototype.hasOwnProperty.call(data, 'policy_id') &&
+            actorScope === RealmScope.ANY
+        ) {
             updateData.policy_id = data.policy_id;
         }
 

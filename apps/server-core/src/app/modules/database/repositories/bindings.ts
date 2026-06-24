@@ -12,7 +12,8 @@ import type {
     FindOptionsWhere,
     ObjectLiteral,
 } from 'typeorm';
-import type { BasePolicy, PermissionPolicyBinding } from '@authup/access';
+import type { BasePolicy, PermissionPolicyBinding, RealmScopeValue } from '@authup/access';
+import { RealmScope } from '@authup/access';
 import type { Permission } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import { PolicyRepository } from '../../../../adapters/database/domains/policy/index.ts';
@@ -28,6 +29,7 @@ export type LoadBoundPermissionsOptions<E extends ObjectLiteral> = {
 type PermissionJunction = {
     permission: Permission;
     policy_id?: string | null;
+    realm_scope?: RealmScopeValue | null;
 };
 
 export async function loadBoundPermissions<E extends PermissionJunction & ObjectLiteral>(
@@ -63,6 +65,9 @@ export async function loadBoundPermissions<E extends PermissionJunction & Object
         return {
             permission: entry.permission,
             policies: policies.length > 0 ? policies : undefined,
+            // Fail-closed coercion: a missing column (stale cache / pre-migration row)
+            // becomes the most restrictive `own`.
+            realm_scope: entry.realm_scope ?? RealmScope.OWN,
         };
     });
 }

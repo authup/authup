@@ -46,6 +46,13 @@ export class RobotPermissionEntity implements RobotPermission {
     @JoinColumn({ name: 'policy_id' })
     policy: Policy | null;
 
+    @Column({
+        type: 'varchar',
+        length: 50,
+        default: 'own',
+    })
+    realm_scope: 'own' | 'own_or_null' | 'any';
+
     @Column()
     robot_id: string;
 

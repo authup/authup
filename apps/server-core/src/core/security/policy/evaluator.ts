@@ -21,8 +21,10 @@ import {
     PolicyEngine,
     PolicyIssueCode,
     definePolicyIssueItem,
+    maxRealmScope,
     maybeInvertPolicyOutcome,
     mergePermissionPolicyBindings,
+    realmScopeMatches,
 } from '@authup/access';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 
@@ -106,6 +108,28 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
         const bindingsMerged = mergePermissionPolicyBindings(identityBindings);
         if (bindingsMerged.length === 0) {
             return { success: maybeInvertPolicyOutcome(false, policy.invert) };
+        }
+
+        // Realm reach (coarse, actor-relative) — enforced as a separate factor from
+        // the policy_id policies below, ANDed with them. It runs ONLY when the
+        // resource ATTRIBUTES carry a `realm_id`. On preEvaluate / gate checks
+        // ATTRIBUTES is absent (excluded), so the factor neutral-passes — without this
+        // every write/read gate would deny. It also neutral-passes for resources that
+        // are not keyed by their own `realm_id` (e.g. permission-junction rows, which
+        // carry only owner_realm_id / permission_realm_id) — mirroring the prior
+        // realm-match behaviour of a neutral pass when no realm key is present.
+        const attributes = await this.attributesEvaluator.accessData(ctx) as Record<string, any> | null;
+        if (attributes && Object.prototype.hasOwnProperty.call(attributes, 'realm_id')) {
+            const realmScope = maxRealmScope(bindingsMerged.map((b) => b.realm_scope));
+            const matches = realmScopeMatches(
+                realmScope,
+                attributes.realm_id ?? null,
+                identity.realmId,
+                identity.realmName,
+            );
+            if (!matches) {
+                return { success: maybeInvertPolicyOutcome(false, policy.invert) };
+            }
         }
 
         const policies : BasePolicy[] = bindingsMerged
