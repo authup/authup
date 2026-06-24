@@ -16,6 +16,7 @@ import {
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
+import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type { Realm, Scope } from '@authup/core-kit';
 import { RealmEntity } from '../realm/index.ts';
 
@@ -52,10 +53,10 @@ export class ScopeEntity implements Scope {
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn()
+    @CreateDateColumn({ transformer: dateToISOStringTransformer })
     created_at: string;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
     updated_at: string;
 
     // ------------------------------------------------------------------

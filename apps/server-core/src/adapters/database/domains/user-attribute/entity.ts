@@ -15,6 +15,7 @@ import {
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
+import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type { Realm, User, UserAttribute } from '@authup/core-kit';
 import { deserialize, serialize } from '@authup/kit';
 import { RealmEntity } from '../realm/index.ts';
@@ -64,9 +65,9 @@ export class UserAttributeEntity implements UserAttribute {
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn()
+    @CreateDateColumn({ transformer: dateToISOStringTransformer })
     created_at: string;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
     updated_at: string;
 }

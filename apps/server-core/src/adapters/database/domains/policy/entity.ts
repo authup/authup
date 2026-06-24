@@ -19,6 +19,7 @@ import {
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
+import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type { Policy, Realm } from '@authup/core-kit';
 import { RealmEntity } from '../realm/index.ts';
 
@@ -91,9 +92,9 @@ export class PolicyEntity implements Policy {
     @JoinColumn({ name: 'realm_id' })
     realm: Realm | null;
 
-    @CreateDateColumn()
+    @CreateDateColumn({ transformer: dateToISOStringTransformer })
     created_at: string;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
     updated_at: string;
 }

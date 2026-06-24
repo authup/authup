@@ -12,9 +12,9 @@ import type { Realm } from '../realm';
 export interface IdentityProviderRoleMapping extends IdentityProviderBaseMapping {
     id: string;
 
-    created_at: Date;
+    created_at: string;
 
-    updated_at: Date;
+    updated_at: string;
 
     // -----------------------------------------------
 

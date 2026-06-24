@@ -16,6 +16,7 @@ import {
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
+import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type {
     IdentityProvider,
     IdentityProviderPreset,
@@ -63,10 +64,10 @@ export class IdentityProviderEntity implements IdentityProvider {
     })
     enabled: boolean;
 
-    @CreateDateColumn()
+    @CreateDateColumn({ transformer: dateToISOStringTransformer })
     created_at: string;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
     updated_at: string;
 
     @Index()

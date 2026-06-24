@@ -15,6 +15,7 @@ import {
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
+import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type { Realm, Role, RoleAttribute } from '@authup/core-kit';
 import {
     deserialize,
@@ -70,9 +71,9 @@ export class RoleAttributeEntity implements RoleAttribute {
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn()
+    @CreateDateColumn({ transformer: dateToISOStringTransformer })
     created_at: string;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
     updated_at: string;
 }

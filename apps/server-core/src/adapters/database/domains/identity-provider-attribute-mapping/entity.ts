@@ -15,6 +15,7 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
+import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type { IdentityProviderAttributeMapping, IdentityProviderMappingSyncMode, Realm } from '@authup/core-kit';
 import { IdentityProviderEntity } from '../identity-provider/index.ts';
 import { RealmEntity } from '../realm/index.ts';
@@ -65,11 +66,11 @@ export class IdentityProviderAttributeMappingEntity implements IdentityProviderA
     })
     target_value: string | null;
 
-    @CreateDateColumn()
-    created_at: Date;
+    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    created_at: string;
 
-    @UpdateDateColumn()
-    updated_at: Date;
+    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    updated_at: string;
 
     // -----------------------------------------------
 
