@@ -1091,23 +1091,23 @@ new `@authup/client-web-theme` package.
   authup-specific element overrides and ships a single CSS entry
   (`@authup/client-web-theme/index.css`) that pulls in
   `tailwindcss`, `@vuecs/design` (concrete OKLCH tokens),
-  `@vuecs/theme-tailwind` (Tailwind ↔ vc-color rebind), and a
-  small Bootstrap-compat `@layer components` block. Consumers register
+  `@vuecs/theme-tailwind` (Tailwind ↔ vc-color rebind). Consumers register
   one theme: `app.use(vuecs, { themes: [authupTheme()] })`.
 - **Tailwind v4** — wired via `@tailwindcss/vite` in both
   `apps/client-web/nuxt.config.ts` (`vite.plugins`) and
   `apps/server-core/ui/vite.config.ts`. v3 is not supported because
   theme-tailwind uses `@theme` and `--color-*` rebinds.
-- **Bootstrap-compat layer** — the `@layer components` block in
-  `packages/client-web-theme/assets/css/index.css` provides `.btn`,
-  `.row`/`.col-N`, `.alert`, `.badge`, `.nav`/`.navbar`,
-  `.modal-*`, `.fade` and a few helpers, each `@apply`ing Tailwind
-  utilities under the legacy Bootstrap class names. This keeps
-  authup's ~135 .vue templates rendering without a 220-class-hit
-  manual rewrite. The layer is transitional — phase out by
-  refactoring call sites to `<VCButton>` / `<VCAlert>` / `<VCBadge>`
-  / Tailwind utilities, and the corresponding rule disappears once
-  no caller references it.
+- **Bootstrap-compat layer — fully retired.** The `@layer components`
+  block in `packages/client-web-theme/assets/css/index.css` used to
+  `@apply` Tailwind utilities under legacy Bootstrap class names
+  (`.btn`, `.row`/`.col-N`, `.alert`, `.badge`, `.nav`/`.navbar`,
+  `.dropdown*`, `.modal-*`, `.fade`) so authup's pre-Tailwind templates
+  kept rendering. Every call site has since migrated to a `<VC*>`
+  component (`.dropdown*` → `<VCDropdownMenu>`, `.modal-*` →
+  `<VCModal>` from `@vuecs/overlays`, the rest in #3139), so the block
+  now holds only a thin `.vc-pagination` override of theme-tailwind's
+  baked button rounding. Don't reintroduce Bootstrap-shaped class
+  names; reach for the matching `<VC*>` component.
 - **Mechanical sweep** — Bootstrap utility classes with a 1:1
   Tailwind equivalent (e.g. `d-flex` → `flex`, `flex-column` →
   `flex-col`, `w-100` → `w-full`, `fw-bold` → `font-bold`,
