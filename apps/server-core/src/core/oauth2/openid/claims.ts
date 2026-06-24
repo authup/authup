@@ -37,10 +37,6 @@ export class OAuth2OpenIDClaimsBuilder {
                     return Math.floor(new Date(value).getTime() / 1000);
                 }
 
-                if (value instanceof Date) {
-                    return Math.floor(value.getTime() / 1000);
-                }
-
                 return value;
             },
         ],
@@ -55,10 +51,6 @@ export class OAuth2OpenIDClaimsBuilder {
             (value: unknown) => {
                 if (typeof value === 'string') {
                     return Math.floor(new Date(value).getTime() / 1000);
-                }
-
-                if (value instanceof Date) {
-                    return Math.floor(value.getTime() / 1000);
                 }
 
                 return value;
@@ -77,10 +69,6 @@ export class OAuth2OpenIDClaimsBuilder {
             (value: unknown) => {
                 if (typeof value === 'string') {
                     return Math.floor(new Date(value).getTime() / 1000);
-                }
-
-                if (value instanceof Date) {
-                    return Math.floor(value.getTime() / 1000);
                 }
 
                 return value;
