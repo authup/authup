@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { defineTheme } from '@vuecs/core';
+import { defineTheme, extend } from '@vuecs/core';
 
 /**
  * App-level theme. Layers authup app-specific concerns (Bootstrap-compat
@@ -34,6 +34,19 @@ import { defineTheme } from '@vuecs/core';
 export default function clientWebTheme() {
     return defineTheme({
         elements: {
+            /*
+             * theme-tailwind's button root sets only
+             * `disabled:cursor-not-allowed`, leaving the enabled button
+             * with the default cursor. Append `cursor-pointer` so enabled
+             * buttons get the pointer affordance; the `disabled:` variant
+             * keeps priority on disabled buttons via its higher
+             * pseudo-class specificity (same pattern theme-tailwind already
+             * uses for the switch element). `extend()` appends to the
+             * resolved class string instead of replacing it, so the full
+             * upstream root (sizes, colors, focus ring) is preserved.
+             */
+            button: { classes: { root: extend('cursor-pointer') } },
+
             /*
              * Strip the baked `text-left` from theme-tailwind's
              * `tableHeadCell.classes.root` (default:
