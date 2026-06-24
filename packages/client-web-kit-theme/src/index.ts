@@ -29,6 +29,13 @@ export default function clientWebKitTheme() {
     return defineTheme({
         extends: [tailwindTheme()],
         elements: {
+            // Enabled `<VCButton>`s render with the native default cursor —
+            // theme-tailwind's button root only sets
+            // `disabled:cursor-not-allowed`, not a base `cursor-pointer`
+            // (tada5hi/vuecs#1656). Add the pointer for the enabled state; the
+            // `disabled:` variant still wins for disabled buttons. Drop this
+            // once the upstream theme ships the pointer.
+            button: { classes: { root: extend('cursor-pointer') } },
             // Bottom margin between stacked form groups. theme-tailwind's
             // default formGroup root is `flex flex-col gap-1` (gap inside
             // the group); without `mb-3` the entity forms stack flush.
