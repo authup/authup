@@ -18,7 +18,7 @@ export default defineNuxtComponent({
 });
 </script>
 <template>
-    <div class="container text-center">
+    <div class="mx-auto w-full max-w-screen-lg px-4 text-center">
         <span class="fa-solid fa-spinner fa-spin" />
     </div>
 </template>

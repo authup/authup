@@ -6,15 +6,19 @@
 -->
 
 <script lang="ts">
+import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
+import type { ButtonSize } from '@vuecs/button';
+import { VCButton } from '@vuecs/button';
 import {
     TranslatorTranslationActionKey,
     TranslatorTranslationCommonKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { useTranslations } from '../../../core';
+import { DEFAULT_BUTTON_SIZE, useTranslations } from '../../../core';
 
 export default defineComponent({
+    components: { VCButton },
     props: {
         value: {
             type: Boolean,
@@ -23,6 +27,10 @@ export default defineComponent({
         isBusy: {
             type: Boolean,
             required: true,
+        },
+        size: {
+            type: String as PropType<ButtonSize>,
+            default: DEFAULT_BUTTON_SIZE,
         },
     },
     emits: ['changed'],
@@ -52,20 +60,13 @@ export default defineComponent({
 });
 </script>
 <template>
-    <button
+    <VCButton
         type="button"
         :aria-label="isBusy ? translations.processing : (value ? translations.remove : translations.add)"
-        :class="['btn btn-xs', {
-            'btn-dark': isBusy,
-            'btn-success': !isBusy && !value,
-            'btn-danger': !isBusy && value,
-        }]"
+        :size="size"
+        :color="isBusy ? 'neutral' : (value ? 'error' : 'success')"
         :disabled="isBusy"
+        :icon-left="isBusy ? 'fa6-solid:question' : (value ? 'fa6-solid:minus' : 'fa6-solid:plus')"
         @click="handleClick"
-    >
-        <VCIcon
-            aria-hidden="true"
-            :name="isBusy ? 'fa6-solid:question' : (value ? 'fa6-solid:minus' : 'fa6-solid:plus')"
-        />
-    </button>
+    />
 </template>

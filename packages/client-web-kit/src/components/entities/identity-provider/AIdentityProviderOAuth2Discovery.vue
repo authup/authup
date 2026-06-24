@@ -17,6 +17,7 @@ import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import { z } from 'zod';
+import type { PropType } from 'vue';
 import {
     computed,
     defineComponent,
@@ -24,8 +25,11 @@ import {
     ref,
 } from 'vue';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
+import { VCAlert } from '@vuecs/elements';
+import type { ButtonSize } from '@vuecs/button';
+import { VCButton } from '@vuecs/button';
 import { IFieldValidation } from '@ilingo/validup-vue';
-import { useTranslations, useTranslator } from '../../../core';
+import { DEFAULT_BUTTON_SIZE, useTranslations, useTranslator } from '../../../core';
 
 // Standalone form (not a registered child) — uses its own URL
 // validator since `@authup/core-kit` doesn't ship a "discovery URL"
@@ -40,9 +44,17 @@ class DiscoveryUrlValidator extends Container<{ url: string }> {
 
 export default defineComponent({
     components: {
-        VCFormGroup, 
-        VCFormInput, 
-        IFieldValidation, 
+        VCFormGroup,
+        VCFormInput,
+        VCAlert,
+        VCButton,
+        IFieldValidation,
+    },
+    props: {
+        size: {
+            type: String as PropType<ButtonSize>,
+            default: DEFAULT_BUTTON_SIZE,
+        },
     },
     emits: ['lookup', 'failed'],
     setup(_, setup) {
@@ -129,20 +141,25 @@ export default defineComponent({
                 </template>
                 <VCFormInput
                     v-model="v.fields.url.$model.value"
-                    :class="{ 'is-valid': lookupValid }"
+                    :class="{ 'border-success-600 ring-1 ring-success-500': lookupValid }"
                     placeholder="https://example.com/.well-known/openid-configuration"
                 />
             </VCFormGroup>
         </IFieldValidation>
-        <div
+        <VCAlert
             v-if="message"
-            class="alert alert-sm alert-warning"
+            color="warning"
+            variant="soft"
+            size="sm"
+            class="mb-3"
         >
             {{ message }}
-        </div>
-        <button
+        </VCAlert>
+        <VCButton
             type="button"
-            class="btn btn-xs btn-primary mb-1"
+            :size="size"
+            color="primary"
+            class="mb-1"
             :disabled="isDisabled"
             @click.prevent="lookup"
         >
@@ -150,6 +167,6 @@ export default defineComponent({
                 name="fa6-solid:magnifying-glass"
                 class="pe-1"
             /> {{ translations.lookup }}
-        </button>
+        </VCButton>
     </div>
 </template>

@@ -8,6 +8,7 @@
 <script lang="ts">
 /* global document, KeyboardEvent */
 import type { Policy } from '@authup/core-kit';
+import type { PropType } from 'vue';
 import {
     computed,
     defineComponent,
@@ -15,8 +16,10 @@ import {
     onUnmounted,
     ref,
 } from 'vue';
+import type { ButtonSize } from '@vuecs/button';
+import { VCButton } from '@vuecs/button';
 import { TranslatorTranslationActionKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { useTranslations } from '../../../core';
+import { DEFAULT_BUTTON_SIZE, useTranslations } from '../../../core';
 import APermissionPolicyAssignment from './APermissionPolicyAssignment.vue';
 import { APolicies } from '../policy';
 import APolicyInlineInfo from '../policy/APolicyInlineInfo.vue';
@@ -24,15 +27,20 @@ import APolicySummary from '../policy/APolicySummary.vue';
 
 export default defineComponent({
     components: {
-        APolicies, 
-        APermissionPolicyAssignment, 
-        APolicyInlineInfo, 
-        APolicySummary, 
+        APolicies,
+        APermissionPolicyAssignment,
+        APolicyInlineInfo,
+        APolicySummary,
+        VCButton,
     },
     props: {
         entityId: {
             type: String,
             required: true,
+        },
+        size: {
+            type: String as PropType<ButtonSize>,
+            default: DEFAULT_BUTTON_SIZE,
         },
     },
     setup(props, { slots }) {
@@ -137,13 +145,14 @@ export default defineComponent({
                             <APolicySummary :entity="detailPolicy" />
                         </div>
                         <div class="modal-footer">
-                            <button
+                            <VCButton
                                 type="button"
-                                class="btn btn-secondary btn-xs"
+                                :size="size"
+                                color="neutral"
+                                variant="soft"
+                                :label="translationsAction.close"
                                 @click="detailPolicy = null"
-                            >
-                                {{ translationsAction.close }}
-                            </button>
+                            />
                         </div>
                     </div>
                 </div>

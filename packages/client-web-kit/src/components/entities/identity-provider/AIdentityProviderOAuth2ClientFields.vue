@@ -13,14 +13,16 @@ import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
 import { defineComponent, reactive, ref } from 'vue';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
+import { VCButton } from '@vuecs/button';
 import { onChange, useUpdatedAt } from '../../../composables';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({
     components: {
-        VCFormGroup, 
-        VCFormInput, 
-        IFieldValidation, 
+        VCFormGroup,
+        VCFormInput,
+        VCButton,
+        IFieldValidation,
     },
     props: { entity: { type: Object as PropType<Partial<IdentityProvider>> } },
     emits: ['updated'],
@@ -87,13 +89,12 @@ export default defineComponent({
                     autocomplete="new-password"
                 >
                     <template #groupAppend>
-                        <button
-                            class="btn"
+                        <VCButton
                             type="button"
                             @click.prevent="secretShow = !secretShow"
                         >
                             <VCIcon :name="secretShow ? 'fa6-solid:eye-slash' : 'fa6-solid:eye'" />
-                        </button>
+                        </VCButton>
                     </template>
                 </VCFormInput>
             </VCFormGroup>

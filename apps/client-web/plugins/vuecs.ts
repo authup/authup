@@ -64,8 +64,8 @@ export default defineNuxtPlugin({
             icons: [fontAwesome()],
             defaults: {
                 // Wire authup's translator + icon choices into vuecs's
-                // DefaultsManager so `useSubmitButton()` / `buildFormSubmit()`
-                // resolve to locale-reactive labels with no per-call work.
+                // DefaultsManager so `useSubmitButton()` resolves to
+                // locale-reactive labels with no per-call work.
                 // Runs after the kit's translator install (`dependsOn:
                 // ['authup']`), so `useTranslation` inside the helper sees
                 // the live ilingo locale provider.

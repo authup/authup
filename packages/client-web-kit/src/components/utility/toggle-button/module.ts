@@ -5,39 +5,42 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { h, resolveComponent } from 'vue';
+import { h } from 'vue';
+import type { ButtonSize } from '@vuecs/button';
+import { VCButton } from '@vuecs/button';
+import { DEFAULT_BUTTON_SIZE } from '../../../core';
 
 type ToggleButtonOptions = {
     value: boolean,
     isBusy: boolean,
-    changed: (value: boolean) => void
+    changed: (value: boolean) => void,
+    size?: ButtonSize,
 };
 export function renderToggleButton(
     options: ToggleButtonOptions,
 ) {
-    const VCIcon = resolveComponent('VCIcon');
     let iconName: string;
+    let color: 'neutral' | 'error' | 'success';
     if (options.isBusy) {
         iconName = 'fa6-solid:question';
+        color = 'neutral';
     } else if (options.value) {
         iconName = 'fa6-solid:minus';
+        color = 'error';
     } else {
         iconName = 'fa6-solid:plus';
+        color = 'success';
     }
 
-    return h('button', {
-        class: ['btn btn-xs', {
-            'btn-dark': options.isBusy,
-            'btn-success': !options.isBusy && !options.value,
-            'btn-danger': !options.isBusy && options.value,
-        }],
+    return h(VCButton, {
+        size: options.size ?? DEFAULT_BUTTON_SIZE,
+        color,
+        iconLeft: iconName,
         disabled: options.isBusy,
         onClick($event: any) {
             $event.preventDefault();
 
             options.changed(!options.value);
         },
-    }, [
-        h(VCIcon, { name: iconName }),
-    ]);
+    });
 }

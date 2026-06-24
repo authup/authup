@@ -103,18 +103,27 @@ export default defineNuxtComponent({
                 </div>
             </div>
 
-            <nav class="page-navbar navbar-expand-md">
+            <!--
+                Inlined from the retired Bootstrap-compat `.navbar*` layer:
+                `navbar-expand-md` → md:flex-nowrap md:justify-start;
+                `navbar-collapse` → grow basis-full items-center, hidden on
+                mobile unless toggled, md:flex! to force-show at md+ (the `!`
+                beats theme-tailwind's flex-col on the VCNavItems root, same
+                reason `md:flex-row!` is needed below). `navbar-content`,
+                `vc-nav-items`, `navbar-gadgets` stay — they're app selectors.
+            -->
+            <nav class="page-navbar md:flex-nowrap md:justify-start">
                 <div
                     id="page-navbar"
-                    class="navbar-content navbar-collapse"
-                    :class="{'show': displayNav}"
+                    class="navbar-content grow basis-full items-center md:flex!"
+                    :class="{ hidden: !displayNav }"
                 >
                     <VCNavItems
-                        class="navbar-nav"
+                        class="flex flex-col list-none md:flex-row!"
                         :data="topItems"
                     />
 
-                    <ul class="navbar-nav vc-nav-items navbar-gadgets">
+                    <ul class="flex flex-col list-none md:flex-row! vc-nav-items navbar-gadgets">
                         <li class="vc-nav-item">
                             <AColorModeSwitcher
                                 v-model:dark="isDark"

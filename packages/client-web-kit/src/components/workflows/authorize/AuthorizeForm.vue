@@ -21,11 +21,16 @@ import {
     TranslatorTranslationNamespace, 
 } from '@authup/i18n';
 import { ITranslateT } from '@ilingo/vue';
+import { VCButton } from '@vuecs/button';
 import { injectHTTPClient, useTranslations, useTranslationsForNamespace } from '../../../core';
 import AuthorizeScopes from './AuthorizeScopes.vue';
 
 export default defineComponent({
-    components: { AuthorizeScopes, ITranslateT },
+    components: {
+        AuthorizeScopes, 
+        ITranslateT, 
+        VCButton, 
+    },
     props: {
         client: {
             type: Object as PropType<Client>,
@@ -213,24 +218,27 @@ export default defineComponent({
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-6">
-                <button
+        <div class="flex flex-wrap -mx-2">
+            <div class="w-6/12 px-2">
+                <VCButton
                     type="button"
-                    class="btn w-full btn-secondary"
+                    color="neutral"
+                    variant="soft"
+                    class="w-full"
                     @click.prevent="abort"
                 >
                     {{ translationsDefault.abort }}
-                </button>
+                </VCButton>
             </div>
-            <div class="col-6">
-                <button
+            <div class="w-6/12 px-2">
+                <VCButton
                     type="button"
-                    class="btn w-full btn-primary"
+                    color="primary"
+                    class="w-full"
                     @click.prevent="authorize"
                 >
                     {{ translationsDefault.authorize }}
-                </button>
+                </VCButton>
             </div>
         </div>
     </div>

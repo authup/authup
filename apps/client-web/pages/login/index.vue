@@ -125,7 +125,7 @@ export default defineNuxtComponent({
             aria-hidden="true"
         />
 
-        <div class="login-content container">
+        <div class="login-content mx-auto w-full max-w-screen-lg px-4">
             <div class="text-center login-hero">
                 <LoginHeroSVG :height="150" />
                 <h1 class="login-title">

@@ -245,8 +245,8 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="row">
-        <div class="col">
+    <div class="flex flex-wrap -mx-2">
+        <div class="flex-1 basis-0 px-2">
             <template v-if="data">
                 <VCFormGroup>
                     <template #label>
@@ -311,8 +311,8 @@ export default defineComponent({
                     />
                 </VCFormGroup>
             </IFieldValidation>
-            <div class="row">
-                <div class="col">
+            <div class="flex flex-wrap -mx-2">
+                <div class="flex-1 basis-0 px-2">
                     <IFieldValidation
                         v-slot="{ value }"
                         :field="v.fields.is_confidential"
@@ -326,7 +326,7 @@ export default defineComponent({
                         </VCFormGroup>
                     </IFieldValidation>
                 </div>
-                <div class="col">
+                <div class="flex-1 basis-0 px-2">
                     <IFieldValidation
                         v-slot="{ value }"
                         :field="v.fields.secret_hashed"
@@ -340,7 +340,7 @@ export default defineComponent({
                         </VCFormGroup>
                     </IFieldValidation>
                 </div>
-                <div class="col">
+                <div class="flex-1 basis-0 px-2">
                     <IFieldValidation
                         v-slot="{ value }"
                         :field="v.fields.active"
@@ -377,7 +377,7 @@ export default defineComponent({
                 </IFieldValidation>
             </template>
         </div>
-        <div class="col">
+        <div class="flex-1 basis-0 px-2">
             <AFormInputList
                 :names="redirectUris"
                 @changed="(value) => {

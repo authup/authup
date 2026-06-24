@@ -255,8 +255,8 @@ export default defineComponent({
                 </IFieldValidation>
 
                 <template v-if="$props.canManage">
-                    <div class="row">
-                        <div class="col">
+                    <div class="flex flex-wrap -mx-2">
+                        <div class="flex-1 basis-0 px-2">
                             <VCFormSwitch
                                 v-model="form.active"
                                 :label="true"
@@ -273,7 +273,7 @@ export default defineComponent({
                         </div>
                         <div
                             v-if="$props.entity"
-                            class="col"
+                            class="flex-1 basis-0 px-2"
                         >
                             <VCFormSwitch
                                 v-model="form.name_locked"

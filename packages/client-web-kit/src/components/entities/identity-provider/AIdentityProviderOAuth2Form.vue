@@ -256,8 +256,8 @@ export default defineComponent({
             </VCFormGroup>
         </template>
 
-        <div class="row">
-            <div class="col">
+        <div class="flex flex-wrap -mx-2">
+            <div class="flex-1 basis-0 px-2">
                 <h6>
                     <VCIcon name="fa6-solid:wrench" /> {{ translations.basic }}
                 </h6>
@@ -266,7 +266,7 @@ export default defineComponent({
                     :entity="data"
                 />
             </div>
-            <div class="col">
+            <div class="flex-1 basis-0 px-2">
                 <h6>
                     <VCIcon name="fa6-solid:lock" /> {{ translations.security }}
                 </h6>

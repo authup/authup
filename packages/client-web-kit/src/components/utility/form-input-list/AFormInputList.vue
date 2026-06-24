@@ -19,10 +19,17 @@ import {
     TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { useTranslations } from '../../../core';
+import { VCAlert } from '@vuecs/elements';
+import type { ButtonSize } from '@vuecs/button';
+import { VCButton } from '@vuecs/button';
+import { DEFAULT_BUTTON_SIZE, useTranslations } from '../../../core';
 
 export default defineComponent({
-    components: { AFormInputListItem },
+    components: {
+        AFormInputListItem, 
+        VCAlert, 
+        VCButton, 
+    },
     props: {
         names: {
             type: Array as PropType<string[]>,
@@ -35,6 +42,10 @@ export default defineComponent({
         maxItems: {
             type: Number,
             default: 100,
+        },
+        size: {
+            type: String as PropType<ButtonSize>,
+            default: DEFAULT_BUTTON_SIZE,
         },
     },
     emits: ['changed'],
@@ -146,22 +157,28 @@ export default defineComponent({
                 </slot>
             </div>
             <div class="ms-auto">
-                <button
-                    class="btn btn-xs btn-primary"
+                <VCButton
+                    :size="size"
+                    color="primary"
                     type="button"
                     :disabled="!canAdd"
                     @click.prevent="add()"
                 >
                     <VCIcon name="fa6-solid:plus" /> {{ translationsAction.add }}
-                </button>
+                </VCButton>
             </div>
         </div>
         <div class="flex flex-col gap-1">
             <template v-if="items.length === 0">
                 <slot name="noItems">
-                    <div class="alert alert-sm alert-info">
+                    <VCAlert
+                        color="info"
+                        variant="soft"
+                        size="sm"
+                        class="mb-3"
+                    >
                         {{ translationsDefault.noItems }}
-                    </div>
+                    </VCAlert>
                 </slot>
             </template>
             <template

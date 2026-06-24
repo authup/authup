@@ -16,6 +16,7 @@ import { IdentityProviderProtocol, getIdentityProviderProtocolForPreset } from '
 import type { IdentityProvider, IdentityProviderPreset } from '@authup/core-kit';
 import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import type { PropType } from 'vue';
+import { VCAlert } from '@vuecs/elements';
 import { onChange, useUpdatedAt } from '../../../composables';
 import { useTranslations } from '../../../core';
 import AIdentityProviderLdapForm from './AIdentityProviderLdapForm.vue';
@@ -27,6 +28,7 @@ export default defineComponent({
         AIdentityProviderLdapForm,
         AIdentityProviderOAuth2Form,
         AIdentityProviderPicker,
+        VCAlert,
     },
     props: {
         entity: { type: Object as PropType<IdentityProvider> },
@@ -148,11 +150,14 @@ export default defineComponent({
             @failed="onChildFailed"
         />
 
-        <div
+        <VCAlert
             v-else-if="protocol || preset"
-            class="alert alert-warning alert-sm"
+            color="warning"
+            variant="soft"
+            size="sm"
+            class="mb-3"
         >
             {{ translations.protocolNotSupported }}
-        </div>
+        </VCAlert>
     </div>
 </template>

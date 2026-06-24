@@ -1,5 +1,6 @@
 <script lang="ts">
 import { VCTimeago } from '@vuecs/timeago';
+import { VCButton } from '@vuecs/button';
 import type { Realm } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
@@ -13,7 +14,7 @@ import {
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { TableColumn } from '@vuecs/table';
-import { defineComponent } from 'vue';
+import { defineComponent, resolveComponent } from 'vue';
 
 export default defineComponent({
     components: {
@@ -23,6 +24,7 @@ export default defineComponent({
         AEntityDelete,
         ARealms,
         VCTimeago,
+        VCButton,
     },
     emits: ['deleted'],
     setup(_props, { emit }) {
@@ -62,6 +64,8 @@ export default defineComponent({
             },
         ];
 
+        const NuxtLink = resolveComponent('NuxtLink');
+
         return {
             columns,
             hasEditPermission,
@@ -69,6 +73,7 @@ export default defineComponent({
             handleDeleted,
             realmManagementId,
             setRealmManagement: store.setRealmManagement,
+            NuxtLink,
         };
     },
 });
@@ -104,22 +109,25 @@ export default defineComponent({
                     <VCTimeago :datetime="row.updated_at" />
                 </template>
                 <template #cell-options="{ row }: { row: any }">
-                    <button
+                    <VCButton
                         v-if="realmManagementId !== row.id"
-                        class="btn btn-xs btn-primary me-1"
+                        size="sm"
+                        color="primary"
+                        icon-left="fa6-solid:check"
+                        class="me-1 border border-transparent"
                         @click.prevent="setRealmManagement(row)"
-                    >
-                        <VCIcon name="fa6-solid:check" />
-                    </button>
-                    <NuxtLink
+                    />
+                    <VCButton
+                        :as="NuxtLink"
                         :to="'/realms/'+ row.id"
-                        class="btn btn-xs btn-outline-primary me-1"
+                        size="sm"
+                        color="primary"
+                        variant="outline"
+                        class="me-1"
                         :disabled="!hasEditPermission"
-                    >
-                        <VCIcon name="fa6-solid:bars" />
-                    </NuxtLink>
+                        icon-left="fa6-solid:bars"
+                    />
                     <AEntityDelete
-                        class="btn btn-xs btn-outline-danger"
                         :entity-id="row.id"
                         entity-type="realm"
                         :with-text="false"

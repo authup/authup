@@ -11,12 +11,14 @@ import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import { TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { assignFormProperties, useTranslations } from '../../../core';
+import { DEFAULT_BUTTON_SIZE, assignFormProperties, useTranslations } from '../../../core';
 import { z } from 'zod';
 import type { PropType } from 'vue';
 import { defineComponent, reactive, ref } from 'vue';
 import type { IdentityProviderRoleMapping, Role } from '@authup/core-kit';
 import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
+import type { ButtonSize } from '@vuecs/button';
+import { VCButton } from '@vuecs/button';
 import { IFieldValidation } from '@ilingo/validup-vue';
 import {
     defineEntityManager,
@@ -46,9 +48,10 @@ class RoleMappingAttributesValidator extends Container<{
 
 export default defineComponent({
     components: {
-        VCFormGroup, 
-        VCFormInput, 
+        VCFormGroup,
+        VCFormInput,
         VCFormSwitch,
+        VCButton,
 
         IFieldValidation,
     },
@@ -60,6 +63,10 @@ export default defineComponent({
         entityId: {
             type: String,
             required: true,
+        },
+        size: {
+            type: String as PropType<ButtonSize>,
+            default: DEFAULT_BUTTON_SIZE,
         },
     },
     emits: defineEntityVEmitOptions<IdentityProviderRoleMapping>(),
@@ -144,12 +151,13 @@ export default defineComponent({
     <div class="flex flex-col">
         <div class="flex flex-row">
             <div class="me-2">
-                <button
-                    class="btn btn-xs btn-dark"
+                <VCButton
+                    :size="size"
+                    color="neutral"
                     @click.prevent="toggleDisplay()"
                 >
                     <VCIcon :name="display ? 'fa6-solid:chevron-up' : 'fa6-solid:chevron-down'" />
-                </button>
+                </VCButton>
             </div>
             <div>
                 <h6
@@ -160,23 +168,23 @@ export default defineComponent({
                 </h6>
             </div>
             <div class="ms-auto">
-                <button
-                    :class="['btn btn-xs', {
-                        'btn-primary': !manager.data.value,
-                        'btn-dark': !!manager.data.value,
-                    }]"
+                <VCButton
+                    :size="size"
+                    :color="manager.data.value ? 'neutral' : 'primary'"
                     @click="handleSaveOrCreate"
                 >
                     <VCIcon :name="manager.data.value ? 'fa6-solid:floppy-disk' : 'fa6-solid:plus'" />
-                </button>
-                <button
+                </VCButton>
+                <VCButton
                     v-if="manager.data.value"
-                    class="btn btn-xs btn-danger ms-1"
+                    :size="size"
+                    color="error"
+                    class="ms-1"
                     :disabled="manager.busy.value"
                     @click="handleDelete"
                 >
                     <VCIcon name="fa6-solid:trash" />
-                </button>
+                </VCButton>
             </div>
         </div>
         <div

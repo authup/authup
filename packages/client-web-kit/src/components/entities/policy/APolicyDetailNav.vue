@@ -6,15 +6,23 @@
 -->
 
 <script lang="ts">
+import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
+import type { ButtonSize } from '@vuecs/button';
+import { VCButton } from '@vuecs/button';
 import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { useTranslation } from '../../../core';
+import { DEFAULT_BUTTON_SIZE, useTranslation } from '../../../core';
 
 export default defineComponent({
+    components: { VCButton },
     props: {
         policyId: {
             type: String,
             required: true,
+        },
+        size: {
+            type: String as PropType<ButtonSize>,
+            default: DEFAULT_BUTTON_SIZE,
         },
     },
     emits: ['click'],
@@ -34,13 +42,14 @@ export default defineComponent({
 });
 </script>
 <template>
-    <button
+    <VCButton
         type="button"
-        class="btn btn-xs btn-outline-info"
+        :size="size"
+        color="info"
+        variant="outline"
         :title="viewPolicyDetails"
         :aria-label="viewPolicyDetails"
+        icon-left="fa6-solid:eye"
         @click="handleClick"
-    >
-        <VCIcon name="fa6-solid:eye" />
-    </button>
+    />
 </template>

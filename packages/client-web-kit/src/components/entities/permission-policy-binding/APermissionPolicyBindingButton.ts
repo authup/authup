@@ -14,12 +14,18 @@ import {
     onMounted,
     onUnmounted,
     ref,
-    resolveComponent,
     toRef,
     watch,
 } from 'vue';
+import type { ButtonSize } from '@vuecs/button';
+import { VCButton } from '@vuecs/button';
 import { TranslatorTranslationActionKey, TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { SlotName, injectHTTPClient, useTranslation } from '../../../core';
+import { 
+    DEFAULT_BUTTON_SIZE, 
+    SlotName, 
+    injectHTTPClient, 
+    useTranslation, 
+} from '../../../core';
 import { hasOwnProperty } from '@authup/kit';
 import { APolicies } from '../policy/APolicies';
 import APolicyInlineInfo from '../policy/APolicyInlineInfo.vue';
@@ -36,6 +42,10 @@ export const APermissionPolicyBindingButton = defineComponent({
         entity: {
             type: Object as PropType<PermissionBindingEntity>,
             required: true,
+        },
+        size: {
+            type: String as PropType<ButtonSize>,
+            default: DEFAULT_BUTTON_SIZE,
         },
     },
     emits: ['updated', 'failed'],
@@ -115,25 +125,29 @@ export const APermissionPolicyBindingButton = defineComponent({
             key: TranslatorTranslationActionKey.CLOSE,
         });
 
-        const VCIcon = resolveComponent('VCIcon');
-
         return () => {
             const children = [];
 
-            children.push(h('button', {
-                class: ['btn btn-xs', {
-                    'btn-dark': busy.value,
-                    'btn-primary': !busy.value && currentPolicyId.value,
-                    'btn-secondary': !busy.value && !currentPolicyId.value,
-                }],
+            let triggerColor: 'neutral' | 'primary' = 'neutral';
+            let triggerVariant: 'solid' | 'soft' = 'soft';
+            if (busy.value) {
+                triggerVariant = 'solid';
+            } else if (currentPolicyId.value) {
+                triggerColor = 'primary';
+                triggerVariant = 'solid';
+            }
+
+            children.push(h(VCButton, {
+                size: props.size,
+                color: triggerColor,
+                variant: triggerVariant,
+                iconLeft: 'fa6-solid:gear',
                 disabled: busy.value,
                 onClick(e: Event) {
                     e.preventDefault();
                     modalOpen.value = true;
                 },
-            }, [
-                h(VCIcon, { name: 'fa6-solid:gear' }),
-            ]));
+            }));
 
             if (modalOpen.value) {
                 const backdrop = h('div', {
@@ -156,22 +170,32 @@ export const APermissionPolicyBindingButton = defineComponent({
                     modalTitle = policy.name;
                     modalBody = h(APolicySummary, { entity: policy });
                     modalFooter = [
-                        h('button', {
+                        h(VCButton, {
                             type: 'button',
-                            class: 'btn btn-outline-secondary btn-xs',
+                            size: props.size,
+                            color: 'neutral',
+                            variant: 'outline',
+                            iconLeft: 'fa6-solid:arrow-left',
+                            label: translationBack.value,
                             onClick() {
                                 detailPolicy.value = null;
                             },
-                        }, [
-                            h(VCIcon, { name: 'fa6-solid:arrow-left', class: 'me-1' }),
-                            translationBack.value,
-                        ]),
+                        }),
                     ];
                 } else {
                     modalTitle = translationJunctionPolicy.value;
                     modalBody = h(APolicies, { query: { filters: { parent_id: null } } }, {
                         [SlotName.ITEM]: (slotProps: { data: Policy }) => {
                             const isSelected = currentPolicyId.value === slotProps.data.id;
+
+                            let selectColor: 'neutral' | 'success' = 'neutral';
+                            let selectVariant: 'solid' | 'soft' = 'soft';
+                            if (busy.value) {
+                                selectVariant = 'solid';
+                            } else if (isSelected) {
+                                selectColor = 'success';
+                                selectVariant = 'solid';
+                            }
 
                             return [
                                 h('div', [slotProps.data.name]),
@@ -182,12 +206,11 @@ export const APermissionPolicyBindingButton = defineComponent({
                                     },
                                 }),
                                 h('div', { class: 'ms-auto' }, [
-                                    h('button', {
-                                        class: ['btn btn-xs', {
-                                            'btn-dark': busy.value,
-                                            'btn-success': !busy.value && isSelected,
-                                            'btn-secondary': !busy.value && !isSelected,
-                                        }],
+                                    h(VCButton, {
+                                        size: props.size,
+                                        color: selectColor,
+                                        variant: selectVariant,
+                                        iconLeft: isSelected ? 'fa6-solid:check' : 'fa6-solid:plus',
                                         disabled: busy.value,
                                         onClick(e: Event) {
                                             e.preventDefault();
@@ -197,31 +220,34 @@ export const APermissionPolicyBindingButton = defineComponent({
                                                 handlePolicySelect(slotProps.data.id);
                                             }
                                         },
-                                    }, [
-                                        h(VCIcon, { name: isSelected ? 'fa6-solid:check' : 'fa6-solid:plus' }),
-                                    ]),
+                                    }),
                                 ]),
                             ];
                         },
                     });
                     modalFooter = [
                         currentPolicyId.value ?
-                            h('button', {
+                            h(VCButton, {
                                 type: 'button',
-                                class: 'btn btn-warning btn-xs',
+                                size: props.size,
+                                color: 'warning',
+                                label: translationReset.value,
                                 disabled: busy.value,
                                 onClick() {
                                     handlePolicySelect(null);
                                 },
-                            }, translationReset.value) :
+                            }) :
                             undefined,
-                        h('button', {
+                        h(VCButton, {
                             type: 'button',
-                            class: 'btn btn-secondary btn-xs',
+                            size: props.size,
+                            color: 'neutral',
+                            variant: 'soft',
+                            label: translationClose.value,
                             onClick() {
                                 modalOpen.value = false;
                             },
-                        }, translationClose.value),
+                        }),
                     ];
                 }
 
