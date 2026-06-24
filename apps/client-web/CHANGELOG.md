@@ -1,5 +1,40 @@
 # Change Log
 
+## [1.0.0-beta.50](https://github.com/authup/authup/compare/v1.0.0-beta.49...v1.0.0-beta.50) (2026-06-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** node >= 22.13 is now required; node 20 is no longer supported.
+
+### Features
+
+* localized error toasts, conformant OpenID discovery, UI cleanups ([#3137](https://github.com/authup/authup/issues/3137)) ([77bc9e5](https://github.com/authup/authup/commit/77bc9e580d961e6af63f79f8bcbad5b09155d23a))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 22 updates ([#3136](https://github.com/authup/authup/issues/3136)) ([491ee21](https://github.com/authup/authup/commit/491ee210aa793d6c6b143d6b8376e41c9e9785ea))
+
+
+### Miscellaneous Chores
+
+* **deps:** upgrade hapic to v3, @hapic/oauth2 to v4, require node &gt;= 22 ([#3134](https://github.com/authup/authup/issues/3134)) ([07503bc](https://github.com/authup/authup/commit/07503bc87b43227cf1b5e03573242d22722a0b08))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.49 to ^1.0.0-beta.50
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.49 to ^1.0.0-beta.50
+    * @authup/client-web-nuxt bumped from ^1.0.0-beta.49 to ^1.0.0-beta.50
+    * @authup/client-web-theme bumped from ^1.0.0-beta.49 to ^1.0.0-beta.50
+    * @authup/core-http-kit bumped from ^1.0.0-beta.49 to ^1.0.0-beta.50
+    * @authup/core-kit bumped from ^1.0.0-beta.49 to ^1.0.0-beta.50
+    * @authup/i18n bumped from ^1.0.0-beta.49 to ^1.0.0-beta.50
+    * @authup/kit bumped from ^1.0.0-beta.49 to ^1.0.0-beta.50
+
 ## [1.0.0-beta.49](https://github.com/authup/authup/compare/v1.0.0-beta.48...v1.0.0-beta.49) (2026-06-13)
 
 

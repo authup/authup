@@ -3,6 +3,29 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.50](https://github.com/authup/authup/compare/v1.0.0-beta.49...v1.0.0-beta.50) (2026-06-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** node >= 22.13 is now required; node 20 is no longer supported.
+
+### Features
+
+* localized error toasts, conformant OpenID discovery, UI cleanups ([#3137](https://github.com/authup/authup/issues/3137)) ([77bc9e5](https://github.com/authup/authup/commit/77bc9e580d961e6af63f79f8bcbad5b09155d23a))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 22 updates ([#3136](https://github.com/authup/authup/issues/3136)) ([491ee21](https://github.com/authup/authup/commit/491ee210aa793d6c6b143d6b8376e41c9e9785ea))
+* **deps:** bump the minorandpatch group across 1 directory with 4 updates ([#3146](https://github.com/authup/authup/issues/3146)) ([f344b3e](https://github.com/authup/authup/commit/f344b3e2f69b5eb2056cfe32c188b43e16c1a855))
+* ensure consistent version for release ([5554980](https://github.com/authup/authup/commit/55549808f266eaab8599018107c0fc1afb9f8e48))
+
+
+### Miscellaneous Chores
+
+* **deps:** upgrade hapic to v3, @hapic/oauth2 to v4, require node &gt;= 22 ([#3134](https://github.com/authup/authup/issues/3134)) ([07503bc](https://github.com/authup/authup/commit/07503bc87b43227cf1b5e03573242d22722a0b08))
+
 ## [1.0.0-beta.49](https://github.com/authup/authup/compare/v1.0.0-beta.48...v1.0.0-beta.49) (2026-06-13)
 
 
