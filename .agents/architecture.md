@@ -998,8 +998,8 @@ dropped their pre-1.x render-function builder APIs (`buildFormGroup` /
 `buildList` / `buildPagination` and friends) in favour of compound
 `<VC*>` SFCs. Authup's entity forms, collection views, and pagination
 chrome were migrated onto the SFCs; the transitional `buildForm*`
-render-function shims (`core/form/builders.ts`) were **retired in
-#3139** — there is no `core/form/builders.ts` anymore. The current
+render-function shims (`core/form/builders.ts`) were **retired in #3139**
+— there is no `core/form/builders.ts` anymore. The current
 integration:
 
 - **Forms** — entity form SFCs (`components/entities/**/A*Form.vue`)
