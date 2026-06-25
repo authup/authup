@@ -5,11 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { RealmReach } from '@authup/access';
 import {
-    BuiltInPolicyType, 
-    PolicyData, 
-    RealmScope, 
-    minRealmScope,
+    BuiltInPolicyType,
+    PolicyData,
+    RealmScope,
+    realmReachCap,
 } from '@authup/access';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
@@ -122,13 +123,19 @@ export class RolePermissionService extends AbstractEntityService implements IRol
             );
 
             // CAP the grant's realm reach to the actor's own ceiling (a creator may
-            // not grant broader than it holds); default to the most restrictive `own`.
-            validated.realm_scope = minRealmScope(validated.realm_scope ?? RealmScope.OWN, grant.realmScope);
+            // not grant broader than it holds): min relative scope + intersection of
+            // the concrete realm allowlist; default to the most restrictive `own`.
+            const capped = realmReachCap(
+                { scope: validated.realm_scope ?? RealmScope.OWN, realm_ids: validated.realm_ids },
+                grant.realmReach,
+            );
+            validated.realm_scope = capped.scope;
+            validated.realm_ids = capped.realm_ids ?? null;
 
             // Only an unrestricted (`any`) actor may set policy_id explicitly; a
             // restricted actor silently inherits its own grant's policy (cannot
             // attach an unowned policy nor detach to widen).
-            if (grant.realmScope !== RealmScope.ANY) {
+            if (grant.realmReach.scope !== RealmScope.ANY) {
                 validated.policy_id = grant.policy ? grant.policy.id : null;
             }
         }
@@ -160,9 +167,9 @@ export class RolePermissionService extends AbstractEntityService implements IRol
         // entity only carries scalar FKs — load the permission relation to derive it).
         // No actor identity (system context) is not realm-gated here; the operation is
         // still authorized by the evaluate() below.
-        let actorScope: RealmScope = RealmScope.ANY;
+        let actorReach: RealmReach = { scope: RealmScope.ANY };
         if (actor.identity) {
-            actorScope = RealmScope.OWN;
+            actorReach = { scope: RealmScope.OWN };
             const lookup: Record<string, any> = { permission_id: entity.permission_id };
             await this.repository.validateJoinColumns(lookup);
             if (lookup.permission) {
@@ -174,22 +181,36 @@ export class RolePermissionService extends AbstractEntityService implements IRol
                         clientId: lookup.permission.client_id,
                     },
                 );
-                actorScope = grant.realmScope;
+                actorReach = grant.realmReach;
             }
         }
 
         const updateData: Record<string, any> = {};
 
-        if (Object.prototype.hasOwnProperty.call(data, 'realm_scope')) {
+        const wantsScope = Object.prototype.hasOwnProperty.call(data, 'realm_scope');
+        const wantsIds = Object.prototype.hasOwnProperty.call(data, 'realm_ids');
+        if (wantsScope || wantsIds) {
             // CAP to the actor's ceiling — a restricted actor may narrow but never widen.
-            updateData.realm_scope = minRealmScope(data.realm_scope ?? RealmScope.OWN, actorScope);
+            const capped = realmReachCap(
+                {
+                    scope: wantsScope ? (data.realm_scope ?? RealmScope.OWN) : (entity.realm_scope ?? RealmScope.OWN),
+                    realm_ids: wantsIds ? data.realm_ids : entity.realm_ids,
+                },
+                actorReach,
+            );
+            if (wantsScope) {
+                updateData.realm_scope = capped.scope;
+            }
+            if (wantsIds) {
+                updateData.realm_ids = capped.realm_ids;
+            }
         }
 
         // Only an unrestricted (`any`) actor may change policy_id (incl. detaching to
         // null); a restricted actor's policy_id change is silently ignored.
         if (
             Object.prototype.hasOwnProperty.call(data, 'policy_id') &&
-            actorScope === RealmScope.ANY
+            actorReach.scope === RealmScope.ANY
         ) {
             updateData.policy_id = data.policy_id;
         }

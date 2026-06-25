@@ -15,6 +15,7 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
+import { deserialize, serialize } from '@authup/kit';
 import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type {
     Client,
@@ -22,6 +23,7 @@ import type {
     Permission,
     Policy,
     Realm,
+    RealmScopeValue,
 } from '@authup/core-kit';
 import { PermissionEntity } from '../permission/index.ts';
 import { PolicyEntity } from '../policy/index.ts';
@@ -51,7 +53,21 @@ export class ClientPermissionEntity implements ClientPermission {
         length: 50,
         default: 'own',
     })
-    realm_scope: 'own' | 'own_or_null' | 'any';
+    realm_scope: RealmScopeValue;
+
+    @Column({
+        type: 'text',
+        nullable: true,
+        transformer: {
+            to(value: any): any {
+                return serialize(value);
+            },
+            from(value: any): any {
+                return deserialize(value);
+            },
+        },
+    })
+    realm_ids: string[] | null;
 
     @Column()
     client_id: string;

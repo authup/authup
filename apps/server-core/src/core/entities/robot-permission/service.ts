@@ -5,11 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { RealmReach } from '@authup/access';
 import {
-    BuiltInPolicyType, 
-    PolicyData, 
-    RealmScope, 
-    minRealmScope,
+    BuiltInPolicyType,
+    PolicyData,
+    RealmScope,
+    realmReachCap,
 } from '@authup/access';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
@@ -117,11 +118,17 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
                 },
             );
 
-            // CAP the grant's realm reach to the actor's own ceiling; default `own`.
-            validated.realm_scope = minRealmScope(validated.realm_scope ?? RealmScope.OWN, grant.realmScope);
+            // CAP the grant's realm reach to the actor's own ceiling (min relative scope
+            // + intersection of the concrete realm allowlist); default `own`.
+            const capped = realmReachCap(
+                { scope: validated.realm_scope ?? RealmScope.OWN, realm_ids: validated.realm_ids },
+                grant.realmReach,
+            );
+            validated.realm_scope = capped.scope;
+            validated.realm_ids = capped.realm_ids ?? null;
 
             // Only an unrestricted (`any`) actor may set policy_id explicitly.
-            if (grant.realmScope !== RealmScope.ANY) {
+            if (grant.realmReach.scope !== RealmScope.ANY) {
                 validated.policy_id = grant.policy ? grant.policy.id : null;
             }
         }
@@ -149,9 +156,9 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
             throw new EntityNotFoundError();
         }
 
-        let actorScope: RealmScope = RealmScope.ANY;
+        let actorReach: RealmReach = { scope: RealmScope.ANY };
         if (actor.identity) {
-            actorScope = RealmScope.OWN;
+            actorReach = { scope: RealmScope.OWN };
             const lookup: Record<string, any> = { permission_id: entity.permission_id };
             await this.repository.validateJoinColumns(lookup);
             if (lookup.permission) {
@@ -163,19 +170,33 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
                         clientId: lookup.permission.client_id,
                     },
                 );
-                actorScope = grant.realmScope;
+                actorReach = grant.realmReach;
             }
         }
 
         const updateData: Record<string, any> = {};
 
-        if (Object.prototype.hasOwnProperty.call(data, 'realm_scope')) {
-            updateData.realm_scope = minRealmScope(data.realm_scope ?? RealmScope.OWN, actorScope);
+        const wantsScope = Object.prototype.hasOwnProperty.call(data, 'realm_scope');
+        const wantsIds = Object.prototype.hasOwnProperty.call(data, 'realm_ids');
+        if (wantsScope || wantsIds) {
+            const capped = realmReachCap(
+                {
+                    scope: wantsScope ? (data.realm_scope ?? RealmScope.OWN) : (entity.realm_scope ?? RealmScope.OWN),
+                    realm_ids: wantsIds ? data.realm_ids : entity.realm_ids,
+                },
+                actorReach,
+            );
+            if (wantsScope) {
+                updateData.realm_scope = capped.scope;
+            }
+            if (wantsIds) {
+                updateData.realm_ids = capped.realm_ids;
+            }
         }
 
         if (
             Object.prototype.hasOwnProperty.call(data, 'policy_id') &&
-            actorScope === RealmScope.ANY
+            actorReach.scope === RealmScope.ANY
         ) {
             updateData.policy_id = data.policy_id;
         }

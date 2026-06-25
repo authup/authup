@@ -21,10 +21,10 @@ import {
     PolicyEngine,
     PolicyIssueCode,
     definePolicyIssueItem,
-    maxRealmScope,
     maybeInvertPolicyOutcome,
     mergePermissionPolicyBindings,
-    realmScopeMatches,
+    mergeRealmReach,
+    realmReachMatches,
 } from '@authup/access';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 
@@ -120,9 +120,11 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
         // realm-match behaviour of a neutral pass when no realm key is present.
         const attributes = await this.attributesEvaluator.accessData(ctx) as Record<string, any> | null;
         if (attributes && Object.prototype.hasOwnProperty.call(attributes, 'realm_id')) {
-            const realmScope = maxRealmScope(bindingsMerged.map((b) => b.realm_scope));
-            const matches = realmScopeMatches(
-                realmScope,
+            const realmReach = mergeRealmReach(
+                bindingsMerged.map((b) => ({ scope: b.realm_scope ?? 'own', realm_ids: b.realm_ids })),
+            );
+            const matches = realmReachMatches(
+                realmReach,
                 attributes.realm_id ?? null,
                 identity.realmId,
                 identity.realmName,

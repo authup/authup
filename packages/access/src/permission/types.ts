@@ -20,9 +20,14 @@ export type PermissionPolicyBinding = {
     permission: BasePermission,
     policies?: BasePolicy[],
     /**
-     * Coarse, actor-relative realm reach of this grant. Merged across grants by
-     * ordered-MAX; absent coerces to the most restrictive `own` (fail-closed).
+     * Relative realm reach of this grant (none/own/own_or_null/any). Merged across
+     * grants by ordered-MAX; absent coerces to the most restrictive `own` (fail-closed).
      * NOT part of the binding identity key (see isPermissionPolicyBindingEqual).
      */
     realm_scope?: RealmScopeValue,
+    /**
+     * Absolute realm allowlist (concrete realm ids) ORed with `realm_scope`. Merged
+     * across grants by union. null/global is expressed via `own_or_null`, never here.
+     */
+    realm_ids?: string[] | null,
 };

@@ -38,6 +38,10 @@ export class Default1779300000000 implements MigrationInterface {
                 ALTER TABLE \`${table}\`
                 ADD \`realm_scope\` varchar(50) NOT NULL DEFAULT 'own'
             `);
+            await queryRunner.query(`
+                ALTER TABLE \`${table}\`
+                ADD \`realm_ids\` text NULL
+            `);
         }
 
         // 2. convert the realm-scoping policies into the enum (clearing only those
@@ -88,6 +92,9 @@ export class Default1779300000000 implements MigrationInterface {
         for (const table of JUNCTION_TABLES) {
             await queryRunner.query(`
                 ALTER TABLE \`${table}\` DROP COLUMN \`realm_scope\`
+            `);
+            await queryRunner.query(`
+                ALTER TABLE \`${table}\` DROP COLUMN \`realm_ids\`
             `);
         }
     }

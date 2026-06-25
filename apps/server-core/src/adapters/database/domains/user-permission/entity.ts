@@ -15,12 +15,14 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
+import { deserialize, serialize } from '@authup/kit';
 import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type {
     Permission,
     Policy,
     Realm,
-    User, 
+    RealmScopeValue,
+    User,
     UserPermission,
 } from '@authup/core-kit';
 import { PolicyEntity } from '../policy/index.ts';
@@ -59,7 +61,21 @@ export class UserPermissionEntity implements UserPermission {
         length: 50,
         default: 'own',
     })
-    realm_scope: 'own' | 'own_or_null' | 'any';
+    realm_scope: RealmScopeValue;
+
+    @Column({
+        type: 'text',
+        nullable: true,
+        transformer: {
+            to(value: any): any {
+                return serialize(value);
+            },
+            from(value: any): any {
+                return deserialize(value);
+            },
+        },
+    })
+    realm_ids: string[] | null;
 
     @Column()
     user_id: User['id'];

@@ -9,6 +9,7 @@ import type { DecisionStrategy } from '@authup/kit';
 import type { Client } from '../client';
 import type { Policy } from '../policy';
 import type { Realm } from '../realm';
+import type { RealmScopeValue } from './constants.ts';
 
 export interface PermissionRelation {
     policy_id: Policy['id'] | null;
@@ -16,11 +17,16 @@ export interface PermissionRelation {
     policy: Policy | null;
 
     /**
-     * Coarse, actor-relative realm reach of this grant. Fail-closed default `own`.
-     * Mirrors the `RealmScope` enum in `@authup/access` (single logic source of
-     * truth); the three string values must agree.
+     * Relative realm reach of this grant (`none` = allowlist-only). Fail-closed
+     * default `own`. See {@link REALM_SCOPE}.
      */
-    realm_scope: 'own' | 'own_or_null' | 'any';
+    realm_scope: RealmScopeValue;
+
+    /**
+     * Absolute realm allowlist (concrete realm ids) ORed with `realm_scope`.
+     * null/global is expressed via `own_or_null`, never here.
+     */
+    realm_ids: string[] | null;
 
     permission_id: Permission['id'];
 

@@ -9,6 +9,7 @@ import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
 import { ValidatorGroup } from '@authup/kit';
+import { REALM_SCOPE } from '../permission';
 import type { RobotPermission } from './entity.ts';
 
 export class RobotPermissionValidator extends Container<
@@ -38,7 +39,13 @@ export class RobotPermissionValidator extends Container<
         this.mount(
             'realm_scope',
             { optional: true },
-            createValidator(z.enum(['own', 'own_or_null', 'any'])),
+            createValidator(z.enum(REALM_SCOPE)),
+        );
+
+        this.mount(
+            'realm_ids',
+            { optional: true },
+            createValidator(z.array(z.uuid()).nullable()),
         );
     }
 }

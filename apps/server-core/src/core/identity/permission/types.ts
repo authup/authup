@@ -9,7 +9,7 @@ import type { Policy } from '@authup/core-kit';
 import type {
     IdentityPolicyData,
     PermissionPolicyBinding,
-    RealmScope,
+    RealmReach,
 } from '@authup/access';
 import type { IClientRepository } from '../../entities/client/types.ts';
 import type { IRobotRepository } from '../../entities/robot/types.ts';
@@ -30,7 +30,7 @@ export type ResolveJunctionPolicyOptions = {
  */
 export type ResolveJunctionGrantResult = {
     policy?: Policy;
-    realmScope: RealmScope;
+    realmReach: RealmReach;
 };
 
 export interface IIdentityPermissionProvider {
