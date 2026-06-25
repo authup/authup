@@ -218,7 +218,7 @@ export const APermissionPolicyBindingButton = defineComponent({
                 triggerVariant = 'solid';
             }
 
-            return h('span', [
+            return h('span', { class: 'inline-flex items-center' }, [
                 h(VCButton, {
                     size: props.size,
                     color: triggerColor,

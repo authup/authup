@@ -1,15 +1,15 @@
 <script lang="ts">
-import { 
-    TranslatorTranslationAppKey, 
-    TranslatorTranslationCommonKey, 
-    TranslatorTranslationEntityKey, 
-    TranslatorTranslationNamespace, 
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { 
-    injectHTTPClient, 
-    useTranslations, 
-    useTranslationsForNamespace, 
-    useTranslator, 
+import {
+    injectHTTPClient,
+    useTranslations,
+    useTranslationsForNamespace,
+    useTranslator,
 } from '@authup/client-web-kit';
 import type { Permission } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
@@ -40,38 +40,38 @@ export default defineComponent({
         const translationsDefault = useTranslations(
             [
                 {
-                    namespace: TranslatorTranslationNamespace.COMMON, 
-                    key: TranslatorTranslationCommonKey.GENERAL, 
+                    namespace: TranslatorTranslationNamespace.COMMON,
+                    key: TranslatorTranslationCommonKey.GENERAL,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.ENTITY, 
-                    key: TranslatorTranslationEntityKey.POLICY, 
-                    count: 2, 
+                    namespace: TranslatorTranslationNamespace.ENTITY,
+                    key: TranslatorTranslationEntityKey.POLICY,
+                    count: 2,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.ENTITY, 
-                    key: TranslatorTranslationEntityKey.USER, 
-                    count: 2, 
+                    namespace: TranslatorTranslationNamespace.ENTITY,
+                    key: TranslatorTranslationEntityKey.USER,
+                    count: 2,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.ENTITY, 
-                    key: TranslatorTranslationEntityKey.CLIENT, 
-                    count: 2, 
+                    namespace: TranslatorTranslationNamespace.ENTITY,
+                    key: TranslatorTranslationEntityKey.CLIENT,
+                    count: 2,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.ENTITY, 
-                    key: TranslatorTranslationEntityKey.ROBOT, 
-                    count: 2, 
+                    namespace: TranslatorTranslationNamespace.ENTITY,
+                    key: TranslatorTranslationEntityKey.ROBOT,
+                    count: 2,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.ENTITY, 
-                    key: TranslatorTranslationEntityKey.ROLE, 
-                    count: 2, 
+                    namespace: TranslatorTranslationNamespace.ENTITY,
+                    key: TranslatorTranslationEntityKey.ROLE,
+                    count: 2,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.ENTITY, 
-                    key: TranslatorTranslationEntityKey.PERMISSION, 
-                    count: 1, 
+                    namespace: TranslatorTranslationNamespace.ENTITY,
+                    key: TranslatorTranslationEntityKey.PERMISSION,
+                    count: 1,
                 },
             ],
         );
@@ -162,7 +162,7 @@ export default defineComponent({
     <div>
         <h1 class="title no-border mb-3">
             <VCIcon
-                name="fa6-solid:user"
+                name="fa6-solid:key"
                 class="me-1"
             />
             {{ entity.name }}
