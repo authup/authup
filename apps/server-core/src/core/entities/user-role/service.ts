@@ -112,9 +112,10 @@ export class UserRoleService extends AbstractEntityService implements IUserRoleS
             }
         }
 
+        // Stamp the owner (user) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_ROLE_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...validated, realm_id: validated.user_realm_id ?? null } }),
         });
 
         let entity = this.repository.create(validated);
@@ -134,9 +135,10 @@ export class UserRoleService extends AbstractEntityService implements IUserRoleS
             throw new EntityNotFoundError();
         }
 
+        // Stamp the owner (user) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_ROLE_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...entity, realm_id: entity.user_realm_id ?? null } }),
         });
 
         const { id: entityId } = entity;

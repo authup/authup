@@ -3,18 +3,18 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
 /**
  * realm_scope enum on the four permission-junction tables (fail-closed realm scoping).
  *
- * Adds the coarse, actor-relative `realm_scope` column (default 'own'), migrates the
- * realm-scoping that previously lived in policies into the column, and removes the
- * baseline `system.realm-match` child of `system.default` plus the now-redundant
- * `system.realm-bound` / `system.realm-or-global` system policies.
+ * Adds the coarse, actor-relative `realm_scope` column (default 'own') and migrates the
+ * realm-scoping that previously lived in policies into the column. The redundant system
+ * realm policies (`system.realm-match` child of `system.default`,
+ * `system.realm-bound`, `system.realm-or-global`) are deleted here as a deterministic
+ * safety net; the provisioner ALSO prunes them on boot (cleanupStaleChildren for the
+ * realm-match child + the top-level stale-prune), so a fresh install needs no migration.
  *
  * up() ordering is LOAD-BEARING: schema -> convert-by-policy-name -> lift-admin ->
- * unbind realm-match child -> delete policy rows (the policy-name joins must resolve
- * before the rows are deleted).
+ * delete policy rows (the policy-name joins must resolve before the rows are deleted).
  *
  * down() is BEST-EFFORT: it drops the column only. The deleted system policies and the
- * nulled junction policy_id pointers are NOT reconstructed (the forward direction is the
- * supported path). After a down(), re-provisioning is required to restore prior behaviour.
+ * nulled junction policy_id pointers are NOT reconstructed (re-provisioning restores them).
  */
 const JUNCTION_TABLES = [
     'auth_role_permissions',
@@ -37,10 +37,6 @@ export class Default1779300000000 implements MigrationInterface {
             await queryRunner.query(`
                 ALTER TABLE "${table}"
                 ADD "realm_scope" character varying(50) NOT NULL DEFAULT 'own'
-            `);
-            await queryRunner.query(`
-                ALTER TABLE "${table}"
-                ADD "realm_ids" text
             `);
         }
 
@@ -71,17 +67,10 @@ export class Default1779300000000 implements MigrationInterface {
               AND r."built_in" = true
         `);
 
-        // 4. unbind the system.realm-match child from system.default.
-        await queryRunner.query(`
-            DELETE FROM "auth_permission_policies"
-            WHERE "policy_id" IN (
-                SELECT "id" FROM "auth_policies"
-                WHERE "name" = 'system.realm-match' AND "built_in" = true AND "realm_id" IS NULL
-            )
-        `);
-
-        // 5. delete the three now-redundant system realm policies (by exact name —
+        // 4. delete the three now-redundant system realm policies (by exact name —
         //    never by type, which would wipe user-defined realm-match policies).
+        //    A cascading closure-tree FK detaches the realm-match child from
+        //    system.default; the provisioner re-prunes idempotently on boot.
         await queryRunner.query(`
             DELETE FROM "auth_policies"
             WHERE "name" IN ('system.realm-match', 'system.realm-bound', 'system.realm-or-global')
@@ -94,9 +83,6 @@ export class Default1779300000000 implements MigrationInterface {
         for (const table of JUNCTION_TABLES) {
             await queryRunner.query(`
                 ALTER TABLE "${table}" DROP COLUMN "realm_scope"
-            `);
-            await queryRunner.query(`
-                ALTER TABLE "${table}" DROP COLUMN "realm_ids"
             `);
         }
     }

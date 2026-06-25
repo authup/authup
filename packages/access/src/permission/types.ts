@@ -25,9 +25,4 @@ export type PermissionPolicyBinding = {
      * NOT part of the binding identity key (see isPermissionPolicyBindingEqual).
      */
     realm_scope?: RealmScopeValue,
-    /**
-     * Absolute realm allowlist (concrete realm ids) ORed with `realm_scope`. Merged
-     * across grants by union. null/global is expressed via `own_or_null`, never here.
-     */
-    realm_ids?: string[] | null,
 };

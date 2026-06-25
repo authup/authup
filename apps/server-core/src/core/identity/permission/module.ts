@@ -8,14 +8,13 @@
 import type {
     IdentityPolicyData,
     PermissionPolicyBinding,
-    RealmReach,
 } from '@authup/access';
 import {
     RealmScope,
+    compareRealmScope,
     isPermissionPolicyBindingEqual,
+    maxRealmScope,
     mergePermissionPolicyBindings,
-    mergeRealmReach,
-    realmReachSuperset,
 } from '@authup/access';
 import type { Policy } from '@authup/core-kit';
 import { isPolicy } from '@authup/core-kit';
@@ -30,10 +29,6 @@ import type {
     ResolveJunctionGrantResult,
     ResolveJunctionPolicyOptions,
 } from './types.ts';
-
-function bindingReach(binding: PermissionPolicyBinding): RealmReach {
-    return { scope: binding.realm_scope ?? RealmScope.OWN, realm_ids: binding.realm_ids };
-}
 
 export class IdentityPermissionProvider implements IIdentityPermissionProvider {
     protected clientRepository: IClientRepository;
@@ -77,11 +72,10 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
                 return false;
             }
 
-            // Realm reach: the parent must cover (⊇) the child's reach — relative
-            // ordinal + concrete-id set-containment (the symbolic `own` never covers a
-            // concrete child realm id; deny-if-unsure). No scopeMatches here — the role
-            // child carries no actor realm; this is a purely structural comparison.
-            if (!realmReachSuperset(bindingReach(parentItem), bindingReach(childItem))) {
+            // Realm reach: the parent's relative scope must be >= the child's (ordered
+            // none < own < own_or_null < any). No scopeMatches here — the role child
+            // carries no actor realm; this is a purely structural comparison.
+            if (compareRealmScope(parentItem.realm_scope, childItem.realm_scope) < 0) {
                 return false;
             }
         }
@@ -115,11 +109,11 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         });
 
         if (matching.length === 0) {
-            return { realmReach: { scope: RealmScope.OWN, realm_ids: null } };
+            return { realmScope: RealmScope.OWN };
         }
 
         const merged = mergePermissionPolicyBindings(matching);
-        const realmReach = mergeRealmReach(merged.map(bindingReach));
+        const realmScope = maxRealmScope(merged.map((b) => b.realm_scope));
 
         let policy: Policy | undefined;
         if (merged.length > 0 && merged[0].policies && merged[0].policies.length > 0) {
@@ -129,7 +123,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             }
         }
 
-        return { policy, realmReach };
+        return { policy, realmScope };
     }
 
     async getFor(identity: IdentityPolicyData) : Promise<PermissionPolicyBinding[]> {

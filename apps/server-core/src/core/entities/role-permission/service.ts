@@ -5,12 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { RealmReach } from '@authup/access';
 import {
     BuiltInPolicyType,
     PolicyData,
     RealmScope,
-    realmReachCap,
+    minRealmScope,
 } from '@authup/access';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
@@ -122,27 +121,23 @@ export class RolePermissionService extends AbstractEntityService implements IRol
                 },
             );
 
-            // CAP the grant's realm reach to the actor's own ceiling (a creator may
-            // not grant broader than it holds): min relative scope + intersection of
-            // the concrete realm allowlist; default to the most restrictive `own`.
-            const capped = realmReachCap(
-                { scope: validated.realm_scope ?? RealmScope.OWN, realm_ids: validated.realm_ids },
-                grant.realmReach,
-            );
-            validated.realm_scope = capped.scope;
-            validated.realm_ids = capped.realm_ids ?? null;
+            // CAP the grant's realm scope to the actor's own ceiling (a creator may not
+            // grant broader than it holds); default to the most restrictive `own`.
+            validated.realm_scope = minRealmScope(validated.realm_scope ?? RealmScope.OWN, grant.realmScope);
 
             // Only an unrestricted (`any`) actor may set policy_id explicitly; a
             // restricted actor silently inherits its own grant's policy (cannot
             // attach an unowned policy nor detach to widen).
-            if (grant.realmReach.scope !== RealmScope.ANY) {
+            if (grant.realmScope !== RealmScope.ANY) {
                 validated.policy_id = grant.policy ? grant.policy.id : null;
             }
         }
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_PERMISSION_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+            // Stamp the owner (role) realm as the canonical `realm_id` so the realm_scope
+            // factor gates this junction write against the actor's reach (no cross-realm).
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...validated, realm_id: validated.role_realm_id ?? null } }),
         });
 
         let entity = this.repository.create(validated);
@@ -167,9 +162,9 @@ export class RolePermissionService extends AbstractEntityService implements IRol
         // entity only carries scalar FKs — load the permission relation to derive it).
         // No actor identity (system context) is not realm-gated here; the operation is
         // still authorized by the evaluate() below.
-        let actorReach: RealmReach = { scope: RealmScope.ANY };
+        let actorScope: RealmScope = RealmScope.ANY;
         if (actor.identity) {
-            actorReach = { scope: RealmScope.OWN };
+            actorScope = RealmScope.OWN;
             const lookup: Record<string, any> = { permission_id: entity.permission_id };
             await this.repository.validateJoinColumns(lookup);
             if (lookup.permission) {
@@ -181,34 +176,22 @@ export class RolePermissionService extends AbstractEntityService implements IRol
                         clientId: lookup.permission.client_id,
                     },
                 );
-                actorReach = grant.realmReach;
+                actorScope = grant.realmScope as RealmScope;
             }
         }
 
         const updateData: Record<string, any> = {};
 
-        const wantsScope = Object.prototype.hasOwnProperty.call(data, 'realm_scope');
-        const wantsIds = Object.prototype.hasOwnProperty.call(data, 'realm_ids');
-        if (wantsScope || wantsIds) {
-            // CAP to the actor's ceiling — a restricted actor may narrow but never widen.
-            const capped = realmReachCap(
-                {
-                    scope: wantsScope ? (data.realm_scope ?? RealmScope.OWN) : (entity.realm_scope ?? RealmScope.OWN),
-                    realm_ids: wantsIds ? data.realm_ids : entity.realm_ids,
-                },
-                actorReach,
-            );
-            // Persist the capped reach atomically — capping one dimension can narrow
-            // the other, so write both whenever the caller touches either.
-            updateData.realm_scope = capped.scope;
-            updateData.realm_ids = capped.realm_ids ?? null;
+        // CAP to the actor's ceiling — a restricted actor may narrow but never widen.
+        if (Object.prototype.hasOwnProperty.call(data, 'realm_scope')) {
+            updateData.realm_scope = minRealmScope(data.realm_scope ?? RealmScope.OWN, actorScope);
         }
 
         // Only an unrestricted (`any`) actor may change policy_id (incl. detaching to
         // null); a restricted actor's policy_id change is silently ignored.
         if (
             Object.prototype.hasOwnProperty.call(data, 'policy_id') &&
-            actorReach.scope === RealmScope.ANY
+            actorScope === RealmScope.ANY
         ) {
             updateData.policy_id = data.policy_id;
         }
@@ -219,7 +202,7 @@ export class RolePermissionService extends AbstractEntityService implements IRol
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_PERMISSION_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: merged }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...merged, realm_id: merged.role_realm_id ?? null } }),
         });
 
         return this.repository.save(merged);
@@ -238,7 +221,7 @@ export class RolePermissionService extends AbstractEntityService implements IRol
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_PERMISSION_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...entity, realm_id: entity.role_realm_id ?? null } }),
         });
 
         const { id: entityId } = entity;

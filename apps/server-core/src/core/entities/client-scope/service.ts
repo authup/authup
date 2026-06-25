@@ -92,9 +92,10 @@ export class ClientScopeService extends AbstractEntityService implements IClient
             validated.scope_realm_id = validated.scope.realm_id;
         }
 
+        // Stamp the owner (client) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_SCOPE_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...validated, realm_id: validated.client_realm_id ?? null } }),
         });
 
         let entity = this.repository.create(validated);
@@ -114,9 +115,10 @@ export class ClientScopeService extends AbstractEntityService implements IClient
             throw new EntityNotFoundError();
         }
 
+        // Stamp the owner (client) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_SCOPE_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...entity, realm_id: entity.client_realm_id ?? null } }),
         });
 
         const { id: entityId } = entity;

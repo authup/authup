@@ -10,12 +10,8 @@ import {
     RealmScope,
     compareRealmScope,
     maxRealmScope,
-    mergeRealmReach,
     minRealmScope,
     normalizeRealmScope,
-    realmReachCap,
-    realmReachMatches,
-    realmReachSuperset,
     realmScopeMatches,
 } from '../../../src';
 
@@ -27,11 +23,13 @@ describe('src/permission/realm-scope', () => {
             expect(normalizeRealmScope('garbage' as any)).toBe(RealmScope.OWN);
             expect(normalizeRealmScope(RealmScope.OWN_OR_NULL)).toBe(RealmScope.OWN_OR_NULL);
             expect(normalizeRealmScope('any')).toBe(RealmScope.ANY);
+            expect(normalizeRealmScope('none')).toBe(RealmScope.NONE);
         });
     });
 
     describe('ordering', () => {
-        it('orders own < own_or_null < any', () => {
+        it('orders none < own < own_or_null < any', () => {
+            expect(compareRealmScope(RealmScope.NONE, RealmScope.OWN)).toBeLessThan(0);
             expect(compareRealmScope(RealmScope.OWN, RealmScope.OWN_OR_NULL)).toBeLessThan(0);
             expect(compareRealmScope(RealmScope.OWN_OR_NULL, RealmScope.ANY)).toBeLessThan(0);
             expect(compareRealmScope(RealmScope.ANY, RealmScope.OWN)).toBeGreaterThan(0);
@@ -93,103 +91,24 @@ describe('src/permission/realm-scope', () => {
             expect(realmScopeMatches(undefined, A, A)).toBe(true);
         });
 
-        it('none never matches relatively', () => {
+        it('none never matches', () => {
             expect(realmScopeMatches(RealmScope.NONE, A, A)).toBe(false);
             expect(realmScopeMatches(RealmScope.NONE, null, A)).toBe(false);
         });
-    });
 
-    describe('realmReachMatches (relative OR allowlist)', () => {
-        const A = 'realm-a';
-        const B = 'realm-b';
-        const C = 'realm-c';
-
-        it('matches a concrete realm in the allowlist regardless of actor realm', () => {
-            const reach = { scope: RealmScope.NONE, realm_ids: [A, B] };
-            expect(realmReachMatches(reach, A, C)).toBe(true); // actor in C, resource A in list
-            expect(realmReachMatches(reach, B, null)).toBe(true); // realm-less actor, B in list
-            expect(realmReachMatches(reach, C, C)).toBe(false); // C not in list, none scope
-        });
-
-        it('own + allowlist = own realm OR the listed realm', () => {
-            const reach = { scope: RealmScope.OWN, realm_ids: [B] };
-            expect(realmReachMatches(reach, A, A)).toBe(true); // own
-            expect(realmReachMatches(reach, B, A)).toBe(true); // listed
-            expect(realmReachMatches(reach, C, A)).toBe(false); // neither
-        });
-
-        it('allowlist never matches null/global (concrete ids only)', () => {
-            expect(realmReachMatches({ scope: RealmScope.NONE, realm_ids: [A] }, null, A)).toBe(false);
-        });
-    });
-
-    describe('mergeRealmReach', () => {
-        it('folds scope by max and realm_ids by union', () => {
-            const merged = mergeRealmReach([
-                { scope: RealmScope.OWN, realm_ids: ['a'] },
-                { scope: RealmScope.OWN_OR_NULL, realm_ids: ['b'] },
-            ]);
-            expect(merged.scope).toBe(RealmScope.OWN_OR_NULL);
-            expect([...(merged.realm_ids ?? [])].sort()).toEqual(['a', 'b']);
-        });
-
-        it('empty folds to fail-closed own with no ids', () => {
-            const merged = mergeRealmReach([]);
-            expect(merged.scope).toBe(RealmScope.OWN);
-            expect(merged.realm_ids).toBeNull();
-        });
-    });
-
-    describe('realmReachSuperset', () => {
-        it('relative ordinal: any ⊇ own_or_null ⊇ own ⊇ none', () => {
-            expect(realmReachSuperset({ scope: RealmScope.ANY }, { scope: RealmScope.OWN })).toBe(true);
-            expect(realmReachSuperset({ scope: RealmScope.OWN }, { scope: RealmScope.OWN_OR_NULL })).toBe(false);
-        });
-
-        it('symbolic own NEVER covers a concrete child realm id (deny-if-unsure)', () => {
-            // realm_admin-ish (own_or_null, no ids) must NOT superset a {B} grant
-            expect(realmReachSuperset(
-                { scope: RealmScope.OWN_OR_NULL },
-                { scope: RealmScope.NONE, realm_ids: ['realm-b'] },
-            )).toBe(false);
-        });
-
-        it('any covers any concrete set; explicit ids must be a superset', () => {
-            expect(realmReachSuperset({ scope: RealmScope.ANY }, { scope: RealmScope.NONE, realm_ids: ['x', 'y'] })).toBe(true);
-            expect(realmReachSuperset(
-                { scope: RealmScope.NONE, realm_ids: ['x', 'y'] },
-                { scope: RealmScope.NONE, realm_ids: ['x'] },
-            )).toBe(true);
-            expect(realmReachSuperset(
-                { scope: RealmScope.NONE, realm_ids: ['x'] },
-                { scope: RealmScope.NONE, realm_ids: ['x', 'y'] },
-            )).toBe(false);
-        });
-    });
-
-    describe('realmReachCap', () => {
-        it('caps relative scope to the creator ceiling', () => {
-            expect(realmReachCap({ scope: RealmScope.ANY }, { scope: RealmScope.OWN_OR_NULL }).scope).toBe(RealmScope.OWN_OR_NULL);
-        });
-
-        it('an any creator may grant any concrete realm ids', () => {
-            const capped = realmReachCap({ scope: RealmScope.NONE, realm_ids: ['a', 'b'] }, { scope: RealmScope.ANY });
-            expect([...(capped.realm_ids ?? [])].sort()).toEqual(['a', 'b']);
-        });
-
-        it('a non-any creator can only grant realm ids it explicitly holds', () => {
-            // realm_admin (own_or_null, no ids) requesting {b} => filtered to null
-            const capped = realmReachCap(
-                { scope: RealmScope.OWN_OR_NULL, realm_ids: ['b'] },
-                { scope: RealmScope.OWN_OR_NULL },
-            );
-            expect(capped.realm_ids).toBeNull();
-            // a creator holding {b} explicitly may pass it through
-            const capped2 = realmReachCap(
-                { scope: RealmScope.NONE, realm_ids: ['b'] },
-                { scope: RealmScope.NONE, realm_ids: ['b', 'c'] },
-            );
-            expect(capped2.realm_ids).toEqual(['b']);
+        describe('multi-realm resource (realm_id array)', () => {
+            it('requires the scope to reach EVERY listed realm (unanimous, fail-closed)', () => {
+                // own actor in A: [A] reachable, [A,B] not (B out of reach)
+                expect(realmScopeMatches(RealmScope.OWN, [A], A)).toBe(true);
+                expect(realmScopeMatches(RealmScope.OWN, [A, B], A)).toBe(false);
+                // any reaches all
+                expect(realmScopeMatches(RealmScope.ANY, [A, B], A)).toBe(true);
+                // own_or_null: [A, null] ok, [A, B] not
+                expect(realmScopeMatches(RealmScope.OWN_OR_NULL, [A, null as any], A)).toBe(true);
+                expect(realmScopeMatches(RealmScope.OWN_OR_NULL, [A, B], A)).toBe(false);
+                // empty array vacuously matches (no realm to fail on)
+                expect(realmScopeMatches(RealmScope.OWN, [], A)).toBe(true);
+            });
         });
     });
 });

@@ -6,14 +6,14 @@
  */
 
 /**
- * Relative realm reach of a permission grant (actor-relative component).
+ * Actor-relative realm reach of a permission grant.
  *
  * Total order (least -> most permissive): none < own < own_or_null < any.
  * A missing/unknown column coerces to `own` (fail-closed); `none` is only ever an
- * explicit value (relative match disabled — the grant reaches only its `realm_ids`).
+ * explicit value (the grant reaches no realm at all).
  */
 export enum RealmScope {
-    /** No relative match — the grant reaches only the realms in its `realm_ids` allowlist. */
+    /** No reach — the grant matches no resource realm. */
     NONE = 'none',
     /** Own realm only — resource realm must equal the actor's realm. */
     OWN = 'own',
@@ -24,16 +24,6 @@ export enum RealmScope {
 }
 
 export type RealmScopeValue = `${RealmScope}`;
-
-/**
- * The full realm reach of a grant: a relative component (`scope`) ORed with an
- * absolute allowlist of concrete realm ids (`realm_ids`). null/global is expressed
- * by the relative `own_or_null`, never by the allowlist.
- */
-export type RealmReach = {
-    scope: RealmScopeValue,
-    realm_ids?: string[] | null,
-};
 
 const REALM_SCOPE_ORDER: Record<RealmScope, number> = {
     [RealmScope.NONE]: 0,
@@ -96,18 +86,36 @@ export function minRealmScope(
 }
 
 /**
- * Relative-component match: whether `scope` reaches a resource in `resourceRealmId`
- * for an actor whose realm is `identityRealmId`/`identityRealmName`.
+ * Whether `scope` reaches a single resource realm `resourceRealmId` for an actor whose
+ * realm is `identityRealmId`/`identityRealmName`.
  *
  * - `any`         -> always.
- * - `none`        -> never (allowlist-only grant).
+ * - `none`        -> never.
  * - realm-less actor (no realmId and no realmName) -> never `own`/`own_or_null`.
  * - resource realm `null` (global) -> only `own_or_null`.
  * - concrete resource realm -> must equal the actor's own realm (by id or name).
  */
+function matchesSingle(
+    normalized: RealmScope,
+    resourceRealmId: string | null,
+    identityRealmId: string | null,
+    identityRealmName: string | null,
+): boolean {
+    if (resourceRealmId === null) {
+        return normalized === RealmScope.OWN_OR_NULL;
+    }
+    return resourceRealmId === identityRealmId || resourceRealmId === identityRealmName;
+}
+
+/**
+ * Whether `scope` reaches the resource. The resource realm may be presented as a single
+ * id, `null` (global), or an array of realm ids — the array form (a resource that spans
+ * multiple realms) requires the scope to reach EVERY listed realm (unanimous, fail-closed),
+ * so any app/entity can express its realm via one or many keys under the canonical contract.
+ */
 export function realmScopeMatches(
     scope: RealmScopeValue | RealmScope | null | undefined,
-    resourceRealmId: string | null | undefined,
+    resourceRealmId: string | string[] | null | undefined,
     identityRealmId: string | null | undefined,
     identityRealmName?: string | null,
 ): boolean {
@@ -125,95 +133,9 @@ export function realmScopeMatches(
         return false;
     }
 
-    const resource = resourceRealmId ?? null;
-    if (resource === null) {
-        return normalized === RealmScope.OWN_OR_NULL;
+    if (Array.isArray(resourceRealmId)) {
+        return resourceRealmId.every((id) => matchesSingle(normalized, id ?? null, realmId, realmName));
     }
 
-    return resource === realmId || resource === realmName;
-}
-
-function normalizeRealmIds(realm_ids?: string[] | null): string[] {
-    return Array.isArray(realm_ids) ? realm_ids.filter((id): id is string => typeof id === 'string') : [];
-}
-
-/**
- * Full reach match: the grant reaches the resource if its absolute allowlist contains
- * the (concrete) resource realm, OR its relative scope matches.
- */
-export function realmReachMatches(
-    reach: RealmReach,
-    resourceRealmId: string | null | undefined,
-    identityRealmId: string | null | undefined,
-    identityRealmName?: string | null,
-): boolean {
-    const resource = resourceRealmId ?? null;
-    if (resource !== null && normalizeRealmIds(reach.realm_ids).includes(resource)) {
-        return true;
-    }
-    return realmScopeMatches(reach.scope, resourceRealmId, identityRealmId, identityRealmName);
-}
-
-/**
- * Fold an actor's grant reaches MOST-PERMISSIVE-WINS: ordered-max of the relative
- * scope, union of the absolute allowlists. Empty folds to fail-closed `own`.
- */
-export function mergeRealmReach(reaches: RealmReach[]): RealmReach {
-    if (reaches.length === 0) {
-        return { scope: RealmScope.OWN, realm_ids: null };
-    }
-    const scope = maxRealmScope(reaches.map((r) => r.scope));
-    const ids = new Set<string>();
-    for (const reach of reaches) {
-        for (const id of normalizeRealmIds(reach.realm_ids)) {
-            ids.add(id);
-        }
-    }
-    return { scope, realm_ids: ids.size > 0 ? [...ids] : null };
-}
-
-/**
- * Whether `parent` reach covers (⊇) `child` reach. Relative: parent.scope ≥ child.scope.
- * Absolute: each concrete realm in child.realm_ids must be covered by parent via
- * `any` or an explicit parent.realm_ids membership. The relative `own` is symbolic and
- * NEVER covers a concrete child realm id (deny-if-unsure — no escalation).
- */
-export function realmReachSuperset(parent: RealmReach, child: RealmReach): boolean {
-    if (compareRealmScope(parent.scope, child.scope) < 0) {
-        return false;
-    }
-
-    const childIds = normalizeRealmIds(child.realm_ids);
-    if (childIds.length === 0) {
-        return true;
-    }
-    if (normalizeRealmScope(parent.scope) === RealmScope.ANY) {
-        return true;
-    }
-    const parentIds = new Set(normalizeRealmIds(parent.realm_ids));
-    return childIds.every((id) => parentIds.has(id));
-}
-
-/**
- * CAP a requested reach to the creator's ceiling (a creator may not grant broader
- * than it holds). Relative: min(requested, creator). Absolute: keep only requested
- * realm ids the creator can itself reach (`any`, or explicit creator.realm_ids
- * membership — the symbolic `own` never qualifies a concrete id).
- */
-export function realmReachCap(requested: RealmReach, creator: RealmReach): RealmReach {
-    const scope = minRealmScope(requested.scope, creator.scope) as RealmScopeValue;
-
-    const requestedIds = normalizeRealmIds(requested.realm_ids);
-    let realm_ids: string[] | null = null;
-    if (requestedIds.length > 0) {
-        if (normalizeRealmScope(creator.scope) === RealmScope.ANY) {
-            realm_ids = [...requestedIds];
-        } else {
-            const creatorIds = new Set(normalizeRealmIds(creator.realm_ids));
-            const allowed = requestedIds.filter((id) => creatorIds.has(id));
-            realm_ids = allowed.length > 0 ? allowed : null;
-        }
-    }
-
-    return { scope, realm_ids };
+    return matchesSingle(normalized, resourceRealmId ?? null, realmId, realmName);
 }

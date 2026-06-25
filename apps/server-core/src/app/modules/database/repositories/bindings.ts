@@ -30,7 +30,6 @@ type PermissionJunction = {
     permission: Permission;
     policy_id?: string | null;
     realm_scope?: RealmScopeValue | null;
-    realm_ids?: string[] | null;
 };
 
 export async function loadBoundPermissions<E extends PermissionJunction & ObjectLiteral>(
@@ -67,9 +66,8 @@ export async function loadBoundPermissions<E extends PermissionJunction & Object
             permission: entry.permission,
             policies: policies.length > 0 ? policies : undefined,
             // Fail-closed coercion: a missing column (stale cache / pre-migration row)
-            // becomes the most restrictive `own`. The absolute allowlist defaults to null.
+            // becomes the most restrictive `own`.
             realm_scope: entry.realm_scope ?? RealmScope.OWN,
-            realm_ids: entry.realm_ids ?? null,
         };
     });
 }

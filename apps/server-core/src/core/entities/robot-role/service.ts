@@ -112,9 +112,10 @@ export class RobotRoleService extends AbstractEntityService implements IRobotRol
             }
         }
 
+        // Stamp the owner (robot) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_ROLE_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...validated, realm_id: validated.robot_realm_id ?? null } }),
         });
 
         let entity = this.repository.create(validated);
@@ -134,9 +135,10 @@ export class RobotRoleService extends AbstractEntityService implements IRobotRol
             throw new EntityNotFoundError();
         }
 
+        // Stamp the owner (robot) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_ROLE_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...entity, realm_id: entity.robot_realm_id ?? null } }),
         });
 
         const { id: entityId } = entity;

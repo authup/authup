@@ -122,9 +122,10 @@ export class IdentityProviderRoleMappingService extends AbstractEntityService im
             }
         }
 
+        // Stamp the owner (identity-provider) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.IDENTITY_PROVIDER_ROLE_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...validated, realm_id: validated.provider_realm_id ?? null } }),
         });
 
         let entity = this.repository.create(validated);
@@ -151,9 +152,10 @@ export class IdentityProviderRoleMappingService extends AbstractEntityService im
 
         const merged = this.repository.merge(entity, validated);
 
+        // Stamp the owner (identity-provider) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: merged }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...merged, realm_id: merged.provider_realm_id ?? null } }),
         });
 
         return this.repository.save(merged);
@@ -170,9 +172,10 @@ export class IdentityProviderRoleMappingService extends AbstractEntityService im
             throw new EntityNotFoundError();
         }
 
+        // Stamp the owner (identity-provider) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.IDENTITY_PROVIDER_ROLE_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...entity, realm_id: entity.provider_realm_id ?? null } }),
         });
 
         const { id: entityId } = entity;

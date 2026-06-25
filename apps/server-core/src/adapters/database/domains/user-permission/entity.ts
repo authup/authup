@@ -15,7 +15,6 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { deserialize, serialize } from '@authup/kit';
 import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type {
     Permission,
@@ -62,20 +61,6 @@ export class UserPermissionEntity implements UserPermission {
         default: 'own',
     })
     realm_scope: RealmScopeValue;
-
-    @Column({
-        type: 'text',
-        nullable: true,
-        transformer: {
-            to(value: any): any {
-                return serialize(value);
-            },
-            from(value: any): any {
-                return deserialize(value);
-            },
-        },
-    })
-    realm_ids: string[] | null;
 
     @Column()
     user_id: User['id'];

@@ -726,21 +726,45 @@ total order and a fail-closed default:
 | **`any`** | always — any realm incl. null | `admin` |
 
 It is enforced inside the server-core `PermissionBindingPolicyEvaluator` (a separate
-factor, ANDed with the junction's `policy_id` policies), and **only when the resource
-carries a `realm_id` attribute** — entity resources are gated; junction rows (which have
-no `realm_id`, only `owner_realm_id`/`permission_realm_id`) neutral-pass, exactly as the
-old realm-match did when no realm key was present. A **realm-less / anonymous** actor can
-never satisfy `own`/`own_or_null` (only `any`), and the factor is skipped entirely on
-`preEvaluate` / gate checks (no ATTRIBUTES). Merge across an actor's grants = ordered
-**MAX** (most permissive wins), so an admin's `any` dominates a stray `own` grant.
-`policy_id` remains for **additional** restrictions ANDed on top (e.g. a specific
-realm-id allowlist via an `ATTRIBUTES` policy `{ realm_id: { $in: [...] } }`).
+factor, ANDed with the junction's `policy_id` policies), **only when the evaluated
+resource ATTRIBUTES carry a canonical `realm_id` key** (a single id, `null`, or an array
+of ids — `realmScopeMatches` requires the scope to reach every listed realm). A
+**realm-less / anonymous** actor can never satisfy `own`/`own_or_null` (only `any`), and
+the factor is skipped entirely on `preEvaluate` / gate checks (no ATTRIBUTES). Merge
+across an actor's grants = ordered **MAX** (most permissive wins), so an admin's `any`
+dominates a stray `own` grant.
+
+**Resources present their realm via the canonical `realm_id` key — entities AND
+junctions.** Entities carry `realm_id` as a column. Junction services
+(`role/user/client/robot-permission`, `user/client/robot-role`, `client-scope`,
+`identity-provider-role-mapping`, `permission-policy`) carry no top-level `realm_id`
+(only `owner_realm_id`/`permission_realm_id`), so they **stamp their OWNER realm**
+(`role_realm_id` for role-permission, `user_realm_id` for user-role, `client_realm_id`
+for client-scope, …) onto a COPY of the `evaluate()` input. So a junction write to
+another realm's entity is realm-gated like a direct entity write — a `realm_admin` in
+realm A cannot bind a permission/role/scope onto a realm-B role/user/client even though
+the permission itself is global. (The *member* side — the permission/role being attached
+— is gated separately by the superset `preEvaluate`.) Stamping a `null` owner (a global
+entity) under `own` correctly denies, consistent with a `realm_admin` not being able to
+write a global base entity.
+
+> **Dependency:** this factor runs inside `PermissionBindingPolicyEvaluator`, i.e. only when
+> `system.default` is bound to the operation permission. Universal binding to every permission
+> comes from `assignDefaultPolicy` (config `permissionsDefaultPolicyAssignment`, default `true`,
+> deprecated). With it disabled, the realm gate (and all permission-binding policy enforcement)
+> weakens — a pre-existing coupling the realm isolation rides on.
+
+`policy_id` remains for **additional** restrictions ANDed on top — and a realm
+restriction *can* still be authored as a `policy_id` `ATTRIBUTES` policy
+(`{ realm_id: { $in: [...] } }`); it is evaluated but is **NOT** part of the realm-scope
+cap/superset (a restricted actor's explicit `policy_id` is ignored on create/update), so
+it is an extra ANDed restriction, never a reach control.
 
 **Propagation CAPs, not inherits**: a creator may only stamp a `realm_scope` ≤ its own
-ceiling for that permission; only an `any`-scoped actor may set an explicit `policy_id`
-(a restricted actor's explicit `policy_id` on create/update is ignored — no widen via
-attach/detach). `isSuperset` additionally requires the parent's `realm_scope` ≥ the
-child's per permission.
+ceiling for that permission (ordered `min`); only an `any`-scoped actor may set an
+explicit `policy_id` (a restricted actor's explicit `policy_id` on create/update is
+ignored — no widen via attach/detach). `isSuperset` additionally requires the parent's
+`realm_scope` ≥ the child's per permission (ordered compare).
 
 ### Admin Roles
 
@@ -811,7 +835,6 @@ export type PermissionBinding = {
     policies?: PolicyWithType[],
     // realm reach of this grant (a separate factor from `policies`)
     realm_scope?: 'none' | 'own' | 'own_or_null' | 'any',  // relative, default own
-    realm_ids?: string[] | null,                            // absolute allowlist
 };
 ```
 
@@ -819,12 +842,14 @@ A permission binding wraps a permission entity with its associated policies. The
 - **Permission-level** (Layer 1): n:m policies from `auth_permission_policies` (loaded by `PermissionDatabaseProvider`)
 - **Junction-level** (Layer 2): the single junction policy from `role_permission.policy_id` etc. (loaded by `getBoundPermissions()`)
 
-The binding also carries the grant's **realm reach** (`realm_scope` + `realm_ids`) as a
-**separate factor from `policies`** — merged across an actor's grants most-permissive-wins
-(ordered-MAX scope + union of `realm_ids`), evaluated inside `system.permission-binding`
-against the resource `realm_id`, and ANDed with the merged `policies` result. It is a
-first-class binding field, **not** part of the binding identity key and never folded into
-the `policies` list (so it is immune to the fail-open policy merge). See
+The binding also carries the grant's **realm reach** (`realm_scope`) as a **separate
+factor from `policies`** — a coarse, actor-relative enum (`none < own < own_or_null <
+any`) merged across an actor's grants most-permissive-wins (ordered-MAX), evaluated inside
+`system.permission-binding` against the resource `realm_id`, and ANDed with the merged
+`policies` result. It is a first-class binding field, **not** part of the binding identity
+key and never folded into the `policies` list (so it is immune to the fail-open policy
+merge). There is no absolute realm-id allowlist on the grant — a specific-realm-set
+restriction is expressed via a `policy_id` `ATTRIBUTES` policy. See
 [Realm reach is a coarse `realm_scope` enum on the grant](#realm-reach-is-a-coarse-realm_scope-enum-on-the-grant).
 
 ## Security: Permission Assignment

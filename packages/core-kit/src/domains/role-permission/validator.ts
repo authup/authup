@@ -41,11 +41,5 @@ export class RolePermissionValidator extends Container<
             { optional: true },
             createValidator(z.enum(REALM_SCOPE)),
         );
-
-        this.mount(
-            'realm_ids',
-            { optional: true },
-            createValidator(z.array(z.uuid()).nullable()),
-        );
     }
 }

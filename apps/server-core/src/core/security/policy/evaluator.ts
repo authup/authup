@@ -21,10 +21,10 @@ import {
     PolicyEngine,
     PolicyIssueCode,
     definePolicyIssueItem,
+    maxRealmScope,
     maybeInvertPolicyOutcome,
     mergePermissionPolicyBindings,
-    mergeRealmReach,
-    realmReachMatches,
+    realmScopeMatches,
 } from '@authup/access';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 
@@ -114,17 +114,15 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
         // the policy_id policies below, ANDed with them. It runs ONLY when the
         // resource ATTRIBUTES carry a `realm_id`. On preEvaluate / gate checks
         // ATTRIBUTES is absent (excluded), so the factor neutral-passes — without this
-        // every write/read gate would deny. It also neutral-passes for resources that
-        // are not keyed by their own `realm_id` (e.g. permission-junction rows, which
-        // carry only owner_realm_id / permission_realm_id) — mirroring the prior
-        // realm-match behaviour of a neutral pass when no realm key is present.
+        // every write/read gate would deny. Resources express their realm via the
+        // canonical `realm_id` key (a single id, null, or an array of ids); entities
+        // carry it as a column and junction services STAMP their owner realm onto the
+        // eval input (so a junction write to another realm's entity is gated too).
         const attributes = await this.attributesEvaluator.accessData(ctx) as Record<string, any> | null;
         if (attributes && Object.prototype.hasOwnProperty.call(attributes, 'realm_id')) {
-            const realmReach = mergeRealmReach(
-                bindingsMerged.map((b) => ({ scope: b.realm_scope ?? 'own', realm_ids: b.realm_ids })),
-            );
-            const matches = realmReachMatches(
-                realmReach,
+            const realmScope = maxRealmScope(bindingsMerged.map((b) => b.realm_scope));
+            const matches = realmScopeMatches(
+                realmScope,
                 attributes.realm_id ?? null,
                 identity.realmId,
                 identity.realmName,

@@ -88,9 +88,10 @@ export class PermissionPolicyService extends AbstractEntityService implements IP
             validated.policy_realm_id = validated.policy.realm_id;
         }
 
+        // Stamp the owner (permission) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.PERMISSION_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...validated, realm_id: validated.permission_realm_id ?? null } }),
         });
 
         let entity = this.repository.create(validated);
@@ -110,9 +111,10 @@ export class PermissionPolicyService extends AbstractEntityService implements IP
             throw new EntityNotFoundError();
         }
 
+        // Stamp the owner (permission) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.PERMISSION_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...entity, realm_id: entity.permission_realm_id ?? null } }),
         });
 
         const { id: entityId } = entity;

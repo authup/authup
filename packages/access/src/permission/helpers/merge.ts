@@ -7,8 +7,7 @@
 
 import { DecisionStrategy } from '@authup/kit';
 import type { BasePolicy } from '../../policy';
-import type { RealmReach } from '../realm-scope.ts';
-import { mergeRealmReach } from '../realm-scope.ts';
+import { maxRealmScope } from '../realm-scope.ts';
 import type { PermissionPolicyBinding } from '../types';
 import { buildPermissionKey } from './key';
 
@@ -16,10 +15,6 @@ type CompositePolicy = BasePolicy & {
     decision_strategy?: `${DecisionStrategy}`,
     children: BasePolicy[],
 };
-
-function bindingReach(binding: PermissionPolicyBinding): RealmReach {
-    return { scope: binding.realm_scope ?? 'own', realm_ids: binding.realm_ids };
-}
 
 export function mergePermissionPolicyBindings(input: PermissionPolicyBinding[]) : PermissionPolicyBinding[] {
     const grouped : Record<string, PermissionPolicyBinding[]> = input
@@ -41,13 +36,11 @@ export function mergePermissionPolicyBindings(input: PermissionPolicyBinding[]) 
         const first = group[0]!;
 
         if (group.length === 1) {
-            // Carry an explicit, coerced realm reach so downstream consumers
+            // Carry an explicit, coerced realm scope so downstream consumers
             // (evaluator, isSuperset) never see undefined (fail-closed default).
-            const reach = mergeRealmReach([bindingReach(first)]);
             output.push({
                 ...first,
-                realm_scope: reach.scope,
-                realm_ids: reach.realm_ids,
+                realm_scope: maxRealmScope([first.realm_scope]),
             });
             continue;
         }
@@ -83,10 +76,10 @@ export function mergePermissionPolicyBindings(input: PermissionPolicyBinding[]) 
             mergedPolicies = [policy];
         }
 
-        // Realm reach folds most-permissive-wins (ordered-MAX scope + union of
-        // realm_ids) — a separate algebra from the AFFIRMATIVE policy composite above,
-        // independent of the fail-open "any binding without policies => unrestricted" rule.
-        const reach = mergeRealmReach(group.map(bindingReach));
+        // Realm scope folds most-permissive-wins (ordered-MAX) — a separate algebra from
+        // the AFFIRMATIVE policy composite above, independent of the fail-open "any binding
+        // without policies => unrestricted" rule.
+        const realmScope = maxRealmScope(group.map((b) => b.realm_scope));
 
         output.push({
             permission: {
@@ -94,8 +87,7 @@ export function mergePermissionPolicyBindings(input: PermissionPolicyBinding[]) 
                 decision_strategy: DecisionStrategy.AFFIRMATIVE,
             },
             policies: mergedPolicies,
-            realm_scope: reach.scope,
-            realm_ids: reach.realm_ids,
+            realm_scope: realmScope,
         });
     }
 

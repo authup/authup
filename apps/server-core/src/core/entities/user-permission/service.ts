@@ -5,12 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { RealmReach } from '@authup/access';
 import {
     BuiltInPolicyType,
     PolicyData,
     RealmScope,
-    realmReachCap,
+    minRealmScope,
 } from '@authup/access';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
@@ -120,24 +119,18 @@ export class UserPermissionService extends AbstractEntityService implements IUse
                 },
             );
 
-            // CAP the grant's realm reach to the actor's own ceiling (min relative scope
-            // + intersection of the concrete realm allowlist); default `own`.
-            const capped = realmReachCap(
-                { scope: validated.realm_scope ?? RealmScope.OWN, realm_ids: validated.realm_ids },
-                grant.realmReach,
-            );
-            validated.realm_scope = capped.scope;
-            validated.realm_ids = capped.realm_ids ?? null;
+            // CAP the grant's realm scope to the actor's own ceiling; default `own`.
+            validated.realm_scope = minRealmScope(validated.realm_scope ?? RealmScope.OWN, grant.realmScope);
 
             // Only an unrestricted (`any`) actor may set policy_id explicitly.
-            if (grant.realmReach.scope !== RealmScope.ANY) {
+            if (grant.realmScope !== RealmScope.ANY) {
                 validated.policy_id = grant.policy ? grant.policy.id : null;
             }
         }
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_PERMISSION_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...validated, realm_id: validated.user_realm_id ?? null } }),
         });
 
         let entity = this.repository.create(validated);
@@ -158,9 +151,9 @@ export class UserPermissionService extends AbstractEntityService implements IUse
             throw new EntityNotFoundError();
         }
 
-        let actorReach: RealmReach = { scope: RealmScope.ANY };
+        let actorScope: RealmScope = RealmScope.ANY;
         if (actor.identity) {
-            actorReach = { scope: RealmScope.OWN };
+            actorScope = RealmScope.OWN;
             const lookup: Record<string, any> = { permission_id: entity.permission_id };
             await this.repository.validateJoinColumns(lookup);
             if (lookup.permission) {
@@ -172,31 +165,20 @@ export class UserPermissionService extends AbstractEntityService implements IUse
                         clientId: lookup.permission.client_id,
                     },
                 );
-                actorReach = grant.realmReach;
+                actorScope = grant.realmScope as RealmScope;
             }
         }
 
         const updateData: Record<string, any> = {};
 
-        const wantsScope = Object.prototype.hasOwnProperty.call(data, 'realm_scope');
-        const wantsIds = Object.prototype.hasOwnProperty.call(data, 'realm_ids');
-        if (wantsScope || wantsIds) {
-            const capped = realmReachCap(
-                {
-                    scope: wantsScope ? (data.realm_scope ?? RealmScope.OWN) : (entity.realm_scope ?? RealmScope.OWN),
-                    realm_ids: wantsIds ? data.realm_ids : entity.realm_ids,
-                },
-                actorReach,
-            );
-            // Persist the capped reach atomically — capping one dimension can narrow
-            // the other, so write both whenever the caller touches either.
-            updateData.realm_scope = capped.scope;
-            updateData.realm_ids = capped.realm_ids ?? null;
+        // CAP to the actor's ceiling — a restricted actor may narrow but never widen.
+        if (Object.prototype.hasOwnProperty.call(data, 'realm_scope')) {
+            updateData.realm_scope = minRealmScope(data.realm_scope ?? RealmScope.OWN, actorScope);
         }
 
         if (
             Object.prototype.hasOwnProperty.call(data, 'policy_id') &&
-            actorReach.scope === RealmScope.ANY
+            actorScope === RealmScope.ANY
         ) {
             updateData.policy_id = data.policy_id;
         }
@@ -207,7 +189,7 @@ export class UserPermissionService extends AbstractEntityService implements IUse
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_PERMISSION_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: merged }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...merged, realm_id: merged.user_realm_id ?? null } }),
         });
 
         return this.repository.save(merged);
@@ -226,7 +208,7 @@ export class UserPermissionService extends AbstractEntityService implements IUse
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_PERMISSION_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...entity, realm_id: entity.user_realm_id ?? null } }),
         });
 
         const { id: entityId } = entity;

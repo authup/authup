@@ -17,16 +17,10 @@ export interface PermissionRelation {
     policy: Policy | null;
 
     /**
-     * Relative realm reach of this grant (`none` = allowlist-only). Fail-closed
+     * Relative realm reach of this grant (none/own/own_or_null/any). Fail-closed
      * default `own`. See {@link REALM_SCOPE}.
      */
     realm_scope: RealmScopeValue;
-
-    /**
-     * Absolute realm allowlist (concrete realm ids) ORed with `realm_scope`.
-     * null/global is expressed via `own_or_null`, never here.
-     */
-    realm_ids: string[] | null;
 
     permission_id: Permission['id'];
 
