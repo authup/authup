@@ -61,7 +61,7 @@
         "@vuecs/overlays": "^1.1.2",
         "@vuecs/pagination": "^2.1.5",
         "@vuecs/placeholder": "^1.0.6",
-        "@vuecs/table": "^1.2.3",
+        "@vuecs/table": "^1.3.0",
         "@vuecs/theme-tailwind": "^6.1.0",
         "@vuecs/timeago": "^2.1.2",
         "date-fns": "^4.1.0",

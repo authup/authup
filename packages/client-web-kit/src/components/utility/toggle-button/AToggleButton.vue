@@ -10,6 +10,7 @@ import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
 import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
+import { VCIcon } from '@vuecs/icon';
 import {
     TranslatorTranslationActionKey,
     TranslatorTranslationCommonKey,
@@ -18,7 +19,7 @@ import {
 import { DEFAULT_BUTTON_SIZE, useTranslations } from '../../../core';
 
 export default defineComponent({
-    components: { VCButton },
+    components: { VCButton, VCIcon },
     props: {
         value: {
             type: Boolean,
@@ -66,7 +67,10 @@ export default defineComponent({
         :size="size"
         :color="isBusy ? 'neutral' : (value ? 'error' : 'success')"
         :disabled="isBusy"
-        :icon-left="isBusy ? 'fa6-solid:question' : (value ? 'fa6-solid:minus' : 'fa6-solid:plus')"
         @click="handleClick"
-    />
+    >
+        <template #leading>
+            <VCIcon :name="isBusy ? 'fa6-solid:question' : (value ? 'fa6-solid:minus' : 'fa6-solid:plus')" />
+        </template>
+    </VCButton>
 </template>

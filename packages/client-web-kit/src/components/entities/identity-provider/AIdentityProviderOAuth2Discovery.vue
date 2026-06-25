@@ -28,6 +28,7 @@ import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { VCAlert } from '@vuecs/elements';
 import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
+import { VCIcon } from '@vuecs/icon';
 import { IFieldValidation } from '@ilingo/validup-vue';
 import { DEFAULT_BUTTON_SIZE, useTranslations, useTranslator } from '../../../core';
 
@@ -48,6 +49,7 @@ export default defineComponent({
         VCFormInput,
         VCAlert,
         VCButton,
+        VCIcon,
         IFieldValidation,
     },
     props: {

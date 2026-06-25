@@ -5,9 +5,11 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
+import { VCIcon } from '@vuecs/icon';
 import { defineComponent } from 'vue';
 
 export default defineComponent({
+    components: { VCIcon },
     props: {
         isError: { type: Boolean },
         message: {

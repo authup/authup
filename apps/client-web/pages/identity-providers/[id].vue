@@ -15,6 +15,7 @@ import {
 import type { IdentityProvider } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
+import { VCIcon } from '@vuecs/icon';
 import { computed, defineComponent, ref } from 'vue';
 import { 
     createError, 
@@ -27,6 +28,7 @@ import {
 import { LayoutKey } from '../../config/layout';
 
 export default defineComponent({
+    components: { VCIcon },
     async setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,

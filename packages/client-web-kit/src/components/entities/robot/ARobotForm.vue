@@ -22,6 +22,7 @@ import {
 import type { Robot } from '@authup/core-kit';
 import { EntityType, RobotValidator } from '@authup/core-kit';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
+import { VCIcon } from '@vuecs/icon';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     AFormSubmit,
@@ -43,6 +44,7 @@ export default defineComponent({
         AToggleButton,
         VCFormGroup,
         VCFormInput,
+        VCIcon,
 
         IFieldValidation,
     },

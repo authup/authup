@@ -9,11 +9,16 @@
 import type { IdentityProvider } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
+import { VCIcon } from '@vuecs/icon';
 import { AIdentityProviderPreset } from './AIdentityProviderPreset';
 import { AIdentityProviderProtocol } from './AIdentityProviderProtocol';
 
 export default defineComponent({
-    components: { AIdentityProviderPreset, AIdentityProviderProtocol },
+    components: {
+        AIdentityProviderPreset, 
+        AIdentityProviderProtocol, 
+        VCIcon, 
+    },
     inheritAttrs: false,
     props: {
         entity: {

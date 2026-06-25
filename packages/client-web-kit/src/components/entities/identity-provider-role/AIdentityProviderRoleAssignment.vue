@@ -19,6 +19,7 @@ import type { IdentityProviderRoleMapping, Role } from '@authup/core-kit';
 import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
+import { VCIcon } from '@vuecs/icon';
 import { IFieldValidation } from '@ilingo/validup-vue';
 import {
     defineEntityManager,
@@ -52,6 +53,7 @@ export default defineComponent({
         VCFormInput,
         VCFormSwitch,
         VCButton,
+        VCIcon,
 
         IFieldValidation,
     },

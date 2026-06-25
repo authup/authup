@@ -26,6 +26,7 @@ import {
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
+import { VCIcon } from '@vuecs/icon';
 import {
     extractValidupResultsFromChild,
     injectHTTPClient,
@@ -53,6 +54,7 @@ export default defineComponent({
         AIdentityProviderProtocol,
         VCFormGroup,
         VCFormInput,
+        VCIcon,
     },
     props: {
         entity: {

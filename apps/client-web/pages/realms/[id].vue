@@ -14,12 +14,14 @@ import {
 import type { Realm } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
+import { VCIcon } from '@vuecs/icon';
 import { computed, defineComponent, ref } from 'vue';
 import { definePageMeta, useErrorToast, useToast } from '#imports';
 import { createError, navigateTo, useRoute } from '#app';
 import { LayoutKey } from '../../config/layout';
 
 export default defineComponent({
+    components: { VCIcon },
     async setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,

@@ -14,6 +14,7 @@ import {
 } from '@authup/i18n';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
+import { VCIcon } from '@vuecs/icon';
 import type { PropType } from 'vue';
 import {
     computed,
@@ -37,6 +38,7 @@ import { AIdentityProviderProtocol } from './AIdentityProviderProtocol';
 
 export default defineComponent({
     components: {
+        VCIcon,
         AFormSubmit,
         AIdentityProviderBasicFields,
         AIdentityProviderLdapConnectionFields,

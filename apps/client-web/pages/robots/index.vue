@@ -9,6 +9,7 @@ import {
     TranslatorTranslationNamespace, 
 } from '@authup/i18n';
 import { useTranslations, useTranslationsForNamespace, useTranslator } from '@authup/client-web-kit';
+import { VCIcon } from '@vuecs/icon';
 import { defineComponent } from 'vue';
 import { 
     computed, 
@@ -19,6 +20,7 @@ import {
 import { LayoutKey } from '../../config/layout';
 
 export default defineComponent({
+    components: { VCIcon },
     setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,

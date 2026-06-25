@@ -12,6 +12,7 @@ import {
     injectStore,
     useTranslationsForNamespace,
 } from '@authup/client-web-kit';
+import { VCIcon } from '@vuecs/icon';
 import { storeToRefs } from 'pinia';
 import {
     computed,
@@ -24,9 +25,10 @@ import LogoSVG from './svg/LogoSVG';
 
 export default defineNuxtComponent({
     components: {
-        AColorModeSwitcher, 
-        ALanguageSwitcherDropdown, 
-        LogoSVG, 
+        AColorModeSwitcher,
+        ALanguageSwitcherDropdown,
+        LogoSVG,
+        VCIcon,
     },
     setup() {
         const store = injectStore();
