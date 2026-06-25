@@ -6,6 +6,7 @@
   -->
 <script lang="ts">
 import { defineComponent } from 'vue';
+import { VCIcon } from '@vuecs/icon';
 import {
     TranslatorTranslationCommonKey,
     TranslatorTranslationNamespace,
@@ -17,6 +18,7 @@ import { useTranslations } from '../../core';
 // component only owns the icon, the localized aria-labels and the toggle
 // event — bind it with `v-model:dark="isDark"`.
 export default defineComponent({
+    components: { VCIcon },
     props: {
         dark: {
             type: Boolean,

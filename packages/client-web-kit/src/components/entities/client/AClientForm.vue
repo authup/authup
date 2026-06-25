@@ -46,6 +46,7 @@ import {
     defineEntityVEmitOptions,
 } from '../../utility';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
+import { VCIcon } from '@vuecs/icon';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({
@@ -55,6 +56,7 @@ export default defineComponent({
         ASecretInput,
         ARealmPicker,
         AFormInputList,
+        VCIcon,
 
         IFieldValidation,
     },

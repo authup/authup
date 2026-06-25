@@ -21,6 +21,7 @@ import {
 } from 'vue';
 import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
+import { VCIcon } from '@vuecs/icon';
 import type { EntityType } from '@authup/core-kit';
 import type { IEntityAPISlim } from '@authup/core-http-kit';
 import { TranslatorTranslationActionKey, TranslatorTranslationNamespace } from '@authup/i18n';
@@ -127,11 +128,13 @@ const AEntityDelete = defineComponent({
                         size: props.size,
                         color: 'error',
                         variant: 'outline',
-                        iconLeft: props.elementIcon || undefined,
                         label: props.withText ? translation.value : undefined,
                         disabled: isDisabled,
                         onClick,
                     },
+                    props.elementIcon ?
+                        { leading: () => h(VCIcon, { name: props.elementIcon }) } :
+                        undefined,
                 );
             }
 

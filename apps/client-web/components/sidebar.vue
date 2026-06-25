@@ -15,12 +15,13 @@ import {
     useTranslationsForNamespace,
     useTranslator,
 } from '@authup/client-web-kit';
+import { VCIcon } from '@vuecs/icon';
 import { storeToRefs } from 'pinia';
 import { computed, defineNuxtComponent } from '#imports';
 import { Navigation } from '../config/layout';
 
 export default defineNuxtComponent({
-    components: { ITranslateT },
+    components: { ITranslateT, VCIcon },
     setup() {
         const store = injectStore();
         const {

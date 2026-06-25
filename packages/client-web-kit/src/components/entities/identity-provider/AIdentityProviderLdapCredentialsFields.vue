@@ -18,6 +18,7 @@ import type { PropType } from 'vue';
 import { defineComponent, reactive, ref } from 'vue';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { VCButton } from '@vuecs/button';
+import { VCIcon } from '@vuecs/icon';
 import { onChange, useUpdatedAt } from '../../../composables';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
@@ -26,6 +27,7 @@ export default defineComponent({
         VCFormGroup,
         VCFormInput,
         VCButton,
+        VCIcon,
         IFieldValidation,
     },
     props: {

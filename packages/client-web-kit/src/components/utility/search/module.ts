@@ -6,8 +6,9 @@
  */
 import { hasNormalizedSlot, normalizeSlot } from '../../../core';
 import type { VNodeChild } from 'vue';
-import { h, resolveComponent } from 'vue';
+import { h } from 'vue';
 import { VCFormInput } from '@vuecs/forms';
+import { VCIcon } from '@vuecs/icon';
 import { ListSearchSlotName } from './constants';
 import type { SearchOptionsInput } from './type';
 
@@ -64,8 +65,8 @@ export function buildListSearch(
     const slots: Record<string, () => VNodeChild> = {};
 
     if (ctx.icon) {
-        const VCIcon = resolveComponent('VCIcon');
-        const iconNode = () => iconContent ?? h(VCIcon, { name: ctx.iconClass });
+        const iconClass = ctx.iconClass ?? 'fa6-solid:magnifying-glass';
+        const iconNode = () => iconContent ?? h(VCIcon, { name: iconClass });
 
         if (ctx.iconPosition === 'start') {
             props.groupPrepend = true;

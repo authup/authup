@@ -9,16 +9,18 @@ import {
     TranslatorTranslationNamespace, 
 } from '@authup/i18n';
 import { useTranslations, useTranslationsForNamespace, useTranslator } from '@authup/client-web-kit';
+import { VCIcon } from '@vuecs/icon';
 import { defineNuxtComponent } from '#app';
-import { 
-    computed, 
-    definePageMeta, 
-    useErrorToast, 
-    useToast, 
+import {
+    computed,
+    definePageMeta,
+    useErrorToast,
+    useToast,
 } from '#imports';
 import { LayoutKey } from '../../config/layout';
 
 export default defineNuxtComponent({
+    components: { VCIcon },
     setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,

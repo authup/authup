@@ -10,9 +10,19 @@ import {
     computed,
     defineComponent,
     h,
-    ref,
 } from 'vue';
+import {
+    VCDropdownMenu,
+    VCDropdownMenuContent,
+    VCDropdownMenuItem,
+    VCDropdownMenuTrigger,
+} from '@vuecs/overlays';
 import { useLocaleControl } from '../../core';
+
+// Active locale keeps the primary fill while keyboard/pointer focus moves
+// over it — the `data-[highlighted]` pair overrides the theme item's neutral
+// hover background so the selected row stays visibly selected.
+const ACTIVE_ITEM_CLASS = 'bg-primary-600 text-on-primary data-[highlighted]:bg-primary-700 data-[highlighted]:text-on-primary';
 
 const ALanguageSwitcherDropdown = defineComponent({
     props: {
@@ -26,8 +36,6 @@ const ALanguageSwitcherDropdown = defineComponent({
     // Suspense, but the embedded server-core SSR app does not — there the
     // component would server-render yet never hydrate (dropdown dead).
     setup(props) {
-        const opened = ref(false);
-
         // vuecs owns the locale (cookie-backed) when installed; the control
         // falls back to ilingo otherwise. Writing here persists via vuecs.
         const { code, set } = useLocaleControl();
@@ -40,43 +48,20 @@ const ALanguageSwitcherDropdown = defineComponent({
 
         const activeCode = computed(() => code.value);
 
-        const setLocale = (input: string) => {
-            set(input);
-            opened.value = false;
-        };
-
-        return () => h('div', { class: 'dropdown' }, [
-            h('button', {
-                class: [
-                    'dropdown-toggle',
-                    props.linkClassExtra,
-                ],
-                onClick(event: any) {
-                    event.preventDefault();
-
-                    opened.value = !opened.value;
-                },
-            }, [
-                activeCode.value,
-            ]),
-            h('div', {
-                class: [
-                    'dropdown-menu',
-                    'dropdown-menu-end',
-                    opened.value ? 'show' : '',
-                ],
-            }, elements.value.map((element) => h('button', {
-                onClick(event) {
-                    event.preventDefault();
-
-                    setLocale(element.value);
-                },
-                class: [
-                    'dropdown-item',
-                    element.active ? 'active' : '',
-                ],
-            }, [element.label]))),
-        ]);
+        return () => h(VCDropdownMenu, null, {
+            default: () => [
+                h(VCDropdownMenuTrigger, { class: ['cursor-pointer', props.linkClassExtra] }, () => activeCode.value),
+                h(VCDropdownMenuContent, { align: 'end' }, () => elements.value.map((element) => h(
+                    VCDropdownMenuItem,
+                    {
+                        key: element.value,
+                        class: element.active ? ACTIVE_ITEM_CLASS : undefined,
+                        onSelect: () => set(element.value),
+                    },
+                    () => element.label,
+                ))),
+            ],
+        });
     },
 });
 

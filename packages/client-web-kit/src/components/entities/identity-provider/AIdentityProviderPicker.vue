@@ -2,6 +2,7 @@
 import { IdentityProviderPreset, IdentityProviderProtocol } from '@authup/core-kit';
 import { TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { defineComponent } from 'vue';
+import { VCIcon } from '@vuecs/icon';
 import { useTranslations } from '../../../core';
 import { AIdentityProviderPreset } from './AIdentityProviderPreset';
 import { AIdentityProviderProtocol } from './AIdentityProviderProtocol';
@@ -10,6 +11,7 @@ export default defineComponent({
     components: {
         AIdentityProviderPreset,
         AIdentityProviderProtocol,
+        VCIcon,
     },
     props: {
         protocol: { type: String },

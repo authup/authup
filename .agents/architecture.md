@@ -1019,55 +1019,71 @@ The UI sits on the `@vuecs/*` 1.x line — see
 for the package matrix. Two architectural notes specific to authup's
 integration are worth knowing before editing UI code:
 
-### Compat shims over vuecs's 1.x SFC rewrite
+### vuecs 1.x SFC integration
 
 `@vuecs/forms` 4.0, `@vuecs/list` 1.0, and `@vuecs/pagination` 2.0
-collectively dropped their pre-1.x render-function builder APIs
-(`buildFormGroup` / `buildList` / `buildPagination` and friends) in
-favour of compound `<VC*>` SFCs. Authup's entity forms, entity
-collection views, and pagination chrome had ~150 builder call sites
-written against the old shape. The migration kept those call sites
-intact by introducing three shim layers:
+dropped their pre-1.x render-function builder APIs (`buildFormGroup` /
+`buildList` / `buildPagination` and friends) in favour of compound
+`<VC*>` SFCs. Authup's entity forms, collection views, and pagination
+chrome were migrated onto the SFCs; the transitional `buildForm*`
+render-function shims (`core/form/builders.ts`) were **retired in #3139**
+— there is no `core/form/builders.ts` anymore. The current
+integration:
 
-- **`packages/client-web-kit/src/core/form/builders.ts`** —
-  `buildFormGroup` / `buildFormInput` / `buildFormInputText` /
-  `buildFormTextarea` / `buildFormCheckbox` / `buildFormSelect` /
-  `buildFormSubmit` shims that take the legacy
-  `{ value, onChange, props, class, ... }` config bag and emit
-  `h(VCFormGroup, { ... }, () => ...)` / `h(VCFormInput, ...)` /
-  etc. Re-exported from `@authup/client-web-kit`'s top-level
-  `core` barrel. Submit buttons default to FA Iconify glyphs
-  (`fa6-solid:plus` / `fa6-solid:floppy-disk`) and `color: primary`
-  for create + update parity with the pre-rewrite defaults.
-- **`packages/client-web-kit/src/components/utility/pagination/module.ts`** —
-  `buildPagination` shim that converts the legacy
-  `{ load, meta, busy }` shape to `<VCPagination>`'s
-  `update:page` event (computing `offset = (page - 1) * limit`).
-- **`packages/client-web-kit/src/components/utility/entity/collection/module.ts`** —
-  `defineEntityCollectionManager().render(...)` rewritten to compose
-  `<VCList>` + `<VCListBody>` + `<VCListItem>` + `<VCListLoading>` +
-  `<VCListEmpty>` directly. Preserves the
-  `{ header, body, item, footer, noMore, loading }` consumer-options
-  shape and the `slotProps.created/updated/deleted` callback
-  convention. **Single-emit contract:** the callbacks delegate to
-  the existing `ListHandlers` instance, which already calls
-  `context.setup.emit('created' | 'updated' | 'deleted', ...)` —
-  don't add a parallel `emit()` on the wrapper side or every
+- **Forms** — entity form SFCs (`components/entities/**/A*Form.vue`)
+  render `<VCFormGroup>` / `<VCFormInput>` / `<VCFormTextarea>` /
+  `<VCFormCheckbox>` / `<VCFormSelect>` directly, binding each field via
+  `@validup/vue`'s `useValidup` and `@ilingo/validup-vue`'s
+  `<IFieldValidation>` (see `ARoleForm.vue`). `AFormSubmit`
+  (`components/utility/AFormSubmit.ts`)
+  wraps `<VCButton>` with `@vuecs/forms`' `useSubmitButton` so the
+  create/update label, icon, and color swap stay locale-reactive — a
+  deliberate adapter, not a temporary shim.
+- **Collections** — `defineEntityCollectionManager().render(...)`
+  (`components/utility/entity/collection/module.ts`) composes `<VCList>`
+  + `<VCListBody>` + `<VCListItem>` + `<VCListLoading>` + `<VCListEmpty>`
+  directly. It preserves the `{ header, body, item, footer, noMore,
+  loading }` consumer-options shape and the
+  `slotProps.created/updated/deleted` callback convention. This is the
+  permanent implementation, not a shim. **Single-emit contract:** the
+  callbacks delegate to the existing `ListHandlers` instance, which
+  already calls `context.setup.emit('created' | 'updated' | 'deleted',
+  ...)` — don't add a parallel `emit()` on the wrapper side or every
   mutation will fire twice and double-update Pinia stores.
-
-The shims are intentionally tactical — they let the migration land
-in one PR without rewriting the ~150 builder call sites. The
-long-term direction is to migrate entity forms / collections /
-pagination chrome to native `<VC*>` SFC template usage, file by
-file, and retire each shim when its last caller is gone.
+- **Pagination** — `<APagination>`
+  (`components/utility/pagination/APagination.ts`) is a thin **adapter**
+  that bridges the entity-collection footer contract (nested rapiq
+  `ListMeta` = `{ total, pagination: { limit, offset }, busy }` + a
+  `load(ListMeta)` callback) onto `<VCPagination>`'s flat
+  `:total` / `:limit` / `:offset` props and `@load({ offset })` event.
+  It earns its keep: the ~30 footer call sites would otherwise each
+  duplicate the `meta`-destructuring and the `@load` re-wrap. Its
+  joined-tab rounding + brand hover styling lives in the theme's
+  `.vc-pagination` rule (`client-web-theme/assets/css/index.css`) and
+  applies to the underlying `<VCPagination>` regardless of the wrapper.
 
 ### Table usage
 
 All 9 entity index pages (`apps/client-web/pages/<entity>/index/index.vue`)
 use `<VCTable>` directly with `:data="props.data"` + `:columns="columns"`.
-Column shape is `TableColumn<Row>` from `@vuecs/table`; per-cell rendering
-flows through the `#cell-<key>` template slots that `<VCTable>`'s
-auto-render path dispatches onto each `<VCTableCell>` (tada5hi/vuecs#1592).
+Per-cell rendering flows through the `#cell-<key>` template slots that
+`<VCTable>`'s auto-render path dispatches onto each `<VCTableCell>`
+(tada5hi/vuecs#1592).
+
+**Row typing (since `@vuecs/table` 1.3.0, tada5hi/vuecs#1601):** `<VCTable>`
+is now generic over `Row`, and the inference flows from `:columns` /
+`:data` into the `#cell-*` slot props. Each page types its columns as
+`TableColumn<Entity>[]` (e.g. `computed<TableColumn<Role>[]>(...)`), and the
+cell slots are written **without** a row annotation — `#cell-built_in="{ row }"`
+— so `row` infers as the entity type (verified: a bogus `row.<field>` access
+is a compile error). The old `#cell-<key>="{ row }: { row: any }"` widening is
+gone. **`VCTable` must stay globally registered** (`app.use(vuecs, …)`): the
+generic `VCTableComponent` is a generic call signature that is **not**
+assignable to the Options-API `components: {}` `Component` slot, so a local
+`import { VCTable } + components: { VCTable }` makes `defineComponent`'s
+overload resolution fail (`TS2769`). The `GlobalComponents` augmentation
+carries the generic, so template inference works via global registration —
+this is the one documented exception to the "explicit VC imports" convention.
 
 Alignment classes (`headerClass: 'text-center'`, `cellClass: 'text-center'`)
 go through as written — no Tailwind v4 `!` suffix needed.
@@ -1119,23 +1135,23 @@ new `@authup/client-web-theme` package.
   authup-specific element overrides and ships a single CSS entry
   (`@authup/client-web-theme/index.css`) that pulls in
   `tailwindcss`, `@vuecs/design` (concrete OKLCH tokens),
-  `@vuecs/theme-tailwind` (Tailwind ↔ vc-color rebind), and a
-  small Bootstrap-compat `@layer components` block. Consumers register
+  `@vuecs/theme-tailwind` (Tailwind ↔ vc-color rebind). Consumers register
   one theme: `app.use(vuecs, { themes: [authupTheme()] })`.
 - **Tailwind v4** — wired via `@tailwindcss/vite` in both
   `apps/client-web/nuxt.config.ts` (`vite.plugins`) and
   `apps/server-core/ui/vite.config.ts`. v3 is not supported because
   theme-tailwind uses `@theme` and `--color-*` rebinds.
-- **Bootstrap-compat layer** — the `@layer components` block in
-  `packages/client-web-theme/assets/css/index.css` provides `.btn`,
-  `.row`/`.col-N`, `.alert`, `.badge`, `.nav`/`.navbar`,
-  `.modal-*`, `.fade` and a few helpers, each `@apply`ing Tailwind
-  utilities under the legacy Bootstrap class names. This keeps
-  authup's ~135 .vue templates rendering without a 220-class-hit
-  manual rewrite. The layer is transitional — phase out by
-  refactoring call sites to `<VCButton>` / `<VCAlert>` / `<VCBadge>`
-  / Tailwind utilities, and the corresponding rule disappears once
-  no caller references it.
+- **Bootstrap-compat layer — fully retired.** The `@layer components`
+  block in `packages/client-web-theme/assets/css/index.css` used to
+  `@apply` Tailwind utilities under legacy Bootstrap class names
+  (`.btn`, `.row`/`.col-N`, `.alert`, `.badge`, `.nav`/`.navbar`,
+  `.dropdown*`, `.modal-*`, `.fade`) so authup's pre-Tailwind templates
+  kept rendering. Every call site has since migrated to a `<VC*>`
+  component (`.dropdown*` → `<VCDropdownMenu>`, `.modal-*` →
+  `<VCModal>` from `@vuecs/overlays`, the rest in #3139), so the block
+  now holds only a thin `.vc-pagination` override of theme-tailwind's
+  baked button rounding. Don't reintroduce Bootstrap-shaped class
+  names; reach for the matching `<VC*>` component.
 - **Mechanical sweep** — Bootstrap utility classes with a 1:1
   Tailwind equivalent (e.g. `d-flex` → `flex`, `flex-column` →
   `flex-col`, `w-100` → `w-full`, `fw-bold` → `font-bold`,
