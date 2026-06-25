@@ -6,10 +6,12 @@
   -->
 <script lang="ts">
 import type { Scope } from '@authup/core-kit';
+import { VCIcon } from '@vuecs/icon';
 import type { PropType } from 'vue';
 import { computed, defineComponent } from 'vue';
 
 export default defineComponent({
+    components: { VCIcon },
     props: {
         entity: {
             type: Object as PropType<Scope>,

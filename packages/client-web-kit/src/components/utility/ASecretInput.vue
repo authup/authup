@@ -9,6 +9,7 @@ import { generateSecret } from '@authup/kit';
 import type { PropType } from 'vue';
 import { computed, defineComponent } from 'vue';
 import { VCFormInput } from '@vuecs/forms';
+import { VCIcon } from '@vuecs/icon';
 import { TranslatorTranslationActionKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { useTranslations } from '../../core';
 
@@ -30,7 +31,7 @@ import { useTranslations } from '../../core';
  */
 export default defineComponent({
     name: 'ASecretInput',
-    components: { VCFormInput },
+    components: { VCFormInput, VCIcon },
     props: {
         modelValue: {
             type: String as PropType<string | null | undefined>,

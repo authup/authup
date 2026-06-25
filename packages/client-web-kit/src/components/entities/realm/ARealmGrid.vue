@@ -17,10 +17,11 @@ import {
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import { VCAlert } from '@vuecs/elements';
+import { VCIcon } from '@vuecs/icon';
 import { injectHTTPClient, useTranslations } from '../../../core';
 
 export default defineComponent({
-    components: { VCAlert },
+    components: { VCAlert, VCIcon },
     props: {
         // When exactly one realm is available, emit `select` for it
         // immediately instead of rendering a single-tile chooser. Lets the

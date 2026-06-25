@@ -9,6 +9,7 @@
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
+import { VCIcon } from '@vuecs/icon';
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
@@ -32,6 +33,7 @@ export default defineComponent({
         VCFormInput,
         VCFormGroup,
         VCButton,
+        VCIcon,
         IFieldValidation,
     },
     props: {

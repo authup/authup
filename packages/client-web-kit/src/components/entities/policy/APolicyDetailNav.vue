@@ -10,11 +10,12 @@ import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
 import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
+import { VCIcon } from '@vuecs/icon';
 import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { DEFAULT_BUTTON_SIZE, useTranslation } from '../../../core';
 
 export default defineComponent({
-    components: { VCButton },
+    components: { VCButton, VCIcon },
     props: {
         policyId: {
             type: String,
@@ -49,7 +50,10 @@ export default defineComponent({
         variant="outline"
         :title="viewPolicyDetails"
         :aria-label="viewPolicyDetails"
-        icon-left="fa6-solid:eye"
         @click="handleClick"
-    />
+    >
+        <template #leading>
+            <VCIcon name="fa6-solid:eye" />
+        </template>
+    </VCButton>
 </template>

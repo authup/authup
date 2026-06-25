@@ -22,14 +22,16 @@ import {
 } from '@authup/i18n';
 import { ITranslateT } from '@ilingo/vue';
 import { VCButton } from '@vuecs/button';
+import { VCIcon } from '@vuecs/icon';
 import { injectHTTPClient, useTranslations, useTranslationsForNamespace } from '../../../core';
 import AuthorizeScopes from './AuthorizeScopes.vue';
 
 export default defineComponent({
     components: {
-        AuthorizeScopes, 
-        ITranslateT, 
-        VCButton, 
+        AuthorizeScopes,
+        ITranslateT,
+        VCButton,
+        VCIcon,
     },
     props: {
         client: {

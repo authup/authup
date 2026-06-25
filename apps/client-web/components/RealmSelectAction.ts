@@ -8,7 +8,8 @@
 import { REALM_MASTER_NAME } from '@authup/core-kit';
 import type { Realm } from '@authup/core-kit';
 import { VCButton } from '@vuecs/button';
-import { computed, resolveComponent } from 'vue';
+import { VCIcon } from '@vuecs/icon';
+import { computed } from 'vue';
 import type { PropType } from 'vue';
 
 export default defineNuxtComponent({
@@ -27,8 +28,6 @@ export default defineNuxtComponent({
         const isMaster = computed(() => props.entity.name === REALM_MASTER_NAME);
         const canCheck = computed(() => !(isMaster.value && !modelValue.value) &&
                 modelValue.value !== props.entity.id);
-
-        const VCIcon = resolveComponent('VCIcon');
 
         return () => {
             if (canCheck.value) {

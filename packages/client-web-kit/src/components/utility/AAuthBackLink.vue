@@ -9,6 +9,7 @@ import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
 import type { LinkProperties } from '@vuecs/link';
 import { VCLink } from '@vuecs/link';
+import { VCIcon } from '@vuecs/icon';
 import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { useTranslations } from '../../core';
 
@@ -16,7 +17,7 @@ import { useTranslations } from '../../core';
 // nothing unless a link is supplied, so callers can pass an optional prop
 // straight through.
 export default defineComponent({
-    components: { VCLink },
+    components: { VCLink, VCIcon },
     props: { link: { type: Object as PropType<LinkProperties> } },
     setup() {
         const translations = useTranslations([

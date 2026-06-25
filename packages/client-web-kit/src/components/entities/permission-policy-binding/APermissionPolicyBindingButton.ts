@@ -148,7 +148,6 @@ export const APermissionPolicyBindingButton = defineComponent({
                                 size: props.size,
                                 color: selectColor,
                                 variant: selectVariant,
-                                iconLeft: isSelected ? 'fa6-solid:check' : 'fa6-solid:plus',
                                 disabled: busy.value,
                                 onClick(e: Event) {
                                     e.preventDefault();
@@ -158,7 +157,7 @@ export const APermissionPolicyBindingButton = defineComponent({
                                         handlePolicySelect(slotProps.data.id);
                                     }
                                 },
-                            }),
+                            }, { leading: () => h(VCIcon, { name: isSelected ? 'fa6-solid:check' : 'fa6-solid:plus' }) }),
                         ]),
                     ];
                 },
@@ -201,12 +200,11 @@ export const APermissionPolicyBindingButton = defineComponent({
                     size: props.size,
                     color: 'neutral',
                     variant: 'outline',
-                    iconLeft: 'fa6-solid:arrow-left',
                     label: translationBack.value,
                     onClick() {
                         detailPolicy.value = null;
                     },
-                }),
+                }, { leading: () => h(VCIcon, { name: 'fa6-solid:arrow-left' }) }),
             ]),
         ];
 
@@ -225,13 +223,12 @@ export const APermissionPolicyBindingButton = defineComponent({
                     size: props.size,
                     color: triggerColor,
                     variant: triggerVariant,
-                    iconLeft: 'fa6-solid:gear',
                     disabled: busy.value,
                     onClick(e: Event) {
                         e.preventDefault();
                         modalOpen.value = true;
                     },
-                }),
+                }, { leading: () => h(VCIcon, { name: 'fa6-solid:gear' }) }),
                 h(VCModal, {
                     open: modalOpen.value,
                     'onUpdate:open': (value: boolean) => {

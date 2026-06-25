@@ -15,6 +15,8 @@ import {
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
+import { VCButton } from '@vuecs/button';
+import { VCIcon } from '@vuecs/icon';
 import type { TableColumn } from '@vuecs/table';
 import { computed, defineComponent, resolveComponent } from 'vue';
 
@@ -25,6 +27,8 @@ export default defineComponent({
         ASearch,
         ARoles,
         AEntityDelete,
+        VCButton,
+        VCIcon,
     },
     emits: ['deleted'],
     setup(_props, { emit }) {
@@ -63,7 +67,7 @@ export default defineComponent({
             },
         ]);
 
-        const columns = computed<TableColumn[]>(() => [
+        const columns = computed<TableColumn<Role>[]>(() => [
             {
                 key: 'name',
                 label: translations.name,
@@ -139,25 +143,25 @@ export default defineComponent({
                 :columns="columns"
                 :busy="props.busy"
             >
-                <template #cell-built_in="{ row }: { row: any }">
+                <template #cell-built_in="{ row }">
                     <VCIcon
                         :name="row.built_in ? 'fa6-solid:check' : 'fa6-solid:xmark'"
                         :class="row.built_in ? 'text-success-600' : 'text-error-600'"
                     />
                 </template>
-                <template #cell-global="{ row }: { row: any }">
+                <template #cell-global="{ row }">
                     <VCIcon
                         :name="!row.realm_id ? 'fa6-solid:check' : 'fa6-solid:xmark'"
                         :class="!row.realm_id ? 'text-success-600' : 'text-error-600'"
                     />
                 </template>
-                <template #cell-created_at="{ row }: { row: any }">
+                <template #cell-created_at="{ row }">
                     <VCTimeago :datetime="row.created_at" />
                 </template>
-                <template #cell-updated_at="{ row }: { row: any }">
+                <template #cell-updated_at="{ row }">
                     <VCTimeago :datetime="row.updated_at" />
                 </template>
-                <template #cell-options="{ row }: { row: any }">
+                <template #cell-options="{ row }">
                     <VCButton
                         :as="NuxtLink"
                         :to="'/roles/'+ row.id"
@@ -166,8 +170,11 @@ export default defineComponent({
                         variant="outline"
                         class="me-1"
                         :disabled="!hasEditPermission"
-                        icon-left="fa6-solid:bars"
-                    />
+                    >
+                        <template #leading>
+                            <VCIcon name="fa6-solid:bars" />
+                        </template>
+                    </VCButton>
                     <AEntityDelete
                         :entity-id="row.id"
                         entity-type="role"
