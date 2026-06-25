@@ -6,9 +6,9 @@
  */
 
 import {
-    BuiltInPolicyType, 
-    PolicyData, 
-    RealmScope, 
+    BuiltInPolicyType,
+    PolicyData,
+    RealmScope,
     SystemPolicyName,
 } from '@authup/access';
 import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
@@ -164,7 +164,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         options: { updateOnly?: boolean } = {},
     ): Promise<{
         entity: Permission,
-        created: boolean 
+        created: boolean
     }> {
         let group: string;
 
@@ -232,7 +232,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
             return {
                 entity,
-                created: false, 
+                created: false,
             };
         }
 
@@ -256,7 +256,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
         return {
             entity,
-            created: true, 
+            created: true,
         };
     }
 

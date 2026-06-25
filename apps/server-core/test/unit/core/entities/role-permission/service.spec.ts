@@ -12,18 +12,18 @@ import {
 } from '@authup/core-kit';
 import type { RolePermission } from '@authup/core-kit';
 import {
-    beforeEach, 
-    describe, 
-    expect, 
+    beforeEach,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { RealmScope } from '@authup/access';
 import { RolePermissionService } from '../../../../../src/core/entities/role-permission/service.ts';
 import {
-    FakeEntityRepository, 
-    createAllowAllActor, 
-    createDenyAllActor, 
+    FakeEntityRepository,
+    createAllowAllActor,
+    createDenyAllActor,
     createNonMasterRealmActor,
 } from '@authup/server-test-kit';
 import { FakeIdentityPermissionProvider } from '../../helpers/index.ts';

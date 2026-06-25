@@ -188,12 +188,10 @@ export class UserPermissionService extends AbstractEntityService implements IUse
                 },
                 actorReach,
             );
-            if (wantsScope) {
-                updateData.realm_scope = capped.scope;
-            }
-            if (wantsIds) {
-                updateData.realm_ids = capped.realm_ids;
-            }
+            // Persist the capped reach atomically — capping one dimension can narrow
+            // the other, so write both whenever the caller touches either.
+            updateData.realm_scope = capped.scope;
+            updateData.realm_ids = capped.realm_ids ?? null;
         }
 
         if (

@@ -21,7 +21,9 @@ export class FakeIdentityPermissionProvider implements IIdentityPermissionProvid
 
     private junctionPolicy: Policy | undefined;
 
-    private junctionReach: RealmReach = { scope: RealmScope.ANY };
+    // Mirror the production no-match default (RealmScope.OWN, fail-closed) so a test
+    // that forgets to configure the grant still exercises the capped path.
+    private junctionReach: RealmReach = { scope: RealmScope.OWN };
 
     setSuperset(value: boolean) {
         this.supersetResult = value;

@@ -4,6 +4,7 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
+import type { RealmScope } from '@authup/access';
 import type { Role } from '@authup/core-kit';
 import type { BaseProvisioningEntity } from '../types.ts';
 
@@ -23,13 +24,13 @@ export type RoleProvisioningRelations = {
      * role-permission junction entry. Realm reach is a coarse, actor-relative
      * enum on the junction (not a policy).
      */
-    globalPermissionsRealmScope?: string,
+    globalPermissionsRealmScope?: RealmScope,
 
     /**
      * Per-permission realm_scope overrides. Maps a realm_scope value to the
      * permission names that should use that scope instead of the default.
      */
-    globalPermissionsRealmScopeOverrides?: Record<string, string[]>,
+    globalPermissionsRealmScopeOverrides?: Partial<Record<RealmScope, string[]>>,
 
     /**
      * Assign role to realm permissions.

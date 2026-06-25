@@ -809,12 +809,23 @@ export type PermissionBinding = {
         decision_strategy?: string | null,
     },
     policies?: PolicyWithType[],
+    // realm reach of this grant (a separate factor from `policies`)
+    realm_scope?: 'none' | 'own' | 'own_or_null' | 'any',  // relative, default own
+    realm_ids?: string[] | null,                            // absolute allowlist
 };
 ```
 
 A permission binding wraps a permission entity with its associated policies. The permission is uniquely identified by `name + client_id + realm_id`. The `policies` array contains:
 - **Permission-level** (Layer 1): n:m policies from `auth_permission_policies` (loaded by `PermissionDatabaseProvider`)
 - **Junction-level** (Layer 2): the single junction policy from `role_permission.policy_id` etc. (loaded by `getBoundPermissions()`)
+
+The binding also carries the grant's **realm reach** (`realm_scope` + `realm_ids`) as a
+**separate factor from `policies`** — merged across an actor's grants most-permissive-wins
+(ordered-MAX scope + union of `realm_ids`), evaluated inside `system.permission-binding`
+against the resource `realm_id`, and ANDed with the merged `policies` result. It is a
+first-class binding field, **not** part of the binding identity key and never folded into
+the `policies` list (so it is immune to the fail-open policy merge). See
+[Realm reach is a coarse `realm_scope` enum on the grant](#realm-reach-is-a-coarse-realm_scope-enum-on-the-grant).
 
 ## Security: Permission Assignment
 

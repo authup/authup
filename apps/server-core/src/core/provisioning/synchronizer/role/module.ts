@@ -48,7 +48,7 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             }
             return {
                 ...input,
-                attributes: attributes || input.attributes, 
+                attributes: attributes || input.attributes,
             };
         }
 
@@ -131,6 +131,9 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         const overrides = new Map<string, string>();
         if (input.relations?.globalPermissionsRealmScopeOverrides) {
             for (const [realmScope, permissionNames] of Object.entries(input.relations.globalPermissionsRealmScopeOverrides)) {
+                if (!permissionNames) {
+                    continue;
+                }
                 for (const permName of permissionNames) {
                     overrides.set(permName, realmScope);
                 }
