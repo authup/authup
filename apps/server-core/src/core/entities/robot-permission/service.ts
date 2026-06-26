@@ -17,7 +17,7 @@ import { PermissionName, RobotPermissionValidator } from '@authup/core-kit';
 import type { Permission, RobotPermission } from '@authup/core-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
-import { AbstractEntityService } from '@authup/server-kit';
+import { JunctionEntityService } from '@authup/server-kit';
 import type { IRobotPermissionRepository, IRobotPermissionService } from './types.ts';
 
 export type RobotPermissionServiceContext = {
@@ -26,7 +26,9 @@ export type RobotPermissionServiceContext = {
     identityPermissionProvider: IIdentityPermissionProvider;
 };
 
-export class RobotPermissionService extends AbstractEntityService implements IRobotPermissionService {
+export class RobotPermissionService extends JunctionEntityService implements IRobotPermissionService {
+    protected readonly ownerRealmKey = 'robot_realm_id';
+
     protected repository: IRobotPermissionRepository;
 
     protected permissionRepository: IEntityRepository<Permission>;
@@ -132,7 +134,7 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_PERMISSION_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...validated, realm_id: validated.robot_realm_id ?? null } }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated) }),
         });
 
         let entity = this.repository.create(validated);
@@ -193,7 +195,7 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_PERMISSION_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...merged, realm_id: merged.robot_realm_id ?? null } }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(merged) }),
         });
 
         return this.repository.save(merged);
@@ -212,7 +214,7 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_PERMISSION_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...entity, realm_id: entity.robot_realm_id ?? null } }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) }),
         });
 
         const { id: entityId } = entity;

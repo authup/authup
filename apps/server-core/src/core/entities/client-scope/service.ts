@@ -11,14 +11,16 @@ import { ValidatorGroup } from '@authup/kit';
 import { ClientScopeValidator, PermissionName } from '@authup/core-kit';
 import type { ClientScope } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
-import { AbstractEntityService } from '@authup/server-kit';
+import { JunctionEntityService } from '@authup/server-kit';
 import type { IClientScopeRepository, IClientScopeService } from './types.ts';
 
 export type ClientScopeServiceContext = {
     repository: IClientScopeRepository;
 };
 
-export class ClientScopeService extends AbstractEntityService implements IClientScopeService {
+export class ClientScopeService extends JunctionEntityService implements IClientScopeService {
+    protected readonly ownerRealmKey = 'client_realm_id';
+
     protected repository: IClientScopeRepository;
 
     protected validator: ClientScopeValidator;
@@ -95,7 +97,7 @@ export class ClientScopeService extends AbstractEntityService implements IClient
         // Stamp the owner (client) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_SCOPE_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...validated, realm_id: validated.client_realm_id ?? null } }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated) }),
         });
 
         let entity = this.repository.create(validated);
@@ -118,7 +120,7 @@ export class ClientScopeService extends AbstractEntityService implements IClient
         // Stamp the owner (client) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_SCOPE_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...entity, realm_id: entity.client_realm_id ?? null } }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) }),
         });
 
         const { id: entityId } = entity;

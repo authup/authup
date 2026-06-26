@@ -17,7 +17,7 @@ import { PermissionName, UserPermissionValidator } from '@authup/core-kit';
 import type { Permission, UserPermission } from '@authup/core-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
-import { AbstractEntityService } from '@authup/server-kit';
+import { JunctionEntityService } from '@authup/server-kit';
 import type { IUserPermissionRepository, IUserPermissionService } from './types.ts';
 
 export type UserPermissionServiceContext = {
@@ -26,7 +26,9 @@ export type UserPermissionServiceContext = {
     identityPermissionProvider: IIdentityPermissionProvider;
 };
 
-export class UserPermissionService extends AbstractEntityService implements IUserPermissionService {
+export class UserPermissionService extends JunctionEntityService implements IUserPermissionService {
+    protected readonly ownerRealmKey = 'user_realm_id';
+
     protected repository: IUserPermissionRepository;
 
     protected permissionRepository: IEntityRepository<Permission>;
@@ -134,7 +136,7 @@ export class UserPermissionService extends AbstractEntityService implements IUse
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_PERMISSION_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...validated, realm_id: validated.user_realm_id ?? null } }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated) }),
         });
 
         let entity = this.repository.create(validated);
@@ -195,7 +197,7 @@ export class UserPermissionService extends AbstractEntityService implements IUse
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_PERMISSION_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...merged, realm_id: merged.user_realm_id ?? null } }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(merged) }),
         });
 
         return this.repository.save(merged);
@@ -214,7 +216,7 @@ export class UserPermissionService extends AbstractEntityService implements IUse
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_PERMISSION_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...entity, realm_id: entity.user_realm_id ?? null } }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) }),
         });
 
         const { id: entityId } = entity;

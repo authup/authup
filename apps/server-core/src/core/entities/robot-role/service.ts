@@ -11,7 +11,7 @@ import { ValidatorGroup } from '@authup/kit';
 import { PermissionName, RobotRoleValidator } from '@authup/core-kit';
 import type { RobotRole } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
-import { AbstractEntityService } from '@authup/server-kit';
+import { JunctionEntityService } from '@authup/server-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import type { IRobotRoleRepository, IRobotRoleService } from './types.ts';
 
@@ -20,7 +20,9 @@ export type RobotRoleServiceContext = {
     identityPermissionProvider: IIdentityPermissionProvider;
 };
 
-export class RobotRoleService extends AbstractEntityService implements IRobotRoleService {
+export class RobotRoleService extends JunctionEntityService implements IRobotRoleService {
+    protected readonly ownerRealmKey = 'robot_realm_id';
+
     protected repository: IRobotRoleRepository;
 
     protected identityPermissionProvider: IIdentityPermissionProvider;
@@ -115,7 +117,7 @@ export class RobotRoleService extends AbstractEntityService implements IRobotRol
         // Stamp the owner (robot) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_ROLE_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...validated, realm_id: validated.robot_realm_id ?? null } }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated) }),
         });
 
         let entity = this.repository.create(validated);
@@ -138,7 +140,7 @@ export class RobotRoleService extends AbstractEntityService implements IRobotRol
         // Stamp the owner (robot) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_ROLE_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...entity, realm_id: entity.robot_realm_id ?? null } }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) }),
         });
 
         const { id: entityId } = entity;

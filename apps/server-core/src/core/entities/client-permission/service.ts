@@ -17,7 +17,7 @@ import { ClientPermissionValidator, PermissionName } from '@authup/core-kit';
 import type { ClientPermission, Permission } from '@authup/core-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
-import { AbstractEntityService } from '@authup/server-kit';
+import { JunctionEntityService } from '@authup/server-kit';
 import type { IClientPermissionRepository, IClientPermissionService } from './types.ts';
 
 export type ClientPermissionServiceContext = {
@@ -26,7 +26,9 @@ export type ClientPermissionServiceContext = {
     identityPermissionProvider: IIdentityPermissionProvider;
 };
 
-export class ClientPermissionService extends AbstractEntityService implements IClientPermissionService {
+export class ClientPermissionService extends JunctionEntityService implements IClientPermissionService {
+    protected readonly ownerRealmKey = 'client_realm_id';
+
     protected repository: IClientPermissionRepository;
 
     protected permissionRepository: IEntityRepository<Permission>;
@@ -132,7 +134,7 @@ export class ClientPermissionService extends AbstractEntityService implements IC
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_PERMISSION_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...validated, realm_id: validated.client_realm_id ?? null } }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated) }),
         });
 
         let entity = this.repository.create(validated);
@@ -193,7 +195,7 @@ export class ClientPermissionService extends AbstractEntityService implements IC
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_PERMISSION_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...merged, realm_id: merged.client_realm_id ?? null } }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(merged) }),
         });
 
         return this.repository.save(merged);
@@ -212,7 +214,7 @@ export class ClientPermissionService extends AbstractEntityService implements IC
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_PERMISSION_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...entity, realm_id: entity.client_realm_id ?? null } }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) }),
         });
 
         const { id: entityId } = entity;

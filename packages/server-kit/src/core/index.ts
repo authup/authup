@@ -6,5 +6,6 @@
  */
 
 export * from './actor';
+export * from './junction-service';
 export * from './service';
 export * from './types';

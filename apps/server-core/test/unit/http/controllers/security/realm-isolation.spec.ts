@@ -5,12 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { 
-    Client as ClientEntity, 
-    Realm, 
-    Role, 
-    Scope, 
-} from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import {
@@ -23,50 +17,39 @@ import {
 import { createTestApplication } from '../../../../app';
 import {
     createFakeClient,
+    createFakeOAuth2IdentityProvider,
+    createFakePermission,
     createFakeRealm,
+    createFakeRobot,
     createFakeRole,
     createFakeScope,
+    createFakeUser,
 } from '../../../../utils';
+import { createFakeTimePolicy } from '../../../../utils/domains/policy';
 
 /**
- * REGRESSION test for the junction realm-isolation fix (plan 033).
+ * STRUCTURAL GUARD for the junction realm-isolation contract (plan 033, Layer 2).
  *
- * Actor C_A is a confidential client in the MASTER realm (realm A) holding a set of
- * *_CREATE permissions, each granted with the default `realm_scope: own` — i.e. a
- * deliberately RESTRICTED actor whose realm reach is realm A only. Pointed at resources
- * that belong to a DIFFERENT realm B, its junction writes must be rejected: each junction
- * service stamps its OWNER realm as the canonical `realm_id` onto the evaluate() input, so
- * the realm_scope factor gates the write exactly as it gates a direct entity write. The
- * own-realm case must still succeed (no over-tightening).
+ * Every junction service stamps its OWNER realm as the canonical `realm_id` so the
+ * realm_scope factor gates the write. This spec is the coverage contract: for EVERY
+ * junction it asserts a restricted realm-A actor (own scope) (a) CAN write a junction
+ * owned by its own realm — proving the setup is otherwise valid — and (b) CANNOT write
+ * the same junction owned by realm B. A junction whose service forgets the stamp would
+ * pass (b) and turn this red. Add a junction => add a row here.
  */
-describe('http/controllers/security (realm isolation of junction writes)', () => {
+describe('http/controllers/security (junction realm-isolation — all junctions)', () => {
     const suite = createTestApplication();
 
-    let realmB: Realm;
-    let roleB: Role;
-    let clientB: ClientEntity;
-    let globalScope: Scope;
-    let roleReadPermissionId: string;
-
+    const ctx: Record<string, any> = {};
     let actor: HTTPClient;
     const knownSecret = 'realm-isolation-secret-123';
 
     beforeAll(async () => {
         await suite.setup();
 
-        // --- realm B + resources owned by realm B ---
-        realmB = await suite.client.realm.create(createFakeRealm());
-        roleB = await suite.client.role.create(createFakeRole({ realm_id: realmB.id }));
-        clientB = await suite.client.client.create({
-            ...createFakeClient(),
-            realm_id: realmB.id,
-        });
-        globalScope = await suite.client.scope.create(createFakeScope({ realm_id: null }));
+        const realmB = await suite.client.realm.create(createFakeRealm());
 
-        const roleReadPermission = await suite.client.permission.getOne(PermissionName.ROLE_READ);
-        roleReadPermissionId = roleReadPermission.id;
-
-        // --- restricted actor C_A in the master realm (realm A) ---
+        // --- restricted actor C_A in the master realm (realm A), every grant `own` ---
         const cA = await suite.client.client.create({
             ...createFakeClient(),
             is_confidential: true,
@@ -74,27 +57,53 @@ describe('http/controllers/security (realm isolation of junction writes)', () =>
             secret_hashed: false,
             secret_encrypted: false,
         });
+        const masterRealmId = cA.realm_id;
 
-        const grantPermissions = [
+        // --- owner entities, one per realm (A = the actor's own realm, B = foreign) ---
+        ctx.roleA = await suite.client.role.create(createFakeRole({ realm_id: masterRealmId }));
+        ctx.roleB = await suite.client.role.create(createFakeRole({ realm_id: realmB.id }));
+        ctx.userA = await suite.client.user.create(createFakeUser({ realm_id: masterRealmId }));
+        ctx.userB = await suite.client.user.create(createFakeUser({ realm_id: realmB.id }));
+        ctx.clientA = await suite.client.client.create({ ...createFakeClient(), realm_id: masterRealmId });
+        ctx.clientB = await suite.client.client.create({ ...createFakeClient(), realm_id: realmB.id });
+        ctx.robotA = await suite.client.robot.create(createFakeRobot({ realm_id: masterRealmId }));
+        ctx.robotB = await suite.client.robot.create(createFakeRobot({ realm_id: realmB.id }));
+        ctx.providerA = await suite.client.identityProvider.create({ ...createFakeOAuth2IdentityProvider(), realm_id: masterRealmId });
+        ctx.providerB = await suite.client.identityProvider.create({ ...createFakeOAuth2IdentityProvider(), realm_id: realmB.id });
+        ctx.permissionA = await suite.client.permission.create({ ...createFakePermission(), realm_id: masterRealmId });
+        ctx.permissionB = await suite.client.permission.create({ ...createFakePermission(), realm_id: realmB.id });
+
+        // --- members the actor can legitimately reference (own/global) ---
+        const roleReadPermission = await suite.client.permission.getOne(PermissionName.ROLE_READ);
+        ctx.roleReadPermissionId = roleReadPermission.id;
+        ctx.emptyRoleId = (await suite.client.role.create(createFakeRole({ realm_id: null }))).id; // no perms => supersettable
+        ctx.globalScopeId = (await suite.client.scope.create(createFakeScope({ realm_id: null }))).id;
+        ctx.globalPolicyId = (await suite.client.policy.create(createFakeTimePolicy())).id;
+
+        // --- grant the actor every operation permission (default realm_scope: own) ---
+        const grants = [
             PermissionName.ROLE_PERMISSION_CREATE,
-            PermissionName.ROLE_READ,
+            PermissionName.USER_PERMISSION_CREATE,
+            PermissionName.CLIENT_PERMISSION_CREATE,
+            PermissionName.ROBOT_PERMISSION_CREATE,
+            PermissionName.USER_ROLE_CREATE,
+            PermissionName.CLIENT_ROLE_CREATE,
+            PermissionName.ROBOT_ROLE_CREATE,
             PermissionName.CLIENT_SCOPE_CREATE,
-            PermissionName.ROLE_CREATE,
+            PermissionName.IDENTITY_PROVIDER_ROLE_CREATE,
+            PermissionName.PERMISSION_UPDATE,
+            PermissionName.ROLE_READ, // the member attached by the *-permission junctions
+            PermissionName.ROLE_CREATE, // for the entity CONTROL below
         ];
-        for (const name of grantPermissions) {
+        for (const name of grants) {
             const permission = await suite.client.permission.getOne(name);
-            // default realm_scope === 'own' -> reach is realm A only
-            await suite.client.clientPermission.create({
-                client_id: cA.id,
-                permission_id: permission.id,
-            });
+            await suite.client.clientPermission.create({ client_id: cA.id, permission_id: permission.id });
         }
 
         const token = await suite.client.token.createWithClientCredentials({
             client_id: cA.id,
             client_secret: knownSecret,
         });
-
         actor = new HTTPClient({ baseURL: suite.baseURL });
         actor.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
     });
@@ -103,48 +112,106 @@ describe('http/controllers/security (realm isolation of junction writes)', () =>
         await suite.teardown();
     });
 
-    it('CONTROL: rejects creating a base entity (role) in another realm (top-level realm_id IS gated)', async () => {
+    it('CONTROL: rejects creating a base entity (role) in another realm', async () => {
         await expect(
-            actor.role.create(createFakeRole({ realm_id: realmB.id })),
+            actor.role.create(createFakeRole({ realm_id: ctx.roleB.realm_id })),
         ).rejects.toThrow();
     });
 
-    it('rejects a restricted realm-A actor attaching a permission onto a realm-B role (role-permission)', async () => {
-        await expect(
-            actor.rolePermission.create({
-                role_id: roleB.id,
-                permission_id: roleReadPermissionId,
-            }),
-        ).rejects.toThrow();
-    });
+    const JUNCTIONS: {
+        name: string;
+        api: string;
+        ownerA: string;
+        ownerB: string;
+        body: (ownerId: string, c: Record<string, any>) => Record<string, any>;
+    }[] = [
+        {
+            name: 'role-permission', 
+            api: 'rolePermission', 
+            ownerA: 'roleA', 
+            ownerB: 'roleB', 
+            body: (id, c) => ({ role_id: id, permission_id: c.roleReadPermissionId }), 
+        },
+        {
+            name: 'user-permission', 
+            api: 'userPermission', 
+            ownerA: 'userA', 
+            ownerB: 'userB', 
+            body: (id, c) => ({ user_id: id, permission_id: c.roleReadPermissionId }), 
+        },
+        {
+            name: 'client-permission', 
+            api: 'clientPermission', 
+            ownerA: 'clientA', 
+            ownerB: 'clientB', 
+            body: (id, c) => ({ client_id: id, permission_id: c.roleReadPermissionId }), 
+        },
+        {
+            name: 'robot-permission', 
+            api: 'robotPermission', 
+            ownerA: 'robotA', 
+            ownerB: 'robotB', 
+            body: (id, c) => ({ robot_id: id, permission_id: c.roleReadPermissionId }), 
+        },
+        {
+            name: 'user-role', 
+            api: 'userRole', 
+            ownerA: 'userA', 
+            ownerB: 'userB', 
+            body: (id, c) => ({ user_id: id, role_id: c.emptyRoleId }), 
+        },
+        {
+            name: 'client-role', 
+            api: 'clientRole', 
+            ownerA: 'clientA', 
+            ownerB: 'clientB', 
+            body: (id, c) => ({ client_id: id, role_id: c.emptyRoleId }), 
+        },
+        {
+            name: 'robot-role', 
+            api: 'robotRole', 
+            ownerA: 'robotA', 
+            ownerB: 'robotB', 
+            body: (id, c) => ({ robot_id: id, role_id: c.emptyRoleId }), 
+        },
+        {
+            name: 'client-scope', 
+            api: 'clientScope', 
+            ownerA: 'clientA', 
+            ownerB: 'clientB', 
+            body: (id, c) => ({ client_id: id, scope_id: c.globalScopeId }), 
+        },
+        {
+            name: 'identity-provider-role-mapping', 
+            api: 'identityProviderRoleMapping', 
+            ownerA: 'providerA', 
+            ownerB: 'providerB', 
+            body: (id, c) => ({ provider_id: id, role_id: c.emptyRoleId }), 
+        },
+        {
+            name: 'permission-policy', 
+            api: 'permissionPolicy', 
+            ownerA: 'permissionA', 
+            ownerB: 'permissionB', 
+            body: (id, c) => ({ permission_id: id, policy_id: c.globalPolicyId }), 
+        },
+    ];
 
-    it('rejects a restricted realm-A actor mutating a realm-B client scope binding (client-scope)', async () => {
-        await expect(
-            actor.clientScope.create({
-                client_id: clientB.id,
-                scope_id: globalScope.id,
-            }),
-        ).rejects.toThrow();
-    });
-
-    it('rejects a restricted realm-A actor managing a GLOBAL role (own !== null, per plan 033)', async () => {
-        const globalRole = await suite.client.role.create(createFakeRole({ realm_id: null }));
-        await expect(
-            actor.rolePermission.create({
-                role_id: globalRole.id,
-                permission_id: roleReadPermissionId,
-            }),
-        ).rejects.toThrow();
-    });
-
-    it('still allows the actor to manage junctions in its OWN realm (no over-tightening)', async () => {
-        // a role + permission in the actor's own (master) realm — must succeed
-        const roleA = await suite.client.role.create(createFakeRole());
-        const result = await actor.rolePermission.create({
-            role_id: roleA.id,
-            permission_id: roleReadPermissionId,
+    describe.each(JUNCTIONS)('$name owner-realm gating', ({
+        api, 
+        ownerA, 
+        ownerB, 
+        body, 
+    }) => {
+        it('allows the restricted actor on an OWN-realm owner (setup is valid)', async () => {
+            const result = await (actor as any)[api].create(body(ctx[ownerA].id, ctx));
+            expect(result.id).toBeDefined();
         });
-        expect(result.id).toBeDefined();
-        expect(result.role_id).toBe(roleA.id);
+
+        it('rejects the restricted actor on a realm-B owner (owner-realm is gated)', async () => {
+            await expect(
+                (actor as any)[api].create(body(ctx[ownerB].id, ctx)),
+            ).rejects.toThrow();
+        });
     });
 });

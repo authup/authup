@@ -20,7 +20,7 @@ import {
 import type { Permission, RolePermission } from '@authup/core-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
-import { AbstractEntityService } from '@authup/server-kit';
+import { JunctionEntityService } from '@authup/server-kit';
 import type { IRolePermissionRepository, IRolePermissionService } from './types.ts';
 
 export type RolePermissionServiceContext = {
@@ -29,7 +29,9 @@ export type RolePermissionServiceContext = {
     identityPermissionProvider: IIdentityPermissionProvider;
 };
 
-export class RolePermissionService extends AbstractEntityService implements IRolePermissionService {
+export class RolePermissionService extends JunctionEntityService implements IRolePermissionService {
+    protected readonly ownerRealmKey = 'role_realm_id';
+
     protected repository: IRolePermissionRepository;
 
     protected permissionRepository: IEntityRepository<Permission>;
@@ -141,7 +143,7 @@ export class RolePermissionService extends AbstractEntityService implements IRol
             name: PermissionName.ROLE_PERMISSION_CREATE,
             // Stamp the owner (role) realm as the canonical `realm_id` so the realm_scope
             // factor gates this junction write against the actor's reach (no cross-realm).
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...validated, realm_id: validated.role_realm_id ?? null } }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated) }),
         });
 
         let entity = this.repository.create(validated);
@@ -208,7 +210,7 @@ export class RolePermissionService extends AbstractEntityService implements IRol
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_PERMISSION_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...merged, realm_id: merged.role_realm_id ?? null } }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(merged) }),
         });
 
         return this.repository.save(merged);
@@ -227,7 +229,7 @@ export class RolePermissionService extends AbstractEntityService implements IRol
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_PERMISSION_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { ...entity, realm_id: entity.role_realm_id ?? null } }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) }),
         });
 
         const { id: entityId } = entity;
