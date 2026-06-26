@@ -10,7 +10,7 @@ import {
     PermissionName,
     ROLE_ADMIN_NAME,
 } from '@authup/core-kit';
-import type { RolePermission } from '@authup/core-kit';
+import type { Permission, RolePermission } from '@authup/core-kit';
 import {
     beforeEach,
     describe,
@@ -30,11 +30,13 @@ import { FakeIdentityPermissionProvider } from '../../helpers/index.ts';
 
 describe('core/entities/role-permission/service', () => {
     let repository: FakeEntityRepository<RolePermission>;
+    let permissionRepository: FakeEntityRepository<Permission>;
     let service: RolePermissionService;
 
     beforeEach(() => {
         repository = new FakeEntityRepository<RolePermission>();
-        service = new RolePermissionService({ repository });
+        permissionRepository = new FakeEntityRepository<Permission>();
+        service = new RolePermissionService({ repository, permissionRepository });
     });
 
     describe('getMany', () => {
@@ -143,7 +145,11 @@ describe('core/entities/role-permission/service', () => {
             const provider = new FakeIdentityPermissionProvider();
             provider.setJunctionRealmScope(RealmScope.OWN);
             provider.setJunctionPolicy(undefined);
-            const scopedService = new RolePermissionService({ repository, identityPermissionProvider: provider });
+            const scopedService = new RolePermissionService({
+                repository, 
+                permissionRepository, 
+                identityPermissionProvider: provider, 
+            });
 
             repository.onValidateJoinColumns((data: any) => {
                 data.permission = { name: 'custom-perm', realm_id: null };
@@ -164,7 +170,11 @@ describe('core/entities/role-permission/service', () => {
         it('lets an any-scoped actor set a broader realm_scope', async () => {
             const provider = new FakeIdentityPermissionProvider();
             provider.setJunctionRealmScope(RealmScope.ANY);
-            const scopedService = new RolePermissionService({ repository, identityPermissionProvider: provider });
+            const scopedService = new RolePermissionService({
+                repository, 
+                permissionRepository, 
+                identityPermissionProvider: provider, 
+            });
 
             repository.onValidateJoinColumns((data: any) => {
                 data.permission = { name: 'custom-perm', realm_id: null };

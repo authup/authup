@@ -7,7 +7,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
-import type { ClientPermission } from '@authup/core-kit';
+import type { ClientPermission, Permission } from '@authup/core-kit';
 import {
     beforeEach, 
     describe, 
@@ -20,11 +20,13 @@ import { FakeEntityRepository, createAllowAllActor, createDenyAllActor } from '@
 
 describe('core/entities/client-permission/service', () => {
     let repository: FakeEntityRepository<ClientPermission>;
+    let permissionRepository: FakeEntityRepository<Permission>;
     let service: ClientPermissionService;
 
     beforeEach(() => {
         repository = new FakeEntityRepository<ClientPermission>();
-        service = new ClientPermissionService({ repository });
+        permissionRepository = new FakeEntityRepository<Permission>();
+        service = new ClientPermissionService({ repository, permissionRepository });
     });
 
     describe('getMany', () => {

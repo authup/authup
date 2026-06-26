@@ -545,10 +545,15 @@ export class HTTPControllerModule {
         const repository = new ClientPermissionRepositoryAdapter(
             container.resolve<Repository<ClientPermission>>(ClientPermissionEntity),
         );
+        const permissionRepository = new PermissionRepositoryAdapter({
+            repository: container.resolve<Repository<Permission>>(PermissionEntity),
+            realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
+        });
         const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         const service = new ClientPermissionService({
             repository,
-            identityPermissionProvider, 
+            permissionRepository,
+            identityPermissionProvider,
         });
         return new ClientPermissionController({ service });
     }
@@ -574,10 +579,15 @@ export class HTTPControllerModule {
         const repository = new RobotPermissionRepositoryAdapter(
             container.resolve<Repository<RobotPermission>>(RobotPermissionEntity),
         );
+        const permissionRepository = new PermissionRepositoryAdapter({
+            repository: container.resolve<Repository<Permission>>(PermissionEntity),
+            realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
+        });
         const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         const service = new RobotPermissionService({
             repository,
-            identityPermissionProvider, 
+            permissionRepository,
+            identityPermissionProvider,
         });
         return new RobotPermissionController({ service });
     }
@@ -607,10 +617,15 @@ export class HTTPControllerModule {
         const repository = new RolePermissionRepositoryAdapter(
             container.resolve<Repository<RolePermission>>(RolePermissionEntity),
         );
+        const permissionRepository = new PermissionRepositoryAdapter({
+            repository: container.resolve<Repository<Permission>>(PermissionEntity),
+            realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
+        });
         const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         const service = new RolePermissionService({
             repository,
-            identityPermissionProvider, 
+            permissionRepository,
+            identityPermissionProvider,
         });
         return new RolePermissionController({ service });
     }
@@ -669,10 +684,15 @@ export class HTTPControllerModule {
         const repository = new UserPermissionRepositoryAdapter(
             container.resolve<Repository<UserPermission>>(UserPermissionEntity),
         );
+        const permissionRepository = new PermissionRepositoryAdapter({
+            repository: container.resolve<Repository<Permission>>(PermissionEntity),
+            realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
+        });
         const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         const service = new UserPermissionService({
             repository,
-            identityPermissionProvider, 
+            permissionRepository,
+            identityPermissionProvider,
         });
         return new UserPermissionController({ service });
     }

@@ -12,21 +12,24 @@ import {
     minRealmScope,
 } from '@authup/access';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
-import { ValidatorGroup } from '@authup/kit';
+import { ValidatorGroup, hasOwnProperty } from '@authup/kit';
 import { PermissionName, RobotPermissionValidator } from '@authup/core-kit';
-import type { RobotPermission } from '@authup/core-kit';
+import type { Permission, RobotPermission } from '@authup/core-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
-import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
+import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { IRobotPermissionRepository, IRobotPermissionService } from './types.ts';
 
 export type RobotPermissionServiceContext = {
     repository: IRobotPermissionRepository;
+    permissionRepository: IEntityRepository<Permission>;
     identityPermissionProvider: IIdentityPermissionProvider;
 };
 
 export class RobotPermissionService extends AbstractEntityService implements IRobotPermissionService {
     protected repository: IRobotPermissionRepository;
+
+    protected permissionRepository: IEntityRepository<Permission>;
 
     protected identityPermissionProvider: IIdentityPermissionProvider;
 
@@ -35,6 +38,7 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
     constructor(ctx: RobotPermissionServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.permissionRepository = ctx.permissionRepository;
         this.identityPermissionProvider = ctx.identityPermissionProvider;
         this.validator = new RobotPermissionValidator();
     }
@@ -152,15 +156,14 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
         let actorScope: RealmScope = RealmScope.ANY;
         if (actor.identity) {
             actorScope = RealmScope.OWN;
-            const lookup: Record<string, any> = { permission_id: entity.permission_id };
-            await this.repository.validateJoinColumns(lookup);
-            if (lookup.permission) {
+            const permission = await this.permissionRepository.findOneById(entity.permission_id);
+            if (permission) {
                 const grant = await this.identityPermissionProvider.resolveJunctionGrant(
                     { type: actor.identity.type, id: actor.identity.data.id },
                     {
-                        name: lookup.permission.name,
-                        realmId: lookup.permission.realm_id,
-                        clientId: lookup.permission.client_id,
+                        name: permission.name,
+                        realmId: permission.realm_id,
+                        clientId: permission.client_id,
                     },
                 );
                 actorScope = grant.realmScope as RealmScope;
@@ -170,12 +173,12 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
         const updateData: Record<string, any> = {};
 
         // CAP to the actor's ceiling — a restricted actor may narrow but never widen.
-        if (Object.prototype.hasOwnProperty.call(data, 'realm_scope')) {
-            updateData.realm_scope = minRealmScope(data.realm_scope ?? RealmScope.OWN, actorScope);
+        if (hasOwnProperty(data, 'realm_scope')) {
+            updateData.realm_scope = minRealmScope(data.realm_scope as RealmScope, actorScope);
         }
 
         if (
-            Object.prototype.hasOwnProperty.call(data, 'policy_id') &&
+            hasOwnProperty(data, 'policy_id') &&
             actorScope === RealmScope.ANY
         ) {
             updateData.policy_id = data.policy_id;
