@@ -17,6 +17,7 @@ import {
 import { ErrorCode } from '@authup/errors';
 import { ClientPermissionService } from '../../../../../src/core/entities/client-permission/service.ts';
 import { FakeEntityRepository, createAllowAllActor, createDenyAllActor } from '@authup/server-test-kit';
+import { FakeIdentityPermissionProvider } from '../../helpers/index.ts';
 
 describe('core/entities/client-permission/service', () => {
     let repository: FakeEntityRepository<ClientPermission>;
@@ -26,7 +27,11 @@ describe('core/entities/client-permission/service', () => {
     beforeEach(() => {
         repository = new FakeEntityRepository<ClientPermission>();
         permissionRepository = new FakeEntityRepository<Permission>();
-        service = new ClientPermissionService({ repository, permissionRepository });
+        service = new ClientPermissionService({
+            repository, 
+            permissionRepository, 
+            identityPermissionProvider: new FakeIdentityPermissionProvider(), 
+        });
     });
 
     describe('getMany', () => {

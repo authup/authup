@@ -29,7 +29,7 @@ describe('adapters/ldap', () => {
         await client.bind();
         await dropLdapTestUserAccount(client);
         await client.unbind();
-        client = undefined;
+        client = undefined as unknown as ILdapClient;
     });
 
     it('should resolve dns', () => {
@@ -56,12 +56,12 @@ describe('adapters/ldap', () => {
         expect(users.length).toEqual(1);
         const user = users.pop();
 
-        expect(user.dn).toEqual('cn=foo,dc=example,dc=com');
-        expect(user.cn).toEqual(['foo']);
-        expect(user.sn).toEqual(['bar']);
-        expect(user.mail).toEqual(['foo.bar@example.com']);
-        expect(user.objectClass).toEqual(['inetOrgPerson']);
-        expect(user.userPassword).toEqual(['foo']);
+        expect(user!.dn).toEqual('cn=foo,dc=example,dc=com');
+        expect(user!.cn).toEqual(['foo']);
+        expect(user!.sn).toEqual(['bar']);
+        expect(user!.mail).toEqual(['foo.bar@example.com']);
+        expect(user!.objectClass).toEqual(['inetOrgPerson']);
+        expect(user!.userPassword).toEqual(['foo']);
     });
 
     it('should authenticate with test user account', async () => {

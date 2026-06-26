@@ -64,7 +64,7 @@ describe('src/http/controllers/permission', () => {
     it('should read resource', async () => {
         const response = await suite.client
             .permission
-            .getOne(details.id);
+            .getOne(details.id!);
 
         expect(response).toBeDefined();
 
@@ -84,7 +84,7 @@ describe('src/http/controllers/permission', () => {
     it('should update resource', async () => {
         const response = await suite.client
             .permission
-            .update(details.id, {
+            .update(details.id!, {
                 ...details,
                 name: 'testa',
             });
@@ -114,7 +114,7 @@ describe('src/http/controllers/permission', () => {
     it('should delete resource', async () => {
         const response = await suite.client
             .permission
-            .delete(details.id);
+            .delete(details.id!);
 
         expect(response).toBeDefined();
     });

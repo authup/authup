@@ -57,17 +57,17 @@ describe('src/http/controllers/client-role', () => {
     it('should read resource', async () => {
         const response = await suite.client
             .clientRole
-            .getOne(entity.id);
+            .getOne(entity!.id);
 
         expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(entity, response, ['client', 'role']);
+        expectPropertiesEqualToSrc(entity!, response, ['client', 'role']);
     });
 
     it('should delete resource', async () => {
         const response = await suite.client
             .clientRole
-            .delete(entity.id);
+            .delete(entity!.id);
 
         expect(response.id).toBeDefined();
     });

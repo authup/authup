@@ -48,7 +48,7 @@ describe('refresh-token', () => {
         await suite.client.robot.update(robot.id, { active: false });
 
         await expectClientError(
-            () => suite.client.token.createWithRobotCredentials(robot),
+            () => suite.client.token.createWithRobotCredentials(robot as any),
             { status: 400, code: ErrorCode.ENTITY_INACTIVE },
         );
     });
@@ -60,7 +60,7 @@ describe('refresh-token', () => {
             () => suite.client.token.createWithRobotCredentials({
                 ...robot,
                 secret: 'foo',
-            }),
+            } as any),
             { status: 400, code: ErrorCode.ENTITY_CREDENTIALS_INVALID },
         );
     });

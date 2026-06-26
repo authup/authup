@@ -54,7 +54,7 @@ describe('src/http/controllers/user', () => {
     it('should read resource', async () => {
         const response = await suite.client
             .user
-            .getOne(details.id, { fields: ['+email'] });
+            .getOne(details.id!, { fields: ['+email'] });
 
         expect(response).toBeDefined();
 
@@ -78,16 +78,16 @@ describe('src/http/controllers/user', () => {
 
         const response = await suite.client
             .user
-            .update(details.id, details);
+            .update(details.id!, details);
 
         expect(response).toBeDefined();
-        expectPropertiesEqualToSrc(details, response, ['password', 'realm']);
+        expectPropertiesEqualToSrc(details, response, ['password', 'realm' as any]);
     });
 
     it('should delete resource', async () => {
         const response = await suite.client
             .user
-            .delete(details.id);
+            .delete(details.id!);
 
         expect(response.id).toBeDefined();
     });

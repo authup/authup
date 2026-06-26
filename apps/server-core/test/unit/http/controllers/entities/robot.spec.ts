@@ -42,7 +42,7 @@ describe('src/http/controllers/robot', () => {
 
     it('should create resource with no initial secret', async () => {
         const data = createFakeRobot();
-        delete data.secret;
+        delete (data as Record<string, any>).secret;
 
         const response = await suite.client
             .robot
@@ -66,7 +66,7 @@ describe('src/http/controllers/robot', () => {
     it('should read resource', async () => {
         const response = await suite.client
             .robot
-            .getOne(details.id);
+            .getOne(details.id!);
 
         expect(response).toBeDefined();
         expectPropertiesEqualToSrc(details, response, ['secret']);
@@ -88,7 +88,7 @@ describe('src/http/controllers/robot', () => {
 
         const response = await suite.client
             .robot
-            .update(details.id, details);
+            .update(details.id!, details);
 
         expect(response).toBeDefined();
         expectPropertiesEqualToSrc(details, response);
@@ -97,7 +97,7 @@ describe('src/http/controllers/robot', () => {
     it('should delete resource', async () => {
         const response = await suite.client
             .robot
-            .delete(details.id);
+            .delete(details.id!);
 
         expect(response.id).toBeDefined();
     });

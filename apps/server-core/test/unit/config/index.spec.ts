@@ -149,7 +149,7 @@ describe('src/config/*.ts', () => {
         const config = await readConfigRawFromFS({ cwd: 'test/data/config' });
 
         expect(config.db).toBeDefined();
-        expect(config.db.type).toEqual('mysql');
-        expect(config.db.database).toEqual('core');
+        expect(config.db!.type).toEqual('mysql');
+        expect(config.db!.database).toEqual('core');
     });
 });

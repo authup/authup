@@ -57,7 +57,7 @@ describe('src/http/controllers/role', () => {
     it('should read resource', async () => {
         const response = await suite.client
             .role
-            .getOne(details.id);
+            .getOne(details.id!);
 
         expect(response).toBeDefined();
 
@@ -67,7 +67,7 @@ describe('src/http/controllers/role', () => {
     it('should read resource by name', async () => {
         const response = await suite.client
             .role
-            .getOne(details.id);
+            .getOne(details.id!);
 
         expect(response).toBeDefined();
 
@@ -77,7 +77,7 @@ describe('src/http/controllers/role', () => {
     it('should update resource', async () => {
         const response = await suite.client
             .role
-            .update(details.id, {
+            .update(details.id!, {
                 ...details,
                 name: 'testa',
             });
@@ -107,7 +107,7 @@ describe('src/http/controllers/role', () => {
     it('should delete resource', async () => {
         const response = await suite.client
             .role
-            .delete(details.id);
+            .delete(details.id!);
 
         expect(response.id).toBeDefined();
     });

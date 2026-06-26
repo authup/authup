@@ -57,17 +57,17 @@ describe('src/http/controllers/client-permission', () => {
     it('should read resource', async () => {
         const response = await suite.client
             .clientPermission
-            .getOne(entity.id);
+            .getOne(entity!.id);
 
         expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(entity, response, ['client', 'permission']);
+        expectPropertiesEqualToSrc(entity!, response, ['client', 'permission']);
     });
 
     it('should delete resource', async () => {
         const response = await suite.client
             .clientPermission
-            .delete(entity.id);
+            .delete(entity!.id);
 
         expect(response.id).toBeDefined();
     });

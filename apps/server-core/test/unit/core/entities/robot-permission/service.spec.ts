@@ -17,6 +17,7 @@ import {
 import { ErrorCode } from '@authup/errors';
 import { RobotPermissionService } from '../../../../../src/core/entities/robot-permission/service.ts';
 import { FakeEntityRepository, createAllowAllActor, createDenyAllActor } from '@authup/server-test-kit';
+import { FakeIdentityPermissionProvider } from '../../helpers/index.ts';
 
 describe('core/entities/robot-permission/service', () => {
     let repository: FakeEntityRepository<RobotPermission>;
@@ -26,7 +27,11 @@ describe('core/entities/robot-permission/service', () => {
     beforeEach(() => {
         repository = new FakeEntityRepository<RobotPermission>();
         permissionRepository = new FakeEntityRepository<Permission>();
-        service = new RobotPermissionService({ repository, permissionRepository });
+        service = new RobotPermissionService({
+            repository, 
+            permissionRepository, 
+            identityPermissionProvider: new FakeIdentityPermissionProvider(), 
+        });
     });
 
     describe('getMany', () => {

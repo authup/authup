@@ -73,7 +73,7 @@ describe('src/http/controllers/identity-provider', () => {
     it('should read resource (oauth2)', async () => {
         const response = await suite.client
             .identityProvider
-            .getOne(oAuth2IdentityProvider.id);
+            .getOne(oAuth2IdentityProvider.id!);
 
         expect(response).toBeDefined();
 
@@ -83,7 +83,7 @@ describe('src/http/controllers/identity-provider', () => {
     it('should read resource (ldap)', async () => {
         const response = await suite.client
             .identityProvider
-            .getOne(ldapIdentityProvider.id);
+            .getOne(ldapIdentityProvider.id!);
 
         expect(response).toBeDefined();
 
@@ -106,7 +106,7 @@ describe('src/http/controllers/identity-provider', () => {
 
         const response = await suite.client
             .identityProvider
-            .update(oAuth2IdentityProvider.id, oAuth2IdentityProvider);
+            .update(oAuth2IdentityProvider.id!, oAuth2IdentityProvider);
 
         expect(response).toBeDefined();
 
@@ -116,7 +116,7 @@ describe('src/http/controllers/identity-provider', () => {
     it('should build authorize url', async () => {
         const response = await suite.client
             .get(
-                buildIdentityProviderAuthorizePath(oAuth2IdentityProvider.id),
+                buildIdentityProviderAuthorizePath(oAuth2IdentityProvider.id!),
                 { redirect: 'manual' },
             );
 
@@ -132,7 +132,7 @@ describe('src/http/controllers/identity-provider', () => {
             .toEqual(oAuth2IdentityProvider.client_id);
 
         expect(
-            responseURL.searchParams.get('redirect_uri').endsWith(buildIdentityProviderAuthorizeCallbackPath(oAuth2IdentityProvider.id)),
+            responseURL.searchParams.get('redirect_uri')!.endsWith(buildIdentityProviderAuthorizeCallbackPath(oAuth2IdentityProvider.id!)),
         ).toBeTruthy();
 
         expect(responseURL.searchParams.get('state')).toBeDefined();
@@ -141,7 +141,7 @@ describe('src/http/controllers/identity-provider', () => {
     it('should delete resource (oauth2)', async () => {
         const response = await suite.client
             .identityProvider
-            .delete(oAuth2IdentityProvider.id);
+            .delete(oAuth2IdentityProvider.id!);
 
         expect(response.id).toBeDefined();
     });
@@ -149,7 +149,7 @@ describe('src/http/controllers/identity-provider', () => {
     it('should delete resource (ldap)', async () => {
         const response = await suite.client
             .identityProvider
-            .delete(ldapIdentityProvider.id);
+            .delete(ldapIdentityProvider.id!);
 
         expect(response.id).toBeDefined();
     });

@@ -36,7 +36,11 @@ describe('core/entities/role-permission/service', () => {
     beforeEach(() => {
         repository = new FakeEntityRepository<RolePermission>();
         permissionRepository = new FakeEntityRepository<Permission>();
-        service = new RolePermissionService({ repository, permissionRepository });
+        service = new RolePermissionService({
+            repository, 
+            permissionRepository, 
+            identityPermissionProvider: new FakeIdentityPermissionProvider(), 
+        });
     });
 
     describe('getMany', () => {
