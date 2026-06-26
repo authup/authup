@@ -49,6 +49,7 @@ export const TranslatorTranslationClientEnglish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.PROTOCOL_NOT_SUPPORTED]: '{{name}} is not supported yet.',
 
     [TranslatorTranslationClientKey.JUNCTION_POLICY]: 'Junction Policy',
+    [TranslatorTranslationClientKey.JUNCTION_REALM_SCOPE]: 'Realm Scope',
     [TranslatorTranslationClientKey.SELECTION_UPDATING]: 'Updating selection',
     [TranslatorTranslationClientKey.SELECTION_REMOVE]: 'Remove from selection',
     [TranslatorTranslationClientKey.SELECTION_ADD]: 'Add to selection',

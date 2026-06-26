@@ -61,6 +61,7 @@ export const TranslatorTranslationClientSpanish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.PROTOCOL_NOT_SUPPORTED]: '{{name}} aún no es compatible.',
 
     [TranslatorTranslationClientKey.JUNCTION_POLICY]: 'Política de unión',
+    [TranslatorTranslationClientKey.JUNCTION_REALM_SCOPE]: 'Ámbito del dominio',
     [TranslatorTranslationClientKey.SELECTION_UPDATING]: 'Actualizando selección',
     [TranslatorTranslationClientKey.SELECTION_REMOVE]: 'Quitar de la selección',
     [TranslatorTranslationClientKey.SELECTION_ADD]: 'Añadir a la selección',

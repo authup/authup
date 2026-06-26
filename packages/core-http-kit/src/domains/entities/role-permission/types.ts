@@ -11,7 +11,7 @@ import type { RolePermission } from '@authup/core-kit';
 
 // Mirrors `RolePermissionValidator` mounts in @authup/core-kit.
 export type RolePermissionCreatePayload = Pick<RolePermission, 'role_id' | 'permission_id'> &
-    Partial<Pick<RolePermission, 'policy_id'>>;
+    Partial<Pick<RolePermission, 'policy_id' | 'realm_scope'>>;
 export type RolePermissionUpdatePayload = Partial<RolePermissionCreatePayload>;
 
 export interface IRolePermissionAPI extends IEntityAPI<RolePermission, RolePermissionCreatePayload, RolePermissionUpdatePayload> {}

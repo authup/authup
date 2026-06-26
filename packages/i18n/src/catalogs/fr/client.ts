@@ -61,6 +61,7 @@ export const TranslatorTranslationClientFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.PROTOCOL_NOT_SUPPORTED]: '{{name}} n\'est pas encore pris en charge.',
 
     [TranslatorTranslationClientKey.JUNCTION_POLICY]: 'Politique de liaison',
+    [TranslatorTranslationClientKey.JUNCTION_REALM_SCOPE]: 'Portée du domaine',
     [TranslatorTranslationClientKey.SELECTION_UPDATING]: 'Mise à jour de la sélection',
     [TranslatorTranslationClientKey.SELECTION_REMOVE]: 'Retirer de la sélection',
     [TranslatorTranslationClientKey.SELECTION_ADD]: 'Ajouter à la sélection',

@@ -80,6 +80,7 @@ export enum TranslatorTranslationClientKey {
     PROTOCOL_NOT_SUPPORTED = 'protocolNotSupported',
 
     JUNCTION_POLICY = 'junctionPolicy',
+    JUNCTION_REALM_SCOPE = 'junctionRealmScope',
     SELECTION_UPDATING = 'selectionUpdating',
     SELECTION_REMOVE = 'selectionRemove',
     SELECTION_ADD = 'selectionAdd',

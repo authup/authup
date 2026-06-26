@@ -61,6 +61,7 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.PROTOCOL_NOT_SUPPORTED]: '{{name}} wird noch nicht unterstützt.',
 
     [TranslatorTranslationClientKey.JUNCTION_POLICY]: 'Verknüpfungsrichtlinie',
+    [TranslatorTranslationClientKey.JUNCTION_REALM_SCOPE]: 'Realm-Geltungsbereich',
     [TranslatorTranslationClientKey.SELECTION_UPDATING]: 'Auswahl wird aktualisiert',
     [TranslatorTranslationClientKey.SELECTION_REMOVE]: 'Aus der Auswahl entfernen',
     [TranslatorTranslationClientKey.SELECTION_ADD]: 'Zur Auswahl hinzufügen',
