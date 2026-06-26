@@ -26,6 +26,7 @@ import {
     mergePermissionPolicyBindings,
     realmScopeMatches,
 } from '@authup/access';
+import { hasOwnProperty } from '@authup/kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 
 export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
@@ -119,11 +120,17 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
         // carry it as a column and junction services STAMP their owner realm onto the
         // eval input (so a junction write to another realm's entity is gated too).
         const attributes = await this.attributesEvaluator.accessData(ctx) as Record<string, any> | null;
-        if (attributes && Object.prototype.hasOwnProperty.call(attributes, 'realm_id')) {
-            const realmScope = maxRealmScope(bindingsMerged.map((b) => b.realm_scope));
+        if (
+            attributes &&
+            hasOwnProperty(attributes, 'realm_id')
+        ) {
+            const realmScope = maxRealmScope(
+                bindingsMerged.map((b) => b.realm_scope),
+            );
+
             const matches = realmScopeMatches(
                 realmScope,
-                attributes.realm_id ?? null,
+                (attributes.realm_id ?? null) as string | string[] | null,
                 identity.realmId,
                 identity.realmName,
             );
