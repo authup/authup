@@ -21,7 +21,6 @@ import {
     PolicyEngine,
     PolicyIssueCode,
     definePolicyIssueItem,
-    maxRealmScope,
     maybeInvertPolicyOutcome,
     mergePermissionPolicyBindings,
     realmScopeMatches,
@@ -124,12 +123,13 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
             attributes &&
             hasOwnProperty(attributes, 'realm_id')
         ) {
-            const realmScope = maxRealmScope(
-                bindingsMerged.map((b) => b.realm_scope),
-            );
-
+            // mergePermissionPolicyBindings already folded the scope with the correct
+            // policy correlation, and identityBindings is filtered to a single
+            // (name, realm_id, client_id) key — so bindingsMerged is length 1 and its
+            // realm_scope is authoritative (do NOT re-fold here, which would bypass the
+            // merge's policy-aware scope reduction).
             const matches = realmScopeMatches(
-                realmScope,
+                bindingsMerged[0].realm_scope,
                 (attributes.realm_id ?? null) as string | string[] | null,
                 identity.realmId,
                 identity.realmName,

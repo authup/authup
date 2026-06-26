@@ -36,14 +36,14 @@ const REALM_ADMIN_EXCLUDED_PERMISSIONS = [
 ];
 
 /**
- * CUD permissions that get system.realm-bound on realm_admin.
- * Covers direct entity types (both global-capable and realm-only).
+ * Direct-entity CUD permissions that realm_admin grants at `realm_scope: own`
+ * (strictly the actor's own realm — see line 372). Every other realm_admin
+ * permission defaults to `own_or_null` (own realm OR global/null resources) so it
+ * can act on global building blocks.
  *
- * Junction entity CUD (e.g. user_role, role_permission) intentionally
- * use realm-or-global instead, because their attributes include
- * multiple realm_id fields (e.g. user_realm_id + role_realm_id).
- * With attribute_name_strict: false, realm-bound would reject
- * junctions where one side is global (realm_id: null).
+ * Junction CUD (e.g. user_role, role_permission) is intentionally NOT listed here:
+ * it stays `own_or_null` because a junction can legitimately reference a global
+ * side (realm_id: null) — a strict `own` would reject those.
  */
 const REALM_ADMIN_BOUND_PERMISSIONS = [
     PermissionName.CLIENT_CREATE,

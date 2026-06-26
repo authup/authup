@@ -476,6 +476,13 @@ export class HTTPControllerModule {
         });
     }
 
+    private createPermissionRepository(container: IContainer): PermissionRepositoryAdapter {
+        return new PermissionRepositoryAdapter({
+            repository: container.resolve<Repository<Permission>>(PermissionEntity),
+            realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
+        });
+    }
+
     async createPermissionController(container: IContainer) {
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
@@ -545,10 +552,7 @@ export class HTTPControllerModule {
         const repository = new ClientPermissionRepositoryAdapter(
             container.resolve<Repository<ClientPermission>>(ClientPermissionEntity),
         );
-        const permissionRepository = new PermissionRepositoryAdapter({
-            repository: container.resolve<Repository<Permission>>(PermissionEntity),
-            realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
-        });
+        const permissionRepository = this.createPermissionRepository(container);
         const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         const service = new ClientPermissionService({
             repository,
@@ -579,10 +583,7 @@ export class HTTPControllerModule {
         const repository = new RobotPermissionRepositoryAdapter(
             container.resolve<Repository<RobotPermission>>(RobotPermissionEntity),
         );
-        const permissionRepository = new PermissionRepositoryAdapter({
-            repository: container.resolve<Repository<Permission>>(PermissionEntity),
-            realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
-        });
+        const permissionRepository = this.createPermissionRepository(container);
         const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         const service = new RobotPermissionService({
             repository,
@@ -617,10 +618,7 @@ export class HTTPControllerModule {
         const repository = new RolePermissionRepositoryAdapter(
             container.resolve<Repository<RolePermission>>(RolePermissionEntity),
         );
-        const permissionRepository = new PermissionRepositoryAdapter({
-            repository: container.resolve<Repository<Permission>>(PermissionEntity),
-            realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
-        });
+        const permissionRepository = this.createPermissionRepository(container);
         const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         const service = new RolePermissionService({
             repository,
@@ -684,10 +682,7 @@ export class HTTPControllerModule {
         const repository = new UserPermissionRepositoryAdapter(
             container.resolve<Repository<UserPermission>>(UserPermissionEntity),
         );
-        const permissionRepository = new PermissionRepositoryAdapter({
-            repository: container.resolve<Repository<Permission>>(PermissionEntity),
-            realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
-        });
+        const permissionRepository = this.createPermissionRepository(container);
         const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         const service = new UserPermissionService({
             repository,
