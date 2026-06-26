@@ -76,10 +76,21 @@ export function mergePermissionPolicyBindings(input: PermissionPolicyBinding[]) 
             mergedPolicies = [policy];
         }
 
-        // Realm scope folds most-permissive-wins (ordered-MAX) — a separate algebra from
-        // the AFFIRMATIVE policy composite above, independent of the fail-open "any binding
-        // without policies => unrestricted" rule.
-        const realmScope = maxRealmScope(group.map((b) => b.realm_scope));
+        // Realm scope folds most-permissive-wins (ordered-MAX). CRITICAL correlation with
+        // the policy merge: when the merge fails open (some binding is policy-free, so
+        // `mergedPolicies` is dropped), fold ONLY the policy-free bindings' scopes. A
+        // policy-bound binding's reach is gated by its (now-dropped) policy, so letting its
+        // scope leak into the unrestricted result would widen access — e.g. a policy-free
+        // `own` grant + a policy-bound `any` grant must NOT merge to unrestricted `any`.
+        // When all bindings are policy-bound (policies retained), every scope is gated, so
+        // the full ordered-MAX is correct.
+        const realmScope = typeof mergedPolicies === 'undefined' ?
+            maxRealmScope(
+                group
+                    .filter((b) => !b.policies || b.policies.length === 0)
+                    .map((b) => b.realm_scope),
+            ) :
+            maxRealmScope(group.map((b) => b.realm_scope));
 
         output.push({
             permission: {

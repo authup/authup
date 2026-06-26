@@ -193,8 +193,9 @@ describe('src/permission/helpers/merge', () => {
         expect(result[0].realm_scope).toBe(RealmScope.OWN);
     });
 
-    it('should fold realm_scope independently of the fail-open policy merge', () => {
-        // {any, no-policy} + {own, policy} => scope MAX = any, policies undefined (fail-open).
+    it('folds an unrestricted high-scope binding to its scope (policy-free `any` => any)', () => {
+        // The policy-FREE binding is the `any` one => the actor genuinely holds an
+        // unrestricted `any` grant, so the fail-open merge to (any, no-policy) is correct.
         const items: PermissionPolicyBinding[] = [
             {
                 permission: { name: 'user_read' },
@@ -211,5 +212,26 @@ describe('src/permission/helpers/merge', () => {
         expect(result).toHaveLength(1);
         expect(result[0].policies).toBeUndefined();
         expect(result[0].realm_scope).toBe(RealmScope.ANY);
+    });
+
+    it('does NOT let a policy-bound high-scope binding leak its scope on a fail-open merge', () => {
+        // The policy-FREE binding is the LOW-scope `own`; the `any` reach was gated by the
+        // (now-dropped) policy. The merged scope must stay `own`, never widen to `any`.
+        const items: PermissionPolicyBinding[] = [
+            {
+                permission: { name: 'user_read' },
+                realm_scope: RealmScope.OWN,
+            },
+            {
+                permission: { name: 'user_read' },
+                policies: [{ type: BuiltInPolicyType.IDENTITY }],
+                realm_scope: RealmScope.ANY,
+            },
+        ];
+
+        const result = mergePermissionPolicyBindings(items);
+        expect(result).toHaveLength(1);
+        expect(result[0].policies).toBeUndefined();
+        expect(result[0].realm_scope).toBe(RealmScope.OWN);
     });
 });

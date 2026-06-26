@@ -125,7 +125,7 @@ export class ClientPermissionService extends AbstractEntityService implements IC
             validated.realm_scope = minRealmScope(validated.realm_scope ?? RealmScope.OWN, grant.realmScope);
 
             // Only an unrestricted (`any`) actor may set policy_id explicitly.
-            if (grant.realmScope !== RealmScope.ANY) {
+            if (grant.realmScope !== RealmScope.ANY || grant.policy) {
                 validated.policy_id = grant.policy ? grant.policy.id : null;
             }
         }
@@ -154,6 +154,7 @@ export class ClientPermissionService extends AbstractEntityService implements IC
         }
 
         let actorScope: RealmScope = RealmScope.ANY;
+        let actorPolicyFree = true;
         if (actor.identity) {
             actorScope = RealmScope.OWN;
             const permission = await this.permissionRepository.findOneById(entity.permission_id);
@@ -167,6 +168,7 @@ export class ClientPermissionService extends AbstractEntityService implements IC
                     },
                 );
                 actorScope = grant.realmScope as RealmScope;
+                actorPolicyFree = !grant.policy;
             }
         }
 
@@ -179,7 +181,8 @@ export class ClientPermissionService extends AbstractEntityService implements IC
 
         if (
             hasOwnProperty(data, 'policy_id') &&
-            actorScope === RealmScope.ANY
+            actorScope === RealmScope.ANY &&
+            actorPolicyFree
         ) {
             updateData.policy_id = data.policy_id;
         }

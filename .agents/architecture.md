@@ -850,7 +850,7 @@ any`) merged across an actor's grants most-permissive-wins (ordered-MAX), evalua
 key and never folded into the `policies` list (so it is immune to the fail-open policy
 merge). There is no absolute realm-id allowlist on the grant — a specific-realm-set
 restriction is expressed via a `policy_id` `ATTRIBUTES` policy. See
-[Realm reach is a coarse `realm_scope` enum on the grant](#realm-reach-is-a-coarse-realm_scope-enum-on-the-grant).
+[Realm reach is a coarse `realm_scope` enum on the grant](#realm-reach-is-a-coarse-realm_scope-enum-on-the-grant-not-a-policy).
 
 ## Security: Permission Assignment
 

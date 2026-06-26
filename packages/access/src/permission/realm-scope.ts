@@ -134,6 +134,11 @@ export function realmScopeMatches(
     }
 
     if (Array.isArray(resourceRealmId)) {
+        // Fail closed: an empty realm set is unreachable for a scoped actor (`any`
+        // already returned above). `[].every()` would otherwise vacuously pass.
+        if (resourceRealmId.length === 0) {
+            return false;
+        }
         return resourceRealmId.every((id) => matchesSingle(normalized, id ?? null, realmId, realmName));
     }
 

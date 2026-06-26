@@ -132,7 +132,7 @@ export class RolePermissionService extends AbstractEntityService implements IRol
             // Only an unrestricted (`any`) actor may set policy_id explicitly; a
             // restricted actor silently inherits its own grant's policy (cannot
             // attach an unowned policy nor detach to widen).
-            if (grant.realmScope !== RealmScope.ANY) {
+            if (grant.realmScope !== RealmScope.ANY || grant.policy) {
                 validated.policy_id = grant.policy ? grant.policy.id : null;
             }
         }
@@ -167,6 +167,7 @@ export class RolePermissionService extends AbstractEntityService implements IRol
         // No actor identity (system context) is not realm-gated here; the operation is
         // still authorized by the evaluate() below.
         let actorScope: RealmScope = RealmScope.ANY;
+        let actorPolicyFree = true;
         if (actor.identity) {
             actorScope = RealmScope.OWN;
             const permission = await this.permissionRepository.findOneById(entity.permission_id);
@@ -180,6 +181,7 @@ export class RolePermissionService extends AbstractEntityService implements IRol
                     },
                 );
                 actorScope = grant.realmScope as RealmScope;
+                actorPolicyFree = !grant.policy;
             }
         }
 
@@ -194,7 +196,8 @@ export class RolePermissionService extends AbstractEntityService implements IRol
         // null); a restricted actor's policy_id change is silently ignored.
         if (
             hasOwnProperty(data, 'policy_id') &&
-            actorScope === RealmScope.ANY
+            actorScope === RealmScope.ANY &&
+            actorPolicyFree
         ) {
             updateData.policy_id = data.policy_id;
         }

@@ -106,8 +106,9 @@ describe('src/permission/realm-scope', () => {
                 // own_or_null: [A, null] ok, [A, B] not
                 expect(realmScopeMatches(RealmScope.OWN_OR_NULL, [A, null as any], A)).toBe(true);
                 expect(realmScopeMatches(RealmScope.OWN_OR_NULL, [A, B], A)).toBe(false);
-                // empty array vacuously matches (no realm to fail on)
-                expect(realmScopeMatches(RealmScope.OWN, [], A)).toBe(true);
+                // empty array fails closed for a scoped actor (unreachable); `any` still passes
+                expect(realmScopeMatches(RealmScope.OWN, [], A)).toBe(false);
+                expect(realmScopeMatches(RealmScope.ANY, [], A)).toBe(true);
             });
         });
     });
