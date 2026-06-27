@@ -113,7 +113,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         }
 
         const merged = mergePermissionPolicyBindings(matching);
-        const realmScope = maxRealmScope(merged.map((b) => b.realm_scope));
+        const realmScope = maxRealmScope(...merged.map((b) => b.realm_scope));
 
         let policy: Policy | undefined;
         if (merged.length > 0 && merged[0].policies && merged[0].policies.length > 0) {

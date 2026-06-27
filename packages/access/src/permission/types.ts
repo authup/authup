@@ -7,7 +7,7 @@
 
 import type { BasePolicy } from '../policy';
 import type { DecisionStrategy } from '@authup/kit';
-import type { RealmScope } from './realm-scope.ts';
+import type { RealmScope } from './realm-scope';
 
 export type BasePermission = {
     name: string;

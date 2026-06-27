@@ -37,10 +37,10 @@ describe('src/permission/realm-scope', () => {
         });
 
         it('maxRealmScope folds to most permissive, default own', () => {
-            expect(maxRealmScope([])).toBe(RealmScope.OWN);
-            expect(maxRealmScope([undefined, null])).toBe(RealmScope.OWN);
-            expect(maxRealmScope([RealmScope.OWN, RealmScope.ANY, RealmScope.OWN_OR_NULL])).toBe(RealmScope.ANY);
-            expect(maxRealmScope([RealmScope.OWN, RealmScope.OWN_OR_NULL])).toBe(RealmScope.OWN_OR_NULL);
+            expect(maxRealmScope()).toBe(RealmScope.OWN);
+            expect(maxRealmScope(undefined, null)).toBe(RealmScope.OWN);
+            expect(maxRealmScope(RealmScope.OWN, RealmScope.ANY, RealmScope.OWN_OR_NULL)).toBe(RealmScope.ANY);
+            expect(maxRealmScope(RealmScope.OWN, RealmScope.OWN_OR_NULL)).toBe(RealmScope.OWN_OR_NULL);
         });
 
         it('minRealmScope caps to most restrictive', () => {
