@@ -7,7 +7,7 @@
 
 import type { BasePolicy } from '../policy';
 import type { DecisionStrategy } from '@authup/kit';
-import type { RealmScopeValue } from './realm-scope.ts';
+import type { RealmScope } from './realm-scope.ts';
 
 export type BasePermission = {
     name: string;
@@ -24,5 +24,5 @@ export type PermissionPolicyBinding = {
      * grants by ordered-MAX; absent coerces to the most restrictive `own` (fail-closed).
      * NOT part of the binding identity key (see isPermissionPolicyBindingEqual).
      */
-    realm_scope?: RealmScopeValue,
+    realm_scope?: `${RealmScope}`,
 };

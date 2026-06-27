@@ -6,7 +6,7 @@
  */
 
 import type { Policy } from '@authup/core-kit';
-import type { IdentityPolicyData, PermissionPolicyBinding, RealmScopeValue } from '@authup/access';
+import type { IdentityPolicyData, PermissionPolicyBinding } from '@authup/access';
 import { RealmScope } from '@authup/access';
 import type {
     IIdentityPermissionProvider,
@@ -23,7 +23,7 @@ export class FakeIdentityPermissionProvider implements IIdentityPermissionProvid
 
     // Mirror the production no-match default (RealmScope.OWN, fail-closed) so a test
     // that forgets to configure the grant still exercises the capped path.
-    private junctionScope: RealmScopeValue = RealmScope.OWN;
+    private junctionScope: `${RealmScope}` = RealmScope.OWN;
 
     setSuperset(value: boolean) {
         this.supersetResult = value;
@@ -37,7 +37,7 @@ export class FakeIdentityPermissionProvider implements IIdentityPermissionProvid
         this.junctionPolicy = policy;
     }
 
-    setJunctionRealmScope(scope: RealmScopeValue) {
+    setJunctionRealmScope(scope: `${RealmScope}`) {
         this.junctionScope = scope;
     }
 

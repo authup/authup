@@ -12,7 +12,7 @@ import type {
     FindOptionsWhere,
     ObjectLiteral,
 } from 'typeorm';
-import type { BasePolicy, PermissionPolicyBinding, RealmScopeValue } from '@authup/access';
+import type { BasePolicy, PermissionPolicyBinding } from '@authup/access';
 import { RealmScope } from '@authup/access';
 import type { Permission } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
@@ -29,7 +29,7 @@ export type LoadBoundPermissionsOptions<E extends ObjectLiteral> = {
 type PermissionJunction = {
     permission: Permission;
     policy_id?: string | null;
-    realm_scope?: RealmScopeValue | null;
+    realm_scope?: `${RealmScope}` | null;
 };
 
 export async function loadBoundPermissions<E extends PermissionJunction & ObjectLiteral>(
