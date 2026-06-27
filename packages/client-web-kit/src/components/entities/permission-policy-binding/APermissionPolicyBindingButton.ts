@@ -112,7 +112,15 @@ export const APermissionPolicyBindingButton = defineComponent({
             busy.value = true;
             try {
                 const response = await api.update(props.entity.id, { realm_scope: scope });
-                currentRealmScope.value = scope;
+                // Reflect the server-capped value: a restricted actor's chosen scope may be
+                // narrowed server-side, so prefer the persisted scope from the response.
+                currentRealmScope.value = (
+                    response &&
+                    typeof response === 'object' &&
+                    hasOwnProperty(response, 'realm_scope')
+                ) ?
+                    response.realm_scope as RealmScopeValue | null :
+                    scope;
                 emit('updated', response);
             } catch (e) {
                 if (e instanceof Error) {

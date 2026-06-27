@@ -170,6 +170,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
         // still authorized by the evaluate() below.
         let actorScope: RealmScope = RealmScope.ANY;
         let actorPolicyFree = true;
+        let actorPolicyId: string | null = null;
         if (actor.identity) {
             actorScope = RealmScope.OWN;
             const permission = await this.permissionRepository.findOneById(entity.permission_id);
@@ -184,6 +185,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
                 );
                 actorScope = grant.realmScope as RealmScope;
                 actorPolicyFree = !grant.policy;
+                actorPolicyId = grant.policy ? grant.policy.id : null;
             }
         }
 
@@ -194,14 +196,16 @@ export class RolePermissionService extends JunctionEntityService implements IRol
             updateData.realm_scope = minRealmScope(data.realm_scope as RealmScope, actorScope);
         }
 
-        // Only an unrestricted (`any`) actor may change policy_id (incl. detaching to
-        // null); a restricted actor's policy_id change is silently ignored.
-        if (
-            hasOwnProperty(data, 'policy_id') &&
-            actorScope === RealmScope.ANY &&
-            actorPolicyFree
-        ) {
-            updateData.policy_id = data.policy_id;
+        // policy_id, capped to the actor's ceiling (mirrors create-time inheritance):
+        // an unrestricted actor may set/clear it explicitly; a restricted/policy-bound
+        // actor that touches the binding inherits its own grant's policy and cannot
+        // detach or replace it to persist a binding broader than it holds.
+        if (actorScope === RealmScope.ANY && actorPolicyFree) {
+            if (hasOwnProperty(data, 'policy_id')) {
+                updateData.policy_id = data.policy_id;
+            }
+        } else if (hasOwnProperty(data, 'realm_scope') || hasOwnProperty(data, 'policy_id')) {
+            updateData.policy_id = actorPolicyId;
         }
 
         await this.repository.validateJoinColumns(updateData);

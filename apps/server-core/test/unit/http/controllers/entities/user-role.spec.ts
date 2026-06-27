@@ -68,7 +68,7 @@ describe('src/http/controllers/user-role', () => {
     it('should delete resource', async () => {
         const response = await suite.client
             .userRole
-            .getOne(details!.id);
+            .delete(details!.id);
 
         expect(response.id).toEqual(details!.id);
     });
