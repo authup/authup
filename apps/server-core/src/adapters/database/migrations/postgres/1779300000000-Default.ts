@@ -24,7 +24,7 @@ const JUNCTION_TABLES = [
 ];
 
 const SCOPE_BY_POLICY: { policy: string, scope: string }[] = [
-    { policy: 'system.realm-or-global', scope: 'own_or_null' },
+    { policy: 'system.realm-or-global', scope: 'ownOrNull' },
     { policy: 'system.realm-bound', scope: 'own' },
 ];
 

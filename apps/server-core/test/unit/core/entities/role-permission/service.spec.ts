@@ -187,7 +187,7 @@ describe('core/entities/role-permission/service', () => {
             const result = await scopedService.create({
                 role_id: randomUUID(),
                 permission_id: randomUUID(),
-                realm_scope: 'own_or_null',
+                realm_scope: 'ownOrNull',
             }, createNonMasterRealmActor());
 
             expect(result.realm_scope).toBe(RealmScope.OWN_OR_NULL);

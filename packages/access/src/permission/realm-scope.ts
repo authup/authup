@@ -8,7 +8,7 @@
 /**
  * Actor-relative realm reach of a permission grant.
  *
- * Total order (least -> most permissive): none < own < own_or_null < any.
+ * Total order (least -> most permissive): none < own < ownOrNull < any.
  * A missing/unknown column coerces to `own` (fail-closed); `none` is only ever an
  * explicit value (the grant reaches no realm at all).
  */
@@ -18,7 +18,7 @@ export enum RealmScope {
     /** Own realm only — resource realm must equal the actor's realm. */
     OWN = 'own',
     /** Own realm or null/global resources (realm_id === null). */
-    OWN_OR_NULL = 'own_or_null',
+    OWN_OR_NULL = 'ownOrNull',
     /** Any realm, including null/global. */
     ANY = 'any',
 }
@@ -91,8 +91,8 @@ export function minRealmScope(
  *
  * - `any`         -> always.
  * - `none`        -> never.
- * - realm-less actor (no realmId and no realmName) -> never `own`/`own_or_null`.
- * - resource realm `null` (global) -> only `own_or_null`.
+ * - realm-less actor (no realmId and no realmName) -> never `own`/`ownOrNull`.
+ * - resource realm `null` (global) -> only `ownOrNull`.
  * - concrete resource realm -> must equal the actor's own realm (by id or name).
  */
 function matchesSingle(

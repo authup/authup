@@ -73,7 +73,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             }
 
             // Realm reach: the parent's relative scope must be >= the child's (ordered
-            // none < own < own_or_null < any). No scopeMatches here — the role child
+            // none < own < ownOrNull < any). No scopeMatches here — the role child
             // carries no actor realm; this is a purely structural comparison.
             if (compareRealmScope(parentItem.realm_scope, childItem.realm_scope) < 0) {
                 return false;

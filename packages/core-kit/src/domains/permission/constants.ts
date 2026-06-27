@@ -10,12 +10,12 @@
  * `RealmScope` enum in `@authup/access` (the logic source of truth) — the values must
  * agree. Kept here as a plain const (no enum) since core-kit cannot depend on access.
  */
-export type RealmScopeValue = 'none' | 'own' | 'own_or_null' | 'any';
+export type RealmScopeValue = 'none' | 'own' | 'ownOrNull' | 'any';
 
 export const REALM_SCOPE = {
     NONE: 'none',
     OWN: 'own',
-    OWN_OR_NULL: 'own_or_null',
+    OWN_OR_NULL: 'ownOrNull',
     ANY: 'any',
 } as const satisfies Record<string, RealmScopeValue>;
 

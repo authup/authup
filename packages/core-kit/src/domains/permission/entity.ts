@@ -17,7 +17,7 @@ export interface PermissionRelation {
     policy: Policy | null;
 
     /**
-     * Relative realm reach of this grant (none/own/own_or_null/any). Fail-closed
+     * Relative realm reach of this grant (none/own/ownOrNull/any). Fail-closed
      * default `own`. See {@link REALM_SCOPE}.
      */
     realm_scope: RealmScopeValue;

@@ -38,11 +38,11 @@ const REALM_ADMIN_EXCLUDED_PERMISSIONS = [
 /**
  * Direct-entity CUD permissions that realm_admin grants at `realm_scope: own`
  * (strictly the actor's own realm — see line 372). Every other realm_admin
- * permission defaults to `own_or_null` (own realm OR global/null resources) so it
+ * permission defaults to `ownOrNull` (own realm OR global/null resources) so it
  * can act on global building blocks.
  *
  * Junction CUD (e.g. user_role, role_permission) is intentionally NOT listed here:
- * it stays `own_or_null` because a junction can legitimately reference a global
+ * it stays `ownOrNull` because a junction can legitimately reference a global
  * side (realm_id: null) — a strict `own` would reject those.
  */
 const REALM_ADMIN_BOUND_PERMISSIONS = [
@@ -349,7 +349,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
      *
      * Uses differentiated realm_scope on the junction:
      * - CUD on global-capable entity types → own (strictly own realm)
-     * - Everything else → own_or_null (own realm + null/global resources)
+     * - Everything else → ownOrNull (own realm + null/global resources)
      *
      * Eligible permissions:
      * - Built-in authup permissions (global) — assigned to all realm_admin roles

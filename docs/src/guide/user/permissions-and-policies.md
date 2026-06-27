@@ -101,7 +101,7 @@ Each permission **grant** (the row that assigns a permission to a role / user / 
 | `realm_scope` | the grant lets the holder act on… | typical use |
 |---|---|---|
 | **`own`** (default) | only the holder's own realm | the safe default; `realm_admin` writes |
-| **`own_or_null`** | the holder's own realm **and** global (`realm_id = null`) resources | `realm_admin` reads — to use global building blocks |
+| **`ownOrNull`** | the holder's own realm **and** global (`realm_id = null`) resources | `realm_admin` reads — to use global building blocks |
 | **`any`** | any realm, including global | `admin` |
 | **`none`** | nothing (reserved) | — |
 
@@ -110,7 +110,7 @@ It is **fail-closed**: a grant with no explicit `realm_scope` defaults to `own`.
 The two built-in admin roles are expressed purely through this reach:
 
 - **`admin`** — every permission at `any`, so it acts on all realms (and global resources) **from an identity in any realm**.
-- **`realm_admin`** — direct entity create/update/delete at `own`; reads and assignments at `own_or_null`. It cannot touch another realm's resources, and cannot create or modify global entities.
+- **`realm_admin`** — direct entity create/update/delete at `own`; reads and assignments at `ownOrNull`. It cannot touch another realm's resources, and cannot create or modify global entities.
 
 There is no special "master realm" privilege.
 
@@ -148,7 +148,7 @@ The decision strategy is set per permission. Most built-in permissions use `unan
 
 Permission assignments (role-permission, user-permission, client-permission, robot-permission) carry two independent controls on the junction table:
 
-- **`realm_scope`** — the coarse [realm reach](#realm-reach-realm_scope) of the grant (`own` / `own_or_null` / `any`). This is how the built-in `realm_admin` is confined to its own realm and `admin` reaches every realm.
+- **`realm_scope`** — the coarse [realm reach](#realm-reach-realm_scope) of the grant (`own` / `ownOrNull` / `any`). This is how the built-in `realm_admin` is confined to its own realm and `admin` reaches every realm.
 - **`policy_id`** — an optional **junction policy** that adds a further restriction on top of the permission's own policies, e.g. an ATTRIBUTES policy `{ realm_id: { $in: ["…"] } }` to limit a grant to a specific set of realms.
 
 Both are evaluated as additional, ANDed factors: the holder must satisfy the permission's own policies, the grant's `realm_scope`, **and** any junction `policy_id`. Only an unrestricted (`any`, policy-free) actor may attach an explicit `policy_id`; a restricted actor inherits its own grant's policy, so it cannot detach a restriction to widen access.

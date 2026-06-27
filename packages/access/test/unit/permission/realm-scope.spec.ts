@@ -28,7 +28,7 @@ describe('src/permission/realm-scope', () => {
     });
 
     describe('ordering', () => {
-        it('orders none < own < own_or_null < any', () => {
+        it('orders none < own < ownOrNull < any', () => {
             expect(compareRealmScope(RealmScope.NONE, RealmScope.OWN)).toBeLessThan(0);
             expect(compareRealmScope(RealmScope.OWN, RealmScope.OWN_OR_NULL)).toBeLessThan(0);
             expect(compareRealmScope(RealmScope.OWN_OR_NULL, RealmScope.ANY)).toBeLessThan(0);
@@ -68,13 +68,13 @@ describe('src/permission/realm-scope', () => {
             expect(realmScopeMatches(RealmScope.OWN, null, A)).toBe(false);
         });
 
-        it('own_or_null matches own realm and null/global', () => {
+        it('ownOrNull matches own realm and null/global', () => {
             expect(realmScopeMatches(RealmScope.OWN_OR_NULL, A, A)).toBe(true);
             expect(realmScopeMatches(RealmScope.OWN_OR_NULL, null, A)).toBe(true);
             expect(realmScopeMatches(RealmScope.OWN_OR_NULL, B, A)).toBe(false);
         });
 
-        it('denies a realm-less actor under own / own_or_null (no A=null === R=null leak)', () => {
+        it('denies a realm-less actor under own / ownOrNull (no A=null === R=null leak)', () => {
             expect(realmScopeMatches(RealmScope.OWN, null, null)).toBe(false);
             expect(realmScopeMatches(RealmScope.OWN_OR_NULL, null, null)).toBe(false);
             expect(realmScopeMatches(RealmScope.OWN, A, null)).toBe(false);
@@ -103,7 +103,7 @@ describe('src/permission/realm-scope', () => {
                 expect(realmScopeMatches(RealmScope.OWN, [A, B], A)).toBe(false);
                 // any reaches all
                 expect(realmScopeMatches(RealmScope.ANY, [A, B], A)).toBe(true);
-                // own_or_null: [A, null] ok, [A, B] not
+                // ownOrNull: [A, null] ok, [A, B] not
                 expect(realmScopeMatches(RealmScope.OWN_OR_NULL, [A, null as any], A)).toBe(true);
                 expect(realmScopeMatches(RealmScope.OWN_OR_NULL, [A, B], A)).toBe(false);
                 // empty array fails closed for a scoped actor (unreachable); `any` still passes

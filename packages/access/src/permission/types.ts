@@ -20,7 +20,7 @@ export type PermissionPolicyBinding = {
     permission: BasePermission,
     policies?: BasePolicy[],
     /**
-     * Relative realm reach of this grant (none/own/own_or_null/any). Merged across
+     * Relative realm reach of this grant (none/own/ownOrNull/any). Merged across
      * grants by ordered-MAX; absent coerces to the most restrictive `own` (fail-closed).
      * NOT part of the binding identity key (see isPermissionPolicyBindingEqual).
      */

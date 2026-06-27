@@ -20,7 +20,7 @@ export type RoleProvisioningRelations = {
     globalPermissionsExclude?: string[],
 
     /**
-     * Default realm_scope (own | own_or_null | any) to stamp on each
+     * Default realm_scope (own | ownOrNull | any) to stamp on each
      * role-permission junction entry. Realm reach is a coarse, actor-relative
      * enum on the junction (not a policy).
      */
