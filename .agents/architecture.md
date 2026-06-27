@@ -748,6 +748,16 @@ the permission itself is global. (The *member* side — the permission/role bein
 entity) under `own` correctly denies, consistent with a `realm_admin` not being able to
 write a global base entity.
 
+> **Known limitation (tracked for the PolicyData redesign):** the factor reads the resource
+> realm from `realm_id` in the **ATTRIBUTES** bag, uniformly for entities and junctions. For
+> an entity that `realm_id` is a real column; for a junction it is *synthetic* (the stamped
+> owner realm). So an `ATTRIBUTE_NAMES` allowlist policy attached to a **junction** permission
+> would (mis)see the synthetic `realm_id` and reject. No default junction permission carries
+> such a policy, so this is latent — but **do not attach an `ATTRIBUTE_NAMES` allowlist to a
+> junction permission**. The clean fix is to carry the resource realm as evaluation *context*
+> (separate from the policy-type ATTRIBUTES bag); it is deferred to the broader rethink of how
+> `PolicyData` is built and passed to evaluators.
+
 > **Dependency:** this factor runs inside `PermissionBindingPolicyEvaluator`, i.e. only when
 > `system.default` is bound to the operation permission. Universal binding to every permission
 > comes from `assignDefaultPolicy` (config `permissionsDefaultPolicyAssignment`, default `true`,

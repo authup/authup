@@ -30,6 +30,16 @@ export abstract class JunctionEntityService extends AbstractEntityService {
      * owner realm as the canonical `realm_id` onto a COPY (never the persisted entity).
      * Use this instead of spreading `realm_id` by hand so a junction can never silently
      * skip the stamp.
+     *
+     * KNOWN LIMITATION: the realm_scope factor reads the resource realm from `realm_id` in
+     * the ATTRIBUTES bag (uniform with entity resources, which carry a real `realm_id`
+     * column). For a junction this `realm_id` is *synthetic* — the owner realm, not a real
+     * junction attribute — so an `ATTRIBUTE_NAMES` allowlist policy attached to a junction
+     * permission would (mis)see it and reject. No default junction permission has such a
+     * policy, so this is latent; the proper fix (carry the resource realm as evaluation
+     * context, separate from the policy-type ATTRIBUTES bag) is tracked for the PolicyData
+     * redesign — do NOT attach an `ATTRIBUTE_NAMES` allowlist to a junction permission until
+     * then.
      */
     protected junctionAttributes(entity: Record<string, any>): Record<string, any> {
         return { ...entity, realm_id: entity[this.ownerRealmKey] ?? null };
