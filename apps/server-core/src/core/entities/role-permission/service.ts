@@ -129,7 +129,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
 
             // CAP the grant's realm scope to the actor's own ceiling (a creator may not
             // grant broader than it holds); default to the most restrictive `own`.
-            validated.realm_scope = minRealmScope(validated.realm_scope ?? RealmScope.OWN, grant.realmScope);
+            validated.realm_scope = minRealmScope([validated.realm_scope ?? RealmScope.OWN, grant.realmScope]);
 
             // Only an unrestricted (`any`) actor may set policy_id explicitly; a
             // restricted actor silently inherits its own grant's policy (cannot
@@ -193,7 +193,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
 
         // CAP to the actor's ceiling — a restricted actor may narrow but never widen.
         if (hasOwnProperty(data, 'realm_scope')) {
-            updateData.realm_scope = minRealmScope(data.realm_scope as RealmScope, actorScope);
+            updateData.realm_scope = minRealmScope([data.realm_scope as RealmScope, actorScope]);
         }
 
         // policy_id, capped to the actor's ceiling (mirrors create-time inheritance):

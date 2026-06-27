@@ -30,8 +30,8 @@ export function compareRealmScope(
     return REALM_SCOPE_ORDER[normalizeRealmScope(a)] - REALM_SCOPE_ORDER[normalizeRealmScope(b)];
 }
 
-/** Fold scopes to the MOST permissive (ordered max). No args folds to `own`. */
-export function maxRealmScope(...values: Array<`${RealmScope}` | null | undefined>): `${RealmScope}` {
+/** Fold scopes to the MOST permissive (ordered max). Empty folds to `own`. */
+export function maxRealmScope(values: Array<`${RealmScope}` | null | undefined>): `${RealmScope}` {
     let max: `${RealmScope}` = RealmScope.NONE;
     let seen = false;
     for (const value of values) {
@@ -45,8 +45,8 @@ export function maxRealmScope(...values: Array<`${RealmScope}` | null | undefine
     return seen ? max : RealmScope.OWN;
 }
 
-/** Fold scopes to the MORE restrictive (ordered min) — used to CAP a grant. No args folds to `own`. */
-export function minRealmScope(...values: Array<`${RealmScope}` | null | undefined>): `${RealmScope}` {
+/** Fold scopes to the MORE restrictive (ordered min) — used to CAP a grant. Empty folds to `own`. */
+export function minRealmScope(values: Array<`${RealmScope}` | null | undefined>): `${RealmScope}` {
     let min: `${RealmScope}` = RealmScope.ANY;
     let seen = false;
     for (const value of values) {

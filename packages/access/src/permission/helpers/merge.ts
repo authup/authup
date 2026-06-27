@@ -40,7 +40,7 @@ export function mergePermissionPolicyBindings(input: PermissionPolicyBinding[]) 
             // (evaluator, isSuperset) never see undefined (fail-closed default).
             output.push({
                 ...first,
-                realm_scope: maxRealmScope(first.realm_scope),
+                realm_scope: maxRealmScope([first.realm_scope]),
             });
             continue;
         }
@@ -86,11 +86,11 @@ export function mergePermissionPolicyBindings(input: PermissionPolicyBinding[]) 
         // the full ordered-MAX is correct.
         const realmScope = typeof mergedPolicies === 'undefined' ?
             maxRealmScope(
-                ...group
+                group
                     .filter((b) => !b.policies || b.policies.length === 0)
                     .map((b) => b.realm_scope),
             ) :
-            maxRealmScope(...group.map((b) => b.realm_scope));
+            maxRealmScope(group.map((b) => b.realm_scope));
 
         output.push({
             permission: {
