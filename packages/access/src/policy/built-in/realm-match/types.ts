@@ -6,6 +6,7 @@
  */
 
 import type { DecisionStrategy } from '@authup/kit';
+import type { RealmScope } from '../../../permission/realm-scope';
 import type { BasePolicy } from '../../types';
 
 export interface RealmMatchPolicy extends BasePolicy {
@@ -29,5 +30,13 @@ export interface RealmMatchPolicy extends BasePolicy {
      * Determines if resources with null realm-id/name value should match all identity realms.
      * If true, any identity realm can access resources with null realm-id/name values.
      */
-    attribute_null_match_all?: boolean
+    attribute_null_match_all?: boolean,
+
+    /**
+     * Coarse, actor-relative realm reach (none/own/ownOrNull/any). When set, the evaluator
+     * runs in SCOPE MODE: it matches the resource realm (read from the REALM_MATCH data key,
+     * falling back to ATTRIBUTES.realm_id) against the identity realm via `realmScopeMatches`,
+     * and ignores `attribute_name` / `attribute_null_match_all`.
+     */
+    scope?: `${RealmScope}`
 }
