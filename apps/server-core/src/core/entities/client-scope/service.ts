@@ -97,7 +97,10 @@ export class ClientScopeService extends JunctionEntityService implements IClient
         // Stamp the owner (client) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_SCOPE_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated) }),
+            input: new PolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated),
+                [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(validated),
+            }),
         });
 
         let entity = this.repository.create(validated);
@@ -120,7 +123,10 @@ export class ClientScopeService extends JunctionEntityService implements IClient
         // Stamp the owner (client) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_SCOPE_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) }),
+            input: new PolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
+                [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(entity),
+            }),
         });
 
         const { id: entityId } = entity;
