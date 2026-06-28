@@ -75,7 +75,7 @@ export class UserService extends AbstractEntityService implements IUserService {
                         PermissionName.USER_UPDATE,
                         PermissionName.USER_DELETE,
                     ],
-                    input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+                    input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
                 });
 
                 data.push(entity);
@@ -129,7 +129,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         if (!isMe) {
             await actor.permissionEvaluator.evaluateOneOf({
                 name: permissionNames,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
             });
         }
 
@@ -225,7 +225,7 @@ export class UserService extends AbstractEntityService implements IUserService {
             if (isSelfEdit) {
                 await actor.permissionEvaluator.evaluate({
                     name: PermissionName.USER_SELF_MANAGE,
-                    input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+                    input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
                 });
             }
 
@@ -252,6 +252,7 @@ export class UserService extends AbstractEntityService implements IUserService {
                             ...entity,
                             ...validated,
                         },
+                        [BuiltInPolicyType.REALM_MATCH]: validated.realm_id ?? entity.realm_id ?? null,
                     }),
                 });
             }
@@ -279,7 +280,7 @@ export class UserService extends AbstractEntityService implements IUserService {
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
         });
 
         if (validated.password) {
@@ -315,7 +316,7 @@ export class UserService extends AbstractEntityService implements IUserService {
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
         });
 
         const { id: entityId } = entity;

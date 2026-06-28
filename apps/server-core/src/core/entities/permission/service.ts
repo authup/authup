@@ -221,6 +221,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
                         ...entity,
                         ...validated,
                     },
+                    [BuiltInPolicyType.REALM_MATCH]: validated.realm_id ?? entity.realm_id ?? null,
                 }),
             });
 
@@ -242,7 +243,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.PERMISSION_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
         });
 
         await this.repository.checkUniqueness(validated);
@@ -277,7 +278,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.PERMISSION_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
         });
 
         const { id: entityId } = entity;

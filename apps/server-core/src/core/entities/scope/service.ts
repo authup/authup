@@ -145,6 +145,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
                         ...entity,
                         ...validated,
                     },
+                    [BuiltInPolicyType.REALM_MATCH]: validated.realm_id ?? entity.realm_id ?? null,
                 }),
             });
 
@@ -165,7 +166,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.SCOPE_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
         });
 
         await this.repository.checkUniqueness(validated);
@@ -192,7 +193,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.SCOPE_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
         });
 
         const { id: entityId } = entity;

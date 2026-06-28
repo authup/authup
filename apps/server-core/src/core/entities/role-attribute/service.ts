@@ -57,7 +57,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
                         PermissionName.ROLE_UPDATE,
                         PermissionName.ROLE_DELETE,
                     ],
-                    input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+                    input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
                 });
                 data.push(entity);
             } catch {
@@ -97,7 +97,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
                 PermissionName.ROLE_UPDATE,
                 PermissionName.ROLE_DELETE,
             ],
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
         });
 
         return entity;
@@ -172,7 +172,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
         });
 
         const { id: entityId } = entity;

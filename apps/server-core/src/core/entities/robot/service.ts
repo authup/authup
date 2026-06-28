@@ -75,7 +75,7 @@ export class RobotService extends AbstractEntityService implements IRobotService
                         PermissionName.ROBOT_UPDATE,
                         PermissionName.ROBOT_DELETE,
                     ],
-                    input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+                    input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
                 });
 
                 data.push(entity);
@@ -129,7 +129,7 @@ export class RobotService extends AbstractEntityService implements IRobotService
         if (!isMe) {
             await actor.permissionEvaluator.evaluateOneOf({
                 name: permissionNames,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
             });
         }
 
@@ -222,7 +222,7 @@ export class RobotService extends AbstractEntityService implements IRobotService
             if (isSelfEdit) {
                 await actor.permissionEvaluator.evaluate({
                     name: PermissionName.ROBOT_SELF_MANAGE,
-                    input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+                    input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
                 });
             } else {
                 await actor.permissionEvaluator.evaluate({
@@ -232,6 +232,7 @@ export class RobotService extends AbstractEntityService implements IRobotService
                             ...entity,
                             ...validated,
                         },
+                        [BuiltInPolicyType.REALM_MATCH]: validated.realm_id ?? entity.realm_id ?? null,
                     }),
                 });
             }
@@ -262,7 +263,7 @@ export class RobotService extends AbstractEntityService implements IRobotService
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
         });
 
         if (!validated.secret) {
@@ -315,7 +316,7 @@ export class RobotService extends AbstractEntityService implements IRobotService
         } else {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.ROBOT_DELETE,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
             });
         }
 

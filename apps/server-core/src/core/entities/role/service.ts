@@ -146,6 +146,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
                         ...entity,
                         ...validated,
                     },
+                    [BuiltInPolicyType.REALM_MATCH]: validated.realm_id ?? entity.realm_id ?? null,
                 }),
             });
 
@@ -165,7 +166,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
         });
 
         await this.repository.checkUniqueness(validated);
@@ -196,7 +197,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
         });
 
         const { id: entityId } = entity;

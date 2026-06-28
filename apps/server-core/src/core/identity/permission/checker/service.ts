@@ -8,7 +8,7 @@
 import type { PermissionEvaluationContext } from '@authup/access';
 import { BuiltInPolicyType, PermissionEvaluator, PolicyData } from '@authup/access';
 import type { Result } from '@authup/kit';
-import { isUUID } from '@authup/kit';
+import { hasOwnProperty, isUUID } from '@authup/kit';
 import { EntityNotFoundError, normalizeError } from '@authup/errors';
 import type { ActorContext } from '@authup/server-kit';
 import { PolicyEngine } from '../../../security/policy/engine.ts';
@@ -50,6 +50,13 @@ export class PermissionCheckerService implements IPermissionCheckerService {
         const input = { ...data };
         if (typeof input[BuiltInPolicyType.IDENTITY] === 'undefined') {
             input[BuiltInPolicyType.IDENTITY] = toIdentityPolicyData(actor.identity);
+        }
+        // Surface the resource realm to the realm_scope reach factor (realm-match scope mode).
+        // Only when the body carries an ATTRIBUTES realm — so a realm-less check still rides
+        // the preEvaluate path below and neutral-passes.
+        const attributes = input[BuiltInPolicyType.ATTRIBUTES] as Record<string, any> | undefined;
+        if (attributes && hasOwnProperty(attributes, 'realm_id')) {
+            input[BuiltInPolicyType.REALM_MATCH] = attributes.realm_id ?? null;
         }
 
         const evaluationContext: PermissionEvaluationContext = {

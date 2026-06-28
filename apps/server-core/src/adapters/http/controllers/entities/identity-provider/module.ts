@@ -123,7 +123,7 @@ export class IdentityProviderController {
                 try {
                     await permissionEvaluator.evaluate({
                         name: PermissionName.IDENTITY_PROVIDER_READ,
-                        input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: datum }),
+                        input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: datum, [BuiltInPolicyType.REALM_MATCH]: datum.realm_id ?? null }),
                     });
                 } catch {
                     // do nothing
@@ -159,7 +159,7 @@ export class IdentityProviderController {
             const permissionEvaluator = useRequestPermissionEvaluator(event);
             await permissionEvaluator.evaluate({
                 name: PermissionName.IDENTITY_PROVIDER_READ,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, [BuiltInPolicyType.REALM_MATCH]: entity.realm_id ?? null }),
             });
         } catch {
             // do nothing
@@ -204,7 +204,7 @@ export class IdentityProviderController {
 
         await permissionEvaluator.evaluate({
             name: PermissionName.IDENTITY_PROVIDER_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, [BuiltInPolicyType.REALM_MATCH]: entity.realm_id ?? null }),
         });
 
         const { id: entityId } = entity;
@@ -413,6 +413,7 @@ export class IdentityProviderController {
                         ...entity,
                         ...data,
                     },
+                    [BuiltInPolicyType.REALM_MATCH]: data.realm_id ?? entity.realm_id ?? null,
                 }),
             });
         } else {
@@ -423,7 +424,7 @@ export class IdentityProviderController {
 
             await permissionEvaluator.evaluate({
                 name: PermissionName.IDENTITY_PROVIDER_CREATE,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: data }),
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: data, [BuiltInPolicyType.REALM_MATCH]: data.realm_id ?? null }),
             });
         }
 

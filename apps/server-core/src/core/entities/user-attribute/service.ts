@@ -141,7 +141,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         } else {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.USER_UPDATE,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
             });
         }
 
@@ -191,7 +191,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         } else {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.USER_UPDATE,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
             });
         }
 
@@ -243,7 +243,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         try {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.USER_UPDATE,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
             });
 
             return true;
