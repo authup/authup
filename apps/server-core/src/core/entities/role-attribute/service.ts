@@ -121,7 +121,10 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_UPDATE,
-            data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: { [data.name]: data.value } }),
+            data: definePolicyInput({
+                [BuiltInPolicyType.ATTRIBUTES]: { [data.name]: data.value },
+                ...this.resourceRealmMatch(entity),
+            }),
         });
 
         await this.repository.save(entity);
@@ -151,7 +154,10 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_UPDATE,
-            data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: { [entity.name]: entity.value } }),
+            data: definePolicyInput({
+                [BuiltInPolicyType.ATTRIBUTES]: { [entity.name]: entity.value },
+                ...this.resourceRealmMatch(entity),
+            }),
         });
 
         await this.repository.save(entity);
