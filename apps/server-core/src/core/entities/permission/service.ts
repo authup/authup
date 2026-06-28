@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PolicyData, SystemPolicyName } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    PolicyData,
+    RealmScope,
+    SystemPolicyName,
+} from '@authup/access';
 import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
 import { AuthupError, BadRequestError, EntityNotFoundError } from '@authup/errors';
 import {
@@ -31,14 +36,14 @@ const REALM_ADMIN_EXCLUDED_PERMISSIONS = [
 ];
 
 /**
- * CUD permissions that get system.realm-bound on realm_admin.
- * Covers direct entity types (both global-capable and realm-only).
+ * Direct-entity CUD permissions that realm_admin grants at `realm_scope: own`
+ * (strictly the actor's own realm — see line 372). Every other realm_admin
+ * permission defaults to `ownOrNull` (own realm OR global/null resources) so it
+ * can act on global building blocks.
  *
- * Junction entity CUD (e.g. user_role, role_permission) intentionally
- * use realm-or-global instead, because their attributes include
- * multiple realm_id fields (e.g. user_realm_id + role_realm_id).
- * With attribute_name_strict: false, realm-bound would reject
- * junctions where one side is global (realm_id: null).
+ * Junction CUD (e.g. user_role, role_permission) is intentionally NOT listed here:
+ * it stays `ownOrNull` because a junction can legitimately reference a global
+ * side (realm_id: null) — a strict `own` would reject those.
  */
 const REALM_ADMIN_BOUND_PERMISSIONS = [
     PermissionName.CLIENT_CREATE,
@@ -159,7 +164,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         options: { updateOnly?: boolean } = {},
     ): Promise<{
         entity: Permission,
-        created: boolean 
+        created: boolean
     }> {
         let group: string;
 
@@ -227,7 +232,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
             return {
                 entity,
-                created: false, 
+                created: false,
             };
         }
 
@@ -251,7 +256,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
         return {
             entity,
-            created: true, 
+            created: true,
         };
     }
 
@@ -333,6 +338,8 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             role_realm_id: adminRole.realm_id,
             permission_id: permission.id,
             permission_realm_id: permission.realm_id,
+            // Global admin: unrestricted realm reach.
+            realm_scope: RealmScope.ANY,
         });
         await this.rolePermissionRepository.save(entry);
     }
@@ -340,9 +347,9 @@ export class PermissionService extends AbstractEntityService implements IPermiss
     /**
      * Assign a newly created permission to all matching realm_admin roles.
      *
-     * Uses differentiated junction policies:
-     * - CUD on global-capable entity types → system.realm-bound
-     * - Everything else → system.realm-or-global
+     * Uses differentiated realm_scope on the junction:
+     * - CUD on global-capable entity types → own (strictly own realm)
+     * - Everything else → ownOrNull (own realm + null/global resources)
      *
      * Eligible permissions:
      * - Built-in authup permissions (global) — assigned to all realm_admin roles
@@ -351,8 +358,6 @@ export class PermissionService extends AbstractEntityService implements IPermiss
      * Excluded:
      * - Realm CRUD permissions (realm_create, realm_update, realm_delete)
      * - Custom global permissions (non-built-in with realm_id: null)
-     *
-     * Fails closed: skips assignment entirely if required policies are not found.
      */
     private async assignToRealmAdminRoles(permission: Permission): Promise<void> {
         if (REALM_ADMIN_EXCLUDED_PERMISSIONS.includes(permission.name as PermissionName)) {
@@ -364,14 +369,9 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             return;
         }
 
-        const policyName = REALM_ADMIN_BOUND_PERMISSIONS.includes(permission.name as PermissionName) ?
-            SystemPolicyName.REALM_BOUND :
-            SystemPolicyName.REALM_OR_GLOBAL;
-
-        const policy = await this.policyRepository.findOneByName(policyName);
-        if (!policy) {
-            return;
-        }
+        const realmScope = REALM_ADMIN_BOUND_PERMISSIONS.includes(permission.name as PermissionName) ?
+            RealmScope.OWN :
+            RealmScope.OWN_OR_NULL;
 
         const realmAdminRoles = await this.roleRepository.findManyBy({ name: ROLE_REALM_ADMIN_NAME });
 
@@ -393,7 +393,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
                 role_realm_id: role.realm_id,
                 permission_id: permission.id,
                 permission_realm_id: permission.realm_id,
-                policy_id: policy.id,
+                realm_scope: realmScope,
             });
             await this.rolePermissionRepository.save(entry);
         }

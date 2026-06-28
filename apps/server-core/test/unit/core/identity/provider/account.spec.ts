@@ -111,8 +111,8 @@ describe('core/identity/provider/account', () => {
     afterAll(async () => {
         await suite.teardown();
 
-        realm = undefined;
-        accountManager = undefined;
+        realm = undefined as unknown as Realm;
+        accountManager = undefined as unknown as IdentityProviderAccountManager;
     });
 
     it('should create user', async () => {

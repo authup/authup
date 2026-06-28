@@ -57,17 +57,17 @@ describe('src/http/controllers/robot-role', () => {
     it('should read resource', async () => {
         const response = await suite.client
             .robotRole
-            .getOne(entity.id);
+            .getOne(entity!.id);
 
         expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(entity, response, ['robot', 'role']);
+        expectPropertiesEqualToSrc(entity!, response, ['robot', 'role']);
     });
 
     it('should delete resource', async () => {
         const response = await suite.client
             .robotRole
-            .delete(entity.id);
+            .delete(entity!.id);
 
         expect(response.id).toBeDefined();
     });

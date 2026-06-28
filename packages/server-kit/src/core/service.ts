@@ -5,24 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { REALM_MASTER_NAME } from '@authup/core-kit';
 import { isObject } from '@authup/kit';
 import type { ActorContext } from './actor/types';
 
 export abstract class AbstractEntityService {
-    protected isActorMasterRealmMember(actor: ActorContext): boolean {
-        if (!actor.identity) {
-            return false;
-        }
-
-        const { data } = actor.identity;
-        if ('realm' in data && data.realm && typeof data.realm === 'object' && 'name' in data.realm) {
-            return data.realm.name === REALM_MASTER_NAME;
-        }
-
-        return false;
-    }
-
     protected getActorRealmId(actor: ActorContext): string | undefined {
         if (!actor.identity) {
             return undefined;

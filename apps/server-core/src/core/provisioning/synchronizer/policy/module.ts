@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { SystemPolicyName } from '@authup/access';
 import type { Policy } from '@authup/core-kit';
 import type { IPermissionPolicyRepository } from '../../../entities/permission-policy/types.ts';
 import type { IPolicyRepository } from '../../../entities/index.ts';
@@ -22,6 +23,17 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
 
         this.repository = ctx.repository;
         this.permissionPolicyRepository = ctx.permissionPolicyRepository;
+    }
+
+    async synchronizeMany(input: PolicyProvisioningEntity[]): Promise<PolicyProvisioningEntity[]> {
+        const output = await super.synchronizeMany(input);
+        // Prune stale TOP-LEVEL built-in system policies (e.g. a system policy removed
+        // from the source). cleanupStaleChildren handles removed CHILDREN of a synced
+        // parent; this is its top-level counterpart so the provisioner — not a migration
+        // — owns the policy-graph shape. Realm-scoped (realm_id != null) policies are out
+        // of scope. Safe: the only caller passes the complete global top-level set.
+        await this.cleanupStaleTopLevel(input.map((entity) => entity.attributes.name));
+        return output;
     }
 
     async synchronize(input: PolicyProvisioningEntity): Promise<PolicyProvisioningEntity> {
@@ -88,6 +100,29 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
         await staleChildren.reduce(async (prev, child) => {
             await prev;
             await this.cleanupStaleChild(child);
+        }, Promise.resolve());
+    }
+
+    private async cleanupStaleTopLevel(declaredNames: (string | undefined)[]): Promise<void> {
+        // Sentinel guard: only prune when the authoritative system source is present.
+        // `system.default` is always declared by DefaultProvisioningSource; if it is
+        // absent the caller passed a partial/non-system set (e.g. a file-only source via a
+        // bare ProvisionerModule), so pruning would wrongly delete real system policies.
+        if (!declaredNames.includes(SystemPolicyName.DEFAULT)) {
+            return;
+        }
+
+        const existing = await this.repository.findManyBy({
+            parent_id: null,
+            realm_id: null,
+            built_in: true,
+        });
+
+        const stale = existing.filter((policy) => !declaredNames.includes(policy.name));
+
+        await stale.reduce(async (prev, policy) => {
+            await prev;
+            await this.cleanupStaleChild(policy);
         }, Promise.resolve());
     }
 

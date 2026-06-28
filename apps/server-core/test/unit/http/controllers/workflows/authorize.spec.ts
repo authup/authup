@@ -82,7 +82,7 @@ describe('src/http/controllers/token', () => {
         expect(url.searchParams.get('code')).toBeFalsy();
         expect(url.searchParams.get('id_token')).toBeDefined();
 
-        const tokenPayload = extractTokenPayload(url.searchParams.get('id_token')) as OAuth2TokenPayload;
+        const tokenPayload = extractTokenPayload(url.searchParams.get('id_token')!) as OAuth2TokenPayload;
         expect(tokenPayload).toBeDefined();
 
         expect(tokenPayload.kind).toEqual(OAuth2TokenKind.ID_TOKEN);
@@ -113,7 +113,7 @@ describe('src/http/controllers/token', () => {
         expect(url.searchParams.get('code')).toBeFalsy();
         expect(url.searchParams.get('id_token')).toBeFalsy();
 
-        const tokenPayload = extractTokenPayload(url.searchParams.get('access_token')) as OAuth2TokenPayload;
+        const tokenPayload = extractTokenPayload(url.searchParams.get('access_token')!) as OAuth2TokenPayload;
         expect(tokenPayload).toBeDefined();
 
         expect(tokenPayload.kind).toEqual(OAuth2TokenKind.ACCESS);

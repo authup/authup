@@ -42,7 +42,6 @@ export const TranslatorTranslationClientEnglish : NamespaceTranslations<`${Trans
 
     [TranslatorTranslationClientKey.REALM_MATCH_STRICT_HINT]: 'Only match if the attribute is strict equal to the name?',
     [TranslatorTranslationClientKey.REALM_MATCH_NULL_MATCH_ALL_HINT]: 'Determines if resources with null realm-id/name value should match all identity realms.{br}If true, any identity realm can access resources with null realm-id/name values.',
-    [TranslatorTranslationClientKey.REALM_MATCH_MASTER_MATCH_ALL_HINT]: 'Specifies whether the master realm of an identity should match all realm-id/name attributes, including null.{br}If true, the master realm can access any resource regardless of its realm value.',
 
     [TranslatorTranslationClientKey.ENABLE_STARTTLS_HINT]: 'Enable StartTLS process?',
     [TranslatorTranslationClientKey.PASSWORD_MUST_MATCH]: 'Must match the password.',
@@ -50,6 +49,7 @@ export const TranslatorTranslationClientEnglish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.PROTOCOL_NOT_SUPPORTED]: '{{name}} is not supported yet.',
 
     [TranslatorTranslationClientKey.JUNCTION_POLICY]: 'Junction Policy',
+    [TranslatorTranslationClientKey.JUNCTION_REALM_SCOPE]: 'Realm Scope',
     [TranslatorTranslationClientKey.SELECTION_UPDATING]: 'Updating selection',
     [TranslatorTranslationClientKey.SELECTION_REMOVE]: 'Remove from selection',
     [TranslatorTranslationClientKey.SELECTION_ADD]: 'Add to selection',

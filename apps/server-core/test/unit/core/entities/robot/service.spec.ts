@@ -12,6 +12,7 @@ import {
 } from '@authup/core-kit';
 import type {
     Realm,
+    Robot,
     User,
 } from '@authup/core-kit';
 import { BuiltInPolicyType, PermissionError } from '@authup/access';

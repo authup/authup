@@ -26,7 +26,8 @@
         "test": "cross-env NODE_ENV=test vitest run --config test/vitest.config.ts",
         "test:mysql": "cross-env DB_TYPE=mysql DB_HOST=127.0.0.1 DB_USERNAME=root DB_PASSWORD=start123 DB_DATABASE=app vitest run --config test/vitest.config.ts",
         "test:psql": "cross-env DB_TYPE=postgres DB_HOST=127.0.0.1 DB_USERNAME=postgres DB_PASSWORD=start123 DB_DATABASE=app vitest run --config test/vitest.config.ts",
-        "test:coverage": "cross-env NODE_ENV=test vitest run --config test/vitest.config.ts --coverage"
+        "test:coverage": "cross-env NODE_ENV=test vitest run --config test/vitest.config.ts --coverage",
+        "check:types": "tsc -p tsconfig.test.json"
     },
     "engines": {
         "node": "^22.13.0 || ^23.5.0 || >=24.0.0"

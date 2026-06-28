@@ -11,7 +11,7 @@ import { ValidatorGroup } from '@authup/kit';
 import { IdentityProviderRoleMappingValidator, PermissionName } from '@authup/core-kit';
 import type { IdentityProviderRoleMapping } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
-import { AbstractEntityService } from '@authup/server-kit';
+import { JunctionEntityService } from '@authup/server-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import type { IIdentityProviderRoleMappingRepository, IIdentityProviderRoleMappingService } from './types.ts';
 
@@ -20,7 +20,9 @@ export type IdentityProviderRoleMappingServiceContext = {
     identityPermissionProvider: IIdentityPermissionProvider;
 };
 
-export class IdentityProviderRoleMappingService extends AbstractEntityService implements IIdentityProviderRoleMappingService {
+export class IdentityProviderRoleMappingService extends JunctionEntityService implements IIdentityProviderRoleMappingService {
+    protected readonly ownerRealmKey = 'provider_realm_id';
+
     protected repository: IIdentityProviderRoleMappingRepository;
 
     protected identityPermissionProvider: IIdentityPermissionProvider;
@@ -122,9 +124,10 @@ export class IdentityProviderRoleMappingService extends AbstractEntityService im
             }
         }
 
+        // Stamp the owner (identity-provider) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.IDENTITY_PROVIDER_ROLE_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated) }),
         });
 
         let entity = this.repository.create(validated);
@@ -151,9 +154,10 @@ export class IdentityProviderRoleMappingService extends AbstractEntityService im
 
         const merged = this.repository.merge(entity, validated);
 
+        // Stamp the owner (identity-provider) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: merged }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(merged) }),
         });
 
         return this.repository.save(merged);
@@ -170,9 +174,10 @@ export class IdentityProviderRoleMappingService extends AbstractEntityService im
             throw new EntityNotFoundError();
         }
 
+        // Stamp the owner (identity-provider) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.IDENTITY_PROVIDER_ROLE_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) }),
         });
 
         const { id: entityId } = entity;

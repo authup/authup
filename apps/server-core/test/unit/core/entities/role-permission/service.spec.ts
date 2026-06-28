@@ -10,24 +10,37 @@ import {
     PermissionName,
     ROLE_ADMIN_NAME,
 } from '@authup/core-kit';
-import type { RolePermission } from '@authup/core-kit';
+import type { Permission, RolePermission } from '@authup/core-kit';
 import {
-    beforeEach, 
-    describe, 
-    expect, 
+    beforeEach,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
+import { RealmScope } from '@authup/access';
 import { RolePermissionService } from '../../../../../src/core/entities/role-permission/service.ts';
-import { FakeEntityRepository, createAllowAllActor, createDenyAllActor } from '@authup/server-test-kit';
+import {
+    FakeEntityRepository,
+    createAllowAllActor,
+    createDenyAllActor,
+    createNonMasterRealmActor,
+} from '@authup/server-test-kit';
+import { FakeIdentityPermissionProvider } from '../../helpers/index.ts';
 
 describe('core/entities/role-permission/service', () => {
     let repository: FakeEntityRepository<RolePermission>;
+    let permissionRepository: FakeEntityRepository<Permission>;
     let service: RolePermissionService;
 
     beforeEach(() => {
         repository = new FakeEntityRepository<RolePermission>();
-        service = new RolePermissionService({ repository });
+        permissionRepository = new FakeEntityRepository<Permission>();
+        service = new RolePermissionService({
+            repository, 
+            permissionRepository, 
+            identityPermissionProvider: new FakeIdentityPermissionProvider(), 
+        });
     });
 
     describe('getMany', () => {
@@ -113,7 +126,7 @@ describe('core/entities/role-permission/service', () => {
             });
         });
 
-        it('should skip permission name preCheck for admin role', async () => {
+        it('should run the permission name preCheck uniformly for the admin role (no bypass)', async () => {
             repository.onValidateJoinColumns((data: any) => {
                 data.role = { name: ROLE_ADMIN_NAME, realm_id: null };
                 data.permission = { name: 'custom-perm', realm_id: null };
@@ -125,11 +138,59 @@ describe('core/entities/role-permission/service', () => {
                 permission_id: randomUUID(),
             }, actor);
 
-            expect(actor.permissionEvaluator.preEvaluateCalls).not.toContainEqual({
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({
                 name: 'custom-perm',
                 realmId: null,
                 clientId: undefined,
             });
+        });
+
+        it('caps realm_scope to the actor ceiling and ignores explicit policy_id for a restricted actor', async () => {
+            const provider = new FakeIdentityPermissionProvider();
+            provider.setJunctionRealmScope(RealmScope.OWN);
+            provider.setJunctionPolicy(undefined);
+            const scopedService = new RolePermissionService({
+                repository, 
+                permissionRepository, 
+                identityPermissionProvider: provider, 
+            });
+
+            repository.onValidateJoinColumns((data: any) => {
+                data.permission = { name: 'custom-perm', realm_id: null };
+            });
+
+            const result = await scopedService.create({
+                role_id: randomUUID(),
+                permission_id: randomUUID(),
+                realm_scope: 'any',
+                policy_id: randomUUID(),
+            }, createNonMasterRealmActor());
+
+            // restricted (own) actor: requested 'any' capped to 'own', explicit policy_id ignored.
+            expect(result.realm_scope).toBe(RealmScope.OWN);
+            expect(result.policy_id).toBeNull();
+        });
+
+        it('lets an any-scoped actor set a broader realm_scope', async () => {
+            const provider = new FakeIdentityPermissionProvider();
+            provider.setJunctionRealmScope(RealmScope.ANY);
+            const scopedService = new RolePermissionService({
+                repository, 
+                permissionRepository, 
+                identityPermissionProvider: provider, 
+            });
+
+            repository.onValidateJoinColumns((data: any) => {
+                data.permission = { name: 'custom-perm', realm_id: null };
+            });
+
+            const result = await scopedService.create({
+                role_id: randomUUID(),
+                permission_id: randomUUID(),
+                realm_scope: 'ownOrNull',
+            }, createNonMasterRealmActor());
+
+            expect(result.realm_scope).toBe(RealmScope.OWN_OR_NULL);
         });
 
         it('should throw validation error when role_id is missing', async () => {

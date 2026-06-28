@@ -50,7 +50,7 @@ describe('src/http/controllers/realm', () => {
     it('should read resource', async () => {
         const response = await suite.client
             .realm
-            .getOne(details.id);
+            .getOne(details.id!);
 
         expect(response).toBeDefined();
         expectPropertiesEqualToSrc(details, response);
@@ -68,7 +68,7 @@ describe('src/http/controllers/realm', () => {
     it('should update resource', async () => {
         const response = await suite.client
             .realm
-            .update(details.id, details);
+            .update(details.id!, details);
 
         expect(response).toBeDefined();
         expectPropertiesEqualToSrc(details, response);
@@ -77,7 +77,7 @@ describe('src/http/controllers/realm', () => {
     it('should delete resource', async () => {
         const response = await suite.client
             .realm
-            .delete(details.id);
+            .delete(details.id!);
 
         expect(response.id).toBeDefined();
     });

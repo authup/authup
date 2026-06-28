@@ -9,6 +9,7 @@ import type { Policy } from '@authup/core-kit';
 import type {
     IdentityPolicyData,
     PermissionPolicyBinding,
+    RealmScope,
 } from '@authup/access';
 import type { IClientRepository } from '../../entities/client/types.ts';
 import type { IRobotRepository } from '../../entities/robot/types.ts';
@@ -22,10 +23,20 @@ export type ResolveJunctionPolicyOptions = {
     clientId?: string | null;
 };
 
+/**
+ * The actor's own grant for a permission: the policy to inherit (if any) and the
+ * realm_scope ceiling the actor is allowed to propagate (a creator may not grant
+ * a broader scope than it holds).
+ */
+export type ResolveJunctionGrantResult = {
+    policy?: Policy;
+    realmScope: `${RealmScope}`;
+};
+
 export interface IIdentityPermissionProvider {
     getFor(identity: IdentityPolicyData): Promise<PermissionPolicyBinding[]>;
     isSuperset(parent: IdentityPolicyData, child: IdentityPolicyData): Promise<boolean>;
-    resolveJunctionPolicy(identity: IdentityPolicyData, options: ResolveJunctionPolicyOptions): Promise<Policy | undefined>;
+    resolveJunctionGrant(identity: IdentityPolicyData, options: ResolveJunctionPolicyOptions): Promise<ResolveJunctionGrantResult>;
 }
 
 export type IdentityPermissionProviderContext = {

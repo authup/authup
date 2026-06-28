@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { hasOwnProperty } from './has-own-property';
+
 export function template(
     str: string,
     data: Record<string, any>,
@@ -18,7 +20,7 @@ export function template(
             const key = match[1];
             if (
                 key &&
-                Object.prototype.hasOwnProperty.call(data, key) &&
+                hasOwnProperty(data, key) &&
                 typeof data[key] !== 'undefined'
             ) {
                 return acc.replace(match[0], data[key]);

@@ -40,7 +40,7 @@ describe('core/identity/policy/checker', () => {
         await suite.setup();
 
         const userRepository = new UserRepository(suite.dataSource);
-        adminUser = await userRepository.findOneByOrFail({ name: 'admin' });
+        adminUser = await userRepository.findOneByOrFail({ name: 'admin' }) as unknown as UserEntity;
 
         const realmEntityRepository = suite.dataSource.getRepository(RealmEntity);
         const realmRepository = new RealmRepositoryAdapter(realmEntityRepository);

@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, SystemPolicyName } from '@authup/access';
-import type { CompositePolicy, RealmMatchPolicy } from '@authup/access';
+import type { CompositePolicy } from '@authup/access';
 import { DecisionStrategy } from '@authup/kit';
 import type {
  
@@ -219,10 +219,11 @@ describe('app/modules/provisioning', () => {
             expect(permBinding!.type).toBe(BuiltInPolicyType.PERMISSION_BINDING);
             expect(permBinding!.built_in).toBe(true);
 
-            const realmMatch = await policyRepositoryAdapter.findOneByName(SystemPolicyName.REALM_MATCH);
-            expect(realmMatch).toBeDefined();
-            expect(realmMatch!.type).toBe(BuiltInPolicyType.REALM_MATCH);
-            expect(realmMatch!.built_in).toBe(true);
+            // The realm-match baseline child + the standalone realm policies were removed
+            // in favour of the realm_scope enum on junctions.
+            expect(await policyRepositoryAdapter.findOneByName(SystemPolicyName.REALM_MATCH)).toBeNull();
+            expect(await policyRepositoryAdapter.findOneByName(SystemPolicyName.REALM_BOUND)).toBeNull();
+            expect(await policyRepositoryAdapter.findOneByName(SystemPolicyName.REALM_OR_GLOBAL)).toBeNull();
         });
 
         it('should create system.default composite with correct children and decisionStrategy', async () => {
@@ -235,13 +236,12 @@ describe('app/modules/provisioning', () => {
             expect(defaultPolicyEA.decision_strategy).toBe(DecisionStrategy.UNANIMOUS);
 
             const children = await policyRepositoryAdapter.findManyBy({ parent_id: defaultPolicy!.id });
-            expect(children).toHaveLength(3);
+            expect(children).toHaveLength(2);
 
             const childNames = children.map((c) => c.name).sort();
             expect(childNames).toEqual([
                 SystemPolicyName.IDENTITY,
                 SystemPolicyName.PERMISSION_BINDING,
-                SystemPolicyName.REALM_MATCH,
             ].sort());
         });
 
@@ -267,21 +267,11 @@ describe('app/modules/provisioning', () => {
                 SystemPolicyName.DEFAULT,
                 SystemPolicyName.IDENTITY,
                 SystemPolicyName.PERMISSION_BINDING,
-                SystemPolicyName.REALM_MATCH,
             ];
             systemNames.forEach((name) => {
                 const matches = allPolicies.filter((p) => p.name === name);
                 expect(matches).toHaveLength(1);
             });
-        });
-
-        it('should set system.realm-match EA attributes correctly', async () => {
-            const realmMatch = await policyRepositoryAdapter.findOneByName(SystemPolicyName.REALM_MATCH);
-            expect(realmMatch).toBeDefined();
-            const realmMatchEA: Partial<RealmMatchPolicy> = realmMatch!;
-            expect(realmMatchEA.attribute_name).toEqual(['realm_id']);
-            expect(realmMatchEA.attribute_name_strict).toBe(false);
-            expect(realmMatchEA.identity_master_match_all).toBe(false);
         });
 
         it('should delete stale child without permission references', async () => {

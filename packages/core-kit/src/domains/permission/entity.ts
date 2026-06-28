@@ -9,11 +9,18 @@ import type { DecisionStrategy } from '@authup/kit';
 import type { Client } from '../client';
 import type { Policy } from '../policy';
 import type { Realm } from '../realm';
+import type { RealmScopeValue } from './constants.ts';
 
 export interface PermissionRelation {
     policy_id: Policy['id'] | null;
 
     policy: Policy | null;
+
+    /**
+     * Relative realm reach of this grant (none/own/ownOrNull/any). Fail-closed
+     * default `own`. See {@link REALM_SCOPE}.
+     */
+    realm_scope: RealmScopeValue;
 
     permission_id: Permission['id'];
 

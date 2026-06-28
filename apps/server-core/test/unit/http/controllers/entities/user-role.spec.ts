@@ -59,17 +59,17 @@ describe('src/http/controllers/user-role', () => {
     it('should read resource', async () => {
         const response = await suite.client
             .userRole
-            .getOne(details.id);
+            .getOne(details!.id);
 
         expect(response).toBeDefined();
-        expectPropertiesEqualToSrc(details, response, ['user', 'role']);
+        expectPropertiesEqualToSrc(details!, response, ['user', 'role']);
     });
 
     it('should delete resource', async () => {
         const response = await suite.client
             .userRole
-            .getOne(details.id);
+            .delete(details!.id);
 
-        expect(response.id).toEqual(details.id);
+        expect(response.id).toEqual(details!.id);
     });
 });

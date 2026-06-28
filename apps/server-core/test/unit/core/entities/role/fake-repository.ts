@@ -11,7 +11,7 @@ import type { IRoleRepository } from '../../../../../src/core/entities/role/type
 import { FakeEntityRepository } from '@authup/server-test-kit';
 
 export class FakeRoleRepository extends FakeEntityRepository<Role> implements IRoleRepository {
-    async checkUniqueness(_data: Partial<Role>, _existing?: Role): Promise<void> {
+    async checkUniqueness(_data?: Partial<Role>, _existing?: Role): Promise<void> {
         // no-op
     }
 

@@ -54,7 +54,6 @@ export const TranslatorTranslationClientSpanish : NamespaceTranslations<`${Trans
 
     [TranslatorTranslationClientKey.REALM_MATCH_STRICT_HINT]: '¿Coincidir solo si el atributo es estrictamente igual al nombre?',
     [TranslatorTranslationClientKey.REALM_MATCH_NULL_MATCH_ALL_HINT]: 'Determina si los recursos con valor de realm-id/nombre nulo coinciden con todos los realms de identidad.{br}Si está activado, cualquier realm de identidad puede acceder a recursos con valores de realm nulos.',
-    [TranslatorTranslationClientKey.REALM_MATCH_MASTER_MATCH_ALL_HINT]: 'Especifica si el realm maestro de una identidad coincide con todos los atributos de realm-id/nombre, incluidos los nulos.{br}Si está activado, el realm maestro puede acceder a cualquier recurso independientemente de su valor de realm.',
 
     [TranslatorTranslationClientKey.ENABLE_STARTTLS_HINT]: '¿Activar el proceso StartTLS?',
     [TranslatorTranslationClientKey.PASSWORD_MUST_MATCH]: 'Debe coincidir con la contraseña.',
@@ -62,6 +61,7 @@ export const TranslatorTranslationClientSpanish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.PROTOCOL_NOT_SUPPORTED]: '{{name}} aún no es compatible.',
 
     [TranslatorTranslationClientKey.JUNCTION_POLICY]: 'Política de unión',
+    [TranslatorTranslationClientKey.JUNCTION_REALM_SCOPE]: 'Ámbito del dominio',
     [TranslatorTranslationClientKey.SELECTION_UPDATING]: 'Actualizando selección',
     [TranslatorTranslationClientKey.SELECTION_REMOVE]: 'Quitar de la selección',
     [TranslatorTranslationClientKey.SELECTION_ADD]: 'Añadir a la selección',

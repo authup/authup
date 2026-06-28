@@ -22,6 +22,7 @@ import type {
     Permission,
     Policy,
     Realm,
+    RealmScopeValue,
 } from '@authup/core-kit';
 import { PermissionEntity } from '../permission/index.ts';
 import { PolicyEntity } from '../policy/index.ts';
@@ -45,6 +46,13 @@ export class ClientPermissionEntity implements ClientPermission {
     })
     @JoinColumn({ name: 'policy_id' })
     policy: Policy | null;
+
+    @Column({
+        type: 'varchar',
+        length: 50,
+        default: 'own',
+    })
+    realm_scope: RealmScopeValue;
 
     @Column()
     client_id: string;

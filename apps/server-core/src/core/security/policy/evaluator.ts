@@ -23,7 +23,9 @@ import {
     definePolicyIssueItem,
     maybeInvertPolicyOutcome,
     mergePermissionPolicyBindings,
+    realmScopeMatches,
 } from '@authup/access';
+import { hasOwnProperty } from '@authup/kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 
 export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
@@ -106,6 +108,35 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
         const bindingsMerged = mergePermissionPolicyBindings(identityBindings);
         if (bindingsMerged.length === 0) {
             return { success: maybeInvertPolicyOutcome(false, policy.invert) };
+        }
+
+        // Realm reach (coarse, actor-relative) — enforced as a separate factor from
+        // the policy_id policies below, ANDed with them. It runs ONLY when the
+        // resource ATTRIBUTES carry a `realm_id`. On preEvaluate / gate checks
+        // ATTRIBUTES is absent (excluded), so the factor neutral-passes — without this
+        // every write/read gate would deny. Resources express their realm via the
+        // canonical `realm_id` key (a single id, null, or an array of ids); entities
+        // carry it as a column and junction services STAMP their owner realm onto the
+        // eval input (so a junction write to another realm's entity is gated too).
+        const attributes = await this.attributesEvaluator.accessData(ctx) as Record<string, any> | null;
+        if (
+            attributes &&
+            hasOwnProperty(attributes, 'realm_id')
+        ) {
+            // mergePermissionPolicyBindings already folded the scope with the correct
+            // policy correlation, and identityBindings is filtered to a single
+            // (name, realm_id, client_id) key — so bindingsMerged is length 1 and its
+            // realm_scope is authoritative (do NOT re-fold here, which would bypass the
+            // merge's policy-aware scope reduction).
+            const matches = realmScopeMatches(
+                bindingsMerged[0].realm_scope,
+                (attributes.realm_id ?? null) as string | string[] | null,
+                identity.realmId,
+                identity.realmName,
+            );
+            if (!matches) {
+                return { success: maybeInvertPolicyOutcome(false, policy.invert) };
+            }
         }
 
         const policies : BasePolicy[] = bindingsMerged

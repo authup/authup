@@ -9,6 +9,7 @@ import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
 import { ValidatorGroup } from '@authup/kit';
+import { REALM_SCOPE } from '../permission';
 import type { ClientPermission } from './entity.ts';
 
 export class ClientPermissionValidator extends Container<
@@ -33,6 +34,12 @@ export class ClientPermissionValidator extends Container<
             'policy_id',
             { optional: true },
             createValidator(z.uuid().nullable()),
+        );
+
+        this.mount(
+            'realm_scope',
+            { optional: true },
+            createValidator(z.enum(REALM_SCOPE)),
         );
     }
 }

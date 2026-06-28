@@ -11,14 +11,16 @@ import { ValidatorGroup } from '@authup/kit';
 import { PermissionName, PermissionPolicyValidator } from '@authup/core-kit';
 import type { PermissionPolicy } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
-import { AbstractEntityService } from '@authup/server-kit';
+import { JunctionEntityService } from '@authup/server-kit';
 import type { IPermissionPolicyRepository, IPermissionPolicyService } from './types.ts';
 
 export type PermissionPolicyServiceContext = {
     repository: IPermissionPolicyRepository;
 };
 
-export class PermissionPolicyService extends AbstractEntityService implements IPermissionPolicyService {
+export class PermissionPolicyService extends JunctionEntityService implements IPermissionPolicyService {
+    protected readonly ownerRealmKey = 'permission_realm_id';
+
     protected repository: IPermissionPolicyRepository;
 
     protected validator: PermissionPolicyValidator;
@@ -88,9 +90,10 @@ export class PermissionPolicyService extends AbstractEntityService implements IP
             validated.policy_realm_id = validated.policy.realm_id;
         }
 
+        // Stamp the owner (permission) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.PERMISSION_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated) }),
         });
 
         let entity = this.repository.create(validated);
@@ -110,9 +113,10 @@ export class PermissionPolicyService extends AbstractEntityService implements IP
             throw new EntityNotFoundError();
         }
 
+        // Stamp the owner (permission) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.PERMISSION_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) }),
         });
 
         const { id: entityId } = entity;

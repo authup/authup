@@ -7,7 +7,7 @@
 
 import { pickRecord } from '@authup/kit';
 import type { Permission, RolePermission } from '@authup/core-kit';
-import type { IPolicyRepository, IRoleRepository } from '../../../entities/index.ts';
+import type { IRoleRepository } from '../../../entities/index.ts';
 import type { RoleProvisioningEntity } from '../../entities/role/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
@@ -18,8 +18,6 @@ import type { RoleProvisioningSynchronizerContext } from './types.ts';
 export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<RoleProvisioningEntity> {
     protected repository : IRoleRepository;
 
-    protected policyRepository?: IPolicyRepository;
-
     protected permissionResolver : ProvisioningEntityResolver<Permission>;
 
     protected permissionJunction: ProvisioningJunctionSynchronizer<RolePermission>;
@@ -28,7 +26,6 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         super();
 
         this.repository = ctx.repository;
-        this.policyRepository = ctx.policyRepository;
         this.permissionResolver = new ProvisioningEntityResolver(ctx.permissionRepository);
         this.permissionJunction = new ProvisioningJunctionSynchronizer({
             repository: ctx.rolePermissionRepository,
@@ -51,7 +48,7 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             }
             return {
                 ...input,
-                attributes: attributes || input.attributes, 
+                attributes: attributes || input.attributes,
             };
         }
 
@@ -100,17 +97,18 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         ];
 
         if (permissions.length > 0) {
-            const policyMap = await this.resolvePolicyMap(input, attributes.name);
+            const defaultScope = input.relations.globalPermissionsRealmScope;
 
-            if (policyMap) {
+            if (defaultScope) {
+                const overrides = this.buildRealmScopeOverrides(input);
                 for (const permission of permissions) {
-                    const policyId = policyMap.overrides.get(permission.name) ?? policyMap.defaultPolicyId;
+                    const realmScope = overrides.get(permission.name) ?? defaultScope;
                     await this.permissionJunction.synchronize(
                         attributes,
                         [permission],
                         'permission_id',
                         'permission_realm_id',
-                        policyId ? { policy_id: policyId } : undefined,
+                        { realm_scope: realmScope },
                     );
                 }
             } else {
@@ -129,43 +127,18 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         };
     }
 
-    private async resolvePolicyMap(
-        input: RoleProvisioningEntity,
-        roleName: string | undefined,
-    ): Promise<{
-        defaultPolicyId: string | undefined,
-        overrides: Map<string, string> 
-    } | undefined> {
-        if (!input.relations?.globalPermissionsPolicyName || !this.policyRepository) {
-            return undefined;
-        }
-
-        const defaultPolicy = await this.policyRepository.findOneByName(input.relations.globalPermissionsPolicyName);
-        if (!defaultPolicy) {
-            throw new Error(
-                `Provisioning: policy '${input.relations.globalPermissionsPolicyName}' not found for role '${roleName}'.`,
-            );
-        }
-
+    private buildRealmScopeOverrides(input: RoleProvisioningEntity): Map<string, string> {
         const overrides = new Map<string, string>();
-
-        if (input.relations.globalPermissionsPolicyOverrides) {
-            for (const [policyName, permissionNames] of Object.entries(input.relations.globalPermissionsPolicyOverrides)) {
-                const policy = await this.policyRepository.findOneByName(policyName);
-                if (!policy) {
-                    throw new Error(
-                        `Provisioning: override policy '${policyName}' not found for role '${roleName}'.`,
-                    );
+        if (input.relations?.globalPermissionsRealmScopeOverrides) {
+            for (const [realmScope, permissionNames] of Object.entries(input.relations.globalPermissionsRealmScopeOverrides)) {
+                if (!permissionNames) {
+                    continue;
                 }
                 for (const permName of permissionNames) {
-                    overrides.set(permName, policy.id);
+                    overrides.set(permName, realmScope);
                 }
             }
         }
-
-        return {
-            defaultPolicyId: defaultPolicy.id,
-            overrides,
-        };
+        return overrides;
     }
 }

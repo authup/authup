@@ -55,7 +55,7 @@ export class RobotRoleEntity implements RobotRole {
     robot_id: string;
 
     @ManyToOne(() => RobotEntity, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'client_id' })
+    @JoinColumn({ name: 'robot_id' })
     robot: Robot;
 
     @Column({ nullable: true })

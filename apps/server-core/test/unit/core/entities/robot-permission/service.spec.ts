@@ -7,7 +7,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
-import type { RobotPermission } from '@authup/core-kit';
+import type { Permission, RobotPermission } from '@authup/core-kit';
 import {
     beforeEach, 
     describe, 
@@ -17,14 +17,21 @@ import {
 import { ErrorCode } from '@authup/errors';
 import { RobotPermissionService } from '../../../../../src/core/entities/robot-permission/service.ts';
 import { FakeEntityRepository, createAllowAllActor, createDenyAllActor } from '@authup/server-test-kit';
+import { FakeIdentityPermissionProvider } from '../../helpers/index.ts';
 
 describe('core/entities/robot-permission/service', () => {
     let repository: FakeEntityRepository<RobotPermission>;
+    let permissionRepository: FakeEntityRepository<Permission>;
     let service: RobotPermissionService;
 
     beforeEach(() => {
         repository = new FakeEntityRepository<RobotPermission>();
-        service = new RobotPermissionService({ repository });
+        permissionRepository = new FakeEntityRepository<Permission>();
+        service = new RobotPermissionService({
+            repository, 
+            permissionRepository, 
+            identityPermissionProvider: new FakeIdentityPermissionProvider(), 
+        });
     });
 
     describe('getMany', () => {

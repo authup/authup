@@ -52,7 +52,7 @@ describe('refresh-token', () => {
 
         response = await suite.client
             .token
-            .createWithRefreshToken({ refresh_token: response.refresh_token });
+            .createWithRefreshToken({ refresh_token: response.refresh_token! });
 
         expect(response).toBeDefined();
         expect(response.access_token).toBeDefined();
@@ -86,7 +86,7 @@ describe('refresh-token', () => {
         const refreshed = await suite.client
             .token
             .createWithRefreshToken({
-                refresh_token: passwordResponse.refresh_token,
+                refresh_token: passwordResponse.refresh_token!,
                 client_id: confidentialClient.id,
                 client_secret: confidentialSecret,
             });
@@ -105,7 +105,7 @@ describe('refresh-token', () => {
             });
 
         await expectClientError(
-            () => suite.client.token.createWithRefreshToken({ refresh_token: passwordResponse.refresh_token }),
+            () => suite.client.token.createWithRefreshToken({ refresh_token: passwordResponse.refresh_token! }),
             { status: 401, code: ErrorCode.OAUTH_CLIENT_INVALID },
         );
     });
@@ -132,7 +132,7 @@ describe('refresh-token', () => {
 
         await expectClientError(
             () => suite.client.token.createWithRefreshToken({
-                refresh_token: passwordResponse.refresh_token,
+                refresh_token: passwordResponse.refresh_token!,
                 client_id: otherClient.id,
                 client_secret: otherSecret,
             }),
@@ -152,7 +152,7 @@ describe('refresh-token', () => {
 
         await expectClientError(
             () => suite.client.token.createWithRefreshToken({
-                refresh_token: passwordResponse.refresh_token,
+                refresh_token: passwordResponse.refresh_token!,
                 client_id: confidentialClient.id,
                 client_secret: 'wrong-secret',
             }),

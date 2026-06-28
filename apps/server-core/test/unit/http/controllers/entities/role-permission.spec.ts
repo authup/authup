@@ -60,16 +60,16 @@ describe('src/http/controllers/role-permission', () => {
     it('should read resource', async () => {
         const response = await suite.client
             .rolePermission
-            .getOne(entity.id);
+            .getOne(entity!.id);
 
         expect(response).toBeDefined();
-        expectPropertiesEqualToSrc(entity, response, ['role', 'permission']);
+        expectPropertiesEqualToSrc(entity!, response, ['role', 'permission']);
     });
 
     it('should delete resource', async () => {
         const response = await suite.client
             .rolePermission
-            .delete(entity.id);
+            .delete(entity!.id);
 
         expect(response.id).toBeDefined();
     });

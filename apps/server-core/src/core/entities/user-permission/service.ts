@@ -5,23 +5,33 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    PolicyData,
+    RealmScope,
+    minRealmScope,
+} from '@authup/access';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
-import { ValidatorGroup } from '@authup/kit';
+import { ValidatorGroup, hasOwnProperty } from '@authup/kit';
 import { PermissionName, UserPermissionValidator } from '@authup/core-kit';
-import type { UserPermission } from '@authup/core-kit';
+import type { Permission, UserPermission } from '@authup/core-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
-import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
-import { AbstractEntityService } from '@authup/server-kit';
+import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
+import { JunctionEntityService } from '@authup/server-kit';
 import type { IUserPermissionRepository, IUserPermissionService } from './types.ts';
 
 export type UserPermissionServiceContext = {
     repository: IUserPermissionRepository;
+    permissionRepository: IEntityRepository<Permission>;
     identityPermissionProvider: IIdentityPermissionProvider;
 };
 
-export class UserPermissionService extends AbstractEntityService implements IUserPermissionService {
+export class UserPermissionService extends JunctionEntityService implements IUserPermissionService {
+    protected readonly ownerRealmKey = 'user_realm_id';
+
     protected repository: IUserPermissionRepository;
+
+    protected permissionRepository: IEntityRepository<Permission>;
 
     protected identityPermissionProvider: IIdentityPermissionProvider;
 
@@ -30,6 +40,7 @@ export class UserPermissionService extends AbstractEntityService implements IUse
     constructor(ctx: UserPermissionServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.permissionRepository = ctx.permissionRepository;
         this.identityPermissionProvider = ctx.identityPermissionProvider;
         this.validator = new UserPermissionValidator();
     }
@@ -101,12 +112,8 @@ export class UserPermissionService extends AbstractEntityService implements IUse
             validated.user_realm_id = validated.user.realm_id;
         }
 
-        if (
-            validated.permission &&
-            actor.identity &&
-            typeof validated.policy_id === 'undefined'
-        ) {
-            const junctionPolicy = await this.identityPermissionProvider.resolveJunctionPolicy(
+        if (validated.permission && actor.identity) {
+            const grant = await this.identityPermissionProvider.resolveJunctionGrant(
                 {
                     type: actor.identity.type,
                     id: actor.identity.data.id,
@@ -117,14 +124,19 @@ export class UserPermissionService extends AbstractEntityService implements IUse
                     clientId: validated.permission.client_id,
                 },
             );
-            if (junctionPolicy) {
-                validated.policy_id = junctionPolicy.id;
+
+            // CAP the grant's realm scope to the actor's own ceiling; default `own`.
+            validated.realm_scope = minRealmScope([validated.realm_scope ?? RealmScope.OWN, grant.realmScope]);
+
+            // Only an unrestricted (`any`) actor may set policy_id explicitly.
+            if (grant.realmScope !== RealmScope.ANY || grant.policy) {
+                validated.policy_id = grant.policy ? grant.policy.id : null;
             }
         }
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_PERMISSION_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated) }),
         });
 
         let entity = this.repository.create(validated);
@@ -145,9 +157,44 @@ export class UserPermissionService extends AbstractEntityService implements IUse
             throw new EntityNotFoundError();
         }
 
+        let actorScope: RealmScope = RealmScope.ANY;
+        let actorPolicyFree = true;
+        let actorPolicyId: string | null = null;
+        if (actor.identity) {
+            actorScope = RealmScope.OWN;
+            const permission = await this.permissionRepository.findOneById(entity.permission_id);
+            if (permission) {
+                const grant = await this.identityPermissionProvider.resolveJunctionGrant(
+                    { type: actor.identity.type, id: actor.identity.data.id },
+                    {
+                        name: permission.name,
+                        realmId: permission.realm_id,
+                        clientId: permission.client_id,
+                    },
+                );
+                actorScope = grant.realmScope as RealmScope;
+                actorPolicyFree = !grant.policy;
+                actorPolicyId = grant.policy ? grant.policy.id : null;
+            }
+        }
+
         const updateData: Record<string, any> = {};
-        if (Object.prototype.hasOwnProperty.call(data, 'policy_id')) {
-            updateData.policy_id = data.policy_id;
+
+        // CAP to the actor's ceiling — a restricted actor may narrow but never widen.
+        if (hasOwnProperty(data, 'realm_scope')) {
+            updateData.realm_scope = minRealmScope([data.realm_scope as RealmScope, actorScope]);
+        }
+
+        // policy_id, capped to the actor's ceiling (mirrors create-time inheritance):
+        // an unrestricted actor may set/clear it explicitly; a restricted/policy-bound
+        // actor that touches the binding inherits its own grant's policy and cannot
+        // detach or replace it to persist a binding broader than it holds.
+        if (actorScope === RealmScope.ANY && actorPolicyFree) {
+            if (hasOwnProperty(data, 'policy_id')) {
+                updateData.policy_id = data.policy_id;
+            }
+        } else if (hasOwnProperty(data, 'realm_scope') || hasOwnProperty(data, 'policy_id')) {
+            updateData.policy_id = actorPolicyId;
         }
 
         await this.repository.validateJoinColumns(updateData);
@@ -156,7 +203,7 @@ export class UserPermissionService extends AbstractEntityService implements IUse
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_PERMISSION_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: merged }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(merged) }),
         });
 
         return this.repository.save(merged);
@@ -175,7 +222,7 @@ export class UserPermissionService extends AbstractEntityService implements IUse
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_PERMISSION_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) }),
         });
 
         const { id: entityId } = entity;

@@ -54,7 +54,6 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
 
     [TranslatorTranslationClientKey.REALM_MATCH_STRICT_HINT]: 'Nur übereinstimmen, wenn das Attribut exakt dem Namen entspricht?',
     [TranslatorTranslationClientKey.REALM_MATCH_NULL_MATCH_ALL_HINT]: 'Bestimmt, ob Ressourcen mit leerem Realm-ID-/Namens-Wert mit allen Identitäts-Realms übereinstimmen.{br}Wenn aktiviert, kann jeder Identitäts-Realm auf Ressourcen mit leeren Realm-Werten zugreifen.',
-    [TranslatorTranslationClientKey.REALM_MATCH_MASTER_MATCH_ALL_HINT]: 'Legt fest, ob der Master-Realm einer Identität mit allen Realm-ID-/Namens-Attributen übereinstimmt, einschließlich leerer Werte.{br}Wenn aktiviert, kann der Master-Realm unabhängig vom Realm-Wert auf jede Ressource zugreifen.',
 
     [TranslatorTranslationClientKey.ENABLE_STARTTLS_HINT]: 'StartTLS-Prozess aktivieren?',
     [TranslatorTranslationClientKey.PASSWORD_MUST_MATCH]: 'Muss mit dem Passwort übereinstimmen.',
@@ -62,6 +61,7 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.PROTOCOL_NOT_SUPPORTED]: '{{name}} wird noch nicht unterstützt.',
 
     [TranslatorTranslationClientKey.JUNCTION_POLICY]: 'Verknüpfungsrichtlinie',
+    [TranslatorTranslationClientKey.JUNCTION_REALM_SCOPE]: 'Realm-Geltungsbereich',
     [TranslatorTranslationClientKey.SELECTION_UPDATING]: 'Auswahl wird aktualisiert',
     [TranslatorTranslationClientKey.SELECTION_REMOVE]: 'Aus der Auswahl entfernen',
     [TranslatorTranslationClientKey.SELECTION_ADD]: 'Zur Auswahl hinzufügen',

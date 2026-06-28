@@ -56,17 +56,17 @@ describe('src/http/controllers/robot-permission', () => {
     it('should read resource', async () => {
         const response = await suite.client
             .robotPermission
-            .getOne(entity.id);
+            .getOne(entity!.id);
 
         expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(entity, response, ['robot', 'permission']);
+        expectPropertiesEqualToSrc(entity!, response, ['robot', 'permission']);
     });
 
     it('should delete resource', async () => {
         const response = await suite.client
             .robotPermission
-            .delete(entity.id);
+            .delete(entity!.id);
 
         expect(response.id).toBeDefined();
     });

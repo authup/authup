@@ -7,6 +7,7 @@
 
 import type { BasePolicy } from '../policy';
 import type { DecisionStrategy } from '@authup/kit';
+import type { RealmScope } from './realm-scope';
 
 export type BasePermission = {
     name: string;
@@ -18,4 +19,10 @@ export type BasePermission = {
 export type PermissionPolicyBinding = {
     permission: BasePermission,
     policies?: BasePolicy[],
+    /**
+     * Relative realm reach of this grant (none/own/ownOrNull/any). Merged across
+     * grants by ordered-MAX; absent coerces to the most restrictive `own` (fail-closed).
+     * NOT part of the binding identity key (see isPermissionPolicyBindingEqual).
+     */
+    realm_scope?: `${RealmScope}`,
 };

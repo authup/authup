@@ -17,10 +17,11 @@ import {
 } from 'typeorm';
 import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type {
-    Permission, 
-    Policy, 
+    Permission,
+    Policy,
     Realm,
-    Robot, 
+    RealmScopeValue,
+    Robot,
     RobotPermission,
 } from '@authup/core-kit';
 import { PermissionEntity } from '../permission/index.ts';
@@ -45,6 +46,13 @@ export class RobotPermissionEntity implements RobotPermission {
     })
     @JoinColumn({ name: 'policy_id' })
     policy: Policy | null;
+
+    @Column({
+        type: 'varchar',
+        length: 50,
+        default: 'own',
+    })
+    realm_scope: RealmScopeValue;
 
     @Column()
     robot_id: string;

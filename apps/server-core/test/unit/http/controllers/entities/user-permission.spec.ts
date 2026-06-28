@@ -60,16 +60,16 @@ describe('src/http/controllers/user-permission', () => {
     it('should read resource', async () => {
         const response = await suite.client
             .userPermission
-            .getOne(details.id);
+            .getOne(details!.id);
 
         expect(response).toBeDefined();
-        expectPropertiesEqualToSrc(details, response, ['user', 'permission']);
+        expectPropertiesEqualToSrc(details!, response, ['user', 'permission']);
     });
 
     it('should delete resource', async () => {
         const response = await suite.client
             .userPermission
-            .delete(details.id);
+            .delete(details!.id);
 
         expect(response.id).toBeDefined();
     });

@@ -20,6 +20,7 @@ import type {
     Permission,
     Policy,
     Realm,
+    RealmScopeValue,
     Role,
     RolePermission,
 } from '@authup/core-kit';
@@ -49,10 +50,17 @@ export class RolePermissionEntity implements RolePermission {
 
     @ManyToOne(() => PolicyEntity, {
         onDelete: 'SET NULL',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'policy_id' })
     policy: Policy | null;
+
+    @Column({
+        type: 'varchar',
+        length: 50,
+        default: 'own',
+    })
+    realm_scope: RealmScopeValue;
 
     @Column()
     role_id: string;

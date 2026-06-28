@@ -5,6 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+/**
+ * Relative realm reach of a permission grant (the `realm_scope` column). Mirrors the
+ * `RealmScope` enum in `@authup/access` (the logic source of truth) — the values must
+ * agree. Kept here as a plain const (no enum) since core-kit cannot depend on access.
+ */
+export type RealmScopeValue = 'none' | 'own' | 'ownOrNull' | 'any';
+
+export const REALM_SCOPE = {
+    NONE: 'none',
+    OWN: 'own',
+    OWN_OR_NULL: 'ownOrNull',
+    ANY: 'any',
+} as const satisfies Record<string, RealmScopeValue>;
+
 export enum PermissionName {
     CLIENT_CREATE = 'client_create',
     CLIENT_DELETE = 'client_delete',

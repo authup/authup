@@ -58,10 +58,13 @@ These are created and maintained automatically on startup:
 
 - `system.default` — a composite policy (UNANIMOUS) that bundles the standard restrictions
 - `system.identity` — requires a valid identity (user, robot, or client)
-- `system.permission-binding` — checks that the identity has the permission assigned
-- `system.realm-match` — ensures realm-level isolation; global entities (`realm_id: null`) match any realm
-- `system.realm-bound` — strict realm matching; rejects global entities (`realm_id: null`)
-- `system.realm-or-global` — realm matching that allows both own-realm and global entities
+- `system.permission-binding` — checks that the identity has the permission assigned, and enforces the grant's **realm reach** (see [Realm Scoping](#realm-scoping))
+
+> Realm isolation is **no longer a policy**. It lives on each permission grant as the
+> coarse, fail-closed `realm_scope` column and is enforced as a separate factor inside
+> `system.permission-binding`. The former `system.realm-match` / `system.realm-bound` /
+> `system.realm-or-global` policies have been removed. The `realm_match` policy *type*
+> remains available for user-defined policies.
 
 System policies:
 - Are marked as `built_in` and cannot be modified or deleted via the API
@@ -91,14 +94,33 @@ Authup distinguishes between **global** and **realm-scoped** entities:
 
 To create a global entity via the API, explicitly pass `realm_id: null`. If omitted, `realm_id` defaults to the actor's realm.
 
-Two built-in admin roles control the scope of access:
+### Realm reach (`realm_scope`)
 
-- **`admin`** — full unrestricted access to all entities, including global ones.
-- **`realm_admin`** — uses differentiated junction policies:
-  - **Entity CUD** (create/update/delete roles, permissions, scopes): `system.realm-bound` — cannot create or modify global entities.
-  - **Everything else** (reads, junction/assignment operations, identity CRUD): `system.realm-or-global` — can read global entities and assign global roles/permissions/scopes to entities within their own realm.
+Each permission **grant** (the row that assigns a permission to a role / user / client / robot) carries a coarse, **actor-relative** realm reach in its `realm_scope` column — which realms the holder may act on *when using that permission*:
 
-There is no special "master realm" privilege. Access control is entirely policy-driven.
+| `realm_scope` | the grant lets the holder act on… | typical use |
+|---|---|---|
+| **`own`** (default) | only the holder's own realm | the safe default; `realm_admin` writes |
+| **`ownOrNull`** | the holder's own realm **and** global (`realm_id = null`) resources | `realm_admin` reads — to use global building blocks |
+| **`any`** | any realm, including global | `admin` |
+| **`none`** | nothing (reserved) | — |
+
+It is **fail-closed**: a grant with no explicit `realm_scope` defaults to `own`. The reach is matched against the realm of the resource being acted on, **independently of and in addition to** any policy on the grant.
+
+The two built-in admin roles are expressed purely through this reach:
+
+- **`admin`** — every permission at `any`, so it acts on all realms (and global resources) **from an identity in any realm**.
+- **`realm_admin`** — direct entity create/update/delete at `own`; reads and assignments at `ownOrNull`. It cannot touch another realm's resources, and cannot create or modify global entities.
+
+There is no special "master realm" privilege.
+
+### Cross-realm protection for assignments
+
+Realm reach also gates **assignments** (granting a role to a user, a permission to a role, a scope to a client, …): the write is gated by the realm of the **owner** entity — the user / role / client / robot whose access you are changing. So a `realm_admin` in realm A cannot grant a role to a user in realm B, even with an otherwise-valid permission.
+
+### Setting a custom reach
+
+When an `admin` assigns a permission, the realm reach can be set per grant — via the API (`realm_scope` on the create/update payload of `role-permission`, `user-permission`, `client-permission`, `robot-permission`) and in the UI (the **Realm Scope** selector beside the policy selector on a permission assignment). A restricted actor's chosen reach is always **capped to its own ceiling** — it can narrow but never widen. To scope a grant to a *specific set* of realms, set `realm_scope: any` and attach a `policy_id` ATTRIBUTES policy `{ realm_id: { $in: ["…"] } }` on top.
 
 ## Permission Evaluation
 
@@ -107,8 +129,9 @@ When a permission is checked, the following flow applies:
 1. Look up the requested permission
 2. If the permission has no policies attached → **allow** (unrestricted)
 3. If the permission has policies attached → evaluate all policies, combining results with the permission's `decision_strategy`
-4. If the permission was obtained through a role or user assignment that carries a **junction policy**, evaluate that policy as an additional restriction
-5. All applicable policies pass → **allow**, any required policy fails → **deny**
+4. Enforce the realm reach of the grant that conferred the permission — the grant's [`realm_scope`](#realm-reach-realm_scope) against the target resource's realm
+5. If that grant also carries a **junction policy** (`policy_id`), evaluate it as a further restriction
+6. The permission's policies pass **and** the realm reach matches **and** any junction policy passes → **allow**; any required factor fails → **deny**
 
 ## Decision Strategy
 
@@ -123,12 +146,12 @@ The decision strategy is set per permission. Most built-in permissions use `unan
 
 ## Junction Policies
 
-Permission assignments (role-permission, user-permission, client-permission, robot-permission) can carry their own policy via the junction table.
-This **junction policy** adds an additional restriction on top of the permission's own policies.
+Permission assignments (role-permission, user-permission, client-permission, robot-permission) carry two independent controls on the junction table:
 
-For example, the `realm_admin` role assigns entity CUD permissions with the `system.realm-bound` junction policy
-(preventing creation of global entities), while read and assignment permissions use `system.realm-or-global`
-(allowing interaction with global entities within the actor's realm).
+- **`realm_scope`** — the coarse [realm reach](#realm-reach-realm_scope) of the grant (`own` / `ownOrNull` / `any`). This is how the built-in `realm_admin` is confined to its own realm and `admin` reaches every realm.
+- **`policy_id`** — an optional **junction policy** that adds a further restriction on top of the permission's own policies, e.g. an ATTRIBUTES policy `{ realm_id: { $in: ["…"] } }` to limit a grant to a specific set of realms.
+
+Both are evaluated as additional, ANDed factors: the holder must satisfy the permission's own policies, the grant's `realm_scope`, **and** any junction `policy_id`. Only an unrestricted (`any`, policy-free) actor may attach an explicit `policy_id`; a restricted actor inherits its own grant's policy, so it cannot detach a restriction to widen access.
 
 ## Privilege Escalation Prevention
 

@@ -11,7 +11,7 @@ import type { UserPermission } from '@authup/core-kit';
 
 // Mirrors `UserPermissionValidator` mounts in @authup/core-kit.
 export type UserPermissionCreatePayload = Pick<UserPermission, 'user_id' | 'permission_id'> &
-    Partial<Pick<UserPermission, 'policy_id'>>;
+    Partial<Pick<UserPermission, 'policy_id' | 'realm_scope'>>;
 export type UserPermissionUpdatePayload = Partial<UserPermissionCreatePayload>;
 
 export interface IUserPermissionAPI extends IEntityAPI<UserPermission, UserPermissionCreatePayload, UserPermissionUpdatePayload> {}

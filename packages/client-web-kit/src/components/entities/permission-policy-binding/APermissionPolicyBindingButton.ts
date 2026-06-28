@@ -5,7 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EntityTypeMap, PermissionRelation, Policy } from '@authup/core-kit';
+import type { 
+    EntityTypeMap, 
+    PermissionRelation, 
+    Policy, 
+    RealmScopeValue,  
+} from '@authup/core-kit';
+import { REALM_SCOPE } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import {
     defineComponent,
@@ -59,6 +65,7 @@ export const APermissionPolicyBindingButton = defineComponent({
         const modalOpen = ref(false);
         const busy = ref(false);
         const currentPolicyId = ref<string | null>(props.entity.policy_id);
+        const currentRealmScope = ref<RealmScopeValue | null>(props.entity.realm_scope ?? null);
         // The detail view is a nested modal: Escape / outside-click close it
         // back to the list (handled by the inner VCModalContent), and another
         // Escape then closes the outer list modal.
@@ -67,6 +74,7 @@ export const APermissionPolicyBindingButton = defineComponent({
         const entityRef = toRef(props, 'entity');
         watch(entityRef, (val) => {
             currentPolicyId.value = val.policy_id;
+            currentRealmScope.value = val.realm_scope ?? null;
         }, { deep: true });
 
         const handlePolicySelect = async (policyId: string | null) => {
@@ -92,9 +100,45 @@ export const APermissionPolicyBindingButton = defineComponent({
             }
         };
 
+        const handleRealmScopeSelect = async (scope: RealmScopeValue) => {
+            if (busy.value || currentRealmScope.value === scope) return;
+
+            const api = hasOwnProperty(client, props.entityType) ?
+                client[props.entityType] as any :
+                undefined;
+
+            if (!api || !api.update) return;
+
+            busy.value = true;
+            try {
+                const response = await api.update(props.entity.id, { realm_scope: scope });
+                // Reflect the server-capped value: a restricted actor's chosen scope may be
+                // narrowed server-side, so prefer the persisted scope from the response.
+                currentRealmScope.value = (
+                    response &&
+                    typeof response === 'object' &&
+                    hasOwnProperty(response, 'realm_scope')
+                ) ?
+                    response.realm_scope as RealmScopeValue | null :
+                    scope;
+                emit('updated', response);
+            } catch (e) {
+                if (e instanceof Error) {
+                    emit('failed', e);
+                }
+            } finally {
+                busy.value = false;
+            }
+        };
+
         const translationJunctionPolicy = useTranslation({
             namespace: TranslatorTranslationNamespace.CLIENT,
             key: TranslatorTranslationClientKey.JUNCTION_POLICY,
+        });
+
+        const translationJunctionRealmScope = useTranslation({
+            namespace: TranslatorTranslationNamespace.CLIENT,
+            key: TranslatorTranslationClientKey.JUNCTION_REALM_SCOPE,
         });
 
         const translationBack = useTranslation({
@@ -117,11 +161,31 @@ export const APermissionPolicyBindingButton = defineComponent({
             'aria-label': translationClose.value,
         }, () => h(VCIcon, { name: 'fa6-solid:xmark' }));
 
+        const renderRealmScopeSelector = () => h('div', { class: 'flex flex-col gap-1' }, [
+            h('div', { class: 'text-sm font-medium' }, translationJunctionRealmScope.value),
+            h('div', { class: 'flex flex-wrap gap-1' }, Object.values(REALM_SCOPE).map((scope) => {
+                const isSelected = currentRealmScope.value === scope;
+                return h(VCButton, {
+                    key: scope,
+                    size: props.size,
+                    color: isSelected ? 'primary' : 'neutral',
+                    variant: isSelected ? 'solid' : 'soft',
+                    disabled: busy.value,
+                    label: scope,
+                    onClick(e: Event) {
+                        e.preventDefault();
+                        handleRealmScopeSelect(scope as RealmScopeValue);
+                    },
+                });
+            })),
+        ]);
+
         const renderListContent = () => [
             h('div', { class: 'flex items-center justify-between gap-2' }, [
                 h(VCModalTitle, () => translationJunctionPolicy.value),
                 renderCloseIcon(),
             ]),
+            renderRealmScopeSelector(),
             h(APolicies, { query: { filters: { parent_id: null } } }, {
                 [SlotName.ITEM]: (slotProps: { data: Policy }) => {
                     const isSelected = currentPolicyId.value === slotProps.data.id;

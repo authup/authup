@@ -5,7 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, SystemPolicyName } from '@authup/access';
+import { BuiltInPolicyType, RealmScope, SystemPolicyName } from '@authup/access';
 import { DecisionStrategy } from '@authup/kit';
 import type {
     Client, 
@@ -69,49 +69,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                             realm_id: null,
                         },
                     },
-                    {
-                        attributes: {
-                            name: SystemPolicyName.REALM_MATCH,
-                            type: BuiltInPolicyType.REALM_MATCH,
-                            built_in: true,
-                            realm_id: null,
-                        },
-                        extraAttributes: {
-                            attribute_name: ['realm_id'],
-                            attribute_name_strict: false,
-                            identity_master_match_all: false,
-                            attribute_null_match_all: true,
-                        },
-                    },
                 ],
-            },
-            {
-                attributes: {
-                    name: SystemPolicyName.REALM_BOUND,
-                    type: BuiltInPolicyType.REALM_MATCH,
-                    built_in: true,
-                    realm_id: null,
-                },
-                extraAttributes: {
-                    attribute_name: ['realm_id'],
-                    attribute_name_strict: false,
-                    attribute_null_match_all: false,
-                    identity_master_match_all: false,
-                },
-            },
-            {
-                attributes: {
-                    name: SystemPolicyName.REALM_OR_GLOBAL,
-                    type: BuiltInPolicyType.REALM_MATCH,
-                    built_in: true,
-                    realm_id: null,
-                },
-                extraAttributes: {
-                    attribute_name: ['realm_id'],
-                    attribute_name_strict: false,
-                    attribute_null_match_all: true,
-                    identity_master_match_all: false,
-                },
             },
             // Self-manage policies use ATTRIBUTE_NAMES + invert: true (denylist).
             // Each `names` entry is what self-edit must REJECT; everything else
@@ -231,7 +189,11 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     name: ROLE_ADMIN_NAME,
                     built_in: true,
                 },
-                relations: { globalPermissions: ['*'] },
+                relations: {
+                    globalPermissions: ['*'],
+                    // Global admin: unrestricted realm reach (any realm + null/global).
+                    globalPermissionsRealmScope: RealmScope.ANY,
+                },
             },
             {
                 strategy: {
@@ -249,9 +211,12 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                         PermissionName.REALM_UPDATE,
                         PermissionName.REALM_DELETE,
                     ],
-                    globalPermissionsPolicyName: SystemPolicyName.REALM_OR_GLOBAL,
-                    globalPermissionsPolicyOverrides: {
-                        [SystemPolicyName.REALM_BOUND]: [
+                    // realm_admin: own realm + null/global by default (so it can
+                    // read/assign global building blocks), but strictly own-realm for
+                    // direct entity CUD (cannot create/modify global entities).
+                    globalPermissionsRealmScope: RealmScope.OWN_OR_NULL,
+                    globalPermissionsRealmScopeOverrides: {
+                        [RealmScope.OWN]: [
                             PermissionName.CLIENT_CREATE,
                             PermissionName.CLIENT_UPDATE,
                             PermissionName.CLIENT_DELETE,

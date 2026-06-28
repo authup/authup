@@ -58,7 +58,7 @@ describe('src/http/controllers/scope', () => {
     it('should read resource', async () => {
         const response = await suite.client
             .scope
-            .getOne(details.id);
+            .getOne(details.id!);
 
         expectPropertiesEqualToSrc(details, response);
     });
@@ -76,7 +76,7 @@ describe('src/http/controllers/scope', () => {
     it('should update resource', async () => {
         const response = await suite.client
             .scope
-            .update(details.id, {
+            .update(details.id!, {
                 ...details,
                 name: 'testa',
             });
@@ -105,7 +105,7 @@ describe('src/http/controllers/scope', () => {
     it('should delete resource', async () => {
         const response = await suite.client
             .scope
-            .delete(details.id);
+            .delete(details.id!);
 
         expect(response.id).toBeDefined();
     });
