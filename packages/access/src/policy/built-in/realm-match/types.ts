@@ -34,9 +34,9 @@ export interface RealmMatchPolicy extends BasePolicy {
 
     /**
      * Coarse, actor-relative realm reach (none/own/ownOrNull/any). When set, the evaluator
-     * runs in SCOPE MODE: it matches the resource realm (read from the REALM_MATCH data key,
-     * falling back to ATTRIBUTES.realm_id) against the identity realm via `realmScopeMatches`,
-     * and ignores `attribute_name` / `attribute_null_match_all`.
+     * runs in SCOPE MODE: it matches the resource realm read from the REALM_MATCH data key
+     * against the identity realm via `realmScopeMatches`, and ignores `attribute_name` /
+     * `attribute_null_match_all`. With no REALM_MATCH key present it neutral-passes.
      */
     scope?: `${RealmScope}`
 }
