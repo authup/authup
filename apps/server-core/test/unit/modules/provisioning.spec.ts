@@ -222,8 +222,8 @@ describe('app/modules/provisioning', () => {
             // The realm-match baseline child + the standalone realm policies were removed
             // in favour of the realm_scope enum on junctions.
             expect(await policyRepositoryAdapter.findOneByName(SystemPolicyName.REALM_MATCH)).toBeNull();
-            expect(await policyRepositoryAdapter.findOneByName(SystemPolicyName.REALM_BOUND)).toBeNull();
-            expect(await policyRepositoryAdapter.findOneByName(SystemPolicyName.REALM_OR_GLOBAL)).toBeNull();
+            expect(await policyRepositoryAdapter.findOneByName('system.realm-bound')).toBeNull();
+            expect(await policyRepositoryAdapter.findOneByName('system.realm-or-global')).toBeNull();
         });
 
         it('should create system.default composite with correct children and decisionStrategy', async () => {

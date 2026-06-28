@@ -157,10 +157,12 @@ describe('src/policy/realm-match scope mode', () => {
         expect(o.success).toBe(true);
     });
 
-    it('falls back to ATTRIBUTES.realm_id when REALM_MATCH is absent', async () => {
+    it('reads ONLY the REALM_MATCH key — an ATTRIBUTES.realm_id is not a realm source', async () => {
+        // Single-source: with no REALM_MATCH key the gate neutral-passes, even when
+        // ATTRIBUTES carries a (foreign) realm_id.
         const o = await run({ scope: 'own' }, {
             [BuiltInPolicyType.IDENTITY]: identityA,
-            [BuiltInPolicyType.ATTRIBUTES]: { realm_id: REALM_A },
+            [BuiltInPolicyType.ATTRIBUTES]: { realm_id: REALM_B },
         });
         expect(o.success).toBe(true);
     });

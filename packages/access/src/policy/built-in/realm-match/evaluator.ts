@@ -47,33 +47,19 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
         }
 
         // SCOPE MODE: coarse, actor-relative realm reach (the realm_scope mechanism lives
-        // here). Read the resource realm from the REALM_MATCH data key, falling back to
-        // ATTRIBUTES.realm_id for back-compat. Key-PRESENCE is the discriminator: an ABSENT
-        // realm neutral-passes (gate check / realm-less resource), while a present `null`
-        // (global resource) is matched (and `own` correctly denies it). Runs BEFORE the
-        // attributes-required guard below, since junction / gate inputs need not carry
-        // ATTRIBUTES.
+        // here). The resource realm is supplied under the REALM_MATCH data key. Key-PRESENCE
+        // is the discriminator: an ABSENT realm neutral-passes (gate check / realm-less
+        // resource), while a present `null` (global resource) is matched (and `own` correctly
+        // denies it). Runs BEFORE the attributes-required guard below, since junction / gate
+        // inputs need not carry ATTRIBUTES.
         if (policy.scope) {
-            let resourceRealm: string | string[] | null | undefined;
-            let resourceRealmPresent = false;
-
-            if (ctx.data && ctx.data.has(BuiltInPolicyType.REALM_MATCH)) {
-                resourceRealm = ctx.data.get<string | string[] | null>(BuiltInPolicyType.REALM_MATCH);
-                resourceRealmPresent = true;
-            } else {
-                const data = await this.attributesEvaluator.accessData(ctx) as Record<string, any> | null;
-                if (data && hasOwnProperty(data, 'realm_id')) {
-                    resourceRealm = (data.realm_id ?? null) as string | string[] | null;
-                    resourceRealmPresent = true;
-                }
-            }
-
-            if (!resourceRealmPresent) {
+            if (!ctx.data || !ctx.data.has(BuiltInPolicyType.REALM_MATCH)) {
                 // Non-evaluation (no resource realm) — neutral pass, no `invert`,
                 // mirroring the attribute-mode non-evaluation pass below.
                 return { success: true };
             }
 
+            const resourceRealm = ctx.data.get<string | string[] | null>(BuiltInPolicyType.REALM_MATCH);
             return {
                 success: maybeInvertPolicyOutcome(
                     realmScopeMatches(
