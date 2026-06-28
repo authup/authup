@@ -427,7 +427,7 @@ describe('core/entities/client/service', () => {
                 (c) => c.name === PermissionName.CLIENT_SELF_MANAGE,
             );
             expect(selfManageCall).toBeDefined();
-            const attrs = selfManageCall!.input!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+            const attrs = selfManageCall!.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
             expect(attrs).toHaveProperty('description', 'updated-desc');
             expect(attrs).not.toHaveProperty('id');
             expect(attrs).not.toHaveProperty('built_in');

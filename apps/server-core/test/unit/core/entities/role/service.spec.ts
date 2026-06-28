@@ -133,7 +133,7 @@ describe('core/entities/role/service', () => {
             expect(actor.permissionEvaluator.evaluateCalls).toContainEqual(
                 expect.objectContaining({
                     name: PermissionName.ROLE_CREATE,
-                    input: expect.anything(),
+                    data: expect.anything(),
                 }),
             );
         });

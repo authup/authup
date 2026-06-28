@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    BuiltInPolicyType,
-    PolicyData,
-    RealmScope,
-    minRealmScope,
+import { 
+    BuiltInPolicyType, 
+    RealmScope, 
+    definePolicyInput, 
+    minRealmScope, 
 } from '@authup/access';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { ValidatorGroup, hasOwnProperty } from '@authup/kit';
@@ -134,7 +134,7 @@ export class RobotPermissionService extends JunctionEntityService implements IRo
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_PERMISSION_CREATE,
-            input: new PolicyData({
+            data: definePolicyInput({
                 [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated),
                 [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(validated),
             }),
@@ -204,7 +204,7 @@ export class RobotPermissionService extends JunctionEntityService implements IRo
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_PERMISSION_UPDATE,
-            input: new PolicyData({
+            data: definePolicyInput({
                 [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(merged),
                 [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(merged),
             }),
@@ -226,7 +226,7 @@ export class RobotPermissionService extends JunctionEntityService implements IRo
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_PERMISSION_DELETE,
-            input: new PolicyData({
+            data: definePolicyInput({
                 [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
                 [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(entity),
             }),

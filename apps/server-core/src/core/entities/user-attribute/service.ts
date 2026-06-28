@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PermissionError, PolicyData } from '@authup/access';
+import { BuiltInPolicyType, PermissionError, definePolicyInput } from '@authup/access';
 import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import { PermissionName } from '@authup/core-kit';
 import type { UserAttribute } from '@authup/core-kit';
@@ -136,12 +136,12 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         if (isSelfFallback) {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.USER_SELF_MANAGE,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { [data.name]: data.value } }),
+                data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: { [data.name]: data.value } }),
             });
         } else {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.USER_UPDATE,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+                data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
             });
         }
 
@@ -186,12 +186,12 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         if (isSelfFallback) {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.USER_SELF_MANAGE,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { [entity.name]: entity.value } }),
+                data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: { [entity.name]: entity.value } }),
             });
         } else {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.USER_UPDATE,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+                data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
             });
         }
 
@@ -243,7 +243,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         try {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.USER_UPDATE,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+                data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
             });
 
             return true;

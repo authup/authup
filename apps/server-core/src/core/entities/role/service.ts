@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import { BuiltInPolicyType, definePolicyInput } from '@authup/access';
 import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
 import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import {
@@ -141,7 +141,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         if (entity) {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.ROLE_UPDATE,
-                input: new PolicyData({
+                data: definePolicyInput({
                     [BuiltInPolicyType.ATTRIBUTES]: {
                         ...entity,
                         ...validated,
@@ -166,7 +166,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
+            data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
         });
 
         await this.repository.checkUniqueness(validated);
@@ -197,7 +197,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+            data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
         });
 
         const { id: entityId } = entity;

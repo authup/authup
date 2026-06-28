@@ -52,8 +52,8 @@ describe('core/entities/role-attribute/service', () => {
 
             const actor = createAllowAllActor();
             actor.permissionEvaluator.setBehavior((call) => {
-                if (call.method === 'evaluateOneOf' && call.ctx.input) {
-                    const entity = call.ctx.input.get('attributes') as RoleAttribute;
+                if (call.method === 'evaluateOneOf' && call.ctx.data) {
+                    const entity = call.ctx.data.get('attributes') as RoleAttribute;
                     if (entity && entity.id === denied.id) {
                         throw PermissionError.denied('test');
                     }

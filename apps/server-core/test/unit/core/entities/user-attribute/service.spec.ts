@@ -189,7 +189,7 @@ describe('core/entities/user-attribute/service', () => {
                 (c) => c.name === PermissionName.USER_SELF_MANAGE,
             );
             expect(selfManageCalls).toHaveLength(1);
-            const attributes = selfManageCalls[0].input?.get('attributes');
+            const attributes = selfManageCalls[0].data?.get('attributes');
             expect(attributes).toEqual({ theme: 'dark' });
         });
 
@@ -216,7 +216,7 @@ describe('core/entities/user-attribute/service', () => {
                 (c) => c.name === PermissionName.USER_SELF_MANAGE,
             );
             expect(selfManageCalls).toHaveLength(1);
-            const attributes = selfManageCalls[0].input?.get('attributes');
+            const attributes = selfManageCalls[0].data?.get('attributes');
             expect(attributes).toEqual({ theme: 'dark' });
         });
 

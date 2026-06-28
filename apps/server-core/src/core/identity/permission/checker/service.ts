@@ -6,7 +6,7 @@
  */
 
 import type { PermissionEvaluationContext } from '@authup/access';
-import { BuiltInPolicyType, PermissionEvaluator, PolicyData } from '@authup/access';
+import { BuiltInPolicyType, PermissionEvaluator, definePolicyInput } from '@authup/access';
 import type { Result } from '@authup/kit';
 import { hasOwnProperty, isUUID } from '@authup/kit';
 import { EntityNotFoundError, normalizeError } from '@authup/errors';
@@ -61,7 +61,7 @@ export class PermissionCheckerService implements IPermissionCheckerService {
 
         const evaluationContext: PermissionEvaluationContext = {
             name: entity.name,
-            input: new PolicyData(input),
+            data: definePolicyInput(input),
         };
 
         const evaluator = new PermissionEvaluator({
@@ -70,8 +70,8 @@ export class PermissionCheckerService implements IPermissionCheckerService {
         });
 
         if (
-            evaluationContext.input &&
-            evaluationContext.input.has(BuiltInPolicyType.ATTRIBUTES)
+            evaluationContext.data &&
+            evaluationContext.data.has(BuiltInPolicyType.ATTRIBUTES)
         ) {
             await evaluator.evaluate(evaluationContext);
         } else {

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import { BuiltInPolicyType, definePolicyInput } from '@authup/access';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
 import { ClientScopeValidator, PermissionName } from '@authup/core-kit';
@@ -97,7 +97,7 @@ export class ClientScopeService extends JunctionEntityService implements IClient
         // Stamp the owner (client) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_SCOPE_CREATE,
-            input: new PolicyData({
+            data: definePolicyInput({
                 [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated),
                 [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(validated),
             }),
@@ -123,7 +123,7 @@ export class ClientScopeService extends JunctionEntityService implements IClient
         // Stamp the owner (client) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_SCOPE_DELETE,
-            input: new PolicyData({
+            data: definePolicyInput({
                 [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
                 [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(entity),
             }),

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import { BuiltInPolicyType, definePolicyInput } from '@authup/access';
 import {
     ValidatorGroup,
     extendObject,
@@ -162,7 +162,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
 
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.PERMISSION_UPDATE,
-                input: new PolicyData({
+                data: definePolicyInput({
                     [BuiltInPolicyType.ATTRIBUTES]: {
                         ...entity,
                         ...validated,
@@ -189,7 +189,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.PERMISSION_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
+            data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
         });
 
         await this.repository.checkUniqueness(validated);
@@ -241,7 +241,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.PERMISSION_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+            data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
         });
 
         const { id: entityId } = entity;

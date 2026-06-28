@@ -9,15 +9,14 @@ import { describe, expect, it } from 'vitest';
 
 import { ErrorCode } from '@authup/errors';
 import type { AttributeNamesPolicy, PermissionPolicyBinding } from '../../../src';
-import {
-    BuiltInPolicyType,
-    PermissionError,
-
-    PermissionEvaluator,
-    PermissionMemoryProvider,
-    PolicyData,
-    PolicyDefaultEvaluators,
-    PolicyEngine,
+import { 
+    BuiltInPolicyType, 
+    PermissionError, 
+    PermissionEvaluator, 
+    PermissionMemoryProvider, 
+    PolicyDefaultEvaluators, 
+    PolicyEngine, 
+    definePolicyInput, 
 } from '../../../src';
 
 const abilities : PermissionPolicyBinding[] = [
@@ -44,7 +43,7 @@ describe('src/ability/manager.ts', () => {
     it('should work with policy', async () => {
         await evaluator.evaluate({
             name: 'user_edit',
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { name: 'admin' } }),
+            data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: { name: 'admin' } }),
         });
     });
 
@@ -54,7 +53,7 @@ describe('src/ability/manager.ts', () => {
         try {
             await evaluator.evaluate({
                 name: 'user_edit',
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { id: '123' } }),
+                data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: { id: '123' } }),
             });
         } catch (e) {
             expect(e).toBeInstanceOf(PermissionError);
