@@ -17,37 +17,44 @@ export type BasePermission = {
 };
 
 /**
- * One disjunction term of a merged binding — a single grant's realm reach paired with its
- * OWN policies. A disjunction-aware evaluator ORs over these, keeping `realm_scope` and
- * `policies` correlated per grant.
+ * A raw permission grant: one permission with its policies and realm reach, as loaded from a
+ * role/identity junction. `aggregatePermissionPolicyBindings` groups these per permission into
+ * a `PermissionPolicyBindingAggregated` (the lossless disjunction of grants).
  */
-export type PermissionPolicyBindingGrant = {
-    /** Relative realm reach of this single grant (none/own/ownOrNull/any). */
-    realm_scope?: `${RealmScope}`,
-    /** Policies attached to this single grant (its junction policy_id tree, etc.). */
-    policies?: BasePolicy[],
-    /** How this grant's own policies combine (defaults to UNANIMOUS). */
-    decision_strategy?: `${DecisionStrategy}` | null,
-};
-
 export type PermissionPolicyBinding = {
     permission: BasePermission,
     policies?: BasePolicy[],
     /**
-     * Relative realm reach of this grant (none/own/ownOrNull/any). Merged across
-     * grants by ordered-MAX; absent coerces to the most restrictive `own` (fail-closed).
-     * NOT part of the binding identity key (see isPermissionPolicyBindingEqual).
+     * Relative realm reach of this grant (none/own/ownOrNull/any). Absent coerces to the
+     * most restrictive `own` (fail-closed). NOT part of the binding identity key
+     * (see isPermissionPolicyBindingEqual).
      */
     realm_scope?: `${RealmScope}`,
+};
+
+/**
+ * One disjunction term of an aggregated binding: a single grant's realm reach paired with its
+ * own (single) policy. A disjunction-aware consumer ORs `realmScopeMatches(realm_scope) ∧ policy`
+ * across the grants of a permission.
+ */
+export type PermissionGrant = {
+    /** Relative realm reach (none/own/ownOrNull/any), normalized — fail-closed default `own`. */
+    realm_scope: `${RealmScope}`,
     /**
-     * The individual (realm_scope, policies) grants merged into this binding — one term per
-     * input grant. A disjunction-aware evaluator ORs over them, access iff
-     *   ∃ grant . realmScopeMatches(grant.realm_scope, resource) ∧ (grant.policies pass)
-     * — keeping each grant's realm reach paired with its OWN policies. The top-level
-     * `realm_scope`/`policies` above are a LOSSY collapse (fail-closed for a mix of
-     * policy-free + policy-bound grants — see mergePermissionPolicyBindings) kept for
-     * consumers that need a single term per key (isSuperset, junction-grant propagation,
-     * the memory provider). Populated by mergePermissionPolicyBindings.
+     * The grant's policy: the raw junction policy (its `id` preserved, for propagation) for a
+     * single-policy grant, a composite for a multi-policy (Layer-1) binding, or `undefined`
+     * when the grant carries no restriction.
      */
-    grants?: PermissionPolicyBindingGrant[],
+    policy?: BasePolicy,
+};
+
+/**
+ * A permission together with the actor's disjunction of grants for it. Output of
+ * `aggregatePermissionPolicyBindings` — the honest, lossless replacement for the collapsed
+ * `PermissionPolicyBinding` (no top-level realm_scope/policies; the access decision is the
+ * OR over `grants`).
+ */
+export type PermissionPolicyBindingAggregated = {
+    permission: BasePermission,
+    grants: PermissionGrant[],
 };

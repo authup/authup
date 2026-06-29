@@ -7,14 +7,14 @@
 
 import type {
     IdentityPolicyData,
+    PermissionGrant,
     PermissionPolicyBinding,
 } from '@authup/access';
 import {
     RealmScope,
+    aggregatePermissionPolicyBindings,
     compareRealmScope,
     isPermissionPolicyBindingEqual,
-    maxRealmScope,
-    mergePermissionPolicyBindings,
 } from '@authup/access';
 import type { Policy } from '@authup/core-kit';
 import { isPolicy } from '@authup/core-kit';
@@ -50,14 +50,11 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
     }
 
     async isSuperset(parent: IdentityPolicyData, child: IdentityPolicyData) : Promise<boolean> {
-        const parentBindings = await this.getFor(parent);
-        const childBindings = await this.getFor(child);
+        const parentAggregated = aggregatePermissionPolicyBindings(await this.getFor(parent));
+        const childAggregated = aggregatePermissionPolicyBindings(await this.getFor(child));
 
-        const parentMerged = mergePermissionPolicyBindings(parentBindings);
-        const childMerged = mergePermissionPolicyBindings(childBindings);
-
-        for (const childItem of childMerged) {
-            const parentItem = parentMerged.find(
+        for (const childItem of childAggregated) {
+            const parentItem = parentAggregated.find(
                 (p) => isPermissionPolicyBindingEqual(p, childItem),
             );
 
@@ -65,18 +62,18 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
                 return false;
             }
 
-            if (
-                parentItem.policies && parentItem.policies.length > 0 &&
-                (!childItem.policies || childItem.policies.length === 0)
-            ) {
-                return false;
-            }
+            // Disjunction-aware superset: EVERY child grant must be dominated by SOME parent
+            // grant (the parent reaches at least as far AND is no more policy-restricted). A
+            // child grant the parent cannot match (e.g. an unconditional `any` the parent only
+            // holds policy-gated) fails the check — the actor cannot assign more than it holds.
+            for (const childGrant of childItem.grants) {
+                const dominated = parentItem.grants.some(
+                    (parentGrant) => grantDominates(parentGrant, childGrant),
+                );
 
-            // Realm reach: the parent's relative scope must be >= the child's (ordered
-            // none < own < ownOrNull < any). No scopeMatches here — the role child
-            // carries no actor realm; this is a purely structural comparison.
-            if (compareRealmScope(parentItem.realm_scope, childItem.realm_scope) < 0) {
-                return false;
+                if (!dominated) {
+                    return false;
+                }
             }
         }
 
@@ -112,18 +109,23 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             return { realmScope: RealmScope.OWN };
         }
 
-        const merged = mergePermissionPolicyBindings(matching);
-        const realmScope = maxRealmScope(merged.map((b) => b.realm_scope));
-
-        let policy: Policy | undefined;
-        if (merged.length > 0 && merged[0].policies && merged[0].policies.length > 0) {
-            const candidate = merged[0].policies[0];
-            if (isPolicy(candidate)) {
-                policy = candidate;
-            }
+        const [aggregated] = aggregatePermissionPolicyBindings(matching);
+        if (!aggregated || aggregated.grants.length === 0) {
+            return { realmScope: RealmScope.OWN };
         }
 
-        return { policy, realmScope };
+        // The propagation ceiling is the actor's MOST-permissive single grant (highest reach,
+        // policy-free preferred on a tie). The capped junction `(min(requested, ceiling.scope),
+        // ceiling.policy)` is then dominated by a real held grant, so the creator never confers
+        // reach/policy it does not itself hold.
+        const ceiling = selectCeilingGrant(aggregated.grants);
+
+        let policy: Policy | undefined;
+        if (ceiling.policy && isPolicy(ceiling.policy)) {
+            policy = ceiling.policy;
+        }
+
+        return { policy, realmScope: ceiling.realm_scope };
     }
 
     async getFor(identity: IdentityPolicyData) : Promise<PermissionPolicyBinding[]> {
@@ -202,4 +204,41 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
 
         return bindings.filter((binding) => binding.permission.client_id === identity.clientId);
     }
+}
+
+/**
+ * Whether `parent` grant covers `child` grant: it reaches at least as far (ordered
+ * none < own < ownOrNull < any) AND is not more policy-restricted (a policy-bound parent
+ * cannot cover an unrestricted child). Policy *content* is not compared — same conservative
+ * approximation the collapsed superset used, now applied per grant.
+ */
+function grantDominates(parent: PermissionGrant, child: PermissionGrant): boolean {
+    if (compareRealmScope(parent.realm_scope, child.realm_scope) < 0) {
+        return false;
+    }
+
+    if (parent.policy && !child.policy) {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * The actor's most-permissive single grant — highest realm reach, policy-free preferred on a
+ * tie — used as the junction propagation ceiling.
+ */
+function selectCeilingGrant(grants: PermissionGrant[]): PermissionGrant {
+    return grants.reduce((best, grant) => {
+        const comparison = compareRealmScope(grant.realm_scope, best.realm_scope);
+        if (comparison > 0) {
+            return grant;
+        }
+
+        if (comparison === 0 && !grant.policy && best.policy) {
+            return grant;
+        }
+
+        return best;
+    });
 }

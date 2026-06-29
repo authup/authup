@@ -9,7 +9,7 @@ import { ErrorCode } from '@authup/errors';
 import type { Issue } from 'validup';
 import { defineIssueItem } from 'validup';
 import { DecisionStrategy } from '@authup/kit';
-import type { CompositePolicy, IPolicyEngine } from '../../policy';
+import type { BasePolicy, CompositePolicy, IPolicyEngine } from '../../policy';
 import {
     BuiltInPolicyType,
     PolicyData,
@@ -21,7 +21,7 @@ import {
 import { PermissionError } from '../error';
 import type { IPermissionProvider } from '../provider';
 
-import type { PermissionPolicyBinding } from '../types.ts';
+import type { PermissionPolicyBindingAggregated } from '../types.ts';
 import type { IPermissionEvaluator, PermissionEvaluationContext, PermissionEvaluatorOptions } from './types.ts';
 
 export class PermissionEvaluator implements IPermissionEvaluator {
@@ -56,7 +56,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
             realmId?: string | null,
             clientId?: string | null
         } = {},
-    ) : Promise<PermissionPolicyBinding | null> {
+    ) : Promise<PermissionPolicyBindingAggregated | null> {
         return this.provider.findOne({
             name: input,
             clientId: overrides.clientId ?? this.clientId,
@@ -107,8 +107,16 @@ export class PermissionEvaluator implements IPermissionEvaluator {
                 continue;
             }
 
-            const policies = binding.policies ?? [];
-            if (policies.length === 0) {
+            // The actor's grants for this permission form a disjunction: a single policy-free
+            // grant is unrestricted, otherwise the permission passes iff ANY grant's policy
+            // passes (AFFIRMATIVE). Each grant's policy already carries its own decision_strategy
+            // (a composite for multi-policy Layer-1 bindings, the raw policy for single).
+            const grantPolicies = binding.grants
+                .map((grant) => grant.policy)
+                .filter((grantPolicy): grantPolicy is BasePolicy => !!grantPolicy);
+
+            if (grantPolicies.length < binding.grants.length) {
+                // some grant is policy-free => unrestricted
                 if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
                     return;
                 }
@@ -121,13 +129,10 @@ export class PermissionEvaluator implements IPermissionEvaluator {
             const data = dataBase.clone();
             data.set(BuiltInPolicyType.PERMISSION_BINDING, binding);
 
-            const policyDecisionStrategy = binding.permission.decision_strategy ??
-                DecisionStrategy.UNANIMOUS;
-
             const compositePolicy : CompositePolicy = {
                 type: BuiltInPolicyType.COMPOSITE,
-                decision_strategy: policyDecisionStrategy,
-                children: policies,
+                decision_strategy: DecisionStrategy.AFFIRMATIVE,
+                children: grantPolicies,
             };
 
             const evaluationResult = await this.policyEngine.evaluate(

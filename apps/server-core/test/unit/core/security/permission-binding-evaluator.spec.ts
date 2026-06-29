@@ -23,10 +23,9 @@ import { FakeIdentityPermissionProvider } from '../helpers/index.ts';
  * An actor can hold several grants for the SAME permission with different
  * (realm_scope, policy). Access is the DISJUNCTION over grants:
  *   ∃ grant . realmScopeMatches(grant.realm_scope, resource) ∧ (grant.policies pass)
- * keeping each grant's realm reach paired with its OWN policies. This guards against:
+ * keeping each grant's realm reach paired with its OWN policy. This guards against:
  *  - UNDER-grant: a policy-free `own` grant must not mask a policy-bound `any` grant's
- *    legitimately wider reach (the collapsed binding folds scope from the policy-free
- *    subset only).
+ *    legitimately wider reach.
  *  - OVER-grant: an `own`-scoped grant's passing policy must not ride an `any`-scoped
  *    grant's wider reach when the `any` grant's own policy fails.
  */

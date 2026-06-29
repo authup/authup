@@ -9,9 +9,10 @@ import type {
     BasePolicy,
     IPermissionProvider,
     PermissionGetOptions,
-    PermissionPolicyBinding,
+    PermissionPolicyBindingAggregated,
 } from '@authup/access';
 import {
+    aggregatePermissionPolicyBindings,
     buildPermissionKey,
 } from '@authup/access';
 import { buildCacheKey } from '@authup/server-kit';
@@ -40,7 +41,7 @@ export class PermissionDatabaseProvider implements IPermissionProvider {
         this.policyRepository = new PolicyRepository(this.dataSource);
     }
 
-    async findOne(options: PermissionGetOptions) : Promise<PermissionPolicyBinding | null> {
+    async findOne(options: PermissionGetOptions) : Promise<PermissionPolicyBindingAggregated | null> {
         const where : FindOptionsWhere<PermissionEntity> = { name: options.name };
 
         if (typeof options.clientId !== 'undefined') {
@@ -82,10 +83,14 @@ export class PermissionDatabaseProvider implements IPermissionProvider {
                 }
             }
 
-            return {
-                permission: entity,
-                policies: policies.length > 0 ? policies : undefined,
-            };
+            const [aggregated] = aggregatePermissionPolicyBindings([
+                {
+                    permission: entity,
+                    policies: policies.length > 0 ? policies : undefined,
+                },
+            ]);
+
+            return aggregated ?? null;
         }
 
         return null;

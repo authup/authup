@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildPermissionKey, mergePermissionPolicyBindings } from '../helpers';
-import type { PermissionPolicyBinding } from '../types';
+import { aggregatePermissionPolicyBindings, buildPermissionKey } from '../helpers';
+import type { PermissionPolicyBinding, PermissionPolicyBindingAggregated } from '../types';
 import type { IPermissionProvider, PermissionGetOptions } from './types';
 
 export class PermissionMemoryProvider implements IPermissionProvider {
-    protected items : Record<string, PermissionPolicyBinding> = {};
+    protected items : Record<string, PermissionPolicyBindingAggregated> = {};
 
     constructor(items: PermissionPolicyBinding[] = []) {
         this.setMany(items);
@@ -18,7 +18,7 @@ export class PermissionMemoryProvider implements IPermissionProvider {
 
     async findOne(
         options: PermissionGetOptions,
-    ): Promise<PermissionPolicyBinding | null> {
+    ): Promise<PermissionPolicyBindingAggregated | null> {
         const key = buildPermissionKey({
             name: options.name,
             client_id: options.clientId,
@@ -34,11 +34,11 @@ export class PermissionMemoryProvider implements IPermissionProvider {
     }
 
     setMany(input: PermissionPolicyBinding[]) {
-        this.items = mergePermissionPolicyBindings(input)
+        this.items = aggregatePermissionPolicyBindings(input)
             .reduce((prev, current) => {
                 const key = buildPermissionKey(current.permission);
                 prev[key] = current;
                 return prev;
-            }, {} as Record<string, PermissionPolicyBinding>);
+            }, {} as Record<string, PermissionPolicyBindingAggregated>);
     }
 }

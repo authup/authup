@@ -736,20 +736,19 @@ fail-open drop can never touch realm reach. A **realm-less / anonymous** actor c
 satisfy `own`/`ownOrNull` (only `any`), and the factor neutral-passes when no `realmMatch`
 key is present (`preEvaluate` / gate checks / realm-less resources).
 
-**Reach and policy are paired PER GRANT — a disjunction, not a folded MAX (issue #3155).**
-An actor can hold several grants for the *same* permission with different
-`(realm_scope, policy_id)`. The evaluator reads the merged binding's `grants[]` (one
-`{ realm_scope, policies }` term per original grant, emitted by `mergePermissionPolicyBindings`)
-and grants access iff **∃ grant . `realmScopeMatches(grant.realm_scope, resource)` ∧
-(grant's `policies` pass)** — each grant's reach stays paired with its OWN policies. This is
-strictly more correct than collapsing to a single `(realm_scope, policies)` and was needed in
-both directions: a policy-free `own` grant must not MASK a policy-bound `any` grant's wider
-reach (the under-grant the issue reported), and an `own` grant's passing policy must not RIDE
-an `any` grant's wider reach when that `any` grant's own policy fails (the symmetric
-over-grant). The binding's top-level `realm_scope` is still a **lossy collapse** (ordered-MAX,
-but folded over the *policy-free subset only* when a policy-free grant is present, so it stays
-fail-closed — an admin's `any` still dominates a stray `own`) consumed only by `isSuperset`,
-junction-grant propagation, and the memory provider — never the access decision.
+**Reach and policy are paired PER GRANT — a disjunction, not a folded MAX (issue #3155,
+plan 036).** An actor can hold several grants for the *same* permission with different
+`(realm_scope, policy_id)`. `aggregatePermissionPolicyBindings` groups the raw bindings into a
+`PermissionPolicyBindingAggregated` = `{ permission, grants: { realm_scope, policy }[] }` — the
+actor's **disjunction** of grants, with **no lossy collapse**. Every consumer evaluates that
+disjunction directly: access is granted iff **∃ grant . `realmScopeMatches(grant.realm_scope,
+resource)` ∧ (grant's `policy` passes)**, so each grant's reach stays paired with its OWN
+policy. This is needed in both directions: a policy-free `own` grant must not MASK a
+policy-bound `any` grant's wider reach (the under-grant the issue reported), and an `own`
+grant's passing policy must not RIDE an `any` grant's wider reach when that `any` grant's own
+policy fails (the symmetric over-grant). There is no collapsed `realm_scope` anymore — the
+predecessor `mergePermissionPolicyBindings`, which folded a single lossy `(realm_scope,
+policies)` per key, was removed in favour of the disjunction.
 
 **Resources present their realm under the `realmMatch` PolicyData key — entities AND
 junctions.** Entity services derive it from the ATTRIBUTES `realm_id` via
@@ -853,11 +852,12 @@ baseline `system.realm-match` child and
 the `system.realm-bound` / `system.realm-or-global` policies were **removed** in favour of the
 enum; the `REALM_MATCH` policy *type* is retained for user-defined actor-relative policies.
 
-### PermissionBinding Type
+### PermissionBinding & aggregated grants
 
 ```typescript
 // packages/access/src/permission/types.ts
-export type PermissionBinding = {
+// Raw binding — one permission grant as loaded from a role/identity junction.
+export type PermissionPolicyBinding = {
     permission: {
         name: string,
         client_id?: string | null,
@@ -867,27 +867,34 @@ export type PermissionBinding = {
     policies?: PolicyWithType[],
     // realm reach of this grant (a separate factor from `policies`)
     realm_scope?: 'none' | 'own' | 'ownOrNull' | 'any',  // relative, default own
-    // per-grant disjunction terms emitted by mergePermissionPolicyBindings — one
-    // { realm_scope, policies, decision_strategy } per original grant; the evaluator
-    // ORs `reach ∧ policies` across them (top-level realm_scope/policies stay a lossy
-    // collapse for the non-evaluator consumers).
-    grants?: PermissionPolicyBindingGrant[],
+};
+
+// aggregatePermissionPolicyBindings(raw[]) groups by permission key into the actor's
+// disjunction of grants — the lossless replacement for the old collapsed binding.
+export type PermissionGrant = {
+    realm_scope: 'none' | 'own' | 'ownOrNull' | 'any',   // normalized, fail-closed default own
+    policy?: PolicyWithType,                             // single junction policy (id kept) or a composite
+};
+export type PermissionPolicyBindingAggregated = {
+    permission: BasePermission,
+    grants: PermissionGrant[],
 };
 ```
 
-A permission binding wraps a permission entity with its associated policies. The permission is uniquely identified by `name + client_id + realm_id`. The `policies` array contains:
+A raw `PermissionPolicyBinding` wraps a permission entity with its associated policies. The
+permission is uniquely identified by `name + client_id + realm_id`. The `policies` array
+contains:
 - **Permission-level** (Layer 1): n:m policies from `auth_permission_policies` (loaded by `PermissionDatabaseProvider`)
 - **Junction-level** (Layer 2): the single junction policy from `role_permission.policy_id` etc. (loaded by `getBoundPermissions()`)
 
-The binding also carries the grant's **realm reach** (`realm_scope`) as a **separate
-factor from `policies`** — a coarse, actor-relative enum (`none < own < ownOrNull <
-any`), ANDed with that grant's `policies` and evaluated inside `system.permission-binding`
-against the resource `realm_id`. It is a first-class binding field, **not** part of the
-binding identity key and never folded into the `policies` list (so it is immune to the
-fail-open policy merge). When an actor holds multiple grants for one permission key, the
-merge preserves each grant's `(realm_scope, policies)` as a `grants[]` disjunction term and
-the evaluator ORs `reach ∧ policies` across them (the top-level `realm_scope` is a lossy
-ordered-MAX collapse for the non-evaluator consumers — see
+Each grant carries its **realm reach** (`realm_scope`) as a **separate factor from its
+`policy`** — a coarse, actor-relative enum (`none < own < ownOrNull < any`), ANDed with that
+grant's policy and evaluated inside `system.permission-binding` against the resource
+`realm_id`. It is **not** part of the binding identity key and is never folded into the policy
+expression (so it is immune to the fail-open policy merge). When an actor holds multiple grants
+for one permission key, `aggregatePermissionPolicyBindings` keeps each `(realm_scope, policy)`
+as a distinct grant and every consumer — the binding evaluator, `isSuperset`, junction-grant
+propagation, the memory provider — evaluates the disjunction directly (see
 [Realm reach](#realm-reach-is-a-coarse-realm_scope-enum-on-the-grant-not-a-policy)). There
 is no absolute realm-id allowlist on the grant — a specific-realm-set restriction is
 expressed via a `policy_id` `ATTRIBUTES` policy. See
