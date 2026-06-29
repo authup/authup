@@ -150,6 +150,17 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
             throw new EntityNotFoundError();
         }
 
+        // realm_id is derived from the role, never caller-supplied: refresh it when the role
+        // is reassigned (validateJoinColumns loaded data.role), otherwise drop any submitted
+        // realm_id so the role-derived value is kept. Without this, a role reassignment would
+        // be authorized against the stale realm, and a caller could pass realm_id to evaluate
+        // ROLE_UPDATE against a realm of their choosing.
+        if (data.role) {
+            data.realm_id = data.role.realm_id;
+        } else {
+            delete data.realm_id;
+        }
+
         entity = this.repository.merge(entity, data);
 
         await actor.permissionEvaluator.evaluate({

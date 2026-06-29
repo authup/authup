@@ -187,6 +187,48 @@ describe('core/entities/role-attribute/service', () => {
                 service.update(entity.id, { value: 'x' }, actor),
             ).rejects.toBeInstanceOf(PermissionError);
         });
+
+        it('ignores a caller-supplied realm_id (realm stays role-derived, no gate bypass)', async () => {
+            const entity = repository.seed(createFakeRoleAttribute({ realm_id: 'realm-b' } as Partial<RoleAttribute>));
+            const actor = createAllowAllActor();
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'evaluate' && call.ctx.name === PermissionName.ROLE_UPDATE) {
+                    const realm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
+                        call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
+                        undefined;
+                    if (typeof realm !== 'undefined' && realm !== 'realm-a') {
+                        throw PermissionError.denied('realm');
+                    }
+                }
+            });
+
+            // The actor tries to gate the write against their own realm by supplying realm_id;
+            // it must be ignored, so the evaluation still runs against the role realm (realm-b).
+            await expect(
+                service.update(entity.id, { value: 'x', realm_id: 'realm-a' }, actor),
+            ).rejects.toBeInstanceOf(PermissionError);
+        });
+
+        it('refreshes realm_id from the new role on reassignment', async () => {
+            const entity = repository.seed(createFakeRoleAttribute({ realm_id: 'realm-a' } as Partial<RoleAttribute>));
+            const actor = createAllowAllActor();
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'evaluate' && call.ctx.name === PermissionName.ROLE_UPDATE) {
+                    const realm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
+                        call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
+                        undefined;
+                    if (typeof realm !== 'undefined' && realm !== 'realm-a') {
+                        throw PermissionError.denied('realm');
+                    }
+                }
+            });
+
+            // Reassign to a role in realm-b: the gate must see the NEW role realm (realm-b),
+            // not the stale realm-a (which would have neutral-passed before the fix).
+            await expect(
+                service.update(entity.id, { role_id: 'r2', role: { realm_id: 'realm-b' } }, actor),
+            ).rejects.toBeInstanceOf(PermissionError);
+        });
     });
 
     describe('delete', () => {
