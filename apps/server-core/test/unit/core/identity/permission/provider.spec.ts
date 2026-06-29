@@ -135,5 +135,23 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             expect(result.realmScope).toBe(RealmScope.OWN);
             expect(result.policy).toBeUndefined();
         });
+
+        it('fails closed (none) when the ceiling policy is not a propagatable Policy', async () => {
+            // Two policies => buildGrant wraps them in a composite (no id) => not isPolicy.
+            // The grant is policy-RESTRICTED, so it must NOT degrade to an unrestricted grant.
+            const provider = createProvider({
+                actor: [
+                    {
+                        permission: { name: 'user_read' },
+                        policies: [policy, { type: BuiltInPolicyType.REALM_MATCH } as any],
+                        realm_scope: RealmScope.ANY,
+                    },
+                ],
+            });
+
+            const result = await provider.resolveJunctionGrant({ type: 'role', id: 'actor' }, { name: 'user_read' });
+            expect(result.realmScope).toBe(RealmScope.NONE);
+            expect(result.policy).toBeUndefined();
+        });
     });
 });

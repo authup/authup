@@ -109,8 +109,11 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             return { realmScope: RealmScope.OWN };
         }
 
-        const [aggregated] = aggregatePermissionPolicyBindings(matching);
-        if (!aggregated || aggregated.grants.length === 0) {
+        // Consider EVERY matching grant (a caller omitting realmId/clientId may leave more
+        // than one permission-key group) so the ceiling never depends on repository order.
+        const grants = aggregatePermissionPolicyBindings(matching)
+            .flatMap((item) => item.grants);
+        if (grants.length === 0) {
             return { realmScope: RealmScope.OWN };
         }
 
@@ -118,10 +121,18 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         // policy-free preferred on a tie). The capped junction `(min(requested, ceiling.scope),
         // ceiling.policy)` is then dominated by a real held grant, so the creator never confers
         // reach/policy it does not itself hold.
-        const ceiling = selectCeilingGrant(aggregated.grants);
+        const ceiling = selectCeilingGrant(grants);
 
         let policy: Policy | undefined;
-        if (ceiling.policy && isPolicy(ceiling.policy)) {
+        if (ceiling.policy) {
+            // The ceiling is policy-restricted but its policy is not a propagatable Policy
+            // (e.g. a composite with no id). Fail CLOSED: a `none` reach blocks propagation
+            // rather than silently dropping the restriction and widening to an unrestricted
+            // grant.
+            if (!isPolicy(ceiling.policy)) {
+                return { realmScope: RealmScope.NONE };
+            }
+
             policy = ceiling.policy;
         }
 
