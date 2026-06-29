@@ -18,7 +18,7 @@ import {
     it,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
-import { PermissionError } from '@authup/access';
+import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import { UserAttributeService } from '../../../../../src/core/entities/user-attribute/service.ts';
 import { 
     FakeEntityRepository, 
@@ -300,6 +300,31 @@ describe('core/entities/user-attribute/service', () => {
             actor.permissionEvaluator.deny('evaluate');
 
             await expect(service.update(entity.id, { value: 'new' }, actor)).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+        });
+
+        it('ignores a caller-supplied realm_id (no USER_UPDATE gate bypass)', async () => {
+            const entity = repository.seed(createFakeUserAttribute({
+                value: 'val',
+                user_id: randomUUID(),
+                realm_id: 'realm-b',
+            } as Partial<UserAttribute>));
+            const actor = createAllowAllActor();
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'evaluate' && call.ctx.name === PermissionName.USER_UPDATE) {
+                    const realm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
+                        call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
+                        undefined;
+                    if (typeof realm !== 'undefined' && realm !== 'realm-a') {
+                        throw PermissionError.denied('realm');
+                    }
+                }
+            });
+
+            // The actor supplies their own realm to gate the write against it; it must be
+            // ignored, so USER_UPDATE still evaluates against the user realm (realm-b).
+            await expect(
+                service.update(entity.id, { value: 'x', realm_id: 'realm-a' }, actor),
+            ).rejects.toBeInstanceOf(PermissionError);
         });
     });
 

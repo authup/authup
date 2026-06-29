@@ -181,6 +181,16 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_SELF_MANAGE });
         }
 
+        // realm_id is derived from the user, never caller-supplied: refresh it from data.user
+        // on reassignment, otherwise drop any submitted realm_id so the user-derived value is
+        // kept. Without this a role/user reassignment would authorize against the stale realm,
+        // and a caller could pass realm_id to evaluate USER_UPDATE against a realm of choosing.
+        if (data.user) {
+            data.realm_id = data.user.realm_id;
+        } else {
+            delete data.realm_id;
+        }
+
         entity = this.repository.merge(entity, data);
 
         if (isSelfFallback) {
