@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PermissionError, PolicyData } from '@authup/access';
+import { BuiltInPolicyType, PermissionError, definePolicyData } from '@authup/access';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
 import { PermissionName, RobotRoleValidator } from '@authup/core-kit';
@@ -117,7 +117,10 @@ export class RobotRoleService extends JunctionEntityService implements IRobotRol
         // Stamp the owner (robot) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_ROLE_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated) }),
+            data: definePolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated),
+                [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(validated),
+            }),
         });
 
         let entity = this.repository.create(validated);
@@ -140,7 +143,10 @@ export class RobotRoleService extends JunctionEntityService implements IRobotRol
         // Stamp the owner (robot) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_ROLE_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) }),
+            data: definePolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
+                [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(entity),
+            }),
         });
 
         const { id: entityId } = entity;

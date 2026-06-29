@@ -7,7 +7,7 @@
 
 import { type Store } from '@authup/client-web-kit';
 import type { IdentityPolicyData } from '@authup/access';
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import type { NavigationItem } from '@vuecs/navigation';
 
 import { LayoutSideDefaultNavigation } from './contants';
@@ -99,7 +99,7 @@ export class Navigation {
                     try {
                         await this.store.permissionEvaluator.preEvaluateOneOf({
                             name: permissions,
-                            input: new PolicyData({ [BuiltInPolicyType.IDENTITY]: identity }),
+                            data: definePolicyData({ [BuiltInPolicyType.IDENTITY]: identity }),
                         });
                     } catch {
                         return undefined;

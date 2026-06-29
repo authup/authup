@@ -726,37 +726,43 @@ total order and a fail-closed default:
 | **`any`** | always — any realm incl. null | `admin` |
 
 It is enforced inside the server-core `PermissionBindingPolicyEvaluator` (a separate
-factor, ANDed with the junction's `policy_id` policies), **only when the evaluated
-resource ATTRIBUTES carry a canonical `realm_id` key** (a single id, `null`, or an array
-of ids — `realmScopeMatches` requires the scope to reach every listed realm). A
-**realm-less / anonymous** actor can never satisfy `own`/`ownOrNull` (only `any`), and
-the factor is skipped entirely on `preEvaluate` / gate checks (no ATTRIBUTES). Merge
-across an actor's grants = ordered **MAX** (most permissive wins), so an admin's `any`
-dominates a stray `own` grant.
+factor, ANDed with the junction's `policy_id` policies) by invoking the
+`RealmMatchPolicyEvaluator` in **SCOPE MODE**: the merged grant `realm_scope` is matched
+against the resource realm supplied under the **`realmMatch` PolicyData key** (a single id,
+`null`, or an array of ids — `realmScopeMatches` requires the scope to reach every listed
+realm). The realm-match call is made **directly** (not via the policy engine — `realmMatch`
+is in `policiesExcluded`) and stays **outside** the `policies[]` merge, so the policy-free
+fail-open drop can never touch realm reach. A **realm-less / anonymous** actor can never
+satisfy `own`/`ownOrNull` (only `any`), and the factor neutral-passes when no `realmMatch`
+key is present (`preEvaluate` / gate checks / realm-less resources). Merge across an actor's
+grants = ordered **MAX** (most permissive wins), so an admin's `any` dominates a stray
+`own` grant.
 
-**Resources present their realm via the canonical `realm_id` key — entities AND
-junctions.** Entities carry `realm_id` as a column. Junction services
-(`role/user/client/robot-permission`, `user/client/robot-role`, `client-scope`,
+**Resources present their realm under the `realmMatch` PolicyData key — entities AND
+junctions.** Entity services derive it from the ATTRIBUTES `realm_id` via
+`AbstractEntityService.resourceRealmMatch` (set only when the source carries `realm_id`, so a
+self-edit UPDATE — where the validator strips `realm_id` — leaves the key absent and
+neutral-passes; `realm_id` also stays in ATTRIBUTES for the self-manage denylists). Junction
+services (`role/user/client/robot-permission`, `user/client/robot-role`, `client-scope`,
 `identity-provider-role-mapping`, `permission-policy`) carry no top-level `realm_id`
-(only `owner_realm_id`/`permission_realm_id`), so they **stamp their OWNER realm**
+(only `owner_realm_id`/`permission_realm_id`), so they set their **OWNER realm**
 (`role_realm_id` for role-permission, `user_realm_id` for user-role, `client_realm_id`
-for client-scope, …) onto a COPY of the `evaluate()` input. So a junction write to
-another realm's entity is realm-gated like a direct entity write — a `realm_admin` in
-realm A cannot bind a permission/role/scope onto a realm-B role/user/client even though
-the permission itself is global. (The *member* side — the permission/role being attached
-— is gated separately by the superset `preEvaluate`.) Stamping a `null` owner (a global
-entity) under `own` correctly denies, consistent with a `realm_admin` not being able to
-write a global base entity.
+for client-scope, … via `JunctionEntityService.junctionResourceRealm`) under the `realmMatch`
+key — junction ATTRIBUTES carry only genuine columns. So a junction write to another realm's
+entity is realm-gated like a direct entity write — a `realm_admin` in realm A cannot bind a
+permission/role/scope onto a realm-B role/user/client even though the permission itself is
+global. (The *member* side — the permission/role being attached — is gated separately by the
+superset `preEvaluate`.) Setting a `null` owner (a global entity) under `own` correctly
+denies, consistent with a `realm_admin` not being able to write a global base entity.
 
-> **Known limitation (tracked for the PolicyData redesign):** the factor reads the resource
-> realm from `realm_id` in the **ATTRIBUTES** bag, uniformly for entities and junctions. For
-> an entity that `realm_id` is a real column; for a junction it is *synthetic* (the stamped
-> owner realm). So an `ATTRIBUTE_NAMES` allowlist policy attached to a **junction** permission
-> would (mis)see the synthetic `realm_id` and reject. No default junction permission carries
-> such a policy, so this is latent — but **do not attach an `ATTRIBUTE_NAMES` allowlist to a
-> junction permission**. The clean fix is to carry the resource realm as evaluation *context*
-> (separate from the policy-type ATTRIBUTES bag); it is deferred to the broader rethink of how
-> `PolicyData` is built and passed to evaluators.
+> **One evaluator, no ATTRIBUTES pollution (plan 035):** the resource realm rides the dedicated
+> `realmMatch` PolicyData key — a legit policy-type slot read only by `RealmMatchPolicyEvaluator`
+> — instead of being stamped into the ATTRIBUTES bag. So `realm_scope` reach and user-authored
+> realm-match policies share **one** evaluator (SCOPE MODE vs attribute-name mode), and an
+> `ATTRIBUTE_NAMES` allowlist on a junction permission no longer mis-sees a synthetic `realm_id`
+> (junction ATTRIBUTES carry only genuine columns). The realm-match evaluator reads the realm
+> ONLY from `realmMatch` (single-source — an ATTRIBUTES `realm_id` is not a realm source for the
+> scope factor).
 
 > **Dependency:** this factor runs inside `PermissionBindingPolicyEvaluator`, i.e. only when
 > `system.default` is bound to the operation permission. Universal binding to every permission

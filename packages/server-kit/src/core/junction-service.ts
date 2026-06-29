@@ -10,10 +10,10 @@ import { AbstractEntityService } from './service';
 /**
  * Base class for junction/association entity services (role-permission, user-role,
  * client-scope, …) whose rows carry no top-level `realm_id`, only the realm of the
- * entities they link. Realm gating of a junction write therefore depends on stamping
- * the OWNER entity's realm as the canonical `realm_id` onto the `evaluate()` input —
- * without it the realm_scope factor neutral-passes and the write fails OPEN
- * (silent cross-realm leak).
+ * entities they link. The OWNER entity's realm gates a junction write — it is supplied to
+ * the realm_scope reach factor under the `realmMatch` PolicyData key (RealmMatchPolicyEvaluator
+ * SCOPE MODE), NOT stamped into ATTRIBUTES — so junction ATTRIBUTES carry only genuine
+ * columns and an ATTRIBUTE_NAMES policy never mis-sees a synthetic `realm_id`.
  */
 export abstract class JunctionEntityService extends AbstractEntityService {
     /**
@@ -26,22 +26,21 @@ export abstract class JunctionEntityService extends AbstractEntityService {
     protected abstract readonly ownerRealmKey: string;
 
     /**
-     * Build the ATTRIBUTES for a permission `evaluate()` on a junction row, stamping the
-     * owner realm as the canonical `realm_id` onto a COPY (never the persisted entity).
-     * Use this instead of spreading `realm_id` by hand so a junction can never silently
-     * skip the stamp.
-     *
-     * KNOWN LIMITATION: the realm_scope factor reads the resource realm from `realm_id` in
-     * the ATTRIBUTES bag (uniform with entity resources, which carry a real `realm_id`
-     * column). For a junction this `realm_id` is *synthetic* — the owner realm, not a real
-     * junction attribute — so an `ATTRIBUTE_NAMES` allowlist policy attached to a junction
-     * permission would (mis)see it and reject. No default junction permission has such a
-     * policy, so this is latent; the proper fix (carry the resource realm as evaluation
-     * context, separate from the policy-type ATTRIBUTES bag) is tracked for the PolicyData
-     * redesign — do NOT attach an `ATTRIBUTE_NAMES` allowlist to a junction permission until
-     * then.
+     * The junction's genuine attributes for a permission `evaluate()` — a COPY of the row
+     * (never the persisted entity). No synthetic `realm_id`; the owner realm travels
+     * separately via {@link junctionResourceRealm}.
      */
     protected junctionAttributes(entity: Record<string, any>): Record<string, any> {
-        return { ...entity, realm_id: entity[this.ownerRealmKey] ?? null };
+        return { ...entity };
+    }
+
+    /**
+     * The OWNER realm for the realm_scope reach factor — set under the `realmMatch` PolicyData
+     * key alongside ATTRIBUTES. A `null` owner (global) is matched (and `own` correctly denies
+     * it). Reading `ownerRealmKey` keeps the compile-time guard: a junction cannot silently
+     * skip its realm.
+     */
+    protected junctionResourceRealm(entity: Record<string, any>): string | null {
+        return entity[this.ownerRealmKey] ?? null;
     }
 }

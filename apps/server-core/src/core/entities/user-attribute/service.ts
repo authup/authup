@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PermissionError, PolicyData } from '@authup/access';
+import { BuiltInPolicyType, PermissionError, definePolicyData } from '@authup/access';
 import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import { PermissionName } from '@authup/core-kit';
 import type { UserAttribute } from '@authup/core-kit';
@@ -136,12 +136,12 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         if (isSelfFallback) {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.USER_SELF_MANAGE,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { [data.name]: data.value } }),
+                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { [data.name]: data.value } }),
             });
         } else {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.USER_UPDATE,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
             });
         }
 
@@ -181,17 +181,26 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_SELF_MANAGE });
         }
 
+        // An attribute belongs to a fixed user; its owner (and the user-derived realm_id) is
+        // IMMUTABLE on update — strip both from the body. This blocks a self-manage or admin
+        // caller from reassigning the attribute to another user (isSelfTarget was decided from
+        // the ORIGINAL owner), and blocks a caller-supplied realm_id that would gate USER_UPDATE
+        // against a realm of their choosing. To move an attribute, delete + recreate.
+        delete data.user_id;
+        delete data.user;
+        delete data.realm_id;
+
         entity = this.repository.merge(entity, data);
 
         if (isSelfFallback) {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.USER_SELF_MANAGE,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { [entity.name]: entity.value } }),
+                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { [entity.name]: entity.value } }),
             });
         } else {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.USER_UPDATE,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
             });
         }
 
@@ -243,7 +252,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         try {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.USER_UPDATE,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
             });
 
             return true;

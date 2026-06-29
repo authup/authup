@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import { PermissionName } from '@authup/core-kit';
 import type { RoleAttribute } from '@authup/core-kit';
@@ -57,7 +57,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
                         PermissionName.ROLE_UPDATE,
                         PermissionName.ROLE_DELETE,
                     ],
-                    input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+                    data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
                 });
                 data.push(entity);
             } catch {
@@ -97,7 +97,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
                 PermissionName.ROLE_UPDATE,
                 PermissionName.ROLE_DELETE,
             ],
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
         });
 
         return entity;
@@ -121,7 +121,10 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { [data.name]: data.value } }),
+            data: definePolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: { [data.name]: data.value },
+                ...this.resourceRealmMatch(entity),
+            }),
         });
 
         await this.repository.save(entity);
@@ -147,11 +150,23 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
             throw new EntityNotFoundError();
         }
 
+        // An attribute belongs to a fixed role; its owner (and the role-derived realm_id) is
+        // IMMUTABLE on update — strip both from the body. This blocks reassigning the attribute
+        // to another role (which would otherwise be authorized against the new realm, not the
+        // one the attribute currently lives in) and blocks a caller-supplied realm_id that would
+        // gate ROLE_UPDATE against a realm of their choosing. To move an attribute, delete + recreate.
+        delete data.role_id;
+        delete data.role;
+        delete data.realm_id;
+
         entity = this.repository.merge(entity, data);
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { [entity.name]: entity.value } }),
+            data: definePolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: { [entity.name]: entity.value },
+                ...this.resourceRealmMatch(entity),
+            }),
         });
 
         await this.repository.save(entity);
@@ -172,7 +187,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
         });
 
         const { id: entityId } = entity;

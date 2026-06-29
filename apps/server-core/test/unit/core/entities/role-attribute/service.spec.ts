@@ -15,7 +15,7 @@ import {
     it,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
-import { PermissionError } from '@authup/access';
+import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import { RoleAttributeService } from '../../../../../src/core/entities/role-attribute/service.ts';
 import { FakeEntityRepository, createAllowAllActor, createDenyAllActor } from '@authup/server-test-kit';
 import { createFakeRoleAttribute } from '../../../../utils/domains/index.ts';
@@ -52,8 +52,8 @@ describe('core/entities/role-attribute/service', () => {
 
             const actor = createAllowAllActor();
             actor.permissionEvaluator.setBehavior((call) => {
-                if (call.method === 'evaluateOneOf' && call.ctx.input) {
-                    const entity = call.ctx.input.get('attributes') as RoleAttribute;
+                if (call.method === 'evaluateOneOf' && call.ctx.data) {
+                    const entity = call.ctx.data.get('attributes') as RoleAttribute;
                     if (entity && entity.id === denied.id) {
                         throw PermissionError.denied('test');
                     }
@@ -115,9 +115,40 @@ describe('core/entities/role-attribute/service', () => {
                 service.create({
                     name: 'attr',
                     role_id: randomUUID(),
-                    role: { realm_id: null }, 
+                    role: { realm_id: null },
                 }, createDenyAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+        });
+
+        it('evaluates ROLE_UPDATE against the role realm (denies a foreign-realm role)', async () => {
+            // Simulate an own-scoped ROLE_UPDATE grant in realm-a: deny when the evaluated
+            // resource realm (realmMatch) is a different realm. Before the realm context was
+            // wired into create, realmMatch was absent and this neutral-passed (cross-realm leak).
+            const actor = createAllowAllActor();
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'evaluate' && call.ctx.name === PermissionName.ROLE_UPDATE) {
+                    const realm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
+                        call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
+                        undefined;
+                    if (typeof realm !== 'undefined' && realm !== 'realm-a') {
+                        throw PermissionError.denied('realm');
+                    }
+                }
+            });
+
+            await expect(service.create({
+                name: 'attr', 
+                value: 'v', 
+                role_id: randomUUID(), 
+                role: { realm_id: 'realm-a' },
+            }, actor)).resolves.toBeDefined();
+
+            await expect(service.create({
+                name: 'attr', 
+                value: 'v', 
+                role_id: randomUUID(), 
+                role: { realm_id: 'realm-b' },
+            }, actor)).rejects.toBeInstanceOf(PermissionError);
         });
     });
 
@@ -136,6 +167,77 @@ describe('core/entities/role-attribute/service', () => {
             await expect(
                 service.update('non-existent-id', { value: 'x' }, createAllowAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
+        });
+
+        it('evaluates ROLE_UPDATE against the attribute realm (denies a foreign-realm attribute)', async () => {
+            const entity = repository.seed(createFakeRoleAttribute({ realm_id: 'realm-b' } as Partial<RoleAttribute>));
+            const actor = createAllowAllActor();
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'evaluate' && call.ctx.name === PermissionName.ROLE_UPDATE) {
+                    const realm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
+                        call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
+                        undefined;
+                    if (typeof realm !== 'undefined' && realm !== 'realm-a') {
+                        throw PermissionError.denied('realm');
+                    }
+                }
+            });
+
+            await expect(
+                service.update(entity.id, { value: 'x' }, actor),
+            ).rejects.toBeInstanceOf(PermissionError);
+        });
+
+        it('ignores a caller-supplied realm_id (realm stays role-derived, no gate bypass)', async () => {
+            const entity = repository.seed(createFakeRoleAttribute({ realm_id: 'realm-b' } as Partial<RoleAttribute>));
+            const actor = createAllowAllActor();
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'evaluate' && call.ctx.name === PermissionName.ROLE_UPDATE) {
+                    const realm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
+                        call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
+                        undefined;
+                    if (typeof realm !== 'undefined' && realm !== 'realm-a') {
+                        throw PermissionError.denied('realm');
+                    }
+                }
+            });
+
+            // The actor tries to gate the write against their own realm by supplying realm_id;
+            // it must be ignored, so the evaluation still runs against the role realm (realm-b).
+            await expect(
+                service.update(entity.id, { value: 'x', realm_id: 'realm-a' }, actor),
+            ).rejects.toBeInstanceOf(PermissionError);
+        });
+
+        it('treats the owner role as immutable (ignores reassignment; realm stays original)', async () => {
+            const entity = repository.seed(createFakeRoleAttribute({
+                role_id: 'role-original',
+                realm_id: 'realm-a',
+            } as Partial<RoleAttribute>));
+            const actor = createAllowAllActor();
+            let gatedRealm: unknown;
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'evaluate' && call.ctx.name === PermissionName.ROLE_UPDATE) {
+                    gatedRealm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
+                        call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
+                        undefined;
+                }
+            });
+
+            // An attempt to reassign to a realm-b role must be ignored: the write is gated
+            // against — and persists — the ORIGINAL role realm (realm-a), never the attempted one.
+            const result = await service.update(
+                entity.id,
+                {
+                    value: 'x', 
+                    role_id: 'role-other', 
+                    role: { realm_id: 'realm-b' }, 
+                },
+                actor,
+            );
+            expect(gatedRealm).toBe('realm-a');
+            expect(result.realm_id).toBe('realm-a');
+            expect(result.role_id).toBe('role-original');
         });
     });
 

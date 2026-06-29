@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
 import { EntityNotFoundError } from '@authup/errors';
 import {
@@ -140,11 +140,12 @@ export class ScopeService extends AbstractEntityService implements IScopeService
         if (entity) {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.SCOPE_UPDATE,
-                input: new PolicyData({
+                data: definePolicyData({
                     [BuiltInPolicyType.ATTRIBUTES]: {
                         ...entity,
                         ...validated,
                     },
+                    [BuiltInPolicyType.REALM_MATCH]: validated.realm_id ?? entity.realm_id ?? null,
                 }),
             });
 
@@ -165,7 +166,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.SCOPE_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
         });
 
         await this.repository.checkUniqueness(validated);
@@ -192,7 +193,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.SCOPE_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
         });
 
         const { id: entityId } = entity;

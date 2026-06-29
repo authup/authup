@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isObject } from '@authup/kit';
+import { BuiltInPolicyType } from '@authup/access';
+import { hasOwnProperty, isObject } from '@authup/kit';
 import type { ActorContext } from './actor/types';
 
 export abstract class AbstractEntityService {
@@ -24,5 +25,19 @@ export abstract class AbstractEntityService {
         }
 
         return undefined;
+    }
+
+    /**
+     * Resource-realm entry for a permission `evaluate()` input, spread into the PolicyData
+     * literal: `new PolicyData({ [ATTRIBUTES]: x, ...this.resourceRealmMatch(x) })`. It mirrors
+     * ATTRIBUTES `realm_id` PRESENCE — the `realmMatch` key is set only when the source carries
+     * `realm_id`, so a self-edit UPDATE (where the validator strips `realm_id`) leaves the key
+     * ABSENT and the realm_scope reach factor neutral-passes, exactly as the pre-key behavior.
+     * A present `realm_id: null` (global resource) is carried as `null` (and `own` denies it).
+     */
+    protected resourceRealmMatch(source: Record<string, any>): Record<string, any> {
+        return hasOwnProperty(source, 'realm_id') ?
+            { [BuiltInPolicyType.REALM_MATCH]: source.realm_id ?? null } :
+            {};
     }
 }

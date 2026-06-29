@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { ValidatorGroup, base64URLDecode, isUUID } from '@authup/kit';
 import {
     DBody,
@@ -123,7 +123,7 @@ export class IdentityProviderController {
                 try {
                     await permissionEvaluator.evaluate({
                         name: PermissionName.IDENTITY_PROVIDER_READ,
-                        input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: datum }),
+                        data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: datum, [BuiltInPolicyType.REALM_MATCH]: datum.realm_id ?? null }),
                     });
                 } catch {
                     // do nothing
@@ -159,7 +159,7 @@ export class IdentityProviderController {
             const permissionEvaluator = useRequestPermissionEvaluator(event);
             await permissionEvaluator.evaluate({
                 name: PermissionName.IDENTITY_PROVIDER_READ,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, [BuiltInPolicyType.REALM_MATCH]: entity.realm_id ?? null }),
             });
         } catch {
             // do nothing
@@ -204,7 +204,7 @@ export class IdentityProviderController {
 
         await permissionEvaluator.evaluate({
             name: PermissionName.IDENTITY_PROVIDER_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, [BuiltInPolicyType.REALM_MATCH]: entity.realm_id ?? null }),
         });
 
         const { id: entityId } = entity;
@@ -408,11 +408,12 @@ export class IdentityProviderController {
         if (entity) {
             await permissionEvaluator.evaluate({
                 name: PermissionName.IDENTITY_PROVIDER_UPDATE,
-                input: new PolicyData({
+                data: definePolicyData({
                     [BuiltInPolicyType.ATTRIBUTES]: {
                         ...entity,
                         ...data,
                     },
+                    [BuiltInPolicyType.REALM_MATCH]: data.realm_id ?? entity.realm_id ?? null,
                 }),
             });
         } else {
@@ -423,7 +424,7 @@ export class IdentityProviderController {
 
             await permissionEvaluator.evaluate({
                 name: PermissionName.IDENTITY_PROVIDER_CREATE,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: data }),
+                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: data, [BuiltInPolicyType.REALM_MATCH]: data.realm_id ?? null }),
             });
         }
 

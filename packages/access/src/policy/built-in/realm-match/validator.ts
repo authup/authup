@@ -9,6 +9,7 @@ import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
 import { DecisionStrategy } from '@authup/kit';
+import { RealmScope } from '../../../permission/realm-scope';
 import type { RealmMatchPolicy } from './types';
 
 export class RealmMatchPolicyValidator extends Container<RealmMatchPolicy> {
@@ -49,6 +50,16 @@ export class RealmMatchPolicyValidator extends Container<RealmMatchPolicy> {
             'attribute_null_match_all',
             createValidator(
                 z.boolean()
+                    .or(z.null())
+                    .or(z.undefined())
+                    .optional(),
+            ),
+        );
+
+        this.mount(
+            'scope',
+            createValidator(
+                z.enum(RealmScope)
                     .or(z.null())
                     .or(z.undefined())
                     .optional(),

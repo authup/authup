@@ -15,7 +15,7 @@ import {
 } from '@authup/client-web-kit';
 import { hasOwnProperty, omitRecord } from '@authup/kit';
 import type { RouteLocationAsPathGeneric, RouteLocationNormalized } from 'vue-router';
-import { BuiltInPolicyType, type IdentityPolicyData, PolicyData } from '@authup/access';
+import { BuiltInPolicyType, type IdentityPolicyData, definePolicyData } from '@authup/access';
 import type { NuxtApp } from '#app';
 import { RouteMetaKey } from '../constants';
 import type { RuntimeOptions } from '../types';
@@ -242,7 +242,7 @@ export class RoutingInterceptor {
             try {
                 await this.store.permissionEvaluator.preEvaluateOneOf({
                     name: permissions,
-                    input: new PolicyData({ [BuiltInPolicyType.IDENTITY]: identity }),
+                    data: definePolicyData({ [BuiltInPolicyType.IDENTITY]: identity }),
                 });
             } catch {
                 return false;

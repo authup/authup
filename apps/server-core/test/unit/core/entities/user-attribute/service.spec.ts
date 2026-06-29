@@ -18,7 +18,7 @@ import {
     it,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
-import { PermissionError } from '@authup/access';
+import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import { UserAttributeService } from '../../../../../src/core/entities/user-attribute/service.ts';
 import { 
     FakeEntityRepository, 
@@ -189,7 +189,7 @@ describe('core/entities/user-attribute/service', () => {
                 (c) => c.name === PermissionName.USER_SELF_MANAGE,
             );
             expect(selfManageCalls).toHaveLength(1);
-            const attributes = selfManageCalls[0].input?.get('attributes');
+            const attributes = selfManageCalls[0].data?.get('attributes');
             expect(attributes).toEqual({ theme: 'dark' });
         });
 
@@ -216,7 +216,7 @@ describe('core/entities/user-attribute/service', () => {
                 (c) => c.name === PermissionName.USER_SELF_MANAGE,
             );
             expect(selfManageCalls).toHaveLength(1);
-            const attributes = selfManageCalls[0].input?.get('attributes');
+            const attributes = selfManageCalls[0].data?.get('attributes');
             expect(attributes).toEqual({ theme: 'dark' });
         });
 
@@ -300,6 +300,46 @@ describe('core/entities/user-attribute/service', () => {
             actor.permissionEvaluator.deny('evaluate');
 
             await expect(service.update(entity.id, { value: 'new' }, actor)).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+        });
+
+        it('ignores a caller-supplied realm_id (no USER_UPDATE gate bypass)', async () => {
+            const entity = repository.seed(createFakeUserAttribute({
+                value: 'val',
+                user_id: randomUUID(),
+                realm_id: 'realm-b',
+            } as Partial<UserAttribute>));
+            const actor = createAllowAllActor();
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'evaluate' && call.ctx.name === PermissionName.USER_UPDATE) {
+                    const realm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
+                        call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
+                        undefined;
+                    if (typeof realm !== 'undefined' && realm !== 'realm-a') {
+                        throw PermissionError.denied('realm');
+                    }
+                }
+            });
+
+            // The actor supplies their own realm to gate the write against it; it must be
+            // ignored, so USER_UPDATE still evaluates against the user realm (realm-b).
+            await expect(
+                service.update(entity.id, { value: 'x', realm_id: 'realm-a' }, actor),
+            ).rejects.toBeInstanceOf(PermissionError);
+        });
+
+        it('treats the owner user as immutable on self-manage (cannot reassign to another user)', async () => {
+            const ownerId = randomUUID();
+            const entity = repository.seed(createFakeUserAttribute({ user_id: ownerId, value: 'v' }));
+            // the owner, forced onto the self-manage path (lacks USER_UPDATE)
+            const actor = createUserActor(ownerId);
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.ctx.name === PermissionName.USER_UPDATE) {
+                    throw PermissionError.denied('no user_update');
+                }
+            });
+
+            const result = await service.update(entity.id, { value: 'x', user_id: randomUUID() }, actor);
+            expect(result.user_id).toBe(ownerId);
         });
     });
 

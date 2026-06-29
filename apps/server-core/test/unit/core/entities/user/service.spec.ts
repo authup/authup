@@ -283,7 +283,7 @@ describe('core/entities/user/service', () => {
                 (c) => c.name === PermissionName.USER_SELF_MANAGE,
             );
             expect(selfManageCall).toBeDefined();
-            const attrs = selfManageCall!.input!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+            const attrs = selfManageCall!.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
             expect(attrs).toHaveProperty('display_name', 'Updated');
             expect(attrs).not.toHaveProperty('id');
             expect(attrs).not.toHaveProperty('active');

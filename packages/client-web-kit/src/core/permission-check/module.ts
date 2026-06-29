@@ -57,14 +57,14 @@ export function createPermissionCheckerReactiveFn(
 
             let outcome: boolean;
 
-            const input = ctx.input || new PolicyData();
+            const input = ctx.data || new PolicyData();
             input.set(BuiltInPolicyType.IDENTITY, identity);
 
             try {
                 computePromise = store.permissionEvaluator
                     .preEvaluateOneOf({
                         ...ctx,
-                        input,
+                        data: input,
                     })
                     .then(() => true)
                     .catch(() => false);

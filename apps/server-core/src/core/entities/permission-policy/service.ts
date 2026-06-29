@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
 import { PermissionName, PermissionPolicyValidator } from '@authup/core-kit';
@@ -93,7 +93,10 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
         // Stamp the owner (permission) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.PERMISSION_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated) }),
+            data: definePolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated),
+                [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(validated),
+            }),
         });
 
         let entity = this.repository.create(validated);
@@ -116,7 +119,10 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
         // Stamp the owner (permission) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.PERMISSION_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) }),
+            data: definePolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
+                [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(entity),
+            }),
         });
 
         const { id: entityId } = entity;

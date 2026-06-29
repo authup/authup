@@ -84,7 +84,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
 
         let count = 0;
 
-        const dataBase = ctx.input || new PolicyData();
+        const dataBase = ctx.data || new PolicyData();
 
         for (const name of ctx.name) {
             const binding = await this.findOne(name, {

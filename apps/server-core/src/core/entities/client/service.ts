@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { ValidatorGroup, isUUID } from '@authup/kit';
 import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import {
@@ -71,7 +71,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
                             PermissionName.CLIENT_UPDATE,
                             PermissionName.CLIENT_DELETE,
                         ],
-                        input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+                        data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
                     });
                     data.push(entity);
                 } catch {
@@ -134,7 +134,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         ) {
             await actor.permissionEvaluator.evaluateOneOf({
                 name: permissionNames,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
             });
         }
 
@@ -252,7 +252,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
             if (isSelfEdit) {
                 await actor.permissionEvaluator.evaluate({
                     name: PermissionName.CLIENT_SELF_MANAGE,
-                    input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+                    data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
                 });
             }
 
@@ -261,7 +261,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
             if (!isSelfEdit) {
                 await actor.permissionEvaluator.evaluate({
                     name: PermissionName.CLIENT_UPDATE,
-                    input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+                    data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
                 });
             }
 
@@ -294,7 +294,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
         });
 
         entity = this.repository.create(validated);
@@ -330,7 +330,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
         });
 
         const { id: entityId } = entity;

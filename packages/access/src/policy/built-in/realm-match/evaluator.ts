@@ -6,10 +6,12 @@
  */
 
 import { DecisionStrategy, hasOwnProperty  } from '@authup/kit';
+import { realmScopeMatches } from '../../../permission/realm-scope';
 import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
 import { maybeInvertPolicyOutcome } from '../../helpers';
 import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
 import { AttributesPolicyEvaluator } from '../attributes';
+import { BuiltInPolicyType } from '../constants';
 import { IdentityPolicyEvaluator } from '../identity';
 import { RealmMatchPolicyValidator } from './validator';
 
@@ -41,6 +43,33 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
                         path: ctx.path,
                     }),
                 ],
+            };
+        }
+
+        // SCOPE MODE: coarse, actor-relative realm reach (the realm_scope mechanism lives
+        // here). The resource realm is supplied under the REALM_MATCH data key. Key-PRESENCE
+        // is the discriminator: an ABSENT realm neutral-passes (gate check / realm-less
+        // resource), while a present `null` (global resource) is matched (and `own` correctly
+        // denies it). Runs BEFORE the attributes-required guard below, since junction / gate
+        // inputs need not carry ATTRIBUTES.
+        if (policy.scope) {
+            if (!ctx.data || !ctx.data.has(BuiltInPolicyType.REALM_MATCH)) {
+                // Non-evaluation (no resource realm) — neutral pass, no `invert`,
+                // mirroring the attribute-mode non-evaluation pass below.
+                return { success: true };
+            }
+
+            const resourceRealm = ctx.data.get<string | string[] | null>(BuiltInPolicyType.REALM_MATCH);
+            return {
+                success: maybeInvertPolicyOutcome(
+                    realmScopeMatches(
+                        policy.scope,
+                        resourceRealm ?? null,
+                        identity.realmId,
+                        identity.realmName,
+                    ),
+                    policy.invert,
+                ),
             };
         }
 
