@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, definePolicyInput } from '@authup/access';
+import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { ValidatorGroup, isUUID } from '@authup/kit';
 import { EntityNotFoundError } from '@authup/errors';
 import {
@@ -75,7 +75,7 @@ export class RobotService extends AbstractEntityService implements IRobotService
                         PermissionName.ROBOT_UPDATE,
                         PermissionName.ROBOT_DELETE,
                     ],
-                    data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+                    data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
                 });
 
                 data.push(entity);
@@ -129,7 +129,7 @@ export class RobotService extends AbstractEntityService implements IRobotService
         if (!isMe) {
             await actor.permissionEvaluator.evaluateOneOf({
                 name: permissionNames,
-                data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
             });
         }
 
@@ -222,12 +222,12 @@ export class RobotService extends AbstractEntityService implements IRobotService
             if (isSelfEdit) {
                 await actor.permissionEvaluator.evaluate({
                     name: PermissionName.ROBOT_SELF_MANAGE,
-                    data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
+                    data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
                 });
             } else {
                 await actor.permissionEvaluator.evaluate({
                     name: PermissionName.ROBOT_UPDATE,
-                    data: definePolicyInput({
+                    data: definePolicyData({
                         [BuiltInPolicyType.ATTRIBUTES]: {
                             ...entity,
                             ...validated,
@@ -263,7 +263,7 @@ export class RobotService extends AbstractEntityService implements IRobotService
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_CREATE,
-            data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
+            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
         });
 
         if (!validated.secret) {
@@ -311,12 +311,12 @@ export class RobotService extends AbstractEntityService implements IRobotService
             // the ATTRIBUTE_NAMES denylist has no keys to reject.
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.ROBOT_SELF_MANAGE,
-                data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: {} }),
+                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: {} }),
             });
         } else {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.ROBOT_DELETE,
-                data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
             });
         }
 

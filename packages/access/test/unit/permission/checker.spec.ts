@@ -16,7 +16,7 @@ import {
     PermissionMemoryProvider, 
     PolicyDefaultEvaluators, 
     PolicyEngine, 
-    definePolicyInput, 
+    definePolicyData, 
 } from '../../../src';
 
 const abilities : PermissionPolicyBinding[] = [
@@ -43,7 +43,7 @@ describe('src/ability/manager.ts', () => {
     it('should work with policy', async () => {
         await evaluator.evaluate({
             name: 'user_edit',
-            data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: { name: 'admin' } }),
+            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { name: 'admin' } }),
         });
     });
 
@@ -53,7 +53,7 @@ describe('src/ability/manager.ts', () => {
         try {
             await evaluator.evaluate({
                 name: 'user_edit',
-                data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: { id: '123' } }),
+                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { id: '123' } }),
             });
         } catch (e) {
             expect(e).toBeInstanceOf(PermissionError);

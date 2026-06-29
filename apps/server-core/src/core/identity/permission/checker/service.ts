@@ -6,7 +6,7 @@
  */
 
 import type { PermissionEvaluationContext } from '@authup/access';
-import { BuiltInPolicyType, PermissionEvaluator, definePolicyInput } from '@authup/access';
+import { BuiltInPolicyType, PermissionEvaluator, definePolicyData } from '@authup/access';
 import type { Result } from '@authup/kit';
 import { hasOwnProperty, isUUID } from '@authup/kit';
 import { EntityNotFoundError, normalizeError } from '@authup/errors';
@@ -61,7 +61,7 @@ export class PermissionCheckerService implements IPermissionCheckerService {
 
         const evaluationContext: PermissionEvaluationContext = {
             name: entity.name,
-            data: definePolicyInput(input),
+            data: definePolicyData(input),
         };
 
         const evaluator = new PermissionEvaluator({

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, definePolicyInput } from '@authup/access';
+import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
 import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import {
@@ -119,7 +119,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
         if (entity) {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.REALM_UPDATE,
-                data: definePolicyInput({
+                data: definePolicyData({
                     [BuiltInPolicyType.ATTRIBUTES]: {
                         ...entity,
                         ...validated,
@@ -142,7 +142,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.REALM_CREATE,
-            data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
         });
 
         entity = this.repository.create(validated);
@@ -189,7 +189,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.REALM_DELETE,
-            data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
         });
 
         const { id: entityId } = entity;

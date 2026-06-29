@@ -6,11 +6,11 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { BuiltInPolicyType, PolicyData, definePolicyInput } from '../../../src';
+import { BuiltInPolicyType, PolicyData, definePolicyData } from '../../../src';
 
 describe('src/policy/input', () => {
     it('builds a PolicyData carrying the well-known keys', () => {
-        const data = definePolicyInput({
+        const data = definePolicyData({
             [BuiltInPolicyType.ATTRIBUTES]: { realm_id: 'r1' },
             [BuiltInPolicyType.REALM_MATCH]: 'r1',
         });
@@ -21,14 +21,14 @@ describe('src/policy/input', () => {
     });
 
     it('accepts unknown keys (open vocabulary for third-party evaluators)', () => {
-        const data = definePolicyInput({ 'x-custom': { foo: 1 } });
+        const data = definePolicyData({ 'x-custom': { foo: 1 } });
 
         expect(data.has('x-custom')).toBe(true);
         expect(data.get('x-custom')).toEqual({ foo: 1 });
     });
 
     it('defaults to an empty bag', () => {
-        const data = definePolicyInput();
+        const data = definePolicyData();
 
         expect(data.has(BuiltInPolicyType.IDENTITY)).toBe(false);
     });

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, definePolicyInput } from '@authup/access';
+import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import { PermissionName } from '@authup/core-kit';
 import type { RoleAttribute } from '@authup/core-kit';
@@ -57,7 +57,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
                         PermissionName.ROLE_UPDATE,
                         PermissionName.ROLE_DELETE,
                     ],
-                    data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+                    data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
                 });
                 data.push(entity);
             } catch {
@@ -97,7 +97,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
                 PermissionName.ROLE_UPDATE,
                 PermissionName.ROLE_DELETE,
             ],
-            data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
         });
 
         return entity;
@@ -121,7 +121,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_UPDATE,
-            data: definePolicyInput({
+            data: definePolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: { [data.name]: data.value },
                 ...this.resourceRealmMatch(entity),
             }),
@@ -154,7 +154,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_UPDATE,
-            data: definePolicyInput({
+            data: definePolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: { [entity.name]: entity.value },
                 ...this.resourceRealmMatch(entity),
             }),
@@ -178,7 +178,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_UPDATE,
-            data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
         });
 
         const { id: entityId } = entity;

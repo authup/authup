@@ -6,7 +6,7 @@
  */
 
 import type { PermissionEvaluationOptions } from '@authup/access';
-import { definePolicyInput } from '@authup/access';
+import { definePolicyData } from '@authup/access';
 import { 
     SlotName, 
     createPermissionCheckerReactiveFn, 
@@ -30,7 +30,7 @@ export const APermissionCheck = defineComponent({
 
         const isPermitted = computed(() => fn({
             name: props.name,
-            data: definePolicyInput(props.input),
+            data: definePolicyData(props.input),
             options: props.options,
         }));
 

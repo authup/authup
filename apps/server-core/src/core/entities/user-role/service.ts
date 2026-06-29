@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PermissionError, definePolicyInput } from '@authup/access';
+import { BuiltInPolicyType, PermissionError, definePolicyData } from '@authup/access';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
 import { PermissionName, UserRoleValidator } from '@authup/core-kit';
@@ -117,7 +117,7 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
         // Stamp the owner (user) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_ROLE_CREATE,
-            data: definePolicyInput({
+            data: definePolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated),
                 [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(validated),
             }),
@@ -143,7 +143,7 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
         // Stamp the owner (user) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_ROLE_DELETE,
-            data: definePolicyInput({
+            data: definePolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
                 [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(entity),
             }),

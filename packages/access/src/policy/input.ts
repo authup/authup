@@ -31,6 +31,6 @@ export interface PolicyInput {
  * Prefer this over `new PolicyData({ ... })` at construction sites so the key vocabulary and
  * per-key value types live in one place.
  */
-export function definePolicyInput(input: PolicyInput = {}): PolicyData {
+export function definePolicyData(input: PolicyInput = {}): PolicyData {
     return new PolicyData(input);
 }

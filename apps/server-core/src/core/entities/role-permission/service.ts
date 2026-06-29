@@ -8,7 +8,7 @@
 import { 
     BuiltInPolicyType, 
     RealmScope, 
-    definePolicyInput, 
+    definePolicyData, 
     minRealmScope, 
 } from '@authup/access';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
@@ -143,7 +143,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
             name: PermissionName.ROLE_PERMISSION_CREATE,
             // Stamp the owner (role) realm as the canonical `realm_id` so the realm_scope
             // factor gates this junction write against the actor's reach (no cross-realm).
-            data: definePolicyInput({
+            data: definePolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated),
                 [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(validated),
             }),
@@ -217,7 +217,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_PERMISSION_UPDATE,
-            data: definePolicyInput({
+            data: definePolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(merged),
                 [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(merged),
             }),
@@ -239,7 +239,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_PERMISSION_DELETE,
-            data: definePolicyInput({
+            data: definePolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
                 [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(entity),
             }),

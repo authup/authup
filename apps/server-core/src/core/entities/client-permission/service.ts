@@ -8,7 +8,7 @@
 import { 
     BuiltInPolicyType, 
     RealmScope, 
-    definePolicyInput, 
+    definePolicyData, 
     minRealmScope, 
 } from '@authup/access';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
@@ -134,7 +134,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_PERMISSION_CREATE,
-            data: definePolicyInput({
+            data: definePolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated),
                 [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(validated),
             }),
@@ -204,7 +204,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_PERMISSION_UPDATE,
-            data: definePolicyInput({
+            data: definePolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(merged),
                 [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(merged),
             }),
@@ -226,7 +226,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_PERMISSION_DELETE,
-            data: definePolicyInput({
+            data: definePolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
                 [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(entity),
             }),

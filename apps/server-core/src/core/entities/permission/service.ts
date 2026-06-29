@@ -9,7 +9,7 @@ import {
     BuiltInPolicyType, 
     RealmScope, 
     SystemPolicyName, 
-    definePolicyInput, 
+    definePolicyData, 
 } from '@authup/access';
 import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
 import { AuthupError, BadRequestError, EntityNotFoundError } from '@authup/errors';
@@ -216,7 +216,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.PERMISSION_UPDATE,
-                data: definePolicyInput({
+                data: definePolicyData({
                     [BuiltInPolicyType.ATTRIBUTES]: {
                         ...entity,
                         ...validated,
@@ -243,7 +243,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.PERMISSION_CREATE,
-            data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
+            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated, ...this.resourceRealmMatch(validated) }),
         });
 
         await this.repository.checkUniqueness(validated);
@@ -278,7 +278,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.PERMISSION_DELETE,
-            data: definePolicyInput({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
+            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
         });
 
         const { id: entityId } = entity;

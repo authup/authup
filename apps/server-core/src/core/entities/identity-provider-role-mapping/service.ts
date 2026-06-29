@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PermissionError, definePolicyInput } from '@authup/access';
+import { BuiltInPolicyType, PermissionError, definePolicyData } from '@authup/access';
 import { BadRequestError, EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
 import { IdentityProviderRoleMappingValidator, PermissionName } from '@authup/core-kit';
@@ -127,7 +127,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
         // Stamp the owner (identity-provider) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.IDENTITY_PROVIDER_ROLE_CREATE,
-            data: definePolicyInput({
+            data: definePolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated),
                 [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(validated),
             }),
@@ -160,7 +160,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
         // Stamp the owner (identity-provider) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE,
-            data: definePolicyInput({
+            data: definePolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(merged),
                 [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(merged),
             }),
@@ -183,7 +183,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
         // Stamp the owner (identity-provider) realm so the realm_scope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.IDENTITY_PROVIDER_ROLE_DELETE,
-            data: definePolicyInput({
+            data: definePolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
                 [BuiltInPolicyType.REALM_MATCH]: this.junctionResourceRealm(entity),
             }),
