@@ -69,7 +69,7 @@
         "@ilingo/validup-vue": "^1.0.1",
         "@ilingo/vue": "^6.0.0",
         "@posva/event-emitter": "^1.0.3",
-        "@types/node": "^25.7.0",
+        "@types/node": "^26.0.1",
         "@validup/vue": "^0.3.3",
         "@validup/zod": "^0.3.3",
         "@vitejs/plugin-vue": "^6.0.5",
