@@ -291,6 +291,31 @@ describe('src/permission/helpers/merge', () => {
             expect(any!.policies![0].type).toBe(BuiltInPolicyType.IDENTITY);
         });
 
+        it('is idempotent — re-merging a merged binding preserves its exact grant terms', () => {
+            const items: PermissionPolicyBinding[] = [
+                {
+                    permission: { name: 'user_read' },
+                    realm_scope: RealmScope.OWN,
+                },
+                {
+                    permission: { name: 'user_read' },
+                    policies: [{ type: BuiltInPolicyType.IDENTITY }],
+                    realm_scope: RealmScope.ANY,
+                },
+            ];
+
+            const once = mergePermissionPolicyBindings(items);
+            const twice = mergePermissionPolicyBindings(once);
+
+            expect(twice).toHaveLength(1);
+            // the second pass must NOT collapse the two terms back into one lossy term
+            expect(twice[0].grants).toHaveLength(2);
+            expect(twice[0].grants).toEqual(once[0].grants);
+            const any = twice[0].grants!.find((g) => g.realm_scope === RealmScope.ANY);
+            expect(any!.policies).toHaveLength(1);
+            expect(any!.policies![0].type).toBe(BuiltInPolicyType.IDENTITY);
+        });
+
         it('keeps per-grant scope on the all-policy-bound case (does not pre-fold to MAX)', () => {
             const items: PermissionPolicyBinding[] = [
                 {

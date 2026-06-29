@@ -736,8 +736,8 @@ fail-open drop can never touch realm reach. A **realm-less / anonymous** actor c
 satisfy `own`/`ownOrNull` (only `any`), and the factor neutral-passes when no `realmMatch`
 key is present (`preEvaluate` / gate checks / realm-less resources).
 
-**Reach and policy are paired PER GRANT — a disjunction, not a folded MAX (plan 037 / issue
-#3155).** An actor can hold several grants for the *same* permission with different
+**Reach and policy are paired PER GRANT — a disjunction, not a folded MAX (issue #3155).**
+An actor can hold several grants for the *same* permission with different
 `(realm_scope, policy_id)`. The evaluator reads the merged binding's `grants[]` (one
 `{ realm_scope, policies }` term per original grant, emitted by `mergePermissionPolicyBindings`)
 and grants access iff **∃ grant . `realmScopeMatches(grant.realm_scope, resource)` ∧
@@ -844,9 +844,12 @@ Layer 2: per-grant junction (from role-permission.policy_id + realm_scope, etc.)
 
 Both layers must pass for access to be granted. Layer 1 is evaluated by the
 `PermissionEvaluator` in `@authup/access`. The server-core `PermissionBindingPolicyEvaluator`
-(invoked via `system.permission-binding`) loads the actor's grants, folds their `realm_scope`
-by ordered-MAX and matches it against the resource `realm_id` (when present), and evaluates
-the merged `policy_id` policies — both must pass. The baseline `system.realm-match` child and
+(invoked via `system.permission-binding`) loads the actor's grants for the permission and
+evaluates the **per-grant disjunction**: for each grant it matches that grant's `realm_scope`
+against the resource `realm_id` (when present) AND evaluates that grant's `policy_id` policies,
+and grants iff some grant passes both (see
+[Realm reach](#realm-reach-is-a-coarse-realm_scope-enum-on-the-grant-not-a-policy)). The
+baseline `system.realm-match` child and
 the `system.realm-bound` / `system.realm-or-global` policies were **removed** in favour of the
 enum; the `REALM_MATCH` policy *type* is retained for user-defined actor-relative policies.
 
@@ -864,6 +867,11 @@ export type PermissionBinding = {
     policies?: PolicyWithType[],
     // realm reach of this grant (a separate factor from `policies`)
     realm_scope?: 'none' | 'own' | 'ownOrNull' | 'any',  // relative, default own
+    // per-grant disjunction terms emitted by mergePermissionPolicyBindings — one
+    // { realm_scope, policies, decision_strategy } per original grant; the evaluator
+    // ORs `reach ∧ policies` across them (top-level realm_scope/policies stay a lossy
+    // collapse for the non-evaluator consumers).
+    grants?: PermissionPolicyBindingGrant[],
 };
 ```
 

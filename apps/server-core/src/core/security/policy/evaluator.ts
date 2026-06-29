@@ -149,16 +149,16 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
                 return { success: maybeInvertPolicyOutcome(true, policy.invert) };
             }
 
-            if (!ctx.evaluators) {
-                continue;
-            }
-
             const compositePolicy : CompositePolicy = {
                 type: BuiltInPolicyType.COMPOSITE,
                 decision_strategy: grant.decision_strategy ?? undefined,
                 children: policies,
             };
 
+            // Missing evaluators is a misconfiguration: let the engine fail CLOSED with a
+            // surfaced POLICY_EVALUATOR_NOT_FOUND issue (new PolicyEngine(undefined) defaults
+            // to an empty registry, so the composite child resolves to no evaluator) rather
+            // than swallowing the grant with a silent issue-less deny.
             const engine = new PolicyEngine(ctx.evaluators);
             const outcome = await engine.evaluate(compositePolicy, {
                 ...ctx,

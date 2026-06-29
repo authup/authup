@@ -29,6 +29,23 @@ function buildGrantTerm(binding: PermissionPolicyBinding): PermissionPolicyBindi
     };
 }
 
+/**
+ * The disjunction terms a binding contributes to a merged result. An already-merged binding
+ * carries its exact per-grant terms in `grants` — preserve them (keeps the merge idempotent),
+ * otherwise synthesize a single term from the (raw) collapsed fields.
+ */
+function getGrantTerms(binding: PermissionPolicyBinding): PermissionPolicyBindingGrant[] {
+    if (binding.grants && binding.grants.length > 0) {
+        return binding.grants.map((grant) => ({
+            realm_scope: normalizeRealmScope(grant.realm_scope),
+            policies: grant.policies,
+            decision_strategy: grant.decision_strategy,
+        }));
+    }
+
+    return [buildGrantTerm(binding)];
+}
+
 export function mergePermissionPolicyBindings(input: PermissionPolicyBinding[]) : PermissionPolicyBinding[] {
     const grouped : Record<string, PermissionPolicyBinding[]> = input
         .reduce((previous, current) => {
@@ -54,7 +71,7 @@ export function mergePermissionPolicyBindings(input: PermissionPolicyBinding[]) 
             output.push({
                 ...first,
                 realm_scope: maxRealmScope([first.realm_scope]),
-                grants: [buildGrantTerm(first)],
+                grants: getGrantTerms(first),
             });
             continue;
         }
@@ -114,10 +131,11 @@ export function mergePermissionPolicyBindings(input: PermissionPolicyBinding[]) 
             },
             policies: mergedPolicies,
             realm_scope: realmScope,
-            // Exact per-grant disjunction terms (one per input grant), preserved alongside
-            // the lossy collapse above so a disjunction-aware evaluator can OR (reach ∧
-            // policies) per grant — see PermissionPolicyBinding.grants.
-            grants: group.map(buildGrantTerm),
+            // Exact per-grant disjunction terms (one per input grant — or its own terms if a
+            // grant was already merged), preserved alongside the lossy collapse above so a
+            // disjunction-aware evaluator can OR (reach ∧ policies) per grant — see
+            // PermissionPolicyBinding.grants.
+            grants: group.flatMap(getGrantTerms),
         });
     }
 
