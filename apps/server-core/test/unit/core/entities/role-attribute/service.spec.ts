@@ -209,25 +209,35 @@ describe('core/entities/role-attribute/service', () => {
             ).rejects.toBeInstanceOf(PermissionError);
         });
 
-        it('refreshes realm_id from the new role on reassignment', async () => {
-            const entity = repository.seed(createFakeRoleAttribute({ realm_id: 'realm-a' } as Partial<RoleAttribute>));
+        it('treats the owner role as immutable (ignores reassignment; realm stays original)', async () => {
+            const entity = repository.seed(createFakeRoleAttribute({
+                role_id: 'role-original',
+                realm_id: 'realm-a',
+            } as Partial<RoleAttribute>));
             const actor = createAllowAllActor();
+            let gatedRealm: unknown;
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.method === 'evaluate' && call.ctx.name === PermissionName.ROLE_UPDATE) {
-                    const realm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
+                    gatedRealm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
                         call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
                         undefined;
-                    if (typeof realm !== 'undefined' && realm !== 'realm-a') {
-                        throw PermissionError.denied('realm');
-                    }
                 }
             });
 
-            // Reassign to a role in realm-b: the gate must see the NEW role realm (realm-b),
-            // not the stale realm-a (which would have neutral-passed before the fix).
-            await expect(
-                service.update(entity.id, { role_id: 'r2', role: { realm_id: 'realm-b' } }, actor),
-            ).rejects.toBeInstanceOf(PermissionError);
+            // An attempt to reassign to a realm-b role must be ignored: the write is gated
+            // against — and persists — the ORIGINAL role realm (realm-a), never the attempted one.
+            const result = await service.update(
+                entity.id,
+                {
+                    value: 'x', 
+                    role_id: 'role-other', 
+                    role: { realm_id: 'realm-b' }, 
+                },
+                actor,
+            );
+            expect(gatedRealm).toBe('realm-a');
+            expect(result.realm_id).toBe('realm-a');
+            expect(result.role_id).toBe('role-original');
         });
     });
 

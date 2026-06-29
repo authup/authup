@@ -326,6 +326,21 @@ describe('core/entities/user-attribute/service', () => {
                 service.update(entity.id, { value: 'x', realm_id: 'realm-a' }, actor),
             ).rejects.toBeInstanceOf(PermissionError);
         });
+
+        it('treats the owner user as immutable on self-manage (cannot reassign to another user)', async () => {
+            const ownerId = randomUUID();
+            const entity = repository.seed(createFakeUserAttribute({ user_id: ownerId, value: 'v' }));
+            // the owner, forced onto the self-manage path (lacks USER_UPDATE)
+            const actor = createUserActor(ownerId);
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.ctx.name === PermissionName.USER_UPDATE) {
+                    throw PermissionError.denied('no user_update');
+                }
+            });
+
+            const result = await service.update(entity.id, { value: 'x', user_id: randomUUID() }, actor);
+            expect(result.user_id).toBe(ownerId);
+        });
     });
 
     describe('delete', () => {

@@ -150,16 +150,14 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
             throw new EntityNotFoundError();
         }
 
-        // realm_id is derived from the role, never caller-supplied: refresh it when the role
-        // is reassigned (validateJoinColumns loaded data.role), otherwise drop any submitted
-        // realm_id so the role-derived value is kept. Without this, a role reassignment would
-        // be authorized against the stale realm, and a caller could pass realm_id to evaluate
-        // ROLE_UPDATE against a realm of their choosing.
-        if (data.role) {
-            data.realm_id = data.role.realm_id;
-        } else {
-            delete data.realm_id;
-        }
+        // An attribute belongs to a fixed role; its owner (and the role-derived realm_id) is
+        // IMMUTABLE on update — strip both from the body. This blocks reassigning the attribute
+        // to another role (which would otherwise be authorized against the new realm, not the
+        // one the attribute currently lives in) and blocks a caller-supplied realm_id that would
+        // gate ROLE_UPDATE against a realm of their choosing. To move an attribute, delete + recreate.
+        delete data.role_id;
+        delete data.role;
+        delete data.realm_id;
 
         entity = this.repository.merge(entity, data);
 
