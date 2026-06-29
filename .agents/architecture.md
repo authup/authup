@@ -727,16 +727,29 @@ total order and a fail-closed default:
 
 It is enforced inside the server-core `PermissionBindingPolicyEvaluator` (a separate
 factor, ANDed with the junction's `policy_id` policies) by invoking the
-`RealmMatchPolicyEvaluator` in **SCOPE MODE**: the merged grant `realm_scope` is matched
+`RealmMatchPolicyEvaluator` in **SCOPE MODE**: a grant's `realm_scope` is matched
 against the resource realm supplied under the **`realmMatch` PolicyData key** (a single id,
 `null`, or an array of ids — `realmScopeMatches` requires the scope to reach every listed
 realm). The realm-match call is made **directly** (not via the policy engine — `realmMatch`
 is in `policiesExcluded`) and stays **outside** the `policies[]` merge, so the policy-free
 fail-open drop can never touch realm reach. A **realm-less / anonymous** actor can never
 satisfy `own`/`ownOrNull` (only `any`), and the factor neutral-passes when no `realmMatch`
-key is present (`preEvaluate` / gate checks / realm-less resources). Merge across an actor's
-grants = ordered **MAX** (most permissive wins), so an admin's `any` dominates a stray
-`own` grant.
+key is present (`preEvaluate` / gate checks / realm-less resources).
+
+**Reach and policy are paired PER GRANT — a disjunction, not a folded MAX (plan 037 / issue
+#3155).** An actor can hold several grants for the *same* permission with different
+`(realm_scope, policy_id)`. The evaluator reads the merged binding's `grants[]` (one
+`{ realm_scope, policies }` term per original grant, emitted by `mergePermissionPolicyBindings`)
+and grants access iff **∃ grant . `realmScopeMatches(grant.realm_scope, resource)` ∧
+(grant's `policies` pass)** — each grant's reach stays paired with its OWN policies. This is
+strictly more correct than collapsing to a single `(realm_scope, policies)` and was needed in
+both directions: a policy-free `own` grant must not MASK a policy-bound `any` grant's wider
+reach (the under-grant the issue reported), and an `own` grant's passing policy must not RIDE
+an `any` grant's wider reach when that `any` grant's own policy fails (the symmetric
+over-grant). The binding's top-level `realm_scope` is still a **lossy collapse** (ordered-MAX,
+but folded over the *policy-free subset only* when a policy-free grant is present, so it stays
+fail-closed — an admin's `any` still dominates a stray `own`) consumed only by `isSuperset`,
+junction-grant propagation, and the memory provider — never the access decision.
 
 **Resources present their realm under the `realmMatch` PolicyData key — entities AND
 junctions.** Entity services derive it from the ATTRIBUTES `realm_id` via
@@ -860,12 +873,16 @@ A permission binding wraps a permission entity with its associated policies. The
 
 The binding also carries the grant's **realm reach** (`realm_scope`) as a **separate
 factor from `policies`** — a coarse, actor-relative enum (`none < own < ownOrNull <
-any`) merged across an actor's grants most-permissive-wins (ordered-MAX), evaluated inside
-`system.permission-binding` against the resource `realm_id`, and ANDed with the merged
-`policies` result. It is a first-class binding field, **not** part of the binding identity
-key and never folded into the `policies` list (so it is immune to the fail-open policy
-merge). There is no absolute realm-id allowlist on the grant — a specific-realm-set
-restriction is expressed via a `policy_id` `ATTRIBUTES` policy. See
+any`), ANDed with that grant's `policies` and evaluated inside `system.permission-binding`
+against the resource `realm_id`. It is a first-class binding field, **not** part of the
+binding identity key and never folded into the `policies` list (so it is immune to the
+fail-open policy merge). When an actor holds multiple grants for one permission key, the
+merge preserves each grant's `(realm_scope, policies)` as a `grants[]` disjunction term and
+the evaluator ORs `reach ∧ policies` across them (the top-level `realm_scope` is a lossy
+ordered-MAX collapse for the non-evaluator consumers — see
+[Realm reach](#realm-reach-is-a-coarse-realm_scope-enum-on-the-grant-not-a-policy)). There
+is no absolute realm-id allowlist on the grant — a specific-realm-set restriction is
+expressed via a `policy_id` `ATTRIBUTES` policy. See
 [Realm reach is a coarse `realm_scope` enum on the grant](#realm-reach-is-a-coarse-realm_scope-enum-on-the-grant-not-a-policy).
 
 ## Security: Permission Assignment

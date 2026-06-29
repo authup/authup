@@ -7,14 +7,27 @@
 
 import { DecisionStrategy } from '@authup/kit';
 import type { BasePolicy } from '../../policy';
-import { maxRealmScope } from '../realm-scope';
-import type { PermissionPolicyBinding } from '../types';
+import { maxRealmScope, normalizeRealmScope } from '../realm-scope';
+import type { PermissionPolicyBinding, PermissionPolicyBindingGrant } from '../types';
 import { buildPermissionKey } from './key';
 
 type CompositePolicy = BasePolicy & {
     decision_strategy?: `${DecisionStrategy}`,
     children: BasePolicy[],
 };
+
+/**
+ * One disjunction term per original grant — keeps that grant's realm reach paired with its
+ * OWN policies so a disjunction-aware evaluator can OR (reach ∧ policies) without the lossy
+ * collapse of the top-level realm_scope/policies fields.
+ */
+function buildGrantTerm(binding: PermissionPolicyBinding): PermissionPolicyBindingGrant {
+    return {
+        realm_scope: normalizeRealmScope(binding.realm_scope),
+        policies: binding.policies,
+        decision_strategy: binding.permission.decision_strategy,
+    };
+}
 
 export function mergePermissionPolicyBindings(input: PermissionPolicyBinding[]) : PermissionPolicyBinding[] {
     const grouped : Record<string, PermissionPolicyBinding[]> = input
@@ -41,6 +54,7 @@ export function mergePermissionPolicyBindings(input: PermissionPolicyBinding[]) 
             output.push({
                 ...first,
                 realm_scope: maxRealmScope([first.realm_scope]),
+                grants: [buildGrantTerm(first)],
             });
             continue;
         }
@@ -76,14 +90,15 @@ export function mergePermissionPolicyBindings(input: PermissionPolicyBinding[]) 
             mergedPolicies = [policy];
         }
 
-        // Realm scope folds most-permissive-wins (ordered-MAX). CRITICAL correlation with
-        // the policy merge: when the merge fails open (some binding is policy-free, so
-        // `mergedPolicies` is dropped), fold ONLY the policy-free bindings' scopes. A
-        // policy-bound binding's reach is gated by its (now-dropped) policy, so letting its
-        // scope leak into the unrestricted result would widen access — e.g. a policy-free
-        // `own` grant + a policy-bound `any` grant must NOT merge to unrestricted `any`.
-        // When all bindings are policy-bound (policies retained), every scope is gated, so
-        // the full ordered-MAX is correct.
+        // COLLAPSED realm scope (lossy) — for the consumers that need a single term per key
+        // (isSuperset, junction-grant propagation, the memory provider). It is NOT the access
+        // decision: a disjunction-aware evaluator reads `grants` below for the exact
+        // per-grant (reach ∧ policies) semantics. Folds most-permissive-wins (ordered-MAX),
+        // with the policy correlation that keeps the collapse fail-CLOSED: when the merge
+        // fails open (some binding is policy-free, so `mergedPolicies` is dropped), fold ONLY
+        // the policy-free bindings' scopes, so a policy-bound `any` grant's reach does not
+        // leak into the unrestricted result. The mixed-grant reach that this collapse drops
+        // (issue #3155) is recovered from `grants`, not here.
         const realmScope = typeof mergedPolicies === 'undefined' ?
             maxRealmScope(
                 group
@@ -99,6 +114,10 @@ export function mergePermissionPolicyBindings(input: PermissionPolicyBinding[]) 
             },
             policies: mergedPolicies,
             realm_scope: realmScope,
+            // Exact per-grant disjunction terms (one per input grant), preserved alongside
+            // the lossy collapse above so a disjunction-aware evaluator can OR (reach ∧
+            // policies) per grant — see PermissionPolicyBinding.grants.
+            grants: group.map(buildGrantTerm),
         });
     }
 

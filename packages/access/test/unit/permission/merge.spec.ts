@@ -234,4 +234,85 @@ describe('src/permission/helpers/merge', () => {
         expect(result[0].policies).toBeUndefined();
         expect(result[0].realm_scope).toBe(RealmScope.OWN);
     });
+
+    describe('grants (per-grant disjunction terms)', () => {
+        it('emits a single term for a single grant, carrying scope + policies + decision_strategy', () => {
+            const items: PermissionPolicyBinding[] = [
+                {
+                    permission: { name: 'user_read', decision_strategy: DecisionStrategy.AFFIRMATIVE },
+                    policies: [{ type: BuiltInPolicyType.IDENTITY }],
+                    realm_scope: RealmScope.ANY,
+                },
+            ];
+
+            const result = mergePermissionPolicyBindings(items);
+            expect(result[0].grants).toHaveLength(1);
+            expect(result[0].grants![0].realm_scope).toBe(RealmScope.ANY);
+            expect(result[0].grants![0].policies).toHaveLength(1);
+            expect(result[0].grants![0].decision_strategy).toBe(DecisionStrategy.AFFIRMATIVE);
+        });
+
+        it('coerces a missing scope to own on the single grant term (fail-closed)', () => {
+            const result = mergePermissionPolicyBindings([{ permission: { name: 'user_read' } }]);
+            expect(result[0].grants).toHaveLength(1);
+            expect(result[0].grants![0].realm_scope).toBe(RealmScope.OWN);
+        });
+
+        it('preserves each grant scope+policy correlation for the mixed policy-free/own + policy-bound/any case', () => {
+            // The collapsed fields stay lossy (own, no policy); the disjunction terms keep
+            // the (any, IDENTITY) reach the evaluator needs to restore — issue #3155.
+            const items: PermissionPolicyBinding[] = [
+                {
+                    permission: { name: 'user_read' },
+                    realm_scope: RealmScope.OWN,
+                },
+                {
+                    permission: { name: 'user_read' },
+                    policies: [{ type: BuiltInPolicyType.IDENTITY }],
+                    realm_scope: RealmScope.ANY,
+                },
+            ];
+
+            const result = mergePermissionPolicyBindings(items);
+            expect(result).toHaveLength(1);
+
+            // collapsed (unchanged): fail-closed own, policy dropped
+            expect(result[0].realm_scope).toBe(RealmScope.OWN);
+            expect(result[0].policies).toBeUndefined();
+
+            // disjunction terms (new): each grant keeps its own (scope, policies)
+            expect(result[0].grants).toHaveLength(2);
+            const own = result[0].grants!.find((g) => g.realm_scope === RealmScope.OWN);
+            const any = result[0].grants!.find((g) => g.realm_scope === RealmScope.ANY);
+            expect(own).toBeDefined();
+            expect(own!.policies).toBeUndefined();
+            expect(any).toBeDefined();
+            expect(any!.policies).toHaveLength(1);
+            expect(any!.policies![0].type).toBe(BuiltInPolicyType.IDENTITY);
+        });
+
+        it('keeps per-grant scope on the all-policy-bound case (does not pre-fold to MAX)', () => {
+            const items: PermissionPolicyBinding[] = [
+                {
+                    permission: { name: 'user_read' },
+                    policies: [{ type: BuiltInPolicyType.IDENTITY }],
+                    realm_scope: RealmScope.OWN,
+                },
+                {
+                    permission: { name: 'user_read' },
+                    policies: [{ type: BuiltInPolicyType.REALM_MATCH }],
+                    realm_scope: RealmScope.ANY,
+                },
+            ];
+
+            const result = mergePermissionPolicyBindings(items);
+            // collapsed scope still folds to MAX (unchanged for the other consumers)
+            expect(result[0].realm_scope).toBe(RealmScope.ANY);
+            // but each term keeps its own scope so the evaluator does not let the own grant
+            // ride the any reach
+            expect(result[0].grants).toHaveLength(2);
+            expect(result[0].grants!.map((g) => g.realm_scope).sort())
+                .toEqual([RealmScope.ANY, RealmScope.OWN].sort());
+        });
+    });
 });

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Issue } from 'validup';
 import type {
     BasePolicy,
     CompositePolicy,
@@ -108,53 +109,80 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
             return { success: maybeInvertPolicyOutcome(false, policy.invert) };
         }
 
-        // Realm reach (coarse, actor-relative) — a separate factor from the policy_id
-        // policies below, ANDed with them but evaluated OUTSIDE the policies[] merge so the
-        // policy-free fail-open drop can never touch realm reach. mergePermissionPolicyBindings
-        // already folded the scope with the correct policy correlation, and identityBindings is
-        // filtered to a single (name, realm_id, client_id) key — so bindingsMerged is length 1
-        // and bindingsMerged[0].realm_scope is authoritative (do NOT re-fold).
-        //
-        // The reach check is the realm-match evaluator in SCOPE MODE: it reads the resource
-        // realm from ctx.data[REALM_MATCH] (fallback ATTRIBUTES.realm_id) and neutral-passes
-        // when absent (preEvaluate / gate checks). Invoked DIRECTLY (not via PolicyEngine —
-        // REALM_MATCH is in policiesExcluded, so the engine would skip it).
-        const realmOutcome = await this.realmMatchEvaluator.evaluate(
-            { scope: bindingsMerged[0].realm_scope },
-            ctx,
-        );
-        if (!realmOutcome.success) {
-            return { success: maybeInvertPolicyOutcome(false, policy.invert) };
+        // identityBindings is filtered to a single (name, realm_id, client_id) key, so the
+        // merge yields exactly one binding. Its `grants` carry the per-grant
+        // (realm_scope, policies) terms; access is the DISJUNCTION over them:
+        //   ∃ grant . realmScopeMatches(grant.realm_scope, resource) ∧ (grant.policies pass)
+        // Keeping each grant's realm reach paired with its OWN policies fixes both the mixed
+        // policy-free + policy-bound UNDER-grant (the collapsed binding folds the scope from
+        // the policy-free subset only, dropping a policy-bound grant's wider reach) and the
+        // symmetric all-policy-bound OVER-grant (a stray grant's policy must not ride another
+        // grant's wider scope). The collapsed realm_scope/policies stay as-is for the other
+        // merge consumers; only this evaluator reads `grants`.
+        const grants = bindingsMerged[0].grants ?? [{
+            realm_scope: bindingsMerged[0].realm_scope,
+            policies: bindingsMerged[0].policies,
+            decision_strategy: bindingsMerged[0].permission.decision_strategy,
+        }];
+
+        const issues : Issue[] = [];
+        for (const grant of grants) {
+            // Realm reach (coarse, actor-relative) — a SEPARATE factor from the grant's
+            // policy_id policies, ANDed with them but evaluated OUTSIDE the policies merge so
+            // the policy-free fail-open drop can never touch realm reach. The realm-match
+            // evaluator runs in SCOPE MODE: it reads the resource realm from
+            // ctx.data[REALM_MATCH] (fallback ATTRIBUTES.realm_id) and neutral-passes when
+            // absent (preEvaluate / gate checks / realm-less resources) — key-PRESENCE is the
+            // discriminator. Invoked DIRECTLY (not via PolicyEngine — REALM_MATCH is in
+            // policiesExcluded, so the engine would skip it).
+            const realmOutcome = await this.realmMatchEvaluator.evaluate(
+                { scope: grant.realm_scope },
+                ctx,
+            );
+            if (!realmOutcome.success) {
+                continue;
+            }
+
+            const policies : BasePolicy[] = grant.policies || [];
+            if (policies.length === 0) {
+                // Reach matches and this grant carries no further restriction.
+                return { success: maybeInvertPolicyOutcome(true, policy.invert) };
+            }
+
+            if (!ctx.evaluators) {
+                continue;
+            }
+
+            const compositePolicy : CompositePolicy = {
+                type: BuiltInPolicyType.COMPOSITE,
+                decision_strategy: grant.decision_strategy ?? undefined,
+                children: policies,
+            };
+
+            const engine = new PolicyEngine(ctx.evaluators);
+            const outcome = await engine.evaluate(compositePolicy, {
+                ...ctx,
+                path: [
+                    ...(ctx.path || []),
+                    ...(compositePolicy.type ? [compositePolicy.type] : []),
+                ],
+            });
+
+            if (outcome.success) {
+                return { success: maybeInvertPolicyOutcome(true, policy.invert) };
+            }
+
+            if (outcome.issues) {
+                issues.push(...outcome.issues);
+            }
         }
 
-        const policies : BasePolicy[] = bindingsMerged
-            .flatMap((b) => b.policies || []);
-
-        if (policies.length === 0) {
-            return { success: maybeInvertPolicyOutcome(true, policy.invert) };
-        }
-
-        if (!ctx.evaluators) {
-            return { success: maybeInvertPolicyOutcome(false, policy.invert) };
-        }
-
-        const compositePolicy : CompositePolicy = {
-            children: policies,
-            type: BuiltInPolicyType.COMPOSITE,
-        };
-
-        const engine = new PolicyEngine(ctx.evaluators);
-        const outcome = await engine.evaluate(compositePolicy, {
-            ...ctx,
-            path: [
-                ...(ctx.path || []),
-                ...(compositePolicy.type ? [compositePolicy.type] : []),
-            ],
-        });
-
+        // No grant term satisfied (reach ∧ policies). Apply `invert` ONCE to the aggregated
+        // disjunction outcome — never per term, which would corrupt the quantifier.
+        const success = maybeInvertPolicyOutcome(false, policy.invert);
         return {
-            ...outcome,
-            success: maybeInvertPolicyOutcome(outcome.success, policy.invert),
+            success,
+            issues: success ? [] : issues,
         };
     }
 }
