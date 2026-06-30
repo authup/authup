@@ -5,11 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Issue } from 'validup';
 import type {
-    BasePolicy,
-    CompositePolicy,
     IPolicyEvaluator,
-    PermissionPolicyBinding,
+    PermissionPolicyBindingAggregated,
     PolicyEvaluationContext,
     PolicyEvaluationResult,
 } from '@authup/access';
@@ -20,9 +19,9 @@ import {
     PolicyEngine,
     PolicyIssueCode,
     RealmMatchPolicyEvaluator,
+    aggregatePermissionPolicyBindings,
     definePolicyIssueItem,
     maybeInvertPolicyOutcome,
-    mergePermissionPolicyBindings,
 } from '@authup/access';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 
@@ -42,7 +41,7 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
         this.identityPermissionProvider = identityPermissionProvider;
     }
 
-    async accessData(ctx: PolicyEvaluationContext) : Promise<PermissionPolicyBinding | null> {
+    async accessData(ctx: PolicyEvaluationContext) : Promise<PermissionPolicyBindingAggregated | null> {
         if (!ctx.data.has(BuiltInPolicyType.PERMISSION_BINDING)) {
             return null;
         }
@@ -51,7 +50,7 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
             return ctx.data.get(BuiltInPolicyType.PERMISSION_BINDING);
         }
 
-        const data = ctx.data.get<PermissionPolicyBinding>(BuiltInPolicyType.PERMISSION_BINDING);
+        const data = ctx.data.get<PermissionPolicyBindingAggregated>(BuiltInPolicyType.PERMISSION_BINDING);
 
         ctx.data.set(BuiltInPolicyType.PERMISSION_BINDING, data);
         ctx.data.setValidated(BuiltInPolicyType.PERMISSION_BINDING);
@@ -103,58 +102,67 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
             return { success: maybeInvertPolicyOutcome(false, policy.invert) };
         }
 
-        const bindingsMerged = mergePermissionPolicyBindings(identityBindings);
-        if (bindingsMerged.length === 0) {
+        const [aggr] = aggregatePermissionPolicyBindings(identityBindings);
+        if (!aggr) {
             return { success: maybeInvertPolicyOutcome(false, policy.invert) };
         }
 
-        // Realm reach (coarse, actor-relative) — a separate factor from the policy_id
-        // policies below, ANDed with them but evaluated OUTSIDE the policies[] merge so the
-        // policy-free fail-open drop can never touch realm reach. mergePermissionPolicyBindings
-        // already folded the scope with the correct policy correlation, and identityBindings is
-        // filtered to a single (name, realm_id, client_id) key — so bindingsMerged is length 1
-        // and bindingsMerged[0].realm_scope is authoritative (do NOT re-fold).
-        //
-        // The reach check is the realm-match evaluator in SCOPE MODE: it reads the resource
-        // realm from ctx.data[REALM_MATCH] (fallback ATTRIBUTES.realm_id) and neutral-passes
-        // when absent (preEvaluate / gate checks). Invoked DIRECTLY (not via PolicyEngine —
-        // REALM_MATCH is in policiesExcluded, so the engine would skip it).
-        const realmOutcome = await this.realmMatchEvaluator.evaluate(
-            { scope: bindingsMerged[0].realm_scope },
-            ctx,
-        );
-        if (!realmOutcome.success) {
-            return { success: maybeInvertPolicyOutcome(false, policy.invert) };
+        // identityBindings is filtered to a single (name, realm_id, client_id) key, so the
+        // aggregate yields exactly one entry whose `grants` are the actor's per-grant
+        // (realm_scope, policy) disjunction terms; access is the DISJUNCTION over them:
+        //   ∃ grant . realmScopeMatches(grant.realm_scope, resource) ∧ (grant.policy passes)
+        // Pairing each grant's realm reach with its OWN policy is what fixes both the mixed
+        // policy-free + policy-bound UNDER-grant (a policy-free `own` grant must not mask a
+        // policy-bound `any` grant's wider reach) and the symmetric OVER-grant (an `own`
+        // grant's passing policy must not ride an `any` grant's wider reach).
+        const issues : Issue[] = [];
+        for (const grant of aggr.grants) {
+            // Realm reach (coarse, actor-relative) — a SEPARATE factor from the grant's
+            // policy, ANDed with it. The realm-match evaluator runs in SCOPE MODE: it reads the
+            // resource realm from ctx.data[REALM_MATCH] (fallback ATTRIBUTES.realm_id) and
+            // neutral-passes when absent (preEvaluate / gate checks / realm-less resources) —
+            // key-PRESENCE is the discriminator. Invoked DIRECTLY (not via PolicyEngine —
+            // REALM_MATCH is in policiesExcluded, so the engine would skip it).
+            const realmOutcome = await this.realmMatchEvaluator.evaluate(
+                { scope: grant.realm_scope },
+                ctx,
+            );
+            if (!realmOutcome.success) {
+                continue;
+            }
+
+            if (!grant.policy) {
+                // Reach matches and this grant carries no further restriction.
+                return { success: maybeInvertPolicyOutcome(true, policy.invert) };
+            }
+
+            // Missing evaluators is a misconfiguration: let the engine fail CLOSED with a
+            // surfaced POLICY_EVALUATOR_NOT_FOUND issue (new PolicyEngine(undefined) defaults
+            // to an empty registry, so grant.policy resolves to no evaluator) rather than
+            // swallowing the grant with a silent issue-less deny.
+            const engine = new PolicyEngine(ctx.evaluators);
+            const outcome = await engine.evaluate(grant.policy, {
+                ...ctx,
+                path: [
+                    ...(ctx.path || []),
+                ],
+            });
+
+            if (outcome.success) {
+                return { success: maybeInvertPolicyOutcome(true, policy.invert) };
+            }
+
+            if (outcome.issues) {
+                issues.push(...outcome.issues);
+            }
         }
 
-        const policies : BasePolicy[] = bindingsMerged
-            .flatMap((b) => b.policies || []);
-
-        if (policies.length === 0) {
-            return { success: maybeInvertPolicyOutcome(true, policy.invert) };
-        }
-
-        if (!ctx.evaluators) {
-            return { success: maybeInvertPolicyOutcome(false, policy.invert) };
-        }
-
-        const compositePolicy : CompositePolicy = {
-            children: policies,
-            type: BuiltInPolicyType.COMPOSITE,
-        };
-
-        const engine = new PolicyEngine(ctx.evaluators);
-        const outcome = await engine.evaluate(compositePolicy, {
-            ...ctx,
-            path: [
-                ...(ctx.path || []),
-                ...(compositePolicy.type ? [compositePolicy.type] : []),
-            ],
-        });
-
+        // No grant term satisfied (reach ∧ policies). Apply `invert` ONCE to the aggregated
+        // disjunction outcome — never per term, which would corrupt the quantifier.
+        const success = maybeInvertPolicyOutcome(false, policy.invert);
         return {
-            ...outcome,
-            success: maybeInvertPolicyOutcome(outcome.success, policy.invert),
+            success,
+            issues: success ? [] : issues,
         };
     }
 }

@@ -5,9 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionPolicyBinding } from '../types';
+import type { BasePermission } from '../types';
 
-export function isPermissionPolicyBindingEqual(a: PermissionPolicyBinding, b: PermissionPolicyBinding): boolean {
+export function isPermissionPolicyBindingEqual(
+    a: { permission: BasePermission },
+    b: { permission: BasePermission },
+): boolean {
     if (a.permission.name !== b.permission.name) {
         return false;
     }
