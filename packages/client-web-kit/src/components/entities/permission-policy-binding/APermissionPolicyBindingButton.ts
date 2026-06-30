@@ -49,23 +49,36 @@ export const APermissionPolicyBindingButton = defineComponent({
             type: String as PropType<keyof EntityTypeMap>,
             required: true,
         },
+        // The junction this control manages. With an `id` it is an existing binding → EDIT mode
+        // (each selection patches immediately). Without an `id` it is a "template" carrying just
+        // the base fields the new junction is born with (owner FK + permission_id) → CREATE mode
+        // (selections are staged, then the control performs the create itself). One prop, both
+        // modes — the form-initialValue pattern.
         entity: {
-            type: Object as PropType<PermissionBindingEntity>,
-            required: true,
+            type: Object as PropType<Partial<PermissionBindingEntity>>,
+            required: false,
+            default: undefined,
         },
         size: {
             type: String as PropType<ButtonSize>,
             default: DEFAULT_BUTTON_SIZE,
         },
     },
-    emits: ['updated', 'failed'],
+    emits: ['created', 'updated', 'failed'],
     setup(props, { emit }) {
         const client = injectHTTPClient();
 
         const modalOpen = ref(false);
         const busy = ref(false);
-        const currentPolicyId = ref<string | null>(props.entity.policy_id);
-        const currentRealmScope = ref<RealmScopeValue | null>(props.entity.realm_scope ?? null);
+        // Create mode = no persisted junction yet (no id). In that mode selections are STAGED
+        // locally and committed once via the create; in edit mode each selection patches
+        // immediately.
+        const isCreateMode = () => !props.entity?.id;
+        const currentPolicyId = ref<string | null>(props.entity?.policy_id ?? null);
+        // Preselect the backend default (`own`) in create mode so a sensible reach is staged.
+        const currentRealmScope = ref<RealmScopeValue | null>(
+            props.entity?.realm_scope ?? (props.entity?.id ? null : REALM_SCOPE.OWN),
+        );
         // The detail view is a nested modal: Escape / outside-click close it
         // back to the list (handled by the inner VCModalContent), and another
         // Escape then closes the outer list modal.
@@ -73,22 +86,29 @@ export const APermissionPolicyBindingButton = defineComponent({
 
         const entityRef = toRef(props, 'entity');
         watch(entityRef, (val) => {
-            currentPolicyId.value = val.policy_id;
-            currentRealmScope.value = val.realm_scope ?? null;
+            currentPolicyId.value = val?.policy_id ?? null;
+            currentRealmScope.value = val?.realm_scope ?? (val?.id ? null : REALM_SCOPE.OWN);
         }, { deep: true });
 
         const handlePolicySelect = async (policyId: string | null) => {
             if (busy.value) return;
 
+            // Create mode: stage the choice; it is committed by the `create` emit.
+            if (isCreateMode()) {
+                currentPolicyId.value = policyId;
+                return;
+            }
+
+            const entityId = props.entity?.id;
             const api = hasOwnProperty(client, props.entityType) ?
                 client[props.entityType] as any :
                 undefined;
 
-            if (!api || !api.update) return;
+            if (!api || !api.update || !entityId) return;
 
             busy.value = true;
             try {
-                const response = await api.update(props.entity.id, { policy_id: policyId });
+                const response = await api.update(entityId, { policy_id: policyId });
                 currentPolicyId.value = policyId;
                 emit('updated', response);
             } catch (e) {
@@ -103,15 +123,22 @@ export const APermissionPolicyBindingButton = defineComponent({
         const handleRealmScopeSelect = async (scope: RealmScopeValue) => {
             if (busy.value || currentRealmScope.value === scope) return;
 
+            // Create mode: stage the choice; it is committed by the `create` emit.
+            if (isCreateMode()) {
+                currentRealmScope.value = scope;
+                return;
+            }
+
+            const entityId = props.entity?.id;
             const api = hasOwnProperty(client, props.entityType) ?
                 client[props.entityType] as any :
                 undefined;
 
-            if (!api || !api.update) return;
+            if (!api || !api.update || !entityId) return;
 
             busy.value = true;
             try {
-                const response = await api.update(props.entity.id, { realm_scope: scope });
+                const response = await api.update(entityId, { realm_scope: scope });
                 // Reflect the server-capped value: a restricted actor's chosen scope may be
                 // narrowed server-side, so prefer the persisted scope from the response.
                 currentRealmScope.value = (
@@ -131,9 +158,46 @@ export const APermissionPolicyBindingButton = defineComponent({
             }
         };
 
+        // Commit the staged (realm_scope, policy_id) as a NEW junction. Performed here via the
+        // injected client — symmetric with the update path — using the entity template (the FK
+        // base fields) as the create payload base. The created entity is emitted so the parent can
+        // sync its manager (manager.created); it flows back as `props.entity` (now with an id),
+        // switching the control to edit mode. The server caps the chosen scope.
+        const handleCreate = async () => {
+            if (busy.value || !isCreateMode() || !props.entity) return;
+
+            const api = hasOwnProperty(client, props.entityType) ?
+                client[props.entityType] as any :
+                undefined;
+
+            if (!api || !api.create) return;
+
+            busy.value = true;
+            try {
+                const response = await api.create({
+                    ...props.entity,
+                    realm_scope: currentRealmScope.value ?? undefined,
+                    policy_id: currentPolicyId.value ?? undefined,
+                });
+                emit('created', response);
+                modalOpen.value = false;
+            } catch (e) {
+                if (e instanceof Error) {
+                    emit('failed', e);
+                }
+            } finally {
+                busy.value = false;
+            }
+        };
+
         const translationJunctionPolicy = useTranslation({
             namespace: TranslatorTranslationNamespace.CLIENT,
             key: TranslatorTranslationClientKey.JUNCTION_POLICY,
+        });
+
+        const translationAdd = useTranslation({
+            namespace: TranslatorTranslationNamespace.ACTION,
+            key: TranslatorTranslationActionKey.ADD,
         });
 
         const translationJunctionRealmScope = useTranslation({
@@ -275,7 +339,8 @@ export const APermissionPolicyBindingButton = defineComponent({
                 },
             }),
             h('div', { class: 'flex items-center justify-end gap-2' }, [
-                currentPolicyId.value ?
+                // Edit mode only: a quick "reset policy" shortcut (create stages, so no reset).
+                (!isCreateMode() && currentPolicyId.value) ?
                     h(VCButton, {
                         type: 'button',
                         size: props.size,
@@ -297,6 +362,19 @@ export const APermissionPolicyBindingButton = defineComponent({
                         modalOpen.value = false;
                     },
                 }),
+                // Create mode: commit the staged (scope, policy) as a new binding.
+                isCreateMode() ?
+                    h(VCButton, {
+                        type: 'button',
+                        size: props.size,
+                        color: 'primary',
+                        label: translationAdd.value,
+                        disabled: busy.value,
+                        onClick() {
+                            handleCreate();
+                        },
+                    }, { leading: () => h(VCIcon, { name: 'fa6-solid:plus' }) }) :
+                    undefined,
             ]),
         ];
 
@@ -321,11 +399,14 @@ export const APermissionPolicyBindingButton = defineComponent({
         ];
 
         return () => {
+            const createMode = isCreateMode();
+
             let triggerColor: 'neutral' | 'primary' = 'neutral';
             let triggerVariant: 'solid' | 'soft' = 'soft';
             if (busy.value) {
                 triggerVariant = 'solid';
-            } else if (currentPolicyId.value) {
+            } else if (!createMode && currentPolicyId.value) {
+                // Edit mode with a bound policy → highlight the gear.
                 triggerColor = 'primary';
                 triggerVariant = 'solid';
             }
@@ -340,7 +421,8 @@ export const APermissionPolicyBindingButton = defineComponent({
                         e.preventDefault();
                         modalOpen.value = true;
                     },
-                }, { leading: () => h(VCIcon, { name: 'fa6-solid:gear' }) }),
+                    // Create mode → "assign with options" (sliders); edit mode → gear.
+                }, { leading: () => h(VCIcon, { name: createMode ? 'fa6-solid:sliders' : 'fa6-solid:gear' }) }),
                 h(VCModal, {
                     open: modalOpen.value,
                     'onUpdate:open': (value: boolean) => {
