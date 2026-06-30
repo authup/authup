@@ -7,7 +7,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
-import type { IdentityProviderRoleMapping } from '@authup/core-kit';
+import type { IdentityProviderRoleMapping, Role } from '@authup/core-kit';
 import {
     beforeEach,
     describe,
@@ -26,13 +26,19 @@ import { FakeIdentityPermissionProvider } from '../../helpers/fake-identity-perm
 
 describe('core/entities/identity-provider-role-mapping/service', () => {
     let repository: FakeEntityRepository<IdentityProviderRoleMapping>;
+    let roleRepository: FakeEntityRepository<Role>;
     let identityPermissionProvider: FakeIdentityPermissionProvider;
     let service: IdentityProviderRoleMappingService;
 
     beforeEach(() => {
         repository = new FakeEntityRepository<IdentityProviderRoleMapping>();
+        roleRepository = new FakeEntityRepository<Role>();
         identityPermissionProvider = new FakeIdentityPermissionProvider();
-        service = new IdentityProviderRoleMappingService({ repository, identityPermissionProvider });
+        service = new IdentityProviderRoleMappingService({
+            repository, 
+            roleRepository, 
+            identityPermissionProvider, 
+        });
     });
 
     describe('getMany', () => {
@@ -214,6 +220,37 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
             await expect(
                 service.update(entity.id, { name: 'test' }, createDenyAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+        });
+
+        it('re-checks role ownership on update and blocks when the superset check fails (#3166)', async () => {
+            const roleId = randomUUID();
+            roleRepository.seed({ id: roleId, client_id: null } as Partial<Role>);
+            const entity = repository.seed({
+                provider_id: randomUUID(), 
+                role_id: roleId, 
+                name: 'old', 
+            });
+
+            identityPermissionProvider.setSuperset(false);
+
+            await expect(
+                service.update(entity.id, { value: '.*' }, createMasterRealmActor()),
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+        });
+
+        it('allows the update when the actor still owns the role', async () => {
+            const roleId = randomUUID();
+            roleRepository.seed({ id: roleId, client_id: null } as Partial<Role>);
+            const entity = repository.seed({
+                provider_id: randomUUID(), 
+                role_id: roleId, 
+                name: 'old', 
+            });
+
+            identityPermissionProvider.setSuperset(true);
+
+            const result = await service.update(entity.id, { name: 'new' }, createMasterRealmActor());
+            expect(result.name).toBe('new');
         });
 
         it('should not allow changing provider_id or role_id', async () => {

@@ -9,14 +9,15 @@ import { BuiltInPolicyType, PermissionError, definePolicyData } from '@authup/ac
 import { BadRequestError, EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
 import { IdentityProviderRoleMappingValidator, PermissionName } from '@authup/core-kit';
-import type { IdentityProviderRoleMapping } from '@authup/core-kit';
-import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
+import type { IdentityProviderRoleMapping, Role } from '@authup/core-kit';
+import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import type { IIdentityProviderRoleMappingRepository, IIdentityProviderRoleMappingService } from './types.ts';
 
 export type IdentityProviderRoleMappingServiceContext = {
     repository: IIdentityProviderRoleMappingRepository;
+    roleRepository: IEntityRepository<Role>;
     identityPermissionProvider: IIdentityPermissionProvider;
 };
 
@@ -25,6 +26,8 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
 
     protected repository: IIdentityProviderRoleMappingRepository;
 
+    protected roleRepository: IEntityRepository<Role>;
+
     protected identityPermissionProvider: IIdentityPermissionProvider;
 
     protected validator: IdentityProviderRoleMappingValidator;
@@ -32,6 +35,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
     constructor(ctx: IdentityProviderRoleMappingServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.roleRepository = ctx.roleRepository;
         this.identityPermissionProvider = ctx.identityPermissionProvider;
         this.validator = new IdentityProviderRoleMappingValidator();
     }
@@ -154,6 +158,29 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
         const validated = await this.validator.run(data, { group: ValidatorGroup.UPDATE });
 
         await this.repository.validateJoinColumns(validated);
+
+        // `role_id` is immutable on update (CREATE-group only in the validator), so the conferred
+        // role never changes here — only the attribute-matching criteria do. Still re-verify the
+        // actor OWNS that role before letting it edit (e.g. broaden) the mapping, mirroring create()
+        // and the permission-junction member gate (#3164): you may not modify a role-conferring
+        // mapping for a role you no longer own.
+        const role = await this.roleRepository.findOneById(entity.role_id);
+        if (role && actor.identity) {
+            const hasPermissions = await this.identityPermissionProvider.isSuperset(
+                {
+                    type: actor.identity.type,
+                    id: actor.identity.data.id,
+                },
+                {
+                    type: 'role',
+                    id: role.id,
+                    clientId: role.client_id,
+                },
+            );
+            if (!hasPermissions) {
+                throw new PermissionError({ message: 'You don\'t own the required permissions.' });
+            }
+        }
 
         const merged = this.repository.merge(entity, validated);
 

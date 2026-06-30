@@ -483,6 +483,13 @@ export class HTTPControllerModule {
         });
     }
 
+    private createRoleRepository(container: IContainer): RoleRepositoryAdapter {
+        return new RoleRepositoryAdapter({
+            repository: container.resolve<Repository<Role>>(RoleEntity),
+            realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
+        });
+    }
+
     async createPermissionController(container: IContainer) {
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
@@ -730,8 +737,13 @@ export class HTTPControllerModule {
         const repository = new IdentityProviderRoleMappingRepositoryAdapter(
             container.resolve<Repository<any>>(IdentityProviderRoleMappingEntity),
         );
+        const roleRepository = this.createRoleRepository(container);
         const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
-        const service = new IdentityProviderRoleMappingService({ repository, identityPermissionProvider });
+        const service = new IdentityProviderRoleMappingService({
+            repository, 
+            roleRepository, 
+            identityPermissionProvider, 
+        });
         return new IdentityProviderRoleMappingController({ service });
     }
 
