@@ -31,6 +31,7 @@ function createProvider(bindingsById: Record<string, PermissionPolicyBinding[]>)
 }
 
 const policy = { id: 'policy-1', type: BuiltInPolicyType.IDENTITY } as any;
+const policyOther = { id: 'policy-2', type: BuiltInPolicyType.ATTRIBUTES } as any;
 
 describe('core/identity/permission — IdentityPermissionProvider disjunction (#3155)', () => {
     describe('isSuperset', () => {
@@ -90,6 +91,52 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
 
             const result = await provider.isSuperset({ type: 'role', id: 'parent' }, { type: 'role', id: 'child' });
             expect(result).toBe(false);
+        });
+
+        // #3159: policy content is compared — a differently-CONFIGURED policy must not dominate.
+        it('blocks an actor restricted by one policy from assigning a role restricted by another', async () => {
+            const provider = createProvider({
+                parent: [{ permission: { name: 'user_update' }, policies: [policy] }],
+                child: [{ permission: { name: 'user_update' }, policies: [policyOther] }],
+            });
+
+            const result = await provider.isSuperset({ type: 'role', id: 'parent' }, { type: 'role', id: 'child' });
+            expect(result).toBe(false);
+        });
+
+        it('allows assigning a role restricted by the SAME policy the actor holds', async () => {
+            const provider = createProvider({
+                parent: [{ permission: { name: 'user_update' }, policies: [policy] }],
+                child: [{ permission: { name: 'user_update' }, policies: [policy] }],
+            });
+
+            const result = await provider.isSuperset({ type: 'role', id: 'parent' }, { type: 'role', id: 'child' });
+            expect(result).toBe(true);
+        });
+
+        it('allows assigning a role restricted by a distinct policy row with identical config', async () => {
+            // Different persisted id, same configuration => same predicate => the actor holds it.
+            const provider = createProvider({
+                parent: [{
+                    permission: { name: 'user_update' },
+                    policies: [{
+                        id: 'row-1', 
+                        type: BuiltInPolicyType.IDENTITY, 
+                        types: ['user'], 
+                    } as any], 
+                }],
+                child: [{
+                    permission: { name: 'user_update' },
+                    policies: [{
+                        id: 'row-2', 
+                        type: BuiltInPolicyType.IDENTITY, 
+                        types: ['user'], 
+                    } as any], 
+                }],
+            });
+
+            const result = await provider.isSuperset({ type: 'role', id: 'parent' }, { type: 'role', id: 'child' });
+            expect(result).toBe(true);
         });
     });
 

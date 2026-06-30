@@ -55,6 +55,7 @@
     "dependencies": {
         "@ucast/mongo2js": "^2.0.0",
         "pathtrace": "^2.2.0",
+        "smob": "^1.6.1",
         "validup": "^0.5.1",
         "zod": "^4.4.3",
         "@validup/zod": "^0.3.3"
