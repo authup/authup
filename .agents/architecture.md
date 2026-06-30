@@ -919,14 +919,14 @@ An actor with both `admin` (unrestricted) and `realm_admin` (restricted) grants 
 
 ### Junction Policy Propagation
 
-When creating any permission-binding junction (role-permission, user-permission, client-permission, robot-permission):
+When creating or updating any permission-binding junction (role-permission, user-permission, client-permission, robot-permission):
 
-1. The service calls `this.identityPermissionProvider.resolveJunctionGrant(identity, { name, realmId, clientId })`.
-2. It aggregates the actor's grants for that permission and selects the **ceiling** = the actor's most-permissive single grant (`selectCeilingGrant`: highest `realm_scope`, policy-free preferred on a tie).
-3. The new junction is capped to that ceiling: `realm_scope = min(requested, ceiling.realm_scope)`, and the ceiling's **own** `policy` (its `id`) is propagated as `policy_id` — never the target's. (If the ceiling is policy-restricted but its policy is not a propagatable `Policy` — e.g. an id-less composite — it fails closed to `realm_scope: none`.)
-4. If `data.policy_id` is already set explicitly, propagation is skipped.
+1. The service calls `this.identityPermissionProvider.resolveJunctionGrant(identity, { name, realmId, clientId, realmScope })`, passing the **requested** reach (`validated.realm_scope ?? own` on create; `data.realm_scope ?? entity.realm_scope` on update — the *resulting* junction reach, so a policy-only update can't silently widen).
+2. It aggregates the actor's grants for that permission and selects the grant **relative to the requested reach** (`selectGrantForRequest`, #3160): each grant is ranked by the reach it can confer *for this request* — its `realm_scope` capped to `realmScope` — so a lower-scoped policy-free grant beats a higher-scoped policy-bound grant when both cap to the same requested reach (highest *capped* reach, policy-free preferred on a tie). This is **not** a global "ceiling" — a mixed-grant actor (e.g. `own`+no-policy *and* `any`+policy) propagates its policy-free `own` grant for an `own` request instead of inheriting the wider grant's policy.
+3. The selected grant is returned **uncapped**; the new junction is then capped by the consumer: `realm_scope = min(requested, selected.realm_scope)`, and the selected grant's **own** `policy` (its `id`) is propagated as `policy_id` — never the target's. (If the selected grant is policy-restricted but its policy is not a propagatable `Policy` — e.g. an id-less composite — it fails closed to `realm_scope: none`. A clean lower-scoped grant covering the request avoids that fail-closed.)
+4. Returning the selected grant uncapped preserves the "only an unrestricted (`any`, policy-free) actor may set an explicit `policy_id`" rule: that check reads the selected grant's uncapped `realm_scope`/`policy`, so it still fires exactly when the actor genuinely holds an `any` policy-free grant.
 
-This prevents privilege escalation: a `realm_admin` cannot create unrestricted permission bindings. Because the actor only ever propagates its *own* policy (not the target's), this path needs no policy-content comparison — the asymmetry with the superset check, which must compare against fixed target grants.
+This prevents privilege escalation: a `realm_admin` cannot create unrestricted permission bindings, and (post-#3160) a mixed-grant actor neither under-propagates (spurious policy inheritance on a narrow request) nor over-propagates (riding a wider grant's reach with a narrower grant's policy). Because the actor only ever propagates its *own* policy (not the target's), this path needs no policy-content comparison — the asymmetry with the superset check, which must compare against fixed target grants.
 
 ## Self-Edit Pattern (declarative field denylists)
 

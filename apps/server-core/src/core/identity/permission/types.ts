@@ -21,12 +21,23 @@ export type ResolveJunctionPolicyOptions = {
     name: string;
     realmId?: string | null;
     clientId?: string | null;
+    /**
+     * The realm reach the junction is requested to confer (default `own`). The actor's
+     * grant disjunction is selected RELATIVE to this request: the grant chosen is the one
+     * that confers the least-restrictive junction once capped to `realmScope`, not the
+     * actor's absolute most-permissive grant. Lets a mixed-grant actor propagate a
+     * policy-free `own` grant for an `own` request even while holding a wider policy-bound
+     * grant (#3160).
+     */
+    realmScope?: `${RealmScope}`;
 };
 
 /**
- * The actor's own grant for a permission: the policy to inherit (if any) and the
- * realm_scope ceiling the actor is allowed to propagate (a creator may not grant
- * a broader scope than it holds).
+ * The actor's grant SELECTED for the requested reach (`ResolveJunctionPolicyOptions.realmScope`):
+ * the policy to inherit (if any) and the grant's UNCAPPED `realmScope`. Returned uncapped on
+ * purpose — the consumer applies the `min(requested, realmScope)` cap itself, and the uncapped
+ * reach distinguishes a genuinely unrestricted actor (see `applyJunctionCreateGrant` /
+ * `buildJunctionUpdateData`). This is not a global ceiling; it is request-relative (#3160).
  */
 export type ResolveJunctionGrantResult = {
     policy?: Policy;
