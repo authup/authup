@@ -50,6 +50,12 @@ export const TranslatorTranslationClientEnglish : NamespaceTranslations<`${Trans
 
     [TranslatorTranslationClientKey.JUNCTION_POLICY]: 'Junction Policy',
     [TranslatorTranslationClientKey.JUNCTION_REALM_SCOPE]: 'Realm Scope',
+    [TranslatorTranslationClientKey.REALM_SCOPE_OWN]: 'Own realm',
+    [TranslatorTranslationClientKey.REALM_SCOPE_OWN_HINT]: 'Acts only on the holder\'s own realm.',
+    [TranslatorTranslationClientKey.REALM_SCOPE_OWN_OR_NULL]: 'Own + global',
+    [TranslatorTranslationClientKey.REALM_SCOPE_OWN_OR_NULL_HINT]: 'Own realm plus global (realm-less) resources.',
+    [TranslatorTranslationClientKey.REALM_SCOPE_ANY]: 'Any realm',
+    [TranslatorTranslationClientKey.REALM_SCOPE_ANY_HINT]: 'Acts on every realm, including global. Admin-level reach.',
     [TranslatorTranslationClientKey.SELECTION_UPDATING]: 'Updating selection',
     [TranslatorTranslationClientKey.SELECTION_REMOVE]: 'Remove from selection',
     [TranslatorTranslationClientKey.SELECTION_ADD]: 'Add to selection',

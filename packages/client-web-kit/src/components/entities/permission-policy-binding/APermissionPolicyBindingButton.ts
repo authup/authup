@@ -12,7 +12,7 @@ import type {
     RealmScopeValue,  
 } from '@authup/core-kit';
 import { REALM_SCOPE } from '@authup/core-kit';
-import type { PropType } from 'vue';
+import type { PropType, Ref } from 'vue';
 import {
     defineComponent,
     h,
@@ -141,6 +141,44 @@ export const APermissionPolicyBindingButton = defineComponent({
             key: TranslatorTranslationClientKey.JUNCTION_REALM_SCOPE,
         });
 
+        // Localized label + one-line hint per selectable reach. Keyed off the string VALUE of
+        // REALM_SCOPE (camelCase `ownOrNull`), not a member-name derivation. `none` (a dead
+        // grant) is intentionally not offered — see realmScopeOptions below.
+        const realmScopeLabels: Record<string, Ref<string>> = {
+            [REALM_SCOPE.OWN]: useTranslation({
+                namespace: TranslatorTranslationNamespace.CLIENT,
+                key: TranslatorTranslationClientKey.REALM_SCOPE_OWN,
+            }),
+            [REALM_SCOPE.OWN_OR_NULL]: useTranslation({
+                namespace: TranslatorTranslationNamespace.CLIENT,
+                key: TranslatorTranslationClientKey.REALM_SCOPE_OWN_OR_NULL,
+            }),
+            [REALM_SCOPE.ANY]: useTranslation({
+                namespace: TranslatorTranslationNamespace.CLIENT,
+                key: TranslatorTranslationClientKey.REALM_SCOPE_ANY,
+            }),
+        };
+
+        const realmScopeHints: Record<string, Ref<string>> = {
+            [REALM_SCOPE.OWN]: useTranslation({
+                namespace: TranslatorTranslationNamespace.CLIENT,
+                key: TranslatorTranslationClientKey.REALM_SCOPE_OWN_HINT,
+            }),
+            [REALM_SCOPE.OWN_OR_NULL]: useTranslation({
+                namespace: TranslatorTranslationNamespace.CLIENT,
+                key: TranslatorTranslationClientKey.REALM_SCOPE_OWN_OR_NULL_HINT,
+            }),
+            [REALM_SCOPE.ANY]: useTranslation({
+                namespace: TranslatorTranslationNamespace.CLIENT,
+                key: TranslatorTranslationClientKey.REALM_SCOPE_ANY_HINT,
+            }),
+        };
+
+        // Only the reachable scopes are user-selectable; `none` stays a valid stored value but
+        // is never offered (it would create a grant that matches no realm).
+        const realmScopeOptions = Object.values(REALM_SCOPE)
+            .filter((scope) => scope !== REALM_SCOPE.NONE);
+
         const translationBack = useTranslation({
             namespace: TranslatorTranslationNamespace.ACTION,
             key: TranslatorTranslationActionKey.BACK,
@@ -161,24 +199,34 @@ export const APermissionPolicyBindingButton = defineComponent({
             'aria-label': translationClose.value,
         }, () => h(VCIcon, { name: 'fa6-solid:xmark' }));
 
-        const renderRealmScopeSelector = () => h('div', { class: 'flex flex-col gap-1' }, [
-            h('div', { class: 'text-sm font-medium' }, translationJunctionRealmScope.value),
-            h('div', { class: 'flex flex-wrap gap-1' }, Object.values(REALM_SCOPE).map((scope) => {
-                const isSelected = currentRealmScope.value === scope;
-                return h(VCButton, {
-                    key: scope,
-                    size: props.size,
-                    color: isSelected ? 'primary' : 'neutral',
-                    variant: isSelected ? 'solid' : 'soft',
-                    disabled: busy.value,
-                    label: scope,
-                    onClick(e: Event) {
-                        e.preventDefault();
-                        handleRealmScopeSelect(scope as RealmScopeValue);
-                    },
-                });
-            })),
-        ]);
+        const renderRealmScopeSelector = () => {
+            const selectedHint = currentRealmScope.value ?
+                realmScopeHints[currentRealmScope.value]?.value :
+                undefined;
+
+            return h('div', { class: 'flex flex-col gap-1' }, [
+                h('div', { class: 'text-sm font-medium' }, translationJunctionRealmScope.value),
+                h('div', { class: 'flex flex-wrap gap-1' }, realmScopeOptions.map((scope) => {
+                    const isSelected = currentRealmScope.value === scope;
+                    return h(VCButton, {
+                        key: scope,
+                        size: props.size,
+                        color: isSelected ? 'primary' : 'neutral',
+                        variant: isSelected ? 'solid' : 'soft',
+                        disabled: busy.value,
+                        label: realmScopeLabels[scope]?.value ?? scope,
+                        title: realmScopeHints[scope]?.value,
+                        onClick(e: Event) {
+                            e.preventDefault();
+                            handleRealmScopeSelect(scope as RealmScopeValue);
+                        },
+                    });
+                })),
+                selectedHint ?
+                    h('div', { class: 'text-xs text-fg-muted' }, selectedHint) :
+                    undefined,
+            ]);
+        };
 
         const renderListContent = () => [
             h('div', { class: 'flex items-center justify-between gap-2' }, [

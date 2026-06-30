@@ -81,6 +81,12 @@ export enum TranslatorTranslationClientKey {
 
     JUNCTION_POLICY = 'junctionPolicy',
     JUNCTION_REALM_SCOPE = 'junctionRealmScope',
+    REALM_SCOPE_OWN = 'realmScopeOwn',
+    REALM_SCOPE_OWN_HINT = 'realmScopeOwnHint',
+    REALM_SCOPE_OWN_OR_NULL = 'realmScopeOwnOrNull',
+    REALM_SCOPE_OWN_OR_NULL_HINT = 'realmScopeOwnOrNullHint',
+    REALM_SCOPE_ANY = 'realmScopeAny',
+    REALM_SCOPE_ANY_HINT = 'realmScopeAnyHint',
     SELECTION_UPDATING = 'selectionUpdating',
     SELECTION_REMOVE = 'selectionRemove',
     SELECTION_ADD = 'selectionAdd',

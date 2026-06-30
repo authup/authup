@@ -62,6 +62,12 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
 
     [TranslatorTranslationClientKey.JUNCTION_POLICY]: 'Verknüpfungsrichtlinie',
     [TranslatorTranslationClientKey.JUNCTION_REALM_SCOPE]: 'Realm-Geltungsbereich',
+    [TranslatorTranslationClientKey.REALM_SCOPE_OWN]: 'Eigener Realm',
+    [TranslatorTranslationClientKey.REALM_SCOPE_OWN_HINT]: 'Wirkt nur im eigenen Realm des Inhabers.',
+    [TranslatorTranslationClientKey.REALM_SCOPE_OWN_OR_NULL]: 'Eigener + global',
+    [TranslatorTranslationClientKey.REALM_SCOPE_OWN_OR_NULL_HINT]: 'Eigener Realm sowie globale (realm-lose) Ressourcen.',
+    [TranslatorTranslationClientKey.REALM_SCOPE_ANY]: 'Beliebiger Realm',
+    [TranslatorTranslationClientKey.REALM_SCOPE_ANY_HINT]: 'Wirkt auf alle Realms, einschließlich global. Reichweite auf Administratorebene.',
     [TranslatorTranslationClientKey.SELECTION_UPDATING]: 'Auswahl wird aktualisiert',
     [TranslatorTranslationClientKey.SELECTION_REMOVE]: 'Aus der Auswahl entfernen',
     [TranslatorTranslationClientKey.SELECTION_ADD]: 'Zur Auswahl hinzufügen',
