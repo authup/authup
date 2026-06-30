@@ -904,31 +904,29 @@ expressed via a `policy_id` `ATTRIBUTES` policy. See
 
 ### Superset Check
 
-When assigning a role to an identity or identity-provider (user-role, client-role, robot-role, identity-provider-role-mapping), the service verifies the actor owns all permissions in the target role. The check is **policy-aware**:
+When assigning a role to an identity or identity-provider (user-role, client-role, robot-role, identity-provider-role-mapping), `IdentityPermissionProvider.isSuperset(parent, child)` verifies the actor (`parent`) owns at least what the target role (`child`) confers. It is **disjunction-aware and policy-aware** — there is no lossy collapse (the old `mergePermissionBindings` AFFIRMATIVE fold was removed in #3158):
 
-1. Merge actor's bindings per permission (using `mergePermissionBindings` with AFFIRMATIVE strategy)
-2. Merge target's bindings per permission
-3. For each target permission: if actor's merged binding has policies but target's doesn't → fail (actor is more restricted)
+1. `aggregatePermissionPolicyBindings` groups each side's raw bindings into per-permission **grant disjunctions** (`{ realm_scope, policy }[]`).
+2. For each target permission (matched by `name + realm_id + client_id`): if the actor holds no grant for it → fail.
+3. For each target **grant**, require that **some** actor grant **dominates** it (`grantDominates`). Because access is the OR over grants, child-access ⊆ actor-access iff every child grant is covered by some actor grant.
 
-An actor with both `admin` (unrestricted) and `realm_admin` (restricted) roles gets unrestricted access — the merge uses AFFIRMATIVE (least restrictive wins).
+**`grantDominates(parent, child)`** (`@authup/access`, `permission/helpers/grant.ts`) — a parent grant covers a child grant iff:
+
+- **Reach:** `compareRealmScope(parent.realm_scope, child.realm_scope) >= 0` (ordered `none < own < ownOrNull < any`), AND
+- **Policy** (`policyDominates`): an unrestricted parent covers any child; a restricted parent never covers an *unrestricted* child (it cannot confer the wider policy-free reach it lacks); two restricted grants cover one another **only when their policies are provably the same** (`isPolicyEquivalent`), never by evaluated effect. Provably-same means **either** the same persisted row (equal primary-key `id`) **or** structurally-identical configuration — a value-compare (`smob` `isEqual`) over the policy after `normalizePolicyForEquality` strips the non-evaluation-affecting columns (`id, built_in, name, display_name, description, parent_id, parent, realm_id, realm, created_at, updated_at`) recursively through `children`. So two *distinct rows with identical config* (same predicate) dominate, but a genuinely **different** configuration does not. A shared `type` is **not** equivalence (two `attributes` policies are both `type: attributes`, but `{department:X}` ≠ `{department:Y}`). Deciding `child ⊆ parent` for *different* trees is undecidable (a policy is a predicate over `PolicyData`), so we accept only provable identity/equality and treat anything else as distinct (#3159 — the predecessor treated any two policy-bound grants as mutually dominating: a latent over-permit across disjoint policy scopes, e.g. a `department=X` actor conferring a `department=Y` grant). Fail-closed; may under-permit only when the two equal predicates are not provably equal (e.g. composite children in different order). **Security invariant:** every key in `NON_SEMANTIC_POLICY_KEYS` must stay non-evaluation-affecting — adding an evaluation-relevant field there would widen equivalence into an over-permit (new *config* fields need not be added; they are compared by default).
+
+An actor with both `admin` (unrestricted) and `realm_admin` (restricted) grants for a permission gets the union: the unrestricted grant dominates anything, so the disjunction stays permissive without any "least-restrictive-wins" fold.
 
 ### Junction Policy Propagation
 
 When creating any permission-binding junction (role-permission, user-permission, client-permission, robot-permission):
 
-1. The service calls `this.identityPermissionProvider.resolveJunctionPolicy(identity, { name, realm_id, client_id })`
-2. This loads and merges the actor's bindings for that permission
-3. If the merged result has policies, the first policy is set as `policy_id` on the new junction entry
-4. If `data.policy_id` is already set explicitly, propagation is skipped
+1. The service calls `this.identityPermissionProvider.resolveJunctionGrant(identity, { name, realmId, clientId })`.
+2. It aggregates the actor's grants for that permission and selects the **ceiling** = the actor's most-permissive single grant (`selectCeilingGrant`: highest `realm_scope`, policy-free preferred on a tie).
+3. The new junction is capped to that ceiling: `realm_scope = min(requested, ceiling.realm_scope)`, and the ceiling's **own** `policy` (its `id`) is propagated as `policy_id` — never the target's. (If the ceiling is policy-restricted but its policy is not a propagatable `Policy` — e.g. an id-less composite — it fails closed to `realm_scope: none`.)
+4. If `data.policy_id` is already set explicitly, propagation is skipped.
 
-This prevents privilege escalation: a `realm_admin` cannot create unrestricted permission bindings.
-
-### mergePermissionBindings
-
-When merging duplicate permission bindings (same `name + client_id + realm_id`):
-
-- If **any** binding has no policies → merged result has **no policies** (unrestricted)
-- If all bindings have policies → each binding's policies are wrapped in a composite with that binding's `decision_strategy` (defaulting to `UNANIMOUS` when `null`/`undefined`), then all composites are combined under an outer AFFIRMATIVE composite (any-one-passes)
+This prevents privilege escalation: a `realm_admin` cannot create unrestricted permission bindings. Because the actor only ever propagates its *own* policy (not the target's), this path needs no policy-content comparison — the asymmetry with the superset check, which must compare against fixed target grants.
 
 ## Self-Edit Pattern (declarative field denylists)
 

@@ -6,17 +6,18 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { PermissionPolicyBinding } from '../../../src';
+import type { PermissionGrant, PermissionPolicyBinding } from '../../../src';
 import {
     BuiltInPolicyType,
     RealmScope,
     aggregatePermissionPolicyBindings,
-    compareRealmScope,
+    grantDominates,
     isPermissionPolicyBindingEqual,
 } from '../../../src';
 
 // Mirrors IdentityPermissionProvider.isSuperset over the aggregated disjunction: every child
-// grant must be dominated by some parent grant (reach >= AND not more policy-restricted).
+// grant must be dominated by some parent grant (reach >= AND policy provably covered). Uses the
+// shared `grantDominates` so the test cannot drift from production domination semantics.
 function isSupersetPolicyAware(
     parentBindings: PermissionPolicyBinding[],
     childBindings: PermissionPolicyBinding[],
@@ -32,10 +33,9 @@ function isSupersetPolicyAware(
         }
 
         for (const childGrant of childItem.grants) {
-            const dominated = parentItem.grants.some((parentGrant) => (
-                compareRealmScope(parentGrant.realm_scope, childGrant.realm_scope) >= 0 &&
-                !(parentGrant.policy && !childGrant.policy)
-            ));
+            const dominated = parentItem.grants.some(
+                (parentGrant) => grantDominates(parentGrant, childGrant),
+            );
 
             if (!dominated) {
                 return false;
@@ -50,6 +50,19 @@ describe('escalation prevention', () => {
     const realmBoundPolicy = {
         type: BuiltInPolicyType.ATTRIBUTES,
         id: 'realm-bound-id',
+    };
+
+    // Two genuinely different restrictions (disjoint `attributes` queries). "Different policy"
+    // means different CONFIGURATION, not merely a different id — the value-compare strips id.
+    const policyDeptX = {
+        type: BuiltInPolicyType.ATTRIBUTES,
+        id: 'policy-department-x',
+        query: { department: 'x' },
+    };
+    const policyDeptY = {
+        type: BuiltInPolicyType.ATTRIBUTES,
+        id: 'policy-department-y',
+        query: { department: 'y' },
     };
 
     it('should allow: unrestricted actor assigning unrestricted role', () => {
@@ -102,6 +115,114 @@ describe('escalation prevention', () => {
             {
                 permission: { name: 'user_read' },
                 policies: [realmBoundPolicy],
+            },
+        ];
+
+        expect(isSupersetPolicyAware(parent, child)).toBe(true);
+    });
+
+    it('should allow: same policy by id even as distinct objects (identity, not reference)', () => {
+        const parent: PermissionPolicyBinding[] = [
+            {
+                permission: { name: 'user_read' },
+                policies: [{ type: BuiltInPolicyType.ATTRIBUTES, id: 'realm-bound-id' }],
+            },
+        ];
+        const child: PermissionPolicyBinding[] = [
+            {
+                permission: { name: 'user_read' },
+                policies: [{ type: BuiltInPolicyType.ATTRIBUTES, id: 'realm-bound-id' }],
+            },
+        ];
+
+        expect(isSupersetPolicyAware(parent, child)).toBe(true);
+    });
+
+    // --- #3159: policy CONTENT matters — two differently-configured grants must not dominate ---
+
+    it('should block: restricted actor assigning a role restricted by a DIFFERENT policy', () => {
+        // Actor reaches only `department=X`; target confers `department=Y`. Both are policy-bound,
+        // but on disjoint scopes — the actor must NOT be able to confer reach it does not hold.
+        const parent: PermissionPolicyBinding[] = [
+            {
+                permission: { name: 'user_update' },
+                policies: [policyDeptX],
+            },
+        ];
+        const child: PermissionPolicyBinding[] = [
+            {
+                permission: { name: 'user_update' },
+                policies: [policyDeptY],
+            },
+        ];
+
+        expect(isSupersetPolicyAware(parent, child)).toBe(false);
+    });
+
+    it('should block: differing policies even when the actor reaches further (any vs own)', () => {
+        // Wider realm reach does not excuse a non-matching policy — domination needs BOTH.
+        const parent: PermissionPolicyBinding[] = [
+            {
+                permission: { name: 'user_update' },
+                policies: [policyDeptX],
+                realm_scope: RealmScope.ANY,
+            },
+        ];
+        const child: PermissionPolicyBinding[] = [
+            {
+                permission: { name: 'user_update' },
+                policies: [policyDeptY],
+                realm_scope: RealmScope.OWN,
+            },
+        ];
+
+        expect(isSupersetPolicyAware(parent, child)).toBe(false);
+    });
+
+    it('should allow: distinct policy rows with identical configuration (value-compare, different id)', () => {
+        // Two SEPARATE policy rows (different id) encoding the same restriction = same predicate,
+        // so the actor genuinely holds what it confers. id differs; structural config is identical.
+        const parent: PermissionPolicyBinding[] = [
+            {
+                permission: { name: 'user_update' },
+                policies: [{
+                    type: BuiltInPolicyType.ATTRIBUTES, 
+                    id: 'row-1', 
+                    query: { department: 'x' }, 
+                }],
+            },
+        ];
+        const child: PermissionPolicyBinding[] = [
+            {
+                permission: { name: 'user_update' },
+                policies: [{
+                    type: BuiltInPolicyType.ATTRIBUTES, 
+                    id: 'row-2', 
+                    query: { department: 'x' }, 
+                }],
+            },
+        ];
+
+        expect(isSupersetPolicyAware(parent, child)).toBe(true);
+    });
+
+    it('should allow: a matching policy grant dominates even when another actor grant differs', () => {
+        // Disjunction: the actor holds department=X AND department=Y on user_update; assigning a
+        // department=Y role is fine because the department=Y grant dominates it (X need not).
+        const parent: PermissionPolicyBinding[] = [
+            {
+                permission: { name: 'user_update' },
+                policies: [policyDeptX],
+            },
+            {
+                permission: { name: 'user_update' },
+                policies: [policyDeptY],
+            },
+        ];
+        const child: PermissionPolicyBinding[] = [
+            {
+                permission: { name: 'user_update' },
+                policies: [policyDeptY],
             },
         ];
 
@@ -279,5 +400,99 @@ describe('escalation prevention', () => {
         ];
 
         expect(isSupersetPolicyAware(parent, child)).toBe(false);
+    });
+});
+
+// Direct contract of the per-grant domination primitive used by isSuperset. realm_scope is held
+// equal so each case isolates the policy-content decision (the #3159 crux), except where noted.
+describe('grantDominates', () => {
+    const own = RealmScope.OWN;
+    // Two differently-CONFIGURED attributes policies (disjoint queries), not just different ids.
+    const policyA: PermissionGrant['policy'] = {
+        type: BuiltInPolicyType.ATTRIBUTES, 
+        id: 'a', 
+        query: { department: 'x' }, 
+    } as any;
+    const policyB: PermissionGrant['policy'] = {
+        type: BuiltInPolicyType.ATTRIBUTES, 
+        id: 'b', 
+        query: { department: 'y' }, 
+    } as any;
+
+    it('dominates when both grants are unrestricted at equal reach', () => {
+        expect(grantDominates({ realm_scope: own }, { realm_scope: own })).toBe(true);
+    });
+
+    it('an unrestricted parent dominates a restricted child', () => {
+        expect(grantDominates({ realm_scope: own }, { realm_scope: own, policy: policyA })).toBe(true);
+    });
+
+    it('a restricted parent does NOT dominate an unrestricted child', () => {
+        expect(grantDominates({ realm_scope: own, policy: policyA }, { realm_scope: own })).toBe(false);
+    });
+
+    it('dominates when both reference the same persisted policy (same id)', () => {
+        expect(grantDominates(
+            { realm_scope: own, policy: { type: BuiltInPolicyType.ATTRIBUTES, id: 'a' } as any },
+            { realm_scope: own, policy: { type: BuiltInPolicyType.ATTRIBUTES, id: 'a' } as any },
+        )).toBe(true);
+    });
+
+    it('dominates two distinct rows (different id) with identical config (value-compare)', () => {
+        expect(grantDominates(
+            {
+                realm_scope: own,
+                policy: {
+                    type: BuiltInPolicyType.ATTRIBUTES, 
+                    id: 'r1', 
+                    query: { department: 'x' }, 
+                } as any, 
+            },
+            {
+                realm_scope: own,
+                policy: {
+                    type: BuiltInPolicyType.ATTRIBUTES, 
+                    id: 'r2', 
+                    query: { department: 'x' }, 
+                } as any, 
+            },
+        )).toBe(true);
+    });
+
+    it('does NOT dominate two policies with different configuration', () => {
+        // Same type, disjoint queries — a shared type is not equivalence (department=X vs =Y).
+        expect(grantDominates({ realm_scope: own, policy: policyA }, { realm_scope: own, policy: policyB })).toBe(false);
+    });
+
+    it('dominates id-less policies with identical config (value-compare handles missing id)', () => {
+        expect(grantDominates(
+            { realm_scope: own, policy: { type: BuiltInPolicyType.COMPOSITE, children: [policyA] } as any },
+            { realm_scope: own, policy: { type: BuiltInPolicyType.COMPOSITE, children: [policyA] } as any },
+        )).toBe(true);
+    });
+
+    it('does NOT dominate id-less policies whose config differs (fail closed)', () => {
+        expect(grantDominates(
+            { realm_scope: own, policy: { type: BuiltInPolicyType.COMPOSITE, children: [policyA] } as any },
+            { realm_scope: own, policy: { type: BuiltInPolicyType.COMPOSITE, children: [policyB] } as any },
+        )).toBe(false);
+    });
+
+    it('does NOT dominate when the parent reaches less far, even for the same policy', () => {
+        expect(grantDominates(
+            { realm_scope: own, policy: policyA },
+            { realm_scope: RealmScope.ANY, policy: policyA },
+        )).toBe(false);
+    });
+
+    it('a wider ownOrNull parent dominates an own child; the reverse does not (ordered reach)', () => {
+        expect(grantDominates(
+            { realm_scope: RealmScope.OWN_OR_NULL },
+            { realm_scope: own },
+        )).toBe(true);
+        expect(grantDominates(
+            { realm_scope: own },
+            { realm_scope: RealmScope.OWN_OR_NULL },
+        )).toBe(false);
     });
 });

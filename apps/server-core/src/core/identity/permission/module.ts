@@ -14,6 +14,7 @@ import {
     RealmScope,
     aggregatePermissionPolicyBindings,
     compareRealmScope,
+    grantDominates,
     isPermissionPolicyBindingEqual,
 } from '@authup/access';
 import type { Policy } from '@authup/core-kit';
@@ -63,9 +64,10 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             }
 
             // Disjunction-aware superset: EVERY child grant must be dominated by SOME parent
-            // grant (the parent reaches at least as far AND is no more policy-restricted). A
-            // child grant the parent cannot match (e.g. an unconditional `any` the parent only
-            // holds policy-gated) fails the check — the actor cannot assign more than it holds.
+            // grant (reach >= AND the parent's policy provably covers the child's — see
+            // grantDominates). A child grant the parent cannot match — an unconditional `any`
+            // the parent only holds policy-gated, or a policy the parent does not itself hold
+            // (#3159) — fails the check; the actor cannot assign more than it holds.
             for (const childGrant of childItem.grants) {
                 const dominated = parentItem.grants.some(
                     (parentGrant) => grantDominates(parentGrant, childGrant),
@@ -215,24 +217,6 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
 
         return bindings.filter((binding) => binding.permission.client_id === identity.clientId);
     }
-}
-
-/**
- * Whether `parent` grant covers `child` grant: it reaches at least as far (ordered
- * none < own < ownOrNull < any) AND is not more policy-restricted (a policy-bound parent
- * cannot cover an unrestricted child). Policy *content* is not compared — same conservative
- * approximation the collapsed superset used, now applied per grant.
- */
-function grantDominates(parent: PermissionGrant, child: PermissionGrant): boolean {
-    if (compareRealmScope(parent.realm_scope, child.realm_scope) < 0) {
-        return false;
-    }
-
-    if (parent.policy && !child.policy) {
-        return false;
-    }
-
-    return true;
 }
 
 /**

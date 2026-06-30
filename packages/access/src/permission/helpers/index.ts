@@ -7,4 +7,5 @@
 
 export * from './aggregate';
 export * from './equal';
+export * from './grant';
 export * from './key';
