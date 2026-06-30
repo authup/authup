@@ -15,22 +15,30 @@ import {
     it,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
+import { RealmScope } from '@authup/access';
 import { UserPermissionService } from '../../../../../src/core/entities/user-permission/service.ts';
-import { FakeEntityRepository, createAllowAllActor, createDenyAllActor } from '@authup/server-test-kit';
+import {
+    FakeEntityRepository,
+    createAllowAllActor,
+    createDenyAllActor,
+    createMasterRealmActor,
+} from '@authup/server-test-kit';
 import { FakeIdentityPermissionProvider } from '../../helpers/index.ts';
 
 describe('core/entities/user-permission/service', () => {
     let repository: FakeEntityRepository<UserPermission>;
     let permissionRepository: FakeEntityRepository<Permission>;
+    let identityPermissionProvider: FakeIdentityPermissionProvider;
     let service: UserPermissionService;
 
     beforeEach(() => {
         repository = new FakeEntityRepository<UserPermission>();
         permissionRepository = new FakeEntityRepository<Permission>();
+        identityPermissionProvider = new FakeIdentityPermissionProvider();
         service = new UserPermissionService({
-            repository, 
-            permissionRepository, 
-            identityPermissionProvider: new FakeIdentityPermissionProvider(), 
+            repository,
+            permissionRepository,
+            identityPermissionProvider,
         });
     });
 
@@ -190,6 +198,45 @@ describe('core/entities/user-permission/service', () => {
             );
             expect(result.policy_id).toBe(policyId);
             expect(result.user_id).toBe(originalUserId);
+        });
+
+        // #3160 review: a restricted actor (holds only `own`, no policy) must NOT be able to
+        // strip the policy off a wider pre-existing `any` binding while keeping `any` reach.
+        // A policy-only update has to re-cap the existing scope down to the actor's grant.
+        it('re-caps a wider existing realm_scope on a policy-only update by a restricted actor', async () => {
+            identityPermissionProvider.setJunctionRealmScope(RealmScope.OWN);
+            identityPermissionProvider.setJunctionPolicy(undefined);
+
+            const permission = permissionRepository.seed({ name: 'user_read', realm_id: null });
+            const entity = repository.seed({
+                permission_id: permission.id,
+                realm_scope: RealmScope.ANY,
+                policy_id: randomUUID(),
+            });
+
+            const result = await service.update(entity.id, { policy_id: null }, createMasterRealmActor());
+
+            expect(result.realm_scope).toBe(RealmScope.OWN);
+            expect(result.policy_id).toBeNull();
+        });
+
+        // The asymmetry: an unrestricted (`any`, policy-free) actor may drop the policy off a
+        // wide binding WITHOUT its reach being narrowed.
+        it('lets an unrestricted actor drop policy on a wide binding without narrowing reach', async () => {
+            identityPermissionProvider.setJunctionRealmScope(RealmScope.ANY);
+            identityPermissionProvider.setJunctionPolicy(undefined);
+
+            const permission = permissionRepository.seed({ name: 'user_read', realm_id: null });
+            const entity = repository.seed({
+                permission_id: permission.id,
+                realm_scope: RealmScope.ANY,
+                policy_id: randomUUID(),
+            });
+
+            const result = await service.update(entity.id, { policy_id: null }, createMasterRealmActor());
+
+            expect(result.realm_scope).toBe(RealmScope.ANY);
+            expect(result.policy_id).toBeNull();
         });
     });
 

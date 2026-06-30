@@ -21,6 +21,15 @@ export type ResolveJunctionPolicyOptions = {
     name: string;
     realmId?: string | null;
     clientId?: string | null;
+    /**
+     * The realm reach the junction is requested to confer (default `own`). The actor's
+     * grant disjunction is selected RELATIVE to this request: the grant chosen is the one
+     * that confers the least-restrictive junction once capped to `realmScope`, not the
+     * actor's absolute most-permissive grant. Lets a mixed-grant actor propagate a
+     * policy-free `own` grant for an `own` request even while holding a wider policy-bound
+     * grant (#3160).
+     */
+    realmScope?: `${RealmScope}`;
 };
 
 /**

@@ -120,6 +120,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
                     name: validated.permission.name,
                     realmId: validated.permission.realm_id,
                     clientId: validated.permission.client_id,
+                    realmScope: validated.realm_scope ?? RealmScope.OWN,
                 },
             );
 
@@ -171,6 +172,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
                         name: permission.name,
                         realmId: permission.realm_id,
                         clientId: permission.client_id,
+                        realmScope: data.realm_scope ?? entity.realm_scope,
                     },
                 );
                 actorScope = grant.realmScope as RealmScope;
@@ -181,8 +183,11 @@ export class ClientPermissionService extends JunctionEntityService implements IC
 
         const updateData: Record<string, any> = {};
 
+        const touchesScope = hasOwnProperty(data, 'realm_scope');
+        const touchesPolicy = hasOwnProperty(data, 'policy_id');
+
         // CAP to the actor's ceiling — a restricted actor may narrow but never widen.
-        if (hasOwnProperty(data, 'realm_scope')) {
+        if (touchesScope) {
             updateData.realm_scope = minRealmScope([data.realm_scope as RealmScope, actorScope]);
         }
 
@@ -191,11 +196,19 @@ export class ClientPermissionService extends JunctionEntityService implements IC
         // actor that touches the binding inherits its own grant's policy and cannot
         // detach or replace it to persist a binding broader than it holds.
         if (actorScope === RealmScope.ANY && actorPolicyFree) {
-            if (hasOwnProperty(data, 'policy_id')) {
+            if (touchesPolicy) {
                 updateData.policy_id = data.policy_id;
             }
-        } else if (hasOwnProperty(data, 'realm_scope') || hasOwnProperty(data, 'policy_id')) {
+        } else if (touchesScope || touchesPolicy) {
             updateData.policy_id = actorPolicyId;
+
+            // Re-cap the EXISTING reach when the update omits realm_scope: a restricted actor
+            // mutating the binding (e.g. a policy-only edit) must not leave a wider pre-existing
+            // realm_scope standing — that would persist a binding broader than any grant it
+            // holds (fail-OPEN otherwise).
+            if (!touchesScope) {
+                updateData.realm_scope = minRealmScope([entity.realm_scope as RealmScope, actorScope]);
+            }
         }
 
         await this.repository.validateJoinColumns(updateData);

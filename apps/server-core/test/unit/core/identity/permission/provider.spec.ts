@@ -140,37 +140,65 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
         });
     });
 
-    describe('resolveJunctionGrant', () => {
-        it('selects the most-permissive grant as the ceiling (mixed: any + policy)', async () => {
-            const provider = createProvider({
-                actor: [
-                    { permission: { name: 'user_read' }, realm_scope: RealmScope.OWN },
-                    {
-                        permission: { name: 'user_read' }, 
-                        policies: [policy], 
-                        realm_scope: RealmScope.ANY, 
-                    },
-                ],
-            });
+    describe('resolveJunctionGrant (#3160 — selection is relative to the requested reach)', () => {
+        // The actor holds BOTH (own, no-policy) and (any, IDENTITY-policy) for one permission.
+        const mixedActor = () => createProvider({
+            actor: [
+                { permission: { name: 'user_read' }, realm_scope: RealmScope.OWN },
+                {
+                    permission: { name: 'user_read' },
+                    policies: [policy],
+                    realm_scope: RealmScope.ANY,
+                },
+            ],
+        });
 
-            const result = await provider.resolveJunctionGrant({ type: 'role', id: 'actor' }, { name: 'user_read' });
+        it('selects the policy-free own grant for an own request (no spurious policy inheritance)', async () => {
+            // The actor genuinely holds (own, no-policy), so an own-scoped junction must stay
+            // ungated — it must NOT inherit the wider (any, policy) grant's policy (the #3160 bug).
+            const result = await mixedActor().resolveJunctionGrant(
+                { type: 'role', id: 'actor' },
+                { name: 'user_read', realmScope: RealmScope.OWN },
+            );
+            expect(result.realmScope).toBe(RealmScope.OWN);
+            expect(result.policy).toBeUndefined();
+        });
+
+        it('selects the wider policy-bound grant when the request needs its reach', async () => {
+            // Reaching `any` is only possible via the (any, policy) grant, so its policy rides along.
+            const result = await mixedActor().resolveJunctionGrant(
+                { type: 'role', id: 'actor' },
+                { name: 'user_read', realmScope: RealmScope.ANY },
+            );
             expect(result.realmScope).toBe(RealmScope.ANY);
             expect(result.policy?.id).toBe('policy-1');
         });
 
-        it('prefers a policy-free grant on a scope tie (admin stays unrestricted)', async () => {
+        it('defaults the request to own when no realmScope option is given', async () => {
+            const result = await mixedActor().resolveJunctionGrant(
+                { type: 'role', id: 'actor' },
+                { name: 'user_read' },
+            );
+            expect(result.realmScope).toBe(RealmScope.OWN);
+            expect(result.policy).toBeUndefined();
+        });
+
+        it('prefers a policy-free grant on a capped-scope tie (admin stays unrestricted)', async () => {
             const provider = createProvider({
                 actor: [
                     {
-                        permission: { name: 'user_read' }, 
-                        policies: [policy], 
-                        realm_scope: RealmScope.ANY, 
+                        permission: { name: 'user_read' },
+                        policies: [policy],
+                        realm_scope: RealmScope.ANY,
                     },
                     { permission: { name: 'user_read' }, realm_scope: RealmScope.ANY },
                 ],
             });
 
-            const result = await provider.resolveJunctionGrant({ type: 'role', id: 'actor' }, { name: 'user_read' });
+            const result = await provider.resolveJunctionGrant(
+                { type: 'role', id: 'actor' },
+                { name: 'user_read', realmScope: RealmScope.ANY },
+            );
             expect(result.realmScope).toBe(RealmScope.ANY);
             expect(result.policy).toBeUndefined();
         });
@@ -183,7 +211,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             expect(result.policy).toBeUndefined();
         });
 
-        it('fails closed (none) when the ceiling policy is not a propagatable Policy', async () => {
+        it('fails closed (none) when the only grant covering the request has a non-propagatable policy', async () => {
             // Two policies => buildGrant wraps them in a composite (no id) => not isPolicy.
             // The grant is policy-RESTRICTED, so it must NOT degrade to an unrestricted grant.
             const provider = createProvider({
@@ -196,8 +224,33 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 ],
             });
 
-            const result = await provider.resolveJunctionGrant({ type: 'role', id: 'actor' }, { name: 'user_read' });
+            const result = await provider.resolveJunctionGrant(
+                { type: 'role', id: 'actor' },
+                { name: 'user_read', realmScope: RealmScope.ANY },
+            );
             expect(result.realmScope).toBe(RealmScope.NONE);
+            expect(result.policy).toBeUndefined();
+        });
+
+        it('avoids the non-propagatable composite by selecting a clean own grant for an own request', async () => {
+            // #3160: a clean own grant lets an own request succeed even when a wider grant carries
+            // a non-propagatable composite policy (the old global-ceiling collapse failed closed here).
+            const provider = createProvider({
+                actor: [
+                    { permission: { name: 'user_read' }, realm_scope: RealmScope.OWN },
+                    {
+                        permission: { name: 'user_read' },
+                        policies: [policy, { type: BuiltInPolicyType.REALM_MATCH } as any],
+                        realm_scope: RealmScope.ANY,
+                    },
+                ],
+            });
+
+            const result = await provider.resolveJunctionGrant(
+                { type: 'role', id: 'actor' },
+                { name: 'user_read', realmScope: RealmScope.OWN },
+            );
+            expect(result.realmScope).toBe(RealmScope.OWN);
             expect(result.policy).toBeUndefined();
         });
     });

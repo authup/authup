@@ -16,6 +16,7 @@ import {
     compareRealmScope,
     grantDominates,
     isPermissionPolicyBindingEqual,
+    minRealmScope,
 } from '@authup/access';
 import type { Policy } from '@authup/core-kit';
 import { isPolicy } from '@authup/core-kit';
@@ -112,33 +113,37 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         }
 
         // Consider EVERY matching grant (a caller omitting realmId/clientId may leave more
-        // than one permission-key group) so the ceiling never depends on repository order.
+        // than one permission-key group) so the selection never depends on repository order.
         const grants = aggregatePermissionPolicyBindings(matching)
             .flatMap((item) => item.grants);
         if (grants.length === 0) {
             return { realmScope: RealmScope.OWN };
         }
 
-        // The propagation ceiling is the actor's MOST-permissive single grant (highest reach,
-        // policy-free preferred on a tie). The capped junction `(min(requested, ceiling.scope),
-        // ceiling.policy)` is then dominated by a real held grant, so the creator never confers
-        // reach/policy it does not itself hold.
-        const ceiling = selectCeilingGrant(grants);
+        // Select the actor's grant RELATIVE to the requested reach (#3160): the grant that
+        // confers the least-restrictive junction once capped to `realmScope` (highest capped
+        // reach, policy-free preferred on a tie) — NOT a global "ceiling". A mixed-grant actor
+        // (e.g. own+no-policy and any+policy) thus propagates its policy-free own grant for an
+        // own request instead of inheriting the wider grant's policy. The selected grant is
+        // returned UNCAPPED so the consumer's own cap (`min(requested, realmScope)`) and its
+        // "actor is unrestricted-any?" check (which honours an explicit policy_id) still hold.
+        const requested = options.realmScope ?? RealmScope.OWN;
+        const selected = selectGrantForRequest(grants, requested);
 
         let policy: Policy | undefined;
-        if (ceiling.policy) {
-            // The ceiling is policy-restricted but its policy is not a propagatable Policy
-            // (e.g. a composite with no id). Fail CLOSED: a `none` reach blocks propagation
-            // rather than silently dropping the restriction and widening to an unrestricted
-            // grant.
-            if (!isPolicy(ceiling.policy)) {
+        if (selected.policy) {
+            // The selected grant is policy-restricted but its policy is not a propagatable
+            // Policy (e.g. a composite with no id). Fail CLOSED: a `none` reach blocks
+            // propagation rather than silently dropping the restriction and widening to an
+            // unrestricted grant.
+            if (!isPolicy(selected.policy)) {
                 return { realmScope: RealmScope.NONE };
             }
 
-            policy = ceiling.policy;
+            policy = selected.policy;
         }
 
-        return { policy, realmScope: ceiling.realm_scope };
+        return { policy, realmScope: selected.realm_scope };
     }
 
     async getFor(identity: IdentityPolicyData) : Promise<PermissionPolicyBinding[]> {
@@ -220,12 +225,25 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
 }
 
 /**
- * The actor's most-permissive single grant — highest realm reach, policy-free preferred on a
- * tie — used as the junction propagation ceiling.
+ * Select the held grant that confers the least-restrictive junction for `requested` reach.
+ *
+ * Each grant is ranked by the reach it can actually confer for THIS request — its own
+ * `realm_scope` capped to `requested` — so a lower-scoped policy-free grant beats a
+ * higher-scoped policy-bound grant when both cap to the same requested reach (the mixed-grant
+ * fix, #3160). On equal capped reach, a policy-free grant wins (least restrictive). The
+ * ORIGINAL (uncapped) grant is returned: the consumer applies the `min` cap itself, and its
+ * uncapped `realm_scope`/`policy` drive the "actor is unrestricted-any?" check that decides
+ * whether an explicitly-requested `policy_id` may stand.
  */
-function selectCeilingGrant(grants: PermissionGrant[]): PermissionGrant {
+function selectGrantForRequest(
+    grants: PermissionGrant[],
+    requested: `${RealmScope}`,
+): PermissionGrant {
     return grants.reduce((best, grant) => {
-        const comparison = compareRealmScope(grant.realm_scope, best.realm_scope);
+        const bestScope = minRealmScope([best.realm_scope, requested]);
+        const grantScope = minRealmScope([grant.realm_scope, requested]);
+
+        const comparison = compareRealmScope(grantScope, bestScope);
         if (comparison > 0) {
             return grant;
         }
