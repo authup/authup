@@ -411,12 +411,18 @@ export const APermissionPolicyBindingButton = defineComponent({
                 triggerVariant = 'solid';
             }
 
+            // The trigger is icon-only, so give it a programmatic name that also conveys the mode
+            // (assign-with-options vs edit the binding) to assistive tech.
+            const triggerLabel = createMode ? translationAdd.value : translationJunctionPolicy.value;
+
             return h('span', { class: 'inline-flex items-center' }, [
                 h(VCButton, {
                     size: props.size,
                     color: triggerColor,
                     variant: triggerVariant,
                     disabled: busy.value,
+                    'aria-label': triggerLabel,
+                    title: triggerLabel,
                     onClick(e: Event) {
                         e.preventDefault();
                         modalOpen.value = true;
