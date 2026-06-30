@@ -62,6 +62,8 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
 
     [TranslatorTranslationClientKey.JUNCTION_POLICY]: 'Verknüpfungsrichtlinie',
     [TranslatorTranslationClientKey.JUNCTION_REALM_SCOPE]: 'Realm-Geltungsbereich',
+    [TranslatorTranslationClientKey.REALM_SCOPE_NONE]: 'Keiner',
+    [TranslatorTranslationClientKey.REALM_SCOPE_NONE_HINT]: 'Keine Reichweite — trifft auf keinen Realm zu; eine deaktivierte Berechtigung.',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN]: 'Eigener Realm',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN_HINT]: 'Wirkt nur im eigenen Realm des Inhabers.',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN_OR_NULL]: 'Eigener + global',

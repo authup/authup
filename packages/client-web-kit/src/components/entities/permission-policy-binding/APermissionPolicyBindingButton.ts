@@ -205,10 +205,15 @@ export const APermissionPolicyBindingButton = defineComponent({
             key: TranslatorTranslationClientKey.JUNCTION_REALM_SCOPE,
         });
 
-        // Localized label + one-line hint per selectable reach. Keyed off the string VALUE of
-        // REALM_SCOPE (camelCase `ownOrNull`), not a member-name derivation. `none` (a dead
-        // grant) is intentionally not offered — see realmScopeOptions below.
+        // Localized label + one-line hint per reach. Keyed off the string VALUE of REALM_SCOPE
+        // (camelCase `ownOrNull`), not a member-name derivation. `none` is included so a persisted
+        // none-scoped binding can be shown read-only in edit mode (it is never user-selectable —
+        // see realmScopeOptions).
         const realmScopeLabels: Record<string, Ref<string>> = {
+            [REALM_SCOPE.NONE]: useTranslation({
+                namespace: TranslatorTranslationNamespace.CLIENT,
+                key: TranslatorTranslationClientKey.REALM_SCOPE_NONE,
+            }),
             [REALM_SCOPE.OWN]: useTranslation({
                 namespace: TranslatorTranslationNamespace.CLIENT,
                 key: TranslatorTranslationClientKey.REALM_SCOPE_OWN,
@@ -224,6 +229,10 @@ export const APermissionPolicyBindingButton = defineComponent({
         };
 
         const realmScopeHints: Record<string, Ref<string>> = {
+            [REALM_SCOPE.NONE]: useTranslation({
+                namespace: TranslatorTranslationNamespace.CLIENT,
+                key: TranslatorTranslationClientKey.REALM_SCOPE_NONE_HINT,
+            }),
             [REALM_SCOPE.OWN]: useTranslation({
                 namespace: TranslatorTranslationNamespace.CLIENT,
                 key: TranslatorTranslationClientKey.REALM_SCOPE_OWN_HINT,
@@ -264,28 +273,44 @@ export const APermissionPolicyBindingButton = defineComponent({
         }, () => h(VCIcon, { name: 'fa6-solid:xmark' }));
 
         const renderRealmScopeSelector = () => {
-            const selectedHint = currentRealmScope.value ?
-                realmScopeHints[currentRealmScope.value]?.value :
-                undefined;
+            const current = currentRealmScope.value;
+            const selectedHint = current ? realmScopeHints[current]?.value : undefined;
+            // `none` is a valid persisted reach (e.g. a fail-closed propagation) but not
+            // user-selectable. Surface it read-only so an existing none-scoped binding still
+            // renders its state instead of appearing unset.
+            const showNone = current === REALM_SCOPE.NONE;
 
             return h('div', { class: 'flex flex-col gap-1' }, [
                 h('div', { class: 'text-sm font-medium' }, translationJunctionRealmScope.value),
-                h('div', { class: 'flex flex-wrap gap-1' }, realmScopeOptions.map((scope) => {
-                    const isSelected = currentRealmScope.value === scope;
-                    return h(VCButton, {
-                        key: scope,
-                        size: props.size,
-                        color: isSelected ? 'primary' : 'neutral',
-                        variant: isSelected ? 'solid' : 'soft',
-                        disabled: busy.value,
-                        label: realmScopeLabels[scope]?.value ?? scope,
-                        title: realmScopeHints[scope]?.value,
-                        onClick(e: Event) {
-                            e.preventDefault();
-                            handleRealmScopeSelect(scope as RealmScopeValue);
-                        },
-                    });
-                })),
+                h('div', { class: 'flex flex-wrap gap-1' }, [
+                    showNone ?
+                        h(VCButton, {
+                            key: REALM_SCOPE.NONE,
+                            size: props.size,
+                            color: 'primary',
+                            variant: 'solid',
+                            disabled: true,
+                            label: realmScopeLabels[REALM_SCOPE.NONE]?.value ?? REALM_SCOPE.NONE,
+                            title: realmScopeHints[REALM_SCOPE.NONE]?.value,
+                        }) :
+                        undefined,
+                    ...realmScopeOptions.map((scope) => {
+                        const isSelected = current === scope;
+                        return h(VCButton, {
+                            key: scope,
+                            size: props.size,
+                            color: isSelected ? 'primary' : 'neutral',
+                            variant: isSelected ? 'solid' : 'soft',
+                            disabled: busy.value,
+                            label: realmScopeLabels[scope]?.value ?? scope,
+                            title: realmScopeHints[scope]?.value,
+                            onClick(e: Event) {
+                                e.preventDefault();
+                                handleRealmScopeSelect(scope as RealmScopeValue);
+                            },
+                        });
+                    }),
+                ]),
                 selectedHint ?
                     h('div', { class: 'text-xs text-fg-muted' }, selectedHint) :
                     undefined,

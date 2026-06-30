@@ -62,6 +62,8 @@ export const TranslatorTranslationClientSpanish : NamespaceTranslations<`${Trans
 
     [TranslatorTranslationClientKey.JUNCTION_POLICY]: 'Política de unión',
     [TranslatorTranslationClientKey.JUNCTION_REALM_SCOPE]: 'Ámbito del dominio',
+    [TranslatorTranslationClientKey.REALM_SCOPE_NONE]: 'Ninguno',
+    [TranslatorTranslationClientKey.REALM_SCOPE_NONE_HINT]: 'Sin alcance — no coincide con ningún dominio; una concesión deshabilitada.',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN]: 'Dominio propio',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN_HINT]: 'Actúa solo en el dominio propio del titular.',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN_OR_NULL]: 'Propio + global',

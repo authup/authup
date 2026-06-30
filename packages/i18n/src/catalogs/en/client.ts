@@ -50,6 +50,8 @@ export const TranslatorTranslationClientEnglish : NamespaceTranslations<`${Trans
 
     [TranslatorTranslationClientKey.JUNCTION_POLICY]: 'Junction Policy',
     [TranslatorTranslationClientKey.JUNCTION_REALM_SCOPE]: 'Realm Scope',
+    [TranslatorTranslationClientKey.REALM_SCOPE_NONE]: 'None',
+    [TranslatorTranslationClientKey.REALM_SCOPE_NONE_HINT]: 'No reach — matches no realm; a disabled grant.',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN]: 'Own realm',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN_HINT]: 'Acts only on the holder\'s own realm.',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN_OR_NULL]: 'Own + global',

@@ -62,6 +62,8 @@ export const TranslatorTranslationClientFrench : NamespaceTranslations<`${Transl
 
     [TranslatorTranslationClientKey.JUNCTION_POLICY]: 'Politique de liaison',
     [TranslatorTranslationClientKey.JUNCTION_REALM_SCOPE]: 'Portée du domaine',
+    [TranslatorTranslationClientKey.REALM_SCOPE_NONE]: 'Aucune',
+    [TranslatorTranslationClientKey.REALM_SCOPE_NONE_HINT]: 'Aucune portée — ne correspond à aucun domaine ; une attribution désactivée.',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN]: 'Domaine propre',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN_HINT]: 'N\'agit que sur le domaine propre du titulaire.',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN_OR_NULL]: 'Propre + global',
