@@ -8,7 +8,7 @@
 <script lang="ts">
 import { EntityType } from '@authup/core-kit';
 import type { RolePermission } from '@authup/core-kit';
-import { defineComponent } from 'vue';
+import { computed, defineComponent } from 'vue';
 import {
     defineEntityManager,
     defineEntityVEmitOptions,
@@ -61,14 +61,28 @@ export default defineComponent({
             return manager.delete();
         };
 
+        const handleCreated = (entity: RolePermission) => {
+            manager.created(entity);
+        };
+
         const handleUpdated = (entity: RolePermission) => {
             manager.updated(entity);
         };
 
+        // The existing junction in edit mode, else a stable create template (FK base) carrying
+        // no id → the binding control treats it as create mode. Memoized so the template keeps a
+        // stable reference while unassigned.
+        const bindingEntity = computed<Partial<RolePermission>>(() => manager.data.value || {
+            role_id: props.roleId,
+            permission_id: props.permissionId,
+        });
+
         return {
             manager,
             handleChanged,
+            handleCreated,
             handleUpdated,
+            bindingEntity,
             EntityType,
         };
     },
@@ -82,10 +96,10 @@ export default defineComponent({
             @changed="handleChanged"
         />
         <APermissionPolicyBindingButton
-            v-if="manager.data.value"
-            :key="manager.data.value.id"
+            :key="manager.data.value?.id || 'create'"
             :entity-type="EntityType.ROLE_PERMISSION"
-            :entity="manager.data.value"
+            :entity="bindingEntity"
+            @created="handleCreated"
             @updated="handleUpdated"
         />
     </span>

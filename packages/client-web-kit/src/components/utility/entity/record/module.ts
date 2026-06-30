@@ -82,6 +82,13 @@ function create<
     }
 
     const created = (value: RECORD) => {
+        // Adopt the created record as the managed entity — consistent with updated()/deleted()
+        // and with create() (which sets entity.value before notifying). Without this, an
+        // externally-performed create (e.g. APermissionPolicyBindingButton's create mode, or a
+        // socket-originated create) would notify but leave the manager's data unset, so the
+        // consumer never transitions out of the "no record" state.
+        entity.value = value;
+
         if (ctx.setup && ctx.setup.emit) {
             ctx.setup.emit('created', value);
         }
