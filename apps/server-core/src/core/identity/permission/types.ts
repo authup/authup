@@ -33,9 +33,11 @@ export type ResolveJunctionPolicyOptions = {
 };
 
 /**
- * The actor's own grant for a permission: the policy to inherit (if any) and the
- * realm_scope ceiling the actor is allowed to propagate (a creator may not grant
- * a broader scope than it holds).
+ * The actor's grant SELECTED for the requested reach (`ResolveJunctionPolicyOptions.realmScope`):
+ * the policy to inherit (if any) and the grant's UNCAPPED `realmScope`. Returned uncapped on
+ * purpose — the consumer applies the `min(requested, realmScope)` cap itself, and the uncapped
+ * reach distinguishes a genuinely unrestricted actor (see `applyJunctionCreateGrant` /
+ * `buildJunctionUpdateData`). This is not a global ceiling; it is request-relative (#3160).
  */
 export type ResolveJunctionGrantResult = {
     policy?: Policy;

@@ -232,6 +232,51 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             expect(result.policy).toBeUndefined();
         });
 
+        it('selects deterministically between two policy-bound grants regardless of order', async () => {
+            // Two equally-reaching policy-bound grants: the total ordering breaks the tie by policy
+            // id (policy-1 < policy-2), so the selection is identical no matter the binding order.
+            const forward = createProvider({
+                actor: [
+                    {
+                        permission: { name: 'user_read' }, 
+                        policies: [policy], 
+                        realm_scope: RealmScope.ANY, 
+                    },
+                    {
+                        permission: { name: 'user_read' }, 
+                        policies: [policyOther], 
+                        realm_scope: RealmScope.ANY, 
+                    },
+                ],
+            });
+            const reverse = createProvider({
+                actor: [
+                    {
+                        permission: { name: 'user_read' }, 
+                        policies: [policyOther], 
+                        realm_scope: RealmScope.ANY, 
+                    },
+                    {
+                        permission: { name: 'user_read' }, 
+                        policies: [policy], 
+                        realm_scope: RealmScope.ANY, 
+                    },
+                ],
+            });
+
+            const a = await forward.resolveJunctionGrant(
+                { type: 'role', id: 'actor' },
+                { name: 'user_read', realmScope: RealmScope.ANY },
+            );
+            const b = await reverse.resolveJunctionGrant(
+                { type: 'role', id: 'actor' },
+                { name: 'user_read', realmScope: RealmScope.ANY },
+            );
+
+            expect(a.policy?.id).toBe('policy-1');
+            expect(b.policy?.id).toBe('policy-1');
+        });
+
         it('avoids the non-propagatable composite by selecting a clean own grant for an own request', async () => {
             // #3160: a clean own grant lets an own request succeed even when a wider grant carries
             // a non-propagatable composite policy (the old global-ceiling collapse failed closed here).

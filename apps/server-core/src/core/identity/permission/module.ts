@@ -113,7 +113,8 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         }
 
         // Consider EVERY matching grant (a caller omitting realmId/clientId may leave more
-        // than one permission-key group) so the selection never depends on repository order.
+        // than one permission-key group); combined with the total ordering in
+        // selectGrantForRequest, the selection never depends on grant/repository order.
         const grants = aggregatePermissionPolicyBindings(matching)
             .flatMap((item) => item.grants);
         if (grants.length === 0) {
@@ -234,24 +235,56 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
  * ORIGINAL (uncapped) grant is returned: the consumer applies the `min` cap itself, and its
  * uncapped `realm_scope`/`policy` drive the "actor is unrestricted-any?" check that decides
  * whether an explicitly-requested `policy_id` may stand.
+ *
+ * The ordering is TOTAL and deterministic (independent of grant/repository order): ties between
+ * two policy-bound grants on equal capped reach are broken by higher uncapped reach, then a
+ * propagatable policy (one with an id) over an id-less composite that would fail closed, then
+ * lexicographic policy id.
  */
 function selectGrantForRequest(
     grants: PermissionGrant[],
     requested: `${RealmScope}`,
 ): PermissionGrant {
-    return grants.reduce((best, grant) => {
-        const bestScope = minRealmScope([best.realm_scope, requested]);
-        const grantScope = minRealmScope([grant.realm_scope, requested]);
+    return grants.reduce((best, grant) => (isGrantPreferred(grant, best, requested) ? grant : best));
+}
 
-        const comparison = compareRealmScope(grantScope, bestScope);
-        if (comparison > 0) {
-            return grant;
+/** True when `candidate` is a strictly better propagation source than `incumbent` for `requested`. */
+function isGrantPreferred(
+    candidate: PermissionGrant,
+    incumbent: PermissionGrant,
+    requested: `${RealmScope}`,
+): boolean {
+    const byCapped = compareRealmScope(
+        minRealmScope([candidate.realm_scope, requested]),
+        minRealmScope([incumbent.realm_scope, requested]),
+    );
+    if (byCapped !== 0) {
+        return byCapped > 0;
+    }
+
+    // Least restrictive: a policy-free grant beats a policy-bound one on equal capped reach.
+    if (!candidate.policy !== !incumbent.policy) {
+        return !candidate.policy;
+    }
+
+    // Deterministic tie-break for two policy-bound grants on equal capped reach.
+    const byUncapped = compareRealmScope(candidate.realm_scope, incumbent.realm_scope);
+    if (byUncapped !== 0) {
+        return byUncapped > 0;
+    }
+
+    // Prefer a propagatable policy (has an id) over an id-less composite that would fail closed.
+    const candidateId = candidate.policy && isPolicy(candidate.policy) ? candidate.policy.id : undefined;
+    const incumbentId = incumbent.policy && isPolicy(incumbent.policy) ? incumbent.policy.id : undefined;
+    if (candidateId !== incumbentId) {
+        if (typeof candidateId === 'undefined') {
+            return false;
         }
-
-        if (comparison === 0 && !grant.policy && best.policy) {
-            return grant;
+        if (typeof incumbentId === 'undefined') {
+            return true;
         }
+        return candidateId < incumbentId;
+    }
 
-        return best;
-    });
+    return false;
 }

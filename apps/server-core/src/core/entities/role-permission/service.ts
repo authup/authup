@@ -5,20 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { 
-    BuiltInPolicyType, 
-    RealmScope, 
-    definePolicyData, 
-    minRealmScope, 
+import {
+    BuiltInPolicyType,
+    RealmScope,
+    definePolicyData,
 } from '@authup/access';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
-import { ValidatorGroup, hasOwnProperty } from '@authup/kit';
+import { ValidatorGroup } from '@authup/kit';
 import {
     PermissionName,
     RolePermissionValidator,
 } from '@authup/core-kit';
 import type { Permission, RolePermission } from '@authup/core-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
+import { applyJunctionCreateGrant, buildJunctionUpdateData } from '../../identity/permission/junction-grant.ts';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
 import type { IRolePermissionRepository, IRolePermissionService } from './types.ts';
@@ -128,16 +128,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
                 },
             );
 
-            // CAP the grant's realm scope to the actor's own ceiling (a creator may not
-            // grant broader than it holds); default to the most restrictive `own`.
-            validated.realm_scope = minRealmScope([validated.realm_scope ?? RealmScope.OWN, grant.realmScope]);
-
-            // Only an unrestricted (`any`) actor may set policy_id explicitly; a
-            // restricted actor silently inherits its own grant's policy (cannot
-            // attach an unowned policy nor detach to widen).
-            if (grant.realmScope !== RealmScope.ANY || grant.policy) {
-                validated.policy_id = grant.policy ? grant.policy.id : null;
-            }
+            applyJunctionCreateGrant(validated, grant);
         }
 
         await actor.permissionEvaluator.evaluate({
@@ -168,61 +159,50 @@ export class RolePermissionService extends JunctionEntityService implements IRol
             throw new EntityNotFoundError();
         }
 
-        // Resolve the actor's ceiling for this junction's permission (the existing
-        // entity only carries scalar FKs — load the permission relation to derive it).
-        // No actor identity (system context) is not realm-gated here; the operation is
-        // still authorized by the evaluate() below.
-        let actorScope: RealmScope = RealmScope.ANY;
+        const validated = await this.validator.run(data, { group: ValidatorGroup.UPDATE });
+
+        // Resolve the actor's grant for this junction's permission (the existing entity only
+        // carries scalar FKs — load the permission relation to derive it).
+        const permission = await this.permissionRepository.findOneById(entity.permission_id);
+        if (permission) {
+            // Member-permission gate: an actor may only modify a binding for a permission it
+            // holds (mirrors create()).
+            await actor.permissionEvaluator.preEvaluate({
+                name: permission.name,
+                realmId: permission.realm_id,
+                clientId: permission.client_id,
+            });
+        }
+
+        // No actor identity (system context) is not realm-gated here; the operation is still
+        // authorized by the evaluate() below.
+        let actorScope: `${RealmScope}` = RealmScope.ANY;
         let actorPolicyFree = true;
         let actorPolicyId: string | null = null;
-        if (actor.identity) {
+        if (actor.identity && permission) {
+            const grant = await this.identityPermissionProvider.resolveJunctionGrant(
+                { type: actor.identity.type, id: actor.identity.data.id },
+                {
+                    name: permission.name,
+                    realmId: permission.realm_id,
+                    clientId: permission.client_id,
+                    realmScope: validated.realm_scope ?? entity.realm_scope,
+                },
+            );
+            actorScope = grant.realmScope;
+            actorPolicyFree = !grant.policy;
+            actorPolicyId = grant.policy ? grant.policy.id : null;
+        } else if (actor.identity) {
             actorScope = RealmScope.OWN;
-            const permission = await this.permissionRepository.findOneById(entity.permission_id);
-            if (permission) {
-                const grant = await this.identityPermissionProvider.resolveJunctionGrant(
-                    { type: actor.identity.type, id: actor.identity.data.id },
-                    {
-                        name: permission.name,
-                        realmId: permission.realm_id,
-                        clientId: permission.client_id,
-                        realmScope: data.realm_scope ?? entity.realm_scope,
-                    },
-                );
-                actorScope = grant.realmScope as RealmScope;
-                actorPolicyFree = !grant.policy;
-                actorPolicyId = grant.policy ? grant.policy.id : null;
-            }
         }
 
-        const updateData: Record<string, any> = {};
-
-        const touchesScope = hasOwnProperty(data, 'realm_scope');
-        const touchesPolicy = hasOwnProperty(data, 'policy_id');
-
-        // CAP to the actor's ceiling — a restricted actor may narrow but never widen.
-        if (touchesScope) {
-            updateData.realm_scope = minRealmScope([data.realm_scope as RealmScope, actorScope]);
-        }
-
-        // policy_id, capped to the actor's ceiling (mirrors create-time inheritance):
-        // an unrestricted actor may set/clear it explicitly; a restricted/policy-bound
-        // actor that touches the binding inherits its own grant's policy and cannot
-        // detach or replace it to persist a binding broader than it holds.
-        if (actorScope === RealmScope.ANY && actorPolicyFree) {
-            if (touchesPolicy) {
-                updateData.policy_id = data.policy_id;
-            }
-        } else if (touchesScope || touchesPolicy) {
-            updateData.policy_id = actorPolicyId;
-
-            // Re-cap the EXISTING reach when the update omits realm_scope: a restricted actor
-            // mutating the binding (e.g. a policy-only edit) must not leave a wider pre-existing
-            // realm_scope standing — that would persist a binding broader than any grant it
-            // holds (fail-OPEN otherwise).
-            if (!touchesScope) {
-                updateData.realm_scope = minRealmScope([entity.realm_scope as RealmScope, actorScope]);
-            }
-        }
+        const updateData = buildJunctionUpdateData({
+            data: validated,
+            existingScope: entity.realm_scope,
+            actorScope,
+            actorPolicyFree,
+            actorPolicyId,
+        });
 
         await this.repository.validateJoinColumns(updateData);
 
