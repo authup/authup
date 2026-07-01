@@ -10,7 +10,12 @@ import { EntityType } from '@authup/core-kit';
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
-import { TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import {
+    TranslatorTranslationActionKey,
+    TranslatorTranslationAppKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
 import { DEFAULT_BUTTON_SIZE, assignFormProperties, useTranslations } from '../../../core';
 import { z } from 'zod';
 import type { PropType } from 'vue';
@@ -20,6 +25,7 @@ import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
+import { useAlertDialog } from '@vuecs/overlays';
 import { IFieldValidation } from '@ilingo/validup-vue';
 import {
     defineEntityManager,
@@ -88,10 +94,30 @@ export default defineComponent({
 
         const translationsDefault = useTranslations([
             {
-                namespace: TranslatorTranslationNamespace.FIELD, 
-                key: TranslatorTranslationFieldKey.VALUE_IS_REGEX, 
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.VALUE_IS_REGEX,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.REMOVE,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.ABORT,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.APP,
+                key: TranslatorTranslationAppKey.REMOVE_CONFIRM_TITLE,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.APP,
+                key: TranslatorTranslationAppKey.REMOVE_CONFIRM_DESCRIPTION,
             },
         ]);
+
+        // Role-mapping removal is a role grant — confirm it (mirrors the
+        // <AToggleButton withPrompt> path used by the other grant assignments).
+        const confirmDialog = useAlertDialog();
 
         const manager = defineEntityManager({
             type: `${EntityType.IDENTITY_PROVIDER_ROLE_MAPPING}`,
@@ -131,8 +157,20 @@ export default defineComponent({
             });
         };
 
-        const handleDelete = (e: Event) => {
+        const handleDelete = async (e: Event) => {
             e.preventDefault();
+
+            const confirmed = await confirmDialog({
+                title: translationsDefault.removeConfirmTitle,
+                description: translationsDefault.removeConfirmDescription,
+                confirmLabel: translationsDefault.remove,
+                cancelLabel: translationsDefault.abort,
+                tone: 'error',
+            });
+
+            if (!confirmed) {
+                return undefined;
+            }
 
             return manager.delete();
         };

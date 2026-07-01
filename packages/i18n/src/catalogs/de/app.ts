@@ -44,4 +44,7 @@ export const TranslatorTranslationAppGerman : NamespaceTranslations<`${Translato
 
     [TranslatorTranslationAppKey.DELETE_CONFIRM_TITLE]: 'Löschen bestätigen',
     [TranslatorTranslationAppKey.DELETE_CONFIRM_DESCRIPTION]: 'Möchten Sie diese(s) {{entity}} wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
+
+    [TranslatorTranslationAppKey.REMOVE_CONFIRM_TITLE]: 'Entfernen bestätigen',
+    [TranslatorTranslationAppKey.REMOVE_CONFIRM_DESCRIPTION]: 'Möchten Sie diese Zuordnung wirklich entfernen? Sie können sie jederzeit erneut zuweisen.',
 };

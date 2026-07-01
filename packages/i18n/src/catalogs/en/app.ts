@@ -44,4 +44,7 @@ export const TranslatorTranslationAppEnglish : NamespaceTranslations<`${Translat
 
     [TranslatorTranslationAppKey.DELETE_CONFIRM_TITLE]: 'Confirm deletion',
     [TranslatorTranslationAppKey.DELETE_CONFIRM_DESCRIPTION]: 'Are you sure you want to delete this {{entity}}? This action cannot be undone.',
+
+    [TranslatorTranslationAppKey.REMOVE_CONFIRM_TITLE]: 'Confirm removal',
+    [TranslatorTranslationAppKey.REMOVE_CONFIRM_DESCRIPTION]: 'Are you sure you want to remove this assignment? You can re-assign it at any time.',
 };

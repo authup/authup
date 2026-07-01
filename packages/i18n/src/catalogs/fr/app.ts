@@ -44,4 +44,7 @@ export const TranslatorTranslationAppFrench : NamespaceTranslations<`${Translato
 
     [TranslatorTranslationAppKey.DELETE_CONFIRM_TITLE]: 'Confirmer la suppression',
     [TranslatorTranslationAppKey.DELETE_CONFIRM_DESCRIPTION]: 'Voulez-vous vraiment supprimer ce(tte) {{entity}} ? Cette action est irréversible.',
+
+    [TranslatorTranslationAppKey.REMOVE_CONFIRM_TITLE]: 'Confirmer le retrait',
+    [TranslatorTranslationAppKey.REMOVE_CONFIRM_DESCRIPTION]: 'Voulez-vous vraiment retirer cette attribution ? Vous pourrez la réattribuer à tout moment.',
 };
