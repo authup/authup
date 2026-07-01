@@ -41,4 +41,7 @@ export const TranslatorTranslationAppGerman : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.ENTITY_UPDATED]: '{{entity}} wurde erfolgreich aktualisiert.',
     [TranslatorTranslationAppKey.ENTITY_DELETED]: '{{entity}} "{{name}}" wurde erfolgreich gelöscht.',
     [TranslatorTranslationAppKey.ACCOUNT_UPDATED]: 'Das Konto wurde erfolgreich aktualisiert.',
+
+    [TranslatorTranslationAppKey.DELETE_CONFIRM_TITLE]: 'Löschen bestätigen',
+    [TranslatorTranslationAppKey.DELETE_CONFIRM_DESCRIPTION]: 'Möchten Sie diese(s) {{entity}} wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
 };

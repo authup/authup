@@ -147,6 +147,9 @@ export enum TranslatorTranslationAppKey {
     ENTITY_UPDATED = 'entityUpdated',
     ENTITY_DELETED = 'entityDeleted',
     ACCOUNT_UPDATED = 'accountUpdated',
+
+    DELETE_CONFIRM_TITLE = 'deleteConfirmTitle',
+    DELETE_CONFIRM_DESCRIPTION = 'deleteConfirmDescription',
 }
 
 /**

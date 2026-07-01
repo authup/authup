@@ -5,7 +5,7 @@
   view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { VCToastProvider } from '@vuecs/overlays';
+import { VCAlertDialogProvider, VCToastProvider } from '@vuecs/overlays';
 import PageHeader from '../components/header.vue';
 import PageSidebar from '../components/sidebar.vue';
 import PageFooter from '../components/footer.vue';
@@ -16,6 +16,7 @@ export default defineNuxtComponent({
         PageHeader,
         PageSidebar,
         PageFooter,
+        VCAlertDialogProvider,
         VCToastProvider,
     },
 });
@@ -42,5 +43,15 @@ export default defineNuxtComponent({
             </div>
             <PageFooter />
         </div>
+
+        <!--
+            Single host for the imperative useAlertDialog() confirmation API
+            (e.g. <AEntityDelete>'s delete prompt). The AlertDialogManager is
+            provided app-wide by `app.use(installOverlays)` in
+            plugins/vuecs.ts, so one provider under the authenticated shell
+            drains confirmations from every page. Placed beside the toaster,
+            not context-scoped like <VCToastProvider>.
+        -->
+        <VCAlertDialogProvider />
     </VCToastProvider>
 </template>

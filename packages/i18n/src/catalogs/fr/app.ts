@@ -41,4 +41,7 @@ export const TranslatorTranslationAppFrench : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.ENTITY_UPDATED]: '{{entity}} a été mis à jour avec succès.',
     [TranslatorTranslationAppKey.ENTITY_DELETED]: '{{entity}} « {{name}} » a été supprimé avec succès.',
     [TranslatorTranslationAppKey.ACCOUNT_UPDATED]: 'Le compte a été mis à jour avec succès.',
+
+    [TranslatorTranslationAppKey.DELETE_CONFIRM_TITLE]: 'Confirmer la suppression',
+    [TranslatorTranslationAppKey.DELETE_CONFIRM_DESCRIPTION]: 'Voulez-vous vraiment supprimer ce(tte) {{entity}} ? Cette action est irréversible.',
 };
