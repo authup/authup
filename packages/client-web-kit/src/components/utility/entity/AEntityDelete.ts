@@ -122,12 +122,16 @@ const AEntityDelete = defineComponent({
             key: TranslatorTranslationActionKey.DELETE,
         });
 
-        // Imperative confirmation dialog — captured once in setup (the
-        // composable injects the app-level AlertDialogManager provided by
-        // `app.use(installOverlays)`). Resolves true (Delete) / false
-        // (Abort / Escape); on the server it resolves false without
-        // enqueuing, but onClick only ever fires client-side.
-        const confirmDialog = useAlertDialog();
+        // Imperative confirmation dialog, resolved ONLY when prompting is
+        // enabled — so `<AEntityDelete :with-prompt="false">` never injects the
+        // AlertDialogManager and therefore doesn't require `app.use(installOverlays)`
+        // in consumers/tests that skip @vuecs/overlays. `useAlertDialog()` only
+        // calls inject() (no lifecycle hooks), so this one-time conditional
+        // resolution in setup is safe. When enabled it injects the app-level
+        // manager (host: <VCAlertDialogProvider> in the client-web default
+        // layout) and resolves true (Delete) / false (Abort / Escape); on the
+        // server it resolves false without enqueuing, but onClick is client-only.
+        const confirmDialog = props.withPrompt ? useAlertDialog() : undefined;
 
         // Singular, localized entity noun (`count: 1`) interpolated into the
         // confirmation body. The nine index pages that mount <AEntityDelete>
@@ -155,7 +159,7 @@ const AEntityDelete = defineComponent({
         const onClick = async ($event: any) => {
             $event.preventDefault();
 
-            if (props.withPrompt) {
+            if (props.withPrompt && confirmDialog) {
                 const confirmed = await confirmDialog({
                     title: promptTitle.value,
                     description: promptDescription.value,
@@ -169,7 +173,7 @@ const AEntityDelete = defineComponent({
                 }
             }
 
-            return submit.apply(null);
+            return submit();
         };
 
         const render = () => {

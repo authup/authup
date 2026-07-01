@@ -72,18 +72,21 @@ export default defineComponent({
             },
         ]);
 
-        // Imperative confirmation dialog for the removal transition. Captured
-        // once in setup (injects the app-level AlertDialogManager provided by
-        // `app.use(installOverlays)`); the <VCAlertDialogProvider> host lives in
-        // the client-web default layout.
-        const confirmDialog = useAlertDialog();
+        // Imperative confirmation dialog, resolved ONLY when `withPrompt` is set
+        // — the default (off) never injects the AlertDialogManager, so a toggle
+        // that doesn't prompt (scopes, policy-bindings, any downstream consumer)
+        // doesn't require `app.use(installOverlays)`. `useAlertDialog()` only
+        // calls inject() (no lifecycle hooks), so this one-time conditional
+        // resolution in setup is safe. Host: <VCAlertDialogProvider> in the
+        // client-web default layout.
+        const confirmDialog = props.withPrompt ? useAlertDialog() : undefined;
 
         const handleClick = async (e: Event) => {
             e.preventDefault();
 
             // Only the removal transition confirms (currently assigned → this
             // click un-assigns). Adding is low-stakes and never prompts.
-            if (props.value && props.withPrompt) {
+            if (props.value && props.withPrompt && confirmDialog) {
                 const confirmed = await confirmDialog({
                     title: translations.removeConfirmTitle,
                     description: translations.removeConfirmDescription,
