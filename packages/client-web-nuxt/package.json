@@ -51,7 +51,7 @@
     },
     "peerDependencies": {
         "@pinia/nuxt": "*",
-        "pinia": "^2.x || ^3.x"
+        "pinia": "^3.0.0"
     },
     "keywords": [
         "auth",

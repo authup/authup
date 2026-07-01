@@ -53,15 +53,15 @@
   },
   "devDependencies": {
     "@vuecs/core": "^3.3.0",
-    "@vuecs/design": "^1",
-    "@vuecs/theme-tailwind": "^6",
-    "tailwindcss": "^4"
+    "@vuecs/design": "^1.0.7",
+    "@vuecs/theme-tailwind": "^6.1.0",
+    "tailwindcss": "^4.3.2"
   },
   "peerDependencies": {
     "@vuecs/core": "^3.3.0",
-    "@vuecs/design": "^1",
-    "@vuecs/theme-tailwind": "^6",
-    "tailwindcss": "^4"
+    "@vuecs/design": "^1.0.7",
+    "@vuecs/theme-tailwind": "^6.1.0",
+    "tailwindcss": "^4.3.2"
   },
   "publishConfig": {
     "access": "public"
