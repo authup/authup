@@ -55,6 +55,7 @@
         "@authup/server-adapter-kit": "^1.0.0-beta.50"
     },
     "devDependencies": {
+        "@authup/errors": "^1.0.0-beta.50",
         "vitest": "^4.0.18"
     },
     "publishConfig": {

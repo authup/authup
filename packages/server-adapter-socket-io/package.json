@@ -51,10 +51,10 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/core-kit": "^1.0.0-beta.50",
         "@authup/server-adapter-kit": "^1.0.0-beta.50"
     },
     "devDependencies": {
+        "@authup/errors": "^1.0.0-beta.50",
         "vitest": "^4.0.18"
     },
     "publishConfig": {
