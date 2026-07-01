@@ -134,9 +134,13 @@ const AEntityDelete = defineComponent({
         const confirmDialog = props.withPrompt ? useAlertDialog() : undefined;
 
         // Singular, localized entity noun (`count: 1`) interpolated into the
-        // confirmation body. The nine index pages that mount <AEntityDelete>
-        // all pass a primary entity type present in the ENTITY namespace; a
-        // non-primary type falls back to the raw key.
+        // confirmation title as an article-free, infinitive phrase (e.g.
+        // "Benutzer wirklich löschen?") — interpolating a gendered article
+        // around it ("diese(s) {{entity}}") is grammatically wrong in DE/FR/ES
+        // since the article must agree with each noun's gender/case. The nine
+        // index pages that mount <AEntityDelete> all pass a primary entity type
+        // present in the ENTITY namespace; a non-primary type falls back to the
+        // raw key.
         const entityLabel = useTranslation({
             namespace: TranslatorTranslationNamespace.ENTITY,
             key: props.entityType,
@@ -149,11 +153,11 @@ const AEntityDelete = defineComponent({
         const promptTitle = useTranslation({
             namespace: TranslatorTranslationNamespace.APP,
             key: TranslatorTranslationAppKey.DELETE_CONFIRM_TITLE,
+            data: { entity: entityLabel },
         });
         const promptDescription = useTranslation({
             namespace: TranslatorTranslationNamespace.APP,
             key: TranslatorTranslationAppKey.DELETE_CONFIRM_DESCRIPTION,
-            data: { entity: entityLabel },
         });
 
         const onClick = async ($event: any) => {

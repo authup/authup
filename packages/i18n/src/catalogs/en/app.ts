@@ -42,8 +42,8 @@ export const TranslatorTranslationAppEnglish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.ENTITY_DELETED]: '{{entity}} "{{name}}" was successfully deleted.',
     [TranslatorTranslationAppKey.ACCOUNT_UPDATED]: 'The account was successfully updated.',
 
-    [TranslatorTranslationAppKey.DELETE_CONFIRM_TITLE]: 'Confirm deletion',
-    [TranslatorTranslationAppKey.DELETE_CONFIRM_DESCRIPTION]: 'Are you sure you want to delete this {{entity}}? This action cannot be undone.',
+    [TranslatorTranslationAppKey.DELETE_CONFIRM_TITLE]: 'Delete {{entity}}?',
+    [TranslatorTranslationAppKey.DELETE_CONFIRM_DESCRIPTION]: 'This action cannot be undone.',
 
     [TranslatorTranslationAppKey.REMOVE_CONFIRM_TITLE]: 'Confirm removal',
     [TranslatorTranslationAppKey.REMOVE_CONFIRM_DESCRIPTION]: 'Are you sure you want to remove this assignment? You can re-assign it at any time.',
