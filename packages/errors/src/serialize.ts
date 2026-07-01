@@ -5,7 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import { isObject } from '@authup/kit';
+import { isObject } from '@ebec/core';
 
 /**
  * Convert an `Error` (or any value with a `toJSON()` method) into a
