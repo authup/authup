@@ -11,8 +11,10 @@ import { defineComponent } from 'vue';
 import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
+import { useAlertDialog } from '@vuecs/overlays';
 import {
     TranslatorTranslationActionKey,
+    TranslatorTranslationAppKey,
     TranslatorTranslationCommonKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
@@ -33,6 +35,13 @@ export default defineComponent({
             type: String as PropType<ButtonSize>,
             default: DEFAULT_BUTTON_SIZE,
         },
+        // Confirm the removal transition (assigned → un-assign) via
+        // useAlertDialog(). Off by default — un-assigning is reversible, so
+        // only high-stakes grants (role / permission) opt in. Adding never prompts.
+        withPrompt: {
+            type: Boolean,
+            default: false,
+        },
     },
     emits: ['changed'],
     setup(props, { emit }) {
@@ -49,10 +58,48 @@ export default defineComponent({
                 namespace: TranslatorTranslationNamespace.ACTION,
                 key: TranslatorTranslationActionKey.ADD,
             },
+            {
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.ABORT,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.APP,
+                key: TranslatorTranslationAppKey.REMOVE_CONFIRM_TITLE,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.APP,
+                key: TranslatorTranslationAppKey.REMOVE_CONFIRM_DESCRIPTION,
+            },
         ]);
 
-        const handleClick = (e: Event) => {
+        // Imperative confirmation dialog, resolved ONLY when `withPrompt` is set
+        // — the default (off) never injects the AlertDialogManager, so a toggle
+        // that doesn't prompt (scopes, policy-bindings, any downstream consumer)
+        // doesn't require `app.use(installOverlays)`. `useAlertDialog()` only
+        // calls inject() (no lifecycle hooks), so this one-time conditional
+        // resolution in setup is safe. Host: <VCAlertDialogProvider> in the
+        // client-web default layout.
+        const confirmDialog = props.withPrompt ? useAlertDialog() : undefined;
+
+        const handleClick = async (e: Event) => {
             e.preventDefault();
+
+            // Only the removal transition confirms (currently assigned → this
+            // click un-assigns). Adding is low-stakes and never prompts.
+            if (props.value && props.withPrompt && confirmDialog) {
+                const confirmed = await confirmDialog({
+                    title: translations.removeConfirmTitle,
+                    description: translations.removeConfirmDescription,
+                    confirmLabel: translations.remove,
+                    cancelLabel: translations.abort,
+                    tone: 'error',
+                });
+
+                if (!confirmed) {
+                    return;
+                }
+            }
+
             emit('changed', !props.value);
         };
 

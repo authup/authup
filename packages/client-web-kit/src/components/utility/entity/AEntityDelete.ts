@@ -22,9 +22,14 @@ import {
 import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
+import { useAlertDialog } from '@vuecs/overlays';
 import type { EntityType } from '@authup/core-kit';
 import type { IEntityAPISlim } from '@authup/core-http-kit';
-import { TranslatorTranslationActionKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import {
+    TranslatorTranslationActionKey,
+    TranslatorTranslationAppKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
 import { 
     DEFAULT_BUTTON_SIZE, 
     injectHTTPClient, 
@@ -65,6 +70,14 @@ const AEntityDelete = defineComponent({
         disabled: {
             type: Boolean,
             default: false,
+        },
+
+        // Gate the (irreversible) delete behind a confirmation dialog
+        // rendered by the app-level <VCAlertDialogProvider> via
+        // useAlertDialog(). On by default — opt out with :with-prompt="false".
+        withPrompt: {
+            type: Boolean,
+            default: true,
         },
 
         hint: {
@@ -109,10 +122,62 @@ const AEntityDelete = defineComponent({
             key: TranslatorTranslationActionKey.DELETE,
         });
 
-        const onClick = ($event: any) => {
+        // Imperative confirmation dialog, resolved ONLY when prompting is
+        // enabled — so `<AEntityDelete :with-prompt="false">` never injects the
+        // AlertDialogManager and therefore doesn't require `app.use(installOverlays)`
+        // in consumers/tests that skip @vuecs/overlays. `useAlertDialog()` only
+        // calls inject() (no lifecycle hooks), so this one-time conditional
+        // resolution in setup is safe. When enabled it injects the app-level
+        // manager (host: <VCAlertDialogProvider> in the client-web default
+        // layout) and resolves true (Delete) / false (Abort / Escape); on the
+        // server it resolves false without enqueuing, but onClick is client-only.
+        const confirmDialog = props.withPrompt ? useAlertDialog() : undefined;
+
+        // Singular, localized entity noun (`count: 1`) interpolated into the
+        // confirmation title as an article-free, infinitive phrase (e.g.
+        // "Benutzer wirklich löschen?") — interpolating a gendered article
+        // around it ("diese(s) {{entity}}") is grammatically wrong in DE/FR/ES
+        // since the article must agree with each noun's gender/case. The nine
+        // index pages that mount <AEntityDelete> all pass a primary entity type
+        // present in the ENTITY namespace; a non-primary type falls back to the
+        // raw key.
+        const entityLabel = useTranslation({
+            namespace: TranslatorTranslationNamespace.ENTITY,
+            key: props.entityType,
+            count: 1,
+        });
+        const abortLabel = useTranslation({
+            namespace: TranslatorTranslationNamespace.ACTION,
+            key: TranslatorTranslationActionKey.ABORT,
+        });
+        const promptTitle = useTranslation({
+            namespace: TranslatorTranslationNamespace.APP,
+            key: TranslatorTranslationAppKey.DELETE_CONFIRM_TITLE,
+            data: { entity: entityLabel },
+        });
+        const promptDescription = useTranslation({
+            namespace: TranslatorTranslationNamespace.APP,
+            key: TranslatorTranslationAppKey.DELETE_CONFIRM_DESCRIPTION,
+        });
+
+        const onClick = async ($event: any) => {
             $event.preventDefault();
 
-            return submit.apply(null);
+            if (props.withPrompt && confirmDialog) {
+                const confirmed = await confirmDialog({
+                    title: promptTitle.value,
+                    description: promptDescription.value,
+                    confirmLabel: translation.value,
+                    cancelLabel: abortLabel.value,
+                    tone: 'error',
+                });
+
+                if (!confirmed) {
+                    return undefined;
+                }
+            }
+
+            return submit();
         };
 
         const render = () => {

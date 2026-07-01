@@ -26,6 +26,7 @@ import clientWebTheme from '@authup/client-web-theme';
 import fontAwesome from '@vuecs/icons-font-awesome';
 import installForms from '@vuecs/forms';
 import installIcon from '@vuecs/icon';
+import installOverlays from '@vuecs/overlays';
 import installPagination from '@vuecs/pagination';
 import { addCollection } from '@iconify/vue';
 import faBrands from '@iconify-json/fa6-brands/icons.json';
@@ -183,6 +184,10 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
     });
     app.use(installForms);
     app.use(installIcon);
+    // Provides the app-level ToastManager + AlertDialogManager that
+    // `useToast()` / `useAlertDialog()` inject (the <VCToastProvider> in
+    // App.vue only supplies the Reka toast context, not the manager).
+    app.use(installOverlays);
     app.use(installPagination);
 
     return {

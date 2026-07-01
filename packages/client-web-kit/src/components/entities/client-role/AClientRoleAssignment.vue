@@ -71,6 +71,7 @@ export default defineComponent({
     <AToggleButton
         :value="!!manager.data.value"
         :is-busy="manager.busy.value"
+        :with-prompt="true"
         @changed="handleChanged"
     />
 </template>

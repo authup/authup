@@ -41,4 +41,10 @@ export const TranslatorTranslationAppGerman : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.ENTITY_UPDATED]: '{{entity}} wurde erfolgreich aktualisiert.',
     [TranslatorTranslationAppKey.ENTITY_DELETED]: '{{entity}} "{{name}}" wurde erfolgreich gelöscht.',
     [TranslatorTranslationAppKey.ACCOUNT_UPDATED]: 'Das Konto wurde erfolgreich aktualisiert.',
+
+    [TranslatorTranslationAppKey.DELETE_CONFIRM_TITLE]: '{{entity}} wirklich löschen?',
+    [TranslatorTranslationAppKey.DELETE_CONFIRM_DESCRIPTION]: 'Diese Aktion kann nicht rückgängig gemacht werden.',
+
+    [TranslatorTranslationAppKey.REMOVE_CONFIRM_TITLE]: 'Entfernen bestätigen',
+    [TranslatorTranslationAppKey.REMOVE_CONFIRM_DESCRIPTION]: 'Möchten Sie diese Zuordnung wirklich entfernen? Sie können sie jederzeit erneut zuweisen.',
 };

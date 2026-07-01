@@ -41,4 +41,10 @@ export const TranslatorTranslationAppSpanish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.ENTITY_UPDATED]: '{{entity}} se actualizó correctamente.',
     [TranslatorTranslationAppKey.ENTITY_DELETED]: '{{entity}} «{{name}}» se eliminó correctamente.',
     [TranslatorTranslationAppKey.ACCOUNT_UPDATED]: 'La cuenta se actualizó correctamente.',
+
+    [TranslatorTranslationAppKey.DELETE_CONFIRM_TITLE]: '¿Eliminar {{entity}}?',
+    [TranslatorTranslationAppKey.DELETE_CONFIRM_DESCRIPTION]: 'Esta acción no se puede deshacer.',
+
+    [TranslatorTranslationAppKey.REMOVE_CONFIRM_TITLE]: 'Confirmar eliminación',
+    [TranslatorTranslationAppKey.REMOVE_CONFIRM_DESCRIPTION]: '¿Seguro que quieres quitar esta asignación? Puedes volver a asignarla en cualquier momento.',
 };
