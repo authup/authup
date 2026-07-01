@@ -9,7 +9,8 @@
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 [![license](https://img.shields.io/github/license/authup/authup?style=flat-square)](https://github.com/authup/authup/blob/master/LICENSING.md)
 [![stars](https://img.shields.io/github/stars/authup/authup?style=flat-square)](https://github.com/authup/authup)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20836542.svg)](https://doi.org/10.5281/zenodo.20836542)
+[![DOI](https://zenodo.org/badge/380934910.svg)](https://doi.org/10.5281/zenodo.20836542)
+
 ## What is Authup?
 Authup is an authentication & authorization system.
 It is designed to be easy to use and flexible, with support for multiple authentication strategies.
@@ -176,7 +177,7 @@ each release. The badge below resolves to the **concept DOI** — it always poin
 version; to cite a specific release, use that version's DOI from the
 [Zenodo record](https://doi.org/10.5281/zenodo.20836542).
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20836542.svg)](https://doi.org/10.5281/zenodo.20836542)
+[![DOI](https://zenodo.org/badge/380934910.svg)](https://doi.org/10.5281/zenodo.20836542)
 
 Example (BibTeX):
 
