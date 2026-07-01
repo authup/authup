@@ -46,17 +46,17 @@ Foundation (no internal @authup deps):
 Layer 1:
   specs             → kit, errors
   core-realtime-kit → kit
-  i18n              → errors (+ ilingo runtime dep; validup is devDep-only — a `declare module` type augmentation)
+  i18n              → errors (+ ilingo runtime dep; validup is an optional peer — its `declare module` augmentation is re-exposed in the emitted .d.ts)
 
 Layer 2:
   access            → kit, errors
   core-kit          → kit, errors, specs
-  server-kit        → access, core-kit, kit, specs, core-realtime-kit (rapiq is devDep-only — type-only import)
+  server-kit        → access, core-kit, kit, specs, core-realtime-kit, rapiq (rapiq's PaginationParseOutput is re-exposed in server-kit's public .d.ts, so it is a dependency)
 
 Layer 3:
   core-http-kit     → access, kit, core-kit, specs (errors is devDep-only — test)
   server-adapter-kit → kit, errors, specs, core-kit, core-http-kit, server-kit
-  server-test-kit   → access, core-kit, kit, server-kit (devDep-only consumers)
+  server-test-kit   → access, core-kit, kit, server-kit (consumed devDep-only; server-kit is a runtime dependency — its types are re-exposed by the fakes' public .d.ts)
 
 Layer 4:
   server-adapter-node      → server-adapter-kit

@@ -58,5 +58,13 @@
     },
     "publishConfig": {
         "access": "public"
+    },
+    "peerDependencies": {
+        "validup": "^0.5.1"
+    },
+    "peerDependenciesMeta": {
+        "validup": {
+            "optional": true
+        }
     }
 }

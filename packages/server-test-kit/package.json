@@ -51,10 +51,10 @@
     "dependencies": {
         "@authup/access": "^1.0.0-beta.50",
         "@authup/core-kit": "^1.0.0-beta.50",
-        "@authup/kit": "^1.0.0-beta.50"
+        "@authup/kit": "^1.0.0-beta.50",
+        "@authup/server-kit": "^1.0.0-beta.50"
     },
     "devDependencies": {
-        "@authup/server-kit": "^1.0.0-beta.50",
         "vitest": "^4.0.14"
     },
     "publishConfig": {
