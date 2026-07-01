@@ -48,18 +48,14 @@
         "url": "https://github.com/authup/authup/issues"
     },
     "homepage": "https://github.com/authup/authup#readme",
-    "devDependencies": {
+    "dependencies": {
         "@authup/access": "^1.0.0-beta.50",
         "@authup/core-kit": "^1.0.0-beta.50",
-        "@authup/kit": "^1.0.0-beta.50",
+        "@authup/kit": "^1.0.0-beta.50"
+    },
+    "devDependencies": {
         "@authup/server-kit": "^1.0.0-beta.50",
         "vitest": "^4.0.14"
-    },
-    "peerDependencies": {
-        "@authup/access": "^1.0.0-beta.50",
-        "@authup/core-kit": "^1.0.0-beta.50",
-        "@authup/kit": "^1.0.0-beta.50",
-        "@authup/server-kit": "^1.0.0-beta.50"
     },
     "publishConfig": {
         "access": "public"

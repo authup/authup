@@ -49,16 +49,12 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
+        "@authup/errors": "^1.0.0-beta.50",
         "ilingo": "^6.0.0"
     },
     "devDependencies": {
-        "@authup/errors": "^1.0.0-beta.50",
         "validup": "^0.5.1",
         "vitest": "^4.0.14"
-    },
-    "peerDependencies": {
-        "@authup/errors": "^1.0.0-beta.50",
-        "validup": "^0.5.1"
     },
     "publishConfig": {
         "access": "public"
