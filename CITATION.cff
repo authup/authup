@@ -22,6 +22,12 @@ authors:
     # affiliation: ""  # add your institution
 repository-code: "https://github.com/authup/authup"
 url: "https://authup.org"
+# Concept DOI (all-versions) — always resolves to the latest release on Zenodo.
+doi: "10.5281/zenodo.20836542"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.20836542"
+    description: "Concept DOI (all versions)"
 # Authup is dual-licensed: the applications (server-core, client-web, authup CLI)
 # under AGPL-3.0-only (+ commercial), all packages under Apache-2.0.
 license:
