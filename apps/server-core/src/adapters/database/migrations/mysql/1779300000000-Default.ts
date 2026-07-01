@@ -13,8 +13,22 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  * up() ordering is LOAD-BEARING: schema -> convert-by-policy-name -> lift-admin ->
  * delete policy rows (the policy-name joins must resolve before the rows are deleted).
  *
- * down() is BEST-EFFORT: it drops the column only. The deleted system policies and the
- * nulled junction policy_id pointers are NOT reconstructed (re-provisioning restores them).
+ * BREAKING (existing data): only admin (-> any, matched by role name) and realm_admin
+ * (its realm-or-global / realm-bound junction policies -> ownOrNull / own) are converted.
+ * Every OTHER pre-existing grant with no realm policy keeps the 'own' default, so a custom
+ * role or a direct identity grant that previously reached global (realm_id = null) building
+ * blocks via the old system.realm-match baseline is now fail-closed to its own realm. Those
+ * grants must be re-widened to ownOrNull/any by hand: there is deliberately no automatic
+ * bump, because a policy-less grant that managed global resources is indistinguishable in
+ * the data from one that only ever acted on its own realm (auto-widening would fail open).
+ *
+ * down() is BEST-EFFORT and NOT a true inverse: it drops the column only. The deleted
+ * system policies and the nulled junction policy_id pointers are NOT reconstructed, and
+ * boot re-provisioning does NOT repair them either -- the junction synchronizer is
+ * create-only (it never rewrites realm_scope/policy_id on an already-existing row). So a
+ * revert (or revert + re-run) on a POPULATED database permanently pins realm_admin and any
+ * converted grant to the fail-closed 'own' default until fixed by hand; a forward-only
+ * upgrade is unaffected.
  */
 const JUNCTION_TABLES = [
     'auth_role_permissions',
