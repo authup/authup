@@ -67,6 +67,15 @@ Supported formats: `.json`, `.yaml`, `.yml`, `.ts`, `.mts`, `.mjs`, `.js`.
 When multiple files exist in the directory, they are loaded alphabetically and merged.
 If two files define the same entity (same `name` + scope), the later file wins.
 
+Provisioning files are **validated on load** with the same field rules the API
+enforces on entity creation: an invalid entity (missing or malformed `name`,
+invalid `email`, unknown policy `type`, ...) aborts startup with a validation
+error instead of being silently provisioned. Identifier fields are
+canonicalized (trimmed and lowercased), and attribute keys that are not part
+of the entity's schema are stripped. Unlike the API, provisioning files may
+set `built_in: true` on policies, permissions, scopes, roles, realms, and
+clients, and a user's `email` is optional (a placeholder is generated).
+
 ### Docker / Kubernetes
 
 Mount your provisioning files into the container's writable directory:
@@ -241,8 +250,8 @@ policies:
 |--------------------------------|------------|--------------------------------------------------------------------------------------|
 | `globalPermissions`                | `string[]`              | Permission names to assign (global scope). `'*'` = all.                             |
 | `globalPermissionsExclude`         | `string[]`              | Permission names to exclude when using `'*'` wildcard in `globalPermissions`.        |
-| `globalPermissionsPolicyName`      | `string`                | Default policy name for each `globalPermissions` assignment entry.                    |
-| `globalPermissionsPolicyOverrides` | `Record<string, string[]>` | Per-permission policy overrides. Key = policy name, value = permission names.      |
+| `globalPermissionsRealmScope`      | `string`                | Default `realm_scope` (`own`, `ownOrNull`, `any`) stamped on each `globalPermissions` junction entry. |
+| `globalPermissionsRealmScopeOverrides` | `Record<string, string[]>` | Per-permission `realm_scope` overrides. Key = `realm_scope` value, value = permission names. |
 | `realmPermissions`                 | `string[]`              | Permission names to assign (realm scope). `'*'` = all.                              |
 
 ### Realm
@@ -392,8 +401,8 @@ roles:
 ```
 
 Use `globalPermissionsExclude` to exclude specific permissions from a wildcard,
-`globalPermissionsPolicyName` to set a default junction policy,
-and `globalPermissionsPolicyOverrides` to override the policy for specific permissions:
+`globalPermissionsRealmScope` to set the default junction `realm_scope`,
+and `globalPermissionsRealmScopeOverrides` to override the scope for specific permissions:
 
 ```typescript
 roles: [
@@ -402,12 +411,10 @@ roles: [
         relations: {
             globalPermissions: ['*'],
             globalPermissionsExclude: ['realm_create', 'realm_update', 'realm_delete'],
-            globalPermissionsPolicyName: 'system.realm-or-global',
-            globalPermissionsPolicyOverrides: {
-                'system.realm-bound': [
-                    'role_create', 'role_update', 'role_delete',
-                    'permission_create', 'permission_update', 'permission_delete',
-                    'scope_create', 'scope_update', 'scope_delete',
+            globalPermissionsRealmScope: 'own',
+            globalPermissionsRealmScopeOverrides: {
+                ownOrNull: [
+                    'role_read', 'permission_read', 'scope_read', 'policy_read',
                 ],
             },
         },

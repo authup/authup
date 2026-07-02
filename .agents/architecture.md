@@ -556,6 +556,32 @@ The provisioning system declaratively synchronizes entities (permissions, roles,
   - `composite/`: Merges multiple sources with dedup by composite key (`name:realm_id:client_id`)
 - **app/modules/provisioning/module.ts**: `ProvisionerModule` — creates shared repository adapter instances and wires them to synchronizers
 
+### File-Source Validation (`ValidatorGroup.PROVISIONING`)
+
+Only the **file** source validates (the default and programmatic sources are
+code-built and bypass validation — which is why
+`BaseProvisioningSynchronizer.canonicalizeName` stays as defense in depth).
+`FileProvisioningSource` runs `RootProvisioningValidator` with
+`ValidatorGroup.PROVISIONING` and **uses the validated output**: every nested
+entity run (`createProvisioningEntitiesValidator`,
+`core/provisioning/entities/utils.ts`) passes the group explicitly (zod
+check closures don't inherit the validup run group), assigns the result back
+(so validator transforms — canonicalization, stripping — reach the
+synchronizers), and prefixes the array index onto issue paths.
+
+The PROVISIONING group lives in the core-kit entity validators alongside
+CREATE/UPDATE: identifier fields (`name`, `realm_id`, policy `type`) are
+mounted `[CREATE, PROVISIONING]`; `built_in` is mounted **only** under
+PROVISIONING (the API groups deliberately strip it — no HTTP service ever
+runs the PROVISIONING group); `user.email` is optional under PROVISIONING
+(the user synchronizer backfills a placeholder) while staying required at
+CREATE. Consequences for file configs: invalid entities now fail startup
+(fail-closed — the load throws before anything synchronizes), unmounted
+attribute keys are stripped, and top-level `policies` (previously silently
+dropped from the validator output) are validated via
+`PolicyProvisioningValidator` (attributes + `extraAttributes` + recursive
+`children`) and provisioned.
+
 ### Synchronization Order
 
 `ProvisionerModule` runs (1) `GraphProvisioningSynchronizer`, (2) backfill via `assignDefaultPolicy` (config-gated, deprecated).
@@ -814,9 +840,21 @@ This applies to the six controllers that read realm context: `client`, `robot`, 
 
 **Request flow**:
 
-1. `RealmResolverMiddleware` (mounted at `router.use('/realms/:realmId', middleware)` in `HTTPMiddlewareModule.mountRealmResolver`) fires on any URL whose first segment is `/realms/<key>`. It accepts either a UUID or a realm name, resolves via `IRealmRepository.resolve()`, and stashes the resolved UUID on `event.store[sym]` via `setRequestRealmID(event, uuid)`. Unknown realm key → `EntityNotFoundError` → 404.
+1. `RealmResolverMiddleware` (mounted at `router.use('/realms/:realmId', middleware)` in `HTTPMiddlewareModule.mountRealmResolver`) fires on any URL whose first segment is `/realms/<key>`. It accepts either a UUID or a realm name, resolves via `IRealmRepository.resolveId()` (UUID pass-through — no existence check; names resolve canonically), and stashes the resolved UUID on `event.store[sym]` via `setRequestRealmID(event, uuid)`. Unknown realm name → `EntityNotFoundError` → 404; an unknown realm UUID passes through and fails closed at the repository predicate below.
 2. The decorator-mounted route subsequently re-extracts `:realmId` from the URL into `event.params.realmId`, clobbering the raw URL value with itself — this is why the resolved UUID is stored on `event.store`, not `event.params`.
 3. Controllers read the realm via `getRequestRealmID(event)` (helper in `adapters/http/request/helpers/realm-id.ts`), which prefers the stashed UUID and falls back to `event.params.realmId` for cases where the middleware didn't run.
+
+**Fail-closed realm-key predicates**: every repository adapter that filters a
+name lookup by a realm key routes it through `IRealmRepository.resolveId(key)`
+(UUID → returned as-is, binding an unknown UUID matches zero rows; name →
+canonicalizing lookup, `null` on miss) and **fails closed** — `return null` /
+`[]` — instead of silently dropping the filter. This covers the
+`findOneByName` / `findOne` / `findByProtocol` blocks in the
+identity-provider, user, client, robot, role, scope, permission, and policy
+adapters plus the permission/policy checker services (`EntityNotFoundError`
+on an unknown realm key; a realm-less check still runs unfiltered). Never
+reintroduce the fail-open `resolve(...)` + `if (realm)` filter-drop shape — it
+let `GET /realms/<unknown-uuid>/users/<name>` match a cross-realm row.
 
 **Route-realm precedence (writes)**: controllers call `applyRouteRealmIDToBody(event, data)` at the top of `add`/`edit`/`put` (and inside `IdentityProviderController.write()`). When the route has `:realmId`, the helper overwrites `data.realm_id` with the route value — *route wins silently over body* (no `BadRequestError` for mismatch; the body value is simply discarded).
 
@@ -1013,46 +1051,59 @@ The `/token` endpoint authenticates the calling client according to RFC 6749. Co
 | Grant | Client auth requirement |
 |---|---|
 | `client_credentials` | Authentication is the grant's purpose. Confidential client only — public clients are rejected. |
-| `authorization_code` | Confidential client MUST authenticate (RFC §4.1.3). Authenticated `client_id` MUST match the auth code's bound `client_id` — mismatch = `invalid_grant`. |
-| `refresh_token` | Confidential client MUST authenticate (RFC §6). If the refresh token's payload has `client_id`, the request MUST authenticate as that client. Authenticated `client_id` MUST match — mismatch = `invalid_grant`. Tokens with no bound client may refresh without auth (legacy/no-client flow). |
-| `password` | Confidential client MUST authenticate (RFC §4.3.2). The token's `client_id` claim and the OpenID `aud` claim use the **authenticated** client's id, not any user-side association. See *Password grant realm resolution* for how the user realm is resolved. |
+| `authorization_code` | Confidential client MUST authenticate (RFC §4.1.3). Authenticated `client_id` MUST match the auth code's bound `client_id` — mismatch = `invalid_grant`. Client-by-name resolution is scoped by the shared realm hint (see *Token endpoint realm resolution*). |
+| `refresh_token` | Confidential client MUST authenticate (RFC §6). If the refresh token's payload has `client_id`, the request MUST authenticate as that client. Authenticated `client_id` MUST match — mismatch = `invalid_grant`. Tokens with no bound client may refresh without auth (legacy/no-client flow). Client-by-name resolution is scoped by the shared realm hint. |
+| `password` | Confidential client MUST authenticate (RFC §4.3.2). The token's `client_id` claim and the OpenID `aud` claim use the **authenticated** client's id, not any user-side association. The shared realm hint resolves the **user realm** and scopes the client leg. |
 | `robot_credentials` | Authentication is the grant's purpose (Authup-specific extension). |
 
-### Password grant realm resolution
+### Token endpoint realm resolution
 
-The password grant resolves the **user realm** before any authentication
-(`HTTPPasswordGrant.runWithRequest`, `adapters/http/adapters/oauth2/grant-types/password.ts`):
+The three client-authenticating grants (`password`, `authorization_code`,
+`refresh_token`) share ONE realm-hint semantic (helper `readRealmHint` in
+`adapters/http/adapters/oauth2/grant-types/utils/realm.ts`):
 
-- The realm hint is `realm_id ?? realm_name` from the request body — **both
-  denote the user realm** and each accepts a realm UUID **or** name (there is
-  no "client realm vs user realm" split; `realm_name` used to be silently
-  dropped and is now honored). The hint is canonicalized at the ingress
-  (`trim().toLowerCase()`, per *Canonical Identifier Form* layer 3) since no
-  validator runs on the token body.
+- The realm hint is `realm_id ?? realm_name` from the request body (the
+  authorization_code grant also accepts them from the query string, body
+  wins) — each accepts a realm UUID **or** name. The hint is canonicalized at
+  the ingress (`trim().toLowerCase()`, per *Canonical Identifier Form* layer
+  3) since no validator runs on the token body.
 - The hint is resolved once via `IRealmRepository.resolve(hint, true)` —
   **defaults to the master realm** when the hint is absent (or unknown; same
   fallback convention as registration / password-recovery; a missing master
   realm row throws `InternalError` — violated provisioning invariant). The
-  resolved `realm.id` is passed to both the client authenticator and the user
-  authenticator, so name-based user resolution is deterministic (previously a
-  realm-less login with a name matched an arbitrary cross-realm row) and the
-  LDAP-collection `findByProtocol(LDAP, realmId)` lookup is realm-scoped.
-- **The client leg is scoped to the same realm:** a *name*-identified
-  confidential client must live in the user realm (or be identified by its
-  UUID — UUID lookups skip the realm filter). A client named in a different
-  realm than its users now fails with `invalid_client` where the old unscoped
-  name lookup might have matched; register the client in the users' realm or
-  pass its UUID. On the SSR `/authorize` page the login realm is pinned to the
-  **client's** realm (`codeRequest.realm_id`, seeded into the login form), so
-  that page authenticates that realm's users only.
-- **Localized to the HTTP password grant.** HTTP Basic auth shares the same
+  by-id leg of that resolve is query-cached (60s, `CachePrefix.REALM` id key,
+  invalidated by the realm subscriber), so the per-login SELECT is amortized.
+  The refresh grant resolves lazily — a bare refresh (no client auth) does no
+  realm lookup.
+- **What the resolved realm scopes:** on `password`, both the user leg
+  (name-based user resolution is deterministic; the LDAP-collection
+  `findByProtocol(LDAP, realmId)` lookup is realm-scoped) and the client leg.
+  On `authorization_code` / `refresh_token`, only client-by-name resolution —
+  a *name*-identified client must live in the resolved realm (or be
+  identified by its UUID). This makes the refresh leg deterministic: a
+  password login via master's client refreshes against master's client again
+  instead of an unscoped name lookup matching an arbitrary same-named client
+  in another realm (every realm has a built-in `web` client, so collisions
+  are guaranteed). A client name that does not exist in the resolved realm
+  fails with `invalid_client`; register the client in that realm, pass a
+  matching hint, or use its UUID. On the SSR `/authorize` page the login realm is
+  pinned to the **client's** realm (`codeRequest.realm_id`, seeded into the
+  login form), so that page authenticates that realm's users only.
+- **UUID keys skip the realm predicate — intended.** A UUID-identified user
+  or client is resolved globally by primary key (`IdentityResolver` drops the
+  realm key for UUID lookups; UUIDs are globally unique, so the hint adds no
+  disambiguation). The realm hint constrains NAME resolution only, and the
+  issued token always carries the identity's true `realm_id`. Enforcing the
+  predicate for UUIDs would break realm-less id-identified logins, because
+  the master fallback makes "defaulted" indistinguishable from "explicit" by
+  the time the realm reaches the authenticator.
+- **Localized to `/token`.** HTTP Basic auth shares the same
   `UserAuthenticator` class but is intentionally untouched — realm-less
-  Basic-auth-by-name resolution is unchanged. The same unscoped-name ambiguity
-  remains latent for Basic auth, `robot_credentials` / `client_credentials`
-  (robot/client names are unique per `(name, realm_id)`), and client-by-name
-  resolution on the `authorization_code` / `refresh_token` grants (which still
-  treat body `realm_id` as a raw, fallback-less client-realm key) — see plan
-  037 non-goals.
+  Basic-auth-by-name resolution is unchanged (and never carries a realm
+  hint). The same raw, fallback-less `realm_id` handling remains on
+  `robot_credentials` / `client_credentials` (robot/client names are unique
+  per `(name, realm_id)`) and on the `/authorize` code-request verifier's
+  `data.realm_id` — see plan 037/038 non-goals.
 
 ### Credential transport
 
