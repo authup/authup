@@ -17,9 +17,9 @@ import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
 import {
-    computed, 
-    defineComponent, 
-    reactive, 
+    computed,
+    defineComponent,
+    reactive,
     ref,
 } from 'vue';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
