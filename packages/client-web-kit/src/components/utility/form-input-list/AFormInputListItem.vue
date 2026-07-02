@@ -88,6 +88,7 @@ export default defineComponent({
                         type="button"
                         :size="size"
                         color="warning"
+                        class="rounded-l-none"
                         @click.prevent="handleDeleted"
                     >
                         <VCIcon name="fa6-solid:minus" />

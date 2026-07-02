@@ -7,6 +7,7 @@
 
 <script lang="ts">
 import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core-kit';
+import { IdentityProviderOAuth2AttributesValidator } from '@authup/core-kit';
 import {
     TranslatorTranslationActionKey,
     TranslatorTranslationFieldKey,
@@ -14,7 +15,6 @@ import {
 } from '@authup/i18n';
 import type { OpenIDProviderMetadata } from '@authup/specs';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
-import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import { assignFormProperties, useTranslations } from '../../../core';
 import type { PropType } from 'vue';
@@ -46,7 +46,22 @@ export default defineComponent({
             user_info_url: '',
         });
 
-        const v = useValidup(new Container<typeof form>(), form, { name: 'endpoint' });
+        // Shared server-side validator, scoped to the endpoint keys via
+        // `pathsToInclude` — `token_url` and `authorize_url` are required
+        // for non-preset OAuth2/OIDC providers (this sub-form is only
+        // rendered when no preset is selected), `user_info_url` optional.
+        const v = useValidup(
+            new IdentityProviderOAuth2AttributesValidator({ pathsToInclude: ['token_url', 'authorize_url', 'user_info_url'] }),
+            form,
+            { name: 'endpoint' },
+        );
+
+        // `user_info_url` is an optional key on `OAuth2IdentityProvider`, so
+        // the typed `fields` accessor yields `FieldState | undefined` for it
+        // under strict consumers (the apps compile this source through their
+        // `@authup/* → src` aliases with `strict: true`). The dynamic `at()`
+        // accessor materialises the state and is never undefined.
+        const userInfoUrlField = v.fields.at<string | null>('user_info_url');
 
         function init() {
             form.token_url = '';
@@ -85,6 +100,7 @@ export default defineComponent({
 
         return {
             v,
+            userInfoUrlField,
             translations,
             handleDiscoveryLookup,
         };
@@ -132,7 +148,7 @@ export default defineComponent({
     </IFieldValidation>
     <IFieldValidation
         v-slot="{ value }"
-        :field="v.fields.user_info_url"
+        :field="userInfoUrlField"
     >
         <VCFormGroup
             :label="true"
@@ -142,7 +158,7 @@ export default defineComponent({
                 {{ translations.userInfo }}
             </template>
             <VCFormInput
-                v-model="v.fields.user_info_url.$model.value"
+                v-model="userInfoUrlField.$model.value"
                 placeholder="https://..."
             />
         </VCFormGroup>

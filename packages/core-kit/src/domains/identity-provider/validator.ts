@@ -40,25 +40,25 @@ export class IdentityProviderValidator extends Container<IdentityProvider> {
         this.mount('name', { group: ValidatorGroup.CREATE }, nameValidator);
         this.mount('name', {
             group: ValidatorGroup.UPDATE,
-            optional: true, 
+            optional: true,
         }, nameValidator);
 
         this.mount('display_name', { optional: true }, createValidator(
-            zod.string().min(3).max(256),
+            zod.string().min(3).max(256).nullable(),
         ));
 
         const enabledValidator = createValidator(zod.boolean());
         this.mount('enabled', { group: ValidatorGroup.CREATE }, enabledValidator);
         this.mount('enabled', {
             group: ValidatorGroup.UPDATE,
-            optional: true, 
+            optional: true,
         }, enabledValidator);
 
         this.mount(
             'realm_id',
             {
                 group: ValidatorGroup.CREATE,
-                optional: true, 
+                optional: true,
             },
             createValidator(zod.uuid()),
         );

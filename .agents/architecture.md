@@ -1157,7 +1157,42 @@ integration:
   (`components/utility/AFormSubmit.ts`)
   wraps `<VCButton>` with `@vuecs/forms`' `useSubmitButton` so the
   create/update label, icon, and color swap stay locale-reactive — a
-  deliberate adapter, not a temporary shim.
+  deliberate adapter, not a temporary shim. **Split forms & shared
+  validators:** multi-section forms (policy, identity-provider) register
+  field-group sub-forms under a parent `useValidup` collector
+  (`name: 'basic'` / `'client'` / ...), and the parent's `isInvalid` ORs
+  the children's `$invalid`. A validup mount without a `group` option
+  runs in *every* group, so a sub-form running a shared full-entity
+  validator from `@authup/core-kit` unscoped is permanently `$invalid`
+  the moment the validator mounts a key the sub-form's state doesn't own
+  (e.g. `IdentityProvider.protocol`, required in every group but owned
+  by the parent form) — with the issue on an unrendered field, the
+  submit button never enables and no error is visible. **Scope the
+  shared validator with validup's `pathsToInclude`** (`ContainerOptions`
+  or `ContainerRunOptions`) to exactly the keys the sub-form renders —
+  see `AIdentityProviderBasicFields` / `AIdentityProviderOAuth2{Client,
+  Endpoint}Fields`, which reuse `IdentityProviderValidator` /
+  `IdentityProviderOAuth2AttributesValidator` instead of redefining the
+  mounts inline (single source of truth with the server rules; group
+  options per mount are preserved). The alternative — feeding the
+  parent-owned key into the sub-form state via a prop +
+  `watch(..., { immediate: true })` — is only needed when that key
+  should actually be validated client-side (see `APolicyBasicForm`'s
+  `type`). Relatedly, the
+  kit installs `createValidup` with `optionalAs: null` (blank optional
+  inputs are emitted as `null`), so every optional string mount in a
+  shared entity validator must be `.nullable()` — server-side runs use
+  the default `optionalValue: 'undefined'` and would otherwise 400 on
+  the `null`. **Input-group append/prepend slots:** `VCFormInput`'s
+  `#groupAppend` / `#groupPrepend` slots hand the theme's joined addon
+  class down via slot props — bind it on the slot root
+  (`#groupAppend="{ class: appendClass }"` → `:class="appendClass"` on a
+  native `<button>`/`<div>`; see `ASecretInput` / `ANameInput` and the
+  identity-provider secret toggles). Dropping a raw `<VCButton>` in the
+  slot renders a detached fully-rounded button against the input's
+  squared group edge (double border/notched seam). Where a real
+  `<VCButton>` is intentional (e.g. `AFormInputListItem`'s
+  warning-colored delete), square its inner edge with `rounded-l-none`.
 - **Collections** — `defineEntityCollectionManager().render(...)`
   (`components/utility/entity/collection/module.ts`) composes `<VCList>`
   + `<VCListBody>` + `<VCListItem>` + `<VCListLoading>` + `<VCListEmpty>`

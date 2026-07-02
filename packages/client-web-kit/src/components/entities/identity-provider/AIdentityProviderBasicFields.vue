@@ -44,11 +44,15 @@ export default defineComponent({
 
         const isEditing = useIsEditing(computed(() => props.entity as IdentityProvider));
 
-        // Shared `IdentityProviderValidator` from `@authup/core-kit`.
-        // Registers under the parent `<AIdentityProviderOAuth2Form>` /
+        // Shared `IdentityProviderValidator` from `@authup/core-kit`, scoped
+        // via `pathsToInclude` to the keys this sub-form owns — the validator
+        // also mounts `protocol` (required in every group, owned by the
+        // parent form) and `realm_id`; unscoped, those would keep the
+        // sub-form permanently invalid with the issue on an unrendered
+        // field. Registers under the parent `<AIdentityProviderOAuth2Form>` /
         // `<AIdentityProviderLdapForm>` collectors via `name: 'basic'`.
         const v = useValidup(
-            new IdentityProviderValidator(),
+            new IdentityProviderValidator({ pathsToInclude: ['name', 'display_name', 'enabled'] }),
             form,
             {
                 name: 'basic',
@@ -82,12 +86,12 @@ export default defineComponent({
 
         const translationsDefault = useTranslations([
             {
-                namespace: TranslatorTranslationNamespace.FIELD, 
-                key: TranslatorTranslationFieldKey.DISPLAY_NAME, 
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.DISPLAY_NAME,
             },
             {
-                namespace: TranslatorTranslationNamespace.FIELD, 
-                key: TranslatorTranslationFieldKey.NAME, 
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.NAME,
             },
             {
                 namespace: TranslatorTranslationNamespace.FIELD,

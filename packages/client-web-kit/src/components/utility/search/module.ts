@@ -62,11 +62,18 @@ export function buildListSearch(
         placeholder: '...',
     };
 
-    const slots: Record<string, () => VNodeChild> = {};
+    const slots: Record<string, (slotProps?: { class?: unknown }) => VNodeChild> = {};
 
     if (ctx.icon) {
         const iconClass = ctx.iconClass ?? 'fa6-solid:magnifying-glass';
-        const iconNode = () => iconContent ?? h(VCIcon, { name: iconClass });
+        // Apply the theme's addon class handed down via the slot props so
+        // the icon renders as a joined input-group addon (bordered, muted
+        // background) instead of floating next to the squared input edge.
+        const iconNode = (slotProps: { class?: unknown } = {}) => h(
+            'div',
+            { class: slotProps.class },
+            [iconContent ?? h(VCIcon, { name: iconClass })],
+        );
 
         if (ctx.iconPosition === 'start') {
             props.groupPrepend = true;
