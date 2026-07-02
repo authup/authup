@@ -7,6 +7,7 @@
 <script lang="ts">
 import type { IdentityProvider, LdapIdentityProvider } from '@authup/core-kit';
 import {
+    TranslatorTranslationActionKey,
     TranslatorTranslationEntityKey,
     TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
@@ -15,9 +16,13 @@ import { assignFormProperties, useTranslations } from '../../../core';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
-import { defineComponent, reactive, ref } from 'vue';
+import {
+    computed, 
+    defineComponent, 
+    reactive, 
+    ref,
+} from 'vue';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
-import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
 import { onChange, useUpdatedAt } from '../../../composables';
 import { IFieldValidation } from '@ilingo/validup-vue';
@@ -26,7 +31,6 @@ export default defineComponent({
     components: {
         VCFormGroup,
         VCFormInput,
-        VCButton,
         VCIcon,
         IFieldValidation,
     },
@@ -61,12 +65,23 @@ export default defineComponent({
                 namespace: TranslatorTranslationNamespace.FIELD,
                 key: TranslatorTranslationFieldKey.PASSWORD,
             },
+            {
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.SHOW,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.HIDE,
+            },
         ]);
 
+        const passwordToggleLabel = computed(() => (passwordShow.value ? translations.hide : translations.show));
+
         return {
-            v, 
-            passwordShow, 
-            translations, 
+            v,
+            passwordShow,
+            passwordToggleLabel,
+            translations,
         };
     },
 });
@@ -99,13 +114,20 @@ export default defineComponent({
                     :type="passwordShow ? 'text' : 'password'"
                     autocomplete="current-password"
                 >
-                    <template #groupAppend>
-                        <VCButton
+                    <template #groupAppend="{ class: appendClass }">
+                        <button
                             type="button"
+                            :class="appendClass"
+                            class="cursor-pointer transition-colors hover:bg-bg-elevated"
+                            :aria-label="passwordToggleLabel"
+                            :title="passwordToggleLabel"
                             @click.prevent="passwordShow = !passwordShow"
                         >
-                            <VCIcon :name="passwordShow ? 'fa6-solid:eye-slash' : 'fa6-solid:eye'" />
-                        </VCButton>
+                            <VCIcon
+                                aria-hidden="true"
+                                :name="passwordShow ? 'fa6-solid:eye-slash' : 'fa6-solid:eye'"
+                            />
+                        </button>
                     </template>
                 </VCFormInput>
             </VCFormGroup>
