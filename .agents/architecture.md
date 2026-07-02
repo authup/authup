@@ -1157,7 +1157,33 @@ integration:
   (`components/utility/AFormSubmit.ts`)
   wraps `<VCButton>` with `@vuecs/forms`' `useSubmitButton` so the
   create/update label, icon, and color swap stay locale-reactive — a
-  deliberate adapter, not a temporary shim.
+  deliberate adapter, not a temporary shim. **Split forms & shared
+  validators:** multi-section forms (policy, identity-provider) register
+  field-group sub-forms under a parent `useValidup` collector
+  (`name: 'basic'` / `'client'` / ...), and the parent's `isInvalid` ORs
+  the children's `$invalid`. A validup mount without a `group` option
+  runs in *every* group, so when a sub-form runs a shared full-entity
+  validator from `@authup/core-kit`, every non-optional mount must be
+  present in that sub-form's validated state — parent-owned
+  discriminators (`Policy.type`, `IdentityProvider.protocol`) are fed in
+  via a prop + `watch(..., { immediate: true })` (see `APolicyBasicForm`
+  / `AIdentityProviderBasicFields`). Otherwise the sub-form is
+  permanently `$invalid` with the issue on an unrendered field: the
+  submit button never enables and no error is visible. Relatedly, the
+  kit installs `createValidup` with `optionalAs: null` (blank optional
+  inputs are emitted as `null`), so every optional string mount in a
+  shared entity validator must be `.nullable()` — server-side runs use
+  the default `optionalValue: 'undefined'` and would otherwise 400 on
+  the `null`. **Input-group append/prepend slots:** `VCFormInput`'s
+  `#groupAppend` / `#groupPrepend` slots hand the theme's joined addon
+  class down via slot props — bind it on the slot root
+  (`#groupAppend="{ class: appendClass }"` → `:class="appendClass"` on a
+  native `<button>`/`<div>`; see `ASecretInput` / `ANameInput` and the
+  identity-provider secret toggles). Dropping a raw `<VCButton>` in the
+  slot renders a detached fully-rounded button against the input's
+  squared group edge (double border/notched seam). Where a real
+  `<VCButton>` is intentional (e.g. `AFormInputListItem`'s
+  warning-colored delete), square its inner edge with `rounded-l-none`.
 - **Collections** — `defineEntityCollectionManager().render(...)`
   (`components/utility/entity/collection/module.ts`) composes `<VCList>`
   + `<VCListBody>` + `<VCListItem>` + `<VCListLoading>` + `<VCListEmpty>`
