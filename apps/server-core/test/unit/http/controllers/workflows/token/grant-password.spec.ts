@@ -263,6 +263,18 @@ describe('src/http/controllers/token', () => {
 
         expect(response.access_token).toBeDefined();
 
+        const mixedCaseResponse = await suite.client
+            .token
+            .createWithPassword({
+                username: user.name,
+                password: 'realm-user-secret',
+                client_id: client.name.toUpperCase(),
+                client_secret: secret,
+                realm_id: realm.id,
+            });
+
+        expect(mixedCaseResponse.access_token).toBeDefined();
+
         await expectClientError(
             () => suite.client.token.createWithPassword({
                 username: 'admin',
@@ -272,6 +284,19 @@ describe('src/http/controllers/token', () => {
             }),
             { status: 401, code: ErrorCode.OAUTH_CLIENT_INVALID },
         );
+    });
+
+    it('should match a mixed-case username against the canonical stored name', async () => {
+        const user = await suite.client.user.create(createFakeUser({ password: 'case-user-secret' }));
+
+        const response = await suite.client
+            .token
+            .createWithPassword({
+                username: ` ${user.name.toUpperCase()} `,
+                password: 'case-user-secret',
+            });
+
+        expect(response.access_token).toBeDefined();
     });
 
     it('should fall back to the master realm for an unknown realm hint', async () => {

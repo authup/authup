@@ -52,6 +52,8 @@ export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<
     }
 
     async synchronize(input: RobotProvisioningEntity): Promise<RobotProvisioningEntity> {
+        this.canonicalizeName(input.attributes);
+
         const strategy = normalizeEntityProvisioningStrategy(input.strategy);
 
         let attributes = await this.robotRepository.findOneBy({

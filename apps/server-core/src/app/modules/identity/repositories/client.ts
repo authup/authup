@@ -43,13 +43,13 @@ export class ClientIdentityRepository implements IClientIdentityRepository {
         if (isId) {
             query.where('client.id = :id', { id: key });
         } else {
-            query.where('client.name = :name', { name: key });
+            query.where('client.name = :name', { name: key.trim().toLowerCase() });
 
             if (realmKey) {
                 if (isUUID(realmKey)) {
                     query.andWhere('client.realm_id = :realmId', { realmId: realmKey });
                 } else {
-                    query.andWhere('realm.name = :realmName', { realmName: realmKey });
+                    query.andWhere('realm.name = :realmName', { realmName: realmKey.trim().toLowerCase() });
                 }
             }
         }

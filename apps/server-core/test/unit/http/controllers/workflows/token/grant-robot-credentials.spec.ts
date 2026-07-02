@@ -64,4 +64,15 @@ describe('refresh-token', () => {
             { status: 400, code: ErrorCode.ENTITY_CREDENTIALS_INVALID },
         );
     });
+
+    it('should grant token with robot credentials (mixed-case name)', async () => {
+        const response = await suite.client
+            .token
+            .createWithRobotCredentials({
+                id: ` ${robot.name.toUpperCase()} `,
+                secret: robot.secret,
+            });
+
+        expect(response.access_token).toBeDefined();
+    });
 });

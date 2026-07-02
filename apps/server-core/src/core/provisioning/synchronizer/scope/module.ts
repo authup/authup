@@ -22,6 +22,8 @@ export class ScopeProvisioningSynchronizer extends BaseProvisioningSynchronizer<
     }
 
     async synchronize(input: ScopeProvisioningEntity): Promise<ScopeProvisioningEntity> {
+        this.canonicalizeName(input.attributes);
+
         const strategy = normalizeEntityProvisioningStrategy(input.strategy);
 
         let attributes = await this.repository.findOneBy({

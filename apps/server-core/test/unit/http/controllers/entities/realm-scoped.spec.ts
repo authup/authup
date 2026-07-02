@@ -53,6 +53,13 @@ describe('src/http/controllers/realm-scoped', () => {
             expect(response.status).toEqual(200);
         });
 
+        it('should resolve a mixed-case realm key and Basic username', async () => {
+            const mixedCaseAuth = `Basic ${Buffer.from('ADMIN:start123').toString('base64')}`;
+            const response = await httpRequest(suite, 'GET', '/realms/MASTER/users', { headers: { Authorization: mixedCaseAuth } });
+
+            expect(response.status).toEqual(200);
+        });
+
         it('should 404 on unknown realm key in path', async () => {
             const response = await httpRequest(suite, 'GET', '/realms/this-realm-does-not-exist/users', { headers: { Authorization: basicAuth } });
 

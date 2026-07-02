@@ -43,13 +43,13 @@ export class RobotIdentityRepository implements IRobotIdentityRepository {
         if (isId) {
             query.where('robot.id = :id', { id: key });
         } else {
-            query.where('robot.name = :name', { name: key });
+            query.where('robot.name = :name', { name: key.trim().toLowerCase() });
 
             if (realmKey) {
                 if (isUUID(realmKey)) {
                     query.andWhere('robot.realm_id = :realmId', { realmId: realmKey });
                 } else {
-                    query.andWhere('realm.name = :realmName', { realmName: realmKey });
+                    query.andWhere('realm.name = :realmName', { realmName: realmKey.trim().toLowerCase() });
                 }
             }
         }

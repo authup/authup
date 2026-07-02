@@ -59,6 +59,8 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
     }
 
     async synchronize(input: UserProvisioningEntity): Promise<UserProvisioningEntity> {
+        this.canonicalizeName(input.attributes);
+
         const strategy = normalizeEntityProvisioningStrategy(input.strategy);
 
         let attributes = await this.userRepository.findOneBy({

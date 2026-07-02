@@ -37,6 +37,8 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
     }
 
     async synchronize(input: PolicyProvisioningEntity): Promise<PolicyProvisioningEntity> {
+        this.canonicalizeName(input.attributes);
+
         let entity = await this.repository.findOneBy({
             name: input.attributes.name,
             realm_id: input.attributes.realm_id || null,

@@ -46,6 +46,8 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
     }
 
     async synchronize(input: RealmProvisioningEntity): Promise<RealmProvisioningEntity> {
+        this.canonicalizeName(input.attributes);
+
         const strategy = normalizeEntityProvisioningStrategy(input.strategy);
         let attributes = await this.repository.findOneBy({ name: input.attributes.name });
 
