@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.0.0-beta.51](https://github.com/authup/authup/compare/v1.0.0-beta.50...v1.0.0-beta.51) (2026-07-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* **access,server-core:** compare policy content in isSuperset/grantDominates ([#3159](https://github.com/authup/authup/issues/3159)) (#3162)
+* **access,server-core:** per-grant realm-reach disjunction via aggregatePermissionPolicyBindings ([#3158](https://github.com/authup/authup/issues/3158))
+* **access,server-core:** PermissionEvaluationContext.input is renamed to data. Callers of permissionEvaluator.evaluate/preEvaluate/*OneOf must pass { data } instead of { input }.
+* **access,server-core:** actor-relative realm_scope with uniform entity + junction gating ([#3151](https://github.com/authup/authup/issues/3151))
+
+### Bug Fixes
+
+* **access,server-core:** actor-relative realm_scope with uniform entity + junction gating ([#3151](https://github.com/authup/authup/issues/3151)) ([0617e44](https://github.com/authup/authup/commit/0617e4430585bb33ab1937b917d7b630f43c8b70))
+* **access,server-core:** compare policy content in isSuperset/grantDominates ([#3159](https://github.com/authup/authup/issues/3159)) ([#3162](https://github.com/authup/authup/issues/3162)) ([f3d11f2](https://github.com/authup/authup/commit/f3d11f28931a0d862c79e0a70ffb87549aae525f))
+* **access,server-core:** per-grant realm-reach disjunction via aggregatePermissionPolicyBindings ([#3158](https://github.com/authup/authup/issues/3158)) ([1a1b1ce](https://github.com/authup/authup/commit/1a1b1ceef91042af3d8301f8cf445842788eccfa))
+* **deps:** normalize peer/dependency/dev classification across packages ([#3172](https://github.com/authup/authup/issues/3172)) ([c09f383](https://github.com/authup/authup/commit/c09f38315e5c569990b6540baf87cef0f3d8b663))
+
+
+### Code Refactoring
+
+* **access,server-core:** resource realm via the realmMatch policy key + typed PolicyData construction ([#3157](https://github.com/authup/authup/issues/3157)) ([07a0c92](https://github.com/authup/authup/commit/07a0c923cd8c9c07a6342b311bbd995d5fc6bbeb))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/kit bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+
 ## [1.0.0-beta.50](https://github.com/authup/authup/compare/v1.0.0-beta.49...v1.0.0-beta.50) (2026-06-24)
 
 

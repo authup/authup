@@ -3,6 +3,40 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.51](https://github.com/authup/authup/compare/v1.0.0-beta.50...v1.0.0-beta.51) (2026-07-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-core:** select junction grant relative to requested reach ([#3160](https://github.com/authup/authup/issues/3160)) (#3164)
+* **access,server-core:** compare policy content in isSuperset/grantDominates ([#3159](https://github.com/authup/authup/issues/3159)) (#3162)
+* **access,server-core:** per-grant realm-reach disjunction via aggregatePermissionPolicyBindings ([#3158](https://github.com/authup/authup/issues/3158))
+* **access,server-core:** PermissionEvaluationContext.input is renamed to data. Callers of permissionEvaluator.evaluate/preEvaluate/*OneOf must pass { data } instead of { input }.
+* **access,server-core:** actor-relative realm_scope with uniform entity + junction gating ([#3151](https://github.com/authup/authup/issues/3151))
+
+### Features
+
+* **client-web-kit:** confirm entity deletion via AlertDialog + upgrade @vuecs/* to latest ([#3173](https://github.com/authup/authup/issues/3173)) ([f48cdbf](https://github.com/authup/authup/commit/f48cdbf26ba34c4615d973c059a8a739f81cc069))
+* **client-web-kit:** realm_scope UI follow-up — labels + assignment-time scope (plan 034) ([#3168](https://github.com/authup/authup/issues/3168)) ([aab1fb0](https://github.com/authup/authup/commit/aab1fb0a3e7e88f2edb9dc0ce23748b0cf8aae7a))
+
+
+### Bug Fixes
+
+* **access,server-core:** actor-relative realm_scope with uniform entity + junction gating ([#3151](https://github.com/authup/authup/issues/3151)) ([0617e44](https://github.com/authup/authup/commit/0617e4430585bb33ab1937b917d7b630f43c8b70))
+* **access,server-core:** compare policy content in isSuperset/grantDominates ([#3159](https://github.com/authup/authup/issues/3159)) ([#3162](https://github.com/authup/authup/issues/3162)) ([f3d11f2](https://github.com/authup/authup/commit/f3d11f28931a0d862c79e0a70ffb87549aae525f))
+* **access,server-core:** per-grant realm-reach disjunction via aggregatePermissionPolicyBindings ([#3158](https://github.com/authup/authup/issues/3158)) ([1a1b1ce](https://github.com/authup/authup/commit/1a1b1ceef91042af3d8301f8cf445842788eccfa))
+* **deps:** normalize peer/dependency/dev classification across packages ([#3172](https://github.com/authup/authup/issues/3172)) ([c09f383](https://github.com/authup/authup/commit/c09f38315e5c569990b6540baf87cef0f3d8b663))
+* ensure consistent version for release ([840a54b](https://github.com/authup/authup/commit/840a54bb5f7a45d6eb9dfe287a09d8bae768e3be))
+* repair identity provider creation flow ([#3176](https://github.com/authup/authup/issues/3176)) ([877b81f](https://github.com/authup/authup/commit/877b81fc3df6050f740dbcb30e855a81c8e1a58c))
+* scope OAuth2 password grant user resolution to a realm (default master) ([#3175](https://github.com/authup/authup/issues/3175)) ([23d1362](https://github.com/authup/authup/commit/23d136221d18d1b8b2605092bb57bc0078c5f271))
+* **server-core:** re-check role ownership on identity-provider-role-mapping update ([#3166](https://github.com/authup/authup/issues/3166)) ([#3167](https://github.com/authup/authup/issues/3167)) ([66b56e9](https://github.com/authup/authup/commit/66b56e9467502100cde132091b1902ff1750c6d0))
+* **server-core:** select junction grant relative to requested reach ([#3160](https://github.com/authup/authup/issues/3160)) ([#3164](https://github.com/authup/authup/issues/3164)) ([548ee85](https://github.com/authup/authup/commit/548ee856b90f516fbe4e3c468b780ea64bedabf9))
+
+
+### Code Refactoring
+
+* **access,server-core:** resource realm via the realmMatch policy key + typed PolicyData construction ([#3157](https://github.com/authup/authup/issues/3157)) ([07a0c92](https://github.com/authup/authup/commit/07a0c923cd8c9c07a6342b311bbd995d5fc6bbeb))
+
 ## [1.0.0-beta.50](https://github.com/authup/authup/compare/v1.0.0-beta.49...v1.0.0-beta.50) (2026-06-24)
 
 

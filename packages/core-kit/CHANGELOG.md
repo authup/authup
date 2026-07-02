@@ -1,5 +1,26 @@
 # Change Log
 
+## [1.0.0-beta.51](https://github.com/authup/authup/compare/v1.0.0-beta.50...v1.0.0-beta.51) (2026-07-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* **access,server-core:** actor-relative realm_scope with uniform entity + junction gating ([#3151](https://github.com/authup/authup/issues/3151))
+
+### Bug Fixes
+
+* **access,server-core:** actor-relative realm_scope with uniform entity + junction gating ([#3151](https://github.com/authup/authup/issues/3151)) ([0617e44](https://github.com/authup/authup/commit/0617e4430585bb33ab1937b917d7b630f43c8b70))
+* repair identity provider creation flow ([#3176](https://github.com/authup/authup/issues/3176)) ([877b81f](https://github.com/authup/authup/commit/877b81fc3df6050f740dbcb30e855a81c8e1a58c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/errors bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/specs bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+
 ## [1.0.0-beta.50](https://github.com/authup/authup/compare/v1.0.0-beta.49...v1.0.0-beta.50) (2026-06-24)
 
 

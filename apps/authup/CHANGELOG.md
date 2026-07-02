@@ -1,5 +1,22 @@
 # Change Log
 
+## [1.0.0-beta.51](https://github.com/authup/authup/compare/v1.0.0-beta.50...v1.0.0-beta.51) (2026-07-02)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([840a54b](https://github.com/authup/authup/commit/840a54bb5f7a45d6eb9dfe287a09d8bae768e3be))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/kit bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/core-kit bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/server-core bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+
 ## [1.0.0-beta.50](https://github.com/authup/authup/compare/v1.0.0-beta.49...v1.0.0-beta.50) (2026-06-24)
 
 

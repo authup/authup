@@ -1,5 +1,55 @@
 # Change Log
 
+## [1.0.0-beta.51](https://github.com/authup/authup/compare/v1.0.0-beta.50...v1.0.0-beta.51) (2026-07-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-core:** select junction grant relative to requested reach ([#3160](https://github.com/authup/authup/issues/3160)) (#3164)
+* **access,server-core:** compare policy content in isSuperset/grantDominates ([#3159](https://github.com/authup/authup/issues/3159)) (#3162)
+* **access,server-core:** per-grant realm-reach disjunction via aggregatePermissionPolicyBindings ([#3158](https://github.com/authup/authup/issues/3158))
+* **access,server-core:** PermissionEvaluationContext.input is renamed to data. Callers of permissionEvaluator.evaluate/preEvaluate/*OneOf must pass { data } instead of { input }.
+* **access,server-core:** actor-relative realm_scope with uniform entity + junction gating ([#3151](https://github.com/authup/authup/issues/3151))
+
+### Features
+
+* **client-web-kit:** confirm entity deletion via AlertDialog + upgrade @vuecs/* to latest ([#3173](https://github.com/authup/authup/issues/3173)) ([f48cdbf](https://github.com/authup/authup/commit/f48cdbf26ba34c4615d973c059a8a739f81cc069))
+
+
+### Bug Fixes
+
+* **access,server-core:** actor-relative realm_scope with uniform entity + junction gating ([#3151](https://github.com/authup/authup/issues/3151)) ([0617e44](https://github.com/authup/authup/commit/0617e4430585bb33ab1937b917d7b630f43c8b70))
+* **access,server-core:** compare policy content in isSuperset/grantDominates ([#3159](https://github.com/authup/authup/issues/3159)) ([#3162](https://github.com/authup/authup/issues/3162)) ([f3d11f2](https://github.com/authup/authup/commit/f3d11f28931a0d862c79e0a70ffb87549aae525f))
+* **access,server-core:** per-grant realm-reach disjunction via aggregatePermissionPolicyBindings ([#3158](https://github.com/authup/authup/issues/3158)) ([1a1b1ce](https://github.com/authup/authup/commit/1a1b1ceef91042af3d8301f8cf445842788eccfa))
+* **deps:** normalize peer/dependency/dev classification across packages ([#3172](https://github.com/authup/authup/issues/3172)) ([c09f383](https://github.com/authup/authup/commit/c09f38315e5c569990b6540baf87cef0f3d8b663))
+* scope OAuth2 password grant user resolution to a realm (default master) ([#3175](https://github.com/authup/authup/issues/3175)) ([23d1362](https://github.com/authup/authup/commit/23d136221d18d1b8b2605092bb57bc0078c5f271))
+* **server-core:** re-check role ownership on identity-provider-role-mapping update ([#3166](https://github.com/authup/authup/issues/3166)) ([#3167](https://github.com/authup/authup/issues/3167)) ([66b56e9](https://github.com/authup/authup/commit/66b56e9467502100cde132091b1902ff1750c6d0))
+* **server-core:** select junction grant relative to requested reach ([#3160](https://github.com/authup/authup/issues/3160)) ([#3164](https://github.com/authup/authup/issues/3164)) ([548ee85](https://github.com/authup/authup/commit/548ee856b90f516fbe4e3c468b780ea64bedabf9))
+
+
+### Code Refactoring
+
+* **access,server-core:** resource realm via the realmMatch policy key + typed PolicyData construction ([#3157](https://github.com/authup/authup/issues/3157)) ([07a0c92](https://github.com/authup/authup/commit/07a0c923cd8c9c07a6342b311bbd995d5fc6bbeb))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/core-http-kit bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/core-kit bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/errors bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/i18n bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/kit bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/server-kit bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/specs bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/client-web-theme bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/server-test-kit bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+
 ## [1.0.0-beta.50](https://github.com/authup/authup/compare/v1.0.0-beta.49...v1.0.0-beta.50) (2026-06-24)
 
 
