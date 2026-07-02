@@ -44,7 +44,7 @@ export class IdentityProviderValidator extends Container<IdentityProvider> {
         }, nameValidator);
 
         this.mount('display_name', { optional: true }, createValidator(
-            zod.string().min(3).max(256),
+            zod.string().min(3).max(256).nullable(),
         ));
 
         const enabledValidator = createValidator(zod.boolean());
