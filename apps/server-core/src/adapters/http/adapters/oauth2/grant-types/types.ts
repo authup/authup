@@ -22,6 +22,7 @@ import type {
 export type HTTPOAuth2AuthorizeGrantContext = OAuth2AuthorizeGrantContext & {
     codeVerifier: IOAuth2AuthorizationCodeVerifier,
     clientAuthenticator: OAuth2ClientAuthenticator,
+    realmRepository: IRealmRepository,
 };
 
 export interface IHTTPOAuth2Grant {
@@ -36,6 +37,7 @@ export type HTTPOAuth2PasswordGrantContext = OAuth2PasswordGrantContext & {
 
 export type HTTPOAuth2RefreshTokenGrantContext = OAuth2RefreshTokenGrantContext & {
     clientAuthenticator: OAuth2ClientAuthenticator,
+    realmRepository: IRealmRepository,
 };
 
 export type HTTPOAuth2ClientCredentialsGrantContext = BaseGrantContext & {

@@ -71,6 +71,7 @@ export class TokenController {
                 accessTokenIssuer: ctx.accessTokenIssuer,
                 refreshTokenIssuer: ctx.refreshTokenIssuer,
                 sessionManager: ctx.sessionManager,
+                realmRepository: ctx.realmRepository,
             }),
             [OAuth2TokenGrant.CLIENT_CREDENTIALS]: new HTTPClientCredentialsGrant({
                 accessTokenIssuer: ctx.accessTokenIssuer,
@@ -97,6 +98,7 @@ export class TokenController {
                 tokenRevoker: ctx.tokenRevoker,
                 sessionManager: ctx.sessionManager,
                 clientAuthenticator: ctx.oauth2ClientAuthenticator,
+                realmRepository: ctx.realmRepository,
             }),
         };
     }

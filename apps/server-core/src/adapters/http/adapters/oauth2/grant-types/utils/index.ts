@@ -7,3 +7,4 @@
 
 export * from './credentials.ts';
 export * from './guess.ts';
+export * from './realm.ts';

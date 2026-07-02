@@ -13,7 +13,13 @@ import {
 } from 'vitest';
 import type { Client } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
-import { createFakeClient, expectClientError } from '../../../../../utils';
+import {
+    createFakeClient,
+    createFakeRealm,
+    createFakeUser,
+    expectClientError,
+    httpRequest,
+} from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
 
 describe('refresh-token', () => {
@@ -158,5 +164,133 @@ describe('refresh-token', () => {
             }),
             { status: 401, code: ErrorCode.OAUTH_CLIENT_INVALID },
         );
+    });
+
+    it('should resolve a name-identified client deterministically across password and refresh legs', async () => {
+        // same-named confidential clients in master and another realm — the
+        // realm-less name lookup must resolve master on BOTH legs instead of
+        // matching an arbitrary realm's client on refresh
+        const realm = await suite.client.realm.create(createFakeRealm());
+        const { name } = createFakeClient();
+        const masterSecret = 'master-leg-secret';
+        await suite.client.client.create(createFakeClient({
+            name,
+            secret: masterSecret,
+            secret_hashed: false,
+            secret_encrypted: false,
+            is_confidential: true,
+        }));
+        await suite.client.client.create(createFakeClient({
+            name,
+            realm_id: realm.id,
+            secret: 'other-realm-secret',
+            secret_hashed: false,
+            secret_encrypted: false,
+            is_confidential: true,
+        }));
+
+        const passwordResponse = await suite.client
+            .token
+            .createWithPassword({
+                username: 'admin',
+                password: 'start123',
+                client_id: name,
+                client_secret: masterSecret,
+            });
+
+        const refreshed = await suite.client
+            .token
+            .createWithRefreshToken({
+                refresh_token: passwordResponse.refresh_token!,
+                client_id: name,
+                client_secret: masterSecret,
+            });
+
+        expect(refreshed.access_token).toBeDefined();
+    });
+
+    it('should scope a name-identified client on refresh to the realm hint', async () => {
+        const realm = await suite.client.realm.create(createFakeRealm());
+        const secret = 'realm-refresh-secret';
+        const client = await suite.client.client.create(createFakeClient({
+            realm_id: realm.id,
+            secret,
+            secret_hashed: false,
+            secret_encrypted: false,
+            is_confidential: true,
+        }));
+        const user = await suite.client.user.create(createFakeUser({
+            realm_id: realm.id,
+            password: 'realm-user-secret',
+        }));
+
+        const login = () => suite.client
+            .token
+            .createWithPassword({
+                username: user.name,
+                password: 'realm-user-secret',
+                client_id: client.name,
+                client_secret: secret,
+                realm_id: realm.id,
+            });
+
+        let passwordResponse = await login();
+        const refreshed = await suite.client
+            .token
+            .createWithRefreshToken({
+                refresh_token: passwordResponse.refresh_token!,
+                client_id: client.name,
+                client_secret: secret,
+                realm_id: realm.id,
+            });
+
+        expect(refreshed.access_token).toBeDefined();
+
+        // realm_name is honored and canonicalized on the refresh leg too
+        passwordResponse = await login();
+        const rawResponse = await httpRequest(suite, 'POST', '/token', {
+            form: {
+                grant_type: 'refresh_token',
+                refresh_token: passwordResponse.refresh_token!,
+                client_id: client.name,
+                client_secret: secret,
+                realm_name: ` ${realm.name.toUpperCase()} `,
+            },
+        });
+        expect(rawResponse.status).toEqual(200);
+
+        // without a hint the name resolves in master, where the client does
+        // not exist — deterministic fail-closed instead of an unscoped match
+        passwordResponse = await login();
+        await expectClientError(
+            () => suite.client.token.createWithRefreshToken({
+                refresh_token: passwordResponse.refresh_token!,
+                client_id: client.name,
+                client_secret: secret,
+            }),
+            { status: 401, code: ErrorCode.OAUTH_CLIENT_INVALID },
+        );
+    });
+
+    it('should ignore the realm hint for a UUID-identified client on refresh', async () => {
+        const passwordResponse = await suite.client
+            .token
+            .createWithPassword({
+                username: 'admin',
+                password: 'start123',
+                client_id: confidentialClient.id,
+                client_secret: confidentialSecret,
+            });
+
+        const refreshed = await suite.client
+            .token
+            .createWithRefreshToken({
+                refresh_token: passwordResponse.refresh_token!,
+                client_id: confidentialClient.id,
+                client_secret: confidentialSecret,
+                realm_id: 'this-realm-does-not-exist',
+            });
+
+        expect(refreshed.access_token).toBeDefined();
     });
 });

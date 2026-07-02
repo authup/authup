@@ -14,7 +14,7 @@ import { getRequestHeader, getRequestIP } from 'routup';
 import type { ICredentialsAuthenticator, IRealmRepository, OAuth2ClientAuthenticator } from '../../../../../core/index.ts';
 import { PasswordGrantType } from '../../../../../core/index.ts';
 import type { HTTPOAuth2PasswordGrantContext, IHTTPOAuth2Grant } from './types.ts';
-import { extractClientCredentialsFromRequest, readStringField } from './utils/index.ts';
+import { extractClientCredentialsFromRequest, readRealmHint, readStringField } from './utils/index.ts';
 
 export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2Grant {
     protected authenticator : ICredentialsAuthenticator<User>;
@@ -42,15 +42,7 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
 
         const { clientId, clientSecret } = await extractClientCredentialsFromRequest(event);
 
-        // canonical identifier form: realm names are stored LOWER(TRIM(...))
-        const realmHint = [
-            readStringField(body, 'realm_id'),
-            readStringField(body, 'realm_name'),
-        ]
-            .map((value) => value?.trim().toLowerCase())
-            .find((value) => !!value);
-
-        const realm = await this.realmRepository.resolve(realmHint, true);
+        const realm = await this.realmRepository.resolve(readRealmHint(body), true);
 
         const client = clientId ?
             await this.clientAuthenticator.authenticate(

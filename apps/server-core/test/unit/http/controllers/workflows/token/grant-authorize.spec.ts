@@ -20,7 +20,12 @@ import {
 } from '@authup/specs';
 import { ErrorCode } from '@authup/errors';
 import { buildOAuth2CodeChallenge, generateOAuth2CodeVerifier } from '../../../../../../src/core';
-import { createFakeClient, expectClientError, httpRequest } from '../../../../../utils';
+import {
+    createFakeClient,
+    createFakeRealm,
+    expectClientError,
+    httpRequest,
+} from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
 
 describe('grant-authorize', () => {
@@ -434,6 +439,124 @@ describe('grant-authorize', () => {
                 redirect_uri: 'https://example.com/redirect',
                 code,
                 code_verifier: codeVerifier,
+            });
+
+        expect(tokenResponse.access_token).toBeDefined();
+    });
+
+    it('should scope a name-identified client on token exchange to the realm hint', async () => {
+        const realm = await suite.client.realm.create(createFakeRealm());
+        const secret = generateOAuth2CodeVerifier();
+        const client = await suite.client
+            .client
+            .create(createFakeClient({
+                realm_id: realm.id,
+                secret,
+                secret_hashed: false,
+                secret_encrypted: false,
+                is_confidential: true,
+            }));
+        const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        await suite.client.clientScope.create({
+            scope_id: scope.id,
+            client_id: client.id,
+        });
+
+        const issueCode = async () => {
+            const response = await suite.client
+                .authorize
+                .confirm({
+                    response_type: OAuth2AuthorizationResponseType.CODE,
+                    client_id: client.id,
+                    redirect_uri: 'https://example.com/redirect',
+                    scope: `${ScopeName.GLOBAL}`,
+                    state: generateOAuth2CodeVerifier(),
+                });
+            return new URL(response.url).searchParams.get('code')!;
+        };
+
+        // realm_id hint (UUID) scopes the client-name lookup
+        let tokenResponse = await suite.client
+            .token
+            .createWithAuthorizationCode({
+                client_id: client.name,
+                client_secret: secret,
+                redirect_uri: 'https://example.com/redirect',
+                code: await issueCode(),
+                realm_id: realm.id,
+            });
+        expect(tokenResponse.access_token).toBeDefined();
+
+        // realm_id also accepts the realm name
+        tokenResponse = await suite.client
+            .token
+            .createWithAuthorizationCode({
+                client_id: client.name,
+                client_secret: secret,
+                redirect_uri: 'https://example.com/redirect',
+                code: await issueCode(),
+                realm_id: realm.name,
+            });
+        expect(tokenResponse.access_token).toBeDefined();
+
+        // without a hint the name resolves in master, where the client does
+        // not exist — deterministic fail-closed instead of an unscoped match
+        const code = await issueCode();
+        await expectClientError(
+            () => suite.client.token.createWithAuthorizationCode({
+                client_id: client.name,
+                client_secret: secret,
+                redirect_uri: 'https://example.com/redirect',
+                code,
+            }),
+            {
+                status: 401,
+                code: ErrorCode.OAUTH_CLIENT_INVALID,
+                data: { error: OAuth2ErrorCode.INVALID_CLIENT },
+            },
+        );
+    });
+
+    it('should exchange a code for a name-identified public client scoped to its realm', async () => {
+        const realm = await suite.client.realm.create(createFakeRealm());
+        const client = await suite.client
+            .client
+            .create(createFakeClient({
+                realm_id: realm.id,
+                is_confidential: false,
+                secret: null,
+            }));
+        const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        await suite.client.clientScope.create({
+            scope_id: scope.id,
+            client_id: client.id,
+        });
+
+        const codeVerifier = generateOAuth2CodeVerifier();
+        const codeChallenge = await buildOAuth2CodeChallenge(codeVerifier);
+
+        const response = await suite.client
+            .authorize
+            .confirm({
+                response_type: OAuth2AuthorizationResponseType.CODE,
+                client_id: client.id,
+                redirect_uri: 'https://example.com/redirect',
+                scope: `${ScopeName.GLOBAL}`,
+                code_challenge: codeChallenge,
+                code_challenge_method: OAuth2AuthorizationCodeChallengeMethod.SHA_256,
+                state: generateOAuth2CodeVerifier(),
+            });
+
+        const code = new URL(response.url).searchParams.get('code')!;
+
+        const tokenResponse = await suite.client
+            .token
+            .createWithAuthorizationCode({
+                client_id: client.name,
+                redirect_uri: 'https://example.com/redirect',
+                code,
+                code_verifier: codeVerifier,
+                realm_id: realm.id,
             });
 
         expect(tokenResponse.access_token).toBeDefined();

@@ -13,21 +13,25 @@ import { getRequestHeader, getRequestIP } from 'routup';
 import { OAuth2RefreshTokenGrant } from '../../../../../core/index.ts';
 import type {
     IOAuth2TokenVerifier,
+    IRealmRepository,
     OAuth2ClientAuthenticator,
 } from '../../../../../core/index.ts';
 import type { HTTPOAuth2RefreshTokenGrantContext, IHTTPOAuth2Grant } from './types.ts';
-import { extractClientCredentialsFromRequest } from './utils/index.ts';
+import { extractClientCredentialsFromRequest, readRealmHint } from './utils/index.ts';
 
 export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant implements IHTTPOAuth2Grant {
     protected clientAuthenticator : OAuth2ClientAuthenticator;
 
     protected refreshTokenVerifier : IOAuth2TokenVerifier;
 
+    protected realmRepository : IRealmRepository;
+
     constructor(ctx: HTTPOAuth2RefreshTokenGrantContext) {
         super(ctx);
 
         this.clientAuthenticator = ctx.clientAuthenticator;
         this.refreshTokenVerifier = ctx.tokenVerifier;
+        this.realmRepository = ctx.realmRepository;
     }
 
     async runWithRequest(event: IAppEvent): Promise<OAuth2TokenGrantResponse> {
@@ -38,7 +42,6 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
         }
 
         const { clientId, clientSecret } = await extractClientCredentialsFromRequest(event);
-        const realmId = body?.realm_id;
 
         // RFC 6749 §6: verify the refresh token first to learn its bound
         // client (if any), then enforce binding. Authenticate the requesting
@@ -47,10 +50,13 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
         const payload = await this.refreshTokenVerifier.verify(refreshToken);
 
         if (clientId) {
+            // resolved lazily — a bare refresh (no client auth) skips the SELECT
+            const realm = await this.realmRepository.resolve(readRealmHint(body), true);
+
             const client = await this.clientAuthenticator.authenticate(
                 clientId,
                 clientSecret,
-                typeof realmId === 'string' ? realmId : undefined,
+                realm.id,
             );
 
             if (payload.client_id && payload.client_id !== client.id) {
