@@ -80,10 +80,11 @@ export class RoleRepositoryAdapter implements IRoleRepository {
         qb.where('role.name = :name', { name });
 
         if (realmKey) {
-            const realm = await this.realmRepository.resolve(realmKey);
-            if (realm) {
-                qb.andWhere('role.realm_id = :realmId', { realmId: realm.id });
+            const realmId = await this.realmRepository.resolveId(realmKey);
+            if (!realmId) {
+                return null;
             }
+            qb.andWhere('role.realm_id = :realmId', { realmId });
         }
 
         return qb.getOne();

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { randomUUID } from 'node:crypto';
 import {
     afterAll,
     beforeAll,
@@ -71,6 +72,18 @@ describe('core/identity/permission/checker', () => {
     it('throws EntityNotFoundError for an unknown name', async () => {
         await expect(
             service.check(createNanoID(), {}, createAllowAllActor()),
+        ).rejects.toBeInstanceOf(EntityNotFoundError);
+    });
+
+    it('throws EntityNotFoundError for an unknown realm key instead of dropping the filter', async () => {
+        const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
+        const permission = await permissionRepository.save(permissionRepository.create({
+            name: createNanoID(),
+            built_in: true,
+        }));
+
+        await expect(
+            service.check(permission.name, {}, createAllowAllActor(), randomUUID()),
         ).rejects.toBeInstanceOf(EntityNotFoundError);
     });
 

@@ -35,11 +35,15 @@ export class PermissionCheckerService implements IPermissionCheckerService {
         if (isUUID(idOrName)) {
             criteria = { id: idOrName };
         } else {
-            const realmEntity = await this.ctx.realmRepository.resolve(realm);
-            criteria = {
-                name: idOrName,
-                ...(realmEntity ? { realm_id: realmEntity.id } : {}),
-            };
+            criteria = { name: idOrName };
+
+            if (realm) {
+                const realmId = await this.ctx.realmRepository.resolveId(realm);
+                if (!realmId) {
+                    throw new EntityNotFoundError();
+                }
+                criteria.realm_id = realmId;
+            }
         }
 
         const entity = await this.ctx.repository.findOneBy(criteria);

@@ -86,10 +86,11 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
         qb.where('provider.name = :name', { name });
 
         if (realmKey) {
-            const realm = await this.realmRepository.resolve(realmKey);
-            if (realm) {
-                qb.andWhere('provider.realm_id = :realmId', { realmId: realm.id });
+            const realmId = await this.realmRepository.resolveId(realmKey);
+            if (!realmId) {
+                return null;
             }
+            qb.andWhere('provider.realm_id = :realmId', { realmId });
         }
 
         const entity = await qb.getOne();
@@ -163,16 +164,11 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
         qb.where('provider.protocol = :protocol', { protocol });
 
         if (realmKey) {
-            if (isUUID(realmKey)) {
-                qb.andWhere('provider.realm_id = :realmId', { realmId: realmKey });
-            } else {
-                const realm = await this.realmRepository.resolve(realmKey);
-                if (!realm) {
-                    return [];
-                }
-
-                qb.andWhere('provider.realm_id = :realmId', { realmId: realm.id });
+            const realmId = await this.realmRepository.resolveId(realmKey);
+            if (!realmId) {
+                return [];
             }
+            qb.andWhere('provider.realm_id = :realmId', { realmId });
         }
 
         const entities = await qb.getMany();

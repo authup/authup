@@ -93,10 +93,11 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
         qb.where('policy.name = :name', { name });
 
         if (realmKey) {
-            const realm = await this.realmRepository.resolve(realmKey);
-            if (realm) {
-                qb.andWhere('policy.realm_id = :realmId', { realmId: realm.id });
+            const realmId = await this.realmRepository.resolveId(realmKey);
+            if (!realmId) {
+                return null;
             }
+            qb.andWhere('policy.realm_id = :realmId', { realmId });
         }
 
         const entity = await qb.getOne();

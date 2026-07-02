@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { randomUUID } from 'node:crypto';
 import {
     afterAll,
     beforeAll,
@@ -64,6 +65,24 @@ describe('src/http/controllers/realm-scoped', () => {
             const response = await httpRequest(suite, 'GET', '/realms/this-realm-does-not-exist/users', { headers: { Authorization: basicAuth } });
 
             expect(response.status).toEqual(404);
+        });
+
+        it('should fail closed on name lookups under an unknown realm UUID', async () => {
+            const user = await suite.client.user.create(createFakeUser());
+
+            // unknown realm UUID passes the middleware unverified; the
+            // repository predicate must fail closed instead of matching the
+            // same-named entity from another realm
+            let response = await httpRequest(suite, 'GET', `/realms/${randomUUID()}/users/${user.name}`, { headers: { Authorization: basicAuth } });
+            expect(response.status).toEqual(404);
+
+            // known-but-different realm: same fail-closed outcome
+            response = await httpRequest(suite, 'GET', `/realms/${scopedRealm.id}/users/${user.name}`, { headers: { Authorization: basicAuth } });
+            expect(response.status).toEqual(404);
+
+            // positive control: the owning realm resolves the user
+            response = await httpRequest(suite, 'GET', `/realms/${masterRealm.id}/users/${user.name}`, { headers: { Authorization: basicAuth } });
+            expect(response.status).toEqual(200);
         });
 
         it('should create user under route realm, overriding body realm_id', async () => {

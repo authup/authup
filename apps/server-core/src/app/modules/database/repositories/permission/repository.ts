@@ -63,10 +63,11 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
         qb.where('permission.name = :name', { name });
 
         if (realmKey) {
-            const realm = await this.realmRepository.resolve(realmKey);
-            if (realm) {
-                qb.andWhere('permission.realm_id = :realmId', { realmId: realm.id });
+            const realmId = await this.realmRepository.resolveId(realmKey);
+            if (!realmId) {
+                return null;
             }
+            qb.andWhere('permission.realm_id = :realmId', { realmId });
         }
 
         return qb.getOne();
