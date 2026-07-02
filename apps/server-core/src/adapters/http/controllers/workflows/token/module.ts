@@ -88,6 +88,7 @@ export class TokenController {
                 authenticator: ctx.userAuthenticator,
                 clientAuthenticator: ctx.oauth2ClientAuthenticator,
                 sessionManager: ctx.sessionManager,
+                realmRepository: ctx.realmRepository,
             }),
             [OAuth2TokenGrant.REFRESH_TOKEN]: new HTTPOAuth2RefreshTokenGrant({
                 accessTokenIssuer: ctx.accessTokenIssuer,

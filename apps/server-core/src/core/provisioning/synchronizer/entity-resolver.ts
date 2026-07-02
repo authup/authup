@@ -20,6 +20,8 @@ export class ProvisioningEntityResolver<T extends ObjectLiteral = ObjectLiteral>
             return [];
         }
 
+        names = names.map((name) => name.trim().toLowerCase());
+
         const hasWildcard = names.includes('*');
         if (hasWildcard) {
             return this.repository.findManyBy({
@@ -40,6 +42,8 @@ export class ProvisioningEntityResolver<T extends ObjectLiteral = ObjectLiteral>
             return [];
         }
 
+        names = names.map((name) => name.trim().toLowerCase());
+
         const hasWildcard = names.includes('*');
         if (hasWildcard) {
             return this.repository.findManyBy({
@@ -59,6 +63,8 @@ export class ProvisioningEntityResolver<T extends ObjectLiteral = ObjectLiteral>
         if (!names || names.length === 0) {
             return [];
         }
+
+        names = names.map((name) => name.trim().toLowerCase());
 
         const hasWildcard = names.includes('*');
         if (hasWildcard) {

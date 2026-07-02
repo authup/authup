@@ -62,6 +62,8 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
     }
 
     async synchronize(input: ClientProvisioningEntity): Promise<ClientProvisioningEntity> {
+        this.canonicalizeName(input.attributes);
+
         const strategy = normalizeEntityProvisioningStrategy(input.strategy);
 
         let attributes = await this.clientRepository.findOneBy({

@@ -337,7 +337,7 @@ export function createStore(context: StoreCreateContext) {
         const response = await client.token.createWithPassword({
             username: ctx.name,
             password: ctx.password,
-            ...(realmId.value ? { realm_id: ctx.realmId } : {}),
+            ...(ctx.realmId ? { realm_id: ctx.realmId } : {}),
         });
 
         applyTokenGrantResponse(response);

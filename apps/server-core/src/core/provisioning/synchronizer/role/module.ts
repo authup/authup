@@ -35,6 +35,8 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
     }
 
     async synchronize(input: RoleProvisioningEntity): Promise<RoleProvisioningEntity> {
+        this.canonicalizeName(input.attributes);
+
         const strategy = normalizeEntityProvisioningStrategy(input.strategy);
         let attributes = await this.repository.findOneBy({
             name: input.attributes.name,

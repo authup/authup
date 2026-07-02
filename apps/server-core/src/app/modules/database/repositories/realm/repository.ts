@@ -7,6 +7,7 @@
 
 import type { Realm } from '@authup/core-kit';
 import { REALM_MASTER_NAME } from '@authup/core-kit';
+import { InternalError } from '@authup/errors';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
@@ -28,7 +29,7 @@ export class RealmRepositoryAdapter implements IRealmRepository {
 
     findOneByName(name: string): Promise<Realm | null> {
         const qb = this.repository.createQueryBuilder('realm');
-        qb.where('realm.name = :name', { name });
+        qb.where('realm.name = :name', { name: name.trim().toLowerCase() });
 
         return qb.getOne();
     }
@@ -106,6 +107,9 @@ export class RealmRepositoryAdapter implements IRealmRepository {
 
         if (!entity && withFallback) {
             entity = await this.findOneBy({ name: REALM_MASTER_NAME });
+            if (!entity) {
+                throw new InternalError('The master realm could not be resolved.');
+            }
         }
 
         return entity;

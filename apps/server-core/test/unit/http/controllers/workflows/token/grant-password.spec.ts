@@ -12,7 +12,12 @@ import {
     it,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
-import { createFakeClient, createFakeUser, expectClientError } from '../../../../../utils';
+import {
+    createFakeClient,
+    createFakeRealm,
+    createFakeUser,
+    expectClientError,
+} from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
 
 describe('src/http/controllers/token', () => {
@@ -128,5 +133,181 @@ describe('src/http/controllers/token', () => {
             }),
             { status: 400, code: ErrorCode.ENTITY_CREDENTIALS_INVALID },
         );
+    });
+
+    it('should default realm-less password grant to the master realm', async () => {
+        const realm = await suite.client.realm.create(createFakeRealm());
+
+        const { name } = createFakeUser();
+        await suite.client.user.create(createFakeUser({
+            name,
+            password: 'master-secret-123',
+        }));
+        await suite.client.user.create(createFakeUser({
+            name,
+            realm_id: realm.id,
+            password: 'other-secret-123',
+        }));
+
+        const response = await suite.client
+            .token
+            .createWithPassword({
+                username: name,
+                password: 'master-secret-123',
+            });
+
+        expect(response.access_token).toBeDefined();
+
+        await expectClientError(
+            () => suite.client.token.createWithPassword({
+                username: name,
+                password: 'other-secret-123',
+            }),
+            { status: 400, code: ErrorCode.ENTITY_CREDENTIALS_INVALID },
+        );
+    });
+
+    it('should grant token with password for a realm selected via realm hint', async () => {
+        const realm = await suite.client.realm.create(createFakeRealm());
+        const user = await suite.client.user.create(createFakeUser({
+            realm_id: realm.id,
+            password: 'realm-user-secret',
+        }));
+
+        let response = await suite.client
+            .token
+            .createWithPassword({
+                username: user.name,
+                password: 'realm-user-secret',
+                realm_id: realm.id,
+            });
+
+        expect(response.access_token).toBeDefined();
+
+        response = await suite.client
+            .token
+            .createWithPassword({
+                username: user.name,
+                password: 'realm-user-secret',
+                realm_id: realm.name,
+            });
+
+        expect(response.access_token).toBeDefined();
+
+        response = await suite.client
+            .token
+            .createWithPassword({
+                username: user.name,
+                password: 'realm-user-secret',
+                realm_name: realm.name,
+            });
+
+        expect(response.access_token).toBeDefined();
+
+        response = await suite.client
+            .token
+            .createWithPassword({
+                username: user.name,
+                password: 'realm-user-secret',
+                realm_name: ` ${realm.name.toUpperCase()} `,
+            });
+
+        expect(response.access_token).toBeDefined();
+
+        response = await suite.client
+            .token
+            .createWithPassword({
+                username: user.name,
+                password: 'realm-user-secret',
+                realm_id: '   ',
+                realm_name: realm.name,
+            });
+
+        expect(response.access_token).toBeDefined();
+
+        await expectClientError(
+            () => suite.client.token.createWithPassword({
+                username: user.name,
+                password: 'realm-user-secret',
+            }),
+            { status: 400, code: ErrorCode.ENTITY_CREDENTIALS_INVALID },
+        );
+    });
+
+    it('should scope name-identified confidential client authentication to the resolved realm', async () => {
+        const realm = await suite.client.realm.create(createFakeRealm());
+        const secret = 'client-realm-scope-secret';
+        const client = await suite.client
+            .client
+            .create(createFakeClient({
+                realm_id: realm.id,
+                secret,
+                secret_hashed: false,
+                secret_encrypted: false,
+                is_confidential: true,
+            }));
+        const user = await suite.client.user.create(createFakeUser({
+            realm_id: realm.id,
+            password: 'realm-user-secret',
+        }));
+
+        const response = await suite.client
+            .token
+            .createWithPassword({
+                username: user.name,
+                password: 'realm-user-secret',
+                client_id: client.name,
+                client_secret: secret,
+                realm_id: realm.id,
+            });
+
+        expect(response.access_token).toBeDefined();
+
+        const mixedCaseResponse = await suite.client
+            .token
+            .createWithPassword({
+                username: user.name,
+                password: 'realm-user-secret',
+                client_id: client.name.toUpperCase(),
+                client_secret: secret,
+                realm_id: realm.id,
+            });
+
+        expect(mixedCaseResponse.access_token).toBeDefined();
+
+        await expectClientError(
+            () => suite.client.token.createWithPassword({
+                username: 'admin',
+                password: 'start123',
+                client_id: client.name,
+                client_secret: secret,
+            }),
+            { status: 401, code: ErrorCode.OAUTH_CLIENT_INVALID },
+        );
+    });
+
+    it('should match a mixed-case username against the canonical stored name', async () => {
+        const user = await suite.client.user.create(createFakeUser({ password: 'case-user-secret' }));
+
+        const response = await suite.client
+            .token
+            .createWithPassword({
+                username: ` ${user.name.toUpperCase()} `,
+                password: 'case-user-secret',
+            });
+
+        expect(response.access_token).toBeDefined();
+    });
+
+    it('should fall back to the master realm for an unknown realm hint', async () => {
+        const response = await suite.client
+            .token
+            .createWithPassword({
+                username: 'admin',
+                password: 'start123',
+                realm_id: 'this-realm-does-not-exist',
+            });
+
+        expect(response.access_token).toBeDefined();
     });
 });

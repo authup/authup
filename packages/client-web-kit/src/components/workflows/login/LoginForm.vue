@@ -7,6 +7,7 @@ import {
     nextTick,
     reactive,
     ref,
+    watch,
 } from 'vue';
 import type { IdentityProvider, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
@@ -125,19 +126,11 @@ export default defineComponent({
 
         const busy = ref(false);
 
-        const realmId = computed(() => {
-            if (props.codeRequest && props.codeRequest.realm_id) {
-                return props.codeRequest.realm_id;
-            }
-
-            return form.realm_id;
-        });
-
         const identityProviderQuery: Ref<BuildInput<IdentityProvider>> = ref({});
         const resetIdentityProviderQuery = () => {
             identityProviderQuery.value = {
                 filters: {
-                    realm_id: realmId.value || '',
+                    realm_id: form.realm_id || '',
                     protocol: `!${IdentityProviderProtocol.LDAP}`,
                     enabled: true,
                 },
@@ -165,6 +158,16 @@ export default defineComponent({
                 updateIdentityProviderList();
             });
         };
+
+        watch(
+            () => (props.codeRequest ? props.codeRequest.realm_id : undefined),
+            (value) => {
+                if (value && value !== form.realm_id) {
+                    updateRealmId(value);
+                }
+            },
+            { immediate: true },
+        );
 
         const submit = async () => {
             try {

@@ -30,6 +30,8 @@ export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchron
     }
 
     async synchronize(input: PermissionProvisioningEntity): Promise<PermissionProvisioningEntity> {
+        this.canonicalizeName(input.attributes);
+
         const strategy = normalizeEntityProvisioningStrategy(input.strategy);
 
         let attributes = await this.repository.findOneBy({
@@ -87,7 +89,7 @@ export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchron
         }
 
         for (const policyName of policyNames) {
-            const policy = await this.policyRepository.findOneByName(policyName);
+            const policy = await this.policyRepository.findOneByName(policyName.trim().toLowerCase());
             if (!policy) {
                 throw new Error(
                     `Provisioning: policy '${policyName}' not found for permission '${permission.name}'.`,

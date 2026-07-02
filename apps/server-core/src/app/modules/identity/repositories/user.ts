@@ -58,13 +58,13 @@ export class UserIdentityRepository implements IUserIdentityRepository {
         if (isId) {
             query.where('user.id = :id', { id: key });
         } else {
-            query.where('user.name = :name', { name: key });
+            query.where('user.name = :name', { name: key.trim().toLowerCase() });
 
             if (realmKey) {
                 if (isUUID(realmKey)) {
                     query.andWhere('user.realm_id = :realmId', { realmId: realmKey });
                 } else {
-                    query.andWhere('realm.name = :realmName', { realmName: realmKey });
+                    query.andWhere('realm.name = :realmName', { realmName: realmKey.trim().toLowerCase() });
                 }
             }
         }

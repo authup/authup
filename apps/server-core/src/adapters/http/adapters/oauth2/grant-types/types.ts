@@ -12,6 +12,7 @@ import type {
     BaseGrantContext,
     ICredentialsAuthenticator,
     IOAuth2AuthorizationCodeVerifier,
+    IRealmRepository,
     OAuth2AuthorizeGrantContext,
     OAuth2ClientAuthenticator,
     OAuth2PasswordGrantContext,
@@ -30,6 +31,7 @@ export interface IHTTPOAuth2Grant {
 export type HTTPOAuth2PasswordGrantContext = OAuth2PasswordGrantContext & {
     authenticator : ICredentialsAuthenticator<User>,
     clientAuthenticator: OAuth2ClientAuthenticator,
+    realmRepository: IRealmRepository,
 };
 
 export type HTTPOAuth2RefreshTokenGrantContext = OAuth2RefreshTokenGrantContext & {

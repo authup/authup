@@ -1015,8 +1015,44 @@ The `/token` endpoint authenticates the calling client according to RFC 6749. Co
 | `client_credentials` | Authentication is the grant's purpose. Confidential client only — public clients are rejected. |
 | `authorization_code` | Confidential client MUST authenticate (RFC §4.1.3). Authenticated `client_id` MUST match the auth code's bound `client_id` — mismatch = `invalid_grant`. |
 | `refresh_token` | Confidential client MUST authenticate (RFC §6). If the refresh token's payload has `client_id`, the request MUST authenticate as that client. Authenticated `client_id` MUST match — mismatch = `invalid_grant`. Tokens with no bound client may refresh without auth (legacy/no-client flow). |
-| `password` | Confidential client MUST authenticate (RFC §4.3.2). The token's `client_id` claim and the OpenID `aud` claim use the **authenticated** client's id, not any user-side association. |
+| `password` | Confidential client MUST authenticate (RFC §4.3.2). The token's `client_id` claim and the OpenID `aud` claim use the **authenticated** client's id, not any user-side association. See *Password grant realm resolution* for how the user realm is resolved. |
 | `robot_credentials` | Authentication is the grant's purpose (Authup-specific extension). |
+
+### Password grant realm resolution
+
+The password grant resolves the **user realm** before any authentication
+(`HTTPPasswordGrant.runWithRequest`, `adapters/http/adapters/oauth2/grant-types/password.ts`):
+
+- The realm hint is `realm_id ?? realm_name` from the request body — **both
+  denote the user realm** and each accepts a realm UUID **or** name (there is
+  no "client realm vs user realm" split; `realm_name` used to be silently
+  dropped and is now honored). The hint is canonicalized at the ingress
+  (`trim().toLowerCase()`, per *Canonical Identifier Form* layer 3) since no
+  validator runs on the token body.
+- The hint is resolved once via `IRealmRepository.resolve(hint, true)` —
+  **defaults to the master realm** when the hint is absent (or unknown; same
+  fallback convention as registration / password-recovery; a missing master
+  realm row throws `InternalError` — violated provisioning invariant). The
+  resolved `realm.id` is passed to both the client authenticator and the user
+  authenticator, so name-based user resolution is deterministic (previously a
+  realm-less login with a name matched an arbitrary cross-realm row) and the
+  LDAP-collection `findByProtocol(LDAP, realmId)` lookup is realm-scoped.
+- **The client leg is scoped to the same realm:** a *name*-identified
+  confidential client must live in the user realm (or be identified by its
+  UUID — UUID lookups skip the realm filter). A client named in a different
+  realm than its users now fails with `invalid_client` where the old unscoped
+  name lookup might have matched; register the client in the users' realm or
+  pass its UUID. On the SSR `/authorize` page the login realm is pinned to the
+  **client's** realm (`codeRequest.realm_id`, seeded into the login form), so
+  that page authenticates that realm's users only.
+- **Localized to the HTTP password grant.** HTTP Basic auth shares the same
+  `UserAuthenticator` class but is intentionally untouched — realm-less
+  Basic-auth-by-name resolution is unchanged. The same unscoped-name ambiguity
+  remains latent for Basic auth, `robot_credentials` / `client_credentials`
+  (robot/client names are unique per `(name, realm_id)`), and client-by-name
+  resolution on the `authorization_code` / `refresh_token` grants (which still
+  treat body `realm_id` as a raw, fallback-less client-realm key) — see plan
+  037 non-goals.
 
 ### Credential transport
 
@@ -1078,13 +1114,14 @@ Cross-DB collation behavior diverges:
 
 Without canonicalization, the same code base produces different uniqueness behavior on each DB. Canonicalizing identifier columns at write time eliminates the divergence: `=` is sufficient for lookups across both DBs, `UNIQUE` constraints behave identically.
 
-### Three layers of enforcement
+### Four layers of enforcement
 
-Canonical form is enforced at three boundaries (defense-in-depth):
+Canonical form is enforced at four boundaries (defense-in-depth):
 
 1. **Validator transform** — every `name` / `email` validator chains `.trim().toLowerCase()` before its format check (Zod path) or `.matches(...)` (validup path). Mixed-case input is silently lowercased; callers see canonical form in the response.
 2. **Validator regex** — the format check (`isNameValid` for names: `/^[a-z0-9-_.]+$/`; emails: `/^[^A-Z]+$/`) operates on the post-transform value. After `.toLowerCase()` the regex always passes; it remains as documentation of the contract and as a catch for code paths that bypass the transform.
-3. **External boundary canonicalization** — when an identifier enters Authup outside the validator chain (currently: `IdentityProviderAccountManager` taking attribute candidates from external IdPs), it is lowercased at the ingress so external mixed-case usernames don't fall through to the random-nanoid fallback.
+3. **External boundary canonicalization** — when an identifier enters Authup outside the validator chain, it is lowercased at the ingress. Currently: `IdentityProviderAccountManager` taking attribute candidates from external IdPs (so external mixed-case usernames don't fall through to the random-nanoid fallback), and the OAuth2 password grant's `realm_id`/`realm_name` hint.
+4. **Repository-level lookup canonicalization** — name-based *lookups* on the authentication surface canonicalize the key before binding it: the identity repositories (`app/modules/identity/repositories/{user,client,robot}.ts`, both the name and a realm-name filter), `OAuth2ClientRepository.findOneByIdOrName` (the `/authorize` client resolution), and `RealmRepositoryAdapter.findOneByName`. An auth ingress that misses layer 3 (the `/realms/<key>` URL segment specifically, an HTTP Basic username, a token-body credential key) still matches canonically stored rows instead of diverging by database collation. Lookup-only, auth-surface-only — write paths rely on layers 1–3, and the entity repository adapters' `findOneByName` (`GET /roles/<name>` etc.) still bind raw (see plan 038).
 
 ### Adding a new identifier column
 

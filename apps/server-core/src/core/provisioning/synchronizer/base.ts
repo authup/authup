@@ -19,4 +19,14 @@ export abstract class BaseProvisioningSynchronizer<T> implements IProvisioningSy
     }
 
     abstract synchronize(input: T): Promise<T>;
+
+    // canonical identifier form: provisioning sources may carry raw names
+    // (the file-source entity validators run group-less, so the validator
+    // transforms don't apply); lookups against canonically stored rows
+    // and canonical persistence both require it.
+    protected canonicalizeName(attributes: { name?: string | null } | undefined): void {
+        if (attributes && typeof attributes.name === 'string') {
+            attributes.name = attributes.name.trim().toLowerCase();
+        }
+    }
 }

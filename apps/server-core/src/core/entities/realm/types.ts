@@ -9,6 +9,10 @@ import type { Realm } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository  } from '@authup/server-kit';
 
 export interface IRealmRepository extends IEntityRepository<Realm> {
+    /**
+     * @throws InternalError when withFallback is set but the master realm does not exist
+     * (a violated provisioning invariant, not a client fault).
+     */
     resolve(id: string | undefined, withFallback: true): Promise<Realm>;
     resolve(id: string | undefined, withFallback?: boolean): Promise<Realm | null>;
 }
