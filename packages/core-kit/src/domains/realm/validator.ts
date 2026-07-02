@@ -38,10 +38,10 @@ export class RealmValidator extends Container<
                 }),
         );
 
-        this.mount('name', { group: ValidatorGroup.CREATE }, nameValidator);
+        this.mount('name', { group: [ValidatorGroup.CREATE, ValidatorGroup.PROVISIONING] }, nameValidator);
         this.mount('name', {
             group: ValidatorGroup.UPDATE,
-            optional: true, 
+            optional: true,
         }, nameValidator);
 
         this.mount(
@@ -54,6 +54,15 @@ export class RealmValidator extends Container<
             'description',
             { optional: true },
             createValidator(z.string().min(5).max(4096).nullable()),
+        );
+
+        this.mount(
+            'built_in',
+            {
+                group: ValidatorGroup.PROVISIONING,
+                optional: true,
+            },
+            createValidator(z.boolean()),
         );
     }
 }

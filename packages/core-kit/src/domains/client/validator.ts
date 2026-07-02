@@ -54,14 +54,14 @@ export class ClientValidator extends Container<Client> {
 
         this.mount(
             'name',
-            { group: ValidatorGroup.CREATE },
+            { group: [ValidatorGroup.CREATE, ValidatorGroup.PROVISIONING] },
             nameValidator,
         );
         this.mount(
             'name',
             {
                 group: ValidatorGroup.UPDATE,
-                optional: true, 
+                optional: true,
             },
             nameValidator,
         );
@@ -158,10 +158,21 @@ export class ClientValidator extends Container<Client> {
         this.mount(
             'realm_id',
             {
-                group: ValidatorGroup.CREATE,
-                optional: true, 
+                group: [ValidatorGroup.CREATE, ValidatorGroup.PROVISIONING],
+                optional: true,
             },
             createValidator(z.uuid()),
+        );
+
+        // deliberately NOT mounted for CREATE/UPDATE — no API caller may
+        // self-assign built_in; only provisioned entities carry it
+        this.mount(
+            'built_in',
+            {
+                group: ValidatorGroup.PROVISIONING,
+                optional: true,
+            },
+            createValidator(z.boolean()),
         );
     }
 }

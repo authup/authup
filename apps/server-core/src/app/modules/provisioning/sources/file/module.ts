@@ -5,6 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
+import { ValidatorGroup } from '@authup/kit';
 import { load, locateMany } from 'locter';
 import path from 'node:path';
 import type { RootProvisioningEntity } from '../../../../../core/provisioning/entities/index.ts';
@@ -36,7 +37,7 @@ export class FileProvisioningSource implements IProvisioningSource {
         const output : RootProvisioningEntity = {};
         for (const location of locations) {
             const raw = await load(location);
-            const data = await this.rootValidator.run(raw.default);
+            const data = await this.rootValidator.run(raw.default, { group: ValidatorGroup.PROVISIONING });
 
             compositeSource.merge(output, data);
         }

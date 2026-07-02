@@ -29,4 +29,11 @@ export enum EnvironmentName {
 export enum ValidatorGroup {
     CREATE = 'create',
     UPDATE = 'update',
+    /**
+     * Startup provisioning (file source). Shares the CREATE field rules but
+     * relaxes API-only constraints (e.g. optional user email) and mounts
+     * provisioning-only fields (e.g. built_in) that the API groups
+     * deliberately strip. Never used by HTTP-facing services.
+     */
+    PROVISIONING = 'provisioning',
 }

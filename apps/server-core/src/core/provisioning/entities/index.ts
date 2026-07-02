@@ -16,3 +16,4 @@ export * from './scope/index.ts';
 export * from './user/index.ts';
 
 export * from './types.ts';
+export * from './utils.ts';

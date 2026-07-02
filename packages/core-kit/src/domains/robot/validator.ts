@@ -52,14 +52,14 @@ export class RobotValidator extends Container<
 
         this.mount(
             'name',
-            { group: ValidatorGroup.CREATE },
+            { group: [ValidatorGroup.CREATE, ValidatorGroup.PROVISIONING] },
             nameValidator,
         );
         this.mount(
             'name',
             {
                 group: ValidatorGroup.UPDATE,
-                optional: true, 
+                optional: true,
             },
             nameValidator,
         );
@@ -85,8 +85,8 @@ export class RobotValidator extends Container<
         this.mount(
             'realm_id',
             {
-                group: ValidatorGroup.CREATE,
-                optional: true, 
+                group: [ValidatorGroup.CREATE, ValidatorGroup.PROVISIONING],
+                optional: true,
             },
             createValidator(z.uuid()),
         );

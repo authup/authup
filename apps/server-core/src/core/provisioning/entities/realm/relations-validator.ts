@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildZodIssuesForError, createValidator } from '@validup/zod';
-import { Container, isValidupError } from 'validup';
+import { createValidator } from '@validup/zod';
+import { Container } from 'validup';
 import { z } from 'zod';
 import { ClientProvisioningValidator } from '../client/index.ts';
 import { PermissionProvisioningValidator } from '../permission/index.ts';
@@ -14,6 +14,7 @@ import { RobotProvisioningValidator } from '../robot/index.ts';
 import { RoleProvisioningValidator } from '../role/index.ts';
 import { ScopeProvisioningValidator } from '../scope/index.ts';
 import { UserProvisioningValidator } from '../user/index.ts';
+import { createProvisioningEntitiesValidator } from '../utils.ts';
 import type { RealmProvisioningRelations } from './types.ts';
 
 export class RealmProvisioningRelationsValidator extends Container<RealmProvisioningRelations> {
@@ -30,103 +31,37 @@ export class RealmProvisioningRelationsValidator extends Container<RealmProvisio
         this.mount('clients', { optional: true }, createValidator(
             z
                 .array(z.any())
-                .check(async (ctx) => {
-                    try {
-                        for (let i = 0; i < ctx.value.length; i++) {
-                            await clientValidator.run(ctx.value[i]);
-                        }
-                    } catch (e) {
-                        if (isValidupError(e)) {
-                            ctx.issues.push(...buildZodIssuesForError(e));
-                        }
-                    }
-                }),
+                .check(createProvisioningEntitiesValidator(clientValidator)),
         ));
 
         this.mount('roles', { optional: true }, createValidator(
             z
                 .array(z.any())
-                .check(async (ctx) => {
-                    try {
-                        for (let i = 0; i < ctx.value.length; i++) {
-                            await roleValidator.run(ctx.value[i]);
-                        }
-                    } catch (e) {
-                        if (isValidupError(e)) {
-                            ctx.issues.push({
-                                code: 'custom',
-                                message: '',
-                                path: [],
-                                input: undefined,
-                            });
-                            ctx.issues.push(...buildZodIssuesForError(e));
-                        }
-                    }
-                }),
+                .check(createProvisioningEntitiesValidator(roleValidator)),
         ));
 
         this.mount('permissions', { optional: true }, createValidator(
             z
                 .array(z.any())
-                .check(async (ctx) => {
-                    try {
-                        for (let i = 0; i < ctx.value.length; i++) {
-                            await permissionValidator.run(ctx.value[i]);
-                        }
-                    } catch (e) {
-                        if (isValidupError(e)) {
-                            ctx.issues.push(...buildZodIssuesForError(e));
-                        }
-                    }
-                }),
+                .check(createProvisioningEntitiesValidator(permissionValidator)),
         ));
 
         this.mount('robots', { optional: true }, createValidator(
             z
                 .array(z.any())
-                .check(async (ctx) => {
-                    try {
-                        for (let i = 0; i < ctx.value.length; i++) {
-                            await robotValidator.run(ctx.value[i]);
-                        }
-                    } catch (e) {
-                        if (isValidupError(e)) {
-                            ctx.issues.push(...buildZodIssuesForError(e));
-                        }
-                    }
-                }),
+                .check(createProvisioningEntitiesValidator(robotValidator)),
         ));
 
         this.mount('scopes', { optional: true }, createValidator(
             z
                 .array(z.any())
-                .check(async (ctx) => {
-                    try {
-                        for (let i = 0; i < ctx.value.length; i++) {
-                            await scopeValidator.run(ctx.value[i]);
-                        }
-                    } catch (e) {
-                        if (isValidupError(e)) {
-                            ctx.issues.push(...buildZodIssuesForError(e));
-                        }
-                    }
-                }),
+                .check(createProvisioningEntitiesValidator(scopeValidator)),
         ));
 
         this.mount('users', { optional: true }, createValidator(
             z
                 .array(z.any())
-                .check(async (ctx) => {
-                    try {
-                        for (let i = 0; i < ctx.value.length; i++) {
-                            await userValidator.run(ctx.value[i]);
-                        }
-                    } catch (e) {
-                        if (isValidupError(e)) {
-                            ctx.issues.push(...buildZodIssuesForError(e));
-                        }
-                    }
-                }),
+                .check(createProvisioningEntitiesValidator(userValidator)),
         ));
     }
 }
