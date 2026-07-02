@@ -1,5 +1,35 @@
 # Change Log
 
+## [1.0.0-beta.51](https://github.com/authup/authup/compare/v1.0.0-beta.50...v1.0.0-beta.51) (2026-07-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* **access,server-core:** PermissionEvaluationContext.input is renamed to data. Callers of permissionEvaluator.evaluate/preEvaluate/*OneOf must pass { data } instead of { input }.
+
+### Features
+
+* **client-web-kit:** confirm entity deletion via AlertDialog + upgrade @vuecs/* to latest ([#3173](https://github.com/authup/authup/issues/3173)) ([f48cdbf](https://github.com/authup/authup/commit/f48cdbf26ba34c4615d973c059a8a739f81cc069))
+
+
+### Code Refactoring
+
+* **access,server-core:** resource realm via the realmMatch policy key + typed PolicyData construction ([#3157](https://github.com/authup/authup/issues/3157)) ([07a0c92](https://github.com/authup/authup/commit/07a0c923cd8c9c07a6342b311bbd995d5fc6bbeb))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/client-web-nuxt bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/client-web-theme bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/core-http-kit bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/core-kit bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/i18n bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/kit bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+
 ## [1.0.0-beta.50](https://github.com/authup/authup/compare/v1.0.0-beta.49...v1.0.0-beta.50) (2026-06-24)
 
 

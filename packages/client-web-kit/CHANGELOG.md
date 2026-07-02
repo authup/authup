@@ -1,5 +1,44 @@
 # Change Log
 
+## [1.0.0-beta.51](https://github.com/authup/authup/compare/v1.0.0-beta.50...v1.0.0-beta.51) (2026-07-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* **access,server-core:** PermissionEvaluationContext.input is renamed to data. Callers of permissionEvaluator.evaluate/preEvaluate/*OneOf must pass { data } instead of { input }.
+* **access,server-core:** actor-relative realm_scope with uniform entity + junction gating ([#3151](https://github.com/authup/authup/issues/3151))
+
+### Features
+
+* **client-web-kit:** confirm entity deletion via AlertDialog + upgrade @vuecs/* to latest ([#3173](https://github.com/authup/authup/issues/3173)) ([f48cdbf](https://github.com/authup/authup/commit/f48cdbf26ba34c4615d973c059a8a739f81cc069))
+* **client-web-kit:** realm_scope UI follow-up — labels + assignment-time scope (plan 034) ([#3168](https://github.com/authup/authup/issues/3168)) ([aab1fb0](https://github.com/authup/authup/commit/aab1fb0a3e7e88f2edb9dc0ce23748b0cf8aae7a))
+
+
+### Bug Fixes
+
+* **access,server-core:** actor-relative realm_scope with uniform entity + junction gating ([#3151](https://github.com/authup/authup/issues/3151)) ([0617e44](https://github.com/authup/authup/commit/0617e4430585bb33ab1937b917d7b630f43c8b70))
+* **deps:** normalize peer/dependency/dev classification across packages ([#3172](https://github.com/authup/authup/issues/3172)) ([c09f383](https://github.com/authup/authup/commit/c09f38315e5c569990b6540baf87cef0f3d8b663))
+* repair identity provider creation flow ([#3176](https://github.com/authup/authup/issues/3176)) ([877b81f](https://github.com/authup/authup/commit/877b81fc3df6050f740dbcb30e855a81c8e1a58c))
+* scope OAuth2 password grant user resolution to a realm (default master) ([#3175](https://github.com/authup/authup/issues/3175)) ([23d1362](https://github.com/authup/authup/commit/23d136221d18d1b8b2605092bb57bc0078c5f271))
+
+
+### Code Refactoring
+
+* **access,server-core:** resource realm via the realmMatch policy key + typed PolicyData construction ([#3157](https://github.com/authup/authup/issues/3157)) ([07a0c92](https://github.com/authup/authup/commit/07a0c923cd8c9c07a6342b311bbd995d5fc6bbeb))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/core-http-kit bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/core-kit bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/i18n bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/kit bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+    * @authup/specs bumped from ^1.0.0-beta.50 to ^1.0.0-beta.51
+
 ## [1.0.0-beta.50](https://github.com/authup/authup/compare/v1.0.0-beta.49...v1.0.0-beta.50) (2026-06-24)
 
 
