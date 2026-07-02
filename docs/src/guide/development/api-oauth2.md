@@ -45,9 +45,10 @@ curl -X POST 'http://localhost:3001/token' \
 ```
 
 The user is resolved within a single realm. Pass `realm_id` or `realm_name`
-(both accept a realm UUID or name) to select it; when neither is provided,
-the **master** realm is used. In multi-realm deployments, users outside the
-master realm must therefore include a realm parameter:
+(both accept a realm UUID or name) to select it; when neither is provided —
+or the provided value does not match any realm — the **master** realm is
+used. In multi-realm deployments, users outside the master realm must
+therefore include a realm parameter:
 
 ```shell
 curl -X POST 'http://localhost:3001/token' \
