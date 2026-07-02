@@ -7,6 +7,7 @@
 
 import type { User } from '@authup/core-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
+import { OAuth2RequestError } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
 import type { IAppEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
@@ -32,17 +33,22 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
 
     async runWithRequest(event: IAppEvent): Promise<OAuth2TokenGrantResponse> {
         const body = await readRequestBody(event);
-        const {
-            username,
-            password,
-        } = body || {};
+
+        const username = readStringField(body, 'username');
+        const password = readStringField(body, 'password');
+        if (!username || !password) {
+            throw OAuth2RequestError.malformed('username and password must be provided.');
+        }
 
         const { clientId, clientSecret } = await extractClientCredentialsFromRequest(event);
 
         // canonical identifier form: realm names are stored LOWER(TRIM(...))
-        const realmHint = (
-            readStringField(body, 'realm_id') ?? readStringField(body, 'realm_name')
-        )?.trim().toLowerCase() || undefined;
+        const realmHint = [
+            readStringField(body, 'realm_id'),
+            readStringField(body, 'realm_name'),
+        ]
+            .map((value) => value?.trim().toLowerCase())
+            .find((value) => !!value);
 
         const realm = await this.realmRepository.resolve(realmHint, true);
 

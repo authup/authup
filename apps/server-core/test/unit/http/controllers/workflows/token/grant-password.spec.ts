@@ -214,12 +214,63 @@ describe('src/http/controllers/token', () => {
 
         expect(response.access_token).toBeDefined();
 
+        response = await suite.client
+            .token
+            .createWithPassword({
+                username: user.name,
+                password: 'realm-user-secret',
+                realm_id: '   ',
+                realm_name: realm.name,
+            });
+
+        expect(response.access_token).toBeDefined();
+
         await expectClientError(
             () => suite.client.token.createWithPassword({
                 username: user.name,
                 password: 'realm-user-secret',
             }),
             { status: 400, code: ErrorCode.ENTITY_CREDENTIALS_INVALID },
+        );
+    });
+
+    it('should scope name-identified confidential client authentication to the resolved realm', async () => {
+        const realm = await suite.client.realm.create(createFakeRealm());
+        const secret = 'client-realm-scope-secret';
+        const client = await suite.client
+            .client
+            .create(createFakeClient({
+                realm_id: realm.id,
+                secret,
+                secret_hashed: false,
+                secret_encrypted: false,
+                is_confidential: true,
+            }));
+        const user = await suite.client.user.create(createFakeUser({
+            realm_id: realm.id,
+            password: 'realm-user-secret',
+        }));
+
+        const response = await suite.client
+            .token
+            .createWithPassword({
+                username: user.name,
+                password: 'realm-user-secret',
+                client_id: client.name,
+                client_secret: secret,
+                realm_id: realm.id,
+            });
+
+        expect(response.access_token).toBeDefined();
+
+        await expectClientError(
+            () => suite.client.token.createWithPassword({
+                username: 'admin',
+                password: 'start123',
+                client_id: client.name,
+                client_secret: secret,
+            }),
+            { status: 401, code: ErrorCode.OAUTH_CLIENT_INVALID },
         );
     });
 

@@ -167,9 +167,11 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
                 qb.andWhere('provider.realm_id = :realmId', { realmId: realmKey });
             } else {
                 const realm = await this.realmRepository.resolve(realmKey);
-                if (realm) {
-                    qb.andWhere('provider.realm_id = :realmId', { realmId: realm.id });
+                if (!realm) {
+                    return [];
                 }
+
+                qb.andWhere('provider.realm_id = :realmId', { realmId: realm.id });
             }
         }
 
