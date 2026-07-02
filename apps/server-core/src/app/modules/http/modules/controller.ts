@@ -286,6 +286,8 @@ export class HTTPControllerModule {
 
             oauth2ClientAuthenticator,
 
+            realmRepository: new RealmRepositoryAdapter(container.resolve<Repository<Realm>>(RealmEntity)),
+
             sessionManager,
         });
     }

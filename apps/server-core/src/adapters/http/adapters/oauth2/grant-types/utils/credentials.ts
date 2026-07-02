@@ -54,7 +54,7 @@ export async function extractClientCredentialsFromRequest(event: IAppEvent): Pro
     return {};
 }
 
-function readStringField(body: Record<string, any> | undefined, key: string): string | undefined {
+export function readStringField(body: Record<string, any> | undefined, key: string): string | undefined {
     const value = body?.[key];
     return typeof value === 'string' && value.length > 0 ? value : undefined;
 }

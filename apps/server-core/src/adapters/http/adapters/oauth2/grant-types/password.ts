@@ -10,21 +10,24 @@ import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
 import type { IAppEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
-import type { ICredentialsAuthenticator, OAuth2ClientAuthenticator } from '../../../../../core/index.ts';
+import type { ICredentialsAuthenticator, IRealmRepository, OAuth2ClientAuthenticator } from '../../../../../core/index.ts';
 import { PasswordGrantType } from '../../../../../core/index.ts';
 import type { HTTPOAuth2PasswordGrantContext, IHTTPOAuth2Grant } from './types.ts';
-import { extractClientCredentialsFromRequest } from './utils/index.ts';
+import { extractClientCredentialsFromRequest, readStringField } from './utils/index.ts';
 
 export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2Grant {
     protected authenticator : ICredentialsAuthenticator<User>;
 
     protected clientAuthenticator : OAuth2ClientAuthenticator;
 
+    protected realmRepository : IRealmRepository;
+
     constructor(ctx: HTTPOAuth2PasswordGrantContext) {
         super(ctx);
 
         this.authenticator = ctx.authenticator;
         this.clientAuthenticator = ctx.clientAuthenticator;
+        this.realmRepository = ctx.realmRepository;
     }
 
     async runWithRequest(event: IAppEvent): Promise<OAuth2TokenGrantResponse> {
@@ -32,20 +35,26 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
         const {
             username,
             password,
-            realm_id: realmId,
         } = body || {};
 
         const { clientId, clientSecret } = await extractClientCredentialsFromRequest(event);
+
+        // canonical identifier form: realm names are stored LOWER(TRIM(...))
+        const realmHint = (
+            readStringField(body, 'realm_id') ?? readStringField(body, 'realm_name')
+        )?.trim().toLowerCase() || undefined;
+
+        const realm = await this.realmRepository.resolve(realmHint, true);
 
         const client = clientId ?
             await this.clientAuthenticator.authenticate(
                 clientId,
                 clientSecret,
-                typeof realmId === 'string' ? realmId : undefined,
+                realm.id,
             ) :
             undefined;
 
-        const user = await this.authenticator.authenticate(username, password, realmId);
+        const user = await this.authenticator.authenticate(username, password, realm.id);
 
         return this.runWith(
             { user, client },

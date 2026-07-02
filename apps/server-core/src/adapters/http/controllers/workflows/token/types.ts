@@ -14,6 +14,7 @@ import type {
     IOAuth2TokenIssuer,
     IOAuth2TokenRevoker,
     IOAuth2TokenVerifier,
+    IRealmRepository,
     ISessionManager,
     OAuth2ClientAuthenticator,
 } from '../../../../../core/index.ts';
@@ -36,4 +37,6 @@ export type TokenControllerContext = {
     userAuthenticator: ICredentialsAuthenticator<User>
 
     oauth2ClientAuthenticator: OAuth2ClientAuthenticator
+
+    realmRepository: IRealmRepository
 };

@@ -163,9 +163,13 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
         qb.where('provider.protocol = :protocol', { protocol });
 
         if (realmKey) {
-            const realm = await this.realmRepository.resolve(realmKey);
-            if (realm) {
-                qb.andWhere('provider.realm_id = :realmId', { realmId: realm.id });
+            if (isUUID(realmKey)) {
+                qb.andWhere('provider.realm_id = :realmId', { realmId: realmKey });
+            } else {
+                const realm = await this.realmRepository.resolve(realmKey);
+                if (realm) {
+                    qb.andWhere('provider.realm_id = :realmId', { realmId: realm.id });
+                }
             }
         }
 
