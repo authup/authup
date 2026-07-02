@@ -7,6 +7,7 @@ import {
     nextTick,
     reactive,
     ref,
+    watch,
 } from 'vue';
 import type { IdentityProvider, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
@@ -88,9 +89,7 @@ export default defineComponent({
         const form = reactive({
             name: '',
             password: '',
-            realm_id: props.codeRequest && props.codeRequest.realm_id ?
-                props.codeRequest.realm_id :
-                '',
+            realm_id: '',
         });
 
         const v = useValidup(new LoginCredentialsValidator(), form);
@@ -159,6 +158,16 @@ export default defineComponent({
                 updateIdentityProviderList();
             });
         };
+
+        watch(
+            () => (props.codeRequest ? props.codeRequest.realm_id : undefined),
+            (value) => {
+                if (value && value !== form.realm_id) {
+                    updateRealmId(value);
+                }
+            },
+            { immediate: true },
+        );
 
         const submit = async () => {
             try {
