@@ -1015,8 +1015,44 @@ The `/token` endpoint authenticates the calling client according to RFC 6749. Co
 | `client_credentials` | Authentication is the grant's purpose. Confidential client only — public clients are rejected. |
 | `authorization_code` | Confidential client MUST authenticate (RFC §4.1.3). Authenticated `client_id` MUST match the auth code's bound `client_id` — mismatch = `invalid_grant`. |
 | `refresh_token` | Confidential client MUST authenticate (RFC §6). If the refresh token's payload has `client_id`, the request MUST authenticate as that client. Authenticated `client_id` MUST match — mismatch = `invalid_grant`. Tokens with no bound client may refresh without auth (legacy/no-client flow). |
-| `password` | Confidential client MUST authenticate (RFC §4.3.2). The token's `client_id` claim and the OpenID `aud` claim use the **authenticated** client's id, not any user-side association. |
+| `password` | Confidential client MUST authenticate (RFC §4.3.2). The token's `client_id` claim and the OpenID `aud` claim use the **authenticated** client's id, not any user-side association. See *Password grant realm resolution* for how the user realm is resolved. |
 | `robot_credentials` | Authentication is the grant's purpose (Authup-specific extension). |
+
+### Password grant realm resolution
+
+The password grant resolves the **user realm** before any authentication
+(`HTTPPasswordGrant.runWithRequest`, `adapters/http/adapters/oauth2/grant-types/password.ts`):
+
+- The realm hint is `realm_id ?? realm_name` from the request body — **both
+  denote the user realm** and each accepts a realm UUID **or** name (there is
+  no "client realm vs user realm" split; `realm_name` used to be silently
+  dropped and is now honored). The hint is canonicalized at the ingress
+  (`trim().toLowerCase()`, per *Canonical Identifier Form* layer 3) since no
+  validator runs on the token body.
+- The hint is resolved once via `IRealmRepository.resolve(hint, true)` —
+  **defaults to the master realm** when the hint is absent (or unknown; same
+  fallback convention as registration / password-recovery; a missing master
+  realm row throws `InternalError` — violated provisioning invariant). The
+  resolved `realm.id` is passed to both the client authenticator and the user
+  authenticator, so name-based user resolution is deterministic (previously a
+  realm-less login with a name matched an arbitrary cross-realm row) and the
+  LDAP-collection `findByProtocol(LDAP, realmId)` lookup is realm-scoped.
+- **The client leg is scoped to the same realm:** a *name*-identified
+  confidential client must live in the user realm (or be identified by its
+  UUID — UUID lookups skip the realm filter). A client named in a different
+  realm than its users now fails with `invalid_client` where the old unscoped
+  name lookup might have matched; register the client in the users' realm or
+  pass its UUID. On the SSR `/authorize` page the login realm is pinned to the
+  **client's** realm (`codeRequest.realm_id`, seeded into the login form), so
+  that page authenticates that realm's users only.
+- **Localized to the HTTP password grant.** HTTP Basic auth shares the same
+  `UserAuthenticator` class but is intentionally untouched — realm-less
+  Basic-auth-by-name resolution is unchanged. The same unscoped-name ambiguity
+  remains latent for Basic auth, `robot_credentials` / `client_credentials`
+  (robot/client names are unique per `(name, realm_id)`), and client-by-name
+  resolution on the `authorization_code` / `refresh_token` grants (which still
+  treat body `realm_id` as a raw, fallback-less client-realm key) — see plan
+  037 non-goals.
 
 ### Credential transport
 

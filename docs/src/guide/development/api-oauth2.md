@@ -44,6 +44,23 @@ curl -X POST 'http://localhost:3001/token' \
   -d 'password=USER_PASSWORD'
 ```
 
+The user is resolved within a single realm. Pass `realm_id` or `realm_name`
+(both accept a realm UUID or name) to select it; when neither is provided,
+the **master** realm is used. In multi-realm deployments, users outside the
+master realm must therefore include a realm parameter:
+
+```shell
+curl -X POST 'http://localhost:3001/token' \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'grant_type=password' \
+  -d 'username=USER_USERNAME' \
+  -d 'password=USER_PASSWORD' \
+  -d 'realm_id=REALM_ID_OR_NAME'
+```
+
+A confidential client authenticating on this grant by **name** must belong to
+the same realm as the user; clients identified by UUID are unaffected.
+
 #### Response
 ```json
 {
