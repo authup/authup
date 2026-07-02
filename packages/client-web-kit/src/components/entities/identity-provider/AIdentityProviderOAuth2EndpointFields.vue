@@ -7,6 +7,7 @@
 
 <script lang="ts">
 import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core-kit';
+import { IdentityProviderOAuth2AttributesValidator } from '@authup/core-kit';
 import {
     TranslatorTranslationActionKey,
     TranslatorTranslationFieldKey,
@@ -14,36 +15,13 @@ import {
 } from '@authup/i18n';
 import type { OpenIDProviderMetadata } from '@authup/specs';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
-import { Container } from 'validup';
-import { createValidator } from '@validup/zod';
 import { useValidup } from '@validup/vue';
 import { assignFormProperties, useTranslations } from '../../../core';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
-import { z } from 'zod';
 import { onChange, useUpdatedAt } from '../../../composables';
 import AIdentityProviderOAuth2Discovery from './AIdentityProviderOAuth2Discovery.vue';
 import { IFieldValidation } from '@ilingo/validup-vue';
-
-// Mirrors the endpoint rules of the server-side
-// `IdentityProviderOAuth2AttributesValidator` (`@authup/core-kit`):
-// `token_url` and `authorize_url` are required for non-preset OAuth2/OIDC
-// providers (this sub-form is only rendered when no preset is selected),
-// `user_info_url` stays optional. The server is authoritative.
-class OAuth2EndpointFieldsValidator extends Container<{
-    token_url: string;
-    authorize_url: string;
-    user_info_url: string;
-}> {
-    protected override initialize() {
-        super.initialize();
-        this.mount('token_url', createValidator(z.url()));
-        this.mount('authorize_url', createValidator(z.url()));
-        this.mount('user_info_url', { optional: true }, createValidator(
-            z.url().optional().nullable(),
-        ));
-    }
-}
 
 export default defineComponent({
     components: {
@@ -68,7 +46,15 @@ export default defineComponent({
             user_info_url: '',
         });
 
-        const v = useValidup(new OAuth2EndpointFieldsValidator(), form, { name: 'endpoint' });
+        // Shared server-side validator, scoped to the endpoint keys via
+        // `pathsToInclude` — `token_url` and `authorize_url` are required
+        // for non-preset OAuth2/OIDC providers (this sub-form is only
+        // rendered when no preset is selected), `user_info_url` optional.
+        const v = useValidup(
+            new IdentityProviderOAuth2AttributesValidator({ pathsToInclude: ['token_url', 'authorize_url', 'user_info_url'] }),
+            form,
+            { name: 'endpoint' },
+        );
 
         function init() {
             form.token_url = '';

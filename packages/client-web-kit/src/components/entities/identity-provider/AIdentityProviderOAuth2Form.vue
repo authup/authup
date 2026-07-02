@@ -266,7 +266,6 @@ export default defineComponent({
                 <AIdentityProviderBasicFields
                     ref="basicFieldsRef"
                     :entity="data"
-                    :protocol="protocolEff"
                 />
             </div>
             <div class="flex-1 basis-0 px-2">

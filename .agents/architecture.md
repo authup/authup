@@ -1162,14 +1162,23 @@ integration:
   field-group sub-forms under a parent `useValidup` collector
   (`name: 'basic'` / `'client'` / ...), and the parent's `isInvalid` ORs
   the children's `$invalid`. A validup mount without a `group` option
-  runs in *every* group, so when a sub-form runs a shared full-entity
-  validator from `@authup/core-kit`, every non-optional mount must be
-  present in that sub-form's validated state — parent-owned
-  discriminators (`Policy.type`, `IdentityProvider.protocol`) are fed in
-  via a prop + `watch(..., { immediate: true })` (see `APolicyBasicForm`
-  / `AIdentityProviderBasicFields`). Otherwise the sub-form is
-  permanently `$invalid` with the issue on an unrendered field: the
-  submit button never enables and no error is visible. Relatedly, the
+  runs in *every* group, so a sub-form running a shared full-entity
+  validator from `@authup/core-kit` unscoped is permanently `$invalid`
+  the moment the validator mounts a key the sub-form's state doesn't own
+  (e.g. `IdentityProvider.protocol`, required in every group but owned
+  by the parent form) — with the issue on an unrendered field, the
+  submit button never enables and no error is visible. **Scope the
+  shared validator with validup's `pathsToInclude`** (`ContainerOptions`
+  or `ContainerRunOptions`) to exactly the keys the sub-form renders —
+  see `AIdentityProviderBasicFields` / `AIdentityProviderOAuth2{Client,
+  Endpoint}Fields`, which reuse `IdentityProviderValidator` /
+  `IdentityProviderOAuth2AttributesValidator` instead of redefining the
+  mounts inline (single source of truth with the server rules; group
+  options per mount are preserved). The alternative — feeding the
+  parent-owned key into the sub-form state via a prop +
+  `watch(..., { immediate: true })` — is only needed when that key
+  should actually be validated client-side (see `APolicyBasicForm`'s
+  `type`). Relatedly, the
   kit installs `createValidup` with `optionalAs: null` (blank optional
   inputs are emitted as `null`), so every optional string mount in a
   shared entity validator must be `.nullable()` — server-side runs use

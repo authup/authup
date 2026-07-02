@@ -5,7 +5,7 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import type { IdentityProvider, IdentityProviderProtocol } from '@authup/core-kit';
+import type { IdentityProvider } from '@authup/core-kit';
 import { IdentityProviderValidator } from '@authup/core-kit';
 import { ValidatorGroup, generateName } from '@authup/kit';
 import { TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
@@ -17,7 +17,6 @@ import {
     defineComponent,
     reactive,
     useId,
-    watch,
 } from 'vue';
 import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import { onChange, useIsEditing, useUpdatedAt } from '../../../composables';
@@ -33,10 +32,7 @@ export default defineComponent({
 
         IFieldValidation,
     },
-    props: {
-        entity: { type: Object as PropType<Partial<IdentityProvider>> },
-        protocol: { type: String as PropType<string | null>, default: undefined },
-    },
+    props: { entity: { type: Object as PropType<Partial<IdentityProvider>> } },
     emits: ['updated'],
     setup(props, setup) {
         const nameSeed = useId();
@@ -44,16 +40,19 @@ export default defineComponent({
             name: '',
             display_name: '',
             enabled: true,
-            protocol: undefined as `${IdentityProviderProtocol}` | undefined,
         });
 
         const isEditing = useIsEditing(computed(() => props.entity as IdentityProvider));
 
-        // Shared `IdentityProviderValidator` from `@authup/core-kit`.
-        // Registers under the parent `<AIdentityProviderOAuth2Form>` /
+        // Shared `IdentityProviderValidator` from `@authup/core-kit`, scoped
+        // via `pathsToInclude` to the keys this sub-form owns — the validator
+        // also mounts `protocol` (required in every group, owned by the
+        // parent form) and `realm_id`; unscoped, those would keep the
+        // sub-form permanently invalid with the issue on an unrendered
+        // field. Registers under the parent `<AIdentityProviderOAuth2Form>` /
         // `<AIdentityProviderLdapForm>` collectors via `name: 'basic'`.
         const v = useValidup(
-            new IdentityProviderValidator(),
+            new IdentityProviderValidator({ pathsToInclude: ['name', 'display_name', 'enabled'] }),
             form,
             {
                 name: 'basic',
@@ -84,20 +83,6 @@ export default defineComponent({
         onChange(updatedAt, () => assign(props.entity));
 
         assign(props.entity);
-
-        // `protocol` is the provider discriminator owned by the parent
-        // <AIdentityProviderOAuth2Form> / <AIdentityProviderLdapForm>,
-        // not edited here. It's mounted (required in every group) in the
-        // shared IdentityProviderValidator, so feed the parent's resolved
-        // value into the validated state — otherwise the basic sub-form
-        // is permanently invalid and the submit button never enables.
-        watch(
-            () => props.protocol,
-            (value) => {
-                form.protocol = (value as `${IdentityProviderProtocol}`) ?? undefined;
-            },
-            { immediate: true },
-        );
 
         const translationsDefault = useTranslations([
             {

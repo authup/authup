@@ -160,10 +160,7 @@ export default defineComponent({
                 <h6>
                     <VCIcon name="fa6-solid:wrench" /> {{ translations.basic }}
                 </h6>
-                <AIdentityProviderBasicFields
-                    :entity="data"
-                    :protocol="ldapProtocol"
-                />
+                <AIdentityProviderBasicFields :entity="data" />
             </div>
             <div class="flex-1 basis-0 px-2">
                 <h6>
