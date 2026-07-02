@@ -88,7 +88,9 @@ export default defineComponent({
         const form = reactive({
             name: '',
             password: '',
-            realm_id: '',
+            realm_id: props.codeRequest && props.codeRequest.realm_id ?
+                props.codeRequest.realm_id :
+                '',
         });
 
         const v = useValidup(new LoginCredentialsValidator(), form);
@@ -125,19 +127,11 @@ export default defineComponent({
 
         const busy = ref(false);
 
-        const realmId = computed(() => {
-            if (props.codeRequest && props.codeRequest.realm_id) {
-                return props.codeRequest.realm_id;
-            }
-
-            return form.realm_id;
-        });
-
         const identityProviderQuery: Ref<BuildInput<IdentityProvider>> = ref({});
         const resetIdentityProviderQuery = () => {
             identityProviderQuery.value = {
                 filters: {
-                    realm_id: realmId.value || '',
+                    realm_id: form.realm_id || '',
                     protocol: `!${IdentityProviderProtocol.LDAP}`,
                     enabled: true,
                 },
