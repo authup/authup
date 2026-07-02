@@ -56,6 +56,13 @@ export default defineComponent({
             { name: 'endpoint' },
         );
 
+        // `user_info_url` is an optional key on `OAuth2IdentityProvider`, so
+        // the typed `fields` accessor yields `FieldState | undefined` for it
+        // under strict consumers (the apps compile this source through their
+        // `@authup/* → src` aliases with `strict: true`). The dynamic `at()`
+        // accessor materialises the state and is never undefined.
+        const userInfoUrlField = v.fields.at<string | null>('user_info_url');
+
         function init() {
             form.token_url = '';
             form.authorize_url = '';
@@ -93,6 +100,7 @@ export default defineComponent({
 
         return {
             v,
+            userInfoUrlField,
             translations,
             handleDiscoveryLookup,
         };
@@ -140,7 +148,7 @@ export default defineComponent({
     </IFieldValidation>
     <IFieldValidation
         v-slot="{ value }"
-        :field="v.fields.user_info_url"
+        :field="userInfoUrlField"
     >
         <VCFormGroup
             :label="true"
@@ -150,7 +158,7 @@ export default defineComponent({
                 {{ translations.userInfo }}
             </template>
             <VCFormInput
-                v-model="v.fields.user_info_url.$model.value"
+                v-model="userInfoUrlField.$model.value"
                 placeholder="https://..."
             />
         </VCFormGroup>
