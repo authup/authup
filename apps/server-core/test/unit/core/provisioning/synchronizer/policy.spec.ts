@@ -98,6 +98,31 @@ describe('core/provisioning/synchronizer/policy', () => {
     });
 
     describe('stale child cleanup', () => {
+        it('should not treat a mixed-case declared child as stale', async () => {
+            await synchronizer.synchronize({
+                attributes: {
+                    name: 'system.default',
+                    type: BuiltInPolicyType.COMPOSITE,
+                    built_in: true,
+                    realm_id: null,
+                },
+                children: [
+                    {
+                        attributes: {
+                            name: ' Mixed-Child ',
+                            type: BuiltInPolicyType.IDENTITY,
+                            built_in: true,
+                            realm_id: null,
+                        },
+                    },
+                ],
+            });
+
+            const child = policyRepository.getAll().find((p) => p.name === 'mixed-child');
+            expect(child).toBeDefined();
+            expect(child?.parent_id).toBeTruthy();
+        });
+
         it('should delete unreferenced children when parent policy children change', async () => {
             const initialInput: PolicyProvisioningEntity = {
                 attributes: {

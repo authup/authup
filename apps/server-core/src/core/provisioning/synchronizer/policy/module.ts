@@ -77,14 +77,16 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
         parentId: string,
         children: PolicyProvisioningEntity[] = [],
     ): Promise<void> {
-        const declaredNames = children.map((c) => c.attributes.name);
-
         await children.reduce(async (prev, child) => {
             await prev;
             child.attributes.parent_id = parentId;
             child.attributes.parent = { id: parentId } as any;
             await this.synchronize(child);
         }, Promise.resolve());
+
+        // derived AFTER synchronize() so the names are canonicalized —
+        // a pre-sync snapshot would misidentify mixed-case children as stale
+        const declaredNames = children.map((c) => c.attributes.name);
 
         await this.cleanupStaleChildren(parentId, declaredNames);
     }
