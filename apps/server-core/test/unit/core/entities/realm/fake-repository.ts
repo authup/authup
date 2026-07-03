@@ -29,6 +29,10 @@ export class FakeRealmRepository extends FakeEntityRepository<Realm> implements 
         this.seed([this.masterRealm]);
     }
 
+    async findOneByName(name: string): Promise<Realm | null> {
+        return super.findOneByName(name.trim().toLowerCase());
+    }
+
     async resolveId(key: string): Promise<string | null> {
         if (isUUID(key)) {
             return key;
