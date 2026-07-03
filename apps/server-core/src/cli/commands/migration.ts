@@ -89,7 +89,11 @@ async function runMigrationOperation(
         }
     } finally {
         if (dataSource.isInitialized) {
-            await dataSource.destroy();
+            try {
+                await dataSource.destroy();
+            } catch (e) {
+                logger.error(`Failed to destroy data source after migration operation: ${e}`);
+            }
         }
     }
 }
@@ -150,7 +154,12 @@ async function generateMigrations(): Promise<void> {
             });
         } finally {
             if (dataSource.isInitialized) {
-                await dataSource.destroy();
+                try {
+                    await dataSource.destroy();
+                } catch (e) {
+                    // eslint-disable-next-line no-console
+                    console.error(e);
+                }
             }
         }
     }
