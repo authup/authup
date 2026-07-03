@@ -25,12 +25,14 @@ export function createProvisioningEntitiesValidator(
             try {
                 ctx.value[i] = await validator.run(ctx.value[i], { group: ValidatorGroup.PROVISIONING });
             } catch (e) {
-                if (isValidupError(e)) {
-                    ctx.issues.push(...buildZodIssuesForError(e).map((issue) => ({
-                        ...issue,
-                        path: [i, ...(issue.path ?? [])],
-                    })));
+                if (!isValidupError(e)) {
+                    throw e;
                 }
+
+                ctx.issues.push(...buildZodIssuesForError(e).map((issue) => ({
+                    ...issue,
+                    path: [i, ...(issue.path ?? [])],
+                })));
             }
         }
     };
