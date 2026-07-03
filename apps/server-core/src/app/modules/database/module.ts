@@ -83,28 +83,51 @@ export class DatabaseModule implements IModule {
         await dataSource.initialize();
         logger.debug('Established database connection.');
 
-        if (this.options.migrate) {
-            await this.options.migrate(container, dataSource);
-        } else {
-            await this.migrate(container, dataSource);
+        try {
+            if (this.options.migrate) {
+                await this.options.migrate(container, dataSource);
+            } else {
+                await this.migrate(container, dataSource);
+            }
+
+            this.registerRepositories(container, dataSource);
+            this.registerEventPublisher(container, dataSource);
+
+            container.register(DatabaseInjectionKey.DataSource, { useValue: dataSource });
+        } catch (e) {
+            // teardown() is skipped for a module that fails its own setup(),
+            // so release the connection pool and any event-publisher handles
+            // here. Guard cleanup so it can never mask the original error.
+            try {
+                if (dataSource.isInitialized) {
+                    await dataSource.destroy();
+                }
+
+                await this.disposeEventPublisher();
+            } catch (cleanupError) {
+                logger.warn(`Failed to clean up database resources after setup error: ${cleanupError}`);
+            }
+
+            throw e;
         }
-
-        container.register(DatabaseInjectionKey.DataSource, { useValue: dataSource });
-
-        this.registerRepositories(container, dataSource);
-        this.registerEventPublisher(container, dataSource);
     }
 
     async teardown(container: IContainer): Promise<void> {
         const dataSource = container.tryResolve(DatabaseInjectionKey.DataSource);
         if (dataSource.success) {
-            await dataSource.data.destroy();
+            if (dataSource.data.isInitialized) {
+                await dataSource.data.destroy();
+            }
 
             container.unregister(DatabaseInjectionKey.DataSource);
         }
 
         container.unregister(DatabaseInjectionKey.DomainEventPublisher);
 
+        await this.disposeEventPublisher();
+    }
+
+    protected async disposeEventPublisher(): Promise<void> {
         if (this.eventPublisher) {
             await this.eventPublisher.dispose();
             this.eventPublisher = undefined;
