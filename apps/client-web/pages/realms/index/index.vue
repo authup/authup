@@ -12,7 +12,9 @@ import {
     ATitle,
     injectStore,
     usePermissionCheck,
+    useTranslations,
 } from '@authup/client-web-kit';
+import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { storeToRefs } from 'pinia';
 import type { TableColumn } from '@vuecs/table';
 import { defineComponent, resolveComponent } from 'vue';
@@ -39,6 +41,17 @@ export default defineComponent({
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.REALM_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.REALM_DELETE });
+
+        const translations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.APP,
+                key: TranslatorTranslationAppKey.DETAILS,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.APP,
+                key: TranslatorTranslationAppKey.SET_MANAGEMENT_REALM,
+            },
+        ]);
 
         const columns: TableColumn<Realm>[] = [
             {
@@ -75,6 +88,7 @@ export default defineComponent({
             handleDeleted,
             realmManagementId,
             setRealmManagement: store.setRealmManagement,
+            translations,
             NuxtLink,
         };
     },
@@ -113,6 +127,8 @@ export default defineComponent({
                 <template #cell-options="{ row }">
                     <VCButton
                         v-if="realmManagementId !== row.id"
+                        :aria-label="translations.setManagementRealm"
+                        :title="translations.setManagementRealm"
                         size="sm"
                         color="primary"
                         class="me-1 border border-transparent"
@@ -125,6 +141,8 @@ export default defineComponent({
                     <VCButton
                         :as="NuxtLink"
                         :to="'/realms/'+ row.id"
+                        :aria-label="translations.details"
+                        :title="translations.details"
                         size="sm"
                         color="primary"
                         variant="outline"

@@ -126,6 +126,7 @@ export enum TranslatorTranslationAppKey {
 
     MANAGEMENT = 'management',
     DETAILS = 'details',
+    SET_MANAGEMENT_REALM = 'setManagementRealm',
     API_DOCS = 'apiDocs',
     MADE_WITH = 'madeWith',
 

@@ -12,9 +12,11 @@ import {
     ATitle,
     injectStore,
     usePermissionCheck,
+    useTranslations,
 } from '@authup/client-web-kit';
 import type { Policy } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
+import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
 import type { TableColumn } from '@vuecs/table';
@@ -43,6 +45,13 @@ export default defineComponent({
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.PERMISSION_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.PERMISSION_DELETE });
+
+        const translations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.APP,
+                key: TranslatorTranslationAppKey.DETAILS,
+            },
+        ]);
 
         const columns: TableColumn<Policy>[] = [
             {
@@ -84,6 +93,7 @@ export default defineComponent({
             hasDropPermission,
             handleDeleted,
             query,
+            translations,
             NuxtLink,
         };
     },
@@ -124,6 +134,8 @@ export default defineComponent({
                     <VCButton
                         :as="NuxtLink"
                         :to="'/policies/'+ row.id"
+                        :aria-label="translations.details"
+                        :title="translations.details"
                         size="sm"
                         color="primary"
                         variant="outline"

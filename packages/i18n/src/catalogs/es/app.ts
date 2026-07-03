@@ -20,6 +20,7 @@ export const TranslatorTranslationAppSpanish : NamespaceTranslations<`${Translat
 
     [TranslatorTranslationAppKey.MANAGEMENT]: 'Gestión',
     [TranslatorTranslationAppKey.DETAILS]: 'Detalles',
+    [TranslatorTranslationAppKey.SET_MANAGEMENT_REALM]: 'Establecer como realm de gestión',
     [TranslatorTranslationAppKey.API_DOCS]: 'Documentación de la API',
     [TranslatorTranslationAppKey.MADE_WITH]: 'Hecho con',
 

@@ -1,7 +1,12 @@
 <script lang="ts">
 import type { Scope } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
-import { TranslatorTranslationCommonKey, TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
 import {
     AEntityDelete,
     APagination,
@@ -60,6 +65,10 @@ export default defineComponent({
                 namespace: TranslatorTranslationNamespace.FIELD,
                 key: TranslatorTranslationFieldKey.UPDATED_AT,
             },
+            {
+                namespace: TranslatorTranslationNamespace.APP,
+                key: TranslatorTranslationAppKey.DETAILS,
+            },
         ]);
 
         const columns = computed<TableColumn<Scope>[]>(() => [
@@ -102,6 +111,7 @@ export default defineComponent({
             hasDropPermission,
             handleDeleted,
             query,
+            translations,
             NuxtLink,
         };
     },
@@ -148,6 +158,8 @@ export default defineComponent({
                     <VCButton
                         :as="NuxtLink"
                         :to="'/scopes/'+ row.id"
+                        :aria-label="translations.details"
+                        :title="translations.details"
                         size="sm"
                         color="primary"
                         variant="outline"
