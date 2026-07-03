@@ -60,7 +60,17 @@ curl -X POST 'http://localhost:3001/token' \
 ```
 
 A confidential client authenticating on this grant by **name** must belong to
-the same realm as the user; clients identified by UUID are unaffected.
+the same realm as the user; clients identified by UUID are unaffected. The
+realm parameter constrains **name** resolution only — a UUID-identified user
+is resolved globally by primary key, and the issued token always carries the
+user's actual realm.
+
+The same `realm_id` / `realm_name` semantic (master fallback included) applies
+on the `authorization_code` and `refresh_token` grants, where it scopes
+client-by-name resolution: a client identified by **name** on those grants
+resolves within the hinted realm (master when no hint is given). Pass the
+realm parameter — or the client's UUID — when the client lives outside the
+master realm.
 
 #### Response
 ```json

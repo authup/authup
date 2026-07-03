@@ -16,6 +16,7 @@ import type {
     Role, 
 } from '@authup/core-kit';
 import type { DataSource, Repository } from 'typeorm';
+import { IsNull } from 'typeorm';
 import {
     afterAll,
     beforeAll, 
@@ -86,10 +87,16 @@ describe('app/modules/provisioning', () => {
         const source = new FileProvisioningSource({ cwd: 'test/data/sources' });
         const output = await source.load();
 
+        expect(output.policies).toHaveLength(1);
         expect(output.roles).toHaveLength(2);
         expect(output.permissions).toHaveLength(1);
         expect(output.scopes).toHaveLength(1);
         expect(output.realms).toHaveLength(1);
+
+        // validated output preserves provisioning-only fields and relations
+        expect(output.policies![0].attributes.built_in).toBe(true);
+        expect(output.roles![1].attributes.built_in).toBe(true);
+        expect(output.permissions![0].relations?.policies).toEqual(['file-policy']);
 
         const [realm] = output.realms!;
 
@@ -114,6 +121,24 @@ describe('app/modules/provisioning', () => {
 
         const roles = await roleRepository.findBy({ name: 'foo' });
         expect(roles).toHaveLength(2);
+
+        const builtInRole = await roleRepository.findOneBy({ name: 'bar', realm_id: IsNull() });
+        expect(builtInRole?.built_in).toBe(true);
+
+        const filePolicy = await policyRepositoryAdapter.findOneByName('file-policy');
+        expect(filePolicy).toBeDefined();
+        expect(filePolicy?.built_in).toBe(true);
+
+        const permissionRepository = di.resolve<Repository<Permission>>(PermissionEntity);
+        const permission = await permissionRepository.findOneBy({ name: 'foo', realm_id: IsNull() });
+        expect(permission).toBeDefined();
+
+        const permissionPolicyRepository = di.resolve<Repository<PermissionPolicy>>(PermissionPolicyEntity);
+        const junction = await permissionPolicyRepository.findOneBy({
+            permission_id: permission!.id,
+            policy_id: filePolicy!.id,
+        });
+        expect(junction).toBeDefined();
     });
 
     // ---------------------------------------------------------------

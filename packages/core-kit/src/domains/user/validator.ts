@@ -38,14 +38,14 @@ export class UserValidator extends Container<User> {
 
         this.mount(
             'name',
-            { group: ValidatorGroup.CREATE },
+            { group: [ValidatorGroup.CREATE, ValidatorGroup.PROVISIONING] },
             nameValidator,
         );
         this.mount(
             'name',
             {
                 group: ValidatorGroup.UPDATE,
-                optional: true, 
+                optional: true,
             },
             nameValidator,
         );
@@ -96,7 +96,17 @@ export class UserValidator extends Container<User> {
             'email',
             {
                 optional: true,
-                group: ValidatorGroup.UPDATE, 
+                group: ValidatorGroup.UPDATE,
+            },
+            emailValidator,
+        );
+        // provisioning: email is optional — the user synchronizer backfills
+        // a placeholder when omitted
+        this.mount(
+            'email',
+            {
+                optional: true,
+                group: ValidatorGroup.PROVISIONING,
             },
             emailValidator,
         );
@@ -126,8 +136,8 @@ export class UserValidator extends Container<User> {
         this.mount(
             'realm_id',
             {
-                group: ValidatorGroup.CREATE,
-                optional: true, 
+                group: [ValidatorGroup.CREATE, ValidatorGroup.PROVISIONING],
+                optional: true,
             },
             createValidator(z.uuid()),
         );

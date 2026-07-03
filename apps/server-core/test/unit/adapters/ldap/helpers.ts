@@ -9,23 +9,26 @@ import { inject } from 'vitest';
 import { LdapClient } from '../../../../src/adapters/shared/ldap';
 import type { ILdapClient } from '../../../../src/core';
 
-export async function createLdapTestUserAccount(client: ILdapClient) {
+// Spec files run in parallel workers against ONE shared OpenLDAP container —
+// every spec must use its own account name or a sibling's afterAll drop
+// races a concurrent login.
+export async function createLdapTestUserAccount(client: ILdapClient, name = 'foo') {
     try {
-        await client.add('cn=foo,dc=example,dc=com', {
-            cn: 'foo',
+        await client.add(`cn=${name},dc=example,dc=com`, {
+            cn: name,
             sn: 'bar',
-            mail: 'foo.bar@example.com',
+            mail: `${name}.bar@example.com`,
             objectClass: 'inetOrgPerson',
-            userPassword: 'foo',
+            userPassword: name,
         });
     } catch {
         // do nothing ;)
     }
 }
 
-export async function dropLdapTestUserAccount(client: ILdapClient) {
+export async function dropLdapTestUserAccount(client: ILdapClient, name = 'foo') {
     try {
-        await client.del('cn=foo,dc=example,dc=com');
+        await client.del(`cn=${name},dc=example,dc=com`);
     } catch {
         // do nothing :)
     }

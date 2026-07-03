@@ -14,21 +14,25 @@ import { getRequestHeader, getRequestIP } from 'routup';
 import { OAuth2AuthorizeGrant } from '../../../../../core/index.ts';
 import type {
     IOAuth2AuthorizationCodeVerifier,
+    IRealmRepository,
     OAuth2ClientAuthenticator,
 } from '../../../../../core/index.ts';
 import type { HTTPOAuth2AuthorizeGrantContext, IHTTPOAuth2Grant } from './types.ts';
-import { extractClientCredentialsFromRequest } from './utils/index.ts';
+import { extractClientCredentialsFromRequest, readRealmHint } from './utils/index.ts';
 
 export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IHTTPOAuth2Grant {
     protected codeVerifier : IOAuth2AuthorizationCodeVerifier;
 
     protected clientAuthenticator : OAuth2ClientAuthenticator;
 
+    protected realmRepository : IRealmRepository;
+
     constructor(ctx: HTTPOAuth2AuthorizeGrantContext) {
         super(ctx);
 
         this.codeVerifier = ctx.codeVerifier;
         this.clientAuthenticator = ctx.clientAuthenticator;
+        this.realmRepository = ctx.realmRepository;
     }
 
     async runWithRequest(event: IAppEvent): Promise<OAuth2TokenGrantResponse> {
@@ -43,9 +47,9 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
         }
 
         const { clientId, clientSecret } = await extractClientCredentialsFromRequest(event);
-        const realmId = this.pickStringParam(body, query, 'realm_id');
+        const realm = await this.realmRepository.resolve(readRealmHint(body, query), true);
 
-        const client = await this.clientAuthenticator.authenticate(clientId, clientSecret, realmId);
+        const client = await this.clientAuthenticator.authenticate(clientId, clientSecret, realm.id);
 
         const entity = await this.codeVerifier.verify(code, {
             redirectUri,

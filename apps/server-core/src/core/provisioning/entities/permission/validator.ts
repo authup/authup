@@ -8,6 +8,7 @@
 import { PermissionValidator } from '@authup/core-kit';
 import { Container } from 'validup';
 import { ProvisioningStrategyValidator } from '../../strategy/index.ts';
+import { PermissionProvisioningRelationsValidator } from './relations-validator.ts';
 
 import type { PermissionProvisioningEntity } from './types.ts';
 
@@ -20,5 +21,8 @@ export class PermissionProvisioningValidator extends Container<PermissionProvisi
 
         const attributesValidator = new PermissionValidator();
         this.mount('attributes', attributesValidator);
+
+        const relationsValidator = new PermissionProvisioningRelationsValidator();
+        this.mount('relations', { optional: true }, relationsValidator);
     }
 }

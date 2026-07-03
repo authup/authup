@@ -8,18 +8,30 @@
 import type { RootProvisioningEntity } from '../../../src';
 
 const DATA : RootProvisioningEntity = {
+    policies: [
+        {
+            attributes: {
+                name: 'file-policy',
+                type: 'composite',
+                built_in: true,
+            },
+        },
+    ],
     roles: [
         {
             attributes: { name: 'foo' },
             relations: { globalPermissions: ['foo'] },
         },
         {
-            attributes: { name: 'bar' },
+            attributes: { name: 'bar', built_in: true },
             relations: { globalPermissions: ['*'] },
         },
     ],
     permissions: [
-        { attributes: { name: 'foo' } },
+        {
+            attributes: { name: 'foo' },
+            relations: { policies: ['file-policy'] },
+        },
     ],
     scopes: [
         { attributes: { name: 'foo' } },

@@ -32,6 +32,13 @@ export class IdentityResolver implements IIdentityResolver {
         this.robotRepository = ctx.robotRepository;
     }
 
+    /**
+     * A UUID key is resolved globally by primary key — `realmKey` scopes NAME
+     * resolution only (UUIDs are globally unique, and the realm hint on the
+     * password grant is always set via the master fallback, so applying it to
+     * UUID keys would break realm-less id-identified logins). See
+     * architecture.md → Password grant realm resolution.
+     */
     async resolve(
         type: `${IdentityType}`,
         key: string,

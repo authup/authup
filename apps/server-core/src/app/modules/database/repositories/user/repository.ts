@@ -100,10 +100,11 @@ export class UserRepositoryAdapter implements IUserRepository {
         qb.where('user.name = :name', { name });
 
         if (realmKey) {
-            const realm = await this.realmRepository.resolve(realmKey);
-            if (realm) {
-                qb.andWhere('user.realm_id = :realmId', { realmId: realm.id });
+            const realmId = await this.realmRepository.resolveId(realmKey);
+            if (!realmId) {
+                return null;
             }
+            qb.andWhere('user.realm_id = :realmId', { realmId });
         }
 
         const entity = await qb.getOne();
@@ -128,10 +129,11 @@ export class UserRepositoryAdapter implements IUserRepository {
             qb.where('user.name = :name', { name: id });
 
             if (realmKey) {
-                const realm = await this.realmRepository.resolve(realmKey);
-                if (realm) {
-                    qb.andWhere('user.realm_id = :realmId', { realmId: realm.id });
+                const realmId = await this.realmRepository.resolveId(realmKey);
+                if (!realmId) {
+                    return null;
                 }
+                qb.andWhere('user.realm_id = :realmId', { realmId });
             }
         }
 

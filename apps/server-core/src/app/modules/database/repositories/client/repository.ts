@@ -98,10 +98,11 @@ export class ClientRepositoryAdapter implements IClientRepository {
         qb.where('client.name = :name', { name });
 
         if (realmKey) {
-            const realm = await this.realmRepository.resolve(realmKey);
-            if (realm) {
-                qb.andWhere('client.realm_id = :realmId', { realmId: realm.id });
+            const realmId = await this.realmRepository.resolveId(realmKey);
+            if (!realmId) {
+                return null;
             }
+            qb.andWhere('client.realm_id = :realmId', { realmId });
         }
 
         return qb.getOne();
@@ -116,11 +117,11 @@ export class ClientRepositoryAdapter implements IClientRepository {
             qb.where('client.name = :name', { name: id });
 
             if (realmKey) {
-                const realm = await this.realmRepository.resolve(realmKey);
-                if (!realm) {
+                const realmId = await this.realmRepository.resolveId(realmKey);
+                if (!realmId) {
                     return null;
                 }
-                qb.andWhere('client.realm_id = :realmId', { realmId: realm.id });
+                qb.andWhere('client.realm_id = :realmId', { realmId });
             }
         }
 

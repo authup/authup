@@ -25,13 +25,14 @@ import {
 
 describe('src/http/controllers/identity-provider', () => {
     const suite = createTestApplication();
+    const ldapUserName = 'grant-ldap-user';
 
     beforeAll(async () => {
         await suite.setup();
 
         const client = createLdapTestClient();
         await client.bind();
-        await createLdapTestUserAccount(client);
+        await createLdapTestUserAccount(client, ldapUserName);
         await client.unbind();
     });
 
@@ -40,7 +41,7 @@ describe('src/http/controllers/identity-provider', () => {
 
         const client = createLdapTestClient();
         await client.bind();
-        await dropLdapTestUserAccount(client);
+        await dropLdapTestUserAccount(client, ldapUserName);
         await client.unbind();
     });
 
@@ -64,8 +65,8 @@ describe('src/http/controllers/identity-provider', () => {
         const grantResponse = await suite.client
             .token
             .createWithPassword({
-                username: 'foo',
-                password: 'foo',
+                username: ldapUserName,
+                password: ldapUserName,
             });
 
         expect(grantResponse)

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { RealmScope } from '@authup/access';
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
@@ -20,6 +21,18 @@ export class RoleProvisioningRelationsValidator extends Container<RoleProvisioni
 
         this.mount('globalPermissions', { optional: true }, createValidator(
             z.array(z.string()),
+        ));
+
+        this.mount('globalPermissionsExclude', { optional: true }, createValidator(
+            z.array(z.string()),
+        ));
+
+        this.mount('globalPermissionsRealmScope', { optional: true }, createValidator(
+            z.enum(RealmScope),
+        ));
+
+        this.mount('globalPermissionsRealmScopeOverrides', { optional: true }, createValidator(
+            z.partialRecord(z.enum(RealmScope), z.array(z.string())),
         ));
     }
 }

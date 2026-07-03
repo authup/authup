@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { randomUUID } from 'node:crypto';
 import {
     afterAll,
     beforeAll,
@@ -17,6 +18,7 @@ import { IdentityType } from '@authup/core-kit';
 import { EntityNotFoundError } from '@authup/errors';
 import { createNanoID } from '@authup/kit';
 import { createAllowAllActor } from '@authup/server-test-kit';
+import type { ActorContext } from '@authup/server-kit';
 import type { UserEntity } from '../../../../../src';
 import {
     PermissionEntity,
@@ -52,9 +54,9 @@ describe('core/identity/permission/checker', () => {
             repository: suite.dataSource.getRepository(PermissionEntity),
             realmRepository: realmEntityRepository,
         });
-        const identityPermissionProvider = (suite as any).container.resolve(
+        const identityPermissionProvider = suite.container.resolve<IIdentityPermissionProvider>(
             IdentityInjectionKey.PermissionProvider,
-        ) as IIdentityPermissionProvider;
+        );
 
         service = new PermissionCheckerService({
             repository: permissionRepository,
@@ -71,6 +73,18 @@ describe('core/identity/permission/checker', () => {
     it('throws EntityNotFoundError for an unknown name', async () => {
         await expect(
             service.check(createNanoID(), {}, createAllowAllActor()),
+        ).rejects.toBeInstanceOf(EntityNotFoundError);
+    });
+
+    it('throws EntityNotFoundError for an unknown realm key instead of dropping the filter', async () => {
+        const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
+        const permission = await permissionRepository.save(permissionRepository.create({
+            name: createNanoID(),
+            built_in: true,
+        }));
+
+        await expect(
+            service.check(permission.name, {}, createAllowAllActor(), randomUUID()),
         ).rejects.toBeInstanceOf(EntityNotFoundError);
     });
 
@@ -107,7 +121,7 @@ describe('core/identity/permission/checker', () => {
             {},
             {
                 permissionEvaluator: createAllowAllActor().permissionEvaluator,
-                identity: { type: IdentityType.USER, data: adminUser as any },
+                identity: { type: IdentityType.USER, data: adminUser },
             },
         )).resolves.toBeUndefined();
     });
@@ -134,7 +148,7 @@ describe('core/identity/permission/checker', () => {
             {},
             {
                 permissionEvaluator: createAllowAllActor().permissionEvaluator,
-                identity: { type: IdentityType.USER, data: adminUser as any },
+                identity: { type: IdentityType.USER, data: adminUser },
             },
         )).rejects.toThrow();
     });
@@ -183,9 +197,9 @@ describe('core/identity/permission/checker', () => {
         const realmRepository = suite.dataSource.getRepository(RealmEntity);
         const otherRealm = await realmRepository.save(realmRepository.create({ name: createNanoID() }));
 
-        const actor = {
+        const actor: ActorContext = {
             permissionEvaluator: createAllowAllActor().permissionEvaluator,
-            identity: { type: IdentityType.USER, data: user as any },
+            identity: { type: IdentityType.USER, data: user },
         };
 
         // cross-realm resource realm -> denied under own

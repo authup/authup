@@ -38,10 +38,10 @@ export class PolicyValidator extends Container<
                 }),
         );
 
-        this.mount('name', { group: ValidatorGroup.CREATE }, nameValidator);
+        this.mount('name', { group: [ValidatorGroup.CREATE, ValidatorGroup.PROVISIONING] }, nameValidator);
         this.mount('name', {
             group: ValidatorGroup.UPDATE,
-            optional: true, 
+            optional: true,
         }, nameValidator);
 
         this.mount(
@@ -58,7 +58,7 @@ export class PolicyValidator extends Container<
 
         this.mount(
             'type',
-            { group: ValidatorGroup.CREATE },
+            { group: [ValidatorGroup.CREATE, ValidatorGroup.PROVISIONING] },
             createValidator(z.string().min(3).max(128)),
         );
 
@@ -71,10 +71,19 @@ export class PolicyValidator extends Container<
         this.mount(
             'realm_id',
             {
-                group: ValidatorGroup.CREATE,
-                optional: true, 
+                group: [ValidatorGroup.CREATE, ValidatorGroup.PROVISIONING],
+                optional: true,
             },
             createValidator(z.uuid().nullable()),
+        );
+
+        this.mount(
+            'built_in',
+            {
+                group: ValidatorGroup.PROVISIONING,
+                optional: true,
+            },
+            createValidator(z.boolean()),
         );
     }
 }

@@ -12,8 +12,9 @@ import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
+import { buildRedisKeyPath } from '@authup/server-kit';
 import type { IRealmRepository } from '../../../../../core/index.ts';
-import { RealmEntity } from '../../../../../adapters/database/domains/index.ts';
+import { CachePrefix, RealmEntity } from '../../../../../adapters/database/domains/index.ts';
 import { translateWhereConditions } from '../helpers.ts';
 
 export class RealmRepositoryAdapter implements IRealmRepository {
@@ -24,7 +25,17 @@ export class RealmRepositoryAdapter implements IRealmRepository {
     }
 
     findOneById(id: string): Promise<Realm | null> {
-        return this.findOneBy({ id });
+        const qb = this.repository.createQueryBuilder('realm');
+        qb.where('realm.id = :id', { id });
+        qb.cache(
+            buildRedisKeyPath({
+                prefix: CachePrefix.REALM,
+                key: id,
+            }),
+            60_000,
+        );
+
+        return qb.getOne();
     }
 
     findOneByName(name: string): Promise<Realm | null> {
@@ -92,6 +103,15 @@ export class RealmRepositoryAdapter implements IRealmRepository {
             dataSource: this.repository.manager.connection,
             entityTarget: RealmEntity,
         });
+    }
+
+    async resolveId(key: string): Promise<string | null> {
+        if (isUUID(key)) {
+            return key;
+        }
+
+        const entity = await this.findOneByName(key);
+        return entity ? entity.id : null;
     }
 
     async resolve(id: string | undefined, withFallback: true): Promise<Realm>;

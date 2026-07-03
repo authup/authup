@@ -74,10 +74,11 @@ export class ScopeRepositoryAdapter implements IScopeRepository {
         qb.where('scope.name = :name', { name });
 
         if (realmKey) {
-            const realm = await this.realmRepository.resolve(realmKey);
-            if (realm) {
-                qb.andWhere('scope.realm_id = :realmId', { realmId: realm.id });
+            const realmId = await this.realmRepository.resolveId(realmKey);
+            if (!realmId) {
+                return null;
             }
+            qb.andWhere('scope.realm_id = :realmId', { realmId });
         }
 
         return qb.getOne();

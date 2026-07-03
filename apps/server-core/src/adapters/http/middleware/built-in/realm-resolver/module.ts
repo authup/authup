@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isUUID } from '@authup/kit';
 import { EntityNotFoundError } from '@authup/errors';
 import type { IAppEvent } from 'routup';
 import type { IRealmRepository } from '../../../../../core/index.ts';
@@ -25,16 +24,11 @@ export class RealmResolverMiddleware {
             return;
         }
 
-        if (isUUID(value)) {
-            setRequestRealmID(event, value);
-            return;
-        }
-
-        const realm = await this.realmRepository.resolve(value);
-        if (!realm) {
+        const realmId = await this.realmRepository.resolveId(value);
+        if (!realmId) {
             throw new EntityNotFoundError(`realm '${value}' not found`);
         }
 
-        setRequestRealmID(event, realm.id);
+        setRequestRealmID(event, realmId);
     }
 }

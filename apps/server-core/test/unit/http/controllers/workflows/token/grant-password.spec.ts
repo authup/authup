@@ -310,4 +310,31 @@ describe('src/http/controllers/token', () => {
 
         expect(response.access_token).toBeDefined();
     });
+
+    it('should resolve a UUID username globally regardless of realm hint', async () => {
+        const realm = await suite.client.realm.create(createFakeRealm());
+        const user = await suite.client.user.create(createFakeUser({
+            realm_id: realm.id,
+            password: 'uuid-user-secret',
+        }));
+
+        let response = await suite.client
+            .token
+            .createWithPassword({
+                username: user.id,
+                password: 'uuid-user-secret',
+            });
+
+        expect(response.access_token).toBeDefined();
+
+        response = await suite.client
+            .token
+            .createWithPassword({
+                username: user.id,
+                password: 'uuid-user-secret',
+                realm_name: 'master',
+            });
+
+        expect(response.access_token).toBeDefined();
+    });
 });

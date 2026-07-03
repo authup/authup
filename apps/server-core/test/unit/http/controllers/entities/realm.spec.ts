@@ -6,13 +6,13 @@
  */
 
 import {
-    afterAll, 
-    beforeAll, 
-    describe, 
-    expect, 
+    afterAll,
+    beforeAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
-import { createFakeRealm, expectPropertiesEqualToSrc } from '../../../../utils/index.ts';
+import { createFakeRealm, expectClientError, expectPropertiesEqualToSrc } from '../../../../utils/index.ts';
 import { createTestApplication } from '../../../../app/index.ts';
 
 describe('src/http/controllers/realm', () => {
@@ -80,6 +80,39 @@ describe('src/http/controllers/realm', () => {
             .delete(details.id!);
 
         expect(response.id).toBeDefined();
+    });
+
+    it('should serve fresh data after update of an id-cached read', async () => {
+        const entity = await suite.client
+            .realm
+            .create(createFakeRealm());
+
+        // prime the id-keyed query cache
+        await suite.client.realm.getOne(entity.id);
+
+        await suite.client.realm.update(entity.id, { display_name: 'cache-invalidation-check' });
+
+        const response = await suite.client
+            .realm
+            .getOne(entity.id);
+
+        expect(response.display_name).toEqual('cache-invalidation-check');
+    });
+
+    it('should not serve a deleted resource from the id-keyed cache', async () => {
+        const entity = await suite.client
+            .realm
+            .create(createFakeRealm());
+
+        // prime the id-keyed query cache
+        await suite.client.realm.getOne(entity.id);
+
+        await suite.client.realm.delete(entity.id);
+
+        await expectClientError(
+            () => suite.client.realm.getOne(entity.id),
+            { status: 404 },
+        );
     });
 
     it('should create and update resource with put', async () => {

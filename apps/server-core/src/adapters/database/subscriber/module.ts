@@ -91,13 +91,17 @@ export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscrib
     }
 
     async afterRemove(event: RemoveEvent<T>): Promise<any> {
-        if (!event.entity) {
+        // remove() strips the primary key from event.entity before the
+        // subscriber runs — databaseEntity is the pre-removal row and keeps
+        // the id-keyed cache invalidation (and the DELETED payload) intact.
+        const entity = event.databaseEntity ?? event.entity;
+        if (!entity) {
             return;
         }
 
-        await this.dropCacheKeys(event.connection, event.entity);
+        await this.dropCacheKeys(event.connection, entity);
 
-        await this.publish(EntityDefaultEventName.DELETED, event.entity);
+        await this.publish(EntityDefaultEventName.DELETED, entity);
     }
 
     protected async dropCacheKeys(connection: DataSource, data: T) : Promise<void> {

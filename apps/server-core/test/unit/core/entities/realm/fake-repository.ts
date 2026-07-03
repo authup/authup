@@ -8,6 +8,7 @@
 import { randomUUID } from 'node:crypto';
 import type { Realm } from '@authup/core-kit';
 import { REALM_MASTER_NAME } from '@authup/core-kit';
+import { isUUID } from '@authup/kit';
 import type { IRealmRepository } from '../../../../../src/core/entities/realm/types.ts';
 import { FakeEntityRepository } from '@authup/server-test-kit';
 
@@ -26,6 +27,19 @@ export class FakeRealmRepository extends FakeEntityRepository<Realm> implements 
             updated_at: new Date().toISOString(),
         };
         this.seed([this.masterRealm]);
+    }
+
+    async findOneByName(name: string): Promise<Realm | null> {
+        return super.findOneByName(name.trim().toLowerCase());
+    }
+
+    async resolveId(key: string): Promise<string | null> {
+        if (isUUID(key)) {
+            return key;
+        }
+
+        const entity = await this.findOneByName(key);
+        return entity ? entity.id : null;
     }
 
     async resolve(id: string | undefined, withFallback: true): Promise<Realm>;

@@ -160,6 +160,35 @@ Caveats:
 - The default unmatched-route fallback returns a collection shape (`{ data: [], meta: { total: 0 } }`); session endpoints need explicit handlers for logged-in renders, and handlers on fire-and-forget fetch paths must not throw (an unawaited rejection fails vitest).
 - Alias the import (`createFakeHTTPClient`) — `test/utils` already exports a `createFakeClient` entity factory.
 
+## Component Tests (packages/client-web-kit)
+
+The kit has a vitest + `@vue/test-utils` + `happy-dom` setup
+(`test/vitest.config.ts`, `@vitejs/plugin-vue` for SFC compilation). Run with
+`npm run test --workspace=packages/client-web-kit` — the package script passes
+`--config test/vitest.config.ts` explicitly, which is **mandatory**: vitest
+does NOT auto-discover a config under `test/` (packages/access carries a dead
+config as a cautionary example — its plain `vitest run` script never loads it).
+
+Mounting a kit component needs the same wiring a consumer app does —
+`test/utils/index.ts` exports a `mountLoginForm(props?, handlers?)` harness
+that assembles it: fresh `createPinia()` + `createFakeClient` (from
+`@authup/core-http-kit/testing`, records every request in `.requests` with
+URLSearchParams bodies normalized to plain objects) per mount, `app.use(vuecs,
+{})` (ThemeManager + DefaultsManager — `useSubmitButton`/`VC*` throw without
+them), and the kit `install(app, { baseURL, httpClient, pinia, isServer:
+true, cookieGet/cookieSet/cookieUnset })` (`isServer: true` disables the
+auth-hook refresh timer; cookie stubs avoid `useCookies`). The only global
+component lookup in the login subtree is `resolveComponent('VCIcon')` in
+`ATitle` — stub via `global.components`.
+
+The realm-plumbing regression suite pins the interactive-login contract at two
+layers: `test/unit/components/workflows/login-form.spec.ts` (picker-selected
+realm transmitted; `codeRequest.realm_id` transmitted incl. late-arriving prop
+via `setProps`; empty realm omitted from the grant body) and
+`test/unit/core/store/login.spec.ts` (the `store.login()` gate forwards
+`ctx.realmId` even though the store's own realm ref is null pre-login — the
+original one-line bug).
+
 ## Code Coverage
 
 ### Generate coverage report
