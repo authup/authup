@@ -83,16 +83,24 @@ export class DatabaseModule implements IModule {
         await dataSource.initialize();
         logger.debug('Established database connection.');
 
-        if (this.options.migrate) {
-            await this.options.migrate(container, dataSource);
-        } else {
-            await this.migrate(container, dataSource);
+        try {
+            if (this.options.migrate) {
+                await this.options.migrate(container, dataSource);
+            } else {
+                await this.migrate(container, dataSource);
+            }
+
+            container.register(DatabaseInjectionKey.DataSource, { useValue: dataSource });
+
+            this.registerRepositories(container, dataSource);
+            this.registerEventPublisher(container, dataSource);
+        } catch (e) {
+            if (dataSource.isInitialized) {
+                await dataSource.destroy();
+            }
+
+            throw e;
         }
-
-        container.register(DatabaseInjectionKey.DataSource, { useValue: dataSource });
-
-        this.registerRepositories(container, dataSource);
-        this.registerEventPublisher(container, dataSource);
     }
 
     async teardown(container: IContainer): Promise<void> {

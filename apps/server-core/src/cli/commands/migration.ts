@@ -76,9 +76,10 @@ async function runMigrationOperation(
         ...options,
         logging: ['error', 'schema', 'migration'],
     });
-    await dataSource.initialize();
 
     try {
+        await dataSource.initialize();
+
         if (operation === MigrationOperation.REVERT) {
             await dataSource.undoLastMigration();
         } else if (operation === MigrationOperation.STATUS) {
@@ -87,7 +88,9 @@ async function runMigrationOperation(
             await dataSource.runMigrations();
         }
     } finally {
-        await dataSource.destroy();
+        if (dataSource.isInitialized) {
+            await dataSource.destroy();
+        }
     }
 }
 
@@ -132,9 +135,10 @@ async function generateMigrations(): Promise<void> {
         });
 
         const dataSource = new DataSource(dataSourceOptions);
-        await dataSource.initialize();
 
         try {
+            await dataSource.initialize();
+
             await dataSource.runMigrations();
 
             await generateMigration({
@@ -145,7 +149,9 @@ async function generateMigrations(): Promise<void> {
                 prettify: true,
             });
         } finally {
-            await dataSource.destroy();
+            if (dataSource.isInitialized) {
+                await dataSource.destroy();
+            }
         }
     }
 }
