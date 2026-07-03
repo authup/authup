@@ -194,6 +194,10 @@ const AEntityDelete = defineComponent({
                         color: 'error',
                         variant: 'outline',
                         label: props.withText ? translation.value : undefined,
+                        // Icon-only form has no visible text, so surface the
+                        // localized action as the accessible name (+ tooltip).
+                        'aria-label': props.withText ? undefined : translation.value,
+                        title: props.withText ? undefined : translation.value,
                         disabled: isDisabled,
                         onClick,
                     },
@@ -234,6 +238,8 @@ const AEntityDelete = defineComponent({
                 tag as string,
                 mergeProps({
                     disabled: isDisabled,
+                    'aria-label': props.withText ? undefined : translation.value,
+                    title: props.withText ? undefined : translation.value,
                     onClick,
                 }),
                 [

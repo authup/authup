@@ -1,7 +1,7 @@
 <script lang="ts">
 import type { Robot } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
-import { TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { TranslatorTranslationAppKey, TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import {
     AEntityDelete,
     APagination,
@@ -56,6 +56,10 @@ export default defineComponent({
                 namespace: TranslatorTranslationNamespace.FIELD,
                 key: TranslatorTranslationFieldKey.UPDATED_AT,
             },
+            {
+                namespace: TranslatorTranslationNamespace.APP,
+                key: TranslatorTranslationAppKey.DETAILS,
+            },
         ]);
 
         const columns = computed<TableColumn<Robot>[]>(() => [
@@ -92,6 +96,7 @@ export default defineComponent({
             hasDropPermission,
             handleDeleted,
             query,
+            translations,
             NuxtLink,
         };
     },
@@ -132,6 +137,8 @@ export default defineComponent({
                     <VCButton
                         :as="NuxtLink"
                         :to="'/robots/'+ row.id"
+                        :aria-label="translations.details"
+                        :title="translations.details"
                         size="sm"
                         color="primary"
                         variant="outline"

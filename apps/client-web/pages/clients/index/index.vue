@@ -3,7 +3,12 @@
 import { storeToRefs } from 'pinia';
 import type { Client } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
-import { TranslatorTranslationCommonKey, TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
 import {
     AClients,
     AEntityDelete,
@@ -69,6 +74,10 @@ export default defineComponent({
                 namespace: TranslatorTranslationNamespace.FIELD,
                 key: TranslatorTranslationFieldKey.UPDATED_AT,
             },
+            {
+                namespace: TranslatorTranslationNamespace.APP,
+                key: TranslatorTranslationAppKey.DETAILS,
+            },
         ]);
 
         const columns = computed<TableColumn<Client>[]>(() => [
@@ -123,6 +132,7 @@ export default defineComponent({
             hasDropPermission,
             handleDeleted,
             query,
+            translations,
             NuxtLink,
         };
     },
@@ -181,6 +191,8 @@ export default defineComponent({
                     <VCButton
                         :as="NuxtLink"
                         :to="'/clients/'+ row.id"
+                        :aria-label="translations.details"
+                        :title="translations.details"
                         size="sm"
                         color="primary"
                         variant="outline"
