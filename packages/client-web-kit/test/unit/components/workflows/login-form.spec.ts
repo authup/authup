@@ -5,13 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { VueWrapper } from '@vue/test-utils';
 import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import { ARealmPicker } from '../../../../src/components/entities';
 import { findTokenRequest, mountLoginForm } from '../../../utils';
 
-async function submitWithCredentials(wrapper: VueWrapper<any>) {
+type LoginFormWrapper = ReturnType<typeof mountLoginForm>['wrapper'];
+
+async function submitWithCredentials(wrapper: LoginFormWrapper) {
     const inputs = wrapper.findAll('input');
     await inputs[0].setValue('admin');
     await wrapper.find('input[type="password"]').setValue('start123');

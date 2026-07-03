@@ -18,6 +18,7 @@ import { IdentityType } from '@authup/core-kit';
 import { EntityNotFoundError } from '@authup/errors';
 import { createNanoID } from '@authup/kit';
 import { createAllowAllActor } from '@authup/server-test-kit';
+import type { ActorContext } from '@authup/server-kit';
 import type { UserEntity } from '../../../../../src';
 import {
     PermissionEntity,
@@ -53,9 +54,9 @@ describe('core/identity/permission/checker', () => {
             repository: suite.dataSource.getRepository(PermissionEntity),
             realmRepository: realmEntityRepository,
         });
-        const identityPermissionProvider = (suite as any).container.resolve(
+        const identityPermissionProvider = suite.container.resolve<IIdentityPermissionProvider>(
             IdentityInjectionKey.PermissionProvider,
-        ) as IIdentityPermissionProvider;
+        );
 
         service = new PermissionCheckerService({
             repository: permissionRepository,
@@ -120,7 +121,7 @@ describe('core/identity/permission/checker', () => {
             {},
             {
                 permissionEvaluator: createAllowAllActor().permissionEvaluator,
-                identity: { type: IdentityType.USER, data: adminUser as any },
+                identity: { type: IdentityType.USER, data: adminUser },
             },
         )).resolves.toBeUndefined();
     });
@@ -147,7 +148,7 @@ describe('core/identity/permission/checker', () => {
             {},
             {
                 permissionEvaluator: createAllowAllActor().permissionEvaluator,
-                identity: { type: IdentityType.USER, data: adminUser as any },
+                identity: { type: IdentityType.USER, data: adminUser },
             },
         )).rejects.toThrow();
     });
@@ -196,9 +197,9 @@ describe('core/identity/permission/checker', () => {
         const realmRepository = suite.dataSource.getRepository(RealmEntity);
         const otherRealm = await realmRepository.save(realmRepository.create({ name: createNanoID() }));
 
-        const actor = {
+        const actor: ActorContext = {
             permissionEvaluator: createAllowAllActor().permissionEvaluator,
-            identity: { type: IdentityType.USER, data: user as any },
+            identity: { type: IdentityType.USER, data: user },
         };
 
         // cross-realm resource realm -> denied under own

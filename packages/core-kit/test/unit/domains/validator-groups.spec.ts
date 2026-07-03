@@ -18,7 +18,7 @@ describe('domains/validator-groups', () => {
     it('should run zero group-scoped mounts at a group-less run', async () => {
         const validator = new RealmValidator();
 
-        const output = await validator.run({ name: 'MyRealm' } as any);
+        const output = await validator.run({ name: 'MyRealm' });
 
         expect(output).not.toHaveProperty('name');
     });
@@ -26,20 +26,20 @@ describe('domains/validator-groups', () => {
     it('should require and canonicalize name at CREATE and PROVISIONING', async () => {
         const validator = new RealmValidator();
 
-        await expect(validator.run({} as any, { group: ValidatorGroup.CREATE })).rejects.toThrow();
-        await expect(validator.run({} as any, { group: ValidatorGroup.PROVISIONING })).rejects.toThrow();
+        await expect(validator.run({}, { group: ValidatorGroup.CREATE })).rejects.toThrow();
+        await expect(validator.run({}, { group: ValidatorGroup.PROVISIONING })).rejects.toThrow();
 
-        const created = await validator.run({ name: ' FOO ' } as any, { group: ValidatorGroup.CREATE });
+        const created = await validator.run({ name: ' FOO ' }, { group: ValidatorGroup.CREATE });
         expect(created.name).toEqual('foo');
 
-        const provisioned = await validator.run({ name: ' FOO ' } as any, { group: ValidatorGroup.PROVISIONING });
+        const provisioned = await validator.run({ name: ' FOO ' }, { group: ValidatorGroup.PROVISIONING });
         expect(provisioned.name).toEqual('foo');
     });
 
     it('should keep name optional at UPDATE', async () => {
         const validator = new RealmValidator();
 
-        const output = await validator.run({ display_name: 'Foo Bar' } as any, { group: ValidatorGroup.UPDATE });
+        const output = await validator.run({ display_name: 'Foo Bar' }, { group: ValidatorGroup.UPDATE });
 
         expect(output.display_name).toEqual('Foo Bar');
     });
@@ -48,19 +48,19 @@ describe('domains/validator-groups', () => {
         const validator = new ClientValidator();
 
         const created = await validator.run(
-            { name: 'foo', built_in: true } as any,
+            { name: 'foo', built_in: true },
             { group: ValidatorGroup.CREATE },
         );
         expect(created).not.toHaveProperty('built_in');
 
         const updated = await validator.run(
-            { built_in: true } as any,
+            { built_in: true },
             { group: ValidatorGroup.UPDATE },
         );
         expect(updated).not.toHaveProperty('built_in');
 
         const provisioned = await validator.run(
-            { name: 'foo', built_in: true } as any,
+            { name: 'foo', built_in: true },
             { group: ValidatorGroup.PROVISIONING },
         );
         expect(provisioned.built_in).toBe(true);
@@ -69,19 +69,19 @@ describe('domains/validator-groups', () => {
     it('should require email at CREATE but not at PROVISIONING', async () => {
         const validator = new UserValidator();
 
-        await expect(validator.run({ name: 'foo' } as any, { group: ValidatorGroup.CREATE })).rejects.toThrow();
+        await expect(validator.run({ name: 'foo' }, { group: ValidatorGroup.CREATE })).rejects.toThrow();
 
-        const provisioned = await validator.run({ name: 'foo' } as any, { group: ValidatorGroup.PROVISIONING });
+        const provisioned = await validator.run({ name: 'foo' }, { group: ValidatorGroup.PROVISIONING });
         expect(provisioned.name).toEqual('foo');
         expect(provisioned).not.toHaveProperty('email');
 
         await expect(validator.run(
-            { name: 'foo', email: 'not-an-email' } as any,
+            { name: 'foo', email: 'not-an-email' },
             { group: ValidatorGroup.PROVISIONING },
         )).rejects.toThrow();
 
         const withEmail = await validator.run(
-            { name: 'foo', email: 'Foo@Example.com' } as any,
+            { name: 'foo', email: 'Foo@Example.com' },
             { group: ValidatorGroup.PROVISIONING },
         );
         expect(withEmail.email).toEqual('foo@example.com');
@@ -90,15 +90,15 @@ describe('domains/validator-groups', () => {
     it('should require the policy type at CREATE and PROVISIONING', async () => {
         const validator = new PolicyValidator();
 
-        await expect(validator.run({ name: 'foo' } as any, { group: ValidatorGroup.CREATE })).rejects.toThrow();
-        await expect(validator.run({ name: 'foo' } as any, { group: ValidatorGroup.PROVISIONING })).rejects.toThrow();
+        await expect(validator.run({ name: 'foo' }, { group: ValidatorGroup.CREATE })).rejects.toThrow();
+        await expect(validator.run({ name: 'foo' }, { group: ValidatorGroup.PROVISIONING })).rejects.toThrow();
 
         const provisioned = await validator.run(
             {
                 name: 'foo', 
                 type: 'composite', 
                 built_in: true, 
-            } as any,
+            },
             { group: ValidatorGroup.PROVISIONING },
         );
         expect(provisioned.type).toEqual('composite');
