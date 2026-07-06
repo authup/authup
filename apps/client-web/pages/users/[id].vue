@@ -56,9 +56,14 @@ export default defineComponent({
                 count: 2, 
             },
             {
-                namespace: TranslatorTranslationNamespace.ENTITY, 
-                key: TranslatorTranslationEntityKey.USER, 
-                count: 1, 
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.USER,
+                count: 1,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.SESSION,
+                count: 2,
             },
         ]);
 
@@ -100,6 +105,11 @@ export default defineComponent({
                 name: translationsDefault.role,
                 icon: 'fa6-solid:user-group',
                 url: `/users/${entity.value.id}/roles`,
+            },
+            {
+                name: translationsDefault.session,
+                icon: 'fa6-solid:desktop',
+                url: `/users/${entity.value.id}/sessions`,
             },
         ]);
 

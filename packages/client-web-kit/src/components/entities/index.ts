@@ -31,5 +31,6 @@ export * from './user-permission';
 export * from './role-user';
 export * from './scope';
 export * from './scope-client';
+export * from './session';
 export * from './user';
 export * from './user-role';

@@ -18,5 +18,6 @@ export const TranslatorTranslationEntityGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationEntityKey.ROBOT]: definePlural({ one: 'Roboter', other: 'Roboter' }),
     [TranslatorTranslationEntityKey.ROLE]: definePlural({ one: 'Rolle', other: 'Rollen' }),
     [TranslatorTranslationEntityKey.SCOPE]: definePlural({ one: 'Bereich', other: 'Bereiche' }),
+    [TranslatorTranslationEntityKey.SESSION]: definePlural({ one: 'Sitzung', other: 'Sitzungen' }),
     [TranslatorTranslationEntityKey.USER]: definePlural({ one: 'Benutzer', other: 'Benutzer' }),
 };
