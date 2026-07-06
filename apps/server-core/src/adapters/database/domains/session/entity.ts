@@ -50,7 +50,7 @@ export class SessionEntity implements Session {
     @Index()
     @Column({
         type: 'varchar',
-        length: 15, 
+        length: 45,
     })
     ip_address: string;
 

@@ -69,10 +69,18 @@ export default {
     tokenRefreshMaxAge: 259_200,
 
     /**
-     * Access token validity in seconds (default: 3600s / 1 hour).
-     * default: 3_600
+     * Access token validity in seconds (default: 900s / 15 minutes).
+     * default: 900
      */
-    tokenAccessMaxAge: 3_600,
+    tokenAccessMaxAge: 900,
+
+    /**
+     * Grace period (seconds) during which a just-rotated refresh token is
+     * still accepted, minting new chain-linked tokens instead of triggering
+     * replay detection. Absorbs multi-tab / mobile refresh races.
+     * default: 0 (strict — first-use-wins)
+     */
+    tokenRefreshGracePeriod: 0,
 
     // ----------------------------------------------------
     

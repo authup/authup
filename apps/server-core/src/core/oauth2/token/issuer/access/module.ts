@@ -9,7 +9,9 @@ import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2TokenKind } from '@authup/specs';
 import type { IOAuth2TokenSigner } from '../../signer/index.ts';
 import type { IOAuth2TokenRepository } from '../../repository/index.ts';
+import type { ISessionTokenRepository } from '../../../session-token/index.ts';
 import { OAuth2BaseTokenIssuer } from '../base.ts';
+import { persistSessionTokenRow } from '../session-token.ts';
 import type { IOAuth2TokenIssuer, OAuth2TokenIssuerOptions, OAuth2TokenIssuerResponse } from '../types.ts';
 import type { IIdentityRoleProvider } from '../../../../identity/index.ts';
 
@@ -20,17 +22,21 @@ export class OAuth2AccessTokenIssuer extends OAuth2BaseTokenIssuer implements IO
 
     protected identityRoleProvider?: IIdentityRoleProvider;
 
+    protected sessionTokenRepository?: ISessionTokenRepository;
+
     constructor(
         repository: IOAuth2TokenRepository,
         signer: IOAuth2TokenSigner,
         options: OAuth2TokenIssuerOptions = {},
         identityRoleProvider?: IIdentityRoleProvider,
+        sessionTokenRepository?: ISessionTokenRepository,
     ) {
         super(options);
 
         this.repository = repository;
         this.signer = signer;
         this.identityRoleProvider = identityRoleProvider;
+        this.sessionTokenRepository = sessionTokenRepository;
     }
 
     async issue(input: OAuth2TokenPayload = {}) : Promise<OAuth2TokenIssuerResponse> {
@@ -49,6 +55,8 @@ export class OAuth2AccessTokenIssuer extends OAuth2BaseTokenIssuer implements IO
         const token = await this.signer.sign(data);
 
         await this.repository.saveWithSignature(data, token);
+
+        await persistSessionTokenRow(this.sessionTokenRepository, data, 'access', { refresh_token_id: input.refresh_token_id ?? null });
 
         return [token, data];
     }

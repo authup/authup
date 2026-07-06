@@ -22,6 +22,7 @@ import type {
     IOAuth2TokenRevoker,
     IOAuth2TokenSigner,
     IOAuth2TokenVerifier,
+    ISessionTokenRepository,
 } from '../../../core/index.ts';
 
 export const OAuth2InjectionToken = {
@@ -43,6 +44,7 @@ export const OAuth2InjectionToken = {
     RefreshTokenIssuer: new TypedToken<IOAuth2TokenIssuer>('RefreshTokenIssuer'),
 
     TokenRepository: new TypedToken<IOAuth2TokenRepository>('TokenRepository'),
+    SessionTokenRepository: new TypedToken<ISessionTokenRepository>('SessionTokenRepository'),
     TokenRevoker: new TypedToken<IOAuth2TokenRevoker>('TokenRevoker'),
     TokenSigner: new TypedToken<IOAuth2TokenSigner>('TokenSigner'),
     TokenVerifier: new TypedToken<IOAuth2TokenVerifier>('TokenVerifier'),

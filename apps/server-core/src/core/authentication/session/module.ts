@@ -104,6 +104,12 @@ export class SessionManager implements ISessionManager {
 
     // -----------------------------------------------------
 
+    async revoke(id: string): Promise<void> {
+        await this.repository.removeById(id);
+    }
+
+    // -----------------------------------------------------
+
     async verify(session: Session): Promise<void> {
         const ms = new Date(session.expires_at).getTime();
         if (Date.now() > ms) {

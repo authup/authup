@@ -243,6 +243,9 @@ export class HTTPControllerModule {
     }
 
     createToken(container: IContainer) {
+        const config = container.resolve(ConfigInjectionKey);
+        const logger = container.resolve(LoggerInjectionKey);
+
         const sessionManager = container.resolve(AuthenticationInjectionKey.SessionManager);
 
         const codeVerifier = container.resolve(OAuth2InjectionToken.AuthorizationCodeVerifier);
@@ -252,6 +255,8 @@ export class HTTPControllerModule {
 
         const tokenRevoker = container.resolve(OAuth2InjectionToken.TokenRevoker);
         const tokenVerifier = container.resolve(OAuth2InjectionToken.TokenVerifier);
+        const tokenRepository = container.resolve(OAuth2InjectionToken.TokenRepository);
+        const sessionTokenRepository = container.resolve(OAuth2InjectionToken.SessionTokenRepository);
 
         const identityResolver = container.resolve(IdentityInjectionKey.Resolver);
         const identityProviderLdapCollectionAuthenticator = container.resolve(IdentityInjectionKey.ProviderLdapCollectionAuthenticator);
@@ -276,6 +281,11 @@ export class HTTPControllerModule {
 
             tokenVerifier,
             tokenRevoker,
+            tokenRepository,
+            sessionTokenRepository,
+
+            tokenRefreshGracePeriod: config.tokenRefreshGracePeriod,
+            logger,
 
             identityResolver,
             identityPermissionProvider,

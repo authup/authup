@@ -90,6 +90,11 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.tokenRefreshMaxAge = tokenRefreshMaxAge;
     }
 
+    const tokenRefreshGracePeriod = readInt(ConfigEnvironmentVariableName.TOKEN_REFRESH_GRACE_PERIOD);
+    if (typeof tokenRefreshGracePeriod !== 'undefined') {
+        options.tokenRefreshGracePeriod = tokenRefreshGracePeriod;
+    }
+
     const registrationEnabled = readBool(ConfigEnvironmentVariableName.REGISTRATION_ENABLED);
     if (typeof registrationEnabled !== 'undefined') {
         options.registrationEnabled = registrationEnabled;

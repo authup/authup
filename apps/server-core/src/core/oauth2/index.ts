@@ -12,4 +12,5 @@ export * from './key/index.ts';
 export * from './openid/index.ts';
 export * from './response/index.ts';
 export * from './scope/index.ts';
+export * from './session-token/index.ts';
 export * from './token/index.ts';

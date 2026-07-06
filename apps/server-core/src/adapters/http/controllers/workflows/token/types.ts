@@ -6,16 +6,19 @@
  */
 
 import type { Client, Robot, User } from '@authup/core-kit';
+import type { Logger } from '@authup/server-kit';
 import type {
     ICredentialsAuthenticator,
     IIdentityPermissionProvider,
     IIdentityResolver,
     IOAuth2AuthorizationCodeVerifier,
     IOAuth2TokenIssuer,
+    IOAuth2TokenRepository,
     IOAuth2TokenRevoker,
     IOAuth2TokenVerifier,
     IRealmRepository,
     ISessionManager,
+    ISessionTokenRepository,
     OAuth2ClientAuthenticator,
 } from '../../../../../core/index.ts';
 
@@ -26,6 +29,11 @@ export type TokenControllerContext = {
     refreshTokenIssuer: IOAuth2TokenIssuer,
     tokenVerifier: IOAuth2TokenVerifier,
     tokenRevoker: IOAuth2TokenRevoker,
+    tokenRepository: IOAuth2TokenRepository,
+    sessionTokenRepository: ISessionTokenRepository,
+
+    tokenRefreshGracePeriod?: number,
+    logger?: Logger,
 
     sessionManager: ISessionManager,
 

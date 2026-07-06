@@ -1129,6 +1129,80 @@ Distinct from `ClientAuthenticator` (`core/authentication/entities/client/module
 
 `code_challenge_method` defaults to `plain` per RFC 7636 §4.3 — only `S256` triggers SHA-256 verification.
 
+## Refresh Token Rotation & Replay Detection (plan 016)
+
+Every `/token` `refresh_token` call rotates: the presented refresh token (RT) is
+retired and a fresh AT+RT pair minted. Rotation is backed by a durable
+inventory table so replay survives cache flushes and can trigger the RFC 6819
+§5.2.2.3 reaction strategy (revoke the whole token family). Access-token TTL
+default is **900s** (was 3600s) to shrink the revocation blind spot for
+stateless local-JWKS adapters.
+
+### `auth_session_tokens` — one row per issued token
+
+TypeORM entity `SessionTokenEntity` (`adapters/database/domains/session-token/`),
+domain type `SessionToken` in `@authup/core-kit`. Columns: `id` (= jti,
+app-provided `@PrimaryColumn('uuid')`), `session_id` (FK → `auth_sessions`
+**ON DELETE CASCADE**), `kind` (`access`|`refresh`), `parent_id` /
+`refresh_token_id` (plain nullable uuid — informational lineage, **no** self-FK),
+`ip_address(45)` / `user_agent(512)`, `consumed_at` / `revoked_at` /
+`expires_at` (varchar(28) ISO), `created_at`. Indexes on `session_id`, `kind`,
+`expires_at`. **No subscriber** (not cached / not realtime). The same migration
+widens `auth_sessions.ip_address` 15 → 45 (was IPv4-only). Port
+`ISessionTokenRepository` (`core/oauth2/session-token/`), adapter
+`SessionTokenRepositoryAdapter` (`app/modules/oauth2/repositories/session-token/`),
+DI token `OAuth2InjectionToken.SessionTokenRepository`.
+
+### The DB row is the single authority for refresh validity
+
+The refresh grant verifies the RT with **`skipActiveCheck: true`** (crypto + exp
+still enforced; only the cache blocklist is skipped) and decides on the DB row —
+so family-revocation-on-replay is deterministic regardless of cache state (a warm
+cache would otherwise reject a consumed RT *before* `runWith`). Consequently
+`/token/revoke` must also soft-revoke the row: `OAuth2TokenRevoker` takes an
+optional `sessionTokenRepository` and sets `revoked_at` alongside the cache
+blocklist. **Do not remove the `skipActiveCheck` on the refresh path** without
+re-adding a cache-based replay reaction — they are coupled.
+
+### Grant flow (`core/oauth2/grant-types/refresh-token.ts`)
+
+`findOneById(jti)` → reject (`invalid_grant`) if **missing** (expired-and-swept or
+hard-cutover legacy — no `legacyRefresh`), **wrong kind**, or **`revoked_at` set**
+→ `markRefreshConsumed(jti, now)` (atomic conditional UPDATE:
+`consumed_at IS NULL AND revoked_at IS NULL AND kind='refresh'`). On success:
+blocklist the old jti in cache (`setInactive(jti, exp)` — cache-only, **not** a
+DB revoke, so grace stays intact), refresh the session, issue RT (`parent_id =
+old jti`) then AT (`refresh_token_id = new RT jti`). On consume-failure →
+`revokeFamily`. Issuers write the row after `saveWithSignature` via
+`persistSessionTokenRow` when `session_id` is present (M2M client/robot-credentials
+write only an access row — they mint no RT).
+
+### Family revoke = the `auth_sessions` row, never a wider SSO session
+
+`revokeFamily`: `revokeBySessionId` soft-revokes every row and returns
+`{id, expires_at}[]`; each jti is cache-blocklisted **with its real expiry**
+(never the fallback 1h TTL — a 3-day RT must not resurface as `active` in
+introspection); then `sessionManager.revoke(sessionId)` deletes the session
+(cascade drops the rows) so its access tokens stop verifying on authup's own API.
+Replay is logged (`logger?.warn`) and surfaced as `invalid_grant`.
+
+### Grace period (`tokenRefreshGracePeriod`, seconds, default 0 = strict)
+
+On consume-failure, `isWithinGraceWindow(jti)` returns true only when
+`gracePeriod > 0` AND the row is unrevoked AND `now - consumed_at ≤ gracePeriod`
+AND the token is the **chain tip** (`hasConsumedChild(jti)` is false). The chain-tip
+check is load-bearing: without it a stolen *older* consumed RT replayed inside its
+window would fork a parallel session instead of tripping replay detection. A
+graced re-use mints a fresh chain-linked pair (never the same tokens); benign
+multi-tab races present the still-current tip and are absorbed. Default 0 skips
+the extra queries entirely (strict: any consumed-RT replay → family revoke).
+
+### Cleanup
+
+`components/oauth2-cleaner` sweeps `auth_session_tokens` where
+`expires_at < now` (every minute, alongside the existing session sweep). AT rows
+dominate volume; a deleted session cascade-drops its remaining rows.
+
 ## Provisioning Permissions With Policies
 
 `PermissionProvisioningEntity.relations.policies` is a list of policy names to attach to the permission via the `auth_permission_policies` junction. Used by the default provisioning source to wire `system.default` (security baseline) plus the optional ATTRIBUTE_NAMES allowlist:
