@@ -6,6 +6,7 @@
  */
 
 export * from './base-path.ts';
+export * from './internal-http-client.ts';
 export * from './render.ts';
 export * from './serve.ts';
 export * from './types.ts';

@@ -48,6 +48,7 @@ import {
     ListHandlers,
     mergeEntityCollectionRenderOptions,
 } from './utils';
+import { isError } from '@authup/errors';
 
 const merger = createMerger({
     array: false,
@@ -91,6 +92,17 @@ function create<
 
     let query : BuildInput<Entity<RECORD>> | undefined;
 
+    const failed = (error: Error) => {
+        if (context.setup && typeof context.setup.emit === 'function') {
+            context.setup.emit('failed', error);
+        }
+    };
+
+    // Never rejects: callers don't reliably handle rejections — most call
+    // sites are fire-and-forget (the setup-time initial load below, template
+    // refs, pagination footers) and the awaiting ones don't catch. During SSR
+    // an unhandled rejection is fatal to the server process, so a failed load
+    // emits `failed` and leaves the list empty instead of throwing.
     async function load(input: ListMeta<RECORD> = {}) {
         if (!domainAPI || busy.value) return;
 
@@ -157,6 +169,9 @@ function create<
                 limit: response.meta.limit,
                 offset: response.meta.offset,
             };
+        } catch (e) {
+            failed(isError(e) ? e : new Error('The entities could not be loaded.'));
+            return;
         } finally {
             busy.value = false;
             meta.value.busy = false;

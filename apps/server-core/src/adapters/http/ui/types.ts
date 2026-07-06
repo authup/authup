@@ -12,3 +12,16 @@ export type UIRenderContext = {
         data: Record<string, any>,
     },
 };
+
+export type InternalUIHttpClientContext = {
+    /**
+     * The public base URL (config `publicUrl`) — stays the client's
+     * `baseURL` so URLs rendered into the HTML remain user-facing.
+     */
+    publicURL: string,
+    /**
+     * The server's own listen address (e.g. http://localhost:3010/) —
+     * where the transport actually dispatches requests.
+     */
+    internalURL: string,
+};

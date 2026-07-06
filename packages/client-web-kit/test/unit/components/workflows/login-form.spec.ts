@@ -7,7 +7,7 @@
 
 import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
-import { ARealmPicker } from '../../../../src/components/entities';
+import { AIdentityProviders, ARealmPicker } from '../../../../src/components/entities';
 import { findTokenRequest, mountLoginForm } from '../../../utils';
 
 type LoginFormWrapper = ReturnType<typeof mountLoginForm>['wrapper'];
@@ -101,5 +101,24 @@ describe('components/workflows/login', () => {
         expect(body.username).toEqual('admin');
         expect(body.password).toEqual('start123');
         expect('realm_id' in body).toBe(false);
+    });
+
+    // Regression: the collection manager's setup-time load is
+    // fire-and-forget — an uncaught rejection is fatal to an SSR process.
+    // A failing request must be routed into the `failed` emit and leave
+    // the form usable (rendered without the provider list).
+    it('should render when identity provider load fails', async () => {
+        const { wrapper } = mountLoginForm({}, {
+            'GET /identity-providers': () => {
+                throw new Error('unable to get local issuer certificate');
+            },
+        });
+        await flushPromises();
+
+        expect(wrapper.find('form').exists()).toBe(true);
+
+        const providers = wrapper.findComponent(AIdentityProviders);
+        expect(providers.exists()).toBe(true);
+        expect(providers.emitted('failed')).toBeTruthy();
     });
 });
