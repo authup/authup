@@ -17,7 +17,7 @@ import { TestApplication } from './module.ts';
 import { TestHTTPApplication } from './http.ts';
 import { createTestDatabaseModuleForSuite } from './database.ts';
 
-async function buildTestConfig(): Promise<Config> {
+async function buildTestConfig(alter?: (config: Config) => void): Promise<Config> {
     const raw = readConfigRawFromEnv();
     const config = await normalizeConfig(raw);
 
@@ -37,12 +37,20 @@ async function buildTestConfig(): Promise<Config> {
     config.emailVerificationEnabled = true;
     config.passwordRecoveryEnabled = true;
 
+    if (alter) {
+        alter(config);
+    }
+
     return config;
 }
 
-export function createTestApplication() : TestHTTPApplication {
+export type TestApplicationOptions = {
+    config?: (config: Config) => void,
+};
+
+export function createTestApplication(options: TestApplicationOptions = {}) : TestHTTPApplication {
     const modules = new ApplicationBuilder()
-        .withConfig(new ConfigModule(buildTestConfig))
+        .withConfig(new ConfigModule(() => buildTestConfig(options.config)))
         .withLogger()
         .withCache()
         .withLdap()

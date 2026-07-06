@@ -11,7 +11,6 @@ import type { IOAuth2TokenSigner } from '../../signer/index.ts';
 import type { IOAuth2TokenRepository } from '../../repository/index.ts';
 import type { ISessionTokenRepository } from '../../../session-token/index.ts';
 import { OAuth2BaseTokenIssuer } from '../base.ts';
-import { persistSessionTokenRow } from '../session-token.ts';
 import type { IOAuth2TokenIssuer, OAuth2TokenIssuerOptions, OAuth2TokenIssuerResponse } from '../types.ts';
 import type { IIdentityRoleProvider } from '../../../../identity/index.ts';
 
@@ -56,7 +55,17 @@ export class OAuth2AccessTokenIssuer extends OAuth2BaseTokenIssuer implements IO
 
         await this.repository.saveWithSignature(data, token);
 
-        await persistSessionTokenRow(this.sessionTokenRepository, data, 'access', { refresh_token_id: input.refresh_token_id ?? null });
+        if (this.sessionTokenRepository && data.session_id && data.jti && typeof data.exp === 'number') {
+            await this.sessionTokenRepository.create({
+                id: data.jti,
+                session_id: data.session_id,
+                kind: 'access',
+                refresh_token_id: input.refresh_token_id ?? null,
+                ip_address: data.remote_address ?? '',
+                user_agent: data.user_agent ?? '',
+                expires_at: new Date(data.exp * 1000).toISOString(),
+            });
+        }
 
         return [token, data];
     }

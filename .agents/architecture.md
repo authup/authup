@@ -378,6 +378,28 @@ not by client-web:
   restores the authorize request. `sanitizeRelativeRedirect()` in
   `adapters/http/ui/render.ts` rejects absolute / protocol-relative URLs
   (open-redirect guard).
+- **Internal HTTP client (SSR self-calls)**: the render's API calls
+  (session hydration, identity-provider/scope fetches) go through the
+  client registered under `HTTPInjectionKey.UIHttpClient`.
+  `HTTPModule.setup` registers the production default —
+  `createInternalUIHttpClient` (`adapters/http/ui/internal-http-client.ts`),
+  a `@authup/core-http-kit` `Client` whose hapic `FetchTransport` rewrites
+  every request targeting `publicUrl` (origin + sub-path prefix, wildcard
+  listen hosts normalized to loopback) onto the server's own listen
+  address (`HTTPInjectionKey.Server` → `server.url`, resolved lazily per
+  request). So SSR self-calls never round-trip through the reverse proxy:
+  no TLS (a self-signed `publicUrl` cert would fail Node's fetch with
+  `UNABLE_TO_GET_ISSUER_CERT_LOCALLY`), no dependency on the public
+  hostname resolving from inside the deployment. The rewrite is
+  transport-level ONLY — `baseURL` stays `publicUrl` because rendered
+  hrefs (e.g. identity-provider authorize links via `getAuthorizeUri`)
+  derive from it and hydration does not patch attribute mismatches. The
+  registration is `lifetime: 'transient'` (fresh client per render — the
+  kit's auth hook writes per-user state) and is skipped when the token is
+  already bound (test fakes win; see testing.md). Relatedly, the kit's
+  entity-collection manager catches its own load errors and emits
+  `failed` instead of rejecting — a failed SSR fetch renders the page
+  degraded rather than killing the process via an unhandled rejection.
 - **Sub-path deployment**: the SSR UI works behind a prefix-stripping
   reverse proxy (e.g. `https://example.com/auth/* → authup /*`) with no
   extra config — the prefix is derived from `publicUrl`'s pathname
@@ -1173,9 +1195,9 @@ hard-cutover legacy — no `legacyRefresh`), **wrong kind**, or **`revoked_at` s
 blocklist the old jti in cache (`setInactive(jti, exp)` — cache-only, **not** a
 DB revoke, so grace stays intact), refresh the session, issue RT (`parent_id =
 old jti`) then AT (`refresh_token_id = new RT jti`). On consume-failure →
-`revokeFamily`. Issuers write the row after `saveWithSignature` via
-`persistSessionTokenRow` when `session_id` is present (M2M client/robot-credentials
-write only an access row — they mint no RT).
+`revokeFamily`. Each issuer writes the row after `saveWithSignature` when
+`session_id` is present (M2M client/robot-credentials write only an access row —
+they mint no RT).
 
 ### Family revoke = the `auth_sessions` row, never a wider SSO session
 

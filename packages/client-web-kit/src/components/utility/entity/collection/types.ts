@@ -124,7 +124,8 @@ export type EntityCollectionVSlots<T extends Record<string, any>> = {
 export type EntityCollectionVEmitOptions<T> = {
     created: (item: T) => true,
     deleted: (item: T) => true,
-    updated: (item: T) => true
+    updated: (item: T) => true,
+    failed: (error: Error) => true
 };
 
 export type EntityCollectionManagerCreateContext<

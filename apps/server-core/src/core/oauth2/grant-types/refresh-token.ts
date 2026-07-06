@@ -70,6 +70,12 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         if (row.revoked_at) {
             throw OAuth2GrantError.invalid('refresh token has been revoked');
         }
+        if (row.session_id !== payload.session_id) {
+            // The row is written with the token's own session_id and jti is
+            // globally unique, so a mismatch means corruption / jti reuse — fail
+            // closed rather than refresh or revoke against the wrong session.
+            throw OAuth2GrantError.invalid('refresh token session mismatch');
+        }
 
         const now = new Date();
         const nowISO = now.toISOString();
@@ -169,16 +175,16 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
             jti,
         });
 
+        // Blocklisting is best-effort (cache) — settle all of them so one cache
+        // failure cannot skip the rest or, worse, abort the session delete
+        // below (the load-bearing part of the revocation). Pin each TTL to the
+        // token's real expiry (unix seconds) so a long-lived refresh token
+        // cannot resurface as active via introspection after the fallback 1h.
         const rows = await this.sessionTokenRepository.revokeBySessionId(sessionId, at);
-        for (const row of rows) {
-            // Pin the blocklist TTL to the token's real expiry (unix seconds) so
-            // a long-lived refresh token cannot resurface as active via
-            // introspection once the fallback 1h window elapses.
-            await this.tokenRepository.setInactive(
-                row.id,
-                Math.floor(new Date(row.expires_at).getTime() / 1_000),
-            );
-        }
+        await Promise.allSettled(rows.map((row) => this.tokenRepository.setInactive(
+            row.id,
+            Math.floor(new Date(row.expires_at).getTime() / 1_000),
+        )));
 
         await this.sessionManager.revoke(sessionId);
     }

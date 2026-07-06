@@ -14,8 +14,10 @@ export type HTTPServer = ReturnType<typeof serve>;
 export const HTTPInjectionKey = {
     Server: new TypedToken<HTTPServer>('Server'),
     /**
-     * Optional HTTP-client override for the SSR'd UI pages (test
-     * injection — production registers nothing). Register it with a
+     * HTTP client for the SSR'd UI pages. `HTTPModule.setup` registers a
+     * default whose transport dispatches against the server's own listen
+     * address (see `createInternalUIHttpClient`); a registration made
+     * BEFORE setup wins (test injection). Register it with a
      * `useFactory` provider and `lifetime: 'transient'` so every
      * resolve yields a FRESH client: client-web-kit's authentication
      * hook writes per-user Authorization state onto the client it

@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
-import type { IClient as IBaseClient, RequestBaseOptions } from 'hapic';
+import type { ClientOptionsInput, IClient as IBaseClient } from 'hapic';
 import type {
     IClientAPI,
     IClientPermissionAPI,
@@ -36,7 +36,7 @@ import type {
     IUserRoleAPI,
 } from '../domains';
 
-export type ClientOptions = RequestBaseOptions;
+export type ClientOptions = ClientOptionsInput;
 
 /**
  * Replaceable contract of the authup HTTP client: the base transport

@@ -38,6 +38,12 @@ export class SessionTokenRepositoryAdapter implements ISessionTokenRepository {
 
         await this.repository.insert(entity);
 
+        // insert() does not hydrate @CreateDateColumn back onto the in-memory
+        // entity (the DB fills created_at via its DEFAULT). Stamp it so the
+        // returned object satisfies the SessionToken contract instead of
+        // carrying an undefined created_at.
+        entity.created_at = entity.created_at ?? new Date().toISOString();
+
         return entity;
     }
 
