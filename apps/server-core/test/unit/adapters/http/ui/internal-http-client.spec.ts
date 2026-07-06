@@ -82,6 +82,17 @@ describe('createPublicToInternalURLRewriter', () => {
         expect(rewrite('https://hub.local/auth/realms')).toEqual('http://127.0.0.1:64331/realms');
     });
 
+    it('normalizes an ipv6 wildcard internal listen address to loopback', () => {
+        // WHATWG URL serializes an IPv6 hostname WITH brackets:
+        // new URL('http://[::]:64331/').hostname === '[::]'
+        const rewrite = createPublicToInternalURLRewriter(
+            'https://hub.local/auth',
+            'http://[::]:64331/',
+        );
+
+        expect(rewrite('https://hub.local/auth/realms')).toEqual('http://127.0.0.1:64331/realms');
+    });
+
     it('leaves non-absolute input untouched', () => {
         const rewrite = createPublicToInternalURLRewriter(
             'https://hub.local/auth',
