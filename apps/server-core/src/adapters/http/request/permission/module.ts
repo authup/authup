@@ -48,9 +48,17 @@ export class RequestPermissionEvaluator implements IPermissionEvaluator {
 
     protected extendContext(ctx: PermissionEvaluationContext) {
         const scopes = useRequestScopes(this.event);
-        if (scopes.includes(ScopeName.GLOBAL)) {
+        const identity = useRequestIdentity(this.event);
+
+        // Only attach the identity policy data when an identity was actually
+        // resolved. Setting it to `undefined` would still make
+        // `PolicyData.has('identity')` true (key presence), so the built-in
+        // identity evaluator would run its validator against `undefined` and
+        // throw an uncaught error instead of a clean permission denial — see
+        // the deleted-subject edge case in issue #3184.
+        if (scopes.includes(ScopeName.GLOBAL) && identity) {
             ctx.data = ctx.data || new PolicyData();
-            ctx.data.set(BuiltInPolicyType.IDENTITY, useRequestIdentity(this.event));
+            ctx.data.set(BuiltInPolicyType.IDENTITY, identity);
         }
 
         return ctx;
