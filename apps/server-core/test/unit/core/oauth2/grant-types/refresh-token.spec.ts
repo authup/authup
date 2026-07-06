@@ -154,6 +154,39 @@ describe('OAuth2RefreshTokenGrant', () => {
         expect(tokenRepository.setInactiveCalls.every((c) => typeof c.exp === 'number')).toBe(true);
     });
 
+    it('should still revoke the session when a blocklist cache call fails', async () => {
+        const payload = await seed();
+        const grant = build();
+
+        await grant.runWith(payload);
+
+        // a cache blip on blocklisting must not abort the (load-bearing) session revoke
+        tokenRepository.setInactive = async () => {
+            throw new Error('cache unavailable');
+        };
+
+        await expect(grant.runWith(payload)).rejects.toBeDefined();
+        expect(sessionManager.revokeCalls).toContain(sessionId);
+    });
+
+    it('should reject when the row session_id does not match the token session_id', async () => {
+        const payload = await seed();
+        payload.session_id = randomUUID(); // diverges from the stored row's session_id
+        const grant = build();
+
+        let error: unknown;
+        try {
+            await grant.runWith(payload);
+        } catch (e) {
+            error = e;
+        }
+
+        expect(isOAuth2Error(error)).toBe(true);
+        // fail closed: neither consume nor family-revoke on a mismatch
+        expect(sessionTokenRepository.markRefreshConsumedCalls).toHaveLength(0);
+        expect(sessionManager.revokeCalls).toHaveLength(0);
+    });
+
     it('should reject an unknown refresh token (no row) without touching the session', async () => {
         const payload = await seed();
         // present a token whose jti has no row
