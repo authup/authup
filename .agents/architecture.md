@@ -1173,9 +1173,9 @@ hard-cutover legacy — no `legacyRefresh`), **wrong kind**, or **`revoked_at` s
 blocklist the old jti in cache (`setInactive(jti, exp)` — cache-only, **not** a
 DB revoke, so grace stays intact), refresh the session, issue RT (`parent_id =
 old jti`) then AT (`refresh_token_id = new RT jti`). On consume-failure →
-`revokeFamily`. Issuers write the row after `saveWithSignature` via
-`persistSessionTokenRow` when `session_id` is present (M2M client/robot-credentials
-write only an access row — they mint no RT).
+`revokeFamily`. Each issuer writes the row after `saveWithSignature` when
+`session_id` is present (M2M client/robot-credentials write only an access row —
+they mint no RT).
 
 ### Family revoke = the `auth_sessions` row, never a wider SSO session
 
