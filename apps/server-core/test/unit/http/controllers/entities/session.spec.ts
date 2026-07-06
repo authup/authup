@@ -79,12 +79,13 @@ describe('session', () => {
     });
 
     it('scopes a non-privileged user to its own sessions', async () => {
-        const fakeUser = createFakeUser();
+        const password = 'session-self-user-pw';
+        const fakeUser = createFakeUser({ password });
         await suite.client.user.create(fakeUser);
 
         const login = await suite.client.token.createWithPassword({
             username: fakeUser.name,
-            password: fakeUser.password,
+            password,
         });
 
         const client = bearer(login.access_token);

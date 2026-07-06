@@ -36,21 +36,23 @@ describe('session (realm isolation)', () => {
         const realmB = await suite.client.realm.create(createFakeRealm());
 
         // a session in the foreign realm (B)
-        const userB = createFakeUser({ realm_id: realmB.id });
+        const passwordB = 'session-iso-foreign-pw';
+        const userB = createFakeUser({ realm_id: realmB.id, password: passwordB });
         await suite.client.user.create(userB);
         const loginB = await suite.client.token.createWithPassword({
             username: userB.name,
-            password: userB.password,
+            password: passwordB,
             realm_id: realmB.id,
         });
         foreignSessionId = (await suite.client.token.introspect({ token: loginB.access_token })).session_id!;
 
         // a session in the actor's own realm (master)
-        const userM = createFakeUser();
+        const passwordM = 'session-iso-own-pw';
+        const userM = createFakeUser({ password: passwordM });
         await suite.client.user.create(userM);
         const loginM = await suite.client.token.createWithPassword({
             username: userM.name,
-            password: userM.password,
+            password: passwordM,
         });
         ownSessionId = (await suite.client.token.introspect({ token: loginM.access_token })).session_id!;
 
