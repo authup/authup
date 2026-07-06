@@ -87,7 +87,19 @@ export type OAuth2TokenPayload = JWTClaims & {
     /**
      * Global role claims (roles whose realm_id is null or missing).
      */
-    global_access?: OAuth2AccessGrantClaim
+    global_access?: OAuth2AccessGrantClaim,
+
+    /**
+     * Refresh tokens: jti of the previous refresh token in the rotation chain
+     * (informational — the auth_session_tokens row is authoritative for lineage).
+     */
+    parent_id?: string,
+
+    /**
+     * Access tokens: jti of the refresh token this access token was issued
+     * alongside (drives chain-aware access-token revocation).
+     */
+    refresh_token_id?: string
 };
 
 export type OAuth2AccessGrantClaim = {

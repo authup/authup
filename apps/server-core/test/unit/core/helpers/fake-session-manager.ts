@@ -20,6 +20,8 @@ export class FakeSessionManager implements ISessionManager {
 
     public findOneByIdCalls: string[] = [];
 
+    public revokeCalls: string[] = [];
+
     private sessions = new Map<string, Session>();
 
     async create(session: Partial<Session>): Promise<Session> {
@@ -47,5 +49,10 @@ export class FakeSessionManager implements ISessionManager {
     async findOneById(id: string): Promise<Session | null> {
         this.findOneByIdCalls.push(id);
         return this.sessions.get(id) ?? null;
+    }
+
+    async revoke(id: string): Promise<void> {
+        this.revokeCalls.push(id);
+        this.sessions.delete(id);
     }
 }

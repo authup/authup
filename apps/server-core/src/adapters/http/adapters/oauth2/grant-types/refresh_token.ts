@@ -47,7 +47,12 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
         // client (if any), then enforce binding. Authenticate the requesting
         // client when credentials are present, or when the token requires
         // a client binding.
-        const payload = await this.refreshTokenVerifier.verify(refreshToken);
+        //
+        // skipActiveCheck: the durable auth_session_tokens row (not the cache
+        // blocklist) is the refresh-token authority, so a replayed/consumed
+        // token must reach runWith() to trigger family revocation instead of
+        // being rejected here with JWT_INACTIVE.
+        const payload = await this.refreshTokenVerifier.verify(refreshToken, { skipActiveCheck: true });
 
         if (clientId) {
             // resolved lazily — a bare refresh (no client auth) skips the SELECT

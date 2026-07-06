@@ -95,10 +95,13 @@ export class TokenController {
                 accessTokenIssuer: ctx.accessTokenIssuer,
                 refreshTokenIssuer: ctx.refreshTokenIssuer,
                 tokenVerifier: ctx.tokenVerifier,
-                tokenRevoker: ctx.tokenRevoker,
+                tokenRepository: ctx.tokenRepository,
+                sessionTokenRepository: ctx.sessionTokenRepository,
                 sessionManager: ctx.sessionManager,
                 clientAuthenticator: ctx.oauth2ClientAuthenticator,
                 realmRepository: ctx.realmRepository,
+                logger: ctx.logger,
+                options: { gracePeriod: ctx.tokenRefreshGracePeriod },
             }),
         };
     }

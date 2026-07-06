@@ -74,6 +74,7 @@ export class ConfigValidator extends Container<Config> {
 
             tokenAccessMaxAge: nonNegativeNumberValidator,
             tokenRefreshMaxAge: nonNegativeNumberValidator,
+            tokenRefreshGracePeriod: nonNegativeNumberValidator,
             registrationEnabled: booleanValidator,
             emailVerificationEnabled: booleanValidator,
             passwordRecoveryEnabled: booleanValidator,

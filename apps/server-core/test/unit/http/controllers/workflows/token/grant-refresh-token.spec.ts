@@ -293,4 +293,55 @@ describe('refresh-token', () => {
 
         expect(refreshed.access_token).toBeDefined();
     });
+
+    it('should detect refresh-token replay and revoke the whole session family', async () => {
+        const login = await suite.client
+            .token
+            .createWithPassword({ username: 'admin', password: 'start123' });
+
+        const rt1 = login.refresh_token!;
+
+        const rotated = await suite.client
+            .token
+            .createWithRefreshToken({ refresh_token: rt1 });
+
+        expect(rotated.refresh_token).toBeDefined();
+        const rt2 = rotated.refresh_token!;
+        const at2 = rotated.access_token;
+
+        // replay the already-consumed refresh token
+        await expectClientError(
+            () => suite.client.token.createWithRefreshToken({ refresh_token: rt1 }),
+            { status: 400, code: ErrorCode.OAUTH_GRANT_INVALID },
+        );
+
+        // family revoke: the rotated-in refresh token is now dead too
+        await expectClientError(
+            () => suite.client.token.createWithRefreshToken({ refresh_token: rt2 }),
+            { status: 400, code: ErrorCode.OAUTH_GRANT_INVALID },
+        );
+
+        // and the access token minted alongside it introspects as inactive
+        const introspect = await suite.client
+            .token
+            .introspect({ token: at2 });
+        expect(introspect.active).toBeFalsy();
+    });
+
+    it('should reject a refresh token that was explicitly revoked', async () => {
+        const login = await suite.client
+            .token
+            .createWithPassword({ username: 'admin', password: 'start123' });
+
+        const rt = login.refresh_token!;
+
+        await suite.client
+            .token
+            .revoke({ token: rt });
+
+        await expectClientError(
+            () => suite.client.token.createWithRefreshToken({ refresh_token: rt }),
+            { status: 400, code: ErrorCode.OAUTH_GRANT_INVALID },
+        );
+    });
 });

@@ -65,4 +65,12 @@ export interface ISessionManager {
      * @param id
      */
     findOneById(id: string): Promise<Session | null>;
+
+    /**
+     * Revoke (delete) a session by id, forcing re-authentication. Idempotent —
+     * a no-op when the session does not exist.
+     *
+     * @param id
+     */
+    revoke(id: string): Promise<void>;
 }

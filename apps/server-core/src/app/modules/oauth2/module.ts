@@ -18,6 +18,7 @@ import {
     OAuth2KeyRepository,
     OAuth2ScopeRepository,
     OAuth2TokenRepository,
+    SessionTokenRepositoryAdapter,
 } from './repositories/index.ts';
 import {
     OAuth2AccessTokenIssuer,
@@ -85,6 +86,12 @@ export class OAuth2Module implements IModule {
             },
         });
 
+        container.register(OAuth2InjectionToken.SessionTokenRepository, {
+            useFactory: (c) => new SessionTokenRepositoryAdapter(
+                c.resolve(DatabaseInjectionKey.DataSource),
+            ),
+        });
+
         container.register(OAuth2InjectionToken.KeyRepository, {
             // todo: cache use here
             useFactory: (c) => new OAuth2KeyRepository(c.resolve(DatabaseInjectionKey.DataSource)),
@@ -144,7 +151,8 @@ export class OAuth2Module implements IModule {
         container.register(OAuth2InjectionToken.TokenRevoker, {
             useFactory: (c) => {
                 const tokenRepository = c.resolve(OAuth2InjectionToken.TokenRepository);
-                return new OAuth2TokenRevoker(tokenRepository);
+                const sessionTokenRepository = c.resolve(OAuth2InjectionToken.SessionTokenRepository);
+                return new OAuth2TokenRevoker(tokenRepository, sessionTokenRepository);
             },
         });
 
@@ -164,6 +172,7 @@ export class OAuth2Module implements IModule {
                 const tokenRepository = c.resolve(OAuth2InjectionToken.TokenRepository);
                 const tokenSigner = c.resolve(OAuth2InjectionToken.TokenSigner);
                 const identityRoleProvider = c.resolve(IdentityInjectionKey.RoleProvider);
+                const sessionTokenRepository = c.resolve(OAuth2InjectionToken.SessionTokenRepository);
                 return new OAuth2AccessTokenIssuer(
                     tokenRepository,
                     tokenSigner,
@@ -172,6 +181,7 @@ export class OAuth2Module implements IModule {
                         issuer: config.publicUrl,
                     },
                     identityRoleProvider,
+                    sessionTokenRepository,
                 );
             },
         });
@@ -181,6 +191,7 @@ export class OAuth2Module implements IModule {
             useFactory: (c) => {
                 const tokenRepository = c.resolve(OAuth2InjectionToken.TokenRepository);
                 const tokenSigner = c.resolve(OAuth2InjectionToken.TokenSigner);
+                const sessionTokenRepository = c.resolve(OAuth2InjectionToken.SessionTokenRepository);
 
                 return new OAuth2RefreshTokenIssuer(
                     tokenRepository,
@@ -189,6 +200,7 @@ export class OAuth2Module implements IModule {
                         maxAge: config.tokenRefreshMaxAge,
                         issuer: config.publicUrl,
                     },
+                    sessionTokenRepository,
                 );
             },
         });

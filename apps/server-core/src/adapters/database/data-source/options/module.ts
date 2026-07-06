@@ -57,6 +57,7 @@ import {
     ScopeEntity,
     ScopeSubscriber,
     SessionEntity,
+    SessionTokenEntity,
     UserAttributeEntity,
     UserAttributeSubscriber,
     UserEntity,
@@ -101,6 +102,7 @@ export class DataSourceOptionsBuilder {
                 KeyEntity,
 
                 SessionEntity,
+                SessionTokenEntity,
 
                 ClientEntity,
                 ClientPermissionEntity,

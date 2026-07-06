@@ -8,16 +8,23 @@
 import cron from 'node-cron';
 import type { DataSource } from 'typeorm';
 import { LessThan } from 'typeorm';
-import { SessionEntity } from '../../adapters/database/domains/index.ts';
+import { SessionEntity, SessionTokenEntity } from '../../adapters/database/domains/index.ts';
 import type { Component } from '../types.ts';
 
 export function createOAuth2CleanerComponent(dataSource: DataSource) : Component {
     return {
         async start() {
             const sessionRepository = dataSource.getRepository(SessionEntity);
+            const sessionTokenRepository = dataSource.getRepository(SessionTokenEntity);
 
             const execute = async () => {
                 const isoDate = new Date().toISOString();
+
+                // Sweep expired session-token rows first: the auth_session_tokens
+                // volume dominates (one row per access token, ~15min TTL) and a
+                // deleted session cascade-drops its remaining rows anyway.
+                await sessionTokenRepository
+                    .delete({ expires_at: LessThan(isoDate) });
 
                 await sessionRepository
                     .delete({ expires_at: LessThan(isoDate) });
