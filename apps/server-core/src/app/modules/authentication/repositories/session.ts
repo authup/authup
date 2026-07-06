@@ -6,10 +6,15 @@
  */
 
 import type { Session } from '@authup/core-kit';
-import type { ICache } from '@authup/server-kit';
+import type { EntityRepositoryFindManyResult, ICache } from '@authup/server-kit';
 import { buildCacheKey } from '@authup/server-kit';
 import type { Repository } from 'typeorm';
-import type { ISessionRepository } from '../../../../core/index.ts';
+import { applyQuery } from 'typeorm-extension';
+import type {
+    ISessionRepository,
+    SessionFindManyOptions,
+    SessionOwner,
+} from '../../../../core/index.ts';
 import { AuthenticationCachePrefix } from './constants.ts';
 
 type SessionRepositoryContext = {
@@ -44,6 +49,80 @@ export class SessionRepository implements ISessionRepository {
         }
 
         return this.repository.findOneBy({ id });
+    }
+
+    // -----------------------------------------------------
+
+    async findMany(
+        query: Record<string, any>,
+        options: SessionFindManyOptions = {},
+    ): Promise<EntityRepositoryFindManyResult<Session>> {
+        const qb = this.repository.createQueryBuilder('session');
+
+        const { pagination } = applyQuery(qb, query, {
+            defaultAlias: 'session',
+            fields: {
+                allowed: [
+                    'id', 
+                    'sub', 
+                    'sub_kind', 
+                    'ip_address', 
+                    'user_agent',
+                    'expires_at', 
+                    'refreshed_at', 
+                    'seen_at', 
+                    'created_at', 
+                    'updated_at',
+                    'user_id', 
+                    'client_id', 
+                    'robot_id', 
+                    'realm_id',
+                ],
+            },
+            filters: { allowed: ['id', 'sub', 'sub_kind', 'user_id', 'client_id', 'robot_id', 'realm_id'] },
+            relations: { allowed: ['realm'] },
+            sort: { allowed: ['seen_at', 'expires_at', 'created_at', 'updated_at'] },
+            pagination: { maxLimit: 50 },
+        });
+
+        // Force-load the columns the SessionService realm gate + ownership check
+        // depend on. Without this a client `fields` projection could drop
+        // realm_id (rapiq honors the projection over `default`), leaving the
+        // per-row `resourceRealmMatch` with no realm to match — which
+        // neutral-passes the realm_scope reach factor and leaks cross-realm
+        // sessions to an own/ownOrNull-scoped reader.
+        qb.addSelect([
+            'session.realm_id',
+            'session.sub',
+            'session.sub_kind',
+        ]);
+
+        if (options.owner) {
+            // mandatory constraint — not overridable by a rapiq filter
+            qb.andWhere('session.sub = :ownerSub AND session.sub_kind = :ownerSubKind', {
+                ownerSub: options.owner.sub,
+                ownerSubKind: options.owner.subKind,
+            });
+        }
+
+        const [entities, total] = await qb.getManyAndCount();
+
+        return {
+            data: entities,
+            meta: {
+                total,
+                ...pagination,
+            },
+        };
+    }
+
+    async findAllByOwner(owner: SessionOwner): Promise<Session[]> {
+        return this.repository.createQueryBuilder('session')
+            .where('session.sub = :sub AND session.sub_kind = :subKind', {
+                sub: owner.sub,
+                subKind: owner.subKind,
+            })
+            .getMany();
     }
 
     // -----------------------------------------------------

@@ -38,6 +38,7 @@ import {
     setRequestIdentity,
     setRequestPermissionEvaluator,
     setRequestScopes,
+    setRequestSessionId,
     setRequestToken,
 } from '../../../request/index.ts';
 import type { HTTPAuthorizationMiddlewareContext, HTTPAuthorizationMiddlewareOptions } from './types.ts';
@@ -156,6 +157,8 @@ export class AuthorizationMiddleware {
         }
 
         await this.sessionManager.ping(session);
+
+        setRequestSessionId(event, payload.session_id);
 
         // -------------------------------------------------------
 

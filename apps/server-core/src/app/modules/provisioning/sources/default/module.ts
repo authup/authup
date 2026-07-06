@@ -235,6 +235,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                             PermissionName.SCOPE_CREATE,
                             PermissionName.SCOPE_UPDATE,
                             PermissionName.SCOPE_DELETE,
+                            PermissionName.SESSION_DELETE,
                             PermissionName.USER_CREATE,
                             PermissionName.USER_UPDATE,
                             PermissionName.USER_DELETE,
