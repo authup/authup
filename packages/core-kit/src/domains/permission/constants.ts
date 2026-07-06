@@ -91,6 +91,9 @@ export enum PermissionName {
     SCOPE_UPDATE = 'scope_update',
     SCOPE_READ = 'scope_read',
 
+    SESSION_READ = 'session_read',
+    SESSION_DELETE = 'session_delete',
+
     USER_CREATE = 'user_create',
     USER_DELETE = 'user_delete',
     USER_UPDATE = 'user_update',

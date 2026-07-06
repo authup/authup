@@ -28,6 +28,7 @@ import {
     RoleAttributeAPI,
     RolePermissionAPI,
     ScopeAPI,
+    SessionAPI,
     StatusAPI,
     UserAPI,
     UserAttributeAPI,
@@ -75,6 +76,8 @@ export class Client extends BaseClient implements IClient {
     public readonly rolePermission : RolePermissionAPI;
 
     public readonly scope: ScopeAPI;
+
+    public readonly session : SessionAPI;
 
     public readonly status : StatusAPI;
 
@@ -142,6 +145,8 @@ export class Client extends BaseClient implements IClient {
         this.rolePermission = new RolePermissionAPI({ client: this });
 
         this.scope = new ScopeAPI({ client: this });
+
+        this.session = new SessionAPI({ client: this });
 
         this.status = new StatusAPI({ client: this });
 

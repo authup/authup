@@ -22,6 +22,7 @@ export * from './role-attribute/index.ts';
 export * from './role-permission/index.ts';
 export * from './policy/index.ts';
 export * from './scope/index.ts';
+export * from './session/index.ts';
 export * from './user/index.ts';
 export * from './user-attribute/index.ts';
 export * from './user-permission/index.ts';

@@ -14,4 +14,5 @@ export * from './param-id.ts';
 export * from './realm-id.ts';
 export * from './redirect.ts';
 export * from './scopes.ts';
+export * from './session-id.ts';
 export * from './token.ts';

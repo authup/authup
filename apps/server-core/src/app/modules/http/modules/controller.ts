@@ -95,6 +95,7 @@ import {
     RoleController,
     RolePermissionController,
     ScopeController,
+    SessionController,
     UserAttributeController,
     UserController,
     UserPermissionController,
@@ -137,6 +138,7 @@ import {
     RolePermissionService,
     RoleService,
     ScopeService,
+    SessionService,
     UserAttributeService,
     UserAuthenticator,
     UserPermissionService,
@@ -169,6 +171,7 @@ export class HTTPControllerModule {
         const roleAttributeController = this.createRoleAttributeController(container);
         const rolePermissionController = this.createRolePermissionController(container);
         const scopeController = this.createScopeController(container);
+        const sessionController = this.createSessionController(container);
         const userController = this.createUserController(container);
         const userAttributeController = this.createUserAttributeController(container);
         const userPermissionController = this.createUserPermissionController(container);
@@ -206,6 +209,7 @@ export class HTTPControllerModule {
                 roleAttributeController,
                 rolePermissionController,
                 scopeController,
+                sessionController,
                 userController,
                 userAttributeController,
                 userPermissionController,
@@ -668,6 +672,12 @@ export class HTTPControllerModule {
             realmRepository, 
         });
         return new ScopeController({ service });
+    }
+
+    createSessionController(container: IContainer) {
+        const repository = container.resolve(AuthenticationInjectionKey.SessionRepository);
+        const service = new SessionService({ repository });
+        return new SessionController({ service });
     }
 
     createUserController(container: IContainer) {

@@ -1203,6 +1203,48 @@ the extra queries entirely (strict: any consumed-RT replay → family revoke).
 `expires_at < now` (every minute, alongside the existing session sweep). AT rows
 dominate volume; a deleted session cascade-drops its remaining rows.
 
+## Session Management API (plan 016, PR G)
+
+A REST surface over `auth_sessions` for "see all my sessions / force logout":
+`SessionController` (`adapters/http/controllers/entities/session/`), dual-mounted
+`@DController(['/sessions', '/realms/:realmId/sessions'])`, delegating to
+`SessionService` (`core/entities/session/`). Sessions are **read + delete only**
+(never created via this API — the OAuth2 grants own creation).
+
+- `GET /sessions` — list. **Self-service by default:** an actor without
+  `SESSION_READ` is force-scoped to its own sessions (the service catches the
+  `preEvaluate` denial and passes `findMany(query, { owner })`, a mandatory
+  `andWhere` a rapiq filter cannot override). An actor **with** `SESSION_READ`
+  sees every session its realm reach permits (per-row `evaluate` + `resourceRealmMatch`,
+  same drop-unauthorized-rows shape as `RobotService.getMany`).
+- `GET /sessions/:id` — read one. Own session → no permission; else
+  `SESSION_READ` + realm-match. `@me`/`@self` resolve to the caller's current
+  session (`useRequestSessionId`).
+- `DELETE /sessions/:id` — revoke one. Own → no permission; else `SESSION_DELETE`
+  + realm-match. Delete routes through the cache-aware `SessionRepository.remove`
+  (drops the id cache key; the DB delete cascade-drops the session's
+  `auth_session_tokens` rows, so a force-logout also kills the subject's refresh
+  tokens). Access tokens stay valid on local-JWKS adapters until `exp` (the
+  documented limitation; authup's own API rejects immediately via the
+  authorization middleware's session check).
+- `DELETE /sessions` — revoke every own session except the current one
+  ("log out my other devices"). Self-service; the current session id comes from
+  the bearer token (stashed by the authorization middleware via
+  `setRequestSessionId`), never from the client.
+
+**Ownership** = `session.sub === actor.identity.data.id && session.sub_kind ===
+actor.identity.type` (sessions have a polymorphic subject — user/client/robot —
+which is why dedicated `SESSION_READ`/`SESSION_DELETE` beat reusing the parent
+`USER_*`/`CLIENT_*`/`ROBOT_*` families). Both auto-provision (enum-iterated) and
+grant to `admin` (`any`) + `realm_admin` (`ownOrNull` read / `own` delete). The
+list read path bypasses the session cache (id-keyed only, no list index) and goes
+straight to TypeORM. **`SessionRepository.findMany` force-selects `realm_id` /
+`sub` / `sub_kind` (`qb.addSelect`) regardless of the client `fields` projection**
+— the per-row `resourceRealmMatch` gate reads `realm_id`, and rapiq honors a
+`fields` projection over `default`, so without the force-select a scoped reader
+could strip `realm_id` and neutralize the realm_scope reach factor (cross-realm
+leak). `client-web` UI is a follow-up (PR G2).
+
 ## Provisioning Permissions With Policies
 
 `PermissionProvisioningEntity.relations.policies` is a list of policy names to attach to the permission via the `auth_permission_policies` junction. Used by the default provisioning source to wire `system.default` (security baseline) plus the optional ATTRIBUTE_NAMES allowlist:

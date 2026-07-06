@@ -6,9 +6,27 @@
  */
 
 import type { Session } from '@authup/core-kit';
+import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
+
+export type SessionOwner = {
+    sub: string,
+    subKind: string,
+};
+
+export type SessionFindManyOptions = {
+    /**
+     * Force the result to a single subject (self-service). Applied as a
+     * mandatory WHERE that a rapiq query filter cannot override.
+     */
+    owner?: SessionOwner,
+};
 
 export interface ISessionRepository {
     findOneById(id: string): Promise<Session | null> | null;
+
+    findMany(query: Record<string, any>, options?: SessionFindManyOptions): Promise<EntityRepositoryFindManyResult<Session>>;
+
+    findAllByOwner(owner: SessionOwner): Promise<Session[]>;
 
     save(session: Partial<Session>): Promise<Session>;
 
