@@ -16,8 +16,8 @@ import { defineCoreHandler } from 'routup';
  * whose registration carries `lifetime: 'transient'`, so every SSR
  * render resolves a fresh client — never share one client instance
  * across renders (the authentication hook writes per-user state onto
- * it). Mounted only when the token is bound (test injection);
- * production mounts nothing.
+ * it). Production binds the internal loopback client by default
+ * (`HTTPModule.registerUIHttpClient`); tests may pre-register a fake.
  */
 export const UI_HTTP_CLIENT_FACTORY_STORE_KEY = Symbol('UIHttpClientFactory');
 

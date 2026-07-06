@@ -135,7 +135,7 @@ selfClient.setAuthorizationHeader({ type: 'Bearer', token: token.access_token })
 
 ### Testing the SSR'd UI pages (fake HTTP client)
 
-The five SSR auth pages (`GET /authorize`, `/register`, `/activate`, `/password-forgot`, `/password-reset`) render the bundled Vue app under `apps/server-core/ui/`, which fires HTTP calls during render (session hydration via `store.resolve()`, identity-provider and scope fetches). Tests stub those by injecting a fake HTTP client into the SSR — never let the rendered app reach a real server:
+The five SSR auth pages (`GET /authorize`, `/register`, `/activate`, `/password-forgot`, `/password-reset`) render the bundled Vue app under `apps/server-core/ui/`, which fires HTTP calls during render (session hydration via `store.resolve()`, identity-provider and scope fetches). Tests stub those by injecting a fake HTTP client into the SSR — don't let the rendered app depend on real network behavior unless the test targets exactly that (see `ui-pages-internal-client.spec.ts`):
 
 ```typescript
 import { createFakeClient as createFakeHTTPClient } from '@authup/core-http-kit/testing';
@@ -152,12 +152,12 @@ await suite.setup();
 const response = await httpRequest(suite, 'GET', '/register');
 ```
 
-Wiring: the HTTP module mounts a per-request middleware (only when `HTTPInjectionKey.UIHttpClient` is registered — production registers nothing) that stamps a resolve-thunk onto `event.store`; `renderUIPage` resolves per render. Register with `useFactory` + `lifetime: 'transient'` (eldin) — never a singleton-lifetime instance, the client carries per-user Authorization state — and the client is forwarded into the SSR `render()`, and `@authup/client-web-kit`'s `install({ httpClient })` uses it for the provided client, the session store, and the authentication hook alike. See `test/unit/http/controllers/workflows/ui-pages.spec.ts` for hydration-payload assertions (XSS escaping, redirect sanitizing, feature flags).
+Wiring: `HTTPModule.setup` registers a DEFAULT client under `HTTPInjectionKey.UIHttpClient` — `createInternalUIHttpClient`, whose transport rewrites requests targeting `publicUrl` onto the server's own listen address (see architecture.md → Auth Workflow UI) — unless the token is already bound, so a fake registered before `suite.setup()` wins. A per-request middleware stamps a resolve-thunk onto `event.store`; `renderUIPage` resolves per render. Register with `useFactory` + `lifetime: 'transient'` (eldin) — never a singleton-lifetime instance, the client carries per-user Authorization state — and the client is forwarded into the SSR `render()`, and `@authup/client-web-kit`'s `install({ httpClient })` uses it for the provided client, the session store, and the authentication hook alike. See `test/unit/http/controllers/workflows/ui-pages.spec.ts` for hydration-payload assertions (XSS escaping, redirect sanitizing, feature flags) and `ui-pages-internal-client.spec.ts` for the default-client path (loopback dispatch, public hrefs, sub-path `publicUrl` — the test factory takes a config override: `createTestApplication({ config: (c) => { c.publicUrl = '...'; } })`).
 
 Caveats:
 - Register the fake **before** `suite.setup()` — the middleware mount is decided at boot.
 - The SSR renders from the **dist** bundle (`dist/ui/server/server.js`) — rebuild `apps/server-core` after changing the UI app or `client-web-kit`, or the tests exercise a stale bundle.
-- The default unmatched-route fallback returns a collection shape (`{ data: [], meta: { total: 0 } }`); session endpoints need explicit handlers for logged-in renders, and handlers on fire-and-forget fetch paths must not throw (an unawaited rejection fails vitest).
+- The default unmatched-route fallback returns a collection shape (`{ data: [], meta: { total: 0 } }`); session endpoints need explicit handlers for logged-in renders. Entity-collection loads catch their own errors (they emit `failed` instead of rejecting — SSR crash hardening), but handlers on OTHER fire-and-forget fetch paths must not throw (an unawaited rejection fails vitest).
 - Alias the import (`createFakeHTTPClient`) — `test/utils` already exports a `createFakeClient` entity factory.
 
 ## Component Tests (packages/client-web-kit)

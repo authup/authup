@@ -18,12 +18,14 @@ import type {
 
 export function defineEntityCollectionVEmitOptions<T>() : EntityCollectionVEmitOptions<T> {
     return {
-         
+
         created: (_item: T) => true,
-         
+
         deleted: (_item: T) => true,
-         
+
         updated: (_item: T) => true,
+
+        failed: (_error: Error) => true,
     };
 }
 export function defineEntityCollectionVProps<T>() {

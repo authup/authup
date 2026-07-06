@@ -91,6 +91,16 @@ function create<
 
     let query : BuildInput<Entity<RECORD>> | undefined;
 
+    const failed = (error: Error) => {
+        if (context.setup && typeof context.setup.emit === 'function') {
+            context.setup.emit('failed', error);
+        }
+    };
+
+    // Never rejects: every call site is fire-and-forget (the setup-time
+    // initial load below, template refs, pagination footers). During SSR an
+    // unhandled rejection is fatal to the server process, so a failed load
+    // emits `failed` and leaves the list empty instead of throwing.
     async function load(input: ListMeta<RECORD> = {}) {
         if (!domainAPI || busy.value) return;
 
@@ -157,6 +167,9 @@ function create<
                 limit: response.meta.limit,
                 offset: response.meta.offset,
             };
+        } catch (e) {
+            failed(e instanceof Error ? e : new Error('The entities could not be loaded.'));
+            return;
         } finally {
             busy.value = false;
             meta.value.busy = false;
