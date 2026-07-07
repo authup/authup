@@ -53,4 +53,11 @@ export const TranslatorTranslationAppSpanish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_CONFIRM_TITLE]: '¿Cerrar sesión en otros dispositivos?',
     [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_CONFIRM_DESCRIPTION]: 'Esto cierra todas tus otras sesiones. Tu sesión actual permanece activa.',
     [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_SUCCESS]: '{{amount}} otra(s) sesión(es) cerradas.',
+
+    [TranslatorTranslationAppKey.SESSION_REVOKE_ALL]: 'Cerrar sesión en todas partes',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_ALL_CONFIRM_TITLE]: '¿Cerrar la sesión de este usuario en todas partes?',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_ALL_CONFIRM_DESCRIPTION]: 'Esto revoca todas las sesiones de este usuario en todos los dispositivos.',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_ALL_SUCCESS]: '{{amount}} sesión(es) cerradas.',
+
+    [TranslatorTranslationAppKey.SESSION_CURRENT]: 'Este dispositivo',
 };

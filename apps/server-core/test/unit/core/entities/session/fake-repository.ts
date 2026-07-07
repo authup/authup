@@ -13,6 +13,7 @@ import type {
     SessionFindManyOptions,
     SessionOwner,
 } from '../../../../../src/core/index.ts';
+import { SESSION_FILTER_KEYS } from '../../../../../src/core/index.ts';
 
 export class FakeSessionRepository implements ISessionRepository {
     public removeCalls: Session[] = [];
@@ -53,6 +54,22 @@ export class FakeSessionRepository implements ISessionRepository {
 
     async findAllByOwner(owner: SessionOwner): Promise<Session[]> {
         return [...this.sessions.values()].filter((s) => this.ownedBy(s, owner));
+    }
+
+    async findAllByQuery(query: Record<string, any>): Promise<Session[]> {
+        const filter = (query?.filter ?? {}) as Record<string, any>;
+
+        return [...this.sessions.values()].filter((session) => Object
+            .keys(filter)
+            .every((key) => {
+                if (!(SESSION_FILTER_KEYS as readonly string[]).includes(key)) {
+                    // unknown key → applyQuery would ignore it (no constraint)
+                    return true;
+                }
+                const raw = filter[key];
+                const values = typeof raw === 'string' ? raw.split(',') : [raw];
+                return values.map(String).includes(String((session as any)[key]));
+            }));
     }
 
     async save(input: Partial<Session>): Promise<Session> {

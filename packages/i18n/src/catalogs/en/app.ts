@@ -53,4 +53,11 @@ export const TranslatorTranslationAppEnglish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_CONFIRM_TITLE]: 'Log out other devices?',
     [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_CONFIRM_DESCRIPTION]: 'This signs out all your other sessions. Your current session stays active.',
     [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_SUCCESS]: 'Logged out {{amount}} other session(s).',
+
+    [TranslatorTranslationAppKey.SESSION_REVOKE_ALL]: 'Log out everywhere',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_ALL_CONFIRM_TITLE]: 'Log this user out everywhere?',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_ALL_CONFIRM_DESCRIPTION]: 'This revokes every session of this user on all devices.',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_ALL_SUCCESS]: 'Logged out {{amount}} session(s).',
+
+    [TranslatorTranslationAppKey.SESSION_CURRENT]: 'This device',
 };

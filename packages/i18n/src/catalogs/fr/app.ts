@@ -53,4 +53,11 @@ export const TranslatorTranslationAppFrench : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_CONFIRM_TITLE]: 'Déconnecter les autres appareils ?',
     [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_CONFIRM_DESCRIPTION]: 'Cela déconnecte toutes vos autres sessions. Votre session actuelle reste active.',
     [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_SUCCESS]: '{{amount}} autre(s) session(s) déconnectée(s).',
+
+    [TranslatorTranslationAppKey.SESSION_REVOKE_ALL]: 'Déconnecter partout',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_ALL_CONFIRM_TITLE]: 'Déconnecter cet utilisateur partout ?',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_ALL_CONFIRM_DESCRIPTION]: 'Cela révoque toutes les sessions de cet utilisateur sur tous les appareils.',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_ALL_SUCCESS]: '{{amount}} session(s) déconnectée(s).',
+
+    [TranslatorTranslationAppKey.SESSION_CURRENT]: 'Cet appareil',
 };

@@ -120,6 +120,13 @@ export function createStore(context: StoreCreateContext) {
 
     // --------------------------------------------------------------------
 
+    // The id of the session backing the current access token. Sourced from the
+    // token introspection response so the UI can mark "this device" and avoid a
+    // confusing silent self-logout on the current row.
+    const sessionId = ref<string | null>(null);
+
+    // --------------------------------------------------------------------
+
     const realm = ref<RealmMinimal | null>(null);
     const realmId = computed<string | undefined>(() => (realm.value ? realm.value.id : undefined));
     const realmName = computed<string | undefined>(() => (realm.value ? realm.value.name : undefined));
@@ -165,6 +172,7 @@ export function createStore(context: StoreCreateContext) {
         setAccessTokenExpireDate(null);
         setRefreshToken(null);
         setUser(null);
+        sessionId.value = null;
         setRealm(null);
         setRealmManagement(null);
 
@@ -226,6 +234,10 @@ export function createStore(context: StoreCreateContext) {
                 if (response.exp) {
                     const expireDate = new Date(response.exp * 1000);
                     setAccessTokenExpireDate(expireDate);
+                }
+
+                if (response.session_id) {
+                    sessionId.value = response.session_id;
                 }
 
                 if (
@@ -412,5 +424,7 @@ export function createStore(context: StoreCreateContext) {
         user,
         userId,
         setUser,
+
+        sessionId,
     };
 }

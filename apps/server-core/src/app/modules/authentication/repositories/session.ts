@@ -15,6 +15,7 @@ import type {
     SessionFindManyOptions,
     SessionOwner,
 } from '../../../../core/index.ts';
+import { SESSION_FILTER_KEYS } from '../../../../core/index.ts';
 import { AuthenticationCachePrefix } from './constants.ts';
 
 type SessionRepositoryContext = {
@@ -79,7 +80,7 @@ export class SessionRepository implements ISessionRepository {
                     'realm_id',
                 ],
             },
-            filters: { allowed: ['id', 'sub', 'sub_kind', 'user_id', 'client_id', 'robot_id', 'realm_id'] },
+            filters: { allowed: [...SESSION_FILTER_KEYS] },
             relations: { allowed: ['realm'] },
             sort: { allowed: ['seen_at', 'expires_at', 'created_at', 'updated_at'] },
             pagination: { maxLimit: 50 },
@@ -123,6 +124,30 @@ export class SessionRepository implements ISessionRepository {
                 subKind: owner.subKind,
             })
             .getMany();
+    }
+
+    async findAllByQuery(query: Record<string, any>): Promise<Session[]> {
+        const qb = this.repository.createQueryBuilder('session');
+
+        // NOTE: deliberately no `pagination` — a bulk revoke must reach every
+        // matching row. `applyQuery` with a `pagination.maxLimit` would default
+        // the limit to that cap when the caller sends no page (rapiq
+        // `finalizePagination`), silently truncating the delete.
+        applyQuery(qb, query, {
+            defaultAlias: 'session',
+            filters: { allowed: [...SESSION_FILTER_KEYS] },
+        });
+
+        // Same force-select as findMany: the per-session realm gate + ownership
+        // check read realm_id / sub / sub_kind regardless of any `fields`
+        // projection in the query.
+        qb.addSelect([
+            'session.realm_id',
+            'session.sub',
+            'session.sub_kind',
+        ]);
+
+        return qb.getMany();
     }
 
     // -----------------------------------------------------

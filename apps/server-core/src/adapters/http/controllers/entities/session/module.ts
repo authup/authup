@@ -69,7 +69,14 @@ export class SessionController {
         @DContext() event: IAppEvent,
     ): Promise<SessionDeleteManyResponse> {
         const actor = buildActorContext(event);
-        const result = await this.service.deleteManyForActor(actor, useRequestSessionId(event));
+
+        // A recognized target filter (e.g. `?filter[user_id]=<uuid>`) → admin
+        // force-logout (SESSION_DELETE + per-session realm-match). No filter →
+        // self-service "log out my other devices" (keeps the current session).
+        const result = await this.service.deleteMany(actor, {
+            query: useRequestQuery(event),
+            currentSessionId: useRequestSessionId(event),
+        });
 
         event.response.status = 202;
         return result;
