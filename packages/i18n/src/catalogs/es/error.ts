@@ -42,6 +42,7 @@ export const TranslatorTranslationErrorSpanish : NamespaceTranslations<`${ErrorC
     [ErrorCode.OAUTH_GRANT_INVALID]: 'La concesión de autorización no es válida.',
     [ErrorCode.OAUTH_GRANT_TYPE_UNSUPPORTED]: 'El tipo de concesión no es compatible.',
     [ErrorCode.OAUTH_REQUEST_INVALID]: 'La solicitud no es válida.',
+    [ErrorCode.OAUTH_LOGIN_REQUIRED]: 'Debes iniciar sesión para continuar.',
     [ErrorCode.OAUTH_RESPONSE_TYPE_UNSUPPORTED]: 'El tipo de respuesta no es compatible.',
     [ErrorCode.OAUTH_SCOPE_INVALID]: 'El ámbito solicitado no es válido.',
     [ErrorCode.OAUTH_SCOPE_INSUFFICIENT]: 'El ámbito concedido es insuficiente para esta acción.',

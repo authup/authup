@@ -294,6 +294,64 @@ describe('refresh-token', () => {
         expect(refreshed.access_token).toBeDefined();
     });
 
+    it('should reject refresh by a public client whose realm differs from the token realm', async () => {
+        // A no-client refresh token (master realm) presented with a PUBLIC client
+        // from another realm must be rejected — a public client may only refresh
+        // tokens of its own realm. Kills legacy cross-realm public-client refresh
+        // tokens minted before the authorize-side realm gate existed.
+        const realm = await suite.client.realm.create(createFakeRealm());
+        const publicClient = await suite.client.client.create(createFakeClient({
+            realm_id: realm.id,
+            is_confidential: false,
+            secret: null,
+        }));
+
+        const login = await suite.client
+            .token
+            .createWithPassword({ username: 'admin', password: 'start123' });
+
+        await expectClientError(
+            () => suite.client.token.createWithRefreshToken({
+                refresh_token: login.refresh_token!,
+                client_id: publicClient.id,
+            }),
+            { status: 400, code: ErrorCode.OAUTH_GRANT_INVALID },
+        );
+    });
+
+    it('should allow refresh by a public client of the token\'s own realm', async () => {
+        // control for the parity guard above: same-realm public client refreshes
+        // a same-realm token normally.
+        const realm = await suite.client.realm.create(createFakeRealm());
+        const publicClient = await suite.client.client.create(createFakeClient({
+            realm_id: realm.id,
+            is_confidential: false,
+            secret: null,
+        }));
+        const user = await suite.client.user.create(createFakeUser({
+            realm_id: realm.id,
+            password: 'realm-public-refresh',
+        }));
+
+        const login = await suite.client
+            .token
+            .createWithPassword({
+                username: user.name,
+                password: 'realm-public-refresh',
+                realm_id: realm.id,
+            });
+
+        const refreshed = await suite.client
+            .token
+            .createWithRefreshToken({
+                refresh_token: login.refresh_token!,
+                client_id: publicClient.id,
+                realm_id: realm.id,
+            });
+
+        expect(refreshed.access_token).toBeDefined();
+    });
+
     it('should detect refresh-token replay and revoke the whole session family', async () => {
         const login = await suite.client
             .token

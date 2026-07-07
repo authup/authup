@@ -7,7 +7,7 @@
 
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
-import { isSimpleMatch } from '@authup/kit';
+import { isSimpleMatch, isUUID } from '@authup/kit';
 import {
     OAuth2AuthorizationResponseType,
     OAuth2ClientError,
@@ -52,6 +52,14 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
             throw OAuth2ClientError.invalid();
         }
 
+        // A name-identified client needs a realm hint to resolve deterministically
+        // — every realm has a built-in `web` client, so `client_id=web` without a
+        // realm would bind to an arbitrary realm's client (and, post realm-gate,
+        // produce a confusing mismatch against a random realm). Require the hint.
+        if (!isUUID(data.client_id) && !data.realm_id) {
+            throw OAuth2RequestError.malformed('A realm is required to resolve a client by name.');
+        }
+
         const client = await this.clientRepository.findOneByIdOrName(data.client_id, data.realm_id);
         if (!client) {
             throw OAuth2ClientError.invalid();
@@ -94,6 +102,10 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
             data.scope = scopeNames.join(' ');
         }
 
+        // Verified only when matched against a registered, non-null pattern. A
+        // pattern-less client leaves data.redirect_uri unchecked (any value
+        // passes) — flag it so consumers never auto-redirect to it.
+        const redirectUriVerified = !!(client.redirect_uri && data.redirect_uri);
         if (client.redirect_uri && data.redirect_uri) {
             const redirectUris = client.redirect_uri.split(',');
 
@@ -106,6 +118,7 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
             data,
             client,
             scopes,
+            redirectUriVerified,
         };
     }
 }

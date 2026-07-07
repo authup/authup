@@ -8,6 +8,7 @@
 export * from './client';
 export * from './grant';
 export * from './grant-type';
+export * from './login-required';
 export * from './module';
 export * from './request';
 export * from './response-type';

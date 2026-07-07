@@ -73,4 +73,9 @@ export const TranslatorTranslationClientEnglish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.ACCOUNT_ACTIVATED]: 'The account was successfully activated.',
     [TranslatorTranslationClientKey.PASSWORD_RESET_DONE]: 'The password was successfully reset.',
     [TranslatorTranslationClientKey.WORKFLOW_DISABLED]: 'This feature is not enabled.',
+
+    [TranslatorTranslationClientKey.REALM_MISMATCH_TITLE]: 'Sign in with a different account',
+    [TranslatorTranslationClientKey.REALM_MISMATCH_TEXT]: '{{client}} belongs to the {{realm}} realm, but you are signed in to a different realm. Sign in with a {{realm}} account to continue.',
+    [TranslatorTranslationClientKey.SIGN_IN_TO_REALM]: 'Sign in to {{realm}}',
+    [TranslatorTranslationClientKey.RETURN_TO_APP]: 'Return to application',
 };

@@ -44,7 +44,8 @@ export default defineComponent({
             required: true,
         },
     },
-    setup(props) {
+    emits: ['loginRequired'],
+    setup(props, { emit }) {
         const httpClient = injectHTTPClient();
 
         const translationsDefault = useTranslations([
@@ -113,7 +114,17 @@ export default defineComponent({
                 if (typeof window !== 'undefined') {
                     window.location.href = url;
                 }
-            } catch {
+            } catch (e) {
+                // Server rejected the identity for this client (realm mismatch —
+                // e.g. a stale SSR bundle that skipped the client-side realm gate,
+                // or a race). Fall back to re-authentication rather than showing
+                // manual consent for a request the server will never accept.
+                const response = (e as { response?: { data?: { error?: unknown } } })?.response;
+                if (response?.data?.error === 'login_required') {
+                    emit('loginRequired');
+                    return;
+                }
+
                 autoConsentFailed.value = true;
             }
         };

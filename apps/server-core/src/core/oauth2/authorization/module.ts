@@ -11,6 +11,7 @@ import type { OAuth2TokenPayload } from '@authup/specs';
 import {
     OAuth2AuthorizationResponseType,
     OAuth2GrantError,
+    OAuth2LoginRequiredError,
     OAuth2RequestError,
     OAuth2ResponseTypeError,
     hasOAuth2Scopes,
@@ -83,6 +84,15 @@ export class OAuth2Authorization {
 
         if (!identity) {
             throw OAuth2RequestError.identityInvalid();
+        }
+
+        // Realm binding: the code-request verifier stamped data.realm_id with the
+        // resolved client's realm. The authenticated identity must belong to that
+        // same realm — otherwise a lingering session for realm A could silently
+        // mint a code/token for realm B's client (confused deputy). The error body
+        // deliberately carries no identity data (no realm-enumeration oracle).
+        if (data.realm_id && identity.data.realm.id !== data.realm_id) {
+            throw OAuth2LoginRequiredError.realmMismatch();
         }
 
         const payloadBaseNormalized : OAuth2TokenPayload = {

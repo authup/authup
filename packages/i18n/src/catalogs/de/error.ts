@@ -42,6 +42,7 @@ export const TranslatorTranslationErrorGerman : NamespaceTranslations<`${ErrorCo
     [ErrorCode.OAUTH_GRANT_INVALID]: 'Die Autorisierungsfreigabe ist ungültig.',
     [ErrorCode.OAUTH_GRANT_TYPE_UNSUPPORTED]: 'Der Grant-Typ wird nicht unterstützt.',
     [ErrorCode.OAUTH_REQUEST_INVALID]: 'Die Anfrage ist ungültig.',
+    [ErrorCode.OAUTH_LOGIN_REQUIRED]: 'Sie müssen sich anmelden, um fortzufahren.',
     [ErrorCode.OAUTH_RESPONSE_TYPE_UNSUPPORTED]: 'Der Response-Typ wird nicht unterstützt.',
     [ErrorCode.OAUTH_SCOPE_INVALID]: 'Der angeforderte Bereich ist ungültig.',
     [ErrorCode.OAUTH_SCOPE_INSUFFICIENT]: 'Der gewährte Bereich reicht für diese Aktion nicht aus.',
