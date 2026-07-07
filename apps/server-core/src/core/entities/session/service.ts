@@ -7,6 +7,7 @@
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { EntityNotFoundError, UnauthorizedError } from '@authup/errors';
+import { isObject } from '@authup/kit';
 import { PermissionName } from '@authup/core-kit';
 import type { Session } from '@authup/core-kit';
 import { AbstractEntityService } from '@authup/server-kit';
@@ -158,7 +159,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
      */
     protected hasTargetFilter(query?: Record<string, any>): boolean {
         const filter = query?.filter;
-        if (!filter || typeof filter !== 'object') {
+        if (!isObject(filter)) {
             return false;
         }
 
