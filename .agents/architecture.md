@@ -1142,6 +1142,39 @@ session rather than a freshly-created fallback one (documented residual).
 `prompt_values_supported` and **fixes** `revocation_endpoint` from `…/token` to
 `…/token/revoke` (RFC 7009 — an RFC 7009 POST to `/token` never worked).
 
+### RP-Initiated Logout — `end_session_endpoint` (plan 041 PR C)
+
+`GET`/`POST /logout` (discovery `end_session_endpoint`, **no feature flag**) is
+the RP-agnostic session-termination mechanism — the intended way a downstream
+app (kit or non-kit) ends a lingering authup session on its own logout, so
+`store.logout()` never needs a kit-specific session delete. Core logic is
+`OAuth2EndSessionService` (`core/oauth2/end-session/`), wired via
+`createLogoutController`. Security posture (all enforced, unit-tested matrix):
+
+- **id_token_hint** is verified by `OAuth2TokenVerifier` with a new
+  `ignoreExpiry` option — signature, nbf and (crucially) **kind** still apply;
+  only `exp` is skipped (a logout hint is routinely expired). The option threads
+  down to server-kit's `verifyToken` (`validateExp: false`). A hint whose `kind
+  !== id_token` is **rejected** (access/refresh tokens also carry `session_id`,
+  so accepting them would let a leaked access token force a logout). `aud` vs
+  request `client_id` cross-checked when both present.
+- A signature-verified hint carrying `sid` → the referenced session is revoked
+  **immediately** (`ISessionManager.revoke`), but **only** after
+  `session.sub`/`sub_kind` match the hint's subject (never revoke someone else's
+  session). Without a hint the endpoint mutates nothing — the SSR page's sign-out
+  is a click-gated, bearer-authenticated `store.logout()`.
+- `post_logout_redirect_uri` is honored **only** when it is absolute http(s) AND
+  `isSimpleMatch`es a registered client `redirect_uri` pattern (open-redirect
+  guard); otherwise dropped, and `state` rides only alongside a validated
+  redirect. (A dedicated `post_logout_redirect_uri` client column + migration is
+  a deferred follow-up; today it validates against `redirect_uri` patterns.)
+
+The SSR page is `apps/server-core/ui/src/pages/logout.vue` → kit
+`AEndSessionForm`; the typed URL builder is `buildEndSessionURL` in
+`client-web-kit`. **Residual (Keycloak parity):** a *leaked* valid id_token can
+force-logout its session (annoyance, not privilege escalation) — mitigated by
+the sub-match + short id_token TTL.
+
 ## OAuth2 Token Endpoint Authentication
 
 The `/token` endpoint authenticates the calling client according to RFC 6749. Confidential clients MUST present a `client_secret`; public clients identify with `client_id` only.

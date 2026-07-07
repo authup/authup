@@ -82,4 +82,9 @@ export const TranslatorTranslationClientEnglish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.SELECT_ACCOUNT_TITLE]: 'Choose an account',
     [TranslatorTranslationClientKey.CONTINUE_AS]: 'Continue as {{name}}',
     [TranslatorTranslationClientKey.USE_ANOTHER_ACCOUNT]: 'Use another account',
+
+    [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TITLE]: 'Sign out',
+    [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TEXT]: 'Do you want to sign out?',
+    [TranslatorTranslationClientKey.LOGOUT_DONE]: 'You have been signed out.',
+    [TranslatorTranslationClientKey.SIGN_OUT]: 'Sign out',
 };

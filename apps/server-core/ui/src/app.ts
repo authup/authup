@@ -37,6 +37,7 @@ import './tailwind.css';
 import type { Router } from 'vue-router';
 import Activate from './pages/activate.vue';
 import Authorize from './pages/authorize.vue';
+import Logout from './pages/logout.vue';
 import PasswordForgot from './pages/password-forgot.vue';
 import PasswordReset from './pages/password-reset.vue';
 import Register from './pages/register.vue';
@@ -92,6 +93,10 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
             {
                 component: PasswordReset,
                 path: '/password-reset',
+            },
+            {
+                component: Logout,
+                path: '/logout',
             },
         ],
     });

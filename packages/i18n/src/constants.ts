@@ -113,6 +113,11 @@ export enum TranslatorTranslationClientKey {
     SELECT_ACCOUNT_TITLE = 'selectAccountTitle',
     CONTINUE_AS = 'continueAs',
     USE_ANOTHER_ACCOUNT = 'useAnotherAccount',
+
+    LOGOUT_CONFIRM_TITLE = 'logoutConfirmTitle',
+    LOGOUT_CONFIRM_TEXT = 'logoutConfirmText',
+    LOGOUT_DONE = 'logoutDone',
+    SIGN_OUT = 'signOut',
 }
 
 /**

@@ -158,4 +158,25 @@ The resulting `id_token` includes the OIDC `auth_time` (the real authentication 
 
 #### Discovery
 
-Each realm exposes an OpenID Provider metadata document at `GET /realms/<realm>/.well-known/openid-configuration`, advertising the `authorization_endpoint`, `token_endpoint`, `revocation_endpoint` (`/token/revoke`), `jwks_uri`, and `prompt_values_supported`.
+Each realm exposes an OpenID Provider metadata document at `GET /realms/<realm>/.well-known/openid-configuration`, advertising the `authorization_endpoint`, `token_endpoint`, `revocation_endpoint` (`/token/revoke`), `end_session_endpoint` (`/logout`), `jwks_uri`, and `prompt_values_supported`.
+
+### 5. RP-Initiated Logout
+
+To end the Authup session when the user logs out of your application, redirect the browser to the `end_session_endpoint` ([OpenID Connect RP-Initiated Logout 1.0](https://openid.net/specs/openid-connect-rpinitiated-1_0.html)):
+
+```
+GET http://localhost:3001/logout
+  ?id_token_hint=THE_ID_TOKEN
+  &client_id=YOUR_CLIENT_ID
+  &post_logout_redirect_uri=https://app.example.com/after-logout
+  &state=RANDOM
+```
+
+| Parameter | Description |
+|---|---|
+| `id_token_hint` | An `id_token` previously issued to the user. When its signature verifies (an expired token is accepted) and its subject matches the referenced session, that session is revoked immediately without a confirmation prompt; a subject mismatch is ignored as a no-op. |
+| `client_id` | The client requesting logout. Cross-checked against the hint's `aud` when both are present. |
+| `post_logout_redirect_uri` | Where to redirect after logout. Honored only when it is an absolute `http(s)` URL matching one of the client's registered `redirect_uri` patterns (open-redirect guard); otherwise ignored. |
+| `state` | Opaque value echoed back on the redirect (only alongside a validated `post_logout_redirect_uri`). |
+
+Without a valid `id_token_hint`, `/logout` serves a page asking the user to confirm sign-out; no state is changed until they confirm.

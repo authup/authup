@@ -82,4 +82,11 @@ describe('RealmController.getOpenIdConfiguration', () => {
             'select_account',
         ]);
     });
+
+    it('should advertise the end_session_endpoint', async () => {
+        const controller = createController(realm);
+        const config = await controller.getOpenIdConfiguration(realmId);
+
+        expect(config.end_session_endpoint).toEqual('https://auth.example.com/logout');
+    });
 });

@@ -6,9 +6,9 @@
  */
 
 import {
-    type TokenECAlgorithm, 
-    type TokenRSAAlgorithm, 
-    extractTokenHeader, 
+    type TokenECAlgorithm,
+    type TokenRSAAlgorithm,
+    extractTokenHeader,
     verifyToken,
 } from '@authup/server-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
@@ -73,6 +73,7 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
                         type: JWKType.OCT,
                         key: key.decryption_key,
                     },
+                    { ignoreExpiry: options.ignoreExpiry },
                 );
                 break;
             }
@@ -92,6 +93,7 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
                                 []
                         ) as TokenECAlgorithm[],
                     },
+                    { ignoreExpiry: options.ignoreExpiry },
                 );
                 break;
             }
@@ -111,6 +113,7 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
                                 []
                         ) as TokenRSAAlgorithm[],
                     },
+                    { ignoreExpiry: options.ignoreExpiry },
                 );
             }
         }

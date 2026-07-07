@@ -8,6 +8,7 @@
 export * from './activate/index.ts';
 export * from './authorize/index.ts';
 export * from './jwks/index.ts';
+export * from './logout/index.ts';
 export * from './openid/index.ts';
 export * from './password-forgot/index.ts';
 export * from './password-reset/index.ts';

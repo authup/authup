@@ -8,7 +8,13 @@
 import type { OAuth2TokenPayload } from '@authup/specs';
 
 export type OAuth2TokenVerifyOptions = {
-    skipActiveCheck?: boolean
+    skipActiveCheck?: boolean,
+    /**
+     * Skip ONLY the `exp` check (signature, issuer, nbf still enforced). For
+     * verifying an `id_token_hint` on RP-initiated logout, which is routinely
+     * expired by the time the user logs out.
+     */
+    ignoreExpiry?: boolean
 };
 
 export interface IOAuth2TokenVerifier {

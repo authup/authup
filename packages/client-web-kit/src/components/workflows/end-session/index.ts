@@ -5,8 +5,4 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './authorize';
-export * from './end-session';
-export * from './login';
-export * from './password';
-export * from './register';
+export { default as AEndSessionForm } from './AEndSessionForm.vue';

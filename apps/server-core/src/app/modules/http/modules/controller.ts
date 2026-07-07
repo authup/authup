@@ -105,6 +105,7 @@ import {
     ActivateController,
     AuthorizeController,
     JwkController,
+    LogoutController,
     OpenIDController,
     PasswordForgotController,
     PasswordResetController,
@@ -122,6 +123,7 @@ import {
     CredentialsAuthenticator,
     IdentityProviderRoleMappingService,
     OAuth2ClientAuthenticator,
+    OAuth2EndSessionService,
     PasswordRecoveryService,
     PermissionCheckerService,
     PermissionPolicyService,
@@ -189,6 +191,7 @@ export class HTTPControllerModule {
                 this.createPasswordForgotController(container),
                 this.createPasswordResetController(container),
                 this.createRegisterController(container),
+                this.createLogoutController(container),
 
                 this.createStatusController(container),
 
@@ -384,6 +387,26 @@ export class HTTPControllerModule {
                 features: this.buildUIFeatures(config),
             },
             service: this.createRegistrationService(container),
+        });
+    }
+
+    createLogoutController(container: IContainer) {
+        const config = container.resolve(ConfigInjectionKey);
+        const tokenVerifier = container.resolve(OAuth2InjectionToken.TokenVerifier);
+        const sessionManager = container.resolve(AuthenticationInjectionKey.SessionManager);
+        const clientRepository = container.resolve(OAuth2InjectionToken.ClientRepository);
+        const realmRepository = new RealmRepositoryAdapter(container.resolve<Repository<Realm>>(RealmEntity));
+
+        const endSessionService = new OAuth2EndSessionService({
+            tokenVerifier,
+            sessionManager,
+            clientRepository,
+            realmRepository,
+        });
+
+        return new LogoutController({
+            options: { baseURL: config.publicUrl },
+            endSessionService,
         });
     }
 
