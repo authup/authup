@@ -154,6 +154,11 @@ export enum TranslatorTranslationAppKey {
 
     REMOVE_CONFIRM_TITLE = 'removeConfirmTitle',
     REMOVE_CONFIRM_DESCRIPTION = 'removeConfirmDescription',
+
+    SESSION_REVOKE_OTHERS = 'sessionRevokeOthers',
+    SESSION_REVOKE_OTHERS_CONFIRM_TITLE = 'sessionRevokeOthersConfirmTitle',
+    SESSION_REVOKE_OTHERS_CONFIRM_DESCRIPTION = 'sessionRevokeOthersConfirmDescription',
+    SESSION_REVOKE_OTHERS_SUCCESS = 'sessionRevokeOthersSuccess',
 }
 
 /**

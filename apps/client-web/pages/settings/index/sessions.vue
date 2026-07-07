@@ -1,19 +1,29 @@
 <script lang="ts">
 import type { Session } from '@authup/core-kit';
-import { TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import {
+    TranslatorTranslationActionKey,
+    TranslatorTranslationAppKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
 import {
     AEntityDelete,
     APagination,
     ASearch,
     ASessions,
+    injectHTTPClient,
     injectStore,
     useTranslations,
+    useTranslator,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
 import type { TableColumn } from '@vuecs/table';
-import { computed, defineComponent } from 'vue';
-import { definePageMeta } from '#imports';
+import { VCButton } from '@vuecs/button';
+import { VCIcon } from '@vuecs/icon';
+import { useAlertDialog } from '@vuecs/overlays';
+import { computed, defineComponent, ref } from 'vue';
+import { definePageMeta, useErrorToast, useToast } from '#imports';
 import { LayoutKey } from '~/config/layout';
 
 export default defineComponent({
@@ -22,6 +32,8 @@ export default defineComponent({
         APagination,
         ASearch,
         ASessions,
+        VCButton,
+        VCIcon,
     },
     setup() {
         definePageMeta({ [LayoutKey.REQUIRED_LOGGED_IN]: true });
@@ -42,6 +54,11 @@ export default defineComponent({
             { namespace: TranslatorTranslationNamespace.FIELD, key: TranslatorTranslationFieldKey.USER_AGENT },
             { namespace: TranslatorTranslationNamespace.FIELD, key: TranslatorTranslationFieldKey.SEEN_AT },
             { namespace: TranslatorTranslationNamespace.FIELD, key: TranslatorTranslationFieldKey.EXPIRES_AT },
+            { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS },
+            { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_CONFIRM_TITLE },
+            { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_CONFIRM_DESCRIPTION },
+            { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.LOGOUT },
+            { namespace: TranslatorTranslationNamespace.ACTION, key: TranslatorTranslationActionKey.ABORT },
         ]);
 
         const columns = computed<TableColumn<Session>[]>(() => [
@@ -76,11 +93,60 @@ export default defineComponent({
             },
         ]);
 
+        const httpClient = injectHTTPClient();
+        const toast = useToast();
+        const errorToast = useErrorToast();
+        const translate = useTranslator();
+        const confirmDialog = useAlertDialog();
+        const revoking = ref(false);
+
+        // "Log out my other devices" — DELETE /sessions revokes every session of
+        // the current identity except the one this request authenticates with.
+        const revokeOthers = async (reload: () => Promise<void>) => {
+            if (revoking.value) {
+                return;
+            }
+
+            const confirmed = await confirmDialog({
+                title: translations.sessionRevokeOthersConfirmTitle,
+                description: translations.sessionRevokeOthersConfirmDescription,
+                confirmLabel: translations.logout,
+                cancelLabel: translations.abort,
+                tone: 'warning',
+            });
+
+            if (!confirmed) {
+                return;
+            }
+
+            revoking.value = true;
+            try {
+                const response = await httpClient.session.deleteMany();
+
+                toast.show({
+                    variant: 'success',
+                    body: await translate({
+                        namespace: TranslatorTranslationNamespace.APP,
+                        key: TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_SUCCESS,
+                        data: { amount: response.count },
+                    }),
+                });
+
+                await reload();
+            } catch (e) {
+                await errorToast.show(e);
+            } finally {
+                revoking.value = false;
+            }
+        };
+
         return {
             userId,
             query,
             columns,
             translations,
+            revoking,
+            revokeOthers,
         };
     },
 });
@@ -93,10 +159,26 @@ export default defineComponent({
         :footer="true"
     >
         <template #header="props">
-            <ASearch
-                :load="props.load"
-                :busy="props.busy"
-            />
+            <div class="flex flex-wrap items-center gap-2">
+                <div class="flex-grow">
+                    <ASearch
+                        :load="props.load"
+                        :busy="props.busy"
+                    />
+                </div>
+                <VCButton
+                    :label="translations.sessionRevokeOthers"
+                    size="sm"
+                    color="error"
+                    variant="outline"
+                    :disabled="revoking || (props.total ?? 0) <= 1"
+                    @click="revokeOthers(props.load)"
+                >
+                    <template #leading>
+                        <VCIcon name="fa6-solid:right-from-bracket" />
+                    </template>
+                </VCButton>
+            </div>
         </template>
         <template #footer="props">
             <APagination

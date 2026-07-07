@@ -48,4 +48,9 @@ export const TranslatorTranslationAppGerman : NamespaceTranslations<`${Translato
 
     [TranslatorTranslationAppKey.REMOVE_CONFIRM_TITLE]: 'Entfernen bestätigen',
     [TranslatorTranslationAppKey.REMOVE_CONFIRM_DESCRIPTION]: 'Möchten Sie diese Zuordnung wirklich entfernen? Sie können sie jederzeit erneut zuweisen.',
+
+    [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS]: 'Andere Geräte abmelden',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_CONFIRM_TITLE]: 'Andere Geräte abmelden?',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_CONFIRM_DESCRIPTION]: 'Dadurch werden alle anderen Sitzungen abgemeldet. Ihre aktuelle Sitzung bleibt aktiv.',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_SUCCESS]: '{{amount}} andere Sitzung(en) abgemeldet.',
 };

@@ -15,6 +15,8 @@ import type { TableColumn } from '@vuecs/table';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 import { defineNuxtComponent } from '#app';
+import { definePageMeta } from '#imports';
+import { LayoutKey } from '~/config/layout';
 
 export default defineNuxtComponent({
     components: {
@@ -30,6 +32,8 @@ export default defineNuxtComponent({
         },
     },
     setup(props) {
+        definePageMeta({ [LayoutKey.REQUIRED_PERMISSIONS]: [PermissionName.SESSION_READ] });
+
         const query = computed<BuildInput<Session>>(() => ({
             filter: { user_id: props.entity.id },
             sort: { seen_at: 'DESC' },

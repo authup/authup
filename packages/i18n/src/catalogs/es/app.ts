@@ -48,4 +48,9 @@ export const TranslatorTranslationAppSpanish : NamespaceTranslations<`${Translat
 
     [TranslatorTranslationAppKey.REMOVE_CONFIRM_TITLE]: 'Confirmar eliminación',
     [TranslatorTranslationAppKey.REMOVE_CONFIRM_DESCRIPTION]: '¿Seguro que quieres quitar esta asignación? Puedes volver a asignarla en cualquier momento.',
+
+    [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS]: 'Cerrar sesión en otros dispositivos',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_CONFIRM_TITLE]: '¿Cerrar sesión en otros dispositivos?',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_CONFIRM_DESCRIPTION]: 'Esto cierra todas tus otras sesiones. Tu sesión actual permanece activa.',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_SUCCESS]: '{{amount}} otra(s) sesión(es) cerradas.',
 };

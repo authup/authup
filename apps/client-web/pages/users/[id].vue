@@ -5,11 +5,12 @@ import {
     TranslatorTranslationEntityKey, 
     TranslatorTranslationNamespace, 
 } from '@authup/i18n';
-import { 
-    injectHTTPClient, 
-    useTranslations, 
-    useTranslationsForNamespace, 
-    useTranslator, 
+import {
+    injectHTTPClient,
+    usePermissionCheck,
+    useTranslations,
+    useTranslationsForNamespace,
+    useTranslator,
 } from '@authup/client-web-kit';
 import type { User } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
@@ -76,6 +77,12 @@ export default defineComponent({
 
         const translate = useTranslator();
 
+        // The sessions tab surfaces the user's login sessions — only an actor
+        // holding SESSION_READ may list another identity's sessions (the server
+        // force-scopes everyone else to their own), so gate the tab on it. The
+        // route itself is protected in the child page's definePageMeta.
+        const hasSessionReadPermission = usePermissionCheck({ name: PermissionName.SESSION_READ });
+
         try {
             entity.value = await injectHTTPClient()
                 .user
@@ -106,11 +113,11 @@ export default defineComponent({
                 icon: 'fa6-solid:user-group',
                 url: `/users/${entity.value.id}/roles`,
             },
-            {
+            ...(hasSessionReadPermission.value ? [{
                 name: translationsDefault.session,
                 icon: 'fa6-solid:desktop',
                 url: `/users/${entity.value.id}/sessions`,
-            },
+            }] : []),
         ]);
 
         const handleUpdated = async (e: User) => {
