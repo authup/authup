@@ -26,6 +26,16 @@ export interface OAuth2AuthorizationCode {
 
     client_id?: Client['id'] | null,
 
+    /**
+     * The id of the session the authorizing bearer belongs to.
+     *
+     * Threaded from the (interactive) `/authorize` request so the
+     * authorization_code grant can reuse that session instead of creating a
+     * second one on token exchange. Absent for non-interactive / session-less
+     * authorize flows, in which case the grant creates a fresh session.
+     */
+    session_id?: string | null,
+
     sub: string,
 
     sub_kind: `${OAuth2SubKind}`,

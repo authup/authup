@@ -45,6 +45,10 @@ export class OAuth2AuthorizationCodeIssuer implements IOAuth2AuthorizationCodeIs
             entity.id_token = options.idToken;
         }
 
+        if (options.sessionId) {
+            entity.session_id = options.sessionId;
+        }
+
         return this.repository.save(entity, { maxAge: options.maxAge ?? this.options.maxAge });
     }
 
