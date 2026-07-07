@@ -9,6 +9,7 @@ import type { Identity, OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest 
 import { ScopeName } from '@authup/core-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import {
+    OAuth2AuthorizationPrompt,
     OAuth2AuthorizationResponseType,
     OAuth2GrantError,
     OAuth2LoginRequiredError,
@@ -25,6 +26,9 @@ import type {
     OAuth2AuthorizationResult,
 } from './types.ts';
 import type { IIdentityResolver } from '../../identity/index.ts';
+import type { ISessionManager } from '../../authentication/index.ts';
+
+const DEFAULT_PROMPT_LOGIN_MAX_AGE = 60;
 
 export class OAuth2Authorization {
     protected accessTokenIssuer : IOAuth2TokenIssuer;
@@ -35,11 +39,17 @@ export class OAuth2Authorization {
 
     protected identityResolver : IIdentityResolver;
 
+    protected sessionManager : ISessionManager;
+
+    protected promptLoginMaxAge : number;
+
     constructor(ctx: OAuth2AuthorizationManagerContext) {
         this.accessTokenIssuer = ctx.accessTokenIssuer;
         this.openIdTokenIssuer = ctx.openIdTokenIssuer;
         this.codeIssuer = ctx.codeIssuer;
         this.identityResolver = ctx.identityResolver;
+        this.sessionManager = ctx.sessionManager;
+        this.promptLoginMaxAge = ctx.promptLoginMaxAge ?? DEFAULT_PROMPT_LOGIN_MAX_AGE;
     }
 
     /**
@@ -95,6 +105,36 @@ export class OAuth2Authorization {
             throw OAuth2LoginRequiredError.realmMismatch();
         }
 
+        // Authentication time = the backing session's creation instant (NOT
+        // refreshed_at — a token refresh must not reset it). Session-less flows
+        // (e.g. HTTP Basic authorize) present live credentials on this request,
+        // so the authentication time is "now".
+        const nowSeconds = Math.floor(Date.now() / 1000);
+        let authTime = nowSeconds;
+        if (options.sessionId) {
+            const session = await this.sessionManager.findOneById(options.sessionId);
+            if (session && session.created_at) {
+                authTime = Math.floor(new Date(session.created_at).getTime() / 1000);
+            }
+        }
+
+        // OIDC §3.1.2.1 prompt=login / max_age freshness (enforced only when
+        // requested — a plain authorize never throws here). The hosted page
+        // renders the login form for prompt=login; this is the server backstop.
+        const prompts = data.prompt ? data.prompt.split(' ') : [];
+        if (
+            prompts.includes(OAuth2AuthorizationPrompt.LOGIN) &&
+            nowSeconds - authTime > this.promptLoginMaxAge
+        ) {
+            throw OAuth2LoginRequiredError.reauthenticationRequired();
+        }
+        if (typeof data.max_age !== 'undefined' && data.max_age !== null) {
+            const maxAge = Number(data.max_age);
+            if (Number.isFinite(maxAge) && nowSeconds - authTime > maxAge) {
+                throw OAuth2LoginRequiredError.reauthenticationRequired();
+            }
+        }
+
         const payloadBaseNormalized : OAuth2TokenPayload = {
 
             sub: identity.data.id,
@@ -129,7 +169,12 @@ export class OAuth2Authorization {
             (data.scope && hasOAuth2Scopes(data.scope, ScopeName.OPEN_ID));
 
         if (needsIdToken) {
-            const idTokenPayload = { ...payloadBaseNormalized };
+            const idTokenPayload : OAuth2TokenPayload = {
+                ...payloadBaseNormalized,
+                // OIDC id_token claims: real authentication time + session id.
+                auth_time: authTime,
+                ...(options.sessionId ? { sid: options.sessionId } : {}),
+            };
 
             if (output.accessToken) {
                 idTokenPayload.at_hash = await buildOAuth2TokenHash(output.accessToken);

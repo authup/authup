@@ -6,10 +6,10 @@
  */
 
 import {
-    oneOf, 
-    read, 
-    readArray, 
-    readBool, 
+    oneOf,
+    read,
+    readArray,
+    readBool,
     readInt,
 } from 'envix';
 import { hasEnvDataSourceOptions, readDataSourceOptionsFromEnv } from 'typeorm-extension';
@@ -93,6 +93,11 @@ export function readConfigRawFromEnv() : ConfigInput {
     const tokenRefreshGracePeriod = readInt(ConfigEnvironmentVariableName.TOKEN_REFRESH_GRACE_PERIOD);
     if (typeof tokenRefreshGracePeriod !== 'undefined') {
         options.tokenRefreshGracePeriod = tokenRefreshGracePeriod;
+    }
+
+    const promptLoginMaxAge = readInt(ConfigEnvironmentVariableName.PROMPT_LOGIN_MAX_AGE);
+    if (typeof promptLoginMaxAge !== 'undefined') {
+        options.promptLoginMaxAge = promptLoginMaxAge;
     }
 
     const registrationEnabled = readBool(ConfigEnvironmentVariableName.REGISTRATION_ENABLED);

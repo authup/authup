@@ -38,6 +38,16 @@ export enum OAuth2AuthorizationCodeChallengeMethod {
 }
 
 /**
+ * OIDC Core 1.0 §3.1.2.1 `prompt` values.
+ */
+export enum OAuth2AuthorizationPrompt {
+    NONE = 'none',
+    LOGIN = 'login',
+    CONSENT = 'consent',
+    SELECT_ACCOUNT = 'select_account',
+}
+
+/**
  * @see https://datatracker.ietf.org/doc/html/rfc6749#section-5.2
  */
 export enum OAuth2ErrorCode {
@@ -65,4 +75,20 @@ export enum OAuth2ErrorCode {
      * authorization request (e.g. realm mismatch, or prompt=login/max_age).
      */
     LOGIN_REQUIRED = 'login_required',
+
+    /**
+     * OIDC Core 1.0 §3.1.2.6 — interaction is required but prompt=none forbade it.
+     */
+    INTERACTION_REQUIRED = 'interaction_required',
+
+    /**
+     * OIDC Core 1.0 §3.1.2.6 — account selection is required (prompt=select_account
+     * with prompt=none, or the server cannot determine the account).
+     */
+    ACCOUNT_SELECTION_REQUIRED = 'account_selection_required',
+
+    /**
+     * OIDC Core 1.0 §3.1.2.6 — consent is required but prompt=none forbade it.
+     */
+    CONSENT_REQUIRED = 'consent_required',
 }

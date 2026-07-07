@@ -125,3 +125,37 @@ curl -X POST 'http://localhost:3001/token' \
     "expires_in": 3600
 }
 ```
+
+### 4. Authorization Code Flow (OpenID Connect)
+
+Browser-based applications redirect the user to Authup's hosted `/authorize` page, which handles login and consent. On success the browser is redirected back to the `redirect_uri` with a `code`, which is then exchanged at `/token` (`grant_type=authorization_code`). Public clients must use PKCE (`code_challenge` / `code_verifier`) and `state`.
+
+#### Authorize request
+
+```
+GET http://localhost:3001/authorize
+  ?response_type=code
+  &client_id=YOUR_CLIENT_ID
+  &realm_id=YOUR_REALM_ID
+  &redirect_uri=https://app.example.com/callback
+  &scope=global openid
+  &state=RANDOM
+  &code_challenge=CHALLENGE
+  &code_challenge_method=S256
+```
+
+The following [OpenID Connect Core §3.1.2.1](https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest) parameters are supported:
+
+| Parameter | Description |
+|---|---|
+| `prompt` | Space-delimited list of `none`, `login`, `consent`, `select_account`. `select_account` shows a "continue as / use another account" chooser when a session already exists; `login` forces re-authentication; `consent` forces the consent screen; `none` returns an error (e.g. `login_required`) instead of showing any UI. Unknown values are ignored; `none` combined with any other value is an `invalid_request`. |
+| `max_age` | Maximum acceptable age (seconds) of the authentication. If the session is older, the user is asked to re-authenticate (`max_age=0` forces it). |
+| `login_hint` | Pre-fills the identifier on the login form. |
+
+The freshness window for `prompt=login` is configurable via `promptLoginMaxAge` (see the [server configuration](../deployment/configuration-server-core.md)).
+
+The resulting `id_token` includes the OIDC `auth_time` (the real authentication time) and `sid` (session id) claims.
+
+#### Discovery
+
+Each realm exposes an OpenID Provider metadata document at `GET /realms/<realm>/.well-known/openid-configuration`, advertising the `authorization_endpoint`, `token_endpoint`, `revocation_endpoint` (`/token/revoke`), `jwks_uri`, and `prompt_values_supported`.

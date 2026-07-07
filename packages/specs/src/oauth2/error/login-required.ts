@@ -30,4 +30,8 @@ export class OAuth2LoginRequiredError extends OAuth2Error {
     static realmMismatch() {
         return new OAuth2LoginRequiredError({ message: 'Sign in with an account for the requested realm to continue.' });
     }
+
+    static reauthenticationRequired() {
+        return new OAuth2LoginRequiredError({ message: 'Re-authentication is required to continue.' });
+    }
 }

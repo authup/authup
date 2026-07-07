@@ -12,11 +12,17 @@ import type {
     IOAuth2AuthorizationCodeRequestVerifier,
     IOAuth2OpenIDTokenIssuer,
     IOAuth2TokenIssuer,
+    ISessionManager,
 } from '../../../../../core/index.ts';
 
 export type AuthorizeControllerOptions = {
     baseURL: string;
     features: StatusResponseFeatures;
+    /**
+     * Max age (seconds) a `prompt=login` request accepts before forcing re-auth
+     * (config `promptLoginMaxAge`).
+     */
+    promptLoginMaxAge?: number;
 };
 
 export type AuthorizeControllerContext = {
@@ -28,5 +34,6 @@ export type AuthorizeControllerContext = {
     codeIssuer: IOAuth2AuthorizationCodeIssuer,
     codeRequestVerifier: IOAuth2AuthorizationCodeRequestVerifier,
 
-    identityResolver: IIdentityResolver
+    identityResolver: IIdentityResolver,
+    sessionManager: ISessionManager
 };

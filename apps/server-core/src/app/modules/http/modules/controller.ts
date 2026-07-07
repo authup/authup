@@ -81,7 +81,7 @@ import {
     ClientController,
     ClientPermissionController,
     ClientRoleController,
-    ClientScopeController, 
+    ClientScopeController,
     IdentityProviderController,
     IdentityProviderRoleMappingController,
     PermissionController,
@@ -229,11 +229,13 @@ export class HTTPControllerModule {
         const codeRequestVerifier = container.resolve(OAuth2InjectionToken.AuthorizationCodeRequestVerifier);
 
         const identityResolver = container.resolve(IdentityInjectionKey.Resolver);
+        const sessionManager = container.resolve(AuthenticationInjectionKey.SessionManager);
 
         return new AuthorizeController({
             options: {
                 baseURL: config.publicUrl,
                 features: this.buildUIFeatures(config),
+                promptLoginMaxAge: config.promptLoginMaxAge,
             },
 
             accessTokenIssuer,
@@ -243,6 +245,7 @@ export class HTTPControllerModule {
             codeRequestVerifier,
 
             identityResolver,
+            sessionManager,
         });
     }
 
@@ -464,11 +467,11 @@ export class HTTPControllerModule {
         const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository);
         const service = new ClientService({
             repository,
-            realmRepository: realmRepositoryAdapter, 
+            realmRepository: realmRepositoryAdapter,
         });
         return new ClientController({
             service,
-            repository, 
+            repository,
         });
     }
 
@@ -482,7 +485,7 @@ export class HTTPControllerModule {
         const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository);
         const service = new RobotService({
             repository,
-            realmRepository: realmRepositoryAdapter, 
+            realmRepository: realmRepositoryAdapter,
         });
         return new RobotController({
             service,
@@ -566,7 +569,7 @@ export class HTTPControllerModule {
         });
         const service = new RoleService({
             repository,
-            realmRepository, 
+            realmRepository,
         });
         return new RoleController({ service });
     }
@@ -669,7 +672,7 @@ export class HTTPControllerModule {
         });
         const service = new ScopeService({
             repository,
-            realmRepository, 
+            realmRepository,
         });
         return new ScopeController({ service });
     }
@@ -690,7 +693,7 @@ export class HTTPControllerModule {
         const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository);
         const service = new UserService({
             repository,
-            realmRepository: realmRepositoryAdapter, 
+            realmRepository: realmRepositoryAdapter,
         });
         return new UserController({ service });
     }
@@ -740,7 +743,7 @@ export class HTTPControllerModule {
         const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository);
         const service = new PolicyService({
             repository,
-            realmRepository: realmRepositoryAdapter, 
+            realmRepository: realmRepositoryAdapter,
         });
         const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         const checkerService = new PolicyCheckerService({
@@ -762,9 +765,9 @@ export class HTTPControllerModule {
         const roleRepository = this.createRoleRepository(container);
         const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         const service = new IdentityProviderRoleMappingService({
-            repository, 
-            roleRepository, 
-            identityPermissionProvider, 
+            repository,
+            roleRepository,
+            identityPermissionProvider,
         });
         return new IdentityProviderRoleMappingController({ service });
     }
@@ -793,9 +796,9 @@ export class HTTPControllerModule {
         });
 
         const service = new RealmService({
-            repository, 
-            webClientProvisioner, 
-            logger, 
+            repository,
+            webClientProvisioner,
+            logger,
         });
         const keyRepository = dataSource.getRepository(KeyEntity);
 

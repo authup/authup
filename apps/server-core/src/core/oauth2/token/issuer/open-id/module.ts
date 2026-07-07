@@ -70,7 +70,10 @@ export class OAuth2OpenIDTokenIssuer extends OAuth2BaseTokenIssuer implements IO
             ...input,
             ...claims,
             kind: OAuth2TokenKind.ID_TOKEN,
-            auth_time: utc,
+            // Real authentication time when threaded from the authorize flow
+            // (the session's creation instant); fall back to issuance time only
+            // for session-less id_token issuance. `sid` rides via ...input.
+            auth_time: typeof input.auth_time === 'number' ? input.auth_time : utc,
             exp: this.buildExp(input),
             updated_at: utc,
             ...(iss ? { iss } : {}),

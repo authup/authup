@@ -78,4 +78,8 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.REALM_MISMATCH_TEXT]: '{{client}} gehört zum Realm {{realm}}, aber Sie sind in einem anderen Realm angemeldet. Melden Sie sich mit einem {{realm}}-Konto an, um fortzufahren.',
     [TranslatorTranslationClientKey.SIGN_IN_TO_REALM]: 'Bei {{realm}} anmelden',
     [TranslatorTranslationClientKey.RETURN_TO_APP]: 'Zurück zur Anwendung',
+
+    [TranslatorTranslationClientKey.SELECT_ACCOUNT_TITLE]: 'Konto auswählen',
+    [TranslatorTranslationClientKey.CONTINUE_AS]: 'Als {{name}} fortfahren',
+    [TranslatorTranslationClientKey.USE_ANOTHER_ACCOUNT]: 'Anderes Konto verwenden',
 };

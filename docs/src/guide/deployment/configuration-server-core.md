@@ -82,6 +82,14 @@ export default {
      */
     tokenRefreshGracePeriod: 0,
 
+    /**
+     * Max age (seconds) of the authentication that a `prompt=login` / `max_age`
+     * authorize request accepts before forcing re-authentication. Judged against
+     * the session's creation time — a stateless approximation.
+     * default: 60
+     */
+    promptLoginMaxAge: 60,
+
     // ----------------------------------------------------
     
     /**

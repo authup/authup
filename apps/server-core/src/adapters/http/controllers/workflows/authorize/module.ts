@@ -59,6 +59,8 @@ export class AuthorizeController {
             openIdTokenIssuer: ctx.openIdTokenIssuer,
             codeIssuer: ctx.codeIssuer,
             identityResolver: ctx.identityResolver,
+            sessionManager: ctx.sessionManager,
+            promptLoginMaxAge: ctx.options.promptLoginMaxAge,
         });
     }
 

@@ -8,17 +8,17 @@
 /* global window */
 import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
 import type { PropType } from 'vue';
-import { 
-    computed, 
-    defineComponent, 
-    onMounted, 
-    ref, 
+import {
+    computed,
+    defineComponent,
+    onMounted,
+    ref,
 } from 'vue';
-import { 
-    TranslatorTranslationActionKey, 
-    TranslatorTranslationClientKey, 
-    TranslatorTranslationCommonKey, 
-    TranslatorTranslationNamespace, 
+import {
+    TranslatorTranslationActionKey,
+    TranslatorTranslationClientKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import { ITranslateT } from '@ilingo/vue';
 import { VCButton } from '@vuecs/button';
@@ -50,16 +50,16 @@ export default defineComponent({
 
         const translationsDefault = useTranslations([
             {
-                namespace: TranslatorTranslationNamespace.COMMON, 
-                key: TranslatorTranslationCommonKey.APPLICATION, 
+                namespace: TranslatorTranslationNamespace.COMMON,
+                key: TranslatorTranslationCommonKey.APPLICATION,
             },
             {
-                namespace: TranslatorTranslationNamespace.ACTION, 
-                key: TranslatorTranslationActionKey.ABORT, 
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.ABORT,
             },
             {
-                namespace: TranslatorTranslationNamespace.ACTION, 
-                key: TranslatorTranslationActionKey.AUTHORIZE, 
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.AUTHORIZE,
             },
         ]);
 
@@ -134,7 +134,18 @@ export default defineComponent({
         // validator strips it on create/update, so no API caller can self-
         // assign it. Skipping the scope-consent step is therefore safe; user/
         // admin-created clients are never built_in and still show consent.
-        const autoConsent = computed<boolean>(() => !!props.client.built_in);
+        // prompt=consent (OIDC §3.1.2.1) forces the consent screen even for a
+        // built_in client.
+        const autoConsent = computed<boolean>(() => {
+            if (!props.client.built_in) {
+                return false;
+            }
+
+            const prompts = props.codeRequest.prompt ?
+                props.codeRequest.prompt.split(' ') :
+                [];
+            return !prompts.includes('consent');
+        });
 
         // Show the spinner only while an auto-consent submit is in flight. If it
         // fails, drop to the manual consent UI so the user can retry instead of

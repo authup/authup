@@ -63,4 +63,23 @@ describe('RealmController.getOpenIdConfiguration', () => {
         expect(byId.issuer).toEqual(byName.issuer);
         expect(byId.jwks_uri).toEqual(byName.jwks_uri);
     });
+
+    it('should advertise the revocation endpoint at token/revoke (RFC 7009)', async () => {
+        const controller = createController(realm);
+        const config = await controller.getOpenIdConfiguration(realmId);
+
+        expect(config.revocation_endpoint).toEqual('https://auth.example.com/token/revoke');
+    });
+
+    it('should advertise the supported prompt values', async () => {
+        const controller = createController(realm);
+        const config = await controller.getOpenIdConfiguration(realmId);
+
+        expect(config.prompt_values_supported).toEqual([
+            'none',
+            'login',
+            'consent',
+            'select_account',
+        ]);
+    });
 });

@@ -55,6 +55,11 @@ export type OpenIDProviderMetadata = {
     revocation_endpoint: string,
 
     /**
+     * OIDC Core §3.1.2.1 `prompt` values supported by the OP.
+     */
+    prompt_values_supported?: string[],
+
+    /**
      * The OAuth 2.0 / OpenID Connect URL of the OP's Dynamic Client Registration Endpoint OpenID.Registration.
      */
     registration_endpoint?: string,

@@ -8,7 +8,9 @@
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import {
     OAuth2AuthorizationCodeChallengeMethod,
+    OAuth2AuthorizationPrompt,
     OAuth2AuthorizationResponseType,
+    OAuth2RequestError,
     OAuth2ResponseTypeError,
 } from '@authup/specs';
 
@@ -78,6 +80,54 @@ export class OAuth2AuthorizationCodeRequestValidator extends Container<OAuth2Aut
             'nonce',
             { optional: true },
             createValidator(z.string().min(1).max(512).nullable()),
+        );
+
+        this.mount(
+            'prompt',
+            { optional: true },
+            createValidator(
+                z
+                    .string()
+                    .min(1)
+                    .max(128)
+                    .nullable()
+                    .check((ctx) => {
+                        if (!ctx.value) {
+                            return z.NEVER;
+                        }
+
+                        // Unknown tokens are ignored (forward-compat). Only the
+                        // OIDC §3.1.2.1 rule "none must not be combined" is enforced.
+                        const values = ctx.value.split(' ').filter(Boolean);
+                        if (
+                            values.includes(OAuth2AuthorizationPrompt.NONE) &&
+                            values.length > 1
+                        ) {
+                            const error = OAuth2RequestError.malformed(
+                                'prompt=none must not be combined with other prompt values.',
+                            );
+                            ctx.issues.push({
+                                input: ctx.value,
+                                code: 'custom',
+                                message: error.message,
+                            });
+                        }
+
+                        return z.NEVER;
+                    }),
+            ),
+        );
+
+        this.mount(
+            'max_age',
+            { optional: true },
+            createValidator(z.coerce.number().int().min(0).nullable()),
+        );
+
+        this.mount(
+            'login_hint',
+            { optional: true },
+            createValidator(z.string().trim().toLowerCase().min(1).max(256).nullable()),
         );
 
         this.mount(
