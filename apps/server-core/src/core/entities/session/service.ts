@@ -11,7 +11,7 @@ import { PermissionName } from '@authup/core-kit';
 import type { Session } from '@authup/core-kit';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
-import type { ISessionRepository } from '../../authentication/index.ts';
+import type { ISessionRepository, SessionOwner } from '../../authentication/index.ts';
 import type { ISessionService, SessionDeleteManyResult } from './types.ts';
 
 export type SessionServiceContext = {
@@ -152,6 +152,38 @@ export class SessionService extends AbstractEntityService implements ISessionSer
             if (currentSessionId && session.id === currentSessionId) {
                 continue;
             }
+            await this.repository.remove(session);
+            count += 1;
+        }
+
+        return { count };
+    }
+
+    async deleteManyForOwner(
+        actor: ActorContext,
+        owner: SessionOwner,
+    ): Promise<SessionDeleteManyResult> {
+        // Gate: an actor without SESSION_DELETE cannot force-logout anyone → 403.
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.SESSION_DELETE });
+
+        const sessions = await this.repository.findAllByOwner(owner);
+
+        let count = 0;
+        for (const session of sessions) {
+            // Per-session realm-match: a realm_admin only reaches sessions in
+            // its realm. Cross-realm sessions are silently skipped, not failed.
+            try {
+                await actor.permissionEvaluator.evaluate({
+                    name: PermissionName.SESSION_DELETE,
+                    data: definePolicyData({
+                        [BuiltInPolicyType.ATTRIBUTES]: session,
+                        ...this.resourceRealmMatch(session),
+                    }),
+                });
+            } catch {
+                continue;
+            }
+
             await this.repository.remove(session);
             count += 1;
         }

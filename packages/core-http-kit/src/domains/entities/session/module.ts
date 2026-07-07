@@ -31,8 +31,9 @@ export class SessionAPI extends BaseAPI implements ISessionAPI {
         return response.data;
     }
 
-    async deleteMany(): Promise<SessionDeleteManyResponse> {
-        const response = await this.client.delete('sessions');
+    async deleteMany(options: { userId?: string } = {}): Promise<SessionDeleteManyResponse> {
+        const suffix = options.userId ? `?user_id=${encodeURIComponent(options.userId)}` : '';
+        const response = await this.client.delete(`sessions${suffix}`);
 
         return response.data;
     }

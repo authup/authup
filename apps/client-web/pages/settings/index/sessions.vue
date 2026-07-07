@@ -37,7 +37,7 @@ export default defineComponent({
         definePageMeta({ [LayoutKey.REQUIRED_LOGGED_IN]: true });
 
         const store = injectStore();
-        const { userId } = storeToRefs(store);
+        const { userId, sessionId } = storeToRefs(store);
 
         // Scope to the current user's own sessions (an admin holding SESSION_READ
         // would otherwise see every session here); non-admins are self-scoped by
@@ -55,6 +55,7 @@ export default defineComponent({
             { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS },
             { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_CONFIRM_TITLE },
             { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_CONFIRM_DESCRIPTION },
+            { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.SESSION_CURRENT },
             { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.LOGOUT },
             { namespace: TranslatorTranslationNamespace.ACTION, key: TranslatorTranslationActionKey.ABORT },
         ]);
@@ -140,6 +141,7 @@ export default defineComponent({
 
         return {
             userId,
+            sessionId,
             query,
             columns,
             translations,
@@ -199,7 +201,14 @@ export default defineComponent({
                     <VCTimeago :datetime="row.expires_at" />
                 </template>
                 <template #cell-options="{ row }">
+                    <span
+                        v-if="row.id === sessionId"
+                        class="inline-flex items-center rounded-full bg-primary-600/10 px-2 py-0.5 text-xs font-medium text-primary-600"
+                    >
+                        {{ translations.sessionCurrent }}
+                    </span>
                     <AEntityDelete
+                        v-else
                         :entity-id="row.id"
                         entity-type="session"
                         :with-text="false"

@@ -7,6 +7,7 @@
 
 import type { Session } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
+import type { SessionOwner } from '../../authentication/index.ts';
 
 export type SessionDeleteManyResult = {
     count: number,
@@ -35,4 +36,13 @@ export interface ISessionService {
      * ("log out my other devices"). Self-service — no permission required.
      */
     deleteManyForActor(actor: ActorContext, currentSessionId?: string): Promise<SessionDeleteManyResult>;
+
+    /**
+     * Revoke every session of a target subject ("force-logout this user
+     * everywhere"). Requires `SESSION_DELETE`; each session is additionally
+     * realm-matched, so a `realm_admin` only revokes sessions in its reach.
+     * Unlike `deleteManyForActor` there is NO current-session exemption — the
+     * actor is (typically) not the owner.
+     */
+    deleteManyForOwner(actor: ActorContext, owner: SessionOwner): Promise<SessionDeleteManyResult>;
 }

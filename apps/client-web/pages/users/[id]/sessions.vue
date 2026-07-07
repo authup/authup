@@ -1,20 +1,30 @@
 <script lang="ts">
 import type { Session, User } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
-import { TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import {
+    TranslatorTranslationActionKey,
+    TranslatorTranslationAppKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
 import {
     AEntityDelete,
     APagination,
     ASessions,
+    injectHTTPClient,
     usePermissionCheck,
     useTranslations,
+    useTranslator,
 } from '@authup/client-web-kit';
 import type { BuildInput } from 'rapiq';
 import type { TableColumn } from '@vuecs/table';
+import { VCButton } from '@vuecs/button';
+import { VCIcon } from '@vuecs/icon';
+import { useAlertDialog } from '@vuecs/overlays';
 import type { PropType } from 'vue';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { defineNuxtComponent } from '#app';
-import { definePageMeta } from '#imports';
+import { definePageMeta, useErrorToast, useToast } from '#imports';
 import { LayoutKey } from '~/config/layout';
 
 export default defineNuxtComponent({
@@ -22,6 +32,8 @@ export default defineNuxtComponent({
         AEntityDelete,
         APagination,
         ASessions,
+        VCButton,
+        VCIcon,
     },
     props: {
         entity: {
@@ -44,6 +56,11 @@ export default defineNuxtComponent({
             { namespace: TranslatorTranslationNamespace.FIELD, key: TranslatorTranslationFieldKey.USER_AGENT },
             { namespace: TranslatorTranslationNamespace.FIELD, key: TranslatorTranslationFieldKey.SEEN_AT },
             { namespace: TranslatorTranslationNamespace.FIELD, key: TranslatorTranslationFieldKey.EXPIRES_AT },
+            { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.SESSION_REVOKE_ALL },
+            { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.SESSION_REVOKE_ALL_CONFIRM_TITLE },
+            { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.SESSION_REVOKE_ALL_CONFIRM_DESCRIPTION },
+            { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.LOGOUT },
+            { namespace: TranslatorTranslationNamespace.ACTION, key: TranslatorTranslationActionKey.ABORT },
         ]);
 
         const columns = computed<TableColumn<Session>[]>(() => [
@@ -78,11 +95,60 @@ export default defineNuxtComponent({
             },
         ]);
 
+        const httpClient = injectHTTPClient();
+        const toast = useToast();
+        const errorToast = useErrorToast();
+        const translate = useTranslator();
+        const confirmDialog = useAlertDialog();
+        const revoking = ref(false);
+
+        // Admin "Log out everywhere" — DELETE /sessions?user_id=<id> revokes every
+        // session of the target user on all devices (SESSION_DELETE + realm reach).
+        const revokeAll = async (reload: () => Promise<void>) => {
+            if (revoking.value) {
+                return;
+            }
+
+            const confirmed = await confirmDialog({
+                title: translations.sessionRevokeAllConfirmTitle,
+                description: translations.sessionRevokeAllConfirmDescription,
+                confirmLabel: translations.logout,
+                cancelLabel: translations.abort,
+                tone: 'error',
+            });
+
+            if (!confirmed) {
+                return;
+            }
+
+            revoking.value = true;
+            try {
+                const response = await httpClient.session.deleteMany({ userId: props.entity.id });
+
+                toast.show({
+                    variant: 'success',
+                    body: await translate({
+                        namespace: TranslatorTranslationNamespace.APP,
+                        key: TranslatorTranslationAppKey.SESSION_REVOKE_ALL_SUCCESS,
+                        data: { amount: response.count },
+                    }),
+                });
+
+                await reload();
+            } catch (e) {
+                await errorToast.show(e);
+            } finally {
+                revoking.value = false;
+            }
+        };
+
         return {
             query,
             columns,
             hasDropPermission,
             translations,
+            revoking,
+            revokeAll,
         };
     },
 });
@@ -93,6 +159,25 @@ export default defineNuxtComponent({
         :body="{ tag: 'div' }"
         :footer="true"
     >
+        <template #header="props">
+            <div
+                v-if="hasDropPermission"
+                class="flex justify-end mb-2"
+            >
+                <VCButton
+                    :label="translations.sessionRevokeAll"
+                    size="sm"
+                    color="error"
+                    variant="outline"
+                    :disabled="revoking || (props.total ?? 0) === 0"
+                    @click="revokeAll(props.load)"
+                >
+                    <template #leading>
+                        <VCIcon name="fa6-solid:right-from-bracket" />
+                    </template>
+                </VCButton>
+            </div>
+        </template>
         <template #footer="props">
             <APagination
                 :busy="props.busy"

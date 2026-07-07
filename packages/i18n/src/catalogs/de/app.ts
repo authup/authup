@@ -53,4 +53,11 @@ export const TranslatorTranslationAppGerman : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_CONFIRM_TITLE]: 'Andere Geräte abmelden?',
     [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_CONFIRM_DESCRIPTION]: 'Dadurch werden alle anderen Sitzungen abgemeldet. Ihre aktuelle Sitzung bleibt aktiv.',
     [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_SUCCESS]: '{{amount}} andere Sitzung(en) abgemeldet.',
+
+    [TranslatorTranslationAppKey.SESSION_REVOKE_ALL]: 'Überall abmelden',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_ALL_CONFIRM_TITLE]: 'Diesen Benutzer überall abmelden?',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_ALL_CONFIRM_DESCRIPTION]: 'Dadurch werden alle Sitzungen dieses Benutzers auf allen Geräten abgemeldet.',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_ALL_SUCCESS]: '{{amount}} Sitzung(en) abgemeldet.',
+
+    [TranslatorTranslationAppKey.SESSION_CURRENT]: 'Dieses Gerät',
 };

@@ -21,8 +21,12 @@ export interface ISessionAPI {
     delete(id: Session['id']): Promise<EntityRecordResponse<Session>>;
 
     /**
-     * Revoke every session of the current identity except the one this request
-     * authenticates with ("log out my other devices").
+     * Revoke sessions in bulk.
+     *
+     * - No argument → revoke every session of the current identity except the
+     *   one this request authenticates with ("log out my other devices").
+     * - `{ userId }` → admin force-logout: revoke every session of the target
+     *   user on all devices (requires `SESSION_DELETE` + realm reach).
      */
-    deleteMany(): Promise<SessionDeleteManyResponse>;
+    deleteMany(options?: { userId?: string }): Promise<SessionDeleteManyResponse>;
 }

@@ -6,6 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import { BuiltInPolicyType } from '@authup/access';
 import type { Session, User } from '@authup/core-kit';
 import { IdentityType } from '@authup/core-kit';
 import type { ActorContext } from '@authup/server-kit';
@@ -194,6 +195,80 @@ describe('SessionService', () => {
         it('throws for an identity-less actor', async () => {
             const actor = makeActor({ allow: true, identity: false });
             await expect(service.deleteManyForActor(actor)).rejects.toBeDefined();
+        });
+    });
+
+    describe('deleteManyForOwner', () => {
+        const owner = { sub: otherUserId, subKind: IdentityType.USER };
+
+        it('revokes every session of the target subject', async () => {
+            const s1 = seedOther();
+            const s2 = seedOther();
+            seedOwn();
+
+            const actor = makeActor({ allow: true });
+            const { count } = await service.deleteManyForOwner(actor, owner);
+
+            expect(count).toEqual(2);
+            const removed = repository.removeCalls.map((s) => s.id);
+            expect(removed).toContain(s1.id);
+            expect(removed).toContain(s2.id);
+        });
+
+        it('revokes only sessions within the actor realm reach (drops cross-realm)', async () => {
+            const otherRealmId = randomUUID();
+            const inReach1 = seedOther();
+            const inReach2 = seedOther();
+            const outOfReach = repository.seed({
+                sub: otherUserId,
+                sub_kind: IdentityType.USER,
+                realm_id: otherRealmId,
+            });
+
+            // preEvaluate (gate) passes; per-session evaluate denies when the
+            // resource realm is outside the actor's own realm.
+            const evaluator = new FakePermissionEvaluator();
+            evaluator.setBehavior((call) => {
+                if (call.method !== 'evaluate') {
+                    return;
+                }
+                const resourceRealm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
+                    call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
+                    undefined;
+                if (resourceRealm !== realmId) {
+                    throw new Error('out of realm reach');
+                }
+            });
+            const actor: ActorContext = {
+                permissionEvaluator: evaluator,
+                identity: { type: IdentityType.USER, data: { id: userId, realm_id: realmId } as User },
+            };
+
+            const { count } = await service.deleteManyForOwner(actor, owner);
+
+            expect(count).toEqual(2);
+            const removed = repository.removeCalls.map((s) => s.id);
+            expect(removed).toContain(inReach1.id);
+            expect(removed).toContain(inReach2.id);
+            expect(removed).not.toContain(outOfReach.id);
+        });
+
+        it('throws for an actor without the delete permission', async () => {
+            seedOther();
+
+            const actor = makeActor({ allow: false });
+            await expect(service.deleteManyForOwner(actor, owner)).rejects.toBeDefined();
+            expect(repository.removeCalls).toHaveLength(0);
+        });
+
+        it('returns count 0 when the target has no sessions', async () => {
+            seedOwn();
+
+            const actor = makeActor({ allow: true });
+            const { count } = await service.deleteManyForOwner(actor, owner);
+
+            expect(count).toEqual(0);
+            expect(repository.removeCalls).toHaveLength(0);
         });
     });
 });
