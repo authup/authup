@@ -8,12 +8,19 @@
 import type { IOAuth2OpenIDTokenIssuer, IOAuth2TokenIssuer } from '../token/index.ts';
 import type { IOAuth2AuthorizationCodeIssuer } from './code/index.ts';
 import type { IIdentityResolver } from '../../identity/index.ts';
+import type { ISessionManager } from '../../authentication/index.ts';
 
 export type OAuth2AuthorizationManagerContext = {
     accessTokenIssuer: IOAuth2TokenIssuer,
     openIdTokenIssuer: IOAuth2OpenIDTokenIssuer,
     codeIssuer: IOAuth2AuthorizationCodeIssuer,
-    identityResolver: IIdentityResolver
+    identityResolver: IIdentityResolver,
+    sessionManager: ISessionManager,
+    /**
+     * Max age (seconds) of the authentication a `prompt=login` request accepts
+     * before forcing re-auth (config `promptLoginMaxAge`). Default 60.
+     */
+    promptLoginMaxAge?: number
 };
 
 export type OAuth2AuthorizationResult = {

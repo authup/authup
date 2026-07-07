@@ -12,12 +12,12 @@ import {
 import type { IdentityProvider, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { useValidup } from '@validup/vue';
-import { 
-    TranslatorTranslationActionKey, 
-    TranslatorTranslationClientKey, 
-    TranslatorTranslationEntityKey, 
-    TranslatorTranslationFieldKey, 
-    TranslatorTranslationNamespace, 
+import {
+    TranslatorTranslationActionKey,
+    TranslatorTranslationClientKey,
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import {
     injectHTTPClient,
@@ -80,6 +80,8 @@ export default defineComponent({
         // controls navigation policy through the props themselves.
         registerLink: { type: Object as PropType<LinkProperties> },
         passwordForgotLink: { type: Object as PropType<LinkProperties> },
+        // OIDC login_hint — pre-fills the identifier field.
+        usernameHint: { type: String },
     },
     emits: ['done', 'failed'],
     setup(props, { emit }) {
@@ -87,7 +89,7 @@ export default defineComponent({
         const store = injectStore();
 
         const form = reactive({
-            name: '',
+            name: props.usernameHint ?? '',
             password: '',
             realm_id: '',
         });
@@ -96,16 +98,16 @@ export default defineComponent({
 
         const translationsDefault = useTranslations([
             {
-                namespace: TranslatorTranslationNamespace.ACTION, 
-                key: TranslatorTranslationActionKey.LOGIN, 
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.LOGIN,
             },
             {
-                namespace: TranslatorTranslationNamespace.FIELD, 
-                key: TranslatorTranslationFieldKey.NAME, 
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.NAME,
             },
             {
-                namespace: TranslatorTranslationNamespace.FIELD, 
-                key: TranslatorTranslationFieldKey.PASSWORD, 
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.PASSWORD,
             },
             {
                 namespace: TranslatorTranslationNamespace.ENTITY,

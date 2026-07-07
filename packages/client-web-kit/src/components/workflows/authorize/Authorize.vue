@@ -24,9 +24,12 @@ import type { LinkProperties } from '@vuecs/link';
 import { injectHTTPClient, injectStore, useTranslation } from '../../../core';
 import AAuthShell from '../../utility/AAuthShell.vue';
 import LoginForm from '../login/LoginForm.vue';
+import AAccountPrompt from './AAccountPrompt.vue';
 import AuthorizeForm from './AuthorizeForm.vue';
 import AuthorizeRealmMismatch from './AuthorizeRealmMismatch.vue';
 import AuthorizeText from './AuthorizeText.vue';
+
+const OAUTH2_PROMPT_SELECT_ACCOUNT = 'select_account';
 
 const wrapChild = (child: VNodeChild) => h(
     AAuthShell,
@@ -38,6 +41,7 @@ type RealmSummary = Pick<Realm, 'id' | 'name' | 'display_name'>;
 
 export default defineComponent({
     components: {
+        AAccountPrompt,
         AuthorizeText,
         AuthorizeForm,
         AuthorizeRealmMismatch,
@@ -58,13 +62,21 @@ export default defineComponent({
     setup(props, { emit }) {
         const httpClient = injectHTTPClient();
         const store = injectStore();
-        const { loggedIn, realmId } = storeToRefs(store);
+        const {
+            loggedIn,
+            realmId,
+            user,
+        } = storeToRefs(store);
 
         // Local logout — the reactive loggedIn flip re-renders into the
         // realm-pinned login form below.
         const switchAccount = () => {
             store.logout();
         };
+
+        // prompt=select_account chooser: once the user picks "continue as",
+        // proceed past the chooser to consent for the rest of this render cycle.
+        const accountConfirmed = ref<boolean>(false);
 
         const error = ref<Error | null>(null);
         const client = ref<Client | null>(null);
@@ -116,11 +128,14 @@ export default defineComponent({
                         codeRequest: props.codeRequest,
                         registerLink: props.registerLink,
                         passwordForgotLink: props.passwordForgotLink,
+                        usernameHint: props.codeRequest?.login_hint,
                         onFailed: (message: string) => emit('failed', message),
                     }),
                     fallback: () => h(AuthorizeText, { message: loadingText.value }),
                 }));
             }
+
+            const prompts = (props.codeRequest?.prompt ?? '').split(' ').filter(Boolean);
 
             // Realm binding (UX only — the server POST /authorize gate is
             // authoritative). Wait until the store has resolved the signed-in
@@ -141,6 +156,19 @@ export default defineComponent({
                     redirectUri: props.codeRequest.redirect_uri,
                     state: props.codeRequest.state,
                     redirectUriVerified: props.redirectUriVerified,
+                    onSwitch: switchAccount,
+                }));
+            }
+
+            // prompt=select_account: offer "continue as X / use another account"
+            // instead of silently continuing the current session.
+            if (
+                prompts.includes(OAUTH2_PROMPT_SELECT_ACCOUNT) &&
+                !accountConfirmed.value
+            ) {
+                return wrapChild(h(AAccountPrompt, {
+                    identityName: user.value?.name ?? user.value?.display_name ?? '',
+                    onContinue: () => { accountConfirmed.value = true; },
                     onSwitch: switchAccount,
                 }));
             }

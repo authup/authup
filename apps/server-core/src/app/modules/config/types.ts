@@ -166,6 +166,14 @@ export type Config = {
      */
     tokenRefreshGracePeriod: number,
 
+    /**
+     * Max age (seconds) of the authentication that a `prompt=login` / `max_age`
+     * authorize request accepts before forcing re-authentication. A stateless
+     * approximation judged against the session's created_at.
+     * default: 60s
+     */
+    promptLoginMaxAge: number,
+
     // ----------------------------------------------------
 
     /**

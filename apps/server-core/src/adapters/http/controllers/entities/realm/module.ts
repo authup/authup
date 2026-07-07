@@ -17,7 +17,7 @@ import {
     DTags,
 } from '@routup/decorators';
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
-import { OAuth2AuthorizationResponseType } from '@authup/specs';
+import { OAuth2AuthorizationPrompt, OAuth2AuthorizationResponseType } from '@authup/specs';
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Repository } from 'typeorm';
@@ -114,6 +114,13 @@ export class RealmController {
                 OAuth2AuthorizationResponseType.NONE,
             ],
 
+            prompt_values_supported: [
+                OAuth2AuthorizationPrompt.NONE,
+                OAuth2AuthorizationPrompt.LOGIN,
+                OAuth2AuthorizationPrompt.CONSENT,
+                OAuth2AuthorizationPrompt.SELECT_ACCOUNT,
+            ],
+
             subject_types_supported: [
                 'public',
             ],
@@ -132,7 +139,7 @@ export class RealmController {
 
             introspection_endpoint: resolveURL(baseURL, 'token/introspect'),
 
-            revocation_endpoint: resolveURL(baseURL, 'token'),
+            revocation_endpoint: resolveURL(baseURL, 'token/revoke'),
 
             // -----------------------------------------------------------
 

@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { OAuth2AuthorizationPrompt } from '@authup/specs';
+
 const STORAGE_KEY = 'authup.authorization-request';
 
 /**
@@ -63,7 +65,15 @@ export type BuildAuthorizeURLContext = {
     scope?: string,
     state: string,
     codeChallenge: string,
-    codeChallengeMethod: string
+    codeChallengeMethod: string,
+    /**
+     * OIDC `prompt`. Defaults to `select_account` so a lingering session offers
+     * "continue as / use another account" instead of silently continuing. Pass
+     * `''` to opt out, or `none`/`login` for silent-auth / forced re-auth.
+     */
+    prompt?: string,
+    maxAge?: number,
+    loginHint?: string
 };
 
 export function buildAuthorizeURL(ctx: BuildAuthorizeURLContext): string {
@@ -80,6 +90,17 @@ export function buildAuthorizeURL(ctx: BuildAuthorizeURLContext): string {
     params.set('state', ctx.state);
     params.set('code_challenge', ctx.codeChallenge);
     params.set('code_challenge_method', ctx.codeChallengeMethod);
+
+    const prompt = ctx.prompt ?? OAuth2AuthorizationPrompt.SELECT_ACCOUNT;
+    if (prompt) {
+        params.set('prompt', prompt);
+    }
+    if (typeof ctx.maxAge !== 'undefined') {
+        params.set('max_age', String(ctx.maxAge));
+    }
+    if (ctx.loginHint) {
+        params.set('login_hint', ctx.loginHint);
+    }
 
     return `${base}/authorize?${params.toString()}`;
 }

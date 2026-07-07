@@ -1105,6 +1105,43 @@ mechanism. `store.logout()` stays local-only (token/cookie cleanup); it does not
 call `DELETE /sessions/@me` (that endpoint remains the session-management API for
 revoking a specific session from the sessions UI).
 
+### OIDC prompt surface & id_token claims (plan 041 PR B)
+
+`/authorize` accepts the OIDC Core §3.1.2.1 params `prompt`
+(space-delimited `none|login|consent|select_account`; unknown tokens
+**ignored** for forward-compat; `none` combined with any other value →
+`invalid_request`), `max_age` (coerced non-negative int), and `login_hint`
+(canonicalized `trim().toLowerCase()`). Since authup's `/authorize` is a
+**hosted** login page, the ladder in the kit `Authorize.vue` renders the
+behavior for every RP (kit or not): `prompt=select_account` shows an
+`AAccountPrompt` "continue as / use another account" chooser instead of silently
+continuing; `login_hint` pre-fills the identifier; `prompt=consent` suppresses
+the `built_in` auto-consent. `buildAuthorizeURL` (kit) **defaults
+`prompt=select_account`** (overridable) so kit apps inherit account-switching.
+
+`prompt=login` / `max_age` freshness is enforced **server-side** in
+`OAuth2Authorization.authorize()` (the authoritative backstop; the hosted UI is
+convenience): the authentication time is the backing session's `created_at`
+(**never** `refreshed_at` — a token refresh must not reset it; a session-less
+Basic-auth authorize counts as "now"), and a violation throws
+`login_required`. The window is `config.promptLoginMaxAge`
+(`PROMPT_LOGIN_MAX_AGE`, default 60s) — a documented stateless
+approximation, wired via the `AuthorizeController` → `HTTPOAuth2Authorizer` ctx
+alongside the injected `ISessionManager`.
+
+**id_token claims (bug fix + addition):** `auth_time` is now the session's
+creation instant threaded through `payloadBaseNormalized`
+(previously — wrongly — the token issuance time == `iat`), and a `sid` claim
+(= `session_id`) is added (prerequisite for RP-initiated / back-channel logout).
+Both are `OAuth2TokenPayload` fields. The id_token is minted at authorize time
+from `options.sessionId`; the IdP-callback (session-less) flow carries no `sid`,
+and the #3191 session-reuse-vs-fallback path can make `sid` reference the bearer
+session rather than a freshly-created fallback one (documented residual).
+
+**Discovery** (realm-scoped `.well-known/openid-configuration`) advertises
+`prompt_values_supported` and **fixes** `revocation_endpoint` from `…/token` to
+`…/token/revoke` (RFC 7009 — an RFC 7009 POST to `/token` never worked).
+
 ## OAuth2 Token Endpoint Authentication
 
 The `/token` endpoint authenticates the calling client according to RFC 6749. Confidential clients MUST present a `client_secret`; public clients identify with `client_id` only.

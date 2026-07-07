@@ -35,6 +35,18 @@ export type OAuth2TokenPayload = JWTClaims & {
     session_id?: string,
 
     /**
+     * OIDC session identifier claim (id_token) — mirrors session_id. Enables
+     * RP-initiated / back-channel logout to target the session.
+     */
+    sid?: string,
+
+    /**
+     * OIDC id_token claim: time of the End-User authentication (epoch seconds),
+     * i.e. the session's creation time — NOT the token issuance time.
+     */
+    auth_time?: number,
+
+    /**
      * Token type
      */
     kind?: `${OAuth2TokenKind}`,

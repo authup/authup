@@ -109,6 +109,10 @@ export enum TranslatorTranslationClientKey {
     REALM_MISMATCH_TEXT = 'realmMismatchText',
     SIGN_IN_TO_REALM = 'signInToRealm',
     RETURN_TO_APP = 'returnToApp',
+
+    SELECT_ACCOUNT_TITLE = 'selectAccountTitle',
+    CONTINUE_AS = 'continueAs',
+    USE_ANOTHER_ACCOUNT = 'useAnotherAccount',
 }
 
 /**

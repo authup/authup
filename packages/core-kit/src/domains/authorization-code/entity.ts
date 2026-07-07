@@ -36,6 +36,13 @@ export interface OAuth2AuthorizationCode {
      */
     session_id?: string | null,
 
+    /**
+     * Epoch-seconds authentication time (the session's creation time), stamped
+     * when a session backs the authorize request. Feeds the id_token `auth_time`
+     * claim; absent for session-less flows.
+     */
+    auth_time?: number | null,
+
     sub: string,
 
     sub_kind: `${OAuth2SubKind}`,
@@ -55,4 +62,16 @@ export type OAuth2AuthorizationCodeRequest = {
     nonce?: string,
     code_challenge?: string,
     code_challenge_method?: string,
+    /**
+     * OIDC Core §3.1.2.1: space-delimited list of `none|login|consent|select_account`.
+     */
+    prompt?: string,
+    /**
+     * OIDC Core §3.1.2.1: max acceptable age (seconds) of the authentication.
+     */
+    max_age?: number | string,
+    /**
+     * OIDC Core §3.1.2.1: login hint pre-filling the sign-in identifier.
+     */
+    login_hint?: string,
 };

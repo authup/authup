@@ -111,8 +111,8 @@ export class IdentityProviderController {
         @DContext() event: IAppEvent,
     ): Promise<EntityCollectionResponse<IdentityProvider>> {
         const {
-            data, 
-            meta, 
+            data,
+            meta,
         } = await this.repository.findMany(useRequestQuery(event));
 
         try {
@@ -338,8 +338,11 @@ export class IdentityProviderController {
             const url = new URL(resolveURL(this.options.baseURL, 'authorize'));
             for (const codeRequestKey_ of codeRequestKeys) {
                 const codeRequestKey = codeRequestKey_ as keyof OAuth2AuthorizationCodeRequest;
-                if (data.codeRequest[codeRequestKey]) {
-                    url.searchParams.set(codeRequestKey, data.codeRequest[codeRequestKey]);
+                const codeRequestValue = data.codeRequest[codeRequestKey];
+                // Preserve meaningful falsy values (e.g. max_age=0, which OIDC
+                // treats as prompt=login) — only skip absent ones.
+                if (typeof codeRequestValue !== 'undefined' && codeRequestValue !== null) {
+                    url.searchParams.set(codeRequestKey, String(codeRequestValue));
                 }
             }
 

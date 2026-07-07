@@ -542,6 +542,60 @@ describe('grant-authorize', () => {
         );
     });
 
+    it('should include sid and a session-based auth_time in the id_token', async () => {
+        const realm = await suite.client.realm.create(createFakeRealm());
+        const client = await suite.client
+            .client
+            .create(createFakeClient({
+                realm_id: realm.id,
+                is_confidential: false,
+                secret: null,
+            }));
+        const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        await suite.client.clientScope.create({
+            scope_id: scope.id,
+            client_id: client.id,
+        });
+
+        // login creates a session — its id + creation time back the id_token claims
+        const userClient = await loginAsRealmUser(realm);
+        const codeVerifier = generateOAuth2CodeVerifier();
+        const codeChallenge = await buildOAuth2CodeChallenge(codeVerifier);
+
+        const response = await userClient
+            .authorize
+            .confirm({
+                response_type: OAuth2AuthorizationResponseType.CODE,
+                client_id: client.id,
+                redirect_uri: 'https://example.com/redirect',
+                scope: `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}`,
+                code_challenge: codeChallenge,
+                code_challenge_method: OAuth2AuthorizationCodeChallengeMethod.SHA_256,
+                state: generateOAuth2CodeVerifier(),
+            });
+
+        const code = new URL(response.url).searchParams.get('code')!;
+        const tokenResponse = await suite.client
+            .token
+            .createWithAuthorizationCode({
+                client_id: client.name,
+                redirect_uri: 'https://example.com/redirect',
+                code,
+                code_verifier: codeVerifier,
+                realm_id: realm.id,
+            });
+
+        expect(tokenResponse.id_token).toBeDefined();
+
+        const payload = JSON.parse(
+            Buffer.from(tokenResponse.id_token!.split('.')[1], 'base64url').toString('utf8'),
+        ) as { sid?: unknown, auth_time?: unknown };
+
+        expect(typeof payload.sid).toEqual('string');
+        expect((payload.sid as string).length).toBeGreaterThan(0);
+        expect(typeof payload.auth_time).toEqual('number');
+    });
+
     it('should reject /authorize when the identity realm differs from the client realm', async () => {
         // scenario 1: an identity logged in to realm A (here the master-realm
         // admin) authorizing against a client in realm B must be rejected with
