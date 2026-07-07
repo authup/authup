@@ -20,6 +20,7 @@ import type { IOAuth2AuthorizationCodeIssuer } from './code/index.ts';
 import { buildOAuth2TokenHash } from './helpers.ts';
 import type {
     OAuth2AuthorizationManagerContext,
+    OAuth2AuthorizationOptions,
     OAuth2AuthorizationResult,
 } from './types.ts';
 import type { IIdentityResolver } from '../../identity/index.ts';
@@ -45,10 +46,12 @@ export class OAuth2Authorization {
      *
      * @param data
      * @param identity
+     * @param options
      */
     async authorize(
         data: OAuth2AuthorizationCodeRequest,
         identity: Identity,
+        options: OAuth2AuthorizationOptions = {},
     ) : Promise<OAuth2AuthorizationResult> {
         const availableResponseTypes : string[] = Object.values(OAuth2AuthorizationResponseType);
 
@@ -106,6 +109,7 @@ export class OAuth2Authorization {
             codeEntity = await this.codeIssuer.issue(
                 data,
                 identity,
+                { sessionId: options.sessionId },
             );
 
             output.authorizationCode = codeEntity.id;

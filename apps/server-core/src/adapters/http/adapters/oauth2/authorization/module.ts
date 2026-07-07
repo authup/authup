@@ -9,7 +9,7 @@ import type { IAppEvent } from 'routup';
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import type { IOAuth2AuthorizationCodeRequestVerifier, OAuth2AuthorizationResult } from '../../../../../core/index.ts';
 import { OAuth2Authorization, OAuth2AuthorizationCodeRequestValidator } from '../../../../../core/index.ts';
-import { readFromLocations, useRequestIdentityOrFail } from '../../../request/index.ts';
+import { readFromLocations, useRequestIdentityOrFail, useRequestSessionId } from '../../../request/index.ts';
 import type { HTTPOAuth2AuthorizationManagerContext } from './types.ts';
 
 export class HTTPOAuth2Authorizer extends OAuth2Authorization {
@@ -32,7 +32,7 @@ export class HTTPOAuth2Authorizer extends OAuth2Authorization {
 
         const identity = useRequestIdentityOrFail(event);
 
-        return this.authorize(data, identity.raw);
+        return this.authorize(data, identity.raw, { sessionId: useRequestSessionId(event) });
     }
 
     /**

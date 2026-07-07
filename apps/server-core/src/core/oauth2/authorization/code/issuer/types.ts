@@ -14,6 +14,12 @@ export type OAuth2AuthorizationCodeIssuerOptions = {
     maxAge?: number,
 
     idToken?: string,
+
+    /**
+     * The id of the session the authorizing bearer belongs to, persisted on the
+     * authorization code so the token exchange can reuse it.
+     */
+    sessionId?: string | null,
 };
 
 export interface IOAuth2AuthorizationCodeIssuer {

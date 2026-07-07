@@ -24,3 +24,12 @@ export type OAuth2AuthorizationResult = {
     redirectUri: string,
     state?: string
 };
+
+export type OAuth2AuthorizationOptions = {
+    /**
+     * The id of the session the authorizing bearer belongs to. Persisted on the
+     * issued authorization code so the token exchange can reuse that session
+     * instead of creating a second one.
+     */
+    sessionId?: string | null,
+};

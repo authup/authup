@@ -1267,6 +1267,38 @@ straight to TypeORM. **`SessionRepository.findMany` force-selects `realm_id` /
 could strip `realm_id` and neutralize the realm_scope reach factor (cross-realm
 leak). `client-web` UI is a follow-up (PR G2).
 
+### Session continuity: one session per interactive login
+
+An interactive client-web login used to create **two** `auth_sessions` rows: the
+SSR `/authorize` page password-grants a (client-less) bearer session purely to
+authenticate `POST /authorize`, then `/login/callback` exchanges the auth code —
+whose `authorization_code` grant `create()`d a *second* session. The bearer
+session was then abandoned but lingered until expiry (and showed up in the
+sessions list).
+
+The authorization_code grant now **reuses** that bearer session instead of
+minting a second one. The mechanism threads the bearer's session id through the
+auth-code blob:
+
+- `OAuth2AuthorizationCode` carries an optional `session_id` (cache-backed blob —
+  Redis, **no migration**). `HTTPOAuth2Authorizer.authorizeWithRequest` reads
+  `useRequestSessionId(event)` (the id the authorization middleware stashed from
+  the authenticated bearer — server-derived, never client input) and threads it
+  `OAuth2Authorization.authorize(data, identity, { sessionId })` →
+  `OAuth2AuthorizationCodeIssuer.issue(..., { sessionId })` → `entity.session_id`.
+- `OAuth2AuthorizeGrant.resolveSession` reuses the referenced session iff it
+  still exists **and** matches the code's `sub` / `sub_kind` / `realm_id`
+  (defense in depth); it stamps the authorizing `client_id` onto the row and
+  `sessionManager.refresh()`es it. Any mismatch, or a **session-less** authorize
+  flow (external-IdP callback — `IdentityProviderController` issues its code with
+  no `sessionId`; non-interactive clients), falls back to `sessionManager.create()`,
+  preserving prior behavior.
+
+Covered by `test/unit/core/oauth2/grant-types/authorize.spec.ts` (reuse vs.
+fallback branches, incl. the sub/realm-mismatch fail-safes) and the end-to-end
+`test/unit/http/controllers/workflows/token/grant-authorize-session.spec.ts`
+(login → authorize → exchange asserts a single session survives).
+
 ## Provisioning Permissions With Policies
 
 `PermissionProvisioningEntity.relations.policies` is a list of policy names to attach to the permission via the `auth_permission_policies` junction. Used by the default provisioning source to wire `system.default` (security baseline) plus the optional ATTRIBUTE_NAMES allowlist:
