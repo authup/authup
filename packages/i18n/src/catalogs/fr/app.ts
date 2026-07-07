@@ -48,4 +48,9 @@ export const TranslatorTranslationAppFrench : NamespaceTranslations<`${Translato
 
     [TranslatorTranslationAppKey.REMOVE_CONFIRM_TITLE]: 'Confirmer le retrait',
     [TranslatorTranslationAppKey.REMOVE_CONFIRM_DESCRIPTION]: 'Voulez-vous vraiment retirer cette attribution ? Vous pourrez la réattribuer à tout moment.',
+
+    [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS]: 'Déconnecter les autres appareils',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_CONFIRM_TITLE]: 'Déconnecter les autres appareils ?',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_CONFIRM_DESCRIPTION]: 'Cela déconnecte toutes vos autres sessions. Votre session actuelle reste active.',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_SUCCESS]: '{{amount}} autre(s) session(s) déconnectée(s).',
 };

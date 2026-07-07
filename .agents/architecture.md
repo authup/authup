@@ -1267,6 +1267,21 @@ straight to TypeORM. **`SessionRepository.findMany` force-selects `realm_id` /
 could strip `realm_id` and neutralize the realm_scope reach factor (cross-realm
 leak). `client-web` UI is a follow-up (PR G2).
 
+**UI (PR G2):** two `<VCTable>` pages backed by the kit `<ASessions>` collection —
+`pages/settings/index/sessions.vue` (the actor's **own** sessions, `filter:
+{ user_id }`) and `pages/users/[id]/sessions.vue` (an admin viewing a user's
+sessions). The settings page carries a **"log out other devices"** button
+(`authupApp` `SESSION_REVOKE_OTHERS*` keys) that confirms via `useAlertDialog`
+then calls `client.session.deleteMany()` (`DELETE /sessions` — revoke-all-but-
+current), toasts the returned `count`, and reloads the collection; it disables
+when `total <= 1` (only the current session). The admin sessions **tab is gated
+on `SESSION_READ`** in `pages/users/[id].vue` (hidden otherwise — the server
+force-scopes a reader lacking it to their own sessions, so the tab would render
+empty/misleading), and the child route is defense-in-depth-protected via
+`definePageMeta({ [LayoutKey.REQUIRED_PERMISSIONS]: [SESSION_READ] })` (the
+routing interceptor checks every `route.matched` record, so the child meta is
+enforced on direct navigation).
+
 ### Session continuity: one session per interactive login
 
 An interactive client-web login used to create **two** `auth_sessions` rows: the

@@ -48,4 +48,9 @@ export const TranslatorTranslationAppEnglish : NamespaceTranslations<`${Translat
 
     [TranslatorTranslationAppKey.REMOVE_CONFIRM_TITLE]: 'Confirm removal',
     [TranslatorTranslationAppKey.REMOVE_CONFIRM_DESCRIPTION]: 'Are you sure you want to remove this assignment? You can re-assign it at any time.',
+
+    [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS]: 'Log out other devices',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_CONFIRM_TITLE]: 'Log out other devices?',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_CONFIRM_DESCRIPTION]: 'This signs out all your other sessions. Your current session stays active.',
+    [TranslatorTranslationAppKey.SESSION_REVOKE_OTHERS_SUCCESS]: 'Logged out {{amount}} other session(s).',
 };
