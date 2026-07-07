@@ -93,6 +93,25 @@ describe('OAuth2AuthorizationCodeVerifier', () => {
             ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_GRANT_INVALID }));
         });
 
+        it('should verify when realmId matches the code realm', async () => {
+            const code = repository.seed({ client_id: 'client-1', realm_id: 'realm-a' });
+            const result = await verifier.verify(code.id, { clientId: 'client-1', realmId: 'realm-a' });
+            expect(result.id).toBe(code.id);
+        });
+
+        it('should throw grantInvalid when realmId differs from the code realm', async () => {
+            const code = repository.seed({ client_id: 'client-1', realm_id: 'realm-a' });
+            await expect(
+                verifier.verify(code.id, { clientId: 'client-1', realmId: 'realm-b' }),
+            ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_GRANT_INVALID }));
+        });
+
+        it('should ignore realmId when the code has no realm bound', async () => {
+            const code = repository.seed({ client_id: 'client-1' });
+            const result = await verifier.verify(code.id, { clientId: 'client-1', realmId: 'realm-b' });
+            expect(result.id).toBe(code.id);
+        });
+
         it('should throw grantInvalid when public client omits PKCE', async () => {
             const code = repository.seed({ client_id: 'client-1' });
             await expect(

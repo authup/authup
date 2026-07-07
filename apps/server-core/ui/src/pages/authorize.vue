@@ -6,13 +6,20 @@
   -->
 <script lang="ts">
 import { AAuthorize } from '@authup/client-web-kit';
-import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
+import type {
+    Client,
+    OAuth2AuthorizationCodeRequest,
+    Realm,
+    Scope,
+} from '@authup/core-kit';
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import type { LinkProperties } from '@vuecs/link';
 import { useToast } from '@vuecs/overlays';
 import { computed, defineComponent } from 'vue';
 import { useBasePath } from '../base-path';
 import { injectPayload } from '../di';
+
+type RealmSummary = Pick<Realm, 'id' | 'name' | 'display_name'>;
 
 export default defineComponent({
     components: { AAuthorize },
@@ -22,6 +29,8 @@ export default defineComponent({
             error: Error | undefined,
             client: Client | undefined,
             scopes: Scope[] | undefined,
+            realm: RealmSummary | undefined,
+            redirectUriVerified: boolean | undefined,
             features: StatusResponseFeatures | undefined,
             requestPath: string | undefined
         }>();
@@ -76,6 +85,8 @@ export default defineComponent({
         :client="data.client"
         :scopes="data.scopes"
         :error="data.error"
+        :realm="data.realm"
+        :redirect-uri-verified="data.redirectUriVerified"
         :register-link="registerLink"
         :password-forgot-link="passwordForgotLink"
         @failed="handleFailed"

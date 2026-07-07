@@ -14,7 +14,12 @@ import {
 import { URL } from 'node:url';
 
 import type { IAppEvent } from 'routup';
-import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
+import type {
+    Client,
+    OAuth2AuthorizationCodeRequest,
+    Realm,
+    Scope,
+} from '@authup/core-kit';
 import { ForceUserLoggedInMiddleware } from '../../../middleware/index.ts';
 import { HTTPOAuth2Authorizer } from '../../../adapters/index.ts';
 import { renderUIPage } from '../../../ui/index.ts';
@@ -23,6 +28,8 @@ import type { IOAuth2AuthorizationCodeRequestVerifier } from '../../../../../cor
 import { OAuth2AuthorizationCodeRequestValidator } from '../../../../../core/index.ts';
 import type { AuthorizeControllerContext, AuthorizeControllerOptions } from './types.ts';
 import { sanitizeError } from '../../../../../utils/index.ts';
+
+type RealmSummary = Pick<Realm, 'id' | 'name' | 'display_name'>;
 
 @DController('/authorize')
 export class AuthorizeController {
@@ -88,6 +95,15 @@ export class AuthorizeController {
         let client : Client | undefined;
         let scopes : Scope[] | undefined;
 
+        // Target realm summary (the client's realm) — the UI names it in the
+        // realm-mismatch notice. codeRequest.realm_id is only the id.
+        let realm : RealmSummary | undefined;
+
+        // Whether the request redirect_uri matched a registered client pattern —
+        // the UI must not offer an automatic "return to application" redirect to
+        // an unverified (pattern-less-client) redirect_uri.
+        let redirectUriVerified = false;
+
         let error : Error | undefined;
 
         try {
@@ -97,6 +113,15 @@ export class AuthorizeController {
             const result = await this.codeRequestVerifier.verify(data);
             client = result.client;
             scopes = result.scopes;
+            redirectUriVerified = result.redirectUriVerified;
+
+            if (client.realm) {
+                realm = {
+                    id: client.realm.id,
+                    name: client.realm.name,
+                    display_name: client.realm.display_name,
+                };
+            }
 
             codeRequest = result.data;
         } catch (e) {
@@ -121,6 +146,8 @@ export class AuthorizeController {
                     error,
                     client,
                     scopes,
+                    realm,
+                    redirectUriVerified,
                     features: this.options.features,
                     requestPath: `${requestURL.pathname}${requestURL.search}`,
                 },

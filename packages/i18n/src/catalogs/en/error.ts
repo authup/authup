@@ -42,6 +42,7 @@ export const TranslatorTranslationErrorEnglish : NamespaceTranslations<`${ErrorC
     [ErrorCode.OAUTH_GRANT_INVALID]: 'The authorization grant is invalid.',
     [ErrorCode.OAUTH_GRANT_TYPE_UNSUPPORTED]: 'The grant type is not supported.',
     [ErrorCode.OAUTH_REQUEST_INVALID]: 'The request is invalid.',
+    [ErrorCode.OAUTH_LOGIN_REQUIRED]: 'You must sign in to continue.',
     [ErrorCode.OAUTH_RESPONSE_TYPE_UNSUPPORTED]: 'The response type is not supported.',
     [ErrorCode.OAUTH_SCOPE_INVALID]: 'The requested scope is invalid.',
     [ErrorCode.OAUTH_SCOPE_INSUFFICIENT]: 'The granted scope is insufficient for this action.',

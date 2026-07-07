@@ -104,6 +104,11 @@ export enum TranslatorTranslationClientKey {
     ACCOUNT_ACTIVATED = 'accountActivated',
     PASSWORD_RESET_DONE = 'passwordResetDone',
     WORKFLOW_DISABLED = 'workflowDisabled',
+
+    REALM_MISMATCH_TITLE = 'realmMismatchTitle',
+    REALM_MISMATCH_TEXT = 'realmMismatchText',
+    SIGN_IN_TO_REALM = 'signInToRealm',
+    RETURN_TO_APP = 'returnToApp',
 }
 
 /**

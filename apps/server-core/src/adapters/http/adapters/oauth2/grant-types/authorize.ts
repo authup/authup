@@ -56,6 +56,7 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
             codeVerifier,
             clientId: client.id,
             clientIsPublic: !client.is_confidential,
+            realmId: client.realm_id,
         });
 
         return this.runWith(entity, {

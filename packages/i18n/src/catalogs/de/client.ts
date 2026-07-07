@@ -73,4 +73,9 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.SELECTION_UPDATING]: 'Auswahl wird aktualisiert',
     [TranslatorTranslationClientKey.SELECTION_REMOVE]: 'Aus der Auswahl entfernen',
     [TranslatorTranslationClientKey.SELECTION_ADD]: 'Zur Auswahl hinzufügen',
+
+    [TranslatorTranslationClientKey.REALM_MISMATCH_TITLE]: 'Mit einem anderen Konto anmelden',
+    [TranslatorTranslationClientKey.REALM_MISMATCH_TEXT]: '{{client}} gehört zum Realm {{realm}}, aber Sie sind in einem anderen Realm angemeldet. Melden Sie sich mit einem {{realm}}-Konto an, um fortzufahren.',
+    [TranslatorTranslationClientKey.SIGN_IN_TO_REALM]: 'Bei {{realm}} anmelden',
+    [TranslatorTranslationClientKey.RETURN_TO_APP]: 'Zurück zur Anwendung',
 };

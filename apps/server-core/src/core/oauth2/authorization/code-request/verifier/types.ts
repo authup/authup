@@ -18,7 +18,15 @@ export type OAuth2AuthorizationCodeRequestVerificationResult = {
     data: OAuth2AuthorizationCodeRequest,
 
     client: Client,
-    scopes: Scope[]
+    scopes: Scope[],
+
+    /**
+     * True when the request `redirect_uri` was matched against a registered,
+     * non-null client pattern. A pattern-less (null `redirect_uri`) client lets
+     * any supplied `redirect_uri` through unverified — consumers must NOT
+     * automatically redirect to it (open-redirect guard).
+     */
+    redirectUriVerified: boolean
 };
 
 export interface IOAuth2AuthorizationCodeRequestVerifier {

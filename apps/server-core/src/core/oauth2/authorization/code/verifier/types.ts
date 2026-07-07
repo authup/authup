@@ -12,6 +12,7 @@ export type IOAuth2AuthorizationCodeVerifyOptions = {
     codeVerifier?: string,
     clientId?: string,
     clientIsPublic?: boolean,
+    realmId?: string,
 };
 
 export interface IOAuth2AuthorizationCodeVerifier {

@@ -42,6 +42,7 @@ export const TranslatorTranslationErrorFrench : NamespaceTranslations<`${ErrorCo
     [ErrorCode.OAUTH_GRANT_INVALID]: 'L\'autorisation d\'accès est invalide.',
     [ErrorCode.OAUTH_GRANT_TYPE_UNSUPPORTED]: 'Le type d\'autorisation n\'est pas pris en charge.',
     [ErrorCode.OAUTH_REQUEST_INVALID]: 'La requête est invalide.',
+    [ErrorCode.OAUTH_LOGIN_REQUIRED]: 'Vous devez vous connecter pour continuer.',
     [ErrorCode.OAUTH_RESPONSE_TYPE_UNSUPPORTED]: 'Le type de réponse n\'est pas pris en charge.',
     [ErrorCode.OAUTH_SCOPE_INVALID]: 'La portée demandée est invalide.',
     [ErrorCode.OAUTH_SCOPE_INSUFFICIENT]: 'La portée accordée est insuffisante pour cette action.',

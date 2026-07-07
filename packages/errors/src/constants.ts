@@ -48,6 +48,7 @@ export enum ErrorCode {
     OAUTH_GRANT_INVALID = 'invalid_grant',
     OAUTH_GRANT_TYPE_UNSUPPORTED = 'unsupported_token_grant_type',
     OAUTH_REQUEST_INVALID = 'invalid_request',
+    OAUTH_LOGIN_REQUIRED = 'login_required',
     OAUTH_RESPONSE_TYPE_UNSUPPORTED = 'unsupported_response_type',
     OAUTH_SCOPE_INVALID = 'invalid_scope',
     OAUTH_SCOPE_INSUFFICIENT = 'insufficient_scope',

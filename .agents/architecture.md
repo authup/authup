@@ -1064,6 +1064,47 @@ Two-layer rejection:
 
 `AttributeNamesPolicyValidator` reads the policy's `names` field from extra-attributes (`policy_attributes`). For top-level policies bound directly to permissions, the policy is loaded as the root of a closure-table descendants tree. `EATreeRepository.findDescendantsTree()` calls `extendOneWithEA(entity)` after building the children — without that, the root entity's EA fields stay unloaded and the validator fails with "value_invalid". Both Layer 1 (`PermissionDatabaseProvider`) and Layer 2 (`bindings.ts`) depend on this fix.
 
+## Authorize Realm Binding (plan 041)
+
+The authenticated identity's realm MUST equal the client's realm — an identity
+cannot authorize (or redeem a code / refresh a token) against a client in
+another realm. Without this an identity with a lingering session for realm A,
+redirected to `/authorize` for realm B's `web` client (a downstream app's realm
+picker), silently minted realm-A tokens against realm B's client (confused
+deputy; the artifact carried realm-A `iss`/signing-key + realm-B `aud`).
+Enforced server-side at **three** points — the kit UI (realm-mismatch card in
+`Authorize.vue`) is UX only:
+
+1. **`POST /authorize` issuance** — `OAuth2Authorization.authorize()` throws
+   `OAuth2LoginRequiredError` (`ErrorCode.OAUTH_LOGIN_REQUIRED` / OIDC
+   `login_required`, HTTP 400, **no identity data in the body** — no
+   realm-enumeration oracle) when `identity.data.realm.id !== data.realm_id`
+   (the client realm the code-request verifier stamped).
+2. **`/token` code redemption** — the code verifier's `realmId` option (fed
+   `client.realm_id` by the HTTP authorize grant) rejects
+   `code.realm_id !== realmId` with `invalid_grant`. Covers codes minted outside
+   `authorize()` (identity-provider callback) and in-flight pre-deploy codes.
+3. **`/token` refresh parity** — a **public** client refreshing a token whose
+   `realm_id` differs from the client's realm → `invalid_grant` (kills legacy
+   cross-realm public-`web`-client refresh tokens). Confidential clients are
+   exempt — the secret proves identity, and the documented cross-realm password
+   grant (UUID user + master client) relies on that exemption.
+
+Deliberate breaking change: master-realm admins can no longer ride the built-in
+`web` client into other realms' apps. A name-identified client at `/authorize`
+now also requires a realm hint (`invalid_request` otherwise — every realm has a
+`web` client, so a bare name is ambiguous). All SSR auth pages emit
+`Content-Security-Policy: frame-ancestors 'none'` + `X-Frame-Options: DENY`
+(clickjacking guard — the pages hydrate first-party session state, so click-
+gating is only a defense when framing is denied).
+
+Ending a lingering authup session on a downstream app's logout is **not** part
+of this gate — it belongs to standard OIDC RP-Initiated Logout
+(`end_session_endpoint`, plan 041 PR C), so kit and non-kit RPs share one
+mechanism. `store.logout()` stays local-only (token/cookie cleanup); it does not
+call `DELETE /sessions/@me` (that endpoint remains the session-management API for
+revoking a specific session from the sessions UI).
+
 ## OAuth2 Token Endpoint Authentication
 
 The `/token` endpoint authenticates the calling client according to RFC 6749. Confidential clients MUST present a `client_secret`; public clients identify with `client_id` only.

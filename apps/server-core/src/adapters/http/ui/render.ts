@@ -101,6 +101,15 @@ export async function renderUIPage(event: IAppEvent, ctx: UIRenderContext): Prom
     body = rebasePublicAssetURLs(body, getURLBasePath(ctx.payload.config.baseURL));
 
     event.response.headers.set('content-type', 'text/html; charset=utf-8');
+
+    // Clickjacking guard: the SSR auth pages (login, consent, realm-mismatch,
+    // logout) mutate state behind explicit clicks and hydrate the logged-in
+    // session from first-party cookies. Framing them would make click-gating
+    // defeatable via overlay attacks, so deny embedding entirely. (Iframe-based
+    // silent renew is therefore unsupported — auth state is JS-readable anyway.)
+    event.response.headers.set('content-security-policy', "frame-ancestors 'none'");
+    event.response.headers.set('x-frame-options', 'DENY');
+
     return body;
 }
 

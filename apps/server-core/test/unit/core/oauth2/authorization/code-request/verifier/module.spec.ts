@@ -60,12 +60,26 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
         });
 
         it('should throw clientInvalid when client cannot be found', async () => {
+            // a UUID that resolves to nothing — a name would first trip the
+            // realm-hint requirement below
             await expect(
                 verifier.verify({
-                    client_id: 'unknown',
+                    client_id: randomUUID(),
                     response_type: OAuth2AuthorizationResponseType.CODE,
                 }),
             ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_CLIENT_INVALID }));
+        });
+
+        it('should throw requestInvalid when a name-identified client has no realm hint', async () => {
+            // every realm has a built-in `web` client, so a name without a realm
+            // is ambiguous — reject deterministically instead of matching an
+            // arbitrary realm's client.
+            await expect(
+                verifier.verify({
+                    client_id: 'web',
+                    response_type: OAuth2AuthorizationResponseType.CODE,
+                }),
+            ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_REQUEST_INVALID }));
         });
 
         it('should throw clientInactive when the client is inactive', async () => {

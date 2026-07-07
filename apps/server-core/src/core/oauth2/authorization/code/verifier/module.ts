@@ -35,6 +35,15 @@ export class OAuth2AuthorizationCodeVerifier implements IOAuth2AuthorizationCode
             }
         }
 
+        // Realm binding (defense in depth): the code's realm (the authorizing
+        // identity's realm) must match the authenticated client's realm. Blocks
+        // redeeming a realm-A identity's code against a realm-B client — covers
+        // codes minted outside OAuth2Authorization.authorize() (identity-provider
+        // callback) and any in-flight codes issued before the authorize-side gate.
+        if (options.realmId && entity.realm_id && entity.realm_id !== options.realmId) {
+            throw OAuth2GrantError.invalid();
+        }
+
         if (entity.redirect_uri) {
             if (!options.redirectUri || entity.redirect_uri !== options.redirectUri) {
                 throw OAuth2GrantError.redirectUriMismatch();

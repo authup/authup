@@ -11,8 +11,9 @@ import {
     expect,
     it,
 } from 'vitest';
-import type { Client, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import type { Client, OAuth2AuthorizationCodeRequest, Realm } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
+import { Client as HTTPClient } from '@authup/core-http-kit';
 import {
     OAuth2AuthorizationCodeChallengeMethod,
     OAuth2AuthorizationResponseType,
@@ -23,6 +24,7 @@ import { buildOAuth2CodeChallenge, generateOAuth2CodeVerifier } from '../../../.
 import {
     createFakeClient,
     createFakeRealm,
+    createFakeUser,
     expectClientError,
     httpRequest,
 } from '../../../../../utils';
@@ -71,6 +73,28 @@ describe('grant-authorize', () => {
     afterAll(async () => {
         await suite.teardown();
     });
+
+    // Authorize now requires the acting user's realm to match the client realm,
+    // so a code for a non-master-realm client must be issued by a user in that
+    // realm (not the master admin). Creates a realm user, logs in, and returns
+    // an HTTP client bound to that user's bearer token.
+    const loginAsRealmUser = async (realm: Realm): Promise<HTTPClient> => {
+        const password = generateOAuth2CodeVerifier();
+        const user = await suite.client.user.create(createFakeUser({
+            realm_id: realm.id,
+            password,
+        }));
+
+        const login = await suite.client.token.createWithPassword({
+            username: user.name,
+            password,
+            realm_id: realm.id,
+        });
+
+        const userClient = new HTTPClient({ baseURL: suite.baseURL });
+        userClient.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
+        return userClient;
+    };
 
     it('should build oauth2 code challenge', async () => {
         const codeVerifier = 'Li5PBcECIXmMuuDsWHjexHnr6LNK6BWKKkcuJaAjeSkeux7p';
@@ -462,8 +486,9 @@ describe('grant-authorize', () => {
             client_id: client.id,
         });
 
+        const userClient = await loginAsRealmUser(realm);
         const issueCode = async () => {
-            const response = await suite.client
+            const response = await userClient
                 .authorize
                 .confirm({
                     response_type: OAuth2AuthorizationResponseType.CODE,
@@ -517,6 +542,67 @@ describe('grant-authorize', () => {
         );
     });
 
+    it('should reject /authorize when the identity realm differs from the client realm', async () => {
+        // scenario 1: an identity logged in to realm A (here the master-realm
+        // admin) authorizing against a client in realm B must be rejected with
+        // login_required — otherwise a lingering session silently mints a
+        // cross-realm code/token (confused deputy).
+        const realm = await suite.client.realm.create(createFakeRealm());
+        const client = await suite.client
+            .client
+            .create(createFakeClient({
+                realm_id: realm.id,
+                is_confidential: false,
+                secret: null,
+            }));
+        const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        await suite.client.clientScope.create({
+            scope_id: scope.id,
+            client_id: client.id,
+        });
+
+        const codeVerifier = generateOAuth2CodeVerifier();
+        const codeChallenge = await buildOAuth2CodeChallenge(codeVerifier);
+
+        await expectClientError(
+            () => suite.client.authorize.confirm({
+                response_type: OAuth2AuthorizationResponseType.CODE,
+                client_id: client.id,
+                redirect_uri: 'https://example.com/redirect',
+                scope: `${ScopeName.GLOBAL}`,
+                code_challenge: codeChallenge,
+                code_challenge_method: OAuth2AuthorizationCodeChallengeMethod.SHA_256,
+                state: generateOAuth2CodeVerifier(),
+            }),
+            {
+                status: 400,
+                code: ErrorCode.OAUTH_LOGIN_REQUIRED,
+                data: { error: OAuth2ErrorCode.LOGIN_REQUIRED },
+            },
+        );
+    });
+
+    it('should allow /authorize when the identity realm matches the client realm', async () => {
+        // control for the realm gate: a client in the actor's own (master) realm
+        // authorizes normally.
+        const codeVerifier = generateOAuth2CodeVerifier();
+        const codeChallenge = await buildOAuth2CodeChallenge(codeVerifier);
+
+        const response = await suite.client
+            .authorize
+            .confirm({
+                response_type: OAuth2AuthorizationResponseType.CODE,
+                client_id: publicClient.id,
+                redirect_uri: 'https://example.com/redirect',
+                scope: `${ScopeName.GLOBAL}`,
+                code_challenge: codeChallenge,
+                code_challenge_method: OAuth2AuthorizationCodeChallengeMethod.SHA_256,
+                state: generateOAuth2CodeVerifier(),
+            });
+
+        expect(new URL(response.url).searchParams.get('code')).toBeTruthy();
+    });
+
     it('should exchange a code for a name-identified public client scoped to its realm', async () => {
         const realm = await suite.client.realm.create(createFakeRealm());
         const client = await suite.client
@@ -535,7 +621,8 @@ describe('grant-authorize', () => {
         const codeVerifier = generateOAuth2CodeVerifier();
         const codeChallenge = await buildOAuth2CodeChallenge(codeVerifier);
 
-        const response = await suite.client
+        const userClient = await loginAsRealmUser(realm);
+        const response = await userClient
             .authorize
             .confirm({
                 response_type: OAuth2AuthorizationResponseType.CODE,

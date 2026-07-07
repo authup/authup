@@ -67,6 +67,21 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
             if (payload.client_id && payload.client_id !== client.id) {
                 throw OAuth2GrantError.invalid();
             }
+
+            // Realm parity for PUBLIC clients only: a public client may not
+            // refresh a token whose realm differs from the client's own realm.
+            // Kills cross-realm refresh tokens minted for a public `web` client
+            // before the authorize-side realm gate existed. Confidential clients
+            // are exempt — the client secret already proves identity, and the
+            // documented cross-realm password grant (UUID-identified user against
+            // a master-realm client) depends on that exemption.
+            if (
+                !client.is_confidential &&
+                payload.realm_id &&
+                payload.realm_id !== client.realm_id
+            ) {
+                throw OAuth2GrantError.invalid();
+            }
         } else if (payload.client_id) {
             // Token was issued to a specific client — that client MUST
             // re-authenticate (RFC 6749 §6 binding requirement).

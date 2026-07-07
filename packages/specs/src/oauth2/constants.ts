@@ -58,4 +58,11 @@ export enum OAuth2ErrorCode {
     INSUFFICIENT_SCOPE = 'insufficient_scope',
 
     SERVER_ERROR = 'server_error',
+
+    /**
+     * OIDC Core 1.0 §3.1.2.6 — the End-User is required to authenticate.
+     * Used when the authenticated identity may not proceed with the
+     * authorization request (e.g. realm mismatch, or prompt=login/max_age).
+     */
+    LOGIN_REQUIRED = 'login_required',
 }
