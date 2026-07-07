@@ -102,8 +102,8 @@ export default defineNuxtComponent({
         const confirmDialog = useAlertDialog();
         const revoking = ref(false);
 
-        // Admin "Log out everywhere" — DELETE /sessions?user_id=<id> revokes every
-        // session of the target user on all devices (SESSION_DELETE + realm reach).
+        // Admin "Log out everywhere" — DELETE /sessions?filter[user_id]=<id> revokes
+        // every session of the target user on all devices (SESSION_DELETE + realm reach).
         const revokeAll = async (reload: () => Promise<void>) => {
             if (revoking.value) {
                 return;
@@ -123,7 +123,7 @@ export default defineNuxtComponent({
 
             revoking.value = true;
             try {
-                const response = await httpClient.session.deleteMany({ userId: props.entity.id });
+                const response = await httpClient.session.deleteMany({ filter: { user_id: props.entity.id } });
 
                 toast.show({
                     variant: 'success',

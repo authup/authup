@@ -7,10 +7,23 @@
 
 import type { Session } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
-import type { SessionOwner } from '../../authentication/index.ts';
 
 export type SessionDeleteManyResult = {
     count: number,
+};
+
+export type SessionDeleteManyOptions = {
+    /**
+     * The parsed request query. When it carries a recognized target filter
+     * (`SESSION_FILTER_KEYS`, e.g. `filter[user_id]`) the call is an admin
+     * bulk revoke; otherwise it is the self-service path.
+     */
+    query?: Record<string, any>,
+    /**
+     * The caller's current session id (from the bearer). Preserved on the
+     * self-service path so "log out my other devices" keeps this device.
+     */
+    currentSessionId?: string,
 };
 
 export interface ISessionService {
@@ -32,17 +45,16 @@ export interface ISessionService {
     delete(id: string, actor: ActorContext): Promise<Session>;
 
     /**
-     * Revoke every session of the actor except (optionally) the current one
-     * ("log out my other devices"). Self-service — no permission required.
+     * Bulk revoke.
+     *
+     * - **No recognized target filter** → self-service: revoke every session of
+     *   the actor except the current one ("log out my other devices"). No
+     *   permission required.
+     * - **A recognized target filter** (`SESSION_FILTER_KEYS`, e.g.
+     *   `filter[user_id]`, `filter[realm_id]`) → admin "force-logout": revoke
+     *   every matching session. Requires `SESSION_DELETE`, and each session is
+     *   additionally realm-matched (drop-unauthorized), so a `realm_admin` only
+     *   revokes sessions in its reach and filter breadth cannot escalate.
      */
-    deleteManyForActor(actor: ActorContext, currentSessionId?: string): Promise<SessionDeleteManyResult>;
-
-    /**
-     * Revoke every session of a target subject ("force-logout this user
-     * everywhere"). Requires `SESSION_DELETE`; each session is additionally
-     * realm-matched, so a `realm_admin` only revokes sessions in its reach.
-     * Unlike `deleteManyForActor` there is NO current-session exemption — the
-     * actor is (typically) not the owner.
-     */
-    deleteManyForOwner(actor: ActorContext, owner: SessionOwner): Promise<SessionDeleteManyResult>;
+    deleteMany(actor: ActorContext, options?: SessionDeleteManyOptions): Promise<SessionDeleteManyResult>;
 }

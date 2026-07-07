@@ -21,12 +21,14 @@ export interface ISessionAPI {
     delete(id: Session['id']): Promise<EntityRecordResponse<Session>>;
 
     /**
-     * Revoke sessions in bulk.
+     * Revoke sessions in bulk (mirrors `getMany`'s query shape).
      *
      * - No argument → revoke every session of the current identity except the
      *   one this request authenticates with ("log out my other devices").
-     * - `{ userId }` → admin force-logout: revoke every session of the target
-     *   user on all devices (requires `SESSION_DELETE` + realm reach).
+     * - A target `filter` (e.g. `{ filter: { user_id } }`, `{ filter: { realm_id } }`)
+     *   → admin force-logout: revoke every matching session (requires
+     *   `SESSION_DELETE` + per-session realm reach). `filter[user_id]` accepts a
+     *   comma list to target multiple subjects at once.
      */
-    deleteMany(options?: { userId?: string }): Promise<SessionDeleteManyResponse>;
+    deleteMany(data?: BuildInput<Session>): Promise<SessionDeleteManyResponse>;
 }

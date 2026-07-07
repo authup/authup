@@ -14,7 +14,6 @@ import {
     DTags,
 } from '@routup/decorators';
 import type { Session } from '@authup/core-kit';
-import { IdentityType } from '@authup/core-kit';
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { EntityCollectionResponse, SessionDeleteManyResponse } from '@authup/core-http-kit';
@@ -71,17 +70,13 @@ export class SessionController {
     ): Promise<SessionDeleteManyResponse> {
         const actor = buildActorContext(event);
 
-        // `?user_id=<uuid>` → admin force-logout of that user everywhere
-        // (SESSION_DELETE + per-session realm-match). No param → self-service
-        // "log out my other devices" (keeps the current session).
-        const userId = useRequestQuery(event)?.user_id;
-
-        const result = userId ?
-            await this.service.deleteManyForOwner(actor, {
-                sub: String(userId),
-                subKind: IdentityType.USER,
-            }) :
-            await this.service.deleteManyForActor(actor, useRequestSessionId(event));
+        // A recognized target filter (e.g. `?filter[user_id]=<uuid>`) → admin
+        // force-logout (SESSION_DELETE + per-session realm-match). No filter →
+        // self-service "log out my other devices" (keeps the current session).
+        const result = await this.service.deleteMany(actor, {
+            query: useRequestQuery(event),
+            currentSessionId: useRequestSessionId(event),
+        });
 
         event.response.status = 202;
         return result;

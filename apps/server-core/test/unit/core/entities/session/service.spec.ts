@@ -55,15 +55,17 @@ describe('SessionService', () => {
 
     function seedOwn(): Session {
         return repository.seed({
-            sub: userId, 
-            sub_kind: IdentityType.USER, 
+            sub: userId,
+            sub_kind: IdentityType.USER,
+            user_id: userId,
             realm_id: realmId,
         });
     }
     function seedOther(): Session {
         return repository.seed({
-            sub: otherUserId, 
-            sub_kind: IdentityType.USER, 
+            sub: otherUserId,
+            sub_kind: IdentityType.USER,
+            user_id: otherUserId,
             realm_id: realmId,
         });
     }
@@ -165,7 +167,7 @@ describe('SessionService', () => {
         });
     });
 
-    describe('deleteManyForActor', () => {
+    describe('deleteMany (self-service — no target filter)', () => {
         it('revokes every own session except the current one', async () => {
             const s1 = seedOwn();
             const current = seedOwn();
@@ -173,7 +175,7 @@ describe('SessionService', () => {
             seedOther();
 
             const actor = makeActor({ allow: false });
-            const { count } = await service.deleteManyForActor(actor, current.id);
+            const { count } = await service.deleteMany(actor, { currentSessionId: current.id });
 
             expect(count).toEqual(2);
             const removed = repository.removeCalls.map((s) => s.id);
@@ -187,32 +189,66 @@ describe('SessionService', () => {
             seedOwn();
 
             const actor = makeActor({ allow: false });
-            const { count } = await service.deleteManyForActor(actor);
+            const { count } = await service.deleteMany(actor);
 
             expect(count).toEqual(2);
         });
 
+        it('needs no permission (self-service) even with an empty/unrecognized filter', async () => {
+            seedOwn();
+            seedOther();
+
+            // an unrecognized filter key must NOT trigger an admin mass-delete;
+            // it falls through to the self path (deny-all actor still succeeds).
+            const actor = makeActor({ allow: false });
+            const { count } = await service.deleteMany(actor, { query: { filter: { foobar: 'x' } } });
+
+            expect(count).toEqual(1); // only the actor's own session
+        });
+
         it('throws for an identity-less actor', async () => {
             const actor = makeActor({ allow: true, identity: false });
-            await expect(service.deleteManyForActor(actor)).rejects.toBeDefined();
+            await expect(service.deleteMany(actor)).rejects.toBeDefined();
         });
     });
 
-    describe('deleteManyForOwner', () => {
-        const owner = { sub: otherUserId, subKind: IdentityType.USER };
+    describe('deleteMany (admin bulk revoke — target filter)', () => {
+        function adminQuery(userIds: string | string[]): Record<string, any> {
+            return { filter: { user_id: Array.isArray(userIds) ? userIds.join(',') : userIds } };
+        }
 
-        it('revokes every session of the target subject', async () => {
+        it('revokes every session matching filter[user_id]', async () => {
             const s1 = seedOther();
             const s2 = seedOther();
             seedOwn();
 
             const actor = makeActor({ allow: true });
-            const { count } = await service.deleteManyForOwner(actor, owner);
+            const { count } = await service.deleteMany(actor, { query: adminQuery(otherUserId) });
 
             expect(count).toEqual(2);
             const removed = repository.removeCalls.map((s) => s.id);
             expect(removed).toContain(s1.id);
             expect(removed).toContain(s2.id);
+        });
+
+        it('targets multiple subjects via a comma-separated filter[user_id]', async () => {
+            const thirdUserId = randomUUID();
+            const a = seedOther();
+            const b = repository.seed({
+                sub: thirdUserId,
+                sub_kind: IdentityType.USER,
+                user_id: thirdUserId,
+                realm_id: realmId,
+            });
+            seedOwn();
+
+            const actor = makeActor({ allow: true });
+            const { count } = await service.deleteMany(actor, { query: adminQuery([otherUserId, thirdUserId]) });
+
+            expect(count).toEqual(2);
+            const removed = repository.removeCalls.map((s) => s.id);
+            expect(removed).toContain(a.id);
+            expect(removed).toContain(b.id);
         });
 
         it('revokes only sessions within the actor realm reach (drops cross-realm)', async () => {
@@ -222,6 +258,7 @@ describe('SessionService', () => {
             const outOfReach = repository.seed({
                 sub: otherUserId,
                 sub_kind: IdentityType.USER,
+                user_id: otherUserId,
                 realm_id: otherRealmId,
             });
 
@@ -244,7 +281,7 @@ describe('SessionService', () => {
                 identity: { type: IdentityType.USER, data: { id: userId, realm_id: realmId } as User },
             };
 
-            const { count } = await service.deleteManyForOwner(actor, owner);
+            const { count } = await service.deleteMany(actor, { query: adminQuery(otherUserId) });
 
             expect(count).toEqual(2);
             const removed = repository.removeCalls.map((s) => s.id);
@@ -257,7 +294,9 @@ describe('SessionService', () => {
             seedOther();
 
             const actor = makeActor({ allow: false });
-            await expect(service.deleteManyForOwner(actor, owner)).rejects.toBeDefined();
+            await expect(
+                service.deleteMany(actor, { query: adminQuery(otherUserId) }),
+            ).rejects.toBeDefined();
             expect(repository.removeCalls).toHaveLength(0);
         });
 
@@ -265,7 +304,7 @@ describe('SessionService', () => {
             seedOwn();
 
             const actor = makeActor({ allow: true });
-            const { count } = await service.deleteManyForOwner(actor, owner);
+            const { count } = await service.deleteMany(actor, { query: adminQuery(otherUserId) });
 
             expect(count).toEqual(0);
             expect(repository.removeCalls).toHaveLength(0);

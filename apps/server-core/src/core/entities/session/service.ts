@@ -11,8 +11,9 @@ import { PermissionName } from '@authup/core-kit';
 import type { Session } from '@authup/core-kit';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
-import type { ISessionRepository, SessionOwner } from '../../authentication/index.ts';
-import type { ISessionService, SessionDeleteManyResult } from './types.ts';
+import type { ISessionRepository } from '../../authentication/index.ts';
+import { SESSION_FILTER_KEYS } from '../../authentication/index.ts';
+import type { ISessionService, SessionDeleteManyOptions, SessionDeleteManyResult } from './types.ts';
 
 export type SessionServiceContext = {
     repository: ISessionRepository,
@@ -134,17 +135,46 @@ export class SessionService extends AbstractEntityService implements ISessionSer
         return entity;
     }
 
-    async deleteManyForActor(
+    async deleteMany(
         actor: ActorContext,
-        currentSessionId?: string,
+        options: SessionDeleteManyOptions = {},
     ): Promise<SessionDeleteManyResult> {
         if (!actor.identity) {
             throw new UnauthorizedError();
         }
 
+        if (this.hasTargetFilter(options.query)) {
+            return this.deleteManyByQuery(actor, options.query!);
+        }
+
+        return this.deleteManyForSelf(actor, options.currentSessionId);
+    }
+
+    /**
+     * True when the query carries at least one recognized target filter — the
+     * discriminator between the admin bulk-revoke path and self-service. An
+     * unrecognized / empty filter falls through to self-service (fail-safe: a
+     * typo can never trigger an unconstrained mass delete).
+     */
+    protected hasTargetFilter(query?: Record<string, any>): boolean {
+        const filter = query?.filter;
+        if (!filter || typeof filter !== 'object') {
+            return false;
+        }
+
+        return SESSION_FILTER_KEYS.some((key) => {
+            const value = filter[key];
+            return typeof value !== 'undefined' && value !== '';
+        });
+    }
+
+    protected async deleteManyForSelf(
+        actor: ActorContext,
+        currentSessionId?: string,
+    ): Promise<SessionDeleteManyResult> {
         const sessions = await this.repository.findAllByOwner({
-            sub: actor.identity.data.id,
-            subKind: actor.identity.type,
+            sub: actor.identity!.data.id,
+            subKind: actor.identity!.type,
         });
 
         let count = 0;
@@ -159,29 +189,33 @@ export class SessionService extends AbstractEntityService implements ISessionSer
         return { count };
     }
 
-    async deleteManyForOwner(
+    protected async deleteManyByQuery(
         actor: ActorContext,
-        owner: SessionOwner,
+        query: Record<string, any>,
     ): Promise<SessionDeleteManyResult> {
         // Gate: an actor without SESSION_DELETE cannot force-logout anyone → 403.
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.SESSION_DELETE });
 
-        const sessions = await this.repository.findAllByOwner(owner);
+        const sessions = await this.repository.findAllByQuery(query);
 
         let count = 0;
         for (const session of sessions) {
-            // Per-session realm-match: a realm_admin only reaches sessions in
-            // its realm. Cross-realm sessions are silently skipped, not failed.
-            try {
-                await actor.permissionEvaluator.evaluate({
-                    name: PermissionName.SESSION_DELETE,
-                    data: definePolicyData({
-                        [BuiltInPolicyType.ATTRIBUTES]: session,
-                        ...this.resourceRealmMatch(session),
-                    }),
-                });
-            } catch {
-                continue;
+            // Own sessions are always deletable by the actor (mirrors getMany).
+            // Otherwise per-session realm-match: a realm_admin only reaches
+            // sessions in its realm — cross-realm rows are skipped, not failed,
+            // so filter breadth cannot escalate beyond the actor's reach.
+            if (!this.isOwnedBy(session, actor)) {
+                try {
+                    await actor.permissionEvaluator.evaluate({
+                        name: PermissionName.SESSION_DELETE,
+                        data: definePolicyData({
+                            [BuiltInPolicyType.ATTRIBUTES]: session,
+                            ...this.resourceRealmMatch(session),
+                        }),
+                    });
+                } catch {
+                    continue;
+                }
             }
 
             await this.repository.remove(session);

@@ -113,12 +113,31 @@ describe('session', () => {
         const before = await suite.client.session.getMany({ filter: { user_id: user.id } });
         expect(before.data.length).toBeGreaterThanOrEqual(2);
 
-        const result = await suite.client.session.deleteMany({ userId: user.id });
+        const result = await suite.client.session.deleteMany({ filter: { user_id: user.id } });
         expect(result.count).toBeGreaterThanOrEqual(2);
 
         // every session of the target user is gone
         const after = await suite.client.session.getMany({ filter: { user_id: user.id } });
         expect(after.data).toHaveLength(0);
+    });
+
+    it('force-logs-out multiple users in one call via a comma filter', async () => {
+        const password = 'session-multi-user-pw';
+        const first = createFakeUser({ password });
+        const second = createFakeUser({ password });
+        const userA = await suite.client.user.create(first);
+        const userB = await suite.client.user.create(second);
+
+        await suite.client.token.createWithPassword({ username: first.name, password });
+        await suite.client.token.createWithPassword({ username: second.name, password });
+
+        const result = await suite.client.session.deleteMany({ filter: { user_id: [userA.id, userB.id] } });
+        expect(result.count).toBeGreaterThanOrEqual(2);
+
+        const afterA = await suite.client.session.getMany({ filter: { user_id: userA.id } });
+        const afterB = await suite.client.session.getMany({ filter: { user_id: userB.id } });
+        expect(afterA.data).toHaveLength(0);
+        expect(afterB.data).toHaveLength(0);
     });
 
     it('denies a non-privileged user from force-logging-out another user', async () => {
@@ -129,9 +148,9 @@ describe('session', () => {
         const login = await suite.client.token.createWithPassword({ username: fakeUser.name, password });
         const client = bearer(login.access_token);
 
-        // passing a target user_id takes the admin path → 403 (lacks SESSION_DELETE)
+        // a target filter takes the admin path → 403 (lacks SESSION_DELETE)
         await expectClientError(
-            () => client.session.deleteMany({ userId: randomUUID() }),
+            () => client.session.deleteMany({ filter: { user_id: randomUUID() } }),
             { status: 403 },
         );
 

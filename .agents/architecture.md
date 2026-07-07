@@ -1249,19 +1249,29 @@ A REST surface over `auth_sessions` for "see all my sessions / force logout":
   tokens). Access tokens stay valid on local-JWKS adapters until `exp` (the
   documented limitation; authup's own API rejects immediately via the
   authorization middleware's session check).
-- `DELETE /sessions` — bulk revoke. **No query →** revoke every own session
-  except the current one ("log out my other devices"). Self-service; the current
-  session id comes from the bearer token (stashed by the authorization middleware
-  via `setRequestSessionId`), never from the client. **`?user_id=<uuid>` →** admin
-  force-logout: `SessionService.deleteManyForOwner(actor, { sub, subKind: 'user' })`
-  revokes **every** session of the target user on all devices (no current-session
-  exemption). Gated by `SESSION_DELETE` **plus a per-session `resourceRealmMatch`**
-  (same drop-unauthorized shape as `getMany` — a `realm_admin` in realm A cannot
-  force-logout a user's realm-B sessions; `SESSION_DELETE` alone is realm-agnostic).
-  A non-admin passing `?user_id` (even its own id) takes the admin path and gets
-  `403`; self-service is the no-param call. Typed client:
-  `client.session.deleteMany({ userId })` (optional arg — the no-arg self call is
-  unchanged).
+- `DELETE /sessions` — bulk revoke, discriminated by whether the rapiq query
+  carries a **recognized target filter** (`SESSION_FILTER_KEYS` = `id`, `sub`,
+  `sub_kind`, `user_id`, `client_id`, `robot_id`, `realm_id`; the same
+  vocabulary `getMany` filters on):
+  - **No target filter →** self-service: revoke every own session except the
+    current one ("log out my other devices"). No permission; the current session
+    id comes from the bearer token (stashed by the authorization middleware via
+    `setRequestSessionId`), never from the client. An **unrecognized/empty**
+    filter falls through here too — a typo can never trigger a mass delete.
+  - **A target filter (e.g. `?filter[user_id]=<uuid>`, comma-list for several
+    subjects, or `?filter[realm_id]=…`) →** admin force-logout:
+    `SessionService.deleteManyByQuery` loads **every** matching session
+    (`ISessionRepository.findAllByQuery` — deliberately **unbounded**, no
+    pagination cap: reusing the paginated `findMany` would silently truncate at
+    `maxLimit`) and revokes each. Gated by `SESSION_DELETE` **plus a per-session
+    `resourceRealmMatch`** (same drop-unauthorized shape as `getMany`). Filter
+    breadth **cannot escalate** — the actor only deletes what it is already
+    authorized to delete, so a `realm_admin` in realm A silently drops a target's
+    realm-B sessions, and `filter[realm_id]` is bounded to its reach.
+  A non-admin sending a target filter (even its own `user_id`) takes the admin
+  path and gets `403`; self-service is the no-filter call. Typed client mirrors
+  `getMany`: `client.session.deleteMany(data?: BuildInput<Session>)` — `deleteMany()`
+  (self) / `deleteMany({ filter: { user_id } })` (admin).
 
 **Ownership** = `session.sub === actor.identity.data.id && session.sub_kind ===
 actor.identity.type` (sessions have a polymorphic subject — user/client/robot —
@@ -1293,8 +1303,9 @@ enforced on direct navigation).
 
 The admin page carries a **"Log out everywhere"** button (`authupApp`
 `SESSION_REVOKE_ALL*` keys, gated on `SESSION_DELETE` via `usePermissionCheck`,
-error-tone confirm) that calls `client.session.deleteMany({ userId: entity.id })`
-— the admin force-logout path above. The self page marks the caller's **current
+error-tone confirm) that calls
+`client.session.deleteMany({ filter: { user_id: entity.id } })` — the admin
+force-logout path above. The self page marks the caller's **current
 row** with a "This device" badge (`SESSION_CURRENT` key) and omits its per-row
 delete button (a lone current-session delete would be a confusing silent
 self-logout — the "log out other devices" button covers the rest). The current
