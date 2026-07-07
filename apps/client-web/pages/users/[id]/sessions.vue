@@ -5,7 +5,6 @@ import { TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@
 import {
     AEntityDelete,
     APagination,
-    ASearch,
     ASessions,
     usePermissionCheck,
     useTranslations,
@@ -22,7 +21,6 @@ export default defineNuxtComponent({
     components: {
         AEntityDelete,
         APagination,
-        ASearch,
         ASessions,
     },
     props: {
@@ -95,12 +93,6 @@ export default defineNuxtComponent({
         :body="{ tag: 'div' }"
         :footer="true"
     >
-        <template #header="props">
-            <ASearch
-                :load="props.load"
-                :busy="props.busy"
-            />
-        </template>
         <template #footer="props">
             <APagination
                 :busy="props.busy"

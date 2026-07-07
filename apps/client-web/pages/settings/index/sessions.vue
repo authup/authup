@@ -9,7 +9,6 @@ import {
 import {
     AEntityDelete,
     APagination,
-    ASearch,
     ASessions,
     injectHTTPClient,
     injectStore,
@@ -30,7 +29,6 @@ export default defineComponent({
     components: {
         AEntityDelete,
         APagination,
-        ASearch,
         ASessions,
         VCButton,
         VCIcon,
@@ -159,13 +157,7 @@ export default defineComponent({
         :footer="true"
     >
         <template #header="props">
-            <div class="flex flex-wrap items-center gap-2">
-                <div class="flex-grow">
-                    <ASearch
-                        :load="props.load"
-                        :busy="props.busy"
-                    />
-                </div>
+            <div class="flex justify-end mb-2">
                 <VCButton
                     :label="translations.sessionRevokeOthers"
                     size="sm"
