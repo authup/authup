@@ -60,6 +60,11 @@ export type OpenIDProviderMetadata = {
     prompt_values_supported?: string[],
 
     /**
+     * OIDC RP-Initiated Logout 1.0 — the OP's end-session (logout) endpoint.
+     */
+    end_session_endpoint?: string,
+
+    /**
      * The OAuth 2.0 / OpenID Connect URL of the OP's Dynamic Client Registration Endpoint OpenID.Registration.
      */
     registration_endpoint?: string,

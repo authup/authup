@@ -23,10 +23,15 @@ import type { TokenVerifyOptions } from './types';
 export async function verifyToken(
     token: string,
     context: TokenVerifyOptions,
+    options: { ignoreExpiry?: boolean } = {},
 ) : Promise<OAuth2TokenPayload> {
     let promise : Promise<JWTClaims> | undefined;
 
     let output : JWTClaims | undefined;
+
+    // Signature, nbf and issuer/kind checks always apply; only exp is skipped
+    // when explicitly requested (e.g. an id_token_hint on RP-initiated logout).
+    const validateExp = !options.ignoreExpiry;
 
     try {
         switch (context.type) {
@@ -65,6 +70,7 @@ export async function verifyToken(
                 promise = verify(token, key, {
                     algorithms,
                     validateNbf: true,
+                    validateExp,
                 });
                 break;
             }
@@ -88,6 +94,7 @@ export async function verifyToken(
                 promise = verify(token, key, {
                     algorithms,
                     validateNbf: true,
+                    validateExp,
                 });
             }
         }

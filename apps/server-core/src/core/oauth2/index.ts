@@ -7,6 +7,7 @@
 
 export * from './authorization/index.ts';
 export * from './client/index.ts';
+export * from './end-session/index.ts';
 export * from './grant-types/index.ts';
 export * from './key/index.ts';
 export * from './openid/index.ts';

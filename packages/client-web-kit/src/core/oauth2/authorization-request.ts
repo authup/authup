@@ -104,3 +104,39 @@ export function buildAuthorizeURL(ctx: BuildAuthorizeURLContext): string {
 
     return `${base}/authorize?${params.toString()}`;
 }
+
+export type BuildEndSessionURLContext = {
+    baseURL: string,
+    idTokenHint?: string,
+    clientId?: string,
+    postLogoutRedirectUri?: string,
+    state?: string,
+    realmId?: string
+};
+
+/**
+ * Build an OIDC RP-Initiated Logout URL for the `end_session_endpoint`.
+ */
+export function buildEndSessionURL(ctx: BuildEndSessionURLContext): string {
+    const base = ctx.baseURL.replace(/\/+$/, '');
+
+    const params = new URLSearchParams();
+    if (ctx.idTokenHint) {
+        params.set('id_token_hint', ctx.idTokenHint);
+    }
+    if (ctx.clientId) {
+        params.set('client_id', ctx.clientId);
+    }
+    if (ctx.postLogoutRedirectUri) {
+        params.set('post_logout_redirect_uri', ctx.postLogoutRedirectUri);
+    }
+    if (ctx.state) {
+        params.set('state', ctx.state);
+    }
+    if (ctx.realmId) {
+        params.set('realm_id', ctx.realmId);
+    }
+
+    const qs = params.toString();
+    return `${base}/logout${qs ? `?${qs}` : ''}`;
+}

@@ -82,4 +82,9 @@ export const TranslatorTranslationClientFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.SELECT_ACCOUNT_TITLE]: 'Choisir un compte',
     [TranslatorTranslationClientKey.CONTINUE_AS]: 'Continuer en tant que {{name}}',
     [TranslatorTranslationClientKey.USE_ANOTHER_ACCOUNT]: 'Utiliser un autre compte',
+
+    [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TITLE]: 'Se déconnecter',
+    [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TEXT]: 'Voulez-vous vous déconnecter ?',
+    [TranslatorTranslationClientKey.LOGOUT_DONE]: 'Vous avez été déconnecté.',
+    [TranslatorTranslationClientKey.SIGN_OUT]: 'Se déconnecter',
 };

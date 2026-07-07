@@ -106,6 +106,8 @@ export class RealmController {
 
             authorization_endpoint: resolveURL(baseURL, 'authorize'),
 
+            end_session_endpoint: resolveURL(baseURL, 'logout'),
+
             jwks_uri: resolveURL(baseURL, `realms/${entity.name}/jwks`),
 
             response_types_supported: [
