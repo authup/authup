@@ -636,6 +636,50 @@ describe('grant-authorize', () => {
         );
     });
 
+    it('should not leak identity data in the cross-realm login_required body', async () => {
+        // The realm-mismatch rejection must NOT echo identity/realm details —
+        // otherwise the 400 becomes a realm-enumeration oracle for an
+        // (authenticated-adjacent) caller probing which realm a session belongs
+        // to. Pins the "no identity data in the body" verifier condition.
+        const realm = await suite.client.realm.create(createFakeRealm());
+        const client = await suite.client
+            .client
+            .create(createFakeClient({
+                realm_id: realm.id,
+                is_confidential: false,
+                secret: null,
+            }));
+        const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        await suite.client.clientScope.create({
+            scope_id: scope.id,
+            client_id: client.id,
+        });
+
+        const codeVerifier = generateOAuth2CodeVerifier();
+        const codeChallenge = await buildOAuth2CodeChallenge(codeVerifier);
+
+        expect.assertions(4);
+        try {
+            await suite.client.authorize.confirm({
+                response_type: OAuth2AuthorizationResponseType.CODE,
+                client_id: client.id,
+                redirect_uri: 'https://example.com/redirect',
+                scope: `${ScopeName.GLOBAL}`,
+                code_challenge: codeChallenge,
+                code_challenge_method: OAuth2AuthorizationCodeChallengeMethod.SHA_256,
+                state: generateOAuth2CodeVerifier(),
+            });
+        } catch (e: any) {
+            const data = e?.response?.data ?? {};
+            expect(data.code).toEqual(ErrorCode.OAUTH_LOGIN_REQUIRED);
+            // no identity / realm enumeration surface in the body
+            expect(data).not.toHaveProperty('realm_id');
+            expect(data).not.toHaveProperty('sub');
+            // the acting identity's realm id must not appear anywhere in the body
+            expect(JSON.stringify(data)).not.toContain(realm.id);
+        }
+    });
+
     it('should allow /authorize when the identity realm matches the client realm', async () => {
         // control for the realm gate: a client in the actor's own (master) realm
         // authorizes normally.

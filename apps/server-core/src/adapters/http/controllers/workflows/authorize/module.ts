@@ -30,6 +30,7 @@ import type { AuthorizeControllerContext, AuthorizeControllerOptions } from './t
 import { sanitizeError } from '../../../../../utils/index.ts';
 
 type RealmSummary = Pick<Realm, 'id' | 'name' | 'display_name'>;
+type ClientSummary = Pick<Client, 'id' | 'name' | 'display_name' | 'built_in' | 'created_at'>;
 
 @DController('/authorize')
 export class AuthorizeController {
@@ -94,7 +95,7 @@ export class AuthorizeController {
     async serve(@DContext() event: IAppEvent): Promise<string> {
         let codeRequest : OAuth2AuthorizationCodeRequest | undefined;
 
-        let client : Client | undefined;
+        let client : ClientSummary | undefined;
         let scopes : Scope[] | undefined;
 
         // Target realm summary (the client's realm) — the UI names it in the
@@ -113,15 +114,29 @@ export class AuthorizeController {
             const data = await this.codeRequestValidator.run(merged);
 
             const result = await this.codeRequestVerifier.verify(data);
-            client = result.client;
+
+            // Trim the client to a deliberate DTO before it reaches the
+            // anonymous SSR hydration payload — never disclose redirect_uri
+            // patterns (the trusted-origin set), grant_types, internal
+            // base/root URLs, is_confidential, or the secret storage flags to an
+            // unauthenticated visitor. (ClientEntity.secret is additionally
+            // select:false, so the secret is never loaded — but the DTO must not
+            // rely on that alone: a future entity/query change could unset it.)
+            client = {
+                id: result.client.id,
+                name: result.client.name,
+                display_name: result.client.display_name,
+                built_in: result.client.built_in,
+                created_at: result.client.created_at,
+            };
             scopes = result.scopes;
             redirectUriVerified = result.redirectUriVerified;
 
-            if (client.realm) {
+            if (result.client.realm) {
                 realm = {
-                    id: client.realm.id,
-                    name: client.realm.name,
-                    display_name: client.realm.display_name,
+                    id: result.client.realm.id,
+                    name: result.client.realm.name,
+                    display_name: result.client.realm.display_name,
                 };
             }
 

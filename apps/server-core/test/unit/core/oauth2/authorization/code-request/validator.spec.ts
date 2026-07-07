@@ -48,6 +48,18 @@ describe('OAuth2AuthorizationCodeRequestValidator', () => {
         expect(output.max_age).toEqual(60);
     });
 
+    it('should honor an explicit max_age=0', async () => {
+        const output = await validator.run({ ...base, max_age: '0' });
+        expect(output.max_age).toEqual(0);
+    });
+
+    it('should treat an empty max_age as absent (not coerce it to 0)', async () => {
+        // z.coerce.number('') === 0 would silently force re-authentication; a
+        // blank param must be ignored, not read as max_age=0.
+        const output = await validator.run({ ...base, max_age: '' });
+        expect(output.max_age).toBeUndefined();
+    });
+
     it('should canonicalize login_hint (trim + lowercase)', async () => {
         const output = await validator.run({ ...base, login_hint: '  Alice@Corp  ' });
         expect(output.login_hint).toEqual('alice@corp');

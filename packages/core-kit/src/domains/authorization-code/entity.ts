@@ -36,13 +36,6 @@ export interface OAuth2AuthorizationCode {
      */
     session_id?: string | null,
 
-    /**
-     * Epoch-seconds authentication time (the session's creation time), stamped
-     * when a session backs the authorize request. Feeds the id_token `auth_time`
-     * claim; absent for session-less flows.
-     */
-    auth_time?: number | null,
-
     sub: string,
 
     sub_kind: `${OAuth2SubKind}`,

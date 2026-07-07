@@ -121,7 +121,16 @@ export class OAuth2AuthorizationCodeRequestValidator extends Container<OAuth2Aut
         this.mount(
             'max_age',
             { optional: true },
-            createValidator(z.coerce.number().int().min(0).nullable()),
+            createValidator(
+                z.preprocess(
+                    // An empty / blank max_age (e.g. a stray `?max_age=` from an
+                    // RP template) is absent, not `max_age=0` — without this
+                    // z.coerce.number('') === 0 would silently force
+                    // re-authentication on every request for that RP.
+                    (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
+                    z.coerce.number().int().min(0).nullable().optional(),
+                ),
+            ),
         );
 
         this.mount(

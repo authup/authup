@@ -352,6 +352,44 @@ describe('refresh-token', () => {
         expect(refreshed.access_token).toBeDefined();
     });
 
+    it('should allow a confidential client to refresh a token whose realm differs (exemption)', async () => {
+        // The refresh realm-parity guard is intentionally public-clients-only: a
+        // confidential client's secret proves its identity, so it may refresh a
+        // token minted for another realm — the documented cross-realm password
+        // grant (a UUID-identified realm user authenticated via a master-realm
+        // confidential client). Dropping `!client.is_confidential` from the guard
+        // would break this leg; this is its control.
+        const realm = await suite.client.realm.create(createFakeRealm());
+        const user = await suite.client.user.create(createFakeUser({
+            realm_id: realm.id,
+            password: 'confidential-cross-realm',
+        }));
+
+        // UUID username resolves globally; the master-realm confidential client
+        // authenticates. The issued token carries the user's (realm A) realm_id,
+        // which differs from the confidential client's (master) realm.
+        const login = await suite.client
+            .token
+            .createWithPassword({
+                username: user.id,
+                password: 'confidential-cross-realm',
+                client_id: confidentialClient.id,
+                client_secret: confidentialSecret,
+            });
+
+        expect(login.refresh_token).toBeDefined();
+
+        const refreshed = await suite.client
+            .token
+            .createWithRefreshToken({
+                refresh_token: login.refresh_token!,
+                client_id: confidentialClient.id,
+                client_secret: confidentialSecret,
+            });
+
+        expect(refreshed.access_token).toBeDefined();
+    });
+
     it('should detect refresh-token replay and revoke the whole session family', async () => {
         const login = await suite.client
             .token

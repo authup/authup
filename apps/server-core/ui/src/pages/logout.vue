@@ -20,6 +20,7 @@ export default defineComponent({
             hintVerified?: boolean,
             hintSub?: string,
             serverRevoked?: boolean,
+            redirect?: string,
         }>();
 
         return { data: payload.data };
@@ -28,6 +29,10 @@ export default defineComponent({
 </script>
 <template>
     <AAuthShell>
-        <AEndSessionForm :server-revoked="data.serverRevoked" />
+        <AEndSessionForm
+            :server-revoked="data.serverRevoked"
+            :hint-sub="data.hintSub"
+            :redirect="data.redirect"
+        />
     </AAuthShell>
 </template>

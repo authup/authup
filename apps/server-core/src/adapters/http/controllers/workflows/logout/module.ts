@@ -66,15 +66,27 @@ export class LogoutController {
             );
         }
 
-        // Redirect only to a validated post_logout_redirect_uri (open-redirect
-        // guard lives in the service). `state` rides only with a validated uri.
+        // Build the validated post-logout redirect (the open-redirect guard
+        // lives in the service; `state` rides only alongside a validated uri).
+        let redirect: string | undefined;
         if (result.redirectUri) {
             const url = new URL(result.redirectUri);
             if (result.state) {
                 url.searchParams.set('state', result.state);
             }
 
-            return sendRedirect(event, url.href);
+            redirect = url.href;
+        }
+
+        // Bounce straight back to the RP ONLY when the logout was actually
+        // performed server-side (a verified hint revoked the session). A
+        // hint-less or forged request MUST NOT silently redirect without ending
+        // the session — otherwise the RP treats a no-op round-trip as a
+        // successful logout while the authup session survives. Instead render
+        // the click-gated confirm page, which performs the bearer-authenticated
+        // sign-out and then redirects.
+        if (serverRevoked && redirect) {
+            return sendRedirect(event, redirect);
         }
 
         const requestURL = new URL(event.request.url);
@@ -89,6 +101,9 @@ export class LogoutController {
                     // never reflect an unverified hint's claims
                     hintSub: result.hintVerified ? result.sub : undefined,
                     serverRevoked,
+                    // the (already validated) uri to return to after a click-gated
+                    // sign-out; carries `state` when present
+                    redirect,
                     requestPath: `${requestURL.pathname}${requestURL.search}`,
                 },
             },

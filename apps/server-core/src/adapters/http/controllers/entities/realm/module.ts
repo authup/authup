@@ -116,8 +116,12 @@ export class RealmController {
                 OAuth2AuthorizationResponseType.NONE,
             ],
 
+            // `none` is intentionally NOT advertised: the silent-auth error
+            // redirect (OIDC §3.1.2.1) is not implemented — a `prompt=none`
+            // request currently renders the interactive page. Advertising it
+            // would promise a capability the server does not have. (Re-add it
+            // alongside the error-redirect implementation — plan 042.)
             prompt_values_supported: [
-                OAuth2AuthorizationPrompt.NONE,
                 OAuth2AuthorizationPrompt.LOGIN,
                 OAuth2AuthorizationPrompt.CONSENT,
                 OAuth2AuthorizationPrompt.SELECT_ACCOUNT,

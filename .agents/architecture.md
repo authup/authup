@@ -1118,6 +1118,16 @@ behavior for every RP (kit or not): `prompt=select_account` shows an
 continuing; `login_hint` pre-fills the identifier; `prompt=consent` suppresses
 the `built_in` auto-consent. `buildAuthorizeURL` (kit) **defaults
 `prompt=select_account`** (overridable) so kit apps inherit account-switching.
+The chooser targets a **lingering** session only: `LoginForm`'s `done` emit sets
+`accountConfirmed`, so a just-completed credential entry (which IS the account
+selection) proceeds straight to consent instead of re-prompting "continue as X"
+for the account just authenticated; the branch also waits for the store's `user`
+to resolve to avoid a "Continue as \<empty\>" flash. The manual consent screen
+(`AuthorizeForm`) additionally renders a **"Signed in as X — Not you?"** chip
+(emits `switch` → local `store.logout()` → login form), so a wrong-account user
+can switch even when the RP sent no `prompt=select_account`. Prompt/error string
+comparisons use the `@authup/specs` `OAuth2AuthorizationPrompt` /
+`OAuth2ErrorCode` enums, not bare literals.
 
 `prompt=login` / `max_age` freshness is enforced **server-side** in
 `OAuth2Authorization.authorize()` (the authoritative backstop; the hosted UI is
@@ -1139,8 +1149,20 @@ and the #3191 session-reuse-vs-fallback path can make `sid` reference the bearer
 session rather than a freshly-created fallback one (documented residual).
 
 **Discovery** (realm-scoped `.well-known/openid-configuration`) advertises
-`prompt_values_supported` and **fixes** `revocation_endpoint` from `…/token` to
-`…/token/revoke` (RFC 7009 — an RFC 7009 POST to `/token` never worked).
+`prompt_values_supported` (`login`, `consent`, `select_account` — **not**
+`none`: the silent-auth error redirect is unimplemented, so it must not be
+advertised or the RP is promised a capability the server lacks) and **fixes**
+`revocation_endpoint` from `…/token` to `…/token/revoke` (RFC 7009 — an RFC 7009
+POST to `/token` never worked). An empty `max_age=` is treated as **absent**
+(the validator preprocesses blank → undefined; `z.coerce.number('') === 0` would
+otherwise silently force re-authentication).
+
+The anonymous `GET /authorize` hydration payload carries a **trimmed client
+DTO** (`ClientSummary` = `id`/`name`/`display_name`/`built_in`/`created_at`) plus
+the `RealmSummary` and scopes — never the client's `redirect_uri` patterns (the
+trusted-origin set), `grant_types`, internal `base_url`/`root_url`, or the
+secret storage flags. `ClientEntity.secret` is additionally `select:false`, but
+the DTO must not rely on that alone.
 
 ### RP-Initiated Logout — `end_session_endpoint` (plan 041 PR C)
 
@@ -1168,12 +1190,28 @@ app (kit or non-kit) ends a lingering authup session on its own logout, so
   guard); otherwise dropped, and `state` rides only alongside a validated
   redirect. (A dedicated `post_logout_redirect_uri` client column + migration is
   a deferred follow-up; today it validates against `redirect_uri` patterns.)
+- **The server-side bounce fires ONLY when the logout was actually performed**
+  (`serverRevoked` — a verified hint revoked the session). A hint-less or
+  forged request with an otherwise-valid `post_logout_redirect_uri` must **not**
+  302 straight back to the RP: that would let the RP treat a no-op round-trip as
+  a successful logout while the authup session survives. Instead the validated
+  redirect is threaded into the render payload and the click-gated confirm page
+  (`AEndSessionForm`) performs the bearer-authenticated sign-out, then navigates
+  to it (`window.location`).
 
 The SSR page is `apps/server-core/ui/src/pages/logout.vue` → kit
 `AEndSessionForm`; the typed URL builder is `buildEndSessionURL` in
-`client-web-kit`. **Residual (Keycloak parity):** a *leaked* valid id_token can
-force-logout its session (annoyance, not privilege escalation) — mitigated by
-the sub-match + short id_token TTL.
+`client-web-kit`. **`AEndSessionForm` auto-clears local state on mount ONLY when
+`serverRevoked && hintSub === store.user.id`** — the revoked subject must be the
+browser's own user. Without that gate, a cross-site `GET
+/logout?id_token_hint=<attacker's own id_token>` (which revokes the attacker's
+own session, so `serverRevoked` is true) would forcibly sign out any unrelated
+victim who merely renders the page (`store.logout()` is local-only, so it acts
+on whoever's browser rendered it) — a forced-logout CSRF. The controller
+forwards `hintSub` (only for a verified hint) and the validated `redirect` into
+the payload for this gate. **Residual (Keycloak parity):** a *leaked* valid
+id_token can force-logout its own session (annoyance, not privilege escalation)
+— mitigated by the sub-match + short id_token TTL.
 
 ## OAuth2 Token Endpoint Authentication
 
