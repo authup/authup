@@ -18,5 +18,6 @@ export const TranslatorTranslationEntityFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationEntityKey.ROBOT]: definePlural({ one: 'Robot', other: 'Robots' }),
     [TranslatorTranslationEntityKey.ROLE]: definePlural({ one: 'Rôle', other: 'Rôles' }),
     [TranslatorTranslationEntityKey.SCOPE]: definePlural({ one: 'Portée', other: 'Portées' }),
+    [TranslatorTranslationEntityKey.SESSION]: definePlural({ one: 'Session', other: 'Sessions' }),
     [TranslatorTranslationEntityKey.USER]: definePlural({ one: 'Utilisateur', other: 'Utilisateurs' }),
 };

@@ -193,6 +193,7 @@ export enum TranslatorTranslationEntityKey {
     ROBOT = 'robot',
     ROLE = 'role',
     SCOPE = 'scope',
+    SESSION = 'session',
     USER = 'user',
 }
 
@@ -231,6 +232,10 @@ export enum TranslatorTranslationFieldKey {
     CHILDREN = 'children',
     CREATED_AT = 'createdAt',
     UPDATED_AT = 'updatedAt',
+    SEEN_AT = 'seenAt',
+    EXPIRES_AT = 'expiresAt',
+    IP_ADDRESS = 'ipAddress',
+    USER_AGENT = 'userAgent',
     PROTOCOL = 'protocol',
     PROTOCOLS = 'protocols',
     PRESET = 'preset',

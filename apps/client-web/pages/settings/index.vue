@@ -1,6 +1,6 @@
 <script lang="ts">
-import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { useTranslationsForNamespace } from '@authup/client-web-kit';
+import { TranslatorTranslationAppKey, TranslatorTranslationEntityKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { useTranslations, useTranslationsForNamespace } from '@authup/client-web-kit';
 import { VCIcon } from '@vuecs/icon';
 import { computed, defineComponent } from 'vue';
 import { definePageMeta } from '#imports';
@@ -22,6 +22,14 @@ export default defineComponent({
             ],
         );
 
+        const translationsEntity = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.SESSION,
+                count: 2,
+            },
+        ]);
+
         const items = computed(() => [
             {
                 name: translationsApp.account,
@@ -32,6 +40,11 @@ export default defineComponent({
                 name: translationsApp.security,
                 icon: 'fa6-solid:lock',
                 url: '/settings/security',
+            },
+            {
+                name: translationsEntity.session,
+                icon: 'fa6-solid:desktop',
+                url: '/settings/sessions',
             },
         ]);
 
