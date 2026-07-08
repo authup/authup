@@ -20,6 +20,7 @@ import {
 import type { App } from 'vue';
 import AAccountPrompt from '../../../../src/components/workflows/authorize/AAccountPrompt.vue';
 import AAuthorize from '../../../../src/components/workflows/authorize/Authorize.vue';
+import AuthorizeForm from '../../../../src/components/workflows/authorize/AuthorizeForm.vue';
 import AuthorizeSilentRedirect from '../../../../src/components/workflows/authorize/AuthorizeSilentRedirect.vue';
 import {
     StoreDispatcherEventName,
@@ -113,7 +114,13 @@ function mountAuthorize(overrides: MountOverrides = {}) {
             // Stub the branch children we don't assert on — avoids AuthorizeForm's
             // scope fetch (aborted at teardown → noisy happy-dom warning).
             stubs: {
-                AuthorizeForm: { template: '<div class="authorize-form-stub" />' },
+                AuthorizeForm: {
+                    // declare the props we assert on so findComponent(...).props()
+                    // reflects them (a bare template stub drops them to attrs).
+                    props: ['silent'],
+                    emits: ['loginRequired'],
+                    template: '<div class="authorize-form-stub" />',
+                },
                 LoginForm: { template: '<div class="login-form-stub" />' },
                 // keep AuthorizeSilentRedirect real so we can assert its props,
                 // but stub its child so onMounted's window.location is a no-op.
@@ -140,6 +147,7 @@ function mountAuthorize(overrides: MountOverrides = {}) {
 
 const hasChooser = (wrapper: ReturnType<typeof mountAuthorize>['wrapper']) => wrapper.findComponent(AAccountPrompt).exists();
 const silentRedirect = (wrapper: ReturnType<typeof mountAuthorize>['wrapper']) => wrapper.findComponent(AuthorizeSilentRedirect);
+const authorizeForm = (wrapper: ReturnType<typeof mountAuthorize>['wrapper']) => wrapper.findComponent(AuthorizeForm);
 
 describe('AAuthorize prompt=select_account', () => {
     it('shows the account chooser for a lingering (restored) session', async () => {
@@ -234,6 +242,43 @@ describe('AAuthorize prompt=none (silent)', () => {
         expect(silentRedirect(wrapper).exists()).toBe(false);
         // the auto-consent form renders instead
         expect(wrapper.find('.authorize-form-stub').exists()).toBe(true);
+        // verified redirect_uri → the form runs in silent mode (a failure
+        // redirects an OIDC error rather than showing manual consent).
+        expect(authorizeForm(wrapper).props('silent')).toBe(true);
+    });
+
+    it('drops the silent flag for a built_in client when the redirect_uri is unverified', async () => {
+        // Regression: an unverified redirect_uri can't receive an OIDC error, so
+        // a silent auto-consent failure previously dead-ended on a frozen spinner.
+        // The form must run NON-silent so it can fall back to manual consent.
+        const { wrapper } = mountAuthorize({
+            prompt: OAuth2AuthorizationPrompt.NONE,
+            clientBuiltIn: true,
+            redirectUriVerified: false,
+        });
+        await flushPromises();
+
+        expect(silentRedirect(wrapper).exists()).toBe(false);
+        expect(wrapper.find('.authorize-form-stub').exists()).toBe(true);
+        expect(authorizeForm(wrapper).props('silent')).toBe(false);
+    });
+
+    it('forces re-auth (not a stuck spinner) on login_required when the redirect_uri is unverified', async () => {
+        // Regression: handleLoginRequired must not set a silent LOGIN_REQUIRED
+        // redirect it can't perform (unverified URI). It falls back to the login
+        // form instead of leaving AuthorizeForm frozen on its spinner.
+        const { wrapper } = mountAuthorize({
+            prompt: OAuth2AuthorizationPrompt.NONE,
+            clientBuiltIn: true,
+            redirectUriVerified: false,
+        });
+        await flushPromises();
+
+        authorizeForm(wrapper).vm.$emit('loginRequired');
+        await flushPromises();
+
+        expect(silentRedirect(wrapper).exists()).toBe(false);
+        expect(wrapper.find('.login-form-stub').exists()).toBe(true);
     });
 
     it('degrades to interactive UI when the redirect_uri is not verified', async () => {

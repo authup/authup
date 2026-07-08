@@ -101,7 +101,10 @@ export default defineComponent({
         // interactive prompt=login shows the login form with a re-auth banner.
         const handleLoginRequired = () => {
             const prompts = (props.codeRequest?.prompt ?? '').split(' ').filter(Boolean);
-            if (prompts.includes(OAuth2AuthorizationPrompt.NONE)) {
+            // Only redirect the OIDC error to a *verified* redirect_uri; an
+            // unverified one degrades to interactive re-auth (falling through to
+            // the login form) instead of dead-ending on a frozen spinner.
+            if (prompts.includes(OAuth2AuthorizationPrompt.NONE) && props.redirectUriVerified) {
                 silentErrorCode.value = OAuth2ErrorCode.LOGIN_REQUIRED;
                 return;
             }
@@ -315,8 +318,11 @@ export default defineComponent({
                     // prompt=select_account).
                     identityName: user.value?.name ?? user.value?.display_name ?? '',
                     // Silent (built_in) request: auto-consent runs, but a failure
-                    // must redirect an OIDC error, never render manual consent.
-                    silent: isSilent,
+                    // must redirect an OIDC error, never render manual consent —
+                    // but only when the redirect_uri is verified. Otherwise the
+                    // error can't be redirected, so drop the silent flag and let
+                    // AuthorizeForm fall back to interactive manual consent.
+                    silent: isSilent && props.redirectUriVerified,
                     onSwitch: switchAccount,
                     onLoginRequired: handleLoginRequired,
                     onFailed: () => {
