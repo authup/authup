@@ -1112,8 +1112,9 @@ posture). The implicit/hybrid response types (`token`, `id_token`, `none`) are
 rejected by the code-request validator (a `response_type` issue → 400) and,
 defense in depth, by `OAuth2Authorization.authorize()`
 (`unsupported_response_type`). The authorization response never carries tokens
-— an openid-scoped code stores its id_token on the code blob and the `/token`
-exchange returns it. Discovery `response_types_supported` advertises only
+— an openid-scoped code carries `auth_time` (and `nonce`) on the code blob and
+the `/token` exchange mints and returns the id_token. Discovery
+`response_types_supported` advertises only
 `code`. Consequently the code-request verifier requires PKCE + `state` for
 public clients **unconditionally** (the former `willIssueCode` gate is gone —
 every verified request issues a code).
