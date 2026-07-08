@@ -225,7 +225,6 @@ export class HTTPControllerModule {
 
     createAuthorize(container: IContainer) {
         const config = container.resolve(ConfigInjectionKey);
-        const accessTokenIssuer = container.resolve(OAuth2InjectionToken.AccessTokenIssuer);
         const openIdTokenIssuer = container.resolve(OAuth2InjectionToken.OpenIDTokenIssuer);
 
         const codeIssuer = container.resolve(OAuth2InjectionToken.AuthorizationCodeIssuer);
@@ -241,7 +240,6 @@ export class HTTPControllerModule {
                 promptLoginMaxAge: config.promptLoginMaxAge,
             },
 
-            accessTokenIssuer,
             openIdTokenIssuer,
 
             codeIssuer,

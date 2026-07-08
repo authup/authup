@@ -135,13 +135,12 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
             expect(result.client.id).toBe(client.id);
         });
 
-        it('should not require state for public clients in implicit flow', async () => {
+        it('should require PKCE for public clients regardless of response_type (code-only pipeline)', async () => {
             const client = clientRepository.seed({ is_confidential: false });
-            const result = await verifier.verify({
+            await expect(verifier.verify({
                 client_id: client.id,
                 response_type: OAuth2AuthorizationResponseType.TOKEN,
-            });
-            expect(result.client.id).toBe(client.id);
+            })).rejects.toThrow();
         });
 
         it('should flag redirectUriVerified=false for a pattern-less client (open-redirect guard)', async () => {

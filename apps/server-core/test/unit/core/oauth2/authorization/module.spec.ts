@@ -6,7 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { Identity } from '@authup/core-kit';
+import type { Identity, OAuth2AuthorizationCode } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
 import { OAuth2AuthorizationResponseType, OAuth2SubKind } from '@authup/specs';
@@ -21,23 +21,21 @@ import type {
     IIdentityResolver,
     IOAuth2AuthorizationCodeIssuer,
     IOAuth2OpenIDTokenIssuer,
-    IOAuth2TokenIssuer,
 } from '../../../../../src/core/index.ts';
 import { FakeSessionManager } from '../../helpers/fake-session-manager.ts';
 
-// response_type=none + scope=global reaches the prompt/max_age gate without
-// invoking any issuer, so these stubs must never be called.
+// response_type=code + scope=global exercises the prompt/max_age gate; only
+// the code issuer fires — openid issuance (scope-gated) must never be called.
 const notCalled = (name: string) => async () => {
     throw new Error(`${name} should not be called`);
 };
 
-const accessTokenIssuer = { issue: notCalled('accessTokenIssuer.issue') } as unknown as IOAuth2TokenIssuer;
 const openIdTokenIssuer = {
     issue: notCalled('openIdTokenIssuer.issue'),
     issueWithIdentity: notCalled('openIdTokenIssuer.issueWithIdentity'),
 } as unknown as IOAuth2OpenIDTokenIssuer;
 const codeIssuer = {
-    issue: notCalled('codeIssuer.issue'),
+    issue: async () => ({ id: randomUUID() } as OAuth2AuthorizationCode),
     updateIdToken: notCalled('codeIssuer.updateIdToken'),
 } as unknown as IOAuth2AuthorizationCodeIssuer;
 const identityResolver = { resolve: async () => null } as unknown as IIdentityResolver;
@@ -58,7 +56,7 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
     } as unknown as Identity;
 
     const buildData = (extra: Record<string, any> = {}) => ({
-        response_type: OAuth2AuthorizationResponseType.NONE,
+        response_type: OAuth2AuthorizationResponseType.CODE,
         client_id: randomUUID(),
         realm_id: realmId,
         redirect_uri: 'https://example.com/callback',
@@ -80,7 +78,6 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
     beforeEach(() => {
         sessionManager = new FakeSessionManager();
         authorization = new OAuth2Authorization({
-            accessTokenIssuer,
             openIdTokenIssuer,
             codeIssuer,
             identityResolver,
@@ -149,5 +146,22 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
         // no session seeded / no sessionId → auth_time = now → passes
         const result = await authorization.authorize(buildData({ prompt: 'login', max_age: 0 }), identity, {});
         expect(result.redirectUri).toEqual('https://example.com/callback');
+    });
+
+    it.each([
+        ['token'],
+        ['id_token'],
+        ['none'],
+        ['code token'],
+        ['id_token token'],
+    ])('should reject the dropped response type "%s" (OAuth 2.1)', async (responseType) => {
+        await expect(
+            authorization.authorize(buildData({ response_type: responseType }), identity, {}),
+        ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_RESPONSE_TYPE_UNSUPPORTED }));
+    });
+
+    it('should issue an authorization code for response_type=code', async () => {
+        const result = await authorization.authorize(buildData(), identity, {});
+        expect(result.authorizationCode).toBeDefined();
     });
 });

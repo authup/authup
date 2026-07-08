@@ -5,22 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import {
-    afterAll, 
-    beforeAll, 
-    describe, 
-    expect, 
+    afterAll,
+    beforeAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
-import type { OAuth2TokenPayload } from '@authup/specs';
-import {
-    OAuth2AuthorizationResponseType,
-    OAuth2SubKind,
-    OAuth2TokenKind,
-} from '@authup/specs';
-import { extractTokenPayload } from '@authup/server-kit';
-import { createFakeClient } from '../../../../utils';
+import { OAuth2AuthorizationResponseType } from '@authup/specs';
+import { createFakeClient, expectClientError } from '../../../../utils';
 import { createTestApplication } from '../../../../app';
 
 describe('src/http/controllers/token', () => {
@@ -67,75 +61,45 @@ describe('src/http/controllers/token', () => {
         expect(url.searchParams.get('id_token')).toBeFalsy();
     });
 
-    it('should authorize with response_type: id_token', async () => {
-        const response = await suite.client
-            .authorize
-            .confirm({
+    // OAuth 2.1 posture: the authorization endpoint issues codes only — the
+    // implicit/hybrid response types were dropped (plan 042 item 3). Tokens in
+    // the redirect URL leaked via history, proxy logs, and Referer.
+    it.each([
+        [`${OAuth2AuthorizationResponseType.ID_TOKEN}`],
+        [`${OAuth2AuthorizationResponseType.TOKEN}`],
+        [`${OAuth2AuthorizationResponseType.ID_TOKEN} ${OAuth2AuthorizationResponseType.TOKEN}`],
+        [`${OAuth2AuthorizationResponseType.CODE} ${OAuth2AuthorizationResponseType.TOKEN}`],
+        [`${OAuth2AuthorizationResponseType.NONE}`],
+    ])('should reject the dropped response_type: %s', async (responseType) => {
+        await expectClientError(
+            () => suite.client.authorize.confirm({
                 ...payload,
-                response_type: `${OAuth2AuthorizationResponseType.ID_TOKEN}`,
-            });
-
-        expect(response.url).toBeDefined();
-
-        const url = new URL(response.url);
-        expect(url.searchParams.get('access_token')).toBeFalsy();
-        expect(url.searchParams.get('code')).toBeFalsy();
-        expect(url.searchParams.get('id_token')).toBeDefined();
-
-        const tokenPayload = extractTokenPayload(url.searchParams.get('id_token')!) as OAuth2TokenPayload;
-        expect(tokenPayload).toBeDefined();
-
-        expect(tokenPayload.kind).toEqual(OAuth2TokenKind.ID_TOKEN);
-        expect(tokenPayload.realm_id).toBeDefined();
-        expect(tokenPayload.realm_name).toBeDefined();
-        expect(tokenPayload.sub).toBeDefined();
-        expect(tokenPayload.sub_kind).toEqual(OAuth2SubKind.USER);
-
-        // verify claims
-        expect(tokenPayload.name).toBeDefined();
-        expect(tokenPayload.nickname).toBeDefined();
-        expect(tokenPayload.email).toBeDefined();
-        expect(tokenPayload.email_verified).toBeDefined();
+                response_type: responseType,
+            }),
+            { status: 400 },
+        );
     });
 
-    it('should authorize with response_type: token', async () => {
-        const response = await suite.client
-            .authorize
-            .confirm({
+    it('should reject an unknown response_type with a response_type issue', async () => {
+        expect.assertions(2);
+        try {
+            await suite.client.authorize.confirm({
                 ...payload,
-                response_type: `${OAuth2AuthorizationResponseType.TOKEN}`,
+                response_type: 'garbage',
             });
-
-        expect(response.url).toBeDefined();
-
-        const url = new URL(response.url);
-        expect(url.searchParams.get('access_token')).toBeDefined();
-        expect(url.searchParams.get('code')).toBeFalsy();
-        expect(url.searchParams.get('id_token')).toBeFalsy();
-
-        const tokenPayload = extractTokenPayload(url.searchParams.get('access_token')!) as OAuth2TokenPayload;
-        expect(tokenPayload).toBeDefined();
-
-        expect(tokenPayload.kind).toEqual(OAuth2TokenKind.ACCESS);
-        expect(tokenPayload.realm_id).toBeDefined();
-        expect(tokenPayload.realm_name).toBeDefined();
-        expect(tokenPayload.sub).toBeDefined();
-        expect(tokenPayload.sub_kind).toEqual(OAuth2SubKind.USER);
+        } catch (e) {
+            const { response } = (e as { response?: { status?: number, data?: { issues?: { path: string[] }[] } } });
+            expect(response?.status).toEqual(400);
+            expect(response?.data?.issues?.some(
+                (issue) => issue.path.includes('response_type'),
+            )).toBe(true);
+        }
     });
 
-    it('should authorize with response_type: id_token & token', async () => {
-        const response = await suite.client
-            .authorize
-            .confirm({
-                ...payload,
-                response_type: `${OAuth2AuthorizationResponseType.ID_TOKEN} ${OAuth2AuthorizationResponseType.TOKEN}`,
-            });
+    it('should NOT advertise implicit/hybrid response types in discovery', async () => {
+        const configuration = await fetch(`${suite.baseURL}/realms/master/.well-known/openid-configuration`);
+        const body = await configuration.json() as { response_types_supported: string[] };
 
-        expect(response.url).toBeDefined();
-
-        const url = new URL(response.url);
-        expect(url.searchParams.get('access_token')).toBeDefined();
-        expect(url.searchParams.get('code')).toBeFalsy();
-        expect(url.searchParams.get('id_token')).toBeDefined();
+        expect(body.response_types_supported).toEqual([OAuth2AuthorizationResponseType.CODE]);
     });
 });

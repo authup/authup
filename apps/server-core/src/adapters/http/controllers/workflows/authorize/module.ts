@@ -56,7 +56,6 @@ export class AuthorizeController {
 
         this.authorizer = new HTTPOAuth2Authorizer({
             codeRequestVerifier: this.codeRequestVerifier,
-            accessTokenIssuer: ctx.accessTokenIssuer,
             openIdTokenIssuer: ctx.openIdTokenIssuer,
             codeIssuer: ctx.codeIssuer,
             identityResolver: ctx.identityResolver,
@@ -78,14 +77,6 @@ export class AuthorizeController {
 
         if (result.authorizationCode) {
             url.searchParams.set('code', result.authorizationCode);
-        }
-
-        if (result.accessToken) {
-            url.searchParams.set('access_token', result.accessToken);
-        }
-
-        if (result.idToken) {
-            url.searchParams.set('id_token', result.idToken);
         }
 
         return { url: url.href };

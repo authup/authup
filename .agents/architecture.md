@@ -1105,6 +1105,19 @@ mechanism. `store.logout()` stays local-only (token/cookie cleanup); it does not
 call `DELETE /sessions/@me` (that endpoint remains the session-management API for
 revoking a specific session from the sessions UI).
 
+### Response types — code only (plan 042 item 3)
+
+`response_type=code` is the **only** supported response type (OAuth 2.1
+posture). The implicit/hybrid response types (`token`, `id_token`, `none`) are
+rejected by the code-request validator (a `response_type` issue → 400) and,
+defense in depth, by `OAuth2Authorization.authorize()`
+(`unsupported_response_type`). The authorization response never carries tokens
+— an openid-scoped code stores its id_token on the code blob and the `/token`
+exchange returns it. Discovery `response_types_supported` advertises only
+`code`. Consequently the code-request verifier requires PKCE + `state` for
+public clients **unconditionally** (the former `willIssueCode` gate is gone —
+every verified request issues a code).
+
 ### OIDC prompt surface & id_token claims (plan 041 PR B)
 
 `/authorize` accepts the OIDC Core §3.1.2.1 params `prompt`
