@@ -1127,7 +1127,12 @@ to resolve to avoid a "Continue as \<empty\>" flash. The manual consent screen
 (emits `switch` → local `store.logout()` → login form), so a wrong-account user
 can switch even when the RP sent no `prompt=select_account`. Prompt/error string
 comparisons use the `@authup/specs` `OAuth2AuthorizationPrompt` /
-`OAuth2ErrorCode` enums, not bare literals.
+`OAuth2ErrorCode` enums, not bare literals. **Dead-bearer resilience (plan 042
+item 13):** `AuthorizeForm`'s consent POST catch emits `loginRequired` on **both**
+a `login_required` body error **and an HTTP 401** — a bearer that died mid-flow
+(a session sweep, a sibling-tab logout, an account switch) previously fell into
+`autoConsentFailed`, rendering the manual consent screen whose retry re-POSTed
+the same dead bearer forever; now it falls back to re-authentication.
 
 `prompt=login` / `max_age` freshness is enforced **server-side** in
 `OAuth2Authorization.authorize()` (the authoritative backstop; the hosted UI is

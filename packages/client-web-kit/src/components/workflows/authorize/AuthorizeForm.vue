@@ -135,12 +135,21 @@ export default defineComponent({
                     window.location.href = url;
                 }
             } catch (e) {
-                // Server rejected the identity for this client (realm mismatch —
-                // e.g. a stale SSR bundle that skipped the client-side realm gate,
-                // or a race). Fall back to re-authentication rather than showing
-                // manual consent for a request the server will never accept.
-                const response = (e as { response?: { data?: { error?: unknown } } })?.response;
-                if (response?.data?.error === OAuth2ErrorCode.LOGIN_REQUIRED) {
+                // Fall back to re-authentication (rather than the manual consent
+                // screen, whose retry would re-POST the same dead bearer forever)
+                // when the request can never succeed as-is:
+                //  - login_required body error: the server rejected the identity
+                //    for this client (realm mismatch — e.g. a stale SSR bundle
+                //    that skipped the client-side realm gate, or a race).
+                //  - HTTP 401: the bearer is dead/expired (a mid-flow session
+                //    sweep, a sibling-tab logout, or an account switch).
+                const response = (e as {
+                    response?: { status?: number, data?: { error?: unknown } }
+                })?.response;
+                if (
+                    response?.status === 401 ||
+                    response?.data?.error === OAuth2ErrorCode.LOGIN_REQUIRED
+                ) {
                     emit('loginRequired');
                     return;
                 }
