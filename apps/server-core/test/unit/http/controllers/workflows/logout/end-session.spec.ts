@@ -46,6 +46,7 @@ describe('end-session (/logout)', () => {
             is_confidential: false,
             secret: null,
             redirect_uri: REDIRECT_PATTERN,
+            post_logout_redirect_uri: REDIRECT_PATTERN,
         });
 
         for (const scopeName of [ScopeName.GLOBAL, ScopeName.OPEN_ID]) {
@@ -197,6 +198,53 @@ describe('end-session (/logout)', () => {
         // unmatched redirect is dropped → the confirm page renders (200), not a
         // 302 to the attacker origin
         expect(response.status).toEqual(200);
+    });
+
+    it('should set the hardening headers on the confirm page', async () => {
+        const response = await httpRequest(suite, 'GET', '/logout');
+
+        expect(response.status).toEqual(200);
+        expect(response.headers.get('referrer-policy')).toEqual('no-referrer');
+        expect(response.headers.get('content-security-policy')).toContain("frame-ancestors 'none'");
+        expect(response.headers.get('x-frame-options')).toEqual('DENY');
+    });
+
+    it('should resolve a name-identified client through a mixed-case realm hint (ingress canonicalization)', async () => {
+        const response = await httpRequest(
+            suite,
+            'GET',
+            `/logout?client_id=${client.name}` +
+                `&realm_name=${encodeURIComponent(` ${realm.name.toUpperCase()} `)}` +
+                `&post_logout_redirect_uri=${encodeURIComponent(POST_LOGOUT_URI)}`,
+        );
+
+        expect(response.status).toEqual(200);
+
+        // without the validator's trim().toLowerCase() the realm hint would fail
+        // closed → no client resolution → no validated redirect in the payload
+        const match = (await response.text()).match(/window\.__AUTHUP__ = (.+);/);
+        expect(match).toBeTruthy();
+        const payload = JSON.parse(match![1]);
+        expect(payload.data.client?.name).toEqual(client.name);
+        expect(payload.data.redirect).toEqual(POST_LOGOUT_URI);
+    });
+
+    it('should drop ALL params on malformed input (no revoke, confirm page renders)', async () => {
+        const tokens = await mintTokens();
+
+        // an oversized state fails validation → the whole request is treated as
+        // parameter-less: the (valid) hint is dropped, nothing is revoked, and
+        // the neutral confirm page still renders for the human.
+        const response = await httpRequest(
+            suite,
+            'GET',
+            `/logout?id_token_hint=${tokens.id_token}&state=${'x'.repeat(3000)}`,
+            { redirect: 'manual' },
+        );
+
+        expect(response.status).toEqual(200);
+        expect(response.headers.get('content-type') ?? '').toContain('text/html');
+        expect(await refreshSucceeds(tokens.refresh_token!)).toBe(true);
     });
 
     it('should reach the discovery-advertised end_session_endpoint', async () => {

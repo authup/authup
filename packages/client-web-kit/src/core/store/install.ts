@@ -99,6 +99,11 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
                         store.setRefreshToken(value);
                     }
                     break;
+                case CookieName.ID_TOKEN:
+                    if (!store.idToken) {
+                        store.setIdToken(value);
+                    }
+                    break;
                 case CookieName.USER:
                     if (!store.user) {
                         store.setUser(value);
@@ -159,6 +164,17 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
                 cookieSet(CookieName.REFRESH_TOKEN, input, {});
             } else {
                 cookieUnset(CookieName.REFRESH_TOKEN, {});
+            }
+        },
+    );
+
+    storeDispatcher.on(
+        StoreDispatcherEventName.ID_TOKEN_UPDATED,
+        (input) => {
+            if (input) {
+                cookieSet(CookieName.ID_TOKEN, input, {});
+            } else {
+                cookieUnset(CookieName.ID_TOKEN, {});
             }
         },
     );

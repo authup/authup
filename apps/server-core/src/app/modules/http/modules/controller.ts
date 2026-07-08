@@ -397,6 +397,7 @@ export class HTTPControllerModule {
             sessionManager,
             clientRepository,
             realmRepository,
+            hintGracePeriod: config.endSessionHintGracePeriod,
         });
 
         return new LogoutController({

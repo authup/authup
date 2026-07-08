@@ -31,6 +31,7 @@ const client = {
     name: 'web',
     realm_id: realmId,
     redirect_uri: 'https://app.example.com/**',
+    post_logout_redirect_uri: 'https://app.example.com/**',
 } as Client;
 
 const realmRepository = { resolve: async () => ({ id: realmId, name: 'master' } as Realm) } as unknown as IRealmRepository;
@@ -59,11 +60,15 @@ describe('OAuth2EndSessionService', () => {
         aud: clientId,
     };
 
-    const buildService = (verify: () => Promise<OAuth2TokenPayload>) => new OAuth2EndSessionService({
+    const buildService = (
+        verify: () => Promise<OAuth2TokenPayload>,
+        hintGracePeriod?: number,
+    ) => new OAuth2EndSessionService({
         tokenVerifier: buildVerifier(verify),
         sessionManager,
         clientRepository,
         realmRepository,
+        hintGracePeriod,
     });
 
     beforeEach(() => {
@@ -117,6 +122,47 @@ describe('OAuth2EndSessionService', () => {
         expect(result.hintVerified).toBe(false);
     });
 
+    it('should verify an arbitrarily-old expired hint by default (unbounded window)', async () => {
+        const nowSeconds = Math.floor(Date.now() / 1000);
+        const service = buildService(async () => ({ ...validPayload, exp: nowSeconds - 999_999 }));
+        const result = await service.verify({ id_token_hint: 'expired' });
+
+        expect(result.hintVerified).toBe(true);
+    });
+
+    it('should NOT verify a hint expired beyond the grace window', async () => {
+        const nowSeconds = Math.floor(Date.now() / 1000);
+        const service = buildService(async () => ({ ...validPayload, exp: nowSeconds - 7200 }), 3600);
+        const result = await service.verify({ id_token_hint: 'too-old' });
+
+        expect(result.hintVerified).toBe(false);
+        expect(result.sessionId).toBeUndefined();
+    });
+
+    it('should verify a hint expired within the grace window', async () => {
+        const nowSeconds = Math.floor(Date.now() / 1000);
+        const service = buildService(async () => ({ ...validPayload, exp: nowSeconds - 1800 }), 3600);
+        const result = await service.verify({ id_token_hint: 'recently-expired' });
+
+        expect(result.hintVerified).toBe(true);
+        expect(result.sessionId).toEqual(sessionId);
+    });
+
+    it('should verify an unexpired hint under a bounded window', async () => {
+        const nowSeconds = Math.floor(Date.now() / 1000);
+        const service = buildService(async () => ({ ...validPayload, exp: nowSeconds + 900 }), 3600);
+        const result = await service.verify({ id_token_hint: 'fresh' });
+
+        expect(result.hintVerified).toBe(true);
+    });
+
+    it('should fail closed under a bounded window when the hint carries no exp claim', async () => {
+        const service = buildService(async () => validPayload, 3600);
+        const result = await service.verify({ id_token_hint: 'exp-less' });
+
+        expect(result.hintVerified).toBe(false);
+    });
+
     it('should honor a post_logout_redirect_uri matching a registered pattern', async () => {
         const service = buildService(async () => validPayload);
         const result = await service.verify({
@@ -128,6 +174,31 @@ describe('OAuth2EndSessionService', () => {
 
         expect(result.redirectUri).toEqual('https://app.example.com/after-logout');
         expect(result.state).toEqual('xyz');
+    });
+
+    it('should validate against post_logout_redirect_uri, NOT redirect_uri (dedicated column)', async () => {
+        // a client whose login redirect_uri would match but whose dedicated
+        // post-logout allow-list does NOT — the redirect must be dropped
+        const narrowClient = {
+            ...client,
+            redirect_uri: 'https://app.example.com/**',
+            post_logout_redirect_uri: 'https://app.example.com/only-here/**',
+        } as Client;
+        const service = new OAuth2EndSessionService({
+            tokenVerifier: buildVerifier(async () => validPayload),
+            sessionManager,
+            clientRepository: { findOneByIdOrName: async () => narrowClient } as unknown as IOAuth2ClientRepository,
+            realmRepository,
+        });
+
+        const result = await service.verify({
+            id_token_hint: 'valid',
+            client_id: clientId,
+            // matches redirect_uri but not post_logout_redirect_uri
+            post_logout_redirect_uri: 'https://app.example.com/after-logout',
+        });
+
+        expect(result.redirectUri).toBeUndefined();
     });
 
     it('should DROP an unregistered post_logout_redirect_uri (open-redirect guard)', async () => {

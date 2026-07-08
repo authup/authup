@@ -26,13 +26,16 @@ export type WebClientProvisionerContext = {
  * with the legacy password-grant admin login); `openid` for the id-token.
  *
  * `grant_types` is metadata only — the auth-code grant issues a refresh
- * token regardless — but it documents the intended flow. `redirect_uri` is
- * one `<origin>/**` wildcard per trusted origin (matched by isSimpleMatch).
+ * token regardless — but it documents the intended flow. `redirect_uri` and
+ * `post_logout_redirect_uri` are each one `<origin>/**` wildcard per trusted
+ * origin (matched by isSimpleMatch).
  */
 export function buildWebClientAttributes(
     realm: Realm | { id: string },
     appOrigins: string[],
 ): Partial<Client> {
+    const originPatterns = appOrigins.map((origin) => `${origin}/**`).join(',');
+
     return {
         name: CLIENT_WEB_NAME,
         realm_id: realm.id,
@@ -41,7 +44,8 @@ export function buildWebClientAttributes(
         active: true,
         grant_types: 'authorization_code refresh_token',
         scope: `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}`,
-        redirect_uri: appOrigins.map((origin) => `${origin}/**`).join(','),
+        redirect_uri: originPatterns,
+        post_logout_redirect_uri: originPatterns,
     };
 }
 

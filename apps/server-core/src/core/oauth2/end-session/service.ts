@@ -6,6 +6,7 @@
  */
 
 import { isSimpleMatch } from '@authup/kit';
+import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2TokenKind } from '@authup/specs';
 import type { IRealmRepository } from '../../entities/index.ts';
 import type { ISessionManager } from '../../authentication/index.ts';
@@ -27,11 +28,14 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
 
     protected realmRepository: IRealmRepository;
 
+    protected hintGracePeriod: number;
+
     constructor(ctx: OAuth2EndSessionServiceContext) {
         this.tokenVerifier = ctx.tokenVerifier;
         this.sessionManager = ctx.sessionManager;
         this.clientRepository = ctx.clientRepository;
         this.realmRepository = ctx.realmRepository;
+        this.hintGracePeriod = ctx.hintGracePeriod ?? 0;
     }
 
     async verify(data: OAuth2EndSessionRequest): Promise<OAuth2EndSessionResult> {
@@ -53,7 +57,7 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
                 // MUST be an id_token — access/refresh tokens also carry
                 // session_id, so accepting them would let a leaked access token
                 // act as a logout weapon.
-                if (payload.kind === OAuth2TokenKind.ID_TOKEN) {
+                if (payload.kind === OAuth2TokenKind.ID_TOKEN && this.isWithinHintGraceWindow(payload)) {
                     hintVerified = true;
                     sub = payload.sub;
                     subKind = payload.sub_kind;
@@ -98,7 +102,7 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
                 clientName = client.name;
                 if (
                     data.post_logout_redirect_uri &&
-                    this.isValidPostLogoutRedirect(client.redirect_uri, data.post_logout_redirect_uri)
+                    this.isValidPostLogoutRedirect(client.post_logout_redirect_uri, data.post_logout_redirect_uri)
                 ) {
                     redirectUri = data.post_logout_redirect_uri;
                 }
@@ -131,6 +135,26 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
 
         await this.sessionManager.revoke(sessionId);
         return true;
+    }
+
+    /**
+     * With a positive `hintGracePeriod`, an expired hint is honored only within
+     * the window past `exp` — beyond it a leaked id_token stops being a
+     * replayable remote logout (the hint counts as unverified; the click-gated
+     * confirm page still works). 0 keeps spec/Keycloak parity: any expired hint.
+     */
+    protected isWithinHintGraceWindow(payload: OAuth2TokenPayload): boolean {
+        if (this.hintGracePeriod <= 0) {
+            return true;
+        }
+
+        // a bounded window without an exp claim to judge against fails closed
+        if (typeof payload.exp !== 'number') {
+            return false;
+        }
+
+        const nowSeconds = Math.floor(Date.now() / 1000);
+        return nowSeconds - payload.exp <= this.hintGracePeriod;
     }
 
     /**

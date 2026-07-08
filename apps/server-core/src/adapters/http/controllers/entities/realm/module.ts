@@ -116,12 +116,15 @@ export class RealmController {
                 OAuth2AuthorizationResponseType.CODE,
             ],
 
-            // `none` is intentionally NOT advertised: the silent-auth error
-            // redirect (OIDC §3.1.2.1) is not implemented — a `prompt=none`
-            // request currently renders the interactive page. Advertising it
-            // would promise a capability the server does not have. (Re-add it
-            // alongside the error-redirect implementation — plan 042.)
+            // `none` (silent authentication) is handled by the hosted SSR
+            // authorize page (the kit `Authorize.vue`): it either completes a
+            // built_in client's auto-consent silently or redirects the OIDC
+            // error (login_required / consent_required / interaction_required)
+            // to a verified redirect_uri — zero UI. The server GET cannot do
+            // this server-side (auth is header-only; a top-level navigation
+            // carries no bearer), so the SSR page owns it (plan 042 item 10).
             prompt_values_supported: [
+                OAuth2AuthorizationPrompt.NONE,
                 OAuth2AuthorizationPrompt.LOGIN,
                 OAuth2AuthorizationPrompt.CONSENT,
                 OAuth2AuthorizationPrompt.SELECT_ACCOUNT,

@@ -1176,13 +1176,35 @@ sub/realm-mismatch fallback (or session-deleted-in-flight) left the id_token's
 `sid` pointing at a stale session.
 
 **Discovery** (realm-scoped `.well-known/openid-configuration`) advertises
-`prompt_values_supported` (`login`, `consent`, `select_account` — **not**
-`none`: the silent-auth error redirect is unimplemented, so it must not be
-advertised or the RP is promised a capability the server lacks) and **fixes**
-`revocation_endpoint` from `…/token` to `…/token/revoke` (RFC 7009 — an RFC 7009
-POST to `/token` never worked). An empty `max_age=` is treated as **absent**
-(the validator preprocesses blank → undefined; `z.coerce.number('') === 0` would
-otherwise silently force re-authentication).
+`prompt_values_supported` (`none`, `login`, `consent`, `select_account`) and
+**fixes** `revocation_endpoint` from `…/token` to `…/token/revoke` (RFC 7009 —
+an RFC 7009 POST to `/token` never worked). An empty `max_age=` is treated as
+**absent** (the validator preprocesses blank → undefined; `z.coerce.number('')
+=== 0` would otherwise silently force re-authentication).
+
+**`prompt=none` (silent auth) + `prompt=login` (re-auth) are handled in the
+hosted SSR kit `Authorize.vue`, NOT server-side (plan 042 item 10).** The
+server GET cannot silently authenticate: auth is header-only (the
+authorization middleware reads the identity only from `Authorization`; cors.ts
+relies on "no cookie-authenticated endpoint exists"), and a top-level
+`GET /authorize` browser navigation carries no bearer. The session lives
+client-side (the kit store's cookie), so the SSR page — which every RP (kit or
+not) is redirected to — owns the decision. The kit ladder, evaluated after the
+SSR app's router guard `await store.resolve()` settles the session:
+- **`prompt=none`**: not-logged-in / realm-mismatch → redirect
+  `redirect_uri?error=login_required&state`; non-`built_in` client →
+  `consent_required` (no persisted consent record — see plan 043); `built_in`
+  + logged-in + realm-match → the existing auto-consent path issues the code
+  silently; a max_age/freshness `login_required` from the POST is redirected as
+  `login_required`. Every silent error redirect is gated on
+  `redirectUriVerified` — an unverified `redirect_uri` degrades to interactive
+  UI (never redirect an OIDC error to an unregistered URI). Rendered by
+  `AuthorizeSilentRedirect.vue` (client-only `window.location` in `onMounted`).
+- **`prompt=login`**: forces the login form (with a re-auth banner,
+  `authupClient.reauthText`) even for a logged-in user, until a fresh login on
+  this page fires `LOGGED_IN`; the same banner path is reused when the POST
+  surfaces `login_required` mid-flow (replacing the old silent
+  `switchAccount`).
 
 The anonymous `GET /authorize` hydration payload carries a **trimmed client
 DTO** (`ClientSummary` = `id`/`name`/`display_name`/`built_in`/`created_at`) plus
@@ -1200,23 +1222,54 @@ app (kit or non-kit) ends a lingering authup session on its own logout, so
 `OAuth2EndSessionService` (`core/oauth2/end-session/`), wired via
 `createLogoutController`. Security posture (all enforced, unit-tested matrix):
 
+- **Request validation (plan 042 item 4):** `OAuth2EndSessionRequestValidator`
+  (`core/oauth2/end-session/validator.ts`) runs over the merged body+query
+  before anything else — length caps on every param (`id_token_hint` ≤ 4096,
+  `post_logout_redirect_uri` ≤ 2000 + URL check, `state` ≤ 2048), blank params
+  treated as absent, and the `realm_id`/`realm_name` hint canonicalized
+  `trim().toLowerCase()` at the ingress (canonical-identifier-form layer 3, same
+  contract as the token endpoint's `readRealmHint`). On a validation failure the
+  controller falls back to a **parameter-less** confirm page (every
+  attacker-controlled value dropped, no revoke, no redirect) — never a JSON
+  error: the human behind the browser can still sign out.
 - **id_token_hint** is verified by `OAuth2TokenVerifier` with a new
   `ignoreExpiry` option — signature, nbf and (crucially) **kind** still apply;
   only `exp` is skipped (a logout hint is routinely expired). The option threads
   down to server-kit's `verifyToken` (`validateExp: false`). A hint whose `kind
   !== id_token` is **rejected** (access/refresh tokens also carry `session_id`,
   so accepting them would let a leaked access token force a logout). `aud` vs
-  request `client_id` cross-checked when both present.
+  request `client_id` cross-checked when both present — note the id_token `aud`
+  is the client **UUID**, so a name-identified request `client_id` will not
+  match a hint's `aud`.
+- **Bounded expired-hint window (plan 042 item 2):** with config
+  `endSessionHintGracePeriod` > 0 (seconds past `exp`, ENV
+  `END_SESSION_HINT_GRACE_PERIOD`), a hint expired beyond the window counts as
+  **unverified** (`isWithinHintGraceWindow`; exp-less payloads fail closed) —
+  bounding how long a leaked id_token stays a replayable remote logout. The
+  default 0 keeps spec/Keycloak parity (any expired hint accepted); the real
+  bound is then session lifetime, since a hint can only ever revoke the live,
+  sub-matched session its `sid` references.
 - A signature-verified hint carrying `sid` → the referenced session is revoked
   **immediately** (`ISessionManager.revoke`), but **only** after
   `session.sub`/`sub_kind` match the hint's subject (never revoke someone else's
   session). Without a hint the endpoint mutates nothing — the SSR page's sign-out
   is a click-gated, bearer-authenticated `store.logout()`.
 - `post_logout_redirect_uri` is honored **only** when it is absolute http(s) AND
-  `isSimpleMatch`es a registered client `redirect_uri` pattern (open-redirect
-  guard); otherwise dropped, and `state` rides only alongside a validated
-  redirect. (A dedicated `post_logout_redirect_uri` client column + migration is
-  a deferred follow-up; today it validates against `redirect_uri` patterns.)
+  `isSimpleMatch`es a registered pattern in the client's dedicated
+  `post_logout_redirect_uri` column (open-redirect guard); otherwise dropped,
+  and `state` rides only alongside a validated redirect. **The column is
+  separate from `redirect_uri` (plan 042 item 9)** — login and logout redirect
+  surfaces are no longer conflated: a URI that matches the login `redirect_uri`
+  but not the post-logout allow-list is rejected. It is a nullable
+  `varchar(2000)` on `ClientEntity` + core-kit `Client` + `ClientValidator`
+  (comma-separated wildcard patterns, same shape as `redirect_uri`; mounted in
+  every group, **not** in the self-manage denylist, **not** in the trimmed
+  `ClientSummary` DTO, **added** to the client repository `fields.default`
+  allow-list so reads return it). The migration is folded into the
+  still-unreleased `1783325495597-Default.ts` (both dialects, up/down verified
+  by the `tests-migrations` round-trip). `buildWebClientAttributes` sets it to
+  the same `<origin>/**`-per-app-origin patterns as `redirect_uri`, so
+  `WebClientProvisioner`'s MERGE widens it on the next startup.
 - **The server-side bounce fires ONLY when the logout was actually performed**
   (`serverRevoked` — a verified hint revoked the session). A hint-less or
   forged request with an otherwise-valid `post_logout_redirect_uri` must **not**
@@ -1239,6 +1292,31 @@ forwards `hintSub` (only for a verified hint) and the validated `redirect` into
 the payload for this gate. **Residual (Keycloak parity):** a *leaked* valid
 id_token can force-logout its own session (annoyance, not privilege escalation)
 — mitigated by the sub-match + short id_token TTL.
+
+**Kit store retains the id_token; client-web round-trips through `/logout`
+(plan 042 items 8a + 8).** The `@authup/client-web-kit` store now keeps the
+grant response's `id_token` as an `idToken` ref (setter emits
+`StoreDispatcherEventName.ID_TOKEN_UPDATED`, cookie-persisted via
+`CookieName.ID_TOKEN`, cleared in `cleanup()`). `applyTokenGrantResponse`
+**retains** the existing value when a response carries none (a refresh grant
+returns no id_token) rather than clearing it. This gives every kit RP an
+`id_token_hint` to pass to the `end_session_endpoint` — without it they all
+degrade to the click-gated confirm page. `apps/client-web/pages/logout.vue`
+uses it: the page deliberately does **not** set `REQUIRED_LOGGED_OUT` (that meta
+makes the routing interceptor run `store.logout()` before the page's setup,
+discarding the id_token), captures `idToken`/`realmId` on mount, runs the
+local-only `store.logout()`, then hard-redirects to
+`buildEndSessionURL({ baseURL, idTokenHint, realmId,
+postLogoutRedirectUri: <origin>/login })`. With the hint the server revokes and
+bounces straight back; without it the server's confirm page returns to
+`/login`. **It passes NO `client_id`**: the id_token's `aud` is the client
+**UUID**, so a name-identified `client_id` (`web`) would fail the server's
+`aud` cross-check and clear `hintVerified` — silently disabling the revoke (the
+round-trip would always degrade to the confirm page). Omitting it lets the
+service resolve the client from the hint's sole `aud`. `store.logout()` remains
+local-only — the round-trip is the chosen mechanism, **not** a
+`DELETE /sessions/@me` (which would collide with the #3191 interactive-login
+session reuse → self-DoS of fresh logins).
 
 ## OAuth2 Token Endpoint Authentication
 

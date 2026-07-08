@@ -150,7 +150,7 @@ The following [OpenID Connect Core §3.1.2.1](https://openid.net/specs/openid-co
 
 | Parameter | Description |
 |---|---|
-| `prompt` | Space-delimited list of `login`, `consent`, `select_account`. `select_account` shows a "continue as / use another account" chooser when a session already exists; `login` forces re-authentication; `consent` forces the consent screen. Unknown values are ignored; `none` combined with any other value is an `invalid_request`. Note: `none` (silent authentication) is not yet implemented — it is not advertised in `prompt_values_supported`, and a `prompt=none` request currently renders the interactive page rather than returning an error redirect. |
+| `prompt` | Space-delimited list of `none`, `login`, `consent`, `select_account`. `none` performs silent authentication (no UI): a `built_in` client with a valid, realm-matching session is auto-consented and redirected with a `code`; otherwise the OIDC error (`login_required`, `consent_required`, or `interaction_required`) is redirected to the `redirect_uri`. **`prompt=none` must be driven as a top-level navigation, not a hidden iframe** — the authorize page sends `X-Frame-Options: DENY` / `frame-ancestors 'none'`, so the classic iframe silent-renew pattern is blocked. `select_account` shows a "continue as / use another account" chooser when a session already exists; `login` forces re-authentication (with a banner); `consent` forces the consent screen. Unknown values are ignored; `none` combined with any other value is an `invalid_request`. |
 | `max_age` | Maximum acceptable age (seconds) of the authentication. If the session is older, the user is asked to re-authenticate (`max_age=0` forces it). |
 | `login_hint` | Pre-fills the identifier on the login form. |
 
@@ -176,9 +176,9 @@ GET http://localhost:3001/logout
 
 | Parameter | Description |
 |---|---|
-| `id_token_hint` | An `id_token` previously issued to the user. When its signature verifies (an expired token is accepted) and its subject matches the referenced session, that session is revoked immediately without a confirmation prompt; a subject mismatch is ignored as a no-op. |
-| `client_id` | The client requesting logout. Cross-checked against the hint's `aud` when both are present. |
-| `post_logout_redirect_uri` | Where to redirect after logout. Honored only when it is an absolute `http(s)` URL matching one of the client's registered `redirect_uri` patterns (open-redirect guard); otherwise ignored. |
+| `id_token_hint` | An `id_token` previously issued to the user. When its signature verifies (an expired token is accepted — bounded by `endSessionHintGracePeriod` / `END_SESSION_HINT_GRACE_PERIOD` when configured, unbounded by default) and its subject matches the referenced session, that session is revoked immediately without a confirmation prompt; a subject mismatch is ignored as a no-op. |
+| `client_id` | The client requesting logout. Cross-checked against the hint's `aud` when both are present — note `aud` carries the client's **id**, so a name-identified `client_id` will not match a hint's `aud`. |
+| `post_logout_redirect_uri` | Where to redirect after logout. Honored only when it is an absolute `http(s)` URL matching one of the client's registered `post_logout_redirect_uri` patterns (a dedicated allow-list, separate from the login `redirect_uri`; same comma-separated wildcard syntax; open-redirect guard); otherwise ignored. |
 | `state` | Opaque value echoed back on the redirect (only alongside a validated `post_logout_redirect_uri`). |
 
-Without a valid `id_token_hint`, `/logout` serves a page asking the user to confirm sign-out; no state is changed until they confirm.
+Without a valid `id_token_hint`, `/logout` serves a page asking the user to confirm sign-out; no state is changed until they confirm. The same applies when the request is malformed (oversized parameters, an invalid `post_logout_redirect_uri`): every parameter is discarded and the neutral confirm page is served. The `realm_id` / `realm_name` hint (scoping a name-identified `client_id`) is case-insensitive.

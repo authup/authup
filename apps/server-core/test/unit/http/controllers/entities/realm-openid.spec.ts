@@ -75,9 +75,11 @@ describe('RealmController.getOpenIdConfiguration', () => {
         const controller = createController(realm);
         const config = await controller.getOpenIdConfiguration(realmId);
 
-        // `none` (silent auth) is intentionally NOT advertised — the error
-        // redirect is unimplemented, so the server must not promise it.
+        // `none` (silent auth) is handled by the hosted SSR authorize page
+        // (plan 042 item 10) — the kit either auto-consents a built_in client
+        // silently or redirects the OIDC error to a verified redirect_uri.
         expect(config.prompt_values_supported).toEqual([
+            'none',
             'login',
             'consent',
             'select_account',
