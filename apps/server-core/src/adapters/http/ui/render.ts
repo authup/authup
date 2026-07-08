@@ -110,6 +110,10 @@ export async function renderUIPage(event: IAppEvent, ctx: UIRenderContext): Prom
     event.response.headers.set('content-security-policy', "frame-ancestors 'none'");
     event.response.headers.set('x-frame-options', 'DENY');
 
+    // The auth pages' URLs routinely carry sensitive query params
+    // (id_token_hint, code, redirect, state) — never leak them via Referer.
+    event.response.headers.set('referrer-policy', 'no-referrer');
+
     return body;
 }
 

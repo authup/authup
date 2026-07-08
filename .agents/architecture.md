@@ -1173,13 +1173,33 @@ app (kit or non-kit) ends a lingering authup session on its own logout, so
 `OAuth2EndSessionService` (`core/oauth2/end-session/`), wired via
 `createLogoutController`. Security posture (all enforced, unit-tested matrix):
 
+- **Request validation (plan 042 item 4):** `OAuth2EndSessionRequestValidator`
+  (`core/oauth2/end-session/validator.ts`) runs over the merged body+query
+  before anything else — length caps on every param (`id_token_hint` ≤ 4096,
+  `post_logout_redirect_uri` ≤ 2000 + URL check, `state` ≤ 2048), blank params
+  treated as absent, and the `realm_id`/`realm_name` hint canonicalized
+  `trim().toLowerCase()` at the ingress (canonical-identifier-form layer 3, same
+  contract as the token endpoint's `readRealmHint`). On a validation failure the
+  controller falls back to a **parameter-less** confirm page (every
+  attacker-controlled value dropped, no revoke, no redirect) — never a JSON
+  error: the human behind the browser can still sign out.
 - **id_token_hint** is verified by `OAuth2TokenVerifier` with a new
   `ignoreExpiry` option — signature, nbf and (crucially) **kind** still apply;
   only `exp` is skipped (a logout hint is routinely expired). The option threads
   down to server-kit's `verifyToken` (`validateExp: false`). A hint whose `kind
   !== id_token` is **rejected** (access/refresh tokens also carry `session_id`,
   so accepting them would let a leaked access token force a logout). `aud` vs
-  request `client_id` cross-checked when both present.
+  request `client_id` cross-checked when both present — note the id_token `aud`
+  is the client **UUID**, so a name-identified request `client_id` will not
+  match a hint's `aud`.
+- **Bounded expired-hint window (plan 042 item 2):** with config
+  `endSessionHintGracePeriod` > 0 (seconds past `exp`, ENV
+  `END_SESSION_HINT_GRACE_PERIOD`), a hint expired beyond the window counts as
+  **unverified** (`isWithinHintGraceWindow`; exp-less payloads fail closed) —
+  bounding how long a leaked id_token stays a replayable remote logout. The
+  default 0 keeps spec/Keycloak parity (any expired hint accepted); the real
+  bound is then session lifetime, since a hint can only ever revoke the live,
+  sub-matched session its `sid` references.
 - A signature-verified hint carrying `sid` → the referenced session is revoked
   **immediately** (`ISessionManager.revoke`), but **only** after
   `session.sub`/`sub_kind` match the hint's subject (never revoke someone else's

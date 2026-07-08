@@ -100,6 +100,11 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.promptLoginMaxAge = promptLoginMaxAge;
     }
 
+    const endSessionHintGracePeriod = readInt(ConfigEnvironmentVariableName.END_SESSION_HINT_GRACE_PERIOD);
+    if (typeof endSessionHintGracePeriod !== 'undefined') {
+        options.endSessionHintGracePeriod = endSessionHintGracePeriod;
+    }
+
     const registrationEnabled = readBool(ConfigEnvironmentVariableName.REGISTRATION_ENABLED);
     if (typeof registrationEnabled !== 'undefined') {
         options.registrationEnabled = registrationEnabled;

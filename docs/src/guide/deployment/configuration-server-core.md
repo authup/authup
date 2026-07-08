@@ -90,6 +90,16 @@ export default {
      */
     promptLoginMaxAge: 60,
 
+    /**
+     * Seconds past its expiry an (expired) id_token_hint presented at the
+     * RP-initiated logout endpoint (/logout) is still accepted for a
+     * server-side session revoke. Bounds how long a leaked id_token stays a
+     * replayable remote logout; beyond the window the click-gated confirm
+     * page still works.
+     * default: 0 (unbounded — spec/Keycloak parity)
+     */
+    endSessionHintGracePeriod: 0,
+
     // ----------------------------------------------------
     
     /**

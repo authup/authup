@@ -60,11 +60,15 @@ describe('OAuth2EndSessionService', () => {
         aud: clientId,
     };
 
-    const buildService = (verify: () => Promise<OAuth2TokenPayload>) => new OAuth2EndSessionService({
+    const buildService = (
+        verify: () => Promise<OAuth2TokenPayload>,
+        hintGracePeriod?: number,
+    ) => new OAuth2EndSessionService({
         tokenVerifier: buildVerifier(verify),
         sessionManager,
         clientRepository,
         realmRepository,
+        hintGracePeriod,
     });
 
     beforeEach(() => {
@@ -114,6 +118,47 @@ describe('OAuth2EndSessionService', () => {
     it('should NOT verify when client_id is absent from a multi-valued aud', async () => {
         const service = buildService(async () => ({ ...validPayload, aud: [randomUUID(), randomUUID()] }));
         const result = await service.verify({ id_token_hint: 'valid', client_id: clientId });
+
+        expect(result.hintVerified).toBe(false);
+    });
+
+    it('should verify an arbitrarily-old expired hint by default (unbounded window)', async () => {
+        const nowSeconds = Math.floor(Date.now() / 1000);
+        const service = buildService(async () => ({ ...validPayload, exp: nowSeconds - 999_999 }));
+        const result = await service.verify({ id_token_hint: 'expired' });
+
+        expect(result.hintVerified).toBe(true);
+    });
+
+    it('should NOT verify a hint expired beyond the grace window', async () => {
+        const nowSeconds = Math.floor(Date.now() / 1000);
+        const service = buildService(async () => ({ ...validPayload, exp: nowSeconds - 7200 }), 3600);
+        const result = await service.verify({ id_token_hint: 'too-old' });
+
+        expect(result.hintVerified).toBe(false);
+        expect(result.sessionId).toBeUndefined();
+    });
+
+    it('should verify a hint expired within the grace window', async () => {
+        const nowSeconds = Math.floor(Date.now() / 1000);
+        const service = buildService(async () => ({ ...validPayload, exp: nowSeconds - 1800 }), 3600);
+        const result = await service.verify({ id_token_hint: 'recently-expired' });
+
+        expect(result.hintVerified).toBe(true);
+        expect(result.sessionId).toEqual(sessionId);
+    });
+
+    it('should verify an unexpired hint under a bounded window', async () => {
+        const nowSeconds = Math.floor(Date.now() / 1000);
+        const service = buildService(async () => ({ ...validPayload, exp: nowSeconds + 900 }), 3600);
+        const result = await service.verify({ id_token_hint: 'fresh' });
+
+        expect(result.hintVerified).toBe(true);
+    });
+
+    it('should fail closed under a bounded window when the hint carries no exp claim', async () => {
+        const service = buildService(async () => validPayload, 3600);
+        const result = await service.verify({ id_token_hint: 'exp-less' });
 
         expect(result.hintVerified).toBe(false);
     });
