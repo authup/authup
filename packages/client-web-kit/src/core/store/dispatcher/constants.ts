@@ -20,6 +20,8 @@ export enum StoreDispatcherEventName {
 
     REFRESH_TOKEN_UPDATED = 'refreshTokenUpdated',
 
+    ID_TOKEN_UPDATED = 'idTokenUpdated',
+
     USER_UPDATED = 'userUpdated',
 
     REALM_UPDATED = 'realmUpdated',

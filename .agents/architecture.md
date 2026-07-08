@@ -1244,6 +1244,31 @@ the payload for this gate. **Residual (Keycloak parity):** a *leaked* valid
 id_token can force-logout its own session (annoyance, not privilege escalation)
 — mitigated by the sub-match + short id_token TTL.
 
+**Kit store retains the id_token; client-web round-trips through `/logout`
+(plan 042 items 8a + 8).** The `@authup/client-web-kit` store now keeps the
+grant response's `id_token` as an `idToken` ref (setter emits
+`StoreDispatcherEventName.ID_TOKEN_UPDATED`, cookie-persisted via
+`CookieName.ID_TOKEN`, cleared in `cleanup()`). `applyTokenGrantResponse`
+**retains** the existing value when a response carries none (a refresh grant
+returns no id_token) rather than clearing it. This gives every kit RP an
+`id_token_hint` to pass to the `end_session_endpoint` — without it they all
+degrade to the click-gated confirm page. `apps/client-web/pages/logout.vue`
+uses it: the page deliberately does **not** set `REQUIRED_LOGGED_OUT` (that meta
+makes the routing interceptor run `store.logout()` before the page's setup,
+discarding the id_token), captures `idToken`/`realmId` on mount, runs the
+local-only `store.logout()`, then hard-redirects to
+`buildEndSessionURL({ baseURL, idTokenHint, realmId,
+postLogoutRedirectUri: <origin>/login })`. With the hint the server revokes and
+bounces straight back; without it the server's confirm page returns to
+`/login`. **It passes NO `client_id`**: the id_token's `aud` is the client
+**UUID**, so a name-identified `client_id` (`web`) would fail the server's
+`aud` cross-check and clear `hintVerified` — silently disabling the revoke (the
+round-trip would always degrade to the confirm page). Omitting it lets the
+service resolve the client from the hint's sole `aud`. `store.logout()` remains
+local-only — the round-trip is the chosen mechanism, **not** a
+`DELETE /sessions/@me` (which would collide with the #3191 interactive-login
+session reuse → self-DoS of fresh logins).
+
 ## OAuth2 Token Endpoint Authentication
 
 The `/token` endpoint authenticates the calling client according to RFC 6749. Confidential clients MUST present a `client_secret`; public clients identify with `client_id` only.
