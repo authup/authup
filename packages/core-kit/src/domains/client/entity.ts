@@ -38,6 +38,13 @@ export interface Client {
 
     redirect_uri: string | null,
 
+    /**
+     * Comma-separated allow-list of post-logout redirect patterns (OIDC
+     * RP-Initiated Logout `post_logout_redirect_uri`). Matched with the same
+     * wildcard semantics as `redirect_uri`.
+     */
+    post_logout_redirect_uri: string | null,
+
     grant_types: string | null,
 
     scope: string | null,

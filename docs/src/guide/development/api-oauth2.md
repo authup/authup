@@ -176,7 +176,7 @@ GET http://localhost:3001/logout
 |---|---|
 | `id_token_hint` | An `id_token` previously issued to the user. When its signature verifies (an expired token is accepted — bounded by `endSessionHintGracePeriod` / `END_SESSION_HINT_GRACE_PERIOD` when configured, unbounded by default) and its subject matches the referenced session, that session is revoked immediately without a confirmation prompt; a subject mismatch is ignored as a no-op. |
 | `client_id` | The client requesting logout. Cross-checked against the hint's `aud` when both are present — note `aud` carries the client's **id**, so a name-identified `client_id` will not match a hint's `aud`. |
-| `post_logout_redirect_uri` | Where to redirect after logout. Honored only when it is an absolute `http(s)` URL matching one of the client's registered `redirect_uri` patterns (open-redirect guard); otherwise ignored. |
+| `post_logout_redirect_uri` | Where to redirect after logout. Honored only when it is an absolute `http(s)` URL matching one of the client's registered `post_logout_redirect_uri` patterns (a dedicated allow-list, separate from the login `redirect_uri`; same comma-separated wildcard syntax; open-redirect guard); otherwise ignored. |
 | `state` | Opaque value echoed back on the redirect (only alongside a validated `post_logout_redirect_uri`). |
 
 Without a valid `id_token_hint`, `/logout` serves a page asking the user to confirm sign-out; no state is changed until they confirm. The same applies when the request is malformed (oversized parameters, an invalid `post_logout_redirect_uri`): every parameter is discarded and the neutral confirm page is served. The `realm_id` / `realm_name` hint (scoping a name-identified `client_id`) is case-insensitive.

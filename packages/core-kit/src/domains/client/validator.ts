@@ -126,6 +126,31 @@ export class ClientValidator extends Container<Client> {
         );
 
         this.mount(
+            'post_logout_redirect_uri',
+            { optional: true },
+            createValidator(
+                z
+                    .string()
+                    .check((ctx) => {
+                        const validator = z.url();
+                        const urls = ctx.value.split(',');
+                        for (const url of urls) {
+                            try {
+                                validator.parse(url);
+                            } catch (e) {
+                                ctx.issues.push({
+                                    input: url,
+                                    code: 'custom',
+                                    message: e instanceof Error ? e.message : 'The post_logout_redirect_uri is not valid.',
+                                });
+                            }
+                        }
+                    })
+                    .nullable(),
+            ),
+        );
+
+        this.mount(
             'base_url',
             { optional: true },
             createValidator(

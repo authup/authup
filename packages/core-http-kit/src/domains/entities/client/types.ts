@@ -19,6 +19,7 @@ export type ClientCreatePayload = Pick<Client, 'name'> &
         'secret_encrypted' |
         'secret_hashed' |
         'redirect_uri' |
+        'post_logout_redirect_uri' |
         'base_url' |
         'root_url' |
         'grant_types' |

@@ -46,6 +46,7 @@ describe('end-session (/logout)', () => {
             is_confidential: false,
             secret: null,
             redirect_uri: REDIRECT_PATTERN,
+            post_logout_redirect_uri: REDIRECT_PATTERN,
         });
 
         for (const scopeName of [ScopeName.GLOBAL, ScopeName.OPEN_ID]) {

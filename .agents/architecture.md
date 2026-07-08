@@ -1206,10 +1206,21 @@ app (kit or non-kit) ends a lingering authup session on its own logout, so
   session). Without a hint the endpoint mutates nothing — the SSR page's sign-out
   is a click-gated, bearer-authenticated `store.logout()`.
 - `post_logout_redirect_uri` is honored **only** when it is absolute http(s) AND
-  `isSimpleMatch`es a registered client `redirect_uri` pattern (open-redirect
-  guard); otherwise dropped, and `state` rides only alongside a validated
-  redirect. (A dedicated `post_logout_redirect_uri` client column + migration is
-  a deferred follow-up; today it validates against `redirect_uri` patterns.)
+  `isSimpleMatch`es a registered pattern in the client's dedicated
+  `post_logout_redirect_uri` column (open-redirect guard); otherwise dropped,
+  and `state` rides only alongside a validated redirect. **The column is
+  separate from `redirect_uri` (plan 042 item 9)** — login and logout redirect
+  surfaces are no longer conflated: a URI that matches the login `redirect_uri`
+  but not the post-logout allow-list is rejected. It is a nullable
+  `varchar(2000)` on `ClientEntity` + core-kit `Client` + `ClientValidator`
+  (comma-separated wildcard patterns, same shape as `redirect_uri`; mounted in
+  every group, **not** in the self-manage denylist, **not** in the trimmed
+  `ClientSummary` DTO, **added** to the client repository `fields.default`
+  allow-list so reads return it). The migration is folded into the
+  still-unreleased `1783325495597-Default.ts` (both dialects, up/down verified
+  by the `tests-migrations` round-trip). `buildWebClientAttributes` sets it to
+  the same `<origin>/**`-per-app-origin patterns as `redirect_uri`, so
+  `WebClientProvisioner`'s MERGE widens it on the next startup.
 - **The server-side bounce fires ONLY when the logout was actually performed**
   (`serverRevoked` — a verified hint revoked the session). A hint-less or
   forged request with an otherwise-valid `post_logout_redirect_uri` must **not**

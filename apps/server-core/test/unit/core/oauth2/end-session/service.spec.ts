@@ -31,6 +31,7 @@ const client = {
     name: 'web',
     realm_id: realmId,
     redirect_uri: 'https://app.example.com/**',
+    post_logout_redirect_uri: 'https://app.example.com/**',
 } as Client;
 
 const realmRepository = { resolve: async () => ({ id: realmId, name: 'master' } as Realm) } as unknown as IRealmRepository;
@@ -173,6 +174,31 @@ describe('OAuth2EndSessionService', () => {
 
         expect(result.redirectUri).toEqual('https://app.example.com/after-logout');
         expect(result.state).toEqual('xyz');
+    });
+
+    it('should validate against post_logout_redirect_uri, NOT redirect_uri (dedicated column)', async () => {
+        // a client whose login redirect_uri would match but whose dedicated
+        // post-logout allow-list does NOT — the redirect must be dropped
+        const narrowClient = {
+            ...client,
+            redirect_uri: 'https://app.example.com/**',
+            post_logout_redirect_uri: 'https://app.example.com/only-here/**',
+        } as Client;
+        const service = new OAuth2EndSessionService({
+            tokenVerifier: buildVerifier(async () => validPayload),
+            sessionManager,
+            clientRepository: { findOneByIdOrName: async () => narrowClient } as unknown as IOAuth2ClientRepository,
+            realmRepository,
+        });
+
+        const result = await service.verify({
+            id_token_hint: 'valid',
+            client_id: clientId,
+            // matches redirect_uri but not post_logout_redirect_uri
+            post_logout_redirect_uri: 'https://app.example.com/after-logout',
+        });
+
+        expect(result.redirectUri).toBeUndefined();
     });
 
     it('should DROP an unregistered post_logout_redirect_uri (open-redirect guard)', async () => {

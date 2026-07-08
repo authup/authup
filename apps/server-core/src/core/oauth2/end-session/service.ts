@@ -102,7 +102,7 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
                 clientName = client.name;
                 if (
                     data.post_logout_redirect_uri &&
-                    this.isValidPostLogoutRedirect(client.redirect_uri, data.post_logout_redirect_uri)
+                    this.isValidPostLogoutRedirect(client.post_logout_redirect_uri, data.post_logout_redirect_uri)
                 ) {
                     redirectUri = data.post_logout_redirect_uri;
                 }
