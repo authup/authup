@@ -1149,13 +1149,35 @@ and the #3191 session-reuse-vs-fallback path can make `sid` reference the bearer
 session rather than a freshly-created fallback one (documented residual).
 
 **Discovery** (realm-scoped `.well-known/openid-configuration`) advertises
-`prompt_values_supported` (`login`, `consent`, `select_account` — **not**
-`none`: the silent-auth error redirect is unimplemented, so it must not be
-advertised or the RP is promised a capability the server lacks) and **fixes**
-`revocation_endpoint` from `…/token` to `…/token/revoke` (RFC 7009 — an RFC 7009
-POST to `/token` never worked). An empty `max_age=` is treated as **absent**
-(the validator preprocesses blank → undefined; `z.coerce.number('') === 0` would
-otherwise silently force re-authentication).
+`prompt_values_supported` (`none`, `login`, `consent`, `select_account`) and
+**fixes** `revocation_endpoint` from `…/token` to `…/token/revoke` (RFC 7009 —
+an RFC 7009 POST to `/token` never worked). An empty `max_age=` is treated as
+**absent** (the validator preprocesses blank → undefined; `z.coerce.number('')
+=== 0` would otherwise silently force re-authentication).
+
+**`prompt=none` (silent auth) + `prompt=login` (re-auth) are handled in the
+hosted SSR kit `Authorize.vue`, NOT server-side (plan 042 item 10).** The
+server GET cannot silently authenticate: auth is header-only (the
+authorization middleware reads the identity only from `Authorization`; cors.ts
+relies on "no cookie-authenticated endpoint exists"), and a top-level
+`GET /authorize` browser navigation carries no bearer. The session lives
+client-side (the kit store's cookie), so the SSR page — which every RP (kit or
+not) is redirected to — owns the decision. The kit ladder, evaluated after the
+SSR app's router guard `await store.resolve()` settles the session:
+- **`prompt=none`**: not-logged-in / realm-mismatch → redirect
+  `redirect_uri?error=login_required&state`; non-`built_in` client →
+  `consent_required` (no persisted consent record — see plan 043); `built_in`
+  + logged-in + realm-match → the existing auto-consent path issues the code
+  silently; a max_age/freshness `login_required` from the POST is redirected as
+  `login_required`. Every silent error redirect is gated on
+  `redirectUriVerified` — an unverified `redirect_uri` degrades to interactive
+  UI (never redirect an OIDC error to an unregistered URI). Rendered by
+  `AuthorizeSilentRedirect.vue` (client-only `window.location` in `onMounted`).
+- **`prompt=login`**: forces the login form (with a re-auth banner,
+  `authupClient.reauthText`) even for a logged-in user, until a fresh login on
+  this page fires `LOGGED_IN`; the same banner path is reused when the POST
+  surfaces `login_required` mid-flow (replacing the old silent
+  `switchAccount`).
 
 The anonymous `GET /authorize` hydration payload carries a **trimmed client
 DTO** (`ClientSummary` = `id`/`name`/`display_name`/`built_in`/`created_at`) plus

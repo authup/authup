@@ -20,8 +20,12 @@ import {
     onBeforeUnmount,
     ref,
 } from 'vue';
-import { TranslatorTranslationCommonKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { OAuth2AuthorizationPrompt } from '@authup/specs';
+import {
+    TranslatorTranslationClientKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
+import { OAuth2AuthorizationPrompt, OAuth2ErrorCode } from '@authup/specs';
 import type { LinkProperties } from '@vuecs/link';
 import {
     StoreDispatcherEventName,
@@ -35,6 +39,7 @@ import LoginForm from '../login/LoginForm.vue';
 import AAccountPrompt from './AAccountPrompt.vue';
 import AuthorizeForm from './AuthorizeForm.vue';
 import AuthorizeRealmMismatch from './AuthorizeRealmMismatch.vue';
+import AuthorizeSilentRedirect from './AuthorizeSilentRedirect.vue';
 import AuthorizeText from './AuthorizeText.vue';
 
 const wrapChild = (child: VNodeChild) => h(
@@ -51,6 +56,7 @@ export default defineComponent({
         AuthorizeText,
         AuthorizeForm,
         AuthorizeRealmMismatch,
+        AuthorizeSilentRedirect,
         LoginForm,
     },
     props: {
@@ -80,6 +86,30 @@ export default defineComponent({
             store.logout();
         };
 
+        // prompt=login: force re-authentication with a banner (instead of the
+        // silent switchAccount) — set proactively for prompt=login, and when the
+        // server's max_age/freshness backstop surfaces login_required mid-flow.
+        const reauthRequired = ref<boolean>(false);
+
+        // When a silent (prompt=none) request can only be resolved by
+        // redirecting an OIDC error to the RP, this holds the error code and the
+        // render returns AuthorizeSilentRedirect.
+        const silentErrorCode = ref<`${OAuth2ErrorCode}` | null>(null);
+
+        // A login_required from AuthorizeForm's auto-consent (the server
+        // max_age/freshness backstop) — silent requests redirect the error;
+        // interactive prompt=login shows the login form with a re-auth banner.
+        const handleLoginRequired = () => {
+            const prompts = (props.codeRequest?.prompt ?? '').split(' ').filter(Boolean);
+            if (prompts.includes(OAuth2AuthorizationPrompt.NONE)) {
+                silentErrorCode.value = OAuth2ErrorCode.LOGIN_REQUIRED;
+                return;
+            }
+
+            reauthRequired.value = true;
+            store.logout();
+        };
+
         // prompt=select_account chooser: once the user picks "continue as",
         // proceed past the chooser to consent for the rest of this render cycle.
         const accountConfirmed = ref<boolean>(false);
@@ -106,6 +136,26 @@ export default defineComponent({
             namespace: TranslatorTranslationNamespace.COMMON,
             key: TranslatorTranslationCommonKey.LOADING,
         });
+
+        const reauthText = useTranslation({
+            namespace: TranslatorTranslationNamespace.CLIENT,
+            key: TranslatorTranslationClientKey.REAUTH_TEXT,
+        });
+
+        // A silent (prompt=none) request that needs interaction must redirect
+        // the OIDC error to the RP — but ONLY to a redirect_uri that matched a
+        // registered client pattern. Without that, degrade to interactive UI.
+        const silentRedirect = (errorCode: `${OAuth2ErrorCode}`): VNodeChild | null => {
+            if (!props.codeRequest?.redirect_uri || !props.redirectUriVerified) {
+                return null;
+            }
+
+            return wrapChild(h(AuthorizeSilentRedirect, {
+                redirectUri: props.codeRequest.redirect_uri,
+                error: errorCode,
+                state: props.codeRequest.state,
+            }));
+        };
 
         const resolve = async () => {
             if (props.error) {
@@ -143,22 +193,54 @@ export default defineComponent({
                 return [];
             }
 
-            if (!loggedIn.value) {
-                return wrapChild(h(Suspense, {}, {
+            const prompts = (props.codeRequest.prompt ?? '').split(' ').filter(Boolean);
+            const isSilent = prompts.includes(OAuth2AuthorizationPrompt.NONE);
+            const isReauth = prompts.includes(OAuth2AuthorizationPrompt.LOGIN);
+
+            // A mid-flow login_required routed a silent request to an error
+            // redirect (the store's max_age backstop). Emit it once it is known.
+            if (isSilent && silentErrorCode.value) {
+                const redirect = silentRedirect(silentErrorCode.value);
+                if (redirect) {
+                    return redirect;
+                }
+            }
+
+            // Force re-authentication: prompt=login (proactive) or a login_required
+            // surfaced mid-flow. Show the login form (with a banner) until a fresh
+            // login on THIS page fires LOGGED_IN (accountConfirmed).
+            const forceReauth = (isReauth || reauthRequired.value) && !accountConfirmed.value;
+
+            if (!loggedIn.value || forceReauth) {
+                // A silent request can never render a login form — redirect the
+                // login_required error to the RP (falls through to the form only
+                // when the redirect_uri was not verified).
+                if (isSilent) {
+                    const redirect = silentRedirect(OAuth2ErrorCode.LOGIN_REQUIRED);
+                    if (redirect) {
+                        return redirect;
+                    }
+                }
+
+                const loginNode = h(Suspense, {}, {
                     default: () => h(LoginForm, {
                         codeRequest: props.codeRequest,
                         registerLink: props.registerLink,
                         passwordForgotLink: props.passwordForgotLink,
                         usernameHint: props.codeRequest?.login_hint,
-                        // fresh-login → skip the chooser: handled race-free by the
-                        // `watch(loggedIn)` above, not LoginForm's `done` emit.
+                        // fresh-login → skip the chooser: handled race-free by
+                        // the LOGGED_IN dispatcher hook, not LoginForm's `done`.
                         onFailed: (message: string) => emit('failed', message),
                     }),
                     fallback: () => h(AuthorizeText, { message: loadingText.value }),
-                }));
-            }
+                });
 
-            const prompts = (props.codeRequest?.prompt ?? '').split(' ').filter(Boolean);
+                // prompt=login / mid-flow re-auth: a banner above the form
+                // explaining why credentials are requested again.
+                return wrapChild(forceReauth ?
+                    [h(AuthorizeText, { message: reauthText.value }), loginNode] :
+                    loginNode);
+            }
 
             // Realm binding (UX only — the server POST /authorize gate is
             // authoritative). Wait until the store has resolved the signed-in
@@ -173,6 +255,14 @@ export default defineComponent({
                 props.codeRequest.realm_id &&
                 realmId.value !== props.codeRequest.realm_id
             ) {
+                // Silent: can't reuse a foreign-realm session → login_required.
+                if (isSilent) {
+                    const redirect = silentRedirect(OAuth2ErrorCode.LOGIN_REQUIRED);
+                    if (redirect) {
+                        return redirect;
+                    }
+                }
+
                 return wrapChild(h(AuthorizeRealmMismatch, {
                     clientName: props.client?.name ?? '',
                     targetRealmName: props.realm?.display_name || props.realm?.name || '',
@@ -206,6 +296,15 @@ export default defineComponent({
                 return [];
             }
 
+            // A silent request against a non-built_in client can't be
+            // auto-consented (no persisted consent record) → consent_required.
+            if (isSilent && !client.value.built_in) {
+                const redirect = silentRedirect(OAuth2ErrorCode.CONSENT_REQUIRED);
+                if (redirect) {
+                    return redirect;
+                }
+            }
+
             return wrapChild(h(Suspense, {}, {
                 default: () => h(AuthorizeForm, {
                     codeRequest: props.codeRequest!,
@@ -216,7 +315,7 @@ export default defineComponent({
                     // prompt=select_account).
                     identityName: user.value?.name ?? user.value?.display_name ?? '',
                     onSwitch: switchAccount,
-                    onLoginRequired: switchAccount,
+                    onLoginRequired: handleLoginRequired,
                 }),
                 fallback: () => h(AuthorizeText, { message: loadingText.value }),
             }));

@@ -12,6 +12,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import vuecs from '@vuecs/core';
 import { createPinia } from 'pinia';
 import {
+    beforeEach,
     describe,
     expect,
     it,
@@ -19,6 +20,7 @@ import {
 import type { App } from 'vue';
 import AAccountPrompt from '../../../../src/components/workflows/authorize/AAccountPrompt.vue';
 import AAuthorize from '../../../../src/components/workflows/authorize/Authorize.vue';
+import AuthorizeSilentRedirect from '../../../../src/components/workflows/authorize/AuthorizeSilentRedirect.vue';
 import {
     StoreDispatcherEventName,
     injectStore,
@@ -33,13 +35,29 @@ const REALM = { id: 'realm-x', name: 'master' };
 
 // A logged-in, fully-resolved store — the state in which prompt=select_account
 // would render the chooser (mimics a lingering session restored from cookies).
-function seedLoggedIn(store: Store) {
+function seedLoggedIn(store: Store, realmId = REALM.id) {
     store.setAccessToken('access-token');
-    store.setRealm({ id: REALM.id, name: REALM.name });
+    store.setRealm({ id: realmId, name: REALM.name });
     store.setUser({ id: 'user-1', name: 'jdoe' } as unknown as User);
 }
 
-function mountAuthorize() {
+type MountOverrides = {
+    prompt?: string,
+    clientBuiltIn?: boolean,
+    loggedIn?: boolean,
+    realmId?: string,
+    redirectUriVerified?: boolean,
+};
+
+function mountAuthorize(overrides: MountOverrides = {}) {
+    const {
+        prompt = OAuth2AuthorizationPrompt.SELECT_ACCOUNT,
+        clientBuiltIn = false,
+        loggedIn = true,
+        realmId = REALM.id,
+        redirectUriVerified = true,
+    } = overrides;
+
     const pinia = createPinia();
     const httpClient = createFakeClient({ handlers: {} });
 
@@ -62,16 +80,14 @@ function mountAuthorize() {
         state: 'state-1',
         code_challenge: 'challenge',
         code_challenge_method: 'S256',
-        prompt: OAuth2AuthorizationPrompt.SELECT_ACCOUNT,
+        prompt,
     } as OAuth2AuthorizationCodeRequest;
 
-    // non-built_in client → no auto-consent redirect; the chooser is the only
-    // thing we assert on.
     const client = {
         id: 'client-1',
         name: 'web',
         display_name: 'Web',
-        built_in: false,
+        built_in: clientBuiltIn,
         created_at: new Date(0).toISOString(),
     };
 
@@ -82,12 +98,12 @@ function mountAuthorize() {
             codeRequest,
             client,
             realm: {
-                id: REALM.id, 
-                name: REALM.name, 
-                display_name: 'Master', 
+                id: REALM.id,
+                name: REALM.name,
+                display_name: 'Master',
             },
             scopes: [],
-            redirectUriVerified: true,
+            redirectUriVerified,
         },
         global: {
             components: {
@@ -99,6 +115,9 @@ function mountAuthorize() {
             stubs: {
                 AuthorizeForm: { template: '<div class="authorize-form-stub" />' },
                 LoginForm: { template: '<div class="login-form-stub" />' },
+                // keep AuthorizeSilentRedirect real so we can assert its props,
+                // but stub its child so onMounted's window.location is a no-op.
+                AuthorizeText: { template: '<div class="authorize-text-stub" />' },
             },
             plugins: [
                 pinia,
@@ -106,7 +125,9 @@ function mountAuthorize() {
                 [{ install }, options],
                 {
                     install(app: App) {
-                        seedLoggedIn(injectStore(pinia, app));
+                        if (loggedIn) {
+                            seedLoggedIn(injectStore(pinia, app), realmId);
+                        }
                         dispatcher = injectStoreDispatcher(app);
                     },
                 },
@@ -118,6 +139,7 @@ function mountAuthorize() {
 }
 
 const hasChooser = (wrapper: ReturnType<typeof mountAuthorize>['wrapper']) => wrapper.findComponent(AAccountPrompt).exists();
+const silentRedirect = (wrapper: ReturnType<typeof mountAuthorize>['wrapper']) => wrapper.findComponent(AuthorizeSilentRedirect);
 
 describe('AAuthorize prompt=select_account', () => {
     it('shows the account chooser for a lingering (restored) session', async () => {
@@ -150,5 +172,110 @@ describe('AAuthorize prompt=select_account', () => {
         await flushPromises();
 
         expect(hasChooser(wrapper)).toBe(true);
+    });
+});
+
+describe('AAuthorize prompt=none (silent)', () => {
+    // AuthorizeSilentRedirect's onMounted assigns window.location.href — keep it
+    // a no-op so the assertions can inspect the rendered component's props.
+    beforeEach(() => {
+        Object.defineProperty(window, 'location', {
+            configurable: true,
+            writable: true,
+            value: { href: '' },
+        });
+    });
+
+    it('redirects login_required when the user is not logged in', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: OAuth2AuthorizationPrompt.NONE,
+            loggedIn: false,
+        });
+        await flushPromises();
+
+        const redirect = silentRedirect(wrapper);
+        expect(redirect.exists()).toBe(true);
+        expect(redirect.props('error')).toEqual('login_required');
+        expect(redirect.props('state')).toEqual('state-1');
+        expect(wrapper.findComponent({ name: 'LoginForm' }).exists()).toBe(false);
+    });
+
+    it('redirects login_required on a realm mismatch', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: OAuth2AuthorizationPrompt.NONE,
+            realmId: 'other-realm',
+        });
+        await flushPromises();
+
+        const redirect = silentRedirect(wrapper);
+        expect(redirect.exists()).toBe(true);
+        expect(redirect.props('error')).toEqual('login_required');
+    });
+
+    it('redirects consent_required for a non-built_in client', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: OAuth2AuthorizationPrompt.NONE,
+            clientBuiltIn: false,
+        });
+        await flushPromises();
+
+        const redirect = silentRedirect(wrapper);
+        expect(redirect.exists()).toBe(true);
+        expect(redirect.props('error')).toEqual('consent_required');
+    });
+
+    it('does NOT redirect a built_in client (auto-consent proceeds)', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: OAuth2AuthorizationPrompt.NONE,
+            clientBuiltIn: true,
+        });
+        await flushPromises();
+
+        expect(silentRedirect(wrapper).exists()).toBe(false);
+        // the auto-consent form renders instead
+        expect(wrapper.find('.authorize-form-stub').exists()).toBe(true);
+    });
+
+    it('degrades to interactive UI when the redirect_uri is not verified', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: OAuth2AuthorizationPrompt.NONE,
+            loggedIn: false,
+            redirectUriVerified: false,
+        });
+        await flushPromises();
+
+        // never redirect an OIDC error to an unverified URI — show the login form
+        expect(silentRedirect(wrapper).exists()).toBe(false);
+        expect(wrapper.find('.login-form-stub').exists()).toBe(true);
+    });
+});
+
+describe('AAuthorize prompt=login (re-auth)', () => {
+    it('forces the login form with a banner even for a logged-in user', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: OAuth2AuthorizationPrompt.LOGIN,
+            clientBuiltIn: true,
+        });
+        await flushPromises();
+
+        // logged in, but prompt=login forces re-auth: the login form shows (not
+        // the auto-consent form) until a fresh login on this page
+        expect(wrapper.find('.login-form-stub').exists()).toBe(true);
+        expect(wrapper.find('.authorize-form-stub').exists()).toBe(false);
+    });
+
+    it('proceeds past re-auth once a fresh login fires LOGGED_IN', async () => {
+        const { wrapper, dispatcher } = mountAuthorize({
+            prompt: OAuth2AuthorizationPrompt.LOGIN,
+            clientBuiltIn: true,
+        });
+        await flushPromises();
+        expect(wrapper.find('.login-form-stub').exists()).toBe(true);
+
+        dispatcher().emit(StoreDispatcherEventName.LOGGED_IN);
+        await flushPromises();
+
+        // re-auth satisfied → the built_in auto-consent form renders
+        expect(wrapper.find('.authorize-form-stub').exists()).toBe(true);
     });
 });
