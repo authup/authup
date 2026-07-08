@@ -1,6 +1,5 @@
 <script lang="ts">
 /* global window */
-import { CLIENT_WEB_NAME } from '@authup/core-kit';
 import { buildEndSessionURL, injectStore } from '@authup/client-web-kit';
 import { defineNuxtComponent } from '#app';
 import { definePageMeta, onMounted, useRuntimeConfig } from '#imports';
@@ -29,10 +28,15 @@ export default defineNuxtComponent({
             // authup session is ended too. With the id_token hint the server
             // revokes and bounces straight back to post_logout_redirect_uri;
             // without it, the server's click-gated confirm page returns here.
+            //
+            // Deliberately NO client_id: the id_token's `aud` is the client's
+            // UUID, so a name-identified client_id (`web`) would fail the
+            // server's aud cross-check and clear hintVerified — disabling the
+            // revoke. Omitting it lets the server resolve the client from the
+            // hint's sole aud and keep the hint verified.
             window.location.href = buildEndSessionURL({
                 baseURL: runtimeConfig.public.apiUrl as string,
                 idTokenHint,
-                clientId: CLIENT_WEB_NAME,
                 realmId,
                 postLogoutRedirectUri: `${window.location.origin}/login`,
             });

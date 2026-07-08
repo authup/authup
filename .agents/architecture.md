@@ -1226,12 +1226,17 @@ uses it: the page deliberately does **not** set `REQUIRED_LOGGED_OUT` (that meta
 makes the routing interceptor run `store.logout()` before the page's setup,
 discarding the id_token), captures `idToken`/`realmId` on mount, runs the
 local-only `store.logout()`, then hard-redirects to
-`buildEndSessionURL({ baseURL, idTokenHint, clientId: 'web', realmId,
+`buildEndSessionURL({ baseURL, idTokenHint, realmId,
 postLogoutRedirectUri: <origin>/login })`. With the hint the server revokes and
 bounces straight back; without it the server's confirm page returns to
-`/login`. `store.logout()` remains local-only — the round-trip is the chosen
-mechanism, **not** a `DELETE /sessions/@me` (which would collide with the #3191
-interactive-login session reuse → self-DoS of fresh logins).
+`/login`. **It passes NO `client_id`**: the id_token's `aud` is the client
+**UUID**, so a name-identified `client_id` (`web`) would fail the server's
+`aud` cross-check and clear `hintVerified` — silently disabling the revoke (the
+round-trip would always degrade to the confirm page). Omitting it lets the
+service resolve the client from the hint's sole `aud`. `store.logout()` remains
+local-only — the round-trip is the chosen mechanism, **not** a
+`DELETE /sessions/@me` (which would collide with the #3191 interactive-login
+session reuse → self-DoS of fresh logins).
 
 ## OAuth2 Token Endpoint Authentication
 
