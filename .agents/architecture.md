@@ -1610,10 +1610,15 @@ app (kit or non-kit) ends a lingering authup session on its own logout, so
   `post_logout_redirect_uri` ≤ 2000 + URL check, `state` ≤ 2048), blank params
   treated as absent, and the `realm_id`/`realm_name` hint canonicalized
   `trim().toLowerCase()` at the ingress (canonical-identifier-form layer 3, same
-  contract as the token endpoint's `readRealmHint`). On a validation failure the
-  controller falls back to a **parameter-less** confirm page (every
-  attacker-controlled value dropped, no revoke, no redirect) — never a JSON
-  error: the human behind the browser can still sign out.
+  contract as the token endpoint's `readRealmHint`). A validation failure never
+  surfaces as a JSON error — the human behind the browser can still sign out —
+  and a malformed *cosmetic* param (`post_logout_redirect_uri` / `state` /
+  `client_id`) must not cancel the revoke a valid hint authorizes: on a
+  full-request validation failure the controller retries with only the
+  revoke-critical fields (`id_token_hint` + realm hint), dropping the cosmetic
+  ones (no redirect, no client resolution); only a malformed hint itself falls
+  through to the **parameter-less** confirm page (every attacker-controlled
+  value dropped, no revoke).
 - **id_token_hint** is verified by `OAuth2TokenVerifier` with a new
   `ignoreExpiry` option — signature, nbf and (crucially) **kind** still apply;
   only `exp` is skipped (a logout hint is routinely expired). The option threads
