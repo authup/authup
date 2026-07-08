@@ -109,6 +109,22 @@ export function createStore(context: StoreCreateContext) {
 
     // --------------------------------------------------------------------
 
+    // The OIDC id_token from the last grant response. Retained (+ cookie
+    // persisted) so a downstream RP logout can pass it as `id_token_hint` to
+    // the authup `end_session_endpoint` — otherwise every kit RP degrades to
+    // the click-gated confirm page.
+    const idToken = ref<string | null>(null);
+    const setIdToken = (input: string | null) => {
+        idToken.value = input;
+
+        context.dispatcher.emit(
+            StoreDispatcherEventName.ID_TOKEN_UPDATED,
+            input,
+        );
+    };
+
+    // --------------------------------------------------------------------
+
     const user = ref<User | null>(null);
     const userId = computed<string | null>(() => (user.value ? user.value.id : null));
 
@@ -171,6 +187,7 @@ export function createStore(context: StoreCreateContext) {
         setAccessToken(null);
         setAccessTokenExpireDate(null);
         setRefreshToken(null);
+        setIdToken(null);
         setUser(null);
         sessionId.value = null;
         setRealm(null);
@@ -280,6 +297,12 @@ export function createStore(context: StoreCreateContext) {
             setRefreshToken(response.refresh_token);
         } else {
             setRefreshToken(null);
+        }
+
+        // A refresh grant response carries no id_token — keep the retained one
+        // rather than clearing it (the session is unchanged).
+        if (response.id_token) {
+            setIdToken(response.id_token);
         }
     };
 
@@ -409,6 +432,9 @@ export function createStore(context: StoreCreateContext) {
         setAccessTokenExpireDate,
         refreshToken,
         setRefreshToken,
+
+        idToken,
+        setIdToken,
 
         realm,
         realmId,
