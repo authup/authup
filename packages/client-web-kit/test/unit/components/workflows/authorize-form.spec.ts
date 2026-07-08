@@ -62,7 +62,9 @@ function mountForm(authorizeHandler: () => unknown) {
                 VCButton: { render: () => null },
             },
             stubs: {
-                AuthorizeScopes: { template: '<div />' },
+                // a distinctive class so the manual-consent screen (which renders
+                // AuthorizeScopes) is detectable — the spinner does not render it.
+                AuthorizeScopes: { template: '<div class="scopes-stub" />' },
                 ITranslateT: { template: '<span />' },
             },
             plugins: [
@@ -87,8 +89,8 @@ describe('AuthorizeForm dead-bearer resilience', () => {
         await flushPromises();
 
         expect(wrapper.emitted('loginRequired')).toBeTruthy();
-        // never fall through to the manual-consent retry loop
-        expect(wrapper.find('.authorize-scopes').exists()).toBe(false);
+        // never fall through to the manual-consent retry loop (AuthorizeScopes)
+        expect(wrapper.find('.scopes-stub').exists()).toBe(false);
     });
 
     it('emits loginRequired on a login_required body error', async () => {
@@ -98,6 +100,7 @@ describe('AuthorizeForm dead-bearer resilience', () => {
         await flushPromises();
 
         expect(wrapper.emitted('loginRequired')).toBeTruthy();
+        expect(wrapper.find('.scopes-stub').exists()).toBe(false);
     });
 
     it('does NOT emit loginRequired on an unrelated error (falls back to manual consent)', async () => {
@@ -105,5 +108,7 @@ describe('AuthorizeForm dead-bearer resilience', () => {
         await flushPromises();
 
         expect(wrapper.emitted('loginRequired')).toBeFalsy();
+        // the manual-consent UI (with its scope list) renders as the retry path
+        expect(wrapper.find('.scopes-stub').exists()).toBe(true);
     });
 });
