@@ -148,7 +148,7 @@ The following [OpenID Connect Core §3.1.2.1](https://openid.net/specs/openid-co
 
 | Parameter | Description |
 |---|---|
-| `prompt` | Space-delimited list of `login`, `consent`, `select_account`. `select_account` shows a "continue as / use another account" chooser when a session already exists; `login` forces re-authentication; `consent` forces the consent screen. Unknown values are ignored; `none` combined with any other value is an `invalid_request`. Note: `none` (silent authentication) is not yet implemented — it is not advertised in `prompt_values_supported`, and a `prompt=none` request currently renders the interactive page rather than returning an error redirect. |
+| `prompt` | Space-delimited list of `none`, `login`, `consent`, `select_account`. `none` performs silent authentication (no UI): a `built_in` client with a valid, realm-matching session is auto-consented and redirected with a `code`; otherwise the OIDC error (`login_required`, `consent_required`, or `interaction_required`) is redirected to the `redirect_uri`. **`prompt=none` must be driven as a top-level navigation, not a hidden iframe** — the authorize page sends `X-Frame-Options: DENY` / `frame-ancestors 'none'`, so the classic iframe silent-renew pattern is blocked. `select_account` shows a "continue as / use another account" chooser when a session already exists; `login` forces re-authentication (with a banner); `consent` forces the consent screen. Unknown values are ignored; `none` combined with any other value is an `invalid_request`. |
 | `max_age` | Maximum acceptable age (seconds) of the authentication. If the session is older, the user is asked to re-authenticate (`max_age=0` forces it). |
 | `login_hint` | Pre-fills the identifier on the login form. |
 

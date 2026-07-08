@@ -25,6 +25,7 @@ import { ITranslateT } from '@ilingo/vue';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
 import {
+    extractErrorContext,
     injectHTTPClient,
     useTranslation,
     useTranslations,
@@ -52,8 +53,12 @@ export default defineComponent({
         // The signed-in identity's display name — renders the "Signed in as X —
         // Not you?" switch affordance above the consent actions when non-empty.
         identityName: { type: String, default: '' },
+        // Silent (prompt=none) mode: an auto-consent failure must NOT drop to the
+        // interactive manual-consent UI (that would violate the zero-UI
+        // contract). Instead emit `failed` so the parent redirects an OIDC error.
+        silent: { type: Boolean, default: false },
     },
-    emits: ['loginRequired', 'switch'],
+    emits: ['loginRequired', 'switch', 'failed'],
     setup(props, { emit }) {
         const httpClient = injectHTTPClient();
 
@@ -139,9 +144,16 @@ export default defineComponent({
                 // e.g. a stale SSR bundle that skipped the client-side realm gate,
                 // or a race). Fall back to re-authentication rather than showing
                 // manual consent for a request the server will never accept.
-                const response = (e as { response?: { data?: { error?: unknown } } })?.response;
-                if (response?.data?.error === OAuth2ErrorCode.LOGIN_REQUIRED) {
+                const { data } = extractErrorContext(e);
+                if (data?.error === OAuth2ErrorCode.LOGIN_REQUIRED) {
                     emit('loginRequired');
+                    return;
+                }
+
+                // Silent request: never render interactive consent on failure —
+                // the parent redirects an OIDC error (interaction_required).
+                if (props.silent) {
+                    emit('failed');
                     return;
                 }
 
