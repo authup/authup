@@ -10,7 +10,13 @@ import { createFakeClient } from '@authup/core-http-kit/testing';
 import { flushPromises, mount } from '@vue/test-utils';
 import vuecs from '@vuecs/core';
 import { createPinia } from 'pinia';
-import { describe, expect, it } from 'vitest';
+import {
+    beforeEach,
+    describe,
+    expect,
+    it,
+} from 'vitest';
+import type { FakeHandler } from '@authup/core-http-kit/testing';
 import AuthorizeForm from '../../../../src/components/workflows/authorize/AuthorizeForm.vue';
 import { install } from '../../../../src/module';
 import type { Options } from '../../../../src/types';
@@ -35,12 +41,12 @@ const client = {
     created_at: new Date(0).toISOString(),
 } as Client;
 
-function mountForm(silent: boolean) {
+// a non-login_required failure (transient 500 / network blip)
+const failHandler: FakeHandler = () => { throw new Error('boom'); };
+
+function mountForm(silent: boolean, authorizeHandler: FakeHandler = failHandler) {
     const pinia = createPinia();
-    const httpClient = createFakeClient({
-        // a non-login_required failure (transient 500 / network blip)
-        handlers: { 'POST /authorize': () => { throw new Error('boom'); } },
-    });
+    const httpClient = createFakeClient({ handlers: { 'POST /authorize': authorizeHandler } });
 
     const options: Options = {
         baseURL: 'http://fake.test',
@@ -73,7 +79,29 @@ function mountForm(silent: boolean) {
     });
 }
 
-describe('AuthorizeForm silent (prompt=none) failure', () => {
+describe('AuthorizeForm silent (prompt=none)', () => {
+    beforeEach(() => {
+        // auto-consent success assigns window.location.href — keep it inspectable.
+        Object.defineProperty(window, 'location', {
+            configurable: true,
+            writable: true,
+            value: { href: '' },
+        });
+    });
+
+    it('auto-consents silently and redirects to the code URL (success)', async () => {
+        // built_in + prompt=none + a valid session → the auto-consent POST
+        // succeeds and the browser navigates to the returned redirect (with the
+        // code) — zero interactive UI, the silent-success contract.
+        const codeUrl = 'https://app.example.com/cb?code=abc123&state=state-1';
+        const wrapper = mountForm(true, () => ({ url: codeUrl }));
+        await flushPromises();
+
+        expect(window.location.href).toEqual(codeUrl);
+        expect(wrapper.emitted('failed')).toBeFalsy();
+        expect(wrapper.find('.scopes-stub').exists()).toBe(false);
+    });
+
     it('emits failed (no interactive UI) when silent and auto-consent fails', async () => {
         const wrapper = mountForm(true);
         await flushPromises();
