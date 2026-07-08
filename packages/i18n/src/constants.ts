@@ -110,7 +110,6 @@ export enum TranslatorTranslationClientKey {
     SIGN_IN_TO_REALM = 'signInToRealm',
     RETURN_TO_APP = 'returnToApp',
 
-    REAUTH_TITLE = 'reauthTitle',
     REAUTH_TEXT = 'reauthText',
 
     SELECT_ACCOUNT_TITLE = 'selectAccountTitle',

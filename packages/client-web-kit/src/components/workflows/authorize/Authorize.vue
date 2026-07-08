@@ -314,8 +314,14 @@ export default defineComponent({
                     // consent screen (present even when the RP sent no
                     // prompt=select_account).
                     identityName: user.value?.name ?? user.value?.display_name ?? '',
+                    // Silent (built_in) request: auto-consent runs, but a failure
+                    // must redirect an OIDC error, never render manual consent.
+                    silent: isSilent,
                     onSwitch: switchAccount,
                     onLoginRequired: handleLoginRequired,
+                    onFailed: () => {
+                        silentErrorCode.value = OAuth2ErrorCode.INTERACTION_REQUIRED;
+                    },
                 }),
                 fallback: () => h(AuthorizeText, { message: loadingText.value }),
             }));
