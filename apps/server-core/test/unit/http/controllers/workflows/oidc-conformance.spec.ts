@@ -97,14 +97,23 @@ describe('OIDC conformance smoke', () => {
     });
 
     it('exposes a well-formed JWKS', async () => {
+        // The realm signing key is created lazily on first sign, so force one
+        // (a password login mints a master-realm access token) — otherwise the
+        // key set is empty and the assertions below would be vacuous.
+        const password = generateOAuth2CodeVerifier();
+        const signer = await suite.client.user.create(createFakeUser({ password }));
+        await suite.client.token.createWithPassword({ username: signer.name, password });
+
         // discovery endpoints are built from publicUrl (not the random test
         // port), so fetch the JWKS from the running test server directly.
         const response = await fetch(`${suite.baseURL}/realms/${REALM_MASTER_NAME}/jwks`);
         const body = await response.json() as { keys: Record<string, any>[] };
 
         expect(Array.isArray(body.keys)).toBe(true);
+        expect(body.keys.length).toBeGreaterThan(0);
         for (const key of body.keys) {
             expect(typeof key.kty, 'kty').toEqual('string');
+            expect(key.kty.length, 'kty').toBeGreaterThan(0);
         }
     });
 
