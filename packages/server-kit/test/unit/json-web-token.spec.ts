@@ -90,6 +90,57 @@ describe('src/json-web-token', () => {
         }).rejects.toThrow(JWTError.expired());
     });
 
+    it('should verify an expired token when ignoreExpiry is set', async () => {
+        const data : JWTClaims = { exp: 1000, text: 'secretText' };
+
+        const signedText = await signToken(data, {
+            type: 'rsa',
+            key: keyPair.privateKey,
+        });
+
+        const decoded = await verifyToken(signedText, {
+            type: 'rsa',
+            key: keyPair.publicKey,
+        }, { ignoreExpiry: true });
+
+        expect(decoded).toBeDefined();
+        expect(decoded.text).toEqual(data.text);
+    });
+
+    it('should still reject a bad signature even when ignoreExpiry is set', async () => {
+        const otherKeyPair = await createAsymmetricKeyPair({ name: CryptoAsymmetricAlgorithm.RSASSA_PKCS1_V1_5 });
+
+        const signedText = await signToken({ exp: 1000, text: 'secretText' }, {
+            type: 'rsa',
+            key: keyPair.privateKey,
+        });
+
+        // ignoreExpiry skips ONLY exp — the signature anchor must still hold, so
+        // verifying against a foreign public key rejects.
+        await expect(async () => {
+            await verifyToken(signedText, {
+                type: 'rsa',
+                key: otherKeyPair.publicKey,
+            }, { ignoreExpiry: true });
+        }).rejects.toThrow(JWTError);
+    });
+
+    it('should still reject a not-yet-active token when ignoreExpiry is set', async () => {
+        const data : JWTClaims = { nbf: Math.floor(new Date().getTime() / 1000) + 3600 };
+
+        const signedText = await signToken(data, {
+            type: 'rsa',
+            key: keyPair.privateKey,
+        });
+
+        await expect(async () => {
+            await verifyToken(signedText, {
+                type: 'rsa',
+                key: keyPair.publicKey,
+            }, { ignoreExpiry: true });
+        }).rejects.toThrow(JWTError.notActiveBefore());
+    });
+
     it('sign and not verify token (not active before)', async () => {
         const data : JWTClaims = { nbf: Math.floor(new Date().getTime() / 1000) + 3600 };
 

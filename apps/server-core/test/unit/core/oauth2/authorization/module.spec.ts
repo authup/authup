@@ -104,6 +104,25 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
         expect(result.redirectUri).toEqual('https://example.com/callback');
     });
 
+    it('should source auth_time from created_at, never refreshed_at', async () => {
+        const nowSeconds = Math.floor(Date.now() / 1000);
+        await sessionManager.create({
+            id: sessionId,
+            sub: identity.data.id,
+            sub_kind: OAuth2SubKind.USER,
+            realm_id: realmId,
+            created_at: new Date((nowSeconds - 600) * 1000).toISOString(),
+            // A recent token refresh must NOT count as (re-)authentication — if
+            // the implementation regressed to `refreshed_at ?? created_at`, this
+            // fresh value would let a long-stale login satisfy prompt=login.
+            refreshed_at: new Date(nowSeconds * 1000).toISOString(),
+        });
+
+        await expect(
+            authorization.authorize(buildData({ prompt: 'login' }), identity, { sessionId }),
+        ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_LOGIN_REQUIRED }));
+    });
+
     it('should reject when max_age is exceeded', async () => {
         await seedSession(200);
 

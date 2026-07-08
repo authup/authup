@@ -82,6 +82,8 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.SELECT_ACCOUNT_TITLE]: 'Konto auswählen',
     [TranslatorTranslationClientKey.CONTINUE_AS]: 'Als {{name}} fortfahren',
     [TranslatorTranslationClientKey.USE_ANOTHER_ACCOUNT]: 'Anderes Konto verwenden',
+    [TranslatorTranslationClientKey.SIGNED_IN_AS]: 'Angemeldet als {{name}}',
+    [TranslatorTranslationClientKey.NOT_YOU]: 'Nicht Sie?',
 
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TITLE]: 'Abmelden',
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TEXT]: 'Möchten Sie sich abmelden?',

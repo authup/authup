@@ -7,6 +7,7 @@
 <script lang="ts">
 /* global window */
 import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
+import { OAuth2AuthorizationPrompt, OAuth2ErrorCode } from '@authup/specs';
 import type { PropType } from 'vue';
 import {
     computed,
@@ -23,7 +24,12 @@ import {
 import { ITranslateT } from '@ilingo/vue';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
-import { injectHTTPClient, useTranslations, useTranslationsForNamespace } from '../../../core';
+import {
+    injectHTTPClient,
+    useTranslation,
+    useTranslations,
+    useTranslationsForNamespace,
+} from '../../../core';
 import AuthorizeScopes from './AuthorizeScopes.vue';
 
 export default defineComponent({
@@ -43,8 +49,11 @@ export default defineComponent({
             type: Object as PropType<OAuth2AuthorizationCodeRequest>,
             required: true,
         },
+        // The signed-in identity's display name — renders the "Signed in as X —
+        // Not you?" switch affordance above the consent actions when non-empty.
+        identityName: { type: String, default: '' },
     },
-    emits: ['loginRequired'],
+    emits: ['loginRequired', 'switch'],
     setup(props, { emit }) {
         const httpClient = injectHTTPClient();
 
@@ -71,6 +80,17 @@ export default defineComponent({
                 { key: TranslatorTranslationClientKey.TERMS_OF_SERVICE },
             ],
         );
+
+        const signedInAsLabel = useTranslation({
+            namespace: TranslatorTranslationNamespace.CLIENT,
+            key: TranslatorTranslationClientKey.SIGNED_IN_AS,
+            data: { name: computed(() => props.identityName) },
+        });
+
+        const notYouLabel = useTranslation({
+            namespace: TranslatorTranslationNamespace.CLIENT,
+            key: TranslatorTranslationClientKey.NOT_YOU,
+        });
 
         const abort = () => {
             const url = new URL(`${props.codeRequest.redirect_uri}`);
@@ -120,7 +140,7 @@ export default defineComponent({
                 // or a race). Fall back to re-authentication rather than showing
                 // manual consent for a request the server will never accept.
                 const response = (e as { response?: { data?: { error?: unknown } } })?.response;
-                if (response?.data?.error === 'login_required') {
+                if (response?.data?.error === OAuth2ErrorCode.LOGIN_REQUIRED) {
                     emit('loginRequired');
                     return;
                 }
@@ -144,7 +164,7 @@ export default defineComponent({
             const prompts = props.codeRequest.prompt ?
                 props.codeRequest.prompt.split(' ') :
                 [];
-            return !prompts.includes('consent');
+            return !prompts.includes(OAuth2AuthorizationPrompt.CONSENT);
         });
 
         // Show the spinner only while an auto-consent submit is in flight. If it
@@ -165,6 +185,9 @@ export default defineComponent({
             showSpinner,
             translationsDefault,
             translationsClient,
+            signedInAsLabel,
+            notYouLabel,
+            switchAccount: () => emit('switch'),
         };
     },
 });
@@ -240,6 +263,20 @@ export default defineComponent({
                     </small>
                 </div>
             </div>
+        </div>
+
+        <div
+            v-if="identityName"
+            class="text-center"
+        >
+            <small class="text-fg-muted">
+                {{ signedInAsLabel }} —
+                <button
+                    type="button"
+                    class="underline bg-transparent border-0 p-0 cursor-pointer text-inherit"
+                    @click.prevent="switchAccount"
+                >{{ notYouLabel }}</button>
+            </small>
         </div>
 
         <div class="flex flex-wrap -mx-2">

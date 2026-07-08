@@ -75,8 +75,9 @@ describe('RealmController.getOpenIdConfiguration', () => {
         const controller = createController(realm);
         const config = await controller.getOpenIdConfiguration(realmId);
 
+        // `none` (silent auth) is intentionally NOT advertised — the error
+        // redirect is unimplemented, so the server must not promise it.
         expect(config.prompt_values_supported).toEqual([
-            'none',
             'login',
             'consent',
             'select_account',

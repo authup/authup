@@ -143,5 +143,31 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
             });
             expect(result.client.id).toBe(client.id);
         });
+
+        it('should flag redirectUriVerified=false for a pattern-less client (open-redirect guard)', async () => {
+            // A client with no registered redirect_uri pattern lets any
+            // redirect_uri through — consumers must NOT auto-redirect to it.
+            const client = clientRepository.seed({ is_confidential: true, redirect_uri: null });
+            const result = await verifier.verify({
+                client_id: client.id,
+                response_type: OAuth2AuthorizationResponseType.CODE,
+                redirect_uri: 'https://attacker.example.com/callback',
+            });
+            expect(result.client.id).toBe(client.id);
+            expect(result.redirectUriVerified).toBe(false);
+        });
+
+        it('should flag redirectUriVerified=true when the redirect matches a registered pattern', async () => {
+            const client = clientRepository.seed({
+                is_confidential: true,
+                redirect_uri: 'https://app.example.com/**',
+            });
+            const result = await verifier.verify({
+                client_id: client.id,
+                response_type: OAuth2AuthorizationResponseType.CODE,
+                redirect_uri: 'https://app.example.com/callback',
+            });
+            expect(result.redirectUriVerified).toBe(true);
+        });
     });
 });

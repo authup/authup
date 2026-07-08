@@ -58,11 +58,21 @@ describe('src/http/controllers/workflows (SSR pages)', () => {
         expect(response.status).toEqual(200);
         expect(response.headers.get('content-type')).toContain('text/html');
 
+        // clickjacking guard — the page hydrates logged-in state, so framing must
+        // be denied for the click-gated auto-consent/sign-out to be a real defense
+        expect(response.headers.get('content-security-policy')).toContain("frame-ancestors 'none'");
+        expect(response.headers.get('x-frame-options')).toEqual('DENY');
+
         const body = await response.text();
         const payload = extractHydrationPayload(body);
 
         expect(payload.data.error).toBeUndefined();
         expect(payload.data.client.id).toEqual(client.id);
+        // the anonymous hydration payload carries only the trimmed client DTO —
+        // never redirect_uri patterns, grant_types, internal URLs, or the secret
+        expect(payload.data.client.redirect_uri).toBeUndefined();
+        expect(payload.data.client.grant_types).toBeUndefined();
+        expect(payload.data.client.secret).toBeUndefined();
         expect(payload.data.codeRequest.client_id).toEqual(client.id);
         expect(payload.data.features).toBeDefined();
         expect(payload.data.requestPath).toMatch(/^\/authorize\?/);

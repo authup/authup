@@ -119,6 +119,26 @@ describe('OAuth2OpenIDTokenIssuer', () => {
             expect(insertCall.auth_time).toBeLessThanOrEqual(Math.floor(Date.now() / 1000));
         });
 
+        it('should preserve an explicit auth_time verbatim (not overwrite with issuance time)', async () => {
+            const issuer = createIssuer();
+
+            // A session-backed authorize threads the session's creation instant
+            // as auth_time. It must be preserved, NOT replaced by the issuance
+            // time (== iat) — the historical bug this pins against.
+            const authTime = 1000;
+
+            await issuer.issueWithIdentity(
+                {
+                    sub: userId,
+                    realm_id: realmId,
+                    auth_time: authTime,
+                } as OAuth2TokenPayload,
+                identity,
+            );
+
+            expect(repository.insertCalls[0].auth_time).toBe(authTime);
+        });
+
         it('should set realm-scoped iss from issuer option per OIDC §2', async () => {
             const issuer = createIssuer({ options: { issuer: 'https://auth.example.com' } });
 

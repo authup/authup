@@ -5,9 +5,11 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
+/* global window */
 import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
+import { storeToRefs } from 'pinia';
 import {
     defineComponent,
     onMounted,
@@ -24,9 +26,22 @@ export default defineComponent({
             type: Boolean,
             default: false,
         },
+        // The `sub` of the session revoked server-side (only set for a verified
+        // hint). Local auto-cleanup is gated on it matching THIS browser's user.
+        hintSub: {
+            type: String,
+            default: undefined,
+        },
+        // A validated post_logout_redirect_uri (open-redirect guard already
+        // applied server-side; carries `state`). Navigated to after sign-out.
+        redirect: {
+            type: String,
+            default: undefined,
+        },
     },
     setup(props) {
         const store = injectStore();
+        const { user } = storeToRefs(store);
         const done = ref<boolean>(false);
 
         const title = useTranslation({
@@ -46,22 +61,46 @@ export default defineComponent({
             key: TranslatorTranslationClientKey.SIGN_OUT,
         });
 
-        // Always transition to the terminal state — a failed local cleanup must
+        const navigateToRedirect = (): boolean => {
+            if (props.redirect && typeof window !== 'undefined') {
+                window.location.href = props.redirect;
+                return true;
+            }
+
+            return false;
+        };
+
+        // Always transition to a terminal state — a failed local cleanup must
         // not strand the user on the pre-logout UI (in the serverRevoked path
-        // the server already ended the session).
+        // the server already ended the session). Navigate to a validated
+        // post-logout redirect when present, else show the signed-out notice.
         const signOut = async () => {
             try {
                 await store.logout();
             } finally {
-                done.value = true;
+                if (!navigateToRedirect()) {
+                    done.value = true;
+                }
             }
         };
 
         onMounted(async () => {
             // The server already ended the session (verified hint) — clear the
-            // local token/cookie state, then show the terminal notice (await so
-            // "done" isn't shown while local cleanup is still in flight).
-            if (props.serverRevoked) {
+            // local token/cookie state, then show the terminal notice.
+            //
+            // Gate the auto-cleanup on the revoked subject being THIS browser's
+            // user: without it, a cross-site GET to
+            // /logout?id_token_hint=<attacker's own id_token> (which revokes the
+            // attacker's own session, so serverRevoked is true) would forcibly
+            // sign out an unrelated victim who merely renders this page — a
+            // forced-logout CSRF. store.logout() is local-only, so it acts on
+            // whoever's browser rendered the page, not on the hint's subject.
+            if (
+                props.serverRevoked &&
+                props.hintSub &&
+                user.value &&
+                props.hintSub === user.value.id
+            ) {
                 await signOut();
             }
         });

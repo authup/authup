@@ -17,19 +17,25 @@ import {
     Suspense,
     defineComponent,
     h,
+    onBeforeUnmount,
     ref,
 } from 'vue';
 import { TranslatorTranslationCommonKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { OAuth2AuthorizationPrompt } from '@authup/specs';
 import type { LinkProperties } from '@vuecs/link';
-import { injectHTTPClient, injectStore, useTranslation } from '../../../core';
+import {
+    StoreDispatcherEventName,
+    injectHTTPClient,
+    injectStore,
+    injectStoreDispatcher,
+    useTranslation,
+} from '../../../core';
 import AAuthShell from '../../utility/AAuthShell.vue';
 import LoginForm from '../login/LoginForm.vue';
 import AAccountPrompt from './AAccountPrompt.vue';
 import AuthorizeForm from './AuthorizeForm.vue';
 import AuthorizeRealmMismatch from './AuthorizeRealmMismatch.vue';
 import AuthorizeText from './AuthorizeText.vue';
-
-const OAUTH2_PROMPT_SELECT_ACCOUNT = 'select_account';
 
 const wrapChild = (child: VNodeChild) => h(
     AAuthShell,
@@ -77,6 +83,21 @@ export default defineComponent({
         // prompt=select_account chooser: once the user picks "continue as",
         // proceed past the chooser to consent for the rest of this render cycle.
         const accountConfirmed = ref<boolean>(false);
+
+        // A login performed *on this page* IS the account selection — don't then
+        // re-prompt "continue as X" for the account whose credentials were just
+        // entered. The store emits LOGGED_IN only for an explicit login() (the
+        // login form), never for a session restored from cookies (resolve() →
+        // RESOLVED), so a *lingering* session still gets the chooser while a
+        // fresh login skips it. Keying off the store event — not LoginForm's
+        // `done` emit — is what makes this reliable: on login the access-token
+        // flip re-renders Authorize and unmounts LoginForm before its `done`
+        // fires, so that emit is easily lost (the bug this replaced).
+        const dispatcher = injectStoreDispatcher();
+        const offLoggedIn = dispatcher.on(StoreDispatcherEventName.LOGGED_IN, () => {
+            accountConfirmed.value = true;
+        });
+        onBeforeUnmount(offLoggedIn);
 
         const error = ref<Error | null>(null);
         const client = ref<Client | null>(null);
@@ -129,6 +150,8 @@ export default defineComponent({
                         registerLink: props.registerLink,
                         passwordForgotLink: props.passwordForgotLink,
                         usernameHint: props.codeRequest?.login_hint,
+                        // fresh-login → skip the chooser: handled race-free by the
+                        // `watch(loggedIn)` above, not LoginForm's `done` emit.
                         onFailed: (message: string) => emit('failed', message),
                     }),
                     fallback: () => h(AuthorizeText, { message: loadingText.value }),
@@ -161,13 +184,19 @@ export default defineComponent({
             }
 
             // prompt=select_account: offer "continue as X / use another account"
-            // instead of silently continuing the current session.
+            // instead of silently continuing the current session. Wait for the
+            // user to resolve so the chooser never flashes "Continue as " with an
+            // empty name.
             if (
-                prompts.includes(OAUTH2_PROMPT_SELECT_ACCOUNT) &&
+                prompts.includes(OAuth2AuthorizationPrompt.SELECT_ACCOUNT) &&
                 !accountConfirmed.value
             ) {
+                if (!user.value) {
+                    return wrapChild(h(AuthorizeText, { message: loadingText.value }));
+                }
+
                 return wrapChild(h(AAccountPrompt, {
-                    identityName: user.value?.name ?? user.value?.display_name ?? '',
+                    identityName: user.value.name ?? user.value.display_name ?? '',
                     onContinue: () => { accountConfirmed.value = true; },
                     onSwitch: switchAccount,
                 }));
@@ -182,6 +211,11 @@ export default defineComponent({
                     codeRequest: props.codeRequest!,
                     client: client.value!,
                     scopes: props.scopes,
+                    // "Signed in as X — Not you?" switch affordance on the manual
+                    // consent screen (present even when the RP sent no
+                    // prompt=select_account).
+                    identityName: user.value?.name ?? user.value?.display_name ?? '',
+                    onSwitch: switchAccount,
                     onLoginRequired: switchAccount,
                 }),
                 fallback: () => h(AuthorizeText, { message: loadingText.value }),

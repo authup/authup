@@ -21,6 +21,11 @@ type FetchOptions = {
      * Extra request headers. Merged on top of the form Content-Type default.
      */
     headers?: Record<string, string>,
+    /**
+     * Redirect handling. Pass `'manual'` to observe a 3xx `Location` without
+     * following it (e.g. asserting an OAuth2 redirect target).
+     */
+    redirect?: RequestRedirect,
 };
 
 /**
@@ -55,5 +60,6 @@ export async function httpRequest(
         method,
         headers,
         body,
+        redirect: options.redirect,
     });
 }
