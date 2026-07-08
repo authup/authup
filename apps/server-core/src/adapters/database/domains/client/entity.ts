@@ -100,6 +100,14 @@ export class ClientEntity implements Client {
 
     @Column({
         type: 'varchar',
+        length: 2000,
+        nullable: true,
+        default: null,
+    })
+    post_logout_redirect_uri: string | null;
+
+    @Column({
+        type: 'varchar',
         length: 512,
         nullable: true,
     })
