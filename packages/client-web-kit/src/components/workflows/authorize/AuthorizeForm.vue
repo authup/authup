@@ -25,6 +25,7 @@ import { ITranslateT } from '@ilingo/vue';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
 import {
+    extractErrorContext,
     injectHTTPClient,
     useTranslation,
     useTranslations,
@@ -143,8 +144,8 @@ export default defineComponent({
                 // e.g. a stale SSR bundle that skipped the client-side realm gate,
                 // or a race). Fall back to re-authentication rather than showing
                 // manual consent for a request the server will never accept.
-                const response = (e as { response?: { data?: { error?: unknown } } })?.response;
-                if (response?.data?.error === OAuth2ErrorCode.LOGIN_REQUIRED) {
+                const { data } = extractErrorContext(e);
+                if (data?.error === OAuth2ErrorCode.LOGIN_REQUIRED) {
                     emit('loginRequired');
                     return;
                 }
