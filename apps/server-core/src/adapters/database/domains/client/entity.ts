@@ -98,11 +98,12 @@ export class ClientEntity implements Client {
     })
     redirect_uri: string | null;
 
+    // `text` (not varchar) to match `redirect_uri` — the provisioner writes the
+    // same origin-pattern string to both, so a large trusted-origin set must
+    // not overflow only this column.
     @Column({
-        type: 'varchar',
-        length: 2000,
+        type: 'text',
         nullable: true,
-        default: null,
     })
     post_logout_redirect_uri: string | null;
 

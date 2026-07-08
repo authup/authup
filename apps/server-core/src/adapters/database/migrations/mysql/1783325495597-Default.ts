@@ -57,7 +57,7 @@ export class Default1783325495597 implements MigrationInterface {
         // Dedicated post-logout redirect allow-list for OIDC RP-Initiated
         // Logout (plan 042) — no longer conflated with the login redirect_uri.
         await queryRunner.query(`
-            ALTER TABLE \`auth_clients\` ADD \`post_logout_redirect_uri\` varchar(2000) NULL
+            ALTER TABLE \`auth_clients\` ADD \`post_logout_redirect_uri\` text NULL
         `);
     }
 
