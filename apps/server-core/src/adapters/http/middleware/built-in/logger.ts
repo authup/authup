@@ -16,13 +16,48 @@ type LoggerMiddlewareOptions = {
     logger: Logger
 };
 
+// Query params whose values are credentials/tokens — the access log must never
+// persist them (a GET /logout?id_token_hint=<jwt> would otherwise write a
+// signature-valid token into the log).
+const SENSITIVE_QUERY_PARAMS = [
+    'id_token_hint',
+    'id_token',
+    'access_token',
+    'refresh_token',
+    'token',
+    'code',
+    'client_secret',
+];
+
+export function redactSensitiveURLParams(url: string): string {
+    const queryIndex = url.indexOf('?');
+    if (queryIndex === -1) {
+        return url;
+    }
+
+    const params = new URLSearchParams(url.substring(queryIndex + 1));
+    let redacted = false;
+    for (const name of SENSITIVE_QUERY_PARAMS) {
+        if (params.has(name)) {
+            params.set(name, '***');
+            redacted = true;
+        }
+    }
+
+    if (!redacted) {
+        return url;
+    }
+
+    return `${url.substring(0, queryIndex)}?${params.toString()}`;
+}
+
 export function createLoggerMiddleware(options: LoggerMiddlewareOptions) : Handler {
     return logger({
         format: (tokens, event, response) => [
             getRequestIP(event) || '-',
             '-',
             tokens.method(event, response) ?? '-',
-            tokens.url(event, response) ?? '-',
+            redactSensitiveURLParams(tokens.url(event, response) ?? '-'),
             tokens.status(event, response) ?? '-',
             '-',
             tokens['response-time'](event, response) ?? '-',

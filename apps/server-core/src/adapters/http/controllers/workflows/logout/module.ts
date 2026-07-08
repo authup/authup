@@ -14,7 +14,8 @@ import {
 import { URL } from 'node:url';
 import type { IAppEvent } from 'routup';
 import { sendRedirect } from 'routup';
-import type { IOAuth2EndSessionService } from '../../../../../core/index.ts';
+import type { IOAuth2EndSessionService, OAuth2EndSessionRequest } from '../../../../../core/index.ts';
+import { OAuth2EndSessionRequestValidator } from '../../../../../core/index.ts';
 import { readFromLocations } from '../../../request/index.ts';
 import { renderUIPage } from '../../../ui/index.ts';
 import type { LogoutControllerContext, LogoutControllerOptions } from './types.ts';
@@ -25,9 +26,12 @@ export class LogoutController {
 
     protected endSessionService: IOAuth2EndSessionService;
 
+    protected validator: OAuth2EndSessionRequestValidator;
+
     constructor(ctx: LogoutControllerContext) {
         this.options = ctx.options;
         this.endSessionService = ctx.endSessionService;
+        this.validator = new OAuth2EndSessionRequestValidator();
     }
 
     @DGet('', [])
@@ -44,14 +48,18 @@ export class LogoutController {
     protected async handle(event: IAppEvent): Promise<string | Response> {
         const merged = await readFromLocations(event, ['body', 'query']);
 
-        const result = await this.endSessionService.verify({
-            id_token_hint: merged.id_token_hint,
-            client_id: merged.client_id,
-            post_logout_redirect_uri: merged.post_logout_redirect_uri,
-            state: merged.state,
-            realm_id: merged.realm_id,
-            realm_name: merged.realm_name,
-        });
+        // Malformed input (oversized / duplicated params) must never dead-end
+        // the human behind the browser on a JSON error: fall back to a
+        // parameter-less confirm page — every attacker-controlled value is
+        // dropped, the click-gated sign-out keeps working.
+        let data: OAuth2EndSessionRequest;
+        try {
+            data = await this.validator.run(merged);
+        } catch {
+            data = {};
+        }
+
+        const result = await this.endSessionService.verify(data);
 
         // A signature-verified id_token_hint proves possession — revoke the
         // referenced session server-side immediately (only if it belongs to the

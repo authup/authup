@@ -43,6 +43,12 @@ export type OAuth2EndSessionServiceContext = {
     sessionManager: ISessionManager,
     clientRepository: IOAuth2ClientRepository,
     realmRepository: IRealmRepository,
+    /**
+     * Seconds past its `exp` an (expired) id_token_hint is still accepted for
+     * a server-side revoke (config `endSessionHintGracePeriod`).
+     * 0 (default) = unbounded — spec/Keycloak parity.
+     */
+    hintGracePeriod?: number,
 };
 
 export interface IOAuth2EndSessionService {
