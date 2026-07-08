@@ -25,6 +25,7 @@ import { ITranslateT } from '@ilingo/vue';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
 import {
+    extractErrorContext,
     injectHTTPClient,
     useTranslation,
     useTranslations,
@@ -143,12 +144,10 @@ export default defineComponent({
                 //    that skipped the client-side realm gate, or a race).
                 //  - HTTP 401: the bearer is dead/expired (a mid-flow session
                 //    sweep, a sibling-tab logout, or an account switch).
-                const response = (e as {
-                    response?: { status?: number, data?: { error?: unknown } }
-                })?.response;
+                const { status, data } = extractErrorContext(e);
                 if (
-                    response?.status === 401 ||
-                    response?.data?.error === OAuth2ErrorCode.LOGIN_REQUIRED
+                    status === 401 ||
+                    data?.error === OAuth2ErrorCode.LOGIN_REQUIRED
                 ) {
                     emit('loginRequired');
                     return;
