@@ -594,6 +594,11 @@ describe('grant-authorize', () => {
         expect(typeof payload.sid).toEqual('string');
         expect((payload.sid as string).length).toBeGreaterThan(0);
         expect(typeof payload.auth_time).toEqual('number');
+
+        // plan 042 item 6: the id_token is minted at the exchange, so its `sid`
+        // is the REAL backing session — the same one the access token carries.
+        const introspection = await suite.client.token.introspect({ token: tokenResponse.access_token });
+        expect(payload.sid).toEqual(introspection.session_id);
     });
 
     it('should reject /authorize when the identity realm differs from the client realm', async () => {

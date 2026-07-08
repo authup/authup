@@ -18,27 +18,25 @@ import {
 } from 'vitest';
 import { OAuth2Authorization } from '../../../../../src/core/oauth2/authorization/module.ts';
 import type {
-    IIdentityResolver,
     IOAuth2AuthorizationCodeIssuer,
-    IOAuth2OpenIDTokenIssuer,
 } from '../../../../../src/core/index.ts';
+import type { OAuth2AuthorizationCodeIssuerOptions } from '../../../../../src/core/oauth2/authorization/code/issuer/types.ts';
 import { FakeSessionManager } from '../../helpers/fake-session-manager.ts';
 
-// response_type=code + scope=global exercises the prompt/max_age gate; only
-// the code issuer fires — openid issuance (scope-gated) must never be called.
-const notCalled = (name: string) => async () => {
-    throw new Error(`${name} should not be called`);
-};
-
-const openIdTokenIssuer = {
-    issue: notCalled('openIdTokenIssuer.issue'),
-    issueWithIdentity: notCalled('openIdTokenIssuer.issueWithIdentity'),
-} as unknown as IOAuth2OpenIDTokenIssuer;
+// The code issuer records its calls so the authTime propagation can be asserted.
+// No id_token is minted here anymore (that moved to the /token exchange), so no
+// openid-issuer stub is needed.
+const issueCalls: OAuth2AuthorizationCodeIssuerOptions[] = [];
 const codeIssuer = {
-    issue: async () => ({ id: randomUUID() } as OAuth2AuthorizationCode),
-    updateIdToken: notCalled('codeIssuer.updateIdToken'),
+    issue: async (
+        _input: unknown,
+        _identity: unknown,
+        options: OAuth2AuthorizationCodeIssuerOptions = {},
+    ) => {
+        issueCalls.push(options);
+        return { id: randomUUID() } as OAuth2AuthorizationCode;
+    },
 } as unknown as IOAuth2AuthorizationCodeIssuer;
-const identityResolver = { resolve: async () => null } as unknown as IIdentityResolver;
 
 describe('OAuth2Authorization prompt/max_age enforcement', () => {
     const realmId = randomUUID();
@@ -76,11 +74,10 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
     };
 
     beforeEach(() => {
+        issueCalls.length = 0;
         sessionManager = new FakeSessionManager();
         authorization = new OAuth2Authorization({
-            openIdTokenIssuer,
             codeIssuer,
-            identityResolver,
             sessionManager,
             promptLoginMaxAge: 60,
         });
@@ -163,5 +160,27 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
     it('should issue an authorization code for response_type=code', async () => {
         const result = await authorization.authorize(buildData(), identity, {});
         expect(result.authorizationCode).toBeDefined();
+    });
+
+    it('should pass the session created_at as authTime to the code issuer', async () => {
+        const nowSeconds = Math.floor(Date.now() / 1000);
+        await seedSession(300);
+
+        await authorization.authorize(buildData(), identity, { sessionId });
+
+        expect(issueCalls).toHaveLength(1);
+        expect(issueCalls[0].sessionId).toEqual(sessionId);
+        // ~300s ago (created_at), not "now"
+        expect(issueCalls[0].authTime).toBeLessThanOrEqual(nowSeconds - 299);
+    });
+
+    it('should pass authTime = now to the code issuer for a session-less authorize', async () => {
+        const nowSeconds = Math.floor(Date.now() / 1000);
+
+        await authorization.authorize(buildData(), identity, {});
+
+        expect(issueCalls).toHaveLength(1);
+        expect(issueCalls[0].sessionId ?? undefined).toBeUndefined();
+        expect(issueCalls[0].authTime).toBeGreaterThanOrEqual(nowSeconds - 1);
     });
 });

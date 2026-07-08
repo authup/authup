@@ -56,9 +56,7 @@ export class AuthorizeController {
 
         this.authorizer = new HTTPOAuth2Authorizer({
             codeRequestVerifier: this.codeRequestVerifier,
-            openIdTokenIssuer: ctx.openIdTokenIssuer,
             codeIssuer: ctx.codeIssuer,
-            identityResolver: ctx.identityResolver,
             sessionManager: ctx.sessionManager,
             promptLoginMaxAge: ctx.options.promptLoginMaxAge,
         });

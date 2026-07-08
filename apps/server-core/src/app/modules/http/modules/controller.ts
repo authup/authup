@@ -225,12 +225,10 @@ export class HTTPControllerModule {
 
     createAuthorize(container: IContainer) {
         const config = container.resolve(ConfigInjectionKey);
-        const openIdTokenIssuer = container.resolve(OAuth2InjectionToken.OpenIDTokenIssuer);
 
         const codeIssuer = container.resolve(OAuth2InjectionToken.AuthorizationCodeIssuer);
         const codeRequestVerifier = container.resolve(OAuth2InjectionToken.AuthorizationCodeRequestVerifier);
 
-        const identityResolver = container.resolve(IdentityInjectionKey.Resolver);
         const sessionManager = container.resolve(AuthenticationInjectionKey.SessionManager);
 
         return new AuthorizeController({
@@ -240,12 +238,9 @@ export class HTTPControllerModule {
                 promptLoginMaxAge: config.promptLoginMaxAge,
             },
 
-            openIdTokenIssuer,
-
             codeIssuer,
             codeRequestVerifier,
 
-            identityResolver,
             sessionManager,
         });
     }
@@ -260,6 +255,7 @@ export class HTTPControllerModule {
 
         const accessTokenIssuer = container.resolve(OAuth2InjectionToken.AccessTokenIssuer);
         const refreshTokenIssuer = container.resolve(OAuth2InjectionToken.RefreshTokenIssuer);
+        const openIdTokenIssuer = container.resolve(OAuth2InjectionToken.OpenIDTokenIssuer);
 
         const tokenRevoker = container.resolve(OAuth2InjectionToken.TokenRevoker);
         const tokenVerifier = container.resolve(OAuth2InjectionToken.TokenVerifier);
@@ -286,6 +282,7 @@ export class HTTPControllerModule {
 
             accessTokenIssuer,
             refreshTokenIssuer,
+            openIdTokenIssuer,
 
             tokenVerifier,
             tokenRevoker,

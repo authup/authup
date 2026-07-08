@@ -10,7 +10,12 @@ import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { Logger } from '@authup/server-kit';
 import type { ISessionManager } from '../../authentication/index.ts';
 import type { ISessionTokenRepository } from '../session-token/index.ts';
-import type { IOAuth2TokenIssuer, IOAuth2TokenRepository, IOAuth2TokenVerifier } from '../token/index.ts';
+import type {
+    IOAuth2OpenIDTokenIssuer, 
+    IOAuth2TokenIssuer, 
+    IOAuth2TokenRepository, 
+    IOAuth2TokenVerifier,
+} from '../token/index.ts';
 
 export type BaseGrantContext = {
     accessTokenIssuer: IOAuth2TokenIssuer,
@@ -19,6 +24,7 @@ export type BaseGrantContext = {
 
 export type OAuth2AuthorizeGrantContext = BaseGrantContext & {
     refreshTokenIssuer: IOAuth2TokenIssuer,
+    openIdTokenIssuer: IOAuth2OpenIDTokenIssuer,
 };
 
 export type OAuth2IdentityGrantContext = BaseGrantContext & {

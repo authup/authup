@@ -13,13 +13,18 @@ export type OAuth2AuthorizationCodeIssuerOptions = {
      */
     maxAge?: number,
 
-    idToken?: string,
-
     /**
      * The id of the session the authorizing bearer belongs to, persisted on the
      * authorization code so the token exchange can reuse it.
      */
     sessionId?: string | null,
+
+    /**
+     * The authentication instant (seconds since epoch) — persisted on the code
+     * for the id_token `auth_time` claim minted at the /token exchange.
+     * Defaults to the issuance instant (session-less flows authenticate now).
+     */
+    authTime?: number,
 };
 
 export interface IOAuth2AuthorizationCodeIssuer {
@@ -28,9 +33,4 @@ export interface IOAuth2AuthorizationCodeIssuer {
         identity: Identity,
         options?: OAuth2AuthorizationCodeIssuerOptions
     ) : Promise<OAuth2AuthorizationCode>;
-
-    updateIdToken(
-        entity: OAuth2AuthorizationCode,
-        idToken: string,
-    ) : Promise<void>;
 }

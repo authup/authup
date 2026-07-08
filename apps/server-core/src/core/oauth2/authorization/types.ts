@@ -5,15 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IOAuth2OpenIDTokenIssuer } from '../token/index.ts';
 import type { IOAuth2AuthorizationCodeIssuer } from './code/index.ts';
-import type { IIdentityResolver } from '../../identity/index.ts';
 import type { ISessionManager } from '../../authentication/index.ts';
 
 export type OAuth2AuthorizationManagerContext = {
-    openIdTokenIssuer: IOAuth2OpenIDTokenIssuer,
     codeIssuer: IOAuth2AuthorizationCodeIssuer,
-    identityResolver: IIdentityResolver,
     sessionManager: ISessionManager,
     /**
      * Max age (seconds) of the authentication a `prompt=login` request accepts
