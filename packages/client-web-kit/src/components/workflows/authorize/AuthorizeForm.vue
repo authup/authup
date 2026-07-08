@@ -271,10 +271,11 @@ export default defineComponent({
         >
             <small class="text-fg-muted">
                 {{ signedInAsLabel }} —
-                <a
-                    href="#"
+                <button
+                    type="button"
+                    class="underline bg-transparent border-0 p-0 cursor-pointer text-inherit"
                     @click.prevent="switchAccount"
-                >{{ notYouLabel }}</a>
+                >{{ notYouLabel }}</button>
             </small>
         </div>
 
