@@ -11,7 +11,6 @@ import type {
     IOAuth2AuthorizationCodeIssuer,
     IOAuth2AuthorizationCodeRequestVerifier,
     IOAuth2OpenIDTokenIssuer,
-    IOAuth2TokenIssuer,
     ISessionManager,
 } from '../../../../../core/index.ts';
 
@@ -28,7 +27,6 @@ export type AuthorizeControllerOptions = {
 export type AuthorizeControllerContext = {
     options: AuthorizeControllerOptions,
 
-    accessTokenIssuer: IOAuth2TokenIssuer,
     openIdTokenIssuer: IOAuth2OpenIDTokenIssuer,
 
     codeIssuer: IOAuth2AuthorizationCodeIssuer,

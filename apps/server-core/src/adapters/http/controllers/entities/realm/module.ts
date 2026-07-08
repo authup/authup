@@ -110,10 +110,10 @@ export class RealmController {
 
             jwks_uri: resolveURL(baseURL, `realms/${entity.name}/jwks`),
 
+            // OAuth 2.1 posture: the authorization endpoint issues codes
+            // only — implicit/hybrid response types were dropped (plan 042).
             response_types_supported: [
                 OAuth2AuthorizationResponseType.CODE,
-                OAuth2AuthorizationResponseType.TOKEN,
-                OAuth2AuthorizationResponseType.NONE,
             ],
 
             // `none` (silent authentication) is handled by the hosted SSR

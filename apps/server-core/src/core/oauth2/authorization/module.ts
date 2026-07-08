@@ -17,7 +17,7 @@ import {
     OAuth2ResponseTypeError,
     hasOAuth2Scopes,
 } from '@authup/specs';
-import type { IOAuth2OpenIDTokenIssuer, IOAuth2TokenIssuer } from '../token/index.ts';
+import type { IOAuth2OpenIDTokenIssuer } from '../token/index.ts';
 import type { IOAuth2AuthorizationCodeIssuer } from './code/index.ts';
 import { buildOAuth2TokenHash } from './helpers.ts';
 import type {
@@ -31,8 +31,6 @@ import type { ISessionManager } from '../../authentication/index.ts';
 const DEFAULT_PROMPT_LOGIN_MAX_AGE = 60;
 
 export class OAuth2Authorization {
-    protected accessTokenIssuer : IOAuth2TokenIssuer;
-
     protected openIdTokenIssuer : IOAuth2OpenIDTokenIssuer;
 
     protected codeIssuer : IOAuth2AuthorizationCodeIssuer;
@@ -44,7 +42,6 @@ export class OAuth2Authorization {
     protected promptLoginMaxAge : number;
 
     constructor(ctx: OAuth2AuthorizationManagerContext) {
-        this.accessTokenIssuer = ctx.accessTokenIssuer;
         this.openIdTokenIssuer = ctx.openIdTokenIssuer;
         this.codeIssuer = ctx.codeIssuer;
         this.identityResolver = ctx.identityResolver;
@@ -64,8 +61,9 @@ export class OAuth2Authorization {
         identity: Identity,
         options: OAuth2AuthorizationOptions = {},
     ) : Promise<OAuth2AuthorizationResult> {
-        const availableResponseTypes : string[] = Object.values(OAuth2AuthorizationResponseType);
-
+        // OAuth 2.1 posture: only the authorization-code response type is
+        // supported — implicit/hybrid (token, id_token, none) were dropped
+        // (plan 042 item 3). Defense in depth behind the request validator.
         let responseTypes : string[] = [];
         if (data.response_type) {
             responseTypes = Array.isArray(data.response_type) ?
@@ -73,14 +71,14 @@ export class OAuth2Authorization {
                 data.response_type.split(' ');
         }
 
-        const enabledResponseTypes : Record<string, boolean> = {};
-
         for (const responseType of responseTypes) {
-            if (!availableResponseTypes.includes(responseType)) {
+            if (responseType !== OAuth2AuthorizationResponseType.CODE) {
                 throw OAuth2ResponseTypeError.unsupported();
-            } else {
-                enabledResponseTypes[responseType] = true;
             }
+        }
+
+        if (!responseTypes.includes(OAuth2AuthorizationResponseType.CODE)) {
+            throw OAuth2ResponseTypeError.unsupported();
         }
 
         if (!data.redirect_uri) {
@@ -147,54 +145,31 @@ export class OAuth2Authorization {
             ...(data.nonce ? { nonce: data.nonce } : {}),
         };
 
-        let codeEntity : OAuth2AuthorizationCode | undefined;
+        const codeEntity : OAuth2AuthorizationCode = await this.codeIssuer.issue(
+            data,
+            identity,
+            { sessionId: options.sessionId },
+        );
 
-        if (enabledResponseTypes[OAuth2AuthorizationResponseType.TOKEN]) {
-            const [token] = await this.accessTokenIssuer.issue(payloadBaseNormalized);
+        output.authorizationCode = codeEntity.id;
 
-            output.accessToken = token;
-        }
-
-        if (enabledResponseTypes[OAuth2AuthorizationResponseType.CODE]) {
-            codeEntity = await this.codeIssuer.issue(
-                data,
-                identity,
-                { sessionId: options.sessionId },
-            );
-
-            output.authorizationCode = codeEntity.id;
-        }
-
-        const needsIdToken = enabledResponseTypes[OAuth2AuthorizationResponseType.ID_TOKEN] ||
-            (data.scope && hasOAuth2Scopes(data.scope, ScopeName.OPEN_ID));
-
-        if (needsIdToken) {
+        // An openid-scoped code carries its id_token on the code blob — the
+        // /token exchange returns it alongside the access token.
+        if (data.scope && hasOAuth2Scopes(data.scope, ScopeName.OPEN_ID)) {
             const idTokenPayload : OAuth2TokenPayload = {
                 ...payloadBaseNormalized,
                 // OIDC id_token claims: real authentication time + session id.
                 auth_time: authTime,
                 ...(options.sessionId ? { sid: options.sessionId } : {}),
+                c_hash: await buildOAuth2TokenHash(codeEntity.id),
             };
-
-            if (output.accessToken) {
-                idTokenPayload.at_hash = await buildOAuth2TokenHash(output.accessToken);
-            }
-            if (output.authorizationCode) {
-                idTokenPayload.c_hash = await buildOAuth2TokenHash(output.authorizationCode);
-            }
 
             const [token] = await this.openIdTokenIssuer.issueWithIdentity(
                 idTokenPayload,
                 identity,
             );
 
-            if (enabledResponseTypes[OAuth2AuthorizationResponseType.ID_TOKEN]) {
-                output.idToken = token;
-            }
-
-            if (codeEntity) {
-                await this.codeIssuer.updateIdToken(codeEntity, token);
-            }
+            await this.codeIssuer.updateIdToken(codeEntity, token);
         }
 
         return output;

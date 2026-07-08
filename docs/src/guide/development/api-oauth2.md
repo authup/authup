@@ -130,6 +130,8 @@ curl -X POST 'http://localhost:3001/token' \
 
 Browser-based applications redirect the user to Authup's hosted `/authorize` page, which handles login and consent. On success the browser is redirected back to the `redirect_uri` with a `code`, which is then exchanged at `/token` (`grant_type=authorization_code`). Public clients must use PKCE (`code_challenge` / `code_verifier`) and `state`.
 
+`response_type=code` is the **only** supported response type (OAuth 2.1 posture): the implicit and hybrid response types (`token`, `id_token`, `none`) are rejected with `unsupported_response_type` — tokens are never delivered via the redirect URL. RPs still relying on implicit must migrate to the code flow with PKCE.
+
 #### Authorize request
 
 ```
