@@ -17,12 +17,19 @@ import {
     Suspense,
     defineComponent,
     h,
+    onBeforeUnmount,
     ref,
 } from 'vue';
 import { TranslatorTranslationCommonKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { OAuth2AuthorizationPrompt } from '@authup/specs';
 import type { LinkProperties } from '@vuecs/link';
-import { injectHTTPClient, injectStore, useTranslation } from '../../../core';
+import {
+    StoreDispatcherEventName,
+    injectHTTPClient,
+    injectStore,
+    injectStoreDispatcher,
+    useTranslation,
+} from '../../../core';
 import AAuthShell from '../../utility/AAuthShell.vue';
 import LoginForm from '../login/LoginForm.vue';
 import AAccountPrompt from './AAccountPrompt.vue';
@@ -77,6 +84,21 @@ export default defineComponent({
         // proceed past the chooser to consent for the rest of this render cycle.
         const accountConfirmed = ref<boolean>(false);
 
+        // A login performed *on this page* IS the account selection — don't then
+        // re-prompt "continue as X" for the account whose credentials were just
+        // entered. The store emits LOGGED_IN only for an explicit login() (the
+        // login form), never for a session restored from cookies (resolve() →
+        // RESOLVED), so a *lingering* session still gets the chooser while a
+        // fresh login skips it. Keying off the store event — not LoginForm's
+        // `done` emit — is what makes this reliable: on login the access-token
+        // flip re-renders Authorize and unmounts LoginForm before its `done`
+        // fires, so that emit is easily lost (the bug this replaced).
+        const dispatcher = injectStoreDispatcher();
+        const offLoggedIn = dispatcher.on(StoreDispatcherEventName.LOGGED_IN, () => {
+            accountConfirmed.value = true;
+        });
+        onBeforeUnmount(offLoggedIn);
+
         const error = ref<Error | null>(null);
         const client = ref<Client | null>(null);
 
@@ -128,12 +150,8 @@ export default defineComponent({
                         registerLink: props.registerLink,
                         passwordForgotLink: props.passwordForgotLink,
                         usernameHint: props.codeRequest?.login_hint,
-                        // A just-completed credential entry IS the account
-                        // selection — don't re-prompt "continue as X" for the
-                        // account the user just signed into (prompt=select_account
-                        // exists to interrupt a *lingering* session, not a fresh
-                        // login).
-                        onDone: () => { accountConfirmed.value = true; },
+                        // fresh-login → skip the chooser: handled race-free by the
+                        // `watch(loggedIn)` above, not LoginForm's `done` emit.
                         onFailed: (message: string) => emit('failed', message),
                     }),
                     fallback: () => h(AuthorizeText, { message: loadingText.value }),
