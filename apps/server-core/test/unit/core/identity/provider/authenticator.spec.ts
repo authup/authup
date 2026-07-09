@@ -5,22 +5,40 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import { describe, expect, it } from 'vitest';
-import type { OAuth2IdentityProvider } from '@authup/core-kit';
+import type { OAuth2IdentityProvider, Realm } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
 import { BadRequestError, isBadRequestError } from '@authup/errors';
 import type { IIdentityProviderAccountManager } from '../../../../../src/core';
 import { IdentityProviderOAuth2Authenticator } from '../../../../../src/core';
 
-function createAuthenticator(authorizeURL: unknown) {
-    const provider = {
+function createAuthenticator(authorizeURL: string) {
+    const realm: Realm = {
         id: createNanoID(),
+        name: 'master',
+        display_name: null,
+        description: null,
+        built_in: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+    };
+
+    const provider: OAuth2IdentityProvider = {
+        id: createNanoID(),
+        name: 'idp',
+        display_name: null,
         protocol: IdentityProviderProtocol.OAUTH2,
+        preset: null,
+        enabled: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        realm_id: realm.id,
+        realm,
         client_id: 'client-id',
         client_secret: 'client-secret',
         token_url: 'https://idp.example.com/token',
         authorize_url: authorizeURL,
-    } as OAuth2IdentityProvider;
+    };
 
     return new IdentityProviderOAuth2Authenticator({
         options: { baseURL: 'https://authup.example.com/' },

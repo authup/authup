@@ -249,7 +249,7 @@ describe('end-session (/logout)', () => {
 
     it('should reach the discovery-advertised end_session_endpoint', async () => {
         const config = await httpRequest(suite, 'GET', `/realms/${realm.name}/.well-known/openid-configuration`);
-        const body = await config.json() as { end_session_endpoint?: string };
+        const body: { end_session_endpoint?: string } = await config.json();
         expect(body.end_session_endpoint).toBeDefined();
         expect(body.end_session_endpoint!.endsWith('/logout')).toBe(true);
     });

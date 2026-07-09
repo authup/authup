@@ -221,7 +221,7 @@ describe('identity-provider authorization code grant', () => {
                 code: authupCode!,
             });
 
-        let error: any;
+        let error: unknown;
 
         try {
             await suite.client

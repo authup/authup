@@ -7,7 +7,6 @@
 
 import { randomUUID } from 'node:crypto';
 import type { Identity, Realm, User } from '@authup/core-kit';
-import type { OAuth2TokenPayload } from '@authup/specs';
 import { JWTError, OAuth2SubKind, OAuth2TokenKind } from '@authup/specs';
 import {
     beforeEach,
@@ -26,20 +25,39 @@ describe('OAuth2OpenIDTokenIssuer', () => {
     const userId = randomUUID();
     const clientId = randomUUID();
 
-    const user = {
+    const realm: Realm = {
+        id: realmId,
+        name: 'master',
+        display_name: null,
+        description: null,
+        built_in: true,
+        created_at: '2025-01-01T00:00:00.000Z',
+        updated_at: '2025-01-01T00:00:00.000Z',
+    };
+
+    const user: User = {
         id: userId,
         name: 'jdoe',
+        name_locked: false,
         first_name: 'John',
         last_name: 'Doe',
         display_name: 'John Doe',
         email: 'john@example.com',
+        password: null,
+        avatar: null,
+        cover: null,
+        reset_hash: null,
+        reset_at: null,
+        reset_expires: null,
+        status: null,
+        status_message: null,
         active: true,
+        activate_hash: null,
+        created_at: '2025-01-01T00:00:00.000Z',
+        updated_at: '2025-01-01T00:00:00.000Z',
         realm_id: realmId,
-        realm: {
-            id: realmId,
-            name: 'master',
-        } as Realm,
-    } as User;
+        realm,
+    };
 
     const identity: Identity = {
         type: OAuth2SubKind.USER,
@@ -69,8 +87,8 @@ describe('OAuth2OpenIDTokenIssuer', () => {
             resolver.setIdentity(identity);
             const issuer = createIssuer({ identityResolver: resolver });
 
-            await expect(issuer.issue({ sub: userId } as OAuth2TokenPayload)).rejects.toThrow(JWTError);
-            await expect(issuer.issue({ sub_kind: OAuth2SubKind.USER } as OAuth2TokenPayload)).rejects.toThrow(JWTError);
+            await expect(issuer.issue({ sub: userId })).rejects.toThrow(JWTError);
+            await expect(issuer.issue({ sub_kind: OAuth2SubKind.USER })).rejects.toThrow(JWTError);
         });
 
         it('should throw when identity cannot be resolved', async () => {
@@ -79,7 +97,7 @@ describe('OAuth2OpenIDTokenIssuer', () => {
             await expect(issuer.issue({
                 sub: userId,
                 sub_kind: OAuth2SubKind.USER,
-            } as OAuth2TokenPayload)).rejects.toThrow(JWTError);
+            })).rejects.toThrow(JWTError);
         });
 
         it('should resolve identity and issue token', async () => {
@@ -91,7 +109,7 @@ describe('OAuth2OpenIDTokenIssuer', () => {
                 sub: userId,
                 sub_kind: OAuth2SubKind.USER,
                 realm_id: realmId,
-            } as OAuth2TokenPayload);
+            });
             expect(token).toBe('signed-id-token');
         });
     });
@@ -105,7 +123,7 @@ describe('OAuth2OpenIDTokenIssuer', () => {
                 {
                     sub: userId,
                     realm_id: realmId,
-                } as OAuth2TokenPayload,
+                },
                 identity,
             );
 
@@ -132,7 +150,7 @@ describe('OAuth2OpenIDTokenIssuer', () => {
                     sub: userId,
                     realm_id: realmId,
                     auth_time: authTime,
-                } as OAuth2TokenPayload,
+                },
                 identity,
             );
 
@@ -148,7 +166,7 @@ describe('OAuth2OpenIDTokenIssuer', () => {
                     realm_id: realmId,
                     realm_name: 'master',
                     client_id: clientId,
-                } as OAuth2TokenPayload,
+                },
                 identity,
             );
 
@@ -165,7 +183,7 @@ describe('OAuth2OpenIDTokenIssuer', () => {
                     sub: userId,
                     realm_id: realmId,
                     client_id: clientId,
-                } as OAuth2TokenPayload,
+                },
                 identity,
             );
 
@@ -182,7 +200,7 @@ describe('OAuth2OpenIDTokenIssuer', () => {
                     sub: userId,
                     realm_id: realmId,
                     client_id: clientId,
-                } as OAuth2TokenPayload,
+                },
                 identity,
             );
 
@@ -198,7 +216,7 @@ describe('OAuth2OpenIDTokenIssuer', () => {
                 {
                     sub: userId,
                     realm_id: realmId,
-                } as OAuth2TokenPayload,
+                },
                 identity,
             );
 

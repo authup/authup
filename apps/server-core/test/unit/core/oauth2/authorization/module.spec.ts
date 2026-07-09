@@ -6,7 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { Identity, OAuth2AuthorizationCode } from '@authup/core-kit';
+import type { Identity } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
 import { OAuth2AuthorizationResponseType, OAuth2SubKind } from '@authup/specs';
@@ -27,16 +27,18 @@ import { FakeSessionManager } from '../../helpers/fake-session-manager.ts';
 // No id_token is minted here anymore (that moved to the /token exchange), so no
 // openid-issuer stub is needed.
 const issueCalls: OAuth2AuthorizationCodeIssuerOptions[] = [];
-const codeIssuer = {
-    issue: async (
-        _input: unknown,
-        _identity: unknown,
-        options: OAuth2AuthorizationCodeIssuerOptions = {},
-    ) => {
+const codeIssuer: IOAuth2AuthorizationCodeIssuer = {
+    issue: async (_input, _identity, options = {}) => {
         issueCalls.push(options);
-        return { id: randomUUID() } as OAuth2AuthorizationCode;
+        return {
+            id: randomUUID(),
+            sub: randomUUID(),
+            sub_kind: OAuth2SubKind.USER,
+            realm_id: randomUUID(),
+            realm_name: 'master',
+        };
     },
-} as unknown as IOAuth2AuthorizationCodeIssuer;
+};
 
 describe('OAuth2Authorization prompt/max_age enforcement', () => {
     const realmId = randomUUID();
@@ -45,13 +47,40 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
     let sessionManager: FakeSessionManager;
     let authorization: OAuth2Authorization;
 
-    const identity = {
+    const identity: Identity = {
         type: OAuth2SubKind.USER,
         data: {
             id: randomUUID(),
-            realm: { id: realmId, name: 'master' },
+            name: 'user',
+            name_locked: false,
+            first_name: null,
+            last_name: null,
+            display_name: null,
+            email: 'user@example.com',
+            password: null,
+            avatar: null,
+            cover: null,
+            reset_hash: null,
+            reset_at: null,
+            reset_expires: null,
+            status: null,
+            status_message: null,
+            active: true,
+            activate_hash: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            realm_id: realmId,
+            realm: {
+                id: realmId,
+                name: 'master',
+                display_name: null,
+                description: null,
+                built_in: true,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+            },
         },
-    } as unknown as Identity;
+    };
 
     const buildData = (extra: Record<string, any> = {}) => ({
         response_type: OAuth2AuthorizationResponseType.CODE,

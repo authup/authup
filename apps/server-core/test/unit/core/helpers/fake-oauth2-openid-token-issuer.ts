@@ -24,10 +24,10 @@ export class FakeOAuth2OpenIDTokenIssuer implements IOAuth2OpenIDTokenIssuer {
         this.issueCalls.push(input);
         const jti = randomUUID();
         return [`id-token-${jti}`, {
-            ...input, 
-            jti, 
-            exp: this.exp, 
-        } as OAuth2TokenPayload];
+            ...input,
+            jti,
+            exp: this.exp,
+        }];
     }
 
     async issueWithIdentity(

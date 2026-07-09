@@ -74,13 +74,13 @@ describe('grant-authorize realm gate (layer 2)', () => {
 
         // mint a code for realm-B's client, but authorized by a realm-A identity
         // (realm_id is taken from the identity → realm A)
-        const identity = {
+        const identity: Identity = {
             type: IdentityType.USER,
             data: {
-                id: user.id,
-                realm: { id: realmA.id, name: realmA.name },
+                ...user,
+                realm: realmA,
             },
-        } as unknown as Identity;
+        };
 
         const code = await codeIssuer.issue(
             {
@@ -114,13 +114,13 @@ describe('grant-authorize realm gate (layer 2)', () => {
         const codeVerifier = generateOAuth2CodeVerifier();
         const codeChallenge = await buildOAuth2CodeChallenge(codeVerifier);
 
-        const identity = {
+        const identity: Identity = {
             type: IdentityType.USER,
             data: {
-                id: user.id,
-                realm: { id: realmB.id, name: realmB.name },
+                ...user,
+                realm: realmB,
             },
-        } as unknown as Identity;
+        };
 
         const code = await codeIssuer.issue(
             {

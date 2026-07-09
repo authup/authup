@@ -19,24 +19,49 @@ import { OAuth2EndSessionService } from '../../../../../src/core/oauth2/end-sess
 import type {
     IOAuth2ClientRepository,
     IOAuth2TokenVerifier,
-    IRealmRepository,
 } from '../../../../../src/core/index.ts';
 import { FakeSessionManager } from '../../helpers/fake-session-manager.ts';
+import { FakeRealmRepository } from '../../entities/realm/fake-repository.ts';
 
 const realmId = randomUUID();
 const clientId = randomUUID();
 
-const client = {
+const realm: Realm = {
+    id: realmId,
+    name: 'master',
+    display_name: null,
+    description: null,
+    built_in: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+};
+
+const client: Client = {
     id: clientId,
+    active: true,
+    built_in: true,
+    is_confidential: false,
     name: 'web',
-    realm_id: realmId,
+    display_name: null,
+    description: null,
+    secret: null,
+    secret_hashed: false,
+    secret_encrypted: false,
     redirect_uri: 'https://app.example.com/**',
     post_logout_redirect_uri: 'https://app.example.com/**',
-} as Client;
+    grant_types: null,
+    scope: null,
+    base_url: null,
+    root_url: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    realm_id: realmId,
+    realm,
+};
 
-const realmRepository = { resolve: async () => ({ id: realmId, name: 'master' } as Realm) } as unknown as IRealmRepository;
+const realmRepository = new FakeRealmRepository();
 
-const clientRepository = { findOneByIdOrName: async () => client } as unknown as IOAuth2ClientRepository;
+const clientRepository: IOAuth2ClientRepository = { findOneByIdOrName: async () => client };
 
 // A token-verifier stub whose behavior is set per test.
 function buildVerifier(behavior: () => Promise<OAuth2TokenPayload>): IOAuth2TokenVerifier {
@@ -179,15 +204,15 @@ describe('OAuth2EndSessionService', () => {
     it('should validate against post_logout_redirect_uri, NOT redirect_uri (dedicated column)', async () => {
         // a client whose login redirect_uri would match but whose dedicated
         // post-logout allow-list does NOT — the redirect must be dropped
-        const narrowClient = {
+        const narrowClient: Client = {
             ...client,
             redirect_uri: 'https://app.example.com/**',
             post_logout_redirect_uri: 'https://app.example.com/only-here/**',
-        } as Client;
+        };
         const service = new OAuth2EndSessionService({
             tokenVerifier: buildVerifier(async () => validPayload),
             sessionManager,
-            clientRepository: { findOneByIdOrName: async () => narrowClient } as unknown as IOAuth2ClientRepository,
+            clientRepository: { findOneByIdOrName: async () => narrowClient },
             realmRepository,
         });
 

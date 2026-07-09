@@ -20,6 +20,7 @@ import {
     OAuth2ErrorCode,
 } from '@authup/specs';
 import { ErrorCode } from '@authup/errors';
+import { isClientError } from 'hapic';
 import { buildOAuth2CodeChallenge, generateOAuth2CodeVerifier } from '../../../../../../src/core';
 import {
     createFakeClient,
@@ -674,8 +675,8 @@ describe('grant-authorize', () => {
                 code_challenge_method: OAuth2AuthorizationCodeChallengeMethod.SHA_256,
                 state: generateOAuth2CodeVerifier(),
             });
-        } catch (e: any) {
-            const data = e?.response?.data ?? {};
+        } catch (e) {
+            const data = (isClientError(e) ? e.response?.data : undefined) ?? {};
             expect(data.code).toEqual(ErrorCode.OAUTH_LOGIN_REQUIRED);
             // no identity / realm enumeration surface in the body
             expect(data).not.toHaveProperty('realm_id');
