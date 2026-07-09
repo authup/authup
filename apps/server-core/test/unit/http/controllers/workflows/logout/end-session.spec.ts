@@ -20,6 +20,7 @@ import {
 } from '@authup/specs';
 import { buildOAuth2CodeChallenge, generateOAuth2CodeVerifier } from '../../../../../../src/core';
 import {
+    createFakeClient,
     createFakeRealm,
     createFakeUser,
     httpRequest,
@@ -40,14 +41,13 @@ describe('end-session (/logout)', () => {
         await suite.setup();
 
         realm = await suite.client.realm.create(createFakeRealm());
-        client = await suite.client.client.create({
+        client = await suite.client.client.create(createFakeClient({
             realm_id: realm.id,
-            name: `app-${generateOAuth2CodeVerifier().slice(0, 10).toLowerCase()}`,
             is_confidential: false,
             secret: null,
             redirect_uri: REDIRECT_PATTERN,
             post_logout_redirect_uri: REDIRECT_PATTERN,
-        });
+        }));
 
         for (const scopeName of [ScopeName.GLOBAL, ScopeName.OPEN_ID]) {
             const scope = await suite.client.scope.getOne(scopeName);

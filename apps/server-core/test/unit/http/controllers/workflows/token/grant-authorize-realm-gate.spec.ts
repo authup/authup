@@ -18,6 +18,7 @@ import type { IOAuth2AuthorizationCodeIssuer } from '../../../../../../src/core'
 import { buildOAuth2CodeChallenge, generateOAuth2CodeVerifier } from '../../../../../../src/core';
 import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants';
 import {
+    createFakeClient,
     createFakeRealm,
     createFakeUser,
     expectClientError,
@@ -47,13 +48,12 @@ describe('grant-authorize realm gate (layer 2)', () => {
         realmB = await suite.client.realm.create(createFakeRealm());
 
         // a public (PKCE) client living in realm B
-        clientB = await suite.client.client.create({
+        clientB = await suite.client.client.create(createFakeClient({
             realm_id: realmB.id,
-            name: `app-${generateOAuth2CodeVerifier().slice(0, 10).toLowerCase()}`,
             is_confidential: false,
             secret: null,
             redirect_uri: `${REDIRECT_URI.replace('/cb', '')}/**`,
-        });
+        }));
 
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({ scope_id: scope.id, client_id: clientB.id });
