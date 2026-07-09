@@ -111,11 +111,13 @@ describe('identity-provider authorization code grant', () => {
                 is_confidential: true,
             }));
 
-        const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
-        await suite.client.clientScope.create({
-            scope_id: scope.id,
-            client_id: client.id,
-        });
+        for (const scopeName of [ScopeName.GLOBAL, ScopeName.OPEN_ID]) {
+            const scope = await suite.client.scope.getOne(scopeName);
+            await suite.client.clientScope.create({
+                scope_id: scope.id,
+                client_id: client.id,
+            });
+        }
 
         encodedCodeRequest = base64URLEncode(JSON.stringify({
             response_type: 'code',
@@ -235,5 +237,56 @@ describe('identity-provider authorization code grant', () => {
         }
 
         expect(error).toBeDefined();
+    });
+
+    // plan 042 item 6: the id_token is minted at the /token exchange, so a
+    // session-less (federated) openid login now yields an id_token — previously
+    // the IdP-callback code carried none, so openid RPs got no id_token at all.
+    it('should return an id_token with a sid for an openid federated login', async () => {
+        const openidCodeRequest = base64URLEncode(JSON.stringify({
+            response_type: 'code',
+            client_id: client.id,
+            redirect_uri: 'https://example.com/redirect',
+            scope: `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}`,
+        }));
+
+        const authorizeOutResponse = await suite.client
+            .get(
+                `${buildIdentityProviderAuthorizePath(providerId)}?codeRequest=${openidCodeRequest}`,
+                { redirect: 'manual' },
+            );
+
+        const state = new URL(authorizeOutResponse.headers.get('location') as string)
+            .searchParams.get('state');
+
+        const authorizeInResponse = await suite.client
+            .get(
+                `${buildIdentityProviderAuthorizeCallbackPath(providerId)}?code=fake-idp-code&state=${state}`,
+                { redirect: 'manual' },
+            );
+
+        const authupCode = new URL(authorizeInResponse.headers.get('location') as string)
+            .searchParams.get('code');
+
+        const tokenResponse = await suite.client
+            .token
+            .createWithAuthorizationCode({
+                client_id: client.id,
+                client_secret: clientSecret,
+                redirect_uri: 'https://example.com/redirect',
+                code: authupCode!,
+            });
+
+        expect(tokenResponse.id_token).toBeDefined();
+
+        const payload = JSON.parse(
+            Buffer.from(tokenResponse.id_token!.split('.')[1], 'base64url').toString('utf8'),
+        ) as { sid?: unknown };
+
+        expect(typeof payload.sid).toEqual('string');
+        expect((payload.sid as string).length).toBeGreaterThan(0);
+
+        const introspection = await suite.client.token.introspect({ token: tokenResponse.access_token });
+        expect(payload.sid).toEqual(introspection.session_id);
     });
 });

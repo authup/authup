@@ -12,6 +12,7 @@ import type {
     IIdentityPermissionProvider,
     IIdentityResolver,
     IOAuth2AuthorizationCodeVerifier,
+    IOAuth2OpenIDTokenIssuer,
     IOAuth2TokenIssuer,
     IOAuth2TokenRepository,
     IOAuth2TokenRevoker,
@@ -27,6 +28,7 @@ export type TokenControllerContext = {
 
     accessTokenIssuer: IOAuth2TokenIssuer,
     refreshTokenIssuer: IOAuth2TokenIssuer,
+    openIdTokenIssuer: IOAuth2OpenIDTokenIssuer,
     tokenVerifier: IOAuth2TokenVerifier,
     tokenRevoker: IOAuth2TokenRevoker,
     tokenRepository: IOAuth2TokenRepository,

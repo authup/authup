@@ -70,6 +70,7 @@ export class TokenController {
                 clientAuthenticator: ctx.oauth2ClientAuthenticator,
                 accessTokenIssuer: ctx.accessTokenIssuer,
                 refreshTokenIssuer: ctx.refreshTokenIssuer,
+                openIdTokenIssuer: ctx.openIdTokenIssuer,
                 sessionManager: ctx.sessionManager,
                 realmRepository: ctx.realmRepository,
             }),

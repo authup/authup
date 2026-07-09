@@ -90,6 +90,7 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         tokenAccessMaxAge: 900,
         tokenRefreshGracePeriod: 0,
         promptLoginMaxAge: 60,
+        endSessionHintGracePeriod: 0,
         registrationEnabled: false,
         emailVerificationEnabled: false,
         passwordRecoveryEnabled: false,

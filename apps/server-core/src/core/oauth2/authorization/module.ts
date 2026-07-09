@@ -6,8 +6,6 @@
  */
 
 import type { Identity, OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
-import { ScopeName } from '@authup/core-kit';
-import type { OAuth2TokenPayload } from '@authup/specs';
 import {
     OAuth2AuthorizationPrompt,
     OAuth2AuthorizationResponseType,
@@ -15,39 +13,26 @@ import {
     OAuth2LoginRequiredError,
     OAuth2RequestError,
     OAuth2ResponseTypeError,
-    hasOAuth2Scopes,
 } from '@authup/specs';
-import type { IOAuth2OpenIDTokenIssuer, IOAuth2TokenIssuer } from '../token/index.ts';
 import type { IOAuth2AuthorizationCodeIssuer } from './code/index.ts';
-import { buildOAuth2TokenHash } from './helpers.ts';
 import type {
     OAuth2AuthorizationManagerContext,
     OAuth2AuthorizationOptions,
     OAuth2AuthorizationResult,
 } from './types.ts';
-import type { IIdentityResolver } from '../../identity/index.ts';
 import type { ISessionManager } from '../../authentication/index.ts';
 
 const DEFAULT_PROMPT_LOGIN_MAX_AGE = 60;
 
 export class OAuth2Authorization {
-    protected accessTokenIssuer : IOAuth2TokenIssuer;
-
-    protected openIdTokenIssuer : IOAuth2OpenIDTokenIssuer;
-
     protected codeIssuer : IOAuth2AuthorizationCodeIssuer;
-
-    protected identityResolver : IIdentityResolver;
 
     protected sessionManager : ISessionManager;
 
     protected promptLoginMaxAge : number;
 
     constructor(ctx: OAuth2AuthorizationManagerContext) {
-        this.accessTokenIssuer = ctx.accessTokenIssuer;
-        this.openIdTokenIssuer = ctx.openIdTokenIssuer;
         this.codeIssuer = ctx.codeIssuer;
-        this.identityResolver = ctx.identityResolver;
         this.sessionManager = ctx.sessionManager;
         this.promptLoginMaxAge = ctx.promptLoginMaxAge ?? DEFAULT_PROMPT_LOGIN_MAX_AGE;
     }
@@ -64,8 +49,9 @@ export class OAuth2Authorization {
         identity: Identity,
         options: OAuth2AuthorizationOptions = {},
     ) : Promise<OAuth2AuthorizationResult> {
-        const availableResponseTypes : string[] = Object.values(OAuth2AuthorizationResponseType);
-
+        // OAuth 2.1 posture: only the authorization-code response type is
+        // supported — implicit/hybrid (token, id_token, none) were dropped
+        // (plan 042 item 3). Defense in depth behind the request validator.
         let responseTypes : string[] = [];
         if (data.response_type) {
             responseTypes = Array.isArray(data.response_type) ?
@@ -73,14 +59,14 @@ export class OAuth2Authorization {
                 data.response_type.split(' ');
         }
 
-        const enabledResponseTypes : Record<string, boolean> = {};
-
         for (const responseType of responseTypes) {
-            if (!availableResponseTypes.includes(responseType)) {
+            if (responseType !== OAuth2AuthorizationResponseType.CODE) {
                 throw OAuth2ResponseTypeError.unsupported();
-            } else {
-                enabledResponseTypes[responseType] = true;
             }
+        }
+
+        if (!responseTypes.includes(OAuth2AuthorizationResponseType.CODE)) {
+            throw OAuth2ResponseTypeError.unsupported();
         }
 
         if (!data.redirect_uri) {
@@ -135,67 +121,16 @@ export class OAuth2Authorization {
             }
         }
 
-        const payloadBaseNormalized : OAuth2TokenPayload = {
+        // The id_token is NOT minted here — the /token exchange mints it after
+        // resolving the real backing session, so its `sid` is authoritative
+        // (plan 042 item 6). The code carries the authentication instant.
+        const codeEntity : OAuth2AuthorizationCode = await this.codeIssuer.issue(
+            data,
+            identity,
+            { sessionId: options.sessionId, authTime },
+        );
 
-            sub: identity.data.id,
-            sub_kind: identity.type,
-            realm_id: identity.data.realm.id,
-            realm_name: identity.data.realm.name,
-
-            client_id: data.client_id,
-            ...(data.scope ? { scope: data.scope } : {}),
-            ...(data.nonce ? { nonce: data.nonce } : {}),
-        };
-
-        let codeEntity : OAuth2AuthorizationCode | undefined;
-
-        if (enabledResponseTypes[OAuth2AuthorizationResponseType.TOKEN]) {
-            const [token] = await this.accessTokenIssuer.issue(payloadBaseNormalized);
-
-            output.accessToken = token;
-        }
-
-        if (enabledResponseTypes[OAuth2AuthorizationResponseType.CODE]) {
-            codeEntity = await this.codeIssuer.issue(
-                data,
-                identity,
-                { sessionId: options.sessionId },
-            );
-
-            output.authorizationCode = codeEntity.id;
-        }
-
-        const needsIdToken = enabledResponseTypes[OAuth2AuthorizationResponseType.ID_TOKEN] ||
-            (data.scope && hasOAuth2Scopes(data.scope, ScopeName.OPEN_ID));
-
-        if (needsIdToken) {
-            const idTokenPayload : OAuth2TokenPayload = {
-                ...payloadBaseNormalized,
-                // OIDC id_token claims: real authentication time + session id.
-                auth_time: authTime,
-                ...(options.sessionId ? { sid: options.sessionId } : {}),
-            };
-
-            if (output.accessToken) {
-                idTokenPayload.at_hash = await buildOAuth2TokenHash(output.accessToken);
-            }
-            if (output.authorizationCode) {
-                idTokenPayload.c_hash = await buildOAuth2TokenHash(output.authorizationCode);
-            }
-
-            const [token] = await this.openIdTokenIssuer.issueWithIdentity(
-                idTokenPayload,
-                identity,
-            );
-
-            if (enabledResponseTypes[OAuth2AuthorizationResponseType.ID_TOKEN]) {
-                output.idToken = token;
-            }
-
-            if (codeEntity) {
-                await this.codeIssuer.updateIdToken(codeEntity, token);
-            }
-        }
+        output.authorizationCode = codeEntity.id;
 
         return output;
     }

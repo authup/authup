@@ -16,12 +16,14 @@ import {
     it,
 } from 'vitest';
 import { OAuth2AuthorizeGrant } from '../../../../../src/core/oauth2/grant-types/authorize.ts';
+import { FakeOAuth2OpenIDTokenIssuer } from '../../helpers/fake-oauth2-openid-token-issuer.ts';
 import { FakeOAuth2TokenIssuer } from '../../helpers/fake-oauth2-token-issuer.ts';
 import { FakeSessionManager } from '../../helpers/fake-session-manager.ts';
 
 describe('OAuth2AuthorizeGrant', () => {
     let accessTokenIssuer: FakeOAuth2TokenIssuer;
     let refreshTokenIssuer: FakeOAuth2TokenIssuer;
+    let openIdTokenIssuer: FakeOAuth2OpenIDTokenIssuer;
     let sessionManager: FakeSessionManager;
     let grant: OAuth2AuthorizeGrant;
 
@@ -45,10 +47,12 @@ describe('OAuth2AuthorizeGrant', () => {
     beforeEach(() => {
         accessTokenIssuer = new FakeOAuth2TokenIssuer();
         refreshTokenIssuer = new FakeOAuth2TokenIssuer();
+        openIdTokenIssuer = new FakeOAuth2OpenIDTokenIssuer();
         sessionManager = new FakeSessionManager();
         grant = new OAuth2AuthorizeGrant({
             accessTokenIssuer,
             refreshTokenIssuer,
+            openIdTokenIssuer,
             sessionManager,
         });
     });
@@ -147,5 +151,73 @@ describe('OAuth2AuthorizeGrant', () => {
 
         expect(sessionManager.refreshCalls).toHaveLength(0);
         expect(sessionManager.createCalls).toHaveLength(1);
+    });
+
+    // plan 042 item 6: the id_token is minted at the exchange (not at authorize)
+    // so its `sid` references the REAL backing session in every branch.
+
+    it('should not mint an id_token when the code lacks the openid scope', async () => {
+        const result = await grant.runWith(buildCode({ scope: ScopeName.GLOBAL }));
+
+        expect(openIdTokenIssuer.issueCalls).toHaveLength(0);
+        expect(result).not.toHaveProperty('id_token');
+    });
+
+    it('should mint an id_token with sid = the reused session for an openid code', async () => {
+        const sessionId = randomUUID();
+        await sessionManager.create({
+            id: sessionId,
+            sub: userId,
+            sub_kind: OAuth2SubKind.USER,
+            realm_id: realmId,
+            client_id: null,
+        });
+        sessionManager.createCalls.length = 0;
+
+        const authTime = Math.floor(Date.now() / 1000) - 42;
+        const result = await grant.runWith(buildCode({
+            session_id: sessionId,
+            scope: `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}`,
+            nonce: 'n-123',
+            auth_time: authTime,
+        }));
+
+        expect(openIdTokenIssuer.issueCalls).toHaveLength(1);
+        const idTokenPayload = openIdTokenIssuer.issueCalls[0];
+        // sid is the REUSED session, not the code's session_id by coincidence
+        expect(idTokenPayload.sid).toEqual(sessionId);
+        expect(idTokenPayload.auth_time).toEqual(authTime);
+        expect(idTokenPayload.nonce).toEqual('n-123');
+        expect(idTokenPayload.at_hash).toBeDefined();
+        expect(result).toHaveProperty('id_token');
+    });
+
+    it('should mint an id_token with sid = the freshly-created session on fallback', async () => {
+        // session_id references a deleted session → resolveSession creates a new
+        // one; the id_token's sid must be that NEW session, not the stale code id
+        const staleSessionId = randomUUID();
+
+        const result = await grant.runWith(buildCode({
+            session_id: staleSessionId,
+            scope: `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}`,
+        }));
+
+        expect(sessionManager.createCalls).toHaveLength(1);
+        expect(openIdTokenIssuer.issueCalls).toHaveLength(1);
+        const idTokenPayload = openIdTokenIssuer.issueCalls[0];
+        expect(idTokenPayload.sid).toBeDefined();
+        expect(idTokenPayload.sid).not.toEqual(staleSessionId);
+        expect(result).toHaveProperty('id_token');
+    });
+
+    it('should mint an id_token for a session-less (federated) openid code', async () => {
+        // no session_id at all (external-IdP callback) → fresh session, and the
+        // id_token is minted with that session's sid (previously: no id_token)
+        const result = await grant.runWith(buildCode({ scope: `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}` }));
+
+        expect(sessionManager.createCalls).toHaveLength(1);
+        expect(openIdTokenIssuer.issueCalls).toHaveLength(1);
+        expect(openIdTokenIssuer.issueCalls[0].sid).toBeDefined();
+        expect(result).toHaveProperty('id_token');
     });
 });

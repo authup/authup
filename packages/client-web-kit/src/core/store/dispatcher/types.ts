@@ -23,6 +23,7 @@ export type StoreDispatcherEvents = {
     [StoreDispatcherEventName.ACCESS_TOKEN_EXPIRE_DATE_UPDATED]: Date | null,
 
     [StoreDispatcherEventName.REFRESH_TOKEN_UPDATED]: string | null,
+    [StoreDispatcherEventName.ID_TOKEN_UPDATED]: string | null,
     [StoreDispatcherEventName.USER_UPDATED]: User | null,
     [StoreDispatcherEventName.REALM_UPDATED]: RealmMinimal | null,
     [StoreDispatcherEventName.REALM_MANAGEMENT_UPDATED]: RealmMinimal | null,

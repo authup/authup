@@ -29,18 +29,21 @@ export class OAuth2AuthorizationCodeRequestValidator extends Container<OAuth2Aut
                     .string()
                     .nonempty()
                     .check((ctx) => {
-                        const availableResponseTypes = Object.values(OAuth2AuthorizationResponseType);
-                        const responseTypes = ctx.value.split(' ') as OAuth2AuthorizationResponseType[];
+                        // OAuth 2.1 posture: the authorization endpoint issues
+                        // codes only — the implicit/hybrid response types
+                        // (token, id_token, none) are not supported.
+                        const responseTypes = ctx.value.split(' ').filter(Boolean);
 
-                        for (const responseType of responseTypes) {
-                            if (!availableResponseTypes.includes(responseType)) {
-                                const error = OAuth2ResponseTypeError.unsupported();
-                                ctx.issues.push({
-                                    input: responseType,
-                                    code: 'custom',
-                                    message: error.message,
-                                });
-                            }
+                        const invalid = responseTypes.length !== 1 ||
+                            responseTypes[0] !== OAuth2AuthorizationResponseType.CODE;
+
+                        if (invalid) {
+                            const error = OAuth2ResponseTypeError.unsupported();
+                            ctx.issues.push({
+                                input: ctx.value,
+                                code: 'custom',
+                                message: error.message,
+                            });
                         }
 
                         return z.NEVER;

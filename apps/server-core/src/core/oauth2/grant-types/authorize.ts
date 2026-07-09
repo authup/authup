@@ -9,7 +9,8 @@ import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs
 import { hasOAuth2Scopes } from '@authup/specs';
 import type { OAuth2AuthorizationCode, Session } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
-import type { IOAuth2TokenIssuer } from '../token/index.ts';
+import { buildOAuth2TokenHash } from '../authorization/helpers.ts';
+import type { IOAuth2OpenIDTokenIssuer, IOAuth2TokenIssuer } from '../token/index.ts';
 import { OAuth2BaseGrant } from './base.ts';
 import type { IOAuth2Grant, OAuth2AuthorizeGrantContext, OAuth2GrantRunWIthOptions } from './types.ts';
 import type { OAuth2BearerResponseBuildContext } from '../response/index.ts';
@@ -18,6 +19,8 @@ import { buildOAuth2BearerTokenResponse } from '../response/index.ts';
 export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCode> implements IOAuth2Grant {
     protected refreshTokenIssuer : IOAuth2TokenIssuer;
 
+    protected openIdTokenIssuer : IOAuth2OpenIDTokenIssuer;
+
     constructor(ctx: OAuth2AuthorizeGrantContext) {
         super({
             accessTokenIssuer: ctx.accessTokenIssuer,
@@ -25,6 +28,7 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
         });
 
         this.refreshTokenIssuer = ctx.refreshTokenIssuer;
+        this.openIdTokenIssuer = ctx.openIdTokenIssuer;
     }
 
     async runWith(
@@ -55,11 +59,28 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
             refreshTokenPayload,
         };
 
+        // The id_token is minted HERE — after resolveSession — so its `sid`
+        // references the real backing session for the reuse branch, the
+        // fallback branch, and session-less (federated IdP) codes alike.
+        // `auth_time` is the authentication instant captured on the code.
         if (
             authorizationCode.scope &&
             hasOAuth2Scopes(authorizationCode.scope, ScopeName.OPEN_ID)
         ) {
-            buildContext.idToken = authorizationCode.id_token || undefined;
+            const [idToken] = await this.openIdTokenIssuer.issue({
+                sub: authorizationCode.sub || undefined,
+                sub_kind: authorizationCode.sub_kind,
+                realm_id: authorizationCode.realm_id,
+                realm_name: authorizationCode.realm_name,
+                scope: authorizationCode.scope || undefined,
+                client_id: authorizationCode.client_id || undefined,
+                ...(authorizationCode.nonce ? { nonce: authorizationCode.nonce } : {}),
+                ...(typeof authorizationCode.auth_time === 'number' ? { auth_time: authorizationCode.auth_time } : {}),
+                sid: session.id,
+                at_hash: await buildOAuth2TokenHash(accessToken),
+            });
+
+            buildContext.idToken = idToken;
         }
 
         return buildOAuth2BearerTokenResponse(buildContext);

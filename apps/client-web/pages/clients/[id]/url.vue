@@ -50,7 +50,7 @@ export default defineNuxtComponent({
         const generatedUrl = computed(() => {
             const link = new URL('authorize', config.public.apiUrl);
             link.searchParams.set('client_id', props.entity.id);
-            link.searchParams.set('response_type', 'token');
+            link.searchParams.set('response_type', 'code');
 
             if (scopes.value.length > 0) {
                 link.searchParams.set('scope', scopes.value.join(' '));

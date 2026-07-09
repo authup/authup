@@ -9,7 +9,6 @@ import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import { isSimpleMatch, isUUID } from '@authup/kit';
 import {
-    OAuth2AuthorizationResponseType,
     OAuth2ClientError,
     OAuth2GrantError,
     OAuth2RequestError,
@@ -23,13 +22,6 @@ import type {
     OAuth2AuthorizationCodeRequestVerificationResult,
     OAuth2AuthorizationCodeRequestVerifierContext,
 } from './types.ts';
-
-function willIssueCode(responseType: string | undefined): boolean {
-    if (!responseType) {
-        return false;
-    }
-    return responseType.split(' ').includes(OAuth2AuthorizationResponseType.CODE);
-}
 
 export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2AuthorizationCodeRequestVerifier {
     protected clientRepository: IOAuth2ClientRepository;
@@ -69,12 +61,11 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
             throw OAuth2ClientError.inactive();
         }
 
-        // Public clients MUST use PKCE for the code flow (RFC 7636 §4.4.1,
-        // OAuth 2.1). Without PKCE a public client's code flow has no second
-        // factor — anyone who intercepts the redirect can redeem the code at
-        // /token. Only enforce when an authorization code will actually be
-        // issued; implicit/id_token-only flows don't involve a code.
-        if (!client.is_confidential && !data.code_challenge && willIssueCode(data.response_type)) {
+        // Public clients MUST use PKCE (RFC 7636 §4.4.1, OAuth 2.1). Without
+        // PKCE a public client's code flow has no second factor — anyone who
+        // intercepts the redirect can redeem the code at /token. The code flow
+        // is the only supported response type, so this holds unconditionally.
+        if (!client.is_confidential && !data.code_challenge) {
             throw OAuth2RequestError.malformed('PKCE code_challenge is required for public clients.');
         }
 
@@ -82,7 +73,7 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
         // initiating session and prevent CSRF (RFC 6749 §10.12). Confidential
         // clients are exempt because the /token exchange already authenticates
         // them via client_secret.
-        if (!client.is_confidential && !data.state && willIssueCode(data.response_type)) {
+        if (!client.is_confidential && !data.state) {
             throw OAuth2RequestError.malformed('state is required for public clients in the code flow.');
         }
 

@@ -16,6 +16,10 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  *
  * down() narrows ip_address back to 15, which fails if any IPv6 value was
  * stored (best-effort, per the 1779300000000 precedent).
+ *
+ * Also adds auth_clients.post_logout_redirect_uri (plan 042) — a dedicated
+ * OIDC RP-Initiated Logout allow-list, no longer conflated with redirect_uri.
+ * Folded into this still-unreleased migration rather than a new file.
  */
 export class Default1783325495597 implements MigrationInterface {
     name = 'Default1783325495597';
@@ -49,9 +53,19 @@ export class Default1783325495597 implements MigrationInterface {
             ALTER TABLE \`auth_session_tokens\`
             ADD CONSTRAINT \`FK_auth_session_tokens_session_id\` FOREIGN KEY (\`session_id\`) REFERENCES \`auth_sessions\`(\`id\`) ON DELETE CASCADE ON UPDATE NO ACTION
         `);
+
+        // Dedicated post-logout redirect allow-list for OIDC RP-Initiated
+        // Logout (plan 042) — no longer conflated with the login redirect_uri.
+        await queryRunner.query(`
+            ALTER TABLE \`auth_clients\` ADD \`post_logout_redirect_uri\` text NULL
+        `);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`
+            ALTER TABLE \`auth_clients\` DROP COLUMN \`post_logout_redirect_uri\`
+        `);
+
         await queryRunner.query(`
             ALTER TABLE \`auth_session_tokens\` DROP FOREIGN KEY \`FK_auth_session_tokens_session_id\`
         `);
