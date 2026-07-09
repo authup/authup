@@ -137,4 +137,37 @@ describe('AuthorizeForm dead-bearer resilience', () => {
         // the manual-consent UI (with its scope list) renders as the retry path
         expect(wrapper.find('.scopes-stub').exists()).toBe(true);
     });
+
+    it('does NOT emit loginRequired on a non-401 error carrying a different OAuth2 error code', async () => {
+        // guards against a loose check that treats any body `error` field as
+        // login_required — only the LOGIN_REQUIRED code (or a 401) qualifies.
+        const wrapper = mountForm(() => {
+            throw httpError(400, { error: OAuth2ErrorCode.INVALID_REQUEST });
+        });
+        await flushPromises();
+
+        expect(wrapper.emitted('loginRequired')).toBeFalsy();
+        expect(wrapper.find('.scopes-stub').exists()).toBe(true);
+    });
+
+    it('emits loginRequired on a 401 even when the body carries an unrelated error code (status wins)', async () => {
+        const wrapper = mountForm(() => {
+            throw httpError(401, { error: OAuth2ErrorCode.INVALID_REQUEST });
+        });
+        await flushPromises();
+
+        expect(wrapper.emitted('loginRequired')).toBeTruthy();
+        expect(wrapper.find('.scopes-stub').exists()).toBe(false);
+    });
+
+    it('does NOT emit loginRequired for a non-HTTP rejection (no response envelope)', async () => {
+        // a directly-thrown/non-transport error (no `.response`) has no status
+        // and no body `.error` — extractErrorContext yields both as undefined,
+        // so it must fall back to manual consent, not re-authentication.
+        const wrapper = mountForm(() => { throw new Error('boom'); });
+        await flushPromises();
+
+        expect(wrapper.emitted('loginRequired')).toBeFalsy();
+        expect(wrapper.find('.scopes-stub').exists()).toBe(true);
+    });
 });
