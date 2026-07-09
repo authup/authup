@@ -16,6 +16,7 @@ export type StoreDispatcherEvents = {
     [StoreDispatcherEventName.LOGGED_IN]: [],
     [StoreDispatcherEventName.LOGGING_OUT]: [],
     [StoreDispatcherEventName.LOGGED_OUT]: [],
+    [StoreDispatcherEventName.SESSION_EXPIRED]: [],
     [StoreDispatcherEventName.RESOLVING]: [],
     [StoreDispatcherEventName.RESOLVED]: [],
 

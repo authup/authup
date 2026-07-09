@@ -100,7 +100,7 @@ describe('refresh-token', () => {
         expect(refreshed.access_token).toBeDefined();
     });
 
-    it('should reject refresh when token has client_id but request omits client auth', async () => {
+    it('should reject refresh when a CONFIDENTIAL bound token omits client auth', async () => {
         const passwordResponse = await suite.client
             .token
             .createWithPassword({
@@ -110,10 +110,51 @@ describe('refresh-token', () => {
                 client_secret: confidentialSecret,
             });
 
+        // A confidential client MUST re-authenticate on refresh (RFC 6749 §6):
+        // the server resolves the bound client and, finding it confidential
+        // with no secret presented, rejects invalid_client.
         await expectClientError(
             () => suite.client.token.createWithRefreshToken({ refresh_token: passwordResponse.refresh_token! }),
             { status: 401, code: ErrorCode.OAUTH_CLIENT_INVALID },
         );
+    });
+
+    it('should grant refresh for a PUBLIC bound token without client auth', async () => {
+        // A public client cannot authenticate (no secret) and RFC 6749 §10.4
+        // does not require it to — the server extracts the bound client_id from
+        // the signed token. This is what lets the public client-web `web`
+        // client auto-refresh with just { refresh_token }.
+        const publicClient = await suite.client
+            .client
+            .create(createFakeClient({
+                is_confidential: false,
+                secret: null,
+            }));
+
+        const login = await suite.client
+            .token
+            .createWithPassword({
+                username: 'admin',
+                password: 'start123',
+                client_id: publicClient.id,
+            });
+
+        expect(login.refresh_token).toBeDefined();
+
+        // Guard the test's own premise: the token MUST be client-bound, so the
+        // refresh below genuinely exercises the extraction path and cannot
+        // silently pass through the legacy no-client flow.
+        const introspected = await suite.client
+            .token
+            .introspect({ token: login.refresh_token! });
+        expect(introspected.client_id).toEqual(publicClient.id);
+
+        const refreshed = await suite.client
+            .token
+            .createWithRefreshToken({ refresh_token: login.refresh_token! });
+
+        expect(refreshed.access_token).toBeDefined();
+        expect(refreshed.refresh_token).toBeDefined();
     });
 
     it('should reject refresh when authenticated client_id does not match token client_id', async () => {
