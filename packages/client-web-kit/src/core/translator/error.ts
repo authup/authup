@@ -16,16 +16,23 @@ export type ErrorContext = {
     data?: Record<string, any>;
     message?: string;
     issues?: Issue[];
+    /**
+     * The HTTP status of the transport error (a hapic `ClientError`'s
+     * `response.status`), when the error arrived over HTTP. Absent for a
+     * directly-thrown / non-HTTP error.
+     */
+    status?: number;
 };
 
 /**
- * Pull the structured `{ code, data, message, issues }` out of whatever the
- * caller caught. An authup server error arrives as a hapic `ClientError`
+ * Pull the structured `{ code, data, message, issues, status }` out of whatever
+ * the caller caught. An authup server error arrives as a hapic `ClientError`
  * whose `response.data` is the serialized error body (`AuthupError.toJSON`
  * flattens `code` + `data` onto the top level and carries the validup
  * `issues`); a directly-thrown `AuthupError` or plain `Error` exposes the
- * same fields on itself. Duck-typed on purpose — no hapic import, works for
- * both transports.
+ * same fields on itself. Duck-typed on purpose — no hapic import (it is not a
+ * declared dependency, and its `isClientError` guard is `instanceof`-based, so
+ * it would miss a non-hapic-instance error), works for both transports.
  */
 export function extractErrorContext(error: unknown): ErrorContext {
     if (!isObject(error)) {
@@ -37,6 +44,10 @@ export function extractErrorContext(error: unknown): ErrorContext {
     const body: Record<string, any> = isObject(response) && isObject(response.data) ?
         response.data :
         self;
+
+    const status = isObject(response) && typeof response.status === 'number' ?
+        response.status :
+        undefined;
 
     // The server-side body `message` is the most specific human string; the
     // transport error's own `message` (e.g. hapic's "Request failed") is only
@@ -55,6 +66,7 @@ export function extractErrorContext(error: unknown): ErrorContext {
         // Only validation (`BAD_REQUEST`) errors carry issues; a coded
         // business error serializes an empty array.
         issues: Array.isArray(body.issues) && body.issues.length > 0 ? body.issues : undefined,
+        status,
     };
 }
 
