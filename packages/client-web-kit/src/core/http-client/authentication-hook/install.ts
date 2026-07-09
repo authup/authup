@@ -39,6 +39,8 @@ export function installHTTPClientAuthenticationHook(
         timer: !options.isServer,
     });
 
+    const storeDispatcher = injectStoreDispatcher(app);
+
     hook.on(ClientAuthenticationHookEventName.REFRESH_FINISHED, (response) => {
         store.applyTokenGrantResponse(response);
     });
@@ -47,12 +49,20 @@ export function installHTTPClientAuthenticationHook(
 
     hook.on(ClientAuthenticationHookEventName.HEADER_UNSET, () => {
         if (!isSelfCallee) {
+            // A background refresh failed (not a store-driven token clear):
+            // tear the session down and signal an involuntary expiry so the
+            // host app can redirect an idle user off an auth-only page. The
+            // emit runs even if logout() rejects (session is dead regardless),
+            // and the catch keeps a logout failure from surfacing as an
+            // unhandled rejection.
             Promise.resolve()
-                .then(() => store.logout());
+                .then(() => store.logout())
+                .catch(() => { /* best-effort cleanup */ })
+                .finally(() => {
+                    storeDispatcher.emit(StoreDispatcherEventName.SESSION_EXPIRED);
+                });
         }
     });
-
-    const storeDispatcher = injectStoreDispatcher(app);
 
     const handleAccessTokenEvent = () => {
         isSelfCallee = true;

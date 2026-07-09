@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Client } from '@authup/core-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
-import { OAuth2ClientError, OAuth2GrantError, OAuth2RequestError } from '@authup/specs';
+import { OAuth2GrantError, OAuth2RequestError } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
 import type { IAppEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
@@ -54,11 +55,16 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
         // being rejected here with JWT_INACTIVE.
         const payload = await this.refreshTokenVerifier.verify(refreshToken, { skipActiveCheck: true });
 
+        let client: Client | undefined;
+
         if (clientId) {
-            // resolved lazily — a bare refresh (no client auth) skips the SELECT
+            // A client authenticated itself. Resolve by the presented
+            // id/secret (name resolution scoped by the realm hint — resolved
+            // lazily so a bare refresh skips the SELECT) and enforce the
+            // token↔client binding.
             const realm = await this.realmRepository.resolve(readRealmHint(body), true);
 
-            const client = await this.clientAuthenticator.authenticate(
+            client = await this.clientAuthenticator.authenticate(
                 clientId,
                 clientSecret,
                 realm.id,
@@ -67,25 +73,32 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
             if (payload.client_id && payload.client_id !== client.id) {
                 throw OAuth2GrantError.invalid();
             }
-
-            // Realm parity for PUBLIC clients only: a public client may not
-            // refresh a token whose realm differs from the client's own realm.
-            // Kills cross-realm refresh tokens minted for a public `web` client
-            // before the authorize-side realm gate existed. Confidential clients
-            // are exempt — the client secret already proves identity, and the
-            // documented cross-realm password grant (UUID-identified user against
-            // a master-realm client) depends on that exemption.
-            if (
-                !client.is_confidential &&
-                payload.realm_id &&
-                payload.realm_id !== client.realm_id
-            ) {
-                throw OAuth2GrantError.invalid();
-            }
         } else if (payload.client_id) {
-            // Token was issued to a specific client — that client MUST
-            // re-authenticate (RFC 6749 §6 binding requirement).
-            throw OAuth2ClientError.invalid();
+            // No client credentials were presented, but the token is bound to
+            // a client. RFC 6749 §10.4: a public client cannot authenticate
+            // (no secret) and is not required to — the bound identity is read
+            // from the signed token (client_id is server-minted, so trusted)
+            // and refresh-token rotation/replay detection is the abuse control.
+            // A confidential client MUST still authenticate: authenticate()
+            // with no secret throws invalid_client for it, so a confidential-
+            // bound token presented without credentials is rejected here.
+            client = await this.clientAuthenticator.authenticate(payload.client_id);
+        }
+
+        // Realm parity for PUBLIC clients only: a public client may not refresh
+        // a token whose realm differs from the (bound) client's own realm.
+        // Kills cross-realm refresh tokens minted for a public `web` client
+        // before the authorize-side realm gate existed. Confidential clients
+        // are exempt — the client secret already proves identity, and the
+        // documented cross-realm password grant (UUID-identified user against a
+        // master-realm client) depends on that exemption.
+        if (
+            client &&
+            !client.is_confidential &&
+            payload.realm_id &&
+            payload.realm_id !== client.realm_id
+        ) {
+            throw OAuth2GrantError.invalid();
         }
 
         return this.runWith(payload, {
