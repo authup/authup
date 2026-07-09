@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2AuthorizationCodeRequest, User } from '@authup/core-kit';
+import type { Client, OAuth2AuthorizationCodeRequest, User } from '@authup/core-kit';
 import { createFakeClient } from '@authup/core-http-kit/testing';
 import { OAuth2AuthorizationPrompt } from '@authup/specs';
 import { flushPromises, mount } from '@vue/test-utils';
@@ -39,7 +39,40 @@ const REALM = { id: 'realm-x', name: 'master' };
 function seedLoggedIn(store: Store, realmId = REALM.id) {
     store.setAccessToken('access-token');
     store.setRealm({ id: realmId, name: REALM.name });
-    store.setUser({ id: 'user-1', name: 'jdoe' } as unknown as User);
+
+    const now = new Date(0).toISOString();
+    const user: User = {
+        id: 'user-1',
+        name: 'jdoe',
+        name_locked: false,
+        first_name: null,
+        last_name: null,
+        display_name: null,
+        email: 'jdoe@example.com',
+        password: null,
+        avatar: null,
+        cover: null,
+        reset_hash: null,
+        reset_at: null,
+        reset_expires: null,
+        status: null,
+        status_message: null,
+        active: true,
+        activate_hash: null,
+        created_at: now,
+        updated_at: now,
+        realm_id: realmId,
+        realm: {
+            id: realmId,
+            name: REALM.name,
+            display_name: null,
+            description: null,
+            built_in: false,
+            created_at: now,
+            updated_at: now,
+        },
+    };
+    store.setUser(user);
 }
 
 type MountOverrides = {
@@ -82,14 +115,38 @@ function mountAuthorize(overrides: MountOverrides = {}) {
         code_challenge: 'challenge',
         code_challenge_method: 'S256',
         prompt,
-    } as OAuth2AuthorizationCodeRequest;
+    };
 
-    const client = {
+    const clientTimestamp = new Date(0).toISOString();
+    const client: Client = {
         id: 'client-1',
+        active: true,
+        built_in: clientBuiltIn,
+        is_confidential: false,
         name: 'web',
         display_name: 'Web',
-        built_in: clientBuiltIn,
-        created_at: new Date(0).toISOString(),
+        description: null,
+        secret: null,
+        secret_hashed: false,
+        secret_encrypted: false,
+        redirect_uri: null,
+        post_logout_redirect_uri: null,
+        grant_types: null,
+        scope: null,
+        base_url: null,
+        root_url: null,
+        created_at: clientTimestamp,
+        updated_at: clientTimestamp,
+        realm_id: REALM.id,
+        realm: {
+            id: REALM.id,
+            name: REALM.name,
+            display_name: null,
+            description: null,
+            built_in: false,
+            created_at: clientTimestamp,
+            updated_at: clientTimestamp,
+        },
     };
 
     let dispatcher!: StoreDispatcher;

@@ -18,20 +18,35 @@ import { RealmController } from '../../../../../src/adapters/http/controllers/en
 import type { KeyEntity } from '../../../../../src/adapters/database/domains/index.ts';
 
 function createController(realm: Realm, baseURL = 'https://auth.example.com') {
-    const service: Pick<IRealmService, 'getOne'> = { getOne: async () => realm };
+    const notImplemented = async () => {
+        throw new Error('not implemented');
+    };
+    const service: IRealmService = {
+        getOne: async () => realm,
+        getMany: notImplemented,
+        create: notImplemented,
+        update: notImplemented,
+        save: notImplemented,
+        delete: notImplemented,
+    };
     return new RealmController({
         options: { baseURL },
-        service: service as IRealmService,
+        service,
         keyRepository: {} as Repository<KeyEntity>,
     });
 }
 
 describe('RealmController.getOpenIdConfiguration', () => {
     const realmId = randomUUID();
-    const realm = {
+    const realm: Realm = {
         id: realmId,
         name: 'master',
-    } as Realm;
+        display_name: null,
+        description: null,
+        built_in: true,
+        created_at: '2026-01-01T00:00:00.000Z',
+        updated_at: '2026-01-01T00:00:00.000Z',
+    };
 
     it('should construct issuer from realm name (matching the JWT iss claim format)', async () => {
         const controller = createController(realm);

@@ -23,12 +23,39 @@ class FakeClientRepository implements IOAuth2ClientRepository {
     private clients: Client[] = [];
 
     seed(client: Partial<Client>): Client {
-        const entity = {
+        const now = new Date().toISOString();
+        const realmId = randomUUID();
+        const entity: Client = {
             id: randomUUID(),
             active: true,
+            built_in: false,
             is_confidential: false,
+            name: 'client',
+            display_name: null,
+            description: null,
+            secret: null,
+            secret_hashed: false,
+            secret_encrypted: false,
+            redirect_uri: null,
+            post_logout_redirect_uri: null,
+            grant_types: null,
+            scope: null,
+            base_url: null,
+            root_url: null,
+            created_at: now,
+            updated_at: now,
+            realm_id: realmId,
+            realm: {
+                id: realmId,
+                name: 'master',
+                display_name: null,
+                description: null,
+                built_in: true,
+                created_at: now,
+                updated_at: now,
+            },
             ...client,
-        } as Client;
+        };
         this.clients.push(entity);
         return entity;
     }

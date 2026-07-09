@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import type { Client, OAuth2AuthorizationCodeRequest, Realm } from '@authup/core-kit';
 import { createFakeClient } from '@authup/core-http-kit/testing';
 import { OAuth2ErrorCode } from '@authup/specs';
 import { flushPromises, mount } from '@vue/test-utils';
@@ -25,16 +25,43 @@ const codeRequest: OAuth2AuthorizationCodeRequest = {
     redirect_uri: 'https://app.example.com/cb',
     scope: 'global openid',
     state: 'state-1',
-} as OAuth2AuthorizationCodeRequest;
+};
+
+const now = new Date(0).toISOString();
+
+const realm: Realm = {
+    id: 'realm-x',
+    name: 'master',
+    display_name: null,
+    description: null,
+    built_in: true,
+    created_at: now,
+    updated_at: now,
+};
 
 // built_in → auto-consent fires the POST /authorize on mount.
-const client = {
+const client: Client = {
     id: 'client-1',
+    active: true,
+    built_in: true,
+    is_confidential: false,
     name: 'web',
     display_name: 'Web',
-    built_in: true,
-    created_at: new Date(0).toISOString(),
-} as Client;
+    description: null,
+    secret: null,
+    secret_hashed: false,
+    secret_encrypted: false,
+    redirect_uri: null,
+    post_logout_redirect_uri: null,
+    grant_types: null,
+    scope: null,
+    base_url: null,
+    root_url: null,
+    created_at: now,
+    updated_at: now,
+    realm_id: 'realm-x',
+    realm,
+};
 
 function mountForm(authorizeHandler: () => unknown) {
     const pinia = createPinia();
@@ -77,11 +104,10 @@ function mountForm(authorizeHandler: () => unknown) {
 }
 
 // A hapic ClientError-shaped rejection.
-const httpError = (status: number, data: Record<string, any> = {}) => {
-    const error = new Error(`HTTP ${status}`);
-    (error as unknown as { response: unknown }).response = { status, data };
-    return error;
-};
+const httpError = (status: number, data: Record<string, any> = {}) => Object.assign(
+    new Error(`HTTP ${status}`),
+    { response: { status, data } },
+);
 
 describe('AuthorizeForm dead-bearer resilience', () => {
     it('emits loginRequired on a 401 (dead/expired bearer)', async () => {

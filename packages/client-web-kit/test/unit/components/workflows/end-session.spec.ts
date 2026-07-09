@@ -25,6 +25,40 @@ import type { Options } from '../../../../src/types';
 
 const noop = () => undefined;
 
+function createUser(overrides: Pick<User, 'id'>): User {
+    return {
+        id: overrides.id,
+        name: 'user',
+        name_locked: false,
+        first_name: null,
+        last_name: null,
+        display_name: null,
+        email: 'user@example.com',
+        password: null,
+        avatar: null,
+        cover: null,
+        reset_hash: null,
+        reset_at: null,
+        reset_expires: null,
+        status: null,
+        status_message: null,
+        active: true,
+        activate_hash: null,
+        created_at: '2026-01-01T00:00:00.000Z',
+        updated_at: '2026-01-01T00:00:00.000Z',
+        realm_id: 'realm-1',
+        realm: {
+            id: 'realm-1',
+            name: 'master',
+            display_name: null,
+            description: null,
+            built_in: true,
+            created_at: '2026-01-01T00:00:00.000Z',
+            updated_at: '2026-01-01T00:00:00.000Z',
+        },
+    };
+}
+
 function mountEndSession(
     props: Record<string, any> = {},
     seedUser?: Pick<User, 'id'>,
@@ -63,7 +97,7 @@ function mountEndSession(
                     install(app: App) {
                         const store = injectStore(pinia, app);
                         if (seedUser) {
-                            store.user = seedUser as User;
+                            store.user = createUser(seedUser);
                         }
                         logout = vi.spyOn(store, 'logout').mockResolvedValue(undefined);
                     },

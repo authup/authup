@@ -30,16 +30,39 @@ const codeRequest: OAuth2AuthorizationCodeRequest = {
     redirect_uri: 'https://app.example.com/cb',
     scope: 'global openid',
     state: 'state-1',
-} as OAuth2AuthorizationCodeRequest;
+};
 
 // built_in → auto-consent fires the POST /authorize on mount.
-const client = {
+const client: Client = {
     id: 'client-1',
+    active: true,
+    built_in: true,
+    is_confidential: false,
     name: 'web',
     display_name: 'Web',
-    built_in: true,
+    description: null,
+    secret: null,
+    secret_hashed: false,
+    secret_encrypted: false,
+    redirect_uri: null,
+    post_logout_redirect_uri: null,
+    grant_types: null,
+    scope: null,
+    base_url: null,
+    root_url: null,
     created_at: new Date(0).toISOString(),
-} as Client;
+    updated_at: new Date(0).toISOString(),
+    realm_id: 'realm-x',
+    realm: {
+        id: 'realm-x',
+        name: 'master',
+        display_name: null,
+        description: null,
+        built_in: true,
+        created_at: new Date(0).toISOString(),
+        updated_at: new Date(0).toISOString(),
+    },
+};
 
 // a non-login_required failure (transient 500 / network blip)
 const failHandler: FakeHandler = () => { throw new Error('boom'); };

@@ -107,7 +107,7 @@ describe('OIDC conformance smoke', () => {
         // discovery endpoints are built from publicUrl (not the random test
         // port), so fetch the JWKS from the running test server directly.
         const response = await fetch(`${suite.baseURL}/realms/${REALM_MASTER_NAME}/jwks`);
-        const body = await response.json() as { keys: Record<string, any>[] };
+        const body: { keys: Record<string, any>[] } = await response.json();
 
         expect(Array.isArray(body.keys)).toBe(true);
         expect(body.keys.length).toBeGreaterThan(0);
@@ -159,11 +159,7 @@ describe('OIDC conformance smoke', () => {
         });
 
         expect(tokens.id_token).toBeDefined();
-        const payload = decodeJwtPayload(tokens.id_token!) as OAuth2TokenPayload & {
-            iss?: string, 
-            aud?: string, 
-            iat?: number 
-        };
+        const payload: OAuth2TokenPayload = decodeJwtPayload(tokens.id_token!);
 
         // OIDC Core §2 REQUIRED id_token claims
         expect(payload.kind).toEqual(OAuth2TokenKind.ID_TOKEN);
