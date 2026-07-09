@@ -1112,8 +1112,9 @@ posture). The implicit/hybrid response types (`token`, `id_token`, `none`) are
 rejected by the code-request validator (a `response_type` issue → 400) and,
 defense in depth, by `OAuth2Authorization.authorize()`
 (`unsupported_response_type`). The authorization response never carries tokens
-— an openid-scoped code stores its id_token on the code blob and the `/token`
-exchange returns it. Discovery `response_types_supported` advertises only
+— an openid-scoped code carries `auth_time` (and `nonce`) on the code blob and
+the `/token` exchange mints and returns the id_token. Discovery
+`response_types_supported` advertises only
 `code`. Consequently the code-request verifier requires PKCE + `state` for
 public clients **unconditionally** (the former `willIssueCode` gate is gone —
 every verified request issues a code).
@@ -1153,13 +1154,27 @@ approximation, wired via the `AuthorizeController` → `HTTPOAuth2Authorizer` ct
 alongside the injected `ISessionManager`.
 
 **id_token claims (bug fix + addition):** `auth_time` is now the session's
-creation instant threaded through `payloadBaseNormalized`
-(previously — wrongly — the token issuance time == `iat`), and a `sid` claim
-(= `session_id`) is added (prerequisite for RP-initiated / back-channel logout).
-Both are `OAuth2TokenPayload` fields. The id_token is minted at authorize time
-from `options.sessionId`; the IdP-callback (session-less) flow carries no `sid`,
-and the #3191 session-reuse-vs-fallback path can make `sid` reference the bearer
-session rather than a freshly-created fallback one (documented residual).
+creation instant (previously — wrongly — the token issuance time == `iat`), and a
+`sid` claim (= `session_id`) is added (prerequisite for RP-initiated /
+back-channel logout). Both are `OAuth2TokenPayload` fields.
+
+**Minting site — the `/token` exchange, not `/authorize` (plan 042 item 6):**
+the id_token is minted inside the `authorization_code` grant
+(`OAuth2AuthorizeGrant.runWith`) **after** `resolveSession`, so its `sid` is
+**authoritative** — it references the real backing session in the reuse branch,
+the fallback-create branch, and the session-less **federated IdP** flow alike
+(the last previously produced **no** id_token at all, since only
+`OAuth2Authorization.authorize()` minted one and the IdP callback bypasses it).
+`OAuth2Authorization.authorize()` no longer mints the id_token or holds an
+`openIdTokenIssuer` / `identityResolver`; instead it stamps the authentication
+instant onto the auth-code blob (`OAuth2AuthorizationCode.auth_time`, replacing
+the removed `id_token` field — cache blob, no migration) as the `auth_time`
+source, and the grant reads it back. `at_hash` (over the freshly-issued access
+token) and `c_hash` are recomputed at the exchange; `nonce` rides from the code.
+The `openIdTokenIssuer` is wired into the `TokenController` authorize grant, and
+`codeIssuer.updateIdToken` is gone. This resolves the plan-041 residual where a
+sub/realm-mismatch fallback (or session-deleted-in-flight) left the id_token's
+`sid` pointing at a stale session.
 
 **Discovery** (realm-scoped `.well-known/openid-configuration`) advertises
 `prompt_values_supported` (`none`, `login`, `consent`, `select_account`) and

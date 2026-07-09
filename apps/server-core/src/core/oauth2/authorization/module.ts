@@ -6,8 +6,6 @@
  */
 
 import type { Identity, OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
-import { ScopeName } from '@authup/core-kit';
-import type { OAuth2TokenPayload } from '@authup/specs';
 import {
     OAuth2AuthorizationPrompt,
     OAuth2AuthorizationResponseType,
@@ -15,36 +13,26 @@ import {
     OAuth2LoginRequiredError,
     OAuth2RequestError,
     OAuth2ResponseTypeError,
-    hasOAuth2Scopes,
 } from '@authup/specs';
-import type { IOAuth2OpenIDTokenIssuer } from '../token/index.ts';
 import type { IOAuth2AuthorizationCodeIssuer } from './code/index.ts';
-import { buildOAuth2TokenHash } from './helpers.ts';
 import type {
     OAuth2AuthorizationManagerContext,
     OAuth2AuthorizationOptions,
     OAuth2AuthorizationResult,
 } from './types.ts';
-import type { IIdentityResolver } from '../../identity/index.ts';
 import type { ISessionManager } from '../../authentication/index.ts';
 
 const DEFAULT_PROMPT_LOGIN_MAX_AGE = 60;
 
 export class OAuth2Authorization {
-    protected openIdTokenIssuer : IOAuth2OpenIDTokenIssuer;
-
     protected codeIssuer : IOAuth2AuthorizationCodeIssuer;
-
-    protected identityResolver : IIdentityResolver;
 
     protected sessionManager : ISessionManager;
 
     protected promptLoginMaxAge : number;
 
     constructor(ctx: OAuth2AuthorizationManagerContext) {
-        this.openIdTokenIssuer = ctx.openIdTokenIssuer;
         this.codeIssuer = ctx.codeIssuer;
-        this.identityResolver = ctx.identityResolver;
         this.sessionManager = ctx.sessionManager;
         this.promptLoginMaxAge = ctx.promptLoginMaxAge ?? DEFAULT_PROMPT_LOGIN_MAX_AGE;
     }
@@ -133,44 +121,16 @@ export class OAuth2Authorization {
             }
         }
 
-        const payloadBaseNormalized : OAuth2TokenPayload = {
-
-            sub: identity.data.id,
-            sub_kind: identity.type,
-            realm_id: identity.data.realm.id,
-            realm_name: identity.data.realm.name,
-
-            client_id: data.client_id,
-            ...(data.scope ? { scope: data.scope } : {}),
-            ...(data.nonce ? { nonce: data.nonce } : {}),
-        };
-
+        // The id_token is NOT minted here — the /token exchange mints it after
+        // resolving the real backing session, so its `sid` is authoritative
+        // (plan 042 item 6). The code carries the authentication instant.
         const codeEntity : OAuth2AuthorizationCode = await this.codeIssuer.issue(
             data,
             identity,
-            { sessionId: options.sessionId },
+            { sessionId: options.sessionId, authTime },
         );
 
         output.authorizationCode = codeEntity.id;
-
-        // An openid-scoped code carries its id_token on the code blob — the
-        // /token exchange returns it alongside the access token.
-        if (data.scope && hasOAuth2Scopes(data.scope, ScopeName.OPEN_ID)) {
-            const idTokenPayload : OAuth2TokenPayload = {
-                ...payloadBaseNormalized,
-                // OIDC id_token claims: real authentication time + session id.
-                auth_time: authTime,
-                ...(options.sessionId ? { sid: options.sessionId } : {}),
-                c_hash: await buildOAuth2TokenHash(codeEntity.id),
-            };
-
-            const [token] = await this.openIdTokenIssuer.issueWithIdentity(
-                idTokenPayload,
-                identity,
-            );
-
-            await this.codeIssuer.updateIdToken(codeEntity, token);
-        }
 
         return output;
     }

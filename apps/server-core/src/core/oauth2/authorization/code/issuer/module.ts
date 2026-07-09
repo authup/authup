@@ -35,29 +35,18 @@ export class OAuth2AuthorizationCodeIssuer implements IOAuth2AuthorizationCodeIs
             code_challenge: input.code_challenge,
             code_challenge_method: input.code_challenge_method,
 
+            auth_time: options.authTime ?? Math.floor(Date.now() / 1000),
+
             realm_id: identity.data.realm.id,
             realm_name: identity.data.realm.name,
             sub: identity.data.id,
             sub_kind: identity.type,
         };
 
-        if (options.idToken) {
-            entity.id_token = options.idToken;
-        }
-
         if (options.sessionId) {
             entity.session_id = options.sessionId;
         }
 
         return this.repository.save(entity, { maxAge: options.maxAge ?? this.options.maxAge });
-    }
-
-    async updateIdToken(
-        entity: OAuth2AuthorizationCode,
-        idToken: string,
-    ) : Promise<void> {
-        entity.id_token = idToken;
-
-        await this.repository.save(entity, { maxAge: this.options.maxAge });
     }
 }

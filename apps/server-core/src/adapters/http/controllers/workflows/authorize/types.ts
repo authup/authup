@@ -7,10 +7,8 @@
 
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import type {
-    IIdentityResolver,
     IOAuth2AuthorizationCodeIssuer,
     IOAuth2AuthorizationCodeRequestVerifier,
-    IOAuth2OpenIDTokenIssuer,
     ISessionManager,
 } from '../../../../../core/index.ts';
 
@@ -27,11 +25,8 @@ export type AuthorizeControllerOptions = {
 export type AuthorizeControllerContext = {
     options: AuthorizeControllerOptions,
 
-    openIdTokenIssuer: IOAuth2OpenIDTokenIssuer,
-
     codeIssuer: IOAuth2AuthorizationCodeIssuer,
     codeRequestVerifier: IOAuth2AuthorizationCodeRequestVerifier,
 
-    identityResolver: IIdentityResolver,
     sessionManager: ISessionManager
 };

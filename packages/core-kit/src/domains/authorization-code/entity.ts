@@ -20,9 +20,15 @@ export interface OAuth2AuthorizationCode {
 
     redirect_uri?: string | null,
 
-    id_token?: string | null,
-
     nonce?: string | null,
+
+    /**
+     * The authentication instant (seconds since epoch) captured when the code
+     * was issued — the backing session's creation time for interactive flows,
+     * the issuance instant for session-less ones. Carried into the id_token's
+     * `auth_time` claim at the /token exchange.
+     */
+    auth_time?: number | null,
 
     client_id?: Client['id'] | null,
 
