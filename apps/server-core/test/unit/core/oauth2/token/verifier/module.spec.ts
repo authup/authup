@@ -132,6 +132,26 @@ describe('OAuth2TokenVerifier', () => {
             expect(tokenRepo.saveWithSignatureCalls).toContainEqual({ payload, signature: 'raw-token' });
         });
 
+        it('should NOT populate the signature cache when ignoreExpiry is set', async () => {
+            // Regression: an expired id_token_hint verified with ignoreExpiry must
+            // not be re-cached — otherwise the cache-first branch (no exp re-check)
+            // would report the expired token as valid/active for buildTTL's 1h
+            // fallback, e.g. /token/introspect returning active:true (RFC 7662).
+            const payload = createPayload({ exp: Math.floor(Date.now() / 1000) - 3600 });
+            const key = createKey(JWKType.OCT, { decryption_key: 'secret' } as any);
+            const tokenRepo = new FakeOAuth2TokenRepository();
+            extractTokenHeader.mockReturnValue({ kid: key.id });
+            verifyToken.mockResolvedValue(payload);
+
+            const verifier = new OAuth2TokenVerifier(new FakeOAuth2KeyRepository(key), tokenRepo);
+            expect(
+                await verifier.verify('expired-hint', { ignoreExpiry: true, skipActiveCheck: true }),
+            ).toBe(payload);
+
+            expect(tokenRepo.saveWithSignatureCalls).toHaveLength(0);
+            expect(await tokenRepo.findOneBySignature('expired-hint')).toBeNull();
+        });
+
         it('should throw JWKError when OCT key has no decryption_key', async () => {
             const key = createKey(JWKType.OCT, { decryption_key: null } as any);
             extractTokenHeader.mockReturnValue({ kid: key.id });

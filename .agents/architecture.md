@@ -1241,7 +1241,14 @@ app (kit or non-kit) ends a lingering authup session on its own logout, so
 - **id_token_hint** is verified by `OAuth2TokenVerifier` with a new
   `ignoreExpiry` option — signature, nbf and (crucially) **kind** still apply;
   only `exp` is skipped (a logout hint is routinely expired). The option threads
-  down to server-kit's `verifyToken` (`validateExp: false`). A hint whose `kind
+  down to server-kit's `verifyToken` (`validateExp: false`). The `ignoreExpiry`
+  verify path **must NOT populate the shared signature-keyed claims cache**
+  (`OAuth2TokenVerifier.verify` skips `saveWithSignature` when `ignoreExpiry` is
+  set): otherwise an expired token re-caches with `buildTTL`'s 1h fallback (a
+  past `exp` → non-positive ttl → 3600s) and the cache-first branch returns it
+  with no `exp` re-check on every later verify — so `/token/introspect` would
+  report an expired token as `active` for up to an hour (RFC 7662). The
+  exp-bypass stays scoped to the single end-session call. A hint whose `kind
   !== id_token` is **rejected** (access/refresh tokens also carry `session_id`,
   so accepting them would let a leaked access token force a logout). `aud` vs
   request `client_id` cross-checked when both present — note the id_token `aud`

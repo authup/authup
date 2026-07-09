@@ -122,7 +122,17 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
             throw JWTError.payloadPropertyInvalid('jti');
         }
 
-        await this.tokenRepository.saveWithSignature(payload, token);
+        // Never populate the shared signature-keyed claims cache on the
+        // exp-ignoring path. An expired token verified with `ignoreExpiry`
+        // (the RP-initiated-logout id_token_hint) would otherwise be re-cached
+        // with buildTTL's 1h fallback (a past exp yields a non-positive ttl),
+        // and the cache-first branch above returns it with no exp re-check on
+        // every subsequent verify — so `/token/introspect` would report an
+        // expired token as active for up to an hour (RFC 7662). Keep the
+        // exp-bypass scoped to this single call.
+        if (!options.ignoreExpiry) {
+            await this.tokenRepository.saveWithSignature(payload, token);
+        }
 
         if (!options.skipActiveCheck) {
             const isInactive = await this.isInactive(payload.jti);
