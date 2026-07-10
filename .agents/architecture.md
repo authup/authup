@@ -1136,7 +1136,7 @@ The chooser targets a **lingering** session only: `Authorize.vue` watches the
 kit store's `lastAuthOrigin` for a change to `login` during its mount (plan 045
 — the store stamps it at the END of a settled `login()`, so the signal is
 race-free against LoginForm unmounting; the store additionally exposes a
-presence-derived `status` ref: `anonymous | authenticating | restoring |
+presence-derived `status` ref: `unauthenticated | authenticating | restoring |
 authenticated`), so a just-completed credential entry (which IS the account
 selection) proceeds straight to consent instead of re-prompting "continue as X"
 for the account just authenticated; the branch also waits for the store's `user`

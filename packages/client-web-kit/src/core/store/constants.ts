@@ -13,13 +13,13 @@ export const STORE_ID = 'authup';
  * marker.
  *
  * AUTHENTICATED means token + realm + user are present; validating
- * them against the server remains resolve()'s job. ANONYMOUS means no
- * session artifact at all — a refresh-token-only store (the
+ * them against the server remains resolve()'s job. UNAUTHENTICATED means
+ * no session artifact at all — a refresh-token-only store (the
  * access-token cookie expired, the refresh-token session cookie
  * survived) reads RESTORING.
  */
 export enum StoreAuthStatus {
-    ANONYMOUS = 'anonymous',
+    UNAUTHENTICATED = 'unauthenticated',
     AUTHENTICATING = 'authenticating',
     RESTORING = 'restoring',
     AUTHENTICATED = 'authenticated',
@@ -29,7 +29,7 @@ export enum StoreAuthStatus {
  * How the current session became authenticated in this app instance:
  * an interactive password login, an authorization-code exchange, or a
  * cookie restore validated by resolve(). App-instance-lifetime; null
- * while anonymous.
+ * while unauthenticated.
  */
 export enum StoreAuthOrigin {
     LOGIN = 'login',

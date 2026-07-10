@@ -256,7 +256,7 @@ export default defineComponent({
             // built_in client's AuthorizeForm auto-consent (onMounted) can't
             // fire before a realm mismatch is detected and the chooser never
             // flashes "Continue as " with an empty name. The login form above
-            // deliberately does NOT sit behind this gate (anonymous and
+            // deliberately does NOT sit behind this gate (unauthenticated and
             // authenticating must keep rendering it — unmounting the form
             // mid-submit is the race class that triggered plan 045).
             if (status.value !== StoreAuthStatus.AUTHENTICATED) {

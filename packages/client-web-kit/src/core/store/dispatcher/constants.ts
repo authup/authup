@@ -19,7 +19,7 @@ export enum StoreDispatcherEventName {
 
     /** @deprecated Read the store's `status` instead. */
     LOGGING_OUT = 'loggingOut',
-    /** @deprecated Read the store's `status` (=== 'anonymous') instead. */
+    /** @deprecated Read the store's `status` (=== 'unauthenticated') instead. */
     LOGGED_OUT = 'loggedOut',
 
     // Emitted when a background token refresh fails and the session is torn
@@ -31,7 +31,7 @@ export enum StoreDispatcherEventName {
     RESOLVING = 'resolving',
     /**
      * @deprecated Read the store's `status` / `lastAuthOrigin` instead.
-     * Still fires at the end of EVERY resolve() — including the anonymous
+     * Still fires at the end of EVERY resolve() — including the unauthenticated
      * no-op — so it means "resolution settled", not "a session exists".
      */
     RESOLVED = 'resolved',
