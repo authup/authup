@@ -32,10 +32,12 @@ import {
     useTranslationsForNamespace,
 } from '../../../core';
 import AuthorizeScopes from './AuthorizeScopes.vue';
+import AuthorizeText from './AuthorizeText.vue';
 
 export default defineComponent({
     components: {
         AuthorizeScopes,
+        AuthorizeText,
         ITranslateT,
         VCButton,
         VCIcon,
@@ -57,6 +59,10 @@ export default defineComponent({
         // interactive manual-consent UI (that would violate the zero-UI
         // contract). Instead emit `failed` so the parent redirects an OIDC error.
         silent: { type: Boolean, default: false },
+        // Whether the redirect_uri matched a registered client pattern
+        // (server-verified). abort()'s access_denied redirect is gated on it —
+        // same as every other redirect in the ladder. Fail-closed default.
+        redirectUriVerified: { type: Boolean, default: false },
     },
     emits: ['loginRequired', 'switch', 'failed'],
     setup(props, { emit }) {
@@ -97,7 +103,24 @@ export default defineComponent({
             key: TranslatorTranslationClientKey.NOT_YOU,
         });
 
+        const abortedText = useTranslation({
+            namespace: TranslatorTranslationNamespace.CLIENT,
+            key: TranslatorTranslationClientKey.AUTHORIZE_ABORTED,
+        });
+
+        // An abort against an unverified redirect_uri can't navigate — the
+        // template renders a terminal "aborted" notice instead.
+        const aborted = ref<boolean>(false);
+
         const abort = () => {
+            // Only redirect access_denied to a redirect_uri that matched a
+            // registered client pattern — for a misconfigured pattern-less
+            // client this click would otherwise be an open redirect.
+            if (!props.redirectUriVerified) {
+                aborted.value = true;
+                return;
+            }
+
             const url = new URL(`${props.codeRequest.redirect_uri}`);
             url.searchParams.set('error', 'access_denied');
             url.searchParams.set(
@@ -202,6 +225,8 @@ export default defineComponent({
         return {
             authorize,
             abort,
+            aborted,
+            abortedText,
             autoConsent,
             showSpinner,
             translationsDefault,
@@ -214,8 +239,12 @@ export default defineComponent({
 });
 </script>
 <template>
+    <AuthorizeText
+        v-if="aborted"
+        :message="abortedText"
+    />
     <div
-        v-if="showSpinner"
+        v-else-if="showSpinner"
         class="text-center"
     >
         <VCIcon name="fa6-solid:spinner" />

@@ -317,6 +317,9 @@ export default defineComponent({
                     // consent screen (present even when the RP sent no
                     // prompt=select_account).
                     identityName: user.value?.name ?? user.value?.display_name ?? '',
+                    // abort()'s access_denied redirect is gated on the verified
+                    // redirect_uri, like every other redirect in the ladder.
+                    redirectUriVerified: props.redirectUriVerified,
                     // Silent (built_in) request: auto-consent runs, but a failure
                     // must redirect an OIDC error, never render manual consent —
                     // but only when the redirect_uri is verified. Otherwise the
