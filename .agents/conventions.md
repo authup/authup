@@ -67,6 +67,23 @@ Do **not** use `peerDependencies` as a blanket "dedup enforcer" on leaves — de
 - Environment variable names use `SCREAMING_SNAKE_CASE` with `_ENABLED` suffix: `REGISTRATION_ENABLED`, `PASSWORD_RECOVERY_ENABLED`, `EMAIL_VERIFICATION_ENABLED`
 - Config file keys (`.conf`) use `camelCase` matching the TypeScript property name
 
+## References
+
+External project references live in `.agents/references/` — one Markdown file per external project
+this codebase cross-references, building a **cumulative code mapping** so future work can find
+corresponding code without re-searching. When looking up source code or docs in a referenced
+project, update the corresponding reference file with:
+
+- The source file path / function name (or doc/release anchor) in the external project
+- The corresponding file path / function name in this project
+- Any behavioral differences between the implementations (pin claims to a release version)
+
+Current references:
+
+- [authentik.md](references/authentik.md) — Authentik (goauthentik.io): the concept→authup mapping
+  behind the competitive-parity roadmap (`.agents/plans/048-authentik-parity-overview.md`),
+  release-verified through Authentik 2026.5.
+
 ## Best Practices
 
 - Use **ESM** and modern TypeScript/JavaScript.

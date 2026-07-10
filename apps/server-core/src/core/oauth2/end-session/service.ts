@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isSimpleMatch } from '@authup/kit';
+import { isSimpleMatch, isUUID } from '@authup/kit';
+import type { Client } from '@authup/core-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2TokenKind } from '@authup/specs';
 import type { IRealmRepository } from '../../entities/index.ts';
@@ -43,6 +44,7 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
         let sub: string | undefined;
         let subKind: string | undefined;
         let sessionId: string | undefined;
+        let hintRealmId: string | undefined;
         let audiences: string[] = [];
 
         if (data.id_token_hint) {
@@ -62,6 +64,7 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
                     sub = payload.sub;
                     subKind = payload.sub_kind;
                     sessionId = payload.sid ?? payload.session_id ?? undefined;
+                    hintRealmId = payload.realm_id ?? undefined;
                     // aud may be a single string or an array (JWT spec).
                     const { aud } = payload;
                     if (Array.isArray(aud)) {
@@ -75,37 +78,62 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
             }
         }
 
-        // aud/client_id cross-check: when the request supplies a client_id and the
-        // hint carries an aud, the client_id MUST be one of the hint's audiences.
-        if (hintVerified && data.client_id && audiences.length > 0 && !audiences.includes(data.client_id)) {
-            hintVerified = false;
-            sub = undefined;
-            subKind = undefined;
-            sessionId = undefined;
+        // Resolve a single client for the aud cross-check and redirect
+        // validation: the request's client_id, else the hint's sole audience
+        // (ambiguous for a multi-aud hint).
+        const clientId = data.client_id ?? (audiences.length === 1 ? audiences[0] : undefined);
+
+        let client: Client | null = null;
+        if (clientId) {
+            // Scope a name-identified client to the request's realm hint; a
+            // VERIFIED hint's own realm claim serves as fallback (claims from an
+            // unverified hint are never trusted). No master fallback here
+            // (unlike /token): a bogus hint must NOT silently resolve a
+            // same-named client in master → null realm.
+            const realmKey = data.realm_id ?? data.realm_name ?? (hintVerified ? hintRealmId : undefined);
+            const realm = await this.realmRepository.resolve(realmKey, false);
+
+            // Fail closed instead of dropping the realm predicate: a supplied
+            // realm key that does not resolve never degrades to an unscoped
+            // lookup, and a NAME-form client_id without any realm key is
+            // ambiguous (every realm has a built-in `web` client — same rule as
+            // the /authorize verifier). A UUID is globally unique and needs no
+            // scope; the sole-aud-derived clientId is always a UUID.
+            if (realm) {
+                client = await this.clientRepository.findOneByIdOrName(clientId, realm.id);
+            } else if (!realmKey && isUUID(clientId)) {
+                client = await this.clientRepository.findOneByIdOrName(clientId);
+            }
         }
 
-        // Resolve a single client for redirect validation: the request's
-        // client_id, else the hint's sole audience (ambiguous for a multi-aud hint).
-        const clientId = data.client_id ?? (audiences.length === 1 ? audiences[0] : undefined);
+        // aud/client_id cross-check: when the request supplies a client_id on a
+        // verified hint, it MUST denote one of the hint's audiences. The aud is
+        // the client UUID, so a name-form client_id is compared via its resolved
+        // client's id. Fail closed: an aud-less hint, or a name that did not
+        // resolve, counts as unverified.
+        if (hintVerified && data.client_id) {
+            const expected = isUUID(data.client_id) ? data.client_id : client?.id;
+            if (audiences.length === 0 || !expected || !audiences.includes(expected)) {
+                hintVerified = false;
+                sub = undefined;
+                subKind = undefined;
+                sessionId = undefined;
+            }
+        }
 
         let clientName: string | undefined;
         let redirectUri: string | undefined;
 
-        if (clientId) {
-            // Scope a name-identified client to the realm hint. No master
-            // fallback here (unlike /token): a bogus hint must NOT silently
-            // resolve a same-named client in master → null realm, and the
-            // repository fails closed on an unknown realm key.
-            const realm = await this.realmRepository.resolve(data.realm_id ?? data.realm_name, false);
-            const client = await this.clientRepository.findOneByIdOrName(clientId, realm?.id);
-            if (client) {
-                clientName = client.name;
-                if (
-                    data.post_logout_redirect_uri &&
-                    this.isValidPostLogoutRedirect(client.post_logout_redirect_uri, data.post_logout_redirect_uri)
-                ) {
-                    redirectUri = data.post_logout_redirect_uri;
-                }
+        // Redirect validation is independent of hint verification — the
+        // click-gated confirm page (unverified hint / hint-less request) still
+        // honors a registered post-logout redirect.
+        if (client) {
+            clientName = client.name;
+            if (
+                data.post_logout_redirect_uri &&
+                this.isValidPostLogoutRedirect(client.post_logout_redirect_uri, data.post_logout_redirect_uri)
+            ) {
+                redirectUri = data.post_logout_redirect_uri;
             }
         }
 

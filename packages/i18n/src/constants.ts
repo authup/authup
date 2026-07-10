@@ -118,6 +118,8 @@ export enum TranslatorTranslationClientKey {
     SIGNED_IN_AS = 'signedInAs',
     NOT_YOU = 'notYou',
 
+    AUTHORIZE_ABORTED = 'authorizeAborted',
+
     LOGOUT_CONFIRM_TITLE = 'logoutConfirmTitle',
     LOGOUT_CONFIRM_TEXT = 'logoutConfirmText',
     LOGOUT_DONE = 'logoutDone',
