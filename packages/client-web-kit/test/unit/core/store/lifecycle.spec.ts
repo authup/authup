@@ -116,9 +116,16 @@ describe('core/store/lifecycle', () => {
         expect(store.loggedIn.value).toBe(false);
     });
 
-    it('latches a failed introspection during login: token-only session, realm never resolves', async () => {
+    // Deliberately flipped by the plan-045 atomic commit: previously the token
+    // was applied before resolution, leaving a half-built token-only session
+    // whose realm never resolved (the optimistic tokenResolved latch).
+    it('reverts a login whose introspection failed: nothing committed, staged tokens revoked', async () => {
         let introspectCalls = 0;
-        const { store, events } = buildStore({
+        const {
+            store, 
+            httpClient, 
+            events, 
+        } = buildStore({
             'POST /token/introspect': () => {
                 introspectCalls += 1;
                 if (introspectCalls === 1) {
@@ -131,17 +138,24 @@ describe('core/store/lifecycle', () => {
 
         await expect(store.login({ name: 'admin', password: 'start123' })).rejects.toThrow();
 
-        // the token was applied before resolution — a half-built session remains
-        expect(store.loggedIn.value).toBe(true);
+        expect(store.loggedIn.value).toBe(false);
+        expect(store.accessToken.value).toBeNull();
         expect(events).not.toContain(StoreDispatcherEventName.LOGGED_IN);
 
-        // tokenResolved latched true before the failed call — resolve() never retries
-        await store.resolve();
+        // the granted-but-never-committed tokens were revoked best-effort —
+        // otherwise the server session would be orphaned (unreachable by any
+        // later logout)
+        const revokeRequests = requestsTo(httpClient, 'POST', '/token/revoke');
+        expect(revokeRequests).toHaveLength(2);
+        expect(revokeRequests[0].body).toMatchObject({ token: 'at-1' });
+        expect(revokeRequests[1].body).toMatchObject({ token: 'rt-1' });
 
-        expect(introspectCalls).toEqual(1);
+        // no latch: a retry runs introspection again and fully recovers
+        await store.login({ name: 'admin', password: 'start123' });
+
+        expect(introspectCalls).toEqual(2);
+        expect(store.realmId.value).toEqual('realm-1');
         expect(store.user.value).toMatchObject({ id: 'user-1' });
-        expect(store.realmId.value).toBeUndefined();
-        expect(store.sessionId.value).toBeNull();
     });
 
     it('logout is local-only: revokes both tokens, never touches the sessions API', async () => {
@@ -380,5 +394,88 @@ describe('core/store/lifecycle', () => {
 
         expect(requestsTo(httpClient, 'POST', '/token/introspect')).toHaveLength(1);
         expect(requestsTo(httpClient, 'GET', '/users/@me')).toHaveLength(1);
+    });
+
+    it('stages the login: no token or user is observable before the commit', async () => {
+        const observed : unknown[] = [];
+        const { store } = buildStore({
+            'POST /token/introspect': () => {
+                observed.push(store.accessToken.value, store.loggedIn.value);
+
+                return { ...INTROSPECTION_RESPONSE };
+            },
+            'GET /users/@me': () => {
+                observed.push(store.accessToken.value, store.user.value);
+
+                return { ...USER_RESPONSE };
+            },
+        });
+
+        await store.login({ name: 'admin', password: 'start123' });
+
+        // both staged round-trips ran against an untouched store
+        expect(observed).toEqual([null, false, null, null]);
+        expect(store.accessToken.value).toEqual('at-1');
+        expect(store.user.value).toMatchObject({ id: 'user-1' });
+    });
+
+    it('aborts the commit when a logout interleaves with the staged login window', async () => {
+        const {
+            store, 
+            httpClient, 
+            events, 
+        } = buildStore({
+            'POST /token/introspect': async () => {
+                await store.logout();
+
+                return { ...INTROSPECTION_RESPONSE };
+            },
+        });
+
+        await expect(store.login({ name: 'admin', password: 'start123' })).rejects.toThrow();
+
+        // the logout wins: nothing resurrected, staged tokens revoked
+        expect(store.accessToken.value).toBeNull();
+        expect(store.user.value).toBeNull();
+        expect(events).not.toContain(StoreDispatcherEventName.LOGGED_IN);
+
+        const revokeRequests = requestsTo(httpClient, 'POST', '/token/revoke');
+        expect(revokeRequests).toHaveLength(2);
+        expect(revokeRequests[0].body).toMatchObject({ token: 'at-1' });
+        expect(revokeRequests[1].body).toMatchObject({ token: 'rt-1' });
+    });
+
+    it('revalidates on the next resolve() after a bare token apply (refresh path)', async () => {
+        // the resolve() promise-share dedup clears one macrotask after settle
+        // (pinned above) — step past it between the consecutive resolve()s
+        const nextMacroTask = () => new Promise((resolve) => {
+            setTimeout(resolve, 0);
+        });
+
+        const { store, httpClient } = buildStore();
+
+        await store.login({ name: 'admin', password: 'start123' });
+        expect(requestsTo(httpClient, 'POST', '/token/introspect')).toHaveLength(1);
+
+        // a settled session resolves as a no-op
+        await store.resolve();
+        await nextMacroTask();
+        expect(requestsTo(httpClient, 'POST', '/token/introspect')).toHaveLength(1);
+
+        // the auth hook's REFRESH_FINISHED path applies a bare refresh grant —
+        // identity data is now stale, the next resolve() re-introspects with
+        // the fresh token (awaited)
+        store.applyTokenGrantResponse({
+            access_token: 'at-2',
+            token_type: 'Bearer',
+            expires_in: 3600,
+            refresh_token: 'rt-2',
+        });
+
+        await store.resolve();
+
+        const introspections = requestsTo(httpClient, 'POST', '/token/introspect');
+        expect(introspections).toHaveLength(2);
+        expect(introspections[1].body).toMatchObject({ token: 'at-2' });
     });
 });

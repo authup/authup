@@ -30,6 +30,7 @@ import { OAuth2AuthorizationPrompt, OAuth2ErrorCode } from '@authup/specs';
 import type { LinkProperties } from '@vuecs/link';
 import {
     StoreAuthOrigin,
+    StoreAuthStatus,
     injectHTTPClient,
     injectStore,
     useTranslation,
@@ -78,6 +79,7 @@ export default defineComponent({
             loggedIn,
             lastAuthOrigin,
             realmId,
+            status,
             user,
         } = storeToRefs(store);
 
@@ -249,12 +251,15 @@ export default defineComponent({
                     loginNode);
             }
 
-            // Realm binding (UX only — the server POST /authorize gate is
-            // authoritative). Wait until the store has resolved the signed-in
-            // identity's realm before deciding, so a built_in client's
-            // AuthorizeForm auto-consent (onMounted) can't fire before a
-            // mismatch is detected.
-            if (!realmId.value) {
+            // Everything below decides against the signed-in identity — wait
+            // until the store reads AUTHENTICATED (realm + user present), so a
+            // built_in client's AuthorizeForm auto-consent (onMounted) can't
+            // fire before a realm mismatch is detected and the chooser never
+            // flashes "Continue as " with an empty name. The login form above
+            // deliberately does NOT sit behind this gate (anonymous and
+            // authenticating must keep rendering it — unmounting the form
+            // mid-submit is the race class that triggered plan 045).
+            if (status.value !== StoreAuthStatus.AUTHENTICATED) {
                 return wrapChild(h(AuthorizeText, { message: loadingText.value }));
             }
 
@@ -281,19 +286,14 @@ export default defineComponent({
             }
 
             // prompt=select_account: offer "continue as X / use another account"
-            // instead of silently continuing the current session. Wait for the
-            // user to resolve so the chooser never flashes "Continue as " with an
-            // empty name.
+            // instead of silently continuing the current session. The
+            // AUTHENTICATED gate above guarantees the user is present.
             if (
                 prompts.includes(OAuth2AuthorizationPrompt.SELECT_ACCOUNT) &&
                 !accountConfirmed.value
             ) {
-                if (!user.value) {
-                    return wrapChild(h(AuthorizeText, { message: loadingText.value }));
-                }
-
                 return wrapChild(h(AAccountPrompt, {
-                    identityName: user.value.name ?? user.value.display_name ?? '',
+                    identityName: user.value?.name ?? user.value?.display_name ?? '',
                     onContinue: () => { accountConfirmedLocal.value = true; },
                     onSwitch: switchAccount,
                 }));

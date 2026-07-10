@@ -26,6 +26,8 @@ export function installHTTPClientAuthenticationHook(
 
     const { refreshToken } = storeToRefs(store);
 
+    let refreshTokenInUse : string | null = null;
+
     const hook = new ClientAuthenticationHook({
         baseURL: options.baseURL,
         tokenCreator: () => {
@@ -33,8 +35,10 @@ export function installHTTPClientAuthenticationHook(
                 throw new Error('No refresh token available.');
             }
 
+            refreshTokenInUse = refreshToken.value;
+
             const client : IClient = options.httpClient ?? new Client({ baseURL: options.baseURL });
-            return client.token.createWithRefreshToken({ refresh_token: refreshToken.value });
+            return client.token.createWithRefreshToken({ refresh_token: refreshTokenInUse });
         },
         timer: !options.isServer,
     });
@@ -42,6 +46,18 @@ export function installHTTPClientAuthenticationHook(
     const storeDispatcher = injectStoreDispatcher(app);
 
     hook.on(ClientAuthenticationHookEventName.REFRESH_FINISHED, (response) => {
+        // Drop a stale refresh: when the store's refresh token changed while
+        // the grant was in flight (a logout tore the session down, or an
+        // interactive login/exchange replaced it), applying the response
+        // would resurrect torn-down state or overwrite the new session's
+        // tokens with the old session's.
+        if (
+            refreshTokenInUse === null ||
+            store.refreshToken !== refreshTokenInUse
+        ) {
+            return;
+        }
+
         store.applyTokenGrantResponse(response);
     });
 
