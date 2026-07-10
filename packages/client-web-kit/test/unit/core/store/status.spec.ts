@@ -89,10 +89,10 @@ function buildStore(handlers: Record<string, FakeHandler> = {}) {
 }
 
 describe('core/store/status', () => {
-    it('starts anonymous with no origin', () => {
+    it('starts unauthenticated with no origin', () => {
         const { store } = buildStore();
 
-        expect(store.status.value).toEqual(StoreAuthStatus.ANONYMOUS);
+        expect(store.status.value).toEqual(StoreAuthStatus.UNAUTHENTICATED);
         expect(store.lastAuthOrigin.value).toBeNull();
     });
 
@@ -126,7 +126,7 @@ describe('core/store/status', () => {
         expect(store.lastAuthOrigin.value).toEqual(StoreAuthOrigin.LOGIN);
     });
 
-    it('returns to anonymous when the password grant fails', async () => {
+    it('returns to unauthenticated when the password grant fails', async () => {
         const { store } = buildStore({
             'POST /token': () => {
                 throw new Error('grant failed');
@@ -135,11 +135,11 @@ describe('core/store/status', () => {
 
         await expect(store.login({ name: 'admin', password: 'wrong' })).rejects.toThrow();
 
-        expect(store.status.value).toEqual(StoreAuthStatus.ANONYMOUS);
+        expect(store.status.value).toEqual(StoreAuthStatus.UNAUTHENTICATED);
         expect(store.lastAuthOrigin.value).toBeNull();
     });
 
-    it('reads restoring after a login whose introspection failed (token without realm)', async () => {
+    it('returns to unauthenticated when introspection fails during login (atomic commit)', async () => {
         const { store } = buildStore({
             'POST /token/introspect': () => {
                 throw new Error('introspection down');
@@ -148,10 +148,9 @@ describe('core/store/status', () => {
 
         await expect(store.login({ name: 'admin', password: 'start123' })).rejects.toThrow();
 
-        // the token was applied before resolution failed — presence-derived
-        // status truthfully reports the half-built session (changes with the
-        // plan-045 atomic commit)
-        expect(store.status.value).toEqual(StoreAuthStatus.RESTORING);
+        // nothing was committed — no half-built RESTORING session remains
+        expect(store.status.value).toEqual(StoreAuthStatus.UNAUTHENTICATED);
+        expect(store.accessToken.value).toBeNull();
         expect(store.lastAuthOrigin.value).toBeNull();
     });
 
@@ -166,6 +165,37 @@ describe('core/store/status', () => {
 
         store.setUser(buildUser());
         expect(store.status.value).toEqual(StoreAuthStatus.AUTHENTICATED);
+    });
+
+    it('reads restoring for a refresh-token-only store (session presence)', async () => {
+        const { store } = buildStore();
+
+        // the access-token cookie expires via maxAge, the refresh-token
+        // cookie is a session cookie — an RT-only hydration is a normal
+        // restorable state, not unauthenticated
+        store.setRefreshToken('rt-1');
+        expect(store.status.value).toEqual(StoreAuthStatus.RESTORING);
+
+        await store.resolve();
+
+        expect(store.status.value).toEqual(StoreAuthStatus.AUTHENTICATED);
+        expect(store.lastAuthOrigin.value).toEqual(StoreAuthOrigin.RESTORE);
+    });
+
+    it('falls back to unauthenticated when the refresh-token-only restore fails', async () => {
+        const { store } = buildStore({
+            'POST /token': () => {
+                throw new Error('invalid_grant');
+            },
+        });
+
+        store.setRefreshToken('rt-1');
+        expect(store.status.value).toEqual(StoreAuthStatus.RESTORING);
+
+        await expect(store.resolve()).rejects.toThrow();
+
+        expect(store.status.value).toEqual(StoreAuthStatus.UNAUTHENTICATED);
+        expect(store.lastAuthOrigin.value).toBeNull();
     });
 
     it('stamps origin restore when resolve() settles a seeded session', async () => {
@@ -190,12 +220,12 @@ describe('core/store/status', () => {
         expect(store.lastAuthOrigin.value).toEqual(StoreAuthOrigin.LOGIN);
     });
 
-    it('leaves origin null when an anonymous resolve() settles', async () => {
+    it('leaves origin null when an unauthenticated resolve() settles', async () => {
         const { store } = buildStore();
 
         await store.resolve();
 
-        expect(store.status.value).toEqual(StoreAuthStatus.ANONYMOUS);
+        expect(store.status.value).toEqual(StoreAuthStatus.UNAUTHENTICATED);
         expect(store.lastAuthOrigin.value).toBeNull();
     });
 
@@ -215,7 +245,7 @@ describe('core/store/status', () => {
         expect(store.lastAuthOrigin.value).toEqual(StoreAuthOrigin.EXCHANGE);
     });
 
-    it('resets to anonymous with no origin on logout', async () => {
+    it('resets to unauthenticated with no origin on logout', async () => {
         const { store } = buildStore();
 
         await store.login({ name: 'admin', password: 'start123' });
@@ -223,7 +253,7 @@ describe('core/store/status', () => {
 
         await store.logout();
 
-        expect(store.status.value).toEqual(StoreAuthStatus.ANONYMOUS);
+        expect(store.status.value).toEqual(StoreAuthStatus.UNAUTHENTICATED);
         expect(store.lastAuthOrigin.value).toBeNull();
     });
 });
