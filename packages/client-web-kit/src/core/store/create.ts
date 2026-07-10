@@ -214,6 +214,22 @@ export function createStore(context: StoreCreateContext) {
             StoreAuthStatus.RESTORING;
     });
 
+    // Bumped by cleanup(). An interaction/revalidation captures the value when
+    // it starts staging and its commit aborts when it changed — a logout that
+    // interleaved with the staged network round-trips must not be undone by a
+    // late commit (zombie-commit guard).
+    const tokenGeneration = ref(0);
+
+    // The current session has been validated (introspected) once in this app
+    // instance. Not returned: per-instance bookkeeping, deliberately NOT part
+    // of the hydration payload — a fresh instance always revalidates.
+    const validated = ref(false);
+
+    // A token refresh landed since the last commit: status stays
+    // authenticated, but the next resolve() runs an AWAITED revalidation
+    // (failure keeps routing into the navigation guards' catch).
+    const resolutionStale = ref(false);
+
     // --------------------------------------------------------------------
 
     const cleanup = async () => {
@@ -233,8 +249,9 @@ export function createStore(context: StoreCreateContext) {
 
         permissionProvider.setMany([]);
 
-        tokenResolved.value = false;
-        userResolved.value = false;
+        validated.value = false;
+        resolutionStale.value = false;
+        tokenGeneration.value += 1;
 
         try {
             if (tempAccessToken) {
@@ -255,76 +272,125 @@ export function createStore(context: StoreCreateContext) {
 
     // --------------------------------------------------------------------
 
-    const userResolved = ref(false);
-    const resolveUser = async () : Promise<void> => {
-        if (!accessToken.value || userResolved.value) {
-            return Promise.resolve();
-        }
+    // Pure fetchers — they take the token explicitly and mutate nothing, so a
+    // session can be STAGED across multiple round-trips and committed in one
+    // synchronous block (no consumer ever observes a half-built store).
 
-        userResolved.value = true;
-
-        return client.userInfo.get<User>(`Bearer ${accessToken.value}`)
-            .then((response) => {
-                setUser(response);
-            })
-            .catch((e) => {
-                // A failure must not latch — a transient userinfo error would
-                // otherwise permanently leave the user unresolved.
-                userResolved.value = false;
-                throw e;
-            });
-    };
-
-    // --------------------------------------------------------------------
-
-    const tokenResolved = ref(false);
-    const resolveToken = async () : Promise<void> => {
-        if (!accessToken.value || tokenResolved.value) {
-            return Promise.resolve();
-        }
-
-        tokenResolved.value = true;
-
-        return client.token.introspect<OAuth2TokenIntrospectionResponse>({ token: accessToken.value }, {
+    const fetchTokenIntrospection = async (
+        token: string,
+    ) : Promise<OAuth2TokenIntrospectionResponse> => client.token.introspect<OAuth2TokenIntrospectionResponse>(
+        { token },
+        {
             authorizationHeader: {
                 type: 'Bearer',
-                token: accessToken.value,
+                token,
             },
-        })
-            .then((response) => {
-                if (response.exp) {
-                    const expireDate = new Date(response.exp * 1000);
-                    setAccessTokenExpireDate(expireDate);
-                }
+        },
+    );
 
-                if (response.session_id) {
-                    sessionId.value = response.session_id;
-                }
+    const fetchUserInfo = async (token: string) : Promise<User> => client.userInfo.get<User>(`Bearer ${token}`);
 
-                if (
-                    response.realm_id &&
-                    response.realm_name
-                ) {
-                    realm.value = {
-                        id: response.realm_id,
-                        name: response.realm_name,
-                    };
+    type SessionCommitContext = {
+        // tokenGeneration captured when staging started
+        generation: number,
+        // the token introspection/userinfo ran against
+        token: string,
+        // tokens to apply — absent for a revalidation of the current token
+        grant?: OAuth2TokenGrantResponse,
+        introspection: OAuth2TokenIntrospectionResponse,
+        // absent when the current user is kept (revalidation)
+        user?: User,
+        // login/exchange stamp explicitly; a restore stamps only when unset
+        origin?: StoreAuthOrigin.LOGIN | StoreAuthOrigin.EXCHANGE,
+    };
 
-                    if (!realmManagement.value) {
-                        setRealmManagement(realm.value);
-                    }
-                }
+    // The single synchronous write path for a staged session. The write order
+    // is load-bearing (expire date before access token — the cookie listener
+    // derives the token cookie's maxAge from the already-written expire date)
+    // and nothing in here may await. Atomicity holds for the reactive layer;
+    // dispatcher subscribers (cookie sync, auth hook) still observe the
+    // individual setter events synchronously, exactly as before.
+    const commitSession = (ctx: SessionCommitContext) : boolean => {
+        if (ctx.generation !== tokenGeneration.value) {
+            return false;
+        }
 
-                if (response.permissions) {
-                    permissionProvider.setMany(response.permissions.map((permission) => ({
-                        permission: {
-                            name: permission.name,
-                            realm_id: permission.realm_id,
-                            client_id: permission.client_id,
-                        },
-                    })));
-                }
-            });
+        if (ctx.grant) {
+            applyTokenGrantResponse(ctx.grant);
+        }
+
+        // A background hook refresh may have rotated the token while a
+        // revalidation's introspection was in flight — never re-arm the
+        // expire date (and thus the refresh timer) from a superseded token.
+        if (ctx.introspection.exp && ctx.token === accessToken.value) {
+            setAccessTokenExpireDate(new Date(ctx.introspection.exp * 1000));
+        }
+
+        if (ctx.introspection.session_id) {
+            sessionId.value = ctx.introspection.session_id;
+        }
+
+        if (
+            ctx.introspection.realm_id &&
+            ctx.introspection.realm_name
+        ) {
+            // deliberate direct write (not setRealm): a REALM_UPDATED emit
+            // would start persisting a realm cookie for the first time and
+            // open a pre-resolve staleness surface (plan 045 review).
+            realm.value = {
+                id: ctx.introspection.realm_id,
+                name: ctx.introspection.realm_name,
+            };
+
+            if (!realmManagement.value) {
+                setRealmManagement(realm.value);
+            }
+        }
+
+        if (ctx.user) {
+            setUser(ctx.user);
+        }
+
+        if (ctx.introspection.permissions) {
+            permissionProvider.setMany(ctx.introspection.permissions.map((permission) => ({
+                permission: {
+                    name: permission.name,
+                    realm_id: permission.realm_id,
+                    client_id: permission.client_id,
+                },
+            })));
+        }
+
+        validated.value = true;
+        resolutionStale.value = false;
+
+        if (ctx.origin) {
+            lastAuthOrigin.value = ctx.origin;
+        } else if (!lastAuthOrigin.value) {
+            lastAuthOrigin.value = StoreAuthOrigin.RESTORE;
+        }
+
+        return true;
+    };
+
+    // A staged grant that will never be committed (failure or abort) must be
+    // revoked best-effort: the tokens were never written to any ref or cookie,
+    // so no later logout() could reach them — without this, a transient
+    // introspection failure orphans a live server session.
+    const revokeStagedGrant = async (response: OAuth2TokenGrantResponse) => {
+        try {
+            await client.token.revoke({ token: response.access_token });
+        } catch {
+            // best-effort
+        }
+
+        if (response.refresh_token) {
+            try {
+                await client.token.revoke({ token: response.refresh_token });
+            } catch {
+                // best-effort
+            }
+        }
     };
 
     // --------------------------------------------------------------------
@@ -348,6 +414,12 @@ export function createStore(context: StoreCreateContext) {
         if (response.id_token) {
             setIdToken(response.id_token);
         }
+
+        // A bare token apply leaves the identity data (realm/user/permissions)
+        // unrefreshed — the next resolve() runs an awaited revalidation.
+        // commitSession() clears the flag again right after it applies a
+        // grant, so only token-only updates (refresh grants) stay stale.
+        resolutionStale.value = true;
     };
 
     // --------------------------------------------------------------------
@@ -361,46 +433,66 @@ export function createStore(context: StoreCreateContext) {
             try {
                 const response = await client.token.createWithRefreshToken({ refresh_token: refreshToken.value });
 
+                // marks the resolution stale: status stays authenticated,
+                // the next resolve() revalidates (awaited).
                 applyTokenGrantResponse(response);
             } catch (e) {
                 await cleanup();
 
                 throw e;
-            } finally {
-                tokenResolved.value = false;
-                userResolved.value = false;
             }
         },
     );
 
     // --------------------------------------------------------------------
 
+    // Stage introspection (+ userinfo when no user is present yet) for the
+    // current token and commit. Returns silently when the commit was aborted
+    // by an interleaved cleanup() — the caller's post-state (anonymous) is
+    // already what the user asked for.
+    const revalidate = async () : Promise<void> => {
+        const generation = tokenGeneration.value;
+        const token = accessToken.value;
+        if (!token) {
+            return;
+        }
+
+        const introspection = await fetchTokenIntrospection(token);
+        const userInfo = user.value ? undefined : await fetchUserInfo(token);
+
+        commitSession({
+            generation,
+            token,
+            introspection,
+            user: userInfo,
+        });
+    };
+
     // todo: rename to reload() ?
     const resolveInternal = async () : Promise<void> => {
         context.dispatcher.emit(StoreDispatcherEventName.RESOLVING);
 
-        try {
-            if (
-                !accessToken.value &&
-                refreshToken.value
-            ) {
-                await refreshSession();
-            }
+        if (
+            !accessToken.value &&
+            refreshToken.value
+        ) {
+            await refreshSession();
+        }
 
-            if (accessToken.value) {
-                await resolveToken();
-
-                if (!user.value) {
-                    await resolveUser();
+        if (
+            accessToken.value &&
+            (!validated.value || resolutionStale.value)
+        ) {
+            try {
+                await revalidate();
+            } catch (e) {
+                // a still-valid refresh token may recover the session
+                if (refreshToken.value) {
+                    await refreshSession();
+                    await revalidate();
+                } else {
+                    throw e;
                 }
-            }
-        } catch (e) {
-            if (refreshToken.value) {
-                await refreshSession();
-                await resolveToken();
-                await resolveUser();
-            } else {
-                throw e;
             }
         }
 
@@ -421,6 +513,41 @@ export function createStore(context: StoreCreateContext) {
      * (AUTHENTICATED additionally implies realm + user are present).
      */
     const loggedIn = computed<boolean>(() => !!accessToken.value);
+    // Stage introspection + userinfo for a fresh grant, then commit
+    // atomically. On failure or an aborted commit the staged tokens are
+    // revoked best-effort — nothing was written, so nothing else could.
+    // `generation` is captured by the caller BEFORE its first round-trip, so
+    // a logout anywhere in the staged window aborts the commit.
+    const establishSession = async (
+        response: OAuth2TokenGrantResponse,
+        origin: StoreAuthOrigin.LOGIN | StoreAuthOrigin.EXCHANGE,
+        generation: number,
+    ) : Promise<void> => {
+        let committed = false;
+
+        try {
+            const introspection = await fetchTokenIntrospection(response.access_token);
+            const userInfo = await fetchUserInfo(response.access_token);
+
+            committed = commitSession({
+                generation,
+                token: response.access_token,
+                grant: response,
+                introspection,
+                user: userInfo,
+                origin,
+            });
+        } finally {
+            if (!committed) {
+                await revokeStagedGrant(response);
+            }
+        }
+
+        if (!committed) {
+            throw new OAuth2Error('The session was torn down before the login could be established.');
+        }
+    };
+
     const login = async (ctx: StoreLoginContext) => {
         context.dispatcher.emit(StoreDispatcherEventName.LOGGING_IN);
 
@@ -434,17 +561,13 @@ export function createStore(context: StoreCreateContext) {
             });
 
             // Clear any previous identity's state (notably a retained id_token —
-            // a password response carries none, and applyTokenGrantResponse would
-            // keep the stale one) before applying the fresh grant. Also nulls
-            // lastAuthOrigin — re-stamped below on success.
+            // a password response carries none, and the atomic commit would
+            // keep the stale one) and best-effort revoke its tokens before
+            // establishing the fresh session (plan 047.3). cleanup() bumps the
+            // generation, so the staged window's snapshot is taken AFTER it.
             await cleanup();
 
-            applyTokenGrantResponse(response);
-
-            await resolveToken();
-            await resolveUser();
-
-            lastAuthOrigin.value = StoreAuthOrigin.LOGIN;
+            await establishSession(response, StoreAuthOrigin.LOGIN, tokenGeneration.value);
         } finally {
             interactionInFlight.value = null;
         }
@@ -469,14 +592,11 @@ export function createStore(context: StoreCreateContext) {
                 ...params,
             });
 
+            // wipe + revoke the previous identity before establishing the new
+            // one (a failed GRANT above leaves prior state intact — pinned).
             await cleanup();
 
-            applyTokenGrantResponse(response);
-
-            await resolveToken();
-            await resolveUser();
-
-            lastAuthOrigin.value = StoreAuthOrigin.EXCHANGE;
+            await establishSession(response, StoreAuthOrigin.EXCHANGE, tokenGeneration.value);
         } finally {
             interactionInFlight.value = null;
         }

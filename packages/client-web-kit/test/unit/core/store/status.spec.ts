@@ -139,7 +139,7 @@ describe('core/store/status', () => {
         expect(store.lastAuthOrigin.value).toBeNull();
     });
 
-    it('reads restoring after a login whose introspection failed (token without realm)', async () => {
+    it('returns to anonymous when introspection fails during login (atomic commit)', async () => {
         const { store } = buildStore({
             'POST /token/introspect': () => {
                 throw new Error('introspection down');
@@ -148,10 +148,9 @@ describe('core/store/status', () => {
 
         await expect(store.login({ name: 'admin', password: 'start123' })).rejects.toThrow();
 
-        // the token was applied before resolution failed — presence-derived
-        // status truthfully reports the half-built session (changes with the
-        // plan-045 atomic commit)
-        expect(store.status.value).toEqual(StoreAuthStatus.RESTORING);
+        // nothing was committed — no half-built RESTORING session remains
+        expect(store.status.value).toEqual(StoreAuthStatus.ANONYMOUS);
+        expect(store.accessToken.value).toBeNull();
         expect(store.lastAuthOrigin.value).toBeNull();
     });
 
