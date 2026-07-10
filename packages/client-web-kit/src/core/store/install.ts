@@ -74,7 +74,17 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
 
         store.setCookiesRead(true);
 
-        const keys = Object.values(CookieName);
+        // The expire date must hydrate BEFORE the access token: the cookie
+        // listener's write-back echo derives the token cookie's maxAge from
+        // the already-written expire date (the same pinned order
+        // applyTokenGrantResponse follows) — enum order would re-persist the
+        // token as a session cookie.
+        const keys : string[] = [
+            CookieName.ACCESS_TOKEN_EXPIRE_DATE,
+            ...Object.values(CookieName).filter(
+                (key) => key !== CookieName.ACCESS_TOKEN_EXPIRE_DATE,
+            ),
+        ];
 
         let value : any;
         for (const key of keys) {

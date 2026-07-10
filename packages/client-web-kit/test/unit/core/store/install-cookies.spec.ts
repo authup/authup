@@ -114,6 +114,13 @@ describe('core/store/install-cookies', () => {
         expect(setCalls.some(
             (call) => call.key === CookieName.ACCESS_TOKEN && call.value === 'cookie-at',
         )).toBe(true);
+
+        // the expire date hydrates BEFORE the access token, so the write-back
+        // echo re-persists the token cookie with the derived maxAge — never as
+        // a session cookie (enum order would drop the expiry)
+        const accessTokenEcho = setCalls.find((call) => call.key === CookieName.ACCESS_TOKEN);
+        expect(accessTokenEcho!.options.maxAge).toBeTypeOf('number');
+        expect(accessTokenEcho!.options.maxAge!).toBeGreaterThan(0);
     });
 
     it('persists cookies on login — except the realm cookie (introspection bypasses setRealm)', async () => {
