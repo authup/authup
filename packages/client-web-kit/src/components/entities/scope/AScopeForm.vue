@@ -53,6 +53,10 @@ export default defineComponent({
             default: undefined,
         },
         entity: { type: Object as PropType<Scope> },
+        realmId: {
+            type: String,
+            default: undefined,
+        },
     },
     emits: defineEntityVEmitOptions<Scope>(),
     setup(props, ctx) {
@@ -82,7 +86,12 @@ export default defineComponent({
         const store = injectStore();
         const storeRefs = storeToRefs(store);
 
-        const realmId = computed(() => {
+        const realmLock = computed(() => {
+            // realm-management context passed by the page wins
+            if (props.realmId) {
+                return props.realmId;
+            }
+
             if (!storeRefs.realmIsRoot.value) {
                 return storeRefs.realmId.value;
             }
@@ -108,6 +117,11 @@ export default defineComponent({
             }
 
             assignFormProperties(form, manager.data.value, { fields: v.fields });
+
+            // locked-realm prop wins over any realm_id pulled from the entity
+            if (props.realmId) {
+                form.realm_id = props.realmId;
+            }
 
             if (form.name.length === 0) {
                 form.name = generateName(nameSeed);
@@ -157,7 +171,7 @@ export default defineComponent({
             busy,
             v,
             isEditing,
-            realmId,
+            realmLock,
             isNameFixed,
             translationsDefault,
             submit,
@@ -215,7 +229,7 @@ export default defineComponent({
             </VCFormGroup>
         </IFieldValidation>
 
-        <template v-if="!realmId && !isNameFixed && !isEditing">
+        <template v-if="!realmLock && !isNameFixed && !isEditing">
             <IFieldValidation
                 v-slot="{ value }"
                 :field="v.fields.realm_id"
