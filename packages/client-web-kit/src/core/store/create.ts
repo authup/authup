@@ -47,11 +47,15 @@ function createPromiseShareWrapperFn<F extends InputFn>(
             },
         );
 
-        promise.finally(() => {
+        // reset via then(reset, reset) — a bare .finally() would spawn a
+        // derived chain that rejects unhandled whenever the shared promise
+        // rejects (the caller only handles the returned promise).
+        const reset = () => {
             setTimeout(() => {
                 promise = undefined;
             }, 0);
-        });
+        };
+        promise.then(reset, reset);
 
         return promise;
     };
@@ -228,6 +232,12 @@ export function createStore(context: StoreCreateContext) {
         return client.userInfo.get<User>(`Bearer ${accessToken.value}`)
             .then((response) => {
                 setUser(response);
+            })
+            .catch((e) => {
+                // A failure must not latch — a transient userinfo error would
+                // otherwise permanently leave the user unresolved.
+                userResolved.value = false;
+                throw e;
             });
     };
 
