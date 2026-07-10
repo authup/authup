@@ -236,7 +236,14 @@ export function createStore(context: StoreCreateContext) {
         }
 
         if (!accessToken.value) {
-            return StoreAuthStatus.ANONYMOUS;
+            // A surviving refresh token is session presence too: the
+            // access-token cookie expires via maxAge while the refresh-token
+            // cookie is a session cookie, so an RT-only hydration is a normal
+            // restorable state — it must read RESTORING for the whole restore
+            // instead of flapping anonymous → restoring mid-resolve().
+            return refreshToken.value ?
+                StoreAuthStatus.RESTORING :
+                StoreAuthStatus.ANONYMOUS;
         }
 
         return realm.value && user.value ?

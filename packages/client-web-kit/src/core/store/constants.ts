@@ -9,10 +9,14 @@ export const STORE_ID = 'authup';
 
 /**
  * The store's auth phase, derived from state PRESENCE
- * (token / realm / user) plus an in-flight interaction marker.
+ * (access/refresh token / realm / user) plus an in-flight interaction
+ * marker.
  *
  * AUTHENTICATED means token + realm + user are present; validating
- * them against the server remains resolve()'s job.
+ * them against the server remains resolve()'s job. ANONYMOUS means no
+ * session artifact at all — a refresh-token-only store (the
+ * access-token cookie expired, the refresh-token session cookie
+ * survived) reads RESTORING.
  */
 export enum StoreAuthStatus {
     ANONYMOUS = 'anonymous',

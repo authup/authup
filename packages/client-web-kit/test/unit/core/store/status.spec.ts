@@ -167,6 +167,37 @@ describe('core/store/status', () => {
         expect(store.status.value).toEqual(StoreAuthStatus.AUTHENTICATED);
     });
 
+    it('reads restoring for a refresh-token-only store (session presence)', async () => {
+        const { store } = buildStore();
+
+        // the access-token cookie expires via maxAge, the refresh-token
+        // cookie is a session cookie — an RT-only hydration is a normal
+        // restorable state, not anonymous
+        store.setRefreshToken('rt-1');
+        expect(store.status.value).toEqual(StoreAuthStatus.RESTORING);
+
+        await store.resolve();
+
+        expect(store.status.value).toEqual(StoreAuthStatus.AUTHENTICATED);
+        expect(store.lastAuthOrigin.value).toEqual(StoreAuthOrigin.RESTORE);
+    });
+
+    it('falls back to anonymous when the refresh-token-only restore fails', async () => {
+        const { store } = buildStore({
+            'POST /token': () => {
+                throw new Error('invalid_grant');
+            },
+        });
+
+        store.setRefreshToken('rt-1');
+        expect(store.status.value).toEqual(StoreAuthStatus.RESTORING);
+
+        await expect(store.resolve()).rejects.toThrow();
+
+        expect(store.status.value).toEqual(StoreAuthStatus.ANONYMOUS);
+        expect(store.lastAuthOrigin.value).toBeNull();
+    });
+
     it('stamps origin restore when resolve() settles a seeded session', async () => {
         const { store } = buildStore();
 
