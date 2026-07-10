@@ -1079,7 +1079,10 @@ Enforced server-side at **three** points — the kit UI (realm-mismatch card in
    `OAuth2LoginRequiredError` (`ErrorCode.OAUTH_LOGIN_REQUIRED` / OIDC
    `login_required`, HTTP 400, **no identity data in the body** — no
    realm-enumeration oracle) when `identity.data.realm.id !== data.realm_id`
-   (the client realm the code-request verifier stamped).
+   (the client realm the code-request verifier stamped). A missing/dangling
+   realm relation on the identity fails closed the same way (plan 047.6 —
+   a clean `login_required`, never a raw TypeError/500; same null-guard in the
+   code issuer).
 2. **`/token` code redemption** — the code verifier's `realmId` option (fed
    `client.realm_id` by the HTTP authorize grant) rejects
    `code.realm_id !== realmId` with `invalid_grant`. Covers codes minted outside
@@ -1117,7 +1120,13 @@ the `/token` exchange mints and returns the id_token. Discovery
 `response_types_supported` advertises only
 `code`. Consequently the code-request verifier requires PKCE + `state` for
 public clients **unconditionally** (the former `willIssueCode` gate is gone —
-every verified request issues a code).
+every verified request issues a code). The verifier also rejects a
+**pattern-less client** outright (plan 047.1, OAuth 2.1 posture): a client with
+no registered `redirect_uri` patterns cannot use `/authorize` at all —
+previously its `data.redirect_uri` went unchecked (any value passed, merely
+flagged `redirectUriVerified=false`), letting a misconfigured client issue
+codes to arbitrary attacker-supplied URIs. `redirectUriVerified` is now `false`
+only when the request itself carries no `redirect_uri`.
 
 ### OIDC prompt surface & id_token claims (plan 041 PR B)
 
@@ -1136,7 +1145,12 @@ The chooser targets a **lingering** session only: `LoginForm`'s `done` emit sets
 `accountConfirmed`, so a just-completed credential entry (which IS the account
 selection) proceeds straight to consent instead of re-prompting "continue as X"
 for the account just authenticated; the branch also waits for the store's `user`
-to resolve to avoid a "Continue as \<empty\>" flash. The manual consent screen
+to resolve to avoid a "Continue as \<empty\>" flash — but only while resolution
+is genuinely in flight: once it settles without a user (a non-user client/robot
+lingering session, or a failed `userInfo` lookup), the chooser renders a
+"use another account" escape hatch instead of spinning forever, and a failed
+resolve no longer latches `userResolved`, so a transient failure can retry
+(plan 047.2). The manual consent screen
 (`AuthorizeForm`) additionally renders a **"Signed in as X — Not you?"** chip
 (emits `switch` → local `store.logout()` → login form), so a wrong-account user
 can switch even when the RP sent no `prompt=select_account`. Prompt/error string
@@ -1147,6 +1161,10 @@ a `login_required` body error **and an HTTP 401** — a bearer that died mid-flo
 (a session sweep, a sibling-tab logout, an account switch) previously fell into
 `autoConsentFailed`, rendering the manual consent screen whose retry re-POSTed
 the same dead bearer forever; now it falls back to re-authentication.
+`AuthorizeForm`'s **deny/abort** path is gated on `redirectUriVerified` like
+every other redirect in the ladder (plan 047.1): with an unverified
+`redirect_uri` the form renders a stay-on-page notice instead of navigating
+with `error=access_denied` (a user-click open redirect otherwise).
 
 `prompt=login` / `max_age` freshness is enforced **server-side** in
 `OAuth2Authorization.authorize()` (the authoritative backstop; the hosted UI is
@@ -1156,7 +1174,12 @@ Basic-auth authorize counts as "now"), and a violation throws
 `login_required`. The window is `config.promptLoginMaxAge`
 (`PROMPT_LOGIN_MAX_AGE`, default 60s) — a documented stateless
 approximation, wired via the `AuthorizeController` → `HTTPOAuth2Authorizer` ctx
-alongside the injected `ISessionManager`.
+alongside the injected `ISessionManager`. The window is the **deliberate
+contract**, pinned by tests (plan 047.A): a sub-window session satisfies
+`prompt=login` without re-auth (it absorbs the hosted login→consent
+round-trip), an over-window session throws, and `max_age=0` is *stricter* than
+`prompt=login` (the documented inversion). Strict step-up =
+`PROMPT_LOGIN_MAX_AGE=0`.
 
 **id_token claims (bug fix + addition):** `auth_time` is now the session's
 creation instant (previously — wrongly — the token issuance time == `iat`), and a
@@ -1175,7 +1198,12 @@ the fallback-create branch, and the session-less **federated IdP** flow alike
 instant onto the auth-code blob (`OAuth2AuthorizationCode.auth_time`, replacing
 the removed `id_token` field — cache blob, no migration) as the `auth_time`
 source, and the grant reads it back. `at_hash` (over the freshly-issued access
-token) and `c_hash` are recomputed at the exchange; `nonce` rides from the code.
+token) is computed at the exchange, with the digest **derived from the
+id_token's signing `alg`** (plan 047.7 — `*256`→SHA-256, `*384`→SHA-384,
+`*512`→SHA-512, left half per OIDC Core §3.1.3.6; today all keys are RS256, so
+behavior is unchanged — the derivation exists so a future multi-alg key can't
+silently mint wrong hashes). No `c_hash` is minted — it only exists for the
+hybrid response types authup dropped (code-only). `nonce` rides from the code.
 The `openIdTokenIssuer` is wired into the `TokenController` authorize grant, and
 `codeIssuer.updateIdToken` is gone. This resolves the plan-041 residual where a
 sub/realm-mismatch fallback (or session-deleted-in-flight) left the id_token's
@@ -1211,6 +1239,14 @@ SSR app's router guard `await store.resolve()` settles the session:
   this page fires `LOGGED_IN`; the same banner path is reused when the POST
   surfaces `login_required` mid-flow (replacing the old silent
   `switchAccount`).
+
+**Known limitation (plan 047.C, accepted):** because the ladder is client-side,
+a JS-less or scripted `prompt=none` GET receives `200` HTML instead of an
+immediate error redirect — an interop/ergonomics gap only (every security
+backstop runs on POST `/authorize` + `/token` regardless of client JS). A
+server-side silent answer would require cookie-based session recognition on
+`/authorize`, deliberately avoided by the header-only auth/cors model; scoped
+separately as plan 063.
 
 The anonymous `GET /authorize` hydration payload carries a **trimmed client
 DTO** (`ClientSummary` = `id`/`name`/`display_name`/`built_in`/`created_at`) plus
@@ -1251,9 +1287,19 @@ app (kit or non-kit) ends a lingering authup session on its own logout, so
   exp-bypass stays scoped to the single end-session call. A hint whose `kind
   !== id_token` is **rejected** (access/refresh tokens also carry `session_id`,
   so accepting them would let a leaked access token force a logout). `aud` vs
-  request `client_id` cross-checked when both present — note the id_token `aud`
-  is the client **UUID**, so a name-identified request `client_id` will not
-  match a hint's `aud`.
+  request `client_id` cross-check (plan 047.4/047.B): when a **verified** hint
+  is paired with a request `client_id`, the `client_id` MUST match the hint's
+  `aud` — a name-form `client_id` is first **resolved to its client UUID**
+  (realm scope: the request's `realm_id`/`realm_name` hint, else the *verified*
+  hint's own realm claim; never claims of an unverified hint, no master
+  fallback) and the resolved UUID is compared. Fail-closed shape: an `aud`-less
+  verified hint with a request `client_id`, or a name that doesn't resolve,
+  counts as **unverified** (no revoke; confirm page still works). Realm-key
+  resolution is fail-closed too: a supplied-but-unknown realm key skips client
+  resolution entirely (no name, no redirect), and a **name**-form `client_id`
+  with no realm key anywhere fails closed as well (ambiguous — every realm has
+  a `web` client; same rule as the /authorize verifier). A UUID `client_id` —
+  including the sole-`aud`-derived one — resolves globally as before.
 - **Bounded expired-hint window (plan 042 item 2):** with config
   `endSessionHintGracePeriod` > 0 (seconds past `exp`, ENV
   `END_SESSION_HINT_GRACE_PERIOD`), a hint expired beyond the window counts as
@@ -1274,8 +1320,10 @@ app (kit or non-kit) ends a lingering authup session on its own logout, so
   separate from `redirect_uri` (plan 042 item 9)** — login and logout redirect
   surfaces are no longer conflated: a URI that matches the login `redirect_uri`
   but not the post-logout allow-list is rejected. It is a nullable
-  `varchar(2000)` on `ClientEntity` + core-kit `Client` + `ClientValidator`
-  (comma-separated wildcard patterns, same shape as `redirect_uri`; mounted in
+  `text` column on `ClientEntity` + core-kit `Client` + `ClientValidator`
+  (the 2000-char cap is on the inbound `post_logout_redirect_uri` **request
+  param** in `OAuth2EndSessionRequestValidator`, not the column;
+  comma-separated wildcard patterns, same shape as `redirect_uri`; mounted in
   every group, **not** in the self-manage denylist, **not** in the trimmed
   `ClientSummary` DTO, **added** to the client repository `fields.default`
   allow-list so reads return it). The migration is folded into the
@@ -1295,14 +1343,16 @@ app (kit or non-kit) ends a lingering authup session on its own logout, so
 The SSR page is `apps/server-core/ui/src/pages/logout.vue` → kit
 `AEndSessionForm`; the typed URL builder is `buildEndSessionURL` in
 `client-web-kit`. **`AEndSessionForm` auto-clears local state on mount ONLY when
-`serverRevoked && hintSub === store.user.id`** — the revoked subject must be the
-browser's own user. Without that gate, a cross-site `GET
+`serverRevoked && hintSub === store.user.id && hintSubKind === 'user'`** — the
+revoked subject must be the browser's own user, kind included (plan 047.5; a
+missing `hintSubKind` fails closed — no auto-clear). Without that gate, a
+cross-site `GET
 /logout?id_token_hint=<attacker's own id_token>` (which revokes the attacker's
 own session, so `serverRevoked` is true) would forcibly sign out any unrelated
 victim who merely renders the page (`store.logout()` is local-only, so it acts
 on whoever's browser rendered it) — a forced-logout CSRF. The controller
-forwards `hintSub` (only for a verified hint) and the validated `redirect` into
-the payload for this gate. **Residual (Keycloak parity):** a *leaked* valid
+forwards `hintSub` + `hintSubKind` (only for a verified hint) and the validated
+`redirect` into the payload for this gate. **Residual (Keycloak parity):** a *leaked* valid
 id_token can force-logout its own session (annoyance, not privilege escalation)
 — mitigated by the sub-match + short id_token TTL.
 
@@ -1312,7 +1362,10 @@ grant response's `id_token` as an `idToken` ref (setter emits
 `StoreDispatcherEventName.ID_TOKEN_UPDATED`, cookie-persisted via
 `CookieName.ID_TOKEN`, cleared in `cleanup()`). `applyTokenGrantResponse`
 **retains** the existing value when a response carries none (a refresh grant
-returns no id_token) rather than clearing it. This gives every kit RP an
+returns no id_token) rather than clearing it; to keep that retain safe,
+`store.login()` runs `cleanup()` before applying the password-grant response —
+mirroring `exchangeAuthorizationCode` — so a stale id_token can never survive
+onto a newly-authenticated user (plan 047.3). This gives every kit RP an
 `id_token_hint` to pass to the `end_session_endpoint` — without it they all
 degrade to the click-gated confirm page. `apps/client-web/pages/logout.vue`
 uses it: the page deliberately does **not** set `REQUIRED_LOGGED_OUT` (that meta
@@ -1322,11 +1375,11 @@ local-only `store.logout()`, then hard-redirects to
 `buildEndSessionURL({ baseURL, idTokenHint, realmId,
 postLogoutRedirectUri: <origin>/login })`. With the hint the server revokes and
 bounces straight back; without it the server's confirm page returns to
-`/login`. **It passes NO `client_id`**: the id_token's `aud` is the client
-**UUID**, so a name-identified `client_id` (`web`) would fail the server's
-`aud` cross-check and clear `hintVerified` — silently disabling the revoke (the
-round-trip would always degrade to the confirm page). Omitting it lets the
-service resolve the client from the hint's sole `aud`. `store.logout()` remains
+`/login`. **It passes NO `client_id`**: omitting it lets the service resolve
+the client from the hint's sole `aud` (the client **UUID**). Since plan 047.B a
+name-form `client_id` (`web`) would also work — the service resolves it to the
+UUID before the `aud` cross-check — but omission stays the simplest correct
+call (no name→realm ambiguity to think about). `store.logout()` remains
 local-only — the round-trip is the chosen mechanism, **not** a
 `DELETE /sessions/@me` (which would collide with the #3191 interactive-login
 session reuse → self-DoS of fresh logins).

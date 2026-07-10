@@ -29,11 +29,11 @@ export default defineNuxtComponent({
             // revokes and bounces straight back to post_logout_redirect_uri;
             // without it, the server's click-gated confirm page returns here.
             //
-            // Deliberately NO client_id: the id_token's `aud` is the client's
-            // UUID, so a name-identified client_id (`web`) would fail the
-            // server's aud cross-check and clear hintVerified — disabling the
-            // revoke. Omitting it lets the server resolve the client from the
-            // hint's sole aud and keep the hint verified.
+            // Deliberately NO client_id: omitting it lets the server resolve
+            // the client from the hint's sole aud (the client UUID). A
+            // name-identified client_id (`web`) would work too since plan 047.B
+            // (resolved to its UUID before the aud cross-check), but omission
+            // stays the simplest correct call.
             window.location.href = buildEndSessionURL({
                 baseURL: runtimeConfig.public.apiUrl as string,
                 idTokenHint,
