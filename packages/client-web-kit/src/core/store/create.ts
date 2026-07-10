@@ -236,7 +236,14 @@ export function createStore(context: StoreCreateContext) {
         }
 
         if (!accessToken.value) {
-            return StoreAuthStatus.ANONYMOUS;
+            // A surviving refresh token is session presence too: the
+            // access-token cookie expires via maxAge while the refresh-token
+            // cookie is a session cookie, so an RT-only hydration is a normal
+            // restorable state — it must read RESTORING for the whole restore
+            // instead of flapping unauthenticated → restoring mid-resolve().
+            return refreshToken.value ?
+                StoreAuthStatus.RESTORING :
+                StoreAuthStatus.UNAUTHENTICATED;
         }
 
         return realm.value && user.value ?
@@ -478,7 +485,7 @@ export function createStore(context: StoreCreateContext) {
 
     // Stage introspection (+ userinfo when no user is present yet) for the
     // current token and commit. Returns silently when the commit was aborted
-    // by an interleaved cleanup() — the caller's post-state (anonymous) is
+    // by an interleaved cleanup() — the caller's post-state (unauthenticated) is
     // already what the user asked for.
     const revalidate = async () : Promise<void> => {
         const generation = tokenGeneration.value;
