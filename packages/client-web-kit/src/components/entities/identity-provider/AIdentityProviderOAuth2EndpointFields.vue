@@ -64,23 +64,29 @@ export default defineComponent({
         const userInfoUrlField = v.fields.at<string | null>('user_info_url');
 
         function init() {
-            form.token_url = '';
-            form.authorize_url = '';
-            form.user_info_url = '';
+            // blank via the helper so an unsaved (dirty) edit survives an
+            // entity refresh instead of being wiped before the re-assign
+            assignFormProperties(form, {
+                token_url: null,
+                authorize_url: null,
+                user_info_url: null,
+            }, { fields: v.fields });
 
             if (!props.entity) return;
 
-            assignFormProperties(form, props.entity as Partial<OAuth2IdentityProvider>);
+            assignFormProperties(form, props.entity as Partial<OAuth2IdentityProvider>, { fields: v.fields });
         }
 
-        const updated = useUpdatedAt(props.entity as IdentityProvider);
+        const updated = useUpdatedAt(() => props.entity as IdentityProvider);
         onChange(updated, () => init());
 
         init();
 
         const handleDiscoveryLookup = (data: OpenIDProviderMetadata) => {
-            form.authorize_url = data.authorization_endpoint;
-            form.token_url = data.token_endpoint;
+            // through $model so the discovered values count as user edits
+            // (dirty) and survive a concurrent entity refresh
+            v.fields.authorize_url.$model.value = data.authorization_endpoint;
+            v.fields.token_url.$model.value = data.token_endpoint;
         };
 
         const translations = useTranslations([

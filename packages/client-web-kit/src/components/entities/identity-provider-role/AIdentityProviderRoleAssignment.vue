@@ -140,7 +140,7 @@ export default defineComponent({
         });
 
         if (manager.data.value) {
-            assignFormProperties(form, manager.data.value);
+            assignFormProperties(form, manager.data.value, { fields: v.fields });
         }
 
         const handleSaveOrCreate = (e: Event) => {

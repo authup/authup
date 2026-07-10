@@ -1784,6 +1784,25 @@ integration:
   squared group edge (double border/notched seam). Where a real
   `<VCButton>` is intentional (e.g. `AFormInputListItem`'s
   warning-colored delete), square its inner edge with `rounded-l-none`.
+  **Entity hydration contract** (`assignFormProperties(form, entity,
+  { fields: v.fields })`, `core/form/properties.ts`): the helper assigns
+  only keys **declared in the form state** — the form owns its shape, and
+  copying every entity key leaks foreign properties into the state and
+  from there into submit payloads (a stale sibling-sub-form copy of
+  `name` used to clobber the edited value on the identity-provider
+  form's spread, #3222). With the validup `fields` accessor supplied,
+  hydration is **edit-preserving**: a `$dirty` field whose current value
+  differs from the incoming one is skipped (unsaved edit survives an
+  entity refresh), while a `$dirty` field whose value matches is
+  re-assigned and `$reset` (the edit got persisted, future syncs flow
+  again). Two supporting rules: `useUpdatedAt` must be passed a ref or
+  getter (`useUpdatedAt(() => props.entity)`) — passing `props.entity`
+  by value captures the object once and yields a watcher that never
+  fires; and user-input handlers must write through
+  `v.fields.<key>.$model.value` (never `form.<key> = ...`) so the edit
+  is dirty-tracked — direct `form` writes are reserved for hydration
+  defaults (`generateName()` fills, prop seeds) that deliberately stay
+  clean.
 - **Collections** — `defineEntityCollectionManager().render(...)`
   (`components/utility/entity/collection/module.ts`) composes `<VCList>`
   + `<VCListBody>` + `<VCListItem>` + `<VCListLoading>` + `<VCListEmpty>`

@@ -111,7 +111,7 @@ export default defineComponent({
         const store = injectStore();
         const storeRefs = storeToRefs(store);
 
-        const updatedAt = useUpdatedAt(props.entity);
+        const updatedAt = useUpdatedAt(() => props.entity);
 
         const isNameFixed = computed(() => !!props.name && props.name.length > 0);
         const realmId = computed(() => (manager.data.value ?
@@ -133,7 +133,7 @@ export default defineComponent({
                 form.name = props.name;
             }
 
-            assignFormProperties(form, manager.data.value);
+            assignFormProperties(form, manager.data.value, { fields: v.fields });
 
             if (form.name.length === 0) {
                 form.name = generateName(nameSeed);
@@ -181,7 +181,7 @@ export default defineComponent({
 
             await manager.createOrUpdate(form);
 
-            assignFormProperties(form, manager.data.value);
+            assignFormProperties(form, manager.data.value, { fields: v.fields });
         };
 
         const translationsClient = useTranslationsForNamespace(

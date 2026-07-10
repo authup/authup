@@ -7,3 +7,4 @@
 
 export * from './defaults';
 export * from './properties';
+export * from './types';

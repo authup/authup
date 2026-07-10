@@ -109,11 +109,11 @@ export default defineComponent({
                 null;
         });
 
-        const updatedAt = useUpdatedAt(props.entity);
+        const updatedAt = useUpdatedAt(() => props.entity);
         const isBuiltIn = computed(() => !!(manager.data.value && manager.data.value.built_in));
 
         function initForm() {
-            assignFormProperties(form, manager.data.value);
+            assignFormProperties(form, manager.data.value, { fields: v.fields });
 
             if (form.name.length === 0) {
                 form.name = generateName(nameSeed);

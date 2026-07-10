@@ -70,7 +70,7 @@ export default defineComponent({
         };
 
         function assign(data: Partial<IdentityProvider> = {}) {
-            assignFormProperties(form, data);
+            assignFormProperties(form, data, { fields: v.fields });
 
             if (isNameEmpty.value) {
                 form.name = generateName(nameSeed);
@@ -79,7 +79,7 @@ export default defineComponent({
 
         setup.expose({ assign });
 
-        const updatedAt = useUpdatedAt(props.entity as IdentityProvider);
+        const updatedAt = useUpdatedAt(() => props.entity as IdentityProvider);
         onChange(updatedAt, () => assign(props.entity));
 
         assign(props.entity);
@@ -105,7 +105,7 @@ export default defineComponent({
         };
 
         const onNameUpdate = (value: string) => {
-            form.name = value;
+            v.fields.name.$model.value = value;
             update();
         };
 

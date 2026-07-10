@@ -5,18 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ComputedRef, MaybeRef } from 'vue';
-import { computed, isRef } from 'vue';
+import type { ComputedRef, MaybeRefOrGetter } from 'vue';
+import { computed, toValue } from 'vue';
 
 type ObjectLiteral = {
     updated_at: string | Date | undefined
 };
-export function useUpdatedAt<T extends ObjectLiteral>(input?: MaybeRef<T | null | undefined>) : ComputedRef<string | Date | undefined> {
-    return computed(() => {
-        if (isRef(input)) {
-            return input.value ? input.value.updated_at : undefined;
-        }
 
-        return input ? input.updated_at : undefined;
+/**
+ * Track an entity's `updated_at`. Pass a ref or getter
+ * (e.g. `() => props.entity`) — a plain value is accepted but yields a
+ * static computed: reading `props.entity` at the call site captures the
+ * object once, so a later prop replacement never triggers watchers.
+ */
+export function useUpdatedAt<T extends ObjectLiteral>(input?: MaybeRefOrGetter<T | null | undefined>) : ComputedRef<string | Date | undefined> {
+    return computed(() => {
+        const value = toValue(input);
+
+        return value ? value.updated_at : undefined;
     });
 }

@@ -37,17 +37,20 @@ export default defineComponent({
 
         function assign(input: Partial<RealmMatchPolicy> = {}) {
             const { attribute_name, ...data } = input;
-            assignFormProperties(form, data as Record<string, unknown>);
+            let names : string[] = [];
             if (attribute_name) {
-                form.attribute_name = typeof attribute_name === 'string' ? [attribute_name] : attribute_name;
-            } else {
-                form.attribute_name = [];
+                names = typeof attribute_name === 'string' ? [attribute_name] : attribute_name;
             }
+
+            assignFormProperties(form, {
+                ...data,
+                attribute_name: names,
+            } as Record<string, unknown>, { fields: v.fields });
         }
 
         setup.expose({ assign });
 
-        const updatedAt = useUpdatedAt(props.entity as Policy);
+        const updatedAt = useUpdatedAt(() => props.entity as Policy);
         onChange(updatedAt, () => assign(props.entity));
 
         assign(props.entity);
@@ -60,7 +63,7 @@ export default defineComponent({
         };
 
         const handleAttributeNameChanged = (data: string[]) => {
-            form.attribute_name = data;
+            v.fields.attribute_name.$model.value = data;
             handleUpdated();
         };
 

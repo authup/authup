@@ -13,6 +13,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import vuecs from '@vuecs/core';
 import { createPinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
+import AIdentityProviderBasicFields from '../../../../../src/components/entities/identity-provider/AIdentityProviderBasicFields.vue';
 import AIdentityProviderOAuth2Form from '../../../../../src/components/entities/identity-provider/AIdentityProviderOAuth2Form.vue';
 import { ANameInput } from '../../../../../src/components/utility';
 import { install } from '../../../../../src/module';
@@ -48,7 +49,7 @@ function createEntity() : IdentityProvider {
     } as IdentityProvider;
 }
 
-function mountForm(entity: IdentityProvider) {
+function mountComponent(component: any, entity: IdentityProvider) {
     const pinia = createPinia();
     const httpClient = createFakeClient({
         handlers: {
@@ -70,7 +71,7 @@ function mountForm(entity: IdentityProvider) {
         cookieUnset: noop,
     };
 
-    const wrapper = mount(AIdentityProviderOAuth2Form, {
+    const wrapper = mount(component, {
         props: { entity },
         global: {
             components: { VCIcon: { render: () => null } },
@@ -83,6 +84,10 @@ function mountForm(entity: IdentityProvider) {
     });
 
     return { wrapper, httpClient };
+}
+
+function mountForm(entity: IdentityProvider) {
+    return mountComponent(AIdentityProviderOAuth2Form, entity);
 }
 
 function findUpdateRequest(httpClient: FakeClient) : FakeRequest | undefined {
@@ -121,5 +126,65 @@ describe('AIdentityProviderOAuth2Form', () => {
         expect(body).not.toHaveProperty('realm');
         expect(body).not.toHaveProperty('created_at');
         expect(body).not.toHaveProperty('updated_at');
+    });
+});
+
+describe('AIdentityProviderBasicFields', () => {
+    it('should preserve an unsaved edit across an entity refresh and release it once persisted', async () => {
+        const entity = createEntity();
+        const { wrapper } = mountComponent(AIdentityProviderBasicFields, entity);
+
+        await flushPromises();
+
+        const nameInput = wrapper.findComponent(ANameInput);
+        const inputValues = () => wrapper
+            .findAll('input')
+            .map((i) => (i.element as HTMLInputElement).value);
+
+        expect(nameInput.props('modelValue')).toEqual('old-name');
+
+        // user edits the name (dirty), but does not submit
+        nameInput.vm.$emit('update:modelValue', 'new-name');
+        await flushPromises();
+
+        // external refresh: another session changed display_name
+        await wrapper.setProps({
+            entity: {
+                ...entity,
+                display_name: 'Renamed',
+                updated_at: '2026-01-03T00:00:00.000Z',
+            },
+        });
+        await flushPromises();
+
+        // the unsaved name edit survives, the clean field syncs
+        expect(nameInput.props('modelValue')).toEqual('new-name');
+        expect(inputValues()).toContain('Renamed');
+
+        // the entity catches up with the edit (own save persisted it)
+        await wrapper.setProps({
+            entity: {
+                ...entity,
+                name: 'new-name',
+                display_name: 'Renamed',
+                updated_at: '2026-01-04T00:00:00.000Z',
+            },
+        });
+        await flushPromises();
+
+        expect(nameInput.props('modelValue')).toEqual('new-name');
+
+        // a later refresh now flows again — the edit protection is released
+        await wrapper.setProps({
+            entity: {
+                ...entity,
+                name: 'third-name',
+                display_name: 'Renamed',
+                updated_at: '2026-01-05T00:00:00.000Z',
+            },
+        });
+        await flushPromises();
+
+        expect(nameInput.props('modelValue')).toEqual('third-name');
     });
 });

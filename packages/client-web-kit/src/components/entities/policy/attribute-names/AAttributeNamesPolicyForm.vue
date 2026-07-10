@@ -23,7 +23,7 @@ export default defineComponent({
 
         setup.expose({ assign });
 
-        const updatedAt = useUpdatedAt(props.entity as Policy);
+        const updatedAt = useUpdatedAt(() => props.entity as Policy);
         onChange(updatedAt, () => assign(props.entity));
 
         assign(props.entity);
