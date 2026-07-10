@@ -30,7 +30,6 @@ import { OAuth2AuthorizationPrompt, OAuth2ErrorCode } from '@authup/specs';
 import type { LinkProperties } from '@vuecs/link';
 import {
     StoreAuthOrigin,
-    StoreAuthStatus,
     injectHTTPClient,
     injectStore,
     useTranslation,
@@ -79,7 +78,6 @@ export default defineComponent({
             loggedIn,
             lastAuthOrigin,
             realmId,
-            status,
             user,
         } = storeToRefs(store);
 
@@ -140,6 +138,25 @@ export default defineComponent({
 
         const error = ref<Error | null>(null);
         const client = ref<Client | null>(null);
+
+        // The chooser needs the resolved user for "Continue as X" — but
+        // loggedIn/realmId are truthy for ANY identity (token introspection),
+        // while the userinfo fetch fails for a non-user (client/robot)
+        // session, or transiently for a cookie-restored one. Re-resolve and
+        // track settlement so the chooser can offer an escape hatch instead
+        // of spinning forever on the loading text.
+        const userSettled = ref<boolean>(!!user.value);
+        if (!userSettled.value) {
+            Promise.resolve()
+                .then(() => store.resolve())
+                .catch(() => {
+                    // settled — user stays null, the chooser renders the
+                    // account-switch escape hatch instead of the spinner.
+                })
+                .finally(() => {
+                    userSettled.value = true;
+                });
+        }
 
         const loadingText = useTranslation({
             namespace: TranslatorTranslationNamespace.COMMON,
@@ -251,15 +268,12 @@ export default defineComponent({
                     loginNode);
             }
 
-            // Everything below decides against the signed-in identity — wait
-            // until the store reads AUTHENTICATED (realm + user present), so a
-            // built_in client's AuthorizeForm auto-consent (onMounted) can't
-            // fire before a realm mismatch is detected and the chooser never
-            // flashes "Continue as " with an empty name. The login form above
-            // deliberately does NOT sit behind this gate (anonymous and
-            // authenticating must keep rendering it — unmounting the form
-            // mid-submit is the race class that triggered plan 045).
-            if (status.value !== StoreAuthStatus.AUTHENTICATED) {
+            // Realm binding (UX only — the server POST /authorize gate is
+            // authoritative). Wait until the store has resolved the signed-in
+            // identity's realm before deciding, so a built_in client's
+            // AuthorizeForm auto-consent (onMounted) can't fire before a
+            // mismatch is detected.
+            if (!realmId.value) {
                 return wrapChild(h(AuthorizeText, { message: loadingText.value }));
             }
 
@@ -286,14 +300,31 @@ export default defineComponent({
             }
 
             // prompt=select_account: offer "continue as X / use another account"
-            // instead of silently continuing the current session. The
-            // AUTHENTICATED gate above guarantees the user is present.
+            // instead of silently continuing the current session. Wait for the
+            // user to resolve so the chooser never flashes "Continue as " with an
+            // empty name.
             if (
                 prompts.includes(OAuth2AuthorizationPrompt.SELECT_ACCOUNT) &&
                 !accountConfirmed.value
             ) {
+                if (!user.value) {
+                    // Resolution still in flight — loading text is fine. Once
+                    // settled with no user (a non-user identity, or a userinfo
+                    // fetch that keeps failing), offer "use another account"
+                    // (an empty identityName hides the continue action)
+                    // instead of an indefinite spinner.
+                    if (!userSettled.value) {
+                        return wrapChild(h(AuthorizeText, { message: loadingText.value }));
+                    }
+
+                    return wrapChild(h(AAccountPrompt, {
+                        identityName: '',
+                        onSwitch: switchAccount,
+                    }));
+                }
+
                 return wrapChild(h(AAccountPrompt, {
-                    identityName: user.value?.name ?? user.value?.display_name ?? '',
+                    identityName: user.value.name ?? user.value.display_name ?? '',
                     onContinue: () => { accountConfirmedLocal.value = true; },
                     onSwitch: switchAccount,
                 }));
@@ -321,6 +352,9 @@ export default defineComponent({
                     // consent screen (present even when the RP sent no
                     // prompt=select_account).
                     identityName: user.value?.name ?? user.value?.display_name ?? '',
+                    // abort()'s access_denied redirect is gated on the verified
+                    // redirect_uri, like every other redirect in the ladder.
+                    redirectUriVerified: props.redirectUriVerified,
                     // Silent (built_in) request: auto-consent runs, but a failure
                     // must redirect an OIDC error, never render manual consent —
                     // but only when the redirect_uri is verified. Otherwise the

@@ -576,8 +576,6 @@ export function createStore(context: StoreCreateContext) {
 
         interactionInFlight.value = StoreAuthOrigin.LOGIN;
 
-        const generation = tokenGeneration.value;
-
         try {
             const response = await client.token.createWithPassword({
                 username: ctx.name,
@@ -585,7 +583,14 @@ export function createStore(context: StoreCreateContext) {
                 ...(ctx.realmId ? { realm_id: ctx.realmId } : {}),
             });
 
-            await establishSession(response, StoreAuthOrigin.LOGIN, generation);
+            // Clear any previous identity's state (notably a retained id_token —
+            // a password response carries none, and the atomic commit would
+            // keep the stale one) and best-effort revoke its tokens before
+            // establishing the fresh session (plan 047.3). cleanup() bumps the
+            // generation, so the staged window's snapshot is taken AFTER it.
+            await cleanup();
+
+            await establishSession(response, StoreAuthOrigin.LOGIN, tokenGeneration.value);
         } finally {
             interactionInFlight.value = null;
         }

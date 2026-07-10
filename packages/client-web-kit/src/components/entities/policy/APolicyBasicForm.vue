@@ -69,7 +69,7 @@ export default defineComponent({
 
         const isEditing = useIsEditing(entity);
         const realmId = computed(() => {
-            if (!storeRefs.realmIsRoot) {
+            if (!storeRefs.realmIsRoot.value) {
                 return storeRefs.realmId.value;
             }
 

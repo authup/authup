@@ -11,7 +11,12 @@ import { OAuth2ErrorCode } from '@authup/specs';
 import { flushPromises, mount } from '@vue/test-utils';
 import vuecs from '@vuecs/core';
 import { createPinia } from 'pinia';
-import { describe, expect, it } from 'vitest';
+import {
+    beforeEach,
+    describe,
+    expect,
+    it,
+} from 'vitest';
 import AuthorizeForm from '../../../../src/components/workflows/authorize/AuthorizeForm.vue';
 import { install } from '../../../../src/module';
 import type { Options } from '../../../../src/types';
@@ -63,7 +68,12 @@ const client: Client = {
     realm,
 };
 
-function mountForm(authorizeHandler: () => unknown) {
+type FormProps = {
+    client?: Client,
+    redirectUriVerified?: boolean,
+};
+
+function mountForm(authorizeHandler: () => unknown, props: FormProps = {}) {
     const pinia = createPinia();
     const httpClient = createFakeClient({ handlers: { 'POST /authorize': authorizeHandler } });
 
@@ -79,19 +89,23 @@ function mountForm(authorizeHandler: () => unknown) {
 
     return mount(AuthorizeForm, {
         props: {
-            client, 
-            codeRequest, 
-            scopes: [], 
+            client,
+            codeRequest,
+            scopes: [],
+            ...props,
         },
         global: {
             components: {
                 VCIcon: { render: () => null },
-                VCButton: { render: () => null },
+                // clickable so the abort/authorize actions can be triggered
+                VCButton: { template: '<button><slot /></button>' },
             },
             stubs: {
                 // a distinctive class so the manual-consent screen (which renders
                 // AuthorizeScopes) is detectable — the spinner does not render it.
                 AuthorizeScopes: { template: '<div class="scopes-stub" />' },
+                // ...same for the terminal aborted notice.
+                AuthorizeText: { template: '<div class="aborted-stub" />' },
                 ITranslateT: { template: '<span />' },
             },
             plugins: [
@@ -169,5 +183,63 @@ describe('AuthorizeForm dead-bearer resilience', () => {
 
         expect(wrapper.emitted('loginRequired')).toBeFalsy();
         expect(wrapper.find('.scopes-stub').exists()).toBe(true);
+    });
+});
+
+describe('AuthorizeForm abort redirect gate', () => {
+    // non-built_in → no auto-consent; the manual consent UI (with the abort
+    // action) renders immediately.
+    const interactiveClient: Client = { ...client, built_in: false };
+
+    beforeEach(() => {
+        Object.defineProperty(window, 'location', {
+            configurable: true,
+            writable: true,
+            value: { href: '' },
+        });
+    });
+
+    it('does NOT navigate on abort when the redirect_uri is unverified (open-redirect guard)', async () => {
+        const wrapper = mountForm(() => ({}), {
+            client: interactiveClient,
+            redirectUriVerified: false,
+        });
+        await flushPromises();
+        expect(wrapper.find('.scopes-stub').exists()).toBe(true);
+
+        // the abort action is the first of the two consent buttons
+        await wrapper.findAll('button')[0].trigger('click');
+        await flushPromises();
+
+        expect(window.location.href).toEqual('');
+        // stays on the page: a terminal aborted notice replaces the consent UI
+        expect(wrapper.find('.aborted-stub').exists()).toBe(true);
+        expect(wrapper.find('.scopes-stub').exists()).toBe(false);
+    });
+
+    it('defaults to NOT navigating when redirectUriVerified is not passed (fail-closed)', async () => {
+        const wrapper = mountForm(() => ({}), { client: interactiveClient });
+        await flushPromises();
+
+        await wrapper.findAll('button')[0].trigger('click');
+        await flushPromises();
+
+        expect(window.location.href).toEqual('');
+        expect(wrapper.find('.aborted-stub').exists()).toBe(true);
+    });
+
+    it('redirects access_denied (+state) on abort when the redirect_uri is verified', async () => {
+        const wrapper = mountForm(() => ({}), {
+            client: interactiveClient,
+            redirectUriVerified: true,
+        });
+        await flushPromises();
+
+        await wrapper.findAll('button')[0].trigger('click');
+
+        const url = new URL(window.location.href);
+        expect(`${url.origin}${url.pathname}`).toEqual('https://app.example.com/cb');
+        expect(url.searchParams.get('error')).toEqual('access_denied');
+        expect(url.searchParams.get('state')).toEqual('state-1');
     });
 });

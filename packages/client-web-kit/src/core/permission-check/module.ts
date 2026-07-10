@@ -51,7 +51,7 @@ export function createPermissionCheckerReactiveFn(
                 }
 
                 if (storeRefs.realmName.value) {
-                    identity.realmId = storeRefs.realmName.value;
+                    identity.realmName = storeRefs.realmName.value;
                 }
             }
 

@@ -67,4 +67,32 @@ describe('core/store/id-token', () => {
 
         expect(store.idToken.value).toEqual('previous-id-token');
     });
+
+    it('clears a stale id_token on a fresh login whose response carries none', async () => {
+        // a password-grant response carries no id_token — a retained one from a
+        // previous identity must NOT survive onto the newly-authenticated user
+        // (an RP logout would otherwise hint the OLD user's session).
+        const httpClient = createFakeClient({
+            handlers: {
+                'POST /token': () => ({
+                    access_token: 'at',
+                    token_type: 'Bearer',
+                    expires_in: 3600,
+                    refresh_token: 'rt',
+                }),
+                'POST /token/revoke': () => ({}),
+            },
+        });
+
+        const store = createStore({
+            httpClient,
+            dispatcher: createStoreDispatcher(),
+        });
+
+        store.setIdToken('stale-id-token');
+
+        await store.login({ name: 'admin', password: 'start123' });
+
+        expect(store.idToken.value).toBeNull();
+    });
 });

@@ -86,6 +86,8 @@ export const TranslatorTranslationClientFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.SIGNED_IN_AS]: 'Connecté en tant que {{name}}',
     [TranslatorTranslationClientKey.NOT_YOU]: 'Pas vous ?',
 
+    [TranslatorTranslationClientKey.AUTHORIZE_ABORTED]: 'La demande d\'autorisation a été refusée. Un retour automatique vers l\'application n\'est pas possible — vous pouvez fermer cette fenêtre.',
+
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TITLE]: 'Se déconnecter',
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TEXT]: 'Voulez-vous vous déconnecter ?',
     [TranslatorTranslationClientKey.LOGOUT_DONE]: 'Vous avez été déconnecté.',

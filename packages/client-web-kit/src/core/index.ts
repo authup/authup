@@ -6,6 +6,7 @@
  */
 
 export * from './constants';
+export * from './error';
 export * from './http-client';
 export * from './inject';
 export * from './provide';
