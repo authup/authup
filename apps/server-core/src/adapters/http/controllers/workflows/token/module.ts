@@ -71,6 +71,7 @@ export class TokenController {
                 accessTokenIssuer: ctx.accessTokenIssuer,
                 refreshTokenIssuer: ctx.refreshTokenIssuer,
                 openIdTokenIssuer: ctx.openIdTokenIssuer,
+                keyRepository: ctx.keyRepository,
                 sessionManager: ctx.sessionManager,
                 realmRepository: ctx.realmRepository,
             }),
