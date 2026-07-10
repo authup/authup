@@ -45,6 +45,15 @@ describe('buildOAuth2TokenHash', () => {
         expect(hash.length).toBe(43);
     });
 
+    it('should derive SHA-256 for a missing alg (legacy key row, signer *256 default)', async () => {
+        // signature_algorithm is a nullable legacy column — a key without a
+        // persisted alg signs with the signer's *256 default, so the hash
+        // must follow SHA-256 instead of raising a TypeError.
+        const hash = await buildOAuth2TokenHash('some-access-token-value', null);
+
+        expect(hash).toEqual(expectedHash('some-access-token-value', 'sha256', 16));
+    });
+
     it('should fail loud on an unrecognized alg, never silently default', async () => {
         // runtime junk from an untyped source (the key column is persisted
         // data) must throw — a silent SHA-256 fallback would mint a hash no
