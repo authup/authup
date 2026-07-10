@@ -159,18 +159,32 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
         ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_LOGIN_REQUIRED }));
     });
 
-    it('should throw login_required (not a TypeError) when the identity realm relation is dangling', async () => {
-        // a realm row deleted out from under the identity leaves data.realm
-        // undefined at runtime — the realm gate must fail closed with the same
-        // clean login_required (still no identity data in the body)
-        const dangling: UserIdentity = {
+    it('should pass the realm gate when the realm relation is not loaded but realm_id matches', async () => {
+        // the gate compares the scalar realm_id column — it must not depend on
+        // the realm relation having been joined onto the resolved identity
+        const relationless: UserIdentity = {
             type: OAuth2SubKind.USER,
             data: { ...identity.data },
         };
-        Reflect.deleteProperty(dangling.data, 'realm');
+        Reflect.deleteProperty(relationless.data, 'realm');
+
+        const result = await authorization.authorize(buildData(), relationless, {});
+        expect(result.authorizationCode).toBeDefined();
+    });
+
+    it('should throw login_required (not a TypeError) when the identity carries no realm_id', async () => {
+        // an identity resolved without any realm information must fail the
+        // realm gate closed — clean login_required, never a TypeError (still
+        // no identity data in the body)
+        const realmless: UserIdentity = {
+            type: OAuth2SubKind.USER,
+            data: { ...identity.data },
+        };
+        Reflect.deleteProperty(realmless.data, 'realm');
+        Reflect.deleteProperty(realmless.data, 'realm_id');
 
         await expect(
-            authorization.authorize(buildData(), dangling, {}),
+            authorization.authorize(buildData(), realmless, {}),
         ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_LOGIN_REQUIRED }));
     });
 

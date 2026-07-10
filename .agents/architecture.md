@@ -1078,11 +1078,13 @@ Enforced server-side at **three** points — the kit UI (realm-mismatch card in
 1. **`POST /authorize` issuance** — `OAuth2Authorization.authorize()` throws
    `OAuth2LoginRequiredError` (`ErrorCode.OAUTH_LOGIN_REQUIRED` / OIDC
    `login_required`, HTTP 400, **no identity data in the body** — no
-   realm-enumeration oracle) when `identity.data.realm.id !== data.realm_id`
-   (the client realm the code-request verifier stamped). A missing/dangling
-   realm relation on the identity fails closed the same way (plan 047.6 —
-   a clean `login_required`, never a raw TypeError/500; same null-guard in the
-   code issuer).
+   realm-enumeration oracle) when `identity.data.realm_id !== data.realm_id`
+   (the client realm the code-request verifier stamped). The gate reads the
+   scalar `realm_id` column, not the `realm` relation — the relation may not
+   be loaded on the resolved identity. An identity carrying no `realm_id`
+   fails closed the same way (plan 047.6 — a clean `login_required`, never a
+   raw TypeError/500); the code issuer keeps its own null-guard on the loaded
+   relation (it stamps `realm_name`) and fails closed with `invalid_request`.
 2. **`/token` code redemption** — the code verifier's `realmId` option (fed
    `client.realm_id` by the HTTP authorize grant) rejects
    `code.realm_id !== realmId` with `invalid_grant`. Covers codes minted outside

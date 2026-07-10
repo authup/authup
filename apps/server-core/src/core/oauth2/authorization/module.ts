@@ -87,8 +87,10 @@ export class OAuth2Authorization {
         // same realm — otherwise a lingering session for realm A could silently
         // mint a code/token for realm B's client (confused deputy). The error body
         // deliberately carries no identity data (no realm-enumeration oracle).
-        // A dangling realm relation (realm row deleted out from under the
-        // identity) fails the same way — clean login_required, never a TypeError.
+        // The comparison reads the scalar realm_id column, NOT the realm
+        // relation — the relation may simply not be loaded on the resolved
+        // identity. An identity without a realm_id fails closed the same way —
+        // clean login_required, never a TypeError.
         if (
             data.realm_id &&
             identity.data.realm_id !== data.realm_id
