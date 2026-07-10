@@ -87,7 +87,7 @@ export default defineComponent({
         const storeRefs = storeToRefs(store);
 
         const realmId = computed(() => {
-            if (!storeRefs.realmIsRoot) {
+            if (!storeRefs.realmIsRoot.value) {
                 return storeRefs.realmId.value;
             }
 

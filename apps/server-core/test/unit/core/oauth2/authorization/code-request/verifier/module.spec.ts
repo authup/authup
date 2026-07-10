@@ -36,7 +36,9 @@ class FakeClientRepository implements IOAuth2ClientRepository {
             secret: null,
             secret_hashed: false,
             secret_encrypted: false,
-            redirect_uri: null,
+            // authorize-capable clients always carry a registered pattern —
+            // the verifier rejects pattern-less clients outright (OAuth 2.1)
+            redirect_uri: 'https://app.example.com/**',
             post_logout_redirect_uri: null,
             grant_types: null,
             scope: null,
@@ -170,14 +172,39 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
             })).rejects.toThrow();
         });
 
-        it('should flag redirectUriVerified=false for a pattern-less client (open-redirect guard)', async () => {
-            // A client with no registered redirect_uri pattern lets any
-            // redirect_uri through — consumers must NOT auto-redirect to it.
+        it('should reject a pattern-less client outright (open-redirect guard, OAuth 2.1)', async () => {
+            // A client with no registered redirect_uri pattern can never be
+            // matched — the verifier must throw instead of issuing a code to
+            // whatever redirect_uri the request carries.
             const client = clientRepository.seed({ is_confidential: true, redirect_uri: null });
+            await expect(
+                verifier.verify({
+                    client_id: client.id,
+                    response_type: OAuth2AuthorizationResponseType.CODE,
+                    redirect_uri: 'https://attacker.example.com/callback',
+                }),
+            ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_REDIRECT_URI_MISMATCH }));
+        });
+
+        it('should reject a pattern-less client even without a request redirect_uri', async () => {
+            // the reject is unconditional — the GET page render path (no
+            // redirect_uri in the request) must not resolve such a client either
+            const client = clientRepository.seed({ is_confidential: true, redirect_uri: null });
+            await expect(
+                verifier.verify({
+                    client_id: client.id,
+                    response_type: OAuth2AuthorizationResponseType.CODE,
+                }),
+            ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_REDIRECT_URI_MISMATCH }));
+        });
+
+        it('should flag redirectUriVerified=false when the request carries no redirect_uri', async () => {
+            // the GET page render legitimately verifies without a redirect_uri —
+            // it resolves, but consumers must NOT auto-redirect
+            const client = clientRepository.seed({ is_confidential: true });
             const result = await verifier.verify({
                 client_id: client.id,
                 response_type: OAuth2AuthorizationResponseType.CODE,
-                redirect_uri: 'https://attacker.example.com/callback',
             });
             expect(result.client.id).toBe(client.id);
             expect(result.redirectUriVerified).toBe(false);

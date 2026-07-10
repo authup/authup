@@ -14,9 +14,12 @@ import { useTranslation } from '../../../core';
 export default defineComponent({
     components: { VCButton, VCIcon },
     props: {
+        // Empty when the identity could not be resolved to a user (e.g. a
+        // non-user session) — "Continue as" is then hidden, leaving only the
+        // account-switch escape hatch.
         identityName: {
             type: String,
-            required: true,
+            default: '',
         },
     },
     emits: ['continue', 'switch'],
@@ -63,6 +66,7 @@ export default defineComponent({
 
         <div class="flex flex-col gap-2 mt-2">
             <VCButton
+                v-if="identityName"
                 type="button"
                 color="primary"
                 class="w-full"

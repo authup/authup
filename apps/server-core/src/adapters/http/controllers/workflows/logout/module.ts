@@ -108,6 +108,7 @@ export class LogoutController {
                     hintVerified: result.hintVerified,
                     // never reflect an unverified hint's claims
                     hintSub: result.hintVerified ? result.sub : undefined,
+                    hintSubKind: result.hintVerified ? result.subKind : undefined,
                     serverRevoked,
                     // the (already validated) uri to return to after a click-gated
                     // sign-out; carries `state` when present

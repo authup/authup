@@ -61,6 +61,14 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
             throw OAuth2ClientError.inactive();
         }
 
+        // OAuth 2.1 posture: a client with no registered redirect_uri pattern
+        // can never be matched — reject outright instead of trusting whatever
+        // redirect_uri the request carries (the server would otherwise issue a
+        // code to an attacker-supplied URI).
+        if (!client.redirect_uri) {
+            throw OAuth2GrantError.redirectUriMismatch();
+        }
+
         // Public clients MUST use PKCE (RFC 7636 §4.4.1, OAuth 2.1). Without
         // PKCE a public client's code flow has no second factor — anyone who
         // intercepts the redirect can redeem the code at /token. The code flow
@@ -93,11 +101,12 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
             data.scope = scopeNames.join(' ');
         }
 
-        // Verified only when matched against a registered, non-null pattern. A
-        // pattern-less client leaves data.redirect_uri unchecked (any value
-        // passes) — flag it so consumers never auto-redirect to it.
-        const redirectUriVerified = !!(client.redirect_uri && data.redirect_uri);
-        if (client.redirect_uri && data.redirect_uri) {
+        // Verified only when the request's redirect_uri matched a registered
+        // pattern (pattern-less clients were rejected above). A request without
+        // a redirect_uri (e.g. the GET page render) stays unverified so
+        // consumers never auto-redirect without a match.
+        const redirectUriVerified = !!data.redirect_uri;
+        if (data.redirect_uri) {
             const redirectUris = client.redirect_uri.split(',');
 
             if (!isSimpleMatch(data.redirect_uri, redirectUris)) {

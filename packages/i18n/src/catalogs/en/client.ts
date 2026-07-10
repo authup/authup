@@ -86,6 +86,8 @@ export const TranslatorTranslationClientEnglish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.SIGNED_IN_AS]: 'Signed in as {{name}}',
     [TranslatorTranslationClientKey.NOT_YOU]: 'Not you?',
 
+    [TranslatorTranslationClientKey.AUTHORIZE_ABORTED]: 'The authorization request was denied. Returning to the application automatically is not possible — you can close this window.',
+
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TITLE]: 'Sign out',
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TEXT]: 'Do you want to sign out?',
     [TranslatorTranslationClientKey.LOGOUT_DONE]: 'You have been signed out.',
