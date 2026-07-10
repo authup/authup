@@ -172,6 +172,12 @@ export default defineComponent({
         );
 
         const submit = async () => {
+            if (busy.value) {
+                return;
+            }
+
+            busy.value = true;
+
             try {
                 await store.login({
                     name: form.name,
@@ -187,6 +193,8 @@ export default defineComponent({
                         namespace: TranslatorTranslationNamespace.CLIENT,
                         key: TranslatorTranslationClientKey.LOGIN_FAILED,
                     }));
+            } finally {
+                busy.value = false;
             }
         };
 

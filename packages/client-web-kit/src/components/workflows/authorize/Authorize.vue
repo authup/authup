@@ -15,10 +15,11 @@ import { storeToRefs } from 'pinia';
 import type { PropType, VNodeChild } from 'vue';
 import {
     Suspense,
+    computed,
     defineComponent,
     h,
-    onBeforeUnmount,
     ref,
+    watch,
 } from 'vue';
 import {
     TranslatorTranslationClientKey,
@@ -28,10 +29,9 @@ import {
 import { OAuth2AuthorizationPrompt, OAuth2ErrorCode } from '@authup/specs';
 import type { LinkProperties } from '@vuecs/link';
 import {
-    StoreDispatcherEventName,
+    StoreAuthOrigin,
     injectHTTPClient,
     injectStore,
-    injectStoreDispatcher,
     useTranslation,
 } from '../../../core';
 import AAuthShell from '../../utility/AAuthShell.vue';
@@ -76,6 +76,7 @@ export default defineComponent({
         const store = injectStore();
         const {
             loggedIn,
+            lastAuthOrigin,
             realmId,
             user,
         } = storeToRefs(store);
@@ -115,22 +116,25 @@ export default defineComponent({
 
         // prompt=select_account chooser: once the user picks "continue as",
         // proceed past the chooser to consent for the rest of this render cycle.
-        const accountConfirmed = ref<boolean>(false);
+        const accountConfirmedLocal = ref<boolean>(false);
 
         // A login performed *on this page* IS the account selection — don't then
         // re-prompt "continue as X" for the account whose credentials were just
-        // entered. The store emits LOGGED_IN only for an explicit login() (the
-        // login form), never for a session restored from cookies (resolve() →
-        // RESOLVED), so a *lingering* session still gets the chooser while a
-        // fresh login skips it. Keying off the store event — not LoginForm's
-        // `done` emit — is what makes this reliable: on login the access-token
-        // flip re-renders Authorize and unmounts LoginForm before its `done`
-        // fires, so that emit is easily lost (the bug this replaced).
-        const dispatcher = injectStoreDispatcher();
-        const offLoggedIn = dispatcher.on(StoreDispatcherEventName.LOGGED_IN, () => {
-            accountConfirmed.value = true;
+        // entered. The store stamps lastAuthOrigin only at the END of a settled
+        // login()/exchange/restore, so watching it for a CHANGE to LOGIN during
+        // this mount is race-free (unlike LoginForm's `done` emit, which is lost
+        // when the token flip re-renders Authorize and unmounts the form — the
+        // bug this replaced) and mount-scoped: a *lingering* session — whether
+        // restored from cookies (origin RESTORE) or logged in before this page
+        // was opened (origin already LOGIN, no change) — still gets the chooser,
+        // while a fresh on-page login skips it.
+        watch(lastAuthOrigin, (value) => {
+            if (value === StoreAuthOrigin.LOGIN) {
+                accountConfirmedLocal.value = true;
+            }
         });
-        onBeforeUnmount(offLoggedIn);
+
+        const accountConfirmed = computed<boolean>(() => accountConfirmedLocal.value);
 
         const error = ref<Error | null>(null);
         const client = ref<Client | null>(null);
@@ -230,7 +234,7 @@ export default defineComponent({
 
             // Force re-authentication: prompt=login (proactive) or a login_required
             // surfaced mid-flow. Show the login form (with a banner) until a fresh
-            // login on THIS page fires LOGGED_IN (accountConfirmed).
+            // login on THIS page stamps lastAuthOrigin (accountConfirmed).
             const forceReauth = (isReauth || reauthRequired.value) && !accountConfirmed.value;
 
             if (!loggedIn.value || forceReauth) {
@@ -251,7 +255,7 @@ export default defineComponent({
                         passwordForgotLink: props.passwordForgotLink,
                         usernameHint: props.codeRequest?.login_hint,
                         // fresh-login → skip the chooser: handled race-free by
-                        // the LOGGED_IN dispatcher hook, not LoginForm's `done`.
+                        // the lastAuthOrigin watch, not LoginForm's `done`.
                         onFailed: (message: string) => emit('failed', message),
                     }),
                     fallback: () => h(AuthorizeText, { message: loadingText.value }),
@@ -321,7 +325,7 @@ export default defineComponent({
 
                 return wrapChild(h(AAccountPrompt, {
                     identityName: user.value.name ?? user.value.display_name ?? '',
-                    onContinue: () => { accountConfirmed.value = true; },
+                    onContinue: () => { accountConfirmedLocal.value = true; },
                     onSwitch: switchAccount,
                 }));
             }
