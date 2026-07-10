@@ -86,6 +86,8 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.SIGNED_IN_AS]: 'Angemeldet als {{name}}',
     [TranslatorTranslationClientKey.NOT_YOU]: 'Nicht Sie?',
 
+    [TranslatorTranslationClientKey.AUTHORIZE_ABORTED]: 'Die Autorisierungsanfrage wurde abgelehnt. Eine automatische Rückkehr zur Anwendung ist nicht möglich — Sie können dieses Fenster schließen.',
+
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TITLE]: 'Abmelden',
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TEXT]: 'Möchten Sie sich abmelden?',
     [TranslatorTranslationClientKey.LOGOUT_DONE]: 'Sie wurden abgemeldet.',

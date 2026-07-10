@@ -135,6 +135,25 @@ export default defineComponent({
         const error = ref<Error | null>(null);
         const client = ref<Client | null>(null);
 
+        // The chooser needs the resolved user for "Continue as X" — but
+        // loggedIn/realmId are truthy for ANY identity (token introspection),
+        // while the userinfo fetch fails for a non-user (client/robot)
+        // session, or transiently for a cookie-restored one. Re-resolve and
+        // track settlement so the chooser can offer an escape hatch instead
+        // of spinning forever on the loading text.
+        const userSettled = ref<boolean>(!!user.value);
+        if (!userSettled.value) {
+            Promise.resolve()
+                .then(() => store.resolve())
+                .catch(() => {
+                    // settled — user stays null, the chooser renders the
+                    // account-switch escape hatch instead of the spinner.
+                })
+                .finally(() => {
+                    userSettled.value = true;
+                });
+        }
+
         const loadingText = useTranslation({
             namespace: TranslatorTranslationNamespace.COMMON,
             key: TranslatorTranslationCommonKey.LOADING,
@@ -285,7 +304,19 @@ export default defineComponent({
                 !accountConfirmed.value
             ) {
                 if (!user.value) {
-                    return wrapChild(h(AuthorizeText, { message: loadingText.value }));
+                    // Resolution still in flight — loading text is fine. Once
+                    // settled with no user (a non-user identity, or a userinfo
+                    // fetch that keeps failing), offer "use another account"
+                    // (an empty identityName hides the continue action)
+                    // instead of an indefinite spinner.
+                    if (!userSettled.value) {
+                        return wrapChild(h(AuthorizeText, { message: loadingText.value }));
+                    }
+
+                    return wrapChild(h(AAccountPrompt, {
+                        identityName: '',
+                        onSwitch: switchAccount,
+                    }));
                 }
 
                 return wrapChild(h(AAccountPrompt, {
@@ -317,6 +348,9 @@ export default defineComponent({
                     // consent screen (present even when the RP sent no
                     // prompt=select_account).
                     identityName: user.value?.name ?? user.value?.display_name ?? '',
+                    // abort()'s access_denied redirect is gated on the verified
+                    // redirect_uri, like every other redirect in the ladder.
+                    redirectUriVerified: props.redirectUriVerified,
                     // Silent (built_in) request: auto-consent runs, but a failure
                     // must redirect an OIDC error, never render manual consent —
                     // but only when the redirect_uri is verified. Otherwise the

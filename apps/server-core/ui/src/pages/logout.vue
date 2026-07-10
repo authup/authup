@@ -19,6 +19,7 @@ export default defineComponent({
             client?: { name: string },
             hintVerified?: boolean,
             hintSub?: string,
+            hintSubKind?: string,
             serverRevoked?: boolean,
             redirect?: string,
         }>();
@@ -32,6 +33,7 @@ export default defineComponent({
         <AEndSessionForm
             :server-revoked="data.serverRevoked"
             :hint-sub="data.hintSub"
+            :hint-sub-kind="data.hintSubKind"
             :redirect="data.redirect"
         />
     </AAuthShell>

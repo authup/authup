@@ -36,9 +36,16 @@ const REALM = { id: 'realm-x', name: 'master' };
 
 // A logged-in, fully-resolved store — the state in which prompt=select_account
 // would render the chooser (mimics a lingering session restored from cookies).
-function seedLoggedIn(store: Store, realmId = REALM.id) {
+// `withUser: false` mimics a lingering NON-user (client/robot) session, or a
+// cookie-restored one whose userinfo fetch failed: loggedIn/realm are set from
+// token introspection, but the user never resolves.
+function seedLoggedIn(store: Store, realmId = REALM.id, withUser = true) {
     store.setAccessToken('access-token');
     store.setRealm({ id: realmId, name: REALM.name });
+
+    if (!withUser) {
+        return;
+    }
 
     const now = new Date(0).toISOString();
     const user: User = {
@@ -79,6 +86,7 @@ type MountOverrides = {
     prompt?: string,
     clientBuiltIn?: boolean,
     loggedIn?: boolean,
+    withUser?: boolean,
     realmId?: string,
     redirectUriVerified?: boolean,
 };
@@ -88,12 +96,19 @@ function mountAuthorize(overrides: MountOverrides = {}) {
         prompt = OAuth2AuthorizationPrompt.SELECT_ACCOUNT,
         clientBuiltIn = false,
         loggedIn = true,
+        withUser = true,
         realmId = REALM.id,
         redirectUriVerified = true,
     } = overrides;
 
     const pinia = createPinia();
-    const httpClient = createFakeClient({ handlers: {} });
+    const httpClient = createFakeClient({
+        handlers: {
+            // a user-less session's re-resolve attempt must settle by failing —
+            // the default fallback would otherwise fake a truthy "user".
+            'GET /users/@me': () => { throw new Error('userinfo unavailable'); },
+        },
+    });
 
     const options: Options = {
         baseURL: 'http://fake.test',
@@ -174,7 +189,7 @@ function mountAuthorize(overrides: MountOverrides = {}) {
                 AuthorizeForm: {
                     // declare the props we assert on so findComponent(...).props()
                     // reflects them (a bare template stub drops them to attrs).
-                    props: ['silent'],
+                    props: ['silent', 'redirectUriVerified'],
                     emits: ['loginRequired'],
                     template: '<div class="authorize-form-stub" />',
                 },
@@ -190,7 +205,7 @@ function mountAuthorize(overrides: MountOverrides = {}) {
                 {
                     install(app: App) {
                         if (loggedIn) {
-                            seedLoggedIn(injectStore(pinia, app), realmId);
+                            seedLoggedIn(injectStore(pinia, app), realmId, withUser);
                         }
                         dispatcher = injectStoreDispatcher(app);
                     },
@@ -237,6 +252,30 @@ describe('AAuthorize prompt=select_account', () => {
         await flushPromises();
 
         expect(hasChooser(wrapper)).toBe(true);
+    });
+
+    it('offers the account switch (not an indefinite spinner) when the user never resolves', async () => {
+        // loggedIn/realmId are truthy for ANY identity, but userinfo fails for
+        // a non-user (client/robot) session — once resolution settles, the
+        // chooser must render its escape hatch instead of the loading text.
+        const { wrapper } = mountAuthorize({ withUser: false });
+        await flushPromises();
+
+        const prompt = wrapper.findComponent(AAccountPrompt);
+        expect(prompt.exists()).toBe(true);
+        // no resolved user → no "Continue as X", only "use another account"
+        expect(prompt.props('identityName')).toEqual('');
+    });
+
+    it('drops to the login form when "use another account" is chosen on an unresolvable user', async () => {
+        const { wrapper } = mountAuthorize({ withUser: false });
+        await flushPromises();
+
+        wrapper.findComponent(AAccountPrompt).vm.$emit('switch');
+        await flushPromises();
+
+        expect(hasChooser(wrapper)).toBe(false);
+        expect(wrapper.find('.login-form-stub').exists()).toBe(true);
     });
 });
 
@@ -302,6 +341,8 @@ describe('AAuthorize prompt=none (silent)', () => {
         // verified redirect_uri → the form runs in silent mode (a failure
         // redirects an OIDC error rather than showing manual consent).
         expect(authorizeForm(wrapper).props('silent')).toBe(true);
+        // ...and the abort gate receives the verification verdict.
+        expect(authorizeForm(wrapper).props('redirectUriVerified')).toBe(true);
     });
 
     it('drops the silent flag for a built_in client when the redirect_uri is unverified', async () => {

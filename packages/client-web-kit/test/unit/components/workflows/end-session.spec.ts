@@ -6,6 +6,7 @@
  */
 
 import type { User } from '@authup/core-kit';
+import { IdentityType } from '@authup/core-kit';
 import { createFakeClient } from '@authup/core-http-kit/testing';
 import { flushPromises, mount } from '@vue/test-utils';
 import vuecs from '@vuecs/core';
@@ -112,7 +113,11 @@ function mountEndSession(
 describe('AEndSessionForm', () => {
     it('should auto-sign-out when the revoked subject is the current user', async () => {
         const { logout } = mountEndSession(
-            { serverRevoked: true, hintSub: 'user-1' },
+            {
+                serverRevoked: true, 
+                hintSub: 'user-1', 
+                hintSubKind: IdentityType.USER, 
+            },
             { id: 'user-1' },
         );
         await flushPromises();
@@ -122,7 +127,11 @@ describe('AEndSessionForm', () => {
 
     it('should NOT auto-sign-out when the revoked subject differs from the current user (forced-logout CSRF guard)', async () => {
         const { logout } = mountEndSession(
-            { serverRevoked: true, hintSub: 'attacker' },
+            {
+                serverRevoked: true, 
+                hintSub: 'attacker', 
+                hintSubKind: IdentityType.USER, 
+            },
             { id: 'victim' },
         );
         await flushPromises();
@@ -131,7 +140,11 @@ describe('AEndSessionForm', () => {
     });
 
     it('should NOT auto-sign-out for a logged-out visitor (no current user)', async () => {
-        const { logout } = mountEndSession({ serverRevoked: true, hintSub: 'user-1' });
+        const { logout } = mountEndSession({
+            serverRevoked: true,
+            hintSub: 'user-1',
+            hintSubKind: IdentityType.USER,
+        });
         await flushPromises();
 
         expect(logout()).not.toHaveBeenCalled();
@@ -139,7 +152,37 @@ describe('AEndSessionForm', () => {
 
     it('should NOT auto-sign-out when the server did not revoke (click-gated)', async () => {
         const { logout } = mountEndSession(
-            { serverRevoked: false, hintSub: 'user-1' },
+            {
+                serverRevoked: false, 
+                hintSub: 'user-1', 
+                hintSubKind: IdentityType.USER, 
+            },
+            { id: 'user-1' },
+        );
+        await flushPromises();
+
+        expect(logout()).not.toHaveBeenCalled();
+    });
+
+    it('should NOT auto-sign-out when the subject kind is missing (fail-closed)', async () => {
+        const { logout } = mountEndSession(
+            { serverRevoked: true, hintSub: 'user-1' },
+            { id: 'user-1' },
+        );
+        await flushPromises();
+
+        expect(logout()).not.toHaveBeenCalled();
+    });
+
+    it('should NOT auto-sign-out for a non-user subject kind, even on a matching sub', async () => {
+        // a client/robot session's sub lives in a different id namespace — a
+        // collision with the local user id must never count as identity.
+        const { logout } = mountEndSession(
+            {
+                serverRevoked: true, 
+                hintSub: 'user-1', 
+                hintSubKind: IdentityType.CLIENT, 
+            },
             { id: 'user-1' },
         );
         await flushPromises();

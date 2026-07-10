@@ -9,6 +9,7 @@ import type { ObjectLiteral } from '@authup/kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { Logger } from '@authup/server-kit';
 import type { ISessionManager } from '../../authentication/index.ts';
+import type { IOAuth2KeyRepository } from '../key/index.ts';
 import type { ISessionTokenRepository } from '../session-token/index.ts';
 import type {
     IOAuth2OpenIDTokenIssuer, 
@@ -25,6 +26,11 @@ export type BaseGrantContext = {
 export type OAuth2AuthorizeGrantContext = BaseGrantContext & {
     refreshTokenIssuer: IOAuth2TokenIssuer,
     openIdTokenIssuer: IOAuth2OpenIDTokenIssuer,
+    /**
+     * The realm's signing key determines the id_token's JWS alg — and with it
+     * the at_hash digest (OIDC Core §3.1.3.6).
+     */
+    keyRepository: IOAuth2KeyRepository,
 };
 
 export type OAuth2IdentityGrantContext = BaseGrantContext & {

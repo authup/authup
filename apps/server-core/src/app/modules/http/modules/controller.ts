@@ -256,6 +256,7 @@ export class HTTPControllerModule {
         const accessTokenIssuer = container.resolve(OAuth2InjectionToken.AccessTokenIssuer);
         const refreshTokenIssuer = container.resolve(OAuth2InjectionToken.RefreshTokenIssuer);
         const openIdTokenIssuer = container.resolve(OAuth2InjectionToken.OpenIDTokenIssuer);
+        const keyRepository = container.resolve(OAuth2InjectionToken.KeyRepository);
 
         const tokenRevoker = container.resolve(OAuth2InjectionToken.TokenRevoker);
         const tokenVerifier = container.resolve(OAuth2InjectionToken.TokenVerifier);
@@ -283,6 +284,7 @@ export class HTTPControllerModule {
             accessTokenIssuer,
             refreshTokenIssuer,
             openIdTokenIssuer,
+            keyRepository,
 
             tokenVerifier,
             tokenRevoker,
