@@ -385,6 +385,11 @@ export function createStore(context: StoreCreateContext) {
             ...(ctx.realmId ? { realm_id: ctx.realmId } : {}),
         });
 
+        // Clear any previous identity's state (notably a retained id_token —
+        // a password response carries none, and applyTokenGrantResponse would
+        // keep the stale one) before applying the fresh grant.
+        await cleanup();
+
         applyTokenGrantResponse(response);
 
         await resolveToken();
