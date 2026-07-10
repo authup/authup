@@ -23,11 +23,10 @@ import AAuthorize from '../../../../src/components/workflows/authorize/Authorize
 import AuthorizeForm from '../../../../src/components/workflows/authorize/AuthorizeForm.vue';
 import AuthorizeSilentRedirect from '../../../../src/components/workflows/authorize/AuthorizeSilentRedirect.vue';
 import {
-    StoreDispatcherEventName,
+    StoreAuthOrigin,
     injectStore,
-    injectStoreDispatcher,
 } from '../../../../src/core';
-import type { Store, StoreDispatcher } from '../../../../src/core';
+import type { Store } from '../../../../src/core';
 import { install } from '../../../../src/module';
 import type { Options } from '../../../../src/types';
 
@@ -149,7 +148,7 @@ function mountAuthorize(overrides: MountOverrides = {}) {
         },
     };
 
-    let dispatcher!: StoreDispatcher;
+    let store!: Store;
 
     const wrapper = mount(AAuthorize, {
         props: {
@@ -189,17 +188,17 @@ function mountAuthorize(overrides: MountOverrides = {}) {
                 [{ install }, options],
                 {
                     install(app: App) {
+                        store = injectStore(pinia, app);
                         if (loggedIn) {
-                            seedLoggedIn(injectStore(pinia, app), realmId);
+                            seedLoggedIn(store, realmId);
                         }
-                        dispatcher = injectStoreDispatcher(app);
                     },
                 },
             ],
         },
     });
 
-    return { wrapper, dispatcher: () => dispatcher };
+    return { wrapper, store: () => store };
 }
 
 const hasChooser = (wrapper: ReturnType<typeof mountAuthorize>['wrapper']) => wrapper.findComponent(AAccountPrompt).exists();
@@ -214,26 +213,26 @@ describe('AAuthorize prompt=select_account', () => {
         expect(hasChooser(wrapper)).toBe(true);
     });
 
-    it('skips the chooser once a login happens on this page (LOGGED_IN)', async () => {
-        const { wrapper, dispatcher } = mountAuthorize();
+    it('skips the chooser once a login happens on this page (lastAuthOrigin=login)', async () => {
+        const { wrapper, store } = mountAuthorize();
         await flushPromises();
         expect(hasChooser(wrapper)).toBe(true);
 
-        // a fresh login via the form fires LOGGED_IN — the just-entered
+        // a fresh login via the form stamps lastAuthOrigin — the just-entered
         // credentials ARE the account selection, so the chooser must disappear.
-        dispatcher().emit(StoreDispatcherEventName.LOGGED_IN);
+        store().lastAuthOrigin = StoreAuthOrigin.LOGIN;
         await flushPromises();
 
         expect(hasChooser(wrapper)).toBe(false);
     });
 
-    it('keeps the chooser when only a session restore (RESOLVED) fires', async () => {
-        const { wrapper, dispatcher } = mountAuthorize();
+    it('keeps the chooser when only a session restore settles (lastAuthOrigin=restore)', async () => {
+        const { wrapper, store } = mountAuthorize();
         await flushPromises();
 
-        // RESOLVED is emitted by a cookie restore, not an interactive login — it
-        // must NOT suppress the chooser (that is the whole point of the prompt).
-        dispatcher().emit(StoreDispatcherEventName.RESOLVED);
+        // a cookie restore stamps RESTORE, not LOGIN — it must NOT suppress
+        // the chooser (that is the whole point of the prompt).
+        store().lastAuthOrigin = StoreAuthOrigin.RESTORE;
         await flushPromises();
 
         expect(hasChooser(wrapper)).toBe(true);
@@ -366,15 +365,15 @@ describe('AAuthorize prompt=login (re-auth)', () => {
         expect(wrapper.find('.authorize-form-stub').exists()).toBe(false);
     });
 
-    it('proceeds past re-auth once a fresh login fires LOGGED_IN', async () => {
-        const { wrapper, dispatcher } = mountAuthorize({
+    it('proceeds past re-auth once a fresh login stamps lastAuthOrigin', async () => {
+        const { wrapper, store } = mountAuthorize({
             prompt: OAuth2AuthorizationPrompt.LOGIN,
             clientBuiltIn: true,
         });
         await flushPromises();
         expect(wrapper.find('.login-form-stub').exists()).toBe(true);
 
-        dispatcher().emit(StoreDispatcherEventName.LOGGED_IN);
+        store().lastAuthOrigin = StoreAuthOrigin.LOGIN;
         await flushPromises();
 
         // re-auth satisfied → the built_in auto-consent form renders

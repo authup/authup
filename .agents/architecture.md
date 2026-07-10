@@ -1132,8 +1132,12 @@ behavior for every RP (kit or not): `prompt=select_account` shows an
 continuing; `login_hint` pre-fills the identifier; `prompt=consent` suppresses
 the `built_in` auto-consent. `buildAuthorizeURL` (kit) **defaults
 `prompt=select_account`** (overridable) so kit apps inherit account-switching.
-The chooser targets a **lingering** session only: `LoginForm`'s `done` emit sets
-`accountConfirmed`, so a just-completed credential entry (which IS the account
+The chooser targets a **lingering** session only: `Authorize.vue` watches the
+kit store's `lastAuthOrigin` for a change to `login` during its mount (plan 045
+— the store stamps it at the END of a settled `login()`, so the signal is
+race-free against LoginForm unmounting; the store additionally exposes a
+presence-derived `status` ref: `anonymous | authenticating | restoring |
+authenticated`), so a just-completed credential entry (which IS the account
 selection) proceeds straight to consent instead of re-prompting "continue as X"
 for the account just authenticated; the branch also waits for the store's `user`
 to resolve to avoid a "Continue as \<empty\>" flash. The manual consent screen

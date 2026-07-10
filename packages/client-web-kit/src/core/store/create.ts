@@ -23,6 +23,7 @@ import type {
 } from '@authup/core-kit';
 import { REALM_MASTER_NAME } from '@authup/core-kit';
 import { Client } from '@authup/core-http-kit';
+import { StoreAuthOrigin, StoreAuthStatus } from './constants';
 import { StoreDispatcherEventName } from './dispatcher';
 import type { StoreCreateContext, StoreLoginContext } from './types';
 
@@ -184,6 +185,37 @@ export function createStore(context: StoreCreateContext) {
 
     // --------------------------------------------------------------------
 
+    // Marks an interactive login()/exchangeAuthorizationCode() in flight —
+    // status reads AUTHENTICATING for its whole duration, so consumers never
+    // have to interpret the intermediate token/realm/user writes.
+    const interactionInFlight = ref<StoreAuthOrigin.LOGIN | StoreAuthOrigin.EXCHANGE | null>(null);
+
+    // How the current session became authenticated in THIS app instance.
+    // Stamped by login()/exchangeAuthorizationCode() on success and by a
+    // resolve() that finds a session while no origin is set (cookie restore);
+    // a later resolve() never overwrites an interactive origin.
+    const lastAuthOrigin = ref<`${StoreAuthOrigin}` | null>(null);
+
+    // Presence-derived on purpose: reachable from the raw setter surface and
+    // from @pinia/nuxt payload hydration alike (an internal "resolved" flag
+    // would desync from the transferred refs). AUTHENTICATED = the state is
+    // complete, not "server-validated" — validation is resolve()'s job.
+    const status = computed<StoreAuthStatus>(() => {
+        if (interactionInFlight.value) {
+            return StoreAuthStatus.AUTHENTICATING;
+        }
+
+        if (!accessToken.value) {
+            return StoreAuthStatus.ANONYMOUS;
+        }
+
+        return realm.value && user.value ?
+            StoreAuthStatus.AUTHENTICATED :
+            StoreAuthStatus.RESTORING;
+    });
+
+    // --------------------------------------------------------------------
+
     const cleanup = async () => {
         const tempAccessToken = accessToken.value;
         const tempRefreshToken = refreshToken.value;
@@ -196,6 +228,8 @@ export function createStore(context: StoreCreateContext) {
         sessionId.value = null;
         setRealm(null);
         setRealmManagement(null);
+
+        lastAuthOrigin.value = null;
 
         permissionProvider.setMany([]);
 
@@ -364,25 +398,44 @@ export function createStore(context: StoreCreateContext) {
             }
         }
 
+        // A session found by resolve() with no origin set is a restore
+        // (cookie hydration / raw seeding); never overwrite an interactive
+        // origin — a later resolve() on a logged-in session is a no-op here.
+        if (accessToken.value && !lastAuthOrigin.value) {
+            lastAuthOrigin.value = StoreAuthOrigin.RESTORE;
+        }
+
         context.dispatcher.emit(StoreDispatcherEventName.RESOLVED);
     };
 
     const resolve = createPromiseShareWrapperFn(resolveInternal);
 
+    /**
+     * @deprecated Coarse "a token exists" flag — read {@link status} instead
+     * (AUTHENTICATED additionally implies realm + user are present).
+     */
     const loggedIn = computed<boolean>(() => !!accessToken.value);
     const login = async (ctx: StoreLoginContext) => {
         context.dispatcher.emit(StoreDispatcherEventName.LOGGING_IN);
 
-        const response = await client.token.createWithPassword({
-            username: ctx.name,
-            password: ctx.password,
-            ...(ctx.realmId ? { realm_id: ctx.realmId } : {}),
-        });
+        interactionInFlight.value = StoreAuthOrigin.LOGIN;
 
-        applyTokenGrantResponse(response);
+        try {
+            const response = await client.token.createWithPassword({
+                username: ctx.name,
+                password: ctx.password,
+                ...(ctx.realmId ? { realm_id: ctx.realmId } : {}),
+            });
 
-        await resolveToken();
-        await resolveUser();
+            applyTokenGrantResponse(response);
+
+            await resolveToken();
+            await resolveUser();
+
+            lastAuthOrigin.value = StoreAuthOrigin.LOGIN;
+        } finally {
+            interactionInFlight.value = null;
+        }
 
         context.dispatcher.emit(StoreDispatcherEventName.LOGGED_IN);
     };
@@ -396,17 +449,25 @@ export function createStore(context: StoreCreateContext) {
             realm_id?: string
         } = {},
     ) => {
-        const response = await client.token.createWithAuthorizationCode({
-            code,
-            ...params,
-        });
+        interactionInFlight.value = StoreAuthOrigin.EXCHANGE;
 
-        await cleanup();
+        try {
+            const response = await client.token.createWithAuthorizationCode({
+                code,
+                ...params,
+            });
 
-        applyTokenGrantResponse(response);
+            await cleanup();
 
-        await resolveToken();
-        await resolveUser();
+            applyTokenGrantResponse(response);
+
+            await resolveToken();
+            await resolveUser();
+
+            lastAuthOrigin.value = StoreAuthOrigin.EXCHANGE;
+        } finally {
+            interactionInFlight.value = null;
+        }
     };
 
     const logout = async () => {
@@ -426,6 +487,8 @@ export function createStore(context: StoreCreateContext) {
         login,
         logout,
         loggedIn,
+        status,
+        lastAuthOrigin,
         resolve,
         exchangeAuthorizationCode,
 
