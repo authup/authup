@@ -68,6 +68,11 @@ export function createStore(context: StoreCreateContext) {
     const client : IClient = context.httpClient ?? new Client({ baseURL: context.baseURL });
 
     const cookiesRead = ref<boolean>(false);
+    /**
+     * @deprecated Kit-internal hydration bookkeeping — not part of the supported surface.
+     * Kept as a working shim (kit cookie hydration + downstream seeding);
+     * slated for removal in a future major.
+     */
     const setCookiesRead = (value: boolean) => {
         cookiesRead.value = value;
     };
@@ -75,6 +80,11 @@ export function createStore(context: StoreCreateContext) {
     // --------------------------------------------------------------------
 
     const accessToken = ref<string | null>(null);
+    /**
+     * @deprecated Raw token mutation — use login()/logout()/resolve() (or applyTokenGrantResponse for a grant response) instead.
+     * Kept as a working shim (kit cookie hydration + downstream seeding);
+     * slated for removal in a future major.
+     */
     const setAccessToken = (input: string | null) => {
         accessToken.value = input;
 
@@ -87,6 +97,11 @@ export function createStore(context: StoreCreateContext) {
     // --------------------------------------------------------------------
 
     const accessTokenExpireDate = ref<Date | null>(null);
+    /**
+     * @deprecated Raw token mutation — the expire date is derived from grant/introspection responses.
+     * Kept as a working shim (kit cookie hydration + downstream seeding);
+     * slated for removal in a future major.
+     */
     const setAccessTokenExpireDate = (input: Date | number | string | null) => {
         if (typeof input === 'number' || typeof input === 'string') {
             accessTokenExpireDate.value = new Date(input); // verify microseconds or seconds
@@ -103,6 +118,11 @@ export function createStore(context: StoreCreateContext) {
     // --------------------------------------------------------------------
 
     const refreshToken = ref<string | null>(null);
+    /**
+     * @deprecated Raw token mutation — use login()/logout()/resolve() (or applyTokenGrantResponse for a grant response) instead.
+     * Kept as a working shim (kit cookie hydration + downstream seeding);
+     * slated for removal in a future major.
+     */
     const setRefreshToken = (input: string | null) => {
         refreshToken.value = input;
 
@@ -119,6 +139,11 @@ export function createStore(context: StoreCreateContext) {
     // the authup `end_session_endpoint` — otherwise every kit RP degrades to
     // the click-gated confirm page.
     const idToken = ref<string | null>(null);
+    /**
+     * @deprecated Raw token mutation — the id_token rides the grant response (applyTokenGrantResponse retains it across refreshes).
+     * Kept as a working shim (kit cookie hydration + downstream seeding);
+     * slated for removal in a future major.
+     */
     const setIdToken = (input: string | null) => {
         idToken.value = input;
 
@@ -159,6 +184,11 @@ export function createStore(context: StoreCreateContext) {
         return false;
     });
 
+    /**
+     * @deprecated Raw identity mutation — the realm is derived from token introspection during resolve()/login().
+     * Kept as a working shim (kit cookie hydration + downstream seeding);
+     * slated for removal in a future major.
+     */
     const setRealm = (input: RealmMinimal | null) => {
         realm.value = input;
 
