@@ -31,8 +31,9 @@ export enum StoreDispatcherEventName {
     RESOLVING = 'resolving',
     /**
      * @deprecated Read the store's `status` / `lastAuthOrigin` instead.
-     * Still fires at the end of EVERY resolve() — including the unauthenticated
-     * no-op — so it means "resolution settled", not "a session exists".
+     * Fires at the end of every resolve() that does not REJECT — including the
+     * unauthenticated no-op — so it means "resolution completed", not "a
+     * session exists" (a failed resolve() rejects without emitting it).
      */
     RESOLVED = 'resolved',
 
