@@ -147,6 +147,176 @@ describe('OAuth2EndSessionService', () => {
         expect(result.hintVerified).toBe(false);
     });
 
+    it('should NOT verify an aud-less hint when the request supplies a client_id (fail closed)', async () => {
+        // the cross-check must not silently skip on an empty aud — an aud-less
+        // hint cannot prove the client_id binding it claims
+        const service = buildService(async () => ({ ...validPayload, aud: undefined }));
+        const result = await service.verify({ id_token_hint: 'valid', client_id: clientId });
+
+        expect(result.hintVerified).toBe(false);
+        expect(result.sub).toBeUndefined();
+        expect(result.sessionId).toBeUndefined();
+    });
+
+    it('should verify a name-form client_id via its resolved UUID (realm from the verified hint)', async () => {
+        // the id_token aud is the client UUID, so `client_id=web` must be
+        // resolved before the cross-check — scoped by the hint's own realm
+        // claim when the request carries no realm hint.
+        const hintRealm: Realm = {
+            ...realm, 
+            id: randomUUID(), 
+            name: 'tenant-a', 
+            built_in: false,
+        };
+        const scopedRealmRepository = new FakeRealmRepository();
+        scopedRealmRepository.seed([hintRealm]);
+
+        const resolveCalls: [string, string | undefined][] = [];
+        const service = new OAuth2EndSessionService({
+            tokenVerifier: buildVerifier(async () => ({ ...validPayload, realm_id: hintRealm.id })),
+            sessionManager,
+            clientRepository: {
+                findOneByIdOrName: async (idOrName, realmId) => {
+                    resolveCalls.push([idOrName, realmId]);
+                    return idOrName === client.name && realmId === hintRealm.id ? client : null;
+                },
+            },
+            realmRepository: scopedRealmRepository,
+        });
+
+        const result = await service.verify({ id_token_hint: 'valid', client_id: client.name });
+
+        expect(resolveCalls).toEqual([[client.name, hintRealm.id]]);
+        expect(result.hintVerified).toBe(true);
+        expect(result.sub).toEqual(sub);
+        expect(result.sessionId).toEqual(sessionId);
+    });
+
+    it('should NOT verify a name-form client_id that does not resolve to a client (fail closed)', async () => {
+        const service = new OAuth2EndSessionService({
+            tokenVerifier: buildVerifier(async () => validPayload),
+            sessionManager,
+            clientRepository: { findOneByIdOrName: async () => null },
+            realmRepository,
+        });
+
+        const result = await service.verify({
+            id_token_hint: 'valid', 
+            client_id: 'web', 
+            realm_name: 'master', 
+        });
+
+        expect(result.hintVerified).toBe(false);
+        expect(result.sessionId).toBeUndefined();
+    });
+
+    it('should NOT verify a name-form client_id resolving to a client absent from aud', async () => {
+        const otherClient: Client = { ...client, id: randomUUID() };
+        const service = new OAuth2EndSessionService({
+            tokenVerifier: buildVerifier(async () => validPayload),
+            sessionManager,
+            clientRepository: { findOneByIdOrName: async () => otherClient },
+            realmRepository,
+        });
+
+        const result = await service.verify({
+            id_token_hint: 'valid',
+            client_id: otherClient.name,
+            realm_name: 'master',
+        });
+
+        expect(result.hintVerified).toBe(false);
+        expect(result.sessionId).toBeUndefined();
+    });
+
+    it('should skip the client lookup when a supplied realm hint does not resolve (name client_id)', async () => {
+        // an unknown realm key must fail closed — never degrade to an unscoped
+        // name lookup (fail-closed realm-key convention)
+        const lookupCalls: string[] = [];
+        const service = new OAuth2EndSessionService({
+            tokenVerifier: buildVerifier(async () => validPayload),
+            sessionManager,
+            clientRepository: {
+                findOneByIdOrName: async (idOrName) => {
+                    lookupCalls.push(idOrName);
+                    return client;
+                },
+            },
+            realmRepository,
+        });
+
+        const result = await service.verify({
+            id_token_hint: 'valid',
+            client_id: client.name,
+            realm_name: 'unknown-realm',
+            post_logout_redirect_uri: 'https://app.example.com/after-logout',
+        });
+
+        expect(lookupCalls).toHaveLength(0);
+        expect(result.hintVerified).toBe(false);
+        expect(result.clientName).toBeUndefined();
+        expect(result.redirectUri).toBeUndefined();
+    });
+
+    it('should keep a UUID client_id aud-verified when the realm hint does not resolve (no redirect honored)', async () => {
+        // the raw-UUID aud comparison is independent of client resolution —
+        // only the client-derived outputs (name, redirect) fail closed
+        const lookupCalls: string[] = [];
+        const service = new OAuth2EndSessionService({
+            tokenVerifier: buildVerifier(async () => validPayload),
+            sessionManager,
+            clientRepository: {
+                findOneByIdOrName: async (idOrName) => {
+                    lookupCalls.push(idOrName);
+                    return client;
+                },
+            },
+            realmRepository,
+        });
+
+        const result = await service.verify({
+            id_token_hint: 'valid',
+            client_id: clientId,
+            realm_name: 'unknown-realm',
+            post_logout_redirect_uri: 'https://app.example.com/after-logout',
+        });
+
+        expect(lookupCalls).toHaveLength(0);
+        expect(result.hintVerified).toBe(true);
+        expect(result.sessionId).toEqual(sessionId);
+        expect(result.clientName).toBeUndefined();
+        expect(result.redirectUri).toBeUndefined();
+    });
+
+    it('should fail closed for a name-form client_id without any realm key (ambiguous name)', async () => {
+        // no request realm hint and no usable hint realm claim (the hint is
+        // unverified) — every realm has a built-in `web` client, so an unscoped
+        // name lookup is ambiguous (same rule as the /authorize verifier)
+        const lookupCalls: string[] = [];
+        const service = new OAuth2EndSessionService({
+            tokenVerifier: buildVerifier(async () => { throw new Error('bad signature'); }),
+            sessionManager,
+            clientRepository: {
+                findOneByIdOrName: async (idOrName) => {
+                    lookupCalls.push(idOrName);
+                    return client;
+                },
+            },
+            realmRepository,
+        });
+
+        const result = await service.verify({
+            id_token_hint: 'forged',
+            client_id: client.name,
+            post_logout_redirect_uri: 'https://app.example.com/after-logout',
+        });
+
+        expect(lookupCalls).toHaveLength(0);
+        expect(result.hintVerified).toBe(false);
+        expect(result.clientName).toBeUndefined();
+        expect(result.redirectUri).toBeUndefined();
+    });
+
     it('should verify an arbitrarily-old expired hint by default (unbounded window)', async () => {
         const nowSeconds = Math.floor(Date.now() / 1000);
         const service = buildService(async () => ({ ...validPayload, exp: nowSeconds - 999_999 }));
