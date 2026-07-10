@@ -533,6 +533,13 @@ export function createStore(context: StoreCreateContext) {
             }
         }
 
+        // A session found by resolve() with no origin set is a restore
+        // (cookie hydration / raw seeding); never overwrite an interactive
+        // origin — a later resolve() on a logged-in session is a no-op here.
+        if (accessToken.value && !lastAuthOrigin.value) {
+            lastAuthOrigin.value = StoreAuthOrigin.RESTORE;
+        }
+
         context.dispatcher.emit(StoreDispatcherEventName.RESOLVED);
     };
 

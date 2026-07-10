@@ -9,6 +9,7 @@ export const STORE_ID = 'authup';
 
 /**
  * The store's auth phase, derived from state PRESENCE
+<<<<<<< HEAD
  * (access/refresh token / realm / user) plus an in-flight interaction
  * marker.
  *
