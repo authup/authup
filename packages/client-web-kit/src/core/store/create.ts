@@ -47,15 +47,15 @@ function createPromiseShareWrapperFn<F extends InputFn>(
             },
         );
 
-        // reset via then(reset, reset) — a bare .finally() would spawn a
-        // derived chain that rejects unhandled whenever the shared promise
-        // rejects (the caller only handles the returned promise).
-        const reset = () => {
+        // not .finally(): the derived promise it returns would reject
+        // unobserved whenever the shared promise rejects (unhandledrejection
+        // on every failed refresh/resolve).
+        const clear = () => {
             setTimeout(() => {
                 promise = undefined;
             }, 0);
         };
-        promise.then(reset, reset);
+        promise.then(clear, clear);
 
         return promise;
     };

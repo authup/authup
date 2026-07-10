@@ -70,6 +70,7 @@ export default defineNuxtModule<ModuleOptions>({
         });
 
         addPlugin(resolver.resolve('./runtime/plugins/kit'));
+        addPlugin(resolver.resolve('./runtime/plugins/session-expiry'));
         addPlugin(resolver.resolve('./runtime/plugins/root'));
 
         addRouteMiddleware({

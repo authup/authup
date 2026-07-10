@@ -12,6 +12,11 @@ export enum StoreDispatcherEventName {
     LOGGING_OUT = 'loggingOut',
     LOGGED_OUT = 'loggedOut',
 
+    // Emitted when a background token refresh fails and the session is torn
+    // down involuntarily (distinct from a user-initiated LOGGED_OUT, which
+    // already drives its own navigation).
+    SESSION_EXPIRED = 'sessionExpired',
+
     RESOLVING = 'resolving',
     RESOLVED = 'resolved',
 
