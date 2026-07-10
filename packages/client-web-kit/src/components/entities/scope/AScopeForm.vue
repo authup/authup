@@ -92,7 +92,7 @@ export default defineComponent({
                 null;
         });
 
-        const updatedAt = useUpdatedAt(props.entity);
+        const updatedAt = useUpdatedAt(() => props.entity);
 
         const isNameFixed = computed<boolean>(() => {
             if (!!props.name && props.name.length > 0) {
@@ -107,7 +107,7 @@ export default defineComponent({
                 form.name = props.name;
             }
 
-            assignFormProperties(form, manager.data.value);
+            assignFormProperties(form, manager.data.value, { fields: v.fields });
 
             if (form.name.length === 0) {
                 form.name = generateName(nameSeed);

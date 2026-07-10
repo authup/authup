@@ -71,12 +71,12 @@ export default defineComponent({
             { group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)) },
         );
 
-        const updatedAt = useUpdatedAt(props.entity);
+        const updatedAt = useUpdatedAt(() => props.entity);
         const isMaster = computed(() => manager.data.value &&
             manager.data.value.name === REALM_MASTER_NAME);
 
         function initForm() {
-            assignFormProperties(form, manager.data.value);
+            assignFormProperties(form, manager.data.value, { fields: v.fields });
 
             if (form.name.length === 0) {
                 form.name = generateName(nameSeed);

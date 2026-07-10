@@ -5,9 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-type PartialRecordWithNull<T extends Record<string, any>> = {
-    [K in keyof T]?: T[K] | null
-};
+import { isEqual } from 'smob';
+import type { AssignFormPropertiesOptions, PartialRecordWithNull } from './types';
 
 /**
  * Hydrate form state from a data source (e.g. a loaded entity):
@@ -20,12 +19,18 @@ type PartialRecordWithNull<T extends Record<string, any>> = {
  * from there into submit payloads, where a stale copy from one sub-form
  * can clobber an edited value from another.
  *
+ * When `options.fields` is provided (the validup `fields` accessor bound
+ * to `form`), hydration preserves unsaved user edits — see
+ * {@link AssignFormPropertiesOptions}.
+ *
  * @param form the form state to hydrate (mutated in place)
  * @param data the data source to read values from
+ * @param options optional edit-preserving behavior
  */
 export function assignFormProperties<T extends Record<string, any>>(
     form: T,
     data: PartialRecordWithNull<T> = {},
+    options: AssignFormPropertiesOptions = {},
 ) : T {
     const keys : (keyof T)[] = Object.keys(form);
     for (const key of keys) {
@@ -34,11 +39,20 @@ export function assignFormProperties<T extends Record<string, any>>(
         }
 
         const value = data[key];
-        if (value === null) {
-            form[key] = '' as T[keyof T];
-        } else {
-            form[key] = value as T[keyof T];
+        const next = (value === null ? '' : value) as T[keyof T];
+
+        if (options.fields) {
+            const field = options.fields.at(key as string);
+            if (field.$dirty.value) {
+                if (!isEqual(form[key], next)) {
+                    continue;
+                }
+
+                field.$reset();
+            }
         }
+
+        form[key] = next;
     }
 
     return form;

@@ -96,10 +96,10 @@ export default defineComponent({
                 null;
         });
 
-        const updatedAt = useUpdatedAt(props.entity);
+        const updatedAt = useUpdatedAt(() => props.entity);
 
         function initForm() {
-            assignFormProperties(form, manager.data.value);
+            assignFormProperties(form, manager.data.value, { fields: v.fields });
 
             if (form.name.length === 0) {
                 form.name = generateName(nameSeed);

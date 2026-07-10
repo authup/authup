@@ -78,7 +78,7 @@ export default defineComponent({
             { group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)) },
         );
 
-        const updatedAt = useUpdatedAt(props.entity);
+        const updatedAt = useUpdatedAt(() => props.entity);
 
         const isNameFixed = computed(() => !!props.name && props.name.length > 0);
         const isRealmLocked = computed(() => !!props.realmId);
@@ -89,7 +89,7 @@ export default defineComponent({
         );
 
         function initForm() {
-            assignFormProperties(form, manager.data.value);
+            assignFormProperties(form, manager.data.value, { fields: v.fields });
 
             // Apply caller-fixed props AFTER assign so the entity payload
             // can't overwrite a locked name / realm.
@@ -264,7 +264,7 @@ export default defineComponent({
                         <AToggleButton
                             :value="form.realm_id === pickerProps.data.id"
                             :is-busy="pickerProps.busy"
-                            @changed="(value: boolean) => { form.realm_id = value ? pickerProps.data.id : ''; }"
+                            @changed="(value: boolean) => { v.fields.realm_id.$model.value = value ? pickerProps.data.id : ''; }"
                         />
                     </template>
                 </ARealms>

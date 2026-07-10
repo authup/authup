@@ -78,12 +78,12 @@ export default defineComponent({
         ]);
 
         function assign(data: Partial<TimePolicy> = {}) {
-            assignFormProperties(form, data as Record<string, unknown>);
+            assignFormProperties(form, data as Record<string, unknown>, { fields: v.fields });
         }
 
         setup.expose({ assign });
 
-        const updatedAt = useUpdatedAt(props.entity as Policy);
+        const updatedAt = useUpdatedAt(() => props.entity as Policy);
         onChange(updatedAt, () => assign(props.entity));
 
         assign(props.entity);

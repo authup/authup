@@ -53,10 +53,10 @@ export default defineComponent({
         );
 
         function assign() {
-            assignFormProperties(form, props.entity as Partial<OAuth2IdentityProvider>);
+            assignFormProperties(form, props.entity as Partial<OAuth2IdentityProvider>, { fields: v.fields });
         }
 
-        const updatedAt = useUpdatedAt(props.entity as IdentityProvider);
+        const updatedAt = useUpdatedAt(() => props.entity as IdentityProvider);
         onChange(updatedAt, () => assign());
         assign();
 

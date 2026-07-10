@@ -90,7 +90,7 @@ export default defineComponent({
             { group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)) },
         );
 
-        const updatedAt = useUpdatedAt(props.entity);
+        const updatedAt = useUpdatedAt(() => props.entity);
 
         const isRealmLocked = computed(() => !!props.realmId);
         const showRealmPicker = computed(() => props.canManage && !isRealmLocked.value);
@@ -103,7 +103,7 @@ export default defineComponent({
                 form.name_locked = manager.data.value.name_locked;
             }
 
-            assignFormProperties(form, manager.data.value);
+            assignFormProperties(form, manager.data.value, { fields: v.fields });
 
             if (form.name.length === 0) {
                 form.name = generateName(nameSeed);
@@ -306,7 +306,7 @@ export default defineComponent({
                         <AToggleButton
                             :value="form.realm_id === pickerProps.data.id"
                             :is-busy="pickerProps.busy"
-                            @changed="(value: boolean) => { form.realm_id = value ? pickerProps.data.id : ''; }"
+                            @changed="(value: boolean) => { v.fields.realm_id.$model.value = value ? pickerProps.data.id : ''; }"
                         />
                     </template>
                 </ARealms>
