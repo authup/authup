@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { JWTAlgorithm } from '@authup/specs';
+import { JWTError } from '@authup/specs';
 import { subtle } from 'uncrypto';
 
 export function generateOAuth2CodeVerifier() {
@@ -35,11 +37,30 @@ export function base64URLEncode(arrayBuffer: ArrayBuffer) {
         .replace(/=+$/, '');
 }
 
-export async function buildOAuth2TokenHash(value: string) : Promise<string> {
+// OIDC Core §3.1.3.6: at_hash / c_hash use the hash algorithm of the id_token's
+// JWS alg (…S256 → SHA-256, …S384 → SHA-384, …S512 → SHA-512) and keep the LEFT
+// HALF of the digest — so the half-length follows the digest (16/24/32 bytes).
+const TOKEN_HASH_DIGESTS : Record<string, { name: string, halfLength: number }> = {
+    256: { name: 'SHA-256', halfLength: 16 },
+    384: { name: 'SHA-384', halfLength: 24 },
+    512: { name: 'SHA-512', halfLength: 32 },
+};
+
+export async function buildOAuth2TokenHash(
+    value: string,
+    alg: `${JWTAlgorithm}`,
+) : Promise<string> {
+    // fail loud on an unrecognized alg — silently defaulting to SHA-256 would
+    // mint a hash no conforming verifier accepts.
+    const digest = TOKEN_HASH_DIGESTS[alg.slice(-3)];
+    if (!digest) {
+        throw JWTError.headerPropertyInvalid('alg');
+    }
+
     const encoder = new TextEncoder();
     const data = encoder.encode(value);
-    const hashBuffer = await subtle.digest('SHA-256', data);
-    const halfHash = hashBuffer.slice(0, 16);
+    const hashBuffer = await subtle.digest(digest.name, data);
+    const halfHash = hashBuffer.slice(0, digest.halfLength);
 
     return base64URLEncode(halfHash);
 }

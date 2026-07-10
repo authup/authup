@@ -83,6 +83,17 @@ describe('core/store/lifecycle', () => {
 
         expect(events).toEqual([
             StoreDispatcherEventName.LOGGING_IN,
+            // login() clears any previous identity's state between the grant
+            // succeeding and applying the response (plan 047.3 — a retained
+            // id_token must not survive onto a new identity): cleanup()
+            // unsets every stateful ref.
+            StoreDispatcherEventName.ACCESS_TOKEN_UPDATED,
+            StoreDispatcherEventName.ACCESS_TOKEN_EXPIRE_DATE_UPDATED,
+            StoreDispatcherEventName.REFRESH_TOKEN_UPDATED,
+            StoreDispatcherEventName.ID_TOKEN_UPDATED,
+            StoreDispatcherEventName.USER_UPDATED,
+            StoreDispatcherEventName.REALM_UPDATED,
+            StoreDispatcherEventName.REALM_MANAGEMENT_UPDATED,
             // applyTokenGrantResponse: expire date is set BEFORE the token
             // (the cookie maxAge computation depends on that ordering)
             StoreDispatcherEventName.ACCESS_TOKEN_EXPIRE_DATE_UPDATED,
@@ -97,8 +108,11 @@ describe('core/store/lifecycle', () => {
         ]);
 
         // introspection writes realm.value directly, bypassing setRealm —
-        // REALM_UPDATED never fires with a non-null value
-        expect(events).not.toContain(StoreDispatcherEventName.REALM_UPDATED);
+        // REALM_UPDATED only ever fires as the cleanup unset, never with a
+        // non-null value
+        expect(
+            events.filter((event) => event === StoreDispatcherEventName.REALM_UPDATED),
+        ).toHaveLength(1);
         expect(store.realmId.value).toEqual('realm-1');
     });
 

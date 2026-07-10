@@ -6,6 +6,7 @@
  */
 
 import type { Identity, OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import { OAuth2RequestError } from '@authup/specs';
 import type { IOAuth2AuthorizationCodeRepository, OAuth2AuthorizationCodeInput } from '../repository/index.ts';
 import type { IOAuth2AuthorizationCodeIssuer, OAuth2AuthorizationCodeIssuerOptions } from './types.ts';
 
@@ -27,6 +28,14 @@ export class OAuth2AuthorizationCodeIssuer implements IOAuth2AuthorizationCodeIs
         identity: Identity,
         options: OAuth2AuthorizationCodeIssuerOptions = {},
     ) : Promise<OAuth2AuthorizationCode> {
+        // The code carries the identity's realm id + name. A dangling realm
+        // relation (realm row deleted without cascade) must fail closed as a
+        // clean OAuth2 error — never a TypeError → 500.
+        const { realm } = identity.data;
+        if (!realm) {
+            throw OAuth2RequestError.identityInvalid();
+        }
+
         const entity: OAuth2AuthorizationCodeInput = {
             redirect_uri: input.redirect_uri,
             client_id: input.client_id,
@@ -37,8 +46,8 @@ export class OAuth2AuthorizationCodeIssuer implements IOAuth2AuthorizationCodeIs
 
             auth_time: options.authTime ?? Math.floor(Date.now() / 1000),
 
-            realm_id: identity.data.realm.id,
-            realm_name: identity.data.realm.name,
+            realm_id: realm.id,
+            realm_name: realm.name,
             sub: identity.data.id,
             sub_kind: identity.type,
         };

@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { extractErrorContext } from '../../../../src/core/translator/error';
+import { extractErrorContext } from '../../../../src/core/error';
 
 describe('extractErrorContext', () => {
     describe('non-object input', () => {

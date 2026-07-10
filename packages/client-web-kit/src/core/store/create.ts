@@ -266,6 +266,12 @@ export function createStore(context: StoreCreateContext) {
         return client.userInfo.get<User>(`Bearer ${accessToken.value}`)
             .then((response) => {
                 setUser(response);
+            })
+            .catch((e) => {
+                // A failure must not latch — a transient userinfo error would
+                // otherwise permanently leave the user unresolved.
+                userResolved.value = false;
+                throw e;
             });
     };
 
@@ -426,6 +432,12 @@ export function createStore(context: StoreCreateContext) {
                 password: ctx.password,
                 ...(ctx.realmId ? { realm_id: ctx.realmId } : {}),
             });
+
+            // Clear any previous identity's state (notably a retained id_token —
+            // a password response carries none, and applyTokenGrantResponse would
+            // keep the stale one) before applying the fresh grant. Also nulls
+            // lastAuthOrigin — re-stamped below on success.
+            await cleanup();
 
             applyTokenGrantResponse(response);
 

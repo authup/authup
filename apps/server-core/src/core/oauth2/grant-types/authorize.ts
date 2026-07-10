@@ -6,10 +6,11 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
-import { hasOAuth2Scopes } from '@authup/specs';
+import { JWKError, hasOAuth2Scopes } from '@authup/specs';
 import type { OAuth2AuthorizationCode, Session } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import { buildOAuth2TokenHash } from '../authorization/helpers.ts';
+import type { IOAuth2KeyRepository } from '../key/index.ts';
 import type { IOAuth2OpenIDTokenIssuer, IOAuth2TokenIssuer } from '../token/index.ts';
 import { OAuth2BaseGrant } from './base.ts';
 import type { IOAuth2Grant, OAuth2AuthorizeGrantContext, OAuth2GrantRunWIthOptions } from './types.ts';
@@ -21,6 +22,8 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
 
     protected openIdTokenIssuer : IOAuth2OpenIDTokenIssuer;
 
+    protected keyRepository : IOAuth2KeyRepository;
+
     constructor(ctx: OAuth2AuthorizeGrantContext) {
         super({
             accessTokenIssuer: ctx.accessTokenIssuer,
@@ -29,6 +32,7 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
 
         this.refreshTokenIssuer = ctx.refreshTokenIssuer;
         this.openIdTokenIssuer = ctx.openIdTokenIssuer;
+        this.keyRepository = ctx.keyRepository;
     }
 
     async runWith(
@@ -67,6 +71,15 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
             authorizationCode.scope &&
             hasOAuth2Scopes(authorizationCode.scope, ScopeName.OPEN_ID)
         ) {
+            // The at_hash digest follows the id_token's JWS alg (OIDC Core
+            // §3.1.3.6) — the alg of the realm key the openid issuer signs
+            // with. The access token above was signed with the same key, so a
+            // missing key would already have thrown; this guard fails closed.
+            const key = await this.keyRepository.findByRealmId(authorizationCode.realm_id);
+            if (!key) {
+                throw JWKError.notFoundForRealm(authorizationCode.realm_id, authorizationCode.realm_name);
+            }
+
             const [idToken] = await this.openIdTokenIssuer.issue({
                 sub: authorizationCode.sub || undefined,
                 sub_kind: authorizationCode.sub_kind,
@@ -77,7 +90,7 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
                 ...(authorizationCode.nonce ? { nonce: authorizationCode.nonce } : {}),
                 ...(typeof authorizationCode.auth_time === 'number' ? { auth_time: authorizationCode.auth_time } : {}),
                 sid: session.id,
-                at_hash: await buildOAuth2TokenHash(accessToken),
+                at_hash: await buildOAuth2TokenHash(accessToken, key.signature_algorithm),
             });
 
             buildContext.idToken = idToken;

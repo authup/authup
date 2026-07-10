@@ -6,7 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { Identity } from '@authup/core-kit';
+import type { UserIdentity } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
 import { OAuth2AuthorizationResponseType, OAuth2SubKind } from '@authup/specs';
@@ -47,7 +47,7 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
     let sessionManager: FakeSessionManager;
     let authorization: OAuth2Authorization;
 
-    const identity: Identity = {
+    const identity: UserIdentity = {
         type: OAuth2SubKind.USER,
         data: {
             id: randomUUID(),
@@ -125,6 +125,53 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
 
         const result = await authorization.authorize(buildData({ prompt: 'login' }), identity, { sessionId });
         expect(result.redirectUri).toEqual('https://example.com/callback');
+    });
+
+    // The promptLoginMaxAge window (default 60s) is a DELIBERATE stateless
+    // approximation of "just re-authenticated" — a session created inside the
+    // window satisfies prompt=login without a fresh credential entry. Pinned so
+    // the sub-window behavior stays a contract, not an accident.
+    it('should accept prompt=login anywhere inside the freshness window', async () => {
+        await seedSession(30);
+
+        const result = await authorization.authorize(buildData({ prompt: 'login' }), identity, { sessionId });
+        expect(result.authorizationCode).toBeDefined();
+    });
+
+    it('should reject prompt=login just past the freshness window', async () => {
+        await seedSession(90);
+
+        await expect(
+            authorization.authorize(buildData({ prompt: 'login' }), identity, { sessionId }),
+        ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_LOGIN_REQUIRED }));
+    });
+
+    it('should enforce max_age=0 as stricter than prompt=login (documented inversion)', async () => {
+        // a 30s-old session passes prompt=login (inside the window) but fails
+        // max_age=0 — an RP needing hard re-auth semantics sends max_age=0
+        await seedSession(30);
+
+        const viaPrompt = await authorization.authorize(buildData({ prompt: 'login' }), identity, { sessionId });
+        expect(viaPrompt.authorizationCode).toBeDefined();
+
+        await expect(
+            authorization.authorize(buildData({ max_age: 0 }), identity, { sessionId }),
+        ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_LOGIN_REQUIRED }));
+    });
+
+    it('should throw login_required (not a TypeError) when the identity realm relation is dangling', async () => {
+        // a realm row deleted out from under the identity leaves data.realm
+        // undefined at runtime — the realm gate must fail closed with the same
+        // clean login_required (still no identity data in the body)
+        const dangling: UserIdentity = {
+            type: OAuth2SubKind.USER,
+            data: { ...identity.data },
+        };
+        Reflect.deleteProperty(dangling.data, 'realm');
+
+        await expect(
+            authorization.authorize(buildData(), dangling, {}),
+        ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_LOGIN_REQUIRED }));
     });
 
     it('should source auth_time from created_at, never refreshed_at', async () => {
