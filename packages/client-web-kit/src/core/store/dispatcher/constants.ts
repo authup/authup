@@ -5,11 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+/**
+ * The store's event bus is a DERIVED layer over its state — every lifecycle
+ * emission happens at a documented state transition, never as a parallel
+ * source of truth. Emission semantics are frozen for backward compatibility
+ * (plan 045): read the store's `status` / `lastAuthOrigin` state for new code.
+ */
 export enum StoreDispatcherEventName {
+    /** @deprecated Read the store's `status` (=== 'authenticating') instead. */
     LOGGING_IN = 'loggingIn',
+    /** @deprecated Read the store's `lastAuthOrigin` (=== 'login') / `status` instead. */
     LOGGED_IN = 'loggedIn',
 
+    /** @deprecated Read the store's `status` instead. */
     LOGGING_OUT = 'loggingOut',
+    /** @deprecated Read the store's `status` (=== 'anonymous') instead. */
     LOGGED_OUT = 'loggedOut',
 
     // Emitted when a background token refresh fails and the session is torn
@@ -17,7 +27,13 @@ export enum StoreDispatcherEventName {
     // already drives its own navigation).
     SESSION_EXPIRED = 'sessionExpired',
 
+    /** @deprecated Read the store's `status` instead. */
     RESOLVING = 'resolving',
+    /**
+     * @deprecated Read the store's `status` / `lastAuthOrigin` instead.
+     * Still fires at the end of EVERY resolve() — including the anonymous
+     * no-op — so it means "resolution settled", not "a session exists".
+     */
     RESOLVED = 'resolved',
 
     ACCESS_TOKEN_UPDATED = 'accessTokenUpdated',
