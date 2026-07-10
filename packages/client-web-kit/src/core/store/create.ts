@@ -47,11 +47,15 @@ function createPromiseShareWrapperFn<F extends InputFn>(
             },
         );
 
-        promise.finally(() => {
+        // not .finally(): the derived promise it returns would reject
+        // unobserved whenever the shared promise rejects (unhandledrejection
+        // on every failed refresh/resolve).
+        const clear = () => {
             setTimeout(() => {
                 promise = undefined;
             }, 0);
-        });
+        };
+        promise.then(clear, clear);
 
         return promise;
     };
