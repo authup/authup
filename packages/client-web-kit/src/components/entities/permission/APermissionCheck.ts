@@ -14,7 +14,7 @@ import {
     normalizeSlot,  
 } from '../../../core';
 import type { PropType } from 'vue';
-import { computed, defineComponent } from 'vue';
+import { defineComponent } from 'vue';
 
 export const APermissionCheck = defineComponent({
     props: {
@@ -28,11 +28,14 @@ export const APermissionCheck = defineComponent({
     setup(props, { slots }) {
         const fn = createPermissionCheckerReactiveFn();
 
-        const isPermitted = computed(() => fn({
+        // single setup-time call (the checker registers lifecycle hooks and
+        // returns a Ref<boolean>) — wrapping it in computed() would truth-test
+        // the inner Ref object and render the slot unconditionally.
+        const isPermitted = fn({
             name: props.name,
             data: definePolicyData(props.input),
             options: props.options,
-        }));
+        });
 
         return () => {
             if (
