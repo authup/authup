@@ -269,7 +269,13 @@ export function createStore(context: StoreCreateContext) {
 
     // --------------------------------------------------------------------
 
-    const cleanup = async () => {
+    // Returns the generation it bumped to: a caller staging a session MUST use
+    // that value (not a later tokenGeneration read) — the bump happens before
+    // the awaited revoke round-trips, so a concurrent interaction's cleanup()
+    // may bump again before this one resumes, and reading the ref afterwards
+    // would let both commits pass the guard (the loser's committed tokens
+    // would be clobbered without revocation).
+    const cleanup = async () : Promise<number> => {
         const tempAccessToken = accessToken.value;
         const tempRefreshToken = refreshToken.value;
 
@@ -289,6 +295,7 @@ export function createStore(context: StoreCreateContext) {
         validated.value = false;
         resolutionStale.value = false;
         tokenGeneration.value += 1;
+        const generation = tokenGeneration.value;
 
         try {
             if (tempAccessToken) {
@@ -305,6 +312,8 @@ export function createStore(context: StoreCreateContext) {
         } catch {
             // ...
         }
+
+        return generation;
     };
 
     // --------------------------------------------------------------------
@@ -399,7 +408,13 @@ export function createStore(context: StoreCreateContext) {
         }
 
         validated.value = true;
-        resolutionStale.value = false;
+
+        // A background hook refresh that rotated the token mid-staging set the
+        // flag for the NEW token — clearing it for a superseded commit would
+        // skip the promised awaited revalidation on the next resolve().
+        if (ctx.token === accessToken.value) {
+            resolutionStale.value = false;
+        }
 
         if (ctx.origin) {
             lastAuthOrigin.value = ctx.origin;
@@ -467,17 +482,34 @@ export function createStore(context: StoreCreateContext) {
                 throw new OAuth2Error('The access token can not be renewed.');
             }
 
-            try {
-                const response = await client.token.createWithRefreshToken({ refresh_token: refreshToken.value });
+            const generation = tokenGeneration.value;
 
-                // marks the resolution stale: status stays authenticated,
-                // the next resolve() revalidates (awaited).
-                applyTokenGrantResponse(response);
+            let response : OAuth2TokenGrantResponse;
+            try {
+                response = await client.token.createWithRefreshToken({ refresh_token: refreshToken.value });
             } catch (e) {
-                await cleanup();
+                // a cleanup() that interleaved with the round-trip already
+                // tore the state down — don't tear it down a second time.
+                if (generation === tokenGeneration.value) {
+                    await cleanup();
+                }
 
                 throw e;
             }
+
+            // Zombie-commit guard (same contract as commitSession): a logout
+            // that landed while the refresh round-trip was in flight stays
+            // final — the late grant is dropped and revoked best-effort (it
+            // was never written, so no later logout() could reach it).
+            if (generation !== tokenGeneration.value) {
+                await revokeStagedGrant(response);
+
+                throw new OAuth2Error('The session was torn down before the token could be refreshed.');
+            }
+
+            // marks the resolution stale: status stays authenticated,
+            // the next resolve() revalidates (awaited).
+            applyTokenGrantResponse(response);
         },
     );
 
@@ -600,11 +632,12 @@ export function createStore(context: StoreCreateContext) {
             // Clear any previous identity's state (notably a retained id_token —
             // a password response carries none, and the atomic commit would
             // keep the stale one) and best-effort revoke its tokens before
-            // establishing the fresh session (plan 047.3). cleanup() bumps the
-            // generation, so the staged window's snapshot is taken AFTER it.
-            await cleanup();
+            // establishing the fresh session (plan 047.3). The staged window's
+            // snapshot is the generation cleanup() itself bumped to — never a
+            // later ref read, which a concurrent interaction may have bumped.
+            const generation = await cleanup();
 
-            await establishSession(response, StoreAuthOrigin.LOGIN, tokenGeneration.value);
+            await establishSession(response, StoreAuthOrigin.LOGIN, generation);
         } finally {
             interactionInFlight.value = null;
         }
@@ -631,9 +664,9 @@ export function createStore(context: StoreCreateContext) {
 
             // wipe + revoke the previous identity before establishing the new
             // one (a failed GRANT above leaves prior state intact — pinned).
-            await cleanup();
+            const generation = await cleanup();
 
-            await establishSession(response, StoreAuthOrigin.EXCHANGE, tokenGeneration.value);
+            await establishSession(response, StoreAuthOrigin.EXCHANGE, generation);
         } finally {
             interactionInFlight.value = null;
         }

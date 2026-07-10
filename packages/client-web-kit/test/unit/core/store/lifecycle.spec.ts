@@ -459,6 +459,49 @@ describe('core/store/lifecycle', () => {
         expect(revokeRequests[1].body).toMatchObject({ token: 'rt-1' });
     });
 
+    it('keeps a logout final when it interleaves with the store refresh round-trip', async () => {
+        let release : (() => void) | undefined;
+        const gate = new Promise<void>((resolve) => {
+            release = resolve;
+        });
+
+        const { store, httpClient } = buildStore({
+            'POST /token': async () => {
+                await gate;
+
+                return {
+                    access_token: 'at-late',
+                    token_type: 'Bearer',
+                    expires_in: 3600,
+                    refresh_token: 'rt-late',
+                };
+            },
+        });
+
+        // RT-only hydration (access-token cookie expired via maxAge, the
+        // refresh-token session cookie survived) — resolve() starts a refresh
+        store.setRefreshToken('rt-0');
+
+        const resolving = store.resolve();
+
+        await store.logout();
+        release!();
+
+        await expect(resolving).rejects.toThrow(
+            'The session was torn down before the token could be refreshed.',
+        );
+
+        // the logout wins: the late grant is dropped, never written, revoked
+        expect(store.accessToken.value).toBeNull();
+        expect(store.refreshToken.value).toBeNull();
+        expect(store.lastAuthOrigin.value).toBeNull();
+
+        const revoked = requestsTo(httpClient, 'POST', '/token/revoke')
+            .map((request) => (request.body as Record<string, string>).token);
+        expect(revoked).toContain('at-late');
+        expect(revoked).toContain('rt-late');
+    });
+
     it('revalidates on the next resolve() after a bare token apply (refresh path)', async () => {
         // the resolve() promise-share dedup clears one macrotask after settle
         // (pinned above) — step past it between the consecutive resolve()s

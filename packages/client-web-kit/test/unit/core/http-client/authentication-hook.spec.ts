@@ -77,7 +77,11 @@ describe('core/http-client/authentication-hook', () => {
             release = resolve;
         });
 
-        const { store, hook } = buildApp({
+        const {
+            store, 
+            hook, 
+            httpClient, 
+        } = buildApp({
             'POST /token': async () => {
                 await gate;
 
@@ -92,6 +96,8 @@ describe('core/http-client/authentication-hook', () => {
 
         store.setAccessToken('at-1');
         store.setRefreshToken('rt-1');
+
+        hook.attach(httpClient);
 
         const refresh = hook.refresh();
 
@@ -105,6 +111,20 @@ describe('core/http-client/authentication-hook', () => {
 
         expect(store.accessToken).toEqual('at-1');
         expect(store.refreshToken).toEqual('rt-new');
+
+        // the hook applied the stale response to itself before the drop guard
+        // ran — attached clients must be re-synced onto the store's bearer,
+        // never left on the dropped session's.
+        expect(httpClient.getAuthorizationHeader()).toContain('at-1');
+
+        // the dropped pair was never written to the store, so nothing else
+        // could revoke it — the drop guard revokes it best-effort.
+        await new Promise((resolve) => { setTimeout(resolve, 0); });
+        const revoked = httpClient.requests
+            .filter((request) => request.url === '/token/revoke')
+            .map((request) => (request.body as Record<string, string>).token);
+        expect(revoked).toContain('at-stale');
+        expect(revoked).toContain('rt-stale');
     });
 
     it('drops a refresh that finishes after a logout tore the session down', async () => {
@@ -113,7 +133,11 @@ describe('core/http-client/authentication-hook', () => {
             release = resolve;
         });
 
-        const { store, hook } = buildApp({
+        const {
+            store, 
+            hook, 
+            httpClient, 
+        } = buildApp({
             'POST /token': async () => {
                 await gate;
 
@@ -129,6 +153,8 @@ describe('core/http-client/authentication-hook', () => {
         store.setAccessToken('at-1');
         store.setRefreshToken('rt-1');
 
+        hook.attach(httpClient);
+
         const refresh = hook.refresh();
 
         await store.logout();
@@ -139,5 +165,17 @@ describe('core/http-client/authentication-hook', () => {
         // logout stays final — the late refresh must not resurrect a session
         expect(store.accessToken).toBeNull();
         expect(store.refreshToken).toBeNull();
+
+        // ... and must not linger as the attached clients' bearer either
+        expect(httpClient.getAuthorizationHeader()).toBeUndefined();
+
+        // the dropped pair is revoked best-effort (alongside logout()'s own
+        // revoke of the presented pair)
+        await new Promise((resolve) => { setTimeout(resolve, 0); });
+        const revoked = httpClient.requests
+            .filter((request) => request.url === '/token/revoke')
+            .map((request) => (request.body as Record<string, string>).token);
+        expect(revoked).toContain('at-stale');
+        expect(revoked).toContain('rt-stale');
     });
 });

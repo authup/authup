@@ -55,6 +55,26 @@ export function installHTTPClientAuthenticationHook(
             refreshTokenInUse === null ||
             store.refreshToken !== refreshTokenInUse
         ) {
+            // The hook already applied the stale response to itself (header +
+            // timer) — re-sync it from the store's current state so attached
+            // clients never keep the dropped session's bearer.
+            handleAccessTokenEvent();
+            handleAccessTokenExpireDateEvent();
+
+            // The dropped grant's tokens were never written to the store, so
+            // no later logout() could reach them — revoke them best-effort
+            // instead of orphaning a live server session.
+            const client : IClient = options.httpClient ?? new Client({ baseURL: options.baseURL });
+            Promise.resolve()
+                .then(() => client.token.revoke({ token: response.access_token }))
+                .catch(() => { /* best-effort */ });
+            if (response.refresh_token) {
+                const refresh = response.refresh_token;
+                Promise.resolve()
+                    .then(() => client.token.revoke({ token: refresh }))
+                    .catch(() => { /* best-effort */ });
+            }
+
             return;
         }
 
@@ -101,6 +121,11 @@ export function installHTTPClientAuthenticationHook(
         if (store.accessTokenExpireDate) {
             const expiresIn = Math.floor((store.accessTokenExpireDate.getTime() - Date.now()) / 1000);
             hook.setTimer(expiresIn);
+        } else {
+            // no expire date -> nothing to refresh against: a stale armed
+            // timer (e.g. re-armed by a dropped background refresh) would
+            // fire a doomed refresh after logout.
+            hook.clearTimer();
         }
     };
 
