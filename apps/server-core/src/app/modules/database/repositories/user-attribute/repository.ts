@@ -11,7 +11,7 @@ import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IUserAttributeRepository } from '../../../../../core/index.ts';
 import { UserAttributeEntity } from '../../../../../adapters/database/domains/index.ts';
-import { translateWhereConditions } from '../helpers.ts';
+import { applyRealmScopeSelect, translateWhereConditions } from '../helpers.ts';
 
 export class UserAttributeRepositoryAdapter implements IUserAttributeRepository {
     private readonly repository: Repository<UserAttribute>;
@@ -30,6 +30,8 @@ export class UserAttributeRepositoryAdapter implements IUserAttributeRepository 
             sort: { allowed: ['id', 'name', 'user_id', 'realm_id', 'created_at', 'updated_at'] },
             pagination: { maxLimit: 50 },
         });
+
+        applyRealmScopeSelect(qb, 'userAttribute', ['user_id']);
 
         const [entities, total] = await qb.getManyAndCount();
 

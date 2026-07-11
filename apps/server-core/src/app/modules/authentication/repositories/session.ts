@@ -16,6 +16,7 @@ import type {
     SessionOwner,
 } from '../../../../core/index.ts';
 import { SESSION_FILTER_KEYS } from '../../../../core/index.ts';
+import { applyRealmScopeSelect } from '../../database/repositories/helpers.ts';
 import { AuthenticationCachePrefix } from './constants.ts';
 
 type SessionRepositoryContext = {
@@ -86,17 +87,7 @@ export class SessionRepository implements ISessionRepository {
             pagination: { maxLimit: 50 },
         });
 
-        // Force-load the columns the SessionService realm gate + ownership check
-        // depend on. Without this a client `fields` projection could drop
-        // realm_id (rapiq honors the projection over `default`), leaving the
-        // per-row `resourceRealmMatch` with no realm to match — which
-        // neutral-passes the realm_scope reach factor and leaks cross-realm
-        // sessions to an own/ownOrNull-scoped reader.
-        qb.addSelect([
-            'session.realm_id',
-            'session.sub',
-            'session.sub_kind',
-        ]);
+        applyRealmScopeSelect(qb, 'session', ['sub', 'sub_kind']);
 
         if (options.owner) {
             // mandatory constraint — not overridable by a rapiq filter
@@ -138,14 +129,7 @@ export class SessionRepository implements ISessionRepository {
             filters: { allowed: [...SESSION_FILTER_KEYS] },
         });
 
-        // Same force-select as findMany: the per-session realm gate + ownership
-        // check read realm_id / sub / sub_kind regardless of any `fields`
-        // projection in the query.
-        qb.addSelect([
-            'session.realm_id',
-            'session.sub',
-            'session.sub_kind',
-        ]);
+        applyRealmScopeSelect(qb, 'session', ['sub', 'sub_kind']);
 
         return qb.getMany();
     }
