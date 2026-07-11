@@ -143,6 +143,9 @@ export default {
     /**
      * Throttle failed logins per (identifier, ip) pair by counting recent
      * login_failed audit events. Requires auditLogEnabled.
+     * The client IP honors X-Forwarded-For — deploy behind a trusted
+     * reverse proxy that overwrites the header, otherwise a direct client
+     * can spoof the IP half of the throttle key.
      * default: false
      */
     loginAttemptThrottleEnabled: false,
