@@ -134,6 +134,15 @@ describe('IdentityProviderOpenIDAuthenticator', () => {
         const parsed = new URL(authenticator.buildRedirectURL({ state: 'abc' }));
         expect(parsed.searchParams.get('scope')).toEqual('openid custom');
     });
+
+    it('should enforce the openid scope on a user-defined scope', () => {
+        const authenticator = new IdentityProviderOpenIDAuthenticator(
+            createAuthenticatorContext(createOpenIDProvider({ scope: 'profile custom' })),
+        );
+
+        const parsed = new URL(authenticator.buildRedirectURL({ state: 'abc' }));
+        expect(parsed.searchParams.get('scope')).toEqual('openid profile custom');
+    });
 });
 
 describe('IdentityProviderGoogleAuthenticator', () => {
@@ -147,9 +156,9 @@ describe('IdentityProviderGoogleAuthenticator', () => {
         expect(parsed.searchParams.get('scope')).toEqual('openid profile email');
     });
 
-    it('should keep a user-defined scope', () => {
+    it('should merge a user-defined scope with the preset scopes', () => {
         const authenticator = new IdentityProviderGoogleAuthenticator(
-            createAuthenticatorContext(createProvider({ scope: 'openid profile email https://www.googleapis.com/auth/calendar.readonly' })),
+            createAuthenticatorContext(createProvider({ scope: 'https://www.googleapis.com/auth/calendar.readonly' })),
         );
 
         const parsed = new URL(authenticator.buildRedirectURL({ state: 'abc' }));

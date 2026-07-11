@@ -25,9 +25,11 @@ import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { VCIcon } from '@vuecs/icon';
 import { onChange, useUpdatedAt } from '../../../composables';
 import { IFieldValidation } from '@ilingo/validup-vue';
+import { AFormInputList } from '../../utility';
 
 export default defineComponent({
     components: {
+        AFormInputList,
         VCFormGroup,
         VCFormInput,
         VCIcon,
@@ -62,6 +64,11 @@ export default defineComponent({
         // strict consumers — the dynamic `at()` accessor materialises the
         // state and is never undefined.
         const scopeField = v.fields.at<string | null>('scope');
+
+        const scopes = computed(() => {
+            const { value } = scopeField.$model;
+            return value ? value.split(/\s+/).filter((item) => item.length > 0) : [];
+        });
 
         function assign() {
             assignFormProperties(form, props.entity as Partial<OAuth2IdentityProvider>, { fields: v.fields });
@@ -99,6 +106,7 @@ export default defineComponent({
         return {
             v,
             scopeField,
+            scopes,
             secretShow,
             secretToggleLabel,
             translations,
@@ -152,19 +160,15 @@ export default defineComponent({
                 </VCFormInput>
             </VCFormGroup>
         </IFieldValidation>
-        <IFieldValidation
-            v-slot="{ value }"
-            :field="scopeField"
+        <AFormInputList
+            :names="scopes"
+            @changed="(value) => {
+                scopeField.$model.value = value.length === 0 ? '' : value.join(' ');
+            }"
         >
-            <VCFormGroup :validation="value">
-                <template #label>
-                    {{ translations.scope }}
-                </template>
-                <VCFormInput
-                    v-model="scopeField.$model.value"
-                    placeholder="openid profile email"
-                />
-            </VCFormGroup>
-        </IFieldValidation>
+            <template #label>
+                {{ translations.scope }}
+            </template>
+        </AFormInputList>
     </div>
 </template>

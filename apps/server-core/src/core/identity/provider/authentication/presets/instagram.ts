@@ -6,6 +6,7 @@
  */
 
 import { extractTokenPayload } from '@authup/server-kit';
+import { mergeOAuth2Scopes } from '@authup/specs';
 import type { TokenGrantResponse } from '@hapic/oauth2';
 import type { IdentityProviderIdentity } from '../../types.ts';
 import type { IdentityProviderOAuth2AuthenticatorContext } from '../protocols/index.ts';
@@ -13,7 +14,7 @@ import { IdentityProviderOAuth2Authenticator } from '../protocols/index.ts';
 
 export class IdentityProviderInstagramAuthenticator extends IdentityProviderOAuth2Authenticator {
     constructor(ctx: IdentityProviderOAuth2AuthenticatorContext) {
-        ctx.provider.scope = ctx.provider.scope || 'user_profile';
+        ctx.provider.scope = mergeOAuth2Scopes('user_profile', ctx.provider.scope);
         ctx.provider.authorize_url = 'https://api.instagram.com/oauth/authorize';
         ctx.provider.token_url = 'https://api.instagram.com/oauth/access_token';
         ctx.provider.user_info_url = 'https://graph.instagram.com/me?fields=id,username';

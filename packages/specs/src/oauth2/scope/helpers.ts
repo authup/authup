@@ -29,6 +29,23 @@ export function unwrapOAuth2Scope(input: string | string[]) : string[] {
 }
 
 /**
+ * Merge multiple scope representations into a single serialized scope
+ * string (union, first occurrence wins). Case is preserved — unlike
+ * {@link deserializeOAuth2Scope}, which canonicalizes for authup's own
+ * scopes — since external provider scopes may be case-sensitive.
+ *
+ * @param input
+ */
+export function mergeOAuth2Scopes(...input: (string | string[] | null | undefined)[]) : string {
+    const items = input
+        .filter((el) : el is string | string[] => !!el)
+        .flatMap((el) => (Array.isArray(el) ? el : el.split(/\s+|,+/)))
+        .filter((item) => item.length > 0);
+
+    return serializeOAuth2Scope([...new Set(items)]);
+}
+
+/**
  * Check if granted scope(s) cover required scop(e).
  *
  * @param granted

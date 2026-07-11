@@ -15,7 +15,7 @@ import { createPinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
 import AIdentityProviderBasicFields from '../../../../../src/components/entities/identity-provider/AIdentityProviderBasicFields.vue';
 import AIdentityProviderOAuth2Form from '../../../../../src/components/entities/identity-provider/AIdentityProviderOAuth2Form.vue';
-import { ANameInput } from '../../../../../src/components/utility';
+import { AFormInputList, ANameInput } from '../../../../../src/components/utility';
 import { install } from '../../../../../src/module';
 import type { Options } from '../../../../../src/types';
 
@@ -46,6 +46,7 @@ function createEntity() : IdentityProvider {
         client_secret: 'client-secret',
         token_url: 'https://idp.example.com/oauth/token',
         authorize_url: 'https://idp.example.com/oauth/authorize',
+        scope: 'openid profile',
     } as IdentityProvider;
 }
 
@@ -128,16 +129,23 @@ describe('AIdentityProviderOAuth2Form', () => {
         expect(body).not.toHaveProperty('updated_at');
     });
 
-    it('should submit an entered scope on update', async () => {
+    it('should hydrate the scope list and submit a changed scope on update', async () => {
         const entity = createEntity();
         const { wrapper, httpClient } = mountForm(entity);
 
         await flushPromises();
 
-        const scopeInput = wrapper.find('input[placeholder="openid profile email"]');
-        expect(scopeInput.exists()).toBe(true);
+        // one list input per scope token
+        const scopeList = wrapper.findComponent(AFormInputList);
+        expect(scopeList.exists()).toBe(true);
 
-        await scopeInput.setValue('openid profile email custom');
+        const inputValues = wrapper
+            .findAll('input')
+            .map((i) => (i.element as HTMLInputElement).value);
+        expect(inputValues).toContain('openid');
+        expect(inputValues).toContain('profile');
+
+        scopeList.vm.$emit('changed', ['openid', 'profile', 'custom']);
         await flushPromises();
 
         await wrapper.find('form').trigger('submit');
@@ -145,7 +153,7 @@ describe('AIdentityProviderOAuth2Form', () => {
 
         const request = findUpdateRequest(httpClient);
         expect(request).toBeDefined();
-        expect(request!.body).toMatchObject({ scope: 'openid profile email custom' });
+        expect(request!.body).toMatchObject({ scope: 'openid profile custom' });
     });
 });
 
