@@ -71,4 +71,23 @@ describe('components/entities/permission-check', () => {
 
         expect(wrapper.find('.permission-gated').exists()).toBe(true);
     });
+
+    it('should re-evaluate when the name prop changes', async () => {
+        const spy = vi.spyOn(PermissionEvaluator.prototype, 'preEvaluateOneOf')
+            .mockImplementation(async (ctx) => {
+                if (ctx.name !== 'user_read') {
+                    throw new Error('denied');
+                }
+            });
+
+        const wrapper = mountCheck('user_read');
+        await flushPromises();
+        expect(wrapper.find('.permission-gated').exists()).toBe(true);
+
+        await wrapper.setProps({ name: 'user_delete' });
+        await flushPromises();
+
+        expect(spy.mock.calls.length).toBeGreaterThanOrEqual(2);
+        expect(wrapper.find('.permission-gated').exists()).toBe(false);
+    });
 });

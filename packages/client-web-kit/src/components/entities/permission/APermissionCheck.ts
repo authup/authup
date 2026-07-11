@@ -30,12 +30,14 @@ export const APermissionCheck = defineComponent({
 
         // single setup-time call (the checker registers lifecycle hooks and
         // returns a Ref<boolean>) — wrapping it in computed() would truth-test
-        // the inner Ref object and render the slot unconditionally.
-        const isPermitted = fn({
+        // the inner Ref object and render the slot unconditionally. The getter
+        // keeps the context reactive: a name/input/options prop change
+        // re-triggers the evaluation.
+        const isPermitted = fn(() => ({
             name: props.name,
             data: definePolicyData(props.input),
             options: props.options,
-        });
+        }));
 
         return () => {
             if (

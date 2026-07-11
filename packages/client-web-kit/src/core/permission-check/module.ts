@@ -16,7 +16,11 @@ import {
 } from 'vue';
 import type { Store } from '../store';
 import { injectStore, storeToRefs } from '../store';
-import type { PermissionCheckerReactiveFn, PermissionCheckerReactiveFnCreateContext } from './types';
+import type {
+    PermissionCheckerReactiveFn,
+    PermissionCheckerReactiveFnContext,
+    PermissionCheckerReactiveFnCreateContext,
+} from './types';
 
 export function createPermissionCheckerReactiveFn(
     ctx: PermissionCheckerReactiveFnCreateContext = {},
@@ -30,15 +34,23 @@ export function createPermissionCheckerReactiveFn(
 
     const storeRefs = storeToRefs(store);
 
-    return (ctx: PermissionEvaluationContext) : Ref<boolean> => {
+    // The returned fn registers lifecycle hooks — call it ONCE during setup.
+    // Pass a GETTER to make the evaluation context reactive: the checker
+    // re-evaluates whenever the getter's dependencies (e.g. component props)
+    // change, in addition to the login-state changes it always tracks.
+    return (ctx: PermissionCheckerReactiveFnContext) : Ref<boolean> => {
+        const resolveContext : () => PermissionEvaluationContext = typeof ctx === 'function' ?
+            ctx :
+            () => ctx;
+
         const data = ref(false);
 
-        let computePromise: Promise<boolean> | undefined;
-        const compute = async () => {
-            if (computePromise) {
-                return computePromise;
-            }
+        // guards a recompute triggered while an earlier evaluation is still
+        // in flight — only the latest evaluation may write the outcome (the
+        // stale one ran against a superseded context or login state).
+        let sequence = 0;
 
+        const compute = async () => {
             let identity: IdentityPolicyData | undefined;
             if (storeRefs.userId.value) {
                 identity = {
@@ -55,45 +67,45 @@ export function createPermissionCheckerReactiveFn(
                 }
             }
 
-            let outcome: boolean;
+            const evaluationContext = resolveContext();
 
-            const input = ctx.data || new PolicyData();
+            const input = evaluationContext.data || new PolicyData();
             input.set(BuiltInPolicyType.IDENTITY, identity);
 
             try {
-                computePromise = store.permissionEvaluator
+                return await store.permissionEvaluator
                     .preEvaluateOneOf({
-                        ...ctx,
+                        ...evaluationContext,
                         data: input,
                     })
                     .then(() => true)
                     .catch(() => false);
-
-                outcome = await computePromise;
             } catch {
-                outcome = false;
-            } finally {
-                computePromise = undefined;
+                return false;
             }
-
-            return outcome;
         };
 
-        Promise.resolve()
-            .then(() => compute())
-            .then((outcome) => {
-                data.value = outcome;
-            });
+        const recompute = () => {
+            sequence++;
+            const current = sequence;
+
+            Promise.resolve()
+                .then(() => compute())
+                .then((outcome) => {
+                    if (current === sequence) {
+                        data.value = outcome;
+                    }
+                });
+        };
+
+        recompute();
 
         let removeListener: undefined | CallableFunction;
         onMounted(() => {
-            removeListener = watch(storeRefs.loggedIn, () => {
-                Promise.resolve()
-                    .then(() => compute())
-                    .then((outcome) => {
-                        data.value = outcome;
-                    });
-            });
+            removeListener = watch(
+                [storeRefs.loggedIn, resolveContext],
+                () => recompute(),
+            );
         });
 
         onUnmounted(() => {

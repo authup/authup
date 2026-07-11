@@ -16,4 +16,7 @@ export type PermissionCheckerReactiveFnCreateContext = {
     app?: App
 };
 
-export type PermissionCheckerReactiveFn = (ctx: PermissionEvaluationContext) => Ref<boolean>;
+export type PermissionCheckerReactiveFnContext = PermissionEvaluationContext |
+(() => PermissionEvaluationContext);
+
+export type PermissionCheckerReactiveFn = (ctx: PermissionCheckerReactiveFnContext) => Ref<boolean>;
