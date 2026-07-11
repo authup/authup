@@ -22,6 +22,7 @@ export function createFakeOAuth2IdentityProvider(data: Partial<OAuth2IdentityPro
         client_secret: faker.string.alphanumeric({ length: 64 }),
         token_url: faker.internet.url(),
         authorize_url: faker.internet.url(),
+        scope: 'openid profile email',
         ...data,
     } satisfies Partial<OAuth2IdentityProvider>;
 }
