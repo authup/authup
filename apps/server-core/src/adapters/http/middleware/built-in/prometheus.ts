@@ -17,9 +17,7 @@ export function registerPrometheusMiddleware(router: App, input?: OptionsInput) 
                 path = `/${path}`;
             }
 
-            return path.startsWith('/authorize') ||
-                path.startsWith('/token') ||
-                path.startsWith('/metrics') ||
+            return path.startsWith('/metrics') ||
                 path === '/';
         },
     };
