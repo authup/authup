@@ -6,4 +6,5 @@
  */
 
 export * from './authenticator.ts';
+export * from './grant-type.ts';
 export * from './types.ts';

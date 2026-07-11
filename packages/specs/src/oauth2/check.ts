@@ -9,6 +9,7 @@ import { ErrorCode, hasInstanceof, isAuthupError } from '@authup/errors';
 import { isObject } from '@authup/kit';
 import {
     OAUTH2_CLIENT_ERROR_INSTANCE,
+    OAUTH2_CLIENT_UNAUTHORIZED_ERROR_INSTANCE,
     OAUTH2_ERROR_INSTANCE,
     OAUTH2_GRANT_ERROR_INSTANCE,
     OAUTH2_GRANT_TYPE_ERROR_INSTANCE,
@@ -17,6 +18,7 @@ import {
     OAUTH2_SCOPE_ERROR_INSTANCE,
     OAUTH2_SERVER_ERROR_INSTANCE,
     type OAuth2ClientError,
+    type OAuth2ClientUnauthorizedError,
     type OAuth2Error,
     type OAuth2GrantError,
     type OAuth2GrantTypeError,
@@ -61,6 +63,18 @@ export function isOAuth2ClientError(input: unknown): input is OAuth2ClientError 
     }
 
     return input.code === ErrorCode.OAUTH_CLIENT_INVALID;
+}
+
+export function isOAuth2ClientUnauthorizedError(input: unknown): input is OAuth2ClientUnauthorizedError {
+    if (hasInstanceof(input, OAUTH2_CLIENT_UNAUTHORIZED_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isOAuth2Error(input)) {
+        return false;
+    }
+
+    return input.code === ErrorCode.OAUTH_CLIENT_UNAUTHORIZED;
 }
 
 export function isOAuth2GrantError(input: unknown): input is OAuth2GrantError {

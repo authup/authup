@@ -6,12 +6,12 @@
  */
 
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
-import { OAuth2RequestError } from '@authup/specs';
+import { OAuth2RequestError, OAuth2TokenGrant } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IAppEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
-import { OAuth2AuthorizeGrant } from '../../../../../core/index.ts';
+import { OAuth2AuthorizeGrant, assertClientGrantAllowed } from '../../../../../core/index.ts';
 import type {
     IOAuth2AuthorizationCodeVerifier,
     IRealmRepository,
@@ -50,6 +50,8 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
         const realm = await this.realmRepository.resolve(readRealmHint(body, query), true);
 
         const client = await this.clientAuthenticator.authenticate(clientId, clientSecret, realm.id);
+
+        assertClientGrantAllowed(client, OAuth2TokenGrant.AUTHORIZATION_CODE);
 
         const entity = await this.codeVerifier.verify(code, {
             redirectUri,

@@ -45,6 +45,7 @@ export enum ErrorCode {
     // Oauth2 Codes
     OAUTH_REDIRECT_URI_MISMATCH = 'redirect_uri_mismatch',
     OAUTH_CLIENT_INVALID = 'invalid_client',
+    OAUTH_CLIENT_UNAUTHORIZED = 'unauthorized_client',
     OAUTH_GRANT_INVALID = 'invalid_grant',
     OAUTH_GRANT_TYPE_UNSUPPORTED = 'unsupported_token_grant_type',
     OAUTH_REQUEST_INVALID = 'invalid_request',

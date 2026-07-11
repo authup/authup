@@ -172,6 +172,34 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
             })).rejects.toThrow();
         });
 
+        it('should reject a client whose grant_types allowlist omits authorization_code', async () => {
+            const client = clientRepository.seed({ is_confidential: true, grant_types: 'client_credentials' });
+            await expect(
+                verifier.verify({
+                    client_id: client.id,
+                    response_type: OAuth2AuthorizationResponseType.CODE,
+                }),
+            ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_CLIENT_UNAUTHORIZED }));
+        });
+
+        it('should accept a client whose grant_types allowlist includes authorization_code', async () => {
+            const client = clientRepository.seed({ is_confidential: true, grant_types: 'authorization_code refresh_token' });
+            const result = await verifier.verify({
+                client_id: client.id,
+                response_type: OAuth2AuthorizationResponseType.CODE,
+            });
+            expect(result.client.id).toBe(client.id);
+        });
+
+        it('should treat a null grant_types column as allow-all', async () => {
+            const client = clientRepository.seed({ is_confidential: true, grant_types: null });
+            const result = await verifier.verify({
+                client_id: client.id,
+                response_type: OAuth2AuthorizationResponseType.CODE,
+            });
+            expect(result.client.id).toBe(client.id);
+        });
+
         it('should reject a pattern-less client outright (open-redirect guard, OAuth 2.1)', async () => {
             // A client with no registered redirect_uri pattern can never be
             // matched — the verifier must throw instead of issuing a code to

@@ -7,11 +7,11 @@
 
 import type { Client } from '@authup/core-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
-import { OAuth2GrantError, OAuth2RequestError } from '@authup/specs';
+import { OAuth2GrantError, OAuth2RequestError, OAuth2TokenGrant } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
 import type { IAppEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
-import { OAuth2RefreshTokenGrant } from '../../../../../core/index.ts';
+import { OAuth2RefreshTokenGrant, assertClientGrantAllowed } from '../../../../../core/index.ts';
 import type {
     IOAuth2TokenVerifier,
     IRealmRepository,
@@ -83,6 +83,10 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
             // with no secret throws invalid_client for it, so a confidential-
             // bound token presented without credentials is rejected here.
             client = await this.clientAuthenticator.authenticate(payload.client_id);
+        }
+
+        if (client) {
+            assertClientGrantAllowed(client, OAuth2TokenGrant.REFRESH_TOKEN);
         }
 
         // Realm parity for PUBLIC clients only: a public client may not refresh

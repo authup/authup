@@ -13,9 +13,11 @@ import {
     OAuth2GrantError,
     OAuth2RequestError,
     OAuth2ScopeError,
+    OAuth2TokenGrant,
     hasOAuth2Scopes,
 } from '@authup/specs';
 import type { IOAuth2ClientRepository } from '../../../client/index.ts';
+import { assertClientGrantAllowed } from '../../../client/index.ts';
 import type { IOAuth2ScopeRepository } from '../../../scope/index.ts';
 import type {
     IOAuth2AuthorizationCodeRequestVerifier,
@@ -60,6 +62,10 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
         if (!client.active) {
             throw OAuth2ClientError.inactive();
         }
+
+        // A non-null grant_types allowlist must cover the code flow — an RP
+        // misconfiguration fails at the front door, not at code redemption.
+        assertClientGrantAllowed(client, OAuth2TokenGrant.AUTHORIZATION_CODE);
 
         // OAuth 2.1 posture: a client with no registered redirect_uri pattern
         // can never be matched — reject outright instead of trusting whatever

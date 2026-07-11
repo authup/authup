@@ -7,12 +7,12 @@
 
 import type { User } from '@authup/core-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
-import { OAuth2RequestError } from '@authup/specs';
+import { OAuth2RequestError, OAuth2TokenGrant } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
 import type { IAppEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
 import type { ICredentialsAuthenticator, IRealmRepository, OAuth2ClientAuthenticator } from '../../../../../core/index.ts';
-import { PasswordGrantType } from '../../../../../core/index.ts';
+import { PasswordGrantType, assertClientGrantAllowed } from '../../../../../core/index.ts';
 import type { HTTPOAuth2PasswordGrantContext, IHTTPOAuth2Grant } from './types.ts';
 import { extractClientCredentialsFromRequest, readRealmHint, readStringField } from './utils/index.ts';
 
@@ -51,6 +51,10 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
                 realm.id,
             ) :
             undefined;
+
+        if (client) {
+            assertClientGrantAllowed(client, OAuth2TokenGrant.PASSWORD);
+        }
 
         const user = await this.authenticator.authenticate(username, password, realm.id);
 

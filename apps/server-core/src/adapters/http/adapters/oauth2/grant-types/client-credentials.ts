@@ -6,13 +6,14 @@
  */
 
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
+import { OAuth2TokenGrant } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
 import type { Client } from '@authup/core-kit';
 import { EntityCredentialsInvalidError } from '@authup/errors';
 import type { IAppEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
 import type { ICredentialsAuthenticator } from '../../../../../core/index.ts';
-import { ClientCredentialsGrant } from '../../../../../core/index.ts';
+import { ClientCredentialsGrant, assertClientGrantAllowed } from '../../../../../core/index.ts';
 import type { HTTPOAuth2ClientCredentialsGrantContext, IHTTPOAuth2Grant } from './types.ts';
 import { extractClientCredentialsFromRequest } from './utils/index.ts';
 
@@ -35,6 +36,8 @@ export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implement
         }
 
         const client = await this.authenticator.authenticate(clientId, clientSecret ?? '', realmId);
+
+        assertClientGrantAllowed(client, OAuth2TokenGrant.CLIENT_CREDENTIALS);
 
         return this.runWith(client, {
             ipAddress: getRequestIP(event, { trustProxy: true }) ?? undefined,
