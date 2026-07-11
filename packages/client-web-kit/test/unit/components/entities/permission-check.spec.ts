@@ -72,6 +72,36 @@ describe('components/entities/permission-check', () => {
         expect(wrapper.find('.permission-gated').exists()).toBe(true);
     });
 
+    it('should fail closed while a re-evaluation is pending', async () => {
+        let release!: () => void;
+        const gate = new Promise<void>((resolve) => {
+            release = resolve;
+        });
+
+        vi.spyOn(PermissionEvaluator.prototype, 'preEvaluateOneOf')
+            .mockImplementation(async (ctx) => {
+                if (ctx.name === 'user_read') {
+                    return;
+                }
+
+                await gate;
+            });
+
+        const wrapper = mountCheck('user_read');
+        await flushPromises();
+        expect(wrapper.find('.permission-gated').exists()).toBe(true);
+
+        // the re-evaluation is pending on the gate — the previously allowed
+        // outcome must not keep authorizing the slot in the meantime
+        await wrapper.setProps({ name: 'user_update' });
+        await flushPromises();
+        expect(wrapper.find('.permission-gated').exists()).toBe(false);
+
+        release();
+        await flushPromises();
+        expect(wrapper.find('.permission-gated').exists()).toBe(true);
+    });
+
     it('should re-evaluate when the name prop changes', async () => {
         const spy = vi.spyOn(PermissionEvaluator.prototype, 'preEvaluateOneOf')
             .mockImplementation(async (ctx) => {

@@ -89,6 +89,11 @@ export function createPermissionCheckerReactiveFn(
             sequence++;
             const current = sequence;
 
+            // fail closed while the replacement evaluation is pending — a
+            // previously allowed outcome must not keep authorizing across a
+            // context/login change.
+            data.value = false;
+
             Promise.resolve()
                 .then(() => compute())
                 .then((outcome) => {
