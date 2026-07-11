@@ -127,14 +127,14 @@ export function readConfigRawFromEnv() : ConfigInput {
 
     // ---------------------------------------------------------------
 
-    const auditLogEnabled = readBool(ConfigEnvironmentVariableName.AUDIT_LOG_ENABLED);
-    if (typeof auditLogEnabled !== 'undefined') {
-        options.auditLogEnabled = auditLogEnabled;
+    const eventLogEnabled = readBool(ConfigEnvironmentVariableName.EVENT_LOG_ENABLED);
+    if (typeof eventLogEnabled !== 'undefined') {
+        options.eventLogEnabled = eventLogEnabled;
     }
 
-    const auditLogRetentionDays = readInt(ConfigEnvironmentVariableName.AUDIT_LOG_RETENTION_DAYS);
-    if (typeof auditLogRetentionDays !== 'undefined') {
-        options.auditLogRetentionDays = auditLogRetentionDays;
+    const eventLogRetentionDays = readInt(ConfigEnvironmentVariableName.EVENT_LOG_RETENTION_DAYS);
+    if (typeof eventLogRetentionDays !== 'undefined') {
+        options.eventLogRetentionDays = eventLogRetentionDays;
     }
 
     const loginAttemptThrottleEnabled = readBool(ConfigEnvironmentVariableName.LOGIN_ATTEMPT_THROTTLE_ENABLED);

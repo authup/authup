@@ -13,12 +13,16 @@ import {
     PrimaryColumn,
 } from 'typeorm';
 import type {
-    AuditEvent, 
-    AuditEventName, 
-    AuditEventScope, 
-    IdentityType, 
+    Event,
+    EventName,
+    EventScope,
+    IdentityType,
     Realm,
 } from '@authup/core-kit';
+import {
+    deserialize,
+    serialize,
+} from '@authup/kit';
 import { dateToISOStringTransformer } from '../../helpers/index.ts';
 
 // Append-only audit record. All references (actor, client, realm, ref) are
@@ -26,8 +30,8 @@ import { dateToISOStringTransformer } from '../../helpers/index.ts';
 // references. Not cached, not realtime-broadcast: no subscriber.
 @Index(['name', 'scope'])
 @Index(['ref_type', 'ref_id'])
-@Entity({ name: 'audit_events' })
-export class AuditEventEntity implements AuditEvent {
+@Entity({ name: 'auth_events' })
+export class EventEntity implements Event {
     @PrimaryColumn({ type: 'uuid' })
     id: string;
 
@@ -35,13 +39,13 @@ export class AuditEventEntity implements AuditEvent {
         type: 'varchar',
         length: 64,
     })
-    scope: `${AuditEventScope}`;
+    scope: `${EventScope}`;
 
     @Column({
         type: 'varchar',
         length: 64,
     })
-    name: `${AuditEventName}`;
+    name: `${EventName}`;
 
     @Column({
         type: 'varchar',
@@ -134,11 +138,27 @@ export class AuditEventEntity implements AuditEvent {
     realm_id: Realm['id'] | null;
 
     @Column({
-        type: 'simple-json',
+        type: 'text',
         nullable: true,
         default: null,
+        transformer: {
+            to(value: any): any {
+                // serialize(null) would persist the string 'null' instead of
+                // a SQL NULL — keep absent context a real NULL column.
+                return value === null || typeof value === 'undefined' ?
+                    null :
+                    serialize(value);
+            },
+            from(value: any): any {
+                return deserialize(value);
+            },
+        },
     })
     data: Record<string, any> | null;
+
+    @Index()
+    @Column({ type: 'boolean', default: false })
+    expiring: boolean;
 
     @Index()
     @Column({

@@ -6,7 +6,7 @@
  */
 
 import type { User } from '@authup/core-kit';
-import { AuditEventName, AuditEventScope } from '@authup/core-kit';
+import { EventName, EventScope } from '@authup/core-kit';
 import { isEntityCredentialsInvalidError, isEntityInactiveError } from '@authup/errors';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { OAuth2RequestError, OAuth2TokenGrant } from '@authup/specs';
@@ -84,9 +84,9 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
             user = await this.authenticator.authenticate(username, password, realm.id);
         } catch (e) {
             if (isEntityCredentialsInvalidError(e) || isEntityInactiveError(e)) {
-                await this.auditEventService?.record({
-                    scope: AuditEventScope.OAUTH2,
-                    name: AuditEventName.LOGIN_FAILED,
+                await this.eventService?.record({
+                    scope: EventScope.OAUTH2,
+                    name: EventName.LOGIN_FAILED,
                     actorType: null,
                     actorId: null,
                     actorName: identifier,

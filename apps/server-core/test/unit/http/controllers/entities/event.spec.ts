@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuditEventName, AuditEventScope, IdentityType } from '@authup/core-kit';
+import { EventName, EventScope, IdentityType } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
 import {
     afterAll,
@@ -17,7 +17,7 @@ import {
 import { createTestApplication } from '../../../../app';
 import { createFakeUser, expectClientError, httpRequest } from '../../../../utils';
 
-describe('src/http/controllers/entities/audit-event', () => {
+describe('src/http/controllers/entities/event', () => {
     const suite = createTestApplication();
 
     const user = createFakeUser();
@@ -43,12 +43,12 @@ describe('src/http/controllers/entities/audit-event', () => {
         });
         expect(response.access_token).toBeDefined();
 
-        const { data } = await suite.client.auditEvent.getMany({ filter: { name: AuditEventName.LOGIN, actor_id: userId } });
+        const { data } = await suite.client.event.getMany({ filter: { name: EventName.LOGIN, actor_id: userId } });
         expect(data.length).toBeGreaterThanOrEqual(1);
 
         const [row] = data;
-        expect(row.scope).toEqual(AuditEventScope.OAUTH2);
-        expect(row.name).toEqual(AuditEventName.LOGIN);
+        expect(row.scope).toEqual(EventScope.OAUTH2);
+        expect(row.name).toEqual(EventName.LOGIN);
         expect(row.actor_type).toEqual(IdentityType.USER);
         expect(row.actor_id).toEqual(userId);
         expect(row.actor_name).toEqual(user.name);
@@ -74,11 +74,11 @@ describe('src/http/controllers/entities/audit-event', () => {
             { status: 400 },
         );
 
-        const { data } = await suite.client.auditEvent.getMany({ filter: { name: AuditEventName.LOGIN_FAILED, actor_name: user.name } });
+        const { data } = await suite.client.event.getMany({ filter: { name: EventName.LOGIN_FAILED, actor_name: user.name } });
         expect(data.length).toBeGreaterThanOrEqual(1);
 
         const [row] = data;
-        expect(row.scope).toEqual(AuditEventScope.OAUTH2);
+        expect(row.scope).toEqual(EventScope.OAUTH2);
         expect(row.actor_id).toBeNull();
         expect(row.actor_type).toBeNull();
         // the submitted identifier, canonicalized (trim + lowercase)
@@ -90,19 +90,19 @@ describe('src/http/controllers/entities/audit-event', () => {
     });
 
     it('filters the collection by event name', async () => {
-        const { data } = await suite.client.auditEvent.getMany({ filter: { name: AuditEventName.LOGIN } });
+        const { data } = await suite.client.event.getMany({ filter: { name: EventName.LOGIN } });
 
         expect(data.length).toBeGreaterThanOrEqual(1);
-        expect(data.every((row) => row.name === AuditEventName.LOGIN)).toBe(true);
+        expect(data.every((row) => row.name === EventName.LOGIN)).toBe(true);
     });
 
     it('reads a single audit event', async () => {
-        const { data } = await suite.client.auditEvent.getMany({ filter: { name: AuditEventName.LOGIN, actor_id: userId } });
+        const { data } = await suite.client.event.getMany({ filter: { name: EventName.LOGIN, actor_id: userId } });
         expect(data.length).toBeGreaterThanOrEqual(1);
 
-        const row = await suite.client.auditEvent.getOne(data[0].id);
+        const row = await suite.client.event.getOne(data[0].id);
         expect(row.id).toEqual(data[0].id);
-        expect(row.name).toEqual(AuditEventName.LOGIN);
+        expect(row.name).toEqual(EventName.LOGIN);
     });
 
     // Generous timeout: an AUTHENTICATED request to an unmatched route is slow
@@ -111,20 +111,20 @@ describe('src/http/controllers/entities/audit-event', () => {
     // each time. Pre-existing behavior (reproducible with any Basic-auth'd
     // request to e.g. /unknown-path), unrelated to the audit surface.
     it('rejects write attempts (append-only surface)', async () => {
-        const post = await httpRequest(suite, 'POST', '/audit-events', {
+        const post = await httpRequest(suite, 'POST', '/events', {
             headers: { Authorization: adminAuthorization },
             form: { name: 'login', scope: 'oauth2' },
         });
         expect([404, 405]).toContain(post.status);
 
-        const { data } = await suite.client.auditEvent.getMany({ filter: { name: AuditEventName.LOGIN, actor_id: userId } });
+        const { data } = await suite.client.event.getMany({ filter: { name: EventName.LOGIN, actor_id: userId } });
         expect(data.length).toBeGreaterThanOrEqual(1);
 
-        const del = await httpRequest(suite, 'DELETE', `/audit-events/${data[0].id}`, { headers: { Authorization: adminAuthorization } });
+        const del = await httpRequest(suite, 'DELETE', `/events/${data[0].id}`, { headers: { Authorization: adminAuthorization } });
         expect([404, 405]).toContain(del.status);
 
         // the row survives the delete attempt
-        const row = await suite.client.auditEvent.getOne(data[0].id);
+        const row = await suite.client.event.getOne(data[0].id);
         expect(row.id).toEqual(data[0].id);
     }, 30_000);
 

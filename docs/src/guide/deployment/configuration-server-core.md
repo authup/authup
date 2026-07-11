@@ -128,21 +128,21 @@ export default {
     passwordMinLength: 10,
 
     /**
-     * Persist security audit events (login, login_failed, authorize,
-     * logout, refresh replay, ...) to the audit_events table.
+     * Persist security events (login, login_failed, authorize,
+     * logout, refresh replay, ...) to the auth_events table.
      * default: true
      */
-    auditLogEnabled: true,
+    eventLogEnabled: true,
 
     /**
-     * Retention for persisted audit events in days. 0 = keep forever.
+     * Retention for persisted security events in days. 0 = keep forever.
      * default: 365
      */
-    auditLogRetentionDays: 365,
+    eventLogRetentionDays: 365,
 
     /**
      * Throttle failed logins per (identifier, ip) pair by counting recent
-     * login_failed audit events. Requires auditLogEnabled.
+     * login_failed events. Requires eventLogEnabled.
      * The client IP honors X-Forwarded-For — deploy behind a trusted
      * reverse proxy that overwrites the header, otherwise a direct client
      * can spoof the IP half of the throttle key.
@@ -224,8 +224,8 @@ registrationEnabled=false
 emailVerificationEnabled=false
 passwordRecoveryEnabled=false
 passwordMinLength=10
-auditLogEnabled=true
-auditLogRetentionDays=365
+eventLogEnabled=true
+eventLogRetentionDays=365
 loginAttemptThrottleEnabled=false
 loginAttemptThreshold=5
 loginAttemptWindow=900
@@ -246,8 +246,8 @@ REGISTRATION_ENABLED=false
 EMAIL_VERIFICATION_ENABLED=false
 PASSWORD_RECOVERY_ENABLED=false
 PASSWORD_MIN_LENGTH=10
-AUDIT_LOG_ENABLED=true
-AUDIT_LOG_RETENTION_DAYS=365
+EVENT_LOG_ENABLED=true
+EVENT_LOG_RETENTION_DAYS=365
 LOGIN_ATTEMPT_THROTTLE_ENABLED=false
 LOGIN_ATTEMPT_THRESHOLD=5
 LOGIN_ATTEMPT_WINDOW=900

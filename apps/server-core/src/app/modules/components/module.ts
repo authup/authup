@@ -7,8 +7,8 @@
 
 import type { Component } from '../../../components/index.ts';
 import {
-    createAuditEventCleanerComponent,
     createDatabaseUniqueEntriesComponent,
+    createEventCleanerComponent,
     createOAuth2CleanerComponent,
 } from '../../../components/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
@@ -40,8 +40,8 @@ export class ComponentsModule implements IModule {
 
         // The sweep only exists when rows are written AND carry an expiry —
         // with retention 0 (keep forever) every expires_at is null anyway.
-        if (config.auditLogEnabled && config.auditLogRetentionDays > 0) {
-            components.push(createAuditEventCleanerComponent(dataSource, logger));
+        if (config.eventLogEnabled && config.eventLogRetentionDays > 0) {
+            components.push(createEventCleanerComponent(dataSource, logger));
         }
 
         // start() is deliberately fire-and-forget, so a rejection must be

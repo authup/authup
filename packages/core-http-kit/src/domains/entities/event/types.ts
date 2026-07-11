@@ -6,15 +6,15 @@
  */
 
 import type { BuildInput } from 'rapiq';
-import type { AuditEvent } from '@authup/core-kit';
+import type { Event } from '@authup/core-kit';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
 /**
  * Read-only client — the audit log is append-only: rows are written
  * server-side at the emit points and pruned by the retention sweep.
  */
-export interface IAuditEventAPI {
-    getMany(data?: BuildInput<AuditEvent>): Promise<EntityCollectionResponse<AuditEvent>>;
+export interface IEventAPI {
+    getMany(data?: BuildInput<Event>): Promise<EntityCollectionResponse<Event>>;
 
-    getOne(id: AuditEvent['id'], record?: BuildInput<AuditEvent>): Promise<EntityRecordResponse<AuditEvent>>;
+    getOne(id: Event['id'], record?: BuildInput<Event>): Promise<EntityRecordResponse<Event>>;
 }

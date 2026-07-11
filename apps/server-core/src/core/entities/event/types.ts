@@ -6,28 +6,28 @@
  */
 
 import type {
-    AuditEvent, 
-    AuditEventName, 
-    AuditEventScope, 
+    Event, 
+    EventName, 
+    EventScope, 
     IdentityType,
 } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
 
-export type AuditEventOwner = {
+export type EventOwner = {
     actorId: string,
     actorType: string,
 };
 
-export type AuditEventFindManyOptions = {
+export type EventFindManyOptions = {
     /**
      * Mandatory owner constraint (self-service scope) — not overridable by a
      * rapiq filter.
      */
-    owner?: AuditEventOwner,
+    owner?: EventOwner,
 };
 
-export type AuditEventCountRecentFilter = {
-    name: `${AuditEventName}`,
+export type EventCountRecentFilter = {
+    name: `${EventName}`,
     actorName?: string,
     requestIpAddress?: string,
     realmId?: string | null,
@@ -37,31 +37,31 @@ export type AuditEventCountRecentFilter = {
     since: string,
 };
 
-export interface IAuditEventRepository {
-    create(data: Partial<AuditEvent>): AuditEvent;
+export interface IEventRepository {
+    create(data: Partial<Event>): Event;
 
-    save(entity: AuditEvent): Promise<AuditEvent>;
+    save(entity: Event): Promise<Event>;
 
     findMany(
         query: Record<string, any>,
-        options?: AuditEventFindManyOptions,
-    ): Promise<EntityRepositoryFindManyResult<AuditEvent>>;
+        options?: EventFindManyOptions,
+    ): Promise<EntityRepositoryFindManyResult<Event>>;
 
-    findOneById(id: string): Promise<AuditEvent | null>;
+    findOneById(id: string): Promise<Event | null>;
 
-    countRecent(filter: AuditEventCountRecentFilter): Promise<number>;
+    countRecent(filter: EventCountRecentFilter): Promise<number>;
 
     /**
-     * Retention sweep: drop every row whose expires_at lies before the given
-     * instant (rows with expires_at = null are kept forever). Returns the
+     * Retention sweep: drop every expiring row whose expires_at lies before
+     * the given instant (non-expiring rows are kept forever). Returns the
      * number of removed rows.
      */
     deleteExpired(now: string): Promise<number>;
 }
 
-export type AuditEventRecordInput = {
-    scope: `${AuditEventScope}`,
-    name: `${AuditEventName}`,
+export type EventRecordInput = {
+    scope: `${EventScope}`,
+    name: `${EventName}`,
     refType?: string | null,
     refId?: string | null,
     clientId?: string | null,
@@ -76,35 +76,35 @@ export type AuditEventRecordInput = {
     data?: Record<string, any> | null,
 };
 
-export type AuditEventServiceOptions = {
+export type EventServiceOptions = {
     /**
-     * config.auditLogEnabled — when false, record() only emits the structured
+     * config.eventLogEnabled — when false, record() only emits the structured
      * log line and persists nothing.
      */
     enabled?: boolean,
     /**
-     * config.auditLogRetentionDays — stamped per row as expires_at at write
-     * time; 0 = keep forever (expires_at stays null).
+     * config.eventLogRetentionDays — stamped per row as expiring/expires_at
+     * at write time; 0 = keep forever (expiring stays false, expires_at null).
      */
     retentionDays?: number,
 };
 
-export interface IAuditEventService {
+export interface IEventService {
     /**
      * Persist an audit event. Fire-and-forget-safe: never throws — a write
      * failure must not fail the originating auth operation.
      */
-    record(input: AuditEventRecordInput): Promise<void>;
+    record(input: EventRecordInput): Promise<void>;
 
     /**
-     * List audit events. An actor without AUDIT_READ is scoped to its own
-     * rows ("my sign-in history"); an actor with AUDIT_READ sees every row
+     * List audit events. An actor without EVENT_READ is scoped to its own
+     * rows ("my sign-in history"); an actor with EVENT_READ sees every row
      * its realm reach permits.
      */
-    getMany(query: Record<string, any>, actor: ActorContext): Promise<EntityRepositoryFindManyResult<AuditEvent>>;
+    getMany(query: Record<string, any>, actor: ActorContext): Promise<EntityRepositoryFindManyResult<Event>>;
 
     /**
      * Read a single audit event. Own rows need no permission.
      */
-    getOne(id: string, actor: ActorContext): Promise<AuditEvent>;
+    getOne(id: string, actor: ActorContext): Promise<Event>;
 }

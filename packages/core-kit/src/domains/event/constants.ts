@@ -6,10 +6,10 @@
  */
 
 /**
- * Fixed audit-event vocabulary (never free text). The (scope, name) pair
+ * Fixed event vocabulary (never free text). The (scope, name) pair
  * classifies an event; ref_type/ref_id point at the affected resource.
  */
-export enum AuditEventName {
+export enum EventName {
     LOGIN = 'login',
     LOGIN_FAILED = 'login_failed',
     LOGOUT = 'logout',
@@ -21,12 +21,12 @@ export enum AuditEventName {
     PASSWORD_RESET_COMPLETED = 'password_reset_completed',
 }
 
-export enum AuditEventScope {
+export enum EventScope {
     OAUTH2 = 'oauth2',
     IDENTITY = 'identity',
 }
 
-export enum AuditEventRefType {
+export enum EventRefType {
     SESSION = 'session',
     USER = 'user',
     CLIENT = 'client',

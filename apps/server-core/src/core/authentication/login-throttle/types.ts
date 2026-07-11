@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IAuditEventRepository } from '../../entities/index.ts';
+import type { IEventRepository } from '../../entities/index.ts';
 
 export type LoginThrottleServiceOptions = {
     /**
@@ -26,7 +26,7 @@ export type LoginThrottleServiceOptions = {
 };
 
 export type LoginThrottleServiceContext = {
-    repository: IAuditEventRepository,
+    repository: IEventRepository,
     options?: LoginThrottleServiceOptions,
 };
 

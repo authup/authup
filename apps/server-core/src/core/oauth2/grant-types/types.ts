@@ -9,7 +9,7 @@ import type { ObjectLiteral } from '@authup/kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { Logger } from '@authup/server-kit';
 import type { ISessionManager } from '../../authentication/index.ts';
-import type { IAuditEventService } from '../../entities/index.ts';
+import type { IEventService } from '../../entities/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 import type { IOAuth2KeyRepository } from '../key/index.ts';
 import type { ISessionTokenRepository } from '../session-token/index.ts';
@@ -41,7 +41,7 @@ export type OAuth2IdentityGrantContext = BaseGrantContext & {
 
 export type OAuth2PasswordGrantContext = BaseGrantContext & {
     refreshTokenIssuer: IOAuth2TokenIssuer,
-    auditEventService?: IAuditEventService,
+    eventService?: IEventService,
     metrics?: IAuthFlowMetrics,
 };
 
@@ -59,7 +59,7 @@ export type OAuth2RefreshTokenGrantContext = BaseGrantContext & {
     tokenVerifier: IOAuth2TokenVerifier,
     tokenRepository: IOAuth2TokenRepository,
     sessionTokenRepository: ISessionTokenRepository,
-    auditEventService?: IAuditEventService,
+    eventService?: IEventService,
     metrics?: IAuthFlowMetrics,
     logger?: Logger,
     options?: OAuth2RefreshTokenGrantOptions,

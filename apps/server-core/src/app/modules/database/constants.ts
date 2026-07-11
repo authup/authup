@@ -8,11 +8,11 @@
 import type { IDomainEventPublisher } from '@authup/server-kit';
 import type { DataSource } from 'typeorm';
 import { TypedToken } from 'eldin';
-import type { IAuditEventRepository, IAuditEventService } from '../../../core/index.ts';
+import type { IEventRepository, IEventService } from '../../../core/index.ts';
 
 export const DatabaseInjectionKey = {
     DataSource: new TypedToken<DataSource>('DataSource'),
     DomainEventPublisher: new TypedToken<IDomainEventPublisher>('DomainEventPublisher'),
-    AuditEventRepository: new TypedToken<IAuditEventRepository>('AuditEventRepository'),
-    AuditEventService: new TypedToken<IAuditEventService>('AuditEventService'),
+    EventRepository: new TypedToken<IEventRepository>('EventRepository'),
+    EventService: new TypedToken<IEventService>('EventService'),
 } as const;

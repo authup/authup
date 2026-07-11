@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IAuditEventService, IRealmRepository } from '../../entities/index.ts';
+import type { IEventService, IRealmRepository } from '../../entities/index.ts';
 import type { ISessionManager } from '../../authentication/index.ts';
 import type { IOAuth2ClientRepository } from '../client/index.ts';
 import type { IOAuth2TokenVerifier } from '../token/index.ts';
@@ -43,7 +43,7 @@ export type OAuth2EndSessionServiceContext = {
     sessionManager: ISessionManager,
     clientRepository: IOAuth2ClientRepository,
     realmRepository: IRealmRepository,
-    auditEventService?: IAuditEventService,
+    eventService?: IEventService,
     /**
      * Seconds past its `exp` an (expired) id_token_hint is still accepted for
      * a server-side revoke (config `endSessionHintGracePeriod`).

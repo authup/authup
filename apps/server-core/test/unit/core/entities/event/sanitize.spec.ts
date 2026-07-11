@@ -6,9 +6,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { sanitizeAuditEventData } from '../../../../../src/core/entities/audit-event/sanitize.ts';
+import { sanitizeEventData } from '../../../../../src/core/entities/event/sanitize.ts';
 
-describe('sanitizeAuditEventData', () => {
+describe('sanitizeEventData', () => {
     it.each([
         ['grant_type', 'password'],
         ['scope', 'global openid'],
@@ -23,12 +23,12 @@ describe('sanitizeAuditEventData', () => {
         ['jti', 'b0e8b3d2-1111-1111-1111-111111111111'],
         ['revoked_session_id', 'b0e8b3d2-2222-2222-2222-222222222222'],
     ])('keeps the allowlisted scalar key %s', (key, value) => {
-        expect(sanitizeAuditEventData({ [key]: value })).toEqual({ [key]: value });
+        expect(sanitizeEventData({ [key]: value })).toEqual({ [key]: value });
     });
 
     it('keeps number and boolean values on allowlisted keys', () => {
-        expect(sanitizeAuditEventData({ reason: 42 })).toEqual({ reason: 42 });
-        expect(sanitizeAuditEventData({ reason: true })).toEqual({ reason: true });
+        expect(sanitizeEventData({ reason: 42 })).toEqual({ reason: 42 });
+        expect(sanitizeEventData({ reason: true })).toEqual({ reason: true });
     });
 
     it.each([
@@ -41,15 +41,15 @@ describe('sanitizeAuditEventData', () => {
         ['id_token_hint'],
         ['authorization'],
     ])('drops the credential/secret key %s', (key) => {
-        expect(sanitizeAuditEventData({ [key]: 'super-secret-value' })).toBeNull();
+        expect(sanitizeEventData({ [key]: 'super-secret-value' })).toBeNull();
 
         // and never lets it ride alongside an allowlisted key
-        const mixed = sanitizeAuditEventData({ grant_type: 'password', [key]: 'super-secret-value' });
+        const mixed = sanitizeEventData({ grant_type: 'password', [key]: 'super-secret-value' });
         expect(mixed).toEqual({ grant_type: 'password' });
     });
 
     it('drops arbitrary non-allowlisted keys', () => {
-        expect(sanitizeAuditEventData({ foo: 'bar', username: 'admin' })).toBeNull();
+        expect(sanitizeEventData({ foo: 'bar', username: 'admin' })).toBeNull();
     });
 
     it.each([
@@ -59,11 +59,11 @@ describe('sanitizeAuditEventData', () => {
         ['undefined', undefined],
         ['function', () => 'value'],
     ])('drops a %s value even under an allowlisted key', (_label, value) => {
-        expect(sanitizeAuditEventData({ reason: value })).toBeNull();
+        expect(sanitizeEventData({ reason: value })).toBeNull();
     });
 
     it('cannot smuggle a secret through a nested structure under an allowlisted key', () => {
-        const output = sanitizeAuditEventData({
+        const output = sanitizeEventData({
             grant_type: 'password',
             reason: { password: 'super-secret' },
             scope: ['refresh_token', { client_secret: 'oops' }],
@@ -76,7 +76,7 @@ describe('sanitizeAuditEventData', () => {
 
     it('truncates string values to 512 characters', () => {
         const value = 'a'.repeat(600);
-        const output = sanitizeAuditEventData({ reason: value });
+        const output = sanitizeEventData({ reason: value });
 
         expect(output).not.toBeNull();
         expect(output!.reason).toHaveLength(512);
@@ -85,7 +85,7 @@ describe('sanitizeAuditEventData', () => {
 
     it('keeps a string of exactly 512 characters untouched', () => {
         const value = 'b'.repeat(512);
-        expect(sanitizeAuditEventData({ reason: value })).toEqual({ reason: value });
+        expect(sanitizeEventData({ reason: value })).toEqual({ reason: value });
     });
 
     it.each([
@@ -93,6 +93,6 @@ describe('sanitizeAuditEventData', () => {
         ['undefined', undefined],
         ['empty object', {}],
     ])('returns null for %s input', (_label, input) => {
-        expect(sanitizeAuditEventData(input)).toBeNull();
+        expect(sanitizeEventData(input)).toBeNull();
     });
 });

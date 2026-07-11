@@ -6,7 +6,7 @@
  */
 
 /**
- * The central PII/credential write boundary for audit-event context data.
+ * The central PII/credential write boundary for event context data.
  *
  * Allowlist-first: only these keys survive, and only with scalar values —
  * objects and arrays are dropped outright, so a nested structure can never
@@ -31,7 +31,7 @@ const DATA_KEY_ALLOW_LIST = [
 
 const DATA_VALUE_MAX_LENGTH = 512;
 
-export function sanitizeAuditEventData(
+export function sanitizeEventData(
     input?: Record<string, any> | null,
 ): Record<string, any> | null {
     if (!input) {

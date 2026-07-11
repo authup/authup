@@ -5,45 +5,45 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AuditEvent } from '@authup/core-kit';
+import type { Event } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
 import { LessThan } from 'typeorm';
 import { applyQuery } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
-    AuditEventCountRecentFilter,
-    AuditEventFindManyOptions,
-    IAuditEventRepository,
+    EventCountRecentFilter,
+    EventFindManyOptions,
+    IEventRepository,
 } from '../../../../../core/index.ts';
 import { applyRealmScopeSelect } from '../helpers.ts';
 
-export class AuditEventRepositoryAdapter implements IAuditEventRepository {
-    private readonly repository: Repository<AuditEvent>;
+export class EventRepositoryAdapter implements IEventRepository {
+    private readonly repository: Repository<Event>;
 
-    constructor(repository: Repository<AuditEvent>) {
+    constructor(repository: Repository<Event>) {
         this.repository = repository;
     }
 
-    create(data: Partial<AuditEvent>): AuditEvent {
+    create(data: Partial<Event>): Event {
         return this.repository.create(data);
     }
 
-    async save(entity: AuditEvent): Promise<AuditEvent> {
+    async save(entity: Event): Promise<Event> {
         return this.repository.save(entity);
     }
 
-    async findOneById(id: string): Promise<AuditEvent | null> {
+    async findOneById(id: string): Promise<Event | null> {
         return this.repository.findOneBy({ id });
     }
 
     async findMany(
         query: Record<string, any>,
-        options: AuditEventFindManyOptions = {},
-    ): Promise<EntityRepositoryFindManyResult<AuditEvent>> {
-        const qb = this.repository.createQueryBuilder('auditEvent');
+        options: EventFindManyOptions = {},
+    ): Promise<EntityRepositoryFindManyResult<Event>> {
+        const qb = this.repository.createQueryBuilder('event');
 
         const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'auditEvent',
+            defaultAlias: 'event',
             fields: {
                 allowed: [
                     'id',
@@ -61,6 +61,7 @@ export class AuditEventRepositoryAdapter implements IAuditEventRepository {
                     'request_user_agent',
                     'realm_id',
                     'data',
+                    'expiring',
                     'expires_at',
                     'created_at',
                 ],
@@ -78,6 +79,7 @@ export class AuditEventRepositoryAdapter implements IAuditEventRepository {
                     'actor_name',
                     'request_ip_address',
                     'realm_id',
+                    'expiring',
                     'created_at',
                 ],
             },
@@ -85,11 +87,11 @@ export class AuditEventRepositoryAdapter implements IAuditEventRepository {
             pagination: { maxLimit: 50 },
         });
 
-        applyRealmScopeSelect(qb, 'auditEvent', ['actor_id', 'actor_type']);
+        applyRealmScopeSelect(qb, 'event', ['actor_id', 'actor_type']);
 
         if (options.owner) {
             // mandatory constraint — not overridable by a rapiq filter
-            qb.andWhere('auditEvent.actor_id = :ownerActorId AND auditEvent.actor_type = :ownerActorType', {
+            qb.andWhere('event.actor_id = :ownerActorId AND event.actor_type = :ownerActorType', {
                 ownerActorId: options.owner.actorId,
                 ownerActorType: options.owner.actorType,
             });
@@ -106,24 +108,24 @@ export class AuditEventRepositoryAdapter implements IAuditEventRepository {
         };
     }
 
-    async countRecent(filter: AuditEventCountRecentFilter): Promise<number> {
-        const qb = this.repository.createQueryBuilder('auditEvent')
-            .where('auditEvent.name = :name', { name: filter.name })
-            .andWhere('auditEvent.created_at > :since', { since: new Date(filter.since) });
+    async countRecent(filter: EventCountRecentFilter): Promise<number> {
+        const qb = this.repository.createQueryBuilder('event')
+            .where('event.name = :name', { name: filter.name })
+            .andWhere('event.created_at > :since', { since: new Date(filter.since) });
 
         if (filter.actorName) {
-            qb.andWhere('auditEvent.actor_name = :actorName', { actorName: filter.actorName });
+            qb.andWhere('event.actor_name = :actorName', { actorName: filter.actorName });
         }
 
         if (filter.requestIpAddress) {
-            qb.andWhere('auditEvent.request_ip_address = :requestIpAddress', { requestIpAddress: filter.requestIpAddress });
+            qb.andWhere('event.request_ip_address = :requestIpAddress', { requestIpAddress: filter.requestIpAddress });
         }
 
         if (typeof filter.realmId !== 'undefined') {
             if (filter.realmId === null) {
-                qb.andWhere('auditEvent.realm_id IS NULL');
+                qb.andWhere('event.realm_id IS NULL');
             } else {
-                qb.andWhere('auditEvent.realm_id = :realmId', { realmId: filter.realmId });
+                qb.andWhere('event.realm_id = :realmId', { realmId: filter.realmId });
             }
         }
 
@@ -131,7 +133,10 @@ export class AuditEventRepositoryAdapter implements IAuditEventRepository {
     }
 
     async deleteExpired(now: string): Promise<number> {
-        const result = await this.repository.delete({ expires_at: LessThan(now) });
+        const result = await this.repository.delete({
+            expiring: true,
+            expires_at: LessThan(now),
+        });
 
         return result.affected ?? 0;
     }

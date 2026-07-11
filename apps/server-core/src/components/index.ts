@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './audit-event-cleaner/index.ts';
 export * from './database/index.ts';
+export * from './event-cleaner/index.ts';
 export * from './oauth2-cleaner/index.ts';
 export * from './types.ts';

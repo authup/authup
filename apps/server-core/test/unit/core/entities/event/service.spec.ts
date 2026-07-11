@@ -6,8 +6,8 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { AuditEvent, User } from '@authup/core-kit';
-import { AuditEventName, AuditEventScope, IdentityType } from '@authup/core-kit';
+import type { Event, User } from '@authup/core-kit';
+import { EventName, EventScope, IdentityType } from '@authup/core-kit';
 import type { ActorContext } from '@authup/server-kit';
 import {
     beforeEach,
@@ -16,9 +16,9 @@ import {
     it,
 } from 'vitest';
 import { FakePermissionEvaluator } from '@authup/server-test-kit';
-import { AuditEventService } from '../../../../../src/core/entities/audit-event/service.ts';
-import type { AuditEventServiceOptions } from '../../../../../src/core/index.ts';
-import { FakeAuditEventRepository } from './fake-repository.ts';
+import { EventService } from '../../../../../src/core/entities/event/service.ts';
+import type { EventServiceOptions } from '../../../../../src/core/index.ts';
+import { FakeEventRepository } from './fake-repository.ts';
 
 const DAY_IN_MS = 86_400_000;
 
@@ -46,23 +46,23 @@ function makeActor(options: { allow: boolean, identity?: boolean } = { allow: tr
     return actor;
 }
 
-describe('AuditEventService', () => {
-    let repository: FakeAuditEventRepository;
-    let service: AuditEventService;
+describe('EventService', () => {
+    let repository: FakeEventRepository;
+    let service: EventService;
 
     beforeEach(() => {
-        repository = new FakeAuditEventRepository();
-        service = new AuditEventService({ repository });
+        repository = new FakeEventRepository();
+        service = new EventService({ repository });
     });
 
-    function buildService(options: AuditEventServiceOptions): AuditEventService {
-        return new AuditEventService({ repository, options });
+    function buildService(options: EventServiceOptions): EventService {
+        return new EventService({ repository, options });
     }
 
-    function seedOwn(data: Partial<AuditEvent> = {}): AuditEvent {
+    function seedOwn(data: Partial<Event> = {}): Event {
         return repository.seed({
-            scope: AuditEventScope.OAUTH2,
-            name: AuditEventName.LOGIN,
+            scope: EventScope.OAUTH2,
+            name: EventName.LOGIN,
             actor_type: IdentityType.USER,
             actor_id: userId,
             realm_id: realmId,
@@ -70,10 +70,10 @@ describe('AuditEventService', () => {
         });
     }
 
-    function seedForeign(data: Partial<AuditEvent> = {}): AuditEvent {
+    function seedForeign(data: Partial<Event> = {}): Event {
         return repository.seed({
-            scope: AuditEventScope.OAUTH2,
-            name: AuditEventName.LOGIN,
+            scope: EventScope.OAUTH2,
+            name: EventName.LOGIN,
             actor_type: IdentityType.USER,
             actor_id: otherUserId,
             realm_id: realmId,
@@ -84,8 +84,8 @@ describe('AuditEventService', () => {
     describe('record', () => {
         it('persists a row with a generated id', async () => {
             await service.record({
-                scope: AuditEventScope.OAUTH2,
-                name: AuditEventName.LOGIN,
+                scope: EventScope.OAUTH2,
+                name: EventName.LOGIN,
                 actorType: IdentityType.USER,
                 actorId: userId,
                 actorName: 'test-user',
@@ -96,8 +96,8 @@ describe('AuditEventService', () => {
             const [row] = repository.rows;
             expect(row.id).toBeTypeOf('string');
             expect(row.id.length).toBeGreaterThan(0);
-            expect(row.scope).toEqual(AuditEventScope.OAUTH2);
-            expect(row.name).toEqual(AuditEventName.LOGIN);
+            expect(row.scope).toEqual(EventScope.OAUTH2);
+            expect(row.name).toEqual(EventName.LOGIN);
             expect(row.actor_type).toEqual(IdentityType.USER);
             expect(row.actor_id).toEqual(userId);
             expect(row.actor_name).toEqual('test-user');
@@ -106,8 +106,8 @@ describe('AuditEventService', () => {
 
         it('strips secrets from the context data via the sanitizer', async () => {
             await service.record({
-                scope: AuditEventScope.OAUTH2,
-                name: AuditEventName.LOGIN_FAILED,
+                scope: EventScope.OAUTH2,
+                name: EventName.LOGIN_FAILED,
                 data: {
                     grant_type: 'password',
                     error_code: 'entity_credentials_invalid',
@@ -126,11 +126,12 @@ describe('AuditEventService', () => {
         it('stamps expires_at from the configured retention window', async () => {
             const retentionDays = 30;
             await buildService({ retentionDays }).record({
-                scope: AuditEventScope.OAUTH2,
-                name: AuditEventName.LOGIN,
+                scope: EventScope.OAUTH2,
+                name: EventName.LOGIN,
             });
 
             const [row] = repository.rows;
+            expect(row.expiring).toBeTruthy();
             expect(row.expires_at).not.toBeNull();
             const delta = new Date(row.expires_at!).getTime() -
                 (Date.now() + (retentionDays * DAY_IN_MS));
@@ -139,8 +140,8 @@ describe('AuditEventService', () => {
 
         it('defaults the retention to 365 days', async () => {
             await service.record({
-                scope: AuditEventScope.OAUTH2,
-                name: AuditEventName.LOGIN,
+                scope: EventScope.OAUTH2,
+                name: EventName.LOGIN,
             });
 
             const [row] = repository.rows;
@@ -152,18 +153,19 @@ describe('AuditEventService', () => {
 
         it('keeps rows forever when retentionDays is 0', async () => {
             await buildService({ retentionDays: 0 }).record({
-                scope: AuditEventScope.OAUTH2,
-                name: AuditEventName.LOGIN,
+                scope: EventScope.OAUTH2,
+                name: EventName.LOGIN,
             });
 
             expect(repository.rows).toHaveLength(1);
+            expect(repository.rows[0].expiring).toBeFalsy();
             expect(repository.rows[0].expires_at).toBeNull();
         });
 
         it('persists nothing when disabled', async () => {
             await buildService({ enabled: false }).record({
-                scope: AuditEventScope.OAUTH2,
-                name: AuditEventName.LOGIN,
+                scope: EventScope.OAUTH2,
+                name: EventName.LOGIN,
             });
 
             expect(repository.rows).toHaveLength(0);
@@ -173,8 +175,8 @@ describe('AuditEventService', () => {
             repository.saveError = new Error('database unavailable');
 
             await expect(service.record({
-                scope: AuditEventScope.OAUTH2,
-                name: AuditEventName.LOGIN,
+                scope: EventScope.OAUTH2,
+                name: EventName.LOGIN,
             })).resolves.toBeUndefined();
 
             expect(repository.rows).toHaveLength(0);
@@ -182,7 +184,7 @@ describe('AuditEventService', () => {
     });
 
     describe('getMany', () => {
-        it('scopes an actor without audit_read to its own rows', async () => {
+        it('scopes an actor without event_read to its own rows', async () => {
             seedOwn();
             seedOwn();
             const foreign = seedForeign();
@@ -267,7 +269,7 @@ describe('AuditEventService', () => {
     it('exposes a read/record-only surface (append-only log)', () => {
         // the log is append-only: writes happen via record(), pruning via the
         // retention sweep — the service must not grow mutation methods.
-        const methods = Object.getOwnPropertyNames(AuditEventService.prototype);
+        const methods = Object.getOwnPropertyNames(EventService.prototype);
         expect(methods).not.toContain('create');
         expect(methods).not.toContain('update');
         expect(methods).not.toContain('save');

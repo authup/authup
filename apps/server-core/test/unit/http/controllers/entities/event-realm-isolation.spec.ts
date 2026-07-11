@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuditEventName, PermissionName } from '@authup/core-kit';
+import { EventName, PermissionName } from '@authup/core-kit';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import {
     afterAll,
@@ -19,12 +19,12 @@ import { createFakeClient, createFakeRealm, createFakeUser } from '../../../../u
 
 /**
  * Wave-2 regression (mirrors the wave-0 field-projection suite): an own-scoped
- * `AUDIT_READ` holder must not be able to surface another realm's audit rows by
+ * `EVENT_READ` holder must not be able to surface another realm's audit rows by
  * projecting `realm_id` (or the actor columns the ownership check reads) out of
  * the SQL SELECT via `fields[...]` — that would neutralize the per-row
- * realm_scope gate in `AuditEventService.getMany`.
+ * realm_scope gate in `EventService.getMany`.
  */
-describe('audit-event (realm isolation)', () => {
+describe('event (realm isolation)', () => {
     const suite = createTestApplication();
 
     let actor: HTTPClient;
@@ -54,15 +54,15 @@ describe('audit-event (realm isolation)', () => {
             password: userM.password!,
         });
 
-        const foreignRows = await suite.client.auditEvent.getMany({ filter: { name: AuditEventName.LOGIN, actor_id: createdB.id } });
+        const foreignRows = await suite.client.event.getMany({ filter: { name: EventName.LOGIN, actor_id: createdB.id } });
         expect(foreignRows.data.length).toBeGreaterThanOrEqual(1);
         foreignRowId = foreignRows.data[0].id;
 
-        const ownRows = await suite.client.auditEvent.getMany({ filter: { name: AuditEventName.LOGIN, actor_id: createdM.id } });
+        const ownRows = await suite.client.event.getMany({ filter: { name: EventName.LOGIN, actor_id: createdM.id } });
         expect(ownRows.data.length).toBeGreaterThanOrEqual(1);
         ownRowId = ownRows.data[0].id;
 
-        // a restricted actor in master holding AUDIT_READ at the default `own` scope
+        // a restricted actor in master holding EVENT_READ at the default `own` scope
         const actorClient = await suite.client.client.create({
             ...createFakeClient(),
             is_confidential: true,
@@ -70,7 +70,7 @@ describe('audit-event (realm isolation)', () => {
             secret_hashed: false,
             secret_encrypted: false,
         });
-        const permission = await suite.client.permission.getOne(PermissionName.AUDIT_READ);
+        const permission = await suite.client.permission.getOne(PermissionName.EVENT_READ);
         await suite.client.clientPermission.create({
             client_id: actorClient.id,
             permission_id: permission.id,
@@ -90,14 +90,14 @@ describe('audit-event (realm isolation)', () => {
 
     it('keeps a foreign-realm audit event hidden even when realm_id is projected away', async () => {
         // control: the own-realm row IS visible to the own-scoped reader
-        const own = await actor.auditEvent.getMany({
+        const own = await actor.event.getMany({
             filter: { id: ownRowId },
             fields: ['id', 'name'],
         });
         expect(own.data.some((row) => row.id === ownRowId)).toBe(true);
 
         // the foreign-realm row must NOT appear despite fields=id,name omitting realm_id
-        const foreign = await actor.auditEvent.getMany({
+        const foreign = await actor.event.getMany({
             filter: { id: foreignRowId },
             fields: ['id', 'name'],
         });

@@ -98,8 +98,8 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         passwordRecoveryEnabled: false,
         passwordMinLength: USER_PASSWORD_MIN_LENGTH,
 
-        auditLogEnabled: true,
-        auditLogRetentionDays: 365,
+        eventLogEnabled: true,
+        eventLogRetentionDays: 365,
         loginAttemptThrottleEnabled: false,
         loginAttemptThreshold: 5,
         loginAttemptWindow: 900,
@@ -129,9 +129,9 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
     };
 
     // fail loud at boot: the throttle counts login_failed rows in
-    // audit_events — with the audit log disabled it would silently no-op.
-    if (config.loginAttemptThrottleEnabled && !config.auditLogEnabled) {
-        throw new AuthupError('loginAttemptThrottleEnabled requires auditLogEnabled.');
+    // auth_events — with the audit log disabled it would silently no-op.
+    if (config.loginAttemptThrottleEnabled && !config.eventLogEnabled) {
+        throw new AuthupError('loginAttemptThrottleEnabled requires eventLogEnabled.');
     }
 
     return config;

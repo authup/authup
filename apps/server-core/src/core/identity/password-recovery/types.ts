@@ -6,7 +6,7 @@
  */
 
 import type { IMailClient, IMailTemplateRenderer } from '../../mail/types.ts';
-import type { IAuditEventService, IRealmRepository, IUserRepository } from '../../entities/index.ts';
+import type { IEventService, IRealmRepository, IUserRepository } from '../../entities/index.ts';
 import type { IdentityWorkflowContext } from '../types.ts';
 
 export type PasswordRecoveryServiceOptions = {
@@ -22,7 +22,7 @@ export type PasswordRecoveryServiceContext = {
     mailTemplateRenderer: IMailTemplateRenderer,
     repository: IUserRepository,
     realmRepository: IRealmRepository,
-    auditEventService?: IAuditEventService,
+    eventService?: IEventService,
 };
 
 export type PasswordForgotResult = {

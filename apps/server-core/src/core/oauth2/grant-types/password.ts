@@ -9,13 +9,13 @@ import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs
 import { OAuth2SubKind, OAuth2TokenGrant } from '@authup/specs';
 import type { Client, User } from '@authup/core-kit';
 import {
-    AuditEventName,
-    AuditEventRefType,
-    AuditEventScope,
+    EventName,
+    EventRefType,
+    EventScope,
     IdentityType,
     ScopeName,
 } from '@authup/core-kit';
-import type { IAuditEventService } from '../../entities/index.ts';
+import type { IEventService } from '../../entities/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 import { buildOAuth2BearerTokenResponse } from '../response/index.ts';
 import type { IOAuth2TokenIssuer } from '../token/index.ts';
@@ -30,7 +30,7 @@ export type OAuth2PasswordGrantInput = {
 export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput> {
     protected refreshTokenIssuer : IOAuth2TokenIssuer;
 
-    protected auditEventService? : IAuditEventService;
+    protected eventService? : IEventService;
 
     protected metrics? : IAuthFlowMetrics;
 
@@ -41,7 +41,7 @@ export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput>
         });
 
         this.refreshTokenIssuer = ctx.refreshTokenIssuer;
-        this.auditEventService = ctx.auditEventService;
+        this.eventService = ctx.eventService;
         this.metrics = ctx.metrics;
     }
 
@@ -73,10 +73,10 @@ export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput>
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue(issuePayload);
         const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue(issuePayload);
 
-        await this.auditEventService?.record({
-            scope: AuditEventScope.OAUTH2,
-            name: AuditEventName.LOGIN,
-            refType: AuditEventRefType.SESSION,
+        await this.eventService?.record({
+            scope: EventScope.OAUTH2,
+            name: EventName.LOGIN,
+            refType: EventRefType.SESSION,
             refId: session.id,
             clientId: clientId ?? null,
             actorType: IdentityType.USER,

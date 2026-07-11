@@ -6,9 +6,9 @@
  */
 
 import {
-    AuditEventName,
-    AuditEventRefType,
-    AuditEventScope,
+    EventName,
+    EventRefType,
+    EventScope,
     IdentityType,
     UserValidator,
 } from '@authup/core-kit';
@@ -26,7 +26,7 @@ import type {
 } from './types.ts';
 import type { IMailClient, IMailTemplateRenderer } from '../../mail/types.ts';
 import { MailTemplateName } from '../../mail/index.ts';
-import type { IAuditEventService, IRealmRepository, IUserRepository } from '../../entities/index.ts';
+import type { IEventService, IRealmRepository, IUserRepository } from '../../entities/index.ts';
 import type { IdentityWorkflowContext } from '../types.ts';
 
 export class RegistrationService implements IRegistrationService {
@@ -40,7 +40,7 @@ export class RegistrationService implements IRegistrationService {
 
     protected realmRepository: IRealmRepository;
 
-    protected auditEventService?: IAuditEventService;
+    protected eventService?: IEventService;
 
     constructor(ctx: RegistrationServiceContext) {
         this.options = ctx.options;
@@ -48,7 +48,7 @@ export class RegistrationService implements IRegistrationService {
         this.mailTemplateRenderer = ctx.mailTemplateRenderer;
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
-        this.auditEventService = ctx.auditEventService;
+        this.eventService = ctx.eventService;
     }
 
     async register(data: Record<string, any>, context?: IdentityWorkflowContext): Promise<RegistrationResult> {
@@ -105,10 +105,10 @@ export class RegistrationService implements IRegistrationService {
             }
         }
 
-        await this.auditEventService?.record({
-            scope: AuditEventScope.IDENTITY,
-            name: AuditEventName.REGISTER,
-            refType: AuditEventRefType.USER,
+        await this.eventService?.record({
+            scope: EventScope.IDENTITY,
+            name: EventName.REGISTER,
+            refType: EventRefType.USER,
             refId: entity.id,
             actorType: IdentityType.USER,
             actorId: entity.id,
@@ -133,10 +133,10 @@ export class RegistrationService implements IRegistrationService {
 
         await this.repository.save(merged);
 
-        await this.auditEventService?.record({
-            scope: AuditEventScope.IDENTITY,
-            name: AuditEventName.ACCOUNT_ACTIVATED,
-            refType: AuditEventRefType.USER,
+        await this.eventService?.record({
+            scope: EventScope.IDENTITY,
+            name: EventName.ACCOUNT_ACTIVATED,
+            refType: EventRefType.USER,
             refId: merged.id,
             actorType: IdentityType.USER,
             actorId: merged.id,

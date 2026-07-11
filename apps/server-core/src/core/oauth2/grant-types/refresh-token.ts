@@ -7,9 +7,9 @@
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
 import { JWTError, OAuth2GrantError } from '@authup/specs';
-import { AuditEventName, AuditEventRefType, AuditEventScope } from '@authup/core-kit';
+import { EventName, EventRefType, EventScope } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
-import type { IAuditEventService } from '../../entities/index.ts';
+import type { IEventService } from '../../entities/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 import { buildOAuth2BearerTokenResponse } from '../response/index.ts';
 import type { ISessionTokenRepository } from '../session-token/index.ts';
@@ -26,7 +26,7 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
 
     protected sessionTokenRepository : ISessionTokenRepository;
 
-    protected auditEventService? : IAuditEventService;
+    protected eventService? : IEventService;
 
     protected metrics? : IAuthFlowMetrics;
 
@@ -44,7 +44,7 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         this.tokenVerifier = ctx.tokenVerifier;
         this.tokenRepository = ctx.tokenRepository;
         this.sessionTokenRepository = ctx.sessionTokenRepository;
-        this.auditEventService = ctx.auditEventService;
+        this.eventService = ctx.eventService;
         this.metrics = ctx.metrics;
         this.logger = ctx.logger;
         this.gracePeriod = ctx.options?.gracePeriod ?? 0;
@@ -184,10 +184,10 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
             jti,
         });
 
-        await this.auditEventService?.record({
-            scope: AuditEventScope.OAUTH2,
-            name: AuditEventName.REFRESH_REPLAY_DETECTED,
-            refType: AuditEventRefType.SESSION,
+        await this.eventService?.record({
+            scope: EventScope.OAUTH2,
+            name: EventName.REFRESH_REPLAY_DETECTED,
+            refType: EventRefType.SESSION,
             refId: sessionId,
             data: { jti },
         });

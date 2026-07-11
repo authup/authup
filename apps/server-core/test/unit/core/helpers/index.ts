@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './fake-audit-event-service.ts';
+export * from './fake-event-service.ts';
 export * from './fake-auth-flow-metrics.ts';
 export * from './fake-mail-client.ts';
 export * from './fake-identity-permission-provider.ts';

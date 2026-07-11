@@ -8,9 +8,9 @@
 import type { Client, Robot, User } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import type {
-    IAuditEventService,
     IAuthFlowMetrics,
     ICredentialsAuthenticator,
+    IEventService,
     IIdentityPermissionProvider,
     IIdentityResolver,
     ILoginThrottleService,
@@ -39,7 +39,7 @@ export type TokenControllerContext = {
     tokenRepository: IOAuth2TokenRepository,
     sessionTokenRepository: ISessionTokenRepository,
 
-    auditEventService?: IAuditEventService,
+    eventService?: IEventService,
     metrics?: IAuthFlowMetrics,
     loginThrottleService?: ILoginThrottleService,
 

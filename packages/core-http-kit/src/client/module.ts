@@ -8,11 +8,11 @@
 import { Client as BaseClient, HookName, isClientError } from 'hapic';
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
 import {
-    AuditEventAPI,
     ClientAPI,
     ClientPermissionAPI,
     ClientRoleAPI,
     ClientScopeAPI,
+    EventAPI,
     IdentityProviderAPI,
     IdentityProviderRoleMappingAPI,
     OAuth2AuthorizeAPI,
@@ -44,8 +44,6 @@ export class Client extends BaseClient implements IClient {
 
     public readonly authorize : OAuth2AuthorizeAPI;
 
-    public readonly auditEvent : AuditEventAPI;
-
     public readonly client : ClientAPI;
 
     public readonly clientPermission : ClientPermissionAPI;
@@ -53,6 +51,8 @@ export class Client extends BaseClient implements IClient {
     public readonly clientRole : ClientRoleAPI;
 
     public readonly clientScope : ClientScopeAPI;
+
+    public readonly event : EventAPI;
 
     public readonly identityProvider : IdentityProviderAPI;
 
@@ -125,12 +125,12 @@ export class Client extends BaseClient implements IClient {
             options, 
         });
 
-        this.auditEvent = new AuditEventAPI({ client: this });
-
         this.client = new ClientAPI({ client: this });
         this.clientPermission = new ClientPermissionAPI({ client: this });
         this.clientRole = new ClientRoleAPI({ client: this });
         this.clientScope = new ClientScopeAPI({ client: this });
+
+        this.event = new EventAPI({ client: this });
 
         this.identityProvider = new IdentityProviderAPI({ client: this });
         this.identityProviderRoleMapping = new IdentityProviderRoleMappingAPI({ client: this });

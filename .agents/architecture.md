@@ -1727,29 +1727,31 @@ fallback branches, incl. the sub/realm-mismatch fail-safes) and the end-to-end
 `test/unit/http/controllers/workflows/token/grant-authorize-session.spec.ts`
 (login → authorize → exchange asserts a single session survives).
 
-## Audit / Security Event Log (plans 057 + 053 + 058)
+## Security Event Log (plans 057 + 053 + 058)
 
-`audit_events` is the persisted, PII-stripped security audit trail — the single
+`auth_events` is the persisted, PII-stripped security audit trail — the single
 login-event surface. The record shape is derived from PrivateAIM/hub's
 Authentik-lineage telemetry `Event` (`(scope, name)` verb pair, `ref_type`/
 `ref_id` target reference, denormalized `actor_type`/`actor_id`/`actor_name`
 snapshot that survives actor deletion, `request_*` context group, per-row
-`expires_at` retention) hardened with the discipline hub lacks: a **closed
-taxonomy** (`AuditEventName`/`AuditEventScope` enums in
-`packages/core-kit/src/domains/audit-event/` — never free text), **append-only**
+`expiring` + `expires_at` retention, serialize-transformer `data` text column
+— null-guarded so absent context stays SQL NULL) hardened with the discipline
+hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
+`packages/core-kit/src/domains/event/` — never free text), **append-only**
 (read-only HTTP surface, no update/delete API, no `updated_at`), and a central
 **PII write boundary**.
 
-- **Write path:** `AuditEventService.record()` (`core/entities/audit-event/`) is
+- **Write path:** `EventService.record()` (`core/entities/event/`) is
   fire-and-forget-safe (a write failure logs and never fails the originating
-  auth operation), stamps `expires_at` from `auditLogRetentionDays`
-  (`0` = keep forever → null), truncates client-controlled strings to column
-  widths, and passes `data` through `sanitizeAuditEventData` — **allowlist-first,
+  auth operation), stamps `expiring`/`expires_at` from `eventLogRetentionDays`
+  (`0` = keep forever → `expiring: false`, `expires_at` null), truncates
+  client-controlled strings to column
+  widths, and passes `data` through `sanitizeEventData` — **allowlist-first,
   scalars only** (objects/arrays are dropped outright, so nothing nested can
   smuggle a secret; `password`/`client_secret`/`code`/`*token*` are simply never
   allowlisted). A structured logger line fires per event even when persistence
-  is disabled (`auditLogEnabled=false`) — the free SIEM/Loki complement.
-- **Emit sites** (explicit `record()` calls via optional `auditEventService?`
+  is disabled (`eventLogEnabled=false`) — the free SIEM/Loki complement.
+- **Emit sites** (explicit `record()` calls via optional `eventService?`
   ctx — the CRUD subscriber bus is deliberately NOT involved): password grant
   `LOGIN` (core `runWith`, after issuance) and `LOGIN_FAILED` (HTTP adapter
   catch — carries the **canonicalized attempted identifier in `actor_name`**
@@ -1760,17 +1762,18 @@ taxonomy** (`AuditEventName`/`AuditEventScope` enums in
   `ACCOUNT_ACTIVATED`, `PASSWORD_RESET_REQUESTED/COMPLETED`. Token issuance
   emits **no rows** (plan 016's `auth_session_tokens` already inventories every
   token; volume control).
-- **Read API:** `GET /audit-events` (+ `/realms/:realmId/audit-events`),
-  read-only, gated by `AUDIT_READ` with the session-service shape: a reader
+- **Read API:** `GET /events` (+ `/realms/:realmId/events`),
+  read-only, gated by `EVENT_READ` with the session-service shape: a reader
   without the permission is force-scoped to its own rows (`actor_id` +
   `actor_type`), a scoped reader gets per-row realm_scope drops, and the
   repository force-selects the gate columns (`applyRealmScopeSelect`, plan-039
-  discipline). `AUDIT_READ` auto-provisions via `Object.values(PermissionName)`:
+  discipline). `EVENT_READ` auto-provisions via `Object.values(PermissionName)`:
   `admin` = `any`, `realm_admin` = `ownOrNull` (deliberately NOT in the OWN
-  override list). Typed client: `client.auditEvent.getMany/getOne`.
-- **Retention:** `components/audit-event-cleaner` (every minute, oauth2-cleaner
-  mirror) deletes `expires_at < now`; scheduled only when
-  `auditLogEnabled && auditLogRetentionDays > 0`. Per-action retention later is
+  override list). Typed client: `client.event.getMany/getOne`.
+- **Retention:** `components/event-cleaner` (every minute, oauth2-cleaner
+  mirror) deletes `expiring = true AND expires_at < now` (hub's cleaner shape);
+  scheduled only when
+  `eventLogEnabled && eventLogRetentionDays > 0`. Per-action retention later is
   per-action stamping — no schema change.
 - **Failed-login throttle (plan 053, default off):** `LoginThrottleService`
   (`core/authentication/login-throttle/`) counts recent `LOGIN_FAILED` rows via
@@ -1779,7 +1782,7 @@ taxonomy** (`AuditEventName`/`AuditEventScope` enums in
   open) — and throws `LoginThrottledError` (HTTP **429**,
   `login_attempt_throttled`, `data.retryAfter`) before `authenticate` in the
   HTTP password grant. Config `loginAttemptThrottleEnabled/Threshold/Window`;
-  enabling it with `auditLogEnabled=false` **fails loud at config time**. Basic
+  enabling it with `eventLogEnabled=false` **fails loud at config time**. Basic
   auth is deliberately NOT throttled (recording/widening is a later call).
 - **Metrics (plan 058 Part 2):** `IAuthFlowMetrics` port (`core/metrics/`,
   noop default) with the prom-client adapter (`app/modules/metrics/`,
@@ -1788,7 +1791,7 @@ taxonomy** (`AuditEventName`/`AuditEventScope` enums in
   `authup_token_grant_total{grant_type}` (successes only),
   `authup_authorize_total{outcome}` (`denied` reserved until plan 052),
   `authup_refresh_replay_total`. Bounded label sets only — subject-level
-  attribution belongs in the audit log, never in metric labels.
+  attribution belongs in the security event log, never in metric labels.
 
 ## Provisioning Permissions With Policies
 

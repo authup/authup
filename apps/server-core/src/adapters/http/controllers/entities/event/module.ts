@@ -12,33 +12,33 @@ import {
     DPath,
     DTags,
 } from '@routup/decorators';
-import type { AuditEvent } from '@authup/core-kit';
+import type { Event } from '@authup/core-kit';
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { EntityCollectionResponse } from '@authup/core-http-kit';
-import type { IAuditEventService } from '../../../../../core/index.ts';
+import type { IEventService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
-export type AuditEventControllerContext = {
-    service: IAuditEventService,
+export type EventControllerContext = {
+    service: IEventService,
 };
 
 // Read-only surface — the log is append-only: writes happen internally via
-// IAuditEventService.record(), pruning is the retention sweep's job.
-@DTags('audit')
-@DController(['/audit-events', '/realms/:realmId/audit-events'])
-export class AuditEventController {
-    protected service: IAuditEventService;
+// IEventService.record(), pruning is the retention sweep's job.
+@DTags('event')
+@DController(['/events', '/realms/:realmId/events'])
+export class EventController {
+    protected service: IEventService;
 
-    constructor(ctx: AuditEventControllerContext) {
+    constructor(ctx: EventControllerContext) {
         this.service = ctx.service;
     }
 
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IAppEvent,
-    ): Promise<EntityCollectionResponse<AuditEvent>> {
+    ): Promise<EntityCollectionResponse<Event>> {
         const actor = buildActorContext(event);
         const {
             data,
@@ -55,7 +55,7 @@ export class AuditEventController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<AuditEvent> {
+    ): Promise<Event> {
         const actor = buildActorContext(event);
 
         return this.service.getOne(id, actor);

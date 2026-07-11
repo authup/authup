@@ -7,20 +7,20 @@
 
 import type { IdentityType } from '../identity';
 import type { Realm } from '../realm';
-import type { AuditEventName, AuditEventScope } from './constants';
+import type { EventName, EventScope } from './constants';
 
-export interface AuditEvent {
+export interface Event {
     id: string;
 
     /**
      * Event group, e.g. oauth2, identity.
      */
-    scope: `${AuditEventScope}`;
+    scope: `${EventScope}`;
 
     /**
      * Event action, e.g. login, login_failed, authorize.
      */
-    name: `${AuditEventName}`;
+    name: `${EventName}`;
 
     /**
      * Kind of the affected resource, e.g. session, user, client.
@@ -70,6 +70,12 @@ export interface AuditEvent {
     data: Record<string, any> | null;
 
     // ------------------------------------------------------------------
+
+    /**
+     * default: false — rows with a stamped expires_at are expiring and get
+     * swept.
+     */
+    expiring: boolean;
 
     /**
      * Expiration date (iso) — stamped at write from the retention config;

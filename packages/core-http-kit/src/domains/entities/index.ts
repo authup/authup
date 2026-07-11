@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './audit-event';
 export * from './client';
 export * from './client-permission';
 export * from './client-role';
 export * from './client-scope';
+export * from './event';
 export * from './identity-provider';
 export * from './identity-provider-role-mapping';
 export * from './policy';

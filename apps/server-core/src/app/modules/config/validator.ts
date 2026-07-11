@@ -85,8 +85,8 @@ export class ConfigValidator extends Container<Config> {
                 z.number().int().positive().max(USER_PASSWORD_MAX_LENGTH),
             ),
 
-            auditLogEnabled: booleanValidator,
-            auditLogRetentionDays: nonNegativeNumberValidator,
+            eventLogEnabled: booleanValidator,
+            eventLogRetentionDays: nonNegativeNumberValidator,
             loginAttemptThrottleEnabled: booleanValidator,
             loginAttemptThreshold: createValidator(z.number().int().positive()),
             loginAttemptWindow: createValidator(z.number().int().positive()),

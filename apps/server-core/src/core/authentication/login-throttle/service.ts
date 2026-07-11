@@ -5,16 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuditEventName } from '@authup/core-kit';
+import { EventName } from '@authup/core-kit';
 import { LoginThrottledError } from '@authup/errors';
-import type { IAuditEventRepository } from '../../entities/index.ts';
+import type { IEventRepository } from '../../entities/index.ts';
 import type { ILoginThrottleService, LoginThrottleServiceContext, LoginThrottleServiceOptions } from './types.ts';
 
 const DEFAULT_THRESHOLD = 5;
 const DEFAULT_WINDOW_SECONDS = 900;
 
 export class LoginThrottleService implements ILoginThrottleService {
-    protected repository: IAuditEventRepository;
+    protected repository: IEventRepository;
 
     protected options: LoginThrottleServiceOptions;
 
@@ -46,7 +46,7 @@ export class LoginThrottleService implements ILoginThrottleService {
         const windowSeconds = this.options.windowSeconds ?? DEFAULT_WINDOW_SECONDS;
 
         const count = await this.repository.countRecent({
-            name: AuditEventName.LOGIN_FAILED,
+            name: EventName.LOGIN_FAILED,
             actorName: ctx.identifier,
             requestIpAddress: ctx.ipAddress,
             realmId: ctx.realmId,

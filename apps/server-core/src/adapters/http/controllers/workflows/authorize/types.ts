@@ -7,8 +7,8 @@
 
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import type {
-    IAuditEventService,
     IAuthFlowMetrics,
+    IEventService,
     IOAuth2AuthorizationCodeIssuer,
     IOAuth2AuthorizationCodeRequestVerifier,
     ISessionManager,
@@ -32,6 +32,6 @@ export type AuthorizeControllerContext = {
 
     sessionManager: ISessionManager,
 
-    auditEventService?: IAuditEventService,
+    eventService?: IEventService,
     metrics?: IAuthFlowMetrics,
 };

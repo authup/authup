@@ -8,34 +8,34 @@
 import { randomUUID } from 'node:crypto';
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
-import type { AuditEvent } from '@authup/core-kit';
+import type { Event } from '@authup/core-kit';
 import { EntityNotFoundError } from '@authup/errors';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { ActorContext, EntityRepositoryFindManyResult, Logger } from '@authup/server-kit';
-import { sanitizeAuditEventData } from './sanitize.ts';
+import { sanitizeEventData } from './sanitize.ts';
 import type {
-    AuditEventRecordInput,
-    AuditEventServiceOptions,
-    IAuditEventRepository,
-    IAuditEventService,
+    EventRecordInput,
+    EventServiceOptions,
+    IEventRepository,
+    IEventService,
 } from './types.ts';
 
-export type AuditEventServiceContext = {
-    repository: IAuditEventRepository,
-    options?: AuditEventServiceOptions,
+export type EventServiceContext = {
+    repository: IEventRepository,
+    options?: EventServiceOptions,
     logger?: Logger,
 };
 
 const DAY_IN_MS = 86_400_000;
 
-export class AuditEventService extends AbstractEntityService implements IAuditEventService {
-    protected repository: IAuditEventRepository;
+export class EventService extends AbstractEntityService implements IEventService {
+    protected repository: IEventRepository;
 
-    protected options: AuditEventServiceOptions;
+    protected options: EventServiceOptions;
 
     protected logger?: Logger;
 
-    constructor(ctx: AuditEventServiceContext) {
+    constructor(ctx: EventServiceContext) {
         super();
 
         this.repository = ctx.repository;
@@ -43,15 +43,15 @@ export class AuditEventService extends AbstractEntityService implements IAuditEv
         this.logger = ctx.logger;
     }
 
-    protected isOwnedBy(entity: AuditEvent, actor: ActorContext): boolean {
+    protected isOwnedBy(entity: Event, actor: ActorContext): boolean {
         return !!actor.identity &&
             !!entity.actor_id &&
             entity.actor_id === actor.identity.data.id &&
             entity.actor_type === actor.identity.type;
     }
 
-    async record(input: AuditEventRecordInput): Promise<void> {
-        const data = sanitizeAuditEventData(input.data);
+    async record(input: EventRecordInput): Promise<void> {
+        const data = sanitizeEventData(input.data);
 
         // complementary structured log line — fires even when persistence is
         // disabled, so a SIEM/Loki pipeline can pick the events up for free.
@@ -90,6 +90,7 @@ export class AuditEventService extends AbstractEntityService implements IAuditEv
                 request_user_agent: truncate(input.requestUserAgent, 512),
                 realm_id: input.realmId ?? null,
                 data,
+                expiring: retentionDays > 0,
                 expires_at: retentionDays > 0 ?
                     new Date(Date.now() + (retentionDays * DAY_IN_MS)).toISOString() :
                     null,
@@ -105,10 +106,10 @@ export class AuditEventService extends AbstractEntityService implements IAuditEv
     async getMany(
         query: Record<string, any>,
         actor: ActorContext,
-    ): Promise<EntityRepositoryFindManyResult<AuditEvent>> {
+    ): Promise<EntityRepositoryFindManyResult<Event>> {
         let canReadAll = true;
         try {
-            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.AUDIT_READ });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.EVENT_READ });
         } catch (e) {
             if (!actor.identity) {
                 throw e;
@@ -128,7 +129,7 @@ export class AuditEventService extends AbstractEntityService implements IAuditEv
 
         const { data: entities, meta } = await this.repository.findMany(query);
 
-        const data: AuditEvent[] = [];
+        const data: Event[] = [];
         let { total } = meta;
 
         for (const entity of entities) {
@@ -139,7 +140,7 @@ export class AuditEventService extends AbstractEntityService implements IAuditEv
 
             try {
                 await actor.permissionEvaluator.evaluate({
-                    name: PermissionName.AUDIT_READ,
+                    name: PermissionName.EVENT_READ,
                     data: definePolicyData({
                         [BuiltInPolicyType.ATTRIBUTES]: entity,
                         ...this.resourceRealmMatch(entity),
@@ -160,16 +161,16 @@ export class AuditEventService extends AbstractEntityService implements IAuditEv
         };
     }
 
-    async getOne(id: string, actor: ActorContext): Promise<AuditEvent> {
+    async getOne(id: string, actor: ActorContext): Promise<Event> {
         const entity = await this.repository.findOneById(id);
         if (!entity) {
             throw new EntityNotFoundError();
         }
 
         if (!this.isOwnedBy(entity, actor)) {
-            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.AUDIT_READ });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.EVENT_READ });
             await actor.permissionEvaluator.evaluate({
-                name: PermissionName.AUDIT_READ,
+                name: PermissionName.EVENT_READ,
                 data: definePolicyData({
                     [BuiltInPolicyType.ATTRIBUTES]: entity,
                     ...this.resourceRealmMatch(entity),

@@ -6,7 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { AuditEventName, AuditEventScope } from '@authup/core-kit';
+import { EventName, EventScope } from '@authup/core-kit';
 import { isLoginThrottledError } from '@authup/errors';
 import {
     beforeEach,
@@ -16,7 +16,7 @@ import {
 } from 'vitest';
 import { LoginThrottleService } from '../../../../../src/core/authentication/login-throttle/service.ts';
 import type { LoginThrottleServiceOptions } from '../../../../../src/core/index.ts';
-import { FakeAuditEventRepository } from '../../entities/audit-event/fake-repository.ts';
+import { FakeEventRepository } from '../../entities/event/fake-repository.ts';
 
 const IDENTIFIER = 'victim-user';
 const OTHER_IDENTIFIER = 'other-user';
@@ -27,11 +27,11 @@ const THRESHOLD = 3;
 const WINDOW_SECONDS = 900;
 
 describe('LoginThrottleService', () => {
-    let repository: FakeAuditEventRepository;
+    let repository: FakeEventRepository;
     const realmId = randomUUID();
 
     beforeEach(() => {
-        repository = new FakeAuditEventRepository();
+        repository = new FakeEventRepository();
     });
 
     function buildService(options?: LoginThrottleServiceOptions): LoginThrottleService {
@@ -52,8 +52,8 @@ describe('LoginThrottleService', () => {
         ageSeconds?: number,
     } = {}): void {
         repository.seed({
-            scope: AuditEventScope.OAUTH2,
-            name: AuditEventName.LOGIN_FAILED,
+            scope: EventScope.OAUTH2,
+            name: EventName.LOGIN_FAILED,
             actor_name: data.identifier ?? IDENTIFIER,
             request_ip_address: data.ip ?? IP,
             realm_id: typeof data.realm === 'undefined' ? realmId : data.realm,

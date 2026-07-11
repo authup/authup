@@ -5,21 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AuditEvent } from '@authup/core-kit';
+import type { Event } from '@authup/core-kit';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
-    AuditEventRecordInput,
-    IAuditEventService,
-} from '../../../../src/core/entities/audit-event/types.ts';
+    EventRecordInput,
+    IEventService,
+} from '../../../../src/core/entities/event/types.ts';
 
-export class FakeAuditEventService implements IAuditEventService {
-    public recordCalls: AuditEventRecordInput[] = [];
+export class FakeEventService implements IEventService {
+    public recordCalls: EventRecordInput[] = [];
 
-    async record(input: AuditEventRecordInput): Promise<void> {
+    async record(input: EventRecordInput): Promise<void> {
         this.recordCalls.push(input);
     }
 
-    async getMany(): Promise<EntityRepositoryFindManyResult<AuditEvent>> {
+    async getMany(): Promise<EntityRepositoryFindManyResult<Event>> {
         return {
             data: [],
             meta: {
@@ -30,7 +30,7 @@ export class FakeAuditEventService implements IAuditEventService {
         };
     }
 
-    async getOne(): Promise<AuditEvent> {
+    async getOne(): Promise<Event> {
         throw new Error('not implemented');
     }
 }

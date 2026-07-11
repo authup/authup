@@ -6,9 +6,9 @@
  */
 
 import {
-    AuditEventName,
-    AuditEventRefType,
-    AuditEventScope,
+    EventName,
+    EventRefType,
+    EventScope,
     IdentityType,
     USER_PASSWORD_MAX_LENGTH,
     USER_PASSWORD_MIN_LENGTH,
@@ -31,7 +31,7 @@ import type {
 } from './types.ts';
 import type { IMailClient, IMailTemplateRenderer } from '../../mail/types.ts';
 import { MailTemplateName } from '../../mail/index.ts';
-import type { IAuditEventService, IRealmRepository, IUserRepository } from '../../entities/index.ts';
+import type { IEventService, IRealmRepository, IUserRepository } from '../../entities/index.ts';
 import type { IdentityWorkflowContext } from '../types.ts';
 import { PASSWORD_RESET_EXPIRES_IN_MINUTES } from './constants.ts';
 
@@ -46,7 +46,7 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
 
     protected mailTemplateRenderer: IMailTemplateRenderer;
 
-    protected auditEventService?: IAuditEventService;
+    protected eventService?: IEventService;
 
     constructor(ctx: PasswordRecoveryServiceContext) {
         this.options = ctx.options;
@@ -54,7 +54,7 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         this.realmRepository = ctx.realmRepository;
         this.mailClient = ctx.mailClient;
         this.mailTemplateRenderer = ctx.mailTemplateRenderer;
-        this.auditEventService = ctx.auditEventService;
+        this.eventService = ctx.eventService;
     }
 
     async forgotPassword(data: Record<string, any>, context?: IdentityWorkflowContext): Promise<PasswordForgotResult> {
@@ -126,10 +126,10 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
             throw new BadRequestError('Password recovery failed. Could not send reset email.');
         }
 
-        await this.auditEventService?.record({
-            scope: AuditEventScope.IDENTITY,
-            name: AuditEventName.PASSWORD_RESET_REQUESTED,
-            refType: AuditEventRefType.USER,
+        await this.eventService?.record({
+            scope: EventScope.IDENTITY,
+            name: EventName.PASSWORD_RESET_REQUESTED,
+            refType: EventRefType.USER,
             refId: merged.id,
             actorType: IdentityType.USER,
             actorId: merged.id,
@@ -179,10 +179,10 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
 
         await this.repository.save(merged);
 
-        await this.auditEventService?.record({
-            scope: AuditEventScope.IDENTITY,
-            name: AuditEventName.PASSWORD_RESET_COMPLETED,
-            refType: AuditEventRefType.USER,
+        await this.eventService?.record({
+            scope: EventScope.IDENTITY,
+            name: EventName.PASSWORD_RESET_COMPLETED,
+            refType: EventRefType.USER,
             refId: merged.id,
             actorType: IdentityType.USER,
             actorId: merged.id,

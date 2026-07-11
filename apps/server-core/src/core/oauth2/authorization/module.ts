@@ -6,7 +6,7 @@
  */
 
 import type { Identity, OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
-import { AuditEventName, AuditEventRefType, AuditEventScope } from '@authup/core-kit';
+import { EventName, EventRefType, EventScope } from '@authup/core-kit';
 import { hasInstanceof } from '@authup/errors';
 import {
     OAUTH2_LOGIN_REQUIRED_ERROR_INSTANCE,
@@ -24,7 +24,7 @@ import type {
     OAuth2AuthorizationResult,
 } from './types.ts';
 import type { ISessionManager } from '../../authentication/index.ts';
-import type { IAuditEventService } from '../../entities/index.ts';
+import type { IEventService } from '../../entities/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 
 const DEFAULT_PROMPT_LOGIN_MAX_AGE = 60;
@@ -34,7 +34,7 @@ export class OAuth2Authorization {
 
     protected sessionManager : ISessionManager;
 
-    protected auditEventService? : IAuditEventService;
+    protected eventService? : IEventService;
 
     protected metrics? : IAuthFlowMetrics;
 
@@ -43,7 +43,7 @@ export class OAuth2Authorization {
     constructor(ctx: OAuth2AuthorizationManagerContext) {
         this.codeIssuer = ctx.codeIssuer;
         this.sessionManager = ctx.sessionManager;
-        this.auditEventService = ctx.auditEventService;
+        this.eventService = ctx.eventService;
         this.metrics = ctx.metrics;
         this.promptLoginMaxAge = ctx.promptLoginMaxAge ?? DEFAULT_PROMPT_LOGIN_MAX_AGE;
     }
@@ -63,10 +63,10 @@ export class OAuth2Authorization {
         try {
             const result = await this.authorizeInner(data, identity, options);
 
-            await this.auditEventService?.record({
-                scope: AuditEventScope.OAUTH2,
-                name: AuditEventName.AUTHORIZE,
-                refType: AuditEventRefType.CLIENT,
+            await this.eventService?.record({
+                scope: EventScope.OAUTH2,
+                name: EventName.AUTHORIZE,
+                refType: EventRefType.CLIENT,
                 refId: options.client?.id ?? data.client_id ?? null,
                 clientId: options.client?.id ?? data.client_id ?? null,
                 actorType: identity.type,

@@ -149,30 +149,30 @@ describe('src/config/*.ts', () => {
         it('should default the audit-log and login-throttle keys', async () => {
             const config = await normalizeConfig();
 
-            expect(config.auditLogEnabled).toEqual(true);
-            expect(config.auditLogRetentionDays).toEqual(365);
+            expect(config.eventLogEnabled).toEqual(true);
+            expect(config.eventLogRetentionDays).toEqual(365);
             expect(config.loginAttemptThrottleEnabled).toEqual(false);
             expect(config.loginAttemptThreshold).toEqual(5);
             expect(config.loginAttemptWindow).toEqual(900);
         });
 
         it('should reject the login throttle without the audit log (fail loud)', async () => {
-            // the throttle counts login_failed rows in audit_events — with the
+            // the throttle counts login_failed rows in auth_events — with the
             // audit log disabled it would silently no-op.
             await expect(normalizeConfig({
                 loginAttemptThrottleEnabled: true,
-                auditLogEnabled: false,
+                eventLogEnabled: false,
             })).rejects.toThrow();
         });
 
         it('should accept the login throttle alongside the audit log', async () => {
             const config = await normalizeConfig({
                 loginAttemptThrottleEnabled: true,
-                auditLogEnabled: true,
+                eventLogEnabled: true,
             });
 
             expect(config.loginAttemptThrottleEnabled).toEqual(true);
-            expect(config.auditLogEnabled).toEqual(true);
+            expect(config.eventLogEnabled).toEqual(true);
         });
     });
 

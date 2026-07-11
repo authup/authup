@@ -8,13 +8,13 @@
 import type { Client } from '@authup/core-kit';
 import type { IOAuth2AuthorizationCodeIssuer } from './code/index.ts';
 import type { ISessionManager } from '../../authentication/index.ts';
-import type { IAuditEventService } from '../../entities/index.ts';
+import type { IEventService } from '../../entities/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 
 export type OAuth2AuthorizationManagerContext = {
     codeIssuer: IOAuth2AuthorizationCodeIssuer,
     sessionManager: ISessionManager,
-    auditEventService?: IAuditEventService,
+    eventService?: IEventService,
     metrics?: IAuthFlowMetrics,
     /**
      * Max age (seconds) of the authentication a `prompt=login` request accepts

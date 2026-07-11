@@ -6,28 +6,28 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { AuditEvent } from '@authup/core-kit';
+import type { Event } from '@authup/core-kit';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
-    AuditEventCountRecentFilter,
-    AuditEventFindManyOptions,
-    IAuditEventRepository,
+    EventCountRecentFilter,
+    EventFindManyOptions,
+    IEventRepository,
 } from '../../../../../src/core/index.ts';
 
-export class FakeAuditEventRepository implements IAuditEventRepository {
-    public rows: AuditEvent[] = [];
+export class FakeEventRepository implements IEventRepository {
+    public rows: Event[] = [];
 
-    public saveCalls: AuditEvent[] = [];
+    public saveCalls: Event[] = [];
 
     public saveError: Error | null = null;
 
-    seed(data: Partial<AuditEvent>): AuditEvent {
+    seed(data: Partial<Event>): Event {
         const entity = this.create(data);
         this.rows.push(entity);
         return entity;
     }
 
-    create(data: Partial<AuditEvent>): AuditEvent {
+    create(data: Partial<Event>): Event {
         return {
             id: randomUUID(),
             ref_type: null,
@@ -42,13 +42,14 @@ export class FakeAuditEventRepository implements IAuditEventRepository {
             request_user_agent: null,
             realm_id: null,
             data: null,
+            expiring: false,
             expires_at: null,
             created_at: new Date().toISOString(),
             ...data,
-        } as AuditEvent;
+        } as Event;
     }
 
-    async save(entity: AuditEvent): Promise<AuditEvent> {
+    async save(entity: Event): Promise<Event> {
         if (this.saveError) {
             throw this.saveError;
         }
@@ -65,14 +66,14 @@ export class FakeAuditEventRepository implements IAuditEventRepository {
         return entity;
     }
 
-    async findOneById(id: string): Promise<AuditEvent | null> {
+    async findOneById(id: string): Promise<Event | null> {
         return this.rows.find((row) => row.id === id) ?? null;
     }
 
     async findMany(
         query: Record<string, any>,
-        options: AuditEventFindManyOptions = {},
-    ): Promise<EntityRepositoryFindManyResult<AuditEvent>> {
+        options: EventFindManyOptions = {},
+    ): Promise<EntityRepositoryFindManyResult<Event>> {
         let data = [...this.rows];
 
         if (options.owner) {
@@ -91,7 +92,7 @@ export class FakeAuditEventRepository implements IAuditEventRepository {
         };
     }
 
-    async countRecent(filter: AuditEventCountRecentFilter): Promise<number> {
+    async countRecent(filter: EventCountRecentFilter): Promise<number> {
         const since = new Date(filter.since).getTime();
 
         return this.rows.filter((row) => {
@@ -125,7 +126,8 @@ export class FakeAuditEventRepository implements IAuditEventRepository {
         const nowTime = new Date(now).getTime();
         const before = this.rows.length;
 
-        this.rows = this.rows.filter((row) => row.expires_at === null ||
+        this.rows = this.rows.filter((row) => !row.expiring ||
+            row.expires_at === null ||
             new Date(row.expires_at).getTime() >= nowTime);
 
         return before - this.rows.length;

@@ -7,7 +7,7 @@
 
 import { randomUUID } from 'node:crypto';
 import type { Session } from '@authup/core-kit';
-import { AuditEventName, AuditEventRefType, AuditEventScope } from '@authup/core-kit';
+import { EventName, EventRefType, EventScope } from '@authup/core-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2SubKind, OAuth2TokenKind, isOAuth2Error } from '@authup/specs';
 import {
@@ -18,8 +18,8 @@ import {
 } from 'vitest';
 import { OAuth2RefreshTokenGrant } from '../../../../../src/core/oauth2/grant-types/refresh-token.ts';
 import {
-    FakeAuditEventService,
     FakeAuthFlowMetrics,
+    FakeEventService,
     FakeOAuth2TokenIssuer,
     FakeOAuth2TokenRepository,
     FakeOAuth2TokenVerifier,
@@ -34,7 +34,7 @@ describe('OAuth2RefreshTokenGrant', () => {
     let tokenRepository: FakeOAuth2TokenRepository;
     let sessionTokenRepository: FakeSessionTokenRepository;
     let sessionManager: FakeSessionManager;
-    let auditEventService: FakeAuditEventService;
+    let eventService: FakeEventService;
     let metrics: FakeAuthFlowMetrics;
 
     const realmId = randomUUID();
@@ -52,7 +52,7 @@ describe('OAuth2RefreshTokenGrant', () => {
             tokenRepository,
             sessionTokenRepository,
             sessionManager,
-            auditEventService,
+            eventService,
             metrics,
             options,
         });
@@ -100,7 +100,7 @@ describe('OAuth2RefreshTokenGrant', () => {
         tokenRepository = new FakeOAuth2TokenRepository();
         sessionTokenRepository = new FakeSessionTokenRepository();
         sessionManager = new FakeSessionManager();
-        auditEventService = new FakeAuditEventService();
+        eventService = new FakeEventService();
         metrics = new FakeAuthFlowMetrics();
     });
 
@@ -171,11 +171,11 @@ describe('OAuth2RefreshTokenGrant', () => {
         await grant.runWith(payload);
         await expect(grant.runWith(payload)).rejects.toBeDefined();
 
-        expect(auditEventService.recordCalls).toHaveLength(1);
-        const [record] = auditEventService.recordCalls;
-        expect(record.scope).toEqual(AuditEventScope.OAUTH2);
-        expect(record.name).toEqual(AuditEventName.REFRESH_REPLAY_DETECTED);
-        expect(record.refType).toEqual(AuditEventRefType.SESSION);
+        expect(eventService.recordCalls).toHaveLength(1);
+        const [record] = eventService.recordCalls;
+        expect(record.scope).toEqual(EventScope.OAUTH2);
+        expect(record.name).toEqual(EventName.REFRESH_REPLAY_DETECTED);
+        expect(record.refType).toEqual(EventRefType.SESSION);
         expect(record.refId).toEqual(sessionId);
         expect(record.data).toEqual({ jti: refreshJti });
 
@@ -188,7 +188,7 @@ describe('OAuth2RefreshTokenGrant', () => {
 
         await grant.runWith(payload);
 
-        expect(auditEventService.recordCalls).toHaveLength(0);
+        expect(eventService.recordCalls).toHaveLength(0);
         expect(metrics.refreshReplayCalls).toEqual(0);
     });
 
