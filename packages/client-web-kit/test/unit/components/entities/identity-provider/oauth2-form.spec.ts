@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProvider } from '@authup/core-kit';
+import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { createFakeClient } from '@authup/core-http-kit/testing';
 import type { FakeClient, FakeRequest } from '@authup/core-http-kit/testing';
@@ -127,6 +127,22 @@ describe('AIdentityProviderOAuth2Form', () => {
         expect(body).not.toHaveProperty('realm');
         expect(body).not.toHaveProperty('created_at');
         expect(body).not.toHaveProperty('updated_at');
+    });
+
+    it('should submit with an empty scope (blank optional emitted as null)', async () => {
+        const entity = createEntity();
+        delete (entity as Partial<OAuth2IdentityProvider>).scope;
+
+        const { wrapper, httpClient } = mountForm(entity);
+
+        await flushPromises();
+
+        await wrapper.find('form').trigger('submit');
+        await flushPromises();
+
+        const request = findUpdateRequest(httpClient);
+        expect(request).toBeDefined();
+        expect((request!.body as Record<string, any>).scope ?? null).toBeNull();
     });
 
     it('should hydrate the scope list and submit a changed scope on update', async () => {

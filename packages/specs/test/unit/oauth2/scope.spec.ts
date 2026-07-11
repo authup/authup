@@ -16,6 +16,10 @@ describe('src/oauth2/scope/helpers', () => {
         expect(splitOAuth2Scope(undefined, '')).toEqual([]);
     });
 
+    it('should split array elements like string input', () => {
+        expect(splitOAuth2Scope(['openid profile', 'email'])).toEqual(['openid', 'profile', 'email']);
+    });
+
     it('should merge scopes with first occurrence winning', () => {
         expect(mergeOAuth2Scopes('openid profile email', 'openid custom'))
             .toEqual('openid profile email custom');

@@ -39,7 +39,7 @@ export function unwrapOAuth2Scope(input: string | string[]) : string[] {
 export function splitOAuth2Scope(...input: (string | string[] | null | undefined)[]) : string[] {
     return input
         .filter((el) : el is string | string[] => !!el)
-        .flatMap((el) => (Array.isArray(el) ? el : el.split(/\s+|,+/)))
+        .flatMap((el) => (Array.isArray(el) ? splitOAuth2Scope(...el) : el.split(/\s+|,+/)))
         .filter((item) => item.length > 0);
 }
 
