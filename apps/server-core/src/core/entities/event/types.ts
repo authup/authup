@@ -74,6 +74,12 @@ export type EventRecordInput = {
     requestUserAgent?: string | null,
     realmId?: string | null,
     data?: Record<string, any> | null,
+    /**
+     * Per-event retention override in days — wins over the service-level
+     * retentionDays; 0 = keep forever. expiring/expires_at derive from the
+     * effective value.
+     */
+    retentionDays?: number,
 };
 
 export type EventServiceOptions = {
@@ -85,6 +91,30 @@ export type EventServiceOptions = {
     /**
      * config.eventLogRetentionDays — stamped per row as expiring/expires_at
      * at write time; 0 = keep forever (expiring stays false, expires_at null).
+     */
+    retentionDays?: number,
+};
+
+/**
+ * Actor + request attribution for entity-CRUD audit rows. The shape is
+ * defined here (core) so core never imports from adapters/http — the wiring
+ * injects the HTTP adapter's AsyncLocalStorage getter, and writes outside an
+ * HTTP request (provisioning, CLI, cron) simply resolve to undefined.
+ */
+export type EventRequestContext = {
+    actorType: `${IdentityType}` | null,
+    actorId: string | null,
+    actorName: string | null,
+    requestPath: string | null,
+    requestMethod: string | null,
+    requestIpAddress: string | null,
+    requestUserAgent: string | null,
+};
+
+export type EntityEventHandlerOptions = {
+    /**
+     * Per-row retention (days) for entity-CRUD audit rows — entity churn
+     * self-prunes on a short TTL (config eventLogEntityRetentionDays).
      */
     retentionDays?: number,
 };

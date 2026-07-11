@@ -87,6 +87,8 @@ export class ConfigValidator extends Container<Config> {
 
             eventLogEnabled: booleanValidator,
             eventLogRetentionDays: nonNegativeNumberValidator,
+            eventLogEntityEnabled: booleanValidator,
+            eventLogEntityRetentionDays: nonNegativeNumberValidator,
             loginAttemptThrottleEnabled: booleanValidator,
             loginAttemptThreshold: createValidator(z.number().int().positive()),
             loginAttemptWindow: createValidator(z.number().int().positive()),

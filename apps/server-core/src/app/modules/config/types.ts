@@ -230,6 +230,21 @@ export type Config = {
     eventLogRetentionDays: number,
 
     /**
+     * Additionally mirror every entity create/update/delete published on the
+     * domain-event bus into the auth_events table (scope: entity). Only
+     * effective while eventLogEnabled is true.
+     * default: true
+     */
+    eventLogEntityEnabled: boolean,
+
+    /**
+     * Per-row retention for entity-CRUD audit events in days — deliberately
+     * short so entity churn self-prunes. 0 = keep forever.
+     * default: 7
+     */
+    eventLogEntityRetentionDays: number,
+
+    /**
      * Throttle failed interactive logins per (identifier, ip) pair by
      * counting recent login_failed audit events. Requires eventLogEnabled.
      * default: false

@@ -1752,7 +1752,7 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   allowlisted). A structured logger line fires per event even when persistence
   is disabled (`eventLogEnabled=false`) — the free SIEM/Loki complement.
 - **Emit sites** (explicit `record()` calls via optional `eventService?`
-  ctx — the CRUD subscriber bus is deliberately NOT involved): password grant
+  ctx — security events never ride the CRUD subscriber bus): password grant
   `LOGIN` (core `runWith`, after issuance) and `LOGIN_FAILED` (HTTP adapter
   catch — carries the **canonicalized attempted identifier in `actor_name`**
   with `actor_id` null; the deliberate PII-posture call, it is the throttle
@@ -1762,6 +1762,32 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   `ACCOUNT_ACTIVATED`, `PASSWORD_RESET_REQUESTED/COMPLETED`. Token issuance
   emits **no rows** (plan 016's `auth_session_tokens` already inventories every
   token; volume control).
+- **Entity-CRUD bridge (plan 057 Stage 2, hub's EntityEventHandler):**
+  `EntityEventHandler` (`core/entities/event/entity-event-handler.ts`, an
+  `IDomainEventHandler` registered on the `DomainEventPublisher` in
+  `DatabaseModule.registerEventPublisher` when `eventLogEnabled &&
+  eventLogEntityEnabled`) mirrors every entity create/update/delete already
+  published by the 22+ `EntitySubscriber`s into scope-`entity`
+  `created|updated|deleted` rows (`ref_type` = entity type, `ref_id` = id).
+  The pre-update snapshot rides the publish **context** as `dataPrevious`
+  (`afterUpdate` passes `event.databaseEntity`) — **never inside `content`**,
+  the shared realtime wire payload the redis/socket handlers ship. Actor +
+  request attribution comes from an AsyncLocalStorage request context
+  (`adapters/http/request/event-context.ts`; middleware mounted immediately
+  after the authorization middleware — non-HTTP writes like
+  provisioning/CLI/cron have no store → null actor = "system" semantics).
+  Updates carry a `data.diff` of `{ next, previous }` **scalar** pairs
+  (`buildEntityDiff`, `core/entities/event/diff.ts`): keys ending `_at` and
+  any key matching the secret denylist
+  `/(password|secret|hash|token|credential)/i` are dropped fail-closed,
+  strings truncated to 512; `sanitizeEventData`'s dedicated `diff` branch
+  re-checks the same regex at the write boundary. Created/deleted rows carry
+  `data: null` (no column dumps). Rows self-prune on a short per-row TTL via
+  `EventRecordInput.retentionDays` (config `eventLogEntityEnabled` default
+  `true` / `eventLogEntityRetentionDays` default `7` days, env
+  `EVENT_LOG_ENTITY_*`). v1 semantics: `realm_id` is read from the entity's
+  own column — junction rows (rolePermission, userRole, ...) carry none and
+  stay realm-less (null).
 - **Read API:** `GET /events` (+ `/realms/:realmId/events`),
   read-only, gated by `EVENT_READ` with the session-service shape: a reader
   without the permission is force-scoped to its own rows (`actor_id` +

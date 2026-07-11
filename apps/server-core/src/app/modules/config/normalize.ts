@@ -100,6 +100,8 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
 
         eventLogEnabled: true,
         eventLogRetentionDays: 365,
+        eventLogEntityEnabled: true,
+        eventLogEntityRetentionDays: 7,
         loginAttemptThrottleEnabled: false,
         loginAttemptThreshold: 5,
         loginAttemptWindow: 900,

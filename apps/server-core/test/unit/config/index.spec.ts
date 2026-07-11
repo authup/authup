@@ -151,6 +151,8 @@ describe('src/config/*.ts', () => {
 
             expect(config.eventLogEnabled).toEqual(true);
             expect(config.eventLogRetentionDays).toEqual(365);
+            expect(config.eventLogEntityEnabled).toEqual(true);
+            expect(config.eventLogEntityRetentionDays).toEqual(7);
             expect(config.loginAttemptThrottleEnabled).toEqual(false);
             expect(config.loginAttemptThreshold).toEqual(5);
             expect(config.loginAttemptWindow).toEqual(900);

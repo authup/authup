@@ -137,6 +137,16 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.eventLogRetentionDays = eventLogRetentionDays;
     }
 
+    const eventLogEntityEnabled = readBool(ConfigEnvironmentVariableName.EVENT_LOG_ENTITY_ENABLED);
+    if (typeof eventLogEntityEnabled !== 'undefined') {
+        options.eventLogEntityEnabled = eventLogEntityEnabled;
+    }
+
+    const eventLogEntityRetentionDays = readInt(ConfigEnvironmentVariableName.EVENT_LOG_ENTITY_RETENTION_DAYS);
+    if (typeof eventLogEntityRetentionDays !== 'undefined') {
+        options.eventLogEntityRetentionDays = eventLogEntityRetentionDays;
+    }
+
     const loginAttemptThrottleEnabled = readBool(ConfigEnvironmentVariableName.LOGIN_ATTEMPT_THROTTLE_ENABLED);
     if (typeof loginAttemptThrottleEnabled !== 'undefined') {
         options.loginAttemptThrottleEnabled = loginAttemptThrottleEnabled;

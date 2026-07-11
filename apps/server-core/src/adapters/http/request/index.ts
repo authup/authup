@@ -6,5 +6,6 @@
  */
 
 export * from './constants.ts';
+export * from './event-context.ts';
 export * from './helpers/index.ts';
 export * from './permission/index.ts';

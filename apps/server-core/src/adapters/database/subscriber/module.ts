@@ -87,7 +87,7 @@ export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscrib
 
         await this.dropCacheKeys(event.connection, event.entity as T);
 
-        await this.publish(EntityDefaultEventName.UPDATED, event.entity as T);
+        await this.publish(EntityDefaultEventName.UPDATED, event.entity as T, event.databaseEntity);
     }
 
     async afterRemove(event: RemoveEvent<T>): Promise<any> {
@@ -112,7 +112,11 @@ export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscrib
         await connection.queryResultCache.remove(this.ctx.cache.keys(data));
     }
 
-    protected async publish(event: `${EntityDefaultEventName}`, data: T) : Promise<void> {
+    protected async publish(
+        event: `${EntityDefaultEventName}`,
+        data: T,
+        dataPrevious?: T,
+    ) : Promise<void> {
         if (!this.publisher) {
             return;
         }
@@ -124,6 +128,7 @@ export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscrib
                 data,
             },
             destinations: this.ctx.destinations(data),
+            ...(dataPrevious ? { dataPrevious } : {}),
         });
     }
 }

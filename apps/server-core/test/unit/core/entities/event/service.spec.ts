@@ -151,6 +151,34 @@ describe('EventService', () => {
             expect(Math.abs(delta)).toBeLessThan(60_000);
         });
 
+        it('honors a per-event retentionDays override for expiring/expires_at', async () => {
+            const retentionDays = 7;
+            await buildService({ retentionDays: 365 }).record({
+                scope: EventScope.ENTITY,
+                name: EventName.CREATED,
+                retentionDays,
+            });
+
+            const [row] = repository.rows;
+            expect(row.expiring).toBeTruthy();
+            expect(row.expires_at).not.toBeNull();
+            const delta = new Date(row.expires_at!).getTime() -
+                (Date.now() + (retentionDays * DAY_IN_MS));
+            expect(Math.abs(delta)).toBeLessThan(60_000);
+        });
+
+        it('keeps rows forever when the per-event override is 0', async () => {
+            await buildService({ retentionDays: 365 }).record({
+                scope: EventScope.ENTITY,
+                name: EventName.CREATED,
+                retentionDays: 0,
+            });
+
+            const [row] = repository.rows;
+            expect(row.expiring).toBeFalsy();
+            expect(row.expires_at).toBeNull();
+        });
+
         it('keeps rows forever when retentionDays is 0', async () => {
             await buildService({ retentionDays: 0 }).record({
                 scope: EventScope.OAUTH2,

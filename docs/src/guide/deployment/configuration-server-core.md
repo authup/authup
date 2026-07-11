@@ -141,6 +141,21 @@ export default {
     eventLogRetentionDays: 365,
 
     /**
+     * Additionally mirror every entity create/update/delete into the
+     * auth_events table (scope: entity). Only effective while
+     * eventLogEnabled is true.
+     * default: true
+     */
+    eventLogEntityEnabled: true,
+
+    /**
+     * Retention for entity create/update/delete events in days —
+     * deliberately short so entity churn self-prunes. 0 = keep forever.
+     * default: 7
+     */
+    eventLogEntityRetentionDays: 7,
+
+    /**
      * Throttle failed logins per (identifier, ip) pair by counting recent
      * login_failed events. Requires eventLogEnabled.
      * The client IP honors X-Forwarded-For — deploy behind a trusted
@@ -226,6 +241,8 @@ passwordRecoveryEnabled=false
 passwordMinLength=10
 eventLogEnabled=true
 eventLogRetentionDays=365
+eventLogEntityEnabled=true
+eventLogEntityRetentionDays=7
 loginAttemptThrottleEnabled=false
 loginAttemptThreshold=5
 loginAttemptWindow=900
@@ -248,6 +265,8 @@ PASSWORD_RECOVERY_ENABLED=false
 PASSWORD_MIN_LENGTH=10
 EVENT_LOG_ENABLED=true
 EVENT_LOG_RETENTION_DAYS=365
+EVENT_LOG_ENTITY_ENABLED=true
+EVENT_LOG_ENTITY_RETENTION_DAYS=7
 LOGIN_ATTEMPT_THROTTLE_ENABLED=false
 LOGIN_ATTEMPT_THRESHOLD=5
 LOGIN_ATTEMPT_WINDOW=900

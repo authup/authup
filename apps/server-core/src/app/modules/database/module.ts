@@ -29,7 +29,8 @@ import {
     isDatabaseTypeSupportedForEnvironment,
 } from '../../../adapters/database/index.ts';
 import type { Event } from '@authup/core-kit';
-import { EventService } from '../../../core/index.ts';
+import { EntityEventHandler, EventService } from '../../../core/index.ts';
+import { useRequestEventContext } from '../../../adapters/http/request/index.ts';
 import { EventRepositoryAdapter } from './repositories/index.ts';
 import { CacheInjectionKey } from '../cache/index.ts';
 import type { IModule } from 'orkos';
@@ -95,8 +96,10 @@ export class DatabaseModule implements IModule {
             }
 
             this.registerRepositories(container, dataSource);
-            this.registerEventPublisher(container, dataSource);
+            // the event service must exist before the publisher wiring — the
+            // entity-CRUD bridge handler resolves it from the container.
             this.registerEvents(container, dataSource);
+            this.registerEventPublisher(container, dataSource);
 
             container.register(DatabaseInjectionKey.DataSource, { useValue: dataSource });
         } catch (e) {
@@ -242,6 +245,14 @@ export class DatabaseModule implements IModule {
 
             publisher.register(new DomainEventRedisHandler(client));
             publisher.register(new DomainEventSocketHandler(client));
+        }
+
+        if (config.eventLogEnabled && config.eventLogEntityEnabled) {
+            publisher.register(new EntityEventHandler({
+                eventService: container.resolve(DatabaseInjectionKey.EventService),
+                requestContext: useRequestEventContext,
+                options: { retentionDays: config.eventLogEntityRetentionDays },
+            }));
         }
 
         container.register(DatabaseInjectionKey.DomainEventPublisher, { useValue: publisher });

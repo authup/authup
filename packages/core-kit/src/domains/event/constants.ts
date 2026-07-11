@@ -19,11 +19,15 @@ export enum EventName {
     ACCOUNT_ACTIVATED = 'account_activated',
     PASSWORD_RESET_REQUESTED = 'password_reset_requested',
     PASSWORD_RESET_COMPLETED = 'password_reset_completed',
+    CREATED = 'created',
+    UPDATED = 'updated',
+    DELETED = 'deleted',
 }
 
 export enum EventScope {
     OAUTH2 = 'oauth2',
     IDENTITY = 'identity',
+    ENTITY = 'entity',
 }
 
 export enum EventRefType {

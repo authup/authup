@@ -72,7 +72,7 @@ export class EventService extends AbstractEntityService implements IEventService
         }
 
         try {
-            const retentionDays = this.options.retentionDays ?? 365;
+            const retentionDays = input.retentionDays ?? this.options.retentionDays ?? 365;
 
             const entity = this.repository.create({
                 id: randomUUID(),
