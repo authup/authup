@@ -11,6 +11,7 @@ import type { IAppEvent } from 'routup';
 import type {
     BaseGrantContext,
     ICredentialsAuthenticator,
+    ILoginThrottleService,
     IOAuth2AuthorizationCodeVerifier,
     IRealmRepository,
     OAuth2AuthorizeGrantContext,
@@ -33,6 +34,7 @@ export type HTTPOAuth2PasswordGrantContext = OAuth2PasswordGrantContext & {
     authenticator : ICredentialsAuthenticator<User>,
     clientAuthenticator: OAuth2ClientAuthenticator,
     realmRepository: IRealmRepository,
+    loginThrottleService?: ILoginThrottleService,
 };
 
 export type HTTPOAuth2RefreshTokenGrantContext = OAuth2RefreshTokenGrantContext & {

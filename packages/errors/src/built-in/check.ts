@@ -16,6 +16,7 @@ import { ENTITY_CREDENTIALS_INVALID_ERROR_INSTANCE, type EntityCredentialsInvali
 import { ENTITY_INACTIVE_ERROR_INSTANCE, type EntityInactiveError } from './entity-inactive.ts';
 import { ENTITY_NOT_FOUND_ERROR_INSTANCE, type EntityNotFoundError } from './entity-not-found.ts';
 import { INTERNAL_ERROR_INSTANCE, type InternalError } from './internal.ts';
+import { LOGIN_THROTTLED_ERROR_INSTANCE, type LoginThrottledError } from './login-throttled.ts';
 import { UNAUTHORIZED_ERROR_INSTANCE, type UnauthorizedError } from './unauthorized.ts';
 
 export function isAuthHeaderError(input: unknown): input is AuthHeaderError {
@@ -70,4 +71,10 @@ export function isInternalError(input: unknown): input is InternalError {
     if (hasInstanceof(input, INTERNAL_ERROR_INSTANCE)) return true;
     if (!isAuthupError(input)) return false;
     return input.code === ErrorCode.INTERNAL_ERROR;
+}
+
+export function isLoginThrottledError(input: unknown): input is LoginThrottledError {
+    if (hasInstanceof(input, LOGIN_THROTTLED_ERROR_INSTANCE)) return true;
+    if (!isAuthupError(input)) return false;
+    return input.code === ErrorCode.LOGIN_ATTEMPT_THROTTLED;
 }

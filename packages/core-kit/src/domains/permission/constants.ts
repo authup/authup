@@ -20,6 +20,8 @@ export const REALM_SCOPE = {
 } as const satisfies Record<string, RealmScopeValue>;
 
 export enum PermissionName {
+    AUDIT_READ = 'audit_read',
+
     CLIENT_CREATE = 'client_create',
     CLIENT_DELETE = 'client_delete',
     CLIENT_UPDATE = 'client_update',

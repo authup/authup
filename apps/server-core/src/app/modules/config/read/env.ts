@@ -127,6 +127,33 @@ export function readConfigRawFromEnv() : ConfigInput {
 
     // ---------------------------------------------------------------
 
+    const auditLogEnabled = readBool(ConfigEnvironmentVariableName.AUDIT_LOG_ENABLED);
+    if (typeof auditLogEnabled !== 'undefined') {
+        options.auditLogEnabled = auditLogEnabled;
+    }
+
+    const auditLogRetentionDays = readInt(ConfigEnvironmentVariableName.AUDIT_LOG_RETENTION_DAYS);
+    if (typeof auditLogRetentionDays !== 'undefined') {
+        options.auditLogRetentionDays = auditLogRetentionDays;
+    }
+
+    const loginAttemptThrottleEnabled = readBool(ConfigEnvironmentVariableName.LOGIN_ATTEMPT_THROTTLE_ENABLED);
+    if (typeof loginAttemptThrottleEnabled !== 'undefined') {
+        options.loginAttemptThrottleEnabled = loginAttemptThrottleEnabled;
+    }
+
+    const loginAttemptThreshold = readInt(ConfigEnvironmentVariableName.LOGIN_ATTEMPT_THRESHOLD);
+    if (typeof loginAttemptThreshold !== 'undefined') {
+        options.loginAttemptThreshold = loginAttemptThreshold;
+    }
+
+    const loginAttemptWindow = readInt(ConfigEnvironmentVariableName.LOGIN_ATTEMPT_WINDOW);
+    if (typeof loginAttemptWindow !== 'undefined') {
+        options.loginAttemptWindow = loginAttemptWindow;
+    }
+
+    // ---------------------------------------------------------------
+
     const clientBasicAuth = readBool(ConfigEnvironmentVariableName.CLIENT_AUTH_BASIC);
     if (typeof clientBasicAuth !== 'undefined') {
         options.clientAuthBasic = clientBasicAuth;

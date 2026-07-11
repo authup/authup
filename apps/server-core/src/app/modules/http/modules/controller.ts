@@ -78,6 +78,7 @@ import {
     UserRoleRepositoryAdapter,
 } from '../../database/index.ts';
 import {
+    AuditEventController,
     ClientController,
     ClientPermissionController,
     ClientRoleController,
@@ -122,6 +123,7 @@ import {
     ClientService,
     CredentialsAuthenticator,
     IdentityProviderRoleMappingService,
+    LoginThrottleService,
     OAuth2ClientAuthenticator,
     OAuth2EndSessionService,
     PasswordRecoveryService,
@@ -156,9 +158,11 @@ import type { Config } from '../../config/index.ts';
 import { ConfigInjectionKey, getAppOrigins } from '../../config/index.ts';
 import { LoggerInjectionKey } from '../../logger/index.ts';
 import { MailInjectionKey, MailTemplateRendererInjectionKey } from '../../mail/index.ts';
+import { MetricsInjectionKey } from '../../metrics/index.ts';
 
 export class HTTPControllerModule {
     async mount(router: App, container: IContainer): Promise<void> {
+        const auditEventController = this.createAuditEventController(container);
         const realmController = this.createRealmController(container);
         const roleController = this.createRoleController(container);
         const permissionController = await this.createPermissionController(container);
@@ -195,6 +199,7 @@ export class HTTPControllerModule {
 
                 this.createStatusController(container),
 
+                auditEventController,
                 clientController,
                 clientPermissionController,
                 clientRoleController,
@@ -231,6 +236,9 @@ export class HTTPControllerModule {
 
         const sessionManager = container.resolve(AuthenticationInjectionKey.SessionManager);
 
+        const auditEventService = container.resolve(DatabaseInjectionKey.AuditEventService);
+        const metrics = container.resolve(MetricsInjectionKey);
+
         return new AuthorizeController({
             options: {
                 baseURL: config.publicUrl,
@@ -242,6 +250,9 @@ export class HTTPControllerModule {
             codeRequestVerifier,
 
             sessionManager,
+
+            auditEventService,
+            metrics,
         });
     }
 
@@ -278,6 +289,18 @@ export class HTTPControllerModule {
 
         const oauth2ClientAuthenticator = new OAuth2ClientAuthenticator(identityResolver);
 
+        const auditEventService = container.resolve(DatabaseInjectionKey.AuditEventService);
+        const metrics = container.resolve(MetricsInjectionKey);
+
+        const loginThrottleService = new LoginThrottleService({
+            repository: container.resolve(DatabaseInjectionKey.AuditEventRepository),
+            options: {
+                enabled: config.loginAttemptThrottleEnabled,
+                threshold: config.loginAttemptThreshold,
+                windowSeconds: config.loginAttemptWindow,
+            },
+        });
+
         return new TokenController({
             codeVerifier,
 
@@ -290,6 +313,10 @@ export class HTTPControllerModule {
             tokenRevoker,
             tokenRepository,
             sessionTokenRepository,
+
+            auditEventService,
+            metrics,
+            loginThrottleService,
 
             tokenRefreshGracePeriod: config.tokenRefreshGracePeriod,
             logger,
@@ -367,6 +394,7 @@ export class HTTPControllerModule {
             mailTemplateRenderer,
             repository,
             realmRepository: new RealmRepositoryAdapter(realmRepository),
+            auditEventService: container.resolve(DatabaseInjectionKey.AuditEventService),
             options: {
                 passwordRecoveryEnabled: config.passwordRecoveryEnabled,
                 emailVerificationEnabled: config.emailVerificationEnabled,
@@ -400,6 +428,7 @@ export class HTTPControllerModule {
             sessionManager,
             clientRepository,
             realmRepository,
+            auditEventService: container.resolve(DatabaseInjectionKey.AuditEventService),
             hintGracePeriod: config.endSessionHintGracePeriod,
         });
 
@@ -439,6 +468,7 @@ export class HTTPControllerModule {
             mailTemplateRenderer,
             repository,
             realmRepository: new RealmRepositoryAdapter(realmRepository),
+            auditEventService: container.resolve(DatabaseInjectionKey.AuditEventService),
             options: {
                 registrationEnabled: config.registrationEnabled,
                 emailVerificationEnabled: config.emailVerificationEnabled,
@@ -704,6 +734,11 @@ export class HTTPControllerModule {
         const repository = container.resolve(AuthenticationInjectionKey.SessionRepository);
         const service = new SessionService({ repository });
         return new SessionController({ service });
+    }
+
+    createAuditEventController(container: IContainer) {
+        const service = container.resolve(DatabaseInjectionKey.AuditEventService);
+        return new AuditEventController({ service });
     }
 
     createUserController(container: IContainer) {

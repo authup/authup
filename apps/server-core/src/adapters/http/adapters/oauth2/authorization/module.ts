@@ -28,11 +28,14 @@ export class HTTPOAuth2Authorizer extends OAuth2Authorization {
     async authorizeWithRequest(event: IAppEvent) : Promise<OAuth2AuthorizationResult> {
         const codeRequestValidated = await this.validateWithRequest(event);
 
-        const { data } = await this.codeRequestVerifier.verify(codeRequestValidated);
+        const { data, client } = await this.codeRequestVerifier.verify(codeRequestValidated);
 
         const identity = useRequestIdentityOrFail(event);
 
-        return this.authorize(data, identity.raw, { sessionId: useRequestSessionId(event) });
+        return this.authorize(data, identity.raw, {
+            sessionId: useRequestSessionId(event),
+            client,
+        });
     }
 
     /**

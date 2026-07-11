@@ -6,12 +6,17 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
-import { OAuth2SubKind } from '@authup/specs';
+import { OAuth2SubKind, OAuth2TokenGrant } from '@authup/specs';
 import type { Client, User } from '@authup/core-kit';
 import {
+    AuditEventName,
+    AuditEventRefType,
+    AuditEventScope,
     IdentityType,
     ScopeName,
 } from '@authup/core-kit';
+import type { IAuditEventService } from '../../entities/index.ts';
+import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 import { buildOAuth2BearerTokenResponse } from '../response/index.ts';
 import type { IOAuth2TokenIssuer } from '../token/index.ts';
 import { OAuth2BaseGrant } from './base.ts';
@@ -25,6 +30,10 @@ export type OAuth2PasswordGrantInput = {
 export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput> {
     protected refreshTokenIssuer : IOAuth2TokenIssuer;
 
+    protected auditEventService? : IAuditEventService;
+
+    protected metrics? : IAuthFlowMetrics;
+
     constructor(ctx: OAuth2PasswordGrantContext) {
         super({
             accessTokenIssuer: ctx.accessTokenIssuer,
@@ -32,6 +41,8 @@ export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput>
         });
 
         this.refreshTokenIssuer = ctx.refreshTokenIssuer;
+        this.auditEventService = ctx.auditEventService;
+        this.metrics = ctx.metrics;
     }
 
     async runWith(input: OAuth2PasswordGrantInput, options: OAuth2GrantRunWIthOptions = {}) : Promise<OAuth2TokenGrantResponse> {
@@ -61,6 +72,25 @@ export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput>
 
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue(issuePayload);
         const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue(issuePayload);
+
+        await this.auditEventService?.record({
+            scope: AuditEventScope.OAUTH2,
+            name: AuditEventName.LOGIN,
+            refType: AuditEventRefType.SESSION,
+            refId: session.id,
+            clientId: clientId ?? null,
+            actorType: IdentityType.USER,
+            actorId: user.id,
+            actorName: user.name,
+            realmId: user.realm_id,
+            requestIpAddress: options.ipAddress ?? null,
+            requestUserAgent: options.userAgent ?? null,
+            data: {
+                grant_type: OAuth2TokenGrant.PASSWORD,
+                session_id: session.id,
+            },
+        });
+        this.metrics?.recordLogin('success');
 
         return buildOAuth2BearerTokenResponse({
             accessToken,

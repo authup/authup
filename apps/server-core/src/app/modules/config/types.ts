@@ -214,6 +214,44 @@ export type Config = {
     // ----------------------------------------------------
 
     /**
+     * Persist security audit events (login, authorize, replay detection, ...)
+     * to the audit_events table. When disabled only the structured log line
+     * is emitted.
+     * default: true
+     */
+    auditLogEnabled: boolean,
+
+    /**
+     * Per-row retention for persisted audit events in days (stamped as
+     * expires_at at write time, swept by the audit-event cleaner).
+     * 0 = keep forever.
+     * default: 365
+     */
+    auditLogRetentionDays: number,
+
+    /**
+     * Throttle failed interactive logins per (identifier, ip) pair by
+     * counting recent login_failed audit events. Requires auditLogEnabled.
+     * default: false
+     */
+    loginAttemptThrottleEnabled: boolean,
+
+    /**
+     * Failed attempts per (identifier, ip) pair within the window before
+     * the pair is throttled.
+     * default: 5
+     */
+    loginAttemptThreshold: number,
+
+    /**
+     * Sliding throttle window in seconds.
+     * default: 900
+     */
+    loginAttemptWindow: number,
+
+    // ----------------------------------------------------
+
+    /**
      * default: false
      */
     clientAuthBasic: boolean,

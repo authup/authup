@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './audit-event/index.ts';
 export * from './client/index.ts';
 export * from './client-permission/index.ts';
 export * from './client-role/index.ts';

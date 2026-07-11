@@ -14,6 +14,7 @@ import {
     transformFilePath,
 } from 'typeorm-extension';
 import {
+    AuditEventEntity,
     ClientEntity,
     ClientPermissionEntity,
     ClientPermissionSubscriber,
@@ -100,6 +101,8 @@ export class DataSourceOptionsBuilder {
             entities: [
                 ...(options.entities ? options.entities : []) as string[],
                 KeyEntity,
+
+                AuditEventEntity,
 
                 SessionEntity,
                 SessionTokenEntity,

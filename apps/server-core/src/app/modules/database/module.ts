@@ -21,12 +21,16 @@ import {
     synchronizeDatabaseSchema,
 } from 'typeorm-extension';
 import {
+    AuditEventEntity,
     DataSourceOptionsBuilder,
     DatabaseQueryResultCache,
     EntitySubscriber,
     isDatabaseTypeSupported,
     isDatabaseTypeSupportedForEnvironment,
 } from '../../../adapters/database/index.ts';
+import type { AuditEvent } from '@authup/core-kit';
+import { AuditEventService } from '../../../core/index.ts';
+import { AuditEventRepositoryAdapter } from './repositories/index.ts';
 import { CacheInjectionKey } from '../cache/index.ts';
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
@@ -92,6 +96,7 @@ export class DatabaseModule implements IModule {
 
             this.registerRepositories(container, dataSource);
             this.registerEventPublisher(container, dataSource);
+            this.registerAuditEvents(container, dataSource);
 
             container.register(DatabaseInjectionKey.DataSource, { useValue: dataSource });
         } catch (e) {
@@ -123,6 +128,8 @@ export class DatabaseModule implements IModule {
         }
 
         container.unregister(DatabaseInjectionKey.DomainEventPublisher);
+        container.unregister(DatabaseInjectionKey.AuditEventRepository);
+        container.unregister(DatabaseInjectionKey.AuditEventService);
 
         await this.disposeEventPublisher();
     }
@@ -245,5 +252,25 @@ export class DatabaseModule implements IModule {
                 subscriber.setPublisher(publisher);
             }
         }
+    }
+
+    protected registerAuditEvents(container: IContainer, dataSource: DataSource) {
+        const config = container.resolve(ConfigInjectionKey);
+        const logger = container.resolve(LoggerInjectionKey);
+
+        const repository = new AuditEventRepositoryAdapter(
+            dataSource.getRepository<AuditEvent>(AuditEventEntity),
+        );
+        container.register(DatabaseInjectionKey.AuditEventRepository, { useValue: repository });
+
+        const service = new AuditEventService({
+            repository,
+            options: {
+                enabled: config.auditLogEnabled,
+                retentionDays: config.auditLogRetentionDays,
+            },
+            logger,
+        });
+        container.register(DatabaseInjectionKey.AuditEventService, { useValue: service });
     }
 }

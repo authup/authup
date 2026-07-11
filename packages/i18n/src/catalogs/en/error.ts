@@ -27,6 +27,7 @@ export const TranslatorTranslationErrorEnglish : NamespaceTranslations<`${ErrorC
     [ErrorCode.PASSWORD_RECOVERY_DISABLED]: 'Password recovery is currently disabled.',
     [ErrorCode.EMAIL_VERIFICATION_REQUIRED]: 'Your email address must be verified first.',
     [ErrorCode.RESET_TOKEN_EXPIRED]: 'The reset token has expired. Please request a new one.',
+    [ErrorCode.LOGIN_ATTEMPT_THROTTLED]: 'Too many failed login attempts. Please try again later.',
 
     [ErrorCode.STORAGE_INSUFFICIENT]: 'There is not enough storage available to complete this action.',
 

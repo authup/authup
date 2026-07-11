@@ -29,6 +29,7 @@ export enum ErrorCode {
     PASSWORD_RECOVERY_DISABLED = 'password_recovery_disabled',
     EMAIL_VERIFICATION_REQUIRED = 'email_verification_required',
     RESET_TOKEN_EXPIRED = 'reset_token_expired',
+    LOGIN_ATTEMPT_THROTTLED = 'login_attempt_throttled',
 
     // Storage Codes
     STORAGE_INSUFFICIENT = 'storage_insufficient',

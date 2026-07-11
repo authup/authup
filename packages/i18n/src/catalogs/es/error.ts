@@ -27,6 +27,7 @@ export const TranslatorTranslationErrorSpanish : NamespaceTranslations<`${ErrorC
     [ErrorCode.PASSWORD_RECOVERY_DISABLED]: 'La recuperación de contraseña está deshabilitada actualmente.',
     [ErrorCode.EMAIL_VERIFICATION_REQUIRED]: 'Primero debe verificar su dirección de correo electrónico.',
     [ErrorCode.RESET_TOKEN_EXPIRED]: 'El token de restablecimiento ha caducado. Solicite uno nuevo.',
+    [ErrorCode.LOGIN_ATTEMPT_THROTTLED]: 'Demasiados intentos de inicio de sesión fallidos. Inténtelo de nuevo más tarde.',
 
     [ErrorCode.STORAGE_INSUFFICIENT]: 'No hay suficiente almacenamiento disponible para completar esta acción.',
 

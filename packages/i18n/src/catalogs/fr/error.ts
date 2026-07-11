@@ -27,6 +27,7 @@ export const TranslatorTranslationErrorFrench : NamespaceTranslations<`${ErrorCo
     [ErrorCode.PASSWORD_RECOVERY_DISABLED]: 'La récupération de mot de passe est actuellement désactivée.',
     [ErrorCode.EMAIL_VERIFICATION_REQUIRED]: 'Votre adresse e-mail doit d\'abord être vérifiée.',
     [ErrorCode.RESET_TOKEN_EXPIRED]: 'Le jeton de réinitialisation a expiré. Veuillez en demander un nouveau.',
+    [ErrorCode.LOGIN_ATTEMPT_THROTTLED]: 'Trop de tentatives de connexion échouées. Veuillez réessayer plus tard.',
 
     [ErrorCode.STORAGE_INSUFFICIENT]: 'L\'espace de stockage disponible est insuffisant pour effectuer cette action.',
 
