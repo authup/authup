@@ -65,7 +65,7 @@ describe('src/http/controllers/entities/event', () => {
         expect(JSON.stringify(row.data)).not.toContain(user.password);
     });
 
-    it('records a login_failed audit event with the canonicalized identifier and no actor id', async () => {
+    it('records a loginFailed audit event with the canonicalized identifier and no actor id', async () => {
         await expectClientError(
             () => suite.client.token.createWithPassword({
                 username: `  ${user.name.toUpperCase()}  `,

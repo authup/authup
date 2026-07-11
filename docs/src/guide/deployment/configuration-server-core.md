@@ -128,7 +128,7 @@ export default {
     passwordMinLength: 10,
 
     /**
-     * Persist security events (login, login_failed, authorize,
+     * Persist security events (login, loginFailed, authorize,
      * logout, refresh replay, ...) to the auth_events table.
      * default: true
      */
@@ -157,7 +157,7 @@ export default {
 
     /**
      * Throttle failed logins per (identifier, ip) pair by counting recent
-     * login_failed events. Requires eventLogEnabled.
+     * loginFailed events. Requires eventLogEnabled.
      * The client IP honors X-Forwarded-For — deploy behind a trusted
      * reverse proxy that overwrites the header, otherwise a direct client
      * can spoof the IP half of the throttle key.

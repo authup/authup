@@ -18,7 +18,7 @@ export interface Event {
     scope: `${EventScope}`;
 
     /**
-     * Event action, e.g. login, login_failed, authorize.
+     * Event action, e.g. login, loginFailed, authorize.
      */
     name: `${EventName}`;
 
@@ -45,7 +45,7 @@ export interface Event {
 
     /**
      * Denormalized actor display snapshot — survives actor deletion.
-     * On login_failed it carries the canonicalized submitted identifier
+     * On loginFailed it carries the canonicalized submitted identifier
      * (the throttle key) while actor_id stays null.
      */
     actor_name: string | null;

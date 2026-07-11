@@ -159,7 +159,7 @@ describe('src/config/*.ts', () => {
         });
 
         it('should reject the login throttle without the audit log (fail loud)', async () => {
-            // the throttle counts login_failed rows in auth_events — with the
+            // the throttle counts loginFailed rows in auth_events — with the
             // audit log disabled it would silently no-op.
             await expect(normalizeConfig({
                 loginAttemptThrottleEnabled: true,

@@ -246,7 +246,7 @@ export type Config = {
 
     /**
      * Throttle failed interactive logins per (identifier, ip) pair by
-     * counting recent login_failed audit events. Requires eventLogEnabled.
+     * counting recent loginFailed audit events. Requires eventLogEnabled.
      * default: false
      */
     loginAttemptThrottleEnabled: boolean,

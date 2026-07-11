@@ -163,7 +163,7 @@ describe('OAuth2RefreshTokenGrant', () => {
         expect(tokenRepository.setInactiveCalls.every((c) => typeof c.exp === 'number')).toBe(true);
     });
 
-    it('should record a refresh_replay_detected audit event and metric on family revocation', async () => {
+    it('should record a refreshReplayDetected audit event and metric on family revocation', async () => {
         const payload = await seed();
         const grant = build();
 

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isObject } from '@authup/kit';
 import { EVENT_DIFF_SECRET_KEY_REGEX } from './diff.ts';
 
 /**
@@ -56,7 +57,7 @@ function truncateDiffScalar(
 }
 
 function sanitizeDiff(input: unknown): Record<string, any> | null {
-    if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    if (!isObject(input)) {
         return null;
     }
 
@@ -67,11 +68,11 @@ function sanitizeDiff(input: unknown): Record<string, any> | null {
             continue;
         }
 
-        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+        if (!isObject(entry)) {
             continue;
         }
 
-        const { next, previous } = entry as Record<string, unknown>;
+        const { next, previous } = entry;
         if (!isDiffScalar(next) || !isDiffScalar(previous)) {
             continue;
         }

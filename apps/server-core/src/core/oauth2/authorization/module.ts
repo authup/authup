@@ -74,7 +74,7 @@ export class OAuth2Authorization {
                 actorName: identity.data.name,
                 realmId: data.realm_id ?? null,
                 data: {
-                    reason: options.client?.built_in ? 'auto_consent' : 'consent',
+                    reason: options.client?.built_in ? 'autoConsent' : 'consent',
                     ...(data.scope ? { scope: data.scope } : {}),
                 },
             });

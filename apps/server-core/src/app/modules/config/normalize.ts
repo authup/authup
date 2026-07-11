@@ -130,7 +130,7 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         trustedOrigins,
     };
 
-    // fail loud at boot: the throttle counts login_failed rows in
+    // fail loud at boot: the throttle counts loginFailed rows in
     // auth_events — with the audit log disabled it would silently no-op.
     if (config.loginAttemptThrottleEnabled && !config.eventLogEnabled) {
         throw new AuthupError('loginAttemptThrottleEnabled requires eventLogEnabled.');
