@@ -127,6 +127,39 @@ export default {
      */
     passwordMinLength: 10,
 
+    /**
+     * Persist security audit events (login, login_failed, authorize,
+     * logout, refresh replay, ...) to the audit_events table.
+     * default: true
+     */
+    auditLogEnabled: true,
+
+    /**
+     * Retention for persisted audit events in days. 0 = keep forever.
+     * default: 365
+     */
+    auditLogRetentionDays: 365,
+
+    /**
+     * Throttle failed logins per (identifier, ip) pair by counting recent
+     * login_failed audit events. Requires auditLogEnabled.
+     * default: false
+     */
+    loginAttemptThrottleEnabled: false,
+
+    /**
+     * Failed attempts per (identifier, ip) pair within the window before
+     * the pair is throttled (HTTP 429).
+     * default: 5
+     */
+    loginAttemptThreshold: 5,
+
+    /**
+     * Sliding throttle window in seconds.
+     * default: 900
+     */
+    loginAttemptWindow: 900,
+
     // ----------------------------------------------------
 
     /**
@@ -188,6 +221,11 @@ registrationEnabled=false
 emailVerificationEnabled=false
 passwordRecoveryEnabled=false
 passwordMinLength=10
+auditLogEnabled=true
+auditLogRetentionDays=365
+loginAttemptThrottleEnabled=false
+loginAttemptThreshold=5
+loginAttemptWindow=900
 userAdminPassword=start123
 userAdminPasswordReset=false
 robotAdminEnabled=false
@@ -205,6 +243,11 @@ REGISTRATION_ENABLED=false
 EMAIL_VERIFICATION_ENABLED=false
 PASSWORD_RECOVERY_ENABLED=false
 PASSWORD_MIN_LENGTH=10
+AUDIT_LOG_ENABLED=true
+AUDIT_LOG_RETENTION_DAYS=365
+LOGIN_ATTEMPT_THROTTLE_ENABLED=false
+LOGIN_ATTEMPT_THRESHOLD=5
+LOGIN_ATTEMPT_WINDOW=900
 USER_ADMIN_PASSWORD=start123
 USER_ADMIN_PASSWORD_RESET=false
 ROBOT_ADMIN_ENABLED=false
