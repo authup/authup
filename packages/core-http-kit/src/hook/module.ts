@@ -253,14 +253,18 @@ export class ClientAuthenticationHook extends EventEmitter<{
             .then((response) => {
                 this.setTimer(response.expires_in);
 
-                this.emit(ClientAuthenticationHookEventName.REFRESH_FINISHED, response);
-
                 this.refreshPromise = undefined;
 
+                // apply the response BEFORE emitting: a subscriber that
+                // decides the refresh is stale (e.g. the kit's drop guard)
+                // must be able to override the header/timer without being
+                // clobbered by a post-emit apply.
                 this.setAuthorizationHeader({
                     type: 'Bearer',
                     token: response.access_token,
                 });
+
+                this.emit(ClientAuthenticationHookEventName.REFRESH_FINISHED, response);
 
                 return response;
             })

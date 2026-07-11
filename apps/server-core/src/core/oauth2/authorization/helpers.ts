@@ -48,11 +48,15 @@ const TOKEN_HASH_DIGESTS : Record<string, { name: string, halfLength: number }> 
 
 export async function buildOAuth2TokenHash(
     value: string,
-    alg: `${JWTAlgorithm}`,
+    alg?: `${JWTAlgorithm}` | null,
 ) : Promise<string> {
-    // fail loud on an unrecognized alg — silently defaulting to SHA-256 would
-    // mint a hash no conforming verifier accepts.
-    const digest = TOKEN_HASH_DIGESTS[alg.slice(-3)];
+    // A key row without a persisted alg (nullable legacy column) signs with
+    // the signer's *256 default (RS256/ES256/HS256) — derive the matching
+    // SHA-256 digest. An unrecognized alg still fails loud — silently
+    // defaulting there would mint a hash no conforming verifier accepts.
+    const digest = alg ?
+        TOKEN_HASH_DIGESTS[alg.slice(-3)] :
+        TOKEN_HASH_DIGESTS['256'];
     if (!digest) {
         throw JWTError.headerPropertyInvalid('alg');
     }

@@ -1154,9 +1154,10 @@ for the account just authenticated; the branch also waits for the store's `user`
 to resolve to avoid a "Continue as \<empty\>" flash — but only while resolution
 is genuinely in flight: once it settles without a user (a non-user client/robot
 lingering session, or a failed `userInfo` lookup), the chooser renders a
-"use another account" escape hatch instead of spinning forever, and a failed
-resolve no longer latches `userResolved`, so a transient failure can retry
-(plan 047.2). The manual consent screen
+"use another account" escape hatch instead of spinning forever (plan 047.2 —
+`Authorize.vue` tracks this with a local `userSettled` ref over the store's
+`resolve()` settling, since the #3215 store rewrite; a failure settles the
+chooser rather than latching it closed). The manual consent screen
 (`AuthorizeForm`) additionally renders a **"Signed in as X — Not you?"** chip
 (emits `switch` → local `store.logout()` → login form), so a wrong-account user
 can switch even when the RP sent no `prompt=select_account`. Prompt/error string

@@ -9,7 +9,6 @@ export const STORE_ID = 'authup';
 
 /**
  * The store's auth phase, derived from state PRESENCE
-<<<<<<< HEAD
  * (access/refresh token / realm / user) plus an in-flight interaction
  * marker.
  *
@@ -18,6 +17,12 @@ export const STORE_ID = 'authup';
  * no session artifact at all — a refresh-token-only store (the
  * access-token cookie expired, the refresh-token session cookie
  * survived) reads RESTORING.
+ *
+ * RESTORING is presence-derived, not progress-derived: it does NOT imply
+ * a restore is in flight — an RT-only store reads RESTORING until some
+ * caller runs resolve() (which either completes the session or clears
+ * the artifacts). Consumers rendering on status should await resolve()
+ * rather than treating RESTORING as a transient spinner state.
  */
 export enum StoreAuthStatus {
     UNAUTHENTICATED = 'unauthenticated',
@@ -29,8 +34,11 @@ export enum StoreAuthStatus {
 /**
  * How the current session became authenticated in this app instance:
  * an interactive password login, an authorization-code exchange, or a
- * cookie restore validated by resolve(). App-instance-lifetime; null
- * while unauthenticated.
+ * cookie restore validated by resolve(). Stamped at the END of the
+ * settled interaction and cleared by cleanup() — it is NOT derived from
+ * status: a raw-seeded store can read `authenticated` with a null
+ * origin, and a stamped origin survives artifact expiry until the next
+ * cleanup().
  */
 export enum StoreAuthOrigin {
     LOGIN = 'login',
