@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-adapter-kit",
     "type": "module",
-    "version": "1.0.0-beta.51",
+    "version": "1.0.0-beta.52",
     "description": "A package containing a toolkit for server side adapters",
     "exports": {
         "./package.json": "./package.json",
@@ -52,12 +52,12 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/core-http-kit": "^1.0.0-beta.51",
-        "@authup/core-kit": "^1.0.0-beta.51",
-        "@authup/errors": "^1.0.0-beta.51",
-        "@authup/kit": "^1.0.0-beta.51",
-        "@authup/server-kit": "^1.0.0-beta.51",
-        "@authup/specs": "^1.0.0-beta.51",
+        "@authup/core-http-kit": "^1.0.0-beta.52",
+        "@authup/core-kit": "^1.0.0-beta.52",
+        "@authup/errors": "^1.0.0-beta.52",
+        "@authup/kit": "^1.0.0-beta.52",
+        "@authup/server-kit": "^1.0.0-beta.52",
+        "@authup/specs": "^1.0.0-beta.52",
         "@isaacs/ttlcache": "^2.1.4",
         "jose": "^6.2.3",
         "redis-extension": "^2.0.4"

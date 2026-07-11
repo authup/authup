@@ -1,5 +1,39 @@
 # Changelog
 
+## [1.0.0-beta.52](https://github.com/authup/authup/compare/v1.0.0-beta.51...v1.0.0-beta.52) (2026-07-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* master-realm admins can no longer authorize into another realm's app via the built-in web client (login_required at /authorize, invalid_grant at /token). Previously-issued cross-realm artifacts were malformed, so intentional reliance is implausible; use realm-local accounts.
+* all in-flight refresh tokens are invalidated on upgrade (the new table is empty), so active users sign in again once. The default access-token lifetime drops from 3600s to 900s.
+
+### Features
+
+* accept oidc prompt params and add auth_time/sid id_token claims ([#3195](https://github.com/authup/authup/issues/3195)) ([10da494](https://github.com/authup/authup/commit/10da494077471ee5b0e54aab24f3ab03610159ae))
+* add "log out other devices" action and gate admin sessions tab on session_read ([#3192](https://github.com/authup/authup/issues/3192)) ([f8ac851](https://github.com/authup/authup/commit/f8ac851f1d1fbc6e3234a45d7e49d006dcba8603))
+* add rp-initiated logout (end_session_endpoint) ([#3196](https://github.com/authup/authup/issues/3196)) ([865520c](https://github.com/authup/authup/commit/865520c245504d731b4f65e5d5688d6a447c72ad))
+* admin bulk session revocation and current-session marking ([#3193](https://github.com/authup/authup/issues/3193)) ([2fb862b](https://github.com/authup/authup/commit/2fb862bd00b63ce4f6785100900c3f7d0729f7f4))
+* configurable scope for oauth2/oidc identity providers ([#3226](https://github.com/authup/authup/issues/3226)) ([9449339](https://github.com/authup/authup/commit/94493396bc95070c300fe5da4e09bdd27073c31f))
+* realm-bind the authorize and token flow ([#3194](https://github.com/authup/authup/issues/3194)) ([b7fc25c](https://github.com/authup/authup/commit/b7fc25c162f20db2b7d28448719c08b5a5e27211))
+* security hardening quick wins ([#3227](https://github.com/authup/authup/issues/3227)) ([fce2e60](https://github.com/authup/authup/commit/fce2e600fc0bc0cafe4a5f1602dc887167bca630))
+* session-management UI ([#3189](https://github.com/authup/authup/issues/3189)) ([7b617c8](https://github.com/authup/authup/commit/7b617c84213990d13fcf3d7961353274bfed02ff))
+* silent prompt=none and prompt=login re-auth in the hosted authorize UI ([#3203](https://github.com/authup/authup/issues/3203)) ([e757c7c](https://github.com/authup/authup/commit/e757c7cbd078500f2bbe104ce7085db759f8669b))
+
+
+### Bug Fixes
+
+* add accessible names to icon-only action buttons on entity index pages ([#3182](https://github.com/authup/authup/issues/3182)) ([86e7eba](https://github.com/authup/authup/commit/86e7eba1ef9141d5b9160f8e14498687adafd520)), closes [#3153](https://github.com/authup/authup/issues/3153)
+* post-review hardening for OAuth2 authorize + RP-initiated logout ([#3216](https://github.com/authup/authup/issues/3216)) ([423849d](https://github.com/authup/authup/commit/423849d186bb5577b129c3138fb3ef72365a3578))
+* rp-initiated logout & authorize hardening (plan 041 audit follow-ups) ([#3197](https://github.com/authup/authup/issues/3197)) ([781c097](https://github.com/authup/authup/commit/781c097ef3a6fb911bc666eb76b580552afafa5e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+
 ## [1.0.0-beta.51](https://github.com/authup/authup/compare/v1.0.0-beta.50...v1.0.0-beta.51) (2026-07-02)
 
 

@@ -1,5 +1,41 @@
 # Change Log
 
+## [1.0.0-beta.52](https://github.com/authup/authup/compare/v1.0.0-beta.51...v1.0.0-beta.52) (2026-07-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* all in-flight refresh tokens are invalidated on upgrade (the new table is empty), so active users sign in again once. The default access-token lifetime drops from 3600s to 900s.
+
+### Features
+
+* add "log out other devices" action and gate admin sessions tab on session_read ([#3192](https://github.com/authup/authup/issues/3192)) ([f8ac851](https://github.com/authup/authup/commit/f8ac851f1d1fbc6e3234a45d7e49d006dcba8603))
+* admin bulk session revocation and current-session marking ([#3193](https://github.com/authup/authup/issues/3193)) ([2fb862b](https://github.com/authup/authup/commit/2fb862bd00b63ce4f6785100900c3f7d0729f7f4))
+* drop implicit & hybrid oauth2 response types ([#3199](https://github.com/authup/authup/issues/3199)) ([0c3108a](https://github.com/authup/authup/commit/0c3108a638f1e3ae86b9f00f21a346a6b063fb04))
+* retain the id_token in the kit store & round-trip client-web logout ([#3201](https://github.com/authup/authup/issues/3201)) ([500d4df](https://github.com/authup/authup/commit/500d4df6ab52907ad80f69f1ea3e74b62d6d2120))
+* session-management UI ([#3189](https://github.com/authup/authup/issues/3189)) ([7b617c8](https://github.com/authup/authup/commit/7b617c84213990d13fcf3d7961353274bfed02ff))
+
+
+### Bug Fixes
+
+* add accessible names to icon-only action buttons on entity index pages ([#3182](https://github.com/authup/authup/issues/3182)) ([86e7eba](https://github.com/authup/authup/commit/86e7eba1ef9141d5b9160f8e14498687adafd520)), closes [#3153](https://github.com/authup/authup/issues/3153)
+* post-review hardening for OAuth2 authorize + RP-initiated logout ([#3216](https://github.com/authup/authup/issues/3216)) ([423849d](https://github.com/authup/authup/commit/423849d186bb5577b129c3138fb3ef72365a3578))
+* remove non-functional session search field ([be557fd](https://github.com/authup/authup/commit/be557fdfd89d15a1422c2dbe72b92716edab18d4))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+    * @authup/client-web-nuxt bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+    * @authup/client-web-theme bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+    * @authup/core-http-kit bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+    * @authup/core-kit bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+    * @authup/i18n bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+    * @authup/kit bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+
 ## [1.0.0-beta.51](https://github.com/authup/authup/compare/v1.0.0-beta.50...v1.0.0-beta.51) (2026-07-02)
 
 

@@ -1,5 +1,28 @@
 # Change Log
 
+## [1.0.0-beta.52](https://github.com/authup/authup/compare/v1.0.0-beta.51...v1.0.0-beta.52) (2026-07-11)
+
+
+### Features
+
+* add rp-initiated logout (end_session_endpoint) ([#3196](https://github.com/authup/authup/issues/3196)) ([865520c](https://github.com/authup/authup/commit/865520c245504d731b4f65e5d5688d6a447c72ad))
+
+
+### Bug Fixes
+
+* rp-initiated logout & authorize hardening (plan 041 audit follow-ups) ([#3197](https://github.com/authup/authup/issues/3197)) ([781c097](https://github.com/authup/authup/commit/781c097ef3a6fb911bc666eb76b580552afafa5e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+    * @authup/core-kit bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+    * @authup/kit bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+    * @authup/specs bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+
 ## [1.0.0-beta.51](https://github.com/authup/authup/compare/v1.0.0-beta.50...v1.0.0-beta.51) (2026-07-02)
 
 

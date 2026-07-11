@@ -3,6 +3,64 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.52](https://github.com/authup/authup/compare/v1.0.0-beta.51...v1.0.0-beta.52) (2026-07-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* master-realm admins can no longer authorize into another realm's app via the built-in web client (login_required at /authorize, invalid_grant at /token). Previously-issued cross-realm artifacts were malformed, so intentional reliance is implausible; use realm-local accounts.
+* all in-flight refresh tokens are invalidated on upgrade (the new table is empty), so active users sign in again once. The default access-token lifetime drops from 3600s to 900s.
+* all in-flight refresh tokens are invalidated on upgrade (the new table is empty), so active users sign in again once. The default access-token lifetime drops from 3600s to 900s.
+* all in-flight refresh tokens are invalidated on upgrade (the new table is empty), so active users sign in again once. The default access-token lifetime drops from 3600s to 900s.
+* a name-identified client on the authorization_code or refresh_token grant without a realm hint now always resolves in the master realm; pass realm_id/realm_name or the client UUID for clients in other realms.
+
+### Features
+
+* accept oidc prompt params and add auth_time/sid id_token claims ([#3195](https://github.com/authup/authup/issues/3195)) ([10da494](https://github.com/authup/authup/commit/10da494077471ee5b0e54aab24f3ab03610159ae))
+* add "log out other devices" action and gate admin sessions tab on session_read ([#3192](https://github.com/authup/authup/issues/3192)) ([f8ac851](https://github.com/authup/authup/commit/f8ac851f1d1fbc6e3234a45d7e49d006dcba8603))
+* add rp-initiated logout (end_session_endpoint) ([#3196](https://github.com/authup/authup/issues/3196)) ([865520c](https://github.com/authup/authup/commit/865520c245504d731b4f65e5d5688d6a447c72ad))
+* admin bulk session revocation and current-session marking ([#3193](https://github.com/authup/authup/issues/3193)) ([2fb862b](https://github.com/authup/authup/commit/2fb862bd00b63ce4f6785100900c3f7d0729f7f4))
+* **client-web-kit:** add store auth status and lastAuthOrigin state ([#3215](https://github.com/authup/authup/issues/3215)) ([049d865](https://github.com/authup/authup/commit/049d865cf9ea364c9da48038af9f0cba0ab02fc7))
+* **client-web-kit:** commit store sessions atomically ([#3218](https://github.com/authup/authup/issues/3218)) ([0b7f4f9](https://github.com/authup/authup/commit/0b7f4f9492496d27d78755e2e7fa3d8402c6fa7e))
+* **client-web-kit:** make entity form re-hydration reactive and edit-preserving ([#3223](https://github.com/authup/authup/issues/3223)) ([9c534a8](https://github.com/authup/authup/commit/9c534a86a5185e8ea79073cc2653d5ff67cc1a84))
+* configurable scope for oauth2/oidc identity providers ([#3226](https://github.com/authup/authup/issues/3226)) ([9449339](https://github.com/authup/authup/commit/94493396bc95070c300fe5da4e09bdd27073c31f))
+* dedicated post_logout_redirect_uri client column ([#3202](https://github.com/authup/authup/issues/3202)) ([70875f3](https://github.com/authup/authup/commit/70875f3d98cc5311f1238a381e541446df77d20c))
+* drop implicit & hybrid oauth2 response types ([#3199](https://github.com/authup/authup/issues/3199)) ([0c3108a](https://github.com/authup/authup/commit/0c3108a638f1e3ae86b9f00f21a346a6b063fb04))
+* mint the id_token at the token exchange for an authoritative sid ([#3200](https://github.com/authup/authup/issues/3200)) ([cea6c40](https://github.com/authup/authup/commit/cea6c4054a0aaca1fb5bc053fa9eeb4210b261a5))
+* realm-bind the authorize and token flow ([#3194](https://github.com/authup/authup/issues/3194)) ([b7fc25c](https://github.com/authup/authup/commit/b7fc25c162f20db2b7d28448719c08b5a5e27211))
+* retain the id_token in the kit store & round-trip client-web logout ([#3201](https://github.com/authup/authup/issues/3201)) ([500d4df](https://github.com/authup/authup/commit/500d4df6ab52907ad80f69f1ea3e74b62d6d2120))
+* rotate refresh tokens with replay detection and family revocation ([#3186](https://github.com/authup/authup/issues/3186)) ([8595c35](https://github.com/authup/authup/commit/8595c355a48da1ab9d80fdc94be7f4ecf48c307c))
+* security hardening quick wins ([#3227](https://github.com/authup/authup/issues/3227)) ([fce2e60](https://github.com/authup/authup/commit/fce2e600fc0bc0cafe4a5f1602dc887167bca630))
+* session-management API (list + revoke sessions) ([#3187](https://github.com/authup/authup/issues/3187)) ([58fcf93](https://github.com/authup/authup/commit/58fcf93e0edbfc4e578a82fefb4e2a1eb7489f45))
+* session-management UI ([#3189](https://github.com/authup/authup/issues/3189)) ([7b617c8](https://github.com/authup/authup/commit/7b617c84213990d13fcf3d7961353274bfed02ff))
+* silent prompt=none and prompt=login re-auth in the hosted authorize UI ([#3203](https://github.com/authup/authup/issues/3203)) ([e757c7c](https://github.com/authup/authup/commit/e757c7cbd078500f2bbe104ce7085db759f8669b))
+* validate & harden the rp-initiated logout endpoint (plan 042) ([#3198](https://github.com/authup/authup/issues/3198)) ([54bdaf8](https://github.com/authup/authup/commit/54bdaf8cea57ee110f034d8a5b102a364f793a85))
+
+
+### Bug Fixes
+
+* add accessible names to icon-only action buttons on entity index pages ([#3182](https://github.com/authup/authup/issues/3182)) ([86e7eba](https://github.com/authup/authup/commit/86e7eba1ef9141d5b9160f8e14498687adafd520)), closes [#3153](https://github.com/authup/authup/issues/3153)
+* **client-web-kit:** observe the promise-share wrapper's derived promise ([#3214](https://github.com/authup/authup/issues/3214)) ([4b6d65d](https://github.com/authup/authup/commit/4b6d65dc687dd4ba591f5cf7fb6a048c26d91280))
+* **client-web-kit:** restrict assignFormProperties to declared form keys ([#3222](https://github.com/authup/authup/issues/3222)) ([df3bbf6](https://github.com/authup/authup/commit/df3bbf6abfaa4720225accb2770843c1baca6ce8))
+* **client-web-kit:** treat a surviving refresh token as session presence ([#3221](https://github.com/authup/authup/issues/3221)) ([09805c2](https://github.com/authup/authup/commit/09805c23fd0e58b8fedd48df7cba9f600a1ca66a))
+* **client-web-kit:** unwrap realmIsRoot ref guards and keep permission-check realm id ([#3217](https://github.com/authup/authup/issues/3217)) ([d43fea8](https://github.com/authup/authup/commit/d43fea82605b3b3356dc3647bc46eb1b0483684f))
+* **deps:** bump the minorandpatch group across 1 directory with 7 updates ([#3190](https://github.com/authup/authup/issues/3190)) ([03ceff0](https://github.com/authup/authup/commit/03ceff02b1526268a0fc0b36f64a932da03f06eb))
+* dispatch SSR self-calls against the listen address ([#3188](https://github.com/authup/authup/issues/3188)) ([e57ebc5](https://github.com/authup/authup/commit/e57ebc5e42896dc590e30b9d6ca1d6a49a3379cc))
+* do not attach undefined identity policy data for global-scoped requests ([#3185](https://github.com/authup/authup/issues/3185)) ([b26a429](https://github.com/authup/authup/commit/b26a429be06ef09fb8f899cc20ab57535cde5290)), closes [#3184](https://github.com/authup/authup/issues/3184)
+* ensure consistent version for release ([130cc2e](https://github.com/authup/authup/commit/130cc2ec394ac940dcba771d25ef41b7dbc85964))
+* fall back to re-auth on a dead bearer in the authorize consent POST ([#3204](https://github.com/authup/authup/issues/3204)) ([70907d2](https://github.com/authup/authup/commit/70907d2ef00cdefead0b0657a655481faf3beec6))
+* gracefully reject invalid identity-provider authorize url ([1ab54ca](https://github.com/authup/authup/commit/1ab54ca23e15dc915febaf2202b005084894c5f3))
+* harden DataSource cleanup on setup and migration error paths ([#3181](https://github.com/authup/authup/issues/3181)) ([7e43cab](https://github.com/authup/authup/commit/7e43cabf3a3455f105073389749429f3919e4579))
+* post-review hardening for OAuth2 authorize + RP-initiated logout ([#3216](https://github.com/authup/authup/issues/3216)) ([423849d](https://github.com/authup/authup/commit/423849d186bb5577b129c3138fb3ef72365a3578))
+* post-review hardening for the store stack ([#3225](https://github.com/authup/authup/issues/3225)) ([6a0c5d1](https://github.com/authup/authup/commit/6a0c5d1135b2b30d061b5a006bfd2847d354fc1b))
+* realm_id property comparision in authorization module ([f34c4f7](https://github.com/authup/authup/commit/f34c4f73956e83cd7bfd1616c62a78cc2753d706))
+* realm-scoping and provisioning-validation follow-ups ([#3177](https://github.com/authup/authup/issues/3177)) ([643f847](https://github.com/authup/authup/commit/643f8472c830d5597e2a24e673937d7cd6a15ced))
+* refresh public-client-bound tokens without client auth ([#3212](https://github.com/authup/authup/issues/3212)) ([1d821fa](https://github.com/authup/authup/commit/1d821fab624ad00381c8602fdd3e0bcee255b82d))
+* remove non-functional session search field ([be557fd](https://github.com/authup/authup/commit/be557fdfd89d15a1422c2dbe72b92716edab18d4))
+* reuse bearer session on interactive authorization_code login ([#3191](https://github.com/authup/authup/issues/3191)) ([b14caf1](https://github.com/authup/authup/commit/b14caf1a3ebbc8d12894474bed922ca169f1c60c))
+* rp-initiated logout & authorize hardening (plan 041 audit follow-ups) ([#3197](https://github.com/authup/authup/issues/3197)) ([781c097](https://github.com/authup/authup/commit/781c097ef3a6fb911bc666eb76b580552afafa5e))
+* scope the id_token_hint exp-bypass so an expired token cannot poison the claims cache ([#3210](https://github.com/authup/authup/issues/3210)) ([a5b9bc9](https://github.com/authup/authup/commit/a5b9bc922d7a260e55151e5ff873f9058a029dab))
+
 ## [1.0.0-beta.51](https://github.com/authup/authup/compare/v1.0.0-beta.50...v1.0.0-beta.51) (2026-07-02)
 
 
