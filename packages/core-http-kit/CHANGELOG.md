@@ -1,5 +1,37 @@
 # Change Log
 
+## [1.0.0-beta.52](https://github.com/authup/authup/compare/v1.0.0-beta.51...v1.0.0-beta.52) (2026-07-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* all in-flight refresh tokens are invalidated on upgrade (the new table is empty), so active users sign in again once. The default access-token lifetime drops from 3600s to 900s.
+
+### Features
+
+* admin bulk session revocation and current-session marking ([#3193](https://github.com/authup/authup/issues/3193)) ([2fb862b](https://github.com/authup/authup/commit/2fb862bd00b63ce4f6785100900c3f7d0729f7f4))
+* dedicated post_logout_redirect_uri client column ([#3202](https://github.com/authup/authup/issues/3202)) ([70875f3](https://github.com/authup/authup/commit/70875f3d98cc5311f1238a381e541446df77d20c))
+* retain the id_token in the kit store & round-trip client-web logout ([#3201](https://github.com/authup/authup/issues/3201)) ([500d4df](https://github.com/authup/authup/commit/500d4df6ab52907ad80f69f1ea3e74b62d6d2120))
+* session-management API (list + revoke sessions) ([#3187](https://github.com/authup/authup/issues/3187)) ([58fcf93](https://github.com/authup/authup/commit/58fcf93e0edbfc4e578a82fefb4e2a1eb7489f45))
+
+
+### Bug Fixes
+
+* dispatch SSR self-calls against the listen address ([#3188](https://github.com/authup/authup/issues/3188)) ([e57ebc5](https://github.com/authup/authup/commit/e57ebc5e42896dc590e30b9d6ca1d6a49a3379cc))
+* post-review hardening for the store stack ([#3225](https://github.com/authup/authup/issues/3225)) ([6a0c5d1](https://github.com/authup/authup/commit/6a0c5d1135b2b30d061b5a006bfd2847d354fc1b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+    * @authup/core-kit bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+    * @authup/kit bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+    * @authup/specs bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+
 ## [1.0.0-beta.51](https://github.com/authup/authup/compare/v1.0.0-beta.50...v1.0.0-beta.51) (2026-07-02)
 
 

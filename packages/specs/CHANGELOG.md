@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.0.0-beta.52](https://github.com/authup/authup/compare/v1.0.0-beta.51...v1.0.0-beta.52) (2026-07-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* master-realm admins can no longer authorize into another realm's app via the built-in web client (login_required at /authorize, invalid_grant at /token). Previously-issued cross-realm artifacts were malformed, so intentional reliance is implausible; use realm-local accounts.
+* all in-flight refresh tokens are invalidated on upgrade (the new table is empty), so active users sign in again once. The default access-token lifetime drops from 3600s to 900s.
+
+### Features
+
+* accept oidc prompt params and add auth_time/sid id_token claims ([#3195](https://github.com/authup/authup/issues/3195)) ([10da494](https://github.com/authup/authup/commit/10da494077471ee5b0e54aab24f3ab03610159ae))
+* add rp-initiated logout (end_session_endpoint) ([#3196](https://github.com/authup/authup/issues/3196)) ([865520c](https://github.com/authup/authup/commit/865520c245504d731b4f65e5d5688d6a447c72ad))
+* configurable scope for oauth2/oidc identity providers ([#3226](https://github.com/authup/authup/issues/3226)) ([9449339](https://github.com/authup/authup/commit/94493396bc95070c300fe5da4e09bdd27073c31f))
+* realm-bind the authorize and token flow ([#3194](https://github.com/authup/authup/issues/3194)) ([b7fc25c](https://github.com/authup/authup/commit/b7fc25c162f20db2b7d28448719c08b5a5e27211))
+* rotate refresh tokens with replay detection and family revocation ([#3186](https://github.com/authup/authup/issues/3186)) ([8595c35](https://github.com/authup/authup/commit/8595c355a48da1ab9d80fdc94be7f4ecf48c307c))
+* security hardening quick wins ([#3227](https://github.com/authup/authup/issues/3227)) ([fce2e60](https://github.com/authup/authup/commit/fce2e600fc0bc0cafe4a5f1602dc887167bca630))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+    * @authup/kit bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+
 ## [1.0.0-beta.51](https://github.com/authup/authup/compare/v1.0.0-beta.50...v1.0.0-beta.51) (2026-07-02)
 
 

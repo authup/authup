@@ -1,5 +1,42 @@
 # Change Log
 
+## [1.0.0-beta.52](https://github.com/authup/authup/compare/v1.0.0-beta.51...v1.0.0-beta.52) (2026-07-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* all in-flight refresh tokens are invalidated on upgrade (the new table is empty), so active users sign in again once. The default access-token lifetime drops from 3600s to 900s.
+* all in-flight refresh tokens are invalidated on upgrade (the new table is empty), so active users sign in again once. The default access-token lifetime drops from 3600s to 900s.
+* all in-flight refresh tokens are invalidated on upgrade (the new table is empty), so active users sign in again once. The default access-token lifetime drops from 3600s to 900s.
+* a name-identified client on the authorization_code or refresh_token grant without a realm hint now always resolves in the master realm; pass realm_id/realm_name or the client UUID for clients in other realms.
+
+### Features
+
+* accept oidc prompt params and add auth_time/sid id_token claims ([#3195](https://github.com/authup/authup/issues/3195)) ([10da494](https://github.com/authup/authup/commit/10da494077471ee5b0e54aab24f3ab03610159ae))
+* configurable scope for oauth2/oidc identity providers ([#3226](https://github.com/authup/authup/issues/3226)) ([9449339](https://github.com/authup/authup/commit/94493396bc95070c300fe5da4e09bdd27073c31f))
+* dedicated post_logout_redirect_uri client column ([#3202](https://github.com/authup/authup/issues/3202)) ([70875f3](https://github.com/authup/authup/commit/70875f3d98cc5311f1238a381e541446df77d20c))
+* mint the id_token at the token exchange for an authoritative sid ([#3200](https://github.com/authup/authup/issues/3200)) ([cea6c40](https://github.com/authup/authup/commit/cea6c4054a0aaca1fb5bc053fa9eeb4210b261a5))
+* rotate refresh tokens with replay detection and family revocation ([#3186](https://github.com/authup/authup/issues/3186)) ([8595c35](https://github.com/authup/authup/commit/8595c355a48da1ab9d80fdc94be7f4ecf48c307c))
+* security hardening quick wins ([#3227](https://github.com/authup/authup/issues/3227)) ([fce2e60](https://github.com/authup/authup/commit/fce2e600fc0bc0cafe4a5f1602dc887167bca630))
+* session-management API (list + revoke sessions) ([#3187](https://github.com/authup/authup/issues/3187)) ([58fcf93](https://github.com/authup/authup/commit/58fcf93e0edbfc4e578a82fefb4e2a1eb7489f45))
+* session-management UI ([#3189](https://github.com/authup/authup/issues/3189)) ([7b617c8](https://github.com/authup/authup/commit/7b617c84213990d13fcf3d7961353274bfed02ff))
+
+
+### Bug Fixes
+
+* realm-scoping and provisioning-validation follow-ups ([#3177](https://github.com/authup/authup/issues/3177)) ([643f847](https://github.com/authup/authup/commit/643f8472c830d5597e2a24e673937d7cd6a15ced))
+* reuse bearer session on interactive authorization_code login ([#3191](https://github.com/authup/authup/issues/3191)) ([b14caf1](https://github.com/authup/authup/commit/b14caf1a3ebbc8d12894474bed922ca169f1c60c))
+* rp-initiated logout & authorize hardening (plan 041 audit follow-ups) ([#3197](https://github.com/authup/authup/issues/3197)) ([781c097](https://github.com/authup/authup/commit/781c097ef3a6fb911bc666eb76b580552afafa5e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+    * @authup/errors bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+    * @authup/specs bumped from ^1.0.0-beta.51 to ^1.0.0-beta.52
+
 ## [1.0.0-beta.51](https://github.com/authup/authup/compare/v1.0.0-beta.50...v1.0.0-beta.51) (2026-07-02)
 
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.0-beta.52](https://github.com/authup/authup/compare/v1.0.0-beta.51...v1.0.0-beta.52) (2026-07-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* a name-identified client on the authorization_code or refresh_token grant without a realm hint now always resolves in the master realm; pass realm_id/realm_name or the client UUID for clients in other realms.
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 7 updates ([#3190](https://github.com/authup/authup/issues/3190)) ([03ceff0](https://github.com/authup/authup/commit/03ceff02b1526268a0fc0b36f64a932da03f06eb))
+* realm-scoping and provisioning-validation follow-ups ([#3177](https://github.com/authup/authup/issues/3177)) ([643f847](https://github.com/authup/authup/commit/643f8472c830d5597e2a24e673937d7cd6a15ced))
+
 ## [1.0.0-beta.51](https://github.com/authup/authup/compare/v1.0.0-beta.50...v1.0.0-beta.51) (2026-07-02)
 
 
