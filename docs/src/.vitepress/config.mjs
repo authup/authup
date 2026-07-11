@@ -220,7 +220,16 @@ export default defineConfig({
                     items: [
                         {
                             text: 'Nginx',
-                            link: '/guide/deployment/nginx', 
+                            link: '/guide/deployment/nginx',
+                        },
+                    ],
+                },
+                {
+                    text: 'Upgrading',
+                    items: [
+                        {
+                            text: 'Upgrade Notes',
+                            link: '/guide/deployment/upgrading',
                         },
                     ],
                 },
