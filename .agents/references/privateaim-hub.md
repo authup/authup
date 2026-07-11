@@ -4,8 +4,8 @@ Cross-reference for the **security event log** (authup `Event` domain, `auth_eve
 plans 057/053/058 — wave-2 PR #3229). authup's implementation was designed from a deep
 investigation of hub's telemetry event system (itself Authentik-derived) and deliberately
 adopts its shape while fixing its weaknesses — **authup is the reference implementation;
-the "upstream candidates" below are improvements hub should adopt back**. Claims pinned to
-hub lockstep version `0.12.1` (2026-07).
+the "upstream candidates" below are improvements hub should adopt back**, tracked as
+**PrivateAIM/hub#1745**. Claims pinned to hub lockstep version `0.12.1` (2026-07).
 
 ## Code mapping
 
