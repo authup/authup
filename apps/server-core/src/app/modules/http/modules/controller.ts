@@ -371,6 +371,7 @@ export class HTTPControllerModule {
                 passwordRecoveryEnabled: config.passwordRecoveryEnabled,
                 emailVerificationEnabled: config.emailVerificationEnabled,
                 publicUrl: config.publicUrl,
+                passwordMinLength: config.passwordMinLength,
             },
         });
     }
@@ -442,6 +443,7 @@ export class HTTPControllerModule {
                 registrationEnabled: config.registrationEnabled,
                 emailVerificationEnabled: config.emailVerificationEnabled,
                 publicUrl: config.publicUrl,
+                passwordMinLength: config.passwordMinLength,
             },
         });
     }
@@ -705,6 +707,7 @@ export class HTTPControllerModule {
     }
 
     createUserController(container: IContainer) {
+        const config = container.resolve(ConfigInjectionKey);
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
         const repository = new UserRepositoryAdapter({
@@ -715,6 +718,7 @@ export class HTTPControllerModule {
         const service = new UserService({
             repository,
             realmRepository: realmRepositoryAdapter,
+            passwordMinLength: config.passwordMinLength,
         });
         return new UserController({ service });
     }

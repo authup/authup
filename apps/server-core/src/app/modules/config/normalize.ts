@@ -8,6 +8,7 @@
 import { read } from 'envix';
 import path from 'node:path';
 import process from 'node:process';
+import { USER_PASSWORD_MIN_LENGTH } from '@authup/core-kit';
 import { EnvironmentName } from '@authup/kit';
 import { toPublicHost } from '../../../utils/host.ts';
 import { expandToOrigins } from './origins.ts';
@@ -94,6 +95,7 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         registrationEnabled: false,
         emailVerificationEnabled: false,
         passwordRecoveryEnabled: false,
+        passwordMinLength: USER_PASSWORD_MIN_LENGTH,
 
         clientAuthBasic: false,
         clientSystemEnabled: false,

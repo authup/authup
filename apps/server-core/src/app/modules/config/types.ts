@@ -204,6 +204,13 @@ export type Config = {
      */
     passwordRecoveryEnabled: boolean,
 
+    /**
+     * Minimum length for user-chosen passwords (user create/update,
+     * registration, password reset). The maximum is fixed at 512.
+     * default: 10
+     */
+    passwordMinLength: number,
+
     // ----------------------------------------------------
 
     /**

@@ -120,6 +120,11 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.passwordRecoveryEnabled = passwordRecoveryEnabled;
     }
 
+    const passwordMinLength = readInt(ConfigEnvironmentVariableName.PASSWORD_MIN_LENGTH);
+    if (typeof passwordMinLength !== 'undefined') {
+        options.passwordMinLength = passwordMinLength;
+    }
+
     // ---------------------------------------------------------------
 
     const clientBasicAuth = readBool(ConfigEnvironmentVariableName.CLIENT_AUTH_BASIC);

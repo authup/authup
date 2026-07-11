@@ -87,6 +87,15 @@ describe('src/config/*.ts', () => {
             expect(config).not.toHaveProperty('foo');
             expect(config.port).toEqual(3001);
         });
+
+        it('should accept a bounded passwordMinLength and reject out-of-bounds values', async () => {
+            const config = await parseConfig({ passwordMinLength: 12 });
+            expect(config.passwordMinLength).toEqual(12);
+
+            await expect(parseConfig({ passwordMinLength: 0 })).rejects.toThrow();
+            await expect(parseConfig({ passwordMinLength: 513 })).rejects.toThrow();
+            await expect(parseConfig({ passwordMinLength: 10.5 })).rejects.toThrow();
+        });
     });
 
     describe('normalizeConfig', () => {
@@ -129,6 +138,12 @@ describe('src/config/*.ts', () => {
             const config = await normalizeConfig({ port: 0 });
 
             expect(config.port).toEqual(0);
+        });
+
+        it('should default passwordMinLength to 10', async () => {
+            const config = await normalizeConfig();
+
+            expect(config.passwordMinLength).toEqual(10);
         });
     });
 

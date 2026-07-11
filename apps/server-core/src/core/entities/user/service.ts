@@ -22,6 +22,7 @@ import type { IUserRepository, IUserService } from './types.ts';
 export type UserServiceContext = {
     repository: IUserRepository;
     realmRepository: IRealmRepository;
+    passwordMinLength?: number;
 };
 
 export class UserService extends AbstractEntityService implements IUserService {
@@ -35,7 +36,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         super();
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
-        this.validator = new UserValidator();
+        this.validator = new UserValidator({ passwordMinLength: ctx.passwordMinLength });
     }
 
     async getMany(

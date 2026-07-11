@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { USER_PASSWORD_MAX_LENGTH, USER_PASSWORD_MIN_LENGTH } from '@authup/core-kit';
 import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import { PasswordRecoveryDisabledError } from './disabled.ts';
 import { EmailVerificationRequiredError } from './email-verification-required.ts';
@@ -226,7 +227,11 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
 
         validator.mount(
             'password',
-            createValidator(z.string().min(5).max(512)),
+            createValidator(
+                z.string()
+                    .min(this.options.passwordMinLength ?? USER_PASSWORD_MIN_LENGTH)
+                    .max(USER_PASSWORD_MAX_LENGTH),
+            ),
         );
 
         return validator.run(data);

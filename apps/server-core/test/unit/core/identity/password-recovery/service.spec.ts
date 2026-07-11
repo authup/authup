@@ -342,6 +342,74 @@ describe('core/identity/password-recovery/service', () => {
             expect(user!.password).not.toBe('newpass123');
         });
 
+        it('should reject a new password below the default minimum length', async () => {
+            const masterRealm = realmRepository.getMasterRealm();
+            repository.seed([createFakeUser({
+                name: 'short-pass-user',
+                email: 'short-pass@example.com',
+                reset_hash: 'short-pass-token',
+                reset_expires: new Date(Date.now() + 60000).toISOString(),
+                realm_id: masterRealm.id,
+            })]);
+
+            const service = new PasswordRecoveryService({
+                options: {
+                    passwordRecoveryEnabled: true,
+                    emailVerificationEnabled: true,
+                },
+                mailClient,
+                mailTemplateRenderer,
+                repository,
+                realmRepository,
+            });
+
+            await expect(
+                service.resetPassword({
+                    email: 'short-pass@example.com',
+                    token: 'short-pass-token',
+                    password: 'a'.repeat(9),
+                }),
+            ).rejects.toThrow(/password/i);
+        });
+
+        it('should honor a configured minimum password length', async () => {
+            const masterRealm = realmRepository.getMasterRealm();
+            repository.seed([createFakeUser({
+                name: 'strict-pass-user',
+                email: 'strict-pass@example.com',
+                reset_hash: 'strict-pass-token',
+                reset_expires: new Date(Date.now() + 60000).toISOString(),
+                realm_id: masterRealm.id,
+            })]);
+
+            const service = new PasswordRecoveryService({
+                options: {
+                    passwordRecoveryEnabled: true,
+                    emailVerificationEnabled: true,
+                    passwordMinLength: 12,
+                },
+                mailClient,
+                mailTemplateRenderer,
+                repository,
+                realmRepository,
+            });
+
+            await expect(
+                service.resetPassword({
+                    email: 'strict-pass@example.com',
+                    token: 'strict-pass-token',
+                    password: 'a'.repeat(11),
+                }),
+            ).rejects.toThrow(/password/i);
+
+            const result = await service.resetPassword({
+                email: 'strict-pass@example.com',
+                token: 'strict-pass-token',
+                password: 'a'.repeat(12),
+            });
+            expect(result.reset_at).toBeDefined();
+        });
+
         it('should reset password by name instead of email', async () => {
             const masterRealm = realmRepository.getMasterRealm();
             const entity = repository.seed(createFakeUser({

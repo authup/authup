@@ -219,9 +219,52 @@ describe('core/entities/user/service', () => {
 
             const result = await service.create({
                 name: 'realm-user',
-                email: 'realm@example.com', 
+                email: 'realm@example.com',
             }, actor);
             expect(result.realm_id).toBe(realmId);
+        });
+
+        it('should reject a password below the default minimum length', async () => {
+            await expect(
+                service.create({
+                    name: 'short-pass-user',
+                    email: 'short-pass@example.com',
+                    password: 'a'.repeat(9),
+                }, createAllowAllActor()),
+            ).rejects.toThrow(/password/i);
+        });
+
+        it('should accept a password at the default minimum length', async () => {
+            const result = await service.create({
+                name: 'floor-pass-user',
+                email: 'floor-pass@example.com',
+                password: 'a'.repeat(10),
+            }, createAllowAllActor());
+
+            expect(result.id).toBeDefined();
+        });
+
+        it('should honor a configured minimum password length', async () => {
+            const strictService = new UserService({
+                repository,
+                realmRepository,
+                passwordMinLength: 12,
+            });
+
+            await expect(
+                strictService.create({
+                    name: 'strict-pass-user',
+                    email: 'strict-pass@example.com',
+                    password: 'a'.repeat(11),
+                }, createAllowAllActor()),
+            ).rejects.toThrow(/password/i);
+
+            const result = await strictService.create({
+                name: 'strict-pass-user',
+                email: 'strict-pass@example.com',
+                password: 'a'.repeat(12),
+            }, createAllowAllActor());
+            expect(result.id).toBeDefined();
         });
     });
 

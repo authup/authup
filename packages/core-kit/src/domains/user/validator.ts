@@ -9,10 +9,18 @@ import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
 import { ValidatorGroup } from '@authup/kit';
+import { USER_PASSWORD_MAX_LENGTH, USER_PASSWORD_MIN_LENGTH } from './constants';
 import type { User } from './entity';
+import type { UserValidatorOptions } from './types';
 import { isUserNameValid } from './utils';
 
 export class UserValidator extends Container<User> {
+    declare protected options: UserValidatorOptions;
+
+    constructor(options: UserValidatorOptions = {}) {
+        super(options);
+    }
+
     protected override initialize() {
         super.initialize();
 
@@ -116,7 +124,11 @@ export class UserValidator extends Container<User> {
         this.mount(
             'password',
             { optional: true },
-            createValidator(z.string().min(3).max(512)),
+            createValidator(
+                z.string()
+                    .min(this.options.passwordMinLength ?? USER_PASSWORD_MIN_LENGTH)
+                    .max(USER_PASSWORD_MAX_LENGTH),
+            ),
         );
 
         // ----------------------------------------------

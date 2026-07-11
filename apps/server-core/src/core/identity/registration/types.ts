@@ -13,6 +13,7 @@ export type RegistrationServiceOptions = {
     registrationEnabled?: boolean,
     emailVerificationEnabled?: boolean,
     publicUrl?: string,
+    passwordMinLength?: number,
 };
 
 export type RegistrationServiceContext = {
