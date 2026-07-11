@@ -5,14 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import { describe, expect, it } from 'vitest';
-import type { OAuth2IdentityProvider, Realm } from '@authup/core-kit';
+import type { OAuth2IdentityProvider, OpenIDIdentityProvider, Realm } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
 import { BadRequestError, isBadRequestError } from '@authup/errors';
 import type { IIdentityProviderAccountManager } from '../../../../../src/core';
-import { IdentityProviderOAuth2Authenticator } from '../../../../../src/core';
+import {
+    IdentityProviderGoogleAuthenticator,
+    IdentityProviderOAuth2Authenticator,
+    IdentityProviderOpenIDAuthenticator,
+} from '../../../../../src/core';
 
-function createAuthenticator(authorizeURL: string) {
+function createProvider(data: Partial<OAuth2IdentityProvider> = {}) : OAuth2IdentityProvider {
     const realm: Realm = {
         id: createNanoID(),
         name: 'master',
@@ -23,7 +27,7 @@ function createAuthenticator(authorizeURL: string) {
         updated_at: new Date().toISOString(),
     };
 
-    const provider: OAuth2IdentityProvider = {
+    return {
         id: createNanoID(),
         name: 'idp',
         display_name: null,
@@ -37,14 +41,31 @@ function createAuthenticator(authorizeURL: string) {
         client_id: 'client-id',
         client_secret: 'client-secret',
         token_url: 'https://idp.example.com/token',
-        authorize_url: authorizeURL,
+        authorize_url: 'https://idp.example.com/authorize',
+        ...data,
     };
+}
 
-    return new IdentityProviderOAuth2Authenticator({
+function createOpenIDProvider(data: Partial<OpenIDIdentityProvider> = {}) : OpenIDIdentityProvider {
+    return {
+        ...createProvider(),
+        protocol: IdentityProviderProtocol.OIDC,
+        ...data,
+    };
+}
+
+function createAuthenticatorContext(provider: OAuth2IdentityProvider | OpenIDIdentityProvider) {
+    return {
         options: { baseURL: 'https://authup.example.com/' },
         accountManager: {} as IIdentityProviderAccountManager,
         provider,
-    });
+    };
+}
+
+function createAuthenticator(authorizeURL: string) {
+    return new IdentityProviderOAuth2Authenticator(
+        createAuthenticatorContext(createProvider({ authorize_url: authorizeURL })),
+    );
 }
 
 describe('IdentityProviderOAuth2Authenticator', () => {
@@ -74,5 +95,65 @@ describe('IdentityProviderOAuth2Authenticator', () => {
         } catch (e) {
             expect(isBadRequestError(e)).toBeTruthy();
         }
+    });
+
+    it('should forward the configured scope to the redirect url', () => {
+        const authenticator = new IdentityProviderOAuth2Authenticator(
+            createAuthenticatorContext(createProvider({ scope: 'foo bar' })),
+        );
+
+        const parsed = new URL(authenticator.buildRedirectURL({ state: 'abc' }));
+        expect(parsed.searchParams.get('scope')).toEqual('foo bar');
+    });
+
+    it('should not send a scope parameter when no scope is configured', () => {
+        const authenticator = new IdentityProviderOAuth2Authenticator(
+            createAuthenticatorContext(createProvider({ scope: null })),
+        );
+
+        const parsed = new URL(authenticator.buildRedirectURL({ state: 'abc' }));
+        expect(parsed.searchParams.get('scope')).toBeNull();
+    });
+});
+
+describe('IdentityProviderOpenIDAuthenticator', () => {
+    it('should default to the openid scopes when no scope is configured', () => {
+        const authenticator = new IdentityProviderOpenIDAuthenticator(
+            createAuthenticatorContext(createOpenIDProvider()),
+        );
+
+        const parsed = new URL(authenticator.buildRedirectURL({ state: 'abc' }));
+        expect(parsed.searchParams.get('scope')).toEqual('openid profile email');
+    });
+
+    it('should keep a user-defined scope', () => {
+        const authenticator = new IdentityProviderOpenIDAuthenticator(
+            createAuthenticatorContext(createOpenIDProvider({ scope: 'openid custom' })),
+        );
+
+        const parsed = new URL(authenticator.buildRedirectURL({ state: 'abc' }));
+        expect(parsed.searchParams.get('scope')).toEqual('openid custom');
+    });
+});
+
+describe('IdentityProviderGoogleAuthenticator', () => {
+    it('should default to the preset scope when no scope is configured', () => {
+        const authenticator = new IdentityProviderGoogleAuthenticator(
+            createAuthenticatorContext(createProvider()),
+        );
+
+        const parsed = new URL(authenticator.buildRedirectURL({ state: 'abc' }));
+        expect(parsed.origin).toEqual('https://accounts.google.com');
+        expect(parsed.searchParams.get('scope')).toEqual('openid profile email');
+    });
+
+    it('should keep a user-defined scope', () => {
+        const authenticator = new IdentityProviderGoogleAuthenticator(
+            createAuthenticatorContext(createProvider({ scope: 'openid profile email https://www.googleapis.com/auth/calendar.readonly' })),
+        );
+
+        const parsed = new URL(authenticator.buildRedirectURL({ state: 'abc' }));
+        expect(parsed.searchParams.get('scope'))
+            .toEqual('openid profile email https://www.googleapis.com/auth/calendar.readonly');
     });
 });

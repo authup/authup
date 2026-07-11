@@ -21,7 +21,7 @@ export interface OAuth2IdentityProviderBase {
 
     user_info_url?: string | null;
 
-    scope?: string;
+    scope?: string | null;
 }
 
 export interface OAuth2IdentityProvider extends IdentityProvider, OAuth2IdentityProviderBase {

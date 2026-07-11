@@ -15,7 +15,7 @@ import { IdentityProviderOAuth2Authenticator } from '../protocols/index.ts';
 
 export class IdentityProviderGoogleAuthenticator extends IdentityProviderOAuth2Authenticator {
     constructor(ctx: IdentityProviderOAuth2AuthenticatorContext) {
-        ctx.provider.scope = 'openid profile email';
+        ctx.provider.scope = ctx.provider.scope || 'openid profile email';
         ctx.provider.authorize_url = 'https://accounts.google.com/o/oauth2/v2/auth';
         ctx.provider.token_url = 'https://oauth2.googleapis.com/token';
         ctx.provider.user_info_url = 'https://openidconnect.googleapis.com/v1/userinfo';

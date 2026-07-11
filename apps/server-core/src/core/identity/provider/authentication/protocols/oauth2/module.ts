@@ -42,7 +42,7 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
                 clientId: ctx.provider.client_id,
                 clientSecret: ctx.provider.client_secret,
                 redirectUri: `${ctx.options.baseURL}${buildIdentityProviderAuthorizeCallbackPath(ctx.provider.id)}`,
-                scope: ctx.provider.scope,
+                scope: ctx.provider.scope || undefined,
                 authorizationEndpoint: ctx.provider.authorize_url,
                 tokenEndpoint: ctx.provider.token_url,
                 userinfoEndpoint: ctx.provider.user_info_url || undefined,

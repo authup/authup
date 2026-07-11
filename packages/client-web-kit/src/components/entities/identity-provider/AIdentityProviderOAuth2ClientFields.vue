@@ -36,21 +36,32 @@ export default defineComponent({
     props: { entity: { type: Object as PropType<Partial<IdentityProvider>> } },
     emits: ['updated'],
     setup(props) {
-        const form = reactive({ client_id: '', client_secret: '' });
+        const form = reactive({
+            client_id: '', 
+            client_secret: '', 
+            scope: '', 
+        });
 
         const secretShow = ref(false);
 
         // Shared server-side validator, scoped to the keys this sub-form
         // owns via `pathsToInclude` — `client_id` stays required for every
         // OAuth2/OIDC flavor, `client_secret` optional (a secret-less
-        // public-client token exchange is a valid provider config). The
-        // remaining mounts (`preset`, endpoint URLs) belong to sibling
-        // sub-forms and are filtered out here.
+        // public-client token exchange is a valid provider config), `scope`
+        // optional (blank = protocol/preset default). The remaining mounts
+        // (`preset`, endpoint URLs) belong to sibling sub-forms and are
+        // filtered out here.
         const v = useValidup(
-            new IdentityProviderOAuth2AttributesValidator({ pathsToInclude: ['client_id', 'client_secret'] }),
+            new IdentityProviderOAuth2AttributesValidator({ pathsToInclude: ['client_id', 'client_secret', 'scope'] }),
             form,
             { name: 'client' },
         );
+
+        // `scope` is an optional key on `OAuth2IdentityProvider`, so the
+        // typed `fields` accessor yields `FieldState | undefined` under
+        // strict consumers — the dynamic `at()` accessor materialises the
+        // state and is never undefined.
+        const scopeField = v.fields.at<string | null>('scope');
 
         function assign() {
             assignFormProperties(form, props.entity as Partial<OAuth2IdentityProvider>, { fields: v.fields });
@@ -70,6 +81,10 @@ export default defineComponent({
                 key: TranslatorTranslationFieldKey.CLIENT_SECRET,
             },
             {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.SCOPE,
+            },
+            {
                 namespace: TranslatorTranslationNamespace.ACTION,
                 key: TranslatorTranslationActionKey.SHOW,
             },
@@ -83,6 +98,7 @@ export default defineComponent({
 
         return {
             v,
+            scopeField,
             secretShow,
             secretToggleLabel,
             translations,
@@ -134,6 +150,20 @@ export default defineComponent({
                         </button>
                     </template>
                 </VCFormInput>
+            </VCFormGroup>
+        </IFieldValidation>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="scopeField"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    {{ translations.scope }}
+                </template>
+                <VCFormInput
+                    v-model="scopeField.$model.value"
+                    placeholder="openid profile email"
+                />
             </VCFormGroup>
         </IFieldValidation>
     </div>

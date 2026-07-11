@@ -13,7 +13,7 @@ import { IdentityProviderOAuth2Authenticator } from '../protocols/index.ts';
 
 export class IdentityProviderFacebookAuthenticator extends IdentityProviderOAuth2Authenticator {
     constructor(ctx: IdentityProviderOAuth2AuthenticatorContext) {
-        ctx.provider.scope = 'email';
+        ctx.provider.scope = ctx.provider.scope || 'email';
         ctx.provider.authorize_url = 'https://graph.facebook.com/oauth/authorize';
         ctx.provider.token_url = 'https://graph.facebook.com/oauth/access_token';
         ctx.provider.user_info_url = 'https://graph.facebook.com/me?fields=id,name,email,first_name,last_name';

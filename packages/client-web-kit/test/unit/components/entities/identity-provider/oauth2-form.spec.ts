@@ -127,6 +127,26 @@ describe('AIdentityProviderOAuth2Form', () => {
         expect(body).not.toHaveProperty('created_at');
         expect(body).not.toHaveProperty('updated_at');
     });
+
+    it('should submit an entered scope on update', async () => {
+        const entity = createEntity();
+        const { wrapper, httpClient } = mountForm(entity);
+
+        await flushPromises();
+
+        const scopeInput = wrapper.find('input[placeholder="openid profile email"]');
+        expect(scopeInput.exists()).toBe(true);
+
+        await scopeInput.setValue('openid profile email custom');
+        await flushPromises();
+
+        await wrapper.find('form').trigger('submit');
+        await flushPromises();
+
+        const request = findUpdateRequest(httpClient);
+        expect(request).toBeDefined();
+        expect(request!.body).toMatchObject({ scope: 'openid profile email custom' });
+    });
 });
 
 describe('AIdentityProviderBasicFields', () => {

@@ -13,7 +13,7 @@ import { IdentityProviderOAuth2Authenticator } from '../protocols/index.ts';
 
 export class IdentityProviderGithubAuthenticator extends IdentityProviderOAuth2Authenticator {
     constructor(ctx: IdentityProviderOAuth2AuthenticatorContext) {
-        ctx.provider.scope = 'user:email';
+        ctx.provider.scope = ctx.provider.scope || 'user:email';
         ctx.provider.authorize_url = 'https://github.com/login/oauth/authorize';
         ctx.provider.token_url = 'https://github.com/login/oauth/access_token';
         ctx.provider.user_info_url = 'https://api.github.com/user';
