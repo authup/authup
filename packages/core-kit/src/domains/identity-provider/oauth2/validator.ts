@@ -72,6 +72,7 @@ export class IdentityProviderOAuth2AttributesValidator extends Container<OAuth2I
 
         this.mount(
             'scope',
+            { optional: true },
             createValidator(z.string().min(3).max(2000).optional()
                 .nullable()),
         );

@@ -60,6 +60,7 @@ export const TranslatorTranslationFieldEnglish : NamespaceTranslations<`${Transl
     [TranslatorTranslationFieldKey.MEMBER_USER_ATTRIBUTE]: 'Member user attribute',
     [TranslatorTranslationFieldKey.CLIENT_ID]: 'Client ID',
     [TranslatorTranslationFieldKey.CLIENT_SECRET]: 'Client secret',
+    [TranslatorTranslationFieldKey.SCOPE]: 'Scope',
     [TranslatorTranslationFieldKey.TOKEN]: 'Token',
     [TranslatorTranslationFieldKey.USER_INFO]: 'UserInfo',
     [TranslatorTranslationFieldKey.DISCOVERY]: 'Discovery',

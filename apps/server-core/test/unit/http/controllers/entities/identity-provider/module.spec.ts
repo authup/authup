@@ -103,6 +103,7 @@ describe('src/http/controllers/identity-provider', () => {
     it('should update resource', async () => {
         oAuth2IdentityProvider.name = 'testa';
         oAuth2IdentityProvider.client_secret = 'start1234';
+        oAuth2IdentityProvider.scope = 'openid profile';
 
         const response = await suite.client
             .identityProvider

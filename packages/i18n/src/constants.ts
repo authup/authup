@@ -284,6 +284,7 @@ export enum TranslatorTranslationFieldKey {
     MEMBER_USER_ATTRIBUTE = 'memberUserAttribute',
     CLIENT_ID = 'clientId',
     CLIENT_SECRET = 'clientSecret',
+    SCOPE = 'scope',
     TOKEN = 'token',
     USER_INFO = 'userInfo',
     DISCOVERY = 'discovery',
