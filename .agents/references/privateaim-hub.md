@@ -52,7 +52,7 @@ hub lockstep version `0.12.1` (2026-07).
     there only because its consumer is an internal WORK queue. authup's publish `content` is the
     shared realtime wire payload (redis/socket → browsers), so `dataPrevious` rides the publish
     **context**, never the content. hub should double-check nothing re-broadcasts its payload.
-11. **Wire-shape parity for failure counting.** authup's `login_failed` rows carry the attempted
+11. **Wire-shape parity for failure counting.** authup's `loginFailed` rows carry the attempted
     identifier in `actor_name` (indexed) — enabling the `(identifier, ip)` throttle as a pure
     column predicate. hub has no auth events (auth is delegated to authup), but the pattern
     applies to any attempt-counting need.

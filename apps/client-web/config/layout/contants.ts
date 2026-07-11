@@ -230,6 +230,23 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         },
     },
     {
+        name: 'Events',
+        type: 'link',
+        url: '/events',
+        icon: 'fa6-solid:clipboard-list',
+        meta: {
+            [LayoutKey.REQUIRED_LOGGED_IN]: true,
+            i18n: {
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.EVENT,
+                count: 2,
+            },
+            [LayoutKey.REQUIRED_PERMISSIONS]: [
+                PermissionName.EVENT_READ,
+            ],
+        },
+    },
+    {
         name: 'Other',
         type: 'separator',
         meta: { i18n: { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.OTHER } },

@@ -1757,7 +1757,7 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   catch — carries the **canonicalized attempted identifier in `actor_name`**
   with `actor_id` null; the deliberate PII-posture call, it is the throttle
   key), `REFRESH_REPLAY_DETECTED` (`revokeFamily`), `AUTHORIZE`
-  (`OAuth2Authorization.authorize()`, `data.reason: auto_consent|consent` from
+  (`OAuth2Authorization.authorize()`, `data.reason: autoConsent|consent` from
   `client.built_in`), `LOGOUT` (end-session hint revoke), `REGISTER` /
   `ACCOUNT_ACTIVATED`, `PASSWORD_RESET_REQUESTED/COMPLETED`. Token issuance
   emits **no rows** (plan 016's `auth_session_tokens` already inventories every
@@ -1796,6 +1796,15 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   discipline). `EVENT_READ` auto-provisions via `Object.values(PermissionName)`:
   `admin` = `any`, `realm_admin` = `ownOrNull` (deliberately NOT in the OWN
   override list). Typed client: `client.event.getMany/getOne`.
+- **Admin UI:** `apps/client-web/pages/events/` — a read-only list page
+  (`index.vue` + `index/index.vue`; kit collection `<AEvents>`
+  (`EntityType.EVENT`, no server-side subscriber — the socket subscription is
+  inert, same as sessions) rendering a `<VCTable>` with name/scope, ref,
+  actor, IP and created_at columns + `ASearch` name filter) and a detail page
+  (`[id]/index.vue`; General / Actor / Request cards + pretty-printed `data`
+  dict). Nav entry + pages are gated on `EVENT_READ`
+  (`LayoutKey.REQUIRED_PERMISSIONS`); no create/update/delete surface exists
+  (append-only).
 - **Retention:** `components/event-cleaner` (every minute, oauth2-cleaner
   mirror) deletes `expiring = true AND expires_at < now` (hub's cleaner shape);
   scheduled only when

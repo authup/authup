@@ -218,6 +218,7 @@ export enum TranslatorTranslationMailKey {
  */
 export enum TranslatorTranslationEntityKey {
     CLIENT = 'client',
+    EVENT = 'event',
     IDENTITY_PROVIDER = 'identityProvider',
     PERMISSION = 'permission',
     POLICY = 'policy',
@@ -289,6 +290,10 @@ export enum TranslatorTranslationFieldKey {
     USER_INFO = 'userInfo',
     DISCOVERY = 'discovery',
     REDIRECT_URL = 'redirectUrl',
+    ACTOR = 'actor',
+    REF = 'ref',
+    PATH = 'path',
+    METHOD = 'method',
 }
 
 /**
@@ -347,4 +352,6 @@ export enum TranslatorTranslationCommonKey {
     GROUP = 'group',
     NO_ITEMS = 'noItems',
     PROCESSING = 'processing',
+    REQUEST = 'request',
+    DATA = 'data',
 }
