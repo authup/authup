@@ -192,6 +192,18 @@ describe('EntityEventHandler', () => {
         expect(eventService.recordCalls[1].data).toBeNull();
     });
 
+    it('records an updated event whose content carries no data (diff skipped, no throw)', async () => {
+        const handler = buildHandler();
+        await handler.handle(buildPublishContext({
+            content: { event: 'updated', data: undefined },
+            dataPrevious: { id: entityId, name: 'previous' },
+        }));
+
+        expect(eventService.recordCalls).toHaveLength(1);
+        expect(eventService.recordCalls[0].data).toBeNull();
+        expect(eventService.recordCalls[0].refId).toBeNull();
+    });
+
     it('ignores publishes for the event entity itself (recursion guard)', async () => {
         await buildHandler().handle(buildPublishContext({ content: { type: 'event' } }));
 

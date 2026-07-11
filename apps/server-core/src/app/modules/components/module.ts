@@ -38,9 +38,13 @@ export class ComponentsModule implements IModule {
             createDatabaseUniqueEntriesComponent(dataSource),
         ];
 
-        // The sweep only exists when rows are written AND carry an expiry —
-        // with retention 0 (keep forever) every expires_at is null anyway.
-        if (config.eventLogEnabled && config.eventLogRetentionDays > 0) {
+        // The sweep only exists when rows are written AND at least one row
+        // family carries an expiry — security events (eventLogRetentionDays)
+        // and entity-CRUD events (eventLogEntityRetentionDays) are stamped
+        // independently, so either non-zero retention needs the cleaner.
+        const securitySweep = config.eventLogRetentionDays > 0;
+        const entitySweep = config.eventLogEntityEnabled && config.eventLogEntityRetentionDays > 0;
+        if (config.eventLogEnabled && (securitySweep || entitySweep)) {
             components.push(createEventCleanerComponent(dataSource, logger));
         }
 

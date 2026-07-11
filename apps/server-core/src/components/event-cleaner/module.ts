@@ -31,8 +31,9 @@ export function createEventCleanerComponent(
                     // Rows carry a per-row expires_at stamped at write time from
                     // eventLogRetentionDays; null = keep forever.
                     await repository.deleteExpired(new Date().toISOString());
-                } catch {
+                } catch (e) {
                     logger?.warn('Sweeping expired audit events failed.');
+                    logger?.warn(e);
                 }
             };
 

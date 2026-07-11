@@ -36,8 +36,9 @@ export function createOAuth2CleanerComponent(
 
                     await sessionRepository
                         .delete({ expires_at: LessThan(isoDate) });
-                } catch {
+                } catch (e) {
                     logger?.warn('Sweeping expired sessions failed.');
+                    logger?.warn(e);
                 }
             };
 

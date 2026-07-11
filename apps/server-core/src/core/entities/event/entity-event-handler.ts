@@ -6,6 +6,7 @@
  */
 
 import { EntityDefaultEventName, EventName, EventScope } from '@authup/core-kit';
+import { isObject } from '@authup/kit';
 import type { DomainEventPublishContext, IDomainEventHandler } from '@authup/server-kit';
 import { buildEntityDiff } from './diff.ts';
 import type {
@@ -68,7 +69,7 @@ export class EntityEventHandler implements IDomainEventHandler {
                 undefined;
 
             let data : Record<string, any> | null = null;
-            if (name === EventName.UPDATED && ctx.dataPrevious) {
+            if (name === EventName.UPDATED && isObject(ctx.content.data) && isObject(ctx.dataPrevious)) {
                 const diff = buildEntityDiff(ctx.content.data, ctx.dataPrevious);
                 if (Object.keys(diff).length > 0) {
                     data = { diff };
