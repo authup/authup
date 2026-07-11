@@ -12,6 +12,7 @@ import {
     TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
+import { splitOAuth2Scope } from '@authup/specs';
 import { assignFormProperties, useTranslations } from '../../../core';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
@@ -65,10 +66,7 @@ export default defineComponent({
         // state and is never undefined.
         const scopeField = v.fields.at<string | null>('scope');
 
-        const scopes = computed(() => {
-            const { value } = scopeField.$model;
-            return value ? value.split(/\s+/).filter((item) => item.length > 0) : [];
-        });
+        const scopes = computed(() => splitOAuth2Scope(scopeField.$model.value));
 
         function assign() {
             assignFormProperties(form, props.entity as Partial<OAuth2IdentityProvider>, { fields: v.fields });
