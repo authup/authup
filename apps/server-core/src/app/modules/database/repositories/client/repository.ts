@@ -14,7 +14,7 @@ import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-e
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IClientRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
-import { translateWhereConditions } from '../helpers.ts';
+import { applyRealmScopeSelect, translateWhereConditions } from '../helpers.ts';
 import { loadBoundPermissions } from '../bindings.ts';
 import {
     CachePrefix,
@@ -78,6 +78,8 @@ export class ClientRepositoryAdapter implements IClientRepository {
             },
             sort: { allowed: ['id', 'created_at', 'updated_at'] },
         });
+
+        applyRealmScopeSelect(qb, 'client', ['secret_hashed', 'secret_encrypted']);
 
         const [entities, total] = await qb.getManyAndCount();
 

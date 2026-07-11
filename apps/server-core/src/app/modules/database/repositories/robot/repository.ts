@@ -14,7 +14,7 @@ import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-e
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IRealmRepository, IRobotRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
-import { translateWhereConditions } from '../helpers.ts';
+import { applyRealmScopeSelect, translateWhereConditions } from '../helpers.ts';
 import { loadBoundPermissions } from '../bindings.ts';
 import {
     CachePrefix,
@@ -72,6 +72,8 @@ export class RobotRepositoryAdapter implements IRobotRepository {
             },
             sort: { allowed: ['id', 'realm_id', 'user_id', 'updated_at', 'created_at'] },
         });
+
+        applyRealmScopeSelect(qb, 'robot', ['id']);
 
         const [entities, total] = await qb.getManyAndCount();
 

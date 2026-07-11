@@ -230,6 +230,52 @@ describe('core/identity/registration/service', () => {
                 }),
             ).rejects.toThrow(/email/i);
         });
+
+        it('should reject a password below the default minimum length', async () => {
+            const service = new RegistrationService({
+                options: { registrationEnabled: true },
+                mailClient,
+                mailTemplateRenderer,
+                repository,
+                realmRepository,
+            });
+
+            await expect(
+                service.register({
+                    name: faker.internet.username().toLowerCase(),
+                    email: faker.internet.email().toLowerCase(),
+                    password: 'a'.repeat(9),
+                }),
+            ).rejects.toThrow(/password/i);
+        });
+
+        it('should honor a configured minimum password length', async () => {
+            const service = new RegistrationService({
+                options: {
+                    registrationEnabled: true,
+                    passwordMinLength: 12,
+                },
+                mailClient,
+                mailTemplateRenderer,
+                repository,
+                realmRepository,
+            });
+
+            await expect(
+                service.register({
+                    name: faker.internet.username().toLowerCase(),
+                    email: faker.internet.email().toLowerCase(),
+                    password: 'a'.repeat(11),
+                }),
+            ).rejects.toThrow(/password/i);
+
+            const result = await service.register({
+                name: faker.internet.username().toLowerCase(),
+                email: faker.internet.email().toLowerCase(),
+                password: 'a'.repeat(12),
+            });
+            expect(result.active).toBe(true);
+        });
     });
 
     describe('activate', () => {

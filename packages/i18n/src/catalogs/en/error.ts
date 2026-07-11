@@ -39,6 +39,7 @@ export const TranslatorTranslationErrorEnglish : NamespaceTranslations<`${ErrorC
 
     [ErrorCode.OAUTH_REDIRECT_URI_MISMATCH]: 'The redirect URI does not match.',
     [ErrorCode.OAUTH_CLIENT_INVALID]: 'The client is invalid.',
+    [ErrorCode.OAUTH_CLIENT_UNAUTHORIZED]: 'The client is not authorized to use this grant type.',
     [ErrorCode.OAUTH_GRANT_INVALID]: 'The authorization grant is invalid.',
     [ErrorCode.OAUTH_GRANT_TYPE_UNSUPPORTED]: 'The grant type is not supported.',
     [ErrorCode.OAUTH_REQUEST_INVALID]: 'The request is invalid.',

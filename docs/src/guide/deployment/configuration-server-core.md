@@ -120,6 +120,13 @@ export default {
      */
     passwordRecoveryEnabled: false,
 
+    /**
+     * Minimum length for user-chosen passwords (user create/update,
+     * registration, password reset). The maximum is fixed at 512.
+     * default: 10
+     */
+    passwordMinLength: 10,
+
     // ----------------------------------------------------
 
     /**
@@ -180,6 +187,7 @@ trustedOrigins=https://app.example.com
 registrationEnabled=false
 emailVerificationEnabled=false
 passwordRecoveryEnabled=false
+passwordMinLength=10
 userAdminPassword=start123
 userAdminPasswordReset=false
 robotAdminEnabled=false
@@ -196,6 +204,7 @@ TRUSTED_ORIGINS=https://app.example.com
 REGISTRATION_ENABLED=false
 EMAIL_VERIFICATION_ENABLED=false
 PASSWORD_RECOVERY_ENABLED=false
+PASSWORD_MIN_LENGTH=10
 USER_ADMIN_PASSWORD=start123
 USER_ADMIN_PASSWORD_RESET=false
 ROBOT_ADMIN_ENABLED=false

@@ -39,6 +39,7 @@ export const TranslatorTranslationErrorGerman : NamespaceTranslations<`${ErrorCo
 
     [ErrorCode.OAUTH_REDIRECT_URI_MISMATCH]: 'Die Weiterleitungs-URI stimmt nicht überein.',
     [ErrorCode.OAUTH_CLIENT_INVALID]: 'Der Client ist ungültig.',
+    [ErrorCode.OAUTH_CLIENT_UNAUTHORIZED]: 'Der Client ist nicht berechtigt, diesen Grant-Typ zu verwenden.',
     [ErrorCode.OAUTH_GRANT_INVALID]: 'Die Autorisierungsfreigabe ist ungültig.',
     [ErrorCode.OAUTH_GRANT_TYPE_UNSUPPORTED]: 'Der Grant-Typ wird nicht unterstützt.',
     [ErrorCode.OAUTH_REQUEST_INVALID]: 'Die Anfrage ist ungültig.',

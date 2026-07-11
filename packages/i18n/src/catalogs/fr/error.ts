@@ -39,6 +39,7 @@ export const TranslatorTranslationErrorFrench : NamespaceTranslations<`${ErrorCo
 
     [ErrorCode.OAUTH_REDIRECT_URI_MISMATCH]: 'L\'URI de redirection ne correspond pas.',
     [ErrorCode.OAUTH_CLIENT_INVALID]: 'Le client est invalide.',
+    [ErrorCode.OAUTH_CLIENT_UNAUTHORIZED]: 'Le client n\'est pas autorisé à utiliser ce type d\'autorisation.',
     [ErrorCode.OAUTH_GRANT_INVALID]: 'L\'autorisation d\'accès est invalide.',
     [ErrorCode.OAUTH_GRANT_TYPE_UNSUPPORTED]: 'Le type d\'autorisation n\'est pas pris en charge.',
     [ErrorCode.OAUTH_REQUEST_INVALID]: 'La requête est invalide.',

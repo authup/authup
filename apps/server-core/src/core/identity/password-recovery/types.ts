@@ -13,6 +13,7 @@ export type PasswordRecoveryServiceOptions = {
     passwordRecoveryEnabled?: boolean,
     emailVerificationEnabled?: boolean,
     publicUrl?: string,
+    passwordMinLength?: number,
 };
 
 export type PasswordRecoveryServiceContext = {

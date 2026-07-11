@@ -21,7 +21,7 @@ import {
     UserPermissionEntity,
     UserRoleEntity,
 } from '../../../../../adapters/database/domains/index.ts';
-import { translateWhereConditions } from '../helpers.ts';
+import { applyRealmScopeSelect, translateWhereConditions } from '../helpers.ts';
 import { loadBoundPermissions } from '../bindings.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
@@ -73,6 +73,8 @@ export class UserRepositoryAdapter implements IUserRepository {
             },
             sort: { allowed: ['id', 'name', 'display_name', 'created_at', 'updated_at'] },
         });
+
+        applyRealmScopeSelect(qb, 'user', ['id']);
 
         const [entities, total] = await qb.getManyAndCount();
 

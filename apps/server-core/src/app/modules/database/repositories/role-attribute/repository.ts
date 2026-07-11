@@ -11,7 +11,7 @@ import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IRoleAttributeRepository } from '../../../../../core/index.ts';
 import { RoleAttributeEntity } from '../../../../../adapters/database/domains/index.ts';
-import { translateWhereConditions } from '../helpers.ts';
+import { applyRealmScopeSelect, translateWhereConditions } from '../helpers.ts';
 
 export class RoleAttributeRepositoryAdapter implements IRoleAttributeRepository {
     private readonly repository: Repository<RoleAttribute>;
@@ -30,6 +30,8 @@ export class RoleAttributeRepositoryAdapter implements IRoleAttributeRepository 
             sort: { allowed: ['id', 'name', 'role_id', 'realm_id', 'created_at', 'updated_at'] },
             pagination: { maxLimit: 50 },
         });
+
+        applyRealmScopeSelect(qb, 'roleAttribute');
 
         const [entities, total] = await qb.getManyAndCount();
 

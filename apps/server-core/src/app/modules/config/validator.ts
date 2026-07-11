@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { USER_PASSWORD_MAX_LENGTH } from '@authup/core-kit';
 import { isObject } from '@authup/kit';
 import { createValidator } from '@validup/zod';
 import type { BetterSqlite3ConnectionOptions } from 'typeorm/driver/better-sqlite3/BetterSqlite3ConnectionOptions.js';
@@ -80,6 +81,9 @@ export class ConfigValidator extends Container<Config> {
             registrationEnabled: booleanValidator,
             emailVerificationEnabled: booleanValidator,
             passwordRecoveryEnabled: booleanValidator,
+            passwordMinLength: createValidator(
+                z.number().int().positive().max(USER_PASSWORD_MAX_LENGTH),
+            ),
 
             clientAuthBasic: booleanValidator,
             clientSystemEnabled: booleanValidator,

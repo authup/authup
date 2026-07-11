@@ -39,6 +39,7 @@ export const TranslatorTranslationErrorSpanish : NamespaceTranslations<`${ErrorC
 
     [ErrorCode.OAUTH_REDIRECT_URI_MISMATCH]: 'La URI de redirección no coincide.',
     [ErrorCode.OAUTH_CLIENT_INVALID]: 'El cliente no es válido.',
+    [ErrorCode.OAUTH_CLIENT_UNAUTHORIZED]: 'El cliente no está autorizado para usar este tipo de concesión.',
     [ErrorCode.OAUTH_GRANT_INVALID]: 'La concesión de autorización no es válida.',
     [ErrorCode.OAUTH_GRANT_TYPE_UNSUPPORTED]: 'El tipo de concesión no es compatible.',
     [ErrorCode.OAUTH_REQUEST_INVALID]: 'La solicitud no es válida.',

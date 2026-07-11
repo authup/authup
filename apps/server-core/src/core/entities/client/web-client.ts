@@ -25,8 +25,9 @@ export type WebClientProvisionerContext = {
  * `global` scope lets the issued token drive the management API (parity
  * with the legacy password-grant admin login); `openid` for the id-token.
  *
- * `grant_types` is metadata only — the auth-code grant issues a refresh
- * token regardless — but it documents the intended flow. `redirect_uri` and
+ * `grant_types` is an enforced allowlist (`assertClientGrantAllowed` at the
+ * /token grants and the /authorize code-request verifier; null = allow-all),
+ * so it must list every flow the client uses. `redirect_uri` and
  * `post_logout_redirect_uri` are each one `<origin>/**` wildcard per trusted
  * origin (matched by isSimpleMatch).
  */
