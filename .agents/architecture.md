@@ -282,16 +282,29 @@ export type RegistrationServiceOptions = {
     registrationEnabled?: boolean,
     emailVerificationEnabled?: boolean,
     publicUrl?: string,
+    passwordMinLength?: number,
 };
 
 export type PasswordRecoveryServiceOptions = {
     passwordRecoveryEnabled?: boolean,
     emailVerificationEnabled?: boolean,
     publicUrl?: string,
+    passwordMinLength?: number,
 };
 ```
 
 Feature gates check these options before proceeding (e.g. `if (!this.options.registrationEnabled) throw ...`). Options are wired from app config in `app/modules/http/modules/controller.ts`.
+
+**Password minimum length:** the config key `passwordMinLength` (ENV
+`PASSWORD_MIN_LENGTH`, default 10, max 512) drives every user-password write
+path: `UserValidator`'s `password` mount takes it as a ctor option
+(`UserValidatorOptions.passwordMinLength`, default `USER_PASSWORD_MIN_LENGTH`
+= 10 from `@authup/core-kit`), threaded via `UserServiceContext` /
+`RegistrationServiceOptions` / `PasswordRecoveryServiceOptions` in the
+controller factories. Un-threaded `UserValidator` sites (IdP account
+provisioning, file provisioning, the kit's client-side form) keep the
+default 10. No composition rules — length only (NIST 800-63B; plan 066
+Stage 1).
 
 **Mail rollback pattern:** When a service persists an entity and then sends an email (e.g. registration activation), wrap the mail call in try/catch. On failure, remove the entity and throw — don't leave orphaned records.
 
@@ -622,7 +635,8 @@ endpoint — the `/authorize` verifier already resolves clients via
 
 - **Attributes** (`buildWebClientAttributes`, `core/entities/client/web-client.ts`):
   `is_confidential: false`, `built_in: true`, `active: true`,
-  `grant_types: 'authorization_code refresh_token'` (metadata only),
+  `grant_types: 'authorization_code refresh_token'` (an enforced allowlist —
+  see *Per-client grant allowlist* under the token-endpoint section),
   `scope: 'global openid'`, `redirect_uri` = one `<origin>/**` wildcard per
   trusted app origin (matched by `isSimpleMatch`).
 - **App origins** come from `getAppOrigins(config)` = publicUrl's origin +
@@ -1405,6 +1419,33 @@ The `/token` endpoint authenticates the calling client according to RFC 6749. Co
 | `password` | Confidential client MUST authenticate (RFC §4.3.2). The token's `client_id` claim and the OpenID `aud` claim use the **authenticated** client's id, not any user-side association. The shared realm hint resolves the **user realm** and scopes the client leg. |
 | `robot_credentials` | Authentication is the grant's purpose (Authup-specific extension). |
 
+### Per-client grant allowlist (`grant_types`)
+
+Independent of client authentication, every client-resolving grant enforces
+`Client.grant_types` as an **opt-in allowlist** via `assertClientGrantAllowed`
+(`core/oauth2/client/grant-type.ts`): when the column is non-null (space- or
+comma-delimited values), the requested grant must be listed — otherwise the
+request fails with `unauthorized_client` (RFC 6749 §5.2,
+`ErrorCode.OAUTH_CLIENT_UNAUTHORIZED`, HTTP 400). `null` = allow-all, so
+enforcement is opt-in per client and upgrades are backward compatible. Enforced
+at both chokepoints:
+
+1. **`/token`** — after client resolution in `authorization_code`,
+   `refresh_token` (including the bound-client-from-token path, so public-client
+   refreshes that never send `client_id` are covered), `client_credentials`, and
+   `password` when a client authenticates. `robot_credentials` resolves no
+   client and is exempt. `/token/introspect` and `/token/revoke` are deliberately
+   NOT gated — RFC 7662/7009 operations are not grants.
+2. **`/authorize` code-request verifier** — a non-null list must include
+   `authorization_code`; denied before the consent UI renders (an RP
+   misconfiguration fails at the front door, not at code redemption).
+
+Unknown values in the column are inert (they can only narrow, never widen). A
+refresh rejected this way is a plain `unauthorized_client` — **not** replay
+detection, so no family revocation; restoring the grant type restores service.
+The provisioned per-realm `web` client lists `authorization_code refresh_token`
+(refreshed by `WebClientProvisioner`'s MERGE on startup).
+
 ### Token endpoint realm resolution
 
 The three client-authenticating grants (`password`, `authorization_code`,
@@ -1606,12 +1647,26 @@ which is why dedicated `SESSION_READ`/`SESSION_DELETE` beat reusing the parent
 `USER_*`/`CLIENT_*`/`ROBOT_*` families). Both auto-provision (enum-iterated) and
 grant to `admin` (`any`) + `realm_admin` (`ownOrNull` read / `own` delete). The
 list read path bypasses the session cache (id-keyed only, no list index) and goes
-straight to TypeORM. **`SessionRepository.findMany` force-selects `realm_id` /
-`sub` / `sub_kind` (`qb.addSelect`) regardless of the client `fields` projection**
-— the per-row `resourceRealmMatch` gate reads `realm_id`, and rapiq honors a
-`fields` projection over `default`, so without the force-select a scoped reader
-could strip `realm_id` and neutralize the realm_scope reach factor (cross-realm
-leak).
+straight to TypeORM. **Every realm-gated `findMany` adapter force-selects the
+columns its per-row gate reads, regardless of the client `fields` projection**
+(plan 039) — the gate reads `entity.realm_id` via `resourceRealmMatch`, and rapiq
+honors a `fields` projection over `default`, so without the force-select a scoped
+reader could strip `realm_id` and neutralize the realm_scope reach factor
+(cross-realm leak; for an `ownOrNull` reader the stripped realm reads as a
+null/global resource). The shared helper `applyRealmScopeSelect(qb, alias,
+extraColumns?)` (`app/modules/database/repositories/helpers.ts`) is called AFTER
+`applyQuery` in: `session` (`+ sub, sub_kind` — ownership check), `user` /
+`robot` (`+ id` — self short-circuit), `client` (`+ secret_hashed,
+secret_encrypted` — the plaintext-secret gate precondition), `role-attribute`,
+`user-attribute` (`+ user_id` — isMe check; the two attribute adapters configure
+no `fields`, so the call is pinning defense in depth there). `role` / `scope` /
+`permission` / `policy` list paths carry no per-row realm gate (their
+`resourceRealmMatch` usages are write paths on server-loaded data), so they are
+deliberately not force-selected. Regression specs:
+`session-realm-isolation.spec.ts` and
+`realm-isolation-field-projection.spec.ts`. When adding a per-row gate to a new
+`getMany`, wire `applyRealmScopeSelect` into its adapter with every column the
+gate reads.
 
 **UI:** two `<VCTable>` pages backed by the kit `<ASessions>` collection —
 `pages/settings/index/sessions.vue` (the actor's **own** sessions, `filter:
