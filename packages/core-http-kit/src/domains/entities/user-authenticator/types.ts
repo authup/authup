@@ -46,6 +46,10 @@ export type UserAuthenticatorChallengeResponse = {
     challenge?: Record<string, unknown>,
 };
 
+export type UserAuthenticatorChallengeSendPayload = {
+    kind: `${UserAuthenticatorKind}`,
+};
+
 export type UserAuthenticatorChallengeVerifyPayload = {
     kind: `${UserAuthenticatorKind}`,
     response: string,
@@ -83,6 +87,10 @@ export interface IUserAuthenticatorAPI {
     ): Promise<EntityRecordResponse<UserAuthenticator>>;
 
     challenge(): Promise<UserAuthenticatorChallengeResponse>;
+
+    sendChallenge(
+        data: UserAuthenticatorChallengeSendPayload
+    ): Promise<{ success: boolean }>;
 
     verifyChallenge(
         data: UserAuthenticatorChallengeVerifyPayload

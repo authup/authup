@@ -117,4 +117,9 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.MFA_DEVICE_NAME]: 'Gerätename',
     [TranslatorTranslationClientKey.MFA_NO_DEVICES]: 'Es wurden noch keine Authenticator-Geräte hinzugefügt.',
     [TranslatorTranslationClientKey.MFA_DEVICE_UNCONFIRMED]: 'nicht bestätigt',
+
+    [TranslatorTranslationClientKey.MFA_USE_EMAIL]: 'E-Mail-Code verwenden',
+    [TranslatorTranslationClientKey.MFA_SEND_CODE]: 'Code senden',
+    [TranslatorTranslationClientKey.MFA_CODE_SENT]: 'Ein Code wurde an deine E-Mail-Adresse gesendet.',
+    [TranslatorTranslationClientKey.MFA_ENROLL_EMAIL]: 'E-Mail-Code',
 };

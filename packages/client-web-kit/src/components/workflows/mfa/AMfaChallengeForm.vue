@@ -5,7 +5,7 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import type { UserAuthenticatorKind } from '@authup/core-kit';
+import { UserAuthenticatorKind } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import {
     computed,
@@ -21,6 +21,13 @@ import { VCAlert } from '@vuecs/elements';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { extractErrorContext, injectHTTPClient, useTranslations } from '../../../core';
 
+// preference order for the initially-selected factor
+const KIND_PRIORITY : `${UserAuthenticatorKind}`[] = [
+    UserAuthenticatorKind.TOTP,
+    UserAuthenticatorKind.EMAIL,
+    UserAuthenticatorKind.RECOVERY,
+];
+
 export default defineComponent({
     components: {
         VCButton,
@@ -31,7 +38,7 @@ export default defineComponent({
     props: {
         kinds: {
             type: Array as PropType<`${UserAuthenticatorKind}`[]>,
-            default: () => ['totp'],
+            default: () => [UserAuthenticatorKind.TOTP],
         },
     },
     emits: ['done', 'failed'],
@@ -42,22 +49,69 @@ export default defineComponent({
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_TITLE },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_CHALLENGE_INTRO },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_CODE },
-            { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_CODE_HINT },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_VERIFY },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_USE_RECOVERY },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_USE_AUTHENTICATOR },
+            { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_USE_EMAIL },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_RECOVERY_CODE },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_FAILED },
+            { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_SEND_CODE },
+            { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_CODE_SENT },
         ]);
 
-        const hasRecovery = computed(() => props.kinds.includes('recovery'));
+        const kind = ref<`${UserAuthenticatorKind}`>(
+            KIND_PRIORITY.find((candidate) => props.kinds.includes(candidate)) ?? UserAuthenticatorKind.TOTP,
+        );
 
-        const useRecovery = ref(false);
-        const kind = computed<`${UserAuthenticatorKind}`>(() => (useRecovery.value ? 'recovery' : 'totp'));
+        // the other kinds the user can switch to
+        const alternatives = computed(
+            () => props.kinds.filter((candidate) => candidate !== kind.value),
+        );
+
+        const isEmail = computed(() => kind.value === UserAuthenticatorKind.EMAIL);
+        const isRecovery = computed(() => kind.value === UserAuthenticatorKind.RECOVERY);
 
         const code = ref('');
         const busy = ref(false);
         const error = ref<string | null>(null);
+        const emailSent = ref(false);
+
+        const codeLabel = computed(() => (
+            isRecovery.value ? translations.mfaRecoveryCode : translations.mfaCode
+        ));
+
+        const switchLabel = (target: `${UserAuthenticatorKind}`): string => {
+            switch (target) {
+                case UserAuthenticatorKind.RECOVERY: return translations.mfaUseRecovery;
+                case UserAuthenticatorKind.EMAIL: return translations.mfaUseEmail;
+                default: return translations.mfaUseAuthenticator;
+            }
+        };
+
+        const switchKind = (target: `${UserAuthenticatorKind}`) => {
+            kind.value = target;
+            code.value = '';
+            error.value = null;
+            emailSent.value = false;
+        };
+
+        const sendEmailCode = async () => {
+            if (busy.value) {
+                return;
+            }
+
+            busy.value = true;
+            error.value = null;
+            try {
+                await apiClient.userAuthenticator.sendChallenge({ kind: UserAuthenticatorKind.EMAIL });
+                emailSent.value = true;
+            } catch (e) {
+                error.value = extractErrorContext(e).message ?? translations.mfaFailed;
+                emit('failed', error.value);
+            } finally {
+                busy.value = false;
+            }
+        };
 
         const submit = async () => {
             if (busy.value || !code.value.trim()) {
@@ -73,29 +127,28 @@ export default defineComponent({
                 });
                 emit('done');
             } catch (e) {
-                const { message } = extractErrorContext(e);
-                error.value = message ?? translations.mfaFailed;
+                error.value = extractErrorContext(e).message ?? translations.mfaFailed;
                 emit('failed', error.value);
             } finally {
                 busy.value = false;
             }
         };
 
-        const toggleRecovery = () => {
-            useRecovery.value = !useRecovery.value;
-            code.value = '';
-            error.value = null;
-        };
-
         return {
+            UserAuthenticatorKind,
             translations,
-            hasRecovery,
-            useRecovery,
+            kind,
+            alternatives,
+            isEmail,
             code,
+            codeLabel,
             busy,
             error,
+            emailSent,
+            switchLabel,
+            switchKind,
+            sendEmailCode,
             submit,
-            toggleRecovery,
         };
     },
 });
@@ -108,23 +161,41 @@ export default defineComponent({
             </h1>
         </div>
 
-        <form @submit.prevent="submit">
-            <VCAlert
-                v-if="error"
-                color="error"
-                variant="soft"
-                class="mb-3"
-            >
-                {{ error }}
-            </VCAlert>
+        <VCAlert
+            v-if="error"
+            color="error"
+            variant="soft"
+            class="mb-3"
+        >
+            {{ error }}
+        </VCAlert>
 
+        <!-- email: request a code first -->
+        <div v-if="isEmail && !emailSent">
             <p class="text-center mb-3">
                 {{ translations.mfaChallengeIntro }}
+            </p>
+            <VCButton
+                :disabled="busy"
+                :busy="busy"
+                color="primary"
+                :label="translations.mfaSendCode"
+                class="w-full"
+                @click="sendEmailCode"
+            />
+        </div>
+
+        <form
+            v-else
+            @submit.prevent="submit"
+        >
+            <p class="text-center mb-3">
+                {{ isEmail ? translations.mfaCodeSent : translations.mfaChallengeIntro }}
             </p>
 
             <VCFormGroup>
                 <template #label>
-                    {{ useRecovery ? translations.mfaRecoveryCode : translations.mfaCode }}
+                    {{ codeLabel }}
                 </template>
                 <VCFormInput
                     v-model="code"
@@ -144,15 +215,17 @@ export default defineComponent({
         </form>
 
         <div
-            v-if="hasRecovery"
-            class="text-center mt-3"
+            v-if="alternatives.length > 0"
+            class="text-center mt-3 flex flex-col gap-1"
         >
             <button
+                v-for="alternative in alternatives"
+                :key="alternative"
                 type="button"
                 class="a-auth-link"
-                @click="toggleRecovery"
+                @click="switchKind(alternative)"
             >
-                {{ useRecovery ? translations.mfaUseAuthenticator : translations.mfaUseRecovery }}
+                {{ switchLabel(alternative) }}
             </button>
         </div>
     </div>

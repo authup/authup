@@ -1731,8 +1731,24 @@ fallback branches, incl. the sub/realm-mismatch fail-safes) and the end-to-end
 
 Polymorphic second-factor device model: `auth_user_authenticators` holds one row
 per enrolled device, discriminated by `kind` (`totp` | `recovery` | `email` |
-`webauthn` — the `UserAuthenticatorKind` enum in `@authup/core-kit`; email and
-webauthn are reserved row-types, wired in later PRs of the same series).
+`webauthn` — the `UserAuthenticatorKind` enum in `@authup/core-kit`; `webauthn`
+is a reserved row-type wired in a later PR of the same series).
+
+**Email OTP (`kind: 'email'`, plan 049 Stage 1.5):** the row marks the mailbox
+as an enrolled factor (confirmed on create — the email is presumed verified via
+activation; enrollment force-loads the `select:false` email column via
+`findOneByWithEmail`). The code itself is **transient**: `sendChallenge(userId,
+'email')` generates a 6-digit numeric code, bcrypt-hashes it into the cache
+(`mfaEmailCode:<user_id>`, 10-min TTL — "hashed at rest" without row churn), and
+mails it via the `MailTemplateName.MFA_EMAIL_OTP` template (`authupMail` i18n,
+×4 locales); `verify` compares against the cached hash + expiry and single-uses
+it (drop on success). A code is only mailed to a user holding a **confirmed**
+email factor (no code-spray oracle), and the `POST /authenticators/challenge/send`
+route returns a uniform 200 regardless (no enrollment-status oracle). Mail deps
+are threaded into the service ctx; `MailModule.setup` now honors a pre-registered
+`MailInjectionKey` (test-fake-wins, mirroring `UIHttpClient`) so tests capture
+mailed codes. Kit: `AMfaChallengeForm` gains an email branch (send-code button →
+code input) and the enroll picker an email option.
 Domain type `UserAuthenticator` (core-kit), TypeORM entity
 `adapters/database/domains/user-authenticator/` (no subscriber — not cached, not
 realtime), port `IUserAuthenticatorRepository` + `UserAuthenticatorService` in

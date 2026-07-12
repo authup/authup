@@ -11,6 +11,7 @@ import type { MailBlock } from '../format/types.ts';
 export enum MailTemplateName {
     REGISTRATION_ACTIVATION = 'registration-activation',
     PASSWORD_RESET = 'password-reset',
+    MFA_EMAIL_OTP = 'mfa-email-otp',
 }
 
 export type MailTemplateParamsMap = {
@@ -21,6 +22,10 @@ export type MailTemplateParamsMap = {
     [MailTemplateName.PASSWORD_RESET]: {
         code: string,
         url?: string,
+        expiresInMinutes?: number,
+    },
+    [MailTemplateName.MFA_EMAIL_OTP]: {
+        code: string,
         expiresInMinutes?: number,
     },
 };

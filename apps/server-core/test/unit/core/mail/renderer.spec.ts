@@ -34,6 +34,20 @@ describe('MailTemplateRenderer', () => {
         expect(mail.text).toContain('you can safely ignore this email');
     });
 
+    it('should render the mfa email OTP template with code + expiry, no action link', async () => {
+        const mail = await renderer.render({
+            template: MailTemplateName.MFA_EMAIL_OTP,
+            params: { code: '482913', expiresInMinutes: 10 },
+        });
+
+        expect(mail.subject).toEqual('Your verification code');
+        expect(mail.html).toContain('482913');
+        expect(mail.text).toContain('482913');
+        expect(mail.html).toContain('10 minutes');
+        // OTP mail carries no clickable action link
+        expect(mail.html).not.toContain('<a ');
+    });
+
     it('should omit the action link when no url is given', async () => {
         const mail = await renderer.render({
             template: MailTemplateName.PASSWORD_RESET,

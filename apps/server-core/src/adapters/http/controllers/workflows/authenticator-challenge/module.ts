@@ -19,12 +19,13 @@ import type { IAppEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
 import type {
     UserAuthenticatorChallengeResponse,
+    UserAuthenticatorChallengeSendPayload,
     UserAuthenticatorChallengeVerifyPayload,
     UserAuthenticatorChallengeVerifyResponse,
 } from '@authup/core-http-kit';
 import type { ISessionManager, IUserAuthenticatorService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { useRequestIdentityOrFail, useRequestSessionId } from '../../../request/index.ts';
+import { useRequestIdentityOrFail, useRequestLocale, useRequestSessionId } from '../../../request/index.ts';
 
 export type AuthenticatorChallengeControllerContext = {
     service: IUserAuthenticatorService,
@@ -63,6 +64,30 @@ export class AuthenticatorChallengeController {
         }
 
         return this.service.challenge(identity.id);
+    }
+
+    @DPost('/send', [ForceLoggedInMiddleware])
+    async send(
+        @DBody() data: UserAuthenticatorChallengeSendPayload,
+        @DContext() event: IAppEvent,
+    ): Promise<{ success: true }> {
+        const identity = useRequestIdentityOrFail(event);
+        if (identity.type !== IdentityType.USER) {
+            throw new BadRequestError('Only user identities can request a challenge.');
+        }
+
+        if (
+            !data ||
+            !Object.values(UserAuthenticatorKind).includes(data.kind as UserAuthenticatorKind)
+        ) {
+            throw new BadRequestError('A kind must be provided.');
+        }
+
+        await this.service.sendChallenge(identity.id, data.kind, { locale: useRequestLocale(event) });
+
+        // uniform 200 regardless of whether a code was actually mailed —
+        // no enrollment-status oracle for the caller.
+        return { success: true };
     }
 
     @DPost('', [ForceLoggedInMiddleware])

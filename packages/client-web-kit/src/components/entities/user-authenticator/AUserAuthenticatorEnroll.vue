@@ -51,6 +51,7 @@ export default defineComponent({
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_ENROLL_TITLE },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_ENROLL_TOTP },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_ENROLL_RECOVERY },
+            { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_ENROLL_EMAIL },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_SCAN_QR },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_MANUAL_KEY },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_CONFIRM_INTRO },
@@ -91,10 +92,18 @@ export default defineComponent({
             error.value = null;
             try {
                 const response = await apiClient.userAuthenticator.enroll(props.userId, { kind });
+
+                // email is confirmed on creation and has nothing to display —
+                // just signal completion.
+                if (kind === UserAuthenticatorKind.EMAIL) {
+                    emit('done', response.entity);
+                    return;
+                }
+
                 enrollment.value = response;
                 enrollmentKind.value = kind;
 
-                // recovery is confirmed on creation — nothing more to do
+                // recovery is confirmed on creation — the codes are shown once
                 if (kind === UserAuthenticatorKind.RECOVERY) {
                     emit('done', response.entity);
                 }
@@ -187,6 +196,13 @@ export default defineComponent({
                     color="primary"
                     :label="translations.mfaEnrollTotp"
                     @click="enroll(UserAuthenticatorKind.TOTP)"
+                />
+                <VCButton
+                    v-if="!forcedKind || forcedKind === UserAuthenticatorKind.EMAIL"
+                    :disabled="busy"
+                    color="neutral"
+                    :label="translations.mfaEnrollEmail"
+                    @click="enroll(UserAuthenticatorKind.EMAIL)"
                 />
                 <VCButton
                     v-if="!forcedKind || forcedKind === UserAuthenticatorKind.RECOVERY"

@@ -24,8 +24,10 @@ import {
     it,
 } from 'vitest';
 import { FakePermissionEvaluator } from '@authup/server-test-kit';
+import { MailTemplateRenderer } from '../../../../../src/core/mail/index.ts';
 import { UserAuthenticatorService } from '../../../../../src/core/entities/user-authenticator/service.ts';
 import type { UserAuthenticatorServiceOptions } from '../../../../../src/core/entities/user-authenticator/types.ts';
+import { FakeMailClient } from '../../helpers/index.ts';
 import { FakeUserRepository } from '../user/fake-repository.ts';
 import { FakeUserAuthenticatorRepository } from './fake-repository.ts';
 
@@ -73,6 +75,7 @@ describe('UserAuthenticatorService', () => {
     let repository: FakeUserAuthenticatorRepository;
     let userRepository: FakeUserRepository;
     let cache: MemoryCache;
+    let mailClient: FakeMailClient;
     let service: UserAuthenticatorService;
 
     function buildService(options: UserAuthenticatorServiceOptions = { enabled: true }) {
@@ -81,6 +84,8 @@ describe('UserAuthenticatorService', () => {
             userRepository,
             cache,
             cipher: new SymmetricCipher(cipherKey),
+            mailClient,
+            mailTemplateRenderer: new MailTemplateRenderer(),
             options,
         });
     }
@@ -89,6 +94,7 @@ describe('UserAuthenticatorService', () => {
         repository = new FakeUserAuthenticatorRepository();
         userRepository = new FakeUserRepository();
         cache = new MemoryCache();
+        mailClient = new FakeMailClient();
         service = buildService();
     });
 
@@ -314,6 +320,102 @@ describe('UserAuthenticatorService', () => {
             const status = await service.challenge(userId);
             expect(status.required).toBeFalsy();
             expect(status.enrollmentRequired).toBeTruthy();
+        });
+    });
+
+    describe('email otp', () => {
+        function seedUserWithEmail() {
+            userRepository.seed({
+                id: userId,
+                name: 'test-user',
+                email: 'user@example.com',
+                realm_id: realmId,
+            } as Partial<User>);
+        }
+
+        it('enrolls a confirmed email device (email present)', async () => {
+            seedUserWithEmail();
+
+            const result = await service.enroll({ kind: UserAuthenticatorKind.EMAIL }, makeActor());
+            expect(result.entity.kind).toEqual(UserAuthenticatorKind.EMAIL);
+            expect(result.entity.confirmed).toBeTruthy();
+
+            const status = await service.challenge(userId);
+            expect(status.required).toBeTruthy();
+            expect(status.kinds).toContain(UserAuthenticatorKind.EMAIL);
+        });
+
+        it('rejects email enrollment when the user has no email', async () => {
+            userRepository.seed({
+                id: userId, 
+                name: 'no-email', 
+                realm_id: realmId,
+            } as Partial<User>);
+
+            expect.assertions(1);
+            try {
+                await service.enroll({ kind: UserAuthenticatorKind.EMAIL }, makeActor());
+            } catch (e) {
+                expect(e).toBeDefined();
+            }
+        });
+
+        it('mails a code and verifies it single-use', async () => {
+            seedUserWithEmail();
+            await service.enroll({ kind: UserAuthenticatorKind.EMAIL }, makeActor());
+
+            await service.sendChallenge(userId, UserAuthenticatorKind.EMAIL);
+            expect(mailClient.sent).toHaveLength(1);
+            expect(mailClient.sent[0].to).toEqual('user@example.com');
+
+            const code = /(\d{6})/.exec(mailClient.sent[0].text ?? '')![1];
+
+            expect(await service.verify(userId, {
+                kind: UserAuthenticatorKind.EMAIL,
+                response: code,
+            })).toBeTruthy();
+
+            // single-use — a second verify of the consumed code fails (the
+            // success reset the backoff, so this is not a throttle path)
+            expect(await service.verify(userId, {
+                kind: UserAuthenticatorKind.EMAIL,
+                response: code,
+            })).toBeFalsy();
+        });
+
+        it('fails a verify when no code was sent', async () => {
+            seedUserWithEmail();
+            await service.enroll({ kind: UserAuthenticatorKind.EMAIL }, makeActor());
+
+            expect(await service.verify(userId, {
+                kind: UserAuthenticatorKind.EMAIL,
+                response: '000000',
+            })).toBeFalsy();
+        });
+
+        it('does not mail a code for a user without a confirmed email factor', async () => {
+            seedUserWithEmail();
+            // no enrollment
+            await service.sendChallenge(userId, UserAuthenticatorKind.EMAIL);
+            expect(mailClient.sent).toHaveLength(0);
+        });
+
+        it('fails closed for email enrollment without a mail transport', async () => {
+            seedUserWithEmail();
+            service = new UserAuthenticatorService({
+                repository,
+                userRepository,
+                cache,
+                cipher: new SymmetricCipher(cipherKey),
+                options: { enabled: true },
+            });
+
+            expect.assertions(1);
+            try {
+                await service.enroll({ kind: UserAuthenticatorKind.EMAIL }, makeActor());
+            } catch (e) {
+                expect((e as any).code).toEqual(ErrorCode.MFA_NOT_CONFIGURABLE);
+            }
         });
     });
 
