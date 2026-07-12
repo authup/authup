@@ -97,11 +97,14 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
         expect(withoutOtpBody.code).toEqual(ErrorCode.OAUTH_MFA_REQUIRED);
         expect(withoutOtpBody.error).toEqual(OAuth2ErrorCode.MFA_REQUIRED);
 
-        // 4) ... and accepts password + otp
+        // 4) ... and accepts password + otp. Use the PREVIOUS step's code (valid
+        // via the ±1 window) so the consumed step stays behind the challenge
+        // code in step 6 — each successful TOTP use must advance the step
+        // (anti-replay, #3237).
         const withOtp = await passwordGrant({
             username: user.name,
             password,
-            otp: totp.generate(),
+            otp: totp.generate({ timestamp: Date.now() - 30_000 }),
         });
         expect(withOtp.status).toEqual(200);
         const withOtpBody = await withOtp.json();
