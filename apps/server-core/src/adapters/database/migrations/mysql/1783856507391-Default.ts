@@ -25,7 +25,6 @@ export class Default1783856507391 implements MigrationInterface {
                 \`parameters\` text NULL,
                 \`codes\` text NULL,
                 \`confirmed\` tinyint NOT NULL DEFAULT 0,
-                \`version\` int NOT NULL DEFAULT 1,
                 \`last_used_at\` varchar(28) NULL,
                 \`created_at\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                 \`updated_at\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
