@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Identity, OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import type {
+    Identity, 
+    OAuth2AuthorizationCode, 
+    OAuth2AuthorizationCodeRequest, 
+    SessionAuthMethod,
+} from '@authup/core-kit';
 
 export type OAuth2AuthorizationCodeIssuerOptions = {
     /**
@@ -30,7 +35,7 @@ export type OAuth2AuthorizationCodeIssuerOptions = {
      * How the subject authenticated (SessionAuthMethod) — persisted on the
      * code so a session created at the /token exchange inherits it.
      */
-    authMethod?: string | null,
+    authMethod?: `${SessionAuthMethod}` | null,
 };
 
 export interface IOAuth2AuthorizationCodeIssuer {
