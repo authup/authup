@@ -33,6 +33,7 @@ import type {
     IStatusAPI,
     IUserAPI,
     IUserAttributeAPI,
+    IUserAuthenticatorAPI,
     IUserPermissionAPI,
     IUserRoleAPI,
 } from '../domains';
@@ -92,6 +93,8 @@ export interface IClient extends IBaseClient {
     readonly user : IUserAPI;
 
     readonly userAttribute : IUserAttributeAPI;
+
+    readonly userAuthenticator : IUserAuthenticatorAPI;
 
     readonly userInfo : IOAuth2UserInfoAPI;
 

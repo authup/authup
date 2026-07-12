@@ -102,6 +102,11 @@ export enum PermissionName {
     USER_READ = 'user_read',
     USER_SELF_MANAGE = 'user_self_manage',
 
+    USER_AUTHENTICATOR_CREATE = 'user_authenticator_create',
+    USER_AUTHENTICATOR_DELETE = 'user_authenticator_delete',
+    USER_AUTHENTICATOR_UPDATE = 'user_authenticator_update',
+    USER_AUTHENTICATOR_READ = 'user_authenticator_read',
+
     USER_PERMISSION_CREATE = 'user_permission_create',
     USER_PERMISSION_DELETE = 'user_permission_delete',
     USER_PERMISSION_READ = 'user_permission_read',

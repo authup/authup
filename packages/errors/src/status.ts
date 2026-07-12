@@ -41,6 +41,7 @@ export const ERROR_CODE_TO_STATUS: Readonly<Partial<Record<`${ErrorCode}`, numbe
 
     // 429
     [ErrorCode.LOGIN_ATTEMPT_THROTTLED]: 429,
+    [ErrorCode.MFA_ATTEMPT_THROTTLED]: 429,
 
     // 500
     [ErrorCode.INTERNAL_ERROR]: 500,

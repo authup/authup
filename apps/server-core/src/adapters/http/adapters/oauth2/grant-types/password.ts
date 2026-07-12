@@ -9,7 +9,7 @@ import type { User } from '@authup/core-kit';
 import { EventName, EventScope } from '@authup/core-kit';
 import { isEntityCredentialsInvalidError, isEntityInactiveError } from '@authup/errors';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
-import { OAuth2RequestError, OAuth2TokenGrant } from '@authup/specs';
+import { OAuth2MfaRequiredError, OAuth2RequestError, OAuth2TokenGrant } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
 import type { IAppEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
@@ -17,9 +17,14 @@ import type {
     ICredentialsAuthenticator,
     ILoginThrottleService,
     IRealmRepository,
+    IUserAuthenticatorService,
     OAuth2ClientAuthenticator,
 } from '../../../../../core/index.ts';
-import { PasswordGrantType, assertClientGrantAllowed } from '../../../../../core/index.ts';
+import {
+    PasswordGrantType,
+    assertClientGrantAllowed,
+    guessUserAuthenticatorKindByResponse,
+} from '../../../../../core/index.ts';
 import type { HTTPOAuth2PasswordGrantContext, IHTTPOAuth2Grant } from './types.ts';
 import { extractClientCredentialsFromRequest, readRealmHint, readStringField } from './utils/index.ts';
 
@@ -32,6 +37,8 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
 
     protected loginThrottleService? : ILoginThrottleService;
 
+    protected userAuthenticatorService? : IUserAuthenticatorService;
+
     constructor(ctx: HTTPOAuth2PasswordGrantContext) {
         super(ctx);
 
@@ -39,6 +46,7 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
         this.clientAuthenticator = ctx.clientAuthenticator;
         this.realmRepository = ctx.realmRepository;
         this.loginThrottleService = ctx.loginThrottleService;
+        this.userAuthenticatorService = ctx.userAuthenticatorService;
     }
 
     async runWithRequest(event: IAppEvent): Promise<OAuth2TokenGrantResponse> {
@@ -104,12 +112,70 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
             throw e;
         }
 
+        const mfaVerifiedAt = await this.verifySecondFactor(user, body, {
+            ipAddress,
+            userAgent,
+            clientId: client?.id ?? null,
+        });
+
         return this.runWith(
-            { user, client },
+            {
+                user, 
+                client, 
+                mfaVerifiedAt, 
+            },
             {
                 ipAddress,
                 userAgent,
             },
         );
+    }
+
+    /**
+     * MFA gate on the direct password grant: a user holding a confirmed
+     * device must send a valid `otp` form parameter (TOTP or recovery
+     * code, classified by shape) — otherwise `mfa_required`. Users
+     * without a device pass through (they could never enroll otherwise).
+     */
+    protected async verifySecondFactor(
+        user: User,
+        body: Record<string, any>,
+        ctx: {
+            ipAddress?: string, 
+            userAgent?: string, 
+            clientId: string | null 
+        },
+    ): Promise<string | undefined> {
+        if (!this.userAuthenticatorService) {
+            return undefined;
+        }
+
+        const status = await this.userAuthenticatorService.challenge(user.id);
+        if (!status.required) {
+            return undefined;
+        }
+
+        const otp = readStringField(body, 'otp');
+        if (!otp) {
+            throw OAuth2MfaRequiredError.challengeRequired();
+        }
+
+        const verified = await this.userAuthenticatorService.verify(
+            user.id,
+            {
+                kind: guessUserAuthenticatorKindByResponse(otp),
+                response: otp,
+            },
+            {
+                ipAddress: ctx.ipAddress ?? null,
+                userAgent: ctx.userAgent ?? null,
+                clientId: ctx.clientId,
+            },
+        );
+        if (!verified) {
+            throw new OAuth2MfaRequiredError({ message: 'The provided second factor is not valid.' });
+        }
+
+        return new Date().toISOString();
     }
 }

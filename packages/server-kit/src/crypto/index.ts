@@ -8,3 +8,4 @@
 export * from './hash';
 export * from './key';
 export * from './json-web-token';
+export * from './symmetric-cipher';

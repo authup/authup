@@ -26,5 +26,6 @@ export * from './scope';
 export * from './session';
 export * from './user';
 export * from './user-attribute';
+export * from './user-authenticator';
 export * from './user-permission';
 export * from './user-role';

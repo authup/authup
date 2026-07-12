@@ -178,6 +178,32 @@ export default {
      */
     loginAttemptWindow: 900,
 
+    /**
+     * Enable multi-factor authentication. Users can enroll authenticator
+     * devices (TOTP app, recovery codes); a user holding a confirmed
+     * device must present a second factor on interactive authorization
+     * and on the password grant (otp parameter).
+     * Requires mfaEncryptionKey.
+     * default: false
+     */
+    mfaEnabled: false,
+
+    /**
+     * Enforce MFA for every user: a user without a confirmed device is
+     * routed to inline enrollment at next interactive login.
+     * Requires mfaEnabled.
+     * default: false
+     */
+    mfaRequired: false,
+
+    /**
+     * Base64-encoded 32-byte key encrypting TOTP seeds at rest
+     * (AES-256-GCM). Generate one with:
+     * node -e "console.log(crypto.randomBytes(32).toString('base64'))"
+     * default: '' (unset)
+     */
+    mfaEncryptionKey: '',
+
     // ----------------------------------------------------
 
     /**
@@ -246,6 +272,9 @@ eventLogEntityRetentionDays=7
 loginAttemptThrottleEnabled=false
 loginAttemptThreshold=5
 loginAttemptWindow=900
+mfaEnabled=false
+mfaRequired=false
+mfaEncryptionKey=
 userAdminPassword=start123
 userAdminPasswordReset=false
 robotAdminEnabled=false
@@ -270,6 +299,9 @@ EVENT_LOG_ENTITY_RETENTION_DAYS=7
 LOGIN_ATTEMPT_THROTTLE_ENABLED=false
 LOGIN_ATTEMPT_THRESHOLD=5
 LOGIN_ATTEMPT_WINDOW=900
+MFA_ENABLED=false
+MFA_REQUIRED=false
+MFA_ENCRYPTION_KEY=
 USER_ADMIN_PASSWORD=start123
 USER_ADMIN_PASSWORD_RESET=false
 ROBOT_ADMIN_ENABLED=false

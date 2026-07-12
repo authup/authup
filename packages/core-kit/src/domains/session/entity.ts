@@ -54,6 +54,18 @@ export interface Session {
     seen_at: string | null,
 
     /**
+     * Time the subject last passed a second-factor (MFA) challenge for
+     * this session (iso). Null when no challenge was performed.
+     */
+    mfa_at: string | null,
+
+    /**
+     * How the subject authenticated (see SessionAuthMethod).
+     * Null for sessions created before the column existed.
+     */
+    auth_method: string | null,
+
+    /**
      * Last time new access-token, refresh-token created for session.
      */
     updated_at: string,

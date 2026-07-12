@@ -33,6 +33,7 @@ import {
     StatusAPI,
     UserAPI,
     UserAttributeAPI,
+    UserAuthenticatorAPI,
     UserPermissionAPI,
     UserRoleAPI,
 } from '../domains';
@@ -89,6 +90,8 @@ export class Client extends BaseClient implements IClient {
     public readonly userInfo : OAuth2UserInfoAPI;
 
     public readonly userAttribute: UserAttributeAPI;
+
+    public readonly userAuthenticator: UserAuthenticatorAPI;
 
     public readonly userPermission : UserPermissionAPI;
 
@@ -162,6 +165,7 @@ export class Client extends BaseClient implements IClient {
             options, 
         });
         this.userAttribute = new UserAttributeAPI({ client: this });
+        this.userAuthenticator = new UserAuthenticatorAPI({ client: this });
         this.userPermission = new UserPermissionAPI({ client: this });
         this.userRole = new UserRoleAPI({ client: this });
 

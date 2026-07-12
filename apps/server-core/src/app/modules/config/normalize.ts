@@ -106,6 +106,10 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         loginAttemptThreshold: 5,
         loginAttemptWindow: 900,
 
+        mfaEnabled: false,
+        mfaRequired: false,
+        mfaEncryptionKey: '',
+
         clientAuthBasic: false,
         clientSystemEnabled: false,
         clientSystemSecret: 'start123',
@@ -134,6 +138,16 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
     // auth_events — with the audit log disabled it would silently no-op.
     if (config.loginAttemptThrottleEnabled && !config.eventLogEnabled) {
         throw new AuthupError('loginAttemptThrottleEnabled requires eventLogEnabled.');
+    }
+
+    if (config.mfaRequired && !config.mfaEnabled) {
+        throw new AuthupError('mfaRequired requires mfaEnabled.');
+    }
+
+    // fail loud at boot rather than at first enrollment: a TOTP seed is
+    // reversible-at-rest and must never be stored without a real key.
+    if (config.mfaEnabled && !config.mfaEncryptionKey) {
+        throw new AuthupError('mfaEnabled requires mfaEncryptionKey (base64, 32 bytes).');
     }
 
     return config;

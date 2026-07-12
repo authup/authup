@@ -15,4 +15,5 @@ export * from './entity-inactive';
 export * from './entity-not-found';
 export * from './internal';
 export * from './login-throttled';
+export * from './mfa-throttled';
 export * from './unauthorized';

@@ -14,7 +14,7 @@ export type AuthFlowLoginResult = 'success' | 'failure';
  * can deny an authorize; emitted in the label domain from day one so
  * dashboards stay stable when it turns live.
  */
-export type AuthFlowAuthorizeOutcome = 'issued' | 'denied' | 'login_required' | 'error';
+export type AuthFlowAuthorizeOutcome = 'issued' | 'denied' | 'login_required' | 'mfa_required' | 'error';
 
 export interface IAuthFlowMetrics {
     recordLogin(result: AuthFlowLoginResult): void;

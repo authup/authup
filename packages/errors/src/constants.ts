@@ -30,6 +30,8 @@ export enum ErrorCode {
     EMAIL_VERIFICATION_REQUIRED = 'email_verification_required',
     RESET_TOKEN_EXPIRED = 'reset_token_expired',
     LOGIN_ATTEMPT_THROTTLED = 'login_attempt_throttled',
+    MFA_ATTEMPT_THROTTLED = 'mfa_attempt_throttled',
+    MFA_NOT_CONFIGURABLE = 'mfa_not_configurable',
 
     // Storage Codes
     STORAGE_INSUFFICIENT = 'storage_insufficient',
@@ -51,6 +53,7 @@ export enum ErrorCode {
     OAUTH_GRANT_TYPE_UNSUPPORTED = 'unsupported_token_grant_type',
     OAUTH_REQUEST_INVALID = 'invalid_request',
     OAUTH_LOGIN_REQUIRED = 'login_required',
+    OAUTH_MFA_REQUIRED = 'mfa_required',
     OAUTH_INTERACTION_REQUIRED = 'interaction_required',
     OAUTH_ACCOUNT_SELECTION_REQUIRED = 'account_selection_required',
     OAUTH_CONSENT_REQUIRED = 'consent_required',

@@ -16,6 +16,8 @@ export class FakeSessionManager implements ISessionManager {
 
     public refreshCalls: Session[] = [];
 
+    public markMfaVerifiedCalls: Session[] = [];
+
     public verifyCalls: Session[] = [];
 
     public findOneByIdCalls: string[] = [];
@@ -39,6 +41,13 @@ export class FakeSessionManager implements ISessionManager {
 
     async refresh(session: Session): Promise<Session> {
         this.refreshCalls.push(session);
+        return session;
+    }
+
+    async markMfaVerified(session: Session): Promise<Session> {
+        this.markMfaVerifiedCalls.push(session);
+        session.mfa_at = new Date().toISOString();
+        this.sessions.set(session.id, session);
         return session;
     }
 
