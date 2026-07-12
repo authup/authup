@@ -14,7 +14,6 @@ import {
     ManyToOne,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
-    VersionColumn,
 } from 'typeorm';
 import type {
     Realm,
@@ -73,13 +72,6 @@ export class UserAuthenticatorEntity implements UserAuthenticator {
         default: false,
     })
     confirmed: boolean;
-
-    // Optimistic-concurrency guard: a concurrent verify that mutates the row
-    // (recovery-code consumption, TOTP step advance) fails the second save with
-    // a version mismatch, so a factor is consumed exactly once (plan-049
-    // hardening, #3237).
-    @VersionColumn()
-    version: number;
 
     @Column({
         type: 'varchar',

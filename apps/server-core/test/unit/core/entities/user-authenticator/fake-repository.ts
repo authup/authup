@@ -54,22 +54,15 @@ export class FakeUserAuthenticatorRepository implements IUserAuthenticatorReposi
 
     async save(entity: UserAuthenticator): Promise<UserAuthenticator> {
         // mirror TypeORM: only provided properties are written — a row
-        // loaded without its select:false columns must not clobber them. The
-        // optimistic-lock version is bumped on every persist (the DB conflict
-        // path is exercised by integration tests, not modeled here).
+        // loaded without its select:false columns must not clobber them.
         const existing = entity.id ? this.entities.get(entity.id) : undefined;
         if (existing) {
-            const merged = {
-                ...existing,
-                ...entity,
-                version: (existing.version ?? 1) + 1,
-            } as UserAuthenticator;
+            const merged = { ...existing, ...entity } as UserAuthenticator;
             this.entities.set(merged.id, merged);
             return merged;
         }
 
-        const created = { ...entity, version: entity.version ?? 1 } as UserAuthenticator;
-        return this.seed(created);
+        return this.seed(entity);
     }
 
     async remove(entity: UserAuthenticator): Promise<void> {

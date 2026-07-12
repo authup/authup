@@ -53,6 +53,17 @@ export class RedisCache implements ICache {
         await this.jsonAdapter.set(key, value, { milliseconds: options.ttl });
     }
 
+    async add(key: string, value: any, options: CacheSetOptions = {}): Promise<boolean> {
+        // Atomic set-if-absent via `SET key value [PX ttl] NX` — returns 'OK'
+        // when stored, null when the key already existed.
+        const payload = JSON.stringify(value);
+        const result = options.ttl ?
+            await this.client.set(key, payload, 'PX', options.ttl, 'NX') :
+            await this.client.set(key, payload, 'NX');
+
+        return result === 'OK';
+    }
+
     async drop(key: string): Promise<void> {
         await this.jsonAdapter.drop(key);
     }

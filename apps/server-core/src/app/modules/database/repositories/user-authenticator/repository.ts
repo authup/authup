@@ -6,9 +6,7 @@
  */
 
 import type { UserAuthenticator, UserAuthenticatorKind } from '@authup/core-kit';
-import { EntityConflictError } from '@authup/errors';
 import type { Repository } from 'typeorm';
-import { OptimisticLockVersionMismatchError } from 'typeorm';
 import { applyQuery } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
@@ -30,17 +28,7 @@ export class UserAuthenticatorRepositoryAdapter implements IUserAuthenticatorRep
     }
 
     async save(entity: UserAuthenticator): Promise<UserAuthenticator> {
-        try {
-            return await this.repository.save(entity);
-        } catch (e) {
-            // Translate the TypeORM optimistic-lock conflict into a
-            // DB-agnostic domain error so the core service (which must not
-            // know about typeorm) can react to a concurrent write.
-            if (e instanceof OptimisticLockVersionMismatchError) {
-                throw new EntityConflictError();
-            }
-            throw e;
-        }
+        return this.repository.save(entity);
     }
 
     async remove(entity: UserAuthenticator): Promise<void> {
