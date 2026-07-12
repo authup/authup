@@ -84,6 +84,12 @@ export type UserAuthenticatorTotpParameters = {
     algorithm: string,
     digits: number,
     period: number,
+    /**
+     * Last accepted TOTP step (absolute period counter). A verify only
+     * succeeds for a strictly greater step — rejects replay within the
+     * validation window (RFC 6238 §5.2).
+     */
+    counter?: number,
 };
 
 /**
