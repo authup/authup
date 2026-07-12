@@ -9,6 +9,7 @@ import type { Client } from '../client';
 import type { Realm } from '../realm';
 import type { User } from '../user';
 import type { Robot } from '../robot';
+import type { SessionAuthMethod } from './constants';
 
 export interface Session {
     /**
@@ -63,7 +64,7 @@ export interface Session {
      * How the subject authenticated (see SessionAuthMethod).
      * Null for sessions created before the column existed.
      */
-    auth_method: string | null,
+    auth_method: `${SessionAuthMethod}` | null,
 
     /**
      * Last time new access-token, refresh-token created for session.

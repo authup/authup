@@ -17,10 +17,11 @@ import {
 } from 'typeorm';
 import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type {
-    Client, 
-    Realm, 
-    Robot, 
-    Session, 
+    Client,
+    Realm,
+    Robot,
+    Session,
+    SessionAuthMethod,
     User,
 } from '@authup/core-kit';
 import { ClientEntity } from '../client/index.ts';
@@ -95,7 +96,7 @@ export class SessionEntity implements Session {
         length: 16,
         nullable: true,
     })
-    auth_method: string | null;
+    auth_method: `${SessionAuthMethod}` | null;
 
     @UpdateDateColumn({ transformer: dateToISOStringTransformer })
     updated_at: string;

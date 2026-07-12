@@ -119,6 +119,26 @@ describe('src/http/controllers/token (id_token amr/acr claims)', () => {
         expect(accessToken.acr).toEqual('urn:authup:pwd');
     });
 
+    it('emits amr/acr on the DIRECT password grant tokens (no authorize exchange)', async () => {
+        const password = 'claims-direct-user';
+        const user = await createUser(password);
+
+        const login = await suite.client.token.createWithPassword({
+            username: user.name,
+            password,
+        });
+
+        // the ROPC grant issues the final tokens directly — they must carry the
+        // derived method the same way the authorization_code exchange does.
+        const accessToken = decodeJwtPayload(login.access_token);
+        expect(accessToken.amr).toEqual(['pwd']);
+        expect(accessToken.acr).toEqual('urn:authup:pwd');
+
+        const refreshToken = decodeJwtPayload(login.refresh_token!);
+        expect(refreshToken.amr).toEqual(['pwd']);
+        expect(refreshToken.acr).toEqual('urn:authup:pwd');
+    });
+
     it('emits amr=[pwd,otp] / acr=urn:authup:mfa after a second factor, satisfying acr step-up', async () => {
         const password = 'claims-mfa-user';
         const user = await createUser(password);
