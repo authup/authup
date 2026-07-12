@@ -26,6 +26,14 @@ export type CacheClearOptions = {
 export interface ICache {
     set(key: string, value: any, options?: CacheSetOptions) : Promise<void>;
 
+    /**
+     * Atomically set the value ONLY if the key does not already exist
+     * (set-if-absent). Returns true when the value was stored, false when the
+     * key was already present. The building block for a distributed lock —
+     * atomic on Redis (`SET … NX`) and on the in-process memory adapter.
+     */
+    add(key: string, value: any, options?: CacheSetOptions) : Promise<boolean>;
+
     has(key: string) : Promise<boolean>;
 
     get<T = unknown>(key: string): Promise<T | null>;
