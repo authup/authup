@@ -16,13 +16,15 @@ import {
     TranslatorTranslationClientKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
+import { startAuthentication } from '@simplewebauthn/browser';
 import { VCButton } from '@vuecs/button';
 import { VCAlert } from '@vuecs/elements';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { extractErrorContext, injectHTTPClient, useTranslations } from '../../../core';
 
-// preference order for the initially-selected factor
+// preference order for the initially-selected factor (most secure first)
 const KIND_PRIORITY : `${UserAuthenticatorKind}`[] = [
+    UserAuthenticatorKind.WEBAUTHN,
     UserAuthenticatorKind.TOTP,
     UserAuthenticatorKind.EMAIL,
     UserAuthenticatorKind.RECOVERY,
@@ -40,6 +42,12 @@ export default defineComponent({
             type: Array as PropType<`${UserAuthenticatorKind}`[]>,
             default: () => [UserAuthenticatorKind.TOTP],
         },
+        // kind-specific challenge payload from GET /authenticators/challenge
+        // (WebAuthn request options under `.webauthn`).
+        challenge: {
+            type: Object as PropType<Record<string, unknown> | null>,
+            default: null,
+        },
     },
     emits: ['done', 'failed'],
     setup(props, { emit }) {
@@ -53,6 +61,8 @@ export default defineComponent({
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_USE_RECOVERY },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_USE_AUTHENTICATOR },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_USE_EMAIL },
+            { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_USE_PASSKEY },
+            { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_PASSKEY_PROMPT },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_RECOVERY_CODE },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_FAILED },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_SEND_CODE },
@@ -70,6 +80,7 @@ export default defineComponent({
 
         const isEmail = computed(() => kind.value === UserAuthenticatorKind.EMAIL);
         const isRecovery = computed(() => kind.value === UserAuthenticatorKind.RECOVERY);
+        const isWebauthn = computed(() => kind.value === UserAuthenticatorKind.WEBAUTHN);
 
         const code = ref('');
         const busy = ref(false);
@@ -84,6 +95,7 @@ export default defineComponent({
             switch (target) {
                 case UserAuthenticatorKind.RECOVERY: return translations.mfaUseRecovery;
                 case UserAuthenticatorKind.EMAIL: return translations.mfaUseEmail;
+                case UserAuthenticatorKind.WEBAUTHN: return translations.mfaUsePasskey;
                 default: return translations.mfaUseAuthenticator;
             }
         };
@@ -134,12 +146,36 @@ export default defineComponent({
             }
         };
 
+        const authenticateWithPasskey = async () => {
+            const optionsJSON = (props.challenge?.webauthn ?? null) as Record<string, unknown> | null;
+            if (busy.value || !optionsJSON) {
+                return;
+            }
+
+            busy.value = true;
+            error.value = null;
+            try {
+                const assertion = await startAuthentication({ optionsJSON: optionsJSON as never });
+                await apiClient.userAuthenticator.verifyChallenge({
+                    kind: UserAuthenticatorKind.WEBAUTHN,
+                    response: JSON.stringify(assertion),
+                });
+                emit('done');
+            } catch (e) {
+                error.value = extractErrorContext(e).message ?? translations.mfaFailed;
+                emit('failed', error.value);
+            } finally {
+                busy.value = false;
+            }
+        };
+
         return {
             UserAuthenticatorKind,
             translations,
             kind,
             alternatives,
             isEmail,
+            isWebauthn,
             code,
             codeLabel,
             busy,
@@ -149,6 +185,7 @@ export default defineComponent({
             switchKind,
             sendEmailCode,
             submit,
+            authenticateWithPasskey,
         };
     },
 });
@@ -170,8 +207,23 @@ export default defineComponent({
             {{ error }}
         </VCAlert>
 
+        <!-- webauthn: a single passkey ceremony button -->
+        <div v-if="isWebauthn">
+            <p class="text-center mb-3">
+                {{ translations.mfaPasskeyPrompt }}
+            </p>
+            <VCButton
+                :disabled="busy"
+                :busy="busy"
+                color="primary"
+                :label="translations.mfaUsePasskey"
+                class="w-full"
+                @click="authenticateWithPasskey"
+            />
+        </div>
+
         <!-- email: request a code first -->
-        <div v-if="isEmail && !emailSent">
+        <div v-else-if="isEmail && !emailSent">
             <p class="text-center mb-3">
                 {{ translations.mfaChallengeIntro }}
             </p>

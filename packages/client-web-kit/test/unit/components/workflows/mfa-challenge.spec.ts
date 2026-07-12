@@ -10,9 +10,23 @@ import {
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import { AMfaChallengeForm } from '../../../../src/components/workflows/mfa';
 import { mountKitComponent } from '../../../utils';
+
+vi.mock('@simplewebauthn/browser', () => ({
+    startAuthentication: vi.fn(async () => ({
+        id: 'cred-1', 
+        response: {}, 
+        type: 'public-key', 
+    })),
+    startRegistration: vi.fn(async () => ({
+        id: 'cred-1', 
+        response: {}, 
+        type: 'public-key', 
+    })),
+}));
 
 describe('AMfaChallengeForm', () => {
     it('verifies a code and emits done', async () => {
@@ -47,6 +61,26 @@ describe('AMfaChallengeForm', () => {
 
         expect(wrapper.emitted('done')).toBeFalsy();
         expect(wrapper.emitted('failed')).toBeTruthy();
+    });
+
+    it('runs the passkey ceremony and verifies the assertion for the webauthn kind', async () => {
+        const { wrapper, httpClient } = mountKitComponent(AMfaChallengeForm, {
+            kinds: ['webauthn'],
+            challenge: { webauthn: { challenge: 'abc', rpId: 'localhost' } },
+        }, { 'POST /authenticators/challenge': () => ({ verified: true }) });
+
+        await wrapper.find('button').trigger('click');
+        await flushPromises();
+
+        const verifyRequest = httpClient.requests.find(
+            (r) => r.method === 'POST' &&
+                new URL(r.url, 'http://localhost').pathname === '/authenticators/challenge',
+        );
+        expect(verifyRequest).toBeDefined();
+        expect(verifyRequest!.body.kind).toEqual('webauthn');
+        // the assertion is forwarded as a JSON string
+        expect(JSON.parse(verifyRequest!.body.response).id).toEqual('cred-1');
+        expect(wrapper.emitted('done')).toBeTruthy();
     });
 
     it('requests an email code before verifying for the email kind', async () => {

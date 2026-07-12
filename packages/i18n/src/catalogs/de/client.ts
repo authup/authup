@@ -122,4 +122,8 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.MFA_SEND_CODE]: 'Code senden',
     [TranslatorTranslationClientKey.MFA_CODE_SENT]: 'Ein Code wurde an deine E-Mail-Adresse gesendet.',
     [TranslatorTranslationClientKey.MFA_ENROLL_EMAIL]: 'E-Mail-Code',
+
+    [TranslatorTranslationClientKey.MFA_USE_PASSKEY]: 'Passkey verwenden',
+    [TranslatorTranslationClientKey.MFA_PASSKEY_PROMPT]: 'Verwende deinen Passkey oder Sicherheitsschlüssel, um fortzufahren.',
+    [TranslatorTranslationClientKey.MFA_ENROLL_WEBAUTHN]: 'Passkey / Sicherheitsschlüssel',
 };

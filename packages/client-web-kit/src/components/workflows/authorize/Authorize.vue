@@ -387,6 +387,7 @@ export default defineComponent({
                 if (mfaStatus.value.required) {
                     return wrapChild(h(AMfaChallengeForm, {
                         kinds: mfaStatus.value.kinds,
+                        challenge: mfaStatus.value.challenge ?? null,
                         onDone: () => { mfaSatisfiedLocal.value = true; },
                         onFailed: (message: string) => emit('failed', message),
                     }));

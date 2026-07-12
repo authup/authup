@@ -86,6 +86,7 @@
         "@routup/prometheus": "^4.0.0",
         "@routup/rate-limit": "^4.0.0",
         "@routup/swagger-ui": "^4.0.0",
+        "@simplewebauthn/server": "^13.3.2",
         "@validup/zod": "^0.3.3",
         "better-sqlite3": "^12.11.1",
         "citty": "^0.2.2",

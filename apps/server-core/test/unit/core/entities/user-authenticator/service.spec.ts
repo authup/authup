@@ -78,6 +78,12 @@ describe('UserAuthenticatorService', () => {
     let mailClient: FakeMailClient;
     let service: UserAuthenticatorService;
 
+    const webauthnOptions = {
+        rpId: 'localhost',
+        rpName: 'authup',
+        origin: 'http://localhost:3000',
+    };
+
     function buildService(options: UserAuthenticatorServiceOptions = { enabled: true }) {
         return new UserAuthenticatorService({
             repository,
@@ -86,7 +92,7 @@ describe('UserAuthenticatorService', () => {
             cipher: new SymmetricCipher(cipherKey),
             mailClient,
             mailTemplateRenderer: new MailTemplateRenderer(),
-            options,
+            options: { webauthn: webauthnOptions, ...options },
         });
     }
 
@@ -415,6 +421,82 @@ describe('UserAuthenticatorService', () => {
                 await service.enroll({ kind: UserAuthenticatorKind.EMAIL }, makeActor());
             } catch (e) {
                 expect((e as any).code).toEqual(ErrorCode.MFA_NOT_CONFIGURABLE);
+            }
+        });
+    });
+
+    describe('webauthn', () => {
+        it('enrolls with registration options and stores a challenge (unconfirmed)', async () => {
+            const result = await service.enroll({ kind: UserAuthenticatorKind.WEBAUTHN }, makeActor());
+
+            expect(result.entity.kind).toEqual(UserAuthenticatorKind.WEBAUTHN);
+            expect(result.entity.confirmed).toBeFalsy();
+            expect(result.webauthn).toBeDefined();
+            expect((result.webauthn as any).challenge).toBeDefined();
+            expect((result.webauthn as any).rp.id).toEqual('localhost');
+
+            // a challenge nonce was cached for the confirm ceremony
+            const cached = await cache.get(`mfaWebauthnReg:${  userId}`);
+            expect(cached).toBeDefined();
+
+            // an unconfirmed webauthn device does not satisfy a challenge
+            expect(await service.hasConfirmed(userId)).toBeFalsy();
+        });
+
+        it('surfaces authentication options in the challenge for a confirmed device', async () => {
+            // seed a confirmed webauthn device with credential parameters
+            repository.seed({
+                kind: UserAuthenticatorKind.WEBAUTHN,
+                user_id: userId,
+                realm_id: realmId,
+                confirmed: true,
+                parameters: JSON.stringify({
+                    rp_id: 'localhost',
+                    credential_id: 'Y3JlZC1pZA',
+                    public_key: 'cHVia2V5',
+                    counter: 0,
+                    transports: ['internal'],
+                }),
+            });
+            service = buildService();
+
+            const status = await service.challenge(userId);
+            expect(status.required).toBeTruthy();
+            expect(status.kinds).toContain(UserAuthenticatorKind.WEBAUTHN);
+            expect(status.challenge).toBeDefined();
+            expect((status.challenge as any).webauthn.challenge).toBeDefined();
+            // the allowed credential is scoped to the enrolled device
+            expect((status.challenge as any).webauthn.allowCredentials[0].id).toEqual('Y3JlZC1pZA');
+
+            const cached = await cache.get(`mfaWebauthnAuth:${  userId}`);
+            expect(cached).toBeDefined();
+        });
+
+        it('fails closed without a configured relying-party origin', async () => {
+            service = new UserAuthenticatorService({
+                repository,
+                userRepository,
+                cache,
+                cipher: new SymmetricCipher(cipherKey),
+                options: { enabled: true },
+            });
+
+            expect.assertions(1);
+            try {
+                await service.enroll({ kind: UserAuthenticatorKind.WEBAUTHN }, makeActor());
+            } catch (e) {
+                expect((e as any).code).toEqual(ErrorCode.MFA_NOT_CONFIGURABLE);
+            }
+        });
+
+        it('rejects a malformed attestation on confirm', async () => {
+            const enrolled = await service.enroll({ kind: UserAuthenticatorKind.WEBAUTHN }, makeActor());
+
+            expect.assertions(1);
+            try {
+                await service.confirm(enrolled.entity.id, 'not-json', makeActor());
+            } catch (e) {
+                expect(e).toBeDefined();
             }
         });
     });

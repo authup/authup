@@ -86,6 +86,18 @@ export type UserAuthenticatorTotpParameters = {
     period: number,
 };
 
+/**
+ * Stored on a WebAuthn row's `parameters` column as JSON — the registered
+ * credential (base64url id + public key, signature counter, transports).
+ */
+export type UserAuthenticatorWebauthnParameters = {
+    rp_id: string,
+    credential_id: string,
+    public_key: string,
+    counter: number,
+    transports?: string[],
+};
+
 export type UserAuthenticatorEnrollResult = {
     entity: UserAuthenticator,
     /**
@@ -105,6 +117,11 @@ export type UserAuthenticatorEnrollResult = {
      * Recovery: the raw single-use codes — shown once (download/print).
      */
     codes?: string[],
+    /**
+     * WebAuthn: the registration ceremony options the client passes to
+     * `navigator.credentials.create()` (SimpleWebAuthn `startRegistration`).
+     */
+    webauthn?: Record<string, unknown>,
 };
 
 export type UserAuthenticatorChallengeStatus = {
@@ -200,6 +217,15 @@ export type UserAuthenticatorServiceOptions = {
      * Issuer label for otpauth:// provisioning URIs.
      */
     issuer?: string,
+    /**
+     * WebAuthn relying-party context, derived from publicUrl (the hosted
+     * login origin). Absent = WebAuthn enrollment/verification is refused.
+     */
+    webauthn?: {
+        rpId: string,
+        rpName: string,
+        origin: string,
+    },
 };
 
 export type UserAuthenticatorServiceContext = {

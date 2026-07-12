@@ -1731,8 +1731,31 @@ fallback branches, incl. the sub/realm-mismatch fail-safes) and the end-to-end
 
 Polymorphic second-factor device model: `auth_user_authenticators` holds one row
 per enrolled device, discriminated by `kind` (`totp` | `recovery` | `email` |
-`webauthn` — the `UserAuthenticatorKind` enum in `@authup/core-kit`; `webauthn`
-is a reserved row-type wired in a later PR of the same series).
+`webauthn` — the `UserAuthenticatorKind` enum in `@authup/core-kit`).
+
+**WebAuthn / passkeys as a SECOND factor (plan 049 Stage 2):** `kind: 'webauthn'`
+rows store the registered credential (base64url id + public key, signature
+`counter`, transports) as JSON in `parameters`. The ceremony rides
+`@simplewebauthn/server` (`core/entities/user-authenticator/webauthn.ts`); the
+relying-party context (`rpId`/`rpName`/`origin`) is derived from `publicUrl` —
+because plan 041 made `/authorize` a HOSTED login page, every RP's login runs on
+that one origin, so RP-ID/origin binding is authup's own origin with no per-RP
+plumbing (absent publicUrl → WebAuthn refused, `MFA_NOT_CONFIGURABLE`).
+Registration: `enroll({ kind:'webauthn' })` returns creation options (a cached
+challenge nonce, `mfaWebauthnReg:<user_id>`, 5-min window) and an unconfirmed
+row; `confirm(id, <attestation JSON>)` verifies the attestation and stores the
+credential + marks confirmed. Authentication is kind-generic: `challenge()`
+surfaces the request options under `status.challenge.webauthn` (and caches the
+nonce, `mfaWebauthnAuth:<user_id>`) when a confirmed webauthn device exists;
+`verify(userId, { kind:'webauthn', response: <assertion JSON> })` matches the
+assertion to its credential row, verifies against the cached challenge, and bumps
+the stored signature `counter` (replay defense). Second-factor only —
+usernameless/passkey-first login (which would rewrite `LoginForm`) is out of
+scope. Kit: `AMfaChallengeForm` gains a passkey button
+(`@simplewebauthn/browser` `startAuthentication`, WebAuthn preferred first in the
+priority order) and the enroll picker a passkey option (`startRegistration` →
+confirm). Deps: `@simplewebauthn/server` (server-core), `@simplewebauthn/browser`
+(client-web-kit) — both stateless-leaf `dependencies`.
 
 **Email OTP (`kind: 'email'`, plan 049 Stage 1.5):** the row marks the mailbox
 as an enrolled factor (confirmed on create — the email is presumed verified via

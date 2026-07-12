@@ -137,6 +137,8 @@ export enum TranslatorTranslationClientKey {
     MFA_SETUP_REQUIRED = 'mfaSetupRequired',
 
     MFA_USE_EMAIL = 'mfaUseEmail',
+    MFA_USE_PASSKEY = 'mfaUsePasskey',
+    MFA_PASSKEY_PROMPT = 'mfaPasskeyPrompt',
     MFA_SEND_CODE = 'mfaSendCode',
     MFA_CODE_SENT = 'mfaCodeSent',
 
@@ -144,6 +146,7 @@ export enum TranslatorTranslationClientKey {
     MFA_ENROLL_TOTP = 'mfaEnrollTotp',
     MFA_ENROLL_RECOVERY = 'mfaEnrollRecovery',
     MFA_ENROLL_EMAIL = 'mfaEnrollEmail',
+    MFA_ENROLL_WEBAUTHN = 'mfaEnrollWebauthn',
     MFA_SCAN_QR = 'mfaScanQr',
     MFA_MANUAL_KEY = 'mfaManualKey',
     MFA_CONFIRM_INTRO = 'mfaConfirmIntro',

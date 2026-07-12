@@ -40,10 +40,17 @@ import type {
 } from '@authup/server-kit';
 import { Secret, TOTP } from 'otpauth';
 import QRCode from 'qrcode';
+import type { AuthenticationResponseJSON, RegistrationResponseJSON } from '@simplewebauthn/server';
 import type { IEventService } from '../event/index.ts';
 import type { IMailClient, IMailTemplateRenderer } from '../../mail/index.ts';
 import { MailTemplateName } from '../../mail/index.ts';
 import type { IUserRepository } from '../user/index.ts';
+import {
+    buildWebauthnAuthenticationOptions,
+    buildWebauthnRegistrationOptions,
+    verifyWebauthnAuthentication,
+    verifyWebauthnRegistration,
+} from './webauthn.ts';
 import {
     USER_AUTHENTICATOR_ATTEMPT_CACHE_PREFIX,
     USER_AUTHENTICATOR_ATTEMPT_LOCK_FACTOR,
@@ -56,6 +63,9 @@ import {
     USER_AUTHENTICATOR_TOTP_ALGORITHM,
     USER_AUTHENTICATOR_TOTP_DIGITS,
     USER_AUTHENTICATOR_TOTP_PERIOD,
+    USER_AUTHENTICATOR_WEBAUTHN_AUTH_CACHE_PREFIX,
+    USER_AUTHENTICATOR_WEBAUTHN_CHALLENGE_WINDOW,
+    USER_AUTHENTICATOR_WEBAUTHN_REG_CACHE_PREFIX,
 } from './constants.ts';
 import { generateNumericCode, generateRecoveryCode } from './helpers.ts';
 import type {
@@ -70,7 +80,9 @@ import type {
     UserAuthenticatorTotpParameters,
     UserAuthenticatorVerifyContext,
     UserAuthenticatorVerifyInput,
+    UserAuthenticatorWebauthnParameters,
 } from './types.ts';
+import type { WebauthnContext } from './webauthn.ts';
 
 type AttemptState = {
     count: number,
@@ -79,6 +91,11 @@ type AttemptState = {
 
 type EmailCodeState = {
     hash: string,
+    expiresAt: number,
+};
+
+type WebauthnChallengeState = {
+    challenge: string,
     expiresAt: number,
 };
 
@@ -237,10 +254,56 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             case UserAuthenticatorKind.EMAIL: {
                 return this.enrollEmail(user, validated.name ?? null);
             }
+            case UserAuthenticatorKind.WEBAUTHN: {
+                return this.enrollWebauthn(user, validated.name ?? null);
+            }
             default: {
                 throw new BadRequestError(`The authenticator kind ${validated.kind} can not be enrolled yet.`);
             }
         }
+    }
+
+    protected async enrollWebauthn(user: User, name: string | null): Promise<UserAuthenticatorEnrollResult> {
+        const ctx = this.assertWebauthn();
+
+        // exclude already-registered credentials from a fresh ceremony
+        const existing = await this.repository.findAllWithSecretsByUser(user.id, {
+            kind: UserAuthenticatorKind.WEBAUTHN,
+            confirmed: true,
+        });
+        const excludeCredentials = existing
+            .map((device) => this.parseWebauthnParameters(device))
+            .filter((parameters): parameters is UserAuthenticatorWebauthnParameters => !!parameters)
+            .map((parameters) => ({ id: parameters.credential_id, transports: parameters.transports }));
+
+        const { options, challenge } = await buildWebauthnRegistrationOptions(
+            ctx,
+            { id: user.id, name: user.name },
+            excludeCredentials,
+        );
+
+        await this.cache.set(
+            this.buildWebauthnCacheKey(USER_AUTHENTICATOR_WEBAUTHN_REG_CACHE_PREFIX, user.id),
+            {
+                challenge,
+                expiresAt: Date.now() + (USER_AUTHENTICATOR_WEBAUTHN_CHALLENGE_WINDOW * 1_000),
+            } satisfies WebauthnChallengeState,
+            { ttl: USER_AUTHENTICATOR_WEBAUTHN_CHALLENGE_WINDOW * 1_000 },
+        );
+
+        let entity = this.repository.create({
+            kind: UserAuthenticatorKind.WEBAUTHN,
+            name,
+            confirmed: false,
+            user_id: user.id,
+            realm_id: user.realm_id,
+        });
+        entity = await this.repository.save(entity);
+
+        return {
+            entity: this.sanitize(entity),
+            webauthn: options,
+        };
     }
 
     protected async enrollEmail(user: User, name: string | null): Promise<UserAuthenticatorEnrollResult> {
@@ -400,6 +463,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             return this.sanitize(entity);
         }
 
+        if (entity.kind === UserAuthenticatorKind.WEBAUTHN) {
+            return this.confirmWebauthn(entity, code);
+        }
+
         if (entity.kind !== UserAuthenticatorKind.TOTP) {
             throw new BadRequestError(`The authenticator kind ${entity.kind} can not be confirmed with a code.`);
         }
@@ -418,6 +485,39 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         await this.resetAttempts(entity.user_id);
 
+        entity.confirmed = true;
+        const output = await this.repository.save(entity);
+
+        await this.recordEvent(EventName.MFA_ENROLLED, output);
+
+        return this.sanitize(output);
+    }
+
+    protected async confirmWebauthn(entity: UserAuthenticator, response: string): Promise<UserAuthenticator> {
+        const ctx = this.assertWebauthn();
+
+        const state = await this.cache.get<WebauthnChallengeState>(
+            this.buildWebauthnCacheKey(USER_AUTHENTICATOR_WEBAUTHN_REG_CACHE_PREFIX, entity.user_id),
+        );
+        if (!state || state.expiresAt < Date.now()) {
+            throw new EntityCredentialsInvalidError();
+        }
+
+        let parsed : RegistrationResponseJSON;
+        try {
+            parsed = JSON.parse(response) as RegistrationResponseJSON;
+        } catch {
+            throw new BadRequestError('The registration response is malformed.');
+        }
+
+        const credential = await verifyWebauthnRegistration(ctx, parsed, state.challenge);
+        if (!credential) {
+            throw new EntityCredentialsInvalidError();
+        }
+
+        await this.cache.drop(this.buildWebauthnCacheKey(USER_AUTHENTICATOR_WEBAUTHN_REG_CACHE_PREFIX, entity.user_id));
+
+        entity.parameters = JSON.stringify(credential);
         entity.confirmed = true;
         const output = await this.repository.save(entity);
 
@@ -484,6 +584,21 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
             if (input.kind === UserAuthenticatorKind.EMAIL) {
                 if (await this.verifyEmail(userId, input.response)) {
+                    matched = device;
+                }
+            }
+
+            if (input.kind === UserAuthenticatorKind.WEBAUTHN) {
+                const newCounter = await this.verifyWebauthnDevice(userId, device, input.response);
+                if (newCounter !== null) {
+                    // persist the signature counter (replay defense)
+                    const parameters = this.parseWebauthnParameters(device);
+                    if (parameters) {
+                        device.parameters = JSON.stringify({ ...parameters, counter: newCounter });
+                    }
+                    await this.cache.drop(
+                        this.buildWebauthnCacheKey(USER_AUTHENTICATOR_WEBAUTHN_AUTH_CACHE_PREFIX, userId),
+                    );
                     matched = device;
                 }
             }
@@ -556,6 +671,56 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         }
 
         return false;
+    }
+
+    protected parseWebauthnParameters(device: UserAuthenticator): UserAuthenticatorWebauthnParameters | null {
+        if (!device.parameters) {
+            return null;
+        }
+        try {
+            return JSON.parse(device.parameters) as UserAuthenticatorWebauthnParameters;
+        } catch {
+            return null;
+        }
+    }
+
+    protected async verifyWebauthnDevice(
+        userId: string,
+        device: UserAuthenticator,
+        response: string,
+    ): Promise<number | null> {
+        const ctx = this.assertWebauthn();
+
+        const parameters = this.parseWebauthnParameters(device);
+        if (!parameters) {
+            return null;
+        }
+
+        let parsed : AuthenticationResponseJSON;
+        try {
+            parsed = JSON.parse(response) as AuthenticationResponseJSON;
+        } catch {
+            return null;
+        }
+
+        // the assertion identifies the credential — only verify against its row
+        if (parsed.id !== parameters.credential_id) {
+            return null;
+        }
+
+        const state = await this.cache.get<WebauthnChallengeState>(
+            this.buildWebauthnCacheKey(USER_AUTHENTICATOR_WEBAUTHN_AUTH_CACHE_PREFIX, userId),
+        );
+        if (!state || state.expiresAt < Date.now()) {
+            return null;
+        }
+
+        try {
+            const result = await verifyWebauthnAuthentication(ctx, parsed, state.challenge, parameters);
+            return result.verified ? result.newCounter : null;
+        } catch {
+            return null;
+        }
     }
 
     protected async verifyEmail(userId: string, response: string): Promise<boolean> {
@@ -651,11 +816,38 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         const kinds = Array.from(new Set(confirmed.map((device) => device.kind)));
 
-        return {
+        const status : UserAuthenticatorChallengeStatus = {
             required: confirmed.length > 0,
             enrollmentRequired: !!this.options.required && confirmed.length === 0,
             kinds,
         };
+
+        // WebAuthn needs server-issued request options as the challenge — build
+        // them (and store the nonce) when the subject holds a webauthn factor.
+        if (kinds.includes(UserAuthenticatorKind.WEBAUTHN) && this.options.webauthn) {
+            const credentials = (await this.repository.findAllWithSecretsByUser(userId, {
+                kind: UserAuthenticatorKind.WEBAUTHN,
+                confirmed: true,
+            }))
+                .map((device) => this.parseWebauthnParameters(device))
+                .filter((parameters): parameters is UserAuthenticatorWebauthnParameters => !!parameters)
+                .map((parameters) => ({ id: parameters.credential_id, transports: parameters.transports }));
+
+            const { options, challenge } = await buildWebauthnAuthenticationOptions(this.options.webauthn, credentials);
+
+            await this.cache.set(
+                this.buildWebauthnCacheKey(USER_AUTHENTICATOR_WEBAUTHN_AUTH_CACHE_PREFIX, userId),
+                {
+                    challenge,
+                    expiresAt: Date.now() + (USER_AUTHENTICATOR_WEBAUTHN_CHALLENGE_WINDOW * 1_000),
+                } satisfies WebauthnChallengeState,
+                { ttl: USER_AUTHENTICATOR_WEBAUTHN_CHALLENGE_WINDOW * 1_000 },
+            );
+
+            status.challenge = { webauthn: options };
+        }
+
+        return status;
     }
 
     // ------------------------------------------------------------------
@@ -690,6 +882,17 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         }
     }
 
+    protected assertWebauthn(): WebauthnContext {
+        if (!this.options.webauthn) {
+            throw new AuthupError({
+                code: ErrorCode.MFA_NOT_CONFIGURABLE,
+                message: 'WebAuthn requires a configured public URL (relying-party origin).',
+            });
+        }
+
+        return this.options.webauthn;
+    }
+
     // ------------------------------------------------------------------
 
     protected buildAttemptCacheKey(userId: string): string {
@@ -704,6 +907,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             prefix: USER_AUTHENTICATOR_EMAIL_CODE_CACHE_PREFIX,
             key: userId,
         });
+    }
+
+    protected buildWebauthnCacheKey(prefix: string, userId: string): string {
+        return buildCacheKey({ prefix, key: userId });
     }
 
     protected async assertNotThrottled(userId: string): Promise<void> {
