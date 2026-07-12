@@ -25,6 +25,12 @@ export type OAuth2AuthorizationCodeIssuerOptions = {
      * Defaults to the issuance instant (session-less flows authenticate now).
      */
     authTime?: number,
+
+    /**
+     * How the subject authenticated (SessionAuthMethod) — persisted on the
+     * code so a session created at the /token exchange inherits it.
+     */
+    authMethod?: string | null,
 };
 
 export interface IOAuth2AuthorizationCodeIssuer {

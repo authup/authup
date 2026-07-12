@@ -1817,6 +1817,53 @@ surfaces), `test/unit/http/controllers/workflows/token/grant-password-mfa.spec.t
 (end-to-end: enroll → confirm → grant gated → otp accepted → authorize backstop
 → challenge stamps `mfa_at` → authorize passes; recovery replay rejected).
 
+## Auth-Method Claims — amr / acr / step-up (plan 050)
+
+**HOW the subject authenticated is recorded on the session**
+(`auth_sessions.auth_method`, `SessionAuthMethod` enum in core-kit:
+`pwd | ldap | ext | client | robot`; `ldap` is reserved — the password grant
+currently stamps `pwd` for both, the LDAP distinction is the deferred Stage 1b).
+Every session-creation site stamps it: password grant (`pwd`), identity grant +
+the federated IdP callback (`ext` — threaded through the code blob's
+`auth_method`, which the authorization_code grant's fallback-create inherits;
+the reuse branch inherits from the bearer session row), robot/client
+credentials (`robot`/`client`, session-inventory only). Pre-column sessions
+carry `NULL` → **no amr/acr claims** (authup cannot retroactively know).
+
+**amr/acr are derived at the `/token` exchange mint site** from the *resolved*
+session via `deriveAmrAcr(session)`
+(`core/oauth2/authorization/helpers.ts`): `pwd|ldap → amr ['pwd']`,
+`ext → ['ext']`, plus `'otp'` appended when `session.mfa_at` is set;
+`acr = urn:authup:mfa` when `mfa_at` set, else `urn:authup:pwd`
+(`OAuth2AuthenticationMethodReference` / `OAuth2AuthenticationContextClass`
+enums in `@authup/specs` — urn-style only, never the reserved `"0"`).
+**Deliberately emitted on every token kind** (access/refresh too, not only the
+id_token) so resource servers can read the method without parsing an id_token.
+M2M grants mint no id_token; their methods yield no claims.
+
+**`acr_values` on `/authorize`** is mounted in the code-request validator
+(case-sensitive — no `toLowerCase`, unlike `login_hint`), persisted on the code
+blob, and advertised via discovery `acr_values_supported`
+(`['urn:authup:pwd','urn:authup:mfa']`). Semantics per OIDC Core §5.5.1.1:
+voluntary — unknown tokens are IGNORED (never 400), the id_token always returns
+the ACHIEVED acr. `urn:authup:mfa` acts as a **step-up TRIGGER**
+(Auth0/Keycloak stance), enforced in `OAuth2Authorization.authorizeInner`
+**only while the user actually holds a confirmed factor** (an unsatisfiable
+request degrades to the achieved acr instead of bricking the RP): the session's
+`mfa_at` must be within `mfaFreshnessMaxAge` (config, env
+`MFA_FRESHNESS_MAX_AGE`, **default 60s** — deliberately NOT 0, deviating from
+the plan-050 sketch: the hosted challenge round-trip takes seconds, a 0-window
+could never be satisfied and would loop the ladder; the window mirrors
+`promptLoginMaxAge`'s absorb-the-round-trip semantics). Violation →
+`OAuth2MfaRequiredError.stepUpRequired()`. Strict step-up = a small window,
+never 0.
+
+Tests: `deriveAmrAcr` table + step-up matrix in
+`test/unit/core/oauth2/authorization/{helpers,module}.spec.ts`, stamping
+assertions in the per-grant specs, end-to-end id_token/access-token claim
+decoding in
+`test/unit/http/controllers/workflows/token/id-token-claims.spec.ts`.
+
 ## Security Event Log (plans 057 + 053 + 058)
 
 `auth_events` is the persisted, PII-stripped security audit trail — the single

@@ -5,9 +5,59 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { JWTAlgorithm } from '@authup/specs';
-import { JWTError } from '@authup/specs';
+import type { JWTAlgorithm, OAuth2TokenPayload } from '@authup/specs';
+import {
+    JWTError,
+    OAuth2AuthenticationContextClass,
+    OAuth2AuthenticationMethodReference,
+} from '@authup/specs';
+import type { Session } from '@authup/core-kit';
+import { SessionAuthMethod } from '@authup/core-kit';
 import { subtle } from 'uncrypto';
+
+/**
+ * Derive the OIDC `amr` / `acr` claims from the backing session's
+ * auth_method + mfa_at (plan 050). Pre-column sessions (null auth_method)
+ * yield no claims — authup cannot retroactively know how an old session
+ * authenticated. M2M methods yield none either (amr/acr are user-flow
+ * claims; those grants mint no id_token).
+ */
+export function deriveAmrAcr(
+    session: Pick<Session, 'auth_method' | 'mfa_at'> | null,
+): Pick<OAuth2TokenPayload, 'amr' | 'acr'> {
+    if (!session || !session.auth_method) {
+        return {};
+    }
+
+    const amr : string[] = [];
+    switch (session.auth_method) {
+        case SessionAuthMethod.PASSWORD:
+        case SessionAuthMethod.LDAP: {
+            // LDAP is still a password factor for amr — the finer
+            // distinction lives in the authup-local auth_method.
+            amr.push(OAuth2AuthenticationMethodReference.PASSWORD);
+            break;
+        }
+        case SessionAuthMethod.EXTERNAL: {
+            amr.push(OAuth2AuthenticationMethodReference.EXTERNAL);
+            break;
+        }
+        default: {
+            return {};
+        }
+    }
+
+    if (session.mfa_at) {
+        amr.push(OAuth2AuthenticationMethodReference.OTP);
+    }
+
+    return {
+        amr,
+        acr: session.mfa_at ?
+            OAuth2AuthenticationContextClass.MFA :
+            OAuth2AuthenticationContextClass.PASSWORD,
+    };
+}
 
 export function generateOAuth2CodeVerifier() {
     const length = 64;

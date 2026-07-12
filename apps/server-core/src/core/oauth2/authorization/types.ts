@@ -22,6 +22,12 @@ export type OAuth2AuthorizationManagerContext = {
      */
     promptLoginMaxAge?: number,
     /**
+     * Max age (seconds) of the session's mfa_at an `acr_values=urn:authup:mfa`
+     * step-up request accepts before forcing a fresh challenge
+     * (config `mfaFreshnessMaxAge`). Default 60.
+     */
+    mfaFreshnessMaxAge?: number,
+    /**
      * MFA backstop (plan 049): decides whether the authenticated user must
      * hold a session-bound second-factor proof (mfa_at) before a code is
      * issued. Absent = MFA disabled.

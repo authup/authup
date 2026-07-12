@@ -7,7 +7,7 @@
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
 import type { Identity, Session } from '@authup/core-kit';
-import { ScopeName } from '@authup/core-kit';
+import { ScopeName, SessionAuthMethod } from '@authup/core-kit';
 import type { IOAuth2TokenIssuer } from '../token/index.ts';
 import { OAuth2BaseGrant } from './base.ts';
 import { buildOAuth2BearerTokenResponse } from '../response/index.ts';
@@ -35,6 +35,7 @@ export class IdentityGrantType extends OAuth2BaseGrant<Identity> {
             realm_id: identity.data.realm_id,
             sub: identity.data.id,
             sub_kind: identity.type,
+            auth_method: SessionAuthMethod.EXTERNAL,
         };
 
         const { id: sessionId } = await this.sessionManager.create(session);

@@ -77,6 +77,7 @@ describe('RobotCredentialsGrant', () => {
                 realm_id: realmId,
                 sub: robotId,
                 sub_kind: IdentityType.ROBOT,
+                auth_method: 'robot',
             }),
         );
     });

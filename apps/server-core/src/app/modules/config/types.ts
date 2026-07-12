@@ -291,6 +291,15 @@ export type Config = {
      */
     mfaEncryptionKey: string,
 
+    /**
+     * Max age (seconds) of the session's second-factor proof (mfa_at) an
+     * `acr_values=urn:authup:mfa` step-up request accepts before forcing
+     * a fresh challenge. Mirrors promptLoginMaxAge's semantics (the
+     * window absorbs the hosted challenge round-trip).
+     * default: 60
+     */
+    mfaFreshnessMaxAge: number,
+
     // ----------------------------------------------------
 
     /**

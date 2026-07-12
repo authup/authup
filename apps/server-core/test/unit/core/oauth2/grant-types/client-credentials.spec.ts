@@ -75,6 +75,7 @@ describe('ClientCredentialsGrant', () => {
                 realm_id: realmId,
                 sub: clientId,
                 sub_kind: IdentityType.CLIENT,
+                auth_method: 'client',
             }),
         );
     });

@@ -17,7 +17,7 @@ import {
     DTags,
 } from '@routup/decorators';
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
-import { OAuth2AuthorizationPrompt, OAuth2AuthorizationResponseType } from '@authup/specs';
+import { OAuth2AuthenticationContextClass, OAuth2AuthorizationPrompt, OAuth2AuthorizationResponseType } from '@authup/specs';
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Repository } from 'typeorm';
@@ -128,6 +128,14 @@ export class RealmController {
                 OAuth2AuthorizationPrompt.LOGIN,
                 OAuth2AuthorizationPrompt.CONSENT,
                 OAuth2AuthorizationPrompt.SELECT_ACCOUNT,
+            ],
+
+            // two coarse levels only (urn-style — OIDC reserves the bare
+            // "0"); `urn:authup:mfa` in `acr_values` acts as a step-up
+            // trigger (plan 050).
+            acr_values_supported: [
+                OAuth2AuthenticationContextClass.PASSWORD,
+                OAuth2AuthenticationContextClass.MFA,
             ],
 
             subject_types_supported: [

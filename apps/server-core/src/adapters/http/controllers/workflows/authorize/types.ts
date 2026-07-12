@@ -23,6 +23,11 @@ export type AuthorizeControllerOptions = {
      * (config `promptLoginMaxAge`).
      */
     promptLoginMaxAge?: number;
+    /**
+     * Max age (seconds) of the session's mfa_at an acr_values step-up request
+     * accepts before forcing a fresh challenge (config `mfaFreshnessMaxAge`).
+     */
+    mfaFreshnessMaxAge?: number;
 };
 
 export type AuthorizeControllerContext = {

@@ -47,6 +47,20 @@ export type OAuth2TokenPayload = JWTClaims & {
     auth_time?: number,
 
     /**
+     * OIDC Core §2 / RFC 8176: authentication method references — HOW the
+     * subject authenticated (e.g. ['pwd'], ['pwd','otp'], ['ext']). Rides
+     * every token kind, not only the id_token, so resource servers can read
+     * the method without parsing an id_token.
+     */
+    amr?: string[],
+
+    /**
+     * OIDC Core §2: authentication context class reference — the satisfied
+     * assurance level (urn:authup:pwd | urn:authup:mfa).
+     */
+    acr?: string,
+
+    /**
      * Token type
      */
     kind?: `${OAuth2TokenKind}`,

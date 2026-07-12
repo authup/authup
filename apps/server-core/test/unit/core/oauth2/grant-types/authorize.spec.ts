@@ -271,4 +271,79 @@ describe('OAuth2AuthorizeGrant', () => {
             grant.runWith(buildCode({ scope: `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}` })),
         ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.JWK_NOT_FOUND }));
     });
+    // plan 050: amr/acr derive from the RESOLVED session; auth_method inherits
+    // through the code blob on fallback-create.
+
+    it('should inherit auth_method from the code blob on fallback-create', async () => {
+        await grant.runWith(buildCode({ auth_method: 'ext' }));
+
+        expect(sessionManager.createCalls[0]).toEqual(
+            expect.objectContaining({ auth_method: 'ext' }),
+        );
+    });
+
+    it('should mint amr/acr from the reused session (password login)', async () => {
+        const sessionId = randomUUID();
+        await sessionManager.create({
+            id: sessionId,
+            sub: userId,
+            sub_kind: OAuth2SubKind.USER,
+            realm_id: realmId,
+            client_id: null,
+            auth_method: 'pwd',
+            mfa_at: null,
+        });
+
+        await grant.runWith(buildCode({
+            session_id: sessionId,
+            scope: `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}`,
+        }));
+
+        const claims = expect.objectContaining({ amr: ['pwd'], acr: 'urn:authup:pwd' });
+        expect(openIdTokenIssuer.issueCalls).toContainEqual(claims);
+        // deliberately on the access token too
+        expect(accessTokenIssuer.issueCalls).toContainEqual(claims);
+    });
+
+    it('should mint the mfa acr once the session carries a second-factor proof', async () => {
+        const sessionId = randomUUID();
+        await sessionManager.create({
+            id: sessionId,
+            sub: userId,
+            sub_kind: OAuth2SubKind.USER,
+            realm_id: realmId,
+            client_id: null,
+            auth_method: 'pwd',
+            mfa_at: new Date().toISOString(),
+        });
+
+        await grant.runWith(buildCode({
+            session_id: sessionId,
+            scope: `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}`,
+        }));
+
+        expect(openIdTokenIssuer.issueCalls).toContainEqual(
+            expect.objectContaining({ amr: ['pwd', 'otp'], acr: 'urn:authup:mfa' }),
+        );
+    });
+
+    it('should mint no amr/acr for a pre-column session (null auth_method)', async () => {
+        const sessionId = randomUUID();
+        await sessionManager.create({
+            id: sessionId,
+            sub: userId,
+            sub_kind: OAuth2SubKind.USER,
+            realm_id: realmId,
+            client_id: null,
+        });
+
+        await grant.runWith(buildCode({
+            session_id: sessionId,
+            scope: `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}`,
+        }));
+
+        const [payload] = openIdTokenIssuer.issueCalls;
+        expect(payload).not.toHaveProperty('amr');
+        expect(payload).not.toHaveProperty('acr');
+    });
 });

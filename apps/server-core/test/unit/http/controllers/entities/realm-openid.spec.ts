@@ -107,4 +107,14 @@ describe('RealmController.getOpenIdConfiguration', () => {
 
         expect(config.end_session_endpoint).toEqual('https://auth.example.com/logout');
     });
+
+    it('should advertise the supported acr values (urn-style, two coarse levels)', async () => {
+        const controller = createController(realm);
+        const config = await controller.getOpenIdConfiguration(realmId);
+
+        expect(config.acr_values_supported).toEqual([
+            'urn:authup:pwd',
+            'urn:authup:mfa',
+        ]);
+    });
 });

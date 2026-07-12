@@ -60,6 +60,12 @@ export type OpenIDProviderMetadata = {
     prompt_values_supported?: string[],
 
     /**
+     * OIDC Discovery: `acr` values the OP supports (urn:authup:pwd,
+     * urn:authup:mfa).
+     */
+    acr_values_supported?: string[],
+
+    /**
      * OIDC RP-Initiated Logout 1.0 — the OP's end-session (logout) endpoint.
      */
     end_session_endpoint?: string,

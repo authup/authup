@@ -255,6 +255,7 @@ export class HTTPControllerModule {
                 baseURL: config.publicUrl,
                 features: this.buildUIFeatures(config),
                 promptLoginMaxAge: config.promptLoginMaxAge,
+                mfaFreshnessMaxAge: config.mfaFreshnessMaxAge,
             },
 
             codeIssuer,

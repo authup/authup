@@ -14,6 +14,7 @@ import {
     EventScope,
     IdentityType,
     ScopeName,
+    SessionAuthMethod,
 } from '@authup/core-kit';
 import type { IEventService } from '../../entities/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
@@ -62,6 +63,7 @@ export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput>
             sub: user.id,
             sub_kind: IdentityType.USER,
             mfa_at: input.mfaVerifiedAt ?? null,
+            auth_method: SessionAuthMethod.PASSWORD,
         });
 
         const issuePayload : Partial<OAuth2TokenPayload> = {

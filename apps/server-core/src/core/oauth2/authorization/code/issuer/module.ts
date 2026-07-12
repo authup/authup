@@ -43,8 +43,10 @@ export class OAuth2AuthorizationCodeIssuer implements IOAuth2AuthorizationCodeIs
             nonce: input.nonce,
             code_challenge: input.code_challenge,
             code_challenge_method: input.code_challenge_method,
+            acr_values: input.acr_values ?? null,
 
             auth_time: options.authTime ?? Math.floor(Date.now() / 1000),
+            auth_method: options.authMethod ?? null,
 
             realm_id: realm.id,
             realm_name: realm.name,

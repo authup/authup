@@ -98,6 +98,7 @@ export class ConfigValidator extends Container<Config> {
             // '' = unset; otherwise a base64 string (the cipher enforces
             // the decoded 32-byte length at boot).
             mfaEncryptionKey: createValidator(z.union([z.literal(''), z.base64()])),
+            mfaFreshnessMaxAge: nonNegativeNumberValidator,
 
             clientAuthBasic: booleanValidator,
             clientSystemEnabled: booleanValidator,
