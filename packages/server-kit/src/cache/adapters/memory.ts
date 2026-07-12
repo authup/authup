@@ -47,6 +47,17 @@ export class MemoryCache implements ICache {
         this.instance.set(key, value, { ttl: options.ttl });
     }
 
+    async add(key: string, value: unknown, options: CacheSetOptions = {}): Promise<boolean> {
+        // The check + set run in a single synchronous tick (no await between),
+        // so this is atomic within the single-threaded process.
+        if (this.instance.has(key)) {
+            return false;
+        }
+
+        this.instance.set(key, value, { ttl: options.ttl });
+        return true;
+    }
+
     async drop(key: string): Promise<void> {
         this.instance.delete(key);
     }
