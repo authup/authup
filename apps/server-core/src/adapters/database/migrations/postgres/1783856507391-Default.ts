@@ -25,7 +25,6 @@ export class Default1783856507391 implements MigrationInterface {
                 "parameters" text,
                 "codes" text,
                 "confirmed" boolean NOT NULL DEFAULT false,
-                "version" integer NOT NULL DEFAULT 1,
                 "last_used_at" character varying(28),
                 "created_at" TIMESTAMP NOT NULL DEFAULT now(),
                 "updated_at" TIMESTAMP NOT NULL DEFAULT now(),

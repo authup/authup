@@ -25,7 +25,6 @@ import {
     ErrorCode,
     MfaThrottledError,
     UnauthorizedError,
-    isEntityConflictError,
 } from '@authup/errors';
 import { 
     AbstractEntityService, 
@@ -64,6 +63,8 @@ import {
     USER_AUTHENTICATOR_TOTP_ALGORITHM,
     USER_AUTHENTICATOR_TOTP_DIGITS,
     USER_AUTHENTICATOR_TOTP_PERIOD,
+    USER_AUTHENTICATOR_VERIFY_LOCK_CACHE_PREFIX,
+    USER_AUTHENTICATOR_VERIFY_LOCK_TTL,
     USER_AUTHENTICATOR_WEBAUTHN_AUTH_CACHE_PREFIX,
     USER_AUTHENTICATOR_WEBAUTHN_CHALLENGE_WINDOW,
     USER_AUTHENTICATOR_WEBAUTHN_REG_CACHE_PREFIX,
@@ -577,78 +578,80 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
     ): Promise<boolean> {
         await this.assertNotThrottled(userId);
 
-        const devices = await this.repository.findAllWithSecretsByUser(userId, {
-            kind: input.kind,
-            confirmed: true,
-        });
-
-        let matched : UserAuthenticator | undefined;
-
-        for (const device of devices) {
-            if (input.kind === UserAuthenticatorKind.TOTP) {
-                if (await this.verifyTotp(device, input.response)) {
-                    matched = device;
-                }
-            }
-
-            if (input.kind === UserAuthenticatorKind.RECOVERY) {
-                if (await this.verifyRecovery(device, input.response)) {
-                    matched = device;
-                }
-            }
-
-            if (input.kind === UserAuthenticatorKind.EMAIL) {
-                if (await this.verifyEmail(userId, input.response)) {
-                    matched = device;
-                }
-            }
-
-            if (input.kind === UserAuthenticatorKind.WEBAUTHN) {
-                const newCounter = await this.verifyWebauthnDevice(userId, device, input.response);
-                if (newCounter !== null) {
-                    // persist the signature counter (replay defense)
-                    const parameters = this.parseWebauthnParameters(device);
-                    if (parameters) {
-                        device.parameters = JSON.stringify({ ...parameters, counter: newCounter });
-                    }
-                    await this.cache.drop(
-                        this.buildWebauthnCacheKey(USER_AUTHENTICATOR_WEBAUTHN_AUTH_CACHE_PREFIX, userId),
-                    );
-                    matched = device;
-                }
-            }
-
-            if (matched) {
-                break;
-            }
-        }
-
-        if (!matched) {
-            await this.bumpAttempts(userId);
-            await this.recordChallengeEvent(EventName.MFA_CHALLENGE_FAILED, userId, input.kind, ctx);
+        // Serialize the read-verify-save critical section per user so a single
+        // factor (TOTP step / recovery / email code / webauthn counter) is
+        // consumed exactly once even under concurrent verifies. A held lock
+        // means another verify is mid-flight — bail without penalty rather than
+        // risk a double-consume; that request owns the outcome. Acquisition
+        // fails open (see acquireVerifyLock).
+        const lockKey = this.buildVerifyLockCacheKey(userId);
+        if (!await this.acquireVerifyLock(lockKey)) {
             return false;
         }
 
-        matched.last_used_at = new Date().toISOString();
         try {
-            await this.repository.save(matched);
-        } catch (e) {
-            // A concurrent verify already consumed this factor (optimistic-lock
-            // conflict on the row version) — treat as a failed attempt, not a
-            // 500, so the single-use / anti-replay guarantee holds.
-            if (isEntityConflictError(e)) {
+            const devices = await this.repository.findAllWithSecretsByUser(userId, {
+                kind: input.kind,
+                confirmed: true,
+            });
+
+            let matched : UserAuthenticator | undefined;
+
+            for (const device of devices) {
+                if (input.kind === UserAuthenticatorKind.TOTP) {
+                    if (await this.verifyTotp(device, input.response)) {
+                        matched = device;
+                    }
+                }
+
+                if (input.kind === UserAuthenticatorKind.RECOVERY) {
+                    if (await this.verifyRecovery(device, input.response)) {
+                        matched = device;
+                    }
+                }
+
+                if (input.kind === UserAuthenticatorKind.EMAIL) {
+                    if (await this.verifyEmail(userId, input.response)) {
+                        matched = device;
+                    }
+                }
+
+                if (input.kind === UserAuthenticatorKind.WEBAUTHN) {
+                    const newCounter = await this.verifyWebauthnDevice(userId, device, input.response);
+                    if (newCounter !== null) {
+                        // persist the signature counter (replay defense)
+                        const parameters = this.parseWebauthnParameters(device);
+                        if (parameters) {
+                            device.parameters = JSON.stringify({ ...parameters, counter: newCounter });
+                        }
+                        await this.cache.drop(
+                            this.buildWebauthnCacheKey(USER_AUTHENTICATOR_WEBAUTHN_AUTH_CACHE_PREFIX, userId),
+                        );
+                        matched = device;
+                    }
+                }
+
+                if (matched) {
+                    break;
+                }
+            }
+
+            if (!matched) {
                 await this.bumpAttempts(userId);
                 await this.recordChallengeEvent(EventName.MFA_CHALLENGE_FAILED, userId, input.kind, ctx);
                 return false;
             }
-            throw e;
+
+            matched.last_used_at = new Date().toISOString();
+            await this.repository.save(matched);
+
+            await this.resetAttempts(userId);
+
+            await this.recordChallengeEvent(EventName.MFA_VERIFIED, userId, input.kind, ctx, matched);
+            return true;
+        } finally {
+            await this.releaseVerifyLock(lockKey);
         }
-
-        await this.resetAttempts(userId);
-
-        await this.recordChallengeEvent(EventName.MFA_VERIFIED, userId, input.kind, ctx, matched);
-
-        return true;
     }
 
     protected async verifyTotp(device: UserAuthenticator, token: string): Promise<boolean> {
@@ -681,8 +684,8 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         // Reject replay: the accepted step must strictly advance past the last
         // consumed one (RFC 6238 §5.2), so a captured code can't be reused
-        // within its ±1 validation window. The version column makes the
-        // concurrent case (two verifies advancing the same step) conflict-safe.
+        // within its ±1 validation window. The per-user verify lock makes the
+        // concurrent case (two verifies advancing the same step) safe.
         const step = Math.floor(Date.now() / 1000 / parameters.period) + delta;
         if (typeof parameters.counter === 'number' && step <= parameters.counter) {
             return false;
@@ -954,6 +957,32 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
     protected buildWebauthnCacheKey(prefix: string, userId: string): string {
         return buildCacheKey({ prefix, key: userId });
+    }
+
+    protected buildVerifyLockCacheKey(userId: string): string {
+        return buildCacheKey({
+            prefix: USER_AUTHENTICATOR_VERIFY_LOCK_CACHE_PREFIX,
+            key: userId,
+        });
+    }
+
+    protected async acquireVerifyLock(key: string): Promise<boolean> {
+        try {
+            return await this.cache.add(key, 1, { ttl: USER_AUTHENTICATOR_VERIFY_LOCK_TTL });
+        } catch {
+            // Fail open: a cache outage must not break MFA login. The TOTP
+            // step-counter and recovery `used_at` flags remain the correctness
+            // backstop for the (now unserialized) concurrent case.
+            return true;
+        }
+    }
+
+    protected async releaseVerifyLock(key: string): Promise<void> {
+        try {
+            await this.cache.drop(key);
+        } catch {
+            // Best-effort release; the lock TTL bounds a stranded key.
+        }
     }
 
     protected async assertNotThrottled(userId: string): Promise<void> {

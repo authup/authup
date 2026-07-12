@@ -14,7 +14,7 @@ import {
     isEntityCredentialsInvalidError,
     isMfaThrottledError,
 } from '@authup/errors';
-import { MemoryCache, SymmetricCipher } from '@authup/server-kit';
+import { MemoryCache, SymmetricCipher, buildCacheKey } from '@authup/server-kit';
 import type { ActorContext } from '@authup/server-kit';
 import { Secret, TOTP } from 'otpauth';
 import {
@@ -26,6 +26,7 @@ import {
 import { FakePermissionEvaluator } from '@authup/server-test-kit';
 import { MailTemplateRenderer } from '../../../../../src/core/mail/index.ts';
 import { UserAuthenticatorService } from '../../../../../src/core/entities/user-authenticator/service.ts';
+import { USER_AUTHENTICATOR_VERIFY_LOCK_CACHE_PREFIX } from '../../../../../src/core/entities/user-authenticator/constants.ts';
 import type { UserAuthenticatorServiceOptions } from '../../../../../src/core/entities/user-authenticator/types.ts';
 import { FakeMailClient } from '../../helpers/index.ts';
 import { FakeUserRepository } from '../user/fake-repository.ts';
@@ -277,15 +278,20 @@ describe('UserAuthenticatorService', () => {
             expect(JSON.parse(stored.parameters!).counter).toBeGreaterThan(0);
         });
 
-        it('bumps the optimistic-lock version on each accepted verify', async () => {
+        it('bails without consuming the factor when the verify lock is held', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
             await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
 
-            const before = (await repository.findAllWithSecretsByUser(userId))[0].version ?? 0;
-            await service.verify(userId, { kind: UserAuthenticatorKind.TOTP, response: totpCode(enrolled.secret!) });
-            const after = (await repository.findAllWithSecretsByUser(userId))[0].version ?? 0;
+            // simulate a concurrent verify holding the per-user lock
+            const lockKey = buildCacheKey({ prefix: USER_AUTHENTICATOR_VERIFY_LOCK_CACHE_PREFIX, key: userId });
+            expect(await cache.add(lockKey, 1)).toBeTruthy();
 
-            expect(after).toBeGreaterThan(before);
+            const code = totpCode(enrolled.secret!);
+            expect(await service.verify(userId, { kind: UserAuthenticatorKind.TOTP, response: code })).toBeFalsy();
+
+            // the step was NOT consumed — the same code succeeds once the lock frees
+            await cache.drop(lockKey);
+            expect(await service.verify(userId, { kind: UserAuthenticatorKind.TOTP, response: code })).toBeTruthy();
         });
 
         it('ignores unconfirmed devices', async () => {

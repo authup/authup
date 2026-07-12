@@ -7,6 +7,13 @@
 
 export const USER_AUTHENTICATOR_ATTEMPT_CACHE_PREFIX = 'mfaAttempt';
 
+// Per-user lock serializing concurrent verify critical sections so a factor
+// (recovery code / TOTP step) is consumed exactly once. The TTL only bounds a
+// crashed request holding the lock — generous relative to a verify (a bcrypt
+// compare / seed decrypt + one save).
+export const USER_AUTHENTICATOR_VERIFY_LOCK_CACHE_PREFIX = 'mfaVerifyLock';
+export const USER_AUTHENTICATOR_VERIFY_LOCK_TTL = 10_000;
+
 /**
  * Per-account exponential backoff for failed challenge codes:
  * lock = min(MAX, FACTOR * 2^(n-1)) seconds after the n-th failure,
