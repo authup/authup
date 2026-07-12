@@ -23,16 +23,17 @@ export class SymmetricCipher implements ISymmetricCipher {
     protected key : Promise<CryptoKey>;
 
     constructor(key: string) {
-        this.key = SymmetricCipher.importKey(key);
-    }
-
-    protected static async importKey(key: string) : Promise<CryptoKey> {
+        // Validate the key SYNCHRONOUSLY so a bad key throws at construction
+        // (i.e. at boot / DI mount) — a clean startup error, never an
+        // unobserved promise rejection that only surfaces at first
+        // encrypt/decrypt. Only the subtle import (over already-validated
+        // 32-byte material) stays async, and it does not reject in practice.
         const raw = base64ToArrayBuffer(key.trim());
         if (raw.byteLength !== KEY_BYTE_LENGTH) {
             throw new Error(`The cipher key must decode to ${KEY_BYTE_LENGTH} bytes (got ${raw.byteLength}).`);
         }
 
-        return subtle.importKey(
+        this.key = subtle.importKey(
             'raw',
             raw,
             { name: SymmetricAlgorithm.AES_GCM },

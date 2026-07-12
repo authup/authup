@@ -53,6 +53,11 @@ export class UserAuthenticatorController {
             if (identity && identity.type === IdentityType.USER) {
                 return identity.id;
             }
+
+            // A non-user identity (client/robot) has no authenticator
+            // namespace — fail loud instead of letting the literal token
+            // fall through and silently match zero rows.
+            throw new BadRequestError('The @me/@self token can only be used by a user identity.');
         }
 
         return id;
