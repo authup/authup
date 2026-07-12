@@ -417,18 +417,28 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             stored.push({ hash: await hash(code), used_at: null });
         }
 
-        // regenerate semantics: a user holds ONE recovery-code set.
-        await this.repository.removeAllByUser(user.id, UserAuthenticatorKind.RECOVERY);
+        // regenerate semantics: a user holds ONE recovery-code set. Reuse the
+        // existing row via a single atomic save instead of delete-then-insert,
+        // so a mid-operation failure can never leave the user with no codes.
+        const [existing] = await this.repository.findAllWithSecretsByUser(user.id, { kind: UserAuthenticatorKind.RECOVERY });
 
-        let entity = this.repository.create({
-            kind: UserAuthenticatorKind.RECOVERY,
-            name,
-            codes: JSON.stringify(stored),
-            confirmed: true,
-            user_id: user.id,
-            realm_id: user.realm_id,
-        });
-        entity = await this.repository.save(entity);
+        let entity : UserAuthenticator;
+        if (existing) {
+            existing.name = name;
+            existing.codes = JSON.stringify(stored);
+            existing.confirmed = true;
+            entity = await this.repository.save(existing);
+        } else {
+            entity = this.repository.create({
+                kind: UserAuthenticatorKind.RECOVERY,
+                name,
+                codes: JSON.stringify(stored),
+                confirmed: true,
+                user_id: user.id,
+                realm_id: user.realm_id,
+            });
+            entity = await this.repository.save(entity);
+        }
 
         await this.recordEvent(EventName.MFA_ENROLLED, entity);
 
