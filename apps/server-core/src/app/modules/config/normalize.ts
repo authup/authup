@@ -10,7 +10,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { USER_PASSWORD_MIN_LENGTH } from '@authup/core-kit';
 import { AuthupError } from '@authup/errors';
-import { EnvironmentName } from '@authup/kit';
+import { EnvironmentName, base64ToArrayBuffer } from '@authup/kit';
 import { toPublicHost } from '../../../utils/host.ts';
 import { expandToOrigins } from './origins.ts';
 import { parseConfig } from './parse.ts';
@@ -146,9 +146,24 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
     }
 
     // fail loud at boot rather than at first enrollment: a TOTP seed is
-    // reversible-at-rest and must never be stored without a real key.
-    if (config.mfaEnabled && !config.mfaEncryptionKey) {
-        throw new AuthupError('mfaEnabled requires mfaEncryptionKey (base64, 32 bytes).');
+    // reversible-at-rest and must never be stored without a real key. Validate
+    // the DECODED length here (not just truthiness) so a whitespace / invalid /
+    // wrong-length key fails at config time, not asynchronously inside the
+    // cipher at first encrypt/decrypt.
+    if (config.mfaEnabled) {
+        if (!config.mfaEncryptionKey) {
+            throw new AuthupError('mfaEnabled requires mfaEncryptionKey (base64, 32 bytes).');
+        }
+
+        let byteLength = -1;
+        try {
+            byteLength = base64ToArrayBuffer(config.mfaEncryptionKey.trim()).byteLength;
+        } catch {
+            // fall through — treated as invalid below
+        }
+        if (byteLength !== 32) {
+            throw new AuthupError('mfaEncryptionKey must decode to exactly 32 bytes (base64).');
+        }
     }
 
     return config;

@@ -32,10 +32,10 @@ describe('src/crypto/symmetric-cipher', () => {
         expect(await cipher.decrypt(second)).toEqual('value');
     });
 
-    it('should reject a key of the wrong length', async () => {
-        const cipher = new SymmetricCipher(Buffer.alloc(16, 1).toString('base64'));
-
-        await expect(cipher.encrypt('value')).rejects.toThrow(/32 bytes/);
+    it('should throw synchronously at construction for a key of the wrong length', () => {
+        // a bad key must fail at construction (boot), never as a deferred
+        // rejection at first encrypt/decrypt
+        expect(() => new SymmetricCipher(Buffer.alloc(16, 1).toString('base64'))).toThrow(/32 bytes/);
     });
 
     it('should reject a blob sealed under a different key', async () => {
