@@ -61,6 +61,7 @@ import {
     SessionTokenEntity,
     UserAttributeEntity,
     UserAttributeSubscriber,
+    UserAuthenticatorEntity,
     UserEntity,
     UserPermissionEntity,
     UserPermissionSubscriber,
@@ -139,6 +140,7 @@ export class DataSourceOptionsBuilder {
 
                 UserEntity,
                 UserAttributeEntity,
+                UserAuthenticatorEntity,
                 UserPermissionEntity,
                 UserRoleEntity,
             ],

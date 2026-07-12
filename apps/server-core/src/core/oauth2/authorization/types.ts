@@ -8,7 +8,7 @@
 import type { Client } from '@authup/core-kit';
 import type { IOAuth2AuthorizationCodeIssuer } from './code/index.ts';
 import type { ISessionManager } from '../../authentication/index.ts';
-import type { IEventService } from '../../entities/index.ts';
+import type { IEventService, IUserAuthenticatorChallengeProvider } from '../../entities/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 
 export type OAuth2AuthorizationManagerContext = {
@@ -20,7 +20,13 @@ export type OAuth2AuthorizationManagerContext = {
      * Max age (seconds) of the authentication a `prompt=login` request accepts
      * before forcing re-auth (config `promptLoginMaxAge`). Default 60.
      */
-    promptLoginMaxAge?: number
+    promptLoginMaxAge?: number,
+    /**
+     * MFA backstop (plan 049): decides whether the authenticated user must
+     * hold a session-bound second-factor proof (mfa_at) before a code is
+     * issued. Absent = MFA disabled.
+     */
+    mfaChallengeProvider?: IUserAuthenticatorChallengeProvider,
 };
 
 export type OAuth2AuthorizationResult = {

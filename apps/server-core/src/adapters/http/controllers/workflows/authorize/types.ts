@@ -12,6 +12,7 @@ import type {
     IOAuth2AuthorizationCodeIssuer,
     IOAuth2AuthorizationCodeRequestVerifier,
     ISessionManager,
+    IUserAuthenticatorChallengeProvider,
 } from '../../../../../core/index.ts';
 
 export type AuthorizeControllerOptions = {
@@ -34,4 +35,6 @@ export type AuthorizeControllerContext = {
 
     eventService?: IEventService,
     metrics?: IAuthFlowMetrics,
+
+    mfaChallengeProvider?: IUserAuthenticatorChallengeProvider,
 };

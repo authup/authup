@@ -5,15 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Identity, OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
-import { EventName, EventRefType, EventScope } from '@authup/core-kit';
+import type {
+    Identity, 
+    OAuth2AuthorizationCode, 
+    OAuth2AuthorizationCodeRequest, 
+    Session,
+} from '@authup/core-kit';
+import {
+    EventName, 
+    EventRefType, 
+    EventScope, 
+    IdentityType,
+} from '@authup/core-kit';
 import { hasInstanceof } from '@authup/errors';
 import {
     OAUTH2_LOGIN_REQUIRED_ERROR_INSTANCE,
+    OAUTH2_MFA_REQUIRED_ERROR_INSTANCE,
     OAuth2AuthorizationPrompt,
     OAuth2AuthorizationResponseType,
     OAuth2GrantError,
     OAuth2LoginRequiredError,
+    OAuth2MfaRequiredError,
     OAuth2RequestError,
     OAuth2ResponseTypeError,
 } from '@authup/specs';
@@ -24,7 +36,7 @@ import type {
     OAuth2AuthorizationResult,
 } from './types.ts';
 import type { ISessionManager } from '../../authentication/index.ts';
-import type { IEventService } from '../../entities/index.ts';
+import type { IEventService, IUserAuthenticatorChallengeProvider } from '../../entities/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 
 const DEFAULT_PROMPT_LOGIN_MAX_AGE = 60;
@@ -40,12 +52,15 @@ export class OAuth2Authorization {
 
     protected promptLoginMaxAge : number;
 
+    protected mfaChallengeProvider? : IUserAuthenticatorChallengeProvider;
+
     constructor(ctx: OAuth2AuthorizationManagerContext) {
         this.codeIssuer = ctx.codeIssuer;
         this.sessionManager = ctx.sessionManager;
         this.eventService = ctx.eventService;
         this.metrics = ctx.metrics;
         this.promptLoginMaxAge = ctx.promptLoginMaxAge ?? DEFAULT_PROMPT_LOGIN_MAX_AGE;
+        this.mfaChallengeProvider = ctx.mfaChallengeProvider;
     }
 
     /**
@@ -84,6 +99,8 @@ export class OAuth2Authorization {
         } catch (e) {
             if (hasInstanceof(e, OAUTH2_LOGIN_REQUIRED_ERROR_INSTANCE)) {
                 this.metrics?.recordAuthorize('login_required');
+            } else if (hasInstanceof(e, OAUTH2_MFA_REQUIRED_ERROR_INSTANCE)) {
+                this.metrics?.recordAuthorize('mfa_required');
             } else {
                 this.metrics?.recordAuthorize('error');
             }
@@ -152,10 +169,28 @@ export class OAuth2Authorization {
         // so the authentication time is "now".
         const nowSeconds = Math.floor(Date.now() / 1000);
         let authTime = nowSeconds;
+        let session : Session | null = null;
         if (options.sessionId) {
-            const session = await this.sessionManager.findOneById(options.sessionId);
+            session = await this.sessionManager.findOneById(options.sessionId);
             if (session && session.created_at) {
                 authTime = Math.floor(new Date(session.created_at).getTime() / 1000);
+            }
+        }
+
+        // MFA backstop (plan 049) — the authoritative server-side gate; the
+        // hosted UI's challenge step is convenience. The proof is session-bound
+        // (mfa_at — stamped by the challenge endpoint or the password grant's
+        // otp param), so a session-less flow (HTTP Basic) cannot carry one and
+        // fails closed while the user holds a confirmed device. A user without
+        // a device under mfaRequired is routed to inline enrollment.
+        if (this.mfaChallengeProvider && identity.type === IdentityType.USER) {
+            const challenge = await this.mfaChallengeProvider.challenge(identity.data.id);
+            if (challenge.required && !session?.mfa_at) {
+                throw OAuth2MfaRequiredError.challengeRequired();
+            }
+
+            if (challenge.enrollmentRequired) {
+                throw OAuth2MfaRequiredError.enrollmentRequired();
             }
         }
 

@@ -28,6 +28,8 @@ export const TranslatorTranslationErrorSpanish : NamespaceTranslations<`${ErrorC
     [ErrorCode.EMAIL_VERIFICATION_REQUIRED]: 'Primero debe verificar su dirección de correo electrónico.',
     [ErrorCode.RESET_TOKEN_EXPIRED]: 'El token de restablecimiento ha caducado. Solicite uno nuevo.',
     [ErrorCode.LOGIN_ATTEMPT_THROTTLED]: 'Demasiados intentos de inicio de sesión fallidos. Inténtelo de nuevo más tarde.',
+    [ErrorCode.MFA_ATTEMPT_THROTTLED]: 'Demasiados intentos de verificación fallidos. Inténtelo de nuevo más tarde.',
+    [ErrorCode.MFA_NOT_CONFIGURABLE]: 'La autenticación multifactor no está disponible en este servidor.',
 
     [ErrorCode.STORAGE_INSUFFICIENT]: 'No hay suficiente almacenamiento disponible para completar esta acción.',
 
@@ -45,6 +47,7 @@ export const TranslatorTranslationErrorSpanish : NamespaceTranslations<`${ErrorC
     [ErrorCode.OAUTH_GRANT_TYPE_UNSUPPORTED]: 'El tipo de concesión no es compatible.',
     [ErrorCode.OAUTH_REQUEST_INVALID]: 'La solicitud no es válida.',
     [ErrorCode.OAUTH_LOGIN_REQUIRED]: 'Debes iniciar sesión para continuar.',
+    [ErrorCode.OAUTH_MFA_REQUIRED]: 'Se requiere un segundo factor para continuar.',
     [ErrorCode.OAUTH_INTERACTION_REQUIRED]: 'Se requiere interacción para continuar.',
     [ErrorCode.OAUTH_ACCOUNT_SELECTION_REQUIRED]: 'Selecciona una cuenta para continuar.',
     [ErrorCode.OAUTH_CONSENT_REQUIRED]: 'Se requiere tu consentimiento para continuar.',

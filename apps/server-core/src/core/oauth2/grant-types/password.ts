@@ -25,6 +25,11 @@ import type { OAuth2GrantRunWIthOptions, OAuth2PasswordGrantContext } from './ty
 export type OAuth2PasswordGrantInput = {
     user: User,
     client?: Client,
+    /**
+     * Instant the user passed a second-factor challenge alongside the
+     * grant (the `otp` parameter) — stamped onto the session as mfa_at.
+     */
+    mfaVerifiedAt?: string,
 };
 
 export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput> {
@@ -56,6 +61,7 @@ export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput>
             client_id: clientId,
             sub: user.id,
             sub_kind: IdentityType.USER,
+            mfa_at: input.mfaVerifiedAt ?? null,
         });
 
         const issuePayload : Partial<OAuth2TokenPayload> = {

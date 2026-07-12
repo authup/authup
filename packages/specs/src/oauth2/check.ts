@@ -13,6 +13,7 @@ import {
     OAUTH2_ERROR_INSTANCE,
     OAUTH2_GRANT_ERROR_INSTANCE,
     OAUTH2_GRANT_TYPE_ERROR_INSTANCE,
+    OAUTH2_MFA_REQUIRED_ERROR_INSTANCE,
     OAUTH2_REQUEST_ERROR_INSTANCE,
     OAUTH2_RESPONSE_TYPE_ERROR_INSTANCE,
     OAUTH2_SCOPE_ERROR_INSTANCE,
@@ -22,6 +23,7 @@ import {
     type OAuth2Error,
     type OAuth2GrantError,
     type OAuth2GrantTypeError,
+    type OAuth2MfaRequiredError,
     type OAuth2RequestError,
     type OAuth2ResponseTypeError,
     type OAuth2ScopeError,
@@ -75,6 +77,18 @@ export function isOAuth2ClientUnauthorizedError(input: unknown): input is OAuth2
     }
 
     return input.code === ErrorCode.OAUTH_CLIENT_UNAUTHORIZED;
+}
+
+export function isOAuth2MfaRequiredError(input: unknown): input is OAuth2MfaRequiredError {
+    if (hasInstanceof(input, OAUTH2_MFA_REQUIRED_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isOAuth2Error(input)) {
+        return false;
+    }
+
+    return input.code === ErrorCode.OAUTH_MFA_REQUIRED;
 }
 
 export function isOAuth2GrantError(input: unknown): input is OAuth2GrantError {

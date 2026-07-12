@@ -19,6 +19,10 @@ export enum EventName {
     ACCOUNT_ACTIVATED = 'accountActivated',
     PASSWORD_RESET_REQUESTED = 'passwordResetRequested',
     PASSWORD_RESET_COMPLETED = 'passwordResetCompleted',
+    MFA_ENROLLED = 'mfaEnrolled',
+    MFA_REMOVED = 'mfaRemoved',
+    MFA_VERIFIED = 'mfaVerified',
+    MFA_CHALLENGE_FAILED = 'mfaChallengeFailed',
     CREATED = 'created',
     UPDATED = 'updated',
     DELETED = 'deleted',
@@ -34,4 +38,5 @@ export enum EventRefType {
     SESSION = 'session',
     USER = 'user',
     CLIENT = 'client',
+    USER_AUTHENTICATOR = 'userAuthenticator',
 }

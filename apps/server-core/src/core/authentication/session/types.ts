@@ -93,6 +93,13 @@ export interface ISessionManager {
     refresh(session: Session) : Promise<Session>;
 
     /**
+     * Stamp a successful second-factor challenge (mfa_at) onto the session.
+     *
+     * @param session
+     */
+    markMfaVerified(session: Session) : Promise<Session>;
+
+    /**
      * Check if session exists and is valid.
      *
      * @throws JWTError

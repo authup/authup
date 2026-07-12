@@ -24,6 +24,7 @@ import type {
     IRealmRepository,
     ISessionManager,
     ISessionTokenRepository,
+    IUserAuthenticatorService,
     OAuth2ClientAuthenticator,
 } from '../../../../../core/index.ts';
 
@@ -42,6 +43,7 @@ export type TokenControllerContext = {
     eventService?: IEventService,
     metrics?: IAuthFlowMetrics,
     loginThrottleService?: ILoginThrottleService,
+    userAuthenticatorService?: IUserAuthenticatorService,
 
     tokenRefreshGracePeriod?: number,
     logger?: Logger,

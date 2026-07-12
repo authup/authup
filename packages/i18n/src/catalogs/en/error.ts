@@ -28,6 +28,8 @@ export const TranslatorTranslationErrorEnglish : NamespaceTranslations<`${ErrorC
     [ErrorCode.EMAIL_VERIFICATION_REQUIRED]: 'Your email address must be verified first.',
     [ErrorCode.RESET_TOKEN_EXPIRED]: 'The reset token has expired. Please request a new one.',
     [ErrorCode.LOGIN_ATTEMPT_THROTTLED]: 'Too many failed login attempts. Please try again later.',
+    [ErrorCode.MFA_ATTEMPT_THROTTLED]: 'Too many failed verification attempts. Please try again later.',
+    [ErrorCode.MFA_NOT_CONFIGURABLE]: 'Multi-factor authentication is not available on this server.',
 
     [ErrorCode.STORAGE_INSUFFICIENT]: 'There is not enough storage available to complete this action.',
 
@@ -45,6 +47,7 @@ export const TranslatorTranslationErrorEnglish : NamespaceTranslations<`${ErrorC
     [ErrorCode.OAUTH_GRANT_TYPE_UNSUPPORTED]: 'The grant type is not supported.',
     [ErrorCode.OAUTH_REQUEST_INVALID]: 'The request is invalid.',
     [ErrorCode.OAUTH_LOGIN_REQUIRED]: 'You must sign in to continue.',
+    [ErrorCode.OAUTH_MFA_REQUIRED]: 'A second factor is required to continue.',
     [ErrorCode.OAUTH_INTERACTION_REQUIRED]: 'Interaction is required to continue.',
     [ErrorCode.OAUTH_ACCOUNT_SELECTION_REQUIRED]: 'Please select an account to continue.',
     [ErrorCode.OAUTH_CONSENT_REQUIRED]: 'Your consent is required to continue.',

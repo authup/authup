@@ -267,6 +267,33 @@ export type Config = {
     // ----------------------------------------------------
 
     /**
+     * Org-wide multi-factor authentication feature toggle. When enabled,
+     * users can enroll authenticator devices, and a user holding a
+     * confirmed device must present a second factor on interactive
+     * authorization and the password grant.
+     * default: false
+     */
+    mfaEnabled: boolean,
+
+    /**
+     * Enforce MFA for every user: a user without a confirmed device is
+     * routed to inline enrollment at next interactive login
+     * (configure-inline). Requires mfaEnabled.
+     * default: false
+     */
+    mfaRequired: boolean,
+
+    /**
+     * Base64-encoded 32-byte key encrypting TOTP seeds at rest
+     * (AES-256-GCM). Without it, TOTP enrollment fails closed —
+     * a seed is never stored under a zero/derived key.
+     * default: '' (unset)
+     */
+    mfaEncryptionKey: string,
+
+    // ----------------------------------------------------
+
+    /**
      * default: false
      */
     clientAuthBasic: boolean,

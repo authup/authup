@@ -164,6 +164,23 @@ export function readConfigRawFromEnv() : ConfigInput {
 
     // ---------------------------------------------------------------
 
+    const mfaEnabled = readBool(ConfigEnvironmentVariableName.MFA_ENABLED);
+    if (typeof mfaEnabled !== 'undefined') {
+        options.mfaEnabled = mfaEnabled;
+    }
+
+    const mfaRequired = readBool(ConfigEnvironmentVariableName.MFA_REQUIRED);
+    if (typeof mfaRequired !== 'undefined') {
+        options.mfaRequired = mfaRequired;
+    }
+
+    const mfaEncryptionKey = read(ConfigEnvironmentVariableName.MFA_ENCRYPTION_KEY);
+    if (mfaEncryptionKey) {
+        options.mfaEncryptionKey = mfaEncryptionKey;
+    }
+
+    // ---------------------------------------------------------------
+
     const clientBasicAuth = readBool(ConfigEnvironmentVariableName.CLIENT_AUTH_BASIC);
     if (typeof clientBasicAuth !== 'undefined') {
         options.clientAuthBasic = clientBasicAuth;

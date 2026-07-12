@@ -1727,6 +1727,96 @@ fallback branches, incl. the sub/realm-mismatch fail-safes) and the end-to-end
 `test/unit/http/controllers/workflows/token/grant-authorize-session.spec.ts`
 (login → authorize → exchange asserts a single session survives).
 
+## MFA — Authenticator Devices (plan 049)
+
+Polymorphic second-factor device model: `auth_user_authenticators` holds one row
+per enrolled device, discriminated by `kind` (`totp` | `recovery` | `email` |
+`webauthn` — the `UserAuthenticatorKind` enum in `@authup/core-kit`; email and
+webauthn are reserved row-types, wired in later PRs of the same series).
+Domain type `UserAuthenticator` (core-kit), TypeORM entity
+`adapters/database/domains/user-authenticator/` (no subscriber — not cached, not
+realtime), port `IUserAuthenticatorRepository` + `UserAuthenticatorService` in
+`core/entities/user-authenticator/`, adapter in
+`app/modules/database/repositories/user-authenticator/`.
+
+**Secret handling — the load-bearing rules:**
+
+- The TOTP seed must be *recoverable* (verification recomputes codes), so it is
+  **AES-256-GCM-encrypted at rest** via `SymmetricCipher`
+  (`@authup/server-kit`, `crypto/symmetric-cipher/` — blob =
+  `base64(iv ‖ ciphertext ‖ tag)`) under the config `mfaEncryptionKey`
+  (env `MFA_ENCRYPTION_KEY`, base64 32 bytes). Fail-closed at every layer:
+  `normalizeConfig` throws at boot when `mfaEnabled` without a key, the service
+  refuses TOTP enrollment/verification without a cipher
+  (`ErrorCode.MFA_NOT_CONFIGURABLE`).
+- Recovery codes are **bcrypt-hashed** (`hash`/`compare` from server-kit),
+  stored as a JSON `{hash, used_at}[]` blob on a single `kind:'recovery'` row
+  (regenerate semantics — re-enrolling replaces the set); single-use (`used_at`
+  stamped on match).
+- `secret` and `codes` are `select:false` columns; the repository re-selects
+  them ONLY via `findOneWithSecretsById` / `findAllWithSecretsByUser`
+  (verification paths). Every read surface (`getMany`/`getOne`/enroll response
+  entity) nulls both — the raw seed/URI/QR/codes appear exactly once, in the
+  enroll response (`{ entity, secret?, uri?, qr?, codes? }`; QR is a
+  server-rendered PNG data-URI via the `qrcode` dep, TOTP via `otpauth`).
+- The `findMany` adapter follows the plan-039 discipline
+  (`applyRealmScopeSelect(qb, 'userAuthenticator', ['user_id'])`).
+
+**Enrollment is two-step** (except recovery, which is usable immediately):
+`POST /users/:id/authenticators` creates an *unconfirmed* row and returns the
+provisioning material; `POST /users/:id/authenticators/:deviceId/confirm` with a
+valid code flips `confirmed`. Only confirmed devices satisfy challenges. Own
+devices are ungated self-access (like sessions); managing *others'* devices
+requires the `USER_AUTHENTICATOR_READ/CREATE/UPDATE/DELETE` permissions
+(auto-provisioned; realm_admin holds CUD at `own` reach, read at `ownOrNull`),
+with per-row `resourceRealmMatch` gates. A foreign device id under the wrong
+user's nested route is a 404 (no existence oracle).
+
+**Enforcement — two chokepoints, both server-side:**
+
+1. **Interactive `/authorize`**: the proof is session-bound — `auth_sessions.mfa_at`
+   is stamped by `POST /authenticators/challenge` (bearer-scoped;
+   `ISessionManager.markMfaVerified`) or by the password grant's `otp` param.
+   `OAuth2Authorization.authorizeInner` (ctx `mfaChallengeProvider`, the
+   `IUserAuthenticatorChallengeProvider` seam) throws `OAuth2MfaRequiredError`
+   (`ErrorCode.OAUTH_MFA_REQUIRED` / wire `error: mfa_required` — a dedicated
+   code, deliberately NOT `login_required`, so RPs can tell "log in again" from
+   "complete the challenge") when the user holds a confirmed device and the
+   backing session carries no `mfa_at`. A session-less flow (HTTP Basic) fails
+   closed the same way. `GET /authenticators/challenge` reports
+   `{ required, enrollmentRequired, kinds, challenge? }` — the kind-generic wire
+   shape (the optional `challenge` payload carries WebAuthn request options in
+   Stage 2) that drives the kit ladder.
+2. **Direct password grant**: `HTTPPasswordGrant.verifySecondFactor` — a user
+   with a confirmed device must send a valid `otp` form parameter (TOTP or
+   recovery code, classified by shape via
+   `guessUserAuthenticatorKindByResponse`: all-digits → totp) or the grant
+   throws `mfa_required`. On success the created session is stamped
+   (`mfa_at`), so the subsequent SSR `POST /authorize` passes the backstop.
+   Users *without* a device pass through (they could never enroll otherwise) —
+   `mfaRequired` (configure-inline) is enforced at `/authorize`
+   (`enrollmentRequired` → the hosted UI routes to inline enrollment), not at
+   the token endpoint. WebAuthn cannot ride a single POST — it stays
+   interactive-only (documented boundary).
+
+**Brute-force**: per-account exponential backoff inside
+`UserAuthenticatorService.verify`/`confirm` — cache-keyed
+(`mfaAttempt:<user_id>`) `min(300, 1·2^(n−1))`s lock, reset on success, 429
+`MfaThrottledError` (`ErrorCode.MFA_ATTEMPT_THROTTLED`, `retryAfter` in the
+body). Config: `mfaEnabled` / `mfaRequired` / `mfaEncryptionKey`
+(`MFA_ENABLED` / `MFA_REQUIRED` / `MFA_ENCRYPTION_KEY`; `mfaRequired` requires
+`mfaEnabled`, boot-validated). Events: `mfaEnrolled` / `mfaRemoved` /
+`mfaVerified` / `mfaChallengeFailed` (`EventScope.IDENTITY`). Typed client:
+`client.userAuthenticator.*` (getMany/getOne/enroll/confirm/delete +
+`challenge()`/`verifyChallenge()`).
+
+Tests: `test/unit/core/entities/user-authenticator/service.spec.ts` (service
+matrix incl. backoff + single-use + select:false modeling),
+`test/unit/http/controllers/entities/user-authenticator.spec.ts` (permission
+surfaces), `test/unit/http/controllers/workflows/token/grant-password-mfa.spec.ts`
+(end-to-end: enroll → confirm → grant gated → otp accepted → authorize backstop
+→ challenge stamps `mfa_at` → authorize passes; recovery replay rejected).
+
 ## Security Event Log (plans 057 + 053 + 058)
 
 `auth_events` is the persisted, PII-stripped security audit trail — the single

@@ -23,6 +23,7 @@ import type {
     RolePermission,
     Scope,
     UserAttribute,
+    UserAuthenticator as UserAuthenticatorModel,
     UserPermission,
     UserRole,
 } from '@authup/core-kit';
@@ -47,6 +48,7 @@ import {
     RolePermissionEntity,
     ScopeEntity,
     UserAttributeEntity,
+    UserAuthenticatorEntity,
     UserEntity,
     UserPermissionEntity,
     UserRepository,
@@ -73,6 +75,7 @@ import {
     RoleRepositoryAdapter,
     ScopeRepositoryAdapter,
     UserAttributeRepositoryAdapter,
+    UserAuthenticatorRepositoryAdapter,
     UserPermissionRepositoryAdapter,
     UserRepositoryAdapter,
     UserRoleRepositoryAdapter,
@@ -98,12 +101,14 @@ import {
     ScopeController,
     SessionController,
     UserAttributeController,
+    UserAuthenticatorController,
     UserController,
     UserPermissionController,
     UserRoleController,
 } from '../../../../adapters/http/index.ts';
 import {
     ActivateController,
+    AuthenticatorChallengeController,
     AuthorizeController,
     JwkController,
     LogoutController,
@@ -115,6 +120,7 @@ import {
     TokenController,
 } from '../../../../adapters/http/controllers/index.ts';
 import type { IContainer } from 'eldin';
+import { SymmetricCipher } from '@authup/server-kit';
 import {
     ClientAuthenticator,
     ClientPermissionService,
@@ -145,6 +151,7 @@ import {
     SessionService,
     UserAttributeService,
     UserAuthenticator,
+    UserAuthenticatorService,
     UserPermissionService,
     UserRoleService,
     UserService,
@@ -156,6 +163,7 @@ import { IdentityInjectionKey } from '../../identity/index.ts';
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import type { Config } from '../../config/index.ts';
 import { ConfigInjectionKey, getAppOrigins } from '../../config/index.ts';
+import { CacheInjectionKey } from '../../cache/index.ts';
 import { LoggerInjectionKey } from '../../logger/index.ts';
 import { MailInjectionKey, MailTemplateRendererInjectionKey } from '../../mail/index.ts';
 import { MetricsInjectionKey } from '../../metrics/index.ts';
@@ -180,6 +188,7 @@ export class HTTPControllerModule {
         const sessionController = this.createSessionController(container);
         const userController = this.createUserController(container);
         const userAttributeController = this.createUserAttributeController(container);
+        const userAuthenticatorController = this.createUserAuthenticatorController(container);
         const userPermissionController = this.createUserPermissionController(container);
         const userRoleController = this.createUserRoleController(container);
         const policyController = this.createPolicyController(container);
@@ -196,6 +205,7 @@ export class HTTPControllerModule {
                 this.createPasswordResetController(container),
                 this.createRegisterController(container),
                 this.createLogoutController(container),
+                this.createAuthenticatorChallengeController(container),
 
                 this.createStatusController(container),
 
@@ -220,6 +230,7 @@ export class HTTPControllerModule {
                 sessionController,
                 userController,
                 userAttributeController,
+                userAuthenticatorController,
                 userPermissionController,
                 userRoleController,
             ],
@@ -253,6 +264,8 @@ export class HTTPControllerModule {
 
             eventService,
             metrics,
+
+            mfaChallengeProvider: this.resolveUserAuthenticatorService(container),
         });
     }
 
@@ -317,6 +330,7 @@ export class HTTPControllerModule {
             eventService,
             metrics,
             loginThrottleService,
+            userAuthenticatorService: this.resolveUserAuthenticatorService(container),
 
             tokenRefreshGracePeriod: config.tokenRefreshGracePeriod,
             logger,
@@ -734,6 +748,60 @@ export class HTTPControllerModule {
         const repository = container.resolve(AuthenticationInjectionKey.SessionRepository);
         const service = new SessionService({ repository });
         return new SessionController({ service });
+    }
+
+    private userAuthenticatorService? : UserAuthenticatorService;
+
+    protected resolveUserAuthenticatorService(container: IContainer) : UserAuthenticatorService {
+        if (this.userAuthenticatorService) {
+            return this.userAuthenticatorService;
+        }
+
+        const config = container.resolve(ConfigInjectionKey);
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
+
+        const repository = new UserAuthenticatorRepositoryAdapter(
+            container.resolve<Repository<UserAuthenticatorModel>>(UserAuthenticatorEntity),
+        );
+        const userRepository = new UserRepositoryAdapter({
+            repository: new UserRepository(dataSource),
+            realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
+        });
+
+        let issuer : string | undefined;
+        try {
+            issuer = new URL(config.publicUrl).hostname;
+        } catch {
+            issuer = undefined;
+        }
+
+        this.userAuthenticatorService = new UserAuthenticatorService({
+            repository,
+            userRepository,
+            cache: container.resolve(CacheInjectionKey),
+            cipher: config.mfaEncryptionKey ?
+                new SymmetricCipher(config.mfaEncryptionKey) :
+                null,
+            eventService: container.resolve(DatabaseInjectionKey.EventService),
+            options: {
+                enabled: config.mfaEnabled,
+                required: config.mfaRequired,
+                issuer,
+            },
+        });
+
+        return this.userAuthenticatorService;
+    }
+
+    createUserAuthenticatorController(container: IContainer) {
+        return new UserAuthenticatorController({ service: this.resolveUserAuthenticatorService(container) });
+    }
+
+    createAuthenticatorChallengeController(container: IContainer) {
+        return new AuthenticatorChallengeController({
+            service: this.resolveUserAuthenticatorService(container),
+            sessionManager: container.resolve(AuthenticationInjectionKey.SessionManager),
+        });
     }
 
     createEventController(container: IContainer) {

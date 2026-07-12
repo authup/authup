@@ -28,6 +28,8 @@ export const TranslatorTranslationErrorGerman : NamespaceTranslations<`${ErrorCo
     [ErrorCode.EMAIL_VERIFICATION_REQUIRED]: 'Deine E-Mail-Adresse muss zuerst bestätigt werden.',
     [ErrorCode.RESET_TOKEN_EXPIRED]: 'Das Reset-Token ist abgelaufen. Bitte fordere ein neues an.',
     [ErrorCode.LOGIN_ATTEMPT_THROTTLED]: 'Zu viele fehlgeschlagene Anmeldeversuche. Bitte versuche es später erneut.',
+    [ErrorCode.MFA_ATTEMPT_THROTTLED]: 'Zu viele fehlgeschlagene Bestätigungsversuche. Bitte versuche es später erneut.',
+    [ErrorCode.MFA_NOT_CONFIGURABLE]: 'Multi-Faktor-Authentifizierung ist auf diesem Server nicht verfügbar.',
 
     [ErrorCode.STORAGE_INSUFFICIENT]: 'Es ist nicht genügend Speicherplatz verfügbar, um diese Aktion auszuführen.',
 
@@ -45,6 +47,7 @@ export const TranslatorTranslationErrorGerman : NamespaceTranslations<`${ErrorCo
     [ErrorCode.OAUTH_GRANT_TYPE_UNSUPPORTED]: 'Der Grant-Typ wird nicht unterstützt.',
     [ErrorCode.OAUTH_REQUEST_INVALID]: 'Die Anfrage ist ungültig.',
     [ErrorCode.OAUTH_LOGIN_REQUIRED]: 'Sie müssen sich anmelden, um fortzufahren.',
+    [ErrorCode.OAUTH_MFA_REQUIRED]: 'Ein zweiter Faktor ist erforderlich, um fortzufahren.',
     [ErrorCode.OAUTH_INTERACTION_REQUIRED]: 'Eine Interaktion ist erforderlich, um fortzufahren.',
     [ErrorCode.OAUTH_ACCOUNT_SELECTION_REQUIRED]: 'Bitte wählen Sie ein Konto aus, um fortzufahren.',
     [ErrorCode.OAUTH_CONSENT_REQUIRED]: 'Ihre Zustimmung ist erforderlich, um fortzufahren.',

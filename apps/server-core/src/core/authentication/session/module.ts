@@ -92,6 +92,14 @@ export class SessionManager implements ISessionManager {
 
     // -----------------------------------------------------
 
+    async markMfaVerified(session: Session): Promise<Session> {
+        session.mfa_at = new Date().toISOString();
+
+        return this.repository.save(session);
+    }
+
+    // -----------------------------------------------------
+
     /**
      * Verify session on token inspection/verification.
      *

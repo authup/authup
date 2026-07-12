@@ -28,6 +28,8 @@ export const TranslatorTranslationErrorFrench : NamespaceTranslations<`${ErrorCo
     [ErrorCode.EMAIL_VERIFICATION_REQUIRED]: 'Votre adresse e-mail doit d\'abord être vérifiée.',
     [ErrorCode.RESET_TOKEN_EXPIRED]: 'Le jeton de réinitialisation a expiré. Veuillez en demander un nouveau.',
     [ErrorCode.LOGIN_ATTEMPT_THROTTLED]: 'Trop de tentatives de connexion échouées. Veuillez réessayer plus tard.',
+    [ErrorCode.MFA_ATTEMPT_THROTTLED]: 'Trop de tentatives de vérification échouées. Veuillez réessayer plus tard.',
+    [ErrorCode.MFA_NOT_CONFIGURABLE]: "L'authentification multifacteur n'est pas disponible sur ce serveur.",
 
     [ErrorCode.STORAGE_INSUFFICIENT]: 'L\'espace de stockage disponible est insuffisant pour effectuer cette action.',
 
@@ -45,6 +47,7 @@ export const TranslatorTranslationErrorFrench : NamespaceTranslations<`${ErrorCo
     [ErrorCode.OAUTH_GRANT_TYPE_UNSUPPORTED]: 'Le type d\'autorisation n\'est pas pris en charge.',
     [ErrorCode.OAUTH_REQUEST_INVALID]: 'La requête est invalide.',
     [ErrorCode.OAUTH_LOGIN_REQUIRED]: 'Vous devez vous connecter pour continuer.',
+    [ErrorCode.OAUTH_MFA_REQUIRED]: 'Un second facteur est requis pour continuer.',
     [ErrorCode.OAUTH_INTERACTION_REQUIRED]: 'Une interaction est requise pour continuer.',
     [ErrorCode.OAUTH_ACCOUNT_SELECTION_REQUIRED]: 'Veuillez sélectionner un compte pour continuer.',
     [ErrorCode.OAUTH_CONSENT_REQUIRED]: 'Votre consentement est requis pour continuer.',

@@ -25,6 +25,7 @@ export * from './role-permission/index.ts';
 export * from './scope/index.ts';
 export * from './user/index.ts';
 export * from './user-attribute/index.ts';
+export * from './user-authenticator/index.ts';
 export * from './user-permission/index.ts';
 export * from './user-role/index.ts';
 export * from './identity-provider-role-mapping/index.ts';

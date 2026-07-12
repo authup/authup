@@ -83,6 +83,20 @@ export class SessionEntity implements Session {
     })
     seen_at: string | null;
 
+    @Column({
+        type: 'varchar',
+        length: 28,
+        nullable: true,
+    })
+    mfa_at: string | null;
+
+    @Column({
+        type: 'varchar',
+        length: 16,
+        nullable: true,
+    })
+    auth_method: string | null;
+
     @UpdateDateColumn({ transformer: dateToISOStringTransformer })
     updated_at: string;
 

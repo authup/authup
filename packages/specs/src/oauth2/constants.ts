@@ -91,4 +91,11 @@ export enum OAuth2ErrorCode {
      * OIDC Core 1.0 §3.1.2.6 — consent is required but prompt=none forbade it.
      */
     CONSENT_REQUIRED = 'consent_required',
+
+    /**
+     * Authup extension (Auth0 precedent) — the subject must present a
+     * second factor to continue. Distinct from login_required so RPs can
+     * tell "log in again" from "complete the MFA challenge".
+     */
+    MFA_REQUIRED = 'mfa_required',
 }
