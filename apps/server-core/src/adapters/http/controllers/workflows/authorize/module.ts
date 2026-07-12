@@ -61,6 +61,7 @@ export class AuthorizeController {
             eventService: ctx.eventService,
             metrics: ctx.metrics,
             promptLoginMaxAge: ctx.options.promptLoginMaxAge,
+            mfaFreshnessMaxAge: ctx.options.mfaFreshnessMaxAge,
             mfaChallengeProvider: ctx.mfaChallengeProvider,
         });
     }

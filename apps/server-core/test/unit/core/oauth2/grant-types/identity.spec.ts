@@ -63,6 +63,7 @@ describe('IdentityGrantType', () => {
                 realm_id: realmId,
                 sub: userId,
                 sub_kind: OAuth2SubKind.USER,
+                auth_method: 'ext',
             }),
         );
 

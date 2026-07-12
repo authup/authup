@@ -21,6 +21,7 @@ import { hasInstanceof } from '@authup/errors';
 import {
     OAUTH2_LOGIN_REQUIRED_ERROR_INSTANCE,
     OAUTH2_MFA_REQUIRED_ERROR_INSTANCE,
+    OAuth2AuthenticationContextClass,
     OAuth2AuthorizationPrompt,
     OAuth2AuthorizationResponseType,
     OAuth2GrantError,
@@ -41,6 +42,11 @@ import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 
 const DEFAULT_PROMPT_LOGIN_MAX_AGE = 60;
 
+// Deliberately 60 (not 0, deviating from the plan-050 sketch): the hosted
+// challenge round-trip (stamp mfa_at → retry POST /authorize) takes seconds,
+// so a 0-window step-up could never be satisfied and would loop the ladder.
+const DEFAULT_MFA_FRESHNESS_MAX_AGE = 60;
+
 export class OAuth2Authorization {
     protected codeIssuer : IOAuth2AuthorizationCodeIssuer;
 
@@ -52,6 +58,8 @@ export class OAuth2Authorization {
 
     protected promptLoginMaxAge : number;
 
+    protected mfaFreshnessMaxAge : number;
+
     protected mfaChallengeProvider? : IUserAuthenticatorChallengeProvider;
 
     constructor(ctx: OAuth2AuthorizationManagerContext) {
@@ -60,6 +68,7 @@ export class OAuth2Authorization {
         this.eventService = ctx.eventService;
         this.metrics = ctx.metrics;
         this.promptLoginMaxAge = ctx.promptLoginMaxAge ?? DEFAULT_PROMPT_LOGIN_MAX_AGE;
+        this.mfaFreshnessMaxAge = ctx.mfaFreshnessMaxAge ?? DEFAULT_MFA_FRESHNESS_MAX_AGE;
         this.mfaChallengeProvider = ctx.mfaChallengeProvider;
     }
 
@@ -192,6 +201,25 @@ export class OAuth2Authorization {
             if (challenge.enrollmentRequired) {
                 throw OAuth2MfaRequiredError.enrollmentRequired();
             }
+
+            // Step-up (plan 050 stage 3): a requested `acr_values` containing
+            // urn:authup:mfa is a TRIGGER (Auth0/Keycloak stance) — the proof
+            // must additionally be FRESH (mfaFreshnessMaxAge window, mirroring
+            // promptLoginMaxAge's absorb-the-round-trip semantics). Enforced
+            // only while the user actually holds a factor — per OIDC Core
+            // §5.5.1.1 acr is voluntary, so an unsatisfiable request degrades
+            // to the achieved acr instead of bricking the RP.
+            if (challenge.required && data.acr_values) {
+                const acrValues = data.acr_values.split(' ');
+                if (acrValues.includes(OAuth2AuthenticationContextClass.MFA)) {
+                    const mfaAtSeconds = session?.mfa_at ?
+                        Math.floor(new Date(session.mfa_at).getTime() / 1000) :
+                        null;
+                    if (mfaAtSeconds === null || nowSeconds - mfaAtSeconds > this.mfaFreshnessMaxAge) {
+                        throw OAuth2MfaRequiredError.stepUpRequired();
+                    }
+                }
+            }
         }
 
         // OIDC §3.1.2.1 prompt=login / max_age freshness (enforced only when
@@ -224,7 +252,11 @@ export class OAuth2Authorization {
         const codeEntity : OAuth2AuthorizationCode = await this.codeIssuer.issue(
             data,
             identity,
-            { sessionId: options.sessionId, authTime },
+            {
+                sessionId: options.sessionId,
+                authTime,
+                authMethod: session?.auth_method ?? null,
+            },
         );
 
         output.authorizationCode = codeEntity.id;

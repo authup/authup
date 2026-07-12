@@ -31,6 +31,7 @@ import {
     IdentityProviderValidator,
     IdentityType,
     PermissionName,
+    SessionAuthMethod,
     isOAuth2IdentityProvider,
     isOpenIDIdentityProvider,
 } from '@authup/core-kit';
@@ -330,6 +331,7 @@ export class IdentityProviderController {
                     realm,
                 },
             },
+            { authMethod: SessionAuthMethod.EXTERNAL },
         );
 
         if (data.codeRequest) {

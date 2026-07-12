@@ -204,6 +204,14 @@ export default {
      */
     mfaEncryptionKey: '',
 
+    /**
+     * Max age (seconds) of the session's second-factor proof an
+     * acr_values=urn:authup:mfa step-up request accepts before forcing
+     * a fresh challenge.
+     * default: 60
+     */
+    mfaFreshnessMaxAge: 60,
+
     // ----------------------------------------------------
 
     /**
@@ -275,6 +283,7 @@ loginAttemptWindow=900
 mfaEnabled=false
 mfaRequired=false
 mfaEncryptionKey=
+mfaFreshnessMaxAge=60
 userAdminPassword=start123
 userAdminPasswordReset=false
 robotAdminEnabled=false
@@ -302,6 +311,7 @@ LOGIN_ATTEMPT_WINDOW=900
 MFA_ENABLED=false
 MFA_REQUIRED=false
 MFA_ENCRYPTION_KEY=
+MFA_FRESHNESS_MAX_AGE=60
 USER_ADMIN_PASSWORD=start123
 USER_ADMIN_PASSWORD_RESET=false
 ROBOT_ADMIN_ENABLED=false

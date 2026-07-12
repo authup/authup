@@ -14,9 +14,11 @@ import {
     EventScope,
     IdentityType,
     ScopeName,
+    SessionAuthMethod,
 } from '@authup/core-kit';
 import type { IEventService } from '../../entities/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
+import { deriveAmrAcr } from '../authorization/helpers.ts';
 import { buildOAuth2BearerTokenResponse } from '../response/index.ts';
 import type { IOAuth2TokenIssuer } from '../token/index.ts';
 import { OAuth2BaseGrant } from './base.ts';
@@ -62,7 +64,13 @@ export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput>
             sub: user.id,
             sub_kind: IdentityType.USER,
             mfa_at: input.mfaVerifiedAt ?? null,
+            auth_method: SessionAuthMethod.PASSWORD,
         });
+
+        // amr/acr derive from the session's auth_method + mfa_at — deliberately
+        // on every token kind, so a direct password grant's tokens advertise the
+        // method the same way the authorization_code exchange does.
+        const amrAcr = deriveAmrAcr(session);
 
         const issuePayload : Partial<OAuth2TokenPayload> = {
             client_id: clientId,
@@ -74,6 +82,7 @@ export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput>
             sub_kind: OAuth2SubKind.USER,
             realm_id: user.realm_id,
             realm_name: user.realm?.name,
+            ...amrAcr,
         };
 
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue(issuePayload);

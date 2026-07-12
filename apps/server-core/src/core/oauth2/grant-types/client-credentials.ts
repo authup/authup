@@ -10,7 +10,8 @@ import { OAuth2SubKind } from '@authup/specs';
 import type { Client } from '@authup/core-kit';
 import {
     IdentityType,
-    ScopeName,
+    ScopeName, 
+    SessionAuthMethod,
 } from '@authup/core-kit';
 import { OAuth2BaseGrant } from './base.ts';
 import { buildOAuth2BearerTokenResponse } from '../response/index.ts';
@@ -24,6 +25,7 @@ export class ClientCredentialsGrant extends OAuth2BaseGrant<Client> {
             realm_id: input.realm_id,
             sub: input.id,
             sub_kind: IdentityType.CLIENT,
+            auth_method: SessionAuthMethod.CLIENT,
         });
 
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({

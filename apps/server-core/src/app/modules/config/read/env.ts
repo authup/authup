@@ -179,6 +179,11 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.mfaEncryptionKey = mfaEncryptionKey;
     }
 
+    const mfaFreshnessMaxAge = readInt(ConfigEnvironmentVariableName.MFA_FRESHNESS_MAX_AGE);
+    if (typeof mfaFreshnessMaxAge !== 'undefined') {
+        options.mfaFreshnessMaxAge = mfaFreshnessMaxAge;
+    }
+
     // ---------------------------------------------------------------
 
     const clientBasicAuth = readBool(ConfigEnvironmentVariableName.CLIENT_AUTH_BASIC);

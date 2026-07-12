@@ -109,6 +109,7 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         mfaEnabled: false,
         mfaRequired: false,
         mfaEncryptionKey: '',
+        mfaFreshnessMaxAge: 60,
 
         clientAuthBasic: false,
         clientSystemEnabled: false,

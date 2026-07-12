@@ -34,4 +34,8 @@ export class OAuth2MfaRequiredError extends OAuth2Error {
     static enrollmentRequired() {
         return new OAuth2MfaRequiredError({ message: 'Enroll a second factor to continue.' });
     }
+
+    static stepUpRequired() {
+        return new OAuth2MfaRequiredError({ message: 'A fresh second-factor challenge is required to continue.' });
+    }
 }

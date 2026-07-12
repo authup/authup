@@ -19,6 +19,8 @@ import {
 import { OAuth2Authorization } from '../../../../../src/core/oauth2/authorization/module.ts';
 import type {
     IOAuth2AuthorizationCodeIssuer,
+    IUserAuthenticatorChallengeProvider,
+    UserAuthenticatorChallengeStatus,
 } from '../../../../../src/core/index.ts';
 import type { OAuth2AuthorizationCodeIssuerOptions } from '../../../../../src/core/oauth2/authorization/code/issuer/types.ts';
 import { FakeSessionManager } from '../../helpers/fake-session-manager.ts';
@@ -272,5 +274,168 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
         expect(issueCalls).toHaveLength(1);
         expect(issueCalls[0].sessionId ?? undefined).toBeUndefined();
         expect(issueCalls[0].authTime).toBeGreaterThanOrEqual(nowSeconds - 1);
+    });
+});
+
+describe('OAuth2Authorization MFA backstop + acr step-up', () => {
+    const realmId = randomUUID();
+    const sessionId = randomUUID();
+    const userId = randomUUID();
+
+    let sessionManager: FakeSessionManager;
+
+    const identity: UserIdentity = {
+        type: OAuth2SubKind.USER,
+        data: {
+            id: userId,
+            realm_id: realmId,
+            realm: { id: realmId, name: 'master' },
+        } as UserIdentity['data'],
+    };
+
+    const buildData = (extra: Record<string, any> = {}) => ({
+        response_type: OAuth2AuthorizationResponseType.CODE,
+        client_id: randomUUID(),
+        realm_id: realmId,
+        redirect_uri: 'https://example.com/callback',
+        scope: ScopeName.GLOBAL,
+        ...extra,
+    });
+
+    const provider = (status: Partial<UserAuthenticatorChallengeStatus>): IUserAuthenticatorChallengeProvider => ({
+        challenge: async () => ({
+            required: false,
+            enrollmentRequired: false,
+            kinds: [],
+            ...status,
+        }),
+    });
+
+    const buildAuthorization = (
+        challengeProvider?: IUserAuthenticatorChallengeProvider,
+        mfaFreshnessMaxAge?: number,
+    ) => new OAuth2Authorization({
+        codeIssuer,
+        sessionManager,
+        mfaChallengeProvider: challengeProvider,
+        mfaFreshnessMaxAge,
+    });
+
+    const seedSession = async (input: Record<string, any> = {}) => {
+        await sessionManager.create({
+            id: sessionId,
+            sub: userId,
+            sub_kind: OAuth2SubKind.USER,
+            realm_id: realmId,
+            created_at: new Date().toISOString(),
+            ...input,
+        });
+    };
+
+    beforeEach(() => {
+        issueCalls.length = 0;
+        sessionManager = new FakeSessionManager();
+    });
+
+    it('should reject a confirmed-device user whose session carries no mfa proof', async () => {
+        await seedSession({ mfa_at: null });
+        const authorization = buildAuthorization(provider({ required: true }));
+
+        await expect(authorization.authorize(buildData(), identity, { sessionId }))
+            .rejects.toMatchObject({ code: ErrorCode.OAUTH_MFA_REQUIRED });
+    });
+
+    it('should reject a session-less flow while a factor is required', async () => {
+        const authorization = buildAuthorization(provider({ required: true }));
+
+        await expect(authorization.authorize(buildData(), identity, {}))
+            .rejects.toMatchObject({ code: ErrorCode.OAUTH_MFA_REQUIRED });
+    });
+
+    it('should pass once the session carries the mfa proof', async () => {
+        await seedSession({ mfa_at: new Date().toISOString() });
+        const authorization = buildAuthorization(provider({ required: true }));
+
+        const result = await authorization.authorize(buildData(), identity, { sessionId });
+        expect(result.authorizationCode).toBeDefined();
+    });
+
+    it('should route a device-less user to enrollment under mfaRequired', async () => {
+        await seedSession();
+        const authorization = buildAuthorization(provider({ enrollmentRequired: true }));
+
+        await expect(authorization.authorize(buildData(), identity, { sessionId }))
+            .rejects.toMatchObject({ code: ErrorCode.OAUTH_MFA_REQUIRED });
+    });
+
+    it('should not gate a user without devices (nothing required)', async () => {
+        await seedSession();
+        const authorization = buildAuthorization(provider({}));
+
+        const result = await authorization.authorize(buildData(), identity, { sessionId });
+        expect(result.authorizationCode).toBeDefined();
+    });
+
+    it('should enforce acr step-up freshness against the window', async () => {
+        // proof present but older than the freshness window
+        await seedSession({ mfa_at: new Date(Date.now() - 120_000).toISOString() });
+        const authorization = buildAuthorization(provider({ required: true }), 60);
+
+        await expect(authorization.authorize(
+            buildData({ acr_values: 'urn:authup:mfa' }),
+            identity,
+            { sessionId },
+        )).rejects.toMatchObject({ code: ErrorCode.OAUTH_MFA_REQUIRED });
+    });
+
+    it('should satisfy acr step-up with a fresh proof', async () => {
+        await seedSession({ mfa_at: new Date().toISOString() });
+        const authorization = buildAuthorization(provider({ required: true }), 60);
+
+        const result = await authorization.authorize(
+            buildData({ acr_values: 'urn:authup:mfa' }),
+            identity,
+            { sessionId },
+        );
+        expect(result.authorizationCode).toBeDefined();
+    });
+
+    it('should ignore an unsatisfiable acr request for a factor-less user (voluntary claim)', async () => {
+        await seedSession();
+        const authorization = buildAuthorization(provider({}), 60);
+
+        const result = await authorization.authorize(
+            buildData({ acr_values: 'urn:authup:mfa' }),
+            identity,
+            { sessionId },
+        );
+        expect(result.authorizationCode).toBeDefined();
+    });
+
+    it('should ignore unknown acr tokens (forward-compat)', async () => {
+        await seedSession({ mfa_at: new Date().toISOString() });
+        const authorization = buildAuthorization(provider({ required: true }), 60);
+
+        const result = await authorization.authorize(
+            buildData({ acr_values: 'urn:example:gold' }),
+            identity,
+            { sessionId },
+        );
+        expect(result.authorizationCode).toBeDefined();
+    });
+
+    it('should thread the session auth_method into the issued code', async () => {
+        await seedSession({ auth_method: 'pwd' });
+        const authorization = buildAuthorization();
+
+        await authorization.authorize(buildData(), identity, { sessionId });
+        expect(issueCalls[0]).toEqual(expect.objectContaining({ authMethod: 'pwd' }));
+    });
+
+    it('should thread a null auth_method for a session-less authorize', async () => {
+        const authorization = buildAuthorization();
+
+        await authorization.authorize(buildData(), identity, {});
+        expect(issueCalls[0]).toEqual(expect.objectContaining({ authMethod: null }));
     });
 });

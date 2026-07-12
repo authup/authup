@@ -142,6 +142,13 @@ export class OAuth2AuthorizationCodeRequestValidator extends Container<OAuth2Aut
             createValidator(z.string().trim().toLowerCase().min(1).max(256).nullable()),
         );
 
+        // case-sensitive (urn values) — no toLowerCase, unlike login_hint
+        this.mount(
+            'acr_values',
+            { optional: true },
+            createValidator(z.string().trim().min(1).max(256).nullable()),
+        );
+
         this.mount(
             'realm_id',
             { optional: true },

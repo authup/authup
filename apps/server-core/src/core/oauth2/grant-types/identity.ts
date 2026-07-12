@@ -7,9 +7,10 @@
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
 import type { Identity, Session } from '@authup/core-kit';
-import { ScopeName } from '@authup/core-kit';
+import { ScopeName, SessionAuthMethod } from '@authup/core-kit';
 import type { IOAuth2TokenIssuer } from '../token/index.ts';
 import { OAuth2BaseGrant } from './base.ts';
+import { deriveAmrAcr } from '../authorization/helpers.ts';
 import { buildOAuth2BearerTokenResponse } from '../response/index.ts';
 import type { OAuth2GrantRunWIthOptions, OAuth2IdentityGrantContext } from './types.ts';
 
@@ -35,9 +36,18 @@ export class IdentityGrantType extends OAuth2BaseGrant<Identity> {
             realm_id: identity.data.realm_id,
             sub: identity.data.id,
             sub_kind: identity.type,
+            auth_method: SessionAuthMethod.EXTERNAL,
         };
 
         const { id: sessionId } = await this.sessionManager.create(session);
+
+        // amr/acr derive from the session's auth_method + mfa_at — deliberately
+        // on every token kind, so a direct identity grant's tokens advertise the
+        // (external) method the same way the authorization_code exchange does.
+        const amrAcr = deriveAmrAcr({
+            auth_method: session.auth_method ?? null,
+            mfa_at: session.mfa_at ?? null,
+        });
 
         const issuePayload : Partial<OAuth2TokenPayload> = {
             session_id: sessionId,
@@ -48,6 +58,7 @@ export class IdentityGrantType extends OAuth2BaseGrant<Identity> {
             realm_name: identity.data.realm?.name,
             sub: identity.data.id,
             sub_kind: identity.type,
+            ...amrAcr,
         };
 
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue(issuePayload);

@@ -9,7 +9,7 @@ import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs
 import { JWKError, hasOAuth2Scopes } from '@authup/specs';
 import type { OAuth2AuthorizationCode, Session } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
-import { buildOAuth2TokenHash } from '../authorization/helpers.ts';
+import { buildOAuth2TokenHash, deriveAmrAcr } from '../authorization/helpers.ts';
 import type { IOAuth2KeyRepository } from '../key/index.ts';
 import type { IOAuth2OpenIDTokenIssuer, IOAuth2TokenIssuer } from '../token/index.ts';
 import { OAuth2BaseGrant } from './base.ts';
@@ -41,6 +41,11 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
     ) : Promise<OAuth2TokenGrantResponse> {
         const session = await this.resolveSession(authorizationCode, options);
 
+        // amr/acr derive from the RESOLVED session (auth_method + mfa_at) —
+        // deliberately on every token kind, not only the id_token, so
+        // resource servers can read the method without parsing an id_token.
+        const amrAcr = deriveAmrAcr(session);
+
         const issuePayload : Partial<OAuth2TokenPayload> = {
             user_agent: options.userAgent,
             remote_address: options.ipAddress,
@@ -51,6 +56,7 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
             realm_name: authorizationCode.realm_name,
             scope: authorizationCode.scope || undefined,
             client_id: authorizationCode.client_id || undefined,
+            ...amrAcr,
         };
 
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue(issuePayload);
@@ -89,6 +95,7 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
                 client_id: authorizationCode.client_id || undefined,
                 ...(authorizationCode.nonce ? { nonce: authorizationCode.nonce } : {}),
                 ...(typeof authorizationCode.auth_time === 'number' ? { auth_time: authorizationCode.auth_time } : {}),
+                ...amrAcr,
                 sid: session.id,
                 at_hash: await buildOAuth2TokenHash(accessToken, key.signature_algorithm),
             });
@@ -137,6 +144,7 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
             client_id: authorizationCode.client_id,
             sub_kind: authorizationCode.sub_kind,
             sub: authorizationCode.sub,
+            auth_method: authorizationCode.auth_method ?? null,
         });
     }
 }

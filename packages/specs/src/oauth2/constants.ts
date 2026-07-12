@@ -99,3 +99,24 @@ export enum OAuth2ErrorCode {
      */
     MFA_REQUIRED = 'mfa_required',
 }
+
+/**
+ * RFC 8176 authentication method reference values emitted in the `amr`
+ * claim (plus the authup-local `ext` — RFC 8176 registers no value for
+ * "federated identity provider").
+ */
+export enum OAuth2AuthenticationMethodReference {
+    PASSWORD = 'pwd',
+    OTP = 'otp',
+    EXTERNAL = 'ext',
+}
+
+/**
+ * The two coarse assurance levels emitted in / accepted for the `acr`
+ * claim (urn-style — OIDC Core reserves the bare "0"). Deliberately NOT
+ * a level DSL.
+ */
+export enum OAuth2AuthenticationContextClass {
+    PASSWORD = 'urn:authup:pwd',
+    MFA = 'urn:authup:mfa',
+}

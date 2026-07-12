@@ -8,6 +8,7 @@
 import type { OAuth2SubKind } from '@authup/specs';
 import type { Client } from '../client';
 import type { Realm } from '../realm';
+import type { SessionAuthMethod } from '../session/constants';
 
 export interface OAuth2AuthorizationCode {
     id: string,
@@ -29,6 +30,19 @@ export interface OAuth2AuthorizationCode {
      * `auth_time` claim at the /token exchange.
      */
     auth_time?: number | null,
+
+    /**
+     * How the subject authenticated (SessionAuthMethod) — inherited by the
+     * session the token exchange creates when no backing session exists
+     * (federated IdP callback), and feeding the id_token amr/acr derivation.
+     */
+    auth_method?: `${SessionAuthMethod}` | null,
+
+    /**
+     * The acr_values the RP requested — persisted so the mint step can
+     * compare requested vs satisfied assurance.
+     */
+    acr_values?: string | null,
 
     client_id?: Client['id'] | null,
 
@@ -73,4 +87,10 @@ export type OAuth2AuthorizationCodeRequest = {
      * OIDC Core §3.1.2.1: login hint pre-filling the sign-in identifier.
      */
     login_hint?: string,
+    /**
+     * OIDC Core §3.1.2.1: space-delimited requested acr values. Voluntary
+     * per §5.5.1.1 — unknown tokens are ignored; `urn:authup:mfa` acts as
+     * a step-up trigger.
+     */
+    acr_values?: string,
 };

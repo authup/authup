@@ -10,7 +10,8 @@ import { OAuth2SubKind } from '@authup/specs';
 import type { Robot } from '@authup/core-kit';
 import {
     IdentityType,
-    ScopeName,
+    ScopeName, 
+    SessionAuthMethod,
 } from '@authup/core-kit';
 import { OAuth2BaseGrant } from './base.ts';
 import { buildOAuth2BearerTokenResponse } from '../response/index.ts';
@@ -24,6 +25,7 @@ export class RobotCredentialsGrant extends OAuth2BaseGrant<Robot> {
             realm_id: input.realm_id,
             sub: input.id,
             sub_kind: IdentityType.ROBOT,
+            auth_method: SessionAuthMethod.ROBOT,
         });
 
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
