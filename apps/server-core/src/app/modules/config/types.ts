@@ -214,6 +214,59 @@ export type Config = {
     // ----------------------------------------------------
 
     /**
+     * Persist security audit events (login, authorize, replay detection, ...)
+     * to the auth_events table. When disabled only the structured log line
+     * is emitted.
+     * default: true
+     */
+    eventLogEnabled: boolean,
+
+    /**
+     * Per-row retention for persisted audit events in days (stamped as
+     * expires_at at write time, swept by the event cleaner).
+     * 0 = keep forever.
+     * default: 365
+     */
+    eventLogRetentionDays: number,
+
+    /**
+     * Additionally mirror every entity create/update/delete published on the
+     * domain-event bus into the auth_events table (scope: entity). Only
+     * effective while eventLogEnabled is true.
+     * default: true
+     */
+    eventLogEntityEnabled: boolean,
+
+    /**
+     * Per-row retention for entity-CRUD audit events in days — deliberately
+     * short so entity churn self-prunes. 0 = keep forever.
+     * default: 7
+     */
+    eventLogEntityRetentionDays: number,
+
+    /**
+     * Throttle failed interactive logins per (identifier, ip) pair by
+     * counting recent loginFailed audit events. Requires eventLogEnabled.
+     * default: false
+     */
+    loginAttemptThrottleEnabled: boolean,
+
+    /**
+     * Failed attempts per (identifier, ip) pair within the window before
+     * the pair is throttled.
+     * default: 5
+     */
+    loginAttemptThreshold: number,
+
+    /**
+     * Sliding throttle window in seconds.
+     * default: 900
+     */
+    loginAttemptWindow: number,
+
+    // ----------------------------------------------------
+
+    /**
      * default: false
      */
     clientAuthBasic: boolean,

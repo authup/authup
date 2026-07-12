@@ -19,7 +19,15 @@ export type DomainEventPublishContext<
     T extends EventPayload = EventPayload,
 > = {
     content: T,
-    destinations: DomainEventDestinations
+    destinations: DomainEventDestinations,
+    /**
+     * Pre-mutation snapshot of the entity for `updated` events. Lives on the
+     * publish CONTEXT (never inside `content`): `content` is the shared
+     * realtime wire payload and must never carry previous state to
+     * redis/socket consumers — only in-process handlers (e.g. the audit
+     * entity-event bridge) may read it.
+     */
+    dataPrevious?: Record<string, any>
 };
 
 export interface IDomainEventHandler {

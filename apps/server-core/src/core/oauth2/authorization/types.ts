@@ -5,12 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Client } from '@authup/core-kit';
 import type { IOAuth2AuthorizationCodeIssuer } from './code/index.ts';
 import type { ISessionManager } from '../../authentication/index.ts';
+import type { IEventService } from '../../entities/index.ts';
+import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 
 export type OAuth2AuthorizationManagerContext = {
     codeIssuer: IOAuth2AuthorizationCodeIssuer,
     sessionManager: ISessionManager,
+    eventService?: IEventService,
+    metrics?: IAuthFlowMetrics,
     /**
      * Max age (seconds) of the authentication a `prompt=login` request accepts
      * before forcing re-auth (config `promptLoginMaxAge`). Default 60.
@@ -32,4 +37,10 @@ export type OAuth2AuthorizationOptions = {
      * instead of creating a second one.
      */
     sessionId?: string | null,
+
+    /**
+     * The verified client entity (from the code-request verifier) — consumed by
+     * the audit record to distinguish built_in auto-consent from manual consent.
+     */
+    client?: Client,
 };

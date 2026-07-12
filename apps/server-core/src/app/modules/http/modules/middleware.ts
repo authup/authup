@@ -14,6 +14,7 @@ import {
     createAuthorizationMiddleware,
     createLoggerMiddleware,
     createRealmResolverMiddleware,
+    createRequestEventContextMiddleware,
     createSwaggerMiddleware,
     registerAssetsMiddleware,
     registerBasicMiddleware,
@@ -52,6 +53,7 @@ export class HTTPMiddlewareModule {
 
         await this.mountSwagger(router, container);
         await this.mountAuthorization(router, container);
+        await this.mountRequestEventContext(router);
         await this.mountRealmResolver(router, container);
     }
 
@@ -170,6 +172,12 @@ export class HTTPMiddlewareModule {
         });
 
         router.use(middleware);
+    }
+
+    async mountRequestEventContext(router: App): Promise<void> {
+        // mounted immediately AFTER the authorization middleware — the
+        // identity must already be resolved for actor attribution.
+        router.use(createRequestEventContextMiddleware());
     }
 
     // ----------------------------------------------------

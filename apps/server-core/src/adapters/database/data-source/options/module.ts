@@ -22,6 +22,7 @@ import {
     ClientScopeEntity,
     ClientScopeSubscriber,
     ClientSubscriber,
+    EventEntity,
     IdentityProviderAccountEntity,
     IdentityProviderAccountSubscriber,
     IdentityProviderAttributeEntity,
@@ -100,6 +101,8 @@ export class DataSourceOptionsBuilder {
             entities: [
                 ...(options.entities ? options.entities : []) as string[],
                 KeyEntity,
+
+                EventEntity,
 
                 SessionEntity,
                 SessionTokenEntity,

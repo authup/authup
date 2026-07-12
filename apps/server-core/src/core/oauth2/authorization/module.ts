@@ -6,7 +6,10 @@
  */
 
 import type { Identity, OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import { EventName, EventRefType, EventScope } from '@authup/core-kit';
+import { hasInstanceof } from '@authup/errors';
 import {
+    OAUTH2_LOGIN_REQUIRED_ERROR_INSTANCE,
     OAuth2AuthorizationPrompt,
     OAuth2AuthorizationResponseType,
     OAuth2GrantError,
@@ -21,6 +24,8 @@ import type {
     OAuth2AuthorizationResult,
 } from './types.ts';
 import type { ISessionManager } from '../../authentication/index.ts';
+import type { IEventService } from '../../entities/index.ts';
+import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 
 const DEFAULT_PROMPT_LOGIN_MAX_AGE = 60;
 
@@ -29,11 +34,17 @@ export class OAuth2Authorization {
 
     protected sessionManager : ISessionManager;
 
+    protected eventService? : IEventService;
+
+    protected metrics? : IAuthFlowMetrics;
+
     protected promptLoginMaxAge : number;
 
     constructor(ctx: OAuth2AuthorizationManagerContext) {
         this.codeIssuer = ctx.codeIssuer;
         this.sessionManager = ctx.sessionManager;
+        this.eventService = ctx.eventService;
+        this.metrics = ctx.metrics;
         this.promptLoginMaxAge = ctx.promptLoginMaxAge ?? DEFAULT_PROMPT_LOGIN_MAX_AGE;
     }
 
@@ -45,6 +56,43 @@ export class OAuth2Authorization {
      * @param options
      */
     async authorize(
+        data: OAuth2AuthorizationCodeRequest,
+        identity: Identity,
+        options: OAuth2AuthorizationOptions = {},
+    ) : Promise<OAuth2AuthorizationResult> {
+        try {
+            const result = await this.authorizeInner(data, identity, options);
+
+            await this.eventService?.record({
+                scope: EventScope.OAUTH2,
+                name: EventName.AUTHORIZE,
+                refType: EventRefType.CLIENT,
+                refId: options.client?.id ?? data.client_id ?? null,
+                clientId: options.client?.id ?? data.client_id ?? null,
+                actorType: identity.type,
+                actorId: identity.data.id,
+                actorName: identity.data.name,
+                realmId: data.realm_id ?? null,
+                data: {
+                    reason: options.client?.built_in ? 'autoConsent' : 'consent',
+                    ...(data.scope ? { scope: data.scope } : {}),
+                },
+            });
+            this.metrics?.recordAuthorize('issued');
+
+            return result;
+        } catch (e) {
+            if (hasInstanceof(e, OAUTH2_LOGIN_REQUIRED_ERROR_INSTANCE)) {
+                this.metrics?.recordAuthorize('login_required');
+            } else {
+                this.metrics?.recordAuthorize('error');
+            }
+
+            throw e;
+        }
+    }
+
+    protected async authorizeInner(
         data: OAuth2AuthorizationCodeRequest,
         identity: Identity,
         options: OAuth2AuthorizationOptions = {},

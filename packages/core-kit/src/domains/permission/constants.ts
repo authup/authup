@@ -40,6 +40,8 @@ export enum PermissionName {
     CLIENT_SCOPE_DELETE = 'client_scope_delete',
     CLIENT_SCOPE_READ = 'client_scope_read',
 
+    EVENT_READ = 'event_read',
+
     IDENTITY_PROVIDER_CREATE = 'identity_provider_create',
     IDENTITY_PROVIDER_DELETE = 'identity_provider_delete',
     IDENTITY_PROVIDER_UPDATE = 'identity_provider_update',

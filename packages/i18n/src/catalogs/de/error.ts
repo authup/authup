@@ -27,6 +27,7 @@ export const TranslatorTranslationErrorGerman : NamespaceTranslations<`${ErrorCo
     [ErrorCode.PASSWORD_RECOVERY_DISABLED]: 'Die Passwort-Wiederherstellung ist derzeit deaktiviert.',
     [ErrorCode.EMAIL_VERIFICATION_REQUIRED]: 'Deine E-Mail-Adresse muss zuerst bestätigt werden.',
     [ErrorCode.RESET_TOKEN_EXPIRED]: 'Das Reset-Token ist abgelaufen. Bitte fordere ein neues an.',
+    [ErrorCode.LOGIN_ATTEMPT_THROTTLED]: 'Zu viele fehlgeschlagene Anmeldeversuche. Bitte versuche es später erneut.',
 
     [ErrorCode.STORAGE_INSUFFICIENT]: 'Es ist nicht genügend Speicherplatz verfügbar, um diese Aktion auszuführen.',
 

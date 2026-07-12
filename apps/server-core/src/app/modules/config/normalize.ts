@@ -9,6 +9,7 @@ import { read } from 'envix';
 import path from 'node:path';
 import process from 'node:process';
 import { USER_PASSWORD_MIN_LENGTH } from '@authup/core-kit';
+import { AuthupError } from '@authup/errors';
 import { EnvironmentName } from '@authup/kit';
 import { toPublicHost } from '../../../utils/host.ts';
 import { expandToOrigins } from './origins.ts';
@@ -67,7 +68,7 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         }
     }
 
-    return {
+    const config : Config = {
         env,
         rootPath: process.cwd(),
         writableDirectoryPath,
@@ -97,6 +98,14 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         passwordRecoveryEnabled: false,
         passwordMinLength: USER_PASSWORD_MIN_LENGTH,
 
+        eventLogEnabled: true,
+        eventLogRetentionDays: 365,
+        eventLogEntityEnabled: true,
+        eventLogEntityRetentionDays: 7,
+        loginAttemptThrottleEnabled: false,
+        loginAttemptThreshold: 5,
+        loginAttemptWindow: 900,
+
         clientAuthBasic: false,
         clientSystemEnabled: false,
         clientSystemSecret: 'start123',
@@ -120,4 +129,12 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         // the raw parsed list (parsed.trustedOrigins is merged in above).
         trustedOrigins,
     };
+
+    // fail loud at boot: the throttle counts loginFailed rows in
+    // auth_events — with the audit log disabled it would silently no-op.
+    if (config.loginAttemptThrottleEnabled && !config.eventLogEnabled) {
+        throw new AuthupError('loginAttemptThrottleEnabled requires eventLogEnabled.');
+    }
+
+    return config;
 }

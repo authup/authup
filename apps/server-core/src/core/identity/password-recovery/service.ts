@@ -5,7 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { USER_PASSWORD_MAX_LENGTH, USER_PASSWORD_MIN_LENGTH } from '@authup/core-kit';
+import {
+    EventName,
+    EventRefType,
+    EventScope,
+    IdentityType,
+    USER_PASSWORD_MAX_LENGTH,
+    USER_PASSWORD_MIN_LENGTH,
+} from '@authup/core-kit';
 import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import { PasswordRecoveryDisabledError } from './disabled.ts';
 import { EmailVerificationRequiredError } from './email-verification-required.ts';
@@ -24,7 +31,7 @@ import type {
 } from './types.ts';
 import type { IMailClient, IMailTemplateRenderer } from '../../mail/types.ts';
 import { MailTemplateName } from '../../mail/index.ts';
-import type { IRealmRepository, IUserRepository } from '../../entities/index.ts';
+import type { IEventService, IRealmRepository, IUserRepository } from '../../entities/index.ts';
 import type { IdentityWorkflowContext } from '../types.ts';
 import { PASSWORD_RESET_EXPIRES_IN_MINUTES } from './constants.ts';
 
@@ -39,12 +46,15 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
 
     protected mailTemplateRenderer: IMailTemplateRenderer;
 
+    protected eventService?: IEventService;
+
     constructor(ctx: PasswordRecoveryServiceContext) {
         this.options = ctx.options;
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
         this.mailClient = ctx.mailClient;
         this.mailTemplateRenderer = ctx.mailTemplateRenderer;
+        this.eventService = ctx.eventService;
     }
 
     async forgotPassword(data: Record<string, any>, context?: IdentityWorkflowContext): Promise<PasswordForgotResult> {
@@ -116,6 +126,17 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
             throw new BadRequestError('Password recovery failed. Could not send reset email.');
         }
 
+        await this.eventService?.record({
+            scope: EventScope.IDENTITY,
+            name: EventName.PASSWORD_RESET_REQUESTED,
+            refType: EventRefType.USER,
+            refId: merged.id,
+            actorType: IdentityType.USER,
+            actorId: merged.id,
+            actorName: merged.name,
+            realmId: merged.realm_id,
+        });
+
         return { reset_expires: merged.reset_expires! };
     }
 
@@ -157,6 +178,17 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         });
 
         await this.repository.save(merged);
+
+        await this.eventService?.record({
+            scope: EventScope.IDENTITY,
+            name: EventName.PASSWORD_RESET_COMPLETED,
+            refType: EventRefType.USER,
+            refId: merged.id,
+            actorType: IdentityType.USER,
+            actorId: merged.id,
+            actorName: merged.name,
+            realmId: merged.realm_id,
+        });
 
         return { reset_at: merged.reset_at! };
     }

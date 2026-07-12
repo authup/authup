@@ -5,7 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { UserValidator } from '@authup/core-kit';
+import {
+    EventName,
+    EventRefType,
+    EventScope,
+    IdentityType,
+    UserValidator,
+} from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
 import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import { RegistrationDisabledError } from './error.ts';
@@ -20,7 +26,7 @@ import type {
 } from './types.ts';
 import type { IMailClient, IMailTemplateRenderer } from '../../mail/types.ts';
 import { MailTemplateName } from '../../mail/index.ts';
-import type { IRealmRepository, IUserRepository } from '../../entities/index.ts';
+import type { IEventService, IRealmRepository, IUserRepository } from '../../entities/index.ts';
 import type { IdentityWorkflowContext } from '../types.ts';
 
 export class RegistrationService implements IRegistrationService {
@@ -34,12 +40,15 @@ export class RegistrationService implements IRegistrationService {
 
     protected realmRepository: IRealmRepository;
 
+    protected eventService?: IEventService;
+
     constructor(ctx: RegistrationServiceContext) {
         this.options = ctx.options;
         this.mailClient = ctx.mailClient;
         this.mailTemplateRenderer = ctx.mailTemplateRenderer;
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
+        this.eventService = ctx.eventService;
     }
 
     async register(data: Record<string, any>, context?: IdentityWorkflowContext): Promise<RegistrationResult> {
@@ -96,6 +105,17 @@ export class RegistrationService implements IRegistrationService {
             }
         }
 
+        await this.eventService?.record({
+            scope: EventScope.IDENTITY,
+            name: EventName.REGISTER,
+            refType: EventRefType.USER,
+            refId: entity.id,
+            actorType: IdentityType.USER,
+            actorId: entity.id,
+            actorName: entity.name,
+            realmId: entity.realm_id,
+        });
+
         return { active: entity.active };
     }
 
@@ -112,5 +132,16 @@ export class RegistrationService implements IRegistrationService {
         });
 
         await this.repository.save(merged);
+
+        await this.eventService?.record({
+            scope: EventScope.IDENTITY,
+            name: EventName.ACCOUNT_ACTIVATED,
+            refType: EventRefType.USER,
+            refId: merged.id,
+            actorType: IdentityType.USER,
+            actorId: merged.id,
+            actorName: merged.name,
+            realmId: merged.realm_id,
+        });
     }
 }

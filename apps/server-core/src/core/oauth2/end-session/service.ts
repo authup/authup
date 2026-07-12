@@ -6,10 +6,11 @@
  */
 
 import { isSimpleMatch, isUUID } from '@authup/kit';
-import type { Client } from '@authup/core-kit';
+import type { Client, IdentityType } from '@authup/core-kit';
+import { EventName, EventRefType, EventScope } from '@authup/core-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2TokenKind } from '@authup/specs';
-import type { IRealmRepository } from '../../entities/index.ts';
+import type { IEventService, IRealmRepository } from '../../entities/index.ts';
 import type { ISessionManager } from '../../authentication/index.ts';
 import type { IOAuth2ClientRepository } from '../client/index.ts';
 import type { IOAuth2TokenVerifier } from '../token/index.ts';
@@ -29,6 +30,8 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
 
     protected realmRepository: IRealmRepository;
 
+    protected eventService?: IEventService;
+
     protected hintGracePeriod: number;
 
     constructor(ctx: OAuth2EndSessionServiceContext) {
@@ -36,6 +39,7 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
         this.sessionManager = ctx.sessionManager;
         this.clientRepository = ctx.clientRepository;
         this.realmRepository = ctx.realmRepository;
+        this.eventService = ctx.eventService;
         this.hintGracePeriod = ctx.hintGracePeriod ?? 0;
     }
 
@@ -162,6 +166,18 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
         }
 
         await this.sessionManager.revoke(sessionId);
+
+        await this.eventService?.record({
+            scope: EventScope.OAUTH2,
+            name: EventName.LOGOUT,
+            refType: EventRefType.SESSION,
+            refId: sessionId,
+            actorType: session.sub_kind as `${IdentityType}`,
+            actorId: session.sub,
+            realmId: session.realm_id,
+            data: { revoked_session_id: sessionId },
+        });
+
         return true;
     }
 

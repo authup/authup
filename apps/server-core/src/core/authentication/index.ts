@@ -7,6 +7,7 @@
 
 export * from './credential/index.ts';
 export * from './entities/index.ts';
+export * from './login-throttle/index.ts';
 export * from './base.ts';
 export * from './module.ts';
 export * from './session/index.ts';

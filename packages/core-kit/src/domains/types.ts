@@ -10,6 +10,7 @@ import type { ClientPermission } from './client-permission';
 import type { ClientRole } from './client-role';
 import type { ClientScope } from './client-scope';
 import type { EntityType } from './contstants';
+import type { Event } from './event';
 import type { IdentityProvider } from './identity-provider';
 import type { IdentityProviderAccount } from './identity-provider-account';
 import type { IdentityProviderAttribute } from './identity-provider-attribute';
@@ -37,6 +38,7 @@ type EntityTypeMapRaw = {
     [EntityType.CLIENT_PERMISSION]: ClientPermission,
     [EntityType.CLIENT_ROLE]: ClientRole,
     [EntityType.CLIENT_SCOPE]: ClientScope,
+    [EntityType.EVENT]: Event,
     [EntityType.IDENTITY_PROVIDER]: IdentityProvider,
     [EntityType.IDENTITY_PROVIDER_ACCOUNT]: IdentityProviderAccount,
     [EntityType.IDENTITY_PROVIDER_ATTRIBUTE]: IdentityProviderAttribute,

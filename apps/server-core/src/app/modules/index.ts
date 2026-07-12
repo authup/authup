@@ -13,6 +13,7 @@ export * from './http/index.ts';
 export * from './identity/index.ts';
 export * from './ldap/index.ts';
 export * from './logger/index.ts';
+export * from './metrics/index.ts';
 export * from './oauth2/index.ts';
 export * from './cache/index.ts';
 export * from './provisioning/index.ts';

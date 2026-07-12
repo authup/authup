@@ -7,6 +7,7 @@
 
 import { randomUUID } from 'node:crypto';
 import type { Session } from '@authup/core-kit';
+import { EventName, EventRefType, EventScope } from '@authup/core-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2SubKind, OAuth2TokenKind, isOAuth2Error } from '@authup/specs';
 import {
@@ -17,6 +18,8 @@ import {
 } from 'vitest';
 import { OAuth2RefreshTokenGrant } from '../../../../../src/core/oauth2/grant-types/refresh-token.ts';
 import {
+    FakeAuthFlowMetrics,
+    FakeEventService,
     FakeOAuth2TokenIssuer,
     FakeOAuth2TokenRepository,
     FakeOAuth2TokenVerifier,
@@ -31,6 +34,8 @@ describe('OAuth2RefreshTokenGrant', () => {
     let tokenRepository: FakeOAuth2TokenRepository;
     let sessionTokenRepository: FakeSessionTokenRepository;
     let sessionManager: FakeSessionManager;
+    let eventService: FakeEventService;
+    let metrics: FakeAuthFlowMetrics;
 
     const realmId = randomUUID();
     const clientId = randomUUID();
@@ -47,6 +52,8 @@ describe('OAuth2RefreshTokenGrant', () => {
             tokenRepository,
             sessionTokenRepository,
             sessionManager,
+            eventService,
+            metrics,
             options,
         });
     }
@@ -93,6 +100,8 @@ describe('OAuth2RefreshTokenGrant', () => {
         tokenRepository = new FakeOAuth2TokenRepository();
         sessionTokenRepository = new FakeSessionTokenRepository();
         sessionManager = new FakeSessionManager();
+        eventService = new FakeEventService();
+        metrics = new FakeAuthFlowMetrics();
     });
 
     it('should rotate on the first refresh and link the new token pair', async () => {
@@ -152,6 +161,35 @@ describe('OAuth2RefreshTokenGrant', () => {
 
         // every blocklist entry pins a real expiry (never the fallback 1h TTL)
         expect(tokenRepository.setInactiveCalls.every((c) => typeof c.exp === 'number')).toBe(true);
+    });
+
+    it('should record a refreshReplayDetected audit event and metric on family revocation', async () => {
+        const payload = await seed();
+        const grant = build();
+
+        // first use consumes the token; the replay trips the family revoke
+        await grant.runWith(payload);
+        await expect(grant.runWith(payload)).rejects.toBeDefined();
+
+        expect(eventService.recordCalls).toHaveLength(1);
+        const [record] = eventService.recordCalls;
+        expect(record.scope).toEqual(EventScope.OAUTH2);
+        expect(record.name).toEqual(EventName.REFRESH_REPLAY_DETECTED);
+        expect(record.refType).toEqual(EventRefType.SESSION);
+        expect(record.refId).toEqual(sessionId);
+        expect(record.data).toEqual({ jti: refreshJti });
+
+        expect(metrics.refreshReplayCalls).toEqual(1);
+    });
+
+    it('should not record a replay audit event or metric on a clean rotation', async () => {
+        const payload = await seed();
+        const grant = build();
+
+        await grant.runWith(payload);
+
+        expect(eventService.recordCalls).toHaveLength(0);
+        expect(metrics.refreshReplayCalls).toEqual(0);
     });
 
     it('should still revoke the session when a blocklist cache call fails', async () => {

@@ -11,10 +11,12 @@ import { serve } from 'routup/node';
 import { ConfigInjectionKey } from '../config/index.ts';
 import type { IModule } from 'orkos';
 import { createInternalUIHttpClient } from '../../../adapters/http/ui/index.ts';
+import { NoopAuthFlowMetrics } from '../../../core/index.ts';
 import { ModuleName } from '../constants.ts';
 import type { HTTPServer } from './constants.ts';
 import { HTTPInjectionKey } from './constants.ts';
 import type { IContainer } from 'eldin';
+import { MetricsInjectionKey, PromAuthFlowMetrics } from '../metrics/index.ts';
 import { HTTPControllerModule, HTTPMiddlewareModule } from './modules/index.ts';
 import { LoggerInjectionKey } from '../logger/index.ts';
 
@@ -50,6 +52,7 @@ export class HTTPModule implements IModule {
         const router = new App();
 
         this.registerUIHttpClient(container);
+        this.registerMetrics(container);
 
         await this.middleware.mountBefore(router, container);
         await this.controller.mount(router, container);
@@ -118,6 +121,26 @@ export class HTTPModule implements IModule {
         this.uiHttpClientRegistered = true;
     }
 
+    /**
+     * Auth-flow metric counters for the emit points (plan 058 Part 2).
+     * Registered before the controllers are built — the factories resolve the
+     * token. Prometheus-backed iff the prometheus middleware is enabled
+     * (mirrors HTTPMiddlewareModule.isEnabled: boolean|object, false = off),
+     * otherwise a noop so emit sites never need a guard beyond `?.`.
+     */
+    protected registerMetrics(container: IContainer): void {
+        const config = container.resolve(ConfigInjectionKey);
+
+        const enabled = typeof config.middlewarePrometheus !== 'boolean' ||
+            config.middlewarePrometheus === true;
+
+        container.register(MetricsInjectionKey, {
+            useValue: enabled ?
+                new PromAuthFlowMetrics() :
+                new NoopAuthFlowMetrics(),
+        });
+    }
+
     // ----------------------------------------------------
 
     async teardown(container: IContainer): Promise<void> {
@@ -125,6 +148,8 @@ export class HTTPModule implements IModule {
             container.unregister(HTTPInjectionKey.UIHttpClient);
             this.uiHttpClientRegistered = false;
         }
+
+        container.unregister(MetricsInjectionKey);
 
         if (!this.instance) return;
 

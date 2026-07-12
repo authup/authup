@@ -6,8 +6,14 @@
  */
 
 import type { Component } from '../../../components/index.ts';
-import { createDatabaseUniqueEntriesComponent, createOAuth2CleanerComponent } from '../../../components/index.ts';
+import {
+    createDatabaseUniqueEntriesComponent,
+    createEventCleanerComponent,
+    createOAuth2CleanerComponent,
+} from '../../../components/index.ts';
+import { ConfigInjectionKey } from '../config/index.ts';
 import { DatabaseInjectionKey } from '../database/index.ts';
+import { LoggerInjectionKey } from '../logger/index.ts';
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import type { IContainer } from 'eldin';
@@ -19,18 +25,37 @@ export class ComponentsModule implements IModule {
 
     constructor() {
         this.name = ModuleName.COMPONENTS;
-        this.dependencies = [ModuleName.DATABASE];
+        this.dependencies = [ModuleName.CONFIG, ModuleName.LOGGER, ModuleName.DATABASE];
     }
 
     async setup(container: IContainer): Promise<void> {
+        const config = container.resolve(ConfigInjectionKey);
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
+        const logger = container.resolve(LoggerInjectionKey);
 
         const components: Component[] = [
-            createOAuth2CleanerComponent(dataSource),
+            createOAuth2CleanerComponent(dataSource, logger),
             createDatabaseUniqueEntriesComponent(dataSource),
         ];
 
-        components.forEach((component) => component.start());
+        // The sweep only exists when rows are written AND at least one row
+        // family carries an expiry — security events (eventLogRetentionDays)
+        // and entity-CRUD events (eventLogEntityRetentionDays) are stamped
+        // independently, so either non-zero retention needs the cleaner.
+        const securitySweep = config.eventLogRetentionDays > 0;
+        const entitySweep = config.eventLogEntityEnabled && config.eventLogEntityRetentionDays > 0;
+        if (config.eventLogEnabled && (securitySweep || entitySweep)) {
+            components.push(createEventCleanerComponent(dataSource, logger));
+        }
+
+        // start() is deliberately fire-and-forget, so a rejection must be
+        // caught here — an unhandled rejection is fatal on modern node.
+        components.forEach((component) => {
+            component.start().catch((e) => {
+                logger.error('Starting a background component failed.');
+                logger.error(e);
+            });
+        });
     }
 
     // ----------------------------------------------------

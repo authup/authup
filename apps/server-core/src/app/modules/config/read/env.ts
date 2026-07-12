@@ -127,6 +127,43 @@ export function readConfigRawFromEnv() : ConfigInput {
 
     // ---------------------------------------------------------------
 
+    const eventLogEnabled = readBool(ConfigEnvironmentVariableName.EVENT_LOG_ENABLED);
+    if (typeof eventLogEnabled !== 'undefined') {
+        options.eventLogEnabled = eventLogEnabled;
+    }
+
+    const eventLogRetentionDays = readInt(ConfigEnvironmentVariableName.EVENT_LOG_RETENTION_DAYS);
+    if (typeof eventLogRetentionDays !== 'undefined') {
+        options.eventLogRetentionDays = eventLogRetentionDays;
+    }
+
+    const eventLogEntityEnabled = readBool(ConfigEnvironmentVariableName.EVENT_LOG_ENTITY_ENABLED);
+    if (typeof eventLogEntityEnabled !== 'undefined') {
+        options.eventLogEntityEnabled = eventLogEntityEnabled;
+    }
+
+    const eventLogEntityRetentionDays = readInt(ConfigEnvironmentVariableName.EVENT_LOG_ENTITY_RETENTION_DAYS);
+    if (typeof eventLogEntityRetentionDays !== 'undefined') {
+        options.eventLogEntityRetentionDays = eventLogEntityRetentionDays;
+    }
+
+    const loginAttemptThrottleEnabled = readBool(ConfigEnvironmentVariableName.LOGIN_ATTEMPT_THROTTLE_ENABLED);
+    if (typeof loginAttemptThrottleEnabled !== 'undefined') {
+        options.loginAttemptThrottleEnabled = loginAttemptThrottleEnabled;
+    }
+
+    const loginAttemptThreshold = readInt(ConfigEnvironmentVariableName.LOGIN_ATTEMPT_THRESHOLD);
+    if (typeof loginAttemptThreshold !== 'undefined') {
+        options.loginAttemptThreshold = loginAttemptThreshold;
+    }
+
+    const loginAttemptWindow = readInt(ConfigEnvironmentVariableName.LOGIN_ATTEMPT_WINDOW);
+    if (typeof loginAttemptWindow !== 'undefined') {
+        options.loginAttemptWindow = loginAttemptWindow;
+    }
+
+    // ---------------------------------------------------------------
+
     const clientBasicAuth = readBool(ConfigEnvironmentVariableName.CLIENT_AUTH_BASIC);
     if (typeof clientBasicAuth !== 'undefined') {
         options.clientAuthBasic = clientBasicAuth;

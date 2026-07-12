@@ -24,9 +24,14 @@ import {
     DataSourceOptionsBuilder,
     DatabaseQueryResultCache,
     EntitySubscriber,
+    EventEntity,
     isDatabaseTypeSupported,
     isDatabaseTypeSupportedForEnvironment,
 } from '../../../adapters/database/index.ts';
+import type { Event } from '@authup/core-kit';
+import { EntityEventHandler, EventService } from '../../../core/index.ts';
+import { useRequestEventContext } from '../../../adapters/http/request/index.ts';
+import { EventRepositoryAdapter } from './repositories/index.ts';
 import { CacheInjectionKey } from '../cache/index.ts';
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
@@ -91,6 +96,9 @@ export class DatabaseModule implements IModule {
             }
 
             this.registerRepositories(container, dataSource);
+            // the event service must exist before the publisher wiring — the
+            // entity-CRUD bridge handler resolves it from the container.
+            this.registerEvents(container, dataSource);
             this.registerEventPublisher(container, dataSource);
 
             container.register(DatabaseInjectionKey.DataSource, { useValue: dataSource });
@@ -123,6 +131,8 @@ export class DatabaseModule implements IModule {
         }
 
         container.unregister(DatabaseInjectionKey.DomainEventPublisher);
+        container.unregister(DatabaseInjectionKey.EventRepository);
+        container.unregister(DatabaseInjectionKey.EventService);
 
         await this.disposeEventPublisher();
     }
@@ -237,6 +247,14 @@ export class DatabaseModule implements IModule {
             publisher.register(new DomainEventSocketHandler(client));
         }
 
+        if (config.eventLogEnabled && config.eventLogEntityEnabled) {
+            publisher.register(new EntityEventHandler({
+                eventService: container.resolve(DatabaseInjectionKey.EventService),
+                requestContext: useRequestEventContext,
+                options: { retentionDays: config.eventLogEntityRetentionDays },
+            }));
+        }
+
         container.register(DatabaseInjectionKey.DomainEventPublisher, { useValue: publisher });
 
         for (let i = 0; i < dataSource.subscribers.length; i++) {
@@ -245,5 +263,25 @@ export class DatabaseModule implements IModule {
                 subscriber.setPublisher(publisher);
             }
         }
+    }
+
+    protected registerEvents(container: IContainer, dataSource: DataSource) {
+        const config = container.resolve(ConfigInjectionKey);
+        const logger = container.resolve(LoggerInjectionKey);
+
+        const repository = new EventRepositoryAdapter(
+            dataSource.getRepository<Event>(EventEntity),
+        );
+        container.register(DatabaseInjectionKey.EventRepository, { useValue: repository });
+
+        const service = new EventService({
+            repository,
+            options: {
+                enabled: config.eventLogEnabled,
+                retentionDays: config.eventLogRetentionDays,
+            },
+            logger,
+        });
+        container.register(DatabaseInjectionKey.EventService, { useValue: service });
     }
 }

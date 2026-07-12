@@ -127,6 +127,57 @@ export default {
      */
     passwordMinLength: 10,
 
+    /**
+     * Persist security events (login, loginFailed, authorize,
+     * logout, refresh replay, ...) to the auth_events table.
+     * default: true
+     */
+    eventLogEnabled: true,
+
+    /**
+     * Retention for persisted security events in days. 0 = keep forever.
+     * default: 365
+     */
+    eventLogRetentionDays: 365,
+
+    /**
+     * Additionally mirror every entity create/update/delete into the
+     * auth_events table (scope: entity). Only effective while
+     * eventLogEnabled is true.
+     * default: true
+     */
+    eventLogEntityEnabled: true,
+
+    /**
+     * Retention for entity create/update/delete events in days —
+     * deliberately short so entity churn self-prunes. 0 = keep forever.
+     * default: 7
+     */
+    eventLogEntityRetentionDays: 7,
+
+    /**
+     * Throttle failed logins per (identifier, ip) pair by counting recent
+     * loginFailed events. Requires eventLogEnabled.
+     * The client IP honors X-Forwarded-For — deploy behind a trusted
+     * reverse proxy that overwrites the header, otherwise a direct client
+     * can spoof the IP half of the throttle key.
+     * default: false
+     */
+    loginAttemptThrottleEnabled: false,
+
+    /**
+     * Failed attempts per (identifier, ip) pair within the window before
+     * the pair is throttled (HTTP 429).
+     * default: 5
+     */
+    loginAttemptThreshold: 5,
+
+    /**
+     * Sliding throttle window in seconds.
+     * default: 900
+     */
+    loginAttemptWindow: 900,
+
     // ----------------------------------------------------
 
     /**
@@ -188,6 +239,13 @@ registrationEnabled=false
 emailVerificationEnabled=false
 passwordRecoveryEnabled=false
 passwordMinLength=10
+eventLogEnabled=true
+eventLogRetentionDays=365
+eventLogEntityEnabled=true
+eventLogEntityRetentionDays=7
+loginAttemptThrottleEnabled=false
+loginAttemptThreshold=5
+loginAttemptWindow=900
 userAdminPassword=start123
 userAdminPasswordReset=false
 robotAdminEnabled=false
@@ -205,6 +263,13 @@ REGISTRATION_ENABLED=false
 EMAIL_VERIFICATION_ENABLED=false
 PASSWORD_RECOVERY_ENABLED=false
 PASSWORD_MIN_LENGTH=10
+EVENT_LOG_ENABLED=true
+EVENT_LOG_RETENTION_DAYS=365
+EVENT_LOG_ENTITY_ENABLED=true
+EVENT_LOG_ENTITY_RETENTION_DAYS=7
+LOGIN_ATTEMPT_THROTTLE_ENABLED=false
+LOGIN_ATTEMPT_THRESHOLD=5
+LOGIN_ATTEMPT_WINDOW=900
 USER_ADMIN_PASSWORD=start123
 USER_ADMIN_PASSWORD_RESET=false
 ROBOT_ADMIN_ENABLED=false

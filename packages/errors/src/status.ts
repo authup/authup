@@ -39,6 +39,9 @@ export const ERROR_CODE_TO_STATUS: Readonly<Partial<Record<`${ErrorCode}`, numbe
     // 409
     [ErrorCode.ENTITY_CONFLICT]: 409,
 
+    // 429
+    [ErrorCode.LOGIN_ATTEMPT_THROTTLED]: 429,
+
     // 500
     [ErrorCode.INTERNAL_ERROR]: 500,
 
@@ -69,6 +72,7 @@ export function codeFromHttpStatus(status: number): ErrorCode {
     if (status === 409) return ErrorCode.ENTITY_CONFLICT;
     if (status === 401) return ErrorCode.IDENTITY_UNAUTHORIZED;
     if (status === 403) return ErrorCode.PERMISSION_DENIED;
+    if (status === 429) return ErrorCode.LOGIN_ATTEMPT_THROTTLED;
     if (status === 507) return ErrorCode.STORAGE_INSUFFICIENT;
     if (status >= 500) return ErrorCode.INTERNAL_ERROR;
     return ErrorCode.BAD_REQUEST;

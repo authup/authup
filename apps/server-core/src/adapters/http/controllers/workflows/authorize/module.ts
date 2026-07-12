@@ -58,6 +58,8 @@ export class AuthorizeController {
             codeRequestVerifier: this.codeRequestVerifier,
             codeIssuer: ctx.codeIssuer,
             sessionManager: ctx.sessionManager,
+            eventService: ctx.eventService,
+            metrics: ctx.metrics,
             promptLoginMaxAge: ctx.options.promptLoginMaxAge,
         });
     }

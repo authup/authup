@@ -19,6 +19,7 @@ import { buildPermissionKey } from '@authup/access';
 import { toOAuth2Error } from '../../../../../core/oauth2/helpers/index.ts';
 import type { TokenControllerContext } from './types.ts';
 import type {
+    IAuthFlowMetrics,
     IIdentityPermissionProvider,
     IIdentityResolver,
     IOAuth2TokenIssuer,
@@ -52,6 +53,8 @@ export class TokenController {
 
     protected identityPermissionProvider : IIdentityPermissionProvider;
 
+    protected metrics? : IAuthFlowMetrics;
+
     protected tokenGrants : Record<`${OAuth2TokenGrant}`, IHTTPOAuth2Grant>;
 
     // -------------------------------------------
@@ -63,6 +66,7 @@ export class TokenController {
         this.tokenRevoker = ctx.tokenRevoker;
         this.identityResolver = ctx.identityResolver;
         this.identityPermissionProvider = ctx.identityPermissionProvider;
+        this.metrics = ctx.metrics;
 
         this.tokenGrants = {
             [OAuth2TokenGrant.AUTHORIZATION_CODE]: new HTTPOAuth2AuthorizeGrant({
@@ -92,6 +96,9 @@ export class TokenController {
                 clientAuthenticator: ctx.oauth2ClientAuthenticator,
                 sessionManager: ctx.sessionManager,
                 realmRepository: ctx.realmRepository,
+                eventService: ctx.eventService,
+                metrics: ctx.metrics,
+                loginThrottleService: ctx.loginThrottleService,
             }),
             [OAuth2TokenGrant.REFRESH_TOKEN]: new HTTPOAuth2RefreshTokenGrant({
                 accessTokenIssuer: ctx.accessTokenIssuer,
@@ -102,6 +109,8 @@ export class TokenController {
                 sessionManager: ctx.sessionManager,
                 clientAuthenticator: ctx.oauth2ClientAuthenticator,
                 realmRepository: ctx.realmRepository,
+                eventService: ctx.eventService,
+                metrics: ctx.metrics,
                 logger: ctx.logger,
                 options: { gracePeriod: ctx.tokenRefreshGracePeriod },
             }),
@@ -209,6 +218,10 @@ export class TokenController {
             throw OAuth2GrantTypeError.unsupported();
         }
 
-        return grant.runWithRequest(event);
+        const response = await grant.runWithRequest(event);
+
+        this.metrics?.recordTokenGrant(grantType);
+
+        return response;
     }
 }

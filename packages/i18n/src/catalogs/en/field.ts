@@ -65,4 +65,8 @@ export const TranslatorTranslationFieldEnglish : NamespaceTranslations<`${Transl
     [TranslatorTranslationFieldKey.USER_INFO]: 'UserInfo',
     [TranslatorTranslationFieldKey.DISCOVERY]: 'Discovery',
     [TranslatorTranslationFieldKey.REDIRECT_URL]: 'Redirect URL',
+    [TranslatorTranslationFieldKey.ACTOR]: 'Actor',
+    [TranslatorTranslationFieldKey.REF]: 'Reference',
+    [TranslatorTranslationFieldKey.PATH]: 'Path',
+    [TranslatorTranslationFieldKey.METHOD]: 'Method',
 };
