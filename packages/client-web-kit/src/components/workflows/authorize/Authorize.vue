@@ -11,6 +11,7 @@ import type {
     Realm,
     Scope,
 } from '@authup/core-kit';
+import type { UserAuthenticatorChallengeResponse } from '@authup/core-http-kit';
 import { storeToRefs } from 'pinia';
 import type { PropType, VNodeChild } from 'vue';
 import {
@@ -36,6 +37,8 @@ import {
 } from '../../../core';
 import AAuthShell from '../../utility/AAuthShell.vue';
 import LoginForm from '../login/LoginForm.vue';
+import AMfaChallengeForm from '../mfa/AMfaChallengeForm.vue';
+import AUserAuthenticatorEnroll from '../../entities/user-authenticator/AUserAuthenticatorEnroll.vue';
 import AAccountPrompt from './AAccountPrompt.vue';
 import AuthorizeForm from './AuthorizeForm.vue';
 import AuthorizeRealmMismatch from './AuthorizeRealmMismatch.vue';
@@ -57,6 +60,8 @@ export default defineComponent({
         AuthorizeForm,
         AuthorizeRealmMismatch,
         AuthorizeSilentRedirect,
+        AMfaChallengeForm,
+        AUserAuthenticatorEnroll,
         LoginForm,
     },
     props: {
@@ -135,6 +140,43 @@ export default defineComponent({
         });
 
         const accountConfirmed = computed<boolean>(() => accountConfirmedLocal.value);
+
+        // MFA gate (plan 049). The server POST /authorize backstop is
+        // authoritative; this renders the interactive challenge / inline
+        // enrollment so the code request can succeed. The proof is
+        // session-bound (mfa_at) — the challenge endpoint stamps it — so
+        // once satisfied on THIS page we proceed to consent.
+        const mfaStatus = ref<UserAuthenticatorChallengeResponse | null>(null);
+        const mfaSatisfiedLocal = ref<boolean>(false);
+        const mfaResolving = ref<boolean>(false);
+
+        const refreshMfaStatus = async () => {
+            mfaResolving.value = true;
+            try {
+                mfaStatus.value = await httpClient.userAuthenticator.challenge();
+            } catch {
+                // an errored challenge lookup must not brick the ladder —
+                // the server backstop still gates the code issuance.
+                mfaStatus.value = {
+                    required: false, 
+                    enrollmentRequired: false, 
+                    kinds: [], 
+                };
+            } finally {
+                mfaResolving.value = false;
+            }
+        };
+
+        // Fetch once the identity is logged in (and refetch after a switch).
+        watch(loggedIn, (value) => {
+            if (value && !mfaStatus.value && !mfaResolving.value) {
+                Promise.resolve().then(() => refreshMfaStatus());
+            }
+            if (!value) {
+                mfaStatus.value = null;
+                mfaSatisfiedLocal.value = false;
+            }
+        }, { immediate: true });
 
         const error = ref<Error | null>(null);
         const client = ref<Client | null>(null);
@@ -328,6 +370,42 @@ export default defineComponent({
                     onContinue: () => { accountConfirmedLocal.value = true; },
                     onSwitch: switchAccount,
                 }));
+            }
+
+            // MFA gate (plan 049) — interactive only. A silent (prompt=none)
+            // request can't render a challenge form; its AuthorizeForm
+            // auto-consent hits the server backstop and redirects the OIDC
+            // error (interaction_required), so skip the form here for silent.
+            if (!isSilent && !mfaSatisfiedLocal.value) {
+                // Block consent until the status is known — AuthorizeForm
+                // auto-submits for built_in clients, so it must not render
+                // before we know whether a factor is required.
+                if (!mfaStatus.value) {
+                    return wrapChild(h(AuthorizeText, { message: loadingText.value }));
+                }
+
+                if (mfaStatus.value.required) {
+                    return wrapChild(h(AMfaChallengeForm, {
+                        kinds: mfaStatus.value.kinds,
+                        onDone: () => { mfaSatisfiedLocal.value = true; },
+                        onFailed: (message: string) => emit('failed', message),
+                    }));
+                }
+
+                // mfaRequired + no device → configure inline, then re-check
+                // (the freshly enrolled device makes the next status.required).
+                if (mfaStatus.value.enrollmentRequired) {
+                    return wrapChild(h(AUserAuthenticatorEnroll, {
+                        onDone: () => {
+                            mfaStatus.value = null;
+                            Promise.resolve().then(() => refreshMfaStatus());
+                        },
+                        onFailed: (e: unknown) => emit(
+                            'failed',
+                            e instanceof Error ? e.message : String(e),
+                        ),
+                    }));
+                }
             }
 
             if (!client.value) {

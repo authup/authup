@@ -5,9 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './authorize';
-export * from './end-session';
-export * from './login';
-export * from './mfa';
-export * from './password';
-export * from './register';
+export { default as AUserAuthenticatorEnroll } from './AUserAuthenticatorEnroll.vue';
+export { default as AUserAuthenticators } from './AUserAuthenticators.vue';

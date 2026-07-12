@@ -1,18 +1,19 @@
 <script lang="ts">
 import { storeToRefs } from 'pinia';
 import { TranslatorTranslationAppKey, TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { 
-    AUserPasswordForm, 
-    injectStore, 
-    useTranslations, 
-    useTranslator, 
+import {
+    AUserAuthenticators,
+    AUserPasswordForm,
+    injectStore,
+    useTranslations,
+    useTranslator,
 } from '@authup/client-web-kit';
 import { definePageMeta, useErrorToast, useToast } from '#imports';
 import { defineComponent } from 'vue';
 import { LayoutKey } from '~/config/layout';
 
 export default defineComponent({
-    components: { AUserPasswordForm },
+    components: { AUserAuthenticators, AUserPasswordForm },
     setup() {
         definePageMeta({ [LayoutKey.REQUIRED_LOGGED_IN]: true });
 
@@ -25,8 +26,16 @@ export default defineComponent({
 
         const translationsDefault = useTranslations([
             {
-                namespace: TranslatorTranslationNamespace.FIELD, 
-                key: TranslatorTranslationFieldKey.PASSWORD, 
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.PASSWORD,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.APP,
+                key: TranslatorTranslationAppKey.MFA_SECURITY_TITLE,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.APP,
+                key: TranslatorTranslationAppKey.MFA_SECURITY_HINT,
             },
         ]);
 
@@ -62,6 +71,19 @@ export default defineComponent({
         <AUserPasswordForm
             :id="id"
             @updated="handleUpdated"
+            @failed="handleFailed"
+        />
+
+        <hr class="my-4">
+
+        <h6 class="title">
+            {{ translationsDefault.mfaSecurityTitle }}
+        </h6>
+        <p class="text-fg-muted mb-3">
+            {{ translationsDefault.mfaSecurityHint }}
+        </p>
+        <AUserAuthenticators
+            user-id="@me"
             @failed="handleFailed"
         />
     </div>

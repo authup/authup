@@ -60,4 +60,8 @@ export const TranslatorTranslationAppGerman : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.SESSION_REVOKE_ALL_SUCCESS]: '{{amount}} Sitzung(en) abgemeldet.',
 
     [TranslatorTranslationAppKey.SESSION_CURRENT]: 'Dieses Gerät',
+
+    [TranslatorTranslationAppKey.AUTHENTICATOR]: 'Authentifizierung',
+    [TranslatorTranslationAppKey.MFA_SECURITY_TITLE]: 'Zwei-Faktor-Authentifizierung',
+    [TranslatorTranslationAppKey.MFA_SECURITY_HINT]: 'Füge mit einer Authenticator-App oder Wiederherstellungscodes eine zusätzliche Sicherheitsebene hinzu.',
 };

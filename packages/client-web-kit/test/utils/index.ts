@@ -8,6 +8,7 @@
 import { createFakeClient } from '@authup/core-http-kit/testing';
 import type { FakeClient, FakeHandlerMap, FakeRequest } from '@authup/core-http-kit/testing';
 import { mount } from '@vue/test-utils';
+import type { Component } from 'vue';
 import vuecs from '@vuecs/core';
 import { createPinia } from 'pinia';
 import { ALoginForm } from '../../src/components/workflows/login';
@@ -16,7 +17,8 @@ import type { Options } from '../../src/types';
 
 const noop = () => undefined;
 
-export function mountLoginForm(
+export function mountKitComponent(
+    component: Component,
     props: Record<string, any> = {},
     handlers: FakeHandlerMap = {},
 ) {
@@ -43,7 +45,7 @@ export function mountLoginForm(
         cookieUnset: noop,
     };
 
-    const wrapper = mount(ALoginForm, {
+    const wrapper = mount(component, {
         props,
         global: {
             components: { VCIcon: { render: () => null } },
@@ -56,10 +58,17 @@ export function mountLoginForm(
     });
 
     return {
-        wrapper, 
-        httpClient, 
-        pinia, 
+        wrapper,
+        httpClient,
+        pinia,
     };
+}
+
+export function mountLoginForm(
+    props: Record<string, any> = {},
+    handlers: FakeHandlerMap = {},
+) {
+    return mountKitComponent(ALoginForm, props, handlers);
 }
 
 export function findTokenRequest(httpClient: FakeClient) : FakeRequest | undefined {

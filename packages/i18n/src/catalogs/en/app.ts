@@ -60,4 +60,8 @@ export const TranslatorTranslationAppEnglish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.SESSION_REVOKE_ALL_SUCCESS]: 'Logged out {{amount}} session(s).',
 
     [TranslatorTranslationAppKey.SESSION_CURRENT]: 'This device',
+
+    [TranslatorTranslationAppKey.AUTHENTICATOR]: 'Authenticators',
+    [TranslatorTranslationAppKey.MFA_SECURITY_TITLE]: 'Two-factor authentication',
+    [TranslatorTranslationAppKey.MFA_SECURITY_HINT]: 'Add an extra layer of security with an authenticator app or recovery codes.',
 };
