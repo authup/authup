@@ -51,6 +51,12 @@ export interface UserAuthenticator {
     confirmed: boolean;
 
     /**
+     * Optimistic-concurrency version — bumped on every persist, guards the
+     * verify path so a factor is consumed exactly once under concurrency.
+     */
+    version?: number;
+
+    /**
      * Last successful challenge verification (iso).
      */
     last_used_at: string | null;
