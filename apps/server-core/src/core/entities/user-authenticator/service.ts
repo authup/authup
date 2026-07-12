@@ -25,6 +25,7 @@ import {
     ErrorCode,
     MfaThrottledError,
     UnauthorizedError,
+    isEntityConflictError,
 } from '@authup/errors';
 import { 
     AbstractEntityService, 
@@ -380,6 +381,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         await this.resetAttempts(entity.user_id);
 
         entity.confirmed = true;
+        // The consumed step is tracked only on the login-verify path (below),
+        // NOT here — so a legitimate first login in the same window as the
+        // confirmation is still accepted; only a repeat of an already-used
+        // LOGIN code is rejected.
         const output = await this.repository.save(entity);
 
         await this.recordEvent(EventName.MFA_ENROLLED, output);
@@ -454,10 +459,22 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             return false;
         }
 
-        await this.resetAttempts(userId);
-
         matched.last_used_at = new Date().toISOString();
-        await this.repository.save(matched);
+        try {
+            await this.repository.save(matched);
+        } catch (e) {
+            // A concurrent verify already consumed this factor (optimistic-lock
+            // conflict on the row version) — treat as a failed attempt, not a
+            // 500, so the single-use / anti-replay guarantee holds.
+            if (isEntityConflictError(e)) {
+                await this.bumpAttempts(userId);
+                await this.recordChallengeEvent(EventName.MFA_CHALLENGE_FAILED, userId, input.kind, ctx);
+                return false;
+            }
+            throw e;
+        }
+
+        await this.resetAttempts(userId);
 
         await this.recordChallengeEvent(EventName.MFA_VERIFIED, userId, input.kind, ctx, matched);
 
@@ -487,7 +504,23 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             secret: Secret.fromBase32(await cipher.decrypt(device.secret)),
         });
 
-        return totp.validate({ token: token.trim(), window: 1 }) !== null;
+        const delta = totp.validate({ token: token.trim(), window: 1 });
+        if (delta === null) {
+            return false;
+        }
+
+        // Reject replay: the accepted step must strictly advance past the last
+        // consumed one (RFC 6238 §5.2), so a captured code can't be reused
+        // within its ±1 validation window. The version column makes the
+        // concurrent case (two verifies advancing the same step) conflict-safe.
+        const step = Math.floor(Date.now() / 1000 / parameters.period) + delta;
+        if (typeof parameters.counter === 'number' && step <= parameters.counter) {
+            return false;
+        }
+
+        // persist the consumed step onto the device — the caller saves the row.
+        device.parameters = JSON.stringify({ ...parameters, counter: step });
+        return true;
     }
 
     protected async verifyRecovery(device: UserAuthenticator, code: string): Promise<boolean> {

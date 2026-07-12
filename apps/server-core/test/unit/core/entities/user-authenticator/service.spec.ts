@@ -250,6 +250,32 @@ describe('UserAuthenticatorService', () => {
             expect(stored.last_used_at).toBeDefined();
         });
 
+        it('rejects replay of an already-used login code within its window (#3237)', async () => {
+            const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
+            await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
+
+            const code = totpCode(enrolled.secret!);
+            // the first LOGIN with this code is accepted (the confirmation does
+            // not consume the step); a replay of the same code is rejected —
+            // the consumed step is persisted and must strictly advance.
+            expect(await service.verify(userId, { kind: UserAuthenticatorKind.TOTP, response: code })).toBeTruthy();
+            expect(await service.verify(userId, { kind: UserAuthenticatorKind.TOTP, response: code })).toBeFalsy();
+
+            const [stored] = await repository.findAllWithSecretsByUser(userId);
+            expect(JSON.parse(stored.parameters!).counter).toBeGreaterThan(0);
+        });
+
+        it('bumps the optimistic-lock version on each accepted verify', async () => {
+            const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
+            await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
+
+            const before = (await repository.findAllWithSecretsByUser(userId))[0].version ?? 0;
+            await service.verify(userId, { kind: UserAuthenticatorKind.TOTP, response: totpCode(enrolled.secret!) });
+            const after = (await repository.findAllWithSecretsByUser(userId))[0].version ?? 0;
+
+            expect(after).toBeGreaterThan(before);
+        });
+
         it('ignores unconfirmed devices', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
 
