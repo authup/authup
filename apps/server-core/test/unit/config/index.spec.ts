@@ -158,6 +158,34 @@ describe('src/config/*.ts', () => {
             expect(config.loginAttemptWindow).toEqual(900);
         });
 
+        it('should fail loud at boot when mfaEnabled has no encryption key', async () => {
+            await expect(normalizeConfig({ mfaEnabled: true }))
+                .rejects.toThrow(/mfaEncryptionKey/);
+        });
+
+        it('should reject an mfaEncryptionKey that does not decode to 32 bytes', async () => {
+            // valid base64, wrong length
+            await expect(normalizeConfig({
+                mfaEnabled: true,
+                mfaEncryptionKey: Buffer.alloc(16, 1).toString('base64'),
+            })).rejects.toThrow(/32 bytes/);
+
+            // not base64 at all
+            await expect(normalizeConfig({
+                mfaEnabled: true,
+                mfaEncryptionKey: '   ',
+            })).rejects.toThrow(/mfaEncryptionKey/);
+        });
+
+        it('should accept a valid 32-byte mfaEncryptionKey', async () => {
+            const config = await normalizeConfig({
+                mfaEnabled: true,
+                mfaEncryptionKey: Buffer.alloc(32, 7).toString('base64'),
+            });
+
+            expect(config.mfaEnabled).toEqual(true);
+        });
+
         it('should reject the login throttle without the audit log (fail loud)', async () => {
             // the throttle counts loginFailed rows in auth_events — with the
             // audit log disabled it would silently no-op.
