@@ -8,6 +8,7 @@
 import type { OAuth2SubKind } from '@authup/specs';
 import type { Client } from '../client';
 import type { Realm } from '../realm';
+import type { SessionAuthMethod } from '../session/constants';
 
 export interface OAuth2AuthorizationCode {
     id: string,
@@ -35,7 +36,7 @@ export interface OAuth2AuthorizationCode {
      * session the token exchange creates when no backing session exists
      * (federated IdP callback), and feeding the id_token amr/acr derivation.
      */
-    auth_method?: string | null,
+    auth_method?: `${SessionAuthMethod}` | null,
 
     /**
      * The acr_values the RP requested — persisted so the mint step can
