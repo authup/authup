@@ -33,6 +33,12 @@ export const USER_AUTHENTICATOR_EMAIL_CODE_CACHE_PREFIX = 'mfaEmailCode';
 export const USER_AUTHENTICATOR_EMAIL_CODE_LENGTH = 6;
 export const USER_AUTHENTICATOR_EMAIL_CODE_EXPIRES_IN_MINUTES = 10;
 
+// Per-user cooldown between challenge-code emails (seconds). Bounds mail-capacity
+// abuse — an authenticated caller cannot spray unlimited OTP mails. Separate from
+// the verification backoff (which only tracks failed verifies, not sends).
+export const USER_AUTHENTICATOR_EMAIL_SEND_CACHE_PREFIX = 'mfaEmailSend';
+export const USER_AUTHENTICATOR_EMAIL_SEND_COOLDOWN = 60;
+
 export const USER_AUTHENTICATOR_WEBAUTHN_REG_CACHE_PREFIX = 'mfaWebauthnReg';
 export const USER_AUTHENTICATOR_WEBAUTHN_AUTH_CACHE_PREFIX = 'mfaWebauthnAuth';
 export const USER_AUTHENTICATOR_WEBAUTHN_CHALLENGE_WINDOW = 300;

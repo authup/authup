@@ -455,6 +455,61 @@ describe('UserAuthenticatorService', () => {
                 expect((e as any).code).toEqual(ErrorCode.MFA_NOT_CONFIGURABLE);
             }
         });
+
+        it('re-enrolling email updates the existing factor in place (no destructive gap)', async () => {
+            seedUserWithEmail();
+            const first = await service.enroll({ kind: UserAuthenticatorKind.EMAIL }, makeActor());
+            const second = await service.enroll({ kind: UserAuthenticatorKind.EMAIL }, makeActor());
+
+            const rows = (await repository.findAllByUser(userId))
+                .filter((device) => device.kind === UserAuthenticatorKind.EMAIL);
+            expect(rows).toHaveLength(1);
+            // updated in place — same row id, not remove-then-create
+            expect(second.entity.id).toEqual(first.entity.id);
+            expect(rows[0].confirmed).toBeTruthy();
+        });
+
+        it('rate-limits challenge-code emails per user (send cooldown)', async () => {
+            seedUserWithEmail();
+            await service.enroll({ kind: UserAuthenticatorKind.EMAIL }, makeActor());
+
+            await service.sendChallenge(userId, UserAuthenticatorKind.EMAIL);
+            expect(mailClient.sent).toHaveLength(1);
+
+            // a resend within the cooldown is throttled — no second mail
+            expect.assertions(3);
+            try {
+                await service.sendChallenge(userId, UserAuthenticatorKind.EMAIL);
+            } catch (e) {
+                expect(isMfaThrottledError(e)).toBeTruthy();
+            }
+            expect(mailClient.sent).toHaveLength(1);
+        });
+
+        it('fails email verify closed when the verify lock is unavailable (no persisted backstop)', async () => {
+            seedUserWithEmail();
+            await service.enroll({ kind: UserAuthenticatorKind.EMAIL }, makeActor());
+            await service.sendChallenge(userId, UserAuthenticatorKind.EMAIL);
+            const code = /(\d{6})/.exec(mailClient.sent[0].text ?? '')![1];
+
+            // simulate the lock primitive (set-if-absent) erroring while reads work
+            const originalAdd = cache.add.bind(cache);
+            cache.add = async () => { throw new Error('cache down'); };
+
+            // EMAIL has no persisted anti-replay backstop, so without a real lock
+            // it must fail closed rather than risk a concurrent double-consume.
+            expect(await service.verify(userId, {
+                kind: UserAuthenticatorKind.EMAIL,
+                response: code,
+            })).toBeFalsy();
+
+            // the code was NOT consumed — it verifies once the lock is back
+            cache.add = originalAdd;
+            expect(await service.verify(userId, {
+                kind: UserAuthenticatorKind.EMAIL,
+                response: code,
+            })).toBeTruthy();
+        });
     });
 
     describe('webauthn', () => {
