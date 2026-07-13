@@ -78,6 +78,7 @@ export class TokenController {
                 keyRepository: ctx.keyRepository,
                 sessionManager: ctx.sessionManager,
                 realmRepository: ctx.realmRepository,
+                accessPolicyEvaluator: ctx.accessPolicyEvaluator,
             }),
             [OAuth2TokenGrant.CLIENT_CREDENTIALS]: new HTTPClientCredentialsGrant({
                 accessTokenIssuer: ctx.accessTokenIssuer,

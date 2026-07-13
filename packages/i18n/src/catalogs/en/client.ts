@@ -88,6 +88,10 @@ export const TranslatorTranslationClientEnglish : NamespaceTranslations<`${Trans
 
     [TranslatorTranslationClientKey.AUTHORIZE_ABORTED]: 'The authorization request was denied. Returning to the application automatically is not possible — you can close this window.',
 
+    [TranslatorTranslationClientKey.ACCESS_DENIED_TITLE]: 'Access denied',
+    [TranslatorTranslationClientKey.ACCESS_DENIED_TEXT]: 'You are not permitted to access this application.',
+    [TranslatorTranslationClientKey.CLIENT_ACCESS_POLICY_HINT]: 'Without a policy, every identity in the realm may sign in.',
+
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TITLE]: 'Sign out',
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TEXT]: 'Do you want to sign out?',
     [TranslatorTranslationClientKey.LOGOUT_DONE]: 'You have been signed out.',

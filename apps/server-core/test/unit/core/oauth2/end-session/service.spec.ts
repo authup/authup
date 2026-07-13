@@ -53,6 +53,8 @@ const client: Client = {
     scope: null,
     base_url: null,
     root_url: null,
+    access_policy_id: null,
+    access_policy: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     realm_id: realmId,

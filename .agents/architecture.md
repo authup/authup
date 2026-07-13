@@ -1405,6 +1405,65 @@ local-only — the round-trip is the chosen mechanism, **not** a
 `DELETE /sessions/@me` (which would collide with the #3191 interactive-login
 session reuse → self-DoS of fresh logins).
 
+## Application Access Policy (plan 052)
+
+`Client.access_policy_id` is an optional FK onto `auth_policies`
+(`ON DELETE SET NULL`) gating **who may obtain a token for that client** via
+the interactive code flow. `null` = default-allow (every existing client
+behaves as before); a bound policy is evaluated against the authenticated
+identity and a failure denies with `access_denied` (RFC 6749 §4.1.2.1 —
+`OAuth2ErrorCode.ACCESS_DENIED` / `ErrorCode.OAUTH_ACCESS_DENIED`, HTTP 400,
+neutral message: no identity/policy detail, no enumeration oracle).
+
+- **Evaluator** — `OAuth2AccessPolicyEvaluator`
+  (`core/oauth2/access-policy/`, port `IOAuth2AccessPolicyEvaluator`) loads the
+  policy tree via `PolicyRepository.findDescendantsTreeById` (base row loaded
+  first — an id-only root yields a `type`-less tree every engine consumer
+  fails closed on) and evaluates the server `PolicyEngine` with **`IDENTITY`
+  policy data only** (`toIdentityPolicyData`). Consequences: `IDENTITY` /
+  `REALM_MATCH` / `TIME` / `DATE` / composite policies work; an
+  `ATTRIBUTES`-type access policy can never pass (DATA_MISSING → deny) — the
+  identity's attribute bag is deliberately not loaded at the gate. **Fail
+  closed everywhere**: unresolvable/dangling policy id, tree-load failure,
+  evaluation error, and even a policy-carrying client with **no wired
+  evaluator** all deny. Only a genuinely-null `access_policy_id` allows (a
+  deleted policy degrades to null via `SET NULL`).
+- **Three enforcement legs** (plan-041 layered-enforcement shape): (1)
+  `OAuth2Authorization.authorizeInner` — the LAST gate before code issuance
+  (order: realm → MFA backstop/step-up → prompt/max_age freshness → **access
+  policy** → issue), so a denial is only revealed to a fully-authenticated,
+  second-factor-complete identity; (2) the **federated-IdP callback** (it
+  mints codes without `authorize()`) — on deny it redirects back to the hosted
+  `/authorize` page with `error=access_denied` (`serve()` maps that recognized
+  query param onto a neutral hydration-payload error); (3) a **`/token`
+  code-redemption backstop** — catches codes minted before a policy change or
+  by a missed minting site; the subject is built from the code-blob scalars
+  (no DB identity load) and denial surfaces as `invalid_grant` (RFC 6749 §5.2
+  has no `access_denied`; a denied redemption also burns the code — retries
+  hit code-reuse `invalid_grant`).
+- **Denial transport honors `redirectUriVerified`** (threaded from the
+  code-request verifier through `OAuth2AuthorizationOptions` alongside
+  `client`): verified → `AuthorizeController.confirm` catches the error and
+  returns 200 `{ url: <redirect_uri>?error=access_denied&state=… }` (the kit
+  navigates it like any success — silent flows included); unverified →
+  rethrow → 400 JSON body → the kit `AuthorizeForm` renders a terminal
+  localized denial card (never redirect an OAuth2 error to an unverified
+  URI). The error's `redirectUri`/`state` ride **non-enumerable class
+  fields** on `OAuth2AccessDeniedError`, so they never serialize into the
+  wire body.
+- **Guardrails**: `access_policy_id` is in the `system.client-names-self-manage`
+  ATTRIBUTE_NAMES denylist (a self-managing client cannot change its own
+  gate), stays **out** of the anonymous `GET /authorize` `ClientSummary` DTO,
+  and is mounted `{ optional: true, nullable }` in every validator group so
+  admins can set/clear it. `buildWebClientAttributes` deliberately omits the
+  key — the provisioner MERGE would otherwise wipe an admin-set policy on the
+  per-realm `web` client every boot. The admin form binds it via
+  `APolicyPicker` in `AClientForm`. A denial records
+  `EventName.AUTHORIZE_FAILED` (`data.reason: 'accessPolicy'`, ref = client)
+  and the `authup_authorize_total{outcome="denied"}` metric (label live as of
+  this plan). Client caches mean a policy (re)assignment lags ≤60s at `/token`
+  (`CachePrefix.CLIENT` query cache).
+
 ## OAuth2 Token Endpoint Authentication
 
 The `/token` endpoint authenticates the calling client according to RFC 6749. Confidential clients MUST present a `client_secret`; public clients identify with `client_id` only.
@@ -2152,7 +2211,7 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   registered by `HTTPModule` — `Noop` when `middlewarePrometheus` is off) on
   the default registry: `authup_login_total{result}`,
   `authup_token_grant_total{grant_type}` (successes only),
-  `authup_authorize_total{outcome}` (`denied` reserved until plan 052),
+  `authup_authorize_total{outcome}` (`denied` live since plan 052),
   `authup_refresh_replay_total`. Bounded label sets only — subject-level
   attribution belongs in the security event log, never in metric labels.
 

@@ -7,6 +7,7 @@
 
 import type { Client } from '@authup/core-kit';
 import type { IOAuth2AuthorizationCodeIssuer } from './code/index.ts';
+import type { IOAuth2AccessPolicyEvaluator } from '../access-policy/index.ts';
 import type { ISessionManager } from '../../authentication/index.ts';
 import type { IEventService, IUserAuthenticatorChallengeProvider } from '../../entities/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
@@ -16,6 +17,13 @@ export type OAuth2AuthorizationManagerContext = {
     sessionManager: ISessionManager,
     eventService?: IEventService,
     metrics?: IAuthFlowMetrics,
+    /**
+     * Application access policy gate (plan 052): evaluates a client's
+     * access_policy_id against the authenticated identity before a code is
+     * issued. Absent = feature inert — but a client carrying a policy id
+     * with no wired evaluator still denies (fail closed).
+     */
+    accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,
     /**
      * Max age (seconds) of the authentication a `prompt=login` request accepts
      * before forcing re-auth (config `promptLoginMaxAge`). Default 60.

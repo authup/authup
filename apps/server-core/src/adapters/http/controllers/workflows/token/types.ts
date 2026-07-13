@@ -14,6 +14,7 @@ import type {
     IIdentityPermissionProvider,
     IIdentityResolver,
     ILoginThrottleService,
+    IOAuth2AccessPolicyEvaluator,
     IOAuth2AuthorizationCodeVerifier,
     IOAuth2KeyRepository,
     IOAuth2MfaLoginService,
@@ -46,6 +47,7 @@ export type TokenControllerContext = {
     loginThrottleService?: ILoginThrottleService,
     userAuthenticatorService?: IUserAuthenticatorService,
     mfaLoginService?: IOAuth2MfaLoginService,
+    accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,
 
     tokenRefreshGracePeriod?: number,
     logger?: Logger,

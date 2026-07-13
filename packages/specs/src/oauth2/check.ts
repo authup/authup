@@ -8,6 +8,7 @@
 import { ErrorCode, hasInstanceof, isAuthupError } from '@authup/errors';
 import { isObject } from '@authup/kit';
 import {
+    OAUTH2_ACCESS_DENIED_ERROR_INSTANCE,
     OAUTH2_CLIENT_ERROR_INSTANCE,
     OAUTH2_CLIENT_UNAUTHORIZED_ERROR_INSTANCE,
     OAUTH2_ERROR_INSTANCE,
@@ -18,6 +19,7 @@ import {
     OAUTH2_RESPONSE_TYPE_ERROR_INSTANCE,
     OAUTH2_SCOPE_ERROR_INSTANCE,
     OAUTH2_SERVER_ERROR_INSTANCE,
+    type OAuth2AccessDeniedError,
     type OAuth2ClientError,
     type OAuth2ClientUnauthorizedError,
     type OAuth2Error,
@@ -89,6 +91,18 @@ export function isOAuth2MfaRequiredError(input: unknown): input is OAuth2MfaRequ
     }
 
     return input.code === ErrorCode.OAUTH_MFA_REQUIRED;
+}
+
+export function isOAuth2AccessDeniedError(input: unknown): input is OAuth2AccessDeniedError {
+    if (hasInstanceof(input, OAUTH2_ACCESS_DENIED_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isOAuth2Error(input)) {
+        return false;
+    }
+
+    return input.code === ErrorCode.OAUTH_ACCESS_DENIED;
 }
 
 export function isOAuth2GrantError(input: unknown): input is OAuth2GrantError {

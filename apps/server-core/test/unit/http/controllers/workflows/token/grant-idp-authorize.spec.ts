@@ -14,13 +14,16 @@ import {
 import { createServer } from 'node:http';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
+import { BuiltInPolicyType } from '@authup/access';
 import type { Client } from '@authup/core-kit';
 import {
+    IdentityType,
     ScopeName,
     buildIdentityProviderAuthorizeCallbackPath,
     buildIdentityProviderAuthorizePath,
 } from '@authup/core-kit';
 import { base64URLEncode } from '@authup/kit';
+import { OAuth2ErrorCode } from '@authup/specs';
 import { createFakeClient, createFakeOAuth2IdentityProvider } from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
 
@@ -288,5 +291,69 @@ describe('identity-provider authorization code grant', () => {
 
         const introspection = await suite.client.token.introspect({ token: tokenResponse.access_token });
         expect(payload.sid).toEqual(introspection.session_id);
+    });
+
+    // Application access policy (plan 052), federated leg: the callback never
+    // redirects to the RP directly — a denial bounces back to the hosted
+    // authorize page with error=access_denied, and NO code is issued.
+    it('should bounce a policy-denied federated login back to the hosted authorize page', async () => {
+        // an identity policy restricted to robots denies the federated user
+        const denyPolicy = await suite.client.policy.createBuiltIn({
+            name: 'idp-access-deny',
+            type: BuiltInPolicyType.IDENTITY,
+            invert: false,
+            types: [IdentityType.ROBOT],
+            realm_id: null,
+        });
+        await suite.client.client.update(client.id, { access_policy_id: denyPolicy.id });
+
+        const authorizeOutResponse = await suite.client
+            .get(
+                `${buildIdentityProviderAuthorizePath(providerId)}?codeRequest=${encodedCodeRequest}`,
+                { redirect: 'manual' },
+            );
+
+        const state = new URL(authorizeOutResponse.headers.get('location') as string)
+            .searchParams.get('state');
+
+        const authorizeInResponse = await suite.client
+            .get(
+                `${buildIdentityProviderAuthorizeCallbackPath(providerId)}?code=fake-idp-code&state=${state}`,
+                { redirect: 'manual' },
+            );
+
+        expect(authorizeInResponse.status).toEqual(302);
+
+        const inURL = new URL(authorizeInResponse.headers.get('location') as string);
+        expect(inURL.pathname.endsWith('/authorize')).toBe(true);
+        expect(inURL.searchParams.get('error')).toEqual(OAuth2ErrorCode.ACCESS_DENIED);
+        expect(inURL.searchParams.get('code')).toBeNull();
+        // the original code request rides along so the hosted page can render it
+        expect(inURL.searchParams.get('client_id')).toEqual(client.id);
+    });
+
+    it('should issue a code again once the access policy is cleared', async () => {
+        await suite.client.client.update(client.id, { access_policy_id: null });
+
+        const authorizeOutResponse = await suite.client
+            .get(
+                `${buildIdentityProviderAuthorizePath(providerId)}?codeRequest=${encodedCodeRequest}`,
+                { redirect: 'manual' },
+            );
+
+        const state = new URL(authorizeOutResponse.headers.get('location') as string)
+            .searchParams.get('state');
+
+        const authorizeInResponse = await suite.client
+            .get(
+                `${buildIdentityProviderAuthorizeCallbackPath(providerId)}?code=fake-idp-code&state=${state}`,
+                { redirect: 'manual' },
+            );
+
+        expect(authorizeInResponse.status).toEqual(302);
+
+        const inURL = new URL(authorizeInResponse.headers.get('location') as string);
+        expect(inURL.searchParams.get('error')).toBeNull();
+        expect(inURL.searchParams.get('code')).toBeTruthy();
     });
 });

@@ -65,6 +65,7 @@ export const TranslatorTranslationFieldFrench : NamespaceTranslations<`${Transla
     [TranslatorTranslationFieldKey.USER_INFO]: 'UserInfo',
     [TranslatorTranslationFieldKey.DISCOVERY]: 'Découverte',
     [TranslatorTranslationFieldKey.REDIRECT_URL]: 'URL de redirection',
+    [TranslatorTranslationFieldKey.ACCESS_POLICY]: 'Politique d\'accès',
     [TranslatorTranslationFieldKey.ACTOR]: 'Acteur',
     [TranslatorTranslationFieldKey.REF]: 'Référence',
     [TranslatorTranslationFieldKey.PATH]: 'Chemin',

@@ -48,6 +48,7 @@ export const TranslatorTranslationErrorSpanish : NamespaceTranslations<`${ErrorC
     [ErrorCode.OAUTH_REQUEST_INVALID]: 'La solicitud no es válida.',
     [ErrorCode.OAUTH_LOGIN_REQUIRED]: 'Debes iniciar sesión para continuar.',
     [ErrorCode.OAUTH_MFA_REQUIRED]: 'Se requiere un segundo factor para continuar.',
+    [ErrorCode.OAUTH_ACCESS_DENIED]: 'No tienes permiso para acceder a esta aplicación.',
     [ErrorCode.OAUTH_INTERACTION_REQUIRED]: 'Se requiere interacción para continuar.',
     [ErrorCode.OAUTH_ACCOUNT_SELECTION_REQUIRED]: 'Selecciona una cuenta para continuar.',
     [ErrorCode.OAUTH_CONSENT_REQUIRED]: 'Se requiere tu consentimiento para continuar.',

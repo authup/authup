@@ -88,6 +88,10 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
 
     [TranslatorTranslationClientKey.AUTHORIZE_ABORTED]: 'Die Autorisierungsanfrage wurde abgelehnt. Eine automatische Rückkehr zur Anwendung ist nicht möglich — Sie können dieses Fenster schließen.',
 
+    [TranslatorTranslationClientKey.ACCESS_DENIED_TITLE]: 'Zugriff verweigert',
+    [TranslatorTranslationClientKey.ACCESS_DENIED_TEXT]: 'Sie sind nicht berechtigt, auf diese Anwendung zuzugreifen.',
+    [TranslatorTranslationClientKey.CLIENT_ACCESS_POLICY_HINT]: 'Ohne Richtlinie darf sich jede Identität des Realms anmelden.',
+
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TITLE]: 'Abmelden',
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TEXT]: 'Möchten Sie sich abmelden?',
     [TranslatorTranslationClientKey.LOGOUT_DONE]: 'Sie wurden abgemeldet.',

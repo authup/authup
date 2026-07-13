@@ -48,6 +48,7 @@ export const TranslatorTranslationErrorEnglish : NamespaceTranslations<`${ErrorC
     [ErrorCode.OAUTH_REQUEST_INVALID]: 'The request is invalid.',
     [ErrorCode.OAUTH_LOGIN_REQUIRED]: 'You must sign in to continue.',
     [ErrorCode.OAUTH_MFA_REQUIRED]: 'A second factor is required to continue.',
+    [ErrorCode.OAUTH_ACCESS_DENIED]: 'You are not permitted to access this application.',
     [ErrorCode.OAUTH_INTERACTION_REQUIRED]: 'Interaction is required to continue.',
     [ErrorCode.OAUTH_ACCOUNT_SELECTION_REQUIRED]: 'Please select an account to continue.',
     [ErrorCode.OAUTH_CONSENT_REQUIRED]: 'Your consent is required to continue.',

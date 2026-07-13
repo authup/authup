@@ -120,6 +120,10 @@ export enum TranslatorTranslationClientKey {
 
     AUTHORIZE_ABORTED = 'authorizeAborted',
 
+    ACCESS_DENIED_TITLE = 'accessDeniedTitle',
+    ACCESS_DENIED_TEXT = 'accessDeniedText',
+    CLIENT_ACCESS_POLICY_HINT = 'clientAccessPolicyHint',
+
     LOGOUT_CONFIRM_TITLE = 'logoutConfirmTitle',
     LOGOUT_CONFIRM_TEXT = 'logoutConfirmText',
     LOGOUT_DONE = 'logoutDone',
@@ -336,6 +340,7 @@ export enum TranslatorTranslationFieldKey {
     USER_INFO = 'userInfo',
     DISCOVERY = 'discovery',
     REDIRECT_URL = 'redirectUrl',
+    ACCESS_POLICY = 'accessPolicy',
     ACTOR = 'actor',
     REF = 'ref',
     PATH = 'path',

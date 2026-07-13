@@ -104,8 +104,12 @@ function mountForm(authorizeHandler: () => unknown, props: FormProps = {}) {
                 // a distinctive class so the manual-consent screen (which renders
                 // AuthorizeScopes) is detectable — the spinner does not render it.
                 AuthorizeScopes: { template: '<div class="scopes-stub" />' },
-                // ...same for the terminal aborted notice.
-                AuthorizeText: { template: '<div class="aborted-stub" />' },
+                // ...same for the terminal notices — the class discriminates the
+                // access-policy denial card (is-error) from the aborted notice.
+                AuthorizeText: {
+                    props: ['isError', 'message'],
+                    template: '<div :class="isError ? \'denied-stub\' : \'aborted-stub\'" />',
+                },
                 ITranslateT: { template: '<span />' },
             },
             plugins: [
@@ -241,5 +245,52 @@ describe('AuthorizeForm abort redirect gate', () => {
         expect(`${url.origin}${url.pathname}`).toEqual('https://app.example.com/cb');
         expect(url.searchParams.get('error')).toEqual('access_denied');
         expect(url.searchParams.get('state')).toEqual('state-1');
+    });
+});
+
+describe('AuthorizeForm access-policy denial', () => {
+    beforeEach(() => {
+        Object.defineProperty(window, 'location', {
+            configurable: true,
+            writable: true,
+            value: { href: '' },
+        });
+    });
+
+    it('renders the terminal denial card on an access_denied body error (unverified redirect)', async () => {
+        const wrapper = mountForm(() => {
+            throw httpError(400, {
+                code: OAuth2ErrorCode.ACCESS_DENIED,
+                error: OAuth2ErrorCode.ACCESS_DENIED,
+            });
+        });
+        await flushPromises();
+
+        expect(wrapper.find('.denied-stub').exists()).toBe(true);
+        // no consent UI, no retry action, no navigation, no re-auth fallback
+        expect(wrapper.find('.scopes-stub').exists()).toBe(false);
+        expect(wrapper.findAll('button')).toHaveLength(0);
+        expect(window.location.href).toEqual('');
+        expect(wrapper.emitted('loginRequired')).toBeFalsy();
+    });
+
+    it('does NOT render the denial card for an unrelated 400 error (falls back to manual consent)', async () => {
+        const wrapper = mountForm(() => {
+            throw httpError(400, { error: OAuth2ErrorCode.INVALID_REQUEST });
+        });
+        await flushPromises();
+
+        expect(wrapper.find('.denied-stub').exists()).toBe(false);
+        expect(wrapper.find('.scopes-stub').exists()).toBe(true);
+    });
+
+    it('navigates the server-built error redirect on a verified denial (200 { url })', async () => {
+        const deniedUrl = 'https://app.example.com/cb?error=access_denied&state=state-1';
+        const wrapper = mountForm(() => ({ url: deniedUrl }));
+        await flushPromises();
+
+        expect(window.location.href).toEqual(deniedUrl);
+        expect(wrapper.find('.denied-stub').exists()).toBe(false);
+        expect(wrapper.find('.scopes-stub').exists()).toBe(false);
     });
 });

@@ -105,6 +105,12 @@ export enum OAuth2ErrorCode {
      * tell "log in again" from "complete the MFA challenge".
      */
     MFA_REQUIRED = 'mfa_required',
+
+    /**
+     * RFC 6749 §4.1.2.1 — the resource owner or authorization server
+     * denied the request.
+     */
+    ACCESS_DENIED = 'access_denied',
 }
 
 /**

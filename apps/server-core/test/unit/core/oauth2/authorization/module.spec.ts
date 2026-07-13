@@ -6,10 +6,15 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { UserIdentity } from '@authup/core-kit';
-import { ScopeName } from '@authup/core-kit';
+import type { IdentityPolicyData } from '@authup/access';
+import type { Client, UserIdentity } from '@authup/core-kit';
+import { EventName, ScopeName } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
-import { OAuth2AuthorizationResponseType, OAuth2SubKind } from '@authup/specs';
+import {
+    OAuth2AuthorizationResponseType,
+    OAuth2SubKind,
+    isOAuth2AccessDeniedError,
+} from '@authup/specs';
 import {
     beforeEach,
     describe,
@@ -18,12 +23,13 @@ import {
 } from 'vitest';
 import { OAuth2Authorization } from '../../../../../src/core/oauth2/authorization/module.ts';
 import type {
+    IOAuth2AccessPolicyEvaluator,
     IOAuth2AuthorizationCodeIssuer,
     IUserAuthenticatorChallengeProvider,
     UserAuthenticatorChallengeStatus,
 } from '../../../../../src/core/index.ts';
 import type { OAuth2AuthorizationCodeIssuerOptions } from '../../../../../src/core/oauth2/authorization/code/issuer/types.ts';
-import { FakeSessionManager } from '../../helpers/fake-session-manager.ts';
+import { FakeAuthFlowMetrics, FakeEventService, FakeSessionManager } from '../../helpers/index.ts';
 
 // The code issuer records its calls so the authTime propagation can be asserted.
 // No id_token is minted here anymore (that moved to the /token exchange), so no
@@ -437,5 +443,257 @@ describe('OAuth2Authorization MFA backstop + acr step-up', () => {
 
         await authorization.authorize(buildData(), identity, {});
         expect(issueCalls[0]).toEqual(expect.objectContaining({ authMethod: null }));
+    });
+});
+
+describe('OAuth2Authorization access policy gate (plan 052)', () => {
+    const realmId = randomUUID();
+    const userId = randomUUID();
+
+    let sessionManager: FakeSessionManager;
+
+    class StubAccessPolicyEvaluator implements IOAuth2AccessPolicyEvaluator {
+        public calls: { policyId: string, subject: IdentityPolicyData }[] = [];
+
+        public allowed = false;
+
+        async evaluate(policyId: string, subject: IdentityPolicyData): Promise<boolean> {
+            this.calls.push({ policyId, subject });
+            return this.allowed;
+        }
+    }
+
+    const identity: UserIdentity = {
+        type: OAuth2SubKind.USER,
+        data: {
+            id: userId,
+            name: 'user',
+            realm_id: realmId,
+            realm: { id: realmId, name: 'master' },
+        } as UserIdentity['data'],
+    };
+
+    const buildClient = (data: Partial<Client> = {}): Client => {
+        const now = new Date().toISOString();
+        return {
+            id: randomUUID(),
+            active: true,
+            built_in: false,
+            is_confidential: false,
+            name: 'client',
+            display_name: null,
+            description: null,
+            secret: null,
+            secret_hashed: false,
+            secret_encrypted: false,
+            redirect_uri: 'https://example.com/**',
+            post_logout_redirect_uri: null,
+            grant_types: null,
+            scope: null,
+            base_url: null,
+            root_url: null,
+            access_policy_id: null,
+            access_policy: null,
+            created_at: now,
+            updated_at: now,
+            realm_id: realmId,
+            realm: {
+                id: realmId,
+                name: 'master',
+                display_name: null,
+                description: null,
+                built_in: true,
+                created_at: now,
+                updated_at: now,
+            },
+            ...data,
+        };
+    };
+
+    const buildData = (extra: Record<string, any> = {}) => ({
+        response_type: OAuth2AuthorizationResponseType.CODE,
+        client_id: randomUUID(),
+        realm_id: realmId,
+        redirect_uri: 'https://example.com/callback',
+        scope: ScopeName.GLOBAL,
+        state: 'xyz',
+        ...extra,
+    });
+
+    beforeEach(() => {
+        issueCalls.length = 0;
+        sessionManager = new FakeSessionManager();
+    });
+
+    it('should deny with the verified redirect target on the error when redirectUriVerified', async () => {
+        const evaluator = new StubAccessPolicyEvaluator();
+        const authorization = new OAuth2Authorization({
+            codeIssuer,
+            sessionManager,
+            accessPolicyEvaluator: evaluator,
+        });
+        const client = buildClient({ access_policy_id: randomUUID() });
+
+        expect.assertions(6);
+        try {
+            await authorization.authorize(buildData(), identity, {
+                client,
+                redirectUriVerified: true,
+            });
+        } catch (e) {
+            expect(isOAuth2AccessDeniedError(e)).toBe(true);
+            if (isOAuth2AccessDeniedError(e)) {
+                expect(e.code).toEqual(ErrorCode.OAUTH_ACCESS_DENIED);
+                expect(e.redirectUri).toEqual('https://example.com/callback');
+                expect(e.state).toEqual('xyz');
+            }
+        }
+
+        expect(evaluator.calls).toHaveLength(1);
+        expect(issueCalls).toHaveLength(0);
+    });
+
+    it('should deny without a redirect target when the redirect_uri is unverified', async () => {
+        const evaluator = new StubAccessPolicyEvaluator();
+        const authorization = new OAuth2Authorization({
+            codeIssuer,
+            sessionManager,
+            accessPolicyEvaluator: evaluator,
+        });
+        const client = buildClient({ access_policy_id: randomUUID() });
+
+        expect.assertions(3);
+        try {
+            await authorization.authorize(buildData(), identity, {
+                client,
+                redirectUriVerified: false,
+            });
+        } catch (e) {
+            expect(isOAuth2AccessDeniedError(e)).toBe(true);
+            if (isOAuth2AccessDeniedError(e)) {
+                expect(e.redirectUri).toBeNull();
+                expect(e.state).toBeNull();
+            }
+        }
+    });
+
+    it('should issue a code when the policy permits the identity', async () => {
+        const evaluator = new StubAccessPolicyEvaluator();
+        evaluator.allowed = true;
+        const authorization = new OAuth2Authorization({
+            codeIssuer,
+            sessionManager,
+            accessPolicyEvaluator: evaluator,
+        });
+        const policyId = randomUUID();
+        const client = buildClient({ access_policy_id: policyId });
+
+        const result = await authorization.authorize(buildData(), identity, {
+            client,
+            redirectUriVerified: true,
+        });
+
+        expect(result.authorizationCode).toBeDefined();
+        expect(evaluator.calls).toHaveLength(1);
+        expect(evaluator.calls[0].policyId).toEqual(policyId);
+        expect(evaluator.calls[0].subject).toEqual(expect.objectContaining({
+            type: OAuth2SubKind.USER,
+            id: userId,
+            realmId,
+        }));
+    });
+
+    it('should never invoke the evaluator for a client without an access policy (default allow)', async () => {
+        const evaluator = new StubAccessPolicyEvaluator();
+        const authorization = new OAuth2Authorization({
+            codeIssuer,
+            sessionManager,
+            accessPolicyEvaluator: evaluator,
+        });
+
+        const result = await authorization.authorize(buildData(), identity, {
+            client: buildClient({ access_policy_id: null }),
+            redirectUriVerified: true,
+        });
+
+        expect(result.authorizationCode).toBeDefined();
+        expect(evaluator.calls).toHaveLength(0);
+    });
+
+    it('should never invoke the evaluator when no client is threaded', async () => {
+        const evaluator = new StubAccessPolicyEvaluator();
+        const authorization = new OAuth2Authorization({
+            codeIssuer,
+            sessionManager,
+            accessPolicyEvaluator: evaluator,
+        });
+
+        const result = await authorization.authorize(buildData(), identity, {});
+
+        expect(result.authorizationCode).toBeDefined();
+        expect(evaluator.calls).toHaveLength(0);
+    });
+
+    it('should deny a policy-carrying client when no evaluator is wired (fail closed)', async () => {
+        const authorization = new OAuth2Authorization({
+            codeIssuer,
+            sessionManager,
+        });
+        const client = buildClient({ access_policy_id: randomUUID() });
+
+        await expect(
+            authorization.authorize(buildData(), identity, { client, redirectUriVerified: true }),
+        ).rejects.toMatchObject({ code: ErrorCode.OAUTH_ACCESS_DENIED });
+    });
+
+    it('should record the denied metrics outcome and the AUTHORIZE_FAILED event', async () => {
+        const metrics = new FakeAuthFlowMetrics();
+        const eventService = new FakeEventService();
+        const authorization = new OAuth2Authorization({
+            codeIssuer,
+            sessionManager,
+            metrics,
+            eventService,
+        });
+        const client = buildClient({ access_policy_id: randomUUID() });
+
+        await expect(
+            authorization.authorize(buildData(), identity, { client, redirectUriVerified: true }),
+        ).rejects.toMatchObject({ code: ErrorCode.OAUTH_ACCESS_DENIED });
+
+        expect(metrics.authorizeCalls).toEqual(['denied']);
+        expect(eventService.recordCalls).toHaveLength(1);
+        expect(eventService.recordCalls[0]).toEqual(expect.objectContaining({
+            name: EventName.AUTHORIZE_FAILED,
+            refId: client.id,
+            actorId: userId,
+            data: { reason: 'accessPolicy' },
+        }));
+    });
+
+    it('should enforce the MFA backstop before the access policy gate (gate order)', async () => {
+        const evaluator = new StubAccessPolicyEvaluator();
+        const mfaChallengeProvider: IUserAuthenticatorChallengeProvider = {
+            challenge: async () => ({
+                required: true,
+                enrollmentRequired: false,
+                kinds: [],
+            }),
+        };
+        const authorization = new OAuth2Authorization({
+            codeIssuer,
+            sessionManager,
+            mfaChallengeProvider,
+            accessPolicyEvaluator: evaluator,
+        });
+        const client = buildClient({ access_policy_id: randomUUID() });
+
+        // a denial is only revealed to a fully-authenticated (incl. second
+        // factor) identity — the MFA error must win over the policy denial
+        await expect(
+            authorization.authorize(buildData(), identity, { client, redirectUriVerified: true }),
+        ).rejects.toMatchObject({ code: ErrorCode.OAUTH_MFA_REQUIRED });
+
+        expect(evaluator.calls).toHaveLength(0);
     });
 });

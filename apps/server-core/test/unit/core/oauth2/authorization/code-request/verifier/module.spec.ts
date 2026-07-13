@@ -44,6 +44,8 @@ class FakeClientRepository implements IOAuth2ClientRepository {
             scope: null,
             base_url: null,
             root_url: null,
+            access_policy_id: null,
+            access_policy: null,
             created_at: now,
             updated_at: now,
             realm_id: realmId,

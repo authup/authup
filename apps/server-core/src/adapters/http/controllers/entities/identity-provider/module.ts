@@ -40,7 +40,7 @@ import { resolveURL } from '../../../../../utils/index.ts';
 import type { AuthorizeParameters } from '@hapic/oauth2';
 import { useRequestQuery } from '@routup/basic/query';
 import { readRequestBody } from '@routup/basic/body';
-import { OAuth2RequestError } from '@authup/specs';
+import { OAuth2ErrorCode, OAuth2RequestError } from '@authup/specs';
 import type {
     EntityCollectionResponse,
     IdentityProviderCreatePayload,
@@ -51,15 +51,18 @@ import { URL } from 'node:url';
 import type {
     IIdentityProviderAccountManager,
     IIdentityProviderRepository,
+    IOAuth2AccessPolicyEvaluator,
     IOAuth2AuthorizationCodeIssuer,
     IOAuth2AuthorizationCodeRequestVerifier,
     IOAuth2AuthorizationStateManager,
+    IOAuth2ClientRepository,
     IRealmRepository,
     OAuth2AuthorizationState,
 } from '../../../../../core/index.ts';
 import {
     OAuth2AuthorizationCodeRequestValidator,
     createIdentityProviderOAuth2Authenticator,
+    toIdentityPolicyData,
 } from '../../../../../core/index.ts';
 import {
     applyRouteRealmIDToBody,
@@ -82,6 +85,8 @@ export class IdentityProviderController {
 
     protected realmRepository: IRealmRepository;
 
+    protected clientRepository: IOAuth2ClientRepository;
+
     protected accountManager: IIdentityProviderAccountManager;
 
     protected codeRequestVerifier : IOAuth2AuthorizationCodeRequestVerifier;
@@ -92,17 +97,21 @@ export class IdentityProviderController {
 
     protected codeIssuer : IOAuth2AuthorizationCodeIssuer;
 
+    protected accessPolicyEvaluator? : IOAuth2AccessPolicyEvaluator;
+
     // ---------------------------------------------------------
 
     constructor(ctx: IdentityProviderControllerContext) {
         this.options = ctx.options;
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
+        this.clientRepository = ctx.clientRepository;
         this.accountManager = ctx.accountManager;
         this.codeIssuer = ctx.codeIssuer;
         this.codeRequestVerifier = ctx.codeRequestVerifier;
         this.codeRequestValidator = new OAuth2AuthorizationCodeRequestValidator();
         this.stateManager = ctx.stateManager;
+        this.accessPolicyEvaluator = ctx.accessPolicyEvaluator;
     }
 
     // ---------------------------------------------------------
@@ -317,6 +326,44 @@ export class IdentityProviderController {
 
         const realm = await this.realmRepository.resolve(entity.realm_id, true);
 
+        // Application access policy (plan 052), federated leg: the callback
+        // never redirects to the RP directly — a denial bounces back to the
+        // hosted authorize page with error=access_denied, so no
+        // redirectUriVerified threading through the state blob is needed.
+        // A policy id with no wired evaluator denies (fail closed); a
+        // since-deleted client is skipped (the /token backstop still covers it).
+        if (data.codeRequest?.client_id) {
+            const client = await this.clientRepository.findOneByIdOrName(
+                data.codeRequest.client_id,
+                data.codeRequest.realm_id,
+            );
+
+            if (client?.access_policy_id) {
+                let allowed = false;
+
+                const subject = toIdentityPolicyData({
+                    type: IdentityType.USER,
+                    data: {
+                        ...user,
+                        realm,
+                    },
+                });
+                if (this.accessPolicyEvaluator && subject) {
+                    allowed = await this.accessPolicyEvaluator.evaluate(
+                        client.access_policy_id,
+                        subject,
+                    );
+                }
+
+                if (!allowed) {
+                    const url = this.buildHostedAuthorizeURL(data.codeRequest);
+                    url.searchParams.set('error', OAuth2ErrorCode.ACCESS_DENIED);
+
+                    return sendRedirect(event, url.href);
+                }
+            }
+        }
+
         const authorizationCode = await this.codeIssuer.issue(
             {
                 response_type: 'code',
@@ -335,19 +382,7 @@ export class IdentityProviderController {
         );
 
         if (data.codeRequest) {
-            const codeRequestKeys = Object.keys(data.codeRequest);
-
-            const url = new URL(resolveURL(this.options.baseURL, 'authorize'));
-            for (const codeRequestKey_ of codeRequestKeys) {
-                const codeRequestKey = codeRequestKey_ as keyof OAuth2AuthorizationCodeRequest;
-                const codeRequestValue = data.codeRequest[codeRequestKey];
-                // Preserve meaningful falsy values (e.g. max_age=0, which OIDC
-                // treats as prompt=login) — only skip absent ones.
-                if (typeof codeRequestValue !== 'undefined' && codeRequestValue !== null) {
-                    url.searchParams.set(codeRequestKey, String(codeRequestValue));
-                }
-            }
-
+            const url = this.buildHostedAuthorizeURL(data.codeRequest);
             url.searchParams.set('code', authorizationCode.id);
 
             return sendRedirect(event, url.href);
@@ -450,6 +485,25 @@ export class IdentityProviderController {
         event.response.status = 201;
 
         return entity;
+    }
+
+    // ---------------------------------------------------------
+
+    private buildHostedAuthorizeURL(codeRequest: OAuth2AuthorizationCodeRequest): URL {
+        const url = new URL(resolveURL(this.options.baseURL, 'authorize'));
+
+        const codeRequestKeys = Object.keys(codeRequest);
+        for (const codeRequestKey_ of codeRequestKeys) {
+            const codeRequestKey = codeRequestKey_ as keyof OAuth2AuthorizationCodeRequest;
+            const codeRequestValue = codeRequest[codeRequestKey];
+            // Preserve meaningful falsy values (e.g. max_age=0, which OIDC
+            // treats as prompt=login) — only skip absent ones.
+            if (typeof codeRequestValue !== 'undefined' && codeRequestValue !== null) {
+                url.searchParams.set(codeRequestKey, String(codeRequestValue));
+            }
+        }
+
+        return url;
     }
 
     // ---------------------------------------------------------

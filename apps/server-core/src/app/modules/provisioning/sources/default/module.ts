@@ -95,6 +95,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                         'is_confidential',
                         'secret_hashed',
                         'secret_encrypted',
+                        'access_policy_id',
                     ],
                 },
             },

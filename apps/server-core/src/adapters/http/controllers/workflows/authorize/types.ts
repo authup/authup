@@ -9,6 +9,7 @@ import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import type {
     IAuthFlowMetrics,
     IEventService,
+    IOAuth2AccessPolicyEvaluator,
     IOAuth2AuthorizationCodeIssuer,
     IOAuth2AuthorizationCodeRequestVerifier,
     ISessionManager,
@@ -42,4 +43,5 @@ export type AuthorizeControllerContext = {
     metrics?: IAuthFlowMetrics,
 
     mfaChallengeProvider?: IUserAuthenticatorChallengeProvider,
+    accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,
 };

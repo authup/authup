@@ -17,6 +17,7 @@ import {
 } from 'vitest';
 import { createTestApplication } from '../../../../app';
 import { createFakeClient } from '../../../../utils';
+import { createFakeTimePolicy } from '../../../../utils/domains/policy';
 
 describe('http/controllers/client (self-manage)', () => {
     const suite = createTestApplication();
@@ -85,6 +86,16 @@ describe('http/controllers/client (self-manage)', () => {
     it('should reject self-update of active flag (rejected by ATTRIBUTE_NAMES policy)', async () => {
         await expect(
             selfClient.client.update(entity.id, { active: false } as Partial<ClientEntity>),
+        ).rejects.toThrow();
+    });
+
+    it('should reject self-update of access_policy_id (rejected by ATTRIBUTE_NAMES policy)', async () => {
+        // a real policy id — the rejection must come from the self-manage
+        // denylist, not from a dangling-FK validation error
+        const policy = await suite.client.policy.create(createFakeTimePolicy());
+
+        await expect(
+            selfClient.client.update(entity.id, { access_policy_id: policy.id }),
         ).rejects.toThrow();
     });
 

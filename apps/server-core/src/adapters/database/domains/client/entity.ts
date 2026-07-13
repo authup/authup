@@ -18,7 +18,8 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import { dateToISOStringTransformer } from '../../helpers/index.ts';
-import type { Client, Realm } from '@authup/core-kit';
+import type { Client, Policy, Realm } from '@authup/core-kit';
+import { PolicyEntity } from '../policy/index.ts';
 import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_clients' })
@@ -106,6 +107,19 @@ export class ClientEntity implements Client {
         nullable: true,
     })
     post_logout_redirect_uri: string | null;
+
+    @Column({
+        nullable: true,
+        type: 'uuid',
+    })
+    access_policy_id: string | null;
+
+    @ManyToOne(() => PolicyEntity, {
+        onDelete: 'SET NULL',
+        nullable: true,
+    })
+    @JoinColumn({ name: 'access_policy_id' })
+    access_policy: Policy | null;
 
     @Column({
         type: 'varchar',

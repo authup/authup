@@ -88,6 +88,10 @@ export const TranslatorTranslationClientFrench : NamespaceTranslations<`${Transl
 
     [TranslatorTranslationClientKey.AUTHORIZE_ABORTED]: 'La demande d\'autorisation a été refusée. Un retour automatique vers l\'application n\'est pas possible — vous pouvez fermer cette fenêtre.',
 
+    [TranslatorTranslationClientKey.ACCESS_DENIED_TITLE]: 'Accès refusé',
+    [TranslatorTranslationClientKey.ACCESS_DENIED_TEXT]: 'Vous n\'êtes pas autorisé à accéder à cette application.',
+    [TranslatorTranslationClientKey.CLIENT_ACCESS_POLICY_HINT]: 'Sans politique, toute identité du domaine peut se connecter.',
+
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TITLE]: 'Se déconnecter',
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TEXT]: 'Voulez-vous vous déconnecter ?',
     [TranslatorTranslationClientKey.LOGOUT_DONE]: 'Vous avez été déconnecté.',

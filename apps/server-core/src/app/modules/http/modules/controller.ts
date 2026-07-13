@@ -130,6 +130,7 @@ import {
     CredentialsAuthenticator,
     IdentityProviderRoleMappingService,
     LoginThrottleService,
+    OAuth2AccessPolicyEvaluator,
     OAuth2ClientAuthenticator,
     OAuth2EndSessionService,
     OAuth2MfaLoginService,
@@ -268,6 +269,7 @@ export class HTTPControllerModule {
             metrics,
 
             mfaChallengeProvider: this.resolveUserAuthenticatorService(container),
+            accessPolicyEvaluator: this.resolveAccessPolicyEvaluator(container),
         });
     }
 
@@ -334,6 +336,7 @@ export class HTTPControllerModule {
             loginThrottleService,
             userAuthenticatorService: this.resolveUserAuthenticatorService(container),
             mfaLoginService: this.resolveMfaLoginService(container),
+            accessPolicyEvaluator: this.resolveAccessPolicyEvaluator(container),
 
             tokenRefreshGracePeriod: config.tokenRefreshGracePeriod,
             logger,
@@ -519,12 +522,15 @@ export class HTTPControllerModule {
 
             repository,
             realmRepository: new RealmRepositoryAdapter(realmRepository),
+            clientRepository: container.resolve(OAuth2InjectionToken.ClientRepository),
 
             accountManager,
 
             codeIssuer,
             codeRequestVerifier,
             stateManager,
+
+            accessPolicyEvaluator: this.resolveAccessPolicyEvaluator(container),
         });
     }
 
@@ -751,6 +757,24 @@ export class HTTPControllerModule {
         const repository = container.resolve(AuthenticationInjectionKey.SessionRepository);
         const service = new SessionService({ repository });
         return new SessionController({ service });
+    }
+
+    private accessPolicyEvaluator? : OAuth2AccessPolicyEvaluator;
+
+    protected resolveAccessPolicyEvaluator(container: IContainer) : OAuth2AccessPolicyEvaluator {
+        if (this.accessPolicyEvaluator) {
+            return this.accessPolicyEvaluator;
+        }
+
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
+
+        this.accessPolicyEvaluator = new OAuth2AccessPolicyEvaluator({
+            policyProvider: new PolicyRepository(dataSource),
+            identityPermissionProvider: container.resolve(IdentityInjectionKey.PermissionProvider),
+            logger: container.resolve(LoggerInjectionKey),
+        });
+
+        return this.accessPolicyEvaluator;
     }
 
     private userAuthenticatorService? : UserAuthenticatorService;

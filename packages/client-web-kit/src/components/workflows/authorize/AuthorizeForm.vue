@@ -108,6 +108,21 @@ export default defineComponent({
             key: TranslatorTranslationClientKey.AUTHORIZE_ABORTED,
         });
 
+        const accessDeniedTitle = useTranslation({
+            namespace: TranslatorTranslationNamespace.CLIENT,
+            key: TranslatorTranslationClientKey.ACCESS_DENIED_TITLE,
+        });
+
+        const accessDeniedText = useTranslation({
+            namespace: TranslatorTranslationNamespace.CLIENT,
+            key: TranslatorTranslationClientKey.ACCESS_DENIED_TEXT,
+        });
+
+        // Terminal denial: the server's access policy rejected this identity
+        // for the client (unverified-redirect case — a verified denial comes
+        // back as 200 { url } and navigates). No retry: a re-POST re-denies.
+        const accessDenied = ref<boolean>(false);
+
         // An abort against an unverified redirect_uri can't navigate — the
         // template renders a terminal "aborted" notice instead.
         const aborted = ref<boolean>(false);
@@ -122,7 +137,7 @@ export default defineComponent({
             }
 
             const url = new URL(`${props.codeRequest.redirect_uri}`);
-            url.searchParams.set('error', 'access_denied');
+            url.searchParams.set('error', OAuth2ErrorCode.ACCESS_DENIED);
             url.searchParams.set(
                 'error_description',
                 'The resource owner or authorization server denied the request',
@@ -189,6 +204,11 @@ export default defineComponent({
                     return;
                 }
 
+                if (data?.error === OAuth2ErrorCode.ACCESS_DENIED) {
+                    accessDenied.value = true;
+                    return;
+                }
+
                 autoConsentFailed.value = true;
             }
         };
@@ -227,6 +247,9 @@ export default defineComponent({
             abort,
             aborted,
             abortedText,
+            accessDenied,
+            accessDeniedTitle,
+            accessDeniedText,
             autoConsent,
             showSpinner,
             translationsDefault,
@@ -239,8 +262,22 @@ export default defineComponent({
 });
 </script>
 <template>
+    <div
+        v-if="accessDenied"
+        class="flex flex-col gap-2"
+    >
+        <div class="text-center">
+            <h1 class="font-bold">
+                {{ accessDeniedTitle }}
+            </h1>
+        </div>
+        <AuthorizeText
+            :is-error="true"
+            :message="accessDeniedText"
+        />
+    </div>
     <AuthorizeText
-        v-if="aborted"
+        v-else-if="aborted"
         :message="abortedText"
     />
     <div

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Policy } from '../policy';
 import type { Realm } from '../realm';
 
 export interface Client {
@@ -69,4 +70,8 @@ export interface Client {
     realm_id: Realm['id'],
 
     realm: Realm,
+
+    access_policy_id: Policy['id'] | null,
+
+    access_policy: Policy | null,
 }
