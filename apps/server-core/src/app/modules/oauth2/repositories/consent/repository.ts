@@ -77,12 +77,27 @@ export class ConsentRepositoryAdapter implements IConsentRepository {
                 ],
             },
             filters: { allowed: [...CONSENT_FILTER_KEYS] },
-            relations: { allowed: ['client', 'realm'] },
+            relations: { allowed: ['realm'] },
             sort: { allowed: ['created_at', 'updated_at', 'scope'] },
             pagination: { maxLimit: 50 },
         });
 
         applyRealmScopeSelect(qb, 'consent', ['sub', 'sub_kind']);
+
+        // Always expose only a client SUMMARY (id / name / display_name /
+        // built_in) — NEVER the full ClientEntity (redirect_uri + post-logout
+        // patterns = the trusted-origin set, grant_types, base_url/root_url,
+        // secret-storage flags, access_policy_id). `client` is deliberately
+        // absent from relations.allowed so a raw ?include=client cannot force
+        // the full-column join; the self-service Applications tab still gets
+        // the display name from this fixed projection.
+        qb.leftJoin('consent.client', 'client')
+            .addSelect([
+                'client.id',
+                'client.name',
+                'client.display_name',
+                'client.built_in',
+            ]);
 
         if (options.owner) {
             // mandatory constraint — not overridable by a rapiq filter

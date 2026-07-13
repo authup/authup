@@ -101,6 +101,33 @@ describe('consent', () => {
             row.expires_at === null)).toBe(true);
     });
 
+    it('never exposes full client config on the relation, even when requested', async () => {
+        const client = await createScopedClient([ScopeName.GLOBAL]);
+        await confirm(client.id, ScopeName.GLOBAL);
+
+        // A self-service user (no CLIENT_READ) explicitly asks for the client
+        // relation — the response must carry only a summary, never the
+        // trusted-origin patterns / grant_types / secret-storage flags.
+        const { data } = await userClient.consent.getMany({
+            filter: { client_id: client.id },
+            include: ['client'] as any,
+        });
+
+        expect(data.length).toBeGreaterThan(0);
+        const joined = data[0].client as Record<string, any> | undefined;
+        expect(joined).toBeTruthy();
+        expect(joined!.id).toEqual(client.id);
+        expect(joined!.redirect_uri).toBeUndefined();
+        expect(joined!.post_logout_redirect_uri).toBeUndefined();
+        expect(joined!.grant_types).toBeUndefined();
+        expect(joined!.base_url).toBeUndefined();
+        expect(joined!.root_url).toBeUndefined();
+        expect(joined!.is_confidential).toBeUndefined();
+        expect(joined!.access_policy_id).toBeUndefined();
+        expect(joined!.secret_hashed).toBeUndefined();
+        expect(joined!.secret_encrypted).toBeUndefined();
+    });
+
     it('keeps a second identical authorize idempotent (no duplicate rows)', async () => {
         const client = await createScopedClient([ScopeName.GLOBAL, ScopeName.OPEN_ID]);
 

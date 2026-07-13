@@ -43,12 +43,11 @@ export default defineComponent({
 
         // Scope to the current user's own consent rows (an admin holding
         // CONSENT_READ would otherwise see every row here); non-admins are
-        // self-scoped by the server regardless. The client relation is
-        // included so application names render.
+        // self-scoped by the server regardless. The server always joins a
+        // client summary (id/name/display_name), so no relation is requested.
         const query = computed<BuildInput<Consent>>(() => ({
             filter: { sub: userId.value ?? undefined, sub_kind: 'user' },
             sort: { created_at: 'DESC' },
-            relations: ['client'],
         }));
 
         const translations = useTranslations([

@@ -12,6 +12,9 @@ import type { Consent } from '@authup/core-kit';
 import { unwrapOAuth2Scope } from '@authup/specs';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
+import {
+    CONSENT_SCOPE_MAX_LENGTH,
+} from './types.ts';
 import type {
     ConsentCoveringInput,
     ConsentRecordInput,
@@ -39,7 +42,12 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
 
     protected normalizeScopeTokens(scope: string | string[] | null): string[] {
         const tokens = unwrapOAuth2Scope(scope ?? [])
-            .filter((token) => token.length > 0);
+            // Drop empty tokens and any token that does not fit the scope
+            // column (varchar 128). An over-long token — only reachable via a
+            // non-standard scope riding the `global` verifier bypass — is
+            // simply not persisted (never remembered), rather than aborting
+            // the whole write and losing the sibling tokens ordered after it.
+            .filter((token) => token.length > 0 && token.length <= CONSENT_SCOPE_MAX_LENGTH);
 
         return Array.from(new Set(tokens));
     }

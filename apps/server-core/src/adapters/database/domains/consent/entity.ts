@@ -24,6 +24,7 @@ import type {
 } from '@authup/core-kit';
 import { ClientEntity } from '../client/index.ts';
 import { RealmEntity } from '../realm/index.ts';
+import { CONSENT_SCOPE_MAX_LENGTH } from '../../../../core/entities/consent/types.ts';
 
 @Unique('UQ_auth_consents_subject_scope', ['client_id', 'sub', 'sub_kind', 'scope'])
 @Entity({ name: 'auth_consents' })
@@ -46,7 +47,7 @@ export class ConsentEntity implements Consent {
 
     @Column({
         type: 'varchar',
-        length: 128,
+        length: CONSENT_SCOPE_MAX_LENGTH,
     })
     scope: string;
 

@@ -506,8 +506,40 @@ describe('AAuthorize consent covering probe (plan 055)', () => {
 
         expect(wrapper.find('.authorize-form-stub').exists()).toBe(true);
         expect(
-            httpClient.requests.some((request) => request.url.startsWith('/consents')),
+            httpClient.requests.some((request) => request.url.includes('consents')),
         ).toBe(false);
+    });
+
+    it('scopes the probe request to the current subject (sub + sub_kind)', async () => {
+        // an actor holding CONSENT_READ would otherwise receive every
+        // subject's rows — the probe must always send the subject filter.
+        const { httpClient } = mountAuthorize({
+            prompt: '',
+            consentRows: [consentRow('global'), consentRow('openid')],
+        });
+        await flushPromises();
+
+        const probe = httpClient.requests.find((request) => request.url.includes('consents'));
+        expect(probe).toBeTruthy();
+        const probeUrl = decodeURIComponent(probe!.url);
+        expect(probeUrl).toContain('filter[sub]=user-1');
+        expect(probeUrl).toContain('filter[sub_kind]=user');
+    });
+
+    it('does NOT cover when the matching rows belong to another subject', async () => {
+        // defense in depth: even if the server returned a foreign subject's
+        // rows (a CONSENT_READ holder), the covering match re-checks sub —
+        // auto-consent must never fire off a stranger's grant.
+        const { wrapper } = mountAuthorize({
+            prompt: '',
+            consentRows: [
+                { ...consentRow('global'), sub: 'user-2' },
+                { ...consentRow('openid'), sub: 'user-2' },
+            ],
+        });
+        await flushPromises();
+
+        expect(authorizeForm(wrapper).props('consentGranted')).toBe(false);
     });
 });
 

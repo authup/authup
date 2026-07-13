@@ -1461,11 +1461,25 @@ neutral message: no identity/policy detail, no enumeration oracle).
   admins can set/clear it. `buildWebClientAttributes` deliberately omits the
   key — the provisioner MERGE would otherwise wipe an admin-set policy on the
   per-realm `web` client every boot. The admin form binds it via
-  `APolicyPicker` in `AClientForm`. A denial records
-  `EventName.AUTHORIZE_FAILED` (`data.reason: 'accessPolicy'`, ref = client)
-  and the `authup_authorize_total{outcome="denied"}` metric (label live as of
-  this plan). Client caches mean a policy (re)assignment lags ≤60s at `/token`
-  (`CachePrefix.CLIENT` query cache).
+  `APolicyPicker` in `AClientForm`. Client caches mean a policy
+  (re)assignment lags ≤60s at `/token` (`CachePrefix.CLIENT` query cache).
+- **Observability (leg-scoped):** a denial at the **interactive
+  `/authorize`** leg records `EventName.AUTHORIZE_FAILED`
+  (`data.reason: 'accessPolicy'`, ref = client) and increments
+  `authup_authorize_total{outcome="denied"}` — done in
+  `OAuth2Authorization.authorize()`'s catch, the only emit site. The
+  federated-IdP-callback and `/token`-backstop legs are **not** yet
+  instrumented (neither carries an `eventService`/metrics dependency today) —
+  a known audit-coverage gap, not a security gap (the deny itself is
+  enforced at all three legs). Wiring those two legs is a follow-up.
+- **Admission control, not continuous enforcement:** the gate decides who
+  may *obtain* a token via the interactive code flow (+ the redemption
+  backstop). It is deliberately **not** evaluated on the `refresh_token`
+  grant — an already-issued refresh token keeps rotating after a deny policy
+  is attached (plan-052 non-goal: the gate is the authorize code flow). To
+  evict an already-admitted identity, revoke its session (the sessions API) —
+  same model as any other access change. A future continuous-enforcement
+  option would gate refresh too.
 
 ## OAuth2 Consent (plan 055)
 
@@ -1512,11 +1526,21 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   The adapter force-selects `realm_id`/`sub`/`sub_kind` (plan-039 discipline).
   Typed client: `client.consent.getMany/getOne/delete`.
 - **Kit skip (client-side, since GET /authorize is anonymous):**
-  `Authorize.vue` probes `httpClient.consent.getMany({ filter: { client_id } })`
-  alongside the MFA status fetch (same ref-plus-loading-return pattern as
-  `mfaStatus` — the ladder stays a sync render fn; `built_in` clients and
-  logged-out users never hit the loading gate; probe failure → not covered →
-  re-prompt, fail safe). `AuthorizeForm.autoConsent` =
+  `Authorize.vue` probes `httpClient.consent.getMany` **filtered by the
+  resolved user subject** (`sub` = `store.user.id`, `sub_kind: 'user'`, plus
+  `client_id`) alongside the MFA status fetch (same ref-plus-loading-return
+  pattern as `mfaStatus` — the ladder stays a sync render fn). The subject
+  filter is load-bearing: the server only force-scopes a *permissionless*
+  caller to its own rows, so an admin / realm_admin holding `CONSENT_READ`
+  would otherwise get every subject's rows back and auto-consent off a
+  stranger's grant — the covering match therefore also re-checks
+  `row.sub`/`row.sub_kind` (defense in depth). The probe is driven by the
+  resolved user id (not the access-token-derived `loggedIn`, which flips
+  before `userInfo` resolves) and drops any in-flight response whose subject
+  is no longer current (logout / account switch mid-probe). `built_in`
+  clients and non-user / logged-out sessions never auto-consent (they settle
+  to not-covered once the session settles); probe failure → not covered →
+  re-prompt (fail safe). `AuthorizeForm.autoConsent` =
   `(built_in || consentGranted) && !prompt.includes('consent')` — so a
   covering consent auto-submits, and `prompt=consent` always re-prompts. The
   silent (`prompt=none`) branch redirects `consent_required` only when the
@@ -1526,9 +1550,24 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   (`apps/client-web/pages/settings/index/applications.vue`) over the kit
   `<AConsents>` collection — rows grouped per client, granted scopes rendered
   as per-scope revoke chips plus a per-app "Revoke access" (looped per-row
-  DELETEs behind an error-tone `useAlertDialog`). Revoking consent stops the
-  next silent/auto issue; already-issued tokens are unaffected (revoke those
-  via the sessions API — stated limitation).
+  DELETEs behind an error-tone `useAlertDialog`). The self-service list
+  endpoint joins only a **client summary** (id / name / display_name /
+  built_in) — never the full `ClientEntity` (`client` is deliberately absent
+  from the adapter's `relations.allowed`, so a raw `?include=client` cannot
+  force the full-column join and leak redirect_uri patterns / grant_types /
+  secret-storage flags / `access_policy_id` to a self-service user without
+  `CLIENT_READ`). Revoking consent stops the next silent/auto issue;
+  already-issued tokens are unaffected (revoke those via the sessions API —
+  stated limitation).
+- **Stage-1 limitations:** the subject (`sub`/`sub_kind`) is polymorphic with
+  **no FK** (like sessions), so deleting an identity does not cascade-drop its
+  consent rows and no sweeper prunes them (`expires_at` is always null in
+  Stage 1); orphaned rows persist until the client/realm is deleted (CASCADE).
+  A subject-deletion cleanup or an expiry sweep is a Stage-2 addition. An
+  over-long scope token (>128 chars, only reachable via a non-standard scope
+  riding the `global` verifier bypass) is dropped at normalization rather than
+  overflowing the `varchar(128)` column (`CONSENT_SCOPE_MAX_LENGTH`, shared by
+  the entity column + the service normalizer so they cannot drift).
 
 ## OAuth2 Token Endpoint Authentication
 

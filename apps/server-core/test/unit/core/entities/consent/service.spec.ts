@@ -173,6 +173,20 @@ describe('ConsentService', () => {
             expect(repository.insertMissingCalls).toHaveLength(0);
             expect(repository.rows()).toHaveLength(0);
         });
+
+        it('drops a scope token that exceeds the column width, keeping its siblings', async () => {
+            const overLong = 'x'.repeat(200);
+            await service.record({
+                clientId,
+                realmId,
+                owner: owner(),
+                scope: `global ${overLong} openid`,
+            });
+
+            const scopes = repository.rows().map((row) => row.scope).sort();
+            expect(scopes).toEqual(['global', 'openid']);
+            expect(scopes).not.toContain(overLong);
+        });
     });
 
     describe('isCovering', () => {

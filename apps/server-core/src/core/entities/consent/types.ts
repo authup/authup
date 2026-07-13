@@ -14,6 +14,14 @@ export type ConsentOwner = {
 };
 
 /**
+ * Max length of a single stored scope token — must equal the
+ * `auth_consents.scope` column width (varchar 128). A longer token (only
+ * reachable via a non-standard scope riding the `global` verifier bypass) is
+ * dropped at normalization rather than overflowing the column.
+ */
+export const CONSENT_SCOPE_MAX_LENGTH = 128;
+
+/**
  * Filter keys a consent list query may target. Shared by the repository's
  * rapiq `filters.allowed` so service and adapter can never drift.
  */

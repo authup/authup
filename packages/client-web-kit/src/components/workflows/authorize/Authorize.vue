@@ -205,25 +205,60 @@ export default defineComponent({
         const consentStatus = ref<null | { covered: boolean }>(null);
 
         const requestedScopeTokens = computed<string[]>(
-            () => unwrapOAuth2Scope(props.codeRequest?.scope ?? []),
+            // Drop empty tokens exactly like the server's record/covering path
+            // (a comma/whitespace-padded scope yields a '' element) — otherwise
+            // the '' can never match a row and a recorded grant reads as
+            // uncovered forever.
+            () => unwrapOAuth2Scope(props.codeRequest?.scope ?? []).filter((token) => token.length > 0),
         );
 
         const refreshConsentStatus = async () => {
+            // The probe (and auto-consent) only applies to a resolved USER
+            // subject. The server force-scopes a permissionless caller to its
+            // own rows, but an actor holding CONSENT_READ (admin / realm_admin)
+            // would otherwise receive every subject's rows — so the request is
+            // explicitly subject-filtered and the covering match re-checks
+            // sub/sub_kind (defense in depth: never auto-consent off another
+            // subject's grant).
             if (!props.client || props.client.built_in) {
                 consentStatus.value = { covered: false };
                 return;
             }
 
+            const subjectId = user.value?.id;
+            if (!subjectId) {
+                // No resolved user yet: stay pending (loading text) until the
+                // session settles; a settled non-user session (client/robot)
+                // then falls through to manual consent — never auto-consent.
+                if (userSettled.value) {
+                    consentStatus.value = { covered: false };
+                }
+                return;
+            }
+
             try {
                 const { data } = await httpClient.consent.getMany({
-                    filter: { client_id: props.client.id },
+                    filter: {
+                        client_id: props.client.id,
+                        sub: subjectId,
+                        sub_kind: 'user',
+                    },
                     pagination: { limit: 50 },
                 });
+
+                // Drop a response that is no longer current — a logout or
+                // account switch that landed while the probe was in flight
+                // must never latch a stale cross-account verdict.
+                if (!loggedIn.value || user.value?.id !== subjectId) {
+                    return;
+                }
 
                 const now = new Date().toISOString();
                 const covered = requestedScopeTokens.value.length > 0 &&
                     requestedScopeTokens.value.every((token) => data.some(
                         (row) => row.scope === token &&
+                            row.sub === subjectId &&
+                            row.sub_kind === 'user' &&
                             (!row.expires_at || row.expires_at > now),
                     ));
 
@@ -231,33 +266,21 @@ export default defineComponent({
             } catch {
                 // probe failure → re-prompt (fail safe: never auto-consent on
                 // an unknown covering state).
+                if (!loggedIn.value || user.value?.id !== subjectId) {
+                    return;
+                }
                 consentStatus.value = { covered: false };
             }
         };
-
-        // The covering decision is bound to the requested scopes — never
-        // carry it across a code-request change.
-        watch(() => props.codeRequest, () => {
-            consentStatus.value = null;
-            if (loggedIn.value) {
-                Promise.resolve().then(() => refreshConsentStatus());
-            }
-        });
 
         // Fetch once the identity is logged in (and refetch after a switch).
         watch(loggedIn, (value) => {
             if (value && !mfaStatus.value && !mfaResolving.value) {
                 Promise.resolve().then(() => refreshMfaStatus());
             }
-            if (value && !consentStatus.value) {
-                Promise.resolve().then(() => refreshConsentStatus());
-            }
             if (!value) {
                 mfaStatus.value = null;
                 mfaSatisfiedLocal.value = false;
-                // reset on logout AND account switch — a stale covered=true
-                // from user A must never auto-consent user B.
-                consentStatus.value = null;
             }
         }, { immediate: true });
 
@@ -282,6 +305,23 @@ export default defineComponent({
                     userSettled.value = true;
                 });
         }
+
+        // The covering probe is driven by the resolved USER subject (not the
+        // access-token-derived loggedIn, which flips before userInfo resolves)
+        // and by the requested scopes — reset + refetch whenever the subject,
+        // its settlement, or the code request changes, so the decision is
+        // always computed for the current subject and never carried across an
+        // account switch or a code-request change.
+        watch(
+            [loggedIn, () => user.value?.id, userSettled, () => props.codeRequest],
+            () => {
+                consentStatus.value = null;
+                if (loggedIn.value) {
+                    Promise.resolve().then(() => refreshConsentStatus());
+                }
+            },
+            { immediate: true },
+        );
 
         const loadingText = useTranslation({
             namespace: TranslatorTranslationNamespace.COMMON,
