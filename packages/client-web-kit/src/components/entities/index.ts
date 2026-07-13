@@ -34,4 +34,5 @@ export * from './scope';
 export * from './scope-client';
 export * from './session';
 export * from './user';
+export * from './user-authenticator';
 export * from './user-role';

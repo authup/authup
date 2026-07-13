@@ -1817,6 +1817,26 @@ surfaces), `test/unit/http/controllers/workflows/token/grant-password-mfa.spec.t
 (end-to-end: enroll → confirm → grant gated → otp accepted → authorize backstop
 → challenge stamps `mfa_at` → authorize passes; recovery replay rejected).
 
+**UI (kit + app):** the challenge step is `AMfaChallengeForm`
+(`client-web-kit/src/components/workflows/mfa/`) — code input posting to
+`client.userAuthenticator.verifyChallenge`, recovery-code fallback toggle,
+`extractErrorContext` failures. The hosted `Authorize.vue` ladder gates on it
+**interactively only**: after login a `watch(loggedIn)` fetches
+`GET /authenticators/challenge` into `mfaStatus`; consent is blocked until it
+resolves (a `built_in` client auto-submits, so it must not render before the
+factor requirement is known); `required` → `AMfaChallengeForm` before consent
+(its `done` = the endpoint stamped `mfa_at`, so the consent POST passes the
+backstop), `enrollmentRequired` → inline `AUserAuthenticatorEnroll`. Silent
+(`prompt=none`) flows skip the form and let the auto-consent hit the server
+backstop → `interaction_required` redirect. Enrollment components
+(`entities/user-authenticator/`): `AUserAuthenticatorEnroll` (kind picker → TOTP
+QR data-URI + confirm-a-code / recovery one-time codes with download) and
+`AUserAuthenticators` (list + delete + embedded enroll), hosted on the settings
+Security tab (`@me`) and an admin Authenticators tab
+(`users/[id]/authenticators.vue`, gated on `USER_AUTHENTICATOR_READ`). i18n:
+`MFA_*` (`authupClient`) + `AUTHENTICATOR`/`MFA_SECURITY_*` (`authupApp`), ×4
+locales. Kit test `test/unit/components/workflows/mfa-challenge.spec.ts`.
+
 ## Auth-Method Claims — amr / acr / step-up (plan 050)
 
 **HOW the subject authenticated is recorded on the session**

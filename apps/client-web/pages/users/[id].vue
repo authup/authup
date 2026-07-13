@@ -72,6 +72,7 @@ export default defineComponent({
             TranslatorTranslationNamespace.APP,
             [
                 { key: TranslatorTranslationAppKey.DETAILS },
+                { key: TranslatorTranslationAppKey.AUTHENTICATOR },
             ],
         );
 
@@ -82,6 +83,12 @@ export default defineComponent({
         // force-scopes everyone else to their own), so gate the tab on it. The
         // route itself is protected in the child page's definePageMeta.
         const hasSessionReadPermission = usePermissionCheck({ name: PermissionName.SESSION_READ });
+
+        // The authenticators tab manages a user's second-factor devices —
+        // gated on USER_AUTHENTICATOR_READ (own-device management is
+        // self-service on the settings page, not here). The child route is
+        // protected in its own definePageMeta.
+        const hasAuthenticatorReadPermission = usePermissionCheck({ name: PermissionName.USER_AUTHENTICATOR_READ });
 
         try {
             entity.value = await injectHTTPClient()
@@ -117,6 +124,11 @@ export default defineComponent({
                 name: translationsDefault.session,
                 icon: 'fa6-solid:desktop',
                 url: `/users/${entity.value.id}/sessions`,
+            }] : []),
+            ...(hasAuthenticatorReadPermission.value ? [{
+                name: translationsApp.authenticator,
+                icon: 'fa6-solid:shield-halved',
+                url: `/users/${entity.value.id}/authenticators`,
             }] : []),
         ]);
 

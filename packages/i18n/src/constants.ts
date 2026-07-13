@@ -124,6 +124,32 @@ export enum TranslatorTranslationClientKey {
     LOGOUT_CONFIRM_TEXT = 'logoutConfirmText',
     LOGOUT_DONE = 'logoutDone',
     SIGN_OUT = 'signOut',
+
+    MFA_TITLE = 'mfaTitle',
+    MFA_CHALLENGE_INTRO = 'mfaChallengeIntro',
+    MFA_CODE = 'mfaCode',
+    MFA_CODE_HINT = 'mfaCodeHint',
+    MFA_VERIFY = 'mfaVerify',
+    MFA_USE_RECOVERY = 'mfaUseRecovery',
+    MFA_USE_AUTHENTICATOR = 'mfaUseAuthenticator',
+    MFA_RECOVERY_CODE = 'mfaRecoveryCode',
+    MFA_FAILED = 'mfaFailed',
+    MFA_SETUP_REQUIRED = 'mfaSetupRequired',
+
+    MFA_ENROLL_TITLE = 'mfaEnrollTitle',
+    MFA_ENROLL_TOTP = 'mfaEnrollTotp',
+    MFA_ENROLL_RECOVERY = 'mfaEnrollRecovery',
+    MFA_SCAN_QR = 'mfaScanQr',
+    MFA_MANUAL_KEY = 'mfaManualKey',
+    MFA_CONFIRM_INTRO = 'mfaConfirmIntro',
+    MFA_CONFIRM = 'mfaConfirm',
+    MFA_RECOVERY_INTRO = 'mfaRecoveryIntro',
+    MFA_RECOVERY_SAVE = 'mfaRecoverySave',
+    MFA_DOWNLOAD = 'mfaDownload',
+    MFA_ENROLLED = 'mfaEnrolled',
+    MFA_DEVICE_NAME = 'mfaDeviceName',
+    MFA_NO_DEVICES = 'mfaNoDevices',
+    MFA_DEVICE_UNCONFIRMED = 'mfaDeviceUnconfirmed',
 }
 
 /**
@@ -186,6 +212,10 @@ export enum TranslatorTranslationAppKey {
     SESSION_REVOKE_ALL_SUCCESS = 'sessionRevokeAllSuccess',
 
     SESSION_CURRENT = 'sessionCurrent',
+
+    AUTHENTICATOR = 'authenticator',
+    MFA_SECURITY_TITLE = 'mfaSecurityTitle',
+    MFA_SECURITY_HINT = 'mfaSecurityHint',
 }
 
 /**
