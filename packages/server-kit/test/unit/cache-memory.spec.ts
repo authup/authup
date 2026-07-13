@@ -35,4 +35,49 @@ describe('src/cache/adapters/memory', () => {
             expect(await cache.add('lock', 1)).toBe(true);
         });
     });
+
+    describe('increment (atomic counter)', () => {
+        it('creates an absent key at the increment value', async () => {
+            const cache = new MemoryCache();
+
+            expect(await cache.increment('counter')).toBe(1);
+            expect(await cache.get('counter')).toBe(1);
+        });
+
+        it('returns the post-increment value on every call', async () => {
+            const cache = new MemoryCache();
+
+            expect(await cache.increment('counter')).toBe(1);
+            expect(await cache.increment('counter')).toBe(2);
+            expect(await cache.increment('counter', 3)).toBe(5);
+        });
+
+        it('never loses an update under concurrent increments', async () => {
+            const cache = new MemoryCache();
+
+            const outputs = await Promise.all(
+                Array.from({ length: 10 }, () => cache.increment('counter')),
+            );
+
+            expect(await cache.get('counter')).toBe(10);
+            expect(new Set(outputs).size).toBe(10);
+        });
+
+        it('rejects when the key holds a non-numeric value', async () => {
+            const cache = new MemoryCache();
+            await cache.set('counter', { count: 1 }, {});
+
+            await expect(cache.increment('counter')).rejects.toThrow();
+        });
+
+        it('restarts at zero once the key is dropped', async () => {
+            const cache = new MemoryCache();
+
+            await cache.increment('counter');
+            await cache.increment('counter');
+            await cache.drop('counter');
+
+            expect(await cache.increment('counter')).toBe(1);
+        });
+    });
 });

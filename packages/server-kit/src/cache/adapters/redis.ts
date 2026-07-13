@@ -64,6 +64,18 @@ export class RedisCache implements ICache {
         return result === 'OK';
     }
 
+    async increment(key: string, value = 1, options: CacheSetOptions = {}): Promise<number> {
+        // INCRBY is atomic; the follow-up PEXPIRE only (re)arms the expiry,
+        // so an interleaved concurrent increment is harmless. Rejects when
+        // the key holds a non-integer value.
+        const output = await this.client.incrby(key, value);
+        if (options.ttl) {
+            await this.client.pexpire(key, options.ttl);
+        }
+
+        return output;
+    }
+
     async drop(key: string): Promise<void> {
         await this.jsonAdapter.drop(key);
     }

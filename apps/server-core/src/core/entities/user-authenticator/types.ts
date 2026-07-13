@@ -161,6 +161,14 @@ export type UserAuthenticatorVerifyContext = {
     ipAddress?: string | null,
     userAgent?: string | null,
     clientId?: string | null,
+    /**
+     * Runs inside the verify critical section once the factor matched,
+     * BEFORE the consumption (TOTP step / recovery used_at / email code)
+     * is persisted. A throw aborts the verify without consuming the factor
+     * — the seam for binding the proof to another aggregate (the session
+     * mfa_at stamp) so a stamp failure never burns a single-use code.
+     */
+    onVerified?: () => Promise<void>,
 };
 
 /**

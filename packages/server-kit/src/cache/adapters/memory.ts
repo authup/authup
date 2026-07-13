@@ -58,6 +58,19 @@ export class MemoryCache implements ICache {
         return true;
     }
 
+    async increment(key: string, value = 1, options: CacheSetOptions = {}): Promise<number> {
+        // The read + write run in a single synchronous tick (no await
+        // between), so this is atomic within the single-threaded process.
+        const current = this.instance.get(key);
+        if (typeof current !== 'undefined' && typeof current !== 'number') {
+            throw new Error(`The value at key ${key} is not a number.`);
+        }
+
+        const output = (current ?? 0) + value;
+        this.instance.set(key, output, { ttl: options.ttl });
+        return output;
+    }
+
     async drop(key: string): Promise<void> {
         this.instance.delete(key);
     }

@@ -1814,8 +1814,9 @@ user's nested route is a 404 (no existence oracle).
 **Enforcement — two chokepoints, both server-side:**
 
 1. **Interactive `/authorize`**: the proof is session-bound — `auth_sessions.mfa_at`
-   is stamped by `POST /authenticators/challenge` (bearer-scoped;
-   `ISessionManager.markMfaVerified`) or by the password grant's `otp` param.
+   is stamped by `POST /authenticators/challenge` (bearer-scoped; via the
+   verify `onVerified` hook, see *Verify unit of work* below) or by the
+   password grant's `otp` param.
    `OAuth2Authorization.authorizeInner` (ctx `mfaChallengeProvider`, the
    `IUserAuthenticatorChallengeProvider` seam) throws `OAuth2MfaRequiredError`
    (`ErrorCode.OAUTH_MFA_REQUIRED` / wire `error: mfa_required` — a dedicated
@@ -1838,9 +1839,30 @@ user's nested route is a 404 (no existence oracle).
    the token endpoint. WebAuthn cannot ride a single POST — it stays
    interactive-only (documented boundary).
 
+**Verify unit of work (#3237)**: `UserAuthenticatorService.verify()`
+serializes its read-verify-save critical section per user via a cache lock
+(`mfaVerifyLock:<user_id>`, the atomic `ICache.add` set-if-absent — Redis
+`SET … NX`, single-tick memory adapter) so a factor is consumed exactly once
+under concurrency; a held lock bails `false` without penalty, and a cache
+outage fails open for factors with a persisted anti-replay backstop (TOTP
+step-counter, recovery `used_at`) but closed for EMAIL (cache-only
+single-use). Consumption is ordered **stamp-first**: the optional
+`UserAuthenticatorVerifyContext.onVerified` hook — the challenge controller
+stamps `session.mfa_at` (`ISessionManager.markMfaVerified`) inside it — runs
+after the factor matched but BEFORE the consumption persists (the device-row
+save; the email-code / webauthn-challenge cache drops are deferred to the
+same success block), so a session-stamp failure aborts the verify with
+nothing consumed — never a burned single-use code without a completed MFA.
+The accepted residual is the inverse window (consumption fails AFTER the
+hook): a stamped session plus a still-valid code.
+
 **Brute-force**: per-account exponential backoff inside
-`UserAuthenticatorService.verify`/`confirm` — cache-keyed
-(`mfaAttempt:<user_id>`) `min(300, 1·2^(n−1))`s lock, reset on success, 429
+`UserAuthenticatorService.verify`/`confirm` — the failed-attempt count is a
+raw number bumped via the atomic `ICache.increment` (Redis `INCRBY`,
+single-tick memory adapter) under `mfaAttempt:<user_id>` (TTL = 1h window),
+with the lockout deadline under `mfaThrottle:<user_id>` (TTL = the lock), so
+concurrent failures — verify or confirm — never under-count the
+`min(300, 1·2^(n−1))`s lock; reset on success, 429
 `MfaThrottledError` (`ErrorCode.MFA_ATTEMPT_THROTTLED`, `retryAfter` in the
 body). Config: `mfaEnabled` / `mfaRequired` / `mfaEncryptionKey`
 (`MFA_ENABLED` / `MFA_REQUIRED` / `MFA_ENCRYPTION_KEY`; `mfaRequired` requires

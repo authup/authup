@@ -5,7 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+// Failed-attempt counter — a raw number bumped via the cache's atomic
+// increment, so concurrent failures (verify or confirm) never under-count
+// the exponential backoff. The lockout deadline lives under its own prefix.
 export const USER_AUTHENTICATOR_ATTEMPT_CACHE_PREFIX = 'mfaAttempt';
+export const USER_AUTHENTICATOR_THROTTLE_CACHE_PREFIX = 'mfaThrottle';
 
 // Per-user lock serializing concurrent verify critical sections so a factor
 // (recovery code / TOTP step) is consumed exactly once. The TTL only bounds a
