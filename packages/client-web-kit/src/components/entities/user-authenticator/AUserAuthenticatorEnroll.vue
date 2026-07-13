@@ -64,6 +64,7 @@ export default defineComponent({
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_DOWNLOAD },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_SETUP_REQUIRED },
             { namespace: TranslatorTranslationNamespace.ACTION, key: TranslatorTranslationActionKey.ABORT },
+            { namespace: TranslatorTranslationNamespace.ACTION, key: TranslatorTranslationActionKey.CLOSE },
         ]);
 
         const busy = ref(false);
@@ -307,11 +308,18 @@ export default defineComponent({
                     {{ code }}
                 </li>
             </ul>
-            <VCButton
-                color="primary"
-                :label="translations.mfaDownload"
-                @click="downloadRecoveryCodes"
-            />
+            <div class="flex gap-2">
+                <VCButton
+                    color="primary"
+                    :label="translations.mfaDownload"
+                    @click="downloadRecoveryCodes"
+                />
+                <VCButton
+                    color="neutral"
+                    :label="translations.close"
+                    @click="reset"
+                />
+            </div>
         </template>
     </div>
 </template>
