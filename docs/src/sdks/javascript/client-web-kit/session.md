@@ -71,7 +71,8 @@ export default defineComponent({
     setup() {
         const store = injectStore();
         
-        console.log(store.loggedIn); // true
+        console.log(store.status); // 'unauthenticated' | 'authenticating' | 'restoring' | 'authenticated'
+        console.log(store.lastAuthOrigin); // 'login' | 'exchange' | 'restore' | null
         console.log(store.userId); // xxxx-xxxx-...
         console.log(store.realmId); // xxxx-xxxx-...
         console.log(store.realmName); // xxx
@@ -79,3 +80,9 @@ export default defineComponent({
     }
 })
 ```
+
+`status` is presence-derived: `authenticated` means access token, realm and user
+are all present (server-side validation stays `resolve()`'s job), while a
+refresh-token-only session reads `restoring` until `resolve()` settles it.
+The former `loggedIn` flag (a coarse "an access token exists" boolean) is
+deprecated — compare `status` against `StoreAuthStatus.AUTHENTICATED` instead.

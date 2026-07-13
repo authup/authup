@@ -9,6 +9,7 @@
 import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { ITranslateT } from '@ilingo/vue';
 import {
+    StoreAuthStatus,
     injectHTTPClient,
     injectStore,
     injectTranslatorLocale,
@@ -25,10 +26,12 @@ export default defineNuxtComponent({
     setup() {
         const store = injectStore();
         const {
-            loggedIn,
+            status,
             accessTokenExpireDate: tokenExpireDate,
             realmManagement,
         } = storeToRefs(store);
+
+        const authenticated = computed(() => status.value === StoreAuthStatus.AUTHENTICATED);
 
         const tokenExpiresIn = computed(() => {
             if (!tokenExpireDate.value) {
@@ -53,7 +56,7 @@ export default defineNuxtComponent({
         const navigation = new Navigation(store, translate);
         const sideItems = () => navigation.getSideItems();
         const sideItemsWatch = [
-            () => store.loggedIn,
+            () => store.status,
             () => store.userId,
             () => store.realmManagement,
             () => locale.value,
@@ -69,7 +72,7 @@ export default defineNuxtComponent({
         );
 
         return {
-            loggedIn,
+            authenticated,
             tokenExpiresIn,
             docsUrl,
             realmManagement,
@@ -107,7 +110,7 @@ export default defineNuxtComponent({
 
             <div class="mt-auto">
                 <div
-                    v-if="loggedIn"
+                    v-if="authenticated"
                     class="session-info font-weight-light flex-col ms-3 me-3 mb-1 mt-auto"
                 >
                     <small>

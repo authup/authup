@@ -7,6 +7,7 @@
 
 import {
     type Store,
+    StoreAuthStatus,
     type StoreToRefs,
     clearAuthorizationRequest,
     injectStore,
@@ -183,7 +184,7 @@ export class RoutingInterceptor {
             return true;
         }
 
-        return !!this.storeRefs.loggedIn.value;
+        return this.storeRefs.status.value === StoreAuthStatus.AUTHENTICATED;
     }
 
     protected hasLoggedOutCondition(route: RouteLocationNormalized) {
@@ -197,7 +198,7 @@ export class RoutingInterceptor {
             return true;
         }
 
-        return !this.storeRefs.loggedIn.value;
+        return this.storeRefs.status.value !== StoreAuthStatus.AUTHENTICATED;
     }
 
     protected hasPermissionCondition(route: RouteLocationNormalized) {

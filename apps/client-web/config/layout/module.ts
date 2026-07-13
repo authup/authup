@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { type Store } from '@authup/client-web-kit';
+import { type Store, StoreAuthStatus } from '@authup/client-web-kit';
 import type { IdentityPolicyData } from '@authup/access';
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import type { NavigationItem } from '@vuecs/navigation';
@@ -65,7 +65,7 @@ export class Navigation {
 
     protected async reduceItem(item: NavigationItem<NavigationItemMeta>) : Promise<NavigationItem | undefined> {
         if (item.meta) {
-            const { loggedIn } = this.store;
+            const authenticated = this.store.status === StoreAuthStatus.AUTHENTICATED;
             let identity: IdentityPolicyData | undefined;
             if (this.store.userId) {
                 identity = {
@@ -77,7 +77,7 @@ export class Navigation {
             if (
                 typeof item.meta.requireLoggedIn !== 'undefined' &&
                     item.meta.requireLoggedIn &&
-                    !loggedIn
+                    !authenticated
             ) {
                 return undefined;
             }
@@ -85,7 +85,7 @@ export class Navigation {
             if (
                 typeof item.meta.requireLoggedOut !== 'undefined' &&
                     item.meta.requireLoggedOut &&
-                    loggedIn
+                    authenticated
             ) {
                 return undefined;
             }
