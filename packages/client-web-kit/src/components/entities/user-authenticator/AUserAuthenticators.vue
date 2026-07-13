@@ -13,11 +13,13 @@ import {
 } from 'vue';
 import {
     TranslatorTranslationActionKey,
+    TranslatorTranslationAppKey,
     TranslatorTranslationClientKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import { VCButton } from '@vuecs/button';
 import { VCAlert } from '@vuecs/elements';
+import { useAlertDialog } from '@vuecs/overlays';
 import { extractErrorContext, injectHTTPClient, useTranslations } from '../../../core';
 import AUserAuthenticatorEnroll from './AUserAuthenticatorEnroll.vue';
 
@@ -42,7 +44,16 @@ export default defineComponent({
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_NO_DEVICES },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_DEVICE_UNCONFIRMED },
             { namespace: TranslatorTranslationNamespace.ACTION, key: TranslatorTranslationActionKey.DELETE },
+            { namespace: TranslatorTranslationNamespace.ACTION, key: TranslatorTranslationActionKey.ABORT },
+            { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.REMOVE_CONFIRM_TITLE },
+            { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.DELETE_CONFIRM_DESCRIPTION },
         ]);
+
+        // Deleting an MFA device is irreversible and weakens the account's
+        // security posture — gate it behind a confirmation, like other
+        // destructive kit actions. Resolves false in SSR / without the overlay
+        // provider, so the delete is simply not performed there.
+        const confirmDialog = useAlertDialog();
 
         const items = ref<UserAuthenticator[]>([]);
         const busy = ref(false);
@@ -62,6 +73,17 @@ export default defineComponent({
         };
 
         const drop = async (item: UserAuthenticator) => {
+            const confirmed = await confirmDialog({
+                title: translations.removeConfirmTitle,
+                description: translations.deleteConfirmDescription,
+                confirmLabel: translations.delete,
+                cancelLabel: translations.abort,
+                tone: 'error',
+            });
+            if (!confirmed) {
+                return;
+            }
+
             try {
                 await apiClient.userAuthenticator.delete(props.userId, item.id);
                 items.value = items.value.filter((entity) => entity.id !== item.id);
