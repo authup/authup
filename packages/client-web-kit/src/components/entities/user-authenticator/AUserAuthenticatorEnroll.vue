@@ -18,6 +18,8 @@ import {
     TranslatorTranslationClientKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
+import { startRegistration } from '@simplewebauthn/browser';
+import type { PublicKeyCredentialCreationOptionsJSON } from '@simplewebauthn/browser';
 import { VCButton } from '@vuecs/button';
 import { VCAlert } from '@vuecs/elements';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
@@ -52,6 +54,7 @@ export default defineComponent({
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_ENROLL_TOTP },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_ENROLL_RECOVERY },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_ENROLL_EMAIL },
+            { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_ENROLL_WEBAUTHN },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_SCAN_QR },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_MANUAL_KEY },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_CONFIRM_INTRO },
@@ -93,6 +96,25 @@ export default defineComponent({
             error.value = null;
             try {
                 const response = await apiClient.userAuthenticator.enroll(props.userId, { kind });
+
+                // webauthn: run the registration ceremony immediately and
+                // confirm with the attestation (no display).
+                if (kind === UserAuthenticatorKind.WEBAUTHN) {
+                    if (!response.webauthn) {
+                        throw new Error('The server did not return WebAuthn registration options.');
+                    }
+                    // the http-kit response type is intentionally framework-agnostic
+                    // (Record<string, unknown>); assert the browser lib's shape here.
+                    const optionsJSON = response.webauthn as unknown as PublicKeyCredentialCreationOptionsJSON;
+                    const attestation = await startRegistration({ optionsJSON });
+                    const entity = await apiClient.userAuthenticator.confirm(
+                        props.userId,
+                        response.entity.id,
+                        { code: JSON.stringify(attestation) },
+                    );
+                    emit('done', entity);
+                    return;
+                }
 
                 // email is confirmed on creation and has nothing to display —
                 // just signal completion.
@@ -197,6 +219,13 @@ export default defineComponent({
                     color="primary"
                     :label="translations.mfaEnrollTotp"
                     @click="enroll(UserAuthenticatorKind.TOTP)"
+                />
+                <VCButton
+                    v-if="!forcedKind || forcedKind === UserAuthenticatorKind.WEBAUTHN"
+                    :disabled="busy"
+                    color="neutral"
+                    :label="translations.mfaEnrollWebauthn"
+                    @click="enroll(UserAuthenticatorKind.WEBAUTHN)"
                 />
                 <VCButton
                     v-if="!forcedKind || forcedKind === UserAuthenticatorKind.EMAIL"

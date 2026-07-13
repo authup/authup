@@ -770,10 +770,22 @@ export class HTTPControllerModule {
         });
 
         let issuer : string | undefined;
+        let webauthn : {
+            rpId: string, 
+            rpName: string, 
+            origin: string 
+        } | undefined;
         try {
-            issuer = new URL(config.publicUrl).hostname;
+            const url = new URL(config.publicUrl);
+            issuer = url.hostname;
+            webauthn = {
+                rpId: url.hostname,
+                rpName: issuer,
+                origin: url.origin,
+            };
         } catch {
             issuer = undefined;
+            webauthn = undefined;
         }
 
         this.userAuthenticatorService = new UserAuthenticatorService({
@@ -790,6 +802,7 @@ export class HTTPControllerModule {
                 enabled: config.mfaEnabled,
                 required: config.mfaRequired,
                 issuer,
+                webauthn,
             },
         });
 

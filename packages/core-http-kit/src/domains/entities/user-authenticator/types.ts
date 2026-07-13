@@ -33,6 +33,11 @@ export type UserAuthenticatorEnrollResponse = {
      * Recovery: raw single-use codes — shown once.
      */
     codes?: string[],
+    /**
+     * WebAuthn: registration ceremony options for
+     * `@simplewebauthn/browser`'s `startRegistration`.
+     */
+    webauthn?: Record<string, unknown>,
 };
 
 export type UserAuthenticatorConfirmPayload = {
