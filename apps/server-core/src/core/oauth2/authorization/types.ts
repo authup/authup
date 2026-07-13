@@ -55,4 +55,11 @@ export type OAuth2AuthorizationOptions = {
      * the audit record to distinguish built_in auto-consent from manual consent.
      */
     client?: Client,
+
+    /**
+     * Whether the request's redirect_uri was pattern-verified by the
+     * code-request verifier. Gates whether a denial may be answered with an
+     * error redirect (RFC 6749 §4.1.2.1) instead of an interactive error.
+     */
+    redirectUriVerified?: boolean,
 };
