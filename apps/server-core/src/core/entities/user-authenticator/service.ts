@@ -52,6 +52,8 @@ import {
     USER_AUTHENTICATOR_EMAIL_CODE_CACHE_PREFIX,
     USER_AUTHENTICATOR_EMAIL_CODE_EXPIRES_IN_MINUTES,
     USER_AUTHENTICATOR_EMAIL_CODE_LENGTH,
+    USER_AUTHENTICATOR_EMAIL_SEND_CACHE_PREFIX,
+    USER_AUTHENTICATOR_EMAIL_SEND_COOLDOWN,
     USER_AUTHENTICATOR_RECOVERY_CODE_COUNT,
     USER_AUTHENTICATOR_TOTP_ALGORITHM,
     USER_AUTHENTICATOR_TOTP_DIGITS,
@@ -257,17 +259,33 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             throw new BadRequestError('The user has no email address to receive codes.');
         }
 
-        // one email factor per user
-        await this.repository.removeAllByUser(user.id, UserAuthenticatorKind.EMAIL);
+        // one email factor per user — update the existing marker row in place
+        // rather than remove-then-create, so a failed save never leaves the user
+        // with no email factor (the row is a pure marker: no secret/codes).
+        const existing = (await this.repository.findAllByUser(user.id))
+            .filter((device) => device.kind === UserAuthenticatorKind.EMAIL);
 
-        let entity = this.repository.create({
-            kind: UserAuthenticatorKind.EMAIL,
-            name,
-            confirmed: true,
-            user_id: user.id,
-            realm_id: user.realm_id,
-        });
-        entity = await this.repository.save(entity);
+        let entity: UserAuthenticator;
+        if (existing.length > 0) {
+            const [primary, ...duplicates] = existing;
+            primary.name = name;
+            primary.confirmed = true;
+            entity = await this.repository.save(primary);
+            // best-effort cleanup of any stray duplicates (invariant anomaly);
+            // a failure here still leaves the primary factor intact.
+            for (const duplicate of duplicates) {
+                await this.repository.remove(duplicate);
+            }
+        } else {
+            entity = this.repository.create({
+                kind: UserAuthenticatorKind.EMAIL,
+                name,
+                confirmed: true,
+                user_id: user.id,
+                realm_id: user.realm_id,
+            });
+            entity = await this.repository.save(entity);
+        }
 
         await this.recordEvent(EventName.MFA_ENROLLED, entity);
 
@@ -482,10 +500,19 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         // factor (TOTP step / recovery / email code) is consumed exactly once
         // even under concurrent verifies. A held lock means another verify is
         // mid-flight — bail without penalty rather than risk a double-consume;
-        // that request owns the outcome. Acquisition fails open (see
-        // acquireVerifyLock).
+        // that request owns the outcome.
         const lockKey = this.buildVerifyLockCacheKey(userId);
-        if (!await this.acquireVerifyLock(lockKey)) {
+        const lock = await this.acquireVerifyLock(lockKey);
+        if (lock === 'busy') {
+            return false;
+        }
+        // Lock acquisition fails open (cache down → 'unavailable') so a cache
+        // outage cannot brick MFA login. That is only safe for factors with a
+        // PERSISTED anti-replay backstop (TOTP step-counter / recovery used_at).
+        // EMAIL single-use rides entirely on the lock + cache drop with no
+        // persisted backstop, so without a real lock it must fail closed —
+        // otherwise concurrent verifies could both consume one code.
+        if (lock === 'unavailable' && input.kind === UserAuthenticatorKind.EMAIL) {
             return false;
         }
 
@@ -535,7 +562,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             await this.recordChallengeEvent(EventName.MFA_VERIFIED, userId, input.kind, ctx, matched);
             return true;
         } finally {
-            await this.releaseVerifyLock(lockKey);
+            // only release a lock we actually hold (never a fail-open no-lock).
+            if (lock === 'acquired') {
+                await this.releaseVerifyLock(lockKey);
+            }
         }
     }
 
@@ -652,6 +682,25 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             return;
         }
 
+        // per-user send cooldown — an authenticated caller must not be able to
+        // spray unlimited OTP mails. `add` is atomic set-if-absent, so the first
+        // send stores the key and any resend within the window returns false.
+        // Fails open on a cache error (a transient outage must not block a
+        // legitimate code).
+        let withinCooldown: boolean;
+        try {
+            withinCooldown = !(await this.cache.add(
+                this.buildEmailSendCacheKey(userId),
+                1,
+                { ttl: USER_AUTHENTICATOR_EMAIL_SEND_COOLDOWN * 1_000 },
+            ));
+        } catch {
+            withinCooldown = false;
+        }
+        if (withinCooldown) {
+            throw new MfaThrottledError({ retryAfter: USER_AUTHENTICATOR_EMAIL_SEND_COOLDOWN });
+        }
+
         const codeValue = generateNumericCode(USER_AUTHENTICATOR_EMAIL_CODE_LENGTH);
         await this.cache.set(
             this.buildEmailCodeCacheKey(userId),
@@ -752,6 +801,13 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         });
     }
 
+    protected buildEmailSendCacheKey(userId: string): string {
+        return buildCacheKey({
+            prefix: USER_AUTHENTICATOR_EMAIL_SEND_CACHE_PREFIX,
+            key: userId,
+        });
+    }
+
     protected buildVerifyLockCacheKey(userId: string): string {
         return buildCacheKey({
             prefix: USER_AUTHENTICATOR_VERIFY_LOCK_CACHE_PREFIX,
@@ -759,14 +815,16 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         });
     }
 
-    protected async acquireVerifyLock(key: string): Promise<boolean> {
+    protected async acquireVerifyLock(key: string): Promise<'acquired' | 'busy' | 'unavailable'> {
         try {
-            return await this.cache.add(key, 1, { ttl: USER_AUTHENTICATOR_VERIFY_LOCK_TTL });
+            return (await this.cache.add(key, 1, { ttl: USER_AUTHENTICATOR_VERIFY_LOCK_TTL })) ?
+                'acquired' :
+                'busy';
         } catch {
-            // Fail open: a cache outage must not break MFA login. The TOTP
-            // step-counter and recovery `used_at` flags remain the correctness
-            // backstop for the (now unserialized) concurrent case.
-            return true;
+            // Cache down — no real lock. The caller decides: factors with a
+            // persisted anti-replay backstop (TOTP step-counter / recovery
+            // used_at) proceed; EMAIL (cache-only single-use) fails closed.
+            return 'unavailable';
         }
     }
 

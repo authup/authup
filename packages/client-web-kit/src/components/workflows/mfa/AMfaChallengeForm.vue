@@ -107,7 +107,7 @@ export default defineComponent({
                 emailSent.value = true;
             } catch (e) {
                 error.value = extractErrorContext(e).message ?? translations.mfaFailed;
-                emit('failed', error.value);
+                emit('failed', e);
             } finally {
                 busy.value = false;
             }
@@ -128,7 +128,7 @@ export default defineComponent({
                 emit('done');
             } catch (e) {
                 error.value = extractErrorContext(e).message ?? translations.mfaFailed;
-                emit('failed', error.value);
+                emit('failed', e);
             } finally {
                 busy.value = false;
             }
@@ -212,6 +212,22 @@ export default defineComponent({
                 class="w-full"
                 @click="submit"
             />
+
+            <!-- email: allow requesting a fresh code (a delayed/expired one
+                 otherwise dead-ends the flow); the server enforces a cooldown. -->
+            <div
+                v-if="isEmail"
+                class="text-center mt-3"
+            >
+                <button
+                    type="button"
+                    class="a-auth-link"
+                    :disabled="busy"
+                    @click="sendEmailCode"
+                >
+                    {{ translations.mfaSendCode }}
+                </button>
+            </div>
         </form>
 
         <div
