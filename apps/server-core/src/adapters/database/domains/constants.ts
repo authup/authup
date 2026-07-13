@@ -18,6 +18,8 @@ export enum CachePrefix {
     CLIENT_OWNED_ROLES = 'client_owned_roles',
     CLIENT_SCOPE = 'client_scope',
 
+    CONSENT_COVERING = 'consent_covering',
+
     USER = 'user',
     USER_OWNED_ATTRIBUTES = 'user_owned_attributes',
     USER_OWNED_PERMISSIONS = 'user_owned_permissions',

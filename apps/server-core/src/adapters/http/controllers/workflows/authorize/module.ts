@@ -66,6 +66,8 @@ export class AuthorizeController {
             mfaFreshnessMaxAge: ctx.options.mfaFreshnessMaxAge,
             mfaChallengeProvider: ctx.mfaChallengeProvider,
             accessPolicyEvaluator: ctx.accessPolicyEvaluator,
+            consentService: ctx.consentService,
+            logger: ctx.logger,
         });
     }
 

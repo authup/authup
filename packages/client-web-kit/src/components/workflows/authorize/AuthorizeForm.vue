@@ -63,6 +63,9 @@ export default defineComponent({
         // (server-verified). abort()'s access_denied redirect is gated on it —
         // same as every other redirect in the ladder. Fail-closed default.
         redirectUriVerified: { type: Boolean, default: false },
+        // Persisted consent rows cover every requested scope (plan 055) —
+        // allows auto-consent for non-built_in clients. Fail-closed default.
+        consentGranted: { type: Boolean, default: false },
     },
     emits: ['loginRequired', 'switch', 'failed'],
     setup(props, { emit }) {
@@ -213,15 +216,17 @@ export default defineComponent({
             }
         };
 
-        // Auto-consent for built-in clients (e.g. the per-realm `web` client).
-        // `built_in` is a provisioning-only trust boundary — the client
-        // validator strips it on create/update, so no API caller can self-
-        // assign it. Skipping the scope-consent step is therefore safe; user/
-        // admin-created clients are never built_in and still show consent.
-        // prompt=consent (OIDC §3.1.2.1) forces the consent screen even for a
-        // built_in client.
+        // Auto-consent for built-in clients (e.g. the per-realm `web` client)
+        // and for subjects whose persisted consent already covers every
+        // requested scope (plan 055). `built_in` is a provisioning-only trust
+        // boundary — the client validator strips it on create/update, so no
+        // API caller can self-assign it. Skipping the scope-consent step is
+        // therefore safe; user/admin-created clients are never built_in and
+        // show consent until a prior approval covers the request.
+        // prompt=consent (OIDC §3.1.2.1) forces the consent screen regardless
+        // — union/keep happens server-side on the re-approval POST.
         const autoConsent = computed<boolean>(() => {
-            if (!props.client.built_in) {
+            if (!props.client.built_in && !props.consentGranted) {
                 return false;
             }
 

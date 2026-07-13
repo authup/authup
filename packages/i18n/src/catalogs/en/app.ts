@@ -64,4 +64,12 @@ export const TranslatorTranslationAppEnglish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.AUTHENTICATOR]: 'Authenticators',
     [TranslatorTranslationAppKey.MFA_SECURITY_TITLE]: 'Two-factor authentication',
     [TranslatorTranslationAppKey.MFA_SECURITY_HINT]: 'Add an extra layer of security with an authenticator app or recovery codes.',
+
+    [TranslatorTranslationAppKey.APPLICATIONS]: 'Applications',
+    [TranslatorTranslationAppKey.CONSENT_EMPTY]: 'You have not granted any application access yet.',
+    [TranslatorTranslationAppKey.CONSENT_REVOKE]: 'Revoke',
+    [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL]: 'Revoke access',
+    [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_TITLE]: 'Revoke application access',
+    [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_DESCRIPTION]: 'The application will ask for your consent again on the next sign-in.',
+    [TranslatorTranslationAppKey.CONSENT_SCOPES]: 'Granted permissions',
 };

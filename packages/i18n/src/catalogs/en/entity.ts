@@ -11,6 +11,7 @@ import type { NamespaceTranslations } from '../../types';
 
 export const TranslatorTranslationEntityEnglish : NamespaceTranslations<`${TranslatorTranslationEntityKey}`> = {
     [TranslatorTranslationEntityKey.CLIENT]: definePlural({ one: 'Client', other: 'Clients' }),
+    [TranslatorTranslationEntityKey.CONSENT]: definePlural({ one: 'Consent', other: 'Consents' }),
     [TranslatorTranslationEntityKey.EVENT]: definePlural({ one: 'Event', other: 'Events' }),
     [TranslatorTranslationEntityKey.IDENTITY_PROVIDER]: definePlural({ one: 'Identity provider', other: 'Identity providers' }),
     [TranslatorTranslationEntityKey.PERMISSION]: definePlural({ one: 'Permission', other: 'Permissions' }),

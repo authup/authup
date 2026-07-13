@@ -1248,7 +1248,10 @@ not) is redirected to — owns the decision. The kit ladder, evaluated after the
 SSR app's router guard `await store.resolve()` settles the session:
 - **`prompt=none`**: not-logged-in / realm-mismatch → redirect
   `redirect_uri?error=login_required&state`; non-`built_in` client →
-  `consent_required` (no persisted consent record — see plan 043); `built_in`
+  the kit probes the persisted consent first (plan 055, see *OAuth2 Consent*)
+  and only redirects `consent_required` when no covering consent exists —
+  a covering grant falls through to the auto-consent path and issues the
+  code silently; `built_in`
   + logged-in + realm-match → the existing auto-consent path issues the code
   silently; a max_age/freshness `login_required` from the POST is redirected as
   `login_required`. Every silent error redirect is gated on
@@ -1463,6 +1466,69 @@ neutral message: no identity/policy detail, no enumeration oracle).
   and the `authup_authorize_total{outcome="denied"}` metric (label live as of
   this plan). Client caches mean a policy (re)assignment lags ≤60s at `/token`
   (`CachePrefix.CLIENT` query cache).
+
+## OAuth2 Consent (plan 055)
+
+`auth_consents` persists "remember my consent" as **per-scope rows**: one row
+per `(client_id, sub, sub_kind, scope)` (4-column unique index; single
+lowercase scope token per row, `varchar(128)` = `ScopeEntity.name` bound;
+CASCADE FKs to client + realm; polymorphic subject like sessions). A dormant
+`expires_at` (`varchar(28)`, always null in Stage 1) is honored by the
+covering check so expiring consent is a data change, not a schema change.
+Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
+`ConsentEntitySubscriber` under `adapters/database/domains/consent/`.
+
+- **Covering rule (load-bearing):** a request is covered iff **every**
+  requested scope token has a matching unexpired row — strict token-superset,
+  not semantic (`global` does not imply `openid`). Tokens are normalized via
+  `unwrapOAuth2Scope` (`@authup/specs`, the shared lowercasing tokenizer) on
+  BOTH the server (`ConsentService.record`/`isCovering`) and the kit probe —
+  if either side stopped lowercasing, covering would silently never match
+  (permanent re-prompt).
+- **Union/keep semantics:** re-approval (incl. `prompt=consent`) only INSERTS
+  missing tokens (`ConsentRepositoryAdapter.insertMissing` = save-per-missing-
+  row + duplicate-key catch — deliberately NOT a qb `orIgnore()` insert, which
+  would bypass TypeORM subscribers and skip cache invalidation / realtime /
+  audit). A grant only shrinks via explicit revoke.
+- **Persist site — exactly one:** `HTTPOAuth2Authorizer.authorizeWithRequest`,
+  AFTER `authorize()` succeeds (an access-policy denial throws before it —
+  a denied identity never writes a row), skipping `built_in` clients (zero
+  rows, parity with auto-consent) and wrapped try/catch (a consent-write
+  failure never fails an issued code). Deliberately NOT recorded at the
+  federated-IdP callback or `/token` — no synthetic consent for flows that
+  never showed a screen.
+- **Covering read is cached:** `findAllBySubjectClient` rides a 60s query
+  cache keyed `CachePrefix.CONSENT_COVERING` `<client_id>:<sub_kind>:<sub>`,
+  invalidated by the subscriber (`cache.onInsert: true` — union/keep is
+  insert-heavy). The kit probe reads via the uncached `findMany` list path,
+  so client-side covering never sees cache staleness.
+- **Self-service API** (SessionService shape, exactly): `ConsentController`
+  dual-mounted `/consents` + `/realms/:realmId/consents`, read+delete only —
+  no CREATE/UPDATE/deleteMany (rows are created only by the authorize flow).
+  `CONSENT_READ`/`CONSENT_DELETE` permissions auto-provision (`realm_admin`:
+  delete at `own`, read at default `ownOrNull`); a reader without
+  `CONSENT_READ` is force-scoped to its own rows, own-row get/delete needs no
+  permission, foreign rows take per-row `evaluate` + `resourceRealmMatch`.
+  The adapter force-selects `realm_id`/`sub`/`sub_kind` (plan-039 discipline).
+  Typed client: `client.consent.getMany/getOne/delete`.
+- **Kit skip (client-side, since GET /authorize is anonymous):**
+  `Authorize.vue` probes `httpClient.consent.getMany({ filter: { client_id } })`
+  alongside the MFA status fetch (same ref-plus-loading-return pattern as
+  `mfaStatus` — the ladder stays a sync render fn; `built_in` clients and
+  logged-out users never hit the loading gate; probe failure → not covered →
+  re-prompt, fail safe). `AuthorizeForm.autoConsent` =
+  `(built_in || consentGranted) && !prompt.includes('consent')` — so a
+  covering consent auto-submits, and `prompt=consent` always re-prompts. The
+  silent (`prompt=none`) branch redirects `consent_required` only when the
+  settled probe found no covering consent — persisted consent is what makes
+  `prompt=none` meaningful for non-`built_in` clients.
+- **UI:** 4th settings tab "Applications"
+  (`apps/client-web/pages/settings/index/applications.vue`) over the kit
+  `<AConsents>` collection — rows grouped per client, granted scopes rendered
+  as per-scope revoke chips plus a per-app "Revoke access" (looped per-row
+  DELETEs behind an error-tone `useAlertDialog`). Revoking consent stops the
+  next silent/auto issue; already-issued tokens are unaffected (revoke those
+  via the sessions API — stated limitation).
 
 ## OAuth2 Token Endpoint Authentication
 

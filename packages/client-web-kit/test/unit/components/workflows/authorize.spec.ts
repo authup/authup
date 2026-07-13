@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client, OAuth2AuthorizationCodeRequest, User } from '@authup/core-kit';
+import type {
+    Client, 
+    Consent, 
+    OAuth2AuthorizationCodeRequest, 
+    User,
+} from '@authup/core-kit';
 import { createFakeClient } from '@authup/core-http-kit/testing';
 import { OAuth2AuthorizationPrompt } from '@authup/specs';
 import { flushPromises, mount } from '@vue/test-utils';
@@ -81,6 +86,23 @@ function seedLoggedIn(store: Store, realmId = REALM.id, withUser = true) {
     store.setUser(user);
 }
 
+// Per-scope consent rows for the covering probe (plan 055) — one row per
+// lowercase scope token, mirroring the server's persisted shape.
+function consentRow(scope: string, expiresAt: string | null = null): Consent {
+    const now = new Date(0).toISOString();
+    return {
+        id: `consent-${scope}`,
+        client_id: 'client-1',
+        realm_id: REALM.id,
+        sub: 'user-1',
+        sub_kind: 'user',
+        scope,
+        expires_at: expiresAt,
+        created_at: now,
+        updated_at: now,
+    };
+}
+
 type MountOverrides = {
     prompt?: string,
     clientBuiltIn?: boolean,
@@ -88,6 +110,8 @@ type MountOverrides = {
     withUser?: boolean,
     realmId?: string,
     redirectUriVerified?: boolean,
+    consentRows?: Consent[],
+    consentHandler?: () => unknown,
 };
 
 function mountAuthorize(overrides: MountOverrides = {}) {
@@ -98,6 +122,8 @@ function mountAuthorize(overrides: MountOverrides = {}) {
         withUser = true,
         realmId = REALM.id,
         redirectUriVerified = true,
+        consentRows,
+        consentHandler,
     } = overrides;
 
     const pinia = createPinia();
@@ -106,6 +132,14 @@ function mountAuthorize(overrides: MountOverrides = {}) {
             // a user-less session's re-resolve attempt must settle by failing —
             // the default fallback would otherwise fake a truthy "user".
             'GET /users/@me': () => { throw new Error('userinfo unavailable'); },
+            // covering probe: no override → the fallback's empty collection
+            // (no persisted consent → covered=false, today's behavior).
+            ...(consentHandler ?
+                { 'GET /consents': consentHandler } :
+                {}),
+            ...(consentRows && !consentHandler ?
+                { 'GET /consents': () => ({ data: consentRows, meta: { total: consentRows.length } }) } :
+                {}),
         },
     });
 
@@ -188,14 +222,18 @@ function mountAuthorize(overrides: MountOverrides = {}) {
                 AuthorizeForm: {
                     // declare the props we assert on so findComponent(...).props()
                     // reflects them (a bare template stub drops them to attrs).
-                    props: ['silent', 'redirectUriVerified'],
+                    props: ['silent', 'redirectUriVerified', 'consentGranted'],
                     emits: ['loginRequired'],
                     template: '<div class="authorize-form-stub" />',
                 },
                 LoginForm: { template: '<div class="login-form-stub" />' },
                 // keep AuthorizeSilentRedirect real so we can assert its props,
                 // but stub its child so onMounted's window.location is a no-op.
-                AuthorizeText: { template: '<div class="authorize-text-stub" />' },
+                // Render the message so loading-state texts are assertable.
+                AuthorizeText: {
+                    props: ['message', 'isError'],
+                    template: '<div class="authorize-text-stub">{{ message }}</div>',
+                },
             },
             plugins: [
                 pinia,
@@ -213,7 +251,11 @@ function mountAuthorize(overrides: MountOverrides = {}) {
         },
     });
 
-    return { wrapper, store: () => store };
+    return {
+        wrapper, 
+        store: () => store, 
+        httpClient, 
+    };
 }
 
 const hasChooser = (wrapper: ReturnType<typeof mountAuthorize>['wrapper']) => wrapper.findComponent(AAccountPrompt).exists();
@@ -389,6 +431,118 @@ describe('AAuthorize prompt=none (silent)', () => {
         // never redirect an OIDC error to an unverified URI — show the login form
         expect(silentRedirect(wrapper).exists()).toBe(false);
         expect(wrapper.find('.login-form-stub').exists()).toBe(true);
+    });
+});
+
+describe('AAuthorize consent covering probe (plan 055)', () => {
+    // prompt-less request: the ladder runs straight past the chooser/MFA gates
+    // to the consent decision, so the probe outcome is observable on the form.
+    it('passes consentGranted=true when persisted rows cover every requested scope', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: '',
+            consentRows: [consentRow('global'), consentRow('openid')],
+        });
+        await flushPromises();
+
+        expect(wrapper.find('.authorize-form-stub').exists()).toBe(true);
+        expect(authorizeForm(wrapper).props('consentGranted')).toBe(true);
+    });
+
+    it('passes consentGranted=false when a requested token is uncovered', async () => {
+        // rows cover `global` only — `openid` is missing → strict covering fails
+        const { wrapper } = mountAuthorize({
+            prompt: '',
+            consentRows: [consentRow('global')],
+        });
+        await flushPromises();
+
+        expect(wrapper.find('.authorize-form-stub').exists()).toBe(true);
+        expect(authorizeForm(wrapper).props('consentGranted')).toBe(false);
+    });
+
+    it('treats an expired matching row as uncovered (dormant expires_at honored)', async () => {
+        const past = new Date(Date.now() - 1000).toISOString();
+        const { wrapper } = mountAuthorize({
+            prompt: '',
+            consentRows: [consentRow('global'), consentRow('openid', past)],
+        });
+        await flushPromises();
+
+        expect(authorizeForm(wrapper).props('consentGranted')).toBe(false);
+    });
+
+    it('shows the probe loading text while the probe is pending (non-built_in)', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: '',
+            consentHandler: () => new Promise(() => {}),
+        });
+        await flushPromises();
+
+        expect(wrapper.find('.authorize-form-stub').exists()).toBe(false);
+        expect(wrapper.text()).toContain('Checking granted permissions');
+    });
+
+    it('falls back to interactive consent (covered=false) when the probe errors', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: '',
+            consentHandler: () => { throw new Error('probe unavailable'); },
+        });
+        await flushPromises();
+
+        // fail safe: never auto-consent on an unknown covering state
+        expect(wrapper.find('.authorize-form-stub').exists()).toBe(true);
+        expect(authorizeForm(wrapper).props('consentGranted')).toBe(false);
+    });
+
+    it('skips the probe entirely for a built_in client (no loading gate, no request)', async () => {
+        // a never-settling handler would deadlock the ladder if the built_in
+        // path depended on the probe — it must not.
+        const { wrapper, httpClient } = mountAuthorize({
+            prompt: '',
+            clientBuiltIn: true,
+            consentHandler: () => new Promise(() => {}),
+        });
+        await flushPromises();
+
+        expect(wrapper.find('.authorize-form-stub').exists()).toBe(true);
+        expect(
+            httpClient.requests.some((request) => request.url.startsWith('/consents')),
+        ).toBe(false);
+    });
+});
+
+describe('AAuthorize prompt=none consent covering (plan 055)', () => {
+    beforeEach(() => {
+        Object.defineProperty(window, 'location', {
+            configurable: true,
+            writable: true,
+            value: { href: '' },
+        });
+    });
+
+    it('falls through to auto-consent (no consent_required redirect) when covered', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: OAuth2AuthorizationPrompt.NONE,
+            consentRows: [consentRow('global'), consentRow('openid')],
+        });
+        await flushPromises();
+
+        expect(silentRedirect(wrapper).exists()).toBe(false);
+        expect(wrapper.find('.authorize-form-stub').exists()).toBe(true);
+        expect(authorizeForm(wrapper).props('consentGranted')).toBe(true);
+        expect(authorizeForm(wrapper).props('silent')).toBe(true);
+    });
+
+    it('redirects consent_required when the rows do not cover the request', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: OAuth2AuthorizationPrompt.NONE,
+            consentRows: [consentRow('global')],
+        });
+        await flushPromises();
+
+        const redirect = silentRedirect(wrapper);
+        expect(redirect.exists()).toBe(true);
+        expect(redirect.props('error')).toEqual('consent_required');
     });
 });
 

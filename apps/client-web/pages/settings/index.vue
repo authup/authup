@@ -24,6 +24,7 @@ export default defineComponent({
                 { key: TranslatorTranslationAppKey.AUTHENTICATOR },
                 { key: TranslatorTranslationAppKey.SETTINGS },
                 { key: TranslatorTranslationAppKey.MANAGEMENT },
+                { key: TranslatorTranslationAppKey.APPLICATIONS },
             ],
         );
 
@@ -59,6 +60,11 @@ export default defineComponent({
                 name: translationsDefault.session,
                 icon: 'fa6-solid:desktop',
                 url: '/settings/sessions',
+            },
+            {
+                name: translationsApp.applications,
+                icon: 'fa6-solid:grip',
+                url: '/settings/applications',
             },
         ]);
 

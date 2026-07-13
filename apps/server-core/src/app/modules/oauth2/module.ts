@@ -12,6 +12,7 @@ import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 
 import {
+    ConsentRepositoryAdapter,
     OAuth2AuthorizationCodeRepository,
     OAuth2AuthorizationStateRepository,
     OAuth2ClientRepository,
@@ -89,6 +90,12 @@ export class OAuth2Module implements IModule {
 
         container.register(OAuth2InjectionToken.SessionTokenRepository, {
             useFactory: (c) => new SessionTokenRepositoryAdapter(
+                c.resolve(DatabaseInjectionKey.DataSource),
+            ),
+        });
+
+        container.register(OAuth2InjectionToken.ConsentRepository, {
+            useFactory: (c) => new ConsentRepositoryAdapter(
                 c.resolve(DatabaseInjectionKey.DataSource),
             ),
         });

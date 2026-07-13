@@ -92,6 +92,8 @@ export const TranslatorTranslationClientEnglish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.ACCESS_DENIED_TEXT]: 'You are not permitted to access this application.',
     [TranslatorTranslationClientKey.CLIENT_ACCESS_POLICY_HINT]: 'Without a policy, every identity in the realm may sign in.',
 
+    [TranslatorTranslationClientKey.CONSENT_STATUS_LOADING]: 'Checking granted permissions…',
+
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TITLE]: 'Sign out',
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TEXT]: 'Do you want to sign out?',
     [TranslatorTranslationClientKey.LOGOUT_DONE]: 'You have been signed out.',

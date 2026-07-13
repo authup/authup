@@ -92,6 +92,8 @@ export const TranslatorTranslationClientFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.ACCESS_DENIED_TEXT]: 'Vous n\'êtes pas autorisé à accéder à cette application.',
     [TranslatorTranslationClientKey.CLIENT_ACCESS_POLICY_HINT]: 'Sans politique, toute identité du domaine peut se connecter.',
 
+    [TranslatorTranslationClientKey.CONSENT_STATUS_LOADING]: 'Vérification des permissions accordées…',
+
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TITLE]: 'Se déconnecter',
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TEXT]: 'Voulez-vous vous déconnecter ?',
     [TranslatorTranslationClientKey.LOGOUT_DONE]: 'Vous avez été déconnecté.',

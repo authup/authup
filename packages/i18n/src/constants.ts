@@ -124,6 +124,8 @@ export enum TranslatorTranslationClientKey {
     ACCESS_DENIED_TEXT = 'accessDeniedText',
     CLIENT_ACCESS_POLICY_HINT = 'clientAccessPolicyHint',
 
+    CONSENT_STATUS_LOADING = 'consentStatusLoading',
+
     LOGOUT_CONFIRM_TITLE = 'logoutConfirmTitle',
     LOGOUT_CONFIRM_TEXT = 'logoutConfirmText',
     LOGOUT_DONE = 'logoutDone',
@@ -231,6 +233,14 @@ export enum TranslatorTranslationAppKey {
     AUTHENTICATOR = 'authenticator',
     MFA_SECURITY_TITLE = 'mfaSecurityTitle',
     MFA_SECURITY_HINT = 'mfaSecurityHint',
+
+    APPLICATIONS = 'applications',
+    CONSENT_EMPTY = 'consentEmpty',
+    CONSENT_REVOKE = 'consentRevoke',
+    CONSENT_REVOKE_ALL = 'consentRevokeAll',
+    CONSENT_REVOKE_ALL_TITLE = 'consentRevokeAllTitle',
+    CONSENT_REVOKE_ALL_DESCRIPTION = 'consentRevokeAllDescription',
+    CONSENT_SCOPES = 'consentScopes',
 }
 
 /**
@@ -268,6 +278,7 @@ export enum TranslatorTranslationMailKey {
  */
 export enum TranslatorTranslationEntityKey {
     CLIENT = 'client',
+    CONSENT = 'consent',
     EVENT = 'event',
     IDENTITY_PROVIDER = 'identityProvider',
     PERMISSION = 'permission',

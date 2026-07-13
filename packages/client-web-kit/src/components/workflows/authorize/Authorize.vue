@@ -27,7 +27,12 @@ import {
     TranslatorTranslationCommonKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { OAuth2AuthenticationContextClass, OAuth2AuthorizationPrompt, OAuth2ErrorCode } from '@authup/specs';
+import {
+    OAuth2AuthenticationContextClass,
+    OAuth2AuthorizationPrompt,
+    OAuth2ErrorCode,
+    unwrapOAuth2Scope,
+} from '@authup/specs';
 import type { LinkProperties } from '@vuecs/link';
 import {
     StoreAuthOrigin,
@@ -190,14 +195,69 @@ export default defineComponent({
             }
         };
 
+        // Persisted-consent covering probe (plan 055). The subject's
+        // per-scope consent rows for this client decide whether the manual
+        // consent screen can be skipped (auto-consent) — computed client-side
+        // from the self-scoped row list, mirroring the mfaStatus pattern:
+        // null = probe pending (ladder shows a loading text), afterwards
+        // { covered } is the settled decision. built_in clients never probe
+        // (they keep zero rows and auto-consent regardless).
+        const consentStatus = ref<null | { covered: boolean }>(null);
+
+        const requestedScopeTokens = computed<string[]>(
+            () => unwrapOAuth2Scope(props.codeRequest?.scope ?? []),
+        );
+
+        const refreshConsentStatus = async () => {
+            if (!props.client || props.client.built_in) {
+                consentStatus.value = { covered: false };
+                return;
+            }
+
+            try {
+                const { data } = await httpClient.consent.getMany({
+                    filter: { client_id: props.client.id },
+                    pagination: { limit: 50 },
+                });
+
+                const now = new Date().toISOString();
+                const covered = requestedScopeTokens.value.length > 0 &&
+                    requestedScopeTokens.value.every((token) => data.some(
+                        (row) => row.scope === token &&
+                            (!row.expires_at || row.expires_at > now),
+                    ));
+
+                consentStatus.value = { covered };
+            } catch {
+                // probe failure → re-prompt (fail safe: never auto-consent on
+                // an unknown covering state).
+                consentStatus.value = { covered: false };
+            }
+        };
+
+        // The covering decision is bound to the requested scopes — never
+        // carry it across a code-request change.
+        watch(() => props.codeRequest, () => {
+            consentStatus.value = null;
+            if (loggedIn.value) {
+                Promise.resolve().then(() => refreshConsentStatus());
+            }
+        });
+
         // Fetch once the identity is logged in (and refetch after a switch).
         watch(loggedIn, (value) => {
             if (value && !mfaStatus.value && !mfaResolving.value) {
                 Promise.resolve().then(() => refreshMfaStatus());
             }
+            if (value && !consentStatus.value) {
+                Promise.resolve().then(() => refreshConsentStatus());
+            }
             if (!value) {
                 mfaStatus.value = null;
                 mfaSatisfiedLocal.value = false;
+                // reset on logout AND account switch — a stale covered=true
+                // from user A must never auto-consent user B.
+                consentStatus.value = null;
             }
         }, { immediate: true });
 
@@ -231,6 +291,11 @@ export default defineComponent({
         const reauthText = useTranslation({
             namespace: TranslatorTranslationNamespace.CLIENT,
             key: TranslatorTranslationClientKey.REAUTH_TEXT,
+        });
+
+        const consentStatusLoadingText = useTranslation({
+            namespace: TranslatorTranslationNamespace.CLIENT,
+            key: TranslatorTranslationClientKey.CONSENT_STATUS_LOADING,
         });
 
         // A silent (prompt=none) request that needs interaction must redirect
@@ -436,9 +501,24 @@ export default defineComponent({
                 return [];
             }
 
-            // A silent request against a non-built_in client can't be
-            // auto-consented (no persisted consent record) → consent_required.
-            if (isSilent && !client.value.built_in) {
+            // Consent probe gate (plan 055) — block the consent decision until
+            // the covering probe settles. Applies to logged-in users on
+            // non-built_in clients only: built_in clients never depend on the
+            // probe (today's auto-consent flow preserved exactly), and the
+            // logged-out branches returned earlier. Silent requests must wait
+            // here too, or they'd race to a false consent_required redirect.
+            if (!client.value.built_in && consentStatus.value === null) {
+                return wrapChild(h(AuthorizeText, { message: consentStatusLoadingText.value }));
+            }
+
+            // A silent request against a non-built_in client can only proceed
+            // when the persisted consent rows cover every requested scope —
+            // otherwise consent_required.
+            if (
+                isSilent &&
+                !client.value.built_in &&
+                consentStatus.value?.covered !== true
+            ) {
                 const redirect = silentRedirect(OAuth2ErrorCode.CONSENT_REQUIRED);
                 if (redirect) {
                     return redirect;
@@ -457,6 +537,9 @@ export default defineComponent({
                     // abort()'s access_denied redirect is gated on the verified
                     // redirect_uri, like every other redirect in the ladder.
                     redirectUriVerified: props.redirectUriVerified,
+                    // Persisted consent covers every requested scope →
+                    // AuthorizeForm may auto-consent (unless prompt=consent).
+                    consentGranted: consentStatus.value?.covered === true,
                     // Silent (built_in) request: auto-consent runs, but a failure
                     // must redirect an OIDC error, never render manual consent —
                     // but only when the redirect_uri is verified. Otherwise the

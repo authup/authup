@@ -7,7 +7,7 @@
 
 import type { Client, OAuth2AuthorizationCodeRequest, Realm } from '@authup/core-kit';
 import { createFakeClient } from '@authup/core-http-kit/testing';
-import { OAuth2ErrorCode } from '@authup/specs';
+import { OAuth2AuthorizationPrompt, OAuth2ErrorCode } from '@authup/specs';
 import { flushPromises, mount } from '@vue/test-utils';
 import vuecs from '@vuecs/core';
 import { createPinia } from 'pinia';
@@ -71,6 +71,8 @@ const client: Client = {
 type FormProps = {
     client?: Client,
     redirectUriVerified?: boolean,
+    consentGranted?: boolean,
+    codeRequest?: OAuth2AuthorizationCodeRequest,
 };
 
 function mountForm(authorizeHandler: () => unknown, props: FormProps = {}) {
@@ -245,6 +247,50 @@ describe('AuthorizeForm abort redirect gate', () => {
         expect(`${url.origin}${url.pathname}`).toEqual('https://app.example.com/cb');
         expect(url.searchParams.get('error')).toEqual('access_denied');
         expect(url.searchParams.get('state')).toEqual('state-1');
+    });
+});
+
+describe('AuthorizeForm persisted-consent auto-consent (plan 055)', () => {
+    // non-built_in → auto-consent may only ride the consentGranted prop
+    const interactiveClient: Client = { ...client, built_in: false };
+
+    it('auto-submits POST /authorize when consentGranted and no prompt=consent', async () => {
+        let authorizeCalls = 0;
+        const wrapper = mountForm(() => { authorizeCalls += 1; return {}; }, {
+            client: interactiveClient,
+            consentGranted: true,
+        });
+        await flushPromises();
+
+        expect(authorizeCalls).toBe(1);
+        // no manual consent screen — the covered request skipped it
+        expect(wrapper.find('.scopes-stub').exists()).toBe(false);
+    });
+
+    it('keeps the manual consent screen when prompt=consent forces re-approval', async () => {
+        let authorizeCalls = 0;
+        const wrapper = mountForm(() => { authorizeCalls += 1; return {}; }, {
+            client: interactiveClient,
+            consentGranted: true,
+            codeRequest: {
+                ...codeRequest,
+                prompt: OAuth2AuthorizationPrompt.CONSENT,
+            },
+        });
+        await flushPromises();
+
+        // prompt=consent always re-prompts — union/keep happens server-side
+        expect(authorizeCalls).toBe(0);
+        expect(wrapper.find('.scopes-stub').exists()).toBe(true);
+    });
+
+    it('does NOT auto-submit for a non-built_in client without consentGranted', async () => {
+        let authorizeCalls = 0;
+        const wrapper = mountForm(() => { authorizeCalls += 1; return {}; }, { client: interactiveClient });
+        await flushPromises();
+
+        expect(authorizeCalls).toBe(0);
+        expect(wrapper.find('.scopes-stub').exists()).toBe(true);
     });
 });
 

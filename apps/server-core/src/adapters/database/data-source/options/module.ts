@@ -22,6 +22,8 @@ import {
     ClientScopeEntity,
     ClientScopeSubscriber,
     ClientSubscriber,
+    ConsentEntity,
+    ConsentEntitySubscriber,
     EventEntity,
     IdentityProviderAccountEntity,
     IdentityProviderAccountSubscriber,
@@ -113,6 +115,8 @@ export class DataSourceOptionsBuilder {
                 ClientRoleEntity,
                 ClientScopeEntity,
 
+                ConsentEntity,
+
                 IdentityProviderEntity,
                 IdentityProviderAttributeEntity,
                 IdentityProviderAccountEntity,
@@ -152,6 +156,8 @@ export class DataSourceOptionsBuilder {
                 ClientPermissionSubscriber,
                 ClientRoleSubscriber,
                 ClientScopeSubscriber,
+
+                ConsentEntitySubscriber,
 
                 IdentityProviderSubscriber,
                 IdentityProviderAccountSubscriber,

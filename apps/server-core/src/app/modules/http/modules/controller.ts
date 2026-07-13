@@ -85,6 +85,7 @@ import {
     ClientPermissionController,
     ClientRoleController,
     ClientScopeController,
+    ConsentController,
     EventController,
     IdentityProviderController,
     IdentityProviderRoleMappingController,
@@ -127,6 +128,7 @@ import {
     ClientRoleService,
     ClientScopeService,
     ClientService,
+    ConsentService,
     CredentialsAuthenticator,
     IdentityProviderRoleMappingService,
     LoginThrottleService,
@@ -188,6 +190,7 @@ export class HTTPControllerModule {
         const rolePermissionController = this.createRolePermissionController(container);
         const scopeController = this.createScopeController(container);
         const sessionController = this.createSessionController(container);
+        const consentController = this.createConsentController(container);
         const userController = this.createUserController(container);
         const userAttributeController = this.createUserAttributeController(container);
         const userAuthenticatorController = this.createUserAuthenticatorController(container);
@@ -215,6 +218,7 @@ export class HTTPControllerModule {
                 clientPermissionController,
                 clientRoleController,
                 clientScopeController,
+                consentController,
                 eventController,
                 identityProviderRoleController,
                 this.createIdentityProvider(container),
@@ -270,6 +274,9 @@ export class HTTPControllerModule {
 
             mfaChallengeProvider: this.resolveUserAuthenticatorService(container),
             accessPolicyEvaluator: this.resolveAccessPolicyEvaluator(container),
+
+            consentService: this.createConsentService(container),
+            logger: container.resolve(LoggerInjectionKey),
         });
     }
 
@@ -757,6 +764,15 @@ export class HTTPControllerModule {
         const repository = container.resolve(AuthenticationInjectionKey.SessionRepository);
         const service = new SessionService({ repository });
         return new SessionController({ service });
+    }
+
+    protected createConsentService(container: IContainer) : ConsentService {
+        const repository = container.resolve(OAuth2InjectionToken.ConsentRepository);
+        return new ConsentService({ repository });
+    }
+
+    createConsentController(container: IContainer) {
+        return new ConsentController({ service: this.createConsentService(container) });
     }
 
     private accessPolicyEvaluator? : OAuth2AccessPolicyEvaluator;

@@ -64,4 +64,12 @@ export const TranslatorTranslationAppFrench : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.AUTHENTICATOR]: 'Authentificateurs',
     [TranslatorTranslationAppKey.MFA_SECURITY_TITLE]: 'Authentification à deux facteurs',
     [TranslatorTranslationAppKey.MFA_SECURITY_HINT]: 'Ajoutez une couche de sécurité avec une application d\'authentification ou des codes de récupération.',
+
+    [TranslatorTranslationAppKey.APPLICATIONS]: 'Applications',
+    [TranslatorTranslationAppKey.CONSENT_EMPTY]: 'Vous n\'avez encore accordé l\'accès à aucune application.',
+    [TranslatorTranslationAppKey.CONSENT_REVOKE]: 'Révoquer',
+    [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL]: 'Révoquer l\'accès',
+    [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_TITLE]: 'Révoquer l\'accès de l\'application',
+    [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_DESCRIPTION]: 'L\'application demandera à nouveau votre consentement lors de la prochaine connexion.',
+    [TranslatorTranslationAppKey.CONSENT_SCOPES]: 'Permissions accordées',
 };

@@ -92,6 +92,8 @@ export const TranslatorTranslationClientSpanish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.ACCESS_DENIED_TEXT]: 'No tienes permiso para acceder a esta aplicación.',
     [TranslatorTranslationClientKey.CLIENT_ACCESS_POLICY_HINT]: 'Sin política, cualquier identidad del realm puede iniciar sesión.',
 
+    [TranslatorTranslationClientKey.CONSENT_STATUS_LOADING]: 'Comprobando los permisos concedidos…',
+
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TITLE]: 'Cerrar sesión',
     [TranslatorTranslationClientKey.LOGOUT_CONFIRM_TEXT]: '¿Quieres cerrar sesión?',
     [TranslatorTranslationClientKey.LOGOUT_DONE]: 'Has cerrado sesión.',
