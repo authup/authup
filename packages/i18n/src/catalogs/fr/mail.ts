@@ -21,4 +21,9 @@ export const TranslatorTranslationMailFrench : NamespaceTranslations<`${Translat
     [TranslatorTranslationMailKey.PASSWORD_RESET_ACTION]: 'Réinitialiser le mot de passe',
     [TranslatorTranslationMailKey.PASSWORD_RESET_EXPIRY]: 'Le code expire dans {{minutes}} minutes.',
     [TranslatorTranslationMailKey.PASSWORD_RESET_HINT]: 'Si vous n\'avez pas demandé de réinitialisation, vous pouvez ignorer cet e-mail – votre mot de passe reste inchangé.',
+
+    [TranslatorTranslationMailKey.MFA_EMAIL_OTP_SUBJECT]: 'Votre code de vérification',
+    [TranslatorTranslationMailKey.MFA_EMAIL_OTP_INTRO]: 'Utilisez le code ci-dessous pour finaliser votre connexion.',
+    [TranslatorTranslationMailKey.MFA_EMAIL_OTP_EXPIRY]: 'Le code expire dans {{minutes}} minutes.',
+    [TranslatorTranslationMailKey.MFA_EMAIL_OTP_HINT]: 'Si vous n\'avez pas tenté de vous connecter, vous pouvez ignorer cet e-mail.',
 };

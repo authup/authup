@@ -21,4 +21,9 @@ export const TranslatorTranslationMailSpanish : NamespaceTranslations<`${Transla
     [TranslatorTranslationMailKey.PASSWORD_RESET_ACTION]: 'Restablecer contraseña',
     [TranslatorTranslationMailKey.PASSWORD_RESET_EXPIRY]: 'El código caduca en {{minutes}} minutos.',
     [TranslatorTranslationMailKey.PASSWORD_RESET_HINT]: 'Si no solicitaste restablecer la contraseña, puedes ignorar este correo: tu contraseña no cambiará.',
+
+    [TranslatorTranslationMailKey.MFA_EMAIL_OTP_SUBJECT]: 'Tu código de verificación',
+    [TranslatorTranslationMailKey.MFA_EMAIL_OTP_INTRO]: 'Usa el código de abajo para completar tu inicio de sesión.',
+    [TranslatorTranslationMailKey.MFA_EMAIL_OTP_EXPIRY]: 'El código caduca en {{minutes}} minutos.',
+    [TranslatorTranslationMailKey.MFA_EMAIL_OTP_HINT]: 'Si no intentaste iniciar sesión, puedes ignorar este correo.',
 };

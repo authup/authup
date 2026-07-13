@@ -41,12 +41,19 @@ import type {
 import { Secret, TOTP } from 'otpauth';
 import QRCode from 'qrcode';
 import type { IEventService } from '../event/index.ts';
+import type { IMailClient, IMailTemplateRenderer } from '../../mail/index.ts';
+import { MailTemplateName } from '../../mail/index.ts';
 import type { IUserRepository } from '../user/index.ts';
 import {
     USER_AUTHENTICATOR_ATTEMPT_CACHE_PREFIX,
     USER_AUTHENTICATOR_ATTEMPT_LOCK_FACTOR,
     USER_AUTHENTICATOR_ATTEMPT_LOCK_MAX,
     USER_AUTHENTICATOR_ATTEMPT_WINDOW,
+    USER_AUTHENTICATOR_EMAIL_CODE_CACHE_PREFIX,
+    USER_AUTHENTICATOR_EMAIL_CODE_EXPIRES_IN_MINUTES,
+    USER_AUTHENTICATOR_EMAIL_CODE_LENGTH,
+    USER_AUTHENTICATOR_EMAIL_SEND_CACHE_PREFIX,
+    USER_AUTHENTICATOR_EMAIL_SEND_COOLDOWN,
     USER_AUTHENTICATOR_RECOVERY_CODE_COUNT,
     USER_AUTHENTICATOR_TOTP_ALGORITHM,
     USER_AUTHENTICATOR_TOTP_DIGITS,
@@ -54,13 +61,14 @@ import {
     USER_AUTHENTICATOR_VERIFY_LOCK_CACHE_PREFIX,
     USER_AUTHENTICATOR_VERIFY_LOCK_TTL,
 } from './constants.ts';
-import { generateRecoveryCode } from './helpers.ts';
+import { generateNumericCode, generateRecoveryCode } from './helpers.ts';
 import type {
     IUserAuthenticatorRepository,
     IUserAuthenticatorService,
     UserAuthenticatorChallengeStatus,
     UserAuthenticatorEnrollResult,
     UserAuthenticatorRecoveryCode,
+    UserAuthenticatorSendContext,
     UserAuthenticatorServiceContext,
     UserAuthenticatorServiceOptions,
     UserAuthenticatorTotpParameters,
@@ -71,6 +79,11 @@ import type {
 type AttemptState = {
     count: number,
     lockedUntil: number,
+};
+
+type EmailCodeState = {
+    hash: string,
+    expiresAt: number,
 };
 
 export class UserAuthenticatorService extends AbstractEntityService implements IUserAuthenticatorService {
@@ -84,6 +97,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
     protected eventService?: IEventService;
 
+    protected mailClient?: IMailClient;
+
+    protected mailTemplateRenderer?: IMailTemplateRenderer;
+
     protected options: UserAuthenticatorServiceOptions;
 
     protected validator: UserAuthenticatorValidator;
@@ -96,6 +113,8 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         this.cache = ctx.cache;
         this.cipher = ctx.cipher ?? null;
         this.eventService = ctx.eventService;
+        this.mailClient = ctx.mailClient;
+        this.mailTemplateRenderer = ctx.mailTemplateRenderer;
         this.options = ctx.options ?? {};
         this.validator = new UserAuthenticatorValidator();
     }
@@ -219,10 +238,58 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             case UserAuthenticatorKind.RECOVERY: {
                 return this.enrollRecovery(user, validated.name ?? null);
             }
+            case UserAuthenticatorKind.EMAIL: {
+                return this.enrollEmail(user, validated.name ?? null);
+            }
             default: {
                 throw new BadRequestError(`The authenticator kind ${validated.kind} can not be enrolled yet.`);
             }
         }
+    }
+
+    protected async enrollEmail(user: User, name: string | null): Promise<UserAuthenticatorEnrollResult> {
+        this.assertMail();
+
+        // The actor identity may not carry `email` (the User entity's email
+        // column is select:false) — force-load it to confirm the mailbox
+        // exists. The email is presumed verified (activation); the row marks
+        // the mailbox as an enrolled factor, codes are transient (cache).
+        const email = user.email ?? (await this.userRepository.findOneByWithEmail({ id: user.id }))?.email;
+        if (!email) {
+            throw new BadRequestError('The user has no email address to receive codes.');
+        }
+
+        // one email factor per user — update the existing marker row in place
+        // rather than remove-then-create, so a failed save never leaves the user
+        // with no email factor (the row is a pure marker: no secret/codes).
+        const existing = (await this.repository.findAllByUser(user.id))
+            .filter((device) => device.kind === UserAuthenticatorKind.EMAIL);
+
+        let entity: UserAuthenticator;
+        if (existing.length > 0) {
+            const [primary, ...duplicates] = existing;
+            primary.name = name;
+            primary.confirmed = true;
+            entity = await this.repository.save(primary);
+            // best-effort cleanup of any stray duplicates (invariant anomaly);
+            // a failure here still leaves the primary factor intact.
+            for (const duplicate of duplicates) {
+                await this.repository.remove(duplicate);
+            }
+        } else {
+            entity = this.repository.create({
+                kind: UserAuthenticatorKind.EMAIL,
+                name,
+                confirmed: true,
+                user_id: user.id,
+                realm_id: user.realm_id,
+            });
+            entity = await this.repository.save(entity);
+        }
+
+        await this.recordEvent(EventName.MFA_ENROLLED, entity);
+
+        return { entity: this.sanitize(entity) };
     }
 
     protected async resolveTargetUser(
@@ -430,12 +497,22 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         await this.assertNotThrottled(userId);
 
         // Serialize the read-verify-save critical section per user so a single
-        // factor (TOTP step / recovery code) is consumed exactly once even under
-        // concurrent verifies. A held lock means another verify is mid-flight —
-        // bail without penalty rather than risk a double-consume; that request
-        // owns the outcome. Acquisition fails open (see acquireVerifyLock).
+        // factor (TOTP step / recovery / email code) is consumed exactly once
+        // even under concurrent verifies. A held lock means another verify is
+        // mid-flight — bail without penalty rather than risk a double-consume;
+        // that request owns the outcome.
         const lockKey = this.buildVerifyLockCacheKey(userId);
-        if (!await this.acquireVerifyLock(lockKey)) {
+        const lock = await this.acquireVerifyLock(lockKey);
+        if (lock === 'busy') {
+            return false;
+        }
+        // Lock acquisition fails open (cache down → 'unavailable') so a cache
+        // outage cannot brick MFA login. That is only safe for factors with a
+        // PERSISTED anti-replay backstop (TOTP step-counter / recovery used_at).
+        // EMAIL single-use rides entirely on the lock + cache drop with no
+        // persisted backstop, so without a real lock it must fail closed —
+        // otherwise concurrent verifies could both consume one code.
+        if (lock === 'unavailable' && input.kind === UserAuthenticatorKind.EMAIL) {
             return false;
         }
 
@@ -460,6 +537,12 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
                     }
                 }
 
+                if (input.kind === UserAuthenticatorKind.EMAIL) {
+                    if (await this.verifyEmail(userId, input.response)) {
+                        matched = device;
+                    }
+                }
+
                 if (matched) {
                     break;
                 }
@@ -479,7 +562,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             await this.recordChallengeEvent(EventName.MFA_VERIFIED, userId, input.kind, ctx, matched);
             return true;
         } finally {
-            await this.releaseVerifyLock(lockKey);
+            // only release a lock we actually hold (never a fail-open no-lock).
+            if (lock === 'acquired') {
+                await this.releaseVerifyLock(lockKey);
+            }
         }
     }
 
@@ -548,6 +634,98 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         return false;
     }
 
+    protected async verifyEmail(userId: string, response: string): Promise<boolean> {
+        const key = this.buildEmailCodeCacheKey(userId);
+        const state = await this.cache.get<EmailCodeState>(key);
+        if (!state || state.expiresAt < Date.now()) {
+            return false;
+        }
+
+        if (!await compare(response.trim(), state.hash)) {
+            return false;
+        }
+
+        // single-use — drop the code once consumed
+        await this.cache.drop(key);
+        return true;
+    }
+
+    // ------------------------------------------------------------------
+
+    async sendChallenge(
+        userId: string,
+        kind: `${UserAuthenticatorKind}`,
+        ctx: UserAuthenticatorSendContext = {},
+    ): Promise<void> {
+        // Only email needs a server-issued challenge; TOTP/recovery are
+        // client-derived (no-op keeps the endpoint uniform).
+        if (kind !== UserAuthenticatorKind.EMAIL) {
+            return;
+        }
+
+        this.assertMail();
+        await this.assertNotThrottled(userId);
+
+        // require a CONFIRMED email factor — never mail a code to a user who
+        // did not enroll email (no code-spray oracle).
+        const devices = await this.repository.findAllWithSecretsByUser(userId, {
+            kind: UserAuthenticatorKind.EMAIL,
+            confirmed: true,
+        });
+        if (devices.length === 0) {
+            return;
+        }
+
+        // email column is select:false — force-load it for the recipient.
+        const user = await this.userRepository.findOneByWithEmail({ id: userId });
+        if (!user || !user.email) {
+            return;
+        }
+
+        // per-user send cooldown — an authenticated caller must not be able to
+        // spray unlimited OTP mails. `add` is atomic set-if-absent, so the first
+        // send stores the key and any resend within the window returns false.
+        // Fails open on a cache error (a transient outage must not block a
+        // legitimate code).
+        let withinCooldown: boolean;
+        try {
+            withinCooldown = !(await this.cache.add(
+                this.buildEmailSendCacheKey(userId),
+                1,
+                { ttl: USER_AUTHENTICATOR_EMAIL_SEND_COOLDOWN * 1_000 },
+            ));
+        } catch {
+            withinCooldown = false;
+        }
+        if (withinCooldown) {
+            throw new MfaThrottledError({ retryAfter: USER_AUTHENTICATOR_EMAIL_SEND_COOLDOWN });
+        }
+
+        const codeValue = generateNumericCode(USER_AUTHENTICATOR_EMAIL_CODE_LENGTH);
+        await this.cache.set(
+            this.buildEmailCodeCacheKey(userId),
+            {
+                hash: await hash(codeValue),
+                expiresAt: Date.now() + (USER_AUTHENTICATOR_EMAIL_CODE_EXPIRES_IN_MINUTES * 60 * 1_000),
+            } satisfies EmailCodeState,
+            { ttl: USER_AUTHENTICATOR_EMAIL_CODE_EXPIRES_IN_MINUTES * 60 * 1_000 },
+        );
+
+        const mail = await this.mailTemplateRenderer!.render({
+            template: MailTemplateName.MFA_EMAIL_OTP,
+            params: {
+                code: codeValue,
+                expiresInMinutes: USER_AUTHENTICATOR_EMAIL_CODE_EXPIRES_IN_MINUTES,
+            },
+            locale: ctx.locale,
+        });
+
+        await this.mailClient!.send({
+            to: user.email,
+            ...mail,
+        });
+    }
+
     // ------------------------------------------------------------------
 
     async hasConfirmed(userId: string): Promise<boolean> {
@@ -598,11 +776,34 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         return this.cipher;
     }
 
+    protected assertMail(): void {
+        if (!this.mailClient || !this.mailTemplateRenderer) {
+            throw new AuthupError({
+                code: ErrorCode.MFA_NOT_CONFIGURABLE,
+                message: 'Email-based multi-factor authentication requires a configured mail transport.',
+            });
+        }
+    }
+
     // ------------------------------------------------------------------
 
     protected buildAttemptCacheKey(userId: string): string {
         return buildCacheKey({
             prefix: USER_AUTHENTICATOR_ATTEMPT_CACHE_PREFIX,
+            key: userId,
+        });
+    }
+
+    protected buildEmailCodeCacheKey(userId: string): string {
+        return buildCacheKey({
+            prefix: USER_AUTHENTICATOR_EMAIL_CODE_CACHE_PREFIX,
+            key: userId,
+        });
+    }
+
+    protected buildEmailSendCacheKey(userId: string): string {
+        return buildCacheKey({
+            prefix: USER_AUTHENTICATOR_EMAIL_SEND_CACHE_PREFIX,
             key: userId,
         });
     }
@@ -614,14 +815,16 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         });
     }
 
-    protected async acquireVerifyLock(key: string): Promise<boolean> {
+    protected async acquireVerifyLock(key: string): Promise<'acquired' | 'busy' | 'unavailable'> {
         try {
-            return await this.cache.add(key, 1, { ttl: USER_AUTHENTICATOR_VERIFY_LOCK_TTL });
+            return (await this.cache.add(key, 1, { ttl: USER_AUTHENTICATOR_VERIFY_LOCK_TTL })) ?
+                'acquired' :
+                'busy';
         } catch {
-            // Fail open: a cache outage must not break MFA login. The TOTP
-            // step-counter and recovery `used_at` flags remain the correctness
-            // backstop for the (now unserialized) concurrent case.
-            return true;
+            // Cache down — no real lock. The caller decides: factors with a
+            // persisted anti-replay backstop (TOTP step-counter / recovery
+            // used_at) proceed; EMAIL (cache-only single-use) fails closed.
+            return 'unavailable';
         }
     }
 

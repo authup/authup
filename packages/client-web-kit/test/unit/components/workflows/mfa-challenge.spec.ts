@@ -49,6 +49,36 @@ describe('AMfaChallengeForm', () => {
         expect(wrapper.emitted('failed')).toBeTruthy();
     });
 
+    it('requests an email code before verifying for the email kind', async () => {
+        const { wrapper, httpClient } = mountKitComponent(AMfaChallengeForm, { kinds: ['email'] }, {
+            'POST /authenticators/challenge/send': () => ({ success: true }),
+            'POST /authenticators/challenge': () => ({ verified: true }),
+        });
+
+        // first click sends the code (no input yet)
+        await wrapper.find('button').trigger('click');
+        await flushPromises();
+
+        const sendRequest = httpClient.requests.find(
+            (r) => r.method === 'POST' &&
+                new URL(r.url, 'http://localhost').pathname === '/authenticators/challenge/send',
+        );
+        expect(sendRequest).toBeDefined();
+        expect(sendRequest!.body).toEqual({ kind: 'email' });
+
+        // then a code input appears → verify
+        await wrapper.find('input').setValue('123456');
+        await wrapper.find('form').trigger('submit');
+        await flushPromises();
+
+        const verifyRequest = httpClient.requests.find(
+            (r) => r.method === 'POST' &&
+                new URL(r.url, 'http://localhost').pathname === '/authenticators/challenge',
+        );
+        expect(verifyRequest!.body).toEqual({ kind: 'email', response: '123456' });
+        expect(wrapper.emitted('done')).toBeTruthy();
+    });
+
     it('switches to a recovery code when the recovery kind is offered', async () => {
         const { wrapper, httpClient } = mountKitComponent(AMfaChallengeForm, { kinds: ['totp', 'recovery'] }, { 'POST /authenticators/challenge': () => ({ verified: true }) });
 

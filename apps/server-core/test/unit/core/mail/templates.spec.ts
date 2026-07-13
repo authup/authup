@@ -36,7 +36,11 @@ describe('mail templates', () => {
         expect(mail.subject.trim().length).toBeGreaterThan(0);
         expect(mail.html).toContain(`lang="${locale}"`);
         expect(mail.html).toContain('code-123');
-        expect(mail.html).toContain('https://auth.example.com/path');
         expect(mail.text).toContain('code-123');
+
+        // the email OTP template deliberately renders no action link
+        if (template !== MailTemplateName.MFA_EMAIL_OTP) {
+            expect(mail.html).toContain('https://auth.example.com/path');
+        }
     });
 });

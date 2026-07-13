@@ -784,6 +784,8 @@ export class HTTPControllerModule {
                 new SymmetricCipher(config.mfaEncryptionKey) :
                 null,
             eventService: container.resolve(DatabaseInjectionKey.EventService),
+            mailClient: container.resolve(MailInjectionKey),
+            mailTemplateRenderer: container.resolve(MailTemplateRendererInjectionKey),
             options: {
                 enabled: config.mfaEnabled,
                 required: config.mfaRequired,

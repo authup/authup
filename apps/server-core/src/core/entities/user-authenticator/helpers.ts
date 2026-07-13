@@ -37,3 +37,14 @@ export function guessUserAuthenticatorKindByResponse(response: string): `${UserA
         UserAuthenticatorKind.TOTP :
         UserAuthenticatorKind.RECOVERY;
 }
+
+export function generateNumericCode(length: number): string {
+    const bytes = getRandomValues(new Uint8Array(length));
+
+    let output = '';
+    for (let i = 0; i < length; i++) {
+        output += String(bytes[i] % 10);
+    }
+
+    return output;
+}

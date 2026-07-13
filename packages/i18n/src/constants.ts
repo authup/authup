@@ -136,9 +136,14 @@ export enum TranslatorTranslationClientKey {
     MFA_FAILED = 'mfaFailed',
     MFA_SETUP_REQUIRED = 'mfaSetupRequired',
 
+    MFA_USE_EMAIL = 'mfaUseEmail',
+    MFA_SEND_CODE = 'mfaSendCode',
+    MFA_CODE_SENT = 'mfaCodeSent',
+
     MFA_ENROLL_TITLE = 'mfaEnrollTitle',
     MFA_ENROLL_TOTP = 'mfaEnrollTotp',
     MFA_ENROLL_RECOVERY = 'mfaEnrollRecovery',
+    MFA_ENROLL_EMAIL = 'mfaEnrollEmail',
     MFA_SCAN_QR = 'mfaScanQr',
     MFA_MANUAL_KEY = 'mfaManualKey',
     MFA_CONFIRM_INTRO = 'mfaConfirmIntro',
@@ -238,6 +243,11 @@ export enum TranslatorTranslationMailKey {
     PASSWORD_RESET_ACTION = 'passwordResetAction',
     PASSWORD_RESET_EXPIRY = 'passwordResetExpiry',
     PASSWORD_RESET_HINT = 'passwordResetHint',
+
+    MFA_EMAIL_OTP_SUBJECT = 'mfaEmailOtpSubject',
+    MFA_EMAIL_OTP_INTRO = 'mfaEmailOtpIntro',
+    MFA_EMAIL_OTP_EXPIRY = 'mfaEmailOtpExpiry',
+    MFA_EMAIL_OTP_HINT = 'mfaEmailOtpHint',
 }
 
 /**

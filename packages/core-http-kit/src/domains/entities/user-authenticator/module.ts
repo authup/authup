@@ -13,6 +13,7 @@ import type { EntityCollectionResponse, EntityRecordResponse } from '../../types
 import type {
     IUserAuthenticatorAPI,
     UserAuthenticatorChallengeResponse,
+    UserAuthenticatorChallengeSendPayload,
     UserAuthenticatorChallengeVerifyPayload,
     UserAuthenticatorChallengeVerifyResponse,
     UserAuthenticatorConfirmPayload,
@@ -64,6 +65,13 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
 
     async challenge(): Promise<UserAuthenticatorChallengeResponse> {
         const response = await this.client.get('authenticators/challenge');
+        return response.data;
+    }
+
+    async sendChallenge(
+        data: UserAuthenticatorChallengeSendPayload,
+    ): Promise<{ success: boolean }> {
+        const response = await this.client.post('authenticators/challenge/send', data);
         return response.data;
     }
 

@@ -13,6 +13,7 @@ import type {
     ISymmetricCipher,
 } from '@authup/server-kit';
 import type { IEventService } from '../event/index.ts';
+import type { IMailClient, IMailTemplateRenderer } from '../../mail/index.ts';
 import type { IUserRepository } from '../user/index.ts';
 
 export const USER_AUTHENTICATOR_FILTER_KEYS = [
@@ -174,8 +175,22 @@ export interface IUserAuthenticatorService extends IUserAuthenticatorChallengePr
         ctx?: UserAuthenticatorVerifyContext
     ): Promise<boolean>;
 
+    /**
+     * Issue a kind-specific challenge (email OTP: generate + mail a code).
+     * A no-op for kinds whose challenge material is client-derived (TOTP).
+     */
+    sendChallenge(
+        userId: string,
+        kind: `${UserAuthenticatorKind}`,
+        ctx?: UserAuthenticatorSendContext
+    ): Promise<void>;
+
     hasConfirmed(userId: string): Promise<boolean>;
 }
+
+export type UserAuthenticatorSendContext = {
+    locale?: string,
+};
 
 export type UserAuthenticatorServiceOptions = {
     /**
@@ -203,5 +218,11 @@ export type UserAuthenticatorServiceContext = {
      */
     cipher?: ISymmetricCipher | null,
     eventService?: IEventService,
+    /**
+     * Mail dependencies for the email-OTP kind (absent = email OTP
+     * enrollment/send is refused).
+     */
+    mailClient?: IMailClient,
+    mailTemplateRenderer?: IMailTemplateRenderer,
     options?: UserAuthenticatorServiceOptions,
 };

@@ -24,7 +24,15 @@ export class MailModule implements IModule {
     }
 
     async setup(container: IContainer): Promise<void> {
-        container.register(MailTemplateRendererInjectionKey, { useFactory: () => new MailTemplateRenderer() });
+        if (!container.has(MailTemplateRendererInjectionKey)) {
+            container.register(MailTemplateRendererInjectionKey, { useFactory: () => new MailTemplateRenderer() });
+        }
+
+        // A pre-registered client wins (test injection — mirrors the
+        // UIHttpClient pattern), so a fake can capture mailed OTP codes.
+        if (container.has(MailInjectionKey)) {
+            return;
+        }
 
         const result = container.tryResolve(ConfigInjectionKey);
         if (!result.success || !result.data.smtp) {
