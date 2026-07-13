@@ -80,4 +80,24 @@ describe('src/cache/adapters/memory', () => {
             expect(await cache.increment('counter')).toBe(1);
         });
     });
+
+    describe('get (falsy round-trip)', () => {
+        it('returns null for an absent key', async () => {
+            const cache = new MemoryCache();
+
+            expect(await cache.get('missing')).toBeNull();
+        });
+
+        it('round-trips a stored falsy value instead of reading back null', async () => {
+            const cache = new MemoryCache();
+
+            await cache.set('zero', 0, {});
+            await cache.set('flag', false, {});
+            await cache.set('empty', '', {});
+
+            expect(await cache.get('zero')).toBe(0);
+            expect(await cache.get('flag')).toBe(false);
+            expect(await cache.get('empty')).toBe('');
+        });
+    });
 });

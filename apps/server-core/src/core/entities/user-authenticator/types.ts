@@ -171,12 +171,24 @@ export type UserAuthenticatorVerifyContext = {
     onVerified?: () => Promise<void>,
 };
 
+export type UserAuthenticatorChallengeOptions = {
+    /**
+     * Issue kind-specific challenge material as a side effect (e.g. mint +
+     * cache the WebAuthn request nonce). Only the interactive status endpoint
+     * needs it; the enforcement chokepoints (authorize backstop, password
+     * grant) read `required`/`enrollmentRequired`/`kinds` only and pass
+     * `false` so they don't rotate an in-flight ceremony's nonce or run the
+     * extra query on every request. Defaults to `true`.
+     */
+    issueMaterial?: boolean,
+};
+
 /**
  * The login-time seam: computes whether (and how) a subject must be
  * challenged. Consumed by the authorize backstop and the password grant.
  */
 export interface IUserAuthenticatorChallengeProvider {
-    challenge(userId: string): Promise<UserAuthenticatorChallengeStatus>;
+    challenge(userId: string, options?: UserAuthenticatorChallengeOptions): Promise<UserAuthenticatorChallengeStatus>;
 }
 
 export interface IUserAuthenticatorService extends IUserAuthenticatorChallengeProvider {

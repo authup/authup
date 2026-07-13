@@ -627,6 +627,7 @@ export function createStore(context: StoreCreateContext) {
                 username: ctx.name,
                 password: ctx.password,
                 ...(ctx.realmId ? { realm_id: ctx.realmId } : {}),
+                ...(ctx.otp ? { otp: ctx.otp } : {}),
             });
 
             // Clear any previous identity's state (notably a retained id_token —

@@ -617,10 +617,13 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             return false;
         }
         // Lock acquisition fails open (cache down → 'unavailable') so a cache
-        // outage cannot brick MFA login. That is only safe for factors with a
-        // PERSISTED anti-replay backstop (TOTP step-counter / recovery used_at).
-        // EMAIL single-use rides entirely on the lock + cache drop with no
-        // persisted backstop, so without a real lock it must fail closed —
+        // outage cannot brick MFA login. TOTP/recovery proceed because they carry
+        // a PERSISTED anti-replay backstop (TOTP step-counter / recovery used_at)
+        // — note this bounds SEQUENTIAL replay only; two verifies of the same
+        // still-valid code racing during an outage can both read-then-write and
+        // both pass (an accepted, narrow residual, since each still needs a valid
+        // code). EMAIL single-use rides entirely on the lock + cache drop with no
+        // persisted backstop, so without a real lock it MUST fail closed —
         // otherwise concurrent verifies could both consume one code.
         if (lock === 'unavailable' && input.kind === UserAuthenticatorKind.EMAIL) {
             return false;
@@ -923,12 +926,15 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         return this.repository.hasConfirmedByUser(userId);
     }
 
-    async challenge(userId: string): Promise<UserAuthenticatorChallengeStatus> {
+    async challenge(
+        userId: string,
+        options: { issueMaterial?: boolean } = {},
+    ): Promise<UserAuthenticatorChallengeStatus> {
         if (!this.options.enabled) {
             return {
-                required: false, 
-                enrollmentRequired: false, 
-                kinds: [], 
+                required: false,
+                enrollmentRequired: false,
+                kinds: [],
             };
         }
 
@@ -945,7 +951,11 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         // WebAuthn needs server-issued request options as the challenge — build
         // them (and store the nonce) when the subject holds a webauthn factor.
-        if (kinds.includes(UserAuthenticatorKind.WEBAUTHN) && this.options.webauthn) {
+        // Skipped when the caller only needs the requirement flags (issueMaterial
+        // false): the enforcement chokepoints must not rotate an in-flight
+        // ceremony's nonce nor run this extra query on every request.
+        const issueMaterial = options.issueMaterial ?? true;
+        if (issueMaterial && kinds.includes(UserAuthenticatorKind.WEBAUTHN) && this.options.webauthn) {
             const credentials = (await this.repository.findAllWithSecretsByUser(userId, {
                 kind: UserAuthenticatorKind.WEBAUTHN,
                 confirmed: true,

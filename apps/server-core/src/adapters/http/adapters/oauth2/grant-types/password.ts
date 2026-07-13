@@ -150,14 +150,21 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
             return undefined;
         }
 
-        const status = await this.userAuthenticatorService.challenge(user.id);
+        // requirement flags + kinds only — no webauthn material on the token path.
+        const status = await this.userAuthenticatorService.challenge(user.id, { issueMaterial: false });
         if (!status.required) {
             return undefined;
         }
 
         const otp = readStringField(body, 'otp');
         if (!otp) {
-            throw OAuth2MfaRequiredError.challengeRequired();
+            // carry the challengeable kinds so a client (the hosted login form)
+            // can tell whether a single-POST factor (totp/recovery) is on offer
+            // or the user must complete an interactive challenge (email/webauthn).
+            throw new OAuth2MfaRequiredError({
+                message: 'Complete a second-factor challenge to continue.',
+                data: { kinds: status.kinds },
+            });
         }
 
         const verified = await this.userAuthenticatorService.verify(
@@ -173,7 +180,10 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
             },
         );
         if (!verified) {
-            throw new OAuth2MfaRequiredError({ message: 'The provided second factor is not valid.' });
+            throw new OAuth2MfaRequiredError({
+                message: 'The provided second factor is not valid.',
+                data: { kinds: status.kinds },
+            });
         }
 
         return new Date().toISOString();

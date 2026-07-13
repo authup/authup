@@ -37,7 +37,16 @@ export type OAuth2APIOptions = Options;
 export type OAuth2ClientAuthenticationParameters = ClientAuthenticationParameters;
 
 export type OAuth2TokenClientCredentialsGrantParameters = TokenClientCredentialsGrantParameters;
-export type OAuth2TokenPasswordGrantParameters = TokenPasswordGrantParameters;
+/**
+ * The `otp` field is an authup extension (not part of the RFC 6749 password
+ * grant): a user holding a confirmed second factor supplies a TOTP or
+ * recovery code alongside their credentials so the grant is not rejected
+ * with `mfa_required`. It rides as an extra form field — the token request
+ * transport serializes every string parameter.
+ */
+export type OAuth2TokenPasswordGrantParameters = TokenPasswordGrantParameters & {
+    otp?: string,
+};
 export type OAuth2TokenAuthorizationCodeGrantParameters = TokenAuthorizationCodeGrantParameters;
 export type OAuth2TokenRefreshTokenGrantParameters = TokenRefreshTokenGrantParameters;
 export type OAuth2TokenRobotCredentialsGrantParameters = TokenRobotCredentialsGrantParameters;

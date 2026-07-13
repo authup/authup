@@ -17,6 +17,7 @@ import {
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import { startAuthentication } from '@simplewebauthn/browser';
+import type { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/browser';
 import { VCButton } from '@vuecs/button';
 import { VCAlert } from '@vuecs/elements';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
@@ -147,7 +148,11 @@ export default defineComponent({
         };
 
         const authenticateWithPasskey = async () => {
-            const optionsJSON = (props.challenge?.webauthn ?? null) as Record<string, unknown> | null;
+            // The challenge payload is an opaque Record on the wire (the server
+            // keeps @simplewebauthn types out of the HTTP DTO); narrow it back to
+            // the browser API's option shape at this single boundary.
+            const optionsJSON = (props.challenge?.webauthn ?? null) as
+                unknown as PublicKeyCredentialRequestOptionsJSON | null;
             if (busy.value || !optionsJSON) {
                 return;
             }
@@ -155,7 +160,7 @@ export default defineComponent({
             busy.value = true;
             error.value = null;
             try {
-                const assertion = await startAuthentication({ optionsJSON: optionsJSON as never });
+                const assertion = await startAuthentication({ optionsJSON });
                 await apiClient.userAuthenticator.verifyChallenge({
                     kind: UserAuthenticatorKind.WEBAUTHN,
                     response: JSON.stringify(assertion),

@@ -193,7 +193,12 @@ export class OAuth2Authorization {
         // fails closed while the user holds a confirmed device. A user without
         // a device under mfaRequired is routed to inline enrollment.
         if (this.mfaChallengeProvider && identity.type === IdentityType.USER) {
-            const challenge = await this.mfaChallengeProvider.challenge(identity.data.id);
+            // requirement flags only — the interactive challenge material (the
+            // webauthn nonce) is issued by the status endpoint, not this backstop.
+            const challenge = await this.mfaChallengeProvider.challenge(
+                identity.data.id,
+                { issueMaterial: false },
+            );
             if (challenge.required && !session?.mfa_at) {
                 throw OAuth2MfaRequiredError.challengeRequired();
             }

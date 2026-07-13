@@ -1831,13 +1831,32 @@ user's nested route is a 404 (no existence oracle).
    with a confirmed device must send a valid `otp` form parameter (TOTP or
    recovery code, classified by shape via
    `guessUserAuthenticatorKindByResponse`: all-digits → totp) or the grant
-   throws `mfa_required`. On success the created session is stamped
-   (`mfa_at`), so the subsequent SSR `POST /authorize` passes the backstop.
-   Users *without* a device pass through (they could never enroll otherwise) —
-   `mfaRequired` (configure-inline) is enforced at `/authorize`
+   throws `mfa_required` (the error `data.kinds` carries the challengeable kinds
+   so a client can pick the right step). On success the created session is
+   stamped (`mfa_at`), so the subsequent SSR `POST /authorize` passes the
+   backstop. Users *without* a device pass through (they could never enroll
+   otherwise) — `mfaRequired` (configure-inline) is enforced at `/authorize`
    (`enrollmentRequired` → the hosted UI routes to inline enrollment), not at
    the token endpoint. WebAuthn cannot ride a single POST — it stays
    interactive-only (documented boundary).
+
+**The password grant is the single MFA chokepoint for credential login — the
+hosted `LoginForm` drives the `otp`, NOT a post-login challenge.** `store.login`
+(and `StoreLoginContext`) carry an optional `otp`, forwarded on the
+`createWithPassword` body. `LoginForm` catches `mfa_required` from the
+credentials-only submit, transitions to a second-factor step, and *resubmits the
+same credentials WITH the code* — so a token is never issued before the factor is
+verified (fail-closed; a credential-only bearer would be a full-API MFA bypass).
+The step reads the error's `kinds`: TOTP/recovery render a code field;
+email/webauthn (which cannot complete in one POST — email needs a send, webauthn
+needs an interactive ceremony against a live session) render the server message
+instead. **Known boundary:** a user whose ONLY confirmed factor is email or
+webauthn cannot complete a *fresh* interactive login this way; that requires a
+pre-MFA session (a session created before enrollment, or a federated-IdP
+callback) so the `/authorize` backstop + `POST /authenticators/challenge` path
+applies. `challenge(userId, { issueMaterial })` lets the enforcement chokepoints
+(authorize backstop, password grant) read the requirement flags without minting
+the webauthn nonce (issued only by the interactive status endpoint).
 
 **Verify unit of work (#3237)**: `UserAuthenticatorService.verify()`
 serializes its read-verify-save critical section per user via a cache lock

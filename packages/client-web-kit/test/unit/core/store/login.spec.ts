@@ -88,4 +88,36 @@ describe('core/store/login', () => {
         expect(request).toBeDefined();
         expect('realm_id' in (request!.body as Record<string, string>)).toBe(false);
     });
+
+    it('should transmit otp (second factor) when provided', async () => {
+        const { store, httpClient } = buildStore();
+
+        await store.login({
+            name: 'admin',
+            password: 'start123',
+            otp: '123456',
+        });
+
+        const request = findTokenRequest(httpClient);
+        expect(request).toBeDefined();
+        expect(request!.body).toMatchObject({
+            grant_type: 'password',
+            username: 'admin',
+            password: 'start123',
+            otp: '123456',
+        });
+    });
+
+    it('should omit otp when not provided', async () => {
+        const { store, httpClient } = buildStore();
+
+        await store.login({
+            name: 'admin',
+            password: 'start123',
+        });
+
+        const request = findTokenRequest(httpClient);
+        expect(request).toBeDefined();
+        expect('otp' in (request!.body as Record<string, string>)).toBe(false);
+    });
 });

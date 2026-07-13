@@ -96,6 +96,9 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
         const withoutOtpBody = await withoutOtp.json();
         expect(withoutOtpBody.code).toEqual(ErrorCode.OAUTH_MFA_REQUIRED);
         expect(withoutOtpBody.error).toEqual(OAuth2ErrorCode.MFA_REQUIRED);
+        // the challengeable kinds ride the error so the hosted login form can
+        // present the right second-factor step (single-POST otp vs interactive).
+        expect(withoutOtpBody.kinds).toEqual([UserAuthenticatorKind.TOTP]);
 
         // 4) ... and accepts password + otp. Use the PREVIOUS step's code (valid
         // via the ±1 window) so the consumed step stays behind the challenge
