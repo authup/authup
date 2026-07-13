@@ -155,13 +155,20 @@ export default defineComponent({
             try {
                 mfaStatus.value = await httpClient.userAuthenticator.challenge();
             } catch {
-                // an errored challenge lookup must not brick the ladder —
-                // the server backstop still gates the code issuance.
-                mfaStatus.value = {
-                    required: false, 
-                    enrollmentRequired: false, 
-                    kinds: [], 
-                };
+                try {
+                    // one retry before failing open — absorbs a transient blip
+                    // without permanently disabling the client-side gate for the
+                    // rest of this render lifecycle.
+                    mfaStatus.value = await httpClient.userAuthenticator.challenge();
+                } catch {
+                    // an errored challenge lookup must not brick the ladder —
+                    // the server backstop still gates the code issuance.
+                    mfaStatus.value = {
+                        required: false,
+                        enrollmentRequired: false,
+                        kinds: [],
+                    };
+                }
             } finally {
                 mfaResolving.value = false;
             }
