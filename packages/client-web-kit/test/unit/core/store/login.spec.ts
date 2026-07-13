@@ -120,4 +120,26 @@ describe('core/store/login', () => {
         expect(request).toBeDefined();
         expect('otp' in (request!.body as Record<string, string>)).toBe(false);
     });
+
+    // Issue #3242: the MFA-pending ticket completion returns the full grant
+    // out of band (challenge verify response) — applying it must establish a
+    // session with LOGIN semantics, identical to a password-grant login.
+    it('should establish a login session from an out-of-band grant', async () => {
+        const { store, httpClient } = buildStore();
+
+        await store.loginWithTokenGrant({
+            access_token: 'ticket-at',
+            token_type: 'Bearer',
+            expires_in: 3600,
+            refresh_token: 'ticket-rt',
+        });
+
+        expect(store.accessToken.value).toEqual('ticket-at');
+        expect(store.refreshToken.value).toEqual('ticket-rt');
+        expect(store.lastAuthOrigin.value).toEqual('login');
+
+        // no password grant was fired — the tokens came from the challenge
+        const request = findTokenRequest(httpClient);
+        expect(request).toBeUndefined();
+    });
 });

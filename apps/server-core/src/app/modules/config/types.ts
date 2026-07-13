@@ -300,6 +300,16 @@ export type Config = {
      */
     mfaFreshnessMaxAge: number,
 
+    /**
+     * Lifetime (seconds) of the "MFA-pending" login ticket the password
+     * grant issues when the second factor cannot ride the single POST
+     * (email / WebAuthn) — and of the pending session backing it (extended
+     * to the full session lifetime on completion). Sized to cover the
+     * email-OTP window (code expiry: 10 minutes).
+     * default: 600
+     */
+    mfaTicketMaxAge: number,
+
     // ----------------------------------------------------
 
     /**

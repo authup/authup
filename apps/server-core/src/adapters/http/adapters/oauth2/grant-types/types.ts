@@ -13,6 +13,7 @@ import type {
     ICredentialsAuthenticator,
     ILoginThrottleService,
     IOAuth2AuthorizationCodeVerifier,
+    IOAuth2MfaLoginService,
     IRealmRepository,
     IUserAuthenticatorService,
     OAuth2AuthorizeGrantContext,
@@ -37,6 +38,7 @@ export type HTTPOAuth2PasswordGrantContext = OAuth2PasswordGrantContext & {
     realmRepository: IRealmRepository,
     loginThrottleService?: ILoginThrottleService,
     userAuthenticatorService?: IUserAuthenticatorService,
+    mfaLoginService?: IOAuth2MfaLoginService,
 };
 
 export type HTTPOAuth2RefreshTokenGrantContext = OAuth2RefreshTokenGrantContext & {

@@ -6,7 +6,7 @@
  */
 
 import { ErrorCode } from '@authup/errors';
-import { JWTError } from '@authup/specs';
+import { JWTError, OAuth2TokenKind } from '@authup/specs';
 import {
     beforeAll, 
     describe, 
@@ -22,10 +22,15 @@ import { Faker } from '../utils';
 
 describe('verifier', () => {
     let token : string;
+    let mfaToken : string;
     beforeAll(async () => {
         const faker = new Faker();
 
         token = await faker.sign(TokenPayload);
+        mfaToken = await faker.sign({
+            ...TokenPayload,
+            kind: OAuth2TokenKind.MFA,
+        });
 
         vitest.spyOn(TokenAPI.prototype, 'introspect').mockImplementation((options) => introspectToken(options));
         vitest.spyOn(Client.prototype, 'getJwk').mockReturnValue(faker.useJwk());
@@ -50,6 +55,20 @@ describe('verifier', () => {
 
         try {
             await tokenVerifier.verify(ErrorCode.JWT_INVALID);
+            expect(false).toBe(true);
+        } catch (e) {
+            expect(e).toBeInstanceOf(JWTError);
+        }
+    });
+
+    // A bearer must be an ACCESS token: authup signs other kinds with the
+    // same keys (refresh tokens, the MFA-pending login ticket) — a local-JWKS
+    // adapter must never accept them as an authenticated subject.
+    it('should not verify a non-access token kind local', async () => {
+        const tokenVerifier = new TokenVerifier({ baseURL: 'http://localhost:3001' });
+
+        try {
+            await tokenVerifier.verifyLocal(mfaToken);
             expect(false).toBe(true);
         } catch (e) {
             expect(e).toBeInstanceOf(JWTError);

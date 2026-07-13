@@ -184,6 +184,11 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.mfaFreshnessMaxAge = mfaFreshnessMaxAge;
     }
 
+    const mfaTicketMaxAge = readInt(ConfigEnvironmentVariableName.MFA_TICKET_MAX_AGE);
+    if (typeof mfaTicketMaxAge !== 'undefined') {
+        options.mfaTicketMaxAge = mfaTicketMaxAge;
+    }
+
     // ---------------------------------------------------------------
 
     const clientBasicAuth = readBool(ConfigEnvironmentVariableName.CLIENT_AUTH_BASIC);

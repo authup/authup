@@ -26,6 +26,7 @@ import {
     OAuth2AuthorizationCodeRequestVerifier,
     OAuth2AuthorizationCodeVerifier,
     OAuth2AuthorizationStateManager,
+    OAuth2MfaTokenIssuer,
     OAuth2OpenIDTokenIssuer,
     OAuth2RefreshTokenIssuer,
     OAuth2TokenRevoker,
@@ -182,6 +183,23 @@ export class OAuth2Module implements IModule {
                     },
                     identityRoleProvider,
                     sessionTokenRepository,
+                );
+            },
+        });
+
+        // mfa login-ticket issuer
+        container.register(OAuth2InjectionToken.MfaTokenIssuer, {
+            useFactory: (c) => {
+                const tokenRepository = c.resolve(OAuth2InjectionToken.TokenRepository);
+                const tokenSigner = c.resolve(OAuth2InjectionToken.TokenSigner);
+
+                return new OAuth2MfaTokenIssuer(
+                    tokenRepository,
+                    tokenSigner,
+                    {
+                        maxAge: config.mfaTicketMaxAge,
+                        issuer: config.publicUrl,
+                    },
                 );
             },
         });

@@ -17,6 +17,13 @@ export enum OAuth2TokenKind {
     ACCESS = 'access_token',
     ID_TOKEN = 'id_token',
     REFRESH = 'refresh_token',
+    /**
+     * Short-lived "MFA-pending" login ticket (Auth0 `mfa_token` precedent):
+     * issued by the password grant when the second factor cannot ride the
+     * single POST (email / WebAuthn). Default-denied as a bearer everywhere —
+     * only the challenge routes opt in.
+     */
+    MFA = 'mfa_token',
 }
 
 export enum OAuth2SubKind {

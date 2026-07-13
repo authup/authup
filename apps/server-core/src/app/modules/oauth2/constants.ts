@@ -40,6 +40,7 @@ export const OAuth2InjectionToken = {
     KeyRepository: new TypedToken<IOAuth2KeyRepository>('KeyRepository'),
 
     AccessTokenIssuer: new TypedToken<IOAuth2TokenIssuer>('AccessTokenIssuer'),
+    MfaTokenIssuer: new TypedToken<IOAuth2TokenIssuer>('MfaTokenIssuer'),
     OpenIDTokenIssuer: new TypedToken<IOAuth2OpenIDTokenIssuer>('OpenIDTokenIssuer'),
     RefreshTokenIssuer: new TypedToken<IOAuth2TokenIssuer>('RefreshTokenIssuer'),
 

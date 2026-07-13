@@ -132,6 +132,7 @@ import {
     LoginThrottleService,
     OAuth2ClientAuthenticator,
     OAuth2EndSessionService,
+    OAuth2MfaLoginService,
     PasswordRecoveryService,
     PermissionCheckerService,
     PermissionPolicyService,
@@ -332,6 +333,7 @@ export class HTTPControllerModule {
             metrics,
             loginThrottleService,
             userAuthenticatorService: this.resolveUserAuthenticatorService(container),
+            mfaLoginService: this.resolveMfaLoginService(container),
 
             tokenRefreshGracePeriod: config.tokenRefreshGracePeriod,
             logger,
@@ -813,10 +815,31 @@ export class HTTPControllerModule {
         return new UserAuthenticatorController({ service: this.resolveUserAuthenticatorService(container) });
     }
 
+    private mfaLoginService? : OAuth2MfaLoginService;
+
+    protected resolveMfaLoginService(container: IContainer) : OAuth2MfaLoginService {
+        if (this.mfaLoginService) {
+            return this.mfaLoginService;
+        }
+
+        this.mfaLoginService = new OAuth2MfaLoginService({
+            sessionManager: container.resolve(AuthenticationInjectionKey.SessionManager),
+            ticketIssuer: container.resolve(OAuth2InjectionToken.MfaTokenIssuer),
+            accessTokenIssuer: container.resolve(OAuth2InjectionToken.AccessTokenIssuer),
+            refreshTokenIssuer: container.resolve(OAuth2InjectionToken.RefreshTokenIssuer),
+            tokenRepository: container.resolve(OAuth2InjectionToken.TokenRepository),
+            eventService: container.resolve(DatabaseInjectionKey.EventService),
+            metrics: container.resolve(MetricsInjectionKey),
+        });
+
+        return this.mfaLoginService;
+    }
+
     createAuthenticatorChallengeController(container: IContainer) {
         return new AuthenticatorChallengeController({
             service: this.resolveUserAuthenticatorService(container),
             sessionManager: container.resolve(AuthenticationInjectionKey.SessionManager),
+            mfaLoginService: this.resolveMfaLoginService(container),
         });
     }
 

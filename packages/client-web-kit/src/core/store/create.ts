@@ -171,6 +171,12 @@ export function createStore(context: StoreCreateContext) {
     // confusing silent self-logout on the current row.
     const sessionId = ref<string | null>(null);
 
+    // The achieved OIDC acr of the current session's token (urn:authup:pwd |
+    // urn:authup:mfa), sourced from introspection. Lets the hosted authorize
+    // ladder skip a redundant second-factor prompt right after a login whose
+    // grant already verified the factor (otp param / MFA-pending ticket).
+    const acr = ref<string | null>(null);
+
     // --------------------------------------------------------------------
 
     const realm = ref<RealmMinimal | null>(null);
@@ -285,6 +291,7 @@ export function createStore(context: StoreCreateContext) {
         setIdToken(null);
         setUser(null);
         sessionId.value = null;
+        acr.value = null;
         setRealm(null);
         setRealmManagement(null);
 
@@ -375,6 +382,8 @@ export function createStore(context: StoreCreateContext) {
         if (ctx.introspection.session_id) {
             sessionId.value = ctx.introspection.session_id;
         }
+
+        acr.value = ctx.introspection.acr ?? null;
 
         if (
             ctx.introspection.realm_id &&
@@ -646,6 +655,27 @@ export function createStore(context: StoreCreateContext) {
         context.dispatcher.emit(StoreDispatcherEventName.LOGGED_IN);
     };
 
+    // Establish a session from an out-of-band grant response — the MFA-pending
+    // ticket completion (issue #3242): the challenge verify returns the full
+    // grant, and applying it here keeps login semantics (LOGGING_IN/LOGGED_IN
+    // events, AUTHENTICATING status, lastAuthOrigin = login) identical to a
+    // password-grant login.
+    const loginWithTokenGrant = async (response: OAuth2TokenGrantResponse) => {
+        context.dispatcher.emit(StoreDispatcherEventName.LOGGING_IN);
+
+        interactionInFlight.value = StoreAuthOrigin.LOGIN;
+
+        try {
+            const generation = await cleanup();
+
+            await establishSession(response, StoreAuthOrigin.LOGIN, generation);
+        } finally {
+            interactionInFlight.value = null;
+        }
+
+        context.dispatcher.emit(StoreDispatcherEventName.LOGGED_IN);
+    };
+
     const exchangeAuthorizationCode = async (
         code: string,
         params: {
@@ -688,6 +718,7 @@ export function createStore(context: StoreCreateContext) {
         permissionEvaluator,
 
         login,
+        loginWithTokenGrant,
         logout,
         loggedIn,
         status,
@@ -722,5 +753,6 @@ export function createStore(context: StoreCreateContext) {
         setUser,
 
         sessionId,
+        acr,
     };
 }

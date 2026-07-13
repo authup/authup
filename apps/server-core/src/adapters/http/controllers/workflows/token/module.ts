@@ -100,6 +100,7 @@ export class TokenController {
                 metrics: ctx.metrics,
                 loginThrottleService: ctx.loginThrottleService,
                 userAuthenticatorService: ctx.userAuthenticatorService,
+                mfaLoginService: ctx.mfaLoginService,
             }),
             [OAuth2TokenGrant.REFRESH_TOKEN]: new HTTPOAuth2RefreshTokenGrant({
                 accessTokenIssuer: ctx.accessTokenIssuer,

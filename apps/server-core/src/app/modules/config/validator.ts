@@ -99,6 +99,7 @@ export class ConfigValidator extends Container<Config> {
             // the decoded 32-byte length at boot).
             mfaEncryptionKey: createValidator(z.union([z.literal(''), z.base64()])),
             mfaFreshnessMaxAge: nonNegativeNumberValidator,
+            mfaTicketMaxAge: createValidator(z.number().int().positive()),
 
             clientAuthBasic: booleanValidator,
             clientSystemEnabled: booleanValidator,

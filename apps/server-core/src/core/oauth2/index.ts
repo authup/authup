@@ -10,6 +10,7 @@ export * from './client/index.ts';
 export * from './end-session/index.ts';
 export * from './grant-types/index.ts';
 export * from './key/index.ts';
+export * from './mfa-login/index.ts';
 export * from './openid/index.ts';
 export * from './response/index.ts';
 export * from './scope/index.ts';

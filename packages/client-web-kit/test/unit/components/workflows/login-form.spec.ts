@@ -9,6 +9,7 @@ import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import type { FakeClient } from '@authup/core-http-kit/testing';
 import { AIdentityProviders, ARealmPicker } from '../../../../src/components/entities';
+import AMfaChallengeForm from '../../../../src/components/workflows/mfa/AMfaChallengeForm.vue';
 import { findTokenRequest, mountLoginForm } from '../../../utils';
 
 type LoginFormWrapper = ReturnType<typeof mountLoginForm>['wrapper'];
@@ -31,8 +32,9 @@ function tokenRequests(httpClient: FakeClient) {
 
 // A password-grant handler that rejects a credential-only login (as the server
 // does for an MFA-enrolled user) with `mfa_required`, and only succeeds once an
-// `otp` rides along.
-function mfaGatedTokenHandler(kinds: string[] = ['totp']) {
+// `otp` rides along. With `mfaToken` set it mimics the interactive-kind path
+// (issue #3242): the error additionally carries the MFA-pending ticket.
+function mfaGatedTokenHandler(kinds: string[] = ['totp'], mfaToken?: string) {
     return (req: { body?: unknown }) => {
         const body = (req.body ?? {}) as Record<string, any>;
         if (!body.otp) {
@@ -44,6 +46,10 @@ function mfaGatedTokenHandler(kinds: string[] = ['totp']) {
                     error: 'mfa_required',
                     kinds,
                     message: 'Complete a second-factor challenge to continue.',
+                    ...(mfaToken ? {
+                        mfa_token: mfaToken,
+                        mfa_token_expires_in: 600,
+                    } : {}),
                 },
             };
             throw error;
@@ -197,6 +203,71 @@ describe('components/workflows/login', () => {
         expect((wrapper.vm as any).mfaHasCodeFactor).toBe(false);
         // no code input in the challenge step
         expect(wrapper.find('input').exists()).toBe(false);
+        expect(wrapper.emitted('failed')).toBeUndefined();
+    });
+
+    // Issue #3242: an email-only user cannot complete the single-POST otp
+    // step — the server returns an MFA-pending ticket, and the form drives
+    // the interactive challenge against it (send code → verify → the verify
+    // response carries the full grant, which establishes the session).
+    it('should complete an email-only fresh login via the mfa ticket', async () => {
+        const grant = {
+            access_token: 'ticket-at',
+            token_type: 'Bearer',
+            expires_in: 3600,
+            refresh_token: 'ticket-rt',
+        };
+
+        const { wrapper, httpClient } = mountLoginForm({}, {
+            'POST /token': mfaGatedTokenHandler(['email'], 'ticket-123'),
+            'POST /authenticators/challenge/send': () => ({ success: true }),
+            'POST /authenticators/challenge': () => ({ verified: true, token: grant }),
+        });
+        await flushPromises();
+
+        await submitWithCredentials(wrapper);
+
+        expect((wrapper.vm as any).mfaRequired).toBe(true);
+        expect((wrapper.vm as any).mfaTicket).toEqual('ticket-123');
+        expect(wrapper.emitted('failed')).toBeUndefined();
+
+        // the interactive challenge form replaces the inline otp step
+        const challengeForm = wrapper.findComponent(AMfaChallengeForm);
+        expect(challengeForm.exists()).toBe(true);
+
+        // email-only: no challenge-status fetch needed (webauthn-only material)
+        const statusRequests = httpClient.requests.filter(
+            (request) => request.method === 'GET' &&
+                request.url.includes('authenticators/challenge'),
+        );
+        expect(statusRequests).toHaveLength(0);
+
+        // request the code — the call carries the ticket, not a session bearer
+        await challengeForm.find('button').trigger('click');
+        await flushPromises();
+
+        const sendRequest = httpClient.requests.find(
+            (request) => request.method === 'POST' &&
+                request.url.includes('authenticators/challenge/send'),
+        );
+        expect(sendRequest).toBeDefined();
+        expect(sendRequest!.headers.authorization).toEqual('Bearer ticket-123');
+
+        // enter the mailed code and verify
+        await challengeForm.find('input').setValue('123456');
+        await challengeForm.find('form').trigger('submit');
+        await flushPromises();
+
+        const verifyRequest = httpClient.requests.find(
+            (request) => request.method === 'POST' &&
+                new URL(request.url, 'http://localhost').pathname === '/authenticators/challenge',
+        );
+        expect(verifyRequest).toBeDefined();
+        expect(verifyRequest!.headers.authorization).toEqual('Bearer ticket-123');
+        expect(verifyRequest!.body).toMatchObject({ kind: 'email', response: '123456' });
+
+        // the grant from the verify response established the session
+        expect(wrapper.emitted('done')).toBeTruthy();
         expect(wrapper.emitted('failed')).toBeUndefined();
     });
 
