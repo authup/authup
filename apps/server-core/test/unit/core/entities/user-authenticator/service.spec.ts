@@ -175,19 +175,52 @@ describe('UserAuthenticatorService', () => {
             }
         });
 
-        it('allows a privileged actor to enroll another user', async () => {
+        // Every kind except email would hand the enroller a factor it controls:
+        // totp/recovery return the seed/codes, and a webauthn ceremony can be
+        // completed on the enroller's own authenticator. Those are
+        // self-enrollment only even for a privileged actor — an admin resets
+        // another user's MFA by deleting it.
+        it.each([
+            UserAuthenticatorKind.TOTP,
+            UserAuthenticatorKind.RECOVERY,
+            UserAuthenticatorKind.WEBAUTHN,
+        ])(
+            'refuses a privileged actor enrolling a %s factor for another user',
+            async (kind) => {
+                userRepository.seed({
+                    id: otherUserId,
+                    name: 'other',
+                    realm_id: realmId,
+                } as Partial<User>);
+
+                expect.assertions(2);
+                try {
+                    await service.enroll({ kind, user_id: otherUserId }, makeActor());
+                } catch (e) {
+                    expect(isAuthupError(e)).toBeTruthy();
+                    expect((e as { code?: string }).code).toEqual(ErrorCode.BAD_REQUEST);
+                }
+            },
+        );
+
+        // Email is the one exception: its code is mailed to the user's own
+        // mailbox, so provisioning it for another user discloses no secret to
+        // the enroller — a privileged actor may still enable it.
+        it('allows a privileged actor to enroll email for another user', async () => {
             userRepository.seed({
-                id: otherUserId, 
-                name: 'other', 
-                realm_id: realmId, 
+                id: otherUserId,
+                name: 'other',
+                email: 'other@example.com',
+                realm_id: realmId,
             } as Partial<User>);
 
             const result = await service.enroll(
-                { kind: UserAuthenticatorKind.TOTP, user_id: otherUserId },
+                { kind: UserAuthenticatorKind.EMAIL, user_id: otherUserId },
                 makeActor(),
             );
 
             expect(result.entity.user_id).toEqual(otherUserId);
+            expect(result.entity.confirmed).toBeTruthy();
         });
     });
 

@@ -45,22 +45,48 @@ describe('src/http/controllers/user-authenticator', () => {
         return { id: user.id, client };
     }
 
-    it('lets an admin manage another user\'s devices', async () => {
-        const { id: userId } = await createUserBearer('admin-managed-pw');
+    it('lets an admin list and reset another user\'s devices', async () => {
+        const { id: userId, client: userClient } = await createUserBearer('admin-managed-pw');
 
-        const enrolled = await suite.client.userAuthenticator.enroll(userId, { kind: UserAuthenticatorKind.RECOVERY });
+        // secret-bearing factors are self-enrollment only — the user enrolls
+        // their own recovery set (the admin never sees the codes).
+        const enrolled = await userClient.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.RECOVERY });
         expect(enrolled.codes).toHaveLength(10);
         expect(enrolled.entity.user_id).toEqual(userId);
 
+        // the admin can list it (secrets nulled) ...
         const list = await suite.client.userAuthenticator.getMany(userId);
         expect(list.data).toHaveLength(1);
         expect(list.data[0].codes ?? null).toBeNull();
 
+        // ... and reset it by deleting (the sanctioned admin management path)
         const deleted = await suite.client.userAuthenticator.delete(userId, enrolled.entity.id);
         expect(deleted.id).toEqual(enrolled.entity.id);
 
         const after = await suite.client.userAuthenticator.getMany(userId);
         expect(after.data).toHaveLength(0);
+    });
+
+    it('refuses an admin enrolling an owner-controlled factor for another user', async () => {
+        const { id: userId } = await createUserBearer('admin-enroll-block-pw');
+
+        // totp/recovery would disclose the seed/codes to the admin, and a
+        // webauthn ceremony can be completed on the admin's own authenticator —
+        // all three are self-enrollment only.
+        for (const kind of [
+            UserAuthenticatorKind.TOTP,
+            UserAuthenticatorKind.RECOVERY,
+            UserAuthenticatorKind.WEBAUTHN,
+        ]) {
+            await expectClientError(
+                () => suite.client.userAuthenticator.enroll(userId, { kind }),
+                { status: 400 },
+            );
+        }
+
+        // nothing was created on the target
+        const list = await suite.client.userAuthenticator.getMany(userId);
+        expect(list.data).toHaveLength(0);
     });
 
     it('denies a non-privileged user access to a foreign user\'s devices', async () => {

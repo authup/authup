@@ -244,6 +244,24 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         const user = await this.resolveTargetUser(validated.user_id, actor, validated);
 
+        // Only EMAIL may be provisioned FOR another user: its code is mailed to
+        // the user's own (already-verified) mailbox, so the enroller never
+        // obtains a factor it controls. Every other kind would let an admin plant
+        // a second factor they hold, defeating MFA — TOTP/recovery return the
+        // seed/codes to the caller, and a WebAuthn ceremony can be completed on
+        // the enroller's OWN authenticator (the server can't tell whose device
+        // signed). Those are self-enrollment only (Keycloak/Okta/Authentik don't
+        // hand a user's factor secret to an admin either); an admin resets another
+        // user's MFA by DELETING it, and the user re-enrolls.
+        const isSelfEnrollment = !!actor.identity &&
+            actor.identity.type === IdentityType.USER &&
+            actor.identity.data.id === user.id;
+        if (!isSelfEnrollment && validated.kind !== UserAuthenticatorKind.EMAIL) {
+            throw new BadRequestError(
+                `A ${validated.kind} authenticator can only be enrolled by the account owner.`,
+            );
+        }
+
         switch (validated.kind) {
             case UserAuthenticatorKind.TOTP: {
                 return this.enrollTotp(user, validated.name ?? null);

@@ -1811,6 +1811,19 @@ requires the `USER_AUTHENTICATOR_READ/CREATE/UPDATE/DELETE` permissions
 with per-row `resourceRealmMatch` gates. A foreign device id under the wrong
 user's nested route is a 404 (no existence oracle).
 
+**Enrollment FOR another user is email-only, even for a privileged actor
+(`UserAuthenticatorService.enroll`, `BadRequestError` otherwise).** Every other
+kind would let the enroller hold a factor it controls: TOTP/recovery return the
+seed/codes in the enroll response, and a WebAuthn ceremony can be completed on
+the *enroller's own* authenticator (the server can't tell whose device signed).
+Only EMAIL is safe — its code is mailed to the user's own (verified) mailbox, so
+the enroller obtains nothing. So `USER_AUTHENTICATOR_CREATE` on another user is
+effectively "enable email OTP"; an admin **resets** a user's other factors by
+DELETING them and the user re-enrolls (matching Keycloak/Okta/Authentik, which
+never expose a user's factor secret to an admin). The kit `AUserAuthenticatorEnroll`
+mirrors this — when `userId !== '@me'` it offers only the email button
+(`canOfferKind`).
+
 **Enforcement — two chokepoints, both server-side:**
 
 1. **Interactive `/authorize`**: the proof is session-bound — `auth_sessions.mfa_at`
