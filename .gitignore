@@ -18,3 +18,4 @@ authup.**.conf
 .nx
 coverage
 .agents/plans
+ds-bundle/

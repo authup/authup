@@ -9,6 +9,7 @@ import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@au
 import {
     AColorModeSwitcher,
     ALanguageSwitcherDropdown,
+    StoreAuthStatus,
     injectStore,
     useTranslationsForNamespace,
 } from '@authup/client-web-kit';
@@ -33,9 +34,11 @@ export default defineNuxtComponent({
     setup() {
         const store = injectStore();
         const {
-            loggedIn,
+            status,
             user,
         } = storeToRefs(store);
+
+        const authenticated = computed(() => status.value === StoreAuthStatus.AUTHENTICATED);
 
         const translationsApp = useTranslationsForNamespace(
             TranslatorTranslationNamespace.APP,
@@ -67,7 +70,7 @@ export default defineNuxtComponent({
         const { isDark } = useColorMode();
 
         return {
-            loggedIn,
+            authenticated,
             user,
             topItems,
             toggleNav,
@@ -135,7 +138,7 @@ export default defineNuxtComponent({
                         <li class="vc-nav-item">
                             <ALanguageSwitcherDropdown link-class-extra="vc-nav-link" />
                         </li>
-                        <template v-if="loggedIn && user">
+                        <template v-if="authenticated && user">
                             <li class="vc-nav-item">
                                 <a
                                     href="javascript:void(0)"

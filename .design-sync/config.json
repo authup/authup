@@ -1,5 +1,8 @@
 {
     "projectId": "9f2a0d2f-fbf9-4f54-84c0-d1712aa73c6d",
+    "pkg": "@authup/client-web-theme",
     "shape": "custom",
-    "note": "Vue 3 design system — outside the design-sync converter's React-only envelope. Hand-authored tokens-and-styles enrichment of an existing, actively-used project; additive layout, never overwrite hand-authored root styles.css / README.md. See NOTES.md."
+    "note": "Vue 3 design system — outside the design-sync converter's React-only envelope; never run the converter here. Hand-authored tokens-and-styles enrichment of the user's pre-existing, hand-built project. Additive contract + re-sync procedure in NOTES.md.",
+    "lastSync": "2026-07-12",
+    "lastSyncCommit": "a6dca3c9a"
 }
