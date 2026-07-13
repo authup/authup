@@ -59,7 +59,7 @@ export class PolicyCheckerService implements IPolicyCheckerService {
         }
 
         const engine = new PolicyEngine(this.ctx.identityPermissionProvider);
-        await engine.evaluate(
+        await engine.evaluateOrFail(
             entity,
             definePolicyEvaluationContext({ data: new PolicyData(input) }),
         );

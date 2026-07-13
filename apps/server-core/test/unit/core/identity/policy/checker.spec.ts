@@ -12,7 +12,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { BuiltInPolicyType } from '@authup/access';
+import { BuiltInPolicyType, PolicyError } from '@authup/access';
 import { IdentityType } from '@authup/core-kit';
 import { EntityNotFoundError } from '@authup/errors';
 import { createNanoID } from '@authup/kit';
@@ -85,6 +85,21 @@ describe('core/identity/policy/checker', () => {
                 identity: { type: IdentityType.USER, data: adminUser as any },
             },
         )).resolves.toBeUndefined();
+    });
+
+    it('rejects when the policy evaluation does not succeed', async () => {
+        const policyRepository = new PolicyRepository(suite.dataSource);
+        const policy = await policyRepository.save(policyRepository.create({
+            type: BuiltInPolicyType.IDENTITY,
+            name: `${BuiltInPolicyType.IDENTITY}-denial`,
+            built_in: true,
+        }));
+
+        await expect(service.check(
+            policy.id,
+            {},
+            createAllowAllActor(),
+        )).rejects.toBeInstanceOf(PolicyError);
     });
 
     it('safeCheck wraps failures into Result<null>', async () => {

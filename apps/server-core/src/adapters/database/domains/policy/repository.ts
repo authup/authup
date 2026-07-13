@@ -32,8 +32,14 @@ export class PolicyRepository extends EATreeRepository<Policy, PolicyAttribute> 
     }
 
     async findDescendantsTreeById(id: string): Promise<BasePolicy | null> {
-        const entity = this.create();
-        entity.id = id;
+        // The root must be a fully-loaded row: findDescendantsTree() mutates
+        // the passed entity (children + EA) but never populates its base
+        // columns — an id-only stub would yield a `type`-less tree that every
+        // engine consumer fails closed on (policy_evaluator_not_found).
+        const entity = await this.findOneBy({ id });
+        if (!entity) {
+            return null;
+        }
 
         try {
             return await this.findDescendantsTree(entity);
