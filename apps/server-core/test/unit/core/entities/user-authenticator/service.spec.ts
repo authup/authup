@@ -26,7 +26,11 @@ import {
 import { FakePermissionEvaluator } from '@authup/server-test-kit';
 import { MailTemplateRenderer } from '../../../../../src/core/mail/index.ts';
 import { UserAuthenticatorService } from '../../../../../src/core/entities/user-authenticator/service.ts';
-import { USER_AUTHENTICATOR_VERIFY_LOCK_CACHE_PREFIX } from '../../../../../src/core/entities/user-authenticator/constants.ts';
+import {
+    USER_AUTHENTICATOR_VERIFY_LOCK_CACHE_PREFIX,
+    USER_AUTHENTICATOR_WEBAUTHN_AUTH_CACHE_PREFIX,
+    USER_AUTHENTICATOR_WEBAUTHN_REG_CACHE_PREFIX,
+} from '../../../../../src/core/entities/user-authenticator/constants.ts';
 import type { UserAuthenticatorServiceOptions } from '../../../../../src/core/entities/user-authenticator/types.ts';
 import { FakeMailClient } from '../../helpers/index.ts';
 import { FakeUserRepository } from '../user/fake-repository.ts';
@@ -522,12 +526,63 @@ describe('UserAuthenticatorService', () => {
             expect((result.webauthn as any).challenge).toBeDefined();
             expect((result.webauthn as any).rp.id).toEqual('localhost');
 
-            // a challenge nonce was cached for the confirm ceremony
-            const cached = await cache.get(`mfaWebauthnReg:${  userId}`);
-            expect(cached).toBeDefined();
+            // a challenge nonce was cached for the confirm ceremony, keyed by
+            // the new row id (not the user id) so ceremonies don't collide
+            const cached = await cache.get(buildCacheKey({
+                prefix: USER_AUTHENTICATOR_WEBAUTHN_REG_CACHE_PREFIX,
+                key: result.entity.id,
+            }));
+            expect(cached).not.toBeNull();
 
             // an unconfirmed webauthn device does not satisfy a challenge
             expect(await service.hasConfirmed(userId)).toBeFalsy();
+        });
+
+        it('keys the registration challenge per-enrollment (concurrent ceremonies do not collide)', async () => {
+            const first = await service.enroll({ kind: UserAuthenticatorKind.WEBAUTHN }, makeActor());
+            const second = await service.enroll({ kind: UserAuthenticatorKind.WEBAUTHN }, makeActor());
+
+            const regKey = (id: string) => buildCacheKey({
+                prefix: USER_AUTHENTICATOR_WEBAUTHN_REG_CACHE_PREFIX,
+                key: id,
+            });
+
+            // each ceremony cached its own challenge under its row id — the
+            // second enroll did not overwrite the first's challenge
+            expect(first.entity.id).not.toEqual(second.entity.id);
+            expect(await cache.get(regKey(first.entity.id))).not.toBeNull();
+            expect(await cache.get(regKey(second.entity.id))).not.toBeNull();
+        });
+
+        it('throttles repeated failed webauthn confirms (brute-force backoff)', async () => {
+            const enrolled = await service.enroll({ kind: UserAuthenticatorKind.WEBAUTHN }, makeActor());
+
+            // force the cached challenge to be expired so the confirm fails and
+            // bumps the attempt counter (the throttle the TOTP branch applies too)
+            await cache.set(
+                buildCacheKey({
+                    prefix: USER_AUTHENTICATOR_WEBAUTHN_REG_CACHE_PREFIX,
+                    key: enrolled.entity.id,
+                }),
+                { challenge: 'x', expiresAt: Date.now() - 1_000 },
+                { ttl: 10_000 },
+            );
+
+            expect.assertions(2);
+            let firstFailed = false;
+            try {
+                await service.confirm(enrolled.entity.id, '{}', makeActor());
+            } catch {
+                firstFailed = true;
+            }
+            expect(firstFailed).toBeTruthy();
+
+            // the next attempt is locked out (factor 1 → 1s after the first failure)
+            try {
+                await service.confirm(enrolled.entity.id, '{}', makeActor());
+            } catch (e) {
+                expect(isMfaThrottledError(e)).toBeTruthy();
+            }
         });
 
         it('surfaces authentication options in the challenge for a confirmed device', async () => {
@@ -555,8 +610,11 @@ describe('UserAuthenticatorService', () => {
             // the allowed credential is scoped to the enrolled device
             expect((status.challenge as any).webauthn.allowCredentials[0].id).toEqual('Y3JlZC1pZA');
 
-            const cached = await cache.get(`mfaWebauthnAuth:${  userId}`);
-            expect(cached).toBeDefined();
+            const cached = await cache.get(buildCacheKey({
+                prefix: USER_AUTHENTICATOR_WEBAUTHN_AUTH_CACHE_PREFIX,
+                key: userId,
+            }));
+            expect(cached).not.toBeNull();
         });
 
         it('fails closed without a configured relying-party origin', async () => {

@@ -19,6 +19,7 @@ import {
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import { startRegistration } from '@simplewebauthn/browser';
+import type { PublicKeyCredentialCreationOptionsJSON } from '@simplewebauthn/browser';
 import { VCButton } from '@vuecs/button';
 import { VCAlert } from '@vuecs/elements';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
@@ -99,7 +100,13 @@ export default defineComponent({
                 // webauthn: run the registration ceremony immediately and
                 // confirm with the attestation (no display).
                 if (kind === UserAuthenticatorKind.WEBAUTHN) {
-                    const attestation = await startRegistration({ optionsJSON: (response.webauthn ?? {}) as never });
+                    if (!response.webauthn) {
+                        throw new Error('The server did not return WebAuthn registration options.');
+                    }
+                    // the http-kit response type is intentionally framework-agnostic
+                    // (Record<string, unknown>); assert the browser lib's shape here.
+                    const optionsJSON = response.webauthn as unknown as PublicKeyCredentialCreationOptionsJSON;
+                    const attestation = await startRegistration({ optionsJSON });
                     const entity = await apiClient.userAuthenticator.confirm(
                         props.userId,
                         response.entity.id,

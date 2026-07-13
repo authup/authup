@@ -213,7 +213,7 @@ export default defineComponent({
                 {{ translations.mfaPasskeyPrompt }}
             </p>
             <VCButton
-                :disabled="busy"
+                :disabled="busy || !challenge?.webauthn"
                 :busy="busy"
                 color="primary"
                 :label="translations.mfaUsePasskey"

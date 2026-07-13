@@ -286,15 +286,6 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             excludeCredentials,
         );
 
-        await this.cache.set(
-            this.buildWebauthnCacheKey(USER_AUTHENTICATOR_WEBAUTHN_REG_CACHE_PREFIX, user.id),
-            {
-                challenge,
-                expiresAt: Date.now() + (USER_AUTHENTICATOR_WEBAUTHN_CHALLENGE_WINDOW * 1_000),
-            } satisfies WebauthnChallengeState,
-            { ttl: USER_AUTHENTICATOR_WEBAUTHN_CHALLENGE_WINDOW * 1_000 },
-        );
-
         let entity = this.repository.create({
             kind: UserAuthenticatorKind.WEBAUTHN,
             name,
@@ -303,6 +294,19 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             realm_id: user.realm_id,
         });
         entity = await this.repository.save(entity);
+
+        // Key the challenge by the newly created (unconfirmed) row id, NOT the
+        // user id — overlapping enrollment ceremonies (a second tab, a retry
+        // after a cancelled prompt) would otherwise overwrite each other's
+        // challenge and make the first confirmation fail spuriously.
+        await this.cache.set(
+            this.buildWebauthnCacheKey(USER_AUTHENTICATOR_WEBAUTHN_REG_CACHE_PREFIX, entity.id),
+            {
+                challenge,
+                expiresAt: Date.now() + (USER_AUTHENTICATOR_WEBAUTHN_CHALLENGE_WINDOW * 1_000),
+            } satisfies WebauthnChallengeState,
+            { ttl: USER_AUTHENTICATOR_WEBAUTHN_CHALLENGE_WINDOW * 1_000 },
+        );
 
         return {
             entity: this.sanitize(entity),
@@ -530,10 +534,18 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
     protected async confirmWebauthn(entity: UserAuthenticator, response: string): Promise<UserAuthenticator> {
         const ctx = this.assertWebauthn();
 
-        const state = await this.cache.get<WebauthnChallengeState>(
-            this.buildWebauthnCacheKey(USER_AUTHENTICATOR_WEBAUTHN_REG_CACHE_PREFIX, entity.user_id),
-        );
+        // brute-force throttle, same lifecycle as the TOTP confirm branch — the
+        // attestation verify is a real crypto call and must not be retryable
+        // without backoff.
+        await this.assertNotThrottled(entity.user_id);
+
+        // challenge is keyed by the enrollment row id (see enrollWebauthn), so
+        // overlapping ceremonies do not collide.
+        const cacheKey = this.buildWebauthnCacheKey(USER_AUTHENTICATOR_WEBAUTHN_REG_CACHE_PREFIX, entity.id);
+
+        const state = await this.cache.get<WebauthnChallengeState>(cacheKey);
         if (!state || state.expiresAt < Date.now()) {
+            await this.bumpAttempts(entity.user_id);
             throw new EntityCredentialsInvalidError();
         }
 
@@ -546,10 +558,12 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         const credential = await verifyWebauthnRegistration(ctx, parsed, state.challenge);
         if (!credential) {
+            await this.bumpAttempts(entity.user_id);
             throw new EntityCredentialsInvalidError();
         }
 
-        await this.cache.drop(this.buildWebauthnCacheKey(USER_AUTHENTICATOR_WEBAUTHN_REG_CACHE_PREFIX, entity.user_id));
+        await this.resetAttempts(entity.user_id);
+        await this.cache.drop(cacheKey);
 
         entity.parameters = JSON.stringify(credential);
         entity.confirmed = true;
