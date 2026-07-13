@@ -63,6 +63,15 @@ describe('src/http/controllers/robot', () => {
         expect(response.data.length).toBeGreaterThanOrEqual(3);
     });
 
+    it('should read collection with realm include', async () => {
+        const response = await suite.client
+            .robot
+            .getMany({ include: ['realm'] });
+
+        expect(response.data.length).toBeGreaterThanOrEqual(3);
+        expect(response.data[0].realm).toBeDefined();
+    });
+
     it('should read resource', async () => {
         const response = await suite.client
             .robot
