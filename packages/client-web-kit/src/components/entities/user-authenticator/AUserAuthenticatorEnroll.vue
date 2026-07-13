@@ -80,6 +80,21 @@ export default defineComponent({
             () => (props.kind as `${UserAuthenticatorKind}` | null),
         );
 
+        // Only email can be provisioned FOR another user — totp/recovery/webauthn
+        // are owner-controlled (self-enrollment only) and the server rejects them
+        // on a non-self target, so an admin managing a different user is offered
+        // email alone (they reset the rest by deleting the user's devices).
+        const managingOther = computed<boolean>(() => props.userId !== '@me');
+        const canOfferKind = (kind: `${UserAuthenticatorKind}`): boolean => {
+            if (forcedKind.value && forcedKind.value !== kind) {
+                return false;
+            }
+            if (managingOther.value && kind !== UserAuthenticatorKind.EMAIL) {
+                return false;
+            }
+            return true;
+        };
+
         const reset = () => {
             enrollment.value = null;
             enrollmentKind.value = null;
@@ -184,6 +199,7 @@ export default defineComponent({
             enrollmentKind,
             confirmCode,
             forcedKind,
+            canOfferKind,
             enroll,
             confirm,
             reset,
@@ -214,28 +230,28 @@ export default defineComponent({
 
             <div class="flex flex-col gap-2">
                 <VCButton
-                    v-if="!forcedKind || forcedKind === UserAuthenticatorKind.TOTP"
+                    v-if="canOfferKind(UserAuthenticatorKind.TOTP)"
                     :disabled="busy"
                     color="primary"
                     :label="translations.mfaEnrollTotp"
                     @click="enroll(UserAuthenticatorKind.TOTP)"
                 />
                 <VCButton
-                    v-if="!forcedKind || forcedKind === UserAuthenticatorKind.WEBAUTHN"
+                    v-if="canOfferKind(UserAuthenticatorKind.WEBAUTHN)"
                     :disabled="busy"
                     color="neutral"
                     :label="translations.mfaEnrollWebauthn"
                     @click="enroll(UserAuthenticatorKind.WEBAUTHN)"
                 />
                 <VCButton
-                    v-if="!forcedKind || forcedKind === UserAuthenticatorKind.EMAIL"
+                    v-if="canOfferKind(UserAuthenticatorKind.EMAIL)"
                     :disabled="busy"
                     color="neutral"
                     :label="translations.mfaEnrollEmail"
                     @click="enroll(UserAuthenticatorKind.EMAIL)"
                 />
                 <VCButton
-                    v-if="!forcedKind || forcedKind === UserAuthenticatorKind.RECOVERY"
+                    v-if="canOfferKind(UserAuthenticatorKind.RECOVERY)"
                     :disabled="busy"
                     color="neutral"
                     :label="translations.mfaEnrollRecovery"

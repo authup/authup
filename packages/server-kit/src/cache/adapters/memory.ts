@@ -35,12 +35,14 @@ export class MemoryCache implements ICache {
     }
 
     async get<T =unknown>(key: string): Promise<T | null> {
-        const output = await this.instance.get(key);
-        if (output) {
-            return output as T;
+        // Distinguish "absent/expired" (undefined) from a stored falsy value —
+        // a `0` counter or `false`/`''` must round-trip, not read back as null.
+        const output = this.instance.get(key);
+        if (typeof output === 'undefined') {
+            return null;
         }
 
-        return null;
+        return output as T;
     }
 
     async set(key: string, value: unknown, options: CacheSetOptions): Promise<void> {

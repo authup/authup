@@ -7,6 +7,7 @@
 
 import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
+import type { FakeClient } from '@authup/core-http-kit/testing';
 import { AIdentityProviders, ARealmPicker } from '../../../../src/components/entities';
 import { findTokenRequest, mountLoginForm } from '../../../utils';
 
@@ -19,6 +20,42 @@ async function submitWithCredentials(wrapper: LoginFormWrapper) {
 
     await wrapper.find('form').trigger('submit');
     await flushPromises();
+}
+
+function tokenRequests(httpClient: FakeClient) {
+    return httpClient.requests.filter(
+        (request) => request.method === 'POST' &&
+            new URL(request.url, 'http://localhost').pathname === '/token',
+    );
+}
+
+// A password-grant handler that rejects a credential-only login (as the server
+// does for an MFA-enrolled user) with `mfa_required`, and only succeeds once an
+// `otp` rides along.
+function mfaGatedTokenHandler(kinds: string[] = ['totp']) {
+    return (req: { body?: unknown }) => {
+        const body = (req.body ?? {}) as Record<string, any>;
+        if (!body.otp) {
+            const error = new Error('Complete a second-factor challenge to continue.');
+            (error as any).response = {
+                status: 400,
+                data: {
+                    code: 'mfa_required',
+                    error: 'mfa_required',
+                    kinds,
+                    message: 'Complete a second-factor challenge to continue.',
+                },
+            };
+            throw error;
+        }
+
+        return {
+            access_token: 'xyz',
+            token_type: 'Bearer',
+            expires_in: 3600,
+            refresh_token: 'abc',
+        };
+    };
 }
 
 describe('components/workflows/login', () => {
@@ -101,6 +138,86 @@ describe('components/workflows/login', () => {
         expect(body.username).toEqual('admin');
         expect(body.password).toEqual('start123');
         expect('realm_id' in body).toBe(false);
+    });
+
+    // Regression (plan 049 gap): an MFA-enrolled user logging in fresh gets
+    // `mfa_required` from the password grant. The form must NOT dead-end as a
+    // generic failure — it presents a second-factor step and resubmits the same
+    // credentials WITH the otp. Before the fix the credentials-only login threw
+    // and the challenge was never collected.
+    it('should present a second-factor step on mfa_required and complete with otp', async () => {
+        const { wrapper, httpClient } = mountLoginForm({}, { 'POST /token': mfaGatedTokenHandler(['totp']) });
+        await flushPromises();
+
+        // credential-only submit → transitions to the challenge step, no failure
+        await submitWithCredentials(wrapper);
+
+        expect((wrapper.vm as any).mfaRequired).toBe(true);
+        expect(wrapper.emitted('failed')).toBeUndefined();
+
+        // the realm picker / credential view is hidden in the challenge step
+        expect(wrapper.findComponent(ARealmPicker).exists()).toBe(false);
+
+        // the first token request carried NO otp
+        const first = findTokenRequest(httpClient);
+        expect(first!.body).toMatchObject({ grant_type: 'password', username: 'admin' });
+        expect('otp' in (first!.body as Record<string, unknown>)).toBe(false);
+
+        // enter the code and resubmit → the grant is retried WITH the otp
+        const otpInput = wrapper.find('input');
+        expect(otpInput.exists()).toBe(true);
+        await otpInput.setValue('123456');
+        await wrapper.find('form').trigger('submit');
+        await flushPromises();
+
+        const withOtp = tokenRequests(httpClient).find(
+            (request) => (request.body as Record<string, unknown>).otp,
+        );
+        expect(withOtp).toBeDefined();
+        expect(withOtp!.body).toMatchObject({
+            grant_type: 'password',
+            username: 'admin',
+            password: 'start123',
+            otp: '123456',
+        });
+
+        // the completed login never surfaced as a failure
+        expect(wrapper.emitted('failed')).toBeUndefined();
+    });
+
+    // Email / WebAuthn cannot ride a single password POST — the challenge step
+    // must not offer a useless code field to a user holding only those factors.
+    it('should not render an otp field when only interactive factors are enrolled', async () => {
+        const { wrapper } = mountLoginForm({}, { 'POST /token': mfaGatedTokenHandler(['webauthn']) });
+        await flushPromises();
+
+        await submitWithCredentials(wrapper);
+
+        expect((wrapper.vm as any).mfaRequired).toBe(true);
+        expect((wrapper.vm as any).mfaHasCodeFactor).toBe(false);
+        // no code input in the challenge step
+        expect(wrapper.find('input').exists()).toBe(false);
+        expect(wrapper.emitted('failed')).toBeUndefined();
+    });
+
+    // A non-mfa failure (bad credentials) must still surface as `failed`.
+    it('should emit failed for a non-mfa login error', async () => {
+        const { wrapper } = mountLoginForm({}, {
+            'POST /token': () => {
+                const error = new Error('invalid credentials');
+                (error as any).response = {
+                    status: 400,
+                    data: { code: 'entity_credentials_invalid', message: 'invalid credentials' },
+                };
+                throw error;
+            },
+        });
+        await flushPromises();
+
+        await submitWithCredentials(wrapper);
+
+        expect((wrapper.vm as any).mfaRequired).toBe(false);
+        expect(wrapper.emitted('failed')).toBeTruthy();
     });
 
     // Regression: the collection manager's setup-time load is

@@ -42,7 +42,13 @@ export type StoreCreateContext = {
 export type StoreLoginContext = {
     name: string,
     password: string,
-    realmId?: string
+    realmId?: string,
+    /**
+     * A second-factor proof (TOTP or recovery code) submitted alongside the
+     * credentials when the user holds a confirmed authenticator — otherwise
+     * the password grant rejects the login with `mfa_required`.
+     */
+    otp?: string
 };
 
 export type StoreInstallOptions = {

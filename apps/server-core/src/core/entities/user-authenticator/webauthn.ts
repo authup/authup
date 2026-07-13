@@ -14,6 +14,7 @@ import {
 import { isoBase64URL } from '@simplewebauthn/server/helpers';
 import type {
     AuthenticationResponseJSON,
+    AuthenticatorTransportFuture,
     RegistrationResponseJSON,
 } from '@simplewebauthn/server';
 import type { UserAuthenticatorWebauthnParameters } from './types.ts';
@@ -26,8 +27,23 @@ export type WebauthnContext = {
 
 export type WebauthnCredentialRef = {
     id: string,
+    // persisted as a plain string[] on the credential row (JSON column); the
+    // SimpleWebAuthn API narrows it to its transport string-literal union.
     transports?: string[],
 };
+
+// The SimpleWebAuthn option objects are serialized verbatim to the browser
+// (navigator.credentials.*). They cross the wire as an opaque JSON blob, so the
+// public DTO deliberately keeps them as `Record<string, unknown>` rather than
+// leaking @simplewebauthn/server types into the shared HTTP contract — hence the
+// single boundary conversion below.
+function asOpaqueOptions(options: object): Record<string, unknown> {
+    return options as unknown as Record<string, unknown>;
+}
+
+function asTransports(transports?: string[]): AuthenticatorTransportFuture[] | undefined {
+    return transports as AuthenticatorTransportFuture[] | undefined;
+}
 
 export async function buildWebauthnRegistrationOptions(
     ctx: WebauthnContext,
@@ -42,7 +58,7 @@ export async function buildWebauthnRegistrationOptions(
         attestationType: 'none',
         excludeCredentials: existing.map((credential) => ({
             id: credential.id,
-            transports: credential.transports as never,
+            transports: asTransports(credential.transports),
         })),
         authenticatorSelection: {
             residentKey: 'discouraged',
@@ -51,7 +67,7 @@ export async function buildWebauthnRegistrationOptions(
     });
 
     return {
-        options: options as unknown as Record<string, unknown>,
+        options: asOpaqueOptions(options),
         challenge: options.challenge,
     };
 }
@@ -93,12 +109,12 @@ export async function buildWebauthnAuthenticationOptions(
         userVerification: 'preferred',
         allowCredentials: credentials.map((credential) => ({
             id: credential.id,
-            transports: credential.transports as never,
+            transports: asTransports(credential.transports),
         })),
     });
 
     return {
-        options: options as unknown as Record<string, unknown>,
+        options: asOpaqueOptions(options),
         challenge: options.challenge,
     };
 }
@@ -119,7 +135,7 @@ export async function verifyWebauthnAuthentication(
             id: credential.credential_id,
             publicKey: isoBase64URL.toBuffer(credential.public_key),
             counter: credential.counter,
-            transports: credential.transports as never,
+            transports: asTransports(credential.transports),
         },
     });
 

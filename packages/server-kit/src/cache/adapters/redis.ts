@@ -22,12 +22,15 @@ export class RedisCache implements ICache {
     }
 
     async get(key: string): Promise<any> {
+        // jsonAdapter.get returns undefined for an absent key — distinguish that
+        // from a stored falsy value (`0` counter, `false`, `''`) which must
+        // round-trip instead of reading back as null.
         const output = await this.jsonAdapter.get(key);
-        if (output) {
-            return output;
+        if (typeof output === 'undefined') {
+            return null;
         }
 
-        return null;
+        return output;
     }
 
     async pop<T = unknown>(key: string): Promise<T | null> {
@@ -44,9 +47,9 @@ export class RedisCache implements ICache {
     }
 
     async has(key: string) : Promise<boolean> {
-        const output = await this.get(key);
-
-        return !!output;
+        // EXISTS, not a truthiness check on the value — a stored falsy value
+        // (`0`/`false`/`''`) is still present.
+        return (await this.client.exists(key)) > 0;
     }
 
     async set(key: string, value: any, options: CacheSetOptions): Promise<void> {
