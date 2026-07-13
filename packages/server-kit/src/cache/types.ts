@@ -34,6 +34,17 @@ export interface ICache {
      */
     add(key: string, value: any, options?: CacheSetOptions) : Promise<boolean>;
 
+    /**
+     * Atomically increment the numeric value stored at the key by `value`
+     * (default 1), treating an absent key as 0, and return the
+     * post-increment value. A ttl (re)arms the key's expiry on every call —
+     * the building block for a sliding-window counter (attempt throttling).
+     * Concurrent increments never lose an update — atomic on Redis
+     * (`INCRBY`) and on the in-process memory adapter. Rejects when the key
+     * holds a non-numeric value.
+     */
+    increment(key: string, value?: number, options?: CacheSetOptions) : Promise<number>;
+
     has(key: string) : Promise<boolean>;
 
     get<T = unknown>(key: string): Promise<T | null>;

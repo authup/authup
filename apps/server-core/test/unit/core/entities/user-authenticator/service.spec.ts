@@ -27,6 +27,7 @@ import { FakePermissionEvaluator } from '@authup/server-test-kit';
 import { MailTemplateRenderer } from '../../../../../src/core/mail/index.ts';
 import { UserAuthenticatorService } from '../../../../../src/core/entities/user-authenticator/service.ts';
 import {
+    USER_AUTHENTICATOR_ATTEMPT_CACHE_PREFIX,
     USER_AUTHENTICATOR_VERIFY_LOCK_CACHE_PREFIX,
     USER_AUTHENTICATOR_WEBAUTHN_AUTH_CACHE_PREFIX,
     USER_AUTHENTICATOR_WEBAUTHN_REG_CACHE_PREFIX,
@@ -332,6 +333,111 @@ describe('UserAuthenticatorService', () => {
                 response: totpCode(enrolled.secret!),
             });
             expect(verified).toBeTruthy();
+        });
+
+        it('counts concurrent failures atomically (#3237)', async () => {
+            const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
+            await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
+
+            expect(await service.verify(userId, { kind: UserAuthenticatorKind.TOTP, response: '000000' })).toBeFalsy();
+
+            const count = await cache.get(
+                buildCacheKey({ prefix: USER_AUTHENTICATOR_ATTEMPT_CACHE_PREFIX, key: userId }),
+            );
+            expect(count).toBe(1);
+        });
+
+        it('recovers from a legacy (non-numeric) attempt-counter value', async () => {
+            const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
+            await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
+
+            // a pre-upgrade deployment stored the state as a JSON object
+            const key = buildCacheKey({ prefix: USER_AUTHENTICATOR_ATTEMPT_CACHE_PREFIX, key: userId });
+            await cache.set(key, { count: 3, lockedUntil: 0 }, {});
+
+            expect(await service.verify(userId, { kind: UserAuthenticatorKind.TOTP, response: '000000' })).toBeFalsy();
+
+            // the legacy value was dropped and the count restarted
+            expect(await cache.get(key)).toBe(1);
+        });
+    });
+
+    describe('verify unit of work (#3237)', () => {
+        it('does not consume a recovery code when the onVerified hook fails', async () => {
+            const enrolled = await service.enroll({ kind: UserAuthenticatorKind.RECOVERY }, makeActor());
+            const [code] = enrolled.codes!;
+
+            await expect(service.verify(
+                userId,
+                { kind: UserAuthenticatorKind.RECOVERY, response: code },
+                { onVerified: async () => { throw new Error('session stamp failed'); } },
+            )).rejects.toThrow('session stamp failed');
+
+            // nothing was consumed (and no penalty applied) — the same code
+            // completes the challenge once the stamp works again.
+            expect(await service.verify(userId, { kind: UserAuthenticatorKind.RECOVERY, response: code })).toBeTruthy();
+        });
+
+        it('does not consume the TOTP step when the onVerified hook fails', async () => {
+            const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
+            await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
+
+            const code = totpCode(enrolled.secret!);
+            await expect(service.verify(
+                userId,
+                { kind: UserAuthenticatorKind.TOTP, response: code },
+                { onVerified: async () => { throw new Error('session stamp failed'); } },
+            )).rejects.toThrow('session stamp failed');
+
+            expect(await service.verify(userId, { kind: UserAuthenticatorKind.TOTP, response: code })).toBeTruthy();
+        });
+
+        it('does not burn an email code when the onVerified hook fails', async () => {
+            userRepository.seed({
+                id: userId,
+                name: 'test-user',
+                email: 'user@example.com',
+                realm_id: realmId,
+            } as Partial<User>);
+            await service.enroll({ kind: UserAuthenticatorKind.EMAIL }, makeActor());
+            await service.sendChallenge(userId, UserAuthenticatorKind.EMAIL);
+            const code = /(\d{6})/.exec(mailClient.sent[0].text ?? '')![1];
+
+            await expect(service.verify(
+                userId,
+                { kind: UserAuthenticatorKind.EMAIL, response: code },
+                { onVerified: async () => { throw new Error('session stamp failed'); } },
+            )).rejects.toThrow('session stamp failed');
+
+            expect(await service.verify(userId, { kind: UserAuthenticatorKind.EMAIL, response: code })).toBeTruthy();
+
+            // still single-use once actually consumed
+            expect(await service.verify(userId, { kind: UserAuthenticatorKind.EMAIL, response: code })).toBeFalsy();
+        });
+
+        it('runs the onVerified hook on success only, never on a failed code', async () => {
+            const enrolled = await service.enroll({ kind: UserAuthenticatorKind.RECOVERY }, makeActor());
+            const [code] = enrolled.codes!;
+
+            let calls = 0;
+            const onVerified = async () => { calls += 1; };
+
+            expect(await service.verify(
+                userId,
+                { kind: UserAuthenticatorKind.RECOVERY, response: 'not-a-code' },
+                { onVerified },
+            )).toBeFalsy();
+            expect(calls).toBe(0);
+
+            // wait out the 1s lock from the failed attempt
+            await new Promise((resolve) => { setTimeout(resolve, 1_100); });
+
+            expect(await service.verify(
+                userId,
+                { kind: UserAuthenticatorKind.RECOVERY, response: code },
+                { onVerified },
+            )).toBeTruthy();
+            expect(calls).toBe(1);
         });
     });
 

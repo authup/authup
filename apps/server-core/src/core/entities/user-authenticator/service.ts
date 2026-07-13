@@ -62,6 +62,7 @@ import {
     USER_AUTHENTICATOR_EMAIL_SEND_CACHE_PREFIX,
     USER_AUTHENTICATOR_EMAIL_SEND_COOLDOWN,
     USER_AUTHENTICATOR_RECOVERY_CODE_COUNT,
+    USER_AUTHENTICATOR_THROTTLE_CACHE_PREFIX,
     USER_AUTHENTICATOR_TOTP_ALGORITHM,
     USER_AUTHENTICATOR_TOTP_DIGITS,
     USER_AUTHENTICATOR_TOTP_PERIOD,
@@ -87,11 +88,6 @@ import type {
     UserAuthenticatorWebauthnParameters,
 } from './types.ts';
 import type { WebauthnContext } from './webauthn.ts';
-
-type AttemptState = {
-    count: number,
-    lockedUntil: number,
-};
 
 type EmailCodeState = {
     hash: string,
@@ -665,9 +661,6 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
                         if (parameters) {
                             device.parameters = JSON.stringify({ ...parameters, counter: newCounter });
                         }
-                        await this.cache.drop(
-                            this.buildWebauthnCacheKey(USER_AUTHENTICATOR_WEBAUTHN_AUTH_CACHE_PREFIX, userId),
-                        );
                         matched = device;
                     }
                 }
@@ -683,8 +676,30 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
                 return false;
             }
 
+            // Bind the proof to the caller's aggregate (the session mfa_at
+            // stamp) BEFORE any consumption persists: a hook failure aborts
+            // the verify with nothing consumed — never a burned single-use
+            // code without a completed MFA. The residual (a failure AFTER the
+            // hook) leaves a stamped session plus a still-valid code — a
+            // bounded server-error window, not a lost factor.
+            if (ctx.onVerified) {
+                await ctx.onVerified();
+            }
+
             matched.last_used_at = new Date().toISOString();
             await this.repository.save(matched);
+
+            // cache-borne single-use artifacts (email code, webauthn challenge
+            // nonce) are consumed only once the unit of work committed — the
+            // verify lock keeps the deferral race-free.
+            if (input.kind === UserAuthenticatorKind.EMAIL) {
+                await this.cache.drop(this.buildEmailCodeCacheKey(userId));
+            }
+            if (input.kind === UserAuthenticatorKind.WEBAUTHN) {
+                await this.cache.drop(
+                    this.buildWebauthnCacheKey(USER_AUTHENTICATOR_WEBAUTHN_AUTH_CACHE_PREFIX, userId),
+                );
+            }
 
             await this.resetAttempts(userId);
 
@@ -820,13 +835,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             return false;
         }
 
-        if (!await compare(response.trim(), state.hash)) {
-            return false;
-        }
-
-        // single-use — drop the code once consumed
-        await this.cache.drop(key);
-        return true;
+        // single-use — but the drop is deferred to the verify success block,
+        // AFTER the onVerified hook ran, so a hook failure does not burn the
+        // code (the verify lock keeps the deferral race-free).
+        return compare(response.trim(), state.hash);
     }
 
     // ------------------------------------------------------------------
@@ -1011,6 +1023,13 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         });
     }
 
+    protected buildThrottleCacheKey(userId: string): string {
+        return buildCacheKey({
+            prefix: USER_AUTHENTICATOR_THROTTLE_CACHE_PREFIX,
+            key: userId,
+        });
+    }
+
     protected buildEmailCodeCacheKey(userId: string): string {
         return buildCacheKey({
             prefix: USER_AUTHENTICATOR_EMAIL_CODE_CACHE_PREFIX,
@@ -1058,29 +1077,44 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
     }
 
     protected async assertNotThrottled(userId: string): Promise<void> {
-        const state = await this.cache.get<AttemptState>(this.buildAttemptCacheKey(userId));
-        if (state && state.lockedUntil > Date.now()) {
-            throw new MfaThrottledError({ retryAfter: Math.ceil((state.lockedUntil - Date.now()) / 1_000) });
+        const lockedUntil = await this.cache.get<number>(this.buildThrottleCacheKey(userId));
+        if (typeof lockedUntil === 'number' && lockedUntil > Date.now()) {
+            throw new MfaThrottledError({ retryAfter: Math.ceil((lockedUntil - Date.now()) / 1_000) });
         }
     }
 
     protected async bumpAttempts(userId: string): Promise<void> {
         const key = this.buildAttemptCacheKey(userId);
-        const state = (await this.cache.get<AttemptState>(key)) ?? { count: 0, lockedUntil: 0 };
 
-        state.count += 1;
+        // Atomic increment — concurrent failures (verify OR confirm) each get
+        // a distinct count, so the exponential backoff never under-counts.
+        let count : number;
+        try {
+            count = await this.cache.increment(key, 1, { ttl: USER_AUTHENTICATOR_ATTEMPT_WINDOW * 1_000 });
+        } catch {
+            // a non-numeric value at the key (legacy JSON state) — reset and
+            // re-count; a genuine cache outage rethrows from the drop.
+            await this.cache.drop(key);
+            count = await this.cache.increment(key, 1, { ttl: USER_AUTHENTICATOR_ATTEMPT_WINDOW * 1_000 });
+        }
 
         const delay = Math.min(
             USER_AUTHENTICATOR_ATTEMPT_LOCK_MAX,
-            USER_AUTHENTICATOR_ATTEMPT_LOCK_FACTOR * (2 ** (state.count - 1)),
+            USER_AUTHENTICATOR_ATTEMPT_LOCK_FACTOR * (2 ** (count - 1)),
         );
-        state.lockedUntil = Date.now() + (delay * 1_000);
 
-        await this.cache.set(key, state, { ttl: USER_AUTHENTICATOR_ATTEMPT_WINDOW * 1_000 });
+        await this.cache.set(
+            this.buildThrottleCacheKey(userId),
+            Date.now() + (delay * 1_000),
+            { ttl: delay * 1_000 },
+        );
     }
 
     protected async resetAttempts(userId: string): Promise<void> {
-        await this.cache.drop(this.buildAttemptCacheKey(userId));
+        await this.cache.dropMany([
+            this.buildAttemptCacheKey(userId),
+            this.buildThrottleCacheKey(userId),
+        ]);
     }
 
     // ------------------------------------------------------------------

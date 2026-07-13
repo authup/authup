@@ -109,6 +109,16 @@ export class AuthenticatorChallengeController {
             throw new BadRequestError('A kind and response must be provided.');
         }
 
+        // Bind the proof to the backing session — the /authorize backstop
+        // reads session.mfa_at. The session id is server-derived (stashed
+        // by the authorization middleware), never client input. The stamp
+        // runs INSIDE the verify unit of work (before the code consumption
+        // persists), so a stamp failure never burns a single-use code.
+        const sessionId = useRequestSessionId(event);
+        const session = sessionId ?
+            await this.sessionManager.findOneById(sessionId) :
+            null;
+
         const verified = await this.service.verify(
             identity.id,
             {
@@ -119,21 +129,15 @@ export class AuthenticatorChallengeController {
                 ipAddress: getRequestIP(event, { trustProxy: true }) ?? null,
                 userAgent: getRequestHeader(event, 'user-agent') ?? null,
                 clientId: identity.clientId,
+                ...(session ? {
+                    onVerified: async () => {
+                        await this.sessionManager.markMfaVerified(session);
+                    },
+                } : {}),
             },
         );
         if (!verified) {
             throw new EntityCredentialsInvalidError();
-        }
-
-        // Bind the proof to the backing session — the /authorize backstop
-        // reads session.mfa_at. The session id is server-derived (stashed
-        // by the authorization middleware), never client input.
-        const sessionId = useRequestSessionId(event);
-        if (sessionId) {
-            const session = await this.sessionManager.findOneById(sessionId);
-            if (session) {
-                await this.sessionManager.markMfaVerified(session);
-            }
         }
 
         return { verified: true };
