@@ -1662,9 +1662,15 @@ secret_encrypted` — the plaintext-secret gate precondition), `role-attribute`,
 no `fields`, so the call is pinning defense in depth there). `role` / `scope` /
 `permission` / `policy` list paths carry no per-row realm gate (their
 `resourceRealmMatch` usages are write paths on server-loaded data), so they are
-deliberately not force-selected. Regression specs:
+deliberately not force-selected. The helper **dedupes against the already-applied
+projection** (`qb.expressionMap.selects`) — TypeORM's `addSelect` is NOT a no-op
+for an already-selected column: it emits a second identically-aliased select, and
+under a join + take (TypeORM's DISTINCT id-subquery wrapper) postgres rejects the
+wrapper's `ORDER BY "<alias>_id"` as ambiguous (mysql: duplicate column name), so
+every `include=` list query on these adapters 500'd. Regression specs:
 `session-realm-isolation.spec.ts` and
-`realm-isolation-field-projection.spec.ts`. When adding a per-row gate to a new
+`realm-isolation-field-projection.spec.ts`, plus the `include=realm` collection
+cases in `user.spec.ts` / `robot.spec.ts`. When adding a per-row gate to a new
 `getMany`, wire `applyRealmScopeSelect` into its adapter with every column the
 gate reads.
 

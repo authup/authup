@@ -51,6 +51,27 @@ describe('src/http/controllers/user', () => {
         expect(response.data.length).toBeGreaterThanOrEqual(2);
     });
 
+    it('should read collection with realm include', async () => {
+        const response = await suite.client
+            .user
+            .getMany({ include: ['realm'] });
+
+        expect(response.data.length).toBeGreaterThanOrEqual(2);
+        expect(response.data[0].realm).toBeDefined();
+    });
+
+    it('should read collection with fields projection and realm include', async () => {
+        const response = await suite.client
+            .user
+            .getMany({
+                fields: ['id', 'name'],
+                include: ['realm'],
+            });
+
+        expect(response.data.length).toBeGreaterThanOrEqual(2);
+        expect(response.data[0].realm).toBeDefined();
+    });
+
     it('should read resource', async () => {
         const response = await suite.client
             .user

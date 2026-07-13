@@ -14,18 +14,24 @@ import { In, IsNull } from 'typeorm';
  * projection omitting `realm_id` would otherwise leave the per-row
  * `resourceRealmMatch` with no realm to match — neutralizing the realm_scope
  * reach factor and leaking cross-realm rows to an own/ownOrNull-scoped reader.
- * `addSelect` appends to the projected SELECT and is a no-op when the column
- * is already selected. Call it AFTER `applyQuery`.
+ * Call it AFTER `applyQuery`. Columns already in the projection must be
+ * skipped: `addSelect` emits a second identically-aliased column, and under a
+ * join + take (the DISTINCT id-subquery) postgres then rejects the wrapper's
+ * `ORDER BY "<alias>_id"` as ambiguous (mysql: duplicate column name).
  */
 export function applyRealmScopeSelect<T extends ObjectLiteral>(
     qb: SelectQueryBuilder<T>,
     alias: string,
     extraColumns: string[] = [],
 ): void {
-    qb.addSelect([
-        `${alias}.realm_id`,
-        ...extraColumns.map((column) => `${alias}.${column}`),
-    ]);
+    const existing = new Set(qb.expressionMap.selects.map((select) => select.selection));
+    const selections = ['realm_id', ...extraColumns]
+        .map((column) => `${alias}.${column}`)
+        .filter((selection) => !existing.has(selection));
+
+    if (selections.length > 0) {
+        qb.addSelect(selections);
+    }
 }
 
 export function translateWhereConditions(where: Record<string, any>): Record<string, any> {
