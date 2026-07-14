@@ -7,6 +7,7 @@
 
 import type { User } from '@authup/core-kit';
 import { EventName, EventScope, UserAuthenticatorKind } from '@authup/core-kit';
+import type { Logger } from '@authup/server-kit';
 import { isEntityCredentialsInvalidError, isEntityInactiveError } from '@authup/errors';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { OAuth2MfaRequiredError, OAuth2RequestError, OAuth2TokenGrant } from '@authup/specs';
@@ -42,6 +43,8 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
 
     protected mfaLoginService? : IOAuth2MfaLoginService;
 
+    protected logger? : Logger;
+
     constructor(ctx: HTTPOAuth2PasswordGrantContext) {
         super(ctx);
 
@@ -51,6 +54,7 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
         this.loginThrottleService = ctx.loginThrottleService;
         this.userAuthenticatorService = ctx.userAuthenticatorService;
         this.mfaLoginService = ctx.mfaLoginService;
+        this.logger = ctx.logger;
     }
 
     async runWithRequest(event: IAppEvent): Promise<OAuth2TokenGrantResponse> {
@@ -231,15 +235,26 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
             return null;
         }
 
-        return this.mfaLoginService.issueTicket(
-            {
-                user,
-                clientId: ctx.clientId,
-            },
-            {
-                ipAddress: ctx.ipAddress,
-                userAgent: ctx.userAgent,
-            },
-        );
+        try {
+            return await this.mfaLoginService.issueTicket(
+                {
+                    user,
+                    clientId: ctx.clientId,
+                },
+                {
+                    ipAddress: ctx.ipAddress,
+                    userAgent: ctx.userAgent,
+                },
+            );
+        } catch (e) {
+            // degrade to a ticket-less mfa_required rather than letting a
+            // transient issuance failure (pending-session write, cache,
+            // signer) escape as a raw 500 from a controlled response path —
+            // an otp-capable device can still complete, and the credential
+            // retry re-attempts the ticket.
+            this.logger?.warn('Issuing the MFA-pending login ticket failed.', { error: e });
+
+            return null;
+        }
     }
 }

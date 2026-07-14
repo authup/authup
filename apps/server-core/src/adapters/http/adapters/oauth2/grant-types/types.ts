@@ -6,6 +6,7 @@
  */
 
 import type { Client, Robot, User } from '@authup/core-kit';
+import type { Logger } from '@authup/server-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { IAppEvent } from 'routup';
 import type {
@@ -39,6 +40,7 @@ export type HTTPOAuth2PasswordGrantContext = OAuth2PasswordGrantContext & {
     loginThrottleService?: ILoginThrottleService,
     userAuthenticatorService?: IUserAuthenticatorService,
     mfaLoginService?: IOAuth2MfaLoginService,
+    logger?: Logger,
 };
 
 export type HTTPOAuth2RefreshTokenGrantContext = OAuth2RefreshTokenGrantContext & {

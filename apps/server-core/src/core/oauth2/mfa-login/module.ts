@@ -62,9 +62,13 @@ export class OAuth2MfaLoginService implements IOAuth2MfaLoginService {
         const { user } = input;
         const clientId = input.clientId ?? undefined;
 
-        // The pending session lives only as long as the ticket — an
-        // abandoned login self-expires and is swept with the regular
-        // session sweep. Completion extends it to the full lifetime.
+        // One expiration instant for BOTH artifacts — the pending session
+        // lives exactly as long as the ticket (an abandoned login
+        // self-expires and is swept with the regular session sweep;
+        // completion extends it to the full lifetime). Computed once so
+        // the two cannot drift.
+        const expiresAt = this.ticketIssuer.buildExp();
+
         const session = await this.sessionManager.create({
             user_agent: options.userAgent,
             ip_address: options.ipAddress,
@@ -74,7 +78,7 @@ export class OAuth2MfaLoginService implements IOAuth2MfaLoginService {
             sub_kind: IdentityType.USER,
             mfa_at: null,
             auth_method: SessionAuthMethod.PASSWORD,
-            expires_at: new Date(this.ticketIssuer.buildExp() * 1000).toISOString(),
+            expires_at: new Date(expiresAt * 1000).toISOString(),
         });
 
         // No scope, no role claims — the ticket is not a bearer; it only
@@ -88,6 +92,7 @@ export class OAuth2MfaLoginService implements IOAuth2MfaLoginService {
             sub_kind: OAuth2SubKind.USER,
             realm_id: user.realm_id,
             realm_name: user.realm?.name,
+            exp: expiresAt,
         });
 
         return {

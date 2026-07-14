@@ -101,6 +101,7 @@ export class TokenController {
                 loginThrottleService: ctx.loginThrottleService,
                 userAuthenticatorService: ctx.userAuthenticatorService,
                 mfaLoginService: ctx.mfaLoginService,
+                logger: ctx.logger,
             }),
             [OAuth2TokenGrant.REFRESH_TOKEN]: new HTTPOAuth2RefreshTokenGrant({
                 accessTokenIssuer: ctx.accessTokenIssuer,
