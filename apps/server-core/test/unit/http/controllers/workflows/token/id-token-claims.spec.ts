@@ -21,8 +21,6 @@ import { generateOAuth2CodeVerifier } from '../../../../../../src/core';
 import { createFakeClient, createFakeUser, httpRequest } from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
 
-const MFA_KEY = Buffer.alloc(32, 3).toString('base64');
-
 function decodeJwtPayload(token: string): OAuth2TokenPayload {
     const [, payload] = token.split('.');
     return JSON.parse(Buffer.from(payload, 'base64url').toString('utf-8'));
@@ -32,7 +30,6 @@ describe('src/http/controllers/token (id_token amr/acr claims)', () => {
     const suite = createTestApplication({
         config: (config) => {
             config.mfaEnabled = true;
-            config.mfaEncryptionKey = MFA_KEY;
         },
     });
 

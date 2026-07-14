@@ -9,7 +9,12 @@ import { randomUUID } from 'node:crypto';
 import type { Key, OAuth2AuthorizationCode } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
-import { JWKType, JWTAlgorithm, OAuth2SubKind } from '@authup/specs';
+import {
+    JWKType, 
+    JWKUse, 
+    JWTAlgorithm, 
+    OAuth2SubKind,
+} from '@authup/specs';
 import {
     beforeEach,
     describe,
@@ -17,7 +22,7 @@ import {
     it,
 } from 'vitest';
 import { OAuth2AuthorizeGrant } from '../../../../../src/core/oauth2/grant-types/authorize.ts';
-import { FakeOAuth2KeyRepository } from '../../helpers/fake-oauth2-key-repository.ts';
+import { FakeKeyRepository } from '../../helpers/fake-key-repository.ts';
 import { FakeOAuth2OpenIDTokenIssuer } from '../../helpers/fake-oauth2-openid-token-issuer.ts';
 import { FakeOAuth2TokenIssuer } from '../../helpers/fake-oauth2-token-issuer.ts';
 import { FakeSessionManager } from '../../helpers/fake-session-manager.ts';
@@ -26,7 +31,7 @@ describe('OAuth2AuthorizeGrant', () => {
     let accessTokenIssuer: FakeOAuth2TokenIssuer;
     let refreshTokenIssuer: FakeOAuth2TokenIssuer;
     let openIdTokenIssuer: FakeOAuth2OpenIDTokenIssuer;
-    let keyRepository: FakeOAuth2KeyRepository;
+    let keyRepository: FakeKeyRepository;
     let sessionManager: FakeSessionManager;
     let grant: OAuth2AuthorizeGrant;
 
@@ -38,6 +43,7 @@ describe('OAuth2AuthorizeGrant', () => {
     const buildKey = (): Key => ({
         id: randomUUID(),
         type: JWKType.RSA,
+        use: JWKUse.SIGNATURE,
         signature_algorithm: JWTAlgorithm.RS256,
         priority: 0,
         decryption_key: 'rsa-private-key',
@@ -73,7 +79,7 @@ describe('OAuth2AuthorizeGrant', () => {
         accessTokenIssuer = new FakeOAuth2TokenIssuer();
         refreshTokenIssuer = new FakeOAuth2TokenIssuer();
         openIdTokenIssuer = new FakeOAuth2OpenIDTokenIssuer();
-        keyRepository = new FakeOAuth2KeyRepository(buildKey());
+        keyRepository = new FakeKeyRepository(buildKey());
         sessionManager = new FakeSessionManager();
         grant = new OAuth2AuthorizeGrant({
             accessTokenIssuer,
@@ -252,7 +258,7 @@ describe('OAuth2AuthorizeGrant', () => {
         // RS256 key → SHA-256 left half (16 bytes → 22 base64url chars)
         await grant.runWith(buildCode({ scope: `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}` }));
 
-        expect(keyRepository.findByRealmIdCalls).toEqual([realmId]);
+        expect(keyRepository.findByRealmIdCalls).toEqual([{ realmId, use: JWKUse.SIGNATURE }]);
         expect(openIdTokenIssuer.issueCalls[0].at_hash).toHaveLength(22);
 
         // RS512 key → SHA-512 left half (32 bytes → 43 base64url chars)

@@ -6,10 +6,11 @@
  */
 
 import type { Key } from '@authup/core-kit';
-import type { IOAuth2KeyRepository } from '../../../../src/core/oauth2/key/types.ts';
+import type { JWKUse } from '@authup/specs';
+import type { IKeyRepository } from '../../../../src/core/key/types.ts';
 
-export class FakeOAuth2KeyRepository implements IOAuth2KeyRepository {
-    public findByRealmIdCalls: string[] = [];
+export class FakeKeyRepository implements IKeyRepository {
+    public findByRealmIdCalls: { realmId: string, use: `${JWKUse}` }[] = [];
 
     public findByIdCalls: string[] = [];
 
@@ -19,8 +20,8 @@ export class FakeOAuth2KeyRepository implements IOAuth2KeyRepository {
         this.key = key;
     }
 
-    async findByRealmId(realmId: string): Promise<Key | null> {
-        this.findByRealmIdCalls.push(realmId);
+    async findByRealmId(realmId: string, use: `${JWKUse}`): Promise<Key | null> {
+        this.findByRealmIdCalls.push({ realmId, use });
         return this.key;
     }
 

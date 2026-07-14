@@ -267,6 +267,17 @@ export type Config = {
     // ----------------------------------------------------
 
     /**
+     * Optional base64-encoded 32-byte KEK (AES-256-GCM) wrapping the realm
+     * key store's material at rest (auth_keys.decryption_key — realm
+     * signing private keys and the per-realm enc keys the MFA seed cipher
+     * rides). Unset = material persists unwrapped (Keycloak/authentik
+     * parity); setting it later wraps rows lazily on read, removing it
+     * while wrapped rows exist fails loud at first use.
+     * default: '' (unset)
+     */
+    secretsEncryptionKey: string,
+
+    /**
      * Org-wide multi-factor authentication feature toggle. When enabled,
      * users can enroll authenticator devices, and a user holding a
      * confirmed device must present a second factor on interactive
@@ -282,14 +293,6 @@ export type Config = {
      * default: false
      */
     mfaRequired: boolean,
-
-    /**
-     * Base64-encoded 32-byte key encrypting TOTP seeds at rest
-     * (AES-256-GCM). Without it, TOTP enrollment fails closed —
-     * a seed is never stored under a zero/derived key.
-     * default: '' (unset)
-     */
-    mfaEncryptionKey: string,
 
     /**
      * Max age (seconds) of the session's second-factor proof (mfa_at) an

@@ -25,13 +25,10 @@ import {
 } from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
 
-const MFA_KEY = Buffer.alloc(32, 9).toString('base64');
-
 describe('src/http/controllers/token (password grant + authorize MFA)', () => {
     const suite = createTestApplication({
         config: (config) => {
             config.mfaEnabled = true;
-            config.mfaEncryptionKey = MFA_KEY;
         },
     });
 

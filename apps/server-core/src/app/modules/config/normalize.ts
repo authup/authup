@@ -106,9 +106,10 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         loginAttemptThreshold: 5,
         loginAttemptWindow: 900,
 
+        secretsEncryptionKey: '',
+
         mfaEnabled: false,
         mfaRequired: false,
-        mfaEncryptionKey: '',
         mfaFreshnessMaxAge: 60,
         mfaTicketMaxAge: 600,
 
@@ -146,24 +147,20 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         throw new AuthupError('mfaRequired requires mfaEnabled.');
     }
 
-    // fail loud at boot rather than at first enrollment: a TOTP seed is
-    // reversible-at-rest and must never be stored without a real key. Validate
-    // the DECODED length here (not just truthiness) so a whitespace / invalid /
+    // fail loud at boot rather than at first key-store access: wrapped key
+    // material must never be minted under a malformed KEK. Validate the
+    // DECODED length here (not just base64 shape) so a whitespace / invalid /
     // wrong-length key fails at config time, not asynchronously inside the
-    // cipher at first encrypt/decrypt.
-    if (config.mfaEnabled) {
-        if (!config.mfaEncryptionKey) {
-            throw new AuthupError('mfaEnabled requires mfaEncryptionKey (base64, 32 bytes).');
-        }
-
+    // cipher at first wrap/unwrap.
+    if (config.secretsEncryptionKey) {
         let byteLength = -1;
         try {
-            byteLength = base64ToArrayBuffer(config.mfaEncryptionKey.trim()).byteLength;
+            byteLength = base64ToArrayBuffer(config.secretsEncryptionKey.trim()).byteLength;
         } catch {
             // fall through — treated as invalid below
         }
         if (byteLength !== 32) {
-            throw new AuthupError('mfaEncryptionKey must decode to exactly 32 bytes (base64).');
+            throw new AuthupError('secretsEncryptionKey must decode to exactly 32 bytes (base64).');
         }
     }
 

@@ -18,15 +18,12 @@ import { FakeMailClient } from '../../../core/helpers/index.ts';
 import { createFakeUser } from '../../../../utils';
 import { createTestApplication } from '../../../../app';
 
-const MFA_KEY = Buffer.alloc(32, 4).toString('base64');
-
 describe('src/http/controllers/user-authenticator (email otp)', () => {
     const mailClient = new FakeMailClient();
 
     const suite = createTestApplication({
         config: (config) => {
             config.mfaEnabled = true;
-            config.mfaEncryptionKey = MFA_KEY;
         },
     });
 

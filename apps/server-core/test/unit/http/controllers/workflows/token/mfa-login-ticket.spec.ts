@@ -28,7 +28,6 @@ import { FakeMailClient } from '../../../../core/helpers/index.ts';
 import { createFakeClient, createFakeUser, httpRequest } from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
 
-const MFA_KEY = Buffer.alloc(32, 7).toString('base64');
 const MFA_TICKET_MAX_AGE = 600;
 
 describe('src/http/controllers/token (mfa-pending login ticket)', () => {
@@ -37,7 +36,6 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
     const suite = createTestApplication({
         config: (config) => {
             config.mfaEnabled = true;
-            config.mfaEncryptionKey = MFA_KEY;
             config.mfaTicketMaxAge = MFA_TICKET_MAX_AGE;
         },
     });

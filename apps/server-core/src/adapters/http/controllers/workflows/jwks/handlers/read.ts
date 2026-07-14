@@ -6,8 +6,8 @@
  */
 
 import { AsymmetricKey } from '@authup/server-kit';
-import type { OAuth2JsonWebKey } from '@authup/specs';
-import { JWKError, JWKType } from '@authup/specs';
+import type { JWTAlgorithm, OAuth2JsonWebKey } from '@authup/specs';
+import { JWKError, JWKType, JWKUse } from '@authup/specs';
 import type { Repository } from 'typeorm';
 import { In } from 'typeorm';
 import type { KeyEntity } from '../../../../../database/domains/index.ts';
@@ -19,13 +19,17 @@ export async function getJwksRouteHandler(
     const entities = await repository.find({
         where: {
             type: In([JWKType.RSA, JWKType.EC]),
+            use: JWKUse.SIGNATURE,
             ...(realmId ? { realm_id: realmId } : {}),
         },
         order: { priority: 'DESC' },
     });
 
     const promises = entities
-        .filter((entity): entity is KeyEntity & { encryption_key: string } => !!entity.encryption_key)
+        .filter(
+            (entity): entity is KeyEntity & { encryption_key: string, signature_algorithm: `${JWTAlgorithm}` } => !!entity.encryption_key &&
+                !!entity.signature_algorithm,
+        )
         .map(
             (entity) => AsymmetricKey
                 .fromBase64({
@@ -54,6 +58,7 @@ export async function getJwkRouteHandler(
     const entity = await repository.findOne({
         where: {
             type: In([JWKType.RSA, JWKType.EC]),
+            use: JWKUse.SIGNATURE,
             id: keyId,
             ...(realmId ? { realm_id: realmId } : {}),
         },
@@ -63,7 +68,7 @@ export async function getJwkRouteHandler(
         throw JWKError.notFound(keyId);
     }
 
-    if (!entity.encryption_key) {
+    if (!entity.encryption_key || !entity.signature_algorithm) {
         throw JWKError.encryptionKeyMissing();
     }
 

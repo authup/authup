@@ -16,13 +16,10 @@ import { UserAuthenticatorKind } from '@authup/core-kit';
 import { createFakeUser, expectClientError } from '../../../../utils';
 import { createTestApplication } from '../../../../app';
 
-const MFA_KEY = Buffer.alloc(32, 5).toString('base64');
-
 describe('src/http/controllers/user-authenticator', () => {
     const suite = createTestApplication({
         config: (config) => {
             config.mfaEnabled = true;
-            config.mfaEncryptionKey = MFA_KEY;
         },
     });
 

@@ -8,6 +8,7 @@
 import { TypedToken } from 'eldin';
 import type {
     IConsentRepository,
+    IKeyRepository,
     IOAuth2AuthorizationCodeIssuer,
     IOAuth2AuthorizationCodeRepository,
     IOAuth2AuthorizationCodeRequestVerifier,
@@ -15,7 +16,6 @@ import type {
     IOAuth2AuthorizationStateManager,
     IOAuth2AuthorizeStateRepository,
     IOAuth2ClientRepository,
-    IOAuth2KeyRepository,
     IOAuth2OpenIDTokenIssuer,
     IOAuth2ScopeRepository,
     IOAuth2TokenIssuer,
@@ -38,7 +38,7 @@ export const OAuth2InjectionToken = {
 
     AuthorizationStateRepository: new TypedToken<IOAuth2AuthorizeStateRepository>('AuthorizationStateRepository'),
 
-    KeyRepository: new TypedToken<IOAuth2KeyRepository>('KeyRepository'),
+    KeyRepository: new TypedToken<IKeyRepository>('KeyRepository'),
 
     AccessTokenIssuer: new TypedToken<IOAuth2TokenIssuer>('AccessTokenIssuer'),
     MfaTokenIssuer: new TypedToken<IOAuth2TokenIssuer>('MfaTokenIssuer'),

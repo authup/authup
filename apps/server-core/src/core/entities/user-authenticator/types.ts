@@ -10,8 +10,8 @@ import type {
     ActorContext,
     EntityRepositoryFindManyResult,
     ICache,
-    ISymmetricCipher,
 } from '@authup/server-kit';
+import type { IRealmCipher } from '../../key/index.ts';
 import type { IEventService } from '../event/index.ts';
 import type { IMailClient, IMailTemplateRenderer } from '../../mail/index.ts';
 import type { IUserRepository } from '../user/index.ts';
@@ -259,10 +259,10 @@ export type UserAuthenticatorServiceContext = {
     userRepository: IUserRepository,
     cache: ICache,
     /**
-     * Cipher over the config mfaEncryptionKey. Null when no key is
-     * configured — TOTP enrollment then fails closed.
+     * Realm-scoped seed cipher over the key store's per-realm enc keys
+     * (auto-generated on first use — no operator-provided key).
      */
-    cipher?: ISymmetricCipher | null,
+    cipher: IRealmCipher,
     eventService?: IEventService,
     /**
      * Mail dependencies for the email-OTP kind (absent = email OTP

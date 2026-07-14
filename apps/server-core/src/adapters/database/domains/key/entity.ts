@@ -16,7 +16,7 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import { dateToISOStringTransformer } from '../../helpers/index.ts';
-import type { JWKType } from '@authup/specs';
+import type { JWKType, JWKUse } from '@authup/specs';
 import type {
     Key,
     Realm,
@@ -40,6 +40,13 @@ export class KeyEntity implements Key {
         default: null,
     })
     type: `${JWKType}`;
+
+    @Column({
+        type: 'varchar',
+        length: 64,
+        default: 'sig',
+    })
+    use: `${JWKUse}`;
 
     @Column({
         type: 'int',

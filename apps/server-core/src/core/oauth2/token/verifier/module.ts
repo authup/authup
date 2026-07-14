@@ -12,18 +12,23 @@ import {
     verifyToken,
 } from '@authup/server-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
-import { JWKError, JWKType, JWTError } from '@authup/specs';
-import type { IOAuth2KeyRepository } from '../../key/index.ts';
+import {
+    JWKError, 
+    JWKType, 
+    JWKUse, 
+    JWTError,
+} from '@authup/specs';
+import type { IKeyRepository } from '../../../key/index.ts';
 import type { IOAuth2TokenRepository } from '../repository/types.ts';
 import type { IOAuth2TokenVerifier, OAuth2TokenVerifyOptions } from './types.ts';
 
 export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
-    protected keyRepository : IOAuth2KeyRepository;
+    protected keyRepository : IKeyRepository;
 
     protected tokenRepository : IOAuth2TokenRepository;
 
     constructor(
-        keyRepository : IOAuth2KeyRepository,
+        keyRepository : IKeyRepository,
         tokenRepository : IOAuth2TokenRepository,
     ) {
         this.keyRepository = keyRepository;
@@ -58,6 +63,12 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
 
         const key = await this.keyRepository.findById(header.kid);
         if (!key) {
+            throw JWKError.notFound(header.kid);
+        }
+
+        // the key store also holds at-rest encryption keys (use: enc) —
+        // those must never verify a token.
+        if (key.use !== JWKUse.SIGNATURE) {
             throw JWKError.notFound(header.kid);
         }
 

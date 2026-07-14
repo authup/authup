@@ -6,7 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { User } from '@authup/core-kit';
+import type { Key, User } from '@authup/core-kit';
 import { IdentityType, UserAuthenticatorKind } from '@authup/core-kit';
 import {
     ErrorCode,
@@ -14,7 +14,8 @@ import {
     isEntityCredentialsInvalidError,
     isMfaThrottledError,
 } from '@authup/errors';
-import { MemoryCache, SymmetricCipher, buildCacheKey } from '@authup/server-kit';
+import { JWKType, JWKUse } from '@authup/specs';
+import { MemoryCache, buildCacheKey } from '@authup/server-kit';
 import type { ActorContext } from '@authup/server-kit';
 import { Secret, TOTP } from 'otpauth';
 import {
@@ -25,6 +26,7 @@ import {
 } from 'vitest';
 import { FakePermissionEvaluator } from '@authup/server-test-kit';
 import { MailTemplateRenderer } from '../../../../../src/core/mail/index.ts';
+import { RealmCipher } from '../../../../../src/core/key/index.ts';
 import { UserAuthenticatorService } from '../../../../../src/core/entities/user-authenticator/service.ts';
 import {
     USER_AUTHENTICATOR_ATTEMPT_CACHE_PREFIX,
@@ -33,7 +35,7 @@ import {
     USER_AUTHENTICATOR_WEBAUTHN_REG_CACHE_PREFIX,
 } from '../../../../../src/core/entities/user-authenticator/constants.ts';
 import type { UserAuthenticatorServiceOptions } from '../../../../../src/core/entities/user-authenticator/types.ts';
-import { FakeMailClient } from '../../helpers/index.ts';
+import { FakeKeyRepository, FakeMailClient } from '../../helpers/index.ts';
 import { FakeUserRepository } from '../user/fake-repository.ts';
 import { FakeUserAuthenticatorRepository } from './fake-repository.ts';
 
@@ -42,6 +44,33 @@ const userId = randomUUID();
 const otherUserId = randomUUID();
 
 const cipherKey = Buffer.alloc(32, 7).toString('base64');
+
+function buildRealmCipher() {
+    const timestamp = new Date().toISOString();
+    const key: Key = {
+        id: randomUUID(),
+        type: JWKType.OCT,
+        use: JWKUse.ENCRYPTION,
+        signature_algorithm: null,
+        priority: 0,
+        decryption_key: cipherKey,
+        encryption_key: null,
+        created_at: timestamp,
+        updated_at: timestamp,
+        realm_id: realmId,
+        realm: {
+            id: realmId,
+            name: 'master',
+            display_name: null,
+            description: null,
+            built_in: true,
+            created_at: timestamp,
+            updated_at: timestamp,
+        },
+    };
+
+    return new RealmCipher({ keyRepository: new FakeKeyRepository(key) });
+}
 
 function makeActor(options: {
     allow?: boolean, 
@@ -95,7 +124,7 @@ describe('UserAuthenticatorService', () => {
             repository,
             userRepository,
             cache,
-            cipher: new SymmetricCipher(cipherKey),
+            cipher: buildRealmCipher(),
             mailClient,
             mailTemplateRenderer: new MailTemplateRenderer(),
             options: { webauthn: webauthnOptions, ...options },
@@ -136,23 +165,6 @@ describe('UserAuthenticatorService', () => {
                 await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
             } catch (e) {
                 expect(isAuthupError(e)).toBeTruthy();
-                expect((e as any).code).toEqual(ErrorCode.MFA_NOT_CONFIGURABLE);
-            }
-        });
-
-        it('fails closed without an encryption key', async () => {
-            service = new UserAuthenticatorService({
-                repository,
-                userRepository,
-                cache,
-                cipher: null,
-                options: { enabled: true },
-            });
-
-            expect.assertions(1);
-            try {
-                await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
-            } catch (e) {
                 expect((e as any).code).toEqual(ErrorCode.MFA_NOT_CONFIGURABLE);
             }
         });
@@ -340,6 +352,61 @@ describe('UserAuthenticatorService', () => {
                 response: totpCode(enrolled.secret!),
             });
             expect(verified).toBeFalsy();
+        });
+
+        it('fails closed (a plain verification failure) when the seed blob references an unknown key', async () => {
+            const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
+            await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
+
+            // same device rows, but a cipher whose key store no longer
+            // resolves the blob's key id — verify must return false, not 500.
+            service = new UserAuthenticatorService({
+                repository,
+                userRepository,
+                cache,
+                cipher: new RealmCipher({ keyRepository: new FakeKeyRepository(null) }),
+                options: { enabled: true },
+            });
+
+            const verified = await service.verify(userId, {
+                kind: UserAuthenticatorKind.TOTP,
+                response: totpCode(enrolled.secret!),
+            });
+            expect(verified).toBeFalsy();
+        });
+
+        it('lets infrastructure errors during seed decryption bubble (attempt not burned)', async () => {
+            const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
+            await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
+
+            // a cipher failing with a NON-blob-semantics error (database
+            // outage, KEK misconfiguration) must surface as a thrown error —
+            // mapping it to `false` would burn a throttle attempt on a blip.
+            service = new UserAuthenticatorService({
+                repository,
+                userRepository,
+                cache,
+                cipher: {
+                    encrypt: async () => {
+                        throw new Error('unused');
+                    },
+                    decrypt: async () => {
+                        throw new Error('database gone');
+                    },
+                },
+                options: { enabled: true },
+            });
+
+            await expect(service.verify(userId, {
+                kind: UserAuthenticatorKind.TOTP,
+                response: totpCode(enrolled.secret!),
+            })).rejects.toThrow('database gone');
+
+            const attempts = await cache.get(buildCacheKey({
+                prefix: USER_AUTHENTICATOR_ATTEMPT_CACHE_PREFIX,
+                key: userId,
+            }));
+            expect(attempts ?? null).toBeNull();
         });
     });
 
@@ -587,7 +654,7 @@ describe('UserAuthenticatorService', () => {
                 repository,
                 userRepository,
                 cache,
-                cipher: new SymmetricCipher(cipherKey),
+                cipher: buildRealmCipher(),
                 options: { enabled: true },
             });
 
@@ -761,7 +828,7 @@ describe('UserAuthenticatorService', () => {
                 repository,
                 userRepository,
                 cache,
-                cipher: new SymmetricCipher(cipherKey),
+                cipher: buildRealmCipher(),
                 options: { enabled: true },
             });
 

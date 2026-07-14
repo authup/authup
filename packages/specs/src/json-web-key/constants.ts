@@ -19,3 +19,17 @@ export enum JWKType {
      */
     EC = 'ec',
 }
+
+/**
+ * Intended usage of a key (RFC 7517 §4.2).
+ */
+export enum JWKUse {
+    /**
+     * Signing / verifying tokens.
+     */
+    SIGNATURE = 'sig',
+    /**
+     * Encrypting data at rest (e.g. MFA seeds).
+     */
+    ENCRYPTION = 'enc',
+}
