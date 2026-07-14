@@ -37,17 +37,18 @@ export interface IRealmCipher {
     /**
      * Encrypt under the realm's current enc key (created on first use).
      *
-     * @param realmId
      * @param plain
+     * @param realmId
      */
-    encrypt(realmId: string, plain: string) : Promise<string>;
+    encrypt(plain: string, realmId: string) : Promise<string>;
 
     /**
-     * Decrypt a blob via the key id it carries. When a realmId is
-     * supplied, the referenced key must belong to that realm.
+     * Decrypt a blob via the key id it carries. The referenced key must
+     * belong to the given realm — the binding assert is mandatory, so a
+     * foreign realm's blob can never decrypt.
      *
      * @param blob
      * @param realmId
      */
-    decrypt(blob: string, realmId?: string) : Promise<string>;
+    decrypt(blob: string, realmId: string) : Promise<string>;
 }

@@ -2168,10 +2168,13 @@ minted **lazily on first use** per `(realm, use)` — `sig` → RS256 RSA pair
   their where clauses — an enc key must never appear in a JWKS response.
 - **`RealmCipher`** (`core/key/realm-cipher.ts`, `IRealmCipher`) provides
   realm-scoped at-rest encryption over the enc keys:
-  `encrypt(realmId, plain)` → self-describing blob `v1.<key_id>.<payload>`;
-  `decrypt(blob, realmId?)` resolves the key **by the blob's id** (so
+  `encrypt(plain, realmId)` → self-describing blob `v1.<key_id>.<payload>`;
+  `decrypt(blob, realmId)` resolves the key **by the blob's id** (so
   concurrent get-or-create races and future rotation never orphan a blob) and
-  asserts the realm binding when given. Imported `SymmetricCipher`s are
+  **mandatorily** asserts the realm binding (payload-first + required realm on
+  both methods — shape-aligned with `ISymmetricCipher.encrypt(plain)` plus a
+  scope argument; every consumer knows its entity's realm, so a skippable
+  assert would only invite forgetting it). Imported `SymmetricCipher`s are
   cached per key id (material is immutable). Consumer today: the MFA seed
   cipher (`UserAuthenticatorService` ctx); plan 070 adds client
   `secret_encrypted`, IdP `client_secret`, LDAP bind password.

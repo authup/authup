@@ -35,7 +35,7 @@ export class RealmCipher implements IRealmCipher {
         this.ciphers = new Map();
     }
 
-    async encrypt(realmId: string, plain: string) : Promise<string> {
+    async encrypt(plain: string, realmId: string) : Promise<string> {
         const key = await this.keyRepository.findByRealmId(realmId, JWKUse.ENCRYPTION);
         if (!key || !key.decryption_key) {
             throw new AuthupError(`An encryption key could not be resolved for realm ${realmId}.`);
@@ -50,7 +50,7 @@ export class RealmCipher implements IRealmCipher {
         ].join('.');
     }
 
-    async decrypt(blob: string, realmId?: string) : Promise<string> {
+    async decrypt(blob: string, realmId: string) : Promise<string> {
         const parts = blob.split('.');
         if (parts.length !== 3 || parts[0] !== REALM_CIPHER_BLOB_VERSION) {
             throw new AuthupError('The cipher blob is malformed.');
@@ -72,7 +72,7 @@ export class RealmCipher implements IRealmCipher {
             entry = this.resolveCipher(key.id, key.realm_id, key.decryption_key);
         }
 
-        if (realmId && entry.realmId !== realmId) {
+        if (entry.realmId !== realmId) {
             throw new AuthupError(`The cipher blob references a foreign realm's encryption key (${keyId}).`);
         }
 

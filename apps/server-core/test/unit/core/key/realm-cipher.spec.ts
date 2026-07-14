@@ -50,14 +50,13 @@ describe('core/key/realm-cipher', () => {
         const key = buildEncKey(realmId);
         const cipher = new RealmCipher({ keyRepository: new FakeKeyRepository(key) });
 
-        const blob = await cipher.encrypt(realmId, 'seed-material');
+        const blob = await cipher.encrypt('seed-material', realmId);
 
         const parts = blob.split('.');
         expect(parts).toHaveLength(3);
         expect(parts[0]).toEqual(REALM_CIPHER_BLOB_VERSION);
         expect(parts[1]).toEqual(key.id);
 
-        expect(await cipher.decrypt(blob)).toEqual('seed-material');
         expect(await cipher.decrypt(blob, realmId)).toEqual('seed-material');
     });
 
@@ -65,12 +64,12 @@ describe('core/key/realm-cipher', () => {
         const realmId = randomUUID();
         const key = buildEncKey(realmId);
         const source = new RealmCipher({ keyRepository: new FakeKeyRepository(key) });
-        const blob = await source.encrypt(realmId, 'seed-material');
+        const blob = await source.encrypt('seed-material', realmId);
 
         const repository = new FakeKeyRepository(key);
         const cipher = new RealmCipher({ keyRepository: repository });
 
-        expect(await cipher.decrypt(blob)).toEqual('seed-material');
+        expect(await cipher.decrypt(blob, realmId)).toEqual('seed-material');
         expect(repository.findByIdCalls).toEqual([key.id]);
     });
 
@@ -80,24 +79,24 @@ describe('core/key/realm-cipher', () => {
         const repository = new FakeKeyRepository(key);
         const cipher = new RealmCipher({ keyRepository: repository });
 
-        const blob = await cipher.encrypt(realmId, 'seed-material');
+        const blob = await cipher.encrypt('seed-material', realmId);
 
         // the key store no longer resolves anything — the cached entry
         // from encrypt still decrypts.
         repository.setKey(null);
-        expect(await cipher.decrypt(blob)).toEqual('seed-material');
+        expect(await cipher.decrypt(blob, realmId)).toEqual('seed-material');
     });
 
     it('rejects a blob referencing an unknown key', async () => {
         const realmId = randomUUID();
         const source = new RealmCipher({ keyRepository: new FakeKeyRepository(buildEncKey(realmId)) });
-        const blob = await source.encrypt(realmId, 'seed-material');
+        const blob = await source.encrypt('seed-material', realmId);
 
         const cipher = new RealmCipher({ keyRepository: new FakeKeyRepository(null) });
 
         expect.assertions(1);
         try {
-            await cipher.decrypt(blob);
+            await cipher.decrypt(blob, realmId);
         } catch (e) {
             expect(isAuthupError(e)).toBeTruthy();
         }
@@ -108,7 +107,7 @@ describe('core/key/realm-cipher', () => {
         const key = buildEncKey(realmId);
         const cipher = new RealmCipher({ keyRepository: new FakeKeyRepository(key) });
 
-        const blob = await cipher.encrypt(realmId, 'seed-material');
+        const blob = await cipher.encrypt('seed-material', realmId);
 
         await expect(cipher.decrypt(blob, randomUUID())).rejects.toThrow(/foreign realm/);
     });
@@ -117,24 +116,24 @@ describe('core/key/realm-cipher', () => {
         const realmId = randomUUID();
         const key = buildEncKey(realmId);
         const source = new RealmCipher({ keyRepository: new FakeKeyRepository(key) });
-        const blob = await source.encrypt(realmId, 'seed-material');
+        const blob = await source.encrypt('seed-material', realmId);
 
         const cipher = new RealmCipher({ keyRepository: new FakeKeyRepository({ ...key, use: JWKUse.SIGNATURE }) });
 
-        await expect(cipher.decrypt(blob)).rejects.toThrow(/unknown encryption key/);
+        await expect(cipher.decrypt(blob, realmId)).rejects.toThrow(/unknown encryption key/);
     });
 
     it('rejects malformed and foreign-version blobs', async () => {
         const realmId = randomUUID();
         const cipher = new RealmCipher({ keyRepository: new FakeKeyRepository(buildEncKey(realmId)) });
 
-        await expect(cipher.decrypt('garbage')).rejects.toThrow(/malformed/);
-        await expect(cipher.decrypt(`v2.${randomUUID()}.payload`)).rejects.toThrow(/malformed/);
+        await expect(cipher.decrypt('garbage', realmId)).rejects.toThrow(/malformed/);
+        await expect(cipher.decrypt(`v2.${randomUUID()}.payload`, realmId)).rejects.toThrow(/malformed/);
     });
 
     it('fails loud when no enc key can be resolved for the realm', async () => {
         const cipher = new RealmCipher({ keyRepository: new FakeKeyRepository(null) });
 
-        await expect(cipher.encrypt(randomUUID(), 'seed-material')).rejects.toThrow(/encryption key/);
+        await expect(cipher.encrypt('seed-material', randomUUID())).rejects.toThrow(/encryption key/);
     });
 });

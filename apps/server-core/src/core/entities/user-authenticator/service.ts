@@ -428,7 +428,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         let entity = this.repository.create({
             kind: UserAuthenticatorKind.TOTP,
             name,
-            secret: await this.cipher.encrypt(user.realm_id, secret.base32),
+            secret: await this.cipher.encrypt(secret.base32, user.realm_id),
             parameters: JSON.stringify(parameters),
             confirmed: false,
             user_id: user.id,
