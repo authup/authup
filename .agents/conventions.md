@@ -35,6 +35,15 @@
 - **HTTP-level tests** spin up the real server on a random port. Use `suite.client` (typed `@authup/core-http-kit` Client) for API calls; `suite.baseURL` for raw `fetch()` (e.g., asserting HTML response bodies).
 - **UI/SSR tests** stub the rendered Vue app's outbound HTTP via a fake client: register `{ useFactory: () => createFakeClient(handlers) }` (from `@authup/core-http-kit/testing`) with `{ lifetime: 'transient' }` under `HTTPInjectionKey.UIHttpClient` before `suite.setup()` (see `.agents/testing.md`). Transient lifetime — never a singleton instance — because the client carries per-user Authorization state. Production code never imports from `@authup/core-http-kit/testing`.
 
+## Database Migrations
+
+Migrations live in `apps/server-core/src/adapters/database/migrations/{mysql,postgres}/` (sqlite never runs them — the options builder wires `migrations: []` for `better-sqlite3`, so boot falls back to `dataSource.synchronize()` from the entity classes; the test suite does the same).
+
+- **Fold-per-release — one migration file per dialect per release.** The first schema change after a release creates that release's migration (new timestamp); every further schema change before the next release is **folded into that same file** (both dialects, doc header extended per feature) instead of adding a new one. Releases — not master — are the stability boundary: a migration is amendable until it ships in a release, then it is immutable.
+- Keep the folded migration's original (earliest) timestamp so ordering against the released chain holds.
+- After folding, verify with the migration round-trip (`migration run` → `revert` × N → `run`, see [testing.md](testing.md#migration-tests)); a persistent local mysql/postgres dev DB that already executed the pre-fold migrations must be dropped (the CLI re-creates it) or have the stale rows removed from its `migrations` table.
+- Planned for `v1.0.0` final: squash the entire beta chain into a single baseline migration with a stepping-stone upgrade path (upgrade to the last beta first).
+
 ## File Organization
 
 - Exported **types** (interfaces, type aliases) must live in a `types.ts` file in the same directory, not inline in the implementation module. Implementation files import from `types.ts`.

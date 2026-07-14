@@ -1790,7 +1790,12 @@ realtime), port `IUserAuthenticatorRepository` + `UserAuthenticatorService` in
   **AES-256-GCM-encrypted at rest** via `SymmetricCipher`
   (`@authup/server-kit`, `crypto/symmetric-cipher/` — blob =
   `base64(iv ‖ ciphertext ‖ tag)`) under the config `mfaEncryptionKey`
-  (env `MFA_ENCRYPTION_KEY`, base64 32 bytes). Fail-closed at every layer:
+  (env `MFA_ENCRYPTION_KEY`, standard base64 decoding to exactly 32 bytes —
+  e.g. `openssl rand -base64 32`; there is **no key-rotation path**, so a
+  rotated/lost key orphans enrolled TOTP seeds and forces re-enrollment;
+  generation + caveat are user-documented in
+  `docs/src/guide/deployment/configuration-server-core.md`). Fail-closed at
+  every layer:
   `normalizeConfig` throws at boot when `mfaEnabled` without a key, the service
   refuses TOTP enrollment/verification without a cipher
   (`ErrorCode.MFA_NOT_CONFIGURABLE`).

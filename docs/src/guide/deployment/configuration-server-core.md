@@ -199,7 +199,14 @@ export default {
     /**
      * Base64-encoded 32-byte key encrypting TOTP seeds at rest
      * (AES-256-GCM). Generate one with:
+     * openssl rand -base64 32
+     * or:
      * node -e "console.log(crypto.randomBytes(32).toString('base64'))"
+     * Must be standard base64 (+, /, = padding) decoding to exactly
+     * 32 bytes — base64url or any other length is rejected at startup.
+     * Treat it as a long-lived secret: there is no key-rotation path,
+     * so rotating or losing the key makes already-enrolled TOTP devices
+     * undecryptable and forces users to re-enroll them.
      * default: '' (unset)
      */
     mfaEncryptionKey: '',
