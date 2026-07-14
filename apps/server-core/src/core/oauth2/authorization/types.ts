@@ -7,6 +7,7 @@
 
 import type { Client } from '@authup/core-kit';
 import type { IOAuth2AuthorizationCodeIssuer } from './code/index.ts';
+import type { IOAuth2AccessPolicyEvaluator } from '../access-policy/index.ts';
 import type { ISessionManager } from '../../authentication/index.ts';
 import type { IEventService, IUserAuthenticatorChallengeProvider } from '../../entities/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
@@ -16,6 +17,13 @@ export type OAuth2AuthorizationManagerContext = {
     sessionManager: ISessionManager,
     eventService?: IEventService,
     metrics?: IAuthFlowMetrics,
+    /**
+     * Application access policy gate (plan 052): evaluates a client's
+     * access_policy_id against the authenticated identity before a code is
+     * issued. Absent = feature inert — but a client carrying a policy id
+     * with no wired evaluator still denies (fail closed).
+     */
+    accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,
     /**
      * Max age (seconds) of the authentication a `prompt=login` request accepts
      * before forcing re-auth (config `promptLoginMaxAge`). Default 60.
@@ -55,4 +63,11 @@ export type OAuth2AuthorizationOptions = {
      * the audit record to distinguish built_in auto-consent from manual consent.
      */
     client?: Client,
+
+    /**
+     * Whether the request's redirect_uri was pattern-verified by the
+     * code-request verifier. Gates whether a denial may be answered with an
+     * error redirect (RFC 6749 §4.1.2.1) instead of an interactive error.
+     */
+    redirectUriVerified?: boolean,
 };

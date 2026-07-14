@@ -13,6 +13,7 @@ import type {
     BaseGrantContext,
     ICredentialsAuthenticator,
     ILoginThrottleService,
+    IOAuth2AccessPolicyEvaluator,
     IOAuth2AuthorizationCodeVerifier,
     IOAuth2MfaLoginService,
     IRealmRepository,
@@ -27,6 +28,7 @@ export type HTTPOAuth2AuthorizeGrantContext = OAuth2AuthorizeGrantContext & {
     codeVerifier: IOAuth2AuthorizationCodeVerifier,
     clientAuthenticator: OAuth2ClientAuthenticator,
     realmRepository: IRealmRepository,
+    accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,
 };
 
 export interface IHTTPOAuth2Grant {

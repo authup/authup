@@ -37,6 +37,7 @@ import {
     isBCryptHash,
 } from '@authup/kit';
 import { ARealmPicker } from '../realm';
+import APolicyPicker from '../policy/APolicyPicker.vue';
 import {
     AFormInputList,
     AFormSubmit,
@@ -53,6 +54,7 @@ export default defineComponent({
     components: {
         AFormSubmit,
         ANameInput,
+        APolicyPicker,
         ASecretInput,
         ARealmPicker,
         AFormInputList,
@@ -89,6 +91,7 @@ export default defineComponent({
             is_confidential: true,
             secret: '',
             secret_hashed: false,
+            access_policy_id: null as string | null,
         });
 
         const manager = defineEntityManager({
@@ -193,6 +196,7 @@ export default defineComponent({
                 { key: TranslatorTranslationClientKey.IS_CONFIDENTIAL },
                 { key: TranslatorTranslationClientKey.IS_ACTIVE },
                 { key: TranslatorTranslationClientKey.HASH_SECRET },
+                { key: TranslatorTranslationClientKey.CLIENT_ACCESS_POLICY_HINT },
             ],
         );
 
@@ -220,8 +224,12 @@ export default defineComponent({
                     key: TranslatorTranslationFieldKey.REDIRECT_URIS, 
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.FIELD, 
-                    key: TranslatorTranslationFieldKey.SECRET, 
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.SECRET,
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.ACCESS_POLICY,
                 },
             ],
         );
@@ -230,6 +238,8 @@ export default defineComponent({
             const value = v.fields.redirect_uri.$model.value as string | undefined;
             return value ? value.split(',') : [];
         });
+
+        const policyQuery = computed(() => ({ filters: { realm_id: [...(form.realm_id ? [form.realm_id] : []), null] } }));
 
         return {
             translationsDefault,
@@ -241,6 +251,7 @@ export default defineComponent({
             isEditing,
             isSecretHashed,
             redirectUris,
+            policyQuery,
             submit,
         };
     },
@@ -412,6 +423,28 @@ export default defineComponent({
                     />
                     <template #hint>
                         {{ translationsClient.descriptionHint }}
+                    </template>
+                </VCFormGroup>
+            </IFieldValidation>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.access_policy_id"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        {{ translationsDefault.accessPolicy }}
+                    </template>
+                    <template #default>
+                        <APolicyPicker
+                            :value="v.fields.access_policy_id.$model.value"
+                            :query="policyQuery"
+                            @change="(input: string[]) => {
+                                v.fields.access_policy_id.$model.value = input.length > 0 ? input[0] ?? null : null;
+                            }"
+                        />
+                    </template>
+                    <template #hint>
+                        {{ translationsClient.clientAccessPolicyHint }}
                     </template>
                 </VCFormGroup>
             </IFieldValidation>

@@ -16,6 +16,7 @@ import {
 } from 'vitest';
 import { ClientCredentialsService } from '../../../../../src/core';
 import { createFakeClient, expectPropertiesEqualToSrc } from '../../../../utils';
+import { createFakeTimePolicy } from '../../../../utils/domains/policy';
 import { createTestApplication } from '../../../../app';
 
 describe('http/controllers/client', () => {
@@ -176,5 +177,33 @@ describe('http/controllers/client', () => {
         expect(response).toBeDefined();
         expect(response.name).toEqual(nextName);
         expect(response.id).toEqual(id);
+    });
+
+    it('should round-trip access_policy_id through create, update and read', async () => {
+        const policy = await suite.client.policy.create(createFakeTimePolicy());
+        const nextPolicy = await suite.client.policy.create(createFakeTimePolicy());
+
+        const created = await suite.client
+            .client
+            .create(createFakeClient({ access_policy_id: policy.id }));
+
+        expect(created.access_policy_id).toEqual(policy.id);
+
+        let read = await suite.client.client.getOne(created.id);
+        expect(read.access_policy_id).toEqual(policy.id);
+
+        let updated = await suite.client
+            .client
+            .update(created.id, { access_policy_id: nextPolicy.id });
+        expect(updated.access_policy_id).toEqual(nextPolicy.id);
+
+        // clearing detaches the policy (null = default allow)
+        updated = await suite.client
+            .client
+            .update(created.id, { access_policy_id: null });
+        expect(updated.access_policy_id).toBeNull();
+
+        read = await suite.client.client.getOne(created.id);
+        expect(read.access_policy_id).toBeNull();
     });
 });

@@ -6,9 +6,12 @@
  */
 
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
+import type { Logger } from '@authup/server-kit';
 import type {
     IAuthFlowMetrics,
+    IConsentService,
     IEventService,
+    IOAuth2AccessPolicyEvaluator,
     IOAuth2AuthorizationCodeIssuer,
     IOAuth2AuthorizationCodeRequestVerifier,
     ISessionManager,
@@ -42,4 +45,12 @@ export type AuthorizeControllerContext = {
     metrics?: IAuthFlowMetrics,
 
     mfaChallengeProvider?: IUserAuthenticatorChallengeProvider,
+    accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,
+
+    /**
+     * Persisted per-scope consent (plan 055): records the approved scope
+     * tokens after a successful (non-built_in) POST /authorize approval.
+     */
+    consentService?: IConsentService,
+    logger?: Logger,
 };

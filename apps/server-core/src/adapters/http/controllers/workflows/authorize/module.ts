@@ -14,12 +14,14 @@ import {
 import { URL } from 'node:url';
 
 import type { IAppEvent } from 'routup';
+import { useRequestQuery } from '@routup/basic/query';
 import type {
     Client,
     OAuth2AuthorizationCodeRequest,
     Realm,
     Scope,
 } from '@authup/core-kit';
+import { OAuth2AccessDeniedError, OAuth2ErrorCode, isOAuth2AccessDeniedError } from '@authup/specs';
 import { ForceUserLoggedInMiddleware } from '../../../middleware/index.ts';
 import { HTTPOAuth2Authorizer } from '../../../adapters/index.ts';
 import { renderUIPage } from '../../../ui/index.ts';
@@ -63,6 +65,9 @@ export class AuthorizeController {
             promptLoginMaxAge: ctx.options.promptLoginMaxAge,
             mfaFreshnessMaxAge: ctx.options.mfaFreshnessMaxAge,
             mfaChallengeProvider: ctx.mfaChallengeProvider,
+            accessPolicyEvaluator: ctx.accessPolicyEvaluator,
+            consentService: ctx.consentService,
+            logger: ctx.logger,
         });
     }
 
@@ -70,18 +75,37 @@ export class AuthorizeController {
 
     @DPost('', [ForceUserLoggedInMiddleware])
     async confirm(@DContext() event: IAppEvent): Promise<{ url: string }> {
-        const result = await this.authorizer.authorizeWithRequest(event);
+        try {
+            const result = await this.authorizer.authorizeWithRequest(event);
 
-        const url = new URL(result.redirectUri);
-        if (result.state) {
-            url.searchParams.set('state', result.state);
+            const url = new URL(result.redirectUri);
+            if (result.state) {
+                url.searchParams.set('state', result.state);
+            }
+
+            if (result.authorizationCode) {
+                url.searchParams.set('code', result.authorizationCode);
+            }
+
+            return { url: url.href };
+        } catch (e) {
+            // Access-policy denial (plan 052): with a pattern-verified
+            // redirect_uri the denial is answered as an error redirect
+            // (RFC 6749 §4.1.2.1) — the kit navigates the returned url like
+            // any success. Unverified → rethrow → 400 body → interactive
+            // denial card.
+            if (isOAuth2AccessDeniedError(e) && e.redirectUri) {
+                const url = new URL(e.redirectUri);
+                url.searchParams.set('error', OAuth2ErrorCode.ACCESS_DENIED);
+                if (e.state) {
+                    url.searchParams.set('state', e.state);
+                }
+
+                return { url: url.href };
+            }
+
+            throw e;
         }
-
-        if (result.authorizationCode) {
-            url.searchParams.set('code', result.authorizationCode);
-        }
-
-        return { url: url.href };
     }
 
     @DGet('', [])
@@ -140,6 +164,21 @@ export class AuthorizeController {
                 ...normalized,
                 message: normalized.message,
             };
+        }
+
+        // A recognized `error` query param (the federated-IdP callback
+        // redirects back here with error=access_denied on a policy denial)
+        // is mapped onto the hydration payload's error — neutral message,
+        // never attacker-controlled text.
+        if (!error) {
+            const query = useRequestQuery(event);
+            if (query.error === OAuth2ErrorCode.ACCESS_DENIED) {
+                const normalized = sanitizeError(OAuth2AccessDeniedError.forClient());
+                error = {
+                    ...normalized,
+                    message: normalized.message,
+                };
+            }
         }
 
         // Path + query of the original request — the SSR page uses it as

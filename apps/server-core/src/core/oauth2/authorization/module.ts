@@ -19,8 +19,10 @@ import {
 } from '@authup/core-kit';
 import { hasInstanceof } from '@authup/errors';
 import {
+    OAUTH2_ACCESS_DENIED_ERROR_INSTANCE,
     OAUTH2_LOGIN_REQUIRED_ERROR_INSTANCE,
     OAUTH2_MFA_REQUIRED_ERROR_INSTANCE,
+    OAuth2AccessDeniedError,
     OAuth2AuthenticationContextClass,
     OAuth2AuthorizationPrompt,
     OAuth2AuthorizationResponseType,
@@ -31,6 +33,8 @@ import {
     OAuth2ResponseTypeError,
 } from '@authup/specs';
 import type { IOAuth2AuthorizationCodeIssuer } from './code/index.ts';
+import type { IOAuth2AccessPolicyEvaluator } from '../access-policy/index.ts';
+import { toIdentityPolicyData } from '../../identity/permission/identity-policy-data.ts';
 import type {
     OAuth2AuthorizationManagerContext,
     OAuth2AuthorizationOptions,
@@ -62,11 +66,14 @@ export class OAuth2Authorization {
 
     protected mfaChallengeProvider? : IUserAuthenticatorChallengeProvider;
 
+    protected accessPolicyEvaluator? : IOAuth2AccessPolicyEvaluator;
+
     constructor(ctx: OAuth2AuthorizationManagerContext) {
         this.codeIssuer = ctx.codeIssuer;
         this.sessionManager = ctx.sessionManager;
         this.eventService = ctx.eventService;
         this.metrics = ctx.metrics;
+        this.accessPolicyEvaluator = ctx.accessPolicyEvaluator;
         this.promptLoginMaxAge = ctx.promptLoginMaxAge ?? DEFAULT_PROMPT_LOGIN_MAX_AGE;
         this.mfaFreshnessMaxAge = ctx.mfaFreshnessMaxAge ?? DEFAULT_MFA_FRESHNESS_MAX_AGE;
         this.mfaChallengeProvider = ctx.mfaChallengeProvider;
@@ -106,7 +113,21 @@ export class OAuth2Authorization {
 
             return result;
         } catch (e) {
-            if (hasInstanceof(e, OAUTH2_LOGIN_REQUIRED_ERROR_INSTANCE)) {
+            if (hasInstanceof(e, OAUTH2_ACCESS_DENIED_ERROR_INSTANCE)) {
+                await this.eventService?.record({
+                    scope: EventScope.OAUTH2,
+                    name: EventName.AUTHORIZE_FAILED,
+                    refType: EventRefType.CLIENT,
+                    refId: options.client?.id ?? data.client_id ?? null,
+                    clientId: options.client?.id ?? data.client_id ?? null,
+                    actorType: identity.type,
+                    actorId: identity.data.id,
+                    actorName: identity.data.name,
+                    realmId: data.realm_id ?? null,
+                    data: { reason: 'accessPolicy' },
+                });
+                this.metrics?.recordAuthorize('denied');
+            } else if (hasInstanceof(e, OAUTH2_LOGIN_REQUIRED_ERROR_INSTANCE)) {
                 this.metrics?.recordAuthorize('login_required');
             } else if (hasInstanceof(e, OAUTH2_MFA_REQUIRED_ERROR_INSTANCE)) {
                 this.metrics?.recordAuthorize('mfa_required');
@@ -248,6 +269,32 @@ export class OAuth2Authorization {
                 nowSeconds - authTime > maxAge
             ) {
                 throw OAuth2LoginRequiredError.reauthenticationRequired();
+            }
+        }
+
+        // Application access policy (plan 052) — the last gate before
+        // issuance: a denial is only revealed to a fully-authenticated
+        // (incl. second-factor) identity. A client carrying a policy id with
+        // no wired evaluator denies too (never silently allow a configured
+        // gate). The redirect target rides the error only when the
+        // redirect_uri was pattern-verified (RFC 6749 §4.1.2.1).
+        if (options.client?.access_policy_id) {
+            let allowed = false;
+
+            const subject = toIdentityPolicyData(identity);
+            if (this.accessPolicyEvaluator && subject) {
+                allowed = await this.accessPolicyEvaluator.evaluate(
+                    options.client.access_policy_id,
+                    subject,
+                );
+            }
+
+            if (!allowed) {
+                throw OAuth2AccessDeniedError.forClient(
+                    options.redirectUriVerified && data.redirect_uri ?
+                        { redirectUri: data.redirect_uri, state: data.state ?? null } :
+                        undefined,
+                );
             }
         }
 

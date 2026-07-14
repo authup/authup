@@ -85,6 +85,7 @@ import {
     ClientPermissionController,
     ClientRoleController,
     ClientScopeController,
+    ConsentController,
     EventController,
     IdentityProviderController,
     IdentityProviderRoleMappingController,
@@ -127,9 +128,11 @@ import {
     ClientRoleService,
     ClientScopeService,
     ClientService,
+    ConsentService,
     CredentialsAuthenticator,
     IdentityProviderRoleMappingService,
     LoginThrottleService,
+    OAuth2AccessPolicyEvaluator,
     OAuth2ClientAuthenticator,
     OAuth2EndSessionService,
     OAuth2MfaLoginService,
@@ -187,6 +190,7 @@ export class HTTPControllerModule {
         const rolePermissionController = this.createRolePermissionController(container);
         const scopeController = this.createScopeController(container);
         const sessionController = this.createSessionController(container);
+        const consentController = this.createConsentController(container);
         const userController = this.createUserController(container);
         const userAttributeController = this.createUserAttributeController(container);
         const userAuthenticatorController = this.createUserAuthenticatorController(container);
@@ -214,6 +218,7 @@ export class HTTPControllerModule {
                 clientPermissionController,
                 clientRoleController,
                 clientScopeController,
+                consentController,
                 eventController,
                 identityProviderRoleController,
                 this.createIdentityProvider(container),
@@ -268,6 +273,10 @@ export class HTTPControllerModule {
             metrics,
 
             mfaChallengeProvider: this.resolveUserAuthenticatorService(container),
+            accessPolicyEvaluator: this.resolveAccessPolicyEvaluator(container),
+
+            consentService: this.createConsentService(container),
+            logger: container.resolve(LoggerInjectionKey),
         });
     }
 
@@ -334,6 +343,7 @@ export class HTTPControllerModule {
             loginThrottleService,
             userAuthenticatorService: this.resolveUserAuthenticatorService(container),
             mfaLoginService: this.resolveMfaLoginService(container),
+            accessPolicyEvaluator: this.resolveAccessPolicyEvaluator(container),
 
             tokenRefreshGracePeriod: config.tokenRefreshGracePeriod,
             logger,
@@ -519,12 +529,15 @@ export class HTTPControllerModule {
 
             repository,
             realmRepository: new RealmRepositoryAdapter(realmRepository),
+            clientRepository: container.resolve(OAuth2InjectionToken.ClientRepository),
 
             accountManager,
 
             codeIssuer,
             codeRequestVerifier,
             stateManager,
+
+            accessPolicyEvaluator: this.resolveAccessPolicyEvaluator(container),
         });
     }
 
@@ -751,6 +764,33 @@ export class HTTPControllerModule {
         const repository = container.resolve(AuthenticationInjectionKey.SessionRepository);
         const service = new SessionService({ repository });
         return new SessionController({ service });
+    }
+
+    protected createConsentService(container: IContainer) : ConsentService {
+        const repository = container.resolve(OAuth2InjectionToken.ConsentRepository);
+        return new ConsentService({ repository });
+    }
+
+    createConsentController(container: IContainer) {
+        return new ConsentController({ service: this.createConsentService(container) });
+    }
+
+    private accessPolicyEvaluator? : OAuth2AccessPolicyEvaluator;
+
+    protected resolveAccessPolicyEvaluator(container: IContainer) : OAuth2AccessPolicyEvaluator {
+        if (this.accessPolicyEvaluator) {
+            return this.accessPolicyEvaluator;
+        }
+
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
+
+        this.accessPolicyEvaluator = new OAuth2AccessPolicyEvaluator({
+            policyProvider: new PolicyRepository(dataSource),
+            identityPermissionProvider: container.resolve(IdentityInjectionKey.PermissionProvider),
+            logger: container.resolve(LoggerInjectionKey),
+        });
+
+        return this.accessPolicyEvaluator;
     }
 
     private userAuthenticatorService? : UserAuthenticatorService;

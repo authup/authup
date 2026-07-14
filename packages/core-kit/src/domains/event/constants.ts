@@ -14,6 +14,7 @@ export enum EventName {
     LOGIN_FAILED = 'loginFailed',
     LOGOUT = 'logout',
     AUTHORIZE = 'authorize',
+    AUTHORIZE_FAILED = 'authorizeFailed',
     REFRESH_REPLAY_DETECTED = 'refreshReplayDetected',
     REGISTER = 'register',
     ACCOUNT_ACTIVATED = 'accountActivated',

@@ -8,9 +8,11 @@
 import type {
     IIdentityProviderAccountManager,
     IIdentityProviderRepository,
+    IOAuth2AccessPolicyEvaluator,
     IOAuth2AuthorizationCodeIssuer,
     IOAuth2AuthorizationCodeRequestVerifier,
     IOAuth2AuthorizationStateManager,
+    IOAuth2ClientRepository,
     IRealmRepository,
 } from '../../../../../core/index.ts';
 
@@ -23,9 +25,12 @@ export type IdentityProviderControllerContext = {
 
     repository: IIdentityProviderRepository,
     realmRepository: IRealmRepository,
+    clientRepository: IOAuth2ClientRepository,
 
     accountManager: IIdentityProviderAccountManager,
     codeIssuer: IOAuth2AuthorizationCodeIssuer,
     codeRequestVerifier: IOAuth2AuthorizationCodeRequestVerifier,
     stateManager: IOAuth2AuthorizationStateManager,
+
+    accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,
 };

@@ -7,6 +7,7 @@
 
 export * from './authorize/index.ts';
 export * from './client/index.ts';
+export * from './consent/index.ts';
 export * from './scope/index.ts';
 export * from './key/index.ts';
 export * from './session-token/index.ts';

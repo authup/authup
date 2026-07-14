@@ -12,6 +12,7 @@ import {
     ClientPermissionAPI,
     ClientRoleAPI,
     ClientScopeAPI,
+    ConsentAPI,
     EventAPI,
     IdentityProviderAPI,
     IdentityProviderRoleMappingAPI,
@@ -52,6 +53,8 @@ export class Client extends BaseClient implements IClient {
     public readonly clientRole : ClientRoleAPI;
 
     public readonly clientScope : ClientScopeAPI;
+
+    public readonly consent : ConsentAPI;
 
     public readonly event : EventAPI;
 
@@ -132,6 +135,8 @@ export class Client extends BaseClient implements IClient {
         this.clientPermission = new ClientPermissionAPI({ client: this });
         this.clientRole = new ClientRoleAPI({ client: this });
         this.clientScope = new ClientScopeAPI({ client: this });
+
+        this.consent = new ConsentAPI({ client: this });
 
         this.event = new EventAPI({ client: this });
 

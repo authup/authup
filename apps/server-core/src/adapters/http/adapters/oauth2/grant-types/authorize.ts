@@ -6,13 +6,14 @@
  */
 
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
-import { OAuth2RequestError, OAuth2TokenGrant } from '@authup/specs';
+import { OAuth2GrantError, OAuth2RequestError, OAuth2TokenGrant } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IAppEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
 import { OAuth2AuthorizeGrant, assertClientGrantAllowed } from '../../../../../core/index.ts';
 import type {
+    IOAuth2AccessPolicyEvaluator,
     IOAuth2AuthorizationCodeVerifier,
     IRealmRepository,
     OAuth2ClientAuthenticator,
@@ -27,12 +28,15 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
 
     protected realmRepository : IRealmRepository;
 
+    protected accessPolicyEvaluator? : IOAuth2AccessPolicyEvaluator;
+
     constructor(ctx: HTTPOAuth2AuthorizeGrantContext) {
         super(ctx);
 
         this.codeVerifier = ctx.codeVerifier;
         this.clientAuthenticator = ctx.clientAuthenticator;
         this.realmRepository = ctx.realmRepository;
+        this.accessPolicyEvaluator = ctx.accessPolicyEvaluator;
     }
 
     async runWithRequest(event: IAppEvent): Promise<OAuth2TokenGrantResponse> {
@@ -60,6 +64,28 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
             clientIsPublic: !client.is_confidential,
             realmId: client.realm_id,
         });
+
+        // Application access policy (plan 052), /token backstop: a code
+        // minted before the policy was attached (or outside authorize())
+        // must not redeem. The subject is built from the code-blob scalars —
+        // no DB identity load; attribute-rich policies are enforced at the
+        // issuance legs. Denial = invalid_grant, never access_denied here.
+        if (client.access_policy_id) {
+            let allowed = false;
+            if (this.accessPolicyEvaluator) {
+                allowed = await this.accessPolicyEvaluator.evaluate(client.access_policy_id, {
+                    type: entity.sub_kind,
+                    id: entity.sub,
+                    realmId: entity.realm_id ?? null,
+                    realmName: entity.realm_name ?? null,
+                    clientId: entity.client_id ?? null,
+                });
+            }
+
+            if (!allowed) {
+                throw OAuth2GrantError.invalid();
+            }
+        }
 
         return this.runWith(entity, {
             ipAddress: getRequestIP(event, { trustProxy: true }) ?? undefined,

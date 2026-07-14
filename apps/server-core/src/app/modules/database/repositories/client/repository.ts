@@ -62,6 +62,7 @@ export class ClientRepositoryAdapter implements IClientRepository {
                     'grant_types',
                     'scope',
                     'is_confidential',
+                    'access_policy_id',
                     'realm_id',
                     'updated_at',
                     'created_at',
@@ -71,7 +72,8 @@ export class ClientRepositoryAdapter implements IClientRepository {
             filters: { allowed: ['id', 'name', 'realm_id', 'realm.name'] },
             pagination: { maxLimit: 50 },
             relations: {
-                allowed: ['realm'],
+                // @ts-expect-error nullable relation (access_policy) is not covered by NestedResourceKeys
+                allowed: ['realm', 'access_policy'],
                 onJoin: (_property: string, key: string, q: any) => {
                     q.addGroupBy(`${key}.id`);
                 },
@@ -147,13 +149,17 @@ export class ClientRepositoryAdapter implements IClientRepository {
                     'grant_types',
                     'scope',
                     'is_confidential',
+                    'access_policy_id',
                     'realm_id',
                     'updated_at',
                     'created_at',
                 ],
                 allowed: ['secret'],
             },
-            relations: { allowed: ['realm'] },
+            relations: {
+                // @ts-expect-error nullable relation (access_policy) is not covered by NestedResourceKeys
+                allowed: ['realm', 'access_policy'],
+            },
         });
 
         return qb.getOne();

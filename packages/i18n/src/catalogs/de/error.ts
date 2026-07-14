@@ -48,6 +48,7 @@ export const TranslatorTranslationErrorGerman : NamespaceTranslations<`${ErrorCo
     [ErrorCode.OAUTH_REQUEST_INVALID]: 'Die Anfrage ist ungültig.',
     [ErrorCode.OAUTH_LOGIN_REQUIRED]: 'Sie müssen sich anmelden, um fortzufahren.',
     [ErrorCode.OAUTH_MFA_REQUIRED]: 'Ein zweiter Faktor ist erforderlich, um fortzufahren.',
+    [ErrorCode.OAUTH_ACCESS_DENIED]: 'Sie sind nicht berechtigt, auf diese Anwendung zuzugreifen.',
     [ErrorCode.OAUTH_INTERACTION_REQUIRED]: 'Eine Interaktion ist erforderlich, um fortzufahren.',
     [ErrorCode.OAUTH_ACCOUNT_SELECTION_REQUIRED]: 'Bitte wählen Sie ein Konto aus, um fortzufahren.',
     [ErrorCode.OAUTH_CONSENT_REQUIRED]: 'Ihre Zustimmung ist erforderlich, um fortzufahren.',

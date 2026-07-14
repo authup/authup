@@ -24,7 +24,8 @@ export type ClientCreatePayload = Pick<Client, 'name'> &
         'root_url' |
         'grant_types' |
         'scope' |
-        'realm_id'>>;
+        'realm_id' |
+        'access_policy_id'>>;
 export type ClientUpdatePayload = Partial<ClientCreatePayload>;
 export type ClientSavePayload = ClientCreatePayload;
 

@@ -63,6 +63,9 @@ export default defineComponent({
         // (server-verified). abort()'s access_denied redirect is gated on it —
         // same as every other redirect in the ladder. Fail-closed default.
         redirectUriVerified: { type: Boolean, default: false },
+        // Persisted consent rows cover every requested scope (plan 055) —
+        // allows auto-consent for non-built_in clients. Fail-closed default.
+        consentGranted: { type: Boolean, default: false },
     },
     emits: ['loginRequired', 'switch', 'failed'],
     setup(props, { emit }) {
@@ -108,6 +111,21 @@ export default defineComponent({
             key: TranslatorTranslationClientKey.AUTHORIZE_ABORTED,
         });
 
+        const accessDeniedTitle = useTranslation({
+            namespace: TranslatorTranslationNamespace.CLIENT,
+            key: TranslatorTranslationClientKey.ACCESS_DENIED_TITLE,
+        });
+
+        const accessDeniedText = useTranslation({
+            namespace: TranslatorTranslationNamespace.CLIENT,
+            key: TranslatorTranslationClientKey.ACCESS_DENIED_TEXT,
+        });
+
+        // Terminal denial: the server's access policy rejected this identity
+        // for the client (unverified-redirect case — a verified denial comes
+        // back as 200 { url } and navigates). No retry: a re-POST re-denies.
+        const accessDenied = ref<boolean>(false);
+
         // An abort against an unverified redirect_uri can't navigate — the
         // template renders a terminal "aborted" notice instead.
         const aborted = ref<boolean>(false);
@@ -122,7 +140,7 @@ export default defineComponent({
             }
 
             const url = new URL(`${props.codeRequest.redirect_uri}`);
-            url.searchParams.set('error', 'access_denied');
+            url.searchParams.set('error', OAuth2ErrorCode.ACCESS_DENIED);
             url.searchParams.set(
                 'error_description',
                 'The resource owner or authorization server denied the request',
@@ -189,19 +207,26 @@ export default defineComponent({
                     return;
                 }
 
+                if (data?.error === OAuth2ErrorCode.ACCESS_DENIED) {
+                    accessDenied.value = true;
+                    return;
+                }
+
                 autoConsentFailed.value = true;
             }
         };
 
-        // Auto-consent for built-in clients (e.g. the per-realm `web` client).
-        // `built_in` is a provisioning-only trust boundary — the client
-        // validator strips it on create/update, so no API caller can self-
-        // assign it. Skipping the scope-consent step is therefore safe; user/
-        // admin-created clients are never built_in and still show consent.
-        // prompt=consent (OIDC §3.1.2.1) forces the consent screen even for a
-        // built_in client.
+        // Auto-consent for built-in clients (e.g. the per-realm `web` client)
+        // and for subjects whose persisted consent already covers every
+        // requested scope (plan 055). `built_in` is a provisioning-only trust
+        // boundary — the client validator strips it on create/update, so no
+        // API caller can self-assign it. Skipping the scope-consent step is
+        // therefore safe; user/admin-created clients are never built_in and
+        // show consent until a prior approval covers the request.
+        // prompt=consent (OIDC §3.1.2.1) forces the consent screen regardless
+        // — union/keep happens server-side on the re-approval POST.
         const autoConsent = computed<boolean>(() => {
-            if (!props.client.built_in) {
+            if (!props.client.built_in && !props.consentGranted) {
                 return false;
             }
 
@@ -227,6 +252,9 @@ export default defineComponent({
             abort,
             aborted,
             abortedText,
+            accessDenied,
+            accessDeniedTitle,
+            accessDeniedText,
             autoConsent,
             showSpinner,
             translationsDefault,
@@ -239,8 +267,22 @@ export default defineComponent({
 });
 </script>
 <template>
+    <div
+        v-if="accessDenied"
+        class="flex flex-col gap-2"
+    >
+        <div class="text-center">
+            <h1 class="font-bold">
+                {{ accessDeniedTitle }}
+            </h1>
+        </div>
+        <AuthorizeText
+            :is-error="true"
+            :message="accessDeniedText"
+        />
+    </div>
     <AuthorizeText
-        v-if="aborted"
+        v-else-if="aborted"
         :message="abortedText"
     />
     <div

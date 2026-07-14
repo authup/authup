@@ -54,6 +54,7 @@ export enum ErrorCode {
     OAUTH_REQUEST_INVALID = 'invalid_request',
     OAUTH_LOGIN_REQUIRED = 'login_required',
     OAUTH_MFA_REQUIRED = 'mfa_required',
+    OAUTH_ACCESS_DENIED = 'access_denied',
     OAUTH_INTERACTION_REQUIRED = 'interaction_required',
     OAUTH_ACCOUNT_SELECTION_REQUIRED = 'account_selection_required',
     OAUTH_CONSENT_REQUIRED = 'consent_required',

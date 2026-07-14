@@ -1248,7 +1248,10 @@ not) is redirected to — owns the decision. The kit ladder, evaluated after the
 SSR app's router guard `await store.resolve()` settles the session:
 - **`prompt=none`**: not-logged-in / realm-mismatch → redirect
   `redirect_uri?error=login_required&state`; non-`built_in` client →
-  `consent_required` (no persisted consent record — see plan 043); `built_in`
+  the kit probes the persisted consent first (plan 055, see *OAuth2 Consent*)
+  and only redirects `consent_required` when no covering consent exists —
+  a covering grant falls through to the auto-consent path and issues the
+  code silently; `built_in`
   + logged-in + realm-match → the existing auto-consent path issues the code
   silently; a max_age/freshness `login_required` from the POST is redirected as
   `login_required`. Every silent error redirect is gated on
@@ -1404,6 +1407,171 @@ call (no name→realm ambiguity to think about). `store.logout()` remains
 local-only — the round-trip is the chosen mechanism, **not** a
 `DELETE /sessions/@me` (which would collide with the #3191 interactive-login
 session reuse → self-DoS of fresh logins).
+
+## Application Access Policy (plan 052)
+
+`Client.access_policy_id` is an optional FK onto `auth_policies`
+(`ON DELETE SET NULL`) gating **who may obtain a token for that client** via
+the interactive code flow. `null` = default-allow (every existing client
+behaves as before); a bound policy is evaluated against the authenticated
+identity and a failure denies with `access_denied` (RFC 6749 §4.1.2.1 —
+`OAuth2ErrorCode.ACCESS_DENIED` / `ErrorCode.OAUTH_ACCESS_DENIED`, HTTP 400,
+neutral message: no identity/policy detail, no enumeration oracle).
+
+- **Evaluator** — `OAuth2AccessPolicyEvaluator`
+  (`core/oauth2/access-policy/`, port `IOAuth2AccessPolicyEvaluator`) loads the
+  policy tree via `PolicyRepository.findDescendantsTreeById` (base row loaded
+  first — an id-only root yields a `type`-less tree every engine consumer
+  fails closed on) and evaluates the server `PolicyEngine` with **`IDENTITY`
+  policy data only** (`toIdentityPolicyData`). Consequences: `IDENTITY` /
+  `REALM_MATCH` / `TIME` / `DATE` / composite policies work; an
+  `ATTRIBUTES`-type access policy can never pass (DATA_MISSING → deny) — the
+  identity's attribute bag is deliberately not loaded at the gate. **Fail
+  closed everywhere**: unresolvable/dangling policy id, tree-load failure,
+  evaluation error, and even a policy-carrying client with **no wired
+  evaluator** all deny. Only a genuinely-null `access_policy_id` allows (a
+  deleted policy degrades to null via `SET NULL`).
+- **Three enforcement legs** (plan-041 layered-enforcement shape): (1)
+  `OAuth2Authorization.authorizeInner` — the LAST gate before code issuance
+  (order: realm → MFA backstop/step-up → prompt/max_age freshness → **access
+  policy** → issue), so a denial is only revealed to a fully-authenticated,
+  second-factor-complete identity; (2) the **federated-IdP callback** (it
+  mints codes without `authorize()`) — on deny it redirects back to the hosted
+  `/authorize` page with `error=access_denied` (`serve()` maps that recognized
+  query param onto a neutral hydration-payload error); (3) a **`/token`
+  code-redemption backstop** — catches codes minted before a policy change or
+  by a missed minting site; the subject is built from the code-blob scalars
+  (no DB identity load) and denial surfaces as `invalid_grant` (RFC 6749 §5.2
+  has no `access_denied`; a denied redemption also burns the code — retries
+  hit code-reuse `invalid_grant`).
+- **Denial transport honors `redirectUriVerified`** (threaded from the
+  code-request verifier through `OAuth2AuthorizationOptions` alongside
+  `client`): verified → `AuthorizeController.confirm` catches the error and
+  returns 200 `{ url: <redirect_uri>?error=access_denied&state=… }` (the kit
+  navigates it like any success — silent flows included); unverified →
+  rethrow → 400 JSON body → the kit `AuthorizeForm` renders a terminal
+  localized denial card (never redirect an OAuth2 error to an unverified
+  URI). The error's `redirectUri`/`state` ride **non-enumerable class
+  fields** on `OAuth2AccessDeniedError`, so they never serialize into the
+  wire body.
+- **Guardrails**: `access_policy_id` is in the `system.client-names-self-manage`
+  ATTRIBUTE_NAMES denylist (a self-managing client cannot change its own
+  gate), stays **out** of the anonymous `GET /authorize` `ClientSummary` DTO,
+  and is mounted `{ optional: true, nullable }` in every validator group so
+  admins can set/clear it. `buildWebClientAttributes` deliberately omits the
+  key — the provisioner MERGE would otherwise wipe an admin-set policy on the
+  per-realm `web` client every boot. The admin form binds it via
+  `APolicyPicker` in `AClientForm`. Client caches mean a policy
+  (re)assignment lags ≤60s at `/token` (`CachePrefix.CLIENT` query cache).
+- **Observability (leg-scoped):** a denial at the **interactive
+  `/authorize`** leg records `EventName.AUTHORIZE_FAILED`
+  (`data.reason: 'accessPolicy'`, ref = client) and increments
+  `authup_authorize_total{outcome="denied"}` — done in
+  `OAuth2Authorization.authorize()`'s catch, the only emit site. The
+  federated-IdP-callback and `/token`-backstop legs are **not** yet
+  instrumented (neither carries an `eventService`/metrics dependency today) —
+  a known audit-coverage gap, not a security gap (the deny itself is
+  enforced at all three legs). Wiring those two legs is a follow-up.
+- **Admission control, not continuous enforcement:** the gate decides who
+  may *obtain* a token via the interactive code flow (+ the redemption
+  backstop). It is deliberately **not** evaluated on the `refresh_token`
+  grant — an already-issued refresh token keeps rotating after a deny policy
+  is attached (plan-052 non-goal: the gate is the authorize code flow). To
+  evict an already-admitted identity, revoke its session (the sessions API) —
+  same model as any other access change. A future continuous-enforcement
+  option would gate refresh too.
+
+## OAuth2 Consent (plan 055)
+
+`auth_consents` persists "remember my consent" as **per-scope rows**: one row
+per `(client_id, sub, sub_kind, scope)` (4-column unique index; single
+lowercase scope token per row, `varchar(128)` = `ScopeEntity.name` bound;
+CASCADE FKs to client + realm; polymorphic subject like sessions). A dormant
+`expires_at` (`varchar(28)`, always null in Stage 1) is honored by the
+covering check so expiring consent is a data change, not a schema change.
+Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
+`ConsentEntitySubscriber` under `adapters/database/domains/consent/`.
+
+- **Covering rule (load-bearing):** a request is covered iff **every**
+  requested scope token has a matching unexpired row — strict token-superset,
+  not semantic (`global` does not imply `openid`). Tokens are normalized via
+  `unwrapOAuth2Scope` (`@authup/specs`, the shared lowercasing tokenizer) on
+  BOTH the server (`ConsentService.record`/`isCovering`) and the kit probe —
+  if either side stopped lowercasing, covering would silently never match
+  (permanent re-prompt).
+- **Union/keep semantics:** re-approval (incl. `prompt=consent`) only INSERTS
+  missing tokens (`ConsentRepositoryAdapter.insertMissing` = save-per-missing-
+  row + duplicate-key catch — deliberately NOT a qb `orIgnore()` insert, which
+  would bypass TypeORM subscribers and skip cache invalidation / realtime /
+  audit). A grant only shrinks via explicit revoke.
+- **Persist site — exactly one:** `HTTPOAuth2Authorizer.authorizeWithRequest`,
+  AFTER `authorize()` succeeds (an access-policy denial throws before it —
+  a denied identity never writes a row), skipping `built_in` clients (zero
+  rows, parity with auto-consent) and wrapped try/catch (a consent-write
+  failure never fails an issued code). Deliberately NOT recorded at the
+  federated-IdP callback or `/token` — no synthetic consent for flows that
+  never showed a screen.
+- **Covering read is cached:** `findAllBySubjectClient` rides a 60s query
+  cache keyed `CachePrefix.CONSENT_COVERING` `<client_id>:<sub_kind>:<sub>`,
+  invalidated by the subscriber (`cache.onInsert: true` — union/keep is
+  insert-heavy). The kit probe reads via the uncached `findMany` list path,
+  so client-side covering never sees cache staleness.
+- **Self-service API** (SessionService shape, exactly): `ConsentController`
+  dual-mounted `/consents` + `/realms/:realmId/consents`, read+delete only —
+  no CREATE/UPDATE/deleteMany (rows are created only by the authorize flow).
+  `CONSENT_READ`/`CONSENT_DELETE` permissions auto-provision (`realm_admin`:
+  delete at `own`, read at default `ownOrNull`); a reader without
+  `CONSENT_READ` is force-scoped to its own rows, own-row get/delete needs no
+  permission, foreign rows take per-row `evaluate` + `resourceRealmMatch`.
+  The adapter force-selects `realm_id`/`sub`/`sub_kind` (plan-039 discipline).
+  Typed client: `client.consent.getMany/getOne/delete`.
+- **Kit skip (client-side, since GET /authorize is anonymous):**
+  `Authorize.vue` probes `httpClient.consent.getMany` **filtered by the
+  resolved user subject** (`sub` = `store.user.id`, `sub_kind: 'user'`, plus
+  `client_id`) alongside the MFA status fetch (same ref-plus-loading-return
+  pattern as `mfaStatus` — the ladder stays a sync render fn). The subject
+  filter is load-bearing: the server only force-scopes a *permissionless*
+  caller to its own rows, so an admin / realm_admin holding `CONSENT_READ`
+  would otherwise get every subject's rows back and auto-consent off a
+  stranger's grant — the covering match therefore also re-checks
+  `row.sub`/`row.sub_kind` (defense in depth). The probe is driven by the
+  resolved user id (not the access-token-derived `loggedIn`, which flips
+  before `userInfo` resolves) and drops any in-flight response whose subject
+  is no longer current (logout / account switch mid-probe). `built_in`
+  clients and non-user / logged-out sessions never auto-consent (they settle
+  to not-covered once the session settles); probe failure → not covered →
+  re-prompt (fail safe). `AuthorizeForm.autoConsent` =
+  `(built_in || consentGranted) && !prompt.includes('consent')` — so a
+  covering consent auto-submits, and `prompt=consent` always re-prompts. The
+  silent (`prompt=none`) branch redirects `consent_required` only when the
+  settled probe found no covering consent — persisted consent is what makes
+  `prompt=none` meaningful for non-`built_in` clients.
+- **UI:** 4th settings tab "Applications"
+  (`apps/client-web/pages/settings/index/applications.vue`) over the kit
+  `<AConsents>` collection — rows grouped per client, granted scopes rendered
+  as per-scope revoke chips plus a per-app "Revoke access" (looped per-row
+  DELETEs behind an error-tone `useAlertDialog`). The self-service list
+  endpoint joins only a **client summary** (id / name / display_name /
+  built_in) — never the full `ClientEntity` (`client` is deliberately absent
+  from the adapter's `relations.allowed`, so a raw `?include=client` cannot
+  force the full-column join and leak redirect_uri patterns / grant_types /
+  secret-storage flags / `access_policy_id` to a self-service user without
+  `CLIENT_READ`). Revoking consent stops the next silent/auto issue;
+  already-issued tokens are unaffected (revoke those via the sessions API —
+  stated limitation).
+- **Subject deletion:** the subject is polymorphic (`sub`/`sub_kind`), but a
+  **nullable `user_id` FK** (`ON DELETE CASCADE`) is populated whenever
+  `sub_kind = user`, so deleting a user cascade-drops its consent rows. A
+  non-user subject (client/robot) leaves `user_id` null and its rows are
+  cleaned up when the client/realm is deleted (both CASCADE). No expiry sweep
+  yet (`expires_at` is always null in Stage 1) — a Stage-2 addition.
+- **Over-long scope token** (>128 chars, only reachable via a non-standard
+  scope riding the `global` verifier bypass) is dropped at normalization
+  rather than overflowing the `varchar(128)` column (`CONSENT_SCOPE_MAX_LENGTH`,
+  shared by the entity column + the service normalizer so they cannot drift).
+  A race-losing duplicate insert under the unique index is swallowed via
+  `isUniqueConstraintDatabaseError` (`adapters/database/errors/driver.ts`, the
+  reusable driver-error-code unwrapper covering mysql/postgres/sqlite).
 
 ## OAuth2 Token Endpoint Authentication
 
@@ -2152,7 +2320,7 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   registered by `HTTPModule` — `Noop` when `middlewarePrometheus` is off) on
   the default registry: `authup_login_total{result}`,
   `authup_token_grant_total{grant_type}` (successes only),
-  `authup_authorize_total{outcome}` (`denied` reserved until plan 052),
+  `authup_authorize_total{outcome}` (`denied` live since plan 052),
   `authup_refresh_replay_total`. Bounded label sets only — subject-level
   attribution belongs in the security event log, never in metric labels.
 

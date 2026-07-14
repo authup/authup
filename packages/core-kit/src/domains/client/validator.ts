@@ -178,6 +178,12 @@ export class ClientValidator extends Container<Client> {
             createValidator(z.string().min(3).max(512).nullable()),
         );
 
+        this.mount(
+            'access_policy_id',
+            { optional: true },
+            createValidator(z.uuid().nullable()),
+        );
+
         // ----------------------------------------------
 
         this.mount(

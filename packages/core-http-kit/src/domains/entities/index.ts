@@ -9,6 +9,7 @@ export * from './client';
 export * from './client-permission';
 export * from './client-role';
 export * from './client-scope';
+export * from './consent';
 export * from './event';
 export * from './identity-provider';
 export * from './identity-provider-role-mapping';

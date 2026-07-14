@@ -27,7 +27,13 @@ function extractHydrationPayload(body: string) : Record<string, any> {
 describe('src/http/controllers/workflows (SSR pages)', () => {
     const suite = createTestApplication();
 
-    const httpClient = createFakeHTTPClient();
+    const httpClient = createFakeHTTPClient({
+        handlers: {
+            // consent covering probe (plan 055) — logged-in authorize renders
+            // fire it; an empty collection means "not covered" (re-prompt)
+            'GET /consents': () => ({ data: [], meta: { total: 0 } }),
+        },
+    });
 
     beforeAll(async () => {
         suite.container.register(HTTPInjectionKey.UIHttpClient, { useFactory: () => httpClient }, { lifetime: 'transient' });

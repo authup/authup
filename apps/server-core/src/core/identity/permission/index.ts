@@ -6,6 +6,7 @@
  */
 
 export * from './checker/index.ts';
+export * from './identity-policy-data.ts';
 export * from './junction-grant.ts';
 export * from './module.ts';
 export * from './types.ts';
