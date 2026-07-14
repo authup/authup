@@ -13,7 +13,13 @@ import {
     ScopeName,
 } from '@authup/core-kit';
 import { AuthHeaderError } from '@authup/errors';
-import { JWTError, OAuth2TokenKind, deserializeOAuth2Scope } from '@authup/specs';
+import type { OAuth2TokenPayload } from '@authup/specs';
+import {
+    JWTError, 
+    OAuth2SubKind, 
+    OAuth2TokenKind, 
+    deserializeOAuth2Scope,
+} from '@authup/specs';
 import type { IAppEvent } from 'routup';
 import {
     AuthorizationHeaderType,
@@ -34,8 +40,10 @@ import type {
     ISessionManager,
 } from '../../../../../core/index.ts';
 import {
+    RequestIdentity,
     RequestPermissionEvaluator,
     setRequestIdentity,
+    setRequestMfaLoginTicket,
     setRequestPermissionEvaluator,
     setRequestScopes,
     setRequestSessionId,
@@ -125,6 +133,11 @@ export class AuthorizationMiddleware {
         header: BearerAuthorizationHeader,
     ) {
         const payload = await this.oauth2TokenVerifier.verify(header.token);
+        if (payload.kind === OAuth2TokenKind.MFA) {
+            await this.verifyMfaLoginTicket(event, payload);
+            return;
+        }
+
         if (payload.kind !== OAuth2TokenKind.ACCESS) {
             throw JWTError.payloadPropertyInvalid('kind');
         }
@@ -178,6 +191,72 @@ export class AuthorizationMiddleware {
         if (identity) {
             setRequestIdentity(event, identity);
         }
+    }
+
+    /**
+     * An "MFA-pending" login ticket (issue #3242). Verified with the same
+     * rigor as an access token (session existence + subject match), but
+     * stashed on a DEDICATED request slot — the main identity / scope /
+     * session slots stay empty, so every identity-gated route rejects a
+     * ticket bearer (default-deny); only the challenge routes opt in via
+     * useRequestMfaLoginTicket.
+     *
+     * @throws JWTError
+     */
+    protected async verifyMfaLoginTicket(
+        event: IAppEvent,
+        payload: OAuth2TokenPayload,
+    ) {
+        if (payload.sub_kind !== OAuth2SubKind.USER) {
+            throw JWTError.payloadPropertyInvalid('sub_kind');
+        }
+
+        if (!payload.sub) {
+            throw JWTError.payloadPropertyInvalid('sub');
+        }
+
+        if (!payload.realm_id) {
+            throw JWTError.payloadPropertyInvalid('realm_id');
+        }
+
+        if (!payload.session_id) {
+            throw JWTError.payloadPropertyInvalid('session_id');
+        }
+
+        const session = await this.sessionManager.findOneById(payload.session_id);
+        if (!session) {
+            throw JWTError.expired();
+        }
+
+        try {
+            await this.sessionManager.verify(session);
+        } catch {
+            throw JWTError.expired();
+        }
+
+        // defense in depth — the pending session must still belong to the
+        // ticket subject.
+        if (
+            session.sub !== payload.sub ||
+            session.sub_kind !== IdentityType.USER
+        ) {
+            throw JWTError.expired();
+        }
+
+        await this.sessionManager.ping(session);
+
+        const identity = await this.identityResolver.resolve(
+            payload.sub_kind,
+            payload.sub,
+        );
+        if (!identity) {
+            throw JWTError.expired();
+        }
+
+        setRequestMfaLoginTicket(event, {
+            identity: new RequestIdentity(identity),
+            payload,
+        });
     }
 
     protected async verifyBasicAuthorizationHeader(

@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { RequestBaseOptions } from 'hapic';
+import { stringifyAuthorizationHeader } from 'hapic';
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { User, UserAuthenticator } from '@authup/core-kit';
@@ -12,6 +14,7 @@ import { BaseAPI } from '../../base';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     IUserAuthenticatorAPI,
+    UserAuthenticatorChallengeRequestOptions,
     UserAuthenticatorChallengeResponse,
     UserAuthenticatorChallengeSendPayload,
     UserAuthenticatorChallengeVerifyPayload,
@@ -63,22 +66,53 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
         return response.data;
     }
 
-    async challenge(): Promise<UserAuthenticatorChallengeResponse> {
-        const response = await this.client.get('authenticators/challenge');
+    async challenge(
+        options?: UserAuthenticatorChallengeRequestOptions,
+    ): Promise<UserAuthenticatorChallengeResponse> {
+        const response = await this.client.get(
+            'authenticators/challenge',
+            buildUserAuthenticatorChallengeRequestConfig(options),
+        );
         return response.data;
     }
 
     async sendChallenge(
         data: UserAuthenticatorChallengeSendPayload,
+        options?: UserAuthenticatorChallengeRequestOptions,
     ): Promise<{ success: boolean }> {
-        const response = await this.client.post('authenticators/challenge/send', data);
+        const response = await this.client.post(
+            'authenticators/challenge/send',
+            data,
+            buildUserAuthenticatorChallengeRequestConfig(options),
+        );
         return response.data;
     }
 
     async verifyChallenge(
         data: UserAuthenticatorChallengeVerifyPayload,
+        options?: UserAuthenticatorChallengeRequestOptions,
     ): Promise<UserAuthenticatorChallengeVerifyResponse> {
-        const response = await this.client.post('authenticators/challenge', data);
+        const response = await this.client.post(
+            'authenticators/challenge',
+            data,
+            buildUserAuthenticatorChallengeRequestConfig(options),
+        );
         return response.data;
     }
+}
+
+function buildUserAuthenticatorChallengeRequestConfig(
+    options?: UserAuthenticatorChallengeRequestOptions,
+) : RequestBaseOptions | undefined {
+    if (!options || !options.authorizationHeader) {
+        return undefined;
+    }
+
+    return {
+        headers: {
+            Authorization: typeof options.authorizationHeader === 'string' ?
+                options.authorizationHeader :
+                stringifyAuthorizationHeader(options.authorizationHeader),
+        },
+    };
 }

@@ -1856,8 +1856,8 @@ mirrors this — when `userId !== '@me'` it offers only the email button
    backstop. Users *without* a device pass through (they could never enroll
    otherwise) — `mfaRequired` (configure-inline) is enforced at `/authorize`
    (`enrollmentRequired` → the hosted UI routes to inline enrollment), not at
-   the token endpoint. WebAuthn cannot ride a single POST — it stays
-   interactive-only (documented boundary).
+   the token endpoint. WebAuthn cannot ride a single POST — interactive kinds
+   complete a fresh login through the MFA-pending ticket (below).
 
 **The password grant is the single MFA chokepoint for credential login — the
 hosted `LoginForm` drives the `otp`, NOT a post-login challenge.** `store.login`
@@ -1868,14 +1868,69 @@ same credentials WITH the code* — so a token is never issued before the factor
 verified (fail-closed; a credential-only bearer would be a full-API MFA bypass).
 The step reads the error's `kinds`: TOTP/recovery render a code field;
 email/webauthn (which cannot complete in one POST — email needs a send, webauthn
-needs an interactive ceremony against a live session) render the server message
-instead. **Known boundary:** a user whose ONLY confirmed factor is email or
-webauthn cannot complete a *fresh* interactive login this way; that requires a
-pre-MFA session (a session created before enrollment, or a federated-IdP
-callback) so the `/authorize` backstop + `POST /authenticators/challenge` path
-applies. `challenge(userId, { issueMaterial })` lets the enforcement chokepoints
-(authorize backstop, password grant) read the requirement flags without minting
-the webauthn nonce (issued only by the interactive status endpoint).
+needs an interactive ceremony) run the interactive challenge against the
+**MFA-pending ticket** (below). `challenge(userId, { issueMaterial })` lets the
+enforcement chokepoints (authorize backstop, password grant) read the
+requirement flags without minting the webauthn nonce (issued only by the
+interactive status endpoint).
+
+**MFA-pending login ticket (issue #3242)** — the fresh-interactive-login path
+for factor kinds that cannot ride the single grant POST (email / WebAuthn; the
+Auth0 `mfa_token` pattern). When the credential-only password grant hits
+`mfa_required` and the user's kinds include an interactive one, the grant does
+NOT just fail closed: it creates a **pending session** (`mfa_at: null`,
+`expires_at` = ticket lifetime, so an abandoned login self-expires into the
+regular session sweep) and mints a restricted ticket riding the error `data`
+(`mfa_token` + `mfa_token_expires_in`, alongside `kinds`) — never an
+access/refresh pair. TOTP/recovery-only users get no ticket (the inline `otp`
+fast-path stands; a pending session per plain code entry would be churn).
+Mechanics:
+
+- **Discriminator = a dedicated `OAuth2TokenKind.MFA` (`mfa_token`)**, issued
+  by `OAuth2MfaTokenIssuer` (no scope, no role claims, no session-token
+  inventory row) with TTL `mfaTicketMaxAge` (env `MFA_TICKET_MAX_AGE`, default
+  600s — sized to cover the 10-min email-code window). Because
+  `AuthorizationMiddleware` hard-requires `kind === ACCESS`, the ticket is
+  **default-denied on the entire API**: `verifyMfaLoginTicket` verifies it
+  with access-token rigor (session exists + subject match + ping) but stashes
+  it on a DEDICATED request slot (`setRequestMfaLoginTicket` —
+  `adapters/http/request/helpers/mfa-login-ticket.ts`), never the main
+  identity/scope/session slots, so every identity-gated route 401s a ticket
+  bearer. Only the challenge routes opt in: `AuthenticatorChallengeController`
+  resolves its actor as request-identity OR stashed ticket (the former
+  `ForceLoggedInMiddleware` contract widened by exactly one bearer kind).
+- **Completion**: a ticket-authenticated `POST /authenticators/challenge`
+  verify — after `markMfaVerified` stamps `mfa_at` inside the verify unit of
+  work — calls `OAuth2MfaLoginService.complete()`
+  (`core/oauth2/mfa-login/`): extends the pending session to the regular
+  lifetime (`sessionManager.refresh`), mints the full AT+RT pair for it
+  (amr/acr via `deriveAmrAcr` now include `otp` / `urn:authup:mfa`), consumes
+  the ticket (jti blocklist — single use), records the `LOGIN` security event
+  and returns the grant on the verify response (`{ verified: true, token }`).
+  One round-trip, no second exchange; the belt-and-suspenders stays — a
+  pending session has `mfa_at: null`, so a replayed ticket toward
+  `/authorize` still hits the backstop.
+- **Kit**: `LoginForm` reads `data.mfa_token` and renders `AMfaChallengeForm`
+  against the ticket (per-request `authorizationHeader` override on the
+  challenge client calls; the WebAuthn request options are fetched via
+  `GET /authenticators/challenge` with the ticket). The verify response's
+  grant is applied via the store's `loginWithTokenGrant()` (cleanup +
+  staged establish, `lastAuthOrigin: login` — identical semantics to
+  `login()`). The store also exposes the introspected `acr` ref;
+  `Authorize.vue` uses it to skip the ladder's redundant post-login challenge
+  when a fresh ON-PAGE login already carries `urn:authup:mfa` (lingering /
+  restored sessions keep the pre-consent challenge).
+- **Defense in depth**: `@authup/server-adapter-kit`'s `TokenVerifier` now
+  rejects any bearer whose `kind` is present and not `access_token` — authup
+  signs refresh tokens and the ticket with the same keys, and a local-JWKS
+  adapter must not accept them as authenticated subjects.
+
+Tests: `test/unit/http/controllers/workflows/token/mfa-login-ticket.spec.ts`
+(default-deny, pending-session TTL, email end-to-end incl. authorize backstop
++ claim assertions, mixed-kind totp-against-ticket, single-use replay,
+invalid-factor), kit `login-form.spec.ts` (ticket step + Authorization
+override + grant apply) and `store/login.spec.ts` (`loginWithTokenGrant`),
+adapter-kit `verifier.spec.ts` (non-access kind rejected).
 
 **Verify unit of work (#3237)**: `UserAuthenticatorService.verify()`
 serializes its read-verify-save critical section per user via a cache lock

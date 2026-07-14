@@ -57,6 +57,14 @@ export class FakeClient extends Client {
         const url = config.url ?? '';
 
         const match = matchRoute(method, url, this.handlers);
+
+        const headers : Record<string, string> = {};
+        new Headers((config.headers ?? {}) as HeadersInit).forEach((value, key) => {
+            // some DOM shims (happy-dom) preserve header-name case — the
+            // fetch spec lower-cases; normalize so assertions are stable.
+            headers[key.toLowerCase()] = value;
+        });
+
         const request : FakeRequest = {
             method,
             url,
@@ -66,6 +74,7 @@ export class FakeClient extends Client {
                 Object.fromEntries(config.body) :
                 config.body,
             params: match ? match.params : {},
+            headers,
         };
         this.requests.push(request);
 

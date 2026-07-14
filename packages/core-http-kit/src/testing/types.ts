@@ -12,6 +12,11 @@ export type FakeRequest = {
     url: string,
     body?: unknown,
     params: Record<string, string>,
+    /**
+     * Request headers, keys lower-cased — for per-request Authorization
+     * assertions (e.g. the MFA-pending ticket riding the challenge calls).
+     */
+    headers: Record<string, string>,
 };
 
 export type FakeHandler = (req: FakeRequest) => unknown | Promise<unknown>;

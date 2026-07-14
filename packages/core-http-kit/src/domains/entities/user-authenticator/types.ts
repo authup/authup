@@ -5,8 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { AuthorizationHeader } from 'hapic';
 import type { BuildInput } from 'rapiq';
 import type { User, UserAuthenticator, UserAuthenticatorKind } from '@authup/core-kit';
+import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
 export type UserAuthenticatorCreatePayload = {
@@ -62,6 +64,21 @@ export type UserAuthenticatorChallengeVerifyPayload = {
 
 export type UserAuthenticatorChallengeVerifyResponse = {
     verified: boolean,
+    /**
+     * Present when the challenge was authenticated with an "MFA-pending"
+     * login ticket (mfa_token): the full token grant for the completed
+     * login (issue #3242).
+     */
+    token?: OAuth2TokenGrantResponse,
+};
+
+/**
+ * Per-request options for the challenge surface — an MFA-pending login
+ * ticket rides as an explicit bearer override (the client instance holds
+ * no session yet during a fresh login).
+ */
+export type UserAuthenticatorChallengeRequestOptions = {
+    authorizationHeader?: string | AuthorizationHeader,
 };
 
 export interface IUserAuthenticatorAPI {
@@ -91,13 +108,17 @@ export interface IUserAuthenticatorAPI {
         id: UserAuthenticator['id']
     ): Promise<EntityRecordResponse<UserAuthenticator>>;
 
-    challenge(): Promise<UserAuthenticatorChallengeResponse>;
+    challenge(
+        options?: UserAuthenticatorChallengeRequestOptions
+    ): Promise<UserAuthenticatorChallengeResponse>;
 
     sendChallenge(
-        data: UserAuthenticatorChallengeSendPayload
+        data: UserAuthenticatorChallengeSendPayload,
+        options?: UserAuthenticatorChallengeRequestOptions
     ): Promise<{ success: boolean }>;
 
     verifyChallenge(
-        data: UserAuthenticatorChallengeVerifyPayload
+        data: UserAuthenticatorChallengeVerifyPayload,
+        options?: UserAuthenticatorChallengeRequestOptions
     ): Promise<UserAuthenticatorChallengeVerifyResponse>;
 }

@@ -16,6 +16,7 @@ import type {
     ILoginThrottleService,
     IOAuth2AuthorizationCodeVerifier,
     IOAuth2KeyRepository,
+    IOAuth2MfaLoginService,
     IOAuth2OpenIDTokenIssuer,
     IOAuth2TokenIssuer,
     IOAuth2TokenRepository,
@@ -44,6 +45,7 @@ export type TokenControllerContext = {
     metrics?: IAuthFlowMetrics,
     loginThrottleService?: ILoginThrottleService,
     userAuthenticatorService?: IUserAuthenticatorService,
+    mfaLoginService?: IOAuth2MfaLoginService,
 
     tokenRefreshGracePeriod?: number,
     logger?: Logger,

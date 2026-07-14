@@ -6,7 +6,8 @@
  */
 
 import type { User } from '@authup/core-kit';
-import { EventName, EventScope } from '@authup/core-kit';
+import { EventName, EventScope, UserAuthenticatorKind } from '@authup/core-kit';
+import type { Logger } from '@authup/server-kit';
 import { isEntityCredentialsInvalidError, isEntityInactiveError } from '@authup/errors';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { OAuth2MfaRequiredError, OAuth2RequestError, OAuth2TokenGrant } from '@authup/specs';
@@ -16,6 +17,7 @@ import { getRequestHeader, getRequestIP } from 'routup';
 import type {
     ICredentialsAuthenticator,
     ILoginThrottleService,
+    IOAuth2MfaLoginService,
     IRealmRepository,
     IUserAuthenticatorService,
     OAuth2ClientAuthenticator,
@@ -39,6 +41,10 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
 
     protected userAuthenticatorService? : IUserAuthenticatorService;
 
+    protected mfaLoginService? : IOAuth2MfaLoginService;
+
+    protected logger? : Logger;
+
     constructor(ctx: HTTPOAuth2PasswordGrantContext) {
         super(ctx);
 
@@ -47,6 +53,8 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
         this.realmRepository = ctx.realmRepository;
         this.loginThrottleService = ctx.loginThrottleService;
         this.userAuthenticatorService = ctx.userAuthenticatorService;
+        this.mfaLoginService = ctx.mfaLoginService;
+        this.logger = ctx.logger;
     }
 
     async runWithRequest(event: IAppEvent): Promise<OAuth2TokenGrantResponse> {
@@ -161,9 +169,21 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
             // carry the challengeable kinds so a client (the hosted login form)
             // can tell whether a single-POST factor (totp/recovery) is on offer
             // or the user must complete an interactive challenge (email/webauthn).
+            // For the interactive kinds an "MFA-pending" ticket (issue #3242)
+            // rides along: a restricted mfa_token-kind bearer accepted ONLY by
+            // the challenge routes, backed by a short-lived pending session
+            // (mfa_at: null) — never a usable access/refresh pair.
+            const ticket = await this.issueMfaTicket(user, status.kinds, ctx);
+
             throw new OAuth2MfaRequiredError({
                 message: 'Complete a second-factor challenge to continue.',
-                data: { kinds: status.kinds },
+                data: {
+                    kinds: status.kinds,
+                    ...(ticket ? {
+                        mfa_token: ticket.token,
+                        mfa_token_expires_in: ticket.expiresIn,
+                    } : {}),
+                },
             });
         }
 
@@ -187,5 +207,54 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
         }
 
         return new Date().toISOString();
+    }
+
+    /**
+     * Issue the MFA-pending ticket for factor kinds that cannot complete
+     * inside the single grant POST (email needs a server-sent code,
+     * WebAuthn an interactive ceremony). TOTP/recovery-only users keep
+     * the inline `otp` fast-path and get no ticket — a pending session
+     * per plain code entry would be pure churn.
+     */
+    protected async issueMfaTicket(
+        user: User,
+        kinds: `${UserAuthenticatorKind}`[],
+        ctx: {
+            ipAddress?: string,
+            userAgent?: string,
+            clientId: string | null
+        },
+    ) : Promise<{ token: string, expiresIn: number } | null> {
+        if (!this.mfaLoginService) {
+            return null;
+        }
+
+        const interactive = kinds.includes(UserAuthenticatorKind.EMAIL) ||
+            kinds.includes(UserAuthenticatorKind.WEBAUTHN);
+        if (!interactive) {
+            return null;
+        }
+
+        try {
+            return await this.mfaLoginService.issueTicket(
+                {
+                    user,
+                    clientId: ctx.clientId,
+                },
+                {
+                    ipAddress: ctx.ipAddress,
+                    userAgent: ctx.userAgent,
+                },
+            );
+        } catch (e) {
+            // degrade to a ticket-less mfa_required rather than letting a
+            // transient issuance failure (pending-session write, cache,
+            // signer) escape as a raw 500 from a controlled response path —
+            // an otp-capable device can still complete, and the credential
+            // retry re-attempts the ticket.
+            this.logger?.warn('Issuing the MFA-pending login ticket failed.', { error: e });
+
+            return null;
+        }
     }
 }

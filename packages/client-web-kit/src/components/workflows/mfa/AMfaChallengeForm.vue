@@ -21,6 +21,7 @@ import type { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/brow
 import { VCButton } from '@vuecs/button';
 import { VCAlert } from '@vuecs/elements';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
+import type { UserAuthenticatorChallengeRequestOptions } from '@authup/core-http-kit';
 import { extractErrorContext, injectHTTPClient, useTranslations } from '../../../core';
 
 // preference order for the initially-selected factor (most secure first)
@@ -49,10 +50,22 @@ export default defineComponent({
             type: Object as PropType<Record<string, unknown> | null>,
             default: null,
         },
+        // MFA-pending login ticket (issue #3242) — a fresh interactive login
+        // has no session bearer yet, so the challenge calls ride the ticket
+        // as an explicit Authorization override. On success the verify
+        // response carries the full token grant (forwarded via `done`).
+        ticket: {
+            type: String as PropType<string | null>,
+            default: null,
+        },
     },
     emits: ['done', 'failed'],
     setup(props, { emit }) {
         const apiClient = injectHTTPClient();
+
+        const requestOptions = computed<UserAuthenticatorChallengeRequestOptions | undefined>(() => (props.ticket ?
+            { authorizationHeader: { type: 'Bearer', token: props.ticket } } :
+            undefined));
 
         const translations = useTranslations([
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_TITLE },
@@ -116,7 +129,10 @@ export default defineComponent({
             busy.value = true;
             error.value = null;
             try {
-                await apiClient.userAuthenticator.sendChallenge({ kind: UserAuthenticatorKind.EMAIL });
+                await apiClient.userAuthenticator.sendChallenge(
+                    { kind: UserAuthenticatorKind.EMAIL },
+                    requestOptions.value,
+                );
                 emailSent.value = true;
             } catch (e) {
                 error.value = extractErrorContext(e).message ?? translations.mfaFailed;
@@ -134,11 +150,14 @@ export default defineComponent({
             busy.value = true;
             error.value = null;
             try {
-                await apiClient.userAuthenticator.verifyChallenge({
-                    kind: kind.value,
-                    response: code.value.trim(),
-                });
-                emit('done');
+                const response = await apiClient.userAuthenticator.verifyChallenge(
+                    {
+                        kind: kind.value,
+                        response: code.value.trim(),
+                    },
+                    requestOptions.value,
+                );
+                emit('done', response);
             } catch (e) {
                 error.value = extractErrorContext(e).message ?? translations.mfaFailed;
                 emit('failed', e);
@@ -161,11 +180,14 @@ export default defineComponent({
             error.value = null;
             try {
                 const assertion = await startAuthentication({ optionsJSON });
-                await apiClient.userAuthenticator.verifyChallenge({
-                    kind: UserAuthenticatorKind.WEBAUTHN,
-                    response: JSON.stringify(assertion),
-                });
-                emit('done');
+                const response = await apiClient.userAuthenticator.verifyChallenge(
+                    {
+                        kind: UserAuthenticatorKind.WEBAUTHN,
+                        response: JSON.stringify(assertion),
+                    },
+                    requestOptions.value,
+                );
+                emit('done', response);
             } catch (e) {
                 error.value = extractErrorContext(e).message ?? translations.mfaFailed;
                 emit('failed', error.value);

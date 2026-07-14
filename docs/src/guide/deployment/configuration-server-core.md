@@ -212,6 +212,15 @@ export default {
      */
     mfaFreshnessMaxAge: 60,
 
+    /**
+     * Lifetime (seconds) of the MFA-pending login ticket a fresh
+     * interactive login receives when its second factor needs an
+     * interactive challenge (email / WebAuthn) — and of the pending
+     * session backing it.
+     * default: 600
+     */
+    mfaTicketMaxAge: 600,
+
     // ----------------------------------------------------
 
     /**
@@ -284,6 +293,7 @@ mfaEnabled=false
 mfaRequired=false
 mfaEncryptionKey=
 mfaFreshnessMaxAge=60
+mfaTicketMaxAge=600
 userAdminPassword=start123
 userAdminPasswordReset=false
 robotAdminEnabled=false
@@ -312,6 +322,7 @@ MFA_ENABLED=false
 MFA_REQUIRED=false
 MFA_ENCRYPTION_KEY=
 MFA_FRESHNESS_MAX_AGE=60
+MFA_TICKET_MAX_AGE=600
 USER_ADMIN_PASSWORD=start123
 USER_ADMIN_PASSWORD_RESET=false
 ROBOT_ADMIN_ENABLED=false

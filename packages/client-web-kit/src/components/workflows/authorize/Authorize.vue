@@ -27,7 +27,7 @@ import {
     TranslatorTranslationCommonKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { OAuth2AuthorizationPrompt, OAuth2ErrorCode } from '@authup/specs';
+import { OAuth2AuthenticationContextClass, OAuth2AuthorizationPrompt, OAuth2ErrorCode } from '@authup/specs';
 import type { LinkProperties } from '@vuecs/link';
 import {
     StoreAuthOrigin,
@@ -80,6 +80,7 @@ export default defineComponent({
         const httpClient = injectHTTPClient();
         const store = injectStore();
         const {
+            acr,
             loggedIn,
             lastAuthOrigin,
             realmId,
@@ -133,9 +134,25 @@ export default defineComponent({
         // restored from cookies (origin RESTORE) or logged in before this page
         // was opened (origin already LOGIN, no change) — still gets the chooser,
         // while a fresh on-page login skips it.
+        // Second-factor requirement locally satisfied on THIS page (see the
+        // MFA gate below) — declared up here so the fresh-login watch can
+        // stamp it.
+        const mfaSatisfiedLocal = ref<boolean>(false);
+
         watch(lastAuthOrigin, (value) => {
             if (value === StoreAuthOrigin.LOGIN) {
                 accountConfirmedLocal.value = true;
+
+                // A login whose grant already verified the second factor (the
+                // inline `otp` step or the MFA-pending ticket completion,
+                // issue #3242) carries acr urn:authup:mfa — its session is
+                // mfa_at-stamped, so re-prompting the challenge here would be
+                // a redundant second ceremony. Scoped to a fresh ON-PAGE login;
+                // lingering/restored sessions keep the pre-consent challenge
+                // (it also pre-empts acr step-up freshness).
+                if (acr.value === OAuth2AuthenticationContextClass.MFA) {
+                    mfaSatisfiedLocal.value = true;
+                }
             }
         });
 
@@ -147,7 +164,6 @@ export default defineComponent({
         // session-bound (mfa_at) — the challenge endpoint stamps it — so
         // once satisfied on THIS page we proceed to consent.
         const mfaStatus = ref<UserAuthenticatorChallengeResponse | null>(null);
-        const mfaSatisfiedLocal = ref<boolean>(false);
         const mfaResolving = ref<boolean>(false);
 
         const refreshMfaStatus = async () => {

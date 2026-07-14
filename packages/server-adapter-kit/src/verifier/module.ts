@@ -14,6 +14,7 @@ import { isObject } from '@authup/kit';
 import {
     JWKType,
     JWTError,
+    OAuth2TokenKind,
 } from '@authup/specs';
 import type {
     JWTAlgorithm,
@@ -220,6 +221,15 @@ export class TokenVerifier implements ITokenVerifier {
     }
 
     protected transform(input: TokenVerificationDataInput) : TokenVerificationData {
+        // A bearer must be an ACCESS token. Authup signs other token kinds
+        // with the same keys (refresh tokens, the MFA-pending login ticket)
+        // — without this gate a local-JWKS adapter would accept any of them
+        // as an authenticated subject. Kind-less payloads pass (foreign /
+        // legacy tokens the adapter may be pointed at).
+        if (input.kind && input.kind !== OAuth2TokenKind.ACCESS) {
+            throw JWTError.payloadPropertyInvalid('kind');
+        }
+
         return {
             ...input,
             permissions: input.permissions || [],

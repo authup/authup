@@ -36,8 +36,10 @@ import { VCAlert } from '@vuecs/elements';
 import { VCFormGroup, VCFormInput, useSubmitButton } from '@vuecs/forms';
 import type { LinkProperties } from '@vuecs/link';
 import { VCLink } from '@vuecs/link';
+import type { UserAuthenticatorChallengeVerifyResponse } from '@authup/core-http-kit';
 import { AIdentityProviderIcon, AIdentityProviders, ARealmPicker } from '../../entities';
 import { APagination, ATitle } from '../../utility';
+import AMfaChallengeForm from '../mfa/AMfaChallengeForm.vue';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
 // Inline by design — login deliberately uses a permissive credentials
@@ -63,6 +65,7 @@ class LoginCredentialsValidator extends Container<{
 
 export default defineComponent({
     components: {
+        AMfaChallengeForm,
         ARealmPicker,
         APagination,
         ATitle,
@@ -160,6 +163,62 @@ export default defineComponent({
         const mfaKinds = ref<`${UserAuthenticatorKind}`[]>([]);
         const mfaMessage = ref<string | null>(null);
 
+        // MFA-pending ticket (issue #3242): for factor kinds that cannot ride
+        // the single grant POST (email / webauthn) the server returns a
+        // restricted mfa_token alongside `mfa_required`. The challenge form
+        // runs send/verify against that ticket, and a successful verify
+        // returns the full token grant — applied via store.loginWithTokenGrant.
+        const mfaTicket = ref<string | null>(null);
+        const mfaChallenge = ref<Record<string, unknown> | null>(null);
+
+        // The WebAuthn ceremony needs server-issued request options — fetch
+        // the interactive challenge status with the ticket (also refreshes
+        // the kinds authoritatively).
+        const loadMfaChallengeMaterial = async (ticket: string) => {
+            try {
+                const status = await apiClient.userAuthenticator.challenge({ authorizationHeader: { type: 'Bearer', token: ticket } });
+
+                mfaChallenge.value = status.challenge ?? null;
+                if (status.kinds.length > 0) {
+                    mfaKinds.value = status.kinds;
+                }
+            } catch (e) {
+                mfaMessage.value = extractErrorContext(e).message ?? null;
+            }
+        };
+
+        const completeMfaTicketLogin = async (response?: UserAuthenticatorChallengeVerifyResponse) => {
+            if (busy.value) {
+                return;
+            }
+
+            if (!response || !response.token) {
+                // a server without ticket completion never gets here (no
+                // mfa_token on the error) — defensive dead-end message.
+                mfaMessage.value = await translate({
+                    namespace: TranslatorTranslationNamespace.CLIENT,
+                    key: TranslatorTranslationClientKey.LOGIN_FAILED,
+                });
+                return;
+            }
+
+            busy.value = true;
+            mfaMessage.value = null;
+
+            try {
+                await store.loginWithTokenGrant(response.token);
+
+                emit('done');
+            } catch (e) {
+                mfaMessage.value = extractErrorContext(e).message ?? await translate({
+                    namespace: TranslatorTranslationNamespace.CLIENT,
+                    key: TranslatorTranslationClientKey.LOGIN_FAILED,
+                });
+            } finally {
+                busy.value = false;
+            }
+        };
+
         const mfaHasCodeFactor = computed<boolean>(() => mfaKinds.value.length === 0 ||
             mfaKinds.value.includes(UserAuthenticatorKind.TOTP) ||
             mfaKinds.value.includes(UserAuthenticatorKind.RECOVERY));
@@ -239,17 +298,26 @@ export default defineComponent({
                     const hasCodeFactor = kinds.length === 0 ||
                         kinds.includes(UserAuthenticatorKind.TOTP) ||
                         kinds.includes(UserAuthenticatorKind.RECOVERY);
+                    const ticket = typeof ctx.data?.mfa_token === 'string' ?
+                        ctx.data.mfa_token :
+                        null;
 
-                    // Entering a CODE step (from the credentials view) is silent —
-                    // the message only surfaces on a later rejection/throttle. A
-                    // step with no single-POST factor (email/webauthn only) shows
-                    // the server's explanation right away, since there is no field.
-                    mfaMessage.value = mfaRequired.value || !hasCodeFactor ?
+                    // Entering a challenge step (from the credentials view) is
+                    // silent — the message only surfaces on a later rejection /
+                    // throttle, or when the step can render nothing at all (no
+                    // single-POST factor AND no ticket).
+                    mfaMessage.value = mfaRequired.value || (!hasCodeFactor && !ticket) ?
                         (ctx.message ?? null) :
                         null;
                     mfaKinds.value = kinds;
                     mfaRequired.value = true;
                     otp.value = '';
+                    mfaTicket.value = ticket;
+                    mfaChallenge.value = null;
+
+                    if (ticket && kinds.includes(UserAuthenticatorKind.WEBAUTHN)) {
+                        Promise.resolve().then(() => loadMfaChallengeMaterial(ticket));
+                    }
                     return;
                 }
 
@@ -310,6 +378,10 @@ export default defineComponent({
             mfaRequired,
             mfaMessage,
             mfaHasCodeFactor,
+            mfaKinds,
+            mfaTicket,
+            mfaChallenge,
+            completeMfaTicketLogin,
             identityProviderQuery,
             identityProviderRef,
             buildIdentityProviderURL,
@@ -320,79 +392,100 @@ export default defineComponent({
 </script>
 <template>
     <div>
-        <div class="text-center">
-            <h1 class="font-bold">
-                {{ mfaRequired ? translationsDefault.mfaTitle : translationsDefault.login }}
-            </h1>
-        </div>
-        <form @submit.prevent="submit">
-            <template v-if="mfaRequired">
-                <VCAlert
-                    v-if="mfaMessage"
-                    :color="mfaHasCodeFactor ? 'error' : 'warning'"
-                    variant="soft"
-                    class="mb-3"
-                >
-                    {{ mfaMessage }}
-                </VCAlert>
+        <!-- MFA-pending ticket step: the challenge form brings its own
+             title + <form>, so it must render OUTSIDE the credentials form
+             (nested forms break SSR hydration). -->
+        <template v-if="mfaRequired && mfaTicket">
+            <VCAlert
+                v-if="mfaMessage"
+                color="error"
+                variant="soft"
+                class="mb-3"
+            >
+                {{ mfaMessage }}
+            </VCAlert>
 
-                <template v-if="mfaHasCodeFactor">
-                    <p class="text-center mb-3">
-                        {{ translationsDefault.mfaChallengeIntro }}
-                    </p>
+            <AMfaChallengeForm
+                :kinds="mfaKinds"
+                :challenge="mfaChallenge"
+                :ticket="mfaTicket"
+                @done="completeMfaTicketLogin"
+            />
+        </template>
+        <template v-else>
+            <div class="text-center">
+                <h1 class="font-bold">
+                    {{ mfaRequired ? translationsDefault.mfaTitle : translationsDefault.login }}
+                </h1>
+            </div>
+            <form @submit.prevent="submit">
+                <template v-if="mfaRequired">
+                    <VCAlert
+                        v-if="mfaMessage"
+                        :color="mfaHasCodeFactor ? 'error' : 'warning'"
+                        variant="soft"
+                        class="mb-3"
+                    >
+                        {{ mfaMessage }}
+                    </VCAlert>
 
-                    <VCFormGroup>
-                        <template #label>
-                            {{ translationsDefault.mfaCode }}
-                        </template>
-                        <VCFormInput
-                            v-model="otp"
-                            autocomplete="one-time-code"
-                            autofocus
+                    <template v-if="mfaHasCodeFactor">
+                        <p class="text-center mb-3">
+                            {{ translationsDefault.mfaChallengeIntro }}
+                        </p>
+
+                        <VCFormGroup>
+                            <template #label>
+                                {{ translationsDefault.mfaCode }}
+                            </template>
+                            <VCFormInput
+                                v-model="otp"
+                                autocomplete="one-time-code"
+                                autofocus
+                            />
+                        </VCFormGroup>
+
+                        <VCButton
+                            type="submit"
+                            color="primary"
+                            :busy="busy"
+                            :disabled="busy || !otp.trim()"
+                            :label="translationsDefault.mfaVerify"
+                            class="w-full"
+                            @click="submit"
                         />
-                    </VCFormGroup>
-
-                    <VCButton
-                        type="submit"
-                        color="primary"
-                        :busy="busy"
-                        :disabled="busy || !otp.trim()"
-                        :label="translationsDefault.mfaVerify"
-                        class="w-full"
-                        @click="submit"
-                    />
+                    </template>
                 </template>
-            </template>
 
-            <template v-else>
-                <IFieldValidation
-                    v-slot="{ value }"
-                    :field="v.fields.name"
-                >
-                    <VCFormGroup :validation="value">
-                        <template #label>
-                            {{ translationsDefault.name }}
-                        </template>
-                        <VCFormInput v-model="v.fields.name.$model.value" />
-                    </VCFormGroup>
-                </IFieldValidation>
+                <template v-else>
+                    <IFieldValidation
+                        v-slot="{ value }"
+                        :field="v.fields.name"
+                    >
+                        <VCFormGroup :validation="value">
+                            <template #label>
+                                {{ translationsDefault.name }}
+                            </template>
+                            <VCFormInput v-model="v.fields.name.$model.value" />
+                        </VCFormGroup>
+                    </IFieldValidation>
 
-                <IFieldValidation
-                    v-slot="{ value }"
-                    :field="v.fields.password"
-                >
-                    <VCFormGroup :validation="value">
-                        <template #label>
-                            {{ translationsDefault.password }}
-                        </template>
-                        <VCFormInput
-                            v-model="v.fields.password.$model.value"
-                            type="password"
-                        />
-                    </VCFormGroup>
-                </IFieldValidation>
+                    <IFieldValidation
+                        v-slot="{ value }"
+                        :field="v.fields.password"
+                    >
+                        <VCFormGroup :validation="value">
+                            <template #label>
+                                {{ translationsDefault.password }}
+                            </template>
+                            <VCFormInput
+                                v-model="v.fields.password.$model.value"
+                                type="password"
+                            />
+                        </VCFormGroup>
+                    </IFieldValidation>
 
-                <!--
+                    <!--
                 <VCFormSubmit> from form-controls 2.x was dropped in
                 @vuecs/forms 4.x. The 4.x replacement is the
                 useSubmitButton() composable (see setup() above) which
@@ -403,87 +496,88 @@ export default defineComponent({
                 `label` to "Login" because the composable's default
                 (sourced from the vuecs defaults manager) is "Create".
             -->
-                <VCButton
-                    v-bind="submitButton"
-                    :label="translationsDefault.login"
-                    class="w-full"
-                />
-
-                <div
-                    v-if="registerLink || passwordForgotLink"
-                    class="flex flex-row justify-between mt-2 text-sm"
-                >
-                    <VCLink
-                        v-if="registerLink"
-                        v-bind="registerLink"
-                    >
-                        {{ translationsDefault.createAccount }}
-                    </VCLink>
-                    <VCLink
-                        v-if="passwordForgotLink"
-                        v-bind="passwordForgotLink"
-                        class="ms-auto"
-                    >
-                        {{ translationsDefault.forgotPassword }}
-                    </VCLink>
-                </div>
-
-                <hr>
-
-                <template v-if="!codeRequest || !codeRequest.realm_id">
-                    <ARealmPicker
-                        :value="form.realm_id"
-                        @change="updateRealmId"
+                    <VCButton
+                        v-bind="submitButton"
+                        :label="translationsDefault.login"
+                        class="w-full"
                     />
-                </template>
 
-                <AIdentityProviders
-                    ref="identityProviderRef"
-                    :query="identityProviderQuery"
-                    :footer="false"
-                >
-                    <template #header>
-                        <ATitle :text="translationsDefault.identityProvider" />
-                    </template>
-                    <template #footer="props">
-                        <APagination
-                            :busy="props.busy"
-                            :meta="props.meta"
-                            :load="(data?: any) => props.load?.(data)"
-                            :total="props.total"
+                    <div
+                        v-if="registerLink || passwordForgotLink"
+                        class="flex flex-row justify-between mt-2 text-sm"
+                    >
+                        <VCLink
+                            v-if="registerLink"
+                            v-bind="registerLink"
+                        >
+                            {{ translationsDefault.createAccount }}
+                        </VCLink>
+                        <VCLink
+                            v-if="passwordForgotLink"
+                            v-bind="passwordForgotLink"
+                            class="ms-auto"
+                        >
+                            {{ translationsDefault.forgotPassword }}
+                        </VCLink>
+                    </div>
+
+                    <hr>
+
+                    <template v-if="!codeRequest || !codeRequest.realm_id">
+                        <ARealmPicker
+                            :value="form.realm_id"
+                            @change="updateRealmId"
                         />
                     </template>
-                    <template #body="props">
-                        <div class="flex flex-row flex-wrap gap-1">
-                            <div
-                                v-for="(item, key) in props.data"
-                                :key="key"
-                                class="a-login-provider-item"
-                            >
-                                <VCButton
-                                    tag="a"
-                                    :href="buildIdentityProviderURL(item.id)"
-                                    size="sm"
-                                    color="neutral"
-                                    class="p-2 a-login-provider-box bg-fg"
+
+                    <AIdentityProviders
+                        ref="identityProviderRef"
+                        :query="identityProviderQuery"
+                        :footer="false"
+                    >
+                        <template #header>
+                            <ATitle :text="translationsDefault.identityProvider" />
+                        </template>
+                        <template #footer="props">
+                            <APagination
+                                :busy="props.busy"
+                                :meta="props.meta"
+                                :load="(data?: any) => props.load?.(data)"
+                                :total="props.total"
+                            />
+                        </template>
+                        <template #body="props">
+                            <div class="flex flex-row flex-wrap gap-1">
+                                <div
+                                    v-for="(item, key) in props.data"
+                                    :key="key"
+                                    class="a-login-provider-item"
                                 >
-                                    <div class="flex flex-col">
-                                        <div class="text-center mb-1">
-                                            <AIdentityProviderIcon
-                                                class="text-2xl"
-                                                :entity="item"
-                                            />
+                                    <VCButton
+                                        tag="a"
+                                        :href="buildIdentityProviderURL(item.id)"
+                                        size="sm"
+                                        color="neutral"
+                                        class="p-2 a-login-provider-box bg-fg"
+                                    >
+                                        <div class="flex flex-col">
+                                            <div class="text-center mb-1">
+                                                <AIdentityProviderIcon
+                                                    class="text-2xl"
+                                                    :entity="item"
+                                                />
+                                            </div>
+                                            <div>
+                                                {{ item.name }}
+                                            </div>
                                         </div>
-                                        <div>
-                                            {{ item.name }}
-                                        </div>
-                                    </div>
-                                </VCButton>
+                                    </VCButton>
+                                </div>
                             </div>
-                        </div>
-                    </template>
-                </AIdentityProviders>
-            </template>
-        </form>
+                        </template>
+                    </AIdentityProviders>
+                </template>
+            </form>
+        </template>
     </div>
 </template>
