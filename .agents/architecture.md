@@ -2154,7 +2154,7 @@ surfaces), `test/unit/http/controllers/workflows/token/grant-password-mfa.spec.t
 (end-to-end: enroll → confirm → grant gated → otp accepted → authorize backstop
 → challenge stamps `mfa_at` → authorize passes; recovery replay rejected).
 
-## Realm Key Store (plans 069 + 071 Stage A)
+## Realm Key Store (plans 069 + 071 Stages A/B)
 
 `auth_keys` is the general **per-realm key store**, discriminated by the JWK
 `use` column (`sig` | `enc`, RFC 7517 §4.2 — `JWKUse` in `@authup/specs`;
@@ -2162,8 +2162,8 @@ core-kit `Key.use`, `signature_algorithm` nullable for enc keys). Every key
 is a **full named entity** (canonical `name`, unique per `(name, realm_id)` —
 `UQ_auth_keys_name_realm_id`; auto-minted keys get `<use>-<nanoid>`) with a
 **lifecycle `status`** (`KeyStatus`: `active` signs/encrypts + verifies/
-decrypts, `passive` verify/decrypt-only, `disabled` neither) and a dormant
-nullable `certificate` column (PEM chain — Stage B fills it).
+decrypts, `passive` verify/decrypt-only, `disabled` neither) and an optional
+`certificate` column for imported signature-key PEM chains.
 
 **Two ports, one adapter** (`KeyRepositoryAdapter`,
 `app/modules/database/repositories/key/`, DI
@@ -2222,6 +2222,17 @@ CVE-2024-42490 is the cautionary tale). Typed client: `client.key.*`
 **no entity subscriber** (deliberate — `afterInsert` content would carry raw
 private material onto the realtime bus), so no entity-CRUD audit rows;
 explicit `EventService` emits are a follow-up.
+
+**Imported certificates (plan 071 Stage B):** create may attach an immutable
+PEM certificate chain only to an **imported signature key** (never generated
+material or an enc key). `node:crypto.X509Certificate` parses every
+leaf-first PEM block and the leaf's DER SPKI must exactly match the imported
+public key before the raw chain is persisted; certificate generation remains
+deliberately out of scope. All four JWKS surfaces publish RFC 7517 `x5c` as
+leaf-first standard-base64 DER plus `x5t#S256` as the base64url SHA-256 digest
+of the leaf DER. A malformed stored certificate never takes down JWKS: the
+usable public JWK is still published without certificate fields. Stage B
+reuses the dormant nullable column from Stage A and needs no migration.
 
 - **`use` hygiene is load-bearing:** the signer supports oct (HMAC) keys, so
   without the filter it could sign tokens with a realm's *enc* key. Every sig

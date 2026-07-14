@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { X509Certificate, createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import {
     afterAll,
     beforeAll,
@@ -14,9 +16,24 @@ import {
 } from 'vitest';
 import type { Realm } from '@authup/core-kit';
 import { KeyStatus } from '@authup/core-kit';
+import type { OAuth2JsonWebKey } from '@authup/specs';
 import { JWKType, JWKUse } from '@authup/specs';
+import { KeyEntity } from '../../../../../src/adapters/database/domains/index.ts';
 import { createTestApplication } from '../../../../app';
 import { expectClientError } from '../../../../utils';
+
+const CERTIFICATE = readFileSync(
+    new URL('../../../../data/certificates/certificate.pem', import.meta.url),
+    'utf8',
+);
+const PRIVATE_KEY = readFileSync(
+    new URL('../../../../data/certificates/private-key.pem', import.meta.url),
+    'utf8',
+);
+const PUBLIC_KEY = readFileSync(
+    new URL('../../../../data/certificates/public-key.pem', import.meta.url),
+    'utf8',
+);
 
 describe('src/http/controllers/key', () => {
     const suite = createTestApplication();
@@ -113,6 +130,69 @@ describe('src/http/controllers/key', () => {
         jwks = await suite.client.get(`realms/${realm.id}/jwks`);
         kids = jwks.data.keys.map((key: { kid: string }) => key.kid);
         expect(kids).not.toContain(created.id);
+    });
+
+    it('should publish imported certificate metadata on every JWKS surface', async () => {
+        const imported = await suite.client.key.create({
+            use: JWKUse.SIGNATURE,
+            name: 'jwks-certificate',
+            decryption_key: PRIVATE_KEY,
+            encryption_key: PUBLIC_KEY,
+            certificate: CERTIFICATE,
+            realm_id: realm.id,
+        });
+        expect(imported.decryption_key).toBeNull();
+        expect(imported.certificate).toEqual(CERTIFICATE);
+
+        const certificate = new X509Certificate(CERTIFICATE);
+        const expectedX5c = [certificate.raw.toString('base64')];
+        const expectedThumbprint = createHash('sha256')
+            .update(certificate.raw)
+            .digest('base64url');
+
+        const collectionPaths = ['jwks', `realms/${realm.id}/jwks`];
+        for (const path of collectionPaths) {
+            const response = await suite.client.get(path);
+            const entry = (response.data.keys as OAuth2JsonWebKey[])
+                .find((key) => key.kid === imported.id);
+            expect(entry).toMatchObject({
+                x5c: expectedX5c,
+                'x5t#S256': expectedThumbprint,
+            });
+        }
+
+        const recordPaths = [`jwks/${imported.id}`, `realms/${realm.id}/jwks/${imported.id}`];
+        for (const path of recordPaths) {
+            const response = await suite.client.get(path);
+            expect(response.data).toMatchObject({
+                kid: imported.id,
+                x5c: expectedX5c,
+                'x5t#S256': expectedThumbprint,
+            });
+        }
+    });
+
+    it('should omit certificate metadata when absent or when a stored chain is malformed', async () => {
+        const withoutCertificate = await suite.client.key.create({
+            use: JWKUse.SIGNATURE,
+            name: 'jwks-no-certificate',
+            realm_id: realm.id,
+        });
+
+        let response = await suite.client.get(`realms/${realm.id}/jwks`);
+        let entry = (response.data.keys as OAuth2JsonWebKey[])
+            .find((key) => key.kid === withoutCertificate.id);
+        expect(entry).not.toHaveProperty('x5c');
+        expect(entry).not.toHaveProperty('x5t#S256');
+
+        await suite.dataSource.getRepository(KeyEntity).update(withoutCertificate.id, { certificate: 'malformed certificate row' });
+
+        response = await suite.client.get(`realms/${realm.id}/jwks`);
+        entry = (response.data.keys as OAuth2JsonWebKey[])
+            .find((key) => key.kid === withoutCertificate.id);
+        expect(entry?.kid).toEqual(withoutCertificate.id);
+        expect(entry).not.toHaveProperty('x5c');
+        expect(entry).not.toHaveProperty('x5t#S256');
     });
 
     it('should reject a duplicate name per realm', async () => {

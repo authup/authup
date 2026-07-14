@@ -19,6 +19,7 @@ import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/serve
 import { AbstractEntityService, AsymmetricKey, createAsymmetricKeyPair } from '@authup/server-kit';
 import { JWKType, JWKUse, JWTAlgorithm } from '@authup/specs';
 import { getRandomValues } from 'uncrypto';
+import { assertCertificateMatchesKey, parseCertificateChain } from '../../key/index.ts';
 import type { IKeyRepository, IKeyService, KeyDeleteOptions } from './types.ts';
 
 export type KeyServiceContext = {
@@ -147,9 +148,19 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             validated.status = KeyStatus.ACTIVE;
         }
 
+        const hasCertificate = typeof validated.certificate === 'string';
+        if (hasCertificate && (!validated.decryption_key || validated.use !== JWKUse.SIGNATURE)) {
+            throw new BadRequestError('A certificate requires imported signature key material.');
+        }
+
         const material = validated.decryption_key ?
             await this.importMaterial(validated) :
             await this.generateMaterial(validated);
+
+        if (hasCertificate) {
+            const chain = parseCertificateChain(validated.certificate as string);
+            assertCertificateMatchesKey(chain, material.encryptionKey as string);
+        }
 
         let entity = this.repository.create({
             ...validated,

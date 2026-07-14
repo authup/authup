@@ -6,6 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import type { Key } from '@authup/core-kit';
 import { KeyStatus, PermissionName } from '@authup/core-kit';
 import { ErrorCode, isAuthupError } from '@authup/errors';
@@ -24,6 +25,19 @@ import {
 } from '@authup/server-test-kit';
 import { KeyService } from '../../../../../src/core/entities/key/service.ts';
 import { FakeKeyRepository } from './fake-repository.ts';
+
+const CERTIFICATE = readFileSync(
+    new URL('../../../../data/certificates/certificate.pem', import.meta.url),
+    'utf8',
+);
+const PRIVATE_KEY = readFileSync(
+    new URL('../../../../data/certificates/private-key.pem', import.meta.url),
+    'utf8',
+);
+const PUBLIC_KEY = readFileSync(
+    new URL('../../../../data/certificates/public-key.pem', import.meta.url),
+    'utf8',
+);
 
 function buildKey(overrides: Partial<Key> = {}): Partial<Key> {
     return {
@@ -177,6 +191,50 @@ describe('core/entities/key/service', () => {
     });
 
     describe('create — import', () => {
+        it('accepts a matching certificate on an imported signature key', async () => {
+            const entity = await service.create({
+                use: JWKUse.SIGNATURE,
+                decryption_key: PRIVATE_KEY,
+                encryption_key: PUBLIC_KEY,
+                certificate: CERTIFICATE,
+                realm_id: randomUUID(),
+            }, createAllowAllActor());
+
+            expect(entity.type).toEqual(JWKType.RSA);
+            expect(entity.certificate).toEqual(CERTIFICATE);
+            expect(entity.decryption_key).toBeNull();
+        });
+
+        it('rejects a certificate that does not match the imported signature key', async () => {
+            const options = AsymmetricKey.buildImportOptionsForJWTAlgorithm(JWTAlgorithm.RS256);
+            const keyPair = await createAsymmetricKeyPair(options);
+
+            await expect(service.create({
+                use: JWKUse.SIGNATURE,
+                decryption_key: await new AsymmetricKey(keyPair.privateKey).toBase64(),
+                encryption_key: await new AsymmetricKey(keyPair.publicKey).toBase64(),
+                certificate: CERTIFICATE,
+                realm_id: randomUUID(),
+            }, createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+        });
+
+        it('rejects a certificate on generated key material', async () => {
+            await expect(service.create({
+                use: JWKUse.SIGNATURE,
+                certificate: CERTIFICATE,
+                realm_id: randomUUID(),
+            }, createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+        });
+
+        it('rejects a certificate on imported encryption key material', async () => {
+            await expect(service.create({
+                use: JWKUse.ENCRYPTION,
+                decryption_key: Buffer.alloc(32, 7).toString('base64'),
+                certificate: CERTIFICATE,
+                realm_id: randomUUID(),
+            }, createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+        });
+
         it('imports an RSA key pair (pkcs8 + spki)', async () => {
             const options = AsymmetricKey.buildImportOptionsForJWTAlgorithm(JWTAlgorithm.RS256);
             const keyPair = await createAsymmetricKeyPair(options);

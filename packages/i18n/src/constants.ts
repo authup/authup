@@ -370,6 +370,7 @@ export enum TranslatorTranslationFieldKey {
     STATUS = 'status',
     PRIORITY = 'priority',
     SIGNATURE_ALGORITHM = 'signatureAlgorithm',
+    CERTIFICATE = 'certificate',
 }
 
 /**

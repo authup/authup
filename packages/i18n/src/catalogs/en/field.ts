@@ -74,4 +74,5 @@ export const TranslatorTranslationFieldEnglish : NamespaceTranslations<`${Transl
     [TranslatorTranslationFieldKey.STATUS]: 'Status',
     [TranslatorTranslationFieldKey.PRIORITY]: 'Priority',
     [TranslatorTranslationFieldKey.SIGNATURE_ALGORITHM]: 'Signature algorithm',
+    [TranslatorTranslationFieldKey.CERTIFICATE]: 'Certificate',
 };

@@ -151,6 +151,8 @@ export type OAuth2TokenIntrospectionResponse = OAuth2TokenPayload & {
 export type OAuth2JsonWebKey = {
     alg: string,
     kid: string,
+    x5c?: string[],
+    'x5t#S256'?: string,
     crv?: string;
     d?: string;
     dp?: string;

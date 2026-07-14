@@ -95,5 +95,14 @@ export class KeyValidator extends Container<
             },
             createValidator(z.string().min(16).max(16384).nullable()),
         );
+
+        this.mount(
+            'certificate',
+            {
+                group: ValidatorGroup.CREATE,
+                optional: true,
+            },
+            createValidator(z.string().min(64).max(16384).nullable()),
+        );
     }
 }

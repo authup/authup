@@ -6,6 +6,7 @@
  */
 
 export * from './check.ts';
+export * from './certificate.ts';
 export * from './constants.ts';
 export * from './error.ts';
 export * from './provisioner.ts';
