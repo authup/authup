@@ -6,6 +6,7 @@
   -->
 <script lang="ts">
 /* global window */
+import type { UserAuthenticator } from '@authup/core-kit';
 import { UserAuthenticatorKind } from '@authup/core-kit';
 import type { UserAuthenticatorEnrollResponse } from '@authup/core-http-kit';
 import {
@@ -64,6 +65,9 @@ export default defineComponent({
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_RECOVERY_SAVE },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_DOWNLOAD },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_SETUP_REQUIRED },
+            { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_RECOVERY_NUDGE },
+            { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_RECOVERY_NUDGE_GENERATE },
+            { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_RECOVERY_NUDGE_SKIP },
             { namespace: TranslatorTranslationNamespace.ACTION, key: TranslatorTranslationActionKey.ABORT },
             { namespace: TranslatorTranslationNamespace.ACTION, key: TranslatorTranslationActionKey.CLOSE },
         ]);
@@ -102,6 +106,88 @@ export default defineComponent({
             error.value = null;
         };
 
+        // Soft recovery-code nudge (issue #3242 follow-up): a just-enrolled
+        // email/webauthn factor without backup recovery codes leaves the
+        // account one lost mailbox / authenticator away from a locked-out
+        // login — offer (never force) generating codes before finishing.
+        // While set, it holds the enrolled entity whose `done` emit is
+        // DEFERRED until the nudge resolves (skip, or codes acknowledged) —
+        // the authorize ladder re-renders on `done`, which would otherwise
+        // unmount the nudge (and the displayed codes) immediately.
+        const recoveryNudge = ref<UserAuthenticator | null>(null);
+
+        const finishEnrollment = async (entity: UserAuthenticator, kind: `${UserAuthenticatorKind}`) => {
+            if (
+                managingOther.value ||
+                (
+                    kind !== UserAuthenticatorKind.EMAIL &&
+                    kind !== UserAuthenticatorKind.WEBAUTHN
+                )
+            ) {
+                emit('done', entity);
+                return;
+            }
+
+            try {
+                const { meta } = await apiClient.userAuthenticator.getMany(props.userId, {
+                    filter: { kind: UserAuthenticatorKind.RECOVERY },
+                    pagination: { limit: 1 },
+                });
+                if (meta.total > 0) {
+                    emit('done', entity);
+                    return;
+                }
+            } catch {
+                // fail open — never block a completed enrollment on the nudge
+                emit('done', entity);
+                return;
+            }
+
+            recoveryNudge.value = entity;
+        };
+
+        const skipRecoveryNudge = () => {
+            if (!recoveryNudge.value) {
+                return;
+            }
+
+            const entity = recoveryNudge.value;
+            recoveryNudge.value = null;
+            emit('done', entity);
+        };
+
+        const generateRecoveryCodes = async () => {
+            if (busy.value) {
+                return;
+            }
+
+            busy.value = true;
+            error.value = null;
+            try {
+                // deliberately NOT enroll(): the nudge defers every `done`
+                // until the codes were acknowledged (close), so the parent
+                // cannot re-render the shown-once codes away.
+                const response = await apiClient.userAuthenticator.enroll(props.userId, { kind: UserAuthenticatorKind.RECOVERY });
+
+                enrollment.value = response;
+                enrollmentKind.value = UserAuthenticatorKind.RECOVERY;
+            } catch (e) {
+                error.value = extractErrorContext(e).message ?? null;
+            } finally {
+                busy.value = false;
+            }
+        };
+
+        const closeRecoveryCodes = () => {
+            reset();
+
+            if (recoveryNudge.value) {
+                const entity = recoveryNudge.value;
+                recoveryNudge.value = null;
+                emit('done', entity);
+            }
+        };
+
         const enroll = async (kind: `${UserAuthenticatorKind}`) => {
             if (busy.value) {
                 return;
@@ -127,14 +213,14 @@ export default defineComponent({
                         response.entity.id,
                         { code: JSON.stringify(attestation) },
                     );
-                    emit('done', entity);
+                    await finishEnrollment(entity, kind);
                     return;
                 }
 
                 // email is confirmed on creation and has nothing to display —
-                // just signal completion.
+                // just signal completion (via the recovery nudge).
                 if (kind === UserAuthenticatorKind.EMAIL) {
-                    emit('done', response.entity);
+                    await finishEnrollment(response.entity, kind);
                     return;
                 }
 
@@ -204,6 +290,10 @@ export default defineComponent({
             confirm,
             reset,
             downloadRecoveryCodes,
+            recoveryNudge,
+            skipRecoveryNudge,
+            generateRecoveryCodes,
+            closeRecoveryCodes,
         };
     },
 });
@@ -219,8 +309,34 @@ export default defineComponent({
             {{ error }}
         </VCAlert>
 
+        <!-- recovery-code nudge after an email/webauthn enrollment -->
+        <template v-if="recoveryNudge && !enrollment">
+            <VCAlert
+                color="warning"
+                variant="soft"
+                class="mb-3"
+            >
+                {{ translations.mfaRecoveryNudge }}
+            </VCAlert>
+            <div class="flex gap-2">
+                <VCButton
+                    :disabled="busy"
+                    :busy="busy"
+                    color="primary"
+                    :label="translations.mfaRecoveryNudgeGenerate"
+                    @click="generateRecoveryCodes"
+                />
+                <VCButton
+                    :disabled="busy"
+                    color="neutral"
+                    :label="translations.mfaRecoveryNudgeSkip"
+                    @click="skipRecoveryNudge"
+                />
+            </div>
+        </template>
+
         <!-- kind picker (unless an enrollment is in progress or a kind is forced) -->
-        <template v-if="!enrollment">
+        <template v-else-if="!enrollment">
             <p
                 v-if="forcedKind"
                 class="text-center mb-3"
@@ -340,7 +456,7 @@ export default defineComponent({
                 <VCButton
                     color="neutral"
                     :label="translations.close"
-                    @click="reset"
+                    @click="closeRecoveryCodes"
                 />
             </div>
         </template>

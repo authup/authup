@@ -117,6 +117,9 @@ export const TranslatorTranslationClientFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.MFA_DEVICE_NAME]: 'Nom de l\'appareil',
     [TranslatorTranslationClientKey.MFA_NO_DEVICES]: 'Aucun appareil d\'authentification n\'a encore été ajouté.',
     [TranslatorTranslationClientKey.MFA_DEVICE_UNCONFIRMED]: 'non confirmé',
+    [TranslatorTranslationClientKey.MFA_RECOVERY_NUDGE]: 'Ajoutez des codes de récupération de secours afin de pouvoir vous connecter même si vous perdez l\'accès à ce deuxième facteur.',
+    [TranslatorTranslationClientKey.MFA_RECOVERY_NUDGE_GENERATE]: 'Générer des codes de récupération',
+    [TranslatorTranslationClientKey.MFA_RECOVERY_NUDGE_SKIP]: 'Ignorer pour l\'instant',
 
     [TranslatorTranslationClientKey.MFA_USE_EMAIL]: 'Utiliser un code par e-mail',
     [TranslatorTranslationClientKey.MFA_SEND_CODE]: 'Envoyer le code',

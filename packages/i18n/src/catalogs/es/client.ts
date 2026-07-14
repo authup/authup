@@ -117,6 +117,9 @@ export const TranslatorTranslationClientSpanish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.MFA_DEVICE_NAME]: 'Nombre del dispositivo',
     [TranslatorTranslationClientKey.MFA_NO_DEVICES]: 'Aún no se han añadido dispositivos de autenticación.',
     [TranslatorTranslationClientKey.MFA_DEVICE_UNCONFIRMED]: 'no confirmado',
+    [TranslatorTranslationClientKey.MFA_RECOVERY_NUDGE]: 'Añade códigos de recuperación de respaldo para poder iniciar sesión aunque pierdas el acceso a este segundo factor.',
+    [TranslatorTranslationClientKey.MFA_RECOVERY_NUDGE_GENERATE]: 'Generar códigos de recuperación',
+    [TranslatorTranslationClientKey.MFA_RECOVERY_NUDGE_SKIP]: 'Omitir por ahora',
 
     [TranslatorTranslationClientKey.MFA_USE_EMAIL]: 'Usar un código por correo',
     [TranslatorTranslationClientKey.MFA_SEND_CODE]: 'Enviar código',
