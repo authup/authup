@@ -5,7 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { X509Certificate, createHash } from 'node:crypto';
+import {
+    X509Certificate,
+    createHash,
+    createPublicKey,
+} from 'node:crypto';
 import { BadRequestError } from '@authup/errors';
 
 const CERTIFICATE_BLOCK_PATTERN = /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g;
@@ -31,7 +35,20 @@ export function assertCertificateMatchesKey(
         type: 'spki',
         format: 'der',
     });
-    const importedKey = Buffer.from(spkiBase64, 'base64');
+
+    let importedKey : Buffer;
+    try {
+        importedKey = createPublicKey({
+            key: Buffer.from(spkiBase64, 'base64'),
+            type: 'spki',
+            format: 'der',
+        }).export({
+            type: 'spki',
+            format: 'der',
+        });
+    } catch {
+        throw new BadRequestError('The imported public key material is invalid.');
+    }
 
     if (Buffer.compare(certificateKey, importedKey) !== 0) {
         throw new BadRequestError('The certificate does not match the key material.');

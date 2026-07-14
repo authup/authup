@@ -38,6 +38,24 @@ function pemToBase64(value: string): string {
         .replace(/\s+/g, '');
 }
 
+function omitRsaEncryptionNullParameter(spkiBase64: string): string {
+    const canonical = Buffer.from(spkiBase64, 'base64');
+    const alternate = Buffer.from(canonical);
+
+    // Fixture SPKI prefix:
+    // SEQUENCE (long-form length), AlgorithmIdentifier SEQUENCE,
+    // rsaEncryption OID, NULL. RFC-tolerant parsers also accept the same
+    // AlgorithmIdentifier without NULL, so adjust both enclosing lengths
+    // before removing it.
+    alternate[3] -= 2;
+    alternate[5] -= 2;
+
+    return Buffer.concat([
+        alternate.subarray(0, 17),
+        alternate.subarray(19),
+    ]).toString('base64');
+}
+
 // Generated once for this committed test fixture with:
 // openssl req -x509 -newkey rsa:2048 -nodes -sha256 -days 3650 \
 //   -subj '/CN=Authup Stage B Test Certificate' -addext 'basicConstraints=critical,CA:TRUE'
@@ -67,6 +85,15 @@ describe('core/key/certificate', () => {
             .toString('base64');
         expect(() => assertCertificateMatchesKey(chain, mismatched))
             .toThrow(expect.objectContaining({ code: ErrorCode.BAD_REQUEST }));
+    });
+
+    it('normalizes equivalent SPKI encodings before comparison', () => {
+        const chain = parseCertificateChain(CERTIFICATE);
+        const canonical = pemToBase64(PUBLIC_KEY);
+        const equivalent = omitRsaEncryptionNullParameter(canonical);
+
+        expect(equivalent).not.toEqual(canonical);
+        expect(() => assertCertificateMatchesKey(chain, equivalent)).not.toThrow();
     });
 
     it('builds leaf-first x5c values with standard base64 DER', () => {

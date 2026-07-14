@@ -197,6 +197,12 @@ export default defineComponent({
             await manager.createOrUpdate(form as Partial<Key>);
         };
 
+        const updateCertificate = (value: string) => {
+            if (v.fields.certificate) {
+                v.fields.certificate.$model.value = value;
+            }
+        };
+
         const translationsDefault = useTranslations(
             [
                 {
@@ -244,6 +250,7 @@ export default defineComponent({
             translationsDefault,
             translationsClient,
             submit,
+            updateCertificate,
         };
     },
 });
@@ -376,6 +383,7 @@ export default defineComponent({
                     </IFieldValidation>
 
                     <IFieldValidation
+                        v-if="v.fields.certificate"
                         v-slot="{ value }"
                         :field="v.fields.certificate"
                     >
@@ -386,7 +394,7 @@ export default defineComponent({
                             <VCFormTextarea
                                 :model-value="v.fields.certificate.$model.value ?? ''"
                                 :rows="8"
-                                @update:model-value="(next: string) => { v.fields.certificate.$model.value = next; }"
+                                @update:model-value="updateCertificate"
                             />
                         </VCFormGroup>
                     </IFieldValidation>
