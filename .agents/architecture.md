@@ -1722,6 +1722,16 @@ optional `sessionTokenRepository` and sets `revoked_at` alongside the cache
 blocklist. **Do not remove the `skipActiveCheck` on the refresh path** without
 re-adding a cache-based replay reaction — they are coupled.
 
+The `/token/revoke` handler itself verifies with **`{ ignoreExpiry: true,
+skipActiveCheck: true }`** (same shape as the end-session `id_token_hint` verify)
+— RFC 7009 §2.2 requires revoking an invalid (here expired or already-inactive)
+token to still succeed. Signature + kind still anchor it, and `ignoreExpiry`
+keeps the exp-bypass out of the claims cache. Without this, revoking a stale
+refresh token threw `expired_token`, so a client's revoke-then-clear-cookie
+logout aborted, the durable row was never soft-revoked, and the stale refresh
+cookie survived into the next login (replaying it later could trip family
+revocation on the reused session).
+
 ### Grant flow (`core/oauth2/grant-types/refresh-token.ts`)
 
 `findOneById(jti)` → reject (`invalid_grant`) if **missing** (expired-and-swept or

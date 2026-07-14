@@ -197,7 +197,20 @@ export class TokenController {
         try {
             const token = await extractTokenFromRequest(event);
 
-            const payload = await this.tokenVerifier.verify(token);
+            // RFC 7009 §2.2: revoking an invalid token — here one that is expired
+            // or already inactive — MUST still succeed. The client cannot act on
+            // an error, and the token's invalidation (the point of the request)
+            // is already achieved. Signature + kind still anchor the token, so a
+            // forged/garbage token is rejected; `ignoreExpiry` additionally keeps
+            // this exp-bypass out of the shared claims cache (see
+            // OAuth2TokenVerifier). Without this, revoking a stale refresh token
+            // threw `expired_token`, so the caller's revoke-then-clear-cookie
+            // flow aborted, the durable row was never soft-revoked, and the stale
+            // refresh cookie survived into the next login.
+            const payload = await this.tokenVerifier.verify(token, {
+                ignoreExpiry: true,
+                skipActiveCheck: true,
+            });
 
             await this.tokenRevoker.revoke(payload);
 
