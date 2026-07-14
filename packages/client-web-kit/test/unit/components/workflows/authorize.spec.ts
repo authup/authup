@@ -94,6 +94,7 @@ function consentRow(scope: string, expiresAt: string | null = null): Consent {
         id: `consent-${scope}`,
         client_id: 'client-1',
         realm_id: REALM.id,
+        user_id: 'user-1',
         sub: 'user-1',
         sub_kind: 'user',
         scope,

@@ -1,7 +1,8 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 /**
- * MFA — authenticator devices (plan 049) + auth-method claims (plan 050).
+ * MFA — authenticator devices (plan 049) + auth-method claims (plan 050),
+ * application access policy (plan 052) + persisted consent (plan 055).
  *
  * - Adds auth_user_authenticators: polymorphic second-factor device rows
  *   (kind: totp/recovery/email/webauthn) hanging off a user. The TOTP seed
@@ -11,6 +12,16 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  *   second-factor challenge for the session (plan 049).
  * - Adds auth_sessions.auth_method: how the subject authenticated
  *   (pwd/ldap/ext/client/robot — plan 050); NULL for pre-existing sessions.
+ * - Adds auth_clients.access_policy_id: nullable FK to auth_policies
+ *   (ON DELETE SET NULL) — the policy that must pass for an identity to
+ *   authorize against the client (null = default-allow; plan 052).
+ * - Adds auth_consents: one row per (client_id, sub, sub_kind, scope token)
+ *   a subject has approved at POST /authorize. Union/keep (missing tokens
+ *   only, never deleted on re-approval); built_in clients keep zero rows;
+ *   expires_at is dormant (always null in Stage 1) but honored by the
+ *   covering check. FKs to auth_clients / auth_realms and a nullable user_id
+ *   FK (all ON DELETE CASCADE, so a user deletion drops its consents;
+ *   plan 055).
  */
 export class Default1783856507391 implements MigrationInterface {
     name = 'Default1783856507391';
@@ -51,9 +62,90 @@ export class Default1783856507391 implements MigrationInterface {
         await queryRunner.query(`
             ALTER TABLE \`auth_sessions\` ADD \`auth_method\` varchar(16) NULL
         `);
+
+        // application access policy (plan 052)
+        await queryRunner.query(`
+            ALTER TABLE \`auth_clients\` ADD \`access_policy_id\` varchar(36) NULL
+        `);
+        await queryRunner.query(`
+            ALTER TABLE \`auth_clients\`
+            ADD CONSTRAINT \`FK_auth_clients_access_policy_id\` FOREIGN KEY (\`access_policy_id\`) REFERENCES \`auth_policies\`(\`id\`) ON DELETE SET NULL ON UPDATE NO ACTION
+        `);
+
+        // persisted per-scope consent (plan 055)
+        await queryRunner.query(`
+            CREATE TABLE \`auth_consents\` (
+                \`id\` varchar(36) NOT NULL,
+                \`sub\` varchar(64) NOT NULL,
+                \`sub_kind\` varchar(64) NOT NULL,
+                \`scope\` varchar(128) NOT NULL,
+                \`expires_at\` varchar(28) NULL,
+                \`created_at\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+                \`updated_at\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+                \`client_id\` varchar(36) NOT NULL,
+                \`realm_id\` varchar(36) NOT NULL,
+                \`user_id\` varchar(36) NULL,
+                INDEX \`IDX_auth_consents_sub\` (\`sub\`),
+                INDEX \`IDX_auth_consents_client_id\` (\`client_id\`),
+                INDEX \`IDX_auth_consents_realm_id\` (\`realm_id\`),
+                INDEX \`IDX_auth_consents_user_id\` (\`user_id\`),
+                UNIQUE INDEX \`UQ_auth_consents_subject_scope\` (\`client_id\`, \`sub\`, \`sub_kind\`, \`scope\`),
+                PRIMARY KEY (\`id\`)
+            ) ENGINE = InnoDB
+        `);
+
+        await queryRunner.query(`
+            ALTER TABLE \`auth_consents\`
+            ADD CONSTRAINT \`FK_auth_consents_client_id\` FOREIGN KEY (\`client_id\`) REFERENCES \`auth_clients\`(\`id\`) ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
+        await queryRunner.query(`
+            ALTER TABLE \`auth_consents\`
+            ADD CONSTRAINT \`FK_auth_consents_realm_id\` FOREIGN KEY (\`realm_id\`) REFERENCES \`auth_realms\`(\`id\`) ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
+        await queryRunner.query(`
+            ALTER TABLE \`auth_consents\`
+            ADD CONSTRAINT \`FK_auth_consents_user_id\` FOREIGN KEY (\`user_id\`) REFERENCES \`auth_users\`(\`id\`) ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
+        // persisted per-scope consent (plan 055) — reverse last-in-first-out
+        await queryRunner.query(`
+            ALTER TABLE \`auth_consents\` DROP FOREIGN KEY \`FK_auth_consents_user_id\`
+        `);
+        await queryRunner.query(`
+            ALTER TABLE \`auth_consents\` DROP FOREIGN KEY \`FK_auth_consents_realm_id\`
+        `);
+        await queryRunner.query(`
+            ALTER TABLE \`auth_consents\` DROP FOREIGN KEY \`FK_auth_consents_client_id\`
+        `);
+        await queryRunner.query(`
+            DROP INDEX \`UQ_auth_consents_subject_scope\` ON \`auth_consents\`
+        `);
+        await queryRunner.query(`
+            DROP INDEX \`IDX_auth_consents_user_id\` ON \`auth_consents\`
+        `);
+        await queryRunner.query(`
+            DROP INDEX \`IDX_auth_consents_realm_id\` ON \`auth_consents\`
+        `);
+        await queryRunner.query(`
+            DROP INDEX \`IDX_auth_consents_client_id\` ON \`auth_consents\`
+        `);
+        await queryRunner.query(`
+            DROP INDEX \`IDX_auth_consents_sub\` ON \`auth_consents\`
+        `);
+        await queryRunner.query(`
+            DROP TABLE \`auth_consents\`
+        `);
+
+        // application access policy (plan 052)
+        await queryRunner.query(`
+            ALTER TABLE \`auth_clients\` DROP FOREIGN KEY \`FK_auth_clients_access_policy_id\`
+        `);
+        await queryRunner.query(`
+            ALTER TABLE \`auth_clients\` DROP COLUMN \`access_policy_id\`
+        `);
+
         await queryRunner.query(`
             ALTER TABLE \`auth_sessions\` DROP COLUMN \`auth_method\`
         `);

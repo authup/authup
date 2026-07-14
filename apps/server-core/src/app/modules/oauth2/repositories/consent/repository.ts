@@ -6,12 +6,13 @@
  */
 
 import type { Consent } from '@authup/core-kit';
+import { IdentityType } from '@authup/core-kit';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
-import { hasOwnProperty, isObject } from '@authup/kit';
 import type { DataSource, Repository } from 'typeorm';
 import { applyQuery } from 'typeorm-extension';
 import { CachePrefix, ConsentEntity } from '../../../../../adapters/database/domains/index.ts';
+import { isUniqueConstraintDatabaseError } from '../../../../../adapters/database/errors/index.ts';
 import type {
     ConsentFindManyOptions,
     ConsentOwner,
@@ -19,34 +20,6 @@ import type {
 } from '../../../../../core/index.ts';
 import { CONSENT_FILTER_KEYS } from '../../../../../core/index.ts';
 import { applyRealmScopeSelect } from '../../../database/repositories/helpers.ts';
-
-function isUniqueConstraintError(input: unknown): boolean {
-    if (!isObject(input)) {
-        return false;
-    }
-
-    const codes = ['ER_DUP_ENTRY', '23505', 'SQLITE_CONSTRAINT_UNIQUE'];
-
-    if (
-        hasOwnProperty(input, 'code') &&
-        typeof input.code === 'string' &&
-        codes.includes(input.code)
-    ) {
-        return true;
-    }
-
-    if (
-        hasOwnProperty(input, 'driverError') &&
-        isObject(input.driverError) &&
-        hasOwnProperty(input.driverError, 'code') &&
-        typeof input.driverError.code === 'string' &&
-        codes.includes(input.driverError.code)
-    ) {
-        return true;
-    }
-
-    return false;
-}
 
 export class ConsentRepositoryAdapter implements IConsentRepository {
     protected repository: Repository<ConsentEntity>;
@@ -163,10 +136,18 @@ export class ConsentRepositoryAdapter implements IConsentRepository {
         // ConsentEntitySubscriber — covering-cache invalidation, realtime
         // destinations and audit mirroring depend on it. A duplicate-key
         // violation is the benign race outcome under the unique index.
+        // Set the user_id FK only when the subject is a user, so a user
+        // deletion cascade-drops its consent rows; non-user subjects leave it
+        // null (the row is still cleaned up when its client/realm is deleted).
+        const userId = input.owner.subKind === IdentityType.USER ?
+            input.owner.sub :
+            null;
+
         for (const scope of missing) {
             const entity = this.repository.create({
                 client_id: input.clientId,
                 realm_id: input.realmId,
+                user_id: userId,
                 sub: input.owner.sub,
                 sub_kind: input.owner.subKind,
                 scope,
@@ -176,7 +157,7 @@ export class ConsentRepositoryAdapter implements IConsentRepository {
             try {
                 await this.repository.save(entity);
             } catch (e) {
-                if (!isUniqueConstraintError(e)) {
+                if (!isUniqueConstraintDatabaseError(e)) {
                     throw e;
                 }
             }

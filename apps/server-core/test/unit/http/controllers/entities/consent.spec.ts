@@ -96,9 +96,43 @@ describe('consent', () => {
         expect(data.map((row) => row.scope).sort()).toEqual([ScopeName.GLOBAL, ScopeName.OPEN_ID].sort());
         expect(data.every((row) => row.sub === user.id &&
             row.sub_kind === IdentityType.USER &&
+            row.user_id === user.id &&
             row.client_id === client.id &&
             row.realm_id === realm.id &&
             row.expires_at === null)).toBe(true);
+    });
+
+    it('cascade-drops a user\'s consent rows when the user is deleted', async () => {
+        const password = generateOAuth2CodeVerifier();
+        const victim = await suite.client.user.create(createFakeUser({
+            realm_id: realm.id,
+            password,
+        }));
+        const login = await suite.client.token.createWithPassword({
+            username: victim.name,
+            password,
+            realm_id: realm.id,
+        });
+        const victimClient = new HTTPClient({ baseURL: suite.baseURL });
+        victimClient.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
+
+        const client = await createScopedClient([ScopeName.GLOBAL]);
+        await victimClient.authorize.confirm({
+            response_type: OAuth2AuthorizationResponseType.CODE,
+            client_id: client.id,
+            redirect_uri: 'https://example.com/redirect',
+            scope: ScopeName.GLOBAL,
+            state: generateOAuth2CodeVerifier(),
+        });
+
+        const before = await suite.client.consent.getMany({ filter: { sub: victim.id, sub_kind: IdentityType.USER } });
+        expect(before.data.length).toBeGreaterThan(0);
+        expect(before.data.every((row) => row.user_id === victim.id)).toBe(true);
+
+        await suite.client.user.delete(victim.id);
+
+        const after = await suite.client.consent.getMany({ filter: { sub: victim.id, sub_kind: IdentityType.USER } });
+        expect(after.data).toHaveLength(0);
     });
 
     it('never exposes full client config on the relation, even when requested', async () => {

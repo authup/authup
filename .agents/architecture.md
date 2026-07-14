@@ -1559,15 +1559,19 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   `CLIENT_READ`). Revoking consent stops the next silent/auto issue;
   already-issued tokens are unaffected (revoke those via the sessions API —
   stated limitation).
-- **Stage-1 limitations:** the subject (`sub`/`sub_kind`) is polymorphic with
-  **no FK** (like sessions), so deleting an identity does not cascade-drop its
-  consent rows and no sweeper prunes them (`expires_at` is always null in
-  Stage 1); orphaned rows persist until the client/realm is deleted (CASCADE).
-  A subject-deletion cleanup or an expiry sweep is a Stage-2 addition. An
-  over-long scope token (>128 chars, only reachable via a non-standard scope
-  riding the `global` verifier bypass) is dropped at normalization rather than
-  overflowing the `varchar(128)` column (`CONSENT_SCOPE_MAX_LENGTH`, shared by
-  the entity column + the service normalizer so they cannot drift).
+- **Subject deletion:** the subject is polymorphic (`sub`/`sub_kind`), but a
+  **nullable `user_id` FK** (`ON DELETE CASCADE`) is populated whenever
+  `sub_kind = user`, so deleting a user cascade-drops its consent rows. A
+  non-user subject (client/robot) leaves `user_id` null and its rows are
+  cleaned up when the client/realm is deleted (both CASCADE). No expiry sweep
+  yet (`expires_at` is always null in Stage 1) — a Stage-2 addition.
+- **Over-long scope token** (>128 chars, only reachable via a non-standard
+  scope riding the `global` verifier bypass) is dropped at normalization
+  rather than overflowing the `varchar(128)` column (`CONSENT_SCOPE_MAX_LENGTH`,
+  shared by the entity column + the service normalizer so they cannot drift).
+  A race-losing duplicate insert under the unique index is swallowed via
+  `isUniqueConstraintDatabaseError` (`adapters/database/errors/driver.ts`, the
+  reusable driver-error-code unwrapper covering mysql/postgres/sqlite).
 
 ## OAuth2 Token Endpoint Authentication
 

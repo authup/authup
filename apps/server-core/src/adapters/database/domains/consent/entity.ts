@@ -21,9 +21,11 @@ import type {
     Client,
     Consent,
     Realm,
+    User,
 } from '@authup/core-kit';
 import { ClientEntity } from '../client/index.ts';
 import { RealmEntity } from '../realm/index.ts';
+import { UserEntity } from '../user/index.ts';
 import { CONSENT_SCOPE_MAX_LENGTH } from '../../../../core/entities/consent/types.ts';
 
 @Unique('UQ_auth_consents_subject_scope', ['client_id', 'sub', 'sub_kind', 'scope'])
@@ -84,4 +86,16 @@ export class ConsentEntity implements Consent {
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
     realm: RealmEntity;
+
+    @Index()
+    @Column({
+        type: 'uuid', 
+        nullable: true, 
+        default: null, 
+    })
+    user_id: User['id'] | null;
+
+    @ManyToOne(() => UserEntity, { onDelete: 'CASCADE', nullable: true })
+    @JoinColumn({ name: 'user_id' })
+    user: UserEntity | null;
 }

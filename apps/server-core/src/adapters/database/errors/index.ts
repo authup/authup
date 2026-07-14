@@ -6,3 +6,4 @@
  */
 
 export * from './conflict.ts';
+export * from './driver.ts';

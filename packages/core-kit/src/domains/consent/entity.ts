@@ -7,6 +7,7 @@
 
 import type { Client } from '../client';
 import type { Realm } from '../realm';
+import type { User } from '../user';
 
 export interface Consent {
     /**
@@ -55,4 +56,12 @@ export interface Consent {
     realm_id: Realm['id'];
 
     realm: Realm;
+
+    /**
+     * Owning user, set only when the subject is a user (sub_kind = user), so a
+     * user deletion cascade-drops its consent rows. Null for non-user subjects.
+     */
+    user_id: User['id'] | null;
+
+    user?: User | null;
 }
