@@ -37,10 +37,17 @@ export class ConsentRepositoryAdapter implements IConsentRepository {
         const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'consent',
             fields: {
-                allowed: [
+                // `default` (not just `allowed`) so applyQuery adds an explicit
+                // per-column SELECT: it populates expressionMap.selects, which
+                // applyRealmScopeSelect dedupes against. Without it the default
+                // "select all" is implicit (empty selects) and the force-select
+                // re-adds consent.sub — a duplicate `consent_sub` alias that
+                // mysql rejects under the client join (see helpers.ts).
+                default: [
                     'id',
                     'client_id',
                     'realm_id',
+                    'user_id',
                     'sub',
                     'sub_kind',
                     'scope',
