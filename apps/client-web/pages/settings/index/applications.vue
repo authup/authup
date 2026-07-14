@@ -16,6 +16,7 @@ import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
+import { VCTimeago } from '@vuecs/timeago';
 import { useAlertDialog } from '@vuecs/overlays';
 import { computed, defineComponent, ref } from 'vue';
 import { definePageMeta, useErrorToast, useToast } from '#imports';
@@ -34,6 +35,7 @@ export default defineComponent({
         APagination,
         VCButton,
         VCIcon,
+        VCTimeago,
     },
     setup() {
         definePageMeta({ [LayoutKey.REQUIRED_LOGGED_IN]: true });
@@ -135,7 +137,20 @@ export default defineComponent({
 
             revoking.value = true;
             try {
-                await Promise.all(group.rows.map(
+                // Revoke every consent for this client, not only the rows on the
+                // current page — with per-scope rows a client can span pages,
+                // and a "revoke all" that stopped at the visible page would
+                // leave some scopes granted.
+                const { data: rows } = await httpClient.consent.getMany({
+                    filter: {
+                        client_id: group.clientId,
+                        sub: userId.value ?? undefined,
+                        sub_kind: 'user',
+                    },
+                    pagination: { limit: 1000 },
+                });
+
+                await Promise.all(rows.map(
                     (row) => httpClient.consent.delete(row.id),
                 ));
 

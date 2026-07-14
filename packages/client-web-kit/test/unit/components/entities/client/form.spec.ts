@@ -176,6 +176,6 @@ describe('AClientForm access policy', () => {
 
         const request = findUpdateRequest(httpClient);
         expect(request).toBeDefined();
-        expect((request!.body as Record<string, any>).access_policy_id ?? null).toBeNull();
+        expect(request!.body).toHaveProperty('access_policy_id', null);
     });
 });
