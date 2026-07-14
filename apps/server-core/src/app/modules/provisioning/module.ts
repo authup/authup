@@ -58,6 +58,7 @@ import {
     ClientPermissionRepositoryAdapter,
     ClientRepositoryAdapter,
     ClientRoleRepositoryAdapter,
+    KeyRepositoryAdapter,
     PermissionPolicyRepositoryAdapter,
     PermissionRepositoryAdapter,
     PolicyRepositoryAdapter,
@@ -69,8 +70,8 @@ import {
     RoleRepositoryAdapter,
     ScopeRepositoryAdapter,
     UserPermissionRepositoryAdapter,
-    UserRepositoryAdapter,
-    UserRoleRepositoryAdapter,
+    UserRepositoryAdapter, 
+    UserRoleRepositoryAdapter, 
 } from '../database/repositories/index.ts';
 import { DatabaseInjectionKey } from '../database/index.ts';
 import type { IModule } from 'orkos';
@@ -78,8 +79,10 @@ import { ModuleName } from '../constants.ts';
 import fs from 'node:fs';
 import path from 'node:path';
 import { ConfigInjectionKey, getAppOrigins } from '../config/index.ts';
+import { SymmetricCipher } from '@authup/server-kit';
 import { LoggerInjectionKey } from '../logger/index.ts';
 import { WebClientProvisioner } from '../../../core/entities/client/index.ts';
+import { KeyProvisioner } from '../../../core/key/index.ts';
 import { CompositeProvisioningSource, FileProvisioningSource } from './sources/index.ts';
 
 export class ProvisionerModule implements IModule {
@@ -244,9 +247,25 @@ export class ProvisionerModule implements IModule {
             logger: container.resolve(LoggerInjectionKey),
         });
 
+        // Eager key minting (plan 071 hybrid model): every realm — incl.
+        // pre-existing ones — holds sig + enc keys after startup, so the
+        // management API shows them without waiting for first use. The
+        // adapter is constructed locally (NOT resolved from the oauth2
+        // module's registration) so provisioning stays runnable in minimal
+        // module graphs (test setup, CLI); the KEK handling is identical.
+        const keyProvisioner = new KeyProvisioner({
+            keyStore: new KeyRepositoryAdapter(dataSource, {
+                secretsCipher: config.secretsEncryptionKey ?
+                    new SymmetricCipher(config.secretsEncryptionKey) :
+                    null,
+            }),
+            logger: container.resolve(LoggerInjectionKey),
+        });
+
         const realms = await realmRepository.find();
         for (const realm of realms) {
             await webClientProvisioner.ensureForRealm(realm);
+            await keyProvisioner.ensureForRealm(realm);
         }
 
         if (config.permissionsDefaultPolicyAssignment) {

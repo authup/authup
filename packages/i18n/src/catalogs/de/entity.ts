@@ -14,6 +14,7 @@ export const TranslatorTranslationEntityGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationEntityKey.CONSENT]: definePlural({ one: 'Einwilligung', other: 'Einwilligungen' }),
     [TranslatorTranslationEntityKey.EVENT]: definePlural({ one: 'Ereignis', other: 'Ereignisse' }),
     [TranslatorTranslationEntityKey.IDENTITY_PROVIDER]: definePlural({ one: 'Identitätsanbieter', other: 'Identitätsanbieter' }),
+    [TranslatorTranslationEntityKey.KEY]: definePlural({ one: 'Schlüssel', other: 'Schlüssel' }),
     [TranslatorTranslationEntityKey.PERMISSION]: definePlural({ one: 'Berechtigung', other: 'Berechtigungen' }),
     [TranslatorTranslationEntityKey.POLICY]: definePlural({ one: 'Richtlinie', other: 'Richtlinien' }),
     [TranslatorTranslationEntityKey.REALM]: definePlural({ one: 'Organisation', other: 'Organisationen' }),

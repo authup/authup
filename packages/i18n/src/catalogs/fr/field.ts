@@ -70,4 +70,8 @@ export const TranslatorTranslationFieldFrench : NamespaceTranslations<`${Transla
     [TranslatorTranslationFieldKey.REF]: 'Référence',
     [TranslatorTranslationFieldKey.PATH]: 'Chemin',
     [TranslatorTranslationFieldKey.METHOD]: 'Méthode',
+    [TranslatorTranslationFieldKey.USE]: 'Utilisation',
+    [TranslatorTranslationFieldKey.STATUS]: 'Statut',
+    [TranslatorTranslationFieldKey.PRIORITY]: 'Priorité',
+    [TranslatorTranslationFieldKey.SIGNATURE_ALGORITHM]: 'Algorithme de signature',
 };

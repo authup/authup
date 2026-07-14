@@ -8,6 +8,7 @@
 export * from './check.ts';
 export * from './constants.ts';
 export * from './error.ts';
+export * from './provisioner.ts';
 export * from './realm-cipher.ts';
 export * from './types.ts';
 export * from './wrap.ts';

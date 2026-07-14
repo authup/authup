@@ -96,7 +96,8 @@ export class FakeEntityRepository<T extends ObjectLiteral> implements IEntityRep
         this.joinColumnHandler = handler;
     }
 
-    async checkUniqueness(): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async checkUniqueness(data?: Partial<T>, existing?: T): Promise<void> {
         // no-op in fake
     }
 

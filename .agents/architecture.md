@@ -2144,25 +2144,79 @@ surfaces), `test/unit/http/controllers/workflows/token/grant-password-mfa.spec.t
 (end-to-end: enroll → confirm → grant gated → otp accepted → authorize backstop
 → challenge stamps `mfa_at` → authorize passes; recovery replay rejected).
 
-## Realm Key Store (plan 069)
+## Realm Key Store (plans 069 + 071 Stage A)
 
 `auth_keys` is the general **per-realm key store**, discriminated by the JWK
 `use` column (`sig` | `enc`, RFC 7517 §4.2 — `JWKUse` in `@authup/specs`;
-core-kit `Key.use`, `signature_algorithm` nullable for enc keys). Keys are
-minted **lazily on first use** per `(realm, use)` — `sig` → RS256 RSA pair
-(as before), `enc` → 32 random bytes (oct) in the `select:false`
-`decryption_key` column. Port `IKeyRepository`
-(`core/key/types.ts` — `findByRealmId(realmId, use)` get-or-create ordered
-`priority DESC`, `findById`), adapter `KeyRepositoryAdapter`
-(`app/modules/oauth2/repositories/key/`, DI
-`OAuth2InjectionToken.KeyRepository`). The former `core/oauth2/key/`
-`IOAuth2KeyRepository` is gone — signer/verifier/authorize-grant consume
-`IKeyRepository` with an explicit `JWKUse.SIGNATURE`.
+core-kit `Key.use`, `signature_algorithm` nullable for enc keys). Every key
+is a **full named entity** (canonical `name`, unique per `(name, realm_id)` —
+`UQ_auth_keys_name_realm_id`; auto-minted keys get `<use>-<nanoid>`) with a
+**lifecycle `status`** (`KeyStatus`: `active` signs/encrypts + verifies/
+decrypts, `passive` verify/decrypt-only, `disabled` neither) and a dormant
+nullable `certificate` column (PEM chain — Stage B fills it).
+
+**Two ports, one adapter** (`KeyRepositoryAdapter`,
+`app/modules/database/repositories/key/`, DI
+`OAuth2InjectionToken.KeyStore`):
+
+- `IKeyStore` (`core/key/types.ts`) — material resolution for signer /
+  verifier / realm cipher: `resolveOrCreate(realmId, use)` returns the
+  highest-priority **ACTIVE** key with usable (KEK-unwrapped) material, mints
+  one **iff zero rows exist** for `(realm, use)` (`sig` → RS256 RSA pair,
+  `enc` → 32 random oct bytes), and **fails loud** when rows exist but none
+  is active (an admin who disabled every key meant it — never silently
+  re-mint around the kill switch); `resolveById(id)` is a pure read (status
+  enforcement is the consumer's).
+- `IKeyRepository` (`core/entities/key/types.ts`) — the entity CRUD surface
+  for the management API (+ `checkUniqueness`, `countBlobReferences(keyId)`
+  — counts `v1.<key_id>.%` cipher blobs, today the MFA seeds —
+  `findHighestPriority`). Entity reads never select `decryption_key`; the
+  adapter's `save()` KEK-wraps inbound material centrally.
+
+**Minting is hybrid (eager + self-healing backstop):** `KeyProvisioner
+.ensureForRealm` (`core/key/provisioner.ts`) mints sig+enc keys at realm
+creation (`RealmService.save`, system-level and never-fail like the web-client
+provisioner) and as a startup backfill over every realm in
+`ProvisionerModule` (which constructs its own adapter from config — no
+module dependency on oauth2, so minimal graphs keep working);
+`resolveOrCreate` remains the zero-rows backstop, so zero-config MFA
+survives all paths.
+
+**Lifecycle enforcement:** signer + `RealmCipher.encrypt` use
+`resolveOrCreate` (active only); verifier rejects a `kid` whose key is
+non-sig OR `disabled` (passive still verifies); both JWKS surfaces filter
+`status IN (active, passive)`; `RealmCipher.decrypt` re-resolves the key row
+on every call (only the imported `SymmetricCipher` is cached — material is
+immutable, status is not), so disabling an enc key is an immediate,
+**reversible** kill switch (`RealmCipherBlobError` → MFA verify fails
+closed, never a 500).
+
+**Management API (plan 071 Stage A):** `KeyService`
+(`core/entities/key/`) + `KeyController` dual-mounted
+`/keys` + `/realms/:realmId/keys`, gated by the auto-provisioned `KEY_*`
+permission family (`admin` = `any`; `realm_admin` = `ownOrNull` read, `own`
+CUD via the OWN-override list) with per-row `resourceRealmMatch` drops in
+`getMany` (plan-039 `applyRealmScopeSelect`). POST create discriminates
+**generate vs import** by material presence: generate supports
+RS256/384/512 + ES256/384/512 (HS* rejected — JWKS cannot publish shared
+secrets) with `priority = max+1` default so **generate doubles as rotate**;
+import takes pkcs8+spki (base64 or PEM, both validated by importing) for sig
+and 32 base64 bytes for enc. Update mounts only `name`/`priority`/`status`
+(material, `use`, `type`, realm immutable). DELETE on an enc key with live
+blob references answers **409 + `data.references`** unless `?force=true`
+(crypto-shred confirm; no re-encrypt sweep exists, so a hard block would
+make such keys undeletable). **Private material never leaves the server** —
+every read and the create response null `decryption_key` (authentik
+CVE-2024-42490 is the cautionary tale). Typed client: `client.key.*`
+(`KeyCreatePayload`/`KeyUpdatePayload`; `delete(id, { force })`). Keys have
+**no entity subscriber** (deliberate — `afterInsert` content would carry raw
+private material onto the realtime bus), so no entity-CRUD audit rows;
+explicit `EventService` emits are a follow-up.
 
 - **`use` hygiene is load-bearing:** the signer supports oct (HMAC) keys, so
   without the filter it could sign tokens with a realm's *enc* key. Every sig
   consumer filters: signer + authorize grant (at_hash alg) pass
-  `JWKUse.SIGNATURE` to `findByRealmId`; the verifier rejects a `kid`
+  `JWKUse.SIGNATURE` to `resolveOrCreate`; the verifier rejects a `kid`
   resolving to a non-sig key (`JWKError.notFound`); both JWKS surfaces
   (`JwkController`, realm `jwks` handlers) add `use: JWKUse.SIGNATURE` to
   their where clauses — an enc key must never appear in a JWKS response.
@@ -2170,12 +2224,11 @@ minted **lazily on first use** per `(realm, use)` — `sig` → RS256 RSA pair
   realm-scoped at-rest encryption over the enc keys:
   `encrypt(plain, realmId)` → self-describing blob `v1.<key_id>.<payload>`;
   `decrypt(blob, realmId)` resolves the key **by the blob's id** (so
-  concurrent get-or-create races and future rotation never orphan a blob) and
+  concurrent get-or-create races and rotation never orphan a blob) and
   **mandatorily** asserts the realm binding (payload-first + required realm on
   both methods — shape-aligned with `ISymmetricCipher.encrypt(plain)` plus a
   scope argument; every consumer knows its entity's realm, so a skippable
-  assert would only invite forgetting it). Imported `SymmetricCipher`s are
-  cached per key id (material is immutable). Consumer today: the MFA seed
+  assert would only invite forgetting it). Consumer today: the MFA seed
   cipher (`UserAuthenticatorService` ctx); plan 070 adds client
   `secret_encrypted`, IdP `client_secret`, LDAP bind password.
 - **Optional KEK — config `secretsEncryptionKey` (`SECRETS_ENCRYPTION_KEY`,
@@ -2188,18 +2241,34 @@ minted **lazily on first use** per `(realm, use)` — `sig` → RS256 RSA pair
   hardens it without a migration. A wrapped row met without a KEK fails loud
   (`AuthupError`). Unset = plaintext-at-rest (Keycloak/authentik parity;
   verified 2026-07-14, `.agents/references/{keycloak,authentik}.md`) with a
-  one-time production boot warning. Rotation semantics are designed but have
-  no API yet: multiple enc rows per realm order by `priority` (highest
-  encrypts, old rows stay decrypt-only via key-id addressing).
+  one-time production boot warning. Rotation rides `priority` + `status`:
+  generate a new active key (auto `max+1`), flip the old one `passive`
+  (verify/decrypt-only), retire it `disabled`/delete when its artifacts
+  drained.
 - **Realm delete = crypto-shredding:** `auth_keys.realm_id` is ON DELETE
   CASCADE, so deleting a realm drops its enc keys and every seed encrypted
   under them becomes unrecoverable noise.
 
+**UI:** top-level `/keys` pages in client-web (list + add + detail edit,
+realm-switch scoped like users/roles, nav entry gated on `KEY_*`), backed by
+kit `AKeys` / `AKey` / `AKeyForm` (`components/entities/key/`; the form
+covers generate/import on create and name/priority/status on edit); the list
+page's delete flow catches the 409-with-`references` and re-confirms via
+`useAlertDialog` before retrying with `force` (`authupApp`
+`KEY_DELETE_FORCE_CONFIRM_*` keys, ×4 locales).
+
 Tests: `test/unit/core/key/{wrap,realm-cipher}.spec.ts` (KEK matrix, blob
-addressing, foreign-realm/unknown-key/sig-key fail-closed),
+addressing, foreign-realm/unknown-key/sig-key/disabled-key fail-closed,
+kill-switch reversibility),
+`test/unit/app/modules/database/key-repository.spec.ts` (KEK matrix over an
+isolated sqlite, resolveOrCreate lifecycle: passive-not-picked, all-disabled
+loud, generated names), `test/unit/core/entities/key/service.spec.ts`
+(permission matrix, generate/import, immutability, force+count),
+`test/unit/http/controllers/entities/key.spec.ts` (eager realm provisioning,
+CRUD, JWKS lifecycle, nested-realm mount),
 `test/unit/http/controllers/workflows/key-store.spec.ts` (e2e: token + MFA
 flows over a KEK-wrapped store, at-rest `wrapped.v1.` assert, JWKS
-enc-exclusion), enc-key `kid` rejection in
+enc-exclusion), enc-key `kid` + disabled-key rejection in
 `test/unit/core/oauth2/token/verifier/module.spec.ts`.
 
 **UI (kit + app):** the challenge step is `AMfaChallengeForm`

@@ -12,6 +12,7 @@ export * from './client-scope/index.ts';
 export * from './consent/index.ts';
 export * from './event/index.ts';
 export * from './identity-provider/index.ts';
+export * from './key/index.ts';
 export * from './permission/index.ts';
 export * from './permission-policy/index.ts';
 export * from './policy/index.ts';

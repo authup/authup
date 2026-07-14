@@ -11,27 +11,28 @@ import {
     extractTokenHeader,
     verifyToken,
 } from '@authup/server-kit';
+import { KeyStatus } from '@authup/core-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import {
-    JWKError, 
-    JWKType, 
-    JWKUse, 
+    JWKError,
+    JWKType,
+    JWKUse,
     JWTError,
 } from '@authup/specs';
-import type { IKeyRepository } from '../../../key/index.ts';
+import type { IKeyStore } from '../../../key/index.ts';
 import type { IOAuth2TokenRepository } from '../repository/types.ts';
 import type { IOAuth2TokenVerifier, OAuth2TokenVerifyOptions } from './types.ts';
 
 export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
-    protected keyRepository : IKeyRepository;
+    protected keyStore : IKeyStore;
 
     protected tokenRepository : IOAuth2TokenRepository;
 
     constructor(
-        keyRepository : IKeyRepository,
+        keyStore : IKeyStore,
         tokenRepository : IOAuth2TokenRepository,
     ) {
-        this.keyRepository = keyRepository;
+        this.keyStore = keyStore;
         this.tokenRepository = tokenRepository;
     }
 
@@ -61,7 +62,7 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
             throw JWTError.headerPropertyInvalid('kid');
         }
 
-        const key = await this.keyRepository.findById(header.kid);
+        const key = await this.keyStore.resolveById(header.kid);
         if (!key) {
             throw JWKError.notFound(header.kid);
         }
@@ -69,6 +70,11 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
         // the key store also holds at-rest encryption keys (use: enc) —
         // those must never verify a token.
         if (key.use !== JWKUse.SIGNATURE) {
+            throw JWKError.notFound(header.kid);
+        }
+
+        // disabled = neither signs nor verifies (passive still verifies).
+        if (key.status === KeyStatus.DISABLED) {
             throw JWKError.notFound(header.kid);
         }
 

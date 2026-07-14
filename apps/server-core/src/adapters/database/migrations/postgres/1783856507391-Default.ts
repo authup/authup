@@ -25,6 +25,10 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  *   generalizes auth_keys into the per-realm key store. enc rows hold the
  *   realm's auto-generated symmetric at-rest encryption key (oct) that the
  *   MFA seed cipher rides; existing rows default to sig (plan 069).
+ * - Adds auth_keys.name (canonical identifier, backfilled from id),
+ *   auth_keys.status (lifecycle: active/passive/disabled) and the dormant
+ *   auth_keys.certificate (PEM chain, Stage B) — key management API
+ *   (plan 071 Stage A).
  */
 export class Default1783856507391 implements MigrationInterface {
     name = 'Default1783856507391';
@@ -114,10 +118,45 @@ export class Default1783856507391 implements MigrationInterface {
         await queryRunner.query(`
             ALTER TABLE "auth_keys" ADD "use" character varying(64) NOT NULL DEFAULT 'sig'
         `);
+
+        // key management API (plan 071 Stage A)
+        await queryRunner.query(`
+            ALTER TABLE "auth_keys" ADD "name" character varying(128)
+        `);
+        await queryRunner.query(`
+            UPDATE "auth_keys" SET "name" = "id"::text
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "auth_keys" ALTER COLUMN "name" SET NOT NULL
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "auth_keys"
+            ADD CONSTRAINT "UQ_auth_keys_name_realm_id" UNIQUE ("name", "realm_id")
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "auth_keys" ADD "status" character varying(64) NOT NULL DEFAULT 'active'
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "auth_keys" ADD "certificate" text
+        `);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        // realm key store use discriminator (plan 069) — reverse last-in-first-out
+        // key management API (plan 071 Stage A) — reverse last-in-first-out
+        await queryRunner.query(`
+            ALTER TABLE "auth_keys" DROP COLUMN "certificate"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "auth_keys" DROP COLUMN "status"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "auth_keys" DROP CONSTRAINT "UQ_auth_keys_name_realm_id"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "auth_keys" DROP COLUMN "name"
+        `);
+
+        // realm key store use discriminator (plan 069)
         await queryRunner.query(`
             ALTER TABLE "auth_keys" DROP COLUMN "use"
         `);

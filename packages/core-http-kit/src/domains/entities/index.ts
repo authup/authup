@@ -13,6 +13,7 @@ export * from './consent';
 export * from './event';
 export * from './identity-provider';
 export * from './identity-provider-role-mapping';
+export * from './key';
 export * from './policy';
 export * from './permission';
 export * from './permission-policy';

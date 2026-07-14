@@ -222,6 +222,8 @@ export enum TranslatorTranslationAppKey {
     SESSION_REVOKE_OTHERS_CONFIRM_TITLE = 'sessionRevokeOthersConfirmTitle',
     SESSION_REVOKE_OTHERS_CONFIRM_DESCRIPTION = 'sessionRevokeOthersConfirmDescription',
     SESSION_REVOKE_OTHERS_SUCCESS = 'sessionRevokeOthersSuccess',
+    KEY_DELETE_FORCE_CONFIRM_TITLE = 'keyDeleteForceConfirmTitle',
+    KEY_DELETE_FORCE_CONFIRM_DESCRIPTION = 'keyDeleteForceConfirmDescription',
 
     SESSION_REVOKE_ALL = 'sessionRevokeAll',
     SESSION_REVOKE_ALL_CONFIRM_TITLE = 'sessionRevokeAllConfirmTitle',
@@ -281,6 +283,7 @@ export enum TranslatorTranslationEntityKey {
     CONSENT = 'consent',
     EVENT = 'event',
     IDENTITY_PROVIDER = 'identityProvider',
+    KEY = 'key',
     PERMISSION = 'permission',
     POLICY = 'policy',
     REALM = 'realm',
@@ -356,6 +359,10 @@ export enum TranslatorTranslationFieldKey {
     REF = 'ref',
     PATH = 'path',
     METHOD = 'method',
+    USE = 'use',
+    STATUS = 'status',
+    PRIORITY = 'priority',
+    SIGNATURE_ALGORITHM = 'signatureAlgorithm',
 }
 
 /**

@@ -9,6 +9,7 @@ import { TypedToken } from 'eldin';
 import type {
     IConsentRepository,
     IKeyRepository,
+    IKeyStore,
     IOAuth2AuthorizationCodeIssuer,
     IOAuth2AuthorizationCodeRepository,
     IOAuth2AuthorizationCodeRequestVerifier,
@@ -38,7 +39,12 @@ export const OAuth2InjectionToken = {
 
     AuthorizationStateRepository: new TypedToken<IOAuth2AuthorizeStateRepository>('AuthorizationStateRepository'),
 
-    KeyRepository: new TypedToken<IKeyRepository>('KeyRepository'),
+    /**
+     * One adapter instance serving both key ports: the material-resolving
+     * store (signer / verifier / realm cipher) and the entity CRUD surface
+     * (key management API).
+     */
+    KeyStore: new TypedToken<IKeyStore & IKeyRepository>('KeyStore'),
 
     AccessTokenIssuer: new TypedToken<IOAuth2TokenIssuer>('AccessTokenIssuer'),
     MfaTokenIssuer: new TypedToken<IOAuth2TokenIssuer>('MfaTokenIssuer'),

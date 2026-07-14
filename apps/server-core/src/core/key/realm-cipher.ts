@@ -6,48 +6,46 @@
  */
 
 import { AuthupError } from '@authup/errors';
+import { KeyStatus } from '@authup/core-kit';
 import type { ISymmetricCipher } from '@authup/server-kit';
 import { SymmetricCipher } from '@authup/server-kit';
 import { JWKUse } from '@authup/specs';
 import { REALM_CIPHER_BLOB_VERSION } from './constants.ts';
 import { RealmCipherBlobError } from './error.ts';
-import type { IKeyRepository, IRealmCipher } from './types.ts';
+import type { IKeyStore, IRealmCipher } from './types.ts';
 
 export type RealmCipherContext = {
-    keyRepository: IKeyRepository,
-};
-
-type CipherCacheEntry = {
-    realmId: string,
-    cipher: ISymmetricCipher,
+    keyStore: IKeyStore,
 };
 
 export class RealmCipher implements IRealmCipher {
-    protected keyRepository : IKeyRepository;
+    protected keyStore : IKeyStore;
 
     /**
-     * Imported ciphers by key id — key material is immutable, so
-     * entries never invalidate.
+     * Imported ciphers by key id — key MATERIAL is immutable, so entries
+     * never invalidate. Status and realm binding are deliberately NOT
+     * cached: decrypt re-resolves the key row every call so disabling a
+     * key acts as an immediate, reversible kill switch.
      */
-    protected ciphers : Map<string, CipherCacheEntry>;
+    protected ciphers : Map<string, ISymmetricCipher>;
 
     constructor(ctx: RealmCipherContext) {
-        this.keyRepository = ctx.keyRepository;
+        this.keyStore = ctx.keyStore;
         this.ciphers = new Map();
     }
 
     async encrypt(plain: string, realmId: string) : Promise<string> {
-        const key = await this.keyRepository.findByRealmId(realmId, JWKUse.ENCRYPTION);
-        if (!key || !key.decryption_key) {
+        const key = await this.keyStore.resolveOrCreate(realmId, JWKUse.ENCRYPTION);
+        if (!key.decryption_key) {
             throw new AuthupError(`An encryption key could not be resolved for realm ${realmId}.`);
         }
 
-        const entry = this.resolveCipher(key.id, key.realm_id, key.decryption_key);
+        const cipher = this.resolveCipher(key.id, key.decryption_key);
 
         return [
             REALM_CIPHER_BLOB_VERSION,
             key.id,
-            await entry.cipher.encrypt(plain),
+            await cipher.encrypt(plain),
         ].join('.');
     }
 
@@ -59,26 +57,27 @@ export class RealmCipher implements IRealmCipher {
 
         const [, keyId, payload] = parts;
 
-        let entry = this.ciphers.get(keyId);
-        if (!entry) {
-            const key = await this.keyRepository.findById(keyId);
-            if (
-                !key ||
-                key.use !== JWKUse.ENCRYPTION ||
-                !key.decryption_key
-            ) {
-                throw new RealmCipherBlobError(`The cipher blob references an unknown encryption key (${keyId}).`);
-            }
-
-            entry = this.resolveCipher(key.id, key.realm_id, key.decryption_key);
+        const key = await this.keyStore.resolveById(keyId);
+        if (
+            !key ||
+            key.use !== JWKUse.ENCRYPTION ||
+            !key.decryption_key
+        ) {
+            throw new RealmCipherBlobError(`The cipher blob references an unknown encryption key (${keyId}).`);
         }
 
-        if (entry.realmId !== realmId) {
+        if (key.status === KeyStatus.DISABLED) {
+            throw new RealmCipherBlobError(`The cipher blob references a disabled encryption key (${keyId}).`);
+        }
+
+        if (key.realm_id !== realmId) {
             throw new RealmCipherBlobError(`The cipher blob references a foreign realm's encryption key (${keyId}).`);
         }
 
+        const cipher = this.resolveCipher(key.id, key.decryption_key);
+
         try {
-            return await entry.cipher.decrypt(payload);
+            return await cipher.decrypt(payload);
         } catch {
             // failed GCM authentication / corrupt payload — blob semantics,
             // not infrastructure.
@@ -88,18 +87,14 @@ export class RealmCipher implements IRealmCipher {
 
     protected resolveCipher(
         keyId: string,
-        realmId: string,
         material: string,
-    ) : CipherCacheEntry {
-        let entry = this.ciphers.get(keyId);
-        if (!entry) {
-            entry = {
-                realmId,
-                cipher: new SymmetricCipher(material),
-            };
-            this.ciphers.set(keyId, entry);
+    ) : ISymmetricCipher {
+        let cipher = this.ciphers.get(keyId);
+        if (!cipher) {
+            cipher = new SymmetricCipher(material);
+            this.ciphers.set(keyId, cipher);
         }
 
-        return entry;
+        return cipher;
     }
 }

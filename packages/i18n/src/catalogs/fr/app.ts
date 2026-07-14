@@ -72,4 +72,6 @@ export const TranslatorTranslationAppFrench : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_TITLE]: 'Révoquer l\'accès de l\'application',
     [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_DESCRIPTION]: 'L\'application demandera à nouveau votre consentement lors de la prochaine connexion.',
     [TranslatorTranslationAppKey.CONSENT_SCOPES]: 'Permissions accordées',
+    [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_TITLE]: 'Détruire la clé de chiffrement ?',
+    [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_DESCRIPTION]: 'Cette clé est encore référencée par {{count}} secret(s) chiffré(s). Sa suppression les rendra définitivement irrécupérables.',
 };

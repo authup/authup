@@ -8,7 +8,6 @@
 import { randomUUID } from 'node:crypto';
 import type { Key, OAuth2AuthorizationCode } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
-import { ErrorCode } from '@authup/errors';
 import {
     JWKType, 
     JWKUse, 
@@ -22,7 +21,7 @@ import {
     it,
 } from 'vitest';
 import { OAuth2AuthorizeGrant } from '../../../../../src/core/oauth2/grant-types/authorize.ts';
-import { FakeKeyRepository } from '../../helpers/fake-key-repository.ts';
+import { FakeKeyStore } from '../../helpers/fake-key-store.ts';
 import { FakeOAuth2OpenIDTokenIssuer } from '../../helpers/fake-oauth2-openid-token-issuer.ts';
 import { FakeOAuth2TokenIssuer } from '../../helpers/fake-oauth2-token-issuer.ts';
 import { FakeSessionManager } from '../../helpers/fake-session-manager.ts';
@@ -31,7 +30,7 @@ describe('OAuth2AuthorizeGrant', () => {
     let accessTokenIssuer: FakeOAuth2TokenIssuer;
     let refreshTokenIssuer: FakeOAuth2TokenIssuer;
     let openIdTokenIssuer: FakeOAuth2OpenIDTokenIssuer;
-    let keyRepository: FakeKeyRepository;
+    let keyStore: FakeKeyStore;
     let sessionManager: FakeSessionManager;
     let grant: OAuth2AuthorizeGrant;
 
@@ -42,8 +41,10 @@ describe('OAuth2AuthorizeGrant', () => {
     // the realm signing key the id_token's at_hash digest derives from
     const buildKey = (): Key => ({
         id: randomUUID(),
+        name: 'sig-test',
         type: JWKType.RSA,
         use: JWKUse.SIGNATURE,
+        status: 'active',
         signature_algorithm: JWTAlgorithm.RS256,
         priority: 0,
         decryption_key: 'rsa-private-key',
@@ -79,13 +80,13 @@ describe('OAuth2AuthorizeGrant', () => {
         accessTokenIssuer = new FakeOAuth2TokenIssuer();
         refreshTokenIssuer = new FakeOAuth2TokenIssuer();
         openIdTokenIssuer = new FakeOAuth2OpenIDTokenIssuer();
-        keyRepository = new FakeKeyRepository(buildKey());
+        keyStore = new FakeKeyStore(buildKey());
         sessionManager = new FakeSessionManager();
         grant = new OAuth2AuthorizeGrant({
             accessTokenIssuer,
             refreshTokenIssuer,
             openIdTokenIssuer,
-            keyRepository,
+            keyStore,
             sessionManager,
         });
     });
@@ -258,11 +259,11 @@ describe('OAuth2AuthorizeGrant', () => {
         // RS256 key → SHA-256 left half (16 bytes → 22 base64url chars)
         await grant.runWith(buildCode({ scope: `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}` }));
 
-        expect(keyRepository.findByRealmIdCalls).toEqual([{ realmId, use: JWKUse.SIGNATURE }]);
+        expect(keyStore.resolveOrCreateCalls).toEqual([{ realmId, use: JWKUse.SIGNATURE }]);
         expect(openIdTokenIssuer.issueCalls[0].at_hash).toHaveLength(22);
 
         // RS512 key → SHA-512 left half (32 bytes → 43 base64url chars)
-        keyRepository.setKey({ ...buildKey(), signature_algorithm: JWTAlgorithm.RS512 });
+        keyStore.setKey({ ...buildKey(), signature_algorithm: JWTAlgorithm.RS512 });
         openIdTokenIssuer.issueCalls.length = 0;
 
         await grant.runWith(buildCode({ scope: `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}` }));
@@ -270,12 +271,12 @@ describe('OAuth2AuthorizeGrant', () => {
         expect(openIdTokenIssuer.issueCalls[0].at_hash).toHaveLength(43);
     });
 
-    it('should fail closed when no signing key exists for the code realm', async () => {
-        keyRepository.setKey(null);
+    it('should fail closed when no signing key can be resolved for the code realm', async () => {
+        keyStore.setKey(null);
 
         await expect(
             grant.runWith(buildCode({ scope: `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}` })),
-        ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.JWK_NOT_FOUND }));
+        ).rejects.toThrow(/no active sig key/i);
     });
     // plan 050: amr/acr derive from the RESOLVED session; auth_method inherits
     // through the code blob on fallback-create.

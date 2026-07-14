@@ -7,9 +7,12 @@
 
 import type { JWKType, JWKUse, JWTAlgorithm } from '@authup/specs';
 import type { Realm } from '../realm';
+import type { KeyStatus } from './constants';
 
 export interface Key {
     id: string,
+
+    name: string,
 
     /**
      * OCT, RSA or EC
@@ -33,9 +36,20 @@ export interface Key {
     priority: number,
 
     /**
+     * Lifecycle state (active / passive / disabled).
+     */
+    status: `${KeyStatus}`,
+
+    /**
+     * Optional X.509 certificate (PEM chain) — populated on import,
+     * published as x5c/x5t in JWKS (Stage B of plan 071).
+     */
+    certificate?: string | null,
+
+    /**
      * aka private key
      */
-    decryption_key?: string | null,
+    decryption_key: string | null,
 
     /**
      * aka public key

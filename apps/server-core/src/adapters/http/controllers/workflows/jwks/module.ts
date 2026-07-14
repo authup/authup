@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { KeyStatus } from '@authup/core-kit';
 import type { JWTAlgorithm, OAuth2JsonWebKey } from '@authup/specs';
 import { JWKError, JWKType, JWKUse } from '@authup/specs';
 import { AsymmetricKey } from '@authup/server-kit';
@@ -42,6 +43,8 @@ export class JwkController {
             where: {
                 type: In([JWKType.RSA, JWKType.EC]),
                 use: JWKUse.SIGNATURE,
+                // active + passive verify; disabled keys never publish.
+                status: In([KeyStatus.ACTIVE, KeyStatus.PASSIVE]),
                 ...(realmId ? { realm_id: realmId } : {}),
             },
             order: { priority: 'DESC' },
@@ -78,6 +81,7 @@ export class JwkController {
             where: {
                 type: In([JWKType.RSA, JWKType.EC]),
                 use: JWKUse.SIGNATURE,
+                status: In([KeyStatus.ACTIVE, KeyStatus.PASSIVE]),
                 id,
             },
         });
