@@ -374,6 +374,40 @@ describe('UserAuthenticatorService', () => {
             });
             expect(verified).toBeFalsy();
         });
+
+        it('lets infrastructure errors during seed decryption bubble (attempt not burned)', async () => {
+            const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
+            await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
+
+            // a cipher failing with a NON-blob-semantics error (database
+            // outage, KEK misconfiguration) must surface as a thrown error —
+            // mapping it to `false` would burn a throttle attempt on a blip.
+            service = new UserAuthenticatorService({
+                repository,
+                userRepository,
+                cache,
+                cipher: {
+                    encrypt: async () => {
+                        throw new Error('unused');
+                    },
+                    decrypt: async () => {
+                        throw new Error('database gone');
+                    },
+                },
+                options: { enabled: true },
+            });
+
+            await expect(service.verify(userId, {
+                kind: UserAuthenticatorKind.TOTP,
+                response: totpCode(enrolled.secret!),
+            })).rejects.toThrow('database gone');
+
+            const attempts = await cache.get(buildCacheKey({
+                prefix: USER_AUTHENTICATOR_ATTEMPT_CACHE_PREFIX,
+                key: userId,
+            }));
+            expect(attempts ?? null).toBeNull();
+        });
     });
 
     describe('per-account backoff', () => {

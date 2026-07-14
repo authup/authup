@@ -10,6 +10,7 @@ import type { ISymmetricCipher } from '@authup/server-kit';
 import { SymmetricCipher } from '@authup/server-kit';
 import { JWKUse } from '@authup/specs';
 import { REALM_CIPHER_BLOB_VERSION } from './constants.ts';
+import { RealmCipherBlobError } from './error.ts';
 import type { IKeyRepository, IRealmCipher } from './types.ts';
 
 export type RealmCipherContext = {
@@ -53,7 +54,7 @@ export class RealmCipher implements IRealmCipher {
     async decrypt(blob: string, realmId: string) : Promise<string> {
         const parts = blob.split('.');
         if (parts.length !== 3 || parts[0] !== REALM_CIPHER_BLOB_VERSION) {
-            throw new AuthupError('The cipher blob is malformed.');
+            throw new RealmCipherBlobError('The cipher blob is malformed.');
         }
 
         const [, keyId, payload] = parts;
@@ -66,17 +67,23 @@ export class RealmCipher implements IRealmCipher {
                 key.use !== JWKUse.ENCRYPTION ||
                 !key.decryption_key
             ) {
-                throw new AuthupError(`The cipher blob references an unknown encryption key (${keyId}).`);
+                throw new RealmCipherBlobError(`The cipher blob references an unknown encryption key (${keyId}).`);
             }
 
             entry = this.resolveCipher(key.id, key.realm_id, key.decryption_key);
         }
 
         if (entry.realmId !== realmId) {
-            throw new AuthupError(`The cipher blob references a foreign realm's encryption key (${keyId}).`);
+            throw new RealmCipherBlobError(`The cipher blob references a foreign realm's encryption key (${keyId}).`);
         }
 
-        return entry.cipher.decrypt(payload);
+        try {
+            return await entry.cipher.decrypt(payload);
+        } catch {
+            // failed GCM authentication / corrupt payload — blob semantics,
+            // not infrastructure.
+            throw new RealmCipherBlobError(`The cipher blob could not be decrypted (${keyId}).`);
+        }
     }
 
     protected resolveCipher(

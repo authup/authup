@@ -40,6 +40,7 @@ import type {
 import { Secret, TOTP } from 'otpauth';
 import QRCode from 'qrcode';
 import type { AuthenticationResponseJSON, RegistrationResponseJSON } from '@simplewebauthn/server';
+import { isRealmCipherBlobError } from '../../key/index.ts';
 import type { IRealmCipher } from '../../key/index.ts';
 import type { IEventService } from '../event/index.ts';
 import type { IMailClient, IMailTemplateRenderer } from '../../mail/index.ts';
@@ -742,8 +743,15 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             // key-id-addressed blob; one referencing an unknown or foreign
             // key fails closed as a verification failure, never a 500.
             seed = await this.cipher.decrypt(device.secret, device.realm_id);
-        } catch {
-            return false;
+        } catch (e) {
+            // ... but ONLY for blob-semantics failures. Infrastructure errors
+            // (database outage, KEK misconfiguration) must bubble — mapping
+            // them to `false` would burn throttle attempts on a blip.
+            if (isRealmCipherBlobError(e)) {
+                return false;
+            }
+
+            throw e;
         }
 
         let parameters : UserAuthenticatorTotpParameters = {

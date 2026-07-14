@@ -10,7 +10,7 @@ import type { Key, Realm } from '@authup/core-kit';
 import { isAuthupError } from '@authup/errors';
 import { JWKType, JWKUse } from '@authup/specs';
 import { describe, expect, it } from 'vitest';
-import { REALM_CIPHER_BLOB_VERSION, RealmCipher } from '../../../../src/core/key/index.ts';
+import { REALM_CIPHER_BLOB_VERSION, RealmCipher, isRealmCipherBlobError } from '../../../../src/core/key/index.ts';
 import { FakeKeyRepository } from '../helpers/index.ts';
 
 const TIMESTAMP = '2026-01-01T00:00:00.000Z';
@@ -135,5 +135,31 @@ describe('core/key/realm-cipher', () => {
         const cipher = new RealmCipher({ keyRepository: new FakeKeyRepository(null) });
 
         await expect(cipher.encrypt('seed-material', randomUUID())).rejects.toThrow(/encryption key/);
+    });
+
+    it('classifies blob-semantics failures as RealmCipherBlobError (fail-closed class)', async () => {
+        const realmId = randomUUID();
+        const key = buildEncKey(realmId);
+        const cipher = new RealmCipher({ keyRepository: new FakeKeyRepository(key) });
+        const blob = await cipher.encrypt('seed-material', realmId);
+
+        expect.assertions(2);
+
+        // tampered payload — failed GCM authentication
+        const [version, keyId] = blob.split('.');
+        const tampered = [version, keyId, Buffer.alloc(32, 9).toString('base64')].join('.');
+        try {
+            await cipher.decrypt(tampered, realmId);
+        } catch (e) {
+            expect(isRealmCipherBlobError(e)).toBeTruthy();
+        }
+
+        // unknown key reference
+        const empty = new RealmCipher({ keyRepository: new FakeKeyRepository(null) });
+        try {
+            await empty.decrypt(blob, realmId);
+        } catch (e) {
+            expect(isRealmCipherBlobError(e)).toBeTruthy();
+        }
     });
 });

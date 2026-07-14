@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './check.ts';
 export * from './constants.ts';
+export * from './error.ts';
 export * from './realm-cipher.ts';
 export * from './types.ts';
 export * from './wrap.ts';
