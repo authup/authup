@@ -7,6 +7,7 @@
 
 export * from './authentication/index.ts';
 export * from './entities/index.ts';
+export * from './key/index.ts';
 export * from './mail/index.ts';
 export * from './metrics/index.ts';
 export * from './oauth2/index.ts';

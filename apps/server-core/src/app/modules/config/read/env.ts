@@ -174,11 +174,6 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.mfaRequired = mfaRequired;
     }
 
-    const mfaEncryptionKey = read(ConfigEnvironmentVariableName.MFA_ENCRYPTION_KEY);
-    if (mfaEncryptionKey) {
-        options.mfaEncryptionKey = mfaEncryptionKey;
-    }
-
     const mfaFreshnessMaxAge = readInt(ConfigEnvironmentVariableName.MFA_FRESHNESS_MAX_AGE);
     if (typeof mfaFreshnessMaxAge !== 'undefined') {
         options.mfaFreshnessMaxAge = mfaFreshnessMaxAge;
@@ -187,6 +182,11 @@ export function readConfigRawFromEnv() : ConfigInput {
     const mfaTicketMaxAge = readInt(ConfigEnvironmentVariableName.MFA_TICKET_MAX_AGE);
     if (typeof mfaTicketMaxAge !== 'undefined') {
         options.mfaTicketMaxAge = mfaTicketMaxAge;
+    }
+
+    const secretsEncryptionKey = read(ConfigEnvironmentVariableName.SECRETS_ENCRYPTION_KEY);
+    if (secretsEncryptionKey) {
+        options.secretsEncryptionKey = secretsEncryptionKey;
     }
 
     // ---------------------------------------------------------------

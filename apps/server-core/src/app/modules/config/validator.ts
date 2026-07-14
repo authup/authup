@@ -93,11 +93,12 @@ export class ConfigValidator extends Container<Config> {
             loginAttemptThreshold: createValidator(z.number().int().positive()),
             loginAttemptWindow: createValidator(z.number().int().positive()),
 
+            // '' = unset; otherwise a base64 string (normalizeConfig enforces
+            // the decoded 32-byte length at boot).
+            secretsEncryptionKey: createValidator(z.union([z.literal(''), z.base64()])),
+
             mfaEnabled: booleanValidator,
             mfaRequired: booleanValidator,
-            // '' = unset; otherwise a base64 string (the cipher enforces
-            // the decoded 32-byte length at boot).
-            mfaEncryptionKey: createValidator(z.union([z.literal(''), z.base64()])),
             mfaFreshnessMaxAge: nonNegativeNumberValidator,
             mfaTicketMaxAge: createValidator(z.number().int().positive()),
 

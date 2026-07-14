@@ -17,7 +17,7 @@ import {
     vi,
 } from 'vitest';
 import { OAuth2TokenSigner } from '../../../../../../src/core/oauth2/token/signer/module.ts';
-import { FakeOAuth2KeyRepository } from '../../../helpers/fake-oauth2-key-repository.ts';
+import { FakeKeyRepository } from '../../../helpers/fake-key-repository.ts';
 
 vi.mock('@authup/server-kit', () => ({ signToken: vi.fn().mockResolvedValue('signed-jwt-token') }));
 
@@ -41,7 +41,7 @@ describe('OAuth2TokenSigner', () => {
     });
 
     it('should throw JWKError when payload has no realm_id', async () => {
-        const keyRepo = new FakeOAuth2KeyRepository();
+        const keyRepo = new FakeKeyRepository();
         const signer = new OAuth2TokenSigner(keyRepo);
         const payload = createPayload({ realm_id: undefined });
 
@@ -49,7 +49,7 @@ describe('OAuth2TokenSigner', () => {
     });
 
     it('should throw JWKError when no key found for realm', async () => {
-        const keyRepo = new FakeOAuth2KeyRepository(null);
+        const keyRepo = new FakeKeyRepository(null);
         const signer = new OAuth2TokenSigner(keyRepo);
 
         await expect(signer.sign(createPayload())).rejects.toThrow(JWKError);
@@ -62,7 +62,7 @@ describe('OAuth2TokenSigner', () => {
             decryption_key: null,
             realm_id: randomUUID(),
         } as unknown as Key;
-        const keyRepo = new FakeOAuth2KeyRepository(key);
+        const keyRepo = new FakeKeyRepository(key);
         const signer = new OAuth2TokenSigner(keyRepo);
 
         await expect(signer.sign(createPayload())).rejects.toThrow(JWKError);
@@ -75,7 +75,7 @@ describe('OAuth2TokenSigner', () => {
             decryption_key: 'secret-key',
             realm_id: randomUUID(),
         } as unknown as Key;
-        const keyRepo = new FakeOAuth2KeyRepository(key);
+        const keyRepo = new FakeKeyRepository(key);
         const signer = new OAuth2TokenSigner(keyRepo);
         const payload = createPayload();
 
@@ -96,7 +96,7 @@ describe('OAuth2TokenSigner', () => {
             signature_algorithm: 'ES256',
             realm_id: randomUUID(),
         } as unknown as Key;
-        const keyRepo = new FakeOAuth2KeyRepository(key);
+        const keyRepo = new FakeKeyRepository(key);
         const signer = new OAuth2TokenSigner(keyRepo);
 
         const result = await signer.sign(createPayload());
@@ -117,7 +117,7 @@ describe('OAuth2TokenSigner', () => {
             signature_algorithm: 'RS256',
             realm_id: randomUUID(),
         } as unknown as Key;
-        const keyRepo = new FakeOAuth2KeyRepository(key);
+        const keyRepo = new FakeKeyRepository(key);
         const signer = new OAuth2TokenSigner(keyRepo);
 
         const result = await signer.sign(createPayload());

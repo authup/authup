@@ -36,11 +36,11 @@ import type {
     ActorContext,
     EntityRepositoryFindManyResult,
     ICache,
-    ISymmetricCipher,
 } from '@authup/server-kit';
 import { Secret, TOTP } from 'otpauth';
 import QRCode from 'qrcode';
 import type { AuthenticationResponseJSON, RegistrationResponseJSON } from '@simplewebauthn/server';
+import type { IRealmCipher } from '../../key/index.ts';
 import type { IEventService } from '../event/index.ts';
 import type { IMailClient, IMailTemplateRenderer } from '../../mail/index.ts';
 import { MailTemplateName } from '../../mail/index.ts';
@@ -106,7 +106,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
     protected cache: ICache;
 
-    protected cipher: ISymmetricCipher | null;
+    protected cipher: IRealmCipher;
 
     protected eventService?: IEventService;
 
@@ -124,7 +124,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         this.repository = ctx.repository;
         this.userRepository = ctx.userRepository;
         this.cache = ctx.cache;
-        this.cipher = ctx.cipher ?? null;
+        this.cipher = ctx.cipher;
         this.eventService = ctx.eventService;
         this.mailClient = ctx.mailClient;
         this.mailTemplateRenderer = ctx.mailTemplateRenderer;
@@ -408,8 +408,6 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
     }
 
     protected async enrollTotp(user: User, name: string | null): Promise<UserAuthenticatorEnrollResult> {
-        const cipher = this.assertCipher();
-
         const secret = new Secret({ size: 20 });
         const parameters : UserAuthenticatorTotpParameters = {
             algorithm: USER_AUTHENTICATOR_TOTP_ALGORITHM,
@@ -430,7 +428,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         let entity = this.repository.create({
             kind: UserAuthenticatorKind.TOTP,
             name,
-            secret: await cipher.encrypt(secret.base32),
+            secret: await this.cipher.encrypt(user.realm_id, secret.base32),
             parameters: JSON.stringify(parameters),
             confirmed: false,
             user_id: user.id,
@@ -739,7 +737,14 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             return false;
         }
 
-        const cipher = this.assertCipher();
+        let seed : string;
+        try {
+            // key-id-addressed blob; one referencing an unknown or foreign
+            // key fails closed as a verification failure, never a 500.
+            seed = await this.cipher.decrypt(device.secret, device.realm_id);
+        } catch {
+            return false;
+        }
 
         let parameters : UserAuthenticatorTotpParameters = {
             algorithm: USER_AUTHENTICATOR_TOTP_ALGORITHM,
@@ -754,7 +759,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             algorithm: parameters.algorithm,
             digits: parameters.digits,
             period: parameters.period,
-            secret: Secret.fromBase32(await cipher.decrypt(device.secret)),
+            secret: Secret.fromBase32(seed),
         });
 
         const delta = totp.validate({ token: token.trim(), window: 1 });
@@ -1008,18 +1013,6 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
                 message: 'Multi-factor authentication is not enabled.',
             });
         }
-    }
-
-    protected assertCipher(): ISymmetricCipher {
-        // fail-closed: never store or read a seed without a real key.
-        if (!this.cipher) {
-            throw new AuthupError({
-                code: ErrorCode.MFA_NOT_CONFIGURABLE,
-                message: 'Multi-factor authentication requires a configured encryption key (MFA_ENCRYPTION_KEY).',
-            });
-        }
-
-        return this.cipher;
     }
 
     protected assertMail(): void {

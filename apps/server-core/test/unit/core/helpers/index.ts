@@ -11,7 +11,7 @@ export * from './fake-mail-client.ts';
 export * from './fake-identity-permission-provider.ts';
 export * from './fake-identity-resolver.ts';
 export * from './fake-identity-role-provider.ts';
-export * from './fake-oauth2-key-repository.ts';
+export * from './fake-key-repository.ts';
 export * from './fake-oauth2-openid-token-issuer.ts';
 export * from './fake-oauth2-token-issuer.ts';
 export * from './fake-oauth2-token-repository.ts';

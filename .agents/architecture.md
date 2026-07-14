@@ -1955,18 +1955,17 @@ realtime), port `IUserAuthenticatorRepository` + `UserAuthenticatorService` in
 **Secret handling — the load-bearing rules:**
 
 - The TOTP seed must be *recoverable* (verification recomputes codes), so it is
-  **AES-256-GCM-encrypted at rest** via `SymmetricCipher`
-  (`@authup/server-kit`, `crypto/symmetric-cipher/` — blob =
-  `base64(iv ‖ ciphertext ‖ tag)`) under the config `mfaEncryptionKey`
-  (env `MFA_ENCRYPTION_KEY`, standard base64 decoding to exactly 32 bytes —
-  e.g. `openssl rand -base64 32`; there is **no key-rotation path**, so a
-  rotated/lost key orphans enrolled TOTP seeds and forces re-enrollment;
-  generation + caveat are user-documented in
-  `docs/src/guide/deployment/configuration-server-core.md`). Fail-closed at
-  every layer:
-  `normalizeConfig` throws at boot when `mfaEnabled` without a key, the service
-  refuses TOTP enrollment/verification without a cipher
-  (`ErrorCode.MFA_NOT_CONFIGURABLE`).
+  **AES-256-GCM-encrypted at rest** under the user's realm enc key from the
+  **realm key store** (plan 069 — see *Realm Key Store* below): the service's
+  `cipher` ctx is an `IRealmCipher` (`core/key/`), enroll encrypts via
+  `cipher.encrypt(user.realm_id, seed)` into a self-describing
+  `v1.<key_id>.<blob>` and verify decrypts by the blob's key id with a
+  `device.realm_id` binding assert. Keys are auto-generated per realm on first
+  use — **zero key configuration** (`MFA_ENABLED=true` suffices; the former
+  `MFA_ENCRYPTION_KEY` was removed unreleased). A blob referencing an
+  unknown/foreign key fails closed as a plain verification failure (never a
+  500); the TOTP `MFA_NOT_CONFIGURABLE` path is gone (it remains for
+  WebAuthn-without-`publicUrl` and email-without-mail-transport).
 - Recovery codes are **bcrypt-hashed** (`hash`/`compare` from server-kit),
   stored as a JSON `{hash, used_at}[]` blob on a single `kind:'recovery'` row
   (regenerate semantics — re-enrolling replaces the set); single-use (`used_at`
@@ -2130,9 +2129,10 @@ with the lockout deadline under `mfaThrottle:<user_id>` (TTL = the lock), so
 concurrent failures — verify or confirm — never under-count the
 `min(300, 1·2^(n−1))`s lock; reset on success, 429
 `MfaThrottledError` (`ErrorCode.MFA_ATTEMPT_THROTTLED`, `retryAfter` in the
-body). Config: `mfaEnabled` / `mfaRequired` / `mfaEncryptionKey`
-(`MFA_ENABLED` / `MFA_REQUIRED` / `MFA_ENCRYPTION_KEY`; `mfaRequired` requires
-`mfaEnabled`, boot-validated). Events: `mfaEnrolled` / `mfaRemoved` /
+body). Config: `mfaEnabled` / `mfaRequired`
+(`MFA_ENABLED` / `MFA_REQUIRED`; `mfaRequired` requires
+`mfaEnabled`, boot-validated — no key configuration; seed-encryption keys are
+auto-generated per realm, see *Realm Key Store*). Events: `mfaEnrolled` / `mfaRemoved` /
 `mfaVerified` / `mfaChallengeFailed` (`EventScope.IDENTITY`). Typed client:
 `client.userAuthenticator.*` (getMany/getOne/enroll/confirm/delete +
 `challenge()`/`verifyChallenge()`).
@@ -2143,6 +2143,61 @@ matrix incl. backoff + single-use + select:false modeling),
 surfaces), `test/unit/http/controllers/workflows/token/grant-password-mfa.spec.ts`
 (end-to-end: enroll → confirm → grant gated → otp accepted → authorize backstop
 → challenge stamps `mfa_at` → authorize passes; recovery replay rejected).
+
+## Realm Key Store (plan 069)
+
+`auth_keys` is the general **per-realm key store**, discriminated by the JWK
+`use` column (`sig` | `enc`, RFC 7517 §4.2 — `JWKUse` in `@authup/specs`;
+core-kit `Key.use`, `signature_algorithm` nullable for enc keys). Keys are
+minted **lazily on first use** per `(realm, use)` — `sig` → RS256 RSA pair
+(as before), `enc` → 32 random bytes (oct) in the `select:false`
+`decryption_key` column. Port `IKeyRepository`
+(`core/key/types.ts` — `findByRealmId(realmId, use)` get-or-create ordered
+`priority DESC`, `findById`), adapter `KeyRepositoryAdapter`
+(`app/modules/oauth2/repositories/key/`, DI
+`OAuth2InjectionToken.KeyRepository`). The former `core/oauth2/key/`
+`IOAuth2KeyRepository` is gone — signer/verifier/authorize-grant consume
+`IKeyRepository` with an explicit `JWKUse.SIGNATURE`.
+
+- **`use` hygiene is load-bearing:** the signer supports oct (HMAC) keys, so
+  without the filter it could sign tokens with a realm's *enc* key. Every sig
+  consumer filters: signer + authorize grant (at_hash alg) pass
+  `JWKUse.SIGNATURE` to `findByRealmId`; the verifier rejects a `kid`
+  resolving to a non-sig key (`JWKError.notFound`); both JWKS surfaces
+  (`JwkController`, realm `jwks` handlers) add `use: JWKUse.SIGNATURE` to
+  their where clauses — an enc key must never appear in a JWKS response.
+- **`RealmCipher`** (`core/key/realm-cipher.ts`, `IRealmCipher`) provides
+  realm-scoped at-rest encryption over the enc keys:
+  `encrypt(realmId, plain)` → self-describing blob `v1.<key_id>.<payload>`;
+  `decrypt(blob, realmId?)` resolves the key **by the blob's id** (so
+  concurrent get-or-create races and future rotation never orphan a blob) and
+  asserts the realm binding when given. Imported `SymmetricCipher`s are
+  cached per key id (material is immutable). Consumer today: the MFA seed
+  cipher (`UserAuthenticatorService` ctx); plan 070 adds client
+  `secret_encrypted`, IdP `client_secret`, LDAP bind password.
+- **Optional KEK — config `secretsEncryptionKey` (`SECRETS_ENCRYPTION_KEY`,
+  base64 32 bytes, boot-validated when set):** the adapter persists
+  `decryption_key` material (RSA private keys AND oct material — never the
+  public `encryption_key`) wrapped as `wrapped.v1.<blob>`
+  (`wrapKeyMaterial`/`unwrapKeyMaterial` in `core/key/wrap.ts`), unwraps
+  transparently on read, and **lazily wraps** pre-existing plaintext rows on
+  read (best-effort write-back), so adding a KEK to a running deployment
+  hardens it without a migration. A wrapped row met without a KEK fails loud
+  (`AuthupError`). Unset = plaintext-at-rest (Keycloak/authentik parity;
+  verified 2026-07-14, `.agents/references/{keycloak,authentik}.md`) with a
+  one-time production boot warning. Rotation semantics are designed but have
+  no API yet: multiple enc rows per realm order by `priority` (highest
+  encrypts, old rows stay decrypt-only via key-id addressing).
+- **Realm delete = crypto-shredding:** `auth_keys.realm_id` is ON DELETE
+  CASCADE, so deleting a realm drops its enc keys and every seed encrypted
+  under them becomes unrecoverable noise.
+
+Tests: `test/unit/core/key/{wrap,realm-cipher}.spec.ts` (KEK matrix, blob
+addressing, foreign-realm/unknown-key/sig-key fail-closed),
+`test/unit/http/controllers/workflows/key-store.spec.ts` (e2e: token + MFA
+flows over a KEK-wrapped store, at-rest `wrapped.v1.` assert, JWKS
+enc-exclusion), enc-key `kid` rejection in
+`test/unit/core/oauth2/token/verifier/module.spec.ts`.
 
 **UI (kit + app):** the challenge step is `AMfaChallengeForm`
 (`client-web-kit/src/components/workflows/mfa/`) — code input posting to

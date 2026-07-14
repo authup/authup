@@ -22,6 +22,10 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  *   covering check. FKs to auth_clients / auth_realms and a nullable user_id
  *   FK (all ON DELETE CASCADE, so a user deletion drops its consents;
  *   plan 055).
+ * - Adds auth_keys.use: JWK-use discriminator (sig | enc, RFC 7517 §4.2) —
+ *   generalizes auth_keys into the per-realm key store. enc rows hold the
+ *   realm's auto-generated symmetric at-rest encryption key (oct) that the
+ *   MFA seed cipher rides; existing rows default to sig (plan 069).
  */
 export class Default1783856507391 implements MigrationInterface {
     name = 'Default1783856507391';
@@ -106,10 +110,20 @@ export class Default1783856507391 implements MigrationInterface {
             ALTER TABLE \`auth_consents\`
             ADD CONSTRAINT \`FK_auth_consents_user_id\` FOREIGN KEY (\`user_id\`) REFERENCES \`auth_users\`(\`id\`) ON DELETE CASCADE ON UPDATE NO ACTION
         `);
+
+        // realm key store use discriminator (plan 069)
+        await queryRunner.query(`
+            ALTER TABLE \`auth_keys\` ADD \`use\` varchar(64) NOT NULL DEFAULT 'sig'
+        `);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        // persisted per-scope consent (plan 055) — reverse last-in-first-out
+        // realm key store use discriminator (plan 069) — reverse last-in-first-out
+        await queryRunner.query(`
+            ALTER TABLE \`auth_keys\` DROP COLUMN \`use\`
+        `);
+
+        // persisted per-scope consent (plan 055)
         await queryRunner.query(`
             ALTER TABLE \`auth_consents\` DROP FOREIGN KEY \`FK_auth_consents_user_id\`
         `);

@@ -7,14 +7,14 @@
 
 import { type TokenECAlgorithm, type TokenRSAAlgorithm, signToken } from '@authup/server-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
-import { JWKError, JWKType } from '@authup/specs';
-import type { IOAuth2KeyRepository } from '../../key/index.ts';
+import { JWKError, JWKType, JWKUse } from '@authup/specs';
+import type { IKeyRepository } from '../../../key/index.ts';
 import type { IOAuth2TokenSigner } from './types.ts';
 
 export class OAuth2TokenSigner implements IOAuth2TokenSigner {
-    protected keyRepository : IOAuth2KeyRepository;
+    protected keyRepository : IKeyRepository;
 
-    constructor(keyRepository : IOAuth2KeyRepository) {
+    constructor(keyRepository : IKeyRepository) {
         this.keyRepository = keyRepository;
     }
 
@@ -23,7 +23,7 @@ export class OAuth2TokenSigner implements IOAuth2TokenSigner {
             throw JWKError.invalidRealm();
         }
 
-        const key = await this.keyRepository.findByRealmId(payload.realm_id);
+        const key = await this.keyRepository.findByRealmId(payload.realm_id, JWKUse.SIGNATURE);
         if (!key) {
             throw JWKError.notFoundForRealm(payload.realm_id, payload.realm_name);
         }

@@ -5,18 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { SymmetricCipher } from '@authup/server-kit';
 import type { Repository } from 'typeorm';
 import { CacheInjectionKey } from '../cache/index.ts';
 import type { IContainer } from 'eldin';
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
+import { LoggerInjectionKey } from '../logger/index.ts';
 
 import {
     ConsentRepositoryAdapter,
+    KeyRepositoryAdapter,
     OAuth2AuthorizationCodeRepository,
     OAuth2AuthorizationStateRepository,
     OAuth2ClientRepository,
-    OAuth2KeyRepository,
     OAuth2ScopeRepository,
     OAuth2TokenRepository,
     SessionTokenRepositoryAdapter,
@@ -102,7 +104,24 @@ export class OAuth2Module implements IModule {
 
         container.register(OAuth2InjectionToken.KeyRepository, {
             // todo: cache use here
-            useFactory: (c) => new OAuth2KeyRepository(c.resolve(DatabaseInjectionKey.DataSource)),
+            useFactory: (c) => {
+                const config = c.resolve(ConfigInjectionKey);
+
+                let secretsCipher : SymmetricCipher | null = null;
+                if (config.secretsEncryptionKey) {
+                    secretsCipher = new SymmetricCipher(config.secretsEncryptionKey);
+                } else if (config.env === 'production') {
+                    // parity posture without a KEK (Keycloak/authentik store key
+                    // material plaintext too) — but say so once, loudly.
+                    const logger = c.resolve(LoggerInjectionKey);
+                    logger.warn(
+                        'The realm key store persists key material unwrapped; ' +
+                        'set SECRETS_ENCRYPTION_KEY to wrap it at rest.',
+                    );
+                }
+
+                return new KeyRepositoryAdapter(c.resolve(DatabaseInjectionKey.DataSource), { secretsCipher });
+            },
         });
 
         container.register(OAuth2InjectionToken.TokenSigner, {

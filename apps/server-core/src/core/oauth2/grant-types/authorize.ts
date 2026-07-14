@@ -6,11 +6,11 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
-import { JWKError, hasOAuth2Scopes } from '@authup/specs';
+import { JWKError, JWKUse, hasOAuth2Scopes } from '@authup/specs';
 import type { OAuth2AuthorizationCode, Session } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import { buildOAuth2TokenHash, deriveAmrAcr } from '../authorization/helpers.ts';
-import type { IOAuth2KeyRepository } from '../key/index.ts';
+import type { IKeyRepository } from '../../key/index.ts';
 import type { IOAuth2OpenIDTokenIssuer, IOAuth2TokenIssuer } from '../token/index.ts';
 import { OAuth2BaseGrant } from './base.ts';
 import type { IOAuth2Grant, OAuth2AuthorizeGrantContext, OAuth2GrantRunWIthOptions } from './types.ts';
@@ -22,7 +22,7 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
 
     protected openIdTokenIssuer : IOAuth2OpenIDTokenIssuer;
 
-    protected keyRepository : IOAuth2KeyRepository;
+    protected keyRepository : IKeyRepository;
 
     constructor(ctx: OAuth2AuthorizeGrantContext) {
         super({
@@ -81,7 +81,7 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
             // §3.1.3.6) — the alg of the realm key the openid issuer signs
             // with. The access token above was signed with the same key, so a
             // missing key would already have thrown; this guard fails closed.
-            const key = await this.keyRepository.findByRealmId(authorizationCode.realm_id);
+            const key = await this.keyRepository.findByRealmId(authorizationCode.realm_id, JWKUse.SIGNATURE);
             if (!key) {
                 throw JWKError.notFoundForRealm(authorizationCode.realm_id, authorizationCode.realm_name);
             }

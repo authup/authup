@@ -121,7 +121,6 @@ import {
     TokenController,
 } from '../../../../adapters/http/controllers/index.ts';
 import type { IContainer } from 'eldin';
-import { SymmetricCipher } from '@authup/server-kit';
 import {
     ClientAuthenticator,
     ClientPermissionService,
@@ -142,6 +141,7 @@ import {
     PermissionService,
     PolicyCheckerService,
     PolicyService,
+    RealmCipher,
     RealmService,
     RegistrationService,
     RobotAuthenticator,
@@ -834,9 +834,7 @@ export class HTTPControllerModule {
             repository,
             userRepository,
             cache: container.resolve(CacheInjectionKey),
-            cipher: config.mfaEncryptionKey ?
-                new SymmetricCipher(config.mfaEncryptionKey) :
-                null,
+            cipher: new RealmCipher({ keyRepository: container.resolve(OAuth2InjectionToken.KeyRepository) }),
             eventService: container.resolve(DatabaseInjectionKey.EventService),
             mailClient: container.resolve(MailInjectionKey),
             mailTemplateRenderer: container.resolve(MailTemplateRendererInjectionKey),

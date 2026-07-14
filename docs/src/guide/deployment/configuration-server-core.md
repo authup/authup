@@ -179,11 +179,30 @@ export default {
     loginAttemptWindow: 900,
 
     /**
+     * Optional base64-encoded 32-byte key (AES-256-GCM) wrapping the
+     * realm key store's material at rest — the per-realm JWT signing
+     * private keys and the auto-generated per-realm encryption keys
+     * that protect MFA seeds. Generate one with:
+     * openssl rand -base64 32
+     * or:
+     * node -e "console.log(crypto.randomBytes(32).toString('base64'))"
+     * Must be standard base64 (+, /, = padding) decoding to exactly
+     * 32 bytes — base64url or any other length is rejected at startup.
+     * Unset, key material is stored unwrapped in the database (the
+     * Keycloak/authentik posture). Setting it later wraps existing
+     * rows lazily on read; removing it while wrapped rows exist fails
+     * loud at first use, so treat it as a long-lived secret.
+     * default: '' (unset)
+     */
+    secretsEncryptionKey: '',
+
+    /**
      * Enable multi-factor authentication. Users can enroll authenticator
      * devices (TOTP app, recovery codes); a user holding a confirmed
      * device must present a second factor on interactive authorization
-     * and on the password grant (otp parameter).
-     * Requires mfaEncryptionKey.
+     * and on the password grant (otp parameter). Seed-encryption keys
+     * are generated per realm automatically — no further configuration
+     * is required.
      * default: false
      */
     mfaEnabled: false,
@@ -195,21 +214,6 @@ export default {
      * default: false
      */
     mfaRequired: false,
-
-    /**
-     * Base64-encoded 32-byte key encrypting TOTP seeds at rest
-     * (AES-256-GCM). Generate one with:
-     * openssl rand -base64 32
-     * or:
-     * node -e "console.log(crypto.randomBytes(32).toString('base64'))"
-     * Must be standard base64 (+, /, = padding) decoding to exactly
-     * 32 bytes — base64url or any other length is rejected at startup.
-     * Treat it as a long-lived secret: there is no key-rotation path,
-     * so rotating or losing the key makes already-enrolled TOTP devices
-     * undecryptable and forces users to re-enroll them.
-     * default: '' (unset)
-     */
-    mfaEncryptionKey: '',
 
     /**
      * Max age (seconds) of the session's second-factor proof an
@@ -296,9 +300,9 @@ eventLogEntityRetentionDays=7
 loginAttemptThrottleEnabled=false
 loginAttemptThreshold=5
 loginAttemptWindow=900
+secretsEncryptionKey=
 mfaEnabled=false
 mfaRequired=false
-mfaEncryptionKey=
 mfaFreshnessMaxAge=60
 mfaTicketMaxAge=600
 userAdminPassword=start123
@@ -325,9 +329,9 @@ EVENT_LOG_ENTITY_RETENTION_DAYS=7
 LOGIN_ATTEMPT_THROTTLE_ENABLED=false
 LOGIN_ATTEMPT_THRESHOLD=5
 LOGIN_ATTEMPT_WINDOW=900
+SECRETS_ENCRYPTION_KEY=
 MFA_ENABLED=false
 MFA_REQUIRED=false
-MFA_ENCRYPTION_KEY=
 MFA_FRESHNESS_MAX_AGE=60
 MFA_TICKET_MAX_AGE=600
 USER_ADMIN_PASSWORD=start123

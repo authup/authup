@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { JWKType, JWTAlgorithm } from '@authup/specs';
+import type { JWKType, JWKUse, JWTAlgorithm } from '@authup/specs';
 import type { Realm } from '../realm';
 
 export interface Key {
@@ -17,9 +17,15 @@ export interface Key {
     type: `${JWKType}`,
 
     /**
-     * Algorithm for signing and verifying
+     * Intended usage (RFC 7517 §4.2): sig (token signing/verification)
+     * or enc (at-rest data encryption).
      */
-    signature_algorithm: `${JWTAlgorithm}`
+    use: `${JWKUse}`,
+
+    /**
+     * Algorithm for signing and verifying. Null for enc keys.
+     */
+    signature_algorithm: `${JWTAlgorithm}` | null
 
     /**
      * Usage priority.
