@@ -29,6 +29,8 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  *   auth_keys.status (lifecycle: active/passive/disabled) and the dormant
  *   auth_keys.certificate (PEM chain, Stage B) — key management API
  *   (plan 071 Stage A).
+ * - Adds auth_trust_anchors: realm-scoped public CA certificates used by
+ *   RFC 8705 PKI client authentication (plan 071 Stage C).
  */
 export class Default1783856507391 implements MigrationInterface {
     name = 'Default1783856507391';
@@ -139,9 +141,38 @@ export class Default1783856507391 implements MigrationInterface {
         await queryRunner.query(`
             ALTER TABLE "auth_keys" ADD "certificate" text
         `);
+
+        // RFC 8705 realm trust anchors (plan 071 Stage C)
+        await queryRunner.query(`
+            CREATE TABLE "auth_trust_anchors" (
+                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "name" character varying(128) NOT NULL,
+                "certificate" text NOT NULL,
+                "enabled" boolean NOT NULL DEFAULT true,
+                "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+                "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
+                "realm_id" uuid NOT NULL,
+                CONSTRAINT "UQ_auth_trust_anchors_name_realm_id" UNIQUE ("name", "realm_id"),
+                CONSTRAINT "PK_auth_trust_anchors" PRIMARY KEY ("id")
+            )
+        `);
+        await queryRunner.query('CREATE INDEX "IDX_auth_trust_anchors_realm_id" ON "auth_trust_anchors" ("realm_id")');
+        await queryRunner.query(`
+            ALTER TABLE "auth_trust_anchors"
+            ADD CONSTRAINT "FK_auth_trust_anchors_realm_id" FOREIGN KEY ("realm_id") REFERENCES "auth_realms"("id") ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
+        // RFC 8705 realm trust anchors (plan 071 Stage C)
+        await queryRunner.query(`
+            ALTER TABLE "auth_trust_anchors" DROP CONSTRAINT "FK_auth_trust_anchors_realm_id"
+        `);
+        await queryRunner.query('DROP INDEX "public"."IDX_auth_trust_anchors_realm_id"');
+        await queryRunner.query(`
+            DROP TABLE "auth_trust_anchors"
+        `);
+
         // key management API (plan 071 Stage A) — reverse last-in-first-out
         await queryRunner.query(`
             ALTER TABLE "auth_keys" DROP COLUMN "certificate"

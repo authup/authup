@@ -2154,7 +2154,7 @@ surfaces), `test/unit/http/controllers/workflows/token/grant-password-mfa.spec.t
 (end-to-end: enroll → confirm → grant gated → otp accepted → authorize backstop
 → challenge stamps `mfa_at` → authorize passes; recovery replay rejected).
 
-## Realm Key Store (plans 069 + 071 Stages A/B)
+## Realm Key Store (plans 069 + 071 Stages A-C)
 
 `auth_keys` is the general **per-realm key store**, discriminated by the JWK
 `use` column (`sig` | `enc`, RFC 7517 §4.2 — `JWKUse` in `@authup/specs`;
@@ -2233,6 +2233,23 @@ leaf-first standard-base64 DER plus `x5t#S256` as the base64url SHA-256 digest
 of the leaf DER. A malformed stored certificate never takes down JWKS: the
 usable public JWK is still published without certificate fields. Stage B
 reuses the dormant nullable column from Stage A and needs no migration.
+
+**Trusted CAs (plan 071 Stage C):** `auth_trust_anchors` is a separate,
+realm-bound store for public CA certificates; it is deliberately independent
+of `auth_keys` because trust anchors have no operational signing/encryption
+key material and must never enter signer, verifier, cipher, provisioner, or
+JWKS selection. Each row has a canonical name unique within its realm, an
+immutable PEM certificate or chain, and an `enabled` switch. Creation parses
+the chain with `X509Certificate` and requires the first certificate's CA basic
+constraint; replacement is delete + create. `TrustAnchorService` and the
+dual-mounted `/trust-anchors` + `/realms/:realmId/trust-anchors` controller
+reuse `KEY_*` administration permissions and the same realm-scope discipline
+as keys. The web UI presents the collection as **Trusted CAs** inside `/keys`.
+Stage C intentionally provides only schema, CRUD API, typed client, and UI:
+the `enabled` anchors are consumed later by plan 072 when proxy-forwarded
+client certificates are authenticated for RFC 8705. Like keys, trust anchors
+have no entity subscriber. The table was folded into migration
+`1783856507391` while its release window remained open.
 
 - **`use` hygiene is load-bearing:** the signer supports oct (HMAC) keys, so
   without the filter it could sign tokens with a realm's *enc* key. Every sig

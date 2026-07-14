@@ -26,6 +26,7 @@ export * from './role-attribute';
 export * from './role-permission';
 export * from './scope';
 export * from './session';
+export * from './trust-anchor';
 export * from './user';
 export * from './user-attribute';
 export * from './user-authenticator';

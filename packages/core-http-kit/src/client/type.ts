@@ -33,6 +33,7 @@ import type {
     IScopeAPI,
     ISessionAPI,
     IStatusAPI,
+    ITrustAnchorAPI,
     IUserAPI,
     IUserAttributeAPI,
     IUserAuthenticatorAPI,
@@ -95,6 +96,8 @@ export interface IClient extends IBaseClient {
     readonly status : IStatusAPI;
 
     readonly token : IOAuth2TokenAPI;
+
+    readonly trustAnchor : ITrustAnchorAPI;
 
     readonly user : IUserAPI;
 

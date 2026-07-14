@@ -298,6 +298,7 @@ export enum TranslatorTranslationEntityKey {
     ROLE = 'role',
     SCOPE = 'scope',
     SESSION = 'session',
+    TRUST_ANCHOR = 'trustAnchor',
     USER = 'user',
 }
 
