@@ -35,7 +35,7 @@ import {
     USER_AUTHENTICATOR_WEBAUTHN_REG_CACHE_PREFIX,
 } from '../../../../../src/core/entities/user-authenticator/constants.ts';
 import type { UserAuthenticatorServiceOptions } from '../../../../../src/core/entities/user-authenticator/types.ts';
-import { FakeKeyRepository, FakeMailClient } from '../../helpers/index.ts';
+import { FakeKeyStore, FakeMailClient } from '../../helpers/index.ts';
 import { FakeUserRepository } from '../user/fake-repository.ts';
 import { FakeUserAuthenticatorRepository } from './fake-repository.ts';
 
@@ -49,8 +49,10 @@ function buildRealmCipher() {
     const timestamp = new Date().toISOString();
     const key: Key = {
         id: randomUUID(),
+        name: 'enc-test',
         type: JWKType.OCT,
         use: JWKUse.ENCRYPTION,
+        status: 'active',
         signature_algorithm: null,
         priority: 0,
         decryption_key: cipherKey,
@@ -69,7 +71,7 @@ function buildRealmCipher() {
         },
     };
 
-    return new RealmCipher({ keyRepository: new FakeKeyRepository(key) });
+    return new RealmCipher({ keyStore: new FakeKeyStore(key) });
 }
 
 function makeActor(options: {
@@ -364,7 +366,7 @@ describe('UserAuthenticatorService', () => {
                 repository,
                 userRepository,
                 cache,
-                cipher: new RealmCipher({ keyRepository: new FakeKeyRepository(null) }),
+                cipher: new RealmCipher({ keyStore: new FakeKeyStore(null) }),
                 options: { enabled: true },
             });
 

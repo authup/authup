@@ -95,7 +95,24 @@ Apps:
 
 **Explicit component imports (preferred):** new/changed kit or app code should `import { VC* } from '@vuecs/*'` + register in a local `components: {}` (or import for `h()`), rather than relying on the consumer's global `app.use(installX)` registration. This makes the dependency visible, type-checks props locally, and catches latent prop-type bugs that global / `resolveComponent('VC*')` lookups hide. `VCButton` and `VCIcon` were swept to explicit imports across kit + app (the global `app.use(vuecs, …)` registration stays as a fallback); the other `<VC*>` (VCTimeago, VCTable, VCFormGroup, VCList, VCModal, …) are still mostly global — migrate them opportunistically when a file is touched.
 
-### Plugin install order — important
+### Page placement — top-level pages vs detail tabs (client-web)
+
+**Entity-type collections always get a top-level page** (`/users`, `/roles`,
+`/keys`, `/events`, …), scoped to the active realm by the header realm
+switcher (`filter: { realm_id: [realmManagementId ?? null, null] }` — active
+realm + global rows). The realm switcher makes the realm context global
+chrome, so realm-scoped entities do NOT move under `/realms/[id]` — a realm
+tab would only duplicate the switcher (settled 2026-07-14, plan 071: keys
+went top-level for exactly this reason; events stay top-level because audit
+review is inherently cross-realm anyway).
+
+**Detail-page tabs render relations of one specific row**, never entity-type
+collections: junction-table associations (`users/[id]/roles` via
+`user_role`, `roles/[id]/permissions` via `role_permission`) and 1:n
+children owned by the row (`users/[id]/sessions`, `users/[id]/authenticators`
+— subject-owned records; also surfaced under `settings/*` for the own-user
+view). A tab like `users/[id]/sessions` is a parent-scoped *lens* over a
+collection, not its canonical home.
 
 `@vuecs/core` ≥ 3.1.0 (`installThemeManager`) now **merges install
 options into the existing manager** rather than dropping them on second

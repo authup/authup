@@ -6,23 +6,26 @@
  */
 
 import {
-    Column, 
-    CreateDateColumn, 
-    Entity, 
-    Index, 
-    JoinColumn, 
-    ManyToOne, 
-    PrimaryGeneratedColumn, 
+    Column,
+    CreateDateColumn,
+    Entity,
+    Index,
+    JoinColumn,
+    ManyToOne,
+    PrimaryGeneratedColumn,
+    Unique,
     UpdateDateColumn,
 } from 'typeorm';
 import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type { JWKType, JWKUse } from '@authup/specs';
 import type {
     Key,
+    KeyStatus,
     Realm,
 } from '@authup/core-kit';
 import { RealmEntity } from '../realm/index.ts';
 
+@Unique('UQ_auth_keys_name_realm_id', ['name', 'realm_id'])
 @Index([
     'priority',
     'realm_id',
@@ -32,6 +35,12 @@ import { RealmEntity } from '../realm/index.ts';
 export class KeyEntity implements Key {
     @PrimaryGeneratedColumn('uuid')
     id: string;
+
+    @Column({
+        type: 'varchar',
+        length: 128,
+    })
+    name: string;
 
     @Index()
     @Column({
@@ -58,6 +67,20 @@ export class KeyEntity implements Key {
     @Column({
         type: 'varchar',
         length: 64,
+        default: 'active',
+    })
+    status: `${KeyStatus}`;
+
+    @Column({
+        type: 'text',
+        nullable: true,
+        default: null,
+    })
+    certificate: string | null;
+
+    @Column({
+        type: 'varchar',
+        length: 64,
         default: null,
     })
     signature_algorithm: Key['signature_algorithm'];
@@ -68,7 +91,7 @@ export class KeyEntity implements Key {
         default: null,
         select: false,
     })
-    decryption_key?: string | null;
+    decryption_key: string | null;
 
     @Column({
         type: 'varchar',

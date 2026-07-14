@@ -6,11 +6,11 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
-import { JWKError, JWKUse, hasOAuth2Scopes } from '@authup/specs';
+import { JWKUse, hasOAuth2Scopes } from '@authup/specs';
 import type { OAuth2AuthorizationCode, Session } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import { buildOAuth2TokenHash, deriveAmrAcr } from '../authorization/helpers.ts';
-import type { IKeyRepository } from '../../key/index.ts';
+import type { IKeyStore } from '../../key/index.ts';
 import type { IOAuth2OpenIDTokenIssuer, IOAuth2TokenIssuer } from '../token/index.ts';
 import { OAuth2BaseGrant } from './base.ts';
 import type { IOAuth2Grant, OAuth2AuthorizeGrantContext, OAuth2GrantRunWIthOptions } from './types.ts';
@@ -22,7 +22,7 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
 
     protected openIdTokenIssuer : IOAuth2OpenIDTokenIssuer;
 
-    protected keyRepository : IKeyRepository;
+    protected keyStore : IKeyStore;
 
     constructor(ctx: OAuth2AuthorizeGrantContext) {
         super({
@@ -32,7 +32,7 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
 
         this.refreshTokenIssuer = ctx.refreshTokenIssuer;
         this.openIdTokenIssuer = ctx.openIdTokenIssuer;
-        this.keyRepository = ctx.keyRepository;
+        this.keyStore = ctx.keyStore;
     }
 
     async runWith(
@@ -80,11 +80,9 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
             // The at_hash digest follows the id_token's JWS alg (OIDC Core
             // §3.1.3.6) — the alg of the realm key the openid issuer signs
             // with. The access token above was signed with the same key, so a
-            // missing key would already have thrown; this guard fails closed.
-            const key = await this.keyRepository.findByRealmId(authorizationCode.realm_id, JWKUse.SIGNATURE);
-            if (!key) {
-                throw JWKError.notFoundForRealm(authorizationCode.realm_id, authorizationCode.realm_name);
-            }
+            // missing key would already have thrown; this resolves the same
+            // active key.
+            const key = await this.keyStore.resolveOrCreate(authorizationCode.realm_id, JWKUse.SIGNATURE);
 
             const [idToken] = await this.openIdTokenIssuer.issue({
                 sub: authorizationCode.sub || undefined,

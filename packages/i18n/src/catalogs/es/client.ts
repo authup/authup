@@ -135,4 +135,10 @@ export const TranslatorTranslationClientSpanish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.MFA_USE_PASSKEY]: 'Usar una clave de acceso',
     [TranslatorTranslationClientKey.MFA_PASSKEY_PROMPT]: 'Usa tu clave de acceso o llave de seguridad para continuar.',
     [TranslatorTranslationClientKey.MFA_ENROLL_WEBAUTHN]: 'Clave de acceso / llave de seguridad',
+    [TranslatorTranslationClientKey.KEY_USE_SIGNATURE]: 'Firma (sig)',
+    [TranslatorTranslationClientKey.KEY_USE_ENCRYPTION]: 'Cifrado (enc)',
+    [TranslatorTranslationClientKey.KEY_IMPORT_MATERIAL]: 'Importar material de clave existente',
+    [TranslatorTranslationClientKey.KEY_MATERIAL_OCT]: 'Material de clave (32 bytes, base64)',
+    [TranslatorTranslationClientKey.KEY_MATERIAL_PRIVATE]: 'Clave privada (PKCS#8, base64 o PEM)',
+    [TranslatorTranslationClientKey.KEY_MATERIAL_PUBLIC]: 'Clave pública (SPKI, base64 o PEM)',
 };

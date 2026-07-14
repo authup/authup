@@ -15,7 +15,6 @@ import { LoggerInjectionKey } from '../logger/index.ts';
 
 import {
     ConsentRepositoryAdapter,
-    KeyRepositoryAdapter,
     OAuth2AuthorizationCodeRepository,
     OAuth2AuthorizationStateRepository,
     OAuth2ClientRepository,
@@ -23,6 +22,7 @@ import {
     OAuth2TokenRepository,
     SessionTokenRepositoryAdapter,
 } from './repositories/index.ts';
+import { KeyRepositoryAdapter } from '../database/repositories/index.ts';
 import {
     OAuth2AccessTokenIssuer,
     OAuth2AuthorizationCodeIssuer,
@@ -102,7 +102,7 @@ export class OAuth2Module implements IModule {
             ),
         });
 
-        container.register(OAuth2InjectionToken.KeyRepository, {
+        container.register(OAuth2InjectionToken.KeyStore, {
             // todo: cache use here
             useFactory: (c) => {
                 const config = c.resolve(ConfigInjectionKey);
@@ -126,8 +126,8 @@ export class OAuth2Module implements IModule {
 
         container.register(OAuth2InjectionToken.TokenSigner, {
             useFactory: (c) => {
-                const keyRepository = c.resolve(OAuth2InjectionToken.KeyRepository);
-                return new OAuth2TokenSigner(keyRepository);
+                const keyStore = c.resolve(OAuth2InjectionToken.KeyStore);
+                return new OAuth2TokenSigner(keyStore);
             },
         });
 
@@ -186,10 +186,10 @@ export class OAuth2Module implements IModule {
         // token verifier
         container.register(OAuth2InjectionToken.TokenVerifier, {
             useFactory: (c) => {
-                const keyRepository = c.resolve(OAuth2InjectionToken.KeyRepository);
+                const keyStore = c.resolve(OAuth2InjectionToken.KeyStore);
                 const tokenRepository = c.resolve(OAuth2InjectionToken.TokenRepository);
 
-                return new OAuth2TokenVerifier(keyRepository, tokenRepository);
+                return new OAuth2TokenVerifier(keyStore, tokenRepository);
             },
         });
 

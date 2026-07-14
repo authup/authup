@@ -16,6 +16,7 @@ import {
     EventAPI,
     IdentityProviderAPI,
     IdentityProviderRoleMappingAPI,
+    KeyAPI,
     OAuth2AuthorizeAPI,
     OAuth2TokenAPI,
     OAuth2UserInfoAPI,
@@ -61,6 +62,8 @@ export class Client extends BaseClient implements IClient {
     public readonly identityProvider : IdentityProviderAPI;
 
     public readonly identityProviderRoleMapping : IdentityProviderRoleMappingAPI;
+
+    public readonly key : KeyAPI;
 
     public readonly policy: PolicyAPI;
 
@@ -143,6 +146,7 @@ export class Client extends BaseClient implements IClient {
         this.identityProvider = new IdentityProviderAPI({ client: this });
         this.identityProviderRoleMapping = new IdentityProviderRoleMappingAPI({ client: this });
 
+        this.key = new KeyAPI({ client: this });
         this.policy = new PolicyAPI({ client: this });
         this.permission = new PermissionAPI({ client: this });
         this.permissionPolicy = new PermissionPolicyAPI({ client: this });

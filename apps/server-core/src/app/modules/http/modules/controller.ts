@@ -89,6 +89,7 @@ import {
     EventController,
     IdentityProviderController,
     IdentityProviderRoleMappingController,
+    KeyController,
     PermissionController,
     PermissionPolicyController,
     PolicyController,
@@ -130,6 +131,8 @@ import {
     ConsentService,
     CredentialsAuthenticator,
     IdentityProviderRoleMappingService,
+    KeyProvisioner,
+    KeyService,
     LoginThrottleService,
     OAuth2AccessPolicyEvaluator,
     OAuth2ClientAuthenticator,
@@ -189,6 +192,7 @@ export class HTTPControllerModule {
         const roleAttributeController = this.createRoleAttributeController(container);
         const rolePermissionController = this.createRolePermissionController(container);
         const scopeController = this.createScopeController(container);
+        const keyController = this.createKeyController(container);
         const sessionController = this.createSessionController(container);
         const consentController = this.createConsentController(container);
         const userController = this.createUserController(container);
@@ -222,6 +226,7 @@ export class HTTPControllerModule {
                 eventController,
                 identityProviderRoleController,
                 this.createIdentityProvider(container),
+                keyController,
                 permissionController,
                 permissionPolicyController,
                 policyController,
@@ -291,7 +296,7 @@ export class HTTPControllerModule {
         const accessTokenIssuer = container.resolve(OAuth2InjectionToken.AccessTokenIssuer);
         const refreshTokenIssuer = container.resolve(OAuth2InjectionToken.RefreshTokenIssuer);
         const openIdTokenIssuer = container.resolve(OAuth2InjectionToken.OpenIDTokenIssuer);
-        const keyRepository = container.resolve(OAuth2InjectionToken.KeyRepository);
+        const keyStore = container.resolve(OAuth2InjectionToken.KeyStore);
 
         const tokenRevoker = container.resolve(OAuth2InjectionToken.TokenRevoker);
         const tokenVerifier = container.resolve(OAuth2InjectionToken.TokenVerifier);
@@ -331,7 +336,7 @@ export class HTTPControllerModule {
             accessTokenIssuer,
             refreshTokenIssuer,
             openIdTokenIssuer,
-            keyRepository,
+            keyStore,
 
             tokenVerifier,
             tokenRevoker,
@@ -760,6 +765,13 @@ export class HTTPControllerModule {
         return new ScopeController({ service });
     }
 
+    createKeyController(container: IContainer) {
+        // the DI singleton carries the optional KEK cipher — never construct
+        // a fresh adapter here.
+        const service = new KeyService({ repository: container.resolve(OAuth2InjectionToken.KeyStore) });
+        return new KeyController({ service });
+    }
+
     createSessionController(container: IContainer) {
         const repository = container.resolve(AuthenticationInjectionKey.SessionRepository);
         const service = new SessionService({ repository });
@@ -834,7 +846,7 @@ export class HTTPControllerModule {
             repository,
             userRepository,
             cache: container.resolve(CacheInjectionKey),
-            cipher: new RealmCipher({ keyRepository: container.resolve(OAuth2InjectionToken.KeyRepository) }),
+            cipher: new RealmCipher({ keyStore: container.resolve(OAuth2InjectionToken.KeyStore) }),
             eventService: container.resolve(DatabaseInjectionKey.EventService),
             mailClient: container.resolve(MailInjectionKey),
             mailTemplateRenderer: container.resolve(MailTemplateRendererInjectionKey),
@@ -999,10 +1011,15 @@ export class HTTPControllerModule {
             appOrigins: getAppOrigins(config),
             logger,
         });
+        const keyProvisioner = new KeyProvisioner({
+            keyStore: container.resolve(OAuth2InjectionToken.KeyStore),
+            logger,
+        });
 
         const service = new RealmService({
             repository,
             webClientProvisioner,
+            keyProvisioner,
             logger,
         });
         const keyRepository = dataSource.getRepository(KeyEntity);

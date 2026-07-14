@@ -153,6 +153,13 @@ export enum TranslatorTranslationClientKey {
     MFA_ENROLL_RECOVERY = 'mfaEnrollRecovery',
     MFA_ENROLL_EMAIL = 'mfaEnrollEmail',
     MFA_ENROLL_WEBAUTHN = 'mfaEnrollWebauthn',
+
+    KEY_USE_SIGNATURE = 'keyUseSignature',
+    KEY_USE_ENCRYPTION = 'keyUseEncryption',
+    KEY_IMPORT_MATERIAL = 'keyImportMaterial',
+    KEY_MATERIAL_OCT = 'keyMaterialOct',
+    KEY_MATERIAL_PRIVATE = 'keyMaterialPrivate',
+    KEY_MATERIAL_PUBLIC = 'keyMaterialPublic',
     MFA_SCAN_QR = 'mfaScanQr',
     MFA_MANUAL_KEY = 'mfaManualKey',
     MFA_CONFIRM_INTRO = 'mfaConfirmIntro',
@@ -222,6 +229,8 @@ export enum TranslatorTranslationAppKey {
     SESSION_REVOKE_OTHERS_CONFIRM_TITLE = 'sessionRevokeOthersConfirmTitle',
     SESSION_REVOKE_OTHERS_CONFIRM_DESCRIPTION = 'sessionRevokeOthersConfirmDescription',
     SESSION_REVOKE_OTHERS_SUCCESS = 'sessionRevokeOthersSuccess',
+    KEY_DELETE_FORCE_CONFIRM_TITLE = 'keyDeleteForceConfirmTitle',
+    KEY_DELETE_FORCE_CONFIRM_DESCRIPTION = 'keyDeleteForceConfirmDescription',
 
     SESSION_REVOKE_ALL = 'sessionRevokeAll',
     SESSION_REVOKE_ALL_CONFIRM_TITLE = 'sessionRevokeAllConfirmTitle',
@@ -281,6 +290,7 @@ export enum TranslatorTranslationEntityKey {
     CONSENT = 'consent',
     EVENT = 'event',
     IDENTITY_PROVIDER = 'identityProvider',
+    KEY = 'key',
     PERMISSION = 'permission',
     POLICY = 'policy',
     REALM = 'realm',
@@ -356,6 +366,10 @@ export enum TranslatorTranslationFieldKey {
     REF = 'ref',
     PATH = 'path',
     METHOD = 'method',
+    USE = 'use',
+    STATUS = 'status',
+    PRIORITY = 'priority',
+    SIGNATURE_ALGORITHM = 'signatureAlgorithm',
 }
 
 /**

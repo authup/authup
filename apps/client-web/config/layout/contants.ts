@@ -114,15 +114,35 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         meta: {
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             i18n: {
-                namespace: TranslatorTranslationNamespace.ENTITY, 
-                key: TranslatorTranslationEntityKey.IDENTITY_PROVIDER, 
-                count: 2, 
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.IDENTITY_PROVIDER,
+                count: 2,
             },
             [LayoutKey.REQUIRED_PERMISSIONS]: [
                 PermissionName.IDENTITY_PROVIDER_READ,
                 PermissionName.IDENTITY_PROVIDER_CREATE,
                 PermissionName.IDENTITY_PROVIDER_UPDATE,
                 PermissionName.IDENTITY_PROVIDER_DELETE,
+            ],
+        },
+    },
+    {
+        name: 'Keys',
+        type: 'link',
+        url: '/keys',
+        icon: 'fa6-solid:key',
+        meta: {
+            [LayoutKey.REQUIRED_LOGGED_IN]: true,
+            i18n: {
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.KEY,
+                count: 2,
+            },
+            [LayoutKey.REQUIRED_PERMISSIONS]: [
+                PermissionName.KEY_READ,
+                PermissionName.KEY_CREATE,
+                PermissionName.KEY_UPDATE,
+                PermissionName.KEY_DELETE,
             ],
         },
     },

@@ -13,6 +13,7 @@ export * from './consent/index.ts';
 export * from './event/index.ts';
 export * from './identity-provider/index.ts';
 export * from './identity-provide-role/index.ts';
+export * from './key/index.ts';
 export * from './permission/index.ts';
 export * from './permission-policy/index.ts';
 export * from './realm/index.ts';

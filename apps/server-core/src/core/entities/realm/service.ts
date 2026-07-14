@@ -17,11 +17,13 @@ import type { Realm } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult, Logger  } from '@authup/server-kit';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { IWebClientProvisioner } from '../client/types.ts';
+import type { IKeyProvisioner } from '../../key/types.ts';
 import type { IRealmRepository, IRealmService } from './types.ts';
 
 export type RealmServiceContext = {
     repository: IRealmRepository;
     webClientProvisioner?: IWebClientProvisioner;
+    keyProvisioner?: IKeyProvisioner;
     logger?: Logger;
 };
 
@@ -32,12 +34,15 @@ export class RealmService extends AbstractEntityService implements IRealmService
 
     protected webClientProvisioner?: IWebClientProvisioner;
 
+    protected keyProvisioner?: IKeyProvisioner;
+
     protected logger?: Logger;
 
     constructor(ctx: RealmServiceContext) {
         super();
         this.repository = ctx.repository;
         this.webClientProvisioner = ctx.webClientProvisioner;
+        this.keyProvisioner = ctx.keyProvisioner;
         this.logger = ctx.logger;
         this.validator = new RealmValidator();
     }
@@ -164,6 +169,12 @@ export class RealmService extends AbstractEntityService implements IRealmService
                     );
                 }
             }
+        }
+
+        // Mint the realm's sig + enc keys eagerly (plan 071 hybrid model) —
+        // same system-level, never-fail posture as the web client above.
+        if (this.keyProvisioner) {
+            await this.keyProvisioner.ensureForRealm(entity);
         }
 
         return {
