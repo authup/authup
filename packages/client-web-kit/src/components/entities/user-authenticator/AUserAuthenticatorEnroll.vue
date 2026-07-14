@@ -24,7 +24,9 @@ import type { PublicKeyCredentialCreationOptionsJSON } from '@simplewebauthn/bro
 import { VCButton } from '@vuecs/button';
 import { VCAlert } from '@vuecs/elements';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
+import { VCIcon } from '@vuecs/icon';
 import { extractErrorContext, injectHTTPClient, useTranslations } from '../../../core';
+import { USER_AUTHENTICATOR_KIND_ICONS } from './constants';
 
 export default defineComponent({
     components: {
@@ -32,6 +34,7 @@ export default defineComponent({
         VCAlert,
         VCFormGroup,
         VCFormInput,
+        VCIcon,
     },
     props: {
         // resolves `@me` for the calling user; an admin passes a user id.
@@ -46,7 +49,7 @@ export default defineComponent({
             default: null,
         },
     },
-    emits: ['done', 'failed'],
+    emits: ['done', 'failed', 'closed'],
     setup(props, { emit }) {
         const apiClient = injectHTTPClient();
 
@@ -98,6 +101,29 @@ export default defineComponent({
             }
             return true;
         };
+
+        const methods = computed(() => [
+            {
+                kind: UserAuthenticatorKind.TOTP,
+                icon: USER_AUTHENTICATOR_KIND_ICONS[UserAuthenticatorKind.TOTP],
+                label: translations.mfaEnrollTotp,
+            },
+            {
+                kind: UserAuthenticatorKind.WEBAUTHN,
+                icon: USER_AUTHENTICATOR_KIND_ICONS[UserAuthenticatorKind.WEBAUTHN],
+                label: translations.mfaEnrollWebauthn,
+            },
+            {
+                kind: UserAuthenticatorKind.EMAIL,
+                icon: USER_AUTHENTICATOR_KIND_ICONS[UserAuthenticatorKind.EMAIL],
+                label: translations.mfaEnrollEmail,
+            },
+            {
+                kind: UserAuthenticatorKind.RECOVERY,
+                icon: USER_AUTHENTICATOR_KIND_ICONS[UserAuthenticatorKind.RECOVERY],
+                label: translations.mfaEnrollRecovery,
+            },
+        ].filter((item) => canOfferKind(item.kind)));
 
         const reset = () => {
             enrollment.value = null;
@@ -178,6 +204,9 @@ export default defineComponent({
             }
         };
 
+        // terminal dismissal of the shown-once recovery codes — resolves a
+        // deferred nudge `done` and lets a host (modal, wizard step) tear
+        // the enrollment surface down via `closed`.
         const closeRecoveryCodes = () => {
             reset();
 
@@ -186,6 +215,8 @@ export default defineComponent({
                 recoveryNudge.value = null;
                 emit('done', entity);
             }
+
+            emit('closed');
         };
 
         const enroll = async (kind: `${UserAuthenticatorKind}`) => {
@@ -285,7 +316,7 @@ export default defineComponent({
             enrollmentKind,
             confirmCode,
             forcedKind,
-            canOfferKind,
+            methods,
             enroll,
             confirm,
             reset,
@@ -344,35 +375,25 @@ export default defineComponent({
                 {{ translations.mfaSetupRequired }}
             </p>
 
-            <div class="flex flex-col gap-2">
-                <VCButton
-                    v-if="canOfferKind(UserAuthenticatorKind.TOTP)"
+            <div class="flex flex-row gap-2 flex-wrap">
+                <button
+                    v-for="method in methods"
+                    :key="method.kind"
+                    type="button"
+                    class="flex flex-col justify-center gap-1 text-center a-picker-item disabled:opacity-60"
                     :disabled="busy"
-                    color="primary"
-                    :label="translations.mfaEnrollTotp"
-                    @click="enroll(UserAuthenticatorKind.TOTP)"
-                />
-                <VCButton
-                    v-if="canOfferKind(UserAuthenticatorKind.WEBAUTHN)"
-                    :disabled="busy"
-                    color="neutral"
-                    :label="translations.mfaEnrollWebauthn"
-                    @click="enroll(UserAuthenticatorKind.WEBAUTHN)"
-                />
-                <VCButton
-                    v-if="canOfferKind(UserAuthenticatorKind.EMAIL)"
-                    :disabled="busy"
-                    color="neutral"
-                    :label="translations.mfaEnrollEmail"
-                    @click="enroll(UserAuthenticatorKind.EMAIL)"
-                />
-                <VCButton
-                    v-if="canOfferKind(UserAuthenticatorKind.RECOVERY)"
-                    :disabled="busy"
-                    color="neutral"
-                    :label="translations.mfaEnrollRecovery"
-                    @click="enroll(UserAuthenticatorKind.RECOVERY)"
-                />
+                    @click="enroll(method.kind)"
+                >
+                    <div>
+                        <VCIcon
+                            class="text-2xl"
+                            :name="method.icon"
+                        />
+                    </div>
+                    <div>
+                        {{ method.label }}
+                    </div>
+                </button>
             </div>
         </template>
 

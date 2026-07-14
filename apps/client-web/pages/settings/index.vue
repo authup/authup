@@ -1,5 +1,10 @@
 <script lang="ts">
-import { TranslatorTranslationAppKey, TranslatorTranslationEntityKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
 import { useTranslations, useTranslationsForNamespace } from '@authup/client-web-kit';
 import { VCIcon } from '@vuecs/icon';
 import { computed, defineComponent } from 'vue';
@@ -16,17 +21,21 @@ export default defineComponent({
             TranslatorTranslationNamespace.APP,
             [
                 { key: TranslatorTranslationAppKey.ACCOUNT },
-                { key: TranslatorTranslationAppKey.SECURITY },
+                { key: TranslatorTranslationAppKey.AUTHENTICATOR },
                 { key: TranslatorTranslationAppKey.SETTINGS },
                 { key: TranslatorTranslationAppKey.MANAGEMENT },
             ],
         );
 
-        const translationsEntity = useTranslations([
+        const translationsDefault = useTranslations([
             {
                 namespace: TranslatorTranslationNamespace.ENTITY,
                 key: TranslatorTranslationEntityKey.SESSION,
                 count: 2,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.PASSWORD,
             },
         ]);
 
@@ -37,12 +46,17 @@ export default defineComponent({
                 url: '/settings',
             },
             {
-                name: translationsApp.security,
-                icon: 'fa6-solid:lock',
-                url: '/settings/security',
+                name: translationsDefault.password,
+                icon: 'fa6-solid:key',
+                url: '/settings/password',
             },
             {
-                name: translationsEntity.session,
+                name: translationsApp.authenticator,
+                icon: 'fa6-solid:shield-halved',
+                url: '/settings/mfa',
+            },
+            {
+                name: translationsDefault.session,
                 icon: 'fa6-solid:desktop',
                 url: '/settings/sessions',
             },

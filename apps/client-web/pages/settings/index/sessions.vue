@@ -3,6 +3,7 @@ import type { Session } from '@authup/core-kit';
 import {
     TranslatorTranslationActionKey,
     TranslatorTranslationAppKey,
+    TranslatorTranslationEntityKey,
     TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
@@ -48,6 +49,11 @@ export default defineComponent({
         }));
 
         const translations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.ENTITY, 
+                key: TranslatorTranslationEntityKey.SESSION, 
+                count: 2, 
+            },
             { namespace: TranslatorTranslationNamespace.FIELD, key: TranslatorTranslationFieldKey.IP_ADDRESS },
             { namespace: TranslatorTranslationNamespace.FIELD, key: TranslatorTranslationFieldKey.USER_AGENT },
             { namespace: TranslatorTranslationNamespace.FIELD, key: TranslatorTranslationFieldKey.SEEN_AT },
@@ -152,70 +158,75 @@ export default defineComponent({
 });
 </script>
 <template>
-    <ASessions
-        v-if="userId"
-        :query="query"
-        :body="{ tag: 'div' }"
-        :footer="true"
-    >
-        <template #header="props">
-            <div class="flex justify-end mb-2">
-                <VCButton
-                    :label="translations.sessionRevokeOthers"
-                    size="sm"
-                    color="error"
-                    variant="outline"
-                    :disabled="revoking || (props.total ?? 0) <= 1"
-                    @click="revokeOthers(props.load)"
-                >
-                    <template #leading>
-                        <VCIcon name="fa6-solid:right-from-bracket" />
-                    </template>
-                </VCButton>
-            </div>
-        </template>
-        <template #footer="props">
-            <APagination
-                :busy="props.busy"
-                :meta="props.meta"
-                :load="props.load"
-            />
-        </template>
-        <template #body="props">
-            <VCTable
-                :data="props.data"
-                :columns="columns"
-                :busy="props.busy"
-            >
-                <template #cell-user_agent="{ row }">
-                    <span :title="row.user_agent">{{ row.user_agent }}</span>
-                </template>
-                <template #cell-seen_at="{ row }">
-                    <VCTimeago
-                        v-if="row.seen_at"
-                        :datetime="row.seen_at"
-                    />
-                    <span v-else>&ndash;</span>
-                </template>
-                <template #cell-expires_at="{ row }">
-                    <VCTimeago :datetime="row.expires_at" />
-                </template>
-                <template #cell-options="{ row }">
-                    <span
-                        v-if="row.id === sessionId"
-                        class="inline-flex items-center rounded-full bg-primary-600/10 px-2 py-0.5 text-xs font-medium text-primary-600"
+    <div>
+        <h6 class="title">
+            {{ translations.session }}
+        </h6>
+        <ASessions
+            v-if="userId"
+            :query="query"
+            :body="{ tag: 'div' }"
+            :footer="true"
+        >
+            <template #header="props">
+                <div class="flex justify-end mb-2">
+                    <VCButton
+                        :label="translations.sessionRevokeOthers"
+                        size="sm"
+                        color="error"
+                        variant="outline"
+                        :disabled="revoking || (props.total ?? 0) <= 1"
+                        @click="revokeOthers(props.load)"
                     >
-                        {{ translations.sessionCurrent }}
-                    </span>
-                    <AEntityDelete
-                        v-else
-                        :entity-id="row.id"
-                        entity-type="session"
-                        :with-text="false"
-                        @deleted="props.deleted"
-                    />
-                </template>
-            </VCTable>
-        </template>
-    </ASessions>
+                        <template #leading>
+                            <VCIcon name="fa6-solid:right-from-bracket" />
+                        </template>
+                    </VCButton>
+                </div>
+            </template>
+            <template #footer="props">
+                <APagination
+                    :busy="props.busy"
+                    :meta="props.meta"
+                    :load="props.load"
+                />
+            </template>
+            <template #body="props">
+                <VCTable
+                    :data="props.data"
+                    :columns="columns"
+                    :busy="props.busy"
+                >
+                    <template #cell-user_agent="{ row }">
+                        <span :title="row.user_agent">{{ row.user_agent }}</span>
+                    </template>
+                    <template #cell-seen_at="{ row }">
+                        <VCTimeago
+                            v-if="row.seen_at"
+                            :datetime="row.seen_at"
+                        />
+                        <span v-else>&ndash;</span>
+                    </template>
+                    <template #cell-expires_at="{ row }">
+                        <VCTimeago :datetime="row.expires_at" />
+                    </template>
+                    <template #cell-options="{ row }">
+                        <span
+                            v-if="row.id === sessionId"
+                            class="inline-flex items-center rounded-full bg-primary-600/10 px-2 py-0.5 text-xs font-medium text-primary-600"
+                        >
+                            {{ translations.sessionCurrent }}
+                        </span>
+                        <AEntityDelete
+                            v-else
+                            :entity-id="row.id"
+                            entity-type="session"
+                            :with-text="false"
+                            @deleted="props.deleted"
+                        />
+                    </template>
+                </VCTable>
+            </template>
+        </ASessions>
+    </div>
 </template>

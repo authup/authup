@@ -1988,15 +1988,22 @@ factor requirement is known); `required` → `AMfaChallengeForm` before consent
 backstop), `enrollmentRequired` → inline `AUserAuthenticatorEnroll`. Silent
 (`prompt=none`) flows skip the form and let the auto-consent hit the server
 backstop → `interaction_required` redirect. Enrollment components
-(`entities/user-authenticator/`): `AUserAuthenticatorEnroll` (kind picker → TOTP
-QR data-URI + confirm-a-code / recovery one-time codes with download; after a
+(`entities/user-authenticator/`): `AUserAuthenticatorEnroll` (kind picker — the
+shared `.a-picker-item` tile grid with per-kind icons, same visual language as
+the identity-provider/policy-type pickers → TOTP QR data-URI + confirm-a-code /
+recovery one-time codes with download; after a
 successful self email/webauthn enrollment with no existing recovery codes it
 shows a SOFT recovery-code nudge — generate or skip, with the `done` emit
 deferred until the nudge resolves so the authorize ladder's re-render can't
 unmount the shown-once codes; fail-open on the lookup, never for an admin
 managing another user) and
-`AUserAuthenticators` (list + delete + embedded enroll), hosted on the settings
-Security tab (`@me`) and an admin Authenticators tab
+`AUserAuthenticators` (device-row list + delete + an "add" button opening the
+enroll flow in a `<VCModal>`; the enroll component's `closed` emit lets the
+recovery-codes terminal view dismiss the modal only when the user is done),
+hosted on the settings
+Authenticators tab (`settings/index/mfa.vue`, `@me`; the former combined
+Security tab is split — `settings/index/password.vue` keeps the password form)
+and an admin Authenticators tab
 (`users/[id]/authenticators.vue`, gated on `USER_AUTHENTICATOR_READ`). i18n:
 `MFA_*` (`authupClient`) + `AUTHENTICATOR`/`MFA_SECURITY_*` (`authupApp`), ×4
 locales. Kit test `test/unit/components/workflows/mfa-challenge.spec.ts`.

@@ -2,7 +2,6 @@
 import { storeToRefs } from 'pinia';
 import { TranslatorTranslationAppKey, TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import {
-    AUserAuthenticators,
     AUserPasswordForm,
     injectStore,
     useTranslations,
@@ -13,7 +12,7 @@ import { defineComponent } from 'vue';
 import { LayoutKey } from '~/config/layout';
 
 export default defineComponent({
-    components: { AUserAuthenticators, AUserPasswordForm },
+    components: { AUserPasswordForm },
     setup() {
         definePageMeta({ [LayoutKey.REQUIRED_LOGGED_IN]: true });
 
@@ -28,14 +27,6 @@ export default defineComponent({
             {
                 namespace: TranslatorTranslationNamespace.FIELD,
                 key: TranslatorTranslationFieldKey.PASSWORD,
-            },
-            {
-                namespace: TranslatorTranslationNamespace.APP,
-                key: TranslatorTranslationAppKey.MFA_SECURITY_TITLE,
-            },
-            {
-                namespace: TranslatorTranslationNamespace.APP,
-                key: TranslatorTranslationAppKey.MFA_SECURITY_HINT,
             },
         ]);
 
@@ -52,7 +43,6 @@ export default defineComponent({
                 });
             }
         };
-
 
         return {
             id: userId,
@@ -71,19 +61,6 @@ export default defineComponent({
         <AUserPasswordForm
             :id="id"
             @updated="handleUpdated"
-            @failed="handleFailed"
-        />
-
-        <hr class="my-4">
-
-        <h6 class="title">
-            {{ translationsDefault.mfaSecurityTitle }}
-        </h6>
-        <p class="text-fg-muted mb-3">
-            {{ translationsDefault.mfaSecurityHint }}
-        </p>
-        <AUserAuthenticators
-            user-id="@me"
             @failed="handleFailed"
         />
     </div>
