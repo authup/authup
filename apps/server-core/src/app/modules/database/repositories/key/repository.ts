@@ -88,11 +88,18 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
                 realm_id: true,
             },
             where: {
-                realm_id: realmId, 
-                use, 
-                status: KeyStatus.ACTIVE, 
+                realm_id: realmId,
+                use,
+                status: KeyStatus.ACTIVE,
             },
-            order: { priority: 'DESC' },
+            // created_at + id break priority ties deterministically (e.g.
+            // duplicate mints from a concurrent zero-row backstop race —
+            // benign, both keys verify, but selection must be stable).
+            order: {
+                priority: 'DESC', 
+                created_at: 'DESC', 
+                id: 'ASC', 
+            },
         });
 
         if (entity) {

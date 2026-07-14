@@ -9,12 +9,18 @@ import { EntityType, KeyStatus, KeyValidator } from '@authup/core-kit';
 import { JWKUse, JWTAlgorithm } from '@authup/specs';
 import { ValidatorGroup, generateName } from '@authup/kit';
 import { useValidup } from '@validup/vue';
-import { TranslatorTranslationEntityKey, TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import {
+    TranslatorTranslationClientKey,
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
 import {
     assignFormProperties,
     injectStore,
     storeToRefs,
     useTranslations,
+    useTranslationsForNamespace,
 } from '../../../core';
 import type { PropType } from 'vue';
 import {
@@ -79,10 +85,22 @@ export default defineComponent({
             encryption_key: '',
         });
 
-        const useOptions : FormOption[] = [
-            { value: `${JWKUse.SIGNATURE}`, label: 'Signature (sig)' },
-            { value: `${JWKUse.ENCRYPTION}`, label: 'Encryption (enc)' },
-        ];
+        const translationsClient = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.CLIENT,
+            [
+                { key: TranslatorTranslationClientKey.KEY_USE_SIGNATURE },
+                { key: TranslatorTranslationClientKey.KEY_USE_ENCRYPTION },
+                { key: TranslatorTranslationClientKey.KEY_IMPORT_MATERIAL },
+                { key: TranslatorTranslationClientKey.KEY_MATERIAL_OCT },
+                { key: TranslatorTranslationClientKey.KEY_MATERIAL_PRIVATE },
+                { key: TranslatorTranslationClientKey.KEY_MATERIAL_PUBLIC },
+            ],
+        );
+
+        const useOptions = computed<FormOption[]>(() => [
+            { value: `${JWKUse.SIGNATURE}`, label: translationsClient.keyUseSignature },
+            { value: `${JWKUse.ENCRYPTION}`, label: translationsClient.keyUseEncryption },
+        ]);
 
         const algorithmOptions : FormOption[] = [
             JWTAlgorithm.RS256,
@@ -217,6 +235,7 @@ export default defineComponent({
             algorithmOptions,
             statusOptions,
             translationsDefault,
+            translationsClient,
             submit,
         };
     },
@@ -311,7 +330,7 @@ export default defineComponent({
                 <VCFormCheckbox
                     v-model="importEnabled"
                     label
-                    label-content="Import existing key material"
+                    :label-content="translationsClient.keyImportMaterial"
                 />
             </VCFormGroup>
 
@@ -322,7 +341,7 @@ export default defineComponent({
                 >
                     <VCFormGroup :validation="value">
                         <template #label>
-                            {{ isEnc ? 'Key material (32 bytes, base64)' : 'Private key (PKCS#8, base64 or PEM)' }}
+                            {{ isEnc ? translationsClient.keyMaterialOct : translationsClient.keyMaterialPrivate }}
                         </template>
                         <VCFormTextarea
                             :model-value="v.fields.decryption_key.$model.value ?? ''"
@@ -339,7 +358,7 @@ export default defineComponent({
                     >
                         <VCFormGroup :validation="value">
                             <template #label>
-                                Public key (SPKI, base64 or PEM)
+                                {{ translationsClient.keyMaterialPublic }}
                             </template>
                             <VCFormTextarea
                                 :model-value="v.fields.encryption_key.$model.value ?? ''"

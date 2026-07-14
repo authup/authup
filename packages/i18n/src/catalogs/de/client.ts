@@ -135,4 +135,10 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.MFA_USE_PASSKEY]: 'Passkey verwenden',
     [TranslatorTranslationClientKey.MFA_PASSKEY_PROMPT]: 'Verwende deinen Passkey oder Sicherheitsschlüssel, um fortzufahren.',
     [TranslatorTranslationClientKey.MFA_ENROLL_WEBAUTHN]: 'Passkey / Sicherheitsschlüssel',
+    [TranslatorTranslationClientKey.KEY_USE_SIGNATURE]: 'Signatur (sig)',
+    [TranslatorTranslationClientKey.KEY_USE_ENCRYPTION]: 'Verschlüsselung (enc)',
+    [TranslatorTranslationClientKey.KEY_IMPORT_MATERIAL]: 'Vorhandenes Schlüsselmaterial importieren',
+    [TranslatorTranslationClientKey.KEY_MATERIAL_OCT]: 'Schlüsselmaterial (32 Bytes, Base64)',
+    [TranslatorTranslationClientKey.KEY_MATERIAL_PRIVATE]: 'Privater Schlüssel (PKCS#8, Base64 oder PEM)',
+    [TranslatorTranslationClientKey.KEY_MATERIAL_PUBLIC]: 'Öffentlicher Schlüssel (SPKI, Base64 oder PEM)',
 };

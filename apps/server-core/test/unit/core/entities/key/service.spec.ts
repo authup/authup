@@ -212,6 +212,19 @@ describe('core/entities/key/service', () => {
             }, createAllowAllActor())).rejects.toThrow(/could not be imported/);
         });
 
+        it('rejects a valid-format but MISMATCHED key pair', async () => {
+            const options = AsymmetricKey.buildImportOptionsForJWTAlgorithm(JWTAlgorithm.RS256);
+            const pairA = await createAsymmetricKeyPair(options);
+            const pairB = await createAsymmetricKeyPair(options);
+
+            await expect(service.create({
+                use: JWKUse.SIGNATURE,
+                decryption_key: await new AsymmetricKey(pairA.privateKey).toBase64(),
+                encryption_key: await new AsymmetricKey(pairB.publicKey).toBase64(),
+                realm_id: randomUUID(),
+            }, createAllowAllActor())).rejects.toThrow(/do not form a pair/);
+        });
+
         it('imports 32 base64 bytes as an encryption key', async () => {
             const entity = await service.create({
                 use: JWKUse.ENCRYPTION,

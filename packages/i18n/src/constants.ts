@@ -153,6 +153,13 @@ export enum TranslatorTranslationClientKey {
     MFA_ENROLL_RECOVERY = 'mfaEnrollRecovery',
     MFA_ENROLL_EMAIL = 'mfaEnrollEmail',
     MFA_ENROLL_WEBAUTHN = 'mfaEnrollWebauthn',
+
+    KEY_USE_SIGNATURE = 'keyUseSignature',
+    KEY_USE_ENCRYPTION = 'keyUseEncryption',
+    KEY_IMPORT_MATERIAL = 'keyImportMaterial',
+    KEY_MATERIAL_OCT = 'keyMaterialOct',
+    KEY_MATERIAL_PRIVATE = 'keyMaterialPrivate',
+    KEY_MATERIAL_PUBLIC = 'keyMaterialPublic',
     MFA_SCAN_QR = 'mfaScanQr',
     MFA_MANUAL_KEY = 'mfaManualKey',
     MFA_CONFIRM_INTRO = 'mfaConfirmIntro',

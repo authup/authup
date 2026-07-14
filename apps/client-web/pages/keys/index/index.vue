@@ -26,8 +26,12 @@ import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
 import { useAlertDialog } from '@vuecs/overlays';
 import type { TableColumn } from '@vuecs/table';
+import { VCTimeago } from '@vuecs/timeago';
 import { computed, defineComponent, resolveComponent } from 'vue';
 
+// VCTable deliberately stays globally registered — its generic component
+// signature is not assignable to the Options-API `components: {}` slot
+// (see structure.md → Table usage).
 export default defineComponent({
     components: {
         ATitle,
@@ -37,6 +41,7 @@ export default defineComponent({
         AEntityDelete,
         VCButton,
         VCIcon,
+        VCTimeago,
     },
     emits: ['deleted', 'failed'],
     setup(_props, { emit }) {

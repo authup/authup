@@ -331,19 +331,37 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         const algorithm = (validated.signature_algorithm ?? JWTAlgorithm.RS256) as `${JWTAlgorithm}`;
         const options = this.buildAsymmetricOptions(algorithm);
 
+        let privateJwk : JsonWebKey;
+        let publicJwk : JsonWebKey;
+
         try {
-            await AsymmetricKey.fromBase64({
-                format: 'pkcs8', 
-                key: decryptionKey, 
-                options, 
+            const privateKey = await AsymmetricKey.fromBase64({
+                format: 'pkcs8',
+                key: decryptionKey,
+                options,
             });
-            await AsymmetricKey.fromBase64({
-                format: 'spki', 
-                key: encryptionKey, 
-                options, 
+            const publicKey = await AsymmetricKey.fromBase64({
+                format: 'spki',
+                key: encryptionKey,
+                options,
             });
+
+            privateJwk = await privateKey.toJWK();
+            publicJwk = await publicKey.toJWK();
         } catch {
             throw new BadRequestError(`The key material could not be imported for ${algorithm}.`);
+        }
+
+        // the public components (RSA: n/e, EC: crv/x/y) must agree — a
+        // private key paired with a foreign public part would publish a
+        // wrong JWKS entry and break verification of every token it signs.
+        const components : (keyof JsonWebKey)[] = ['kty', 'n', 'e', 'crv', 'x', 'y'];
+        const mismatch = components.some(
+            (component) => publicJwk[component] !== undefined &&
+                publicJwk[component] !== privateJwk[component],
+        );
+        if (mismatch) {
+            throw new BadRequestError('The private and public key material do not form a pair.');
         }
 
         return {
