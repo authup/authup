@@ -158,6 +158,9 @@ export enum TranslatorTranslationClientKey {
     MFA_DEVICE_NAME = 'mfaDeviceName',
     MFA_NO_DEVICES = 'mfaNoDevices',
     MFA_DEVICE_UNCONFIRMED = 'mfaDeviceUnconfirmed',
+    MFA_RECOVERY_NUDGE = 'mfaRecoveryNudge',
+    MFA_RECOVERY_NUDGE_GENERATE = 'mfaRecoveryNudgeGenerate',
+    MFA_RECOVERY_NUDGE_SKIP = 'mfaRecoveryNudgeSkip',
 }
 
 /**

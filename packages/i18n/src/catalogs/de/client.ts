@@ -117,6 +117,9 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.MFA_DEVICE_NAME]: 'Gerätename',
     [TranslatorTranslationClientKey.MFA_NO_DEVICES]: 'Es wurden noch keine Authenticator-Geräte hinzugefügt.',
     [TranslatorTranslationClientKey.MFA_DEVICE_UNCONFIRMED]: 'nicht bestätigt',
+    [TranslatorTranslationClientKey.MFA_RECOVERY_NUDGE]: 'Hinterlege zusätzlich Wiederherstellungscodes, damit du dich weiterhin anmelden kannst, falls du den Zugriff auf diesen zweiten Faktor verlierst.',
+    [TranslatorTranslationClientKey.MFA_RECOVERY_NUDGE_GENERATE]: 'Wiederherstellungscodes erstellen',
+    [TranslatorTranslationClientKey.MFA_RECOVERY_NUDGE_SKIP]: 'Vorerst überspringen',
 
     [TranslatorTranslationClientKey.MFA_USE_EMAIL]: 'E-Mail-Code verwenden',
     [TranslatorTranslationClientKey.MFA_SEND_CODE]: 'Code senden',
