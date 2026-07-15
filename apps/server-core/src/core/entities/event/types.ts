@@ -18,6 +18,11 @@ export type EventOwner = {
     actorType: string,
 };
 
+export type EventReadVisibility = {
+    owner?: EventOwner,
+    realmIds: Array<string | null>,
+};
+
 export type EventFindManyOptions = {
     /**
      * Mandatory owner constraint (self-service scope) — not overridable by a
@@ -25,6 +30,12 @@ export type EventFindManyOptions = {
      */
     owner?: EventOwner,
     realmId?: string,
+    /**
+     * Rows reachable through the actor's realm-scoped permission, plus the
+     * actor's own rows. Applied before pagination so meta.total cannot include
+     * events outside that reach.
+     */
+    visibility?: EventReadVisibility,
 };
 
 export type EventCountRecentFilter = {

@@ -2519,9 +2519,10 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   repository force-selects the gate columns (`applyRealmScopeSelect`, plan-039
   discipline). Nested `/realms/:realmId/events` reads add a mandatory
   repository realm predicate (and single-record reads fail as not found on a
-  mismatch). Because collections still apply asynchronous per-row policies
-  after the database query, their response total is the visible page count
-  rather than the unauthorized backing-table total. `EVENT_READ`
+  mismatch). Flat collection reads derive the actor's coarse realm reach from
+  `EVENT_READ` and apply it (plus an own-row alternative) before database
+  pagination, keeping cross-realm rows out of both pages and totals. Residual
+  per-row policy denials decrement the repository total. `EVENT_READ`
   auto-provisions via `Object.values(PermissionName)`:
   `admin` = `any`, `realm_admin` = `ownOrNull` (deliberately NOT in the OWN
   override list). Typed client: `client.event.getMany/getOne`.

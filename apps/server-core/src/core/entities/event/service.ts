@@ -14,6 +14,7 @@ import { AbstractEntityService } from '@authup/server-kit';
 import type { ActorContext, EntityRepositoryFindManyResult, Logger } from '@authup/server-kit';
 import { sanitizeEventData } from './sanitize.ts';
 import type {
+    EventReadVisibility,
     EventRecordInput,
     EventServiceOptions,
     EventServiceReadOptions,
@@ -49,6 +50,55 @@ export class EventService extends AbstractEntityService implements IEventService
             !!entity.actor_id &&
             entity.actor_id === actor.identity.data.id &&
             entity.actor_type === actor.identity.type;
+    }
+
+    protected async canReadRealm(actor: ActorContext, realmId: string | null): Promise<boolean> {
+        try {
+            await actor.permissionEvaluator.evaluate({
+                name: PermissionName.EVENT_READ,
+                data: definePolicyData({ [BuiltInPolicyType.REALM_MATCH]: realmId }),
+                options: {
+                    policiesIncluded: [
+                        BuiltInPolicyType.COMPOSITE,
+                        BuiltInPolicyType.PERMISSION_BINDING,
+                        BuiltInPolicyType.REALM_MATCH,
+                    ],
+                },
+            });
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    protected async resolveReadVisibility(actor: ActorContext): Promise<EventReadVisibility | undefined> {
+        const actorRealmId = this.getActorRealmId(actor);
+        let foreignRealmId = randomUUID();
+        while (foreignRealmId === actorRealmId) {
+            foreignRealmId = randomUUID();
+        }
+
+        if (await this.canReadRealm(actor, foreignRealmId)) {
+            return undefined;
+        }
+
+        const realmIds: Array<string | null> = [];
+        if (actorRealmId && await this.canReadRealm(actor, actorRealmId)) {
+            realmIds.push(actorRealmId);
+        }
+        if (await this.canReadRealm(actor, null)) {
+            realmIds.push(null);
+        }
+
+        return {
+            realmIds,
+            ...(actor.identity ? {
+                owner: {
+                    actorId: actor.identity.data.id,
+                    actorType: actor.identity.type,
+                },
+            } : {}),
+        };
     }
 
     async record(input: EventRecordInput): Promise<void> {
@@ -130,10 +180,11 @@ export class EventService extends AbstractEntityService implements IEventService
             });
         }
 
-        const { data: entities, meta } = await this.repository.findMany(
-            query,
-            options.realmId ? { realmId: options.realmId } : undefined,
-        );
+        const visibility = await this.resolveReadVisibility(actor);
+        const { data: entities, meta } = await this.repository.findMany(query, {
+            ...(options.realmId ? { realmId: options.realmId } : {}),
+            ...(visibility ? { visibility } : {}),
+        });
 
         const data: Event[] = [];
 
@@ -161,7 +212,7 @@ export class EventService extends AbstractEntityService implements IEventService
             data,
             meta: {
                 ...meta,
-                total: data.length,
+                total: meta.total - (entities.length - data.length),
             },
         };
     }

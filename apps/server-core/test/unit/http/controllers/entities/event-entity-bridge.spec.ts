@@ -285,5 +285,12 @@ describe('event (entity-CRUD bridge)', () => {
         const foreign = await actor.event.getMany({ filter: { id: recorded.data[0].id } });
         expect(foreign.data).toHaveLength(0);
         expect(foreign.meta.total).toEqual(0);
+
+        const foreignBeyondPage = await actor.event.getMany({
+            filter: { id: recorded.data[0].id },
+            pagination: { limit: 1, offset: 1 },
+        });
+        expect(foreignBeyondPage.data).toHaveLength(0);
+        expect(foreignBeyondPage.meta.total).toEqual(0);
     });
 });

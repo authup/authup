@@ -6,6 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import { BuiltInPolicyType } from '@authup/access';
 import type { Event, User } from '@authup/core-kit';
 import { EventName, EventScope, IdentityType } from '@authup/core-kit';
 import type { ActorContext } from '@authup/server-kit';
@@ -264,7 +265,30 @@ describe('EventService', () => {
             expect(meta.total).toEqual(1);
         });
 
-        it('does not expose a backing-table total after per-row authorization', async () => {
+        it('applies actor realm reach before pagination', async () => {
+            const ownRealm = seedForeign();
+            const global = seedForeign({ realm_id: null });
+            seedForeign({ realm_id: otherRealmId });
+
+            const actor = makeActor({ allow: true });
+            (actor.permissionEvaluator as FakePermissionEvaluator).setBehavior(({ method, ctx }) => {
+                if (method !== 'evaluate') {
+                    return;
+                }
+
+                const resourceRealm = ctx.data?.get<string | null>(BuiltInPolicyType.REALM_MATCH);
+                if (resourceRealm !== realmId && resourceRealm !== null) {
+                    throw new Error('Realm denied');
+                }
+            });
+
+            const { data, meta } = await service.getMany({}, actor);
+
+            expect(data.map((row) => row.id)).toEqual([ownRealm.id, global.id]);
+            expect(meta.total).toEqual(2);
+        });
+
+        it('preserves the backing total when all page rows are authorized', async () => {
             const visible = seedForeign();
             repository.findMany = async () => ({
                 data: [visible],
@@ -279,7 +303,36 @@ describe('EventService', () => {
             const { data, meta } = await service.getMany({}, actor);
 
             expect(data).toHaveLength(1);
-            expect(meta.total).toEqual(1);
+            expect(meta.total).toEqual(125);
+        });
+
+        it('subtracts rows denied during per-row authorization from the backing total', async () => {
+            const visible = seedForeign();
+            const denied = seedForeign();
+            repository.findMany = async () => ({
+                data: [visible, denied],
+                meta: {
+                    total: 125,
+                    limit: 50,
+                    offset: 0,
+                },
+            });
+
+            const actor = makeActor({ allow: true });
+            (actor.permissionEvaluator as FakePermissionEvaluator).setBehavior(({ method, ctx }) => {
+                if (method !== 'evaluate' || ctx.options?.policiesIncluded) {
+                    return;
+                }
+
+                const attributes = ctx.data?.get<Event>(BuiltInPolicyType.ATTRIBUTES);
+                if (attributes?.id === denied.id) {
+                    throw new Error('Event denied');
+                }
+            });
+            const { data, meta } = await service.getMany({}, actor);
+
+            expect(data.map((row) => row.id)).toEqual([visible.id]);
+            expect(meta.total).toEqual(124);
         });
 
         it('drops rows a privileged actor is not authorized for (realm reach)', async () => {
