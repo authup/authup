@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { X509Certificate, createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import { X509Certificate } from '@peculiar/x509';
 import type { Client, TrustAnchor } from '@authup/core-kit';
 import {
     describe,
@@ -18,6 +18,7 @@ import type { IAppEvent } from 'routup';
 import {
     type ClientCertificateEvidence,
     ClientCertificateValidator,
+    buildClientCertificateThumbprint,
 } from '../../../../src/core/client-certificate/index.ts';
 import { extractClientCertificateEvidence } from '../../../../src/adapters/http/request/index.ts';
 
@@ -43,11 +44,11 @@ function evidence(leafPEM: string, chainPEMs: string[] = []): ClientCertificateE
     return {
         certificate,
         chain: chainPEMs.map((pem) => new X509Certificate(pem)),
-        thumbprint: createHash('sha256').update(certificate.raw).digest('base64url'),
+        thumbprint: 'unused-by-validator',
     };
 }
 
-function createValidator(enabled = true) {
+function createValidator(enabled = true, crypto?: Crypto) {
     const anchor = {
         certificate: ROOT_PEM,
         enabled,
@@ -57,7 +58,10 @@ function createValidator(enabled = true) {
 
     return {
         findManyBy,
-        validator: new ClientCertificateValidator({ trustAnchorRepository: { findManyBy } }),
+        validator: new ClientCertificateValidator({
+            trustAnchorRepository: { findManyBy },
+            crypto,
+        }),
     };
 }
 
@@ -70,7 +74,7 @@ function event(headers: HeadersInit): IAppEvent {
 }
 
 function structured(certificatePEM: string): string {
-    return `:${new X509Certificate(certificatePEM).raw.toString('base64')}:`;
+    return `:${new X509Certificate(certificatePEM).toString('base64')}:`;
 }
 
 describe('ClientCertificateValidator', () => {
@@ -89,6 +93,30 @@ describe('ClientCertificateValidator', () => {
             client(),
             evidence(LEAF_PEM, [INTERMEDIATE_PEM]),
         )).resolves.toBeUndefined();
+    });
+
+    it('uses the configured WebCrypto provider for certificate signatures', async () => {
+        const verify = vi.fn(async () => false);
+        const subtle = new Proxy(globalThis.crypto.subtle, {
+            get(target, property) {
+                if (property === 'verify') {
+                    return verify;
+                }
+
+                const value = Reflect.get(target, property, target);
+                return typeof value === 'function' ? value.bind(target) : value;
+            },
+        });
+        const crypto = {
+            getRandomValues: globalThis.crypto.getRandomValues.bind(globalThis.crypto),
+            randomUUID: globalThis.crypto.randomUUID.bind(globalThis.crypto),
+            subtle,
+        } as Crypto;
+        const { validator } = createValidator(true, crypto);
+
+        await expect(validator.validateForAuthentication(client(), evidence(DIRECT_LEAF_PEM)))
+            .rejects.toThrow();
+        expect(verify).toHaveBeenCalled();
     });
 
     it('rejects a missing intermediate, an untrusted realm, and the wrong client URI', async () => {
@@ -113,31 +141,31 @@ describe('ClientCertificateValidator', () => {
 });
 
 describe('extractClientCertificateEvidence', () => {
-    it('reads RFC 9440 structured leaf and chain headers', () => {
-        const result = extractClientCertificateEvidence(event({
+    it('reads RFC 9440 structured leaf and chain headers', async () => {
+        const result = await extractClientCertificateEvidence(event({
             'client-cert': structured(LEAF_PEM),
             'client-cert-chain': structured(INTERMEDIATE_PEM),
         }), 'standard');
 
-        expect(result?.certificate.raw.equals(new X509Certificate(LEAF_PEM).raw)).toBe(true);
+        expect(result?.certificate.toString('base64')).toEqual(new X509Certificate(LEAF_PEM).toString('base64'));
         expect(result?.chain).toHaveLength(1);
         expect(result?.thumbprint).toEqual(
-            createHash('sha256').update(new X509Certificate(LEAF_PEM).raw).digest('base64url'),
+            await buildClientCertificateThumbprint(new X509Certificate(LEAF_PEM)),
         );
     });
 
-    it('reads one URL-escaped forwarded PEM and rejects a forwarded chain', () => {
-        const result = extractClientCertificateEvidence(event({ 'x-forwarded-tls-client-cert': encodeURIComponent(DIRECT_LEAF_PEM) }), 'forwarded');
+    it('reads one URL-escaped forwarded PEM and rejects a forwarded chain', async () => {
+        const result = await extractClientCertificateEvidence(event({ 'x-forwarded-tls-client-cert': encodeURIComponent(DIRECT_LEAF_PEM) }), 'forwarded');
         expect(result?.chain).toEqual([]);
 
-        expect(() => extractClientCertificateEvidence(event({ 'x-forwarded-tls-client-cert': encodeURIComponent(`${DIRECT_LEAF_PEM}${ROOT_PEM}`) }), 'forwarded')).toThrow();
+        await expect(extractClientCertificateEvidence(event({ 'x-forwarded-tls-client-cert': encodeURIComponent(`${DIRECT_LEAF_PEM}${ROOT_PEM}`) }), 'forwarded')).rejects.toThrow();
     });
 
-    it('does not fall back between configured sources and rejects malformed evidence', () => {
-        expect(extractClientCertificateEvidence(event({ 'x-forwarded-tls-client-cert': encodeURIComponent(DIRECT_LEAF_PEM) }), 'standard')).toBeUndefined();
+    it('does not fall back between configured sources and rejects malformed evidence', async () => {
+        await expect(extractClientCertificateEvidence(event({ 'x-forwarded-tls-client-cert': encodeURIComponent(DIRECT_LEAF_PEM) }), 'standard')).resolves.toBeUndefined();
 
-        expect(extractClientCertificateEvidence(event({ 'client-cert': structured(DIRECT_LEAF_PEM) }), 'disabled')).toBeUndefined();
+        await expect(extractClientCertificateEvidence(event({ 'client-cert': structured(DIRECT_LEAF_PEM) }), 'disabled')).resolves.toBeUndefined();
 
-        expect(() => extractClientCertificateEvidence(event({ 'client-cert': ':not-base64:' }), 'standard')).toThrow();
+        await expect(extractClientCertificateEvidence(event({ 'client-cert': ':not-base64:' }), 'standard')).rejects.toThrow();
     });
 });

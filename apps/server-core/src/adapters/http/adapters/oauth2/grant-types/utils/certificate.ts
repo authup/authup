@@ -13,12 +13,12 @@ import {
     extractClientCertificateEvidence,
 } from '../../../../request/index.ts';
 
-export function extractOAuth2ClientCertificateEvidence(
+export async function extractOAuth2ClientCertificateEvidence(
     event: IAppEvent,
     source: CertificateSource,
-): ClientCertificateEvidence | undefined {
+): Promise<ClientCertificateEvidence | undefined> {
     try {
-        return extractClientCertificateEvidence(event, source);
+        return await extractClientCertificateEvidence(event, source);
     } catch {
         throw OAuth2ClientError.invalid();
     }

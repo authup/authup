@@ -1711,6 +1711,12 @@ thumbprint. It never probes another header family as fallback. Enabling either
 source asserts that the backend listener is private and the proxy always
 removes/overwrites public certificate headers.
 
+The normalized evidence and validator use `@peculiar/x509` certificate objects
+without Node-specific crypto types. Certificate thumbprints and every
+certificate-path signature edge use the WebCrypto API. The validator accepts
+an optional `Crypto` provider for future browser/server reuse; when omitted,
+Peculiar uses the runtime's global WebCrypto provider.
+
 For `auth_method = 'tls'`, the leaf must be current, non-CA, usable for client
 authentication (clientAuth EKU when present and digitalSignature key usage
 when present), chain through supplied intermediates to an enabled realm trust

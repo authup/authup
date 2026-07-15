@@ -61,7 +61,7 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
 
         const { clientId, clientSecret } = await extractClientCredentialsFromRequest(event);
         const realm = await this.realmRepository.resolve(readRealmHint(body, query), true);
-        const certificateEvidence = extractOAuth2ClientCertificateEvidence(event, this.certificateSource);
+        const certificateEvidence = await extractOAuth2ClientCertificateEvidence(event, this.certificateSource);
 
         const client = await this.clientAuthenticator.authenticate(
             clientId,

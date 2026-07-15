@@ -135,7 +135,7 @@ export class AuthorizationMiddleware {
         header: BearerAuthorizationHeader,
     ) {
         const payload = await this.oauth2TokenVerifier.verify(header.token);
-        this.verifyCertificateBinding(event, payload);
+        await this.verifyCertificateBinding(event, payload);
         if (payload.kind === OAuth2TokenKind.MFA) {
             await this.verifyMfaLoginTicket(event, payload);
             return;
@@ -196,7 +196,7 @@ export class AuthorizationMiddleware {
         }
     }
 
-    protected verifyCertificateBinding(event: IAppEvent, payload: OAuth2TokenPayload): void {
+    protected async verifyCertificateBinding(event: IAppEvent, payload: OAuth2TokenPayload): Promise<void> {
         if (!payload.cnf) {
             return;
         }
@@ -207,7 +207,7 @@ export class AuthorizationMiddleware {
         }
 
         try {
-            const evidence = extractClientCertificateEvidence(
+            const evidence = await extractClientCertificateEvidence(
                 event,
                 this.options.certificateSource ?? 'disabled',
             );

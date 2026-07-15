@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { X509Certificate } from 'node:crypto';
+import type { X509Certificate } from '@peculiar/x509';
 import type { ITrustAnchorRepository } from '../entities/index.ts';
 
 /**
- * Vendor-neutral evidence derived from the certificate used in the external
+ * Runtime-neutral evidence derived from the certificate used in the external
  * client-facing TLS handshake. `chain` excludes the leaf and is ordered as it
  * appeared on the wire when the forwarding format preserves that order.
  */
@@ -21,4 +21,5 @@ export type ClientCertificateEvidence = {
 
 export type ClientCertificateValidatorContext = {
     trustAnchorRepository: Pick<ITrustAnchorRepository, 'findManyBy'>,
+    crypto?: Crypto,
 };

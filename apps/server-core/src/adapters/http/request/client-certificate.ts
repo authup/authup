@@ -5,21 +5,25 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { X509Certificate, createHash } from 'node:crypto';
+import { X509Certificate } from '@peculiar/x509';
 import { BadRequestError } from '@authup/errors';
+import { base64ToArrayBuffer } from '@authup/kit';
 import type { IAppEvent } from 'routup';
 import type { ClientCertificateEvidence } from '../../../core/index.ts';
-import { parseCertificateChain } from '../../../core/index.ts';
+import {
+    buildClientCertificateThumbprint,
+    parseClientCertificateChain,
+} from '../../../core/index.ts';
 import type { CertificateSource } from './types.ts';
 
 const MAX_CERTIFICATE_HEADER_LENGTH = 128 * 1024;
 const MAX_CERTIFICATE_CHAIN_LENGTH = 10;
 const STRUCTURED_BINARY_PATTERN = /^:([A-Za-z0-9+/]*={0,2}):$/;
 
-export function extractClientCertificateEvidence(
+export async function extractClientCertificateEvidence(
     event: IAppEvent,
     source: CertificateSource,
-): ClientCertificateEvidence | undefined {
+): Promise<ClientCertificateEvidence | undefined> {
     if (source === 'disabled') {
         return undefined;
     }
@@ -38,9 +42,7 @@ export function extractClientCertificateEvidence(
 
     return {
         ...result,
-        thumbprint: createHash('sha256')
-            .update(result.certificate.raw)
-            .digest('base64url'),
+        thumbprint: await buildClientCertificateThumbprint(result.certificate),
     };
 }
 
@@ -88,7 +90,7 @@ function extractForwardedEvidence(
 
     let certificates: X509Certificate[];
     try {
-        certificates = parseCertificateChain(pem);
+        certificates = parseClientCertificateChain(pem);
     } catch {
         throw certificateHeaderError();
     }
@@ -119,16 +121,21 @@ function parseStructuredCertificate(value: string): X509Certificate {
         throw certificateHeaderError();
     }
 
-    const raw = Buffer.from(match[1], 'base64');
-    if (
-        raw.length === 0 ||
-        raw.toString('base64').replace(/=+$/, '') !== match[1].replace(/=+$/, '')
-    ) {
-        throw certificateHeaderError();
-    }
-
     try {
-        return new X509Certificate(raw);
+        const raw = base64ToArrayBuffer(match[1]);
+        if (raw.byteLength === 0) {
+            throw certificateHeaderError();
+        }
+
+        const certificate = new X509Certificate(raw);
+        if (
+            certificate.toString('base64').replace(/=+$/, '') !==
+            match[1].replace(/=+$/, '')
+        ) {
+            throw certificateHeaderError();
+        }
+
+        return certificate;
     } catch {
         throw certificateHeaderError();
     }

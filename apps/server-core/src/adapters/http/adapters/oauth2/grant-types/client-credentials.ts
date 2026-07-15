@@ -41,7 +41,7 @@ export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implement
             throw OAuth2ClientError.invalid();
         }
 
-        const certificateEvidence = extractOAuth2ClientCertificateEvidence(event, this.certificateSource);
+        const certificateEvidence = await extractOAuth2ClientCertificateEvidence(event, this.certificateSource);
         const client = await this.clientAuthenticator.authenticate(
             clientId,
             clientSecret,

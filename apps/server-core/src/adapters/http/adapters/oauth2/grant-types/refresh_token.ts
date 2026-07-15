@@ -51,7 +51,7 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
         }
 
         const { clientId, clientSecret } = await extractClientCredentialsFromRequest(event);
-        const certificateEvidence = extractOAuth2ClientCertificateEvidence(event, this.certificateSource);
+        const certificateEvidence = await extractOAuth2ClientCertificateEvidence(event, this.certificateSource);
 
         // RFC 6749 §6: verify the refresh token first to learn its bound
         // client (if any), then enforce binding. Authenticate the requesting

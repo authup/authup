@@ -78,7 +78,7 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
         const { clientId, clientSecret } = await extractClientCredentialsFromRequest(event);
 
         const realm = await this.realmRepository.resolve(readRealmHint(body), true);
-        const certificateEvidence = extractOAuth2ClientCertificateEvidence(event, this.certificateSource);
+        const certificateEvidence = await extractOAuth2ClientCertificateEvidence(event, this.certificateSource);
 
         const client = clientId ?
             await this.clientAuthenticator.authenticate(

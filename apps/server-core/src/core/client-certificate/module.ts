@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { X509Certificate as NodeX509Certificate } from 'node:crypto';
 import {
+    AuthorityKeyIdentifierExtension,
     BasicConstraintsExtension,
     ExtendedKeyUsage,
     ExtendedKeyUsageExtension,
@@ -14,6 +14,7 @@ import {
     KeyUsageFlags,
     KeyUsagesExtension,
     SubjectAlternativeNameExtension,
+    SubjectKeyIdentifierExtension,
     X509Certificate,
 } from '@peculiar/x509';
 import type { Client, TrustAnchor } from '@authup/core-kit';
@@ -22,13 +23,14 @@ import {
     buildClientCertificateURI,
 } from '@authup/core-kit';
 import { BadRequestError } from '@authup/errors';
-import { parseCertificateChain } from '../key/index.ts';
+import { base64URLEncode } from '@authup/kit';
 import type {
     ClientCertificateEvidence,
     ClientCertificateValidatorContext,
 } from './types.ts';
 
 const MAX_CHAIN_DEPTH = 10;
+const CERTIFICATE_BLOCK_PATTERN = /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g;
 
 /**
  * Validates client certificates without performing network I/O. AIA, CRL,
@@ -37,8 +39,11 @@ const MAX_CHAIN_DEPTH = 10;
 export class ClientCertificateValidator {
     protected trustAnchorRepository: ClientCertificateValidatorContext['trustAnchorRepository'];
 
+    protected crypto?: Crypto;
+
     constructor(ctx: ClientCertificateValidatorContext) {
         this.trustAnchorRepository = ctx.trustAnchorRepository;
+        this.crypto = ctx.crypto;
     }
 
     validateForBinding(evidence: ClientCertificateEvidence): void {
@@ -64,10 +69,11 @@ export class ClientCertificateValidator {
                 continue;
             }
 
-            const path = buildPath(
+            const path = await buildPath(
                 evidence.certificate,
                 evidence.chain,
                 anchorCertificate,
+                this.crypto,
             );
             if (!path) {
                 continue;
@@ -86,14 +92,39 @@ export function assertClientCertificateEvidenceValidForBinding(
 ): void {
     assertCertificateCurrent(evidence.certificate);
 
-    if (evidence.certificate.ca) {
+    const constraints = evidence.certificate.getExtension(BasicConstraintsExtension);
+    if (constraints?.ca) {
         throw new BadRequestError('A CA certificate cannot be used as a client certificate.');
     }
 }
 
-function parseAnchorCertificate(anchor: TrustAnchor): NodeX509Certificate | undefined {
+export function parseClientCertificateChain(pem: string): X509Certificate[] {
+    const blocks = pem.match(CERTIFICATE_BLOCK_PATTERN);
+    if (!blocks || blocks.length === 0) {
+        throw new BadRequestError('The certificate chain could not be parsed.');
+    }
+
     try {
-        return parseCertificateChain(anchor.certificate)[0];
+        return blocks.map((block) => new X509Certificate(block));
+    } catch {
+        throw new BadRequestError('The certificate chain could not be parsed.');
+    }
+}
+
+export async function buildClientCertificateThumbprint(
+    certificate: X509Certificate,
+    crypto?: Crypto,
+): Promise<string> {
+    const digest = await certificate.getThumbprint('SHA-256', crypto);
+
+    return base64URLEncode(
+        String.fromCharCode(...new Uint8Array(digest)),
+    );
+}
+
+function parseAnchorCertificate(anchor: TrustAnchor): X509Certificate | undefined {
+    try {
+        return parseClientCertificateChain(anchor.certificate)[0];
     } catch {
         // Rows are validated on create. Treat a corrupt legacy/database row as
         // unusable trust material instead of turning client authentication into
@@ -102,20 +133,22 @@ function parseAnchorCertificate(anchor: TrustAnchor): NodeX509Certificate | unde
     }
 }
 
-function buildPath(
-    leaf: NodeX509Certificate,
-    intermediates: NodeX509Certificate[],
-    anchor: NodeX509Certificate,
-): NodeX509Certificate[] | undefined {
-    return continuePath(leaf, intermediates, anchor, [leaf]);
+async function buildPath(
+    leaf: X509Certificate,
+    intermediates: X509Certificate[],
+    anchor: X509Certificate,
+    crypto?: Crypto,
+): Promise<X509Certificate[] | undefined> {
+    return continuePath(leaf, intermediates, anchor, [leaf], crypto);
 }
 
-function continuePath(
-    current: NodeX509Certificate,
-    available: NodeX509Certificate[],
-    anchor: NodeX509Certificate,
-    path: NodeX509Certificate[],
-): NodeX509Certificate[] | undefined {
+async function continuePath(
+    current: X509Certificate,
+    available: X509Certificate[],
+    anchor: X509Certificate,
+    path: X509Certificate[],
+    crypto?: Crypto,
+): Promise<X509Certificate[] | undefined> {
     if (path.length > MAX_CHAIN_DEPTH) {
         return undefined;
     }
@@ -124,21 +157,26 @@ function continuePath(
         return path;
     }
 
-    if (isIssuedBy(current, anchor)) {
+    if (await isIssuedBy(current, anchor, crypto)) {
         return [...path, anchor];
     }
 
     for (let index = 0; index < available.length; index += 1) {
         const candidate = available[index];
-        if (!candidate || sameCertificate(current, candidate) || !isIssuedBy(current, candidate)) {
+        if (
+            !candidate ||
+            sameCertificate(current, candidate) ||
+            !await isIssuedBy(current, candidate, crypto)
+        ) {
             continue;
         }
 
-        const next = continuePath(
+        const next = await continuePath(
             candidate,
             available.filter((_item, candidateIndex) => candidateIndex !== index),
             anchor,
             [...path, candidate],
+            crypto,
         );
         if (next) {
             return next;
@@ -148,19 +186,42 @@ function continuePath(
     return undefined;
 }
 
-function isIssuedBy(certificate: NodeX509Certificate, issuer: NodeX509Certificate): boolean {
+async function isIssuedBy(
+    certificate: X509Certificate,
+    issuer: X509Certificate,
+    crypto?: Crypto,
+): Promise<boolean> {
+    if (certificate.issuer !== issuer.subject) {
+        return false;
+    }
+
+    const authorityKeyIdentifier = certificate.getExtension(AuthorityKeyIdentifierExtension);
+    if (authorityKeyIdentifier?.keyId) {
+        const subjectKeyIdentifier = issuer.getExtension(SubjectKeyIdentifierExtension);
+        if (subjectKeyIdentifier && subjectKeyIdentifier.keyId !== authorityKeyIdentifier.keyId) {
+            return false;
+        }
+    }
+
     try {
-        return certificate.checkIssued(issuer) && certificate.verify(issuer.publicKey);
+        return await certificate.verify({
+            publicKey: issuer,
+            signatureOnly: true,
+        }, crypto);
     } catch {
         return false;
     }
 }
 
-function sameCertificate(left: NodeX509Certificate, right: NodeX509Certificate): boolean {
-    return left.raw.equals(right.raw);
+function sameCertificate(left: X509Certificate, right: X509Certificate): boolean {
+    const leftRaw = new Uint8Array(left.rawData);
+    const rightRaw = new Uint8Array(right.rawData);
+
+    return leftRaw.length === rightRaw.length &&
+        leftRaw.every((value, index) => value === rightRaw[index]);
 }
 
-function assertCertificationPath(path: NodeX509Certificate[]): void {
+function assertCertificationPath(path: X509Certificate[]): void {
     if (path.length < 2) {
         throw new BadRequestError('The client certificate chain is invalid.');
     }
@@ -172,13 +233,12 @@ function assertCertificationPath(path: NodeX509Certificate[]): void {
         }
 
         assertCertificateCurrent(certificate);
-        const parsed = new X509Certificate(certificate.raw);
-        const constraints = parsed.getExtension(BasicConstraintsExtension);
-        if (!certificate.ca || !constraints?.ca) {
+        const constraints = certificate.getExtension(BasicConstraintsExtension);
+        if (!constraints?.ca) {
             throw new BadRequestError('The client certificate chain contains a non-CA issuer.');
         }
 
-        const keyUsage = parsed.getExtension(KeyUsagesExtension);
+        const keyUsage = certificate.getExtension(KeyUsagesExtension);
         if (keyUsage && (keyUsage.usages & KeyUsageFlags.keyCertSign) === 0) {
             throw new BadRequestError('A client certificate issuer cannot sign certificates.');
         }
@@ -195,10 +255,8 @@ function assertCertificationPath(path: NodeX509Certificate[]): void {
     }
 }
 
-function assertClientCertificatePurpose(certificate: NodeX509Certificate): void {
-    const parsed = new X509Certificate(certificate.raw);
-
-    const extendedKeyUsage = parsed.getExtension(ExtendedKeyUsageExtension);
+function assertClientCertificatePurpose(certificate: X509Certificate): void {
+    const extendedKeyUsage = certificate.getExtension(ExtendedKeyUsageExtension);
     if (
         extendedKeyUsage &&
         !extendedKeyUsage.usages.includes(ExtendedKeyUsage.clientAuth)
@@ -206,15 +264,14 @@ function assertClientCertificatePurpose(certificate: NodeX509Certificate): void 
         throw new BadRequestError('The certificate is not valid for TLS client authentication.');
     }
 
-    const keyUsage = parsed.getExtension(KeyUsagesExtension);
+    const keyUsage = certificate.getExtension(KeyUsagesExtension);
     if (keyUsage && (keyUsage.usages & KeyUsageFlags.digitalSignature) === 0) {
         throw new BadRequestError('The certificate cannot prove possession of its private key.');
     }
 }
 
-function assertClientCertificateIdentity(certificate: NodeX509Certificate, clientId: string): void {
-    const parsed = new X509Certificate(certificate.raw);
-    const subjectAlternativeName = parsed.getExtension(SubjectAlternativeNameExtension);
+function assertClientCertificateIdentity(certificate: X509Certificate, clientId: string): void {
+    const subjectAlternativeName = certificate.getExtension(SubjectAlternativeNameExtension);
     const authupUris = subjectAlternativeName ?
         subjectAlternativeName.names.items
             .filter((name) => name.type === GENERAL_NAME_URL)
@@ -228,11 +285,11 @@ function assertClientCertificateIdentity(certificate: NodeX509Certificate, clien
     }
 }
 
-function assertCertificateCurrent(certificate: NodeX509Certificate): void {
+function assertCertificateCurrent(certificate: X509Certificate): void {
     const now = Date.now();
     if (
-        certificate.validFromDate.getTime() > now ||
-        certificate.validToDate.getTime() < now
+        certificate.notBefore.getTime() > now ||
+        certificate.notAfter.getTime() < now
     ) {
         throw new BadRequestError('The client certificate is not currently valid.');
     }
