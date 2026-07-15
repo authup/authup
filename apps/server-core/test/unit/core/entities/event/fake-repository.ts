@@ -81,6 +81,14 @@ export class FakeEventRepository implements IEventRepository {
             data = data.filter((row) => row.actor_id === owner.actorId &&
                 row.actor_type === owner.actorType);
         }
+        if (options.realmId) {
+            data = data.filter((row) => row.realm_id === options.realmId);
+        }
+        if (options.visibility) {
+            const { owner, realmIds } = options.visibility;
+            data = data.filter((row) => realmIds.includes(row.realm_id) ||
+                (!!owner && row.actor_id === owner.actorId && row.actor_type === owner.actorType));
+        }
 
         return {
             data,

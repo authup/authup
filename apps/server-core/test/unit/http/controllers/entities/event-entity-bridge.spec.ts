@@ -5,8 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { EventName, EventScope, PermissionName } from '@authup/core-kit';
+import {
+    type Event,
+    EventName,
+    EventScope,
+    PermissionName,
+} from '@authup/core-kit';
 import { Client as HTTPClient } from '@authup/core-http-kit';
+import { RealmScope } from '@authup/access';
+import { buildQuery } from 'rapiq';
 import {
     afterAll,
     beforeAll,
@@ -15,9 +22,15 @@ import {
     it,
 } from 'vitest';
 import { createTestApplication } from '../../../../app';
-import { createFakeClient, createFakeRealm, createFakeRole } from '../../../../utils';
+import {
+    createFakeClient,
+    createFakeRealm,
+    createFakeRole,
+    httpRequest,
+} from '../../../../utils';
 
 const SECRET_KEY_REGEX = /(password|secret|hash|token|credential)/i;
+const ADMIN_AUTHORIZATION = `Basic ${Buffer.from('admin:start123').toString('base64')}`;
 
 /**
  * End-to-end coverage for the entity-CRUD audit bridge (plan 057 Stage 2):
@@ -193,5 +206,91 @@ describe('event (entity-CRUD bridge)', () => {
             },
         });
         expect(foreign.data.some((row) => row.ref_id === foreignRole.id)).toBe(false);
+    });
+
+    it('attributes a junction event to its owner realm and hides it from an ownOrNull reader', async () => {
+        const realmB = await suite.client.realm.create(createFakeRealm());
+        const foreignRole = await suite.client.role.create(
+            createFakeRole({ realm_id: realmB.id }),
+        );
+        const userRead = await suite.client.permission.getOne(PermissionName.USER_READ);
+        const binding = await suite.client.rolePermission.create({
+            role_id: foreignRole.id,
+            permission_id: userRead.id,
+        });
+
+        const recorded = await suite.client.event.getMany({
+            filter: {
+                scope: EventScope.ENTITY,
+                name: EventName.CREATED,
+                ref_id: binding.id,
+            },
+        });
+        expect(recorded.data).toHaveLength(1);
+        expect(recorded.data[0].ref_type).toEqual('rolePermission');
+        expect(recorded.data[0].realm_id).toEqual(realmB.id);
+
+        const query = buildQuery({ filter: { id: recorded.data[0].id } });
+        const ownRouteResponse = await httpRequest(
+            suite,
+            'GET',
+            `/realms/master/events${query}`,
+            { headers: { Authorization: ADMIN_AUTHORIZATION } },
+        );
+        expect(ownRouteResponse.status).toEqual(200);
+        const ownRouteBody = await ownRouteResponse.json() as { data: Event[] };
+        expect(ownRouteBody.data).toHaveLength(0);
+
+        const foreignRouteResponse = await httpRequest(
+            suite,
+            'GET',
+            `/realms/${realmB.id}/events${query}`,
+            { headers: { Authorization: ADMIN_AUTHORIZATION } },
+        );
+        expect(foreignRouteResponse.status).toEqual(200);
+        const foreignRouteBody = await foreignRouteResponse.json() as { data: Event[] };
+        expect(foreignRouteBody.data.map((row) => row.id)).toEqual([recorded.data[0].id]);
+
+        const wrongRouteRecord = await httpRequest(
+            suite,
+            'GET',
+            `/realms/master/events/${recorded.data[0].id}`,
+            { headers: { Authorization: ADMIN_AUTHORIZATION } },
+        );
+        expect(wrongRouteRecord.status).toEqual(404);
+
+        const actorSecret = 'bridge-own-or-null-actor-secret';
+        const actorClient = await suite.client.client.create({
+            ...createFakeClient(),
+            auth_method: 'secret',
+            token_binding_method: 'none',
+            secret: actorSecret,
+            secret_hashed: false,
+            secret_encrypted: false,
+        });
+        const eventRead = await suite.client.permission.getOne(PermissionName.EVENT_READ);
+        await suite.client.clientPermission.create({
+            client_id: actorClient.id,
+            permission_id: eventRead.id,
+            realm_scope: RealmScope.OWN_OR_NULL,
+        });
+
+        const token = await suite.client.token.createWithClientCredentials({
+            client_id: actorClient.id,
+            client_secret: actorSecret,
+        });
+        const actor = new HTTPClient({ baseURL: suite.baseURL });
+        actor.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
+
+        const foreign = await actor.event.getMany({ filter: { id: recorded.data[0].id } });
+        expect(foreign.data).toHaveLength(0);
+        expect(foreign.meta.total).toEqual(0);
+
+        const foreignBeyondPage = await actor.event.getMany({
+            filter: { id: recorded.data[0].id },
+            pagination: { limit: 1, offset: 1 },
+        });
+        expect(foreignBeyondPage.data).toHaveLength(0);
+        expect(foreignBeyondPage.meta.total).toEqual(0);
     });
 });

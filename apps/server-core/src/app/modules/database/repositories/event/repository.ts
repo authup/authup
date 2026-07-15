@@ -97,6 +97,32 @@ export class EventRepositoryAdapter implements IEventRepository {
             });
         }
 
+        if (options.realmId) {
+            qb.andWhere('event.realm_id = :routeRealmId', { routeRealmId: options.realmId });
+        }
+
+        if (options.visibility) {
+            const constraints: string[] = [];
+            const parameters: Record<string, unknown> = {};
+            const realmIds = options.visibility.realmIds
+                .filter((realmId): realmId is string => realmId !== null);
+
+            if (realmIds.length > 0) {
+                constraints.push('event.realm_id IN (:...visibleRealmIds)');
+                parameters.visibleRealmIds = realmIds;
+            }
+            if (options.visibility.realmIds.includes(null)) {
+                constraints.push('event.realm_id IS NULL');
+            }
+            if (options.visibility.owner) {
+                constraints.push('(event.actor_id = :visibleActorId AND event.actor_type = :visibleActorType)');
+                parameters.visibleActorId = options.visibility.owner.actorId;
+                parameters.visibleActorType = options.visibility.owner.actorType;
+            }
+
+            qb.andWhere(`(${constraints.length > 0 ? constraints.join(' OR ') : '1 = 0'})`, parameters);
+        }
+
         const [entities, total] = await qb.getManyAndCount();
 
         return {

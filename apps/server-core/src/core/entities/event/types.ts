@@ -18,12 +18,24 @@ export type EventOwner = {
     actorType: string,
 };
 
+export type EventReadVisibility = {
+    owner?: EventOwner,
+    realmIds: Array<string | null>,
+};
+
 export type EventFindManyOptions = {
     /**
      * Mandatory owner constraint (self-service scope) — not overridable by a
      * rapiq filter.
      */
     owner?: EventOwner,
+    realmId?: string,
+    /**
+     * Rows reachable through the actor's realm-scoped permission, plus the
+     * actor's own rows. Applied before pagination so meta.total cannot include
+     * events outside that reach.
+     */
+    visibility?: EventReadVisibility,
 };
 
 export type EventCountRecentFilter = {
@@ -95,6 +107,10 @@ export type EventServiceOptions = {
     retentionDays?: number,
 };
 
+export type EventServiceReadOptions = {
+    realmId?: string,
+};
+
 /**
  * Actor + request attribution for entity-CRUD audit rows. The shape is
  * defined here (core) so core never imports from adapters/http — the wiring
@@ -131,10 +147,14 @@ export interface IEventService {
      * rows ("my sign-in history"); an actor with EVENT_READ sees every row
      * its realm reach permits.
      */
-    getMany(query: Record<string, any>, actor: ActorContext): Promise<EntityRepositoryFindManyResult<Event>>;
+    getMany(
+        query: Record<string, any>,
+        actor: ActorContext,
+        options?: EventServiceReadOptions,
+    ): Promise<EntityRepositoryFindManyResult<Event>>;
 
     /**
      * Read a single audit event. Own rows need no permission.
      */
-    getOne(id: string, actor: ActorContext): Promise<Event>;
+    getOne(id: string, actor: ActorContext, options?: EventServiceReadOptions): Promise<Event>;
 }

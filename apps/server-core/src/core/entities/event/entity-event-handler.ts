@@ -5,8 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { EntityDefaultEventName, EventName, EventScope } from '@authup/core-kit';
-import { isObject } from '@authup/kit';
+import {
+    EntityDefaultEventName,
+    EntityType,
+    EventName,
+    EventScope,
+} from '@authup/core-kit';
+import { hasOwnProperty, isObject } from '@authup/kit';
 import type { DomainEventPublishContext, IDomainEventHandler } from '@authup/server-kit';
 import { buildEntityDiff } from './diff.ts';
 import type {
@@ -25,6 +30,40 @@ const ENTITY_EVENT_NAME_MAP : Record<string, `${EventName}`> = {
     [EntityDefaultEventName.CREATED]: EventName.CREATED,
     [EntityDefaultEventName.UPDATED]: EventName.UPDATED,
     [EntityDefaultEventName.DELETED]: EventName.DELETED,
+};
+
+const ENTITY_REALM_KEY_MAP : Record<`${EntityType}`, string> = {
+    [EntityType.CLIENT]: 'realm_id',
+    [EntityType.CLIENT_PERMISSION]: 'client_realm_id',
+    [EntityType.CLIENT_ROLE]: 'client_realm_id',
+    [EntityType.CLIENT_SCOPE]: 'client_realm_id',
+    [EntityType.CONSENT]: 'realm_id',
+    [EntityType.EVENT]: 'realm_id',
+    [EntityType.IDENTITY_PROVIDER]: 'realm_id',
+    [EntityType.IDENTITY_PROVIDER_ACCOUNT]: 'user_realm_id',
+    [EntityType.IDENTITY_PROVIDER_ATTRIBUTE]: 'realm_id',
+    [EntityType.IDENTITY_PROVIDER_ATTRIBUTE_MAPPING]: 'provider_realm_id',
+    [EntityType.IDENTITY_PROVIDER_PERMISSION_MAPPING]: 'provider_realm_id',
+    [EntityType.IDENTITY_PROVIDER_ROLE_MAPPING]: 'provider_realm_id',
+    [EntityType.KEY]: 'realm_id',
+    [EntityType.POLICY]: 'realm_id',
+    [EntityType.POLICY_ATTRIBUTE]: 'realm_id',
+    [EntityType.PERMISSION]: 'realm_id',
+    [EntityType.PERMISSION_POLICY]: 'permission_realm_id',
+    [EntityType.REALM]: 'id',
+    [EntityType.ROBOT]: 'realm_id',
+    [EntityType.ROBOT_PERMISSION]: 'robot_realm_id',
+    [EntityType.ROBOT_ROLE]: 'robot_realm_id',
+    [EntityType.ROLE]: 'realm_id',
+    [EntityType.ROLE_ATTRIBUTE]: 'realm_id',
+    [EntityType.ROLE_PERMISSION]: 'role_realm_id',
+    [EntityType.SCOPE]: 'realm_id',
+    [EntityType.SESSION]: 'realm_id',
+    [EntityType.TRUST_ANCHOR]: 'realm_id',
+    [EntityType.USER]: 'realm_id',
+    [EntityType.USER_ATTRIBUTE]: 'realm_id',
+    [EntityType.USER_PERMISSION]: 'user_realm_id',
+    [EntityType.USER_ROLE]: 'user_realm_id',
 };
 
 /**
@@ -58,11 +97,11 @@ export class EntityEventHandler implements IDomainEventHandler {
                 return;
             }
 
-            // v1 semantics: realm attribution reads the entity's own realm_id
-            // column — junction rows (rolePermission, userRole, ...) carry no
-            // realm_id column and stay realm-less (null).
             const refId = ctx.content.data?.id ?? null;
-            const realmId = ctx.content.data?.realm_id ?? null;
+            const realmIdCurrent = resolveEntityRealmId(ctx.content.type, ctx.content.data);
+            const realmId = typeof realmIdCurrent === 'undefined' ?
+                (resolveEntityRealmId(ctx.content.type, ctx.dataPrevious) ?? null) :
+                realmIdCurrent;
 
             const requestContext = this.requestContext ?
                 this.requestContext() :
@@ -97,4 +136,20 @@ export class EntityEventHandler implements IDomainEventHandler {
             // fail the originating publish.
         }
     }
+}
+
+function resolveEntityRealmId(
+    type: string,
+    data: unknown,
+): string | null | undefined {
+    if (!isObject(data)) {
+        return undefined;
+    }
+
+    const key = ENTITY_REALM_KEY_MAP[type as `${EntityType}`] ?? 'realm_id';
+    if (!hasOwnProperty(data, key)) {
+        return undefined;
+    }
+
+    return typeof data[key] === 'string' ? data[key] : null;
 }

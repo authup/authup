@@ -18,7 +18,7 @@ import { useRequestQuery } from '@routup/basic/query';
 import type { EntityCollectionResponse } from '@authup/core-http-kit';
 import type { IEventService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { buildActorContext } from '../../../request/index.ts';
+import { buildActorContext, getRequestRealmID } from '../../../request/index.ts';
 
 export type EventControllerContext = {
     service: IEventService,
@@ -43,7 +43,11 @@ export class EventController {
         const {
             data,
             meta,
-        } = await this.service.getMany(useRequestQuery(event), actor);
+        } = await this.service.getMany(
+            useRequestQuery(event),
+            actor,
+            { realmId: getRequestRealmID(event) },
+        );
 
         return {
             data,
@@ -58,6 +62,6 @@ export class EventController {
     ): Promise<Event> {
         const actor = buildActorContext(event);
 
-        return this.service.getOne(id, actor);
+        return this.service.getOne(id, actor, { realmId: getRequestRealmID(event) });
     }
 }
