@@ -11,12 +11,14 @@
 export const USER_AUTHENTICATOR_ATTEMPT_CACHE_PREFIX = 'mfaAttempt';
 export const USER_AUTHENTICATOR_THROTTLE_CACHE_PREFIX = 'mfaThrottle';
 
-// Per-user lock serializing concurrent verify critical sections so a factor
-// (recovery code / TOTP step) is consumed exactly once. The TTL only bounds a
-// crashed request holding the lock — generous relative to a verify (a bcrypt
-// compare / seed decrypt + one save).
+// Per-user renewable lock serializing concurrent verify critical sections so a
+// factor (recovery code / TOTP step) is consumed exactly once. The TTL bounds a
+// crashed request; the active owner renews its lease while verification runs.
 export const USER_AUTHENTICATOR_VERIFY_LOCK_CACHE_PREFIX = 'mfaVerifyLock';
 export const USER_AUTHENTICATOR_VERIFY_LOCK_TTL = 10_000;
+export const USER_AUTHENTICATOR_VERIFY_LOCK_RENEW_INTERVAL = Math.floor(
+    USER_AUTHENTICATOR_VERIFY_LOCK_TTL / 3,
+);
 
 /**
  * Per-account exponential backoff for failed challenge codes:

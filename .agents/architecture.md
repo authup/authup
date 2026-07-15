@@ -2099,6 +2099,18 @@ mirrors this — when `userId !== '@me'` it offers only the email button
    the token endpoint. WebAuthn cannot ride a single POST — interactive kinds
    complete a fresh login through the MFA-pending ticket (below).
 
+**Intentional enforcement boundaries (#3251):** a federated IdP callback trusts
+the upstream provider and establishes its external-auth session without a local
+factor challenge (`mfaRequired` does not force local enrollment there); operators
+must enforce MFA upstream. Setting `mfaEnabled=false` is an explicit policy
+downgrade for every user, including already-enrolled users — device rows remain
+stored and reactivate when the feature is enabled again. Finally, the device-less
+direct password-grant pass-through above is the bootstrap the hosted UI needs to
+reach configure-inline enrollment; clients that require enrollment before an
+application token must use the authorization-code flow and exclude `password`
+from their `grant_types` allowlist. These boundaries are operator-facing in
+`docs/src/guide/deployment/configuration-server-core-mfa.md`.
+
 **The password grant is the single MFA chokepoint for credential login — the
 hosted `LoginForm` drives the `otp`, NOT a post-login challenge.** `store.login`
 (and `StoreLoginContext`) carry an optional `otp`, forwarded on the
@@ -2176,10 +2188,13 @@ adapter-kit `verifier.spec.ts` (non-access kind rejected).
 serializes its read-verify-save critical section per user via a cache lock
 (`mfaVerifyLock:<user_id>`, the atomic `ICache.add` set-if-absent — Redis
 `SET … NX`, single-tick memory adapter) so a factor is consumed exactly once
-under concurrency; a held lock bails `false` without penalty, and a cache
-outage fails open for factors with a persisted anti-replay backstop (TOTP
-step-counter, recovery `used_at`) but closed for EMAIL (cache-only
-single-use). Consumption is ordered **stamp-first**: the optional
+under concurrency. The lock stores a random owner token and its 10s lease is
+renewed every third of the TTL through `ICache.renewIfValue`; release uses
+`ICache.dropIfValue`, so an expired owner can neither extend nor delete a
+successor's lock. A held lock, unavailable cache, lost lease, or failed renewal
+bails `false` without penalty for every factor kind (fail closed); the persisted
+TOTP step-counter / recovery `used_at` remain defense in depth, not an outage
+fail-open path. Consumption is ordered **stamp-first**: the optional
 `UserAuthenticatorVerifyContext.onVerified` hook — the challenge controller
 stamps `session.mfa_at` (`ISessionManager.markMfaVerified`) inside it — runs
 after the factor matched but BEFORE the consumption persists (the device-row

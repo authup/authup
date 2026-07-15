@@ -182,6 +182,10 @@ export default defineConfig({
                                     link: '/guide/deployment/configuration-server-core-redis', 
                                 },
                                 {
+                                    text: 'MFA',
+                                    link: '/guide/deployment/configuration-server-core-mfa',
+                                },
+                                {
                                     text: 'SMTP',
                                     link: '/guide/deployment/configuration-server-core-smtp', 
                                 },

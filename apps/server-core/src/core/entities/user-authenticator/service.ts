@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { randomUUID } from 'node:crypto';
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { ValidatorGroup } from '@authup/kit';
 import {
@@ -25,6 +26,7 @@ import {
     ErrorCode,
     MfaThrottledError,
     UnauthorizedError,
+    isMfaThrottledError,
 } from '@authup/errors';
 import { 
     AbstractEntityService, 
@@ -68,6 +70,7 @@ import {
     USER_AUTHENTICATOR_TOTP_DIGITS,
     USER_AUTHENTICATOR_TOTP_PERIOD,
     USER_AUTHENTICATOR_VERIFY_LOCK_CACHE_PREFIX,
+    USER_AUTHENTICATOR_VERIFY_LOCK_RENEW_INTERVAL,
     USER_AUTHENTICATOR_VERIFY_LOCK_TTL,
     USER_AUTHENTICATOR_WEBAUTHN_AUTH_CACHE_PREFIX,
     USER_AUTHENTICATOR_WEBAUTHN_CHALLENGE_WINDOW,
@@ -98,6 +101,18 @@ type EmailCodeState = {
 type WebauthnChallengeState = {
     challenge: string,
     expiresAt: number,
+};
+
+type VerifyLock = {
+    status: 'acquired',
+    value: string,
+} | {
+    status: 'busy' | 'unavailable',
+};
+
+type VerifyLockLease = {
+    renew: () => Promise<boolean>,
+    stop: () => Promise<void>,
 };
 
 export class UserAuthenticatorService extends AbstractEntityService implements IUserAuthenticatorService {
@@ -621,7 +636,15 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         input: UserAuthenticatorVerifyInput,
         ctx: UserAuthenticatorVerifyContext = {},
     ): Promise<boolean> {
-        await this.assertNotThrottled(userId);
+        try {
+            await this.assertNotThrottled(userId);
+        } catch (e) {
+            if (isMfaThrottledError(e)) {
+                throw e;
+            }
+
+            return false;
+        }
 
         // Serialize the read-verify-save critical section per user so a single
         // factor (TOTP step / recovery / email code / webauthn counter) is
@@ -630,21 +653,11 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         // risk a double-consume; that request owns the outcome.
         const lockKey = this.buildVerifyLockCacheKey(userId);
         const lock = await this.acquireVerifyLock(lockKey);
-        if (lock === 'busy') {
+        if (lock.status !== 'acquired') {
             return false;
         }
-        // Lock acquisition fails open (cache down → 'unavailable') so a cache
-        // outage cannot brick MFA login. TOTP/recovery proceed because they carry
-        // a PERSISTED anti-replay backstop (TOTP step-counter / recovery used_at)
-        // — note this bounds SEQUENTIAL replay only; two verifies of the same
-        // still-valid code racing during an outage can both read-then-write and
-        // both pass (an accepted, narrow residual, since each still needs a valid
-        // code). EMAIL single-use rides entirely on the lock + cache drop with no
-        // persisted backstop, so without a real lock it MUST fail closed —
-        // otherwise concurrent verifies could both consume one code.
-        if (lock === 'unavailable' && input.kind === UserAuthenticatorKind.EMAIL) {
-            return false;
-        }
+
+        const lease = this.maintainVerifyLock(lockKey, lock.value);
 
         try {
             const devices = await this.repository.findAllWithSecretsByUser(userId, {
@@ -696,6 +709,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
                 return false;
             }
 
+            if (!await lease.renew()) {
+                return false;
+            }
+
             // Bind the proof to the caller's aggregate (the session mfa_at
             // stamp) BEFORE any consumption persists: a hook failure aborts
             // the verify with nothing consumed — never a burned single-use
@@ -704,6 +721,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             // bounded server-error window, not a lost factor.
             if (ctx.onVerified) {
                 await ctx.onVerified();
+            }
+
+            if (!await lease.renew()) {
+                return false;
             }
 
             matched.last_used_at = new Date().toISOString();
@@ -726,10 +747,8 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             await this.recordChallengeEvent(EventName.MFA_VERIFIED, userId, input.kind, ctx, matched);
             return true;
         } finally {
-            // only release a lock we actually hold (never a fail-open no-lock).
-            if (lock === 'acquired') {
-                await this.releaseVerifyLock(lockKey);
-            }
+            await lease.stop();
+            await this.releaseVerifyLock(lockKey, lock.value);
         }
     }
 
@@ -1084,24 +1103,61 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         });
     }
 
-    protected async acquireVerifyLock(key: string): Promise<'acquired' | 'busy' | 'unavailable'> {
+    protected async acquireVerifyLock(key: string): Promise<VerifyLock> {
+        const value = randomUUID();
+
         try {
-            return (await this.cache.add(key, 1, { ttl: USER_AUTHENTICATOR_VERIFY_LOCK_TTL })) ?
-                'acquired' :
-                'busy';
+            return (await this.cache.add(key, value, { ttl: USER_AUTHENTICATOR_VERIFY_LOCK_TTL })) ?
+                { status: 'acquired', value } :
+                { status: 'busy' };
         } catch {
-            // Cache down — no real lock. The caller decides: factors with a
-            // persisted anti-replay backstop (TOTP step-counter / recovery
-            // used_at) proceed; EMAIL (cache-only single-use) fails closed.
-            return 'unavailable';
+            return { status: 'unavailable' };
         }
     }
 
-    protected async releaseVerifyLock(key: string): Promise<void> {
+    protected maintainVerifyLock(key: string, value: string): VerifyLockLease {
+        let owned = true;
+        let pending : Promise<void> | undefined;
+
+        const queueRenewal = () => {
+            if (!owned || pending) {
+                return pending;
+            }
+
+            pending = this.cache
+                .renewIfValue(key, value, USER_AUTHENTICATOR_VERIFY_LOCK_TTL)
+                .then((renewed) => {
+                    owned = renewed;
+                })
+                .catch(() => {
+                    owned = false;
+                })
+                .finally(() => {
+                    pending = undefined;
+                });
+
+            return pending;
+        };
+
+        const timer = setInterval(queueRenewal, USER_AUTHENTICATOR_VERIFY_LOCK_RENEW_INTERVAL);
+
+        return {
+            renew: async () => {
+                await queueRenewal();
+                return owned;
+            },
+            stop: async () => {
+                clearInterval(timer);
+                await pending;
+            },
+        };
+    }
+
+    protected async releaseVerifyLock(key: string, value: string): Promise<void> {
         try {
-            await this.cache.drop(key);
+            await this.cache.dropIfValue(key, value);
         } catch {
-            // Best-effort release; the lock TTL bounds a stranded key.
+            // Best-effort release; the renewable lock TTL bounds a stranded key.
         }
     }
 

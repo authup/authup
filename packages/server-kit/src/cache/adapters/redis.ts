@@ -11,6 +11,20 @@ import type { RedisClient, RedisClientOptions } from '../../redis';
 import { createRedisClient } from '../../redis';
 import type { CacheClearOptions, CacheSetOptions, ICache } from '../types';
 
+const RENEW_IF_VALUE_SCRIPT = `
+if redis.call('get', KEYS[1]) == ARGV[1] then
+    return redis.call('pexpire', KEYS[1], ARGV[2])
+end
+return 0
+`;
+
+const DROP_IF_VALUE_SCRIPT = `
+if redis.call('get', KEYS[1]) == ARGV[1] then
+    return redis.call('del', KEYS[1])
+end
+return 0
+`;
+
 export class RedisCache implements ICache {
     protected client : Client;
 
@@ -65,6 +79,29 @@ export class RedisCache implements ICache {
             await this.client.set(key, payload, 'NX');
 
         return result === 'OK';
+    }
+
+    async renewIfValue(key: string, value: string, ttl: number): Promise<boolean> {
+        const result = await this.client.eval(
+            RENEW_IF_VALUE_SCRIPT,
+            1,
+            key,
+            JSON.stringify(value),
+            ttl,
+        );
+
+        return result === 1;
+    }
+
+    async dropIfValue(key: string, value: string): Promise<boolean> {
+        const result = await this.client.eval(
+            DROP_IF_VALUE_SCRIPT,
+            1,
+            key,
+            JSON.stringify(value),
+        );
+
+        return result === 1;
     }
 
     async increment(key: string, value = 1, options: CacheSetOptions = {}): Promise<number> {

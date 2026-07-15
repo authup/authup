@@ -23,6 +23,7 @@ import {
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import { FakePermissionEvaluator } from '@authup/server-test-kit';
 import { MailTemplateRenderer } from '../../../../../src/core/mail/index.ts';
@@ -31,6 +32,8 @@ import { UserAuthenticatorService } from '../../../../../src/core/entities/user-
 import {
     USER_AUTHENTICATOR_ATTEMPT_CACHE_PREFIX,
     USER_AUTHENTICATOR_VERIFY_LOCK_CACHE_PREFIX,
+    USER_AUTHENTICATOR_VERIFY_LOCK_RENEW_INTERVAL,
+    USER_AUTHENTICATOR_VERIFY_LOCK_TTL,
     USER_AUTHENTICATOR_WEBAUTHN_AUTH_CACHE_PREFIX,
     USER_AUTHENTICATOR_WEBAUTHN_REG_CACHE_PREFIX,
 } from '../../../../../src/core/entities/user-authenticator/constants.ts';
@@ -344,6 +347,59 @@ describe('UserAuthenticatorService', () => {
             // the step was NOT consumed — the same code succeeds once the lock frees
             await cache.drop(lockKey);
             expect(await service.verify(userId, { kind: UserAuthenticatorKind.TOTP, response: code })).toBeTruthy();
+        });
+
+        it('keeps the verify lock beyond its base TTL while the success hook is in flight', async () => {
+            const enrolled = await service.enroll({ kind: UserAuthenticatorKind.RECOVERY }, makeActor());
+            const [code] = enrolled.codes!;
+
+            let markStarted! : () => void;
+            const started = new Promise<void>((resolve) => { markStarted = resolve; });
+            let releaseHook! : () => void;
+            const hookGate = new Promise<void>((resolve) => { releaseHook = resolve; });
+            const renew = vi.spyOn(cache, 'renewIfValue');
+
+            vi.useFakeTimers();
+            try {
+                const verification = service.verify(
+                    userId,
+                    { kind: UserAuthenticatorKind.RECOVERY, response: code },
+                    {
+                        onVerified: async () => {
+                            markStarted();
+                            await hookGate;
+                        },
+                    },
+                );
+
+                await started;
+                await vi.advanceTimersByTimeAsync(
+                    USER_AUTHENTICATOR_VERIFY_LOCK_TTL + USER_AUTHENTICATOR_VERIFY_LOCK_RENEW_INTERVAL,
+                );
+                expect(renew.mock.calls.length).toBeGreaterThanOrEqual(3);
+
+                await expect(service.verify(userId, {
+                    kind: UserAuthenticatorKind.RECOVERY,
+                    response: code,
+                })).resolves.toBeFalsy();
+
+                releaseHook();
+                await expect(verification).resolves.toBeTruthy();
+            } finally {
+                vi.useRealTimers();
+            }
+        });
+
+        it('fails verification closed when the cache is unavailable', async () => {
+            const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
+            await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
+
+            cache.get = async () => { throw new Error('cache unavailable'); };
+
+            await expect(service.verify(userId, {
+                kind: UserAuthenticatorKind.TOTP,
+                response: totpCode(enrolled.secret!),
+            })).resolves.toBeFalsy();
         });
 
         it('ignores unconfirmed devices', async () => {
