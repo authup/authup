@@ -2226,11 +2226,15 @@ explicit `EventService` emits are a follow-up.
 **Imported certificates (plan 071 Stage B):** create may attach an immutable
 PEM certificate chain only to an **imported signature key** (never generated
 material or an enc key). `node:crypto.X509Certificate` parses every
-leaf-first PEM block and the leaf's DER SPKI must exactly match the imported
-public key before the raw chain is persisted; certificate generation remains
+leaf-first PEM block; both the leaf and imported DER SPKI are canonicalized
+before comparison so equivalent AlgorithmIdentifier encodings match. The
+crypto helper throws transport-neutral `KeyCertificateError` values derived
+from `AuthupError`, and `KeyService` translates them at its API boundary
+before the raw chain is persisted; certificate generation remains
 deliberately out of scope. All four JWKS surfaces publish RFC 7517 `x5c` as
 leaf-first standard-base64 DER plus `x5t#S256` as the base64url SHA-256 digest
-of the leaf DER. A malformed stored certificate never takes down JWKS: the
+of the leaf DER, computed with Web Crypto `subtle.digest` and the shared
+base64url helper. A malformed stored certificate never takes down JWKS: the
 usable public JWK is still published without certificate fields. Stage B
 reuses the dormant nullable column from Stage A and needs no migration.
 

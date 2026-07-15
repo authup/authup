@@ -7,10 +7,12 @@
 
 import {
     X509Certificate,
-    createHash,
     createPublicKey,
 } from 'node:crypto';
 import { BadRequestError } from '@authup/errors';
+import { base64URLEncode } from '@authup/kit';
+import { subtle } from 'uncrypto';
+import { KeyCertificateError } from './certificate-error.ts';
 
 const CERTIFICATE_BLOCK_PATTERN = /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g;
 
@@ -31,7 +33,12 @@ export function assertCertificateMatchesKey(
     chain: X509Certificate[],
     spkiBase64: string,
 ): void {
-    const certificateKey = chain[0].publicKey.export({
+    const certificate = chain[0];
+    if (!certificate) {
+        throw new KeyCertificateError('The certificate chain is empty.');
+    }
+
+    const certificateKey = certificate.publicKey.export({
         type: 'spki',
         format: 'der',
     });
@@ -47,11 +54,11 @@ export function assertCertificateMatchesKey(
             format: 'der',
         });
     } catch {
-        throw new BadRequestError('The imported public key material is invalid.');
+        throw new KeyCertificateError('The imported public key material is invalid.');
     }
 
     if (Buffer.compare(certificateKey, importedKey) !== 0) {
-        throw new BadRequestError('The certificate does not match the key material.');
+        throw new KeyCertificateError('The certificate does not match the key material.');
     }
 }
 
@@ -59,8 +66,15 @@ export function buildX5c(chain: X509Certificate[]): string[] {
     return chain.map((certificate) => certificate.raw.toString('base64'));
 }
 
-export function buildX5tS256(chain: X509Certificate[]): string {
-    return createHash('sha256')
-        .update(chain[0].raw)
-        .digest('base64url');
+export async function buildX5tS256(chain: X509Certificate[]): Promise<string> {
+    const certificate = chain[0];
+    if (!certificate) {
+        throw new KeyCertificateError('The certificate chain is empty.');
+    }
+
+    const digest = await subtle.digest('SHA-256', certificate.raw);
+
+    return base64URLEncode(
+        String.fromCharCode(...new Uint8Array(digest)),
+    );
 }

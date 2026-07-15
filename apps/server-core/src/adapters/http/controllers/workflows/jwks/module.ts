@@ -26,9 +26,9 @@ export type JwkControllerContext = {
     repository: Repository<KeyEntity>
 };
 
-function buildCertificateJwkFields(
+async function buildCertificateJwkFields(
     certificate: string | null,
-): Partial<Pick<OAuth2JsonWebKey, 'x5c' | 'x5t#S256'>> {
+): Promise<Partial<Pick<OAuth2JsonWebKey, 'x5c' | 'x5t#S256'>>> {
     if (!certificate) {
         return {};
     }
@@ -37,7 +37,7 @@ function buildCertificateJwkFields(
         const chain = parseCertificateChain(certificate);
         return {
             x5c: buildX5c(chain),
-            'x5t#S256': buildX5tS256(chain),
+            'x5t#S256': await buildX5tS256(chain),
         };
     } catch {
         // One malformed legacy/database row must not take down the realm's
@@ -84,12 +84,16 @@ export class JwkController {
                         options: AsymmetricKey.buildImportOptionsForJWTAlgorithm(entity.signature_algorithm),
                     })
                     .then((container) => container.toJWK())
-                    .then((key) => ({
-                        ...key,
-                        kid: entity.id,
-                        alg: entity.signature_algorithm,
-                        ...buildCertificateJwkFields(entity.certificate),
-                    })),
+                    .then(async (key) => {
+                        const certificateFields = await buildCertificateJwkFields(entity.certificate);
+
+                        return {
+                            ...key,
+                            kid: entity.id,
+                            alg: entity.signature_algorithm,
+                            ...certificateFields,
+                        };
+                    }),
             );
 
         const keys = await Promise.all(promises);
@@ -124,12 +128,13 @@ export class JwkController {
             });
 
         const jsonWebKey = await container.toJWK();
+        const certificateFields = await buildCertificateJwkFields(entity.certificate);
 
         return {
             ...jsonWebKey,
             kid: entity.id,
             alg: entity.signature_algorithm,
-            ...buildCertificateJwkFields(entity.certificate),
+            ...certificateFields,
         };
     }
 }
