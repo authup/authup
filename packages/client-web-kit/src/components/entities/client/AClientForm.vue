@@ -374,7 +374,7 @@ export default defineComponent({
                     </template>
                     <VCFormInput
                         :model-value="clientCertificateURI"
-                        :disabled="true"
+                        :readonly="true"
                     />
                     <template #hint>
                         {{ translationsClient.clientCertificateUriHint }}
