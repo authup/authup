@@ -1,0 +1,11 @@
+# Regression fixture: YAML provisioning file must load (locter returns the parsed
+# object directly, without a `.default` wrapper).
+permissions:
+  - attributes:
+      name: yaml_permission
+roles:
+  - attributes:
+      name: yaml_role
+    relations:
+      globalPermissions:
+        - yaml_permission

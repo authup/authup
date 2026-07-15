@@ -107,6 +107,24 @@ describe('app/modules/provisioning', () => {
         expect(realm.relations?.clients).toHaveLength(1);
     });
 
+    it('should load provisioning data from yaml and json files', async () => {
+        // locter returns json/yaml parsed content directly (no `.default` wrapper),
+        // unlike js/ts module files — the source must handle both, otherwise these
+        // files validate to nothing and are silently skipped.
+        const source = new FileProvisioningSource({ cwd: 'test/data/sources-data' });
+        const output = await source.load();
+
+        expect(output.permissions).toHaveLength(1);
+        expect(output.permissions![0].attributes.name).toBe('yaml_permission');
+
+        expect(output.roles).toHaveLength(1);
+        expect(output.roles![0].attributes.name).toBe('yaml_role');
+        expect(output.roles![0].relations?.globalPermissions).toEqual(['yaml_permission']);
+
+        expect(output.scopes).toHaveLength(1);
+        expect(output.scopes![0].attributes.name).toBe('json_scope');
+    });
+
     it('should synchronize provisioning data', async () => {
         const provisioning = new ProvisionerModule([
             new FileProvisioningSource({ cwd: 'test/data/sources' }),

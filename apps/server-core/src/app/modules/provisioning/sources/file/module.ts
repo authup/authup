@@ -5,7 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import { ValidatorGroup } from '@authup/kit';
+import { ValidatorGroup, isObject } from '@authup/kit';
 import { load, locateMany } from 'locter';
 import path from 'node:path';
 import type { RootProvisioningEntity } from '../../../../../core/provisioning/entities/index.ts';
@@ -37,7 +37,13 @@ export class FileProvisioningSource implements IProvisioningSource {
         const output : RootProvisioningEntity = {};
         for (const location of locations) {
             const raw = await load(location);
-            const data = await this.rootValidator.run(raw.default, { group: ValidatorGroup.PROVISIONING });
+            // locter yields a module namespace ({ default }) for js/ts/mjs files,
+            // but the parsed value directly for json/yaml/yml — unwrap the default
+            // export when present so every supported file type validates.
+            const entity = isObject(raw) && 'default' in raw ?
+                raw.default :
+                raw;
+            const data = await this.rootValidator.run(entity, { group: ValidatorGroup.PROVISIONING });
 
             compositeSource.merge(output, data);
         }
