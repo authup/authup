@@ -16,6 +16,7 @@ import { sanitizeEventData } from './sanitize.ts';
 import type {
     EventRecordInput,
     EventServiceOptions,
+    EventServiceReadOptions,
     IEventRepository,
     IEventService,
 } from './types.ts';
@@ -106,6 +107,7 @@ export class EventService extends AbstractEntityService implements IEventService
     async getMany(
         query: Record<string, any>,
         actor: ActorContext,
+        options: EventServiceReadOptions = {},
     ): Promise<EntityRepositoryFindManyResult<Event>> {
         let canReadAll = true;
         try {
@@ -124,13 +126,16 @@ export class EventService extends AbstractEntityService implements IEventService
                     actorId: actor.identity!.data.id,
                     actorType: actor.identity!.type,
                 },
+                ...(options.realmId ? { realmId: options.realmId } : {}),
             });
         }
 
-        const { data: entities, meta } = await this.repository.findMany(query);
+        const { data: entities, meta } = await this.repository.findMany(
+            query,
+            options.realmId ? { realmId: options.realmId } : undefined,
+        );
 
         const data: Event[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             if (this.isOwnedBy(entity, actor)) {
@@ -148,7 +153,7 @@ export class EventService extends AbstractEntityService implements IEventService
                 });
                 data.push(entity);
             } catch {
-                total -= 1;
+                continue;
             }
         }
 
@@ -156,14 +161,14 @@ export class EventService extends AbstractEntityService implements IEventService
             data,
             meta: {
                 ...meta,
-                total,
+                total: data.length,
             },
         };
     }
 
-    async getOne(id: string, actor: ActorContext): Promise<Event> {
+    async getOne(id: string, actor: ActorContext, options: EventServiceReadOptions = {}): Promise<Event> {
         const entity = await this.repository.findOneById(id);
-        if (!entity) {
+        if (!entity || (options.realmId && entity.realm_id !== options.realmId)) {
             throw new EntityNotFoundError();
         }
 

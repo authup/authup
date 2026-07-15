@@ -6,7 +6,12 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { EventName, EventScope, IdentityType } from '@authup/core-kit';
+import {
+    EntityType,
+    EventName,
+    EventScope,
+    IdentityType,
+} from '@authup/core-kit';
 import type { DomainEventPublishContext } from '@authup/server-kit';
 import { 
     beforeEach, 
@@ -93,12 +98,74 @@ describe('EntityEventHandler', () => {
         expect(call.realmId).toEqual(realmId);
     });
 
-    it('leaves the realm null for entities without a realm_id column (junction v1 semantics)', async () => {
-        await buildHandler().handle(buildPublishContext({ content: { type: 'rolePermission', data: { id: entityId } } }));
+    it.each([
+        [EntityType.CLIENT_PERMISSION, 'client_realm_id'],
+        [EntityType.CLIENT_ROLE, 'client_realm_id'],
+        [EntityType.CLIENT_SCOPE, 'client_realm_id'],
+        [EntityType.IDENTITY_PROVIDER_ACCOUNT, 'user_realm_id'],
+        [EntityType.IDENTITY_PROVIDER_ATTRIBUTE_MAPPING, 'provider_realm_id'],
+        [EntityType.IDENTITY_PROVIDER_PERMISSION_MAPPING, 'provider_realm_id'],
+        [EntityType.IDENTITY_PROVIDER_ROLE_MAPPING, 'provider_realm_id'],
+        [EntityType.PERMISSION_POLICY, 'permission_realm_id'],
+        [EntityType.ROBOT_PERMISSION, 'robot_realm_id'],
+        [EntityType.ROBOT_ROLE, 'robot_realm_id'],
+        [EntityType.ROLE_PERMISSION, 'role_realm_id'],
+        [EntityType.USER_PERMISSION, 'user_realm_id'],
+        [EntityType.USER_ROLE, 'user_realm_id'],
+    ])('attributes %s events to the canonical owner realm', async (type, key) => {
+        await buildHandler().handle(buildPublishContext({
+            content: {
+                type,
+                data: {
+                    id: entityId,
+                    [key]: realmId,
+                },
+            },
+        }));
 
-        const [call] = eventService.recordCalls;
-        expect(call.refType).toEqual('rolePermission');
-        expect(call.realmId).toBeNull();
+        expect(eventService.recordCalls[0].realmId).toEqual(realmId);
+    });
+
+    it('attributes realm events to the realm itself', async () => {
+        await buildHandler().handle(buildPublishContext({
+            content: {
+                type: EntityType.REALM,
+                data: { id: realmId },
+            },
+        }));
+
+        expect(eventService.recordCalls[0].realmId).toEqual(realmId);
+    });
+
+    it('preserves a null owner realm instead of using the member realm', async () => {
+        await buildHandler().handle(buildPublishContext({
+            content: {
+                type: EntityType.ROLE_PERMISSION,
+                data: {
+                    id: entityId,
+                    role_realm_id: null,
+                    permission_realm_id: realmId,
+                },
+            },
+        }));
+
+        expect(eventService.recordCalls[0].realmId).toBeNull();
+    });
+
+    it('falls back to the previous owner realm for a partial update payload', async () => {
+        await buildHandler().handle(buildPublishContext({
+            content: {
+                type: EntityType.USER_ROLE,
+                event: 'updated',
+                data: { id: entityId },
+            },
+            dataPrevious: {
+                id: entityId,
+                user_realm_id: realmId,
+            },
+        }));
+
+        expect(eventService.recordCalls[0].realmId).toEqual(realmId);
     });
 
     it('stamps actor/request fields from the injected request context', async () => {

@@ -872,7 +872,7 @@ Realm-scoped controllers are dual-mounted via `@routup/decorators` array paths:
 export class UserController { ... }
 ```
 
-This applies to the six controllers that read realm context: `client`, `robot`, `user`, `permission`, `policy`, `identity-provider`. Junction controllers (e.g. `client-role`, `user-permission`) are mounted flat — their realm is implicit via the parent entity's joins.
+This applies to the controllers that read realm context: `client`, `robot`, `user`, `permission`, `policy`, `identity-provider`, and `event`. Junction controllers (e.g. `client-role`, `user-permission`) are mounted flat — their realm is implicit via the parent entity's joins.
 
 **Request flow**:
 
@@ -2508,15 +2508,21 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   `data: null` (no column dumps). Rows self-prune on a short per-row TTL via
   `EventRecordInput.retentionDays` (config `eventLogEntityEnabled` default
   `true` / `eventLogEntityRetentionDays` default `7` days, env
-  `EVENT_LOG_ENTITY_*`). v1 semantics: `realm_id` is read from the entity's
-  own column — junction rows (rolePermission, userRole, ...) carry none and
-  stay realm-less (null).
+  `EVENT_LOG_ENTITY_*`). Realm attribution uses the resource's canonical
+  owner realm: direct entities use `realm_id`, junctions use the owner-side
+  key (`role_realm_id`, `user_realm_id`, `client_realm_id`, ...), identity
+  provider accounts use `user_realm_id`, and a realm uses its own `id`.
 - **Read API:** `GET /events` (+ `/realms/:realmId/events`),
   read-only, gated by `EVENT_READ` with the session-service shape: a reader
   without the permission is force-scoped to its own rows (`actor_id` +
   `actor_type`), a scoped reader gets per-row realm_scope drops, and the
   repository force-selects the gate columns (`applyRealmScopeSelect`, plan-039
-  discipline). `EVENT_READ` auto-provisions via `Object.values(PermissionName)`:
+  discipline). Nested `/realms/:realmId/events` reads add a mandatory
+  repository realm predicate (and single-record reads fail as not found on a
+  mismatch). Because collections still apply asynchronous per-row policies
+  after the database query, their response total is the visible page count
+  rather than the unauthorized backing-table total. `EVENT_READ`
+  auto-provisions via `Object.values(PermissionName)`:
   `admin` = `any`, `realm_admin` = `ownOrNull` (deliberately NOT in the OWN
   override list). Typed client: `client.event.getMany/getOne`.
 - **Admin UI:** `apps/client-web/pages/events/` — a read-only list page

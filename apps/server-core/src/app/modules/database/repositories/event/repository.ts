@@ -97,6 +97,10 @@ export class EventRepositoryAdapter implements IEventRepository {
             });
         }
 
+        if (options.realmId) {
+            qb.andWhere('event.realm_id = :routeRealmId', { routeRealmId: options.realmId });
+        }
+
         const [entities, total] = await qb.getManyAndCount();
 
         return {

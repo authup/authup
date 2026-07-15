@@ -23,6 +23,7 @@ import { FakeEventRepository } from './fake-repository.ts';
 const DAY_IN_MS = 86_400_000;
 
 const realmId = randomUUID();
+const otherRealmId = randomUUID();
 const userId = randomUUID();
 const otherUserId = randomUUID();
 
@@ -241,6 +242,46 @@ describe('EventService', () => {
             expect(meta.total).toEqual(2);
         });
 
+        it('applies the route realm as a mandatory repository constraint', async () => {
+            const ownRealm = seedForeign();
+            seedForeign({ realm_id: otherRealmId });
+
+            const actor = makeActor({ allow: true });
+            const { data, meta } = await service.getMany({}, actor, { realmId });
+
+            expect(data.map((row) => row.id)).toEqual([ownRealm.id]);
+            expect(meta.total).toEqual(1);
+        });
+
+        it('combines the route realm with the self-service owner constraint', async () => {
+            const ownRealm = seedOwn();
+            seedOwn({ realm_id: otherRealmId });
+
+            const actor = makeActor({ allow: false });
+            const { data, meta } = await service.getMany({}, actor, { realmId });
+
+            expect(data.map((row) => row.id)).toEqual([ownRealm.id]);
+            expect(meta.total).toEqual(1);
+        });
+
+        it('does not expose a backing-table total after per-row authorization', async () => {
+            const visible = seedForeign();
+            repository.findMany = async () => ({
+                data: [visible],
+                meta: {
+                    total: 125,
+                    limit: 50,
+                    offset: 0,
+                },
+            });
+
+            const actor = makeActor({ allow: true });
+            const { data, meta } = await service.getMany({}, actor);
+
+            expect(data).toHaveLength(1);
+            expect(meta.total).toEqual(1);
+        });
+
         it('drops rows a privileged actor is not authorized for (realm reach)', async () => {
             seedOwn();
             seedForeign();
@@ -286,6 +327,14 @@ describe('EventService', () => {
 
             const result = await service.getOne(row.id, actor);
             expect(result.id).toEqual(row.id);
+        });
+
+        it('hides a row outside the route realm before checking ownership', async () => {
+            const row = seedOwn({ realm_id: otherRealmId });
+            const actor = makeActor({ allow: false });
+
+            await expect(service.getOne(row.id, actor, { realmId })).rejects.toBeDefined();
+            expect((actor.permissionEvaluator as FakePermissionEvaluator).preEvaluateCalls).toHaveLength(0);
         });
 
         it('throws when the row does not exist', async () => {
