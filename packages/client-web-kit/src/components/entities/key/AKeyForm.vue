@@ -83,6 +83,7 @@ export default defineComponent({
             realm_id: '',
             decryption_key: '',
             encryption_key: '',
+            certificate: '',
         });
 
         const translationsClient = useTranslationsForNamespace(
@@ -181,17 +182,25 @@ export default defineComponent({
                 if (!importEnabled.value) {
                     form.decryption_key = '';
                     form.encryption_key = '';
+                    form.certificate = '';
                 }
 
                 if (isEnc.value) {
                     form.signature_algorithm = '';
                     form.encryption_key = '';
+                    form.certificate = '';
                 }
             }
 
             // string-enum form sentinels ('' = unset) widen the fields beyond
             // the entity's literal unions — narrow for the manager call.
             await manager.createOrUpdate(form as Partial<Key>);
+        };
+
+        const updateCertificate = (value: string) => {
+            if (v.fields.certificate) {
+                v.fields.certificate.$model.value = value;
+            }
         };
 
         const translationsDefault = useTranslations(
@@ -217,6 +226,10 @@ export default defineComponent({
                     key: TranslatorTranslationFieldKey.SIGNATURE_ALGORITHM,
                 },
                 {
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.CERTIFICATE,
+                },
+                {
                     namespace: TranslatorTranslationNamespace.ENTITY,
                     key: TranslatorTranslationEntityKey.REALM,
                     count: 1,
@@ -237,6 +250,7 @@ export default defineComponent({
             translationsDefault,
             translationsClient,
             submit,
+            updateCertificate,
         };
     },
 });
@@ -364,6 +378,23 @@ export default defineComponent({
                                 :model-value="v.fields.encryption_key.$model.value ?? ''"
                                 :rows="5"
                                 @update:model-value="(next: string) => { v.fields.encryption_key.$model.value = next; }"
+                            />
+                        </VCFormGroup>
+                    </IFieldValidation>
+
+                    <IFieldValidation
+                        v-if="v.fields.certificate"
+                        v-slot="{ value }"
+                        :field="v.fields.certificate"
+                    >
+                        <VCFormGroup :validation="value">
+                            <template #label>
+                                {{ translationsDefault.certificate }}
+                            </template>
+                            <VCFormTextarea
+                                :model-value="v.fields.certificate.$model.value ?? ''"
+                                :rows="8"
+                                @update:model-value="updateCertificate"
                             />
                         </VCFormGroup>
                     </IFieldValidation>

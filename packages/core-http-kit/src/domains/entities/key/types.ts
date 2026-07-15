@@ -14,7 +14,7 @@ import type { EntityCollectionResponse, EntityRecordResponse } from '../../types
 // IMPORTED (sig: pkcs8 + spki, base64 or PEM; enc: 32 base64 bytes).
 // Responses never carry decryption_key.
 export type KeyCreatePayload = Pick<Key, 'use'> &
-    Partial<Pick<Key, 'name' | 'priority' | 'status' | 'signature_algorithm' | 'realm_id' | 'decryption_key' | 'encryption_key'>>;
+    Partial<Pick<Key, 'name' | 'priority' | 'status' | 'signature_algorithm' | 'realm_id' | 'decryption_key' | 'encryption_key' | 'certificate'>>;
 export type KeyUpdatePayload = Partial<Pick<Key, 'name' | 'priority' | 'status'>>;
 
 export type KeyDeleteOptions = {
