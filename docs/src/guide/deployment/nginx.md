@@ -48,6 +48,9 @@ server {
         proxy_set_header X-Real-IP          $remote_addr;
         proxy_set_header X-Forwarded-For    $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto  $scheme;
+        # Clear the client-certificate header so a public request can never
+        # spoof it. Only a trusted mTLS location (see below) may set it.
+        proxy_set_header X-Forwarded-Tls-Client-Cert "";
         proxy_read_timeout          2m;
         proxy_connect_timeout       2m;
         proxy_pass                          http://127.0.0.1:[SERVER_CORE_PORT];
