@@ -533,7 +533,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             throw new BadRequestError(`The authenticator kind ${entity.kind} can not be confirmed with a code.`);
         }
 
-        await this.assertNotThrottled(entity.user_id);
+        await this.assertNotThrottledOrRetry(entity.user_id);
 
         const withSecrets = await this.repository.findOneWithSecretsById(entity.id);
         if (!withSecrets) {
@@ -565,7 +565,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         // brute-force throttle, same lifecycle as the TOTP confirm branch — the
         // attestation verify is a real crypto call and must not be retryable
         // without backoff.
-        await this.assertNotThrottled(entity.user_id);
+        await this.assertNotThrottledOrRetry(entity.user_id);
 
         // challenge is keyed by the enrollment row id (see enrollWebauthn), so
         // overlapping ceremonies do not collide.
@@ -908,7 +908,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         }
 
         this.assertMail();
-        await this.assertNotThrottled(userId);
+        await this.assertNotThrottledOrRetry(userId);
 
         // require a CONFIRMED email factor — never mail a code to a user who
         // did not enroll email (no code-spray oracle).
@@ -1165,6 +1165,23 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         const lockedUntil = await this.cache.get<number>(this.buildThrottleCacheKey(userId));
         if (typeof lockedUntil === 'number' && lockedUntil > Date.now()) {
             throw new MfaThrottledError({ retryAfter: Math.ceil((lockedUntil - Date.now()) / 1_000) });
+        }
+    }
+
+    // Throttle gate for the throwing entry points (confirm / confirmWebauthn /
+    // sendChallenge). Mirrors verify()'s fail-closed posture: a genuine lockout
+    // surfaces unchanged, while an unreadable throttle counter (cache outage) is
+    // treated as a lockout — the caller is told to retry (429) rather than the
+    // outage bubbling up as an internal 500.
+    protected async assertNotThrottledOrRetry(userId: string): Promise<void> {
+        try {
+            await this.assertNotThrottled(userId);
+        } catch (e) {
+            if (isMfaThrottledError(e)) {
+                throw e;
+            }
+
+            throw new MfaThrottledError({ retryAfter: USER_AUTHENTICATOR_ATTEMPT_LOCK_FACTOR });
         }
     }
 

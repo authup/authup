@@ -402,6 +402,21 @@ describe('UserAuthenticatorService', () => {
             })).resolves.toBeFalsy();
         });
 
+        it('fails enrollment confirmation closed (throttled, not a 500) when the cache is unavailable', async () => {
+            const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
+
+            // the throttle read blips — confirm must degrade to a retry-able 429,
+            // never surface the raw cache error as an internal 500.
+            cache.get = async () => { throw new Error('cache unavailable'); };
+
+            expect.assertions(1);
+            try {
+                await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
+            } catch (e) {
+                expect(isMfaThrottledError(e)).toBeTruthy();
+            }
+        });
+
         it('ignores unconfirmed devices', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
 

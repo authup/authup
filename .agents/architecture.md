@@ -2212,7 +2212,12 @@ with the lockout deadline under `mfaThrottle:<user_id>` (TTL = the lock), so
 concurrent failures — verify or confirm — never under-count the
 `min(300, 1·2^(n−1))`s lock; reset on success, 429
 `MfaThrottledError` (`ErrorCode.MFA_ATTEMPT_THROTTLED`, `retryAfter` in the
-body). Config: `mfaEnabled` / `mfaRequired`
+body). The throttle READ on the throwing entry points (`confirm` /
+`confirmWebauthn` / `sendChallenge`) goes through `assertNotThrottledOrRetry`:
+a genuine lockout surfaces unchanged, but an unreadable throttle counter (cache
+outage) fails closed as a retry-able `MfaThrottledError` (429) rather than
+bubbling up as an internal 500 — matching `verify`'s fail-closed posture (which
+returns `false` per its boolean contract). Config: `mfaEnabled` / `mfaRequired`
 (`MFA_ENABLED` / `MFA_REQUIRED`; `mfaRequired` requires
 `mfaEnabled`, boot-validated — no key configuration; seed-encryption keys are
 auto-generated per realm, see *Realm Key Store*). Events: `mfaEnrolled` / `mfaRemoved` /

@@ -53,6 +53,11 @@ sections during an outage could accept the same factor twice. A configured
 Redis deployment should therefore include Redis availability in the login-path
 service-level objective.
 
+The same fail-closed posture applies to the per-account attempt throttle that
+guards enrollment confirmation and challenge-code delivery: when the throttle
+counter cannot be read, those endpoints degrade to a retry-able throttled
+response (HTTP 429) rather than surfacing the outage as an internal 500.
+
 ## Related settings
 
 - `mfaFreshnessMaxAge` (`MFA_FRESHNESS_MAX_AGE`) controls how long a session's
