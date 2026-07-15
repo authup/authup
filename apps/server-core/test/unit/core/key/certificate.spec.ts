@@ -6,7 +6,12 @@
  */
 
 import { readFileSync } from 'node:fs';
-import { ErrorCode } from '@authup/errors';
+import {
+    ErrorCode,
+    isAuthupError,
+    isBadRequestError,
+    isError as isRawError,
+} from '@authup/errors';
 import {
     describe,
     expect,
@@ -83,8 +88,22 @@ describe('core/key/certificate', () => {
             .publicKey
             .export({ type: 'spki', format: 'der' })
             .toString('base64');
-        expect(() => assertCertificateMatchesKey(chain, mismatched))
-            .toThrow(expect.objectContaining({ code: ErrorCode.BAD_REQUEST }));
+        let failure : unknown;
+        try {
+            assertCertificateMatchesKey(chain, mismatched);
+        } catch (e) {
+            failure = e;
+        }
+
+        expect(isRawError(failure)).toBe(true);
+        expect(isAuthupError(failure)).toBe(true);
+        expect(isBadRequestError(failure)).toBe(false);
+        expect(failure).toEqual(expect.objectContaining({ message: 'The certificate does not match the key material.' }));
+    });
+
+    it('rejects an empty certificate chain', () => {
+        expect(() => assertCertificateMatchesKey([], pemToBase64(PUBLIC_KEY)))
+            .toThrow('The certificate chain is empty.');
     });
 
     it('normalizes equivalent SPKI encodings before comparison', () => {
@@ -105,8 +124,14 @@ describe('core/key/certificate', () => {
         ]);
     });
 
-    it('builds the precomputed base64url SHA-256 thumbprint of the leaf', () => {
+    it('builds the precomputed base64url SHA-256 thumbprint of the leaf', async () => {
         const chain = parseCertificateChain(CERTIFICATE);
-        expect(buildX5tS256(chain)).toEqual('U5hnhJe3UHk2pj5m9ZMDfvC54yBQXwExs9P6Ha_xjbE');
+        await expect(buildX5tS256(chain))
+            .resolves.toEqual('U5hnhJe3UHk2pj5m9ZMDfvC54yBQXwExs9P6Ha_xjbE');
+    });
+
+    it('rejects an empty chain when building a thumbprint', async () => {
+        await expect(buildX5tS256([]))
+            .rejects.toThrow('The certificate chain is empty.');
     });
 });

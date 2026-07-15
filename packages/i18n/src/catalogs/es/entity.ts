@@ -22,5 +22,6 @@ export const TranslatorTranslationEntitySpanish : NamespaceTranslations<`${Trans
     [TranslatorTranslationEntityKey.ROLE]: definePlural({ one: 'Rol', other: 'Roles' }),
     [TranslatorTranslationEntityKey.SCOPE]: definePlural({ one: 'Ámbito', other: 'Ámbitos' }),
     [TranslatorTranslationEntityKey.SESSION]: definePlural({ one: 'Sesión', other: 'Sesiones' }),
+    [TranslatorTranslationEntityKey.TRUST_ANCHOR]: definePlural({ one: 'Autoridad de certificación de confianza', other: 'Autoridades de certificación de confianza' }),
     [TranslatorTranslationEntityKey.USER]: definePlural({ one: 'Usuario', other: 'Usuarios' }),
 };

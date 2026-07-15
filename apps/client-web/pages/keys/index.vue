@@ -9,7 +9,12 @@ import {
     TranslatorTranslationEntityKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { useTranslations, useTranslationsForNamespace, useTranslator } from '@authup/client-web-kit';
+import {
+    useTranslation,
+    useTranslations,
+    useTranslationsForNamespace,
+    useTranslator,
+} from '@authup/client-web-kit';
 import { VCIcon } from '@vuecs/icon';
 import { defineNuxtComponent } from '#app';
 import {
@@ -51,7 +56,23 @@ export default defineNuxtComponent({
                 key: TranslatorTranslationEntityKey.KEY,
                 count: 2,
             },
+            {
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.TRUST_ANCHOR,
+                count: 2,
+            },
         ]);
+
+        const keySingular = useTranslation({
+            namespace: TranslatorTranslationNamespace.ENTITY,
+            key: TranslatorTranslationEntityKey.KEY,
+            count: 1,
+        });
+        const trustAnchorSingular = useTranslation({
+            namespace: TranslatorTranslationNamespace.ENTITY,
+            key: TranslatorTranslationEntityKey.TRUST_ANCHOR,
+            count: 1,
+        });
 
         const translationsApp = useTranslationsForNamespace(
             TranslatorTranslationNamespace.APP,
@@ -69,9 +90,19 @@ export default defineNuxtComponent({
                 url: '/keys',
             },
             {
-                name: translationsDefault.add,
+                name: `${translationsDefault.add} ${keySingular.value}`,
                 icon: 'fa6-solid:plus',
                 url: '/keys/add',
+            },
+            {
+                name: translationsDefault.trustAnchor,
+                icon: 'fa6-solid:certificate',
+                url: '/keys/trust-anchors',
+            },
+            {
+                name: `${translationsDefault.add} ${trustAnchorSingular.value}`,
+                icon: 'fa6-solid:plus',
+                url: '/keys/trust-anchors/add',
             },
         ]);
 

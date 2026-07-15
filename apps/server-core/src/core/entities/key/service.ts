@@ -6,7 +6,12 @@
  */
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
-import { BadRequestError, EntityConflictError, EntityNotFoundError } from '@authup/errors';
+import {
+    BadRequestError,
+    EntityConflictError,
+    EntityNotFoundError,
+    isError as isRawError,
+} from '@authup/errors';
 import type { Key } from '@authup/core-kit';
 import { KeyStatus, KeyValidator, PermissionName } from '@authup/core-kit';
 import {
@@ -108,6 +113,10 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.KEY_CREATE });
 
         const validated = await this.validator.run(data, { group: ValidatorGroup.CREATE });
+        const { use } = validated;
+        if (!use) {
+            throw new BadRequestError('A key use must be specified.');
+        }
 
         await this.repository.validateJoinColumns(validated);
 
@@ -133,13 +142,13 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         });
 
         if (!validated.name) {
-            validated.name = `${validated.use}-${createNanoID(10)}`;
+            validated.name = `${use}-${createNanoID(10)}`;
         }
 
         await this.repository.checkUniqueness(validated);
 
         if (typeof validated.priority !== 'number') {
-            const highest = await this.repository.findHighestPriority(validated.realm_id, validated.use as string);
+            const highest = await this.repository.findHighestPriority(validated.realm_id, use);
             // generate doubles as rotate: a new key outranks the current one.
             validated.priority = typeof highest === 'number' ? highest + 1 : 0;
         }
@@ -148,18 +157,30 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             validated.status = KeyStatus.ACTIVE;
         }
 
-        const hasCertificate = typeof validated.certificate === 'string';
-        if (hasCertificate && (!validated.decryption_key || validated.use !== JWKUse.SIGNATURE)) {
+        const certificate = typeof validated.certificate === 'string' ? validated.certificate : null;
+        if (certificate && (!validated.decryption_key || use !== JWKUse.SIGNATURE)) {
             throw new BadRequestError('A certificate requires imported signature key material.');
         }
 
         const material = validated.decryption_key ?
-            await this.importMaterial(validated) :
-            await this.generateMaterial(validated);
+            await this.importMaterial(validated, use) :
+            await this.generateMaterial(validated, use);
 
-        if (hasCertificate) {
-            const chain = parseCertificateChain(validated.certificate as string);
-            assertCertificateMatchesKey(chain, material.encryptionKey as string);
+        if (certificate) {
+            if (!material.encryptionKey) {
+                throw new BadRequestError('A certificate requires imported signature key material.');
+            }
+
+            const chain = parseCertificateChain(certificate);
+            try {
+                assertCertificateMatchesKey(chain, material.encryptionKey);
+            } catch (e) {
+                throw new BadRequestError(
+                    isRawError(e) ?
+                        e.message :
+                        'The certificate could not be matched against the imported key material.',
+                );
+            }
         }
 
         let entity = this.repository.create({
@@ -263,13 +284,16 @@ export class KeyService extends AbstractEntityService implements IKeyService {
 
     // ------------------------------------------------------------------
 
-    protected async generateMaterial(validated: Partial<Key>) : Promise<{
+    protected async generateMaterial(
+        validated: Partial<Key>,
+        use: `${JWKUse}`,
+    ) : Promise<{
         type: `${JWKType}`,
         signatureAlgorithm: `${JWTAlgorithm}` | null,
         decryptionKey: string,
         encryptionKey: string | null,
     }> {
-        if (validated.use === JWKUse.ENCRYPTION) {
+        if (use === JWKUse.ENCRYPTION) {
             if (validated.signature_algorithm) {
                 throw new BadRequestError('An encryption key can not carry a signature algorithm.');
             }
@@ -285,7 +309,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             };
         }
 
-        const algorithm = (validated.signature_algorithm ?? JWTAlgorithm.RS256) as `${JWTAlgorithm}`;
+        const algorithm = validated.signature_algorithm ?? JWTAlgorithm.RS256;
         const options = this.buildAsymmetricOptions(algorithm);
 
         const keyPair = await createAsymmetricKeyPair(options);
@@ -298,15 +322,22 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         };
     }
 
-    protected async importMaterial(validated: Partial<Key>) : Promise<{
+    protected async importMaterial(
+        validated: Partial<Key>,
+        use: `${JWKUse}`,
+    ) : Promise<{
         type: `${JWKType}`,
         signatureAlgorithm: `${JWTAlgorithm}` | null,
         decryptionKey: string,
         encryptionKey: string | null,
     }> {
-        const decryptionKey = this.normalizeMaterial(validated.decryption_key as string);
+        if (!validated.decryption_key) {
+            throw new BadRequestError('Importing key material requires its private part (decryption_key).');
+        }
 
-        if (validated.use === JWKUse.ENCRYPTION) {
+        const decryptionKey = this.normalizeMaterial(validated.decryption_key);
+
+        if (use === JWKUse.ENCRYPTION) {
             if (validated.signature_algorithm) {
                 throw new BadRequestError('An encryption key can not carry a signature algorithm.');
             }
@@ -339,7 +370,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         }
 
         const encryptionKey = this.normalizeMaterial(validated.encryption_key);
-        const algorithm = (validated.signature_algorithm ?? JWTAlgorithm.RS256) as `${JWTAlgorithm}`;
+        const algorithm = validated.signature_algorithm ?? JWTAlgorithm.RS256;
         const options = this.buildAsymmetricOptions(algorithm);
 
         let privateJwk : JsonWebKey;

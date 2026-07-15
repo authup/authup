@@ -74,6 +74,7 @@ import {
     RolePermissionRepositoryAdapter,
     RoleRepositoryAdapter,
     ScopeRepositoryAdapter,
+    TrustAnchorRepositoryAdapter,
     UserAttributeRepositoryAdapter,
     UserAuthenticatorRepositoryAdapter,
     UserPermissionRepositoryAdapter,
@@ -102,6 +103,7 @@ import {
     RolePermissionController,
     ScopeController,
     SessionController,
+    TrustAnchorController,
     UserAttributeController,
     UserAuthenticatorController,
     UserController,
@@ -156,6 +158,7 @@ import {
     RoleService,
     ScopeService,
     SessionService,
+    TrustAnchorService,
     UserAttributeService,
     UserAuthenticator,
     UserAuthenticatorService,
@@ -193,6 +196,7 @@ export class HTTPControllerModule {
         const rolePermissionController = this.createRolePermissionController(container);
         const scopeController = this.createScopeController(container);
         const keyController = this.createKeyController(container);
+        const trustAnchorController = this.createTrustAnchorController(container);
         const sessionController = this.createSessionController(container);
         const consentController = this.createConsentController(container);
         const userController = this.createUserController(container);
@@ -227,6 +231,7 @@ export class HTTPControllerModule {
                 identityProviderRoleController,
                 this.createIdentityProvider(container),
                 keyController,
+                trustAnchorController,
                 permissionController,
                 permissionPolicyController,
                 policyController,
@@ -770,6 +775,14 @@ export class HTTPControllerModule {
         // a fresh adapter here.
         const service = new KeyService({ repository: container.resolve(OAuth2InjectionToken.KeyStore) });
         return new KeyController({ service });
+    }
+
+    createTrustAnchorController(container: IContainer) {
+        const repository = new TrustAnchorRepositoryAdapter(
+            container.resolve(DatabaseInjectionKey.DataSource),
+        );
+        const service = new TrustAnchorService({ repository });
+        return new TrustAnchorController({ service });
     }
 
     createSessionController(container: IContainer) {

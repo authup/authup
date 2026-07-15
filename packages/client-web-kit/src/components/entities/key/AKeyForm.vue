@@ -174,7 +174,7 @@ export default defineComponent({
         initForm();
 
         const submit = async () => {
-            if (v.$invalid.value) {
+            if (busy.value || v.$invalid.value) {
                 return;
             }
 
@@ -192,9 +192,14 @@ export default defineComponent({
                 }
             }
 
-            // string-enum form sentinels ('' = unset) widen the fields beyond
-            // the entity's literal unions — narrow for the manager call.
-            await manager.createOrUpdate(form as Partial<Key>);
+            busy.value = true;
+            try {
+                // string-enum form sentinels ('' = unset) widen the fields beyond
+                // the entity's literal unions — narrow for the manager call.
+                await manager.createOrUpdate(form as Partial<Key>);
+            } finally {
+                busy.value = false;
+            }
         };
 
         const updateCertificate = (value: string) => {
