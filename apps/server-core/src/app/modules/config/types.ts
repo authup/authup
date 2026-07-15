@@ -15,6 +15,7 @@ import type { UIOptions as SwaggerUIOptions } from '@routup/swagger-ui';
 import type { Options as BodyOptions } from '@routup/basic/body';
 import type { DataSourceOptions } from 'typeorm';
 import type { SMTPOptions } from '../mail/adapter/smtp/types.ts';
+import type { CertificateSource } from '../../../adapters/http/request/index.ts';
 
 export type Config = {
     /**
@@ -76,6 +77,22 @@ export type Config = {
      * default: http://localhost:3001
      */
     publicUrl: string,
+
+    /**
+     * Optional externally reachable base URL dedicated to endpoints that
+     * request TLS client certificates. Published as RFC 8705 mTLS endpoint
+     * aliases. The reverse proxy may route it to the same backend listener.
+     * default: null
+     */
+    mtlsPublicUrl: string | null,
+
+    /**
+     * Trusted-proxy client-certificate header contract. Enabling a source
+     * asserts that the backend listener is reachable only through a proxy that
+     * removes or overwrites the selected headers.
+     * default: disabled
+     */
+    certificateSource: CertificateSource,
 
     /**
      * Trusted first-party app origins (besides publicUrl) — used as

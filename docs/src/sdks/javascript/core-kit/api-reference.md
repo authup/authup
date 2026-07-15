@@ -15,7 +15,9 @@ interface Client {
 
     built_in: boolean;
 
-    is_confidential: boolean,
+    auth_method: 'none' | 'secret' | 'tls',
+
+    token_binding_method: 'none' | 'tls',
 
     // ------------------------------------------------------------------
 

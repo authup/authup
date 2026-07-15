@@ -117,7 +117,8 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
             secret: clientSecret,
             secret_hashed: false,
             secret_encrypted: false,
-            is_confidential: true,
+            auth_method: 'secret',
+            token_binding_method: 'none',
         }));
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({

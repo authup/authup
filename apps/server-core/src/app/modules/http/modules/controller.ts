@@ -125,7 +125,7 @@ import {
 } from '../../../../adapters/http/controllers/index.ts';
 import type { IContainer } from 'eldin';
 import {
-    ClientAuthenticator,
+    ClientCertificateValidator,
     ClientPermissionService,
     ClientRoleService,
     ClientScopeService,
@@ -293,6 +293,7 @@ export class HTTPControllerModule {
     createToken(container: IContainer) {
         const config = container.resolve(ConfigInjectionKey);
         const logger = container.resolve(LoggerInjectionKey);
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
 
         const sessionManager = container.resolve(AuthenticationInjectionKey.SessionManager);
 
@@ -313,7 +314,6 @@ export class HTTPControllerModule {
 
         const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
 
-        const clientAuthenticator = new ClientAuthenticator(identityResolver);
         const robotAuthenticator = new RobotAuthenticator(identityResolver);
 
         const userAuthenticator = new CredentialsAuthenticator([
@@ -321,7 +321,10 @@ export class HTTPControllerModule {
             new UserAuthenticator(identityResolver),
         ]);
 
-        const oauth2ClientAuthenticator = new OAuth2ClientAuthenticator(identityResolver);
+        const oauth2ClientAuthenticator = new OAuth2ClientAuthenticator({
+            identityResolver,
+            certificateValidator: new ClientCertificateValidator({ trustAnchorRepository: new TrustAnchorRepositoryAdapter(dataSource) }),
+        });
 
         const eventService = container.resolve(DatabaseInjectionKey.EventService);
         const metrics = container.resolve(MetricsInjectionKey);
@@ -361,11 +364,11 @@ export class HTTPControllerModule {
             identityResolver,
             identityPermissionProvider,
 
-            clientAuthenticator,
             robotAuthenticator,
             userAuthenticator,
 
             oauth2ClientAuthenticator,
+            certificateSource: config.certificateSource,
 
             realmRepository: new RealmRepositoryAdapter(container.resolve<Repository<Realm>>(RealmEntity)),
 
@@ -1038,7 +1041,11 @@ export class HTTPControllerModule {
         const keyRepository = dataSource.getRepository(KeyEntity);
 
         return new RealmController({
-            options: { baseURL: config.publicUrl },
+            options: {
+                baseURL: config.publicUrl,
+                mtlsBaseURL: config.mtlsPublicUrl,
+                clientCertificatesEnabled: config.certificateSource !== 'disabled',
+            },
             service,
             keyRepository,
         });

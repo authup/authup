@@ -29,7 +29,15 @@ import {
     useTranslations, 
     useTranslationsForNamespace, 
 } from '../../../core';
-import { type Client, ClientValidator, EntityType } from '@authup/core-kit';
+import {
+    type Client,
+    ClientAuthMethod,
+    ClientTokenBindingMethod,
+    ClientValidator,
+    EntityType,
+    buildClientCertificateURI,
+} from '@authup/core-kit';
+import type { FormOption } from '@vuecs/forms';
 import {
     ValidatorGroup,
     generateName,
@@ -88,7 +96,8 @@ export default defineComponent({
             redirect_uri: '',
             base_url: '',
             root_url: '',
-            is_confidential: true,
+            auth_method: `${ClientAuthMethod.SECRET}` as `${ClientAuthMethod}`,
+            token_binding_method: `${ClientTokenBindingMethod.NONE}` as `${ClientTokenBindingMethod}`,
             secret: '',
             secret_hashed: false,
             access_policy_id: null as string | null,
@@ -149,19 +158,20 @@ export default defineComponent({
         // hydration-stable value the way names are. Generate the initial secret
         // client-side only to keep full entropy without an SSR hydration mismatch.
         onMounted(() => {
-            if (form.is_confidential && form.secret.length === 0) {
+            if (form.auth_method === ClientAuthMethod.SECRET && form.secret.length === 0) {
                 form.secret = generateSecret();
             }
         });
 
-        const isConfidential = computed(() => form.is_confidential);
-        watch(isConfidential, (val, oldValue) => {
+        const isSecretAuthentication = computed(() => form.auth_method === ClientAuthMethod.SECRET);
+        watch(isSecretAuthentication, (val, oldValue) => {
             if (val === oldValue) return;
 
             if (val) {
                 form.secret = manager.data.value?.secret || generateSecret();
             } else {
                 form.secret = '';
+                form.secret_hashed = false;
             }
         });
 
@@ -193,7 +203,15 @@ export default defineComponent({
                 { key: TranslatorTranslationClientKey.NAME_HINT },
                 { key: TranslatorTranslationClientKey.DESCRIPTION_HINT },
                 { key: TranslatorTranslationClientKey.REDIRECT_URI_HINT },
-                { key: TranslatorTranslationClientKey.IS_CONFIDENTIAL },
+                { key: TranslatorTranslationClientKey.AUTH_METHOD },
+                { key: TranslatorTranslationClientKey.AUTH_METHOD_NONE },
+                { key: TranslatorTranslationClientKey.AUTH_METHOD_SECRET },
+                { key: TranslatorTranslationClientKey.AUTH_METHOD_TLS },
+                { key: TranslatorTranslationClientKey.TOKEN_BINDING_METHOD },
+                { key: TranslatorTranslationClientKey.TOKEN_BINDING_METHOD_NONE },
+                { key: TranslatorTranslationClientKey.TOKEN_BINDING_METHOD_TLS },
+                { key: TranslatorTranslationClientKey.CLIENT_CERTIFICATE_URI },
+                { key: TranslatorTranslationClientKey.CLIENT_CERTIFICATE_URI_HINT },
                 { key: TranslatorTranslationClientKey.IS_ACTIVE },
                 { key: TranslatorTranslationClientKey.HASH_SECRET },
                 { key: TranslatorTranslationClientKey.CLIENT_ACCESS_POLICY_HINT },
@@ -241,6 +259,19 @@ export default defineComponent({
 
         const policyQuery = computed(() => ({ filters: { realm_id: [...(form.realm_id ? [form.realm_id] : []), null] } }));
 
+        const authMethodOptions = computed<FormOption[]>(() => [
+            { value: `${ClientAuthMethod.NONE}`, label: translationsClient.authMethodNone },
+            { value: `${ClientAuthMethod.SECRET}`, label: translationsClient.authMethodSecret },
+            { value: `${ClientAuthMethod.TLS}`, label: translationsClient.authMethodTls },
+        ]);
+        const tokenBindingMethodOptions = computed<FormOption[]>(() => [
+            { value: `${ClientTokenBindingMethod.NONE}`, label: translationsClient.tokenBindingMethodNone },
+            { value: `${ClientTokenBindingMethod.TLS}`, label: translationsClient.tokenBindingMethodTls },
+        ]);
+        const clientCertificateURI = computed(() => (manager.data.value ?
+            buildClientCertificateURI(manager.data.value.id) :
+            ''));
+
         return {
             translationsDefault,
             translationsClient,
@@ -249,7 +280,11 @@ export default defineComponent({
             isNameFixed,
             isBusy: manager.busy.value,
             isEditing,
+            isSecretAuthentication,
             isSecretHashed,
+            authMethodOptions,
+            tokenBindingMethodOptions,
+            clientCertificateURI,
             redirectUris,
             policyQuery,
             submit,
@@ -306,6 +341,48 @@ export default defineComponent({
             </IFieldValidation>
             <IFieldValidation
                 v-slot="{ value }"
+                :field="v.fields.auth_method"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        {{ translationsClient.authMethod }}
+                    </template>
+                    <VCFormSelect
+                        v-model="v.fields.auth_method.$model.value"
+                        :options="authMethodOptions"
+                    />
+                </VCFormGroup>
+            </IFieldValidation>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.token_binding_method"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        {{ translationsClient.tokenBindingMethod }}
+                    </template>
+                    <VCFormSelect
+                        v-model="v.fields.token_binding_method.$model.value"
+                        :options="tokenBindingMethodOptions"
+                    />
+                </VCFormGroup>
+            </IFieldValidation>
+            <template v-if="clientCertificateURI">
+                <VCFormGroup>
+                    <template #label>
+                        {{ translationsClient.clientCertificateUri }}
+                    </template>
+                    <VCFormInput
+                        :model-value="clientCertificateURI"
+                        :readonly="true"
+                    />
+                    <template #hint>
+                        {{ translationsClient.clientCertificateUriHint }}
+                    </template>
+                </VCFormGroup>
+            </template>
+            <IFieldValidation
+                v-slot="{ value }"
                 :field="v.fields.secret"
             >
                 <VCFormGroup :validation="value">
@@ -319,7 +396,7 @@ export default defineComponent({
                     </template>
                     <ASecretInput
                         :model-value="v.fields.secret.$model.value ?? ''"
-                        :disabled="!v.fields.is_confidential.$model.value"
+                        :disabled="!isSecretAuthentication"
                         @update:model-value="(next: string) => { v.fields.secret.$model.value = next; }"
                     />
                 </VCFormGroup>
@@ -328,25 +405,12 @@ export default defineComponent({
                 <div class="flex-1 basis-0 px-2">
                     <IFieldValidation
                         v-slot="{ value }"
-                        :field="v.fields.is_confidential"
-                    >
-                        <VCFormGroup :validation="value">
-                            <VCFormSwitch
-                                v-model="v.fields.is_confidential.$model.value"
-                                :label="true"
-                                :label-content="translationsClient.isConfidential"
-                            />
-                        </VCFormGroup>
-                    </IFieldValidation>
-                </div>
-                <div class="flex-1 basis-0 px-2">
-                    <IFieldValidation
-                        v-slot="{ value }"
                         :field="v.fields.secret_hashed"
                     >
                         <VCFormGroup :validation="value">
                             <VCFormSwitch
                                 v-model="v.fields.secret_hashed.$model.value"
+                                :disabled="!isSecretAuthentication"
                                 :label="true"
                                 :label-content="translationsClient.hashSecret"
                             />

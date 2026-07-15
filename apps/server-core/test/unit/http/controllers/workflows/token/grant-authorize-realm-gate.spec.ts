@@ -50,7 +50,8 @@ describe('grant-authorize realm gate (layer 2)', () => {
         // a public (PKCE) client living in realm B
         clientB = await suite.client.client.create(createFakeClient({
             realm_id: realmB.id,
-            is_confidential: false,
+            auth_method: 'none',
+            token_binding_method: 'none',
             secret: null,
             redirect_uri: `${REDIRECT_URI.replace('/cb', '')}/**`,
         }));

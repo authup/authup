@@ -16,6 +16,8 @@ import type {
     User,
 } from '@authup/core-kit';
 import {
+    ClientAuthMethod,
+    ClientTokenBindingMethod,
     PermissionName, 
     REALM_MASTER_NAME, 
     ROLE_ADMIN_NAME, 
@@ -89,10 +91,12 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                         'active',
                         'realm_id',
                         // Security-critical: a self-edit must not change the
-                        // client's confidentiality (toggling this clears the
-                        // secret) or downgrade the secret-storage format
+                        // client's authentication/binding method (changing the
+                        // auth method may clear its secret) or downgrade the
+                        // secret-storage format
                         // (which would persist the secret in plaintext).
-                        'is_confidential',
+                        'auth_method',
+                        'token_binding_method',
                         'secret_hashed',
                         'secret_encrypted',
                         'access_policy_id',
@@ -297,12 +301,12 @@ export class DefaultProvisioningSource implements IProvisioningSource {
         if (config.clientSystemSecretReset) {
             clientStrategy = {
                 type: ProvisioningEntityStrategyType.MERGE,
-                attributes: ['built_in', 'is_confidential', 'secret', 'secret_hashed', 'secret_encrypted'],
+                attributes: ['built_in', 'auth_method', 'token_binding_method', 'secret', 'secret_hashed', 'secret_encrypted'],
             };
         } else {
             clientStrategy = {
                 type: ProvisioningEntityStrategyType.MERGE,
-                attributes: ['built_in', 'is_confidential'],
+                attributes: ['built_in', 'auth_method', 'token_binding_method'],
             };
         }
 
@@ -312,7 +316,8 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                 strategy: clientStrategy,
                 attributes: {
                     built_in: true,
-                    is_confidential: true,
+                    auth_method: ClientAuthMethod.SECRET,
+                    token_binding_method: ClientTokenBindingMethod.NONE,
                     name: 'system',
                     secret: await clientCredentialsService.protect(config.clientSystemSecret, { secret_hashed: false }),
                     secret_hashed: false,

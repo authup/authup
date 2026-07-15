@@ -43,6 +43,26 @@ export default {
     publicUrl: 'http://localhost:3001',
 
     /**
+     * Optional public base URL whose proxy requests TLS client certificates.
+     * Published in OpenID discovery as RFC 8705 mtls_endpoint_aliases.
+     * Requires certificateSource to be enabled.
+     * default: null
+     */
+    mtlsPublicUrl: 'https://mtls.example.com',
+
+    /**
+     * Trusted-proxy certificate header contract:
+     * - disabled: ignore certificate headers (default)
+     * - standard: RFC 9440 Client-Cert / Client-Cert-Chain
+     * - forwarded: X-Forwarded-Tls-Client-Cert escaped PEM leaf
+     *
+     * Enabling this requires a private backend listener and a proxy that
+     * removes/overwrites public certificate headers on every request.
+     * default: disabled
+     */
+    certificateSource: 'forwarded',
+
+    /**
      * Additional trusted origins. Entries are http(s) origins
      * (e.g. https://app.example.com; other protocols are rejected) or
      * bare hosts (e.g. hub.local, hub.local:8080); a bare host expands
@@ -288,6 +308,8 @@ export default {
 ```dotenv [authup.server.core.conf]
 port=3001
 publicUrl=http://localhost:3001
+mtlsPublicUrl=https://mtls.example.com
+certificateSource=forwarded
 trustedOrigins=https://app.example.com
 registrationEnabled=false
 emailVerificationEnabled=false
@@ -317,6 +339,8 @@ permissionsDefaultPolicyAssignment=true
 ```dotenv [.env]
 PORT=3001
 PUBLIC_URL=http://localhost:3001
+MTLS_PUBLIC_URL=https://mtls.example.com
+CERTIFICATE_SOURCE=forwarded
 TRUSTED_ORIGINS=https://app.example.com
 REGISTRATION_ENABLED=false
 EMAIL_VERIFICATION_ENABLED=false

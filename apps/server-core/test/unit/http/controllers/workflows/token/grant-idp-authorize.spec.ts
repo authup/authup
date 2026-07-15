@@ -111,7 +111,8 @@ describe('identity-provider authorization code grant', () => {
                 secret: clientSecret,
                 secret_hashed: false,
                 secret_encrypted: false,
-                is_confidential: true,
+                auth_method: 'secret',
+                token_binding_method: 'none',
             }));
 
         for (const scopeName of [ScopeName.GLOBAL, ScopeName.OPEN_ID]) {

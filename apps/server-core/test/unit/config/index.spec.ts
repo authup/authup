@@ -146,6 +146,27 @@ describe('src/config/*.ts', () => {
             expect(config.passwordMinLength).toEqual(10);
         });
 
+        it('should keep trusted certificate headers disabled by default', async () => {
+            const config = await normalizeConfig();
+
+            expect(config.certificateSource).toEqual('disabled');
+            expect(config.mtlsPublicUrl).toBeNull();
+        });
+
+        it('should validate the explicit certificate source and mTLS alias contract', async () => {
+            const config = await normalizeConfig({
+                certificateSource: 'standard',
+                mtlsPublicUrl: 'https://mtls.example.com',
+            });
+
+            expect(config.certificateSource).toEqual('standard');
+            expect(config.mtlsPublicUrl).toEqual('https://mtls.example.com');
+
+            await expect(normalizeConfig({ mtlsPublicUrl: 'https://mtls.example.com' })).rejects.toThrow(/certificateSource/);
+            await expect(parseConfig({ certificateSource: 'automatic' }))
+                .rejects.toThrow();
+        });
+
         it('should default the audit-log and login-throttle keys', async () => {
             const config = await normalizeConfig();
 

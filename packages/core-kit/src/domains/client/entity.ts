@@ -7,6 +7,7 @@
 
 import type { Policy } from '../policy';
 import type { Realm } from '../realm';
+import type { ClientAuthMethod, ClientTokenBindingMethod } from './constants';
 
 export interface Client {
     id: string,
@@ -17,7 +18,9 @@ export interface Client {
 
     built_in: boolean;
 
-    is_confidential: boolean,
+    auth_method: `${ClientAuthMethod}`,
+
+    token_binding_method: `${ClientTokenBindingMethod}`,
 
     // ------------------------------------------------------------------
 

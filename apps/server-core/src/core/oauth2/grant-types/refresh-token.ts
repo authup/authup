@@ -123,6 +123,7 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
 
         const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue({
             ...payload,
+            ...(options.confirmation ? { cnf: options.confirmation } : {}),
             user_agent: session.user_agent,
             remote_address: session.ip_address,
             exp: this.refreshTokenIssuer.buildExp(),
@@ -131,6 +132,7 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
 
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
             ...payload,
+            ...(options.confirmation ? { cnf: options.confirmation } : {}),
             user_agent: session.user_agent,
             remote_address: session.ip_address,
             exp: this.accessTokenIssuer.buildExp(),

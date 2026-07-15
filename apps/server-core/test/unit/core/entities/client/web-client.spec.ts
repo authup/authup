@@ -29,7 +29,8 @@ describe('core/entities/client/web-client', () => {
 
             expect(attributes.name).toBe(CLIENT_WEB_NAME);
             expect(attributes.realm_id).toBe(realmId);
-            expect(attributes.is_confidential).toBe(false);
+            expect(attributes.auth_method).toBe('none');
+            expect(attributes.token_binding_method).toBe('none');
             expect(attributes.built_in).toBe(true);
             expect(attributes.active).toBe(true);
             expect(attributes.scope).toBe(`${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}`);
@@ -62,7 +63,8 @@ describe('core/entities/client/web-client', () => {
 
             expect(created).not.toBeNull();
             expect(created!.built_in).toBe(true);
-            expect(created!.is_confidential).toBe(false);
+            expect(created!.auth_method).toBe('none');
+            expect(created!.token_binding_method).toBe('none');
         });
 
         it('should be idempotent across repeated runs', async () => {
@@ -87,7 +89,8 @@ describe('core/entities/client/web-client', () => {
                     name: CLIENT_WEB_NAME,
                     realm_id: realmId,
                     built_in: true,
-                    is_confidential: false,
+                    auth_method: 'none',
+                    token_binding_method: 'none',
                     redirect_uri: 'http://stale.example.com/**',
                 } as any,
             ]);
@@ -112,7 +115,8 @@ describe('core/entities/client/web-client', () => {
                     name: CLIENT_WEB_NAME,
                     realm_id: realmId,
                     built_in: false,
-                    is_confidential: true,
+                    auth_method: 'secret',
+                    token_binding_method: 'none',
                     redirect_uri: 'http://user-owned.example.com/**',
                 } as any,
             ]);
@@ -125,7 +129,7 @@ describe('core/entities/client/web-client', () => {
             });
 
             expect(existing!.built_in).toBe(false);
-            expect(existing!.is_confidential).toBe(true);
+            expect(existing!.auth_method).toBe('secret');
             expect(existing!.redirect_uri).toBe('http://user-owned.example.com/**');
         });
     });

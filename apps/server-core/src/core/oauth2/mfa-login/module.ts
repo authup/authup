@@ -92,6 +92,7 @@ export class OAuth2MfaLoginService implements IOAuth2MfaLoginService {
             sub_kind: OAuth2SubKind.USER,
             realm_id: user.realm_id,
             realm_name: user.realm?.name,
+            ...(input.confirmation ? { cnf: input.confirmation } : {}),
             exp: expiresAt,
         });
 
@@ -124,6 +125,7 @@ export class OAuth2MfaLoginService implements IOAuth2MfaLoginService {
             sub_kind: OAuth2SubKind.USER,
             realm_id: session.realm_id,
             realm_name: ticket.realm_name,
+            ...(ticket.cnf ? { cnf: ticket.cnf } : {}),
             ...amrAcr,
         };
 

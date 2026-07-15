@@ -70,3 +70,18 @@ The optional `tokenBySocket` callback runs when `socket.handshake.auth.token` is
 when you want to pull the token from `socket.handshake.headers.authorization`, the query string,
 or any other source.
 
+For a token carrying `cnf.x5t#S256`, verification also requires
+`certificateThumbprintBySocket` to return the matching base64url SHA-256 DER
+thumbprint:
+
+```typescript
+const data = await verifySocket(socket, {
+    tokenVerifier,
+    certificateThumbprintBySocket: (socket) =>
+        trustedHandshakeCertificateThumbprint(socket),
+});
+```
+
+Bound tokens fail closed when the callback or certificate is absent. Treat the
+callback as a TLS/proxy trust boundary; do not accept an unchecked thumbprint
+sent in `handshake.auth` by the public caller.

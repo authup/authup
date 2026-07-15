@@ -56,6 +56,7 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
             realm_name: authorizationCode.realm_name,
             scope: authorizationCode.scope || undefined,
             client_id: authorizationCode.client_id || undefined,
+            ...(options.confirmation ? { cnf: options.confirmation } : {}),
             ...amrAcr,
         };
 

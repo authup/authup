@@ -44,7 +44,8 @@ describe('token grant_types enforcement', () => {
     const createConfidentialClient = (grantTypes: string | null) : Promise<Client> => {
         const input = createFakeClient();
         input.active = true;
-        input.is_confidential = true;
+        input.auth_method = 'secret';
+        input.token_binding_method = 'none';
         input.secret_hashed = false;
         input.secret_encrypted = false;
         input.grant_types = grantTypes;

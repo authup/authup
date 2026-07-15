@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { ValidatorGroup } from '@authup/kit';
 import type { Client } from './entity';
 import { isClientNameValid } from './helpers';
+import { ClientAuthMethod, ClientTokenBindingMethod } from './constants';
 
 export class ClientValidator extends Container<Client> {
     protected override initialize() {
@@ -25,9 +26,15 @@ export class ClientValidator extends Container<Client> {
         );
 
         this.mount(
-            'is_confidential',
+            'auth_method',
             { optional: true },
-            createValidator(z.boolean()),
+            createValidator(z.enum(ClientAuthMethod)),
+        );
+
+        this.mount(
+            'token_binding_method',
+            { optional: true },
+            createValidator(z.enum(ClientTokenBindingMethod)),
         );
 
         // ----------------------------------------------

@@ -6,7 +6,7 @@
  */
 
 import type { IncomingMessage } from 'node:http';
-import { extractBearerToken } from '@authup/server-adapter-kit';
+import { assertTokenCertificateBinding, extractBearerToken } from '@authup/server-adapter-kit';
 import type { TokenVerificationData } from '@authup/server-adapter-kit';
 import type { VerifyRequestOptions } from './types';
 
@@ -30,5 +30,11 @@ export async function verifyRequest(
         return undefined;
     }
 
-    return options.tokenVerifier.verify(token);
+    const data = await options.tokenVerifier.verify(token);
+    const certificateThumbprint = data.cnf ?
+        await options.certificateThumbprintByRequest?.(req) :
+        undefined;
+    assertTokenCertificateBinding(data, certificateThumbprint);
+
+    return data;
 }

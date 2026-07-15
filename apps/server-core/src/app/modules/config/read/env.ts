@@ -75,6 +75,16 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.publicUrl = publicURL;
     }
 
+    const mtlsPublicURL = read(ConfigEnvironmentVariableName.MTLS_PUBLIC_URL);
+    if (mtlsPublicURL) {
+        options.mtlsPublicUrl = mtlsPublicURL;
+    }
+
+    const certificateSource = read(ConfigEnvironmentVariableName.CERTIFICATE_SOURCE);
+    if (certificateSource) {
+        options.certificateSource = certificateSource as ConfigInput['certificateSource'];
+    }
+
     const trustedOrigins = readArray(ConfigEnvironmentVariableName.TRUSTED_ORIGINS);
     if (trustedOrigins && trustedOrigins.length > 0) {
         options.trustedOrigins = trustedOrigins;

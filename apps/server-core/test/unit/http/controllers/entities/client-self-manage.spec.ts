@@ -31,7 +31,8 @@ describe('http/controllers/client (self-manage)', () => {
 
         const created = await suite.client.client.create({
             ...createFakeClient(),
-            is_confidential: true,
+            auth_method: 'secret',
+            token_binding_method: 'none',
             secret: knownSecret,
             secret_hashed: false,
             secret_encrypted: false,

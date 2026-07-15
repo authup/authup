@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { extractBearerToken } from '@authup/server-adapter-kit';
+import { assertTokenCertificateBinding, extractBearerToken } from '@authup/server-adapter-kit';
 import type { TokenVerificationData } from '@authup/server-adapter-kit';
 import type { VerifyRequestOptions } from './types';
 
@@ -29,5 +29,11 @@ export async function verifyRequest(
         return undefined;
     }
 
-    return options.tokenVerifier.verify(token);
+    const data = await options.tokenVerifier.verify(token);
+    const certificateThumbprint = data.cnf ?
+        await options.certificateThumbprintByRequest?.(request) :
+        undefined;
+    assertTokenCertificateBinding(data, certificateThumbprint);
+
+    return data;
 }

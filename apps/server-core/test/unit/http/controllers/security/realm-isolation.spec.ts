@@ -52,7 +52,8 @@ describe('http/controllers/security (junction realm-isolation — all junctions)
         // --- restricted actor C_A in the master realm (realm A), every grant `own` ---
         const cA = await suite.client.client.create({
             ...createFakeClient(),
-            is_confidential: true,
+            auth_method: 'secret',
+            token_binding_method: 'none',
             secret: knownSecret,
             secret_hashed: false,
             secret_encrypted: false,

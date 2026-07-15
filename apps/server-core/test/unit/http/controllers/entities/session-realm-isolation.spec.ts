@@ -59,7 +59,8 @@ describe('session (realm isolation)', () => {
         // a restricted actor in master holding SESSION_READ at the default `own` scope
         const cA = await suite.client.client.create({
             ...createFakeClient(),
-            is_confidential: true,
+            auth_method: 'secret',
+            token_binding_method: 'none',
             secret: knownSecret,
             secret_hashed: false,
             secret_encrypted: false,

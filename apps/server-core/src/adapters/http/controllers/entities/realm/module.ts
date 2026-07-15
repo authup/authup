@@ -36,7 +36,9 @@ import { buildActorContext } from '../../../request/index.ts';
 import { resolveURL } from '../../../../../utils/index.ts';
 
 export type RealmControllerOptions = {
-    baseURL: string
+    baseURL: string,
+    mtlsBaseURL?: string | null,
+    clientCertificatesEnabled?: boolean,
 };
 
 export type RealmControllerContext = {
@@ -100,6 +102,7 @@ export class RealmController {
         const entity = await this.service.getOne(id);
 
         const { baseURL } = this.options;
+        const { mtlsBaseURL, clientCertificatesEnabled = false } = this.options;
 
         return {
             issuer: resolveURL(baseURL, `realms/${entity.name}`).replace(/\/+$/, ''),
@@ -153,6 +156,24 @@ export class RealmController {
             ],
 
             token_endpoint: resolveURL(baseURL, 'token'),
+
+            token_endpoint_auth_methods_supported: [
+                'none',
+                'client_secret_basic',
+                'client_secret_post',
+                ...(clientCertificatesEnabled ? ['tls_client_auth'] : []),
+            ],
+
+            ...(clientCertificatesEnabled ? { tls_client_certificate_bound_access_tokens: true } : {}),
+
+            ...(mtlsBaseURL ? {
+                mtls_endpoint_aliases: {
+                    token_endpoint: resolveURL(mtlsBaseURL, 'token'),
+                    introspection_endpoint: resolveURL(mtlsBaseURL, 'token/introspect'),
+                    revocation_endpoint: resolveURL(mtlsBaseURL, 'token/revoke'),
+                    userinfo_endpoint: resolveURL(mtlsBaseURL, 'users/@me'),
+                },
+            } : {}),
 
             introspection_endpoint: resolveURL(baseURL, 'token/introspect'),
 

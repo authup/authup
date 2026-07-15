@@ -79,11 +79,13 @@ export class TokenController {
                 sessionManager: ctx.sessionManager,
                 realmRepository: ctx.realmRepository,
                 accessPolicyEvaluator: ctx.accessPolicyEvaluator,
+                certificateSource: ctx.certificateSource,
             }),
             [OAuth2TokenGrant.CLIENT_CREDENTIALS]: new HTTPClientCredentialsGrant({
                 accessTokenIssuer: ctx.accessTokenIssuer,
-                authenticator: ctx.clientAuthenticator,
+                clientAuthenticator: ctx.oauth2ClientAuthenticator,
                 sessionManager: ctx.sessionManager,
+                certificateSource: ctx.certificateSource,
             }),
             [OAuth2TokenGrant.ROBOT_CREDENTIALS]: new HTTPRobotCredentialsGrant({
                 accessTokenIssuer: ctx.accessTokenIssuer,
@@ -103,6 +105,7 @@ export class TokenController {
                 userAuthenticatorService: ctx.userAuthenticatorService,
                 mfaLoginService: ctx.mfaLoginService,
                 logger: ctx.logger,
+                certificateSource: ctx.certificateSource,
             }),
             [OAuth2TokenGrant.REFRESH_TOKEN]: new HTTPOAuth2RefreshTokenGrant({
                 accessTokenIssuer: ctx.accessTokenIssuer,
@@ -117,6 +120,7 @@ export class TokenController {
                 metrics: ctx.metrics,
                 logger: ctx.logger,
                 options: { gracePeriod: ctx.tokenRefreshGracePeriod },
+                certificateSource: ctx.certificateSource,
             }),
         };
     }

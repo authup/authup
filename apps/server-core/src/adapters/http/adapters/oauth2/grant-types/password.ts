@@ -9,7 +9,7 @@ import type { User } from '@authup/core-kit';
 import { EventName, EventScope, UserAuthenticatorKind } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import { isEntityCredentialsInvalidError, isEntityInactiveError } from '@authup/errors';
-import type { OAuth2TokenGrantResponse } from '@authup/specs';
+import type { OAuth2TokenConfirmation, OAuth2TokenGrantResponse } from '@authup/specs';
 import { OAuth2MfaRequiredError, OAuth2RequestError, OAuth2TokenGrant } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
 import type { IAppEvent } from 'routup';
@@ -28,7 +28,13 @@ import {
     guessUserAuthenticatorKindByResponse,
 } from '../../../../../core/index.ts';
 import type { HTTPOAuth2PasswordGrantContext, IHTTPOAuth2Grant } from './types.ts';
-import { extractClientCredentialsFromRequest, readRealmHint, readStringField } from './utils/index.ts';
+import type { CertificateSource } from '../../../request/index.ts';
+import {
+    extractClientCredentialsFromRequest,
+    extractOAuth2ClientCertificateEvidence,
+    readRealmHint,
+    readStringField,
+} from './utils/index.ts';
 
 export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2Grant {
     protected authenticator : ICredentialsAuthenticator<User>;
@@ -45,6 +51,8 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
 
     protected logger? : Logger;
 
+    protected certificateSource: CertificateSource;
+
     constructor(ctx: HTTPOAuth2PasswordGrantContext) {
         super(ctx);
 
@@ -55,6 +63,7 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
         this.userAuthenticatorService = ctx.userAuthenticatorService;
         this.mfaLoginService = ctx.mfaLoginService;
         this.logger = ctx.logger;
+        this.certificateSource = ctx.certificateSource ?? 'disabled';
     }
 
     async runWithRequest(event: IAppEvent): Promise<OAuth2TokenGrantResponse> {
@@ -69,13 +78,19 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
         const { clientId, clientSecret } = await extractClientCredentialsFromRequest(event);
 
         const realm = await this.realmRepository.resolve(readRealmHint(body), true);
+        const certificateEvidence = await extractOAuth2ClientCertificateEvidence(event, this.certificateSource);
 
         const client = clientId ?
             await this.clientAuthenticator.authenticate(
                 clientId,
                 clientSecret,
                 realm.id,
+                certificateEvidence,
             ) :
+            undefined;
+
+        const confirmation = client ?
+            this.clientAuthenticator.resolveTokenBinding(client, certificateEvidence) :
             undefined;
 
         if (client) {
@@ -124,6 +139,7 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
             ipAddress,
             userAgent,
             clientId: client?.id ?? null,
+            confirmation,
         });
 
         return this.runWith(
@@ -133,6 +149,7 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
                 mfaVerifiedAt, 
             },
             {
+                confirmation,
                 ipAddress,
                 userAgent,
             },
@@ -151,7 +168,8 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
         ctx: {
             ipAddress?: string, 
             userAgent?: string, 
-            clientId: string | null 
+            clientId: string | null,
+            confirmation?: OAuth2TokenConfirmation,
         },
     ): Promise<string | undefined> {
         if (!this.userAuthenticatorService) {
@@ -222,7 +240,8 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
         ctx: {
             ipAddress?: string,
             userAgent?: string,
-            clientId: string | null
+            clientId: string | null,
+            confirmation?: OAuth2TokenConfirmation,
         },
     ) : Promise<{ token: string, expiresIn: number } | null> {
         if (!this.mfaLoginService) {
@@ -240,6 +259,7 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
                 {
                     user,
                     clientId: ctx.clientId,
+                    confirmation: ctx.confirmation,
                 },
                 {
                     ipAddress: ctx.ipAddress,

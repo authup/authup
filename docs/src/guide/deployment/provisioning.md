@@ -23,7 +23,8 @@ Its attributes are fixed:
 | Attribute         | Value                                                              |
 |-------------------|--------------------------------------------------------------------|
 | `name`            | `web`                                                              |
-| `is_confidential` | `false` (public — no secret, PKCE required)                       |
+| `auth_method`     | `none` (public — no secret, PKCE required)                        |
+| `token_binding_method` | `none`                                                       |
 | `built_in`        | `true`                                                            |
 | `grant_types`     | `authorization_code refresh_token`                                |
 | `scope`           | `global openid`                                                  |
@@ -122,7 +123,7 @@ export default {
                 ],
                 clients: [
                     {
-                        attributes: { name: 'acme-app', is_confidential: true, secret: 'my-secret' },
+                        attributes: { name: 'acme-app', auth_method: 'secret', secret: 'my-secret' },
                         relations: { globalPermissions: ['*'] },
                     },
                 ],
@@ -303,7 +304,7 @@ Clients (OAuth2 applications) must be nested inside a realm.
 | Field        | Type               | Description                          |
 |--------------|--------------------|--------------------------------------|
 | `strategy`   | `Strategy`         | Sync strategy (optional)             |
-| `attributes` | object             | `name` (required), `secret`, `is_confidential`, `display_name`, `redirect_uri` |
+| `attributes` | object             | `name` (required), `auth_method`, `token_binding_method`, `secret`, `display_name`, `redirect_uri` |
 | `relations`  | object             | See below                            |
 
 **Client relations:**

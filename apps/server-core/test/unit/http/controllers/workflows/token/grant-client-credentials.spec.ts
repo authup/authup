@@ -26,7 +26,8 @@ describe('refresh-token', () => {
 
         const input = createFakeClient();
         input.active = true;
-        input.is_confidential = true;
+        input.auth_method = 'secret';
+        input.token_binding_method = 'none';
         input.secret_hashed = false;
         input.secret_encrypted = false;
 
@@ -59,7 +60,7 @@ describe('refresh-token', () => {
                     client_id: entity.id,
                     client_secret: entity.secret!,
                 }),
-                { status: 400, code: ErrorCode.ENTITY_INACTIVE },
+                { status: 401, code: ErrorCode.OAUTH_CLIENT_INVALID },
             );
         } finally {
             await suite.client.client.update(entity.id, { active: true });
@@ -72,7 +73,7 @@ describe('refresh-token', () => {
                 client_id: entity.id,
                 client_secret: 'foo',
             }),
-            { status: 400, code: ErrorCode.ENTITY_CREDENTIALS_INVALID },
+            { status: 401, code: ErrorCode.OAUTH_CLIENT_INVALID },
         );
     });
 });

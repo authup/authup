@@ -6,7 +6,7 @@
  */
 
 import type { ObjectLiteral } from '@authup/kit';
-import type { OAuth2TokenGrantResponse } from '@authup/specs';
+import type { OAuth2TokenConfirmation, OAuth2TokenGrantResponse } from '@authup/specs';
 import type { Logger } from '@authup/server-kit';
 import type { ISessionManager } from '../../authentication/index.ts';
 import type { IEventService } from '../../entities/index.ts';
@@ -68,6 +68,7 @@ export type OAuth2RefreshTokenGrantContext = BaseGrantContext & {
 export type OAuth2GrantRunWIthOptions = {
     userAgent?: string,
     ipAddress?: string,
+    confirmation?: OAuth2TokenConfirmation,
 };
 
 export interface IOAuth2Grant<T = ObjectLiteral> {

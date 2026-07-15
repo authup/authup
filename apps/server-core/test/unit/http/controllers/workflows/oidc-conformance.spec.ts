@@ -89,6 +89,13 @@ describe('OIDC conformance smoke', () => {
         expect(discovery.introspection_endpoint.endsWith('/token/introspect')).toBe(true);
         expect(Array.isArray(discovery.prompt_values_supported)).toBe(true);
         expect(discovery.prompt_values_supported).toContain('select_account');
+        expect(discovery.token_endpoint_auth_methods_supported).toEqual([
+            'none',
+            'client_secret_basic',
+            'client_secret_post',
+        ]);
+        expect(discovery.tls_client_certificate_bound_access_tokens).toBeUndefined();
+        expect(discovery.mtls_endpoint_aliases).toBeUndefined();
 
         // endpoints share the issuer origin
         const issuerOrigin = new URL(discovery.issuer).origin;
@@ -120,7 +127,8 @@ describe('OIDC conformance smoke', () => {
     it('issues an id_token with the required claims, consistent with discovery', async () => {
         // full auth-code flow: password login → authorize → exchange
         const client: Client = await suite.client.client.create(createFakeClient({
-            is_confidential: false,
+            auth_method: 'none',
+            token_binding_method: 'none',
             secret: null,
             redirect_uri: 'https://app.example.com/**',
         }));

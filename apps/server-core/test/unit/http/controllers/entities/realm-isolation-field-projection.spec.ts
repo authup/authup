@@ -113,7 +113,8 @@ describe('realm isolation (field projection)', () => {
         // a restricted actor in master holding the READ permissions at the default `own` scope
         const actorClient = await suite.client.client.create({
             ...createFakeClient(),
-            is_confidential: true,
+            auth_method: 'secret',
+            token_binding_method: 'none',
             secret: actorSecret,
             secret_hashed: false,
             secret_encrypted: false,
@@ -144,7 +145,8 @@ describe('realm isolation (field projection)', () => {
         // which a stripped realm_id reads as a null/global resource and leaks
         const readerClient = await suite.client.client.create({
             ...createFakeClient(),
-            is_confidential: true,
+            auth_method: 'secret',
+            token_binding_method: 'none',
             secret: readerActorSecret,
             secret_hashed: false,
             secret_encrypted: false,

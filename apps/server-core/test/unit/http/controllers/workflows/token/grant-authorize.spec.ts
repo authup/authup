@@ -49,7 +49,8 @@ describe('grant-authorize', () => {
                 secret: confidentialSecret,
                 secret_hashed: false,
                 secret_encrypted: false,
-                is_confidential: true,
+                auth_method: 'secret',
+                token_binding_method: 'none',
             }));
 
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
@@ -61,7 +62,8 @@ describe('grant-authorize', () => {
         publicClient = await suite.client
             .client
             .create(createFakeClient({
-                is_confidential: false,
+                auth_method: 'none',
+                token_binding_method: 'none',
                 secret: null,
             }));
 
@@ -290,7 +292,8 @@ describe('grant-authorize', () => {
                 secret: otherSecret,
                 secret_hashed: false,
                 secret_encrypted: false,
-                is_confidential: true,
+                auth_method: 'secret',
+                token_binding_method: 'none',
             }));
 
         await expectClientError(
@@ -356,7 +359,8 @@ describe('grant-authorize', () => {
                 secret: specialSecret,
                 secret_hashed: false,
                 secret_encrypted: false,
-                is_confidential: true,
+                auth_method: 'secret',
+                token_binding_method: 'none',
             }));
 
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
@@ -479,7 +483,8 @@ describe('grant-authorize', () => {
                 secret,
                 secret_hashed: false,
                 secret_encrypted: false,
-                is_confidential: true,
+                auth_method: 'secret',
+                token_binding_method: 'none',
             }));
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
@@ -549,7 +554,8 @@ describe('grant-authorize', () => {
             .client
             .create(createFakeClient({
                 realm_id: realm.id,
-                is_confidential: false,
+                auth_method: 'none',
+                token_binding_method: 'none',
                 secret: null,
             }));
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
@@ -612,7 +618,8 @@ describe('grant-authorize', () => {
             .client
             .create(createFakeClient({
                 realm_id: realm.id,
-                is_confidential: false,
+                auth_method: 'none',
+                token_binding_method: 'none',
                 secret: null,
             }));
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
@@ -652,7 +659,8 @@ describe('grant-authorize', () => {
             .client
             .create(createFakeClient({
                 realm_id: realm.id,
-                is_confidential: false,
+                auth_method: 'none',
+                token_binding_method: 'none',
                 secret: null,
             }));
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
@@ -713,7 +721,8 @@ describe('grant-authorize', () => {
             .client
             .create(createFakeClient({
                 realm_id: realm.id,
-                is_confidential: false,
+                auth_method: 'none',
+                token_binding_method: 'none',
                 secret: null,
             }));
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);

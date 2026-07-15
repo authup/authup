@@ -12,3 +12,9 @@ export enum RequestHandlerOperation {
     UPDATE = 'update',
     DELETE = 'delete',
 }
+
+export const CERTIFICATE_SOURCES = [
+    'disabled',
+    'standard',
+    'forwarded',
+] as const;

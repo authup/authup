@@ -22,6 +22,7 @@ export type Socket = {
 export type VerifySocketOptions = {
     tokenVerifier: ITokenVerifier,
     tokenBySocket?: (socket: Socket) => string | undefined,
+    certificateThumbprintBySocket?: (socket: Socket) => string | undefined | Promise<string | undefined>,
 };
 
 export type MiddlewareOptions = VerifySocketOptions & {

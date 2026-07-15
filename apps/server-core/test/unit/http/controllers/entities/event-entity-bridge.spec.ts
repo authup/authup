@@ -97,7 +97,8 @@ describe('event (entity-CRUD bridge)', () => {
 
         const client = await suite.client.client.create({
             ...createFakeClient(),
-            is_confidential: true,
+            auth_method: 'secret',
+            token_binding_method: 'none',
             secret,
             secret_hashed: false,
             secret_encrypted: false,
@@ -154,7 +155,8 @@ describe('event (entity-CRUD bridge)', () => {
         const actorSecret = 'bridge-realm-iso-actor-secret';
         const actorClient = await suite.client.client.create({
             ...createFakeClient(),
-            is_confidential: true,
+            auth_method: 'secret',
+            token_binding_method: 'none',
             secret: actorSecret,
             secret_hashed: false,
             secret_encrypted: false,

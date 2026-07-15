@@ -168,6 +168,7 @@ export class HTTPMiddlewareModule {
                 clientAuthBasic: config.clientAuthBasic,
                 robotAuthBasic: config.robotAuthBasic,
                 userAuthBasic: config.userAuthBasic,
+                certificateSource: config.certificateSource,
             },
         });
 

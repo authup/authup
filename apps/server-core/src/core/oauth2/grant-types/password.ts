@@ -82,6 +82,7 @@ export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput>
             sub_kind: OAuth2SubKind.USER,
             realm_id: user.realm_id,
             realm_name: user.realm?.name,
+            ...(options.confirmation ? { cnf: options.confirmation } : {}),
             ...amrAcr,
         };
 

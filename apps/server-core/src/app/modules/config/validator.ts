@@ -16,6 +16,7 @@ import { Container } from 'validup';
 import { z } from 'zod';
 import { expandToOrigins } from './origins.ts';
 import type { Config } from './types.ts';
+import { CERTIFICATE_SOURCES } from '../../../adapters/http/request/index.ts';
 
 export class ConfigValidator extends Container<Config> {
     protected override initialize() {
@@ -54,6 +55,8 @@ export class ConfigValidator extends Container<Config> {
             port: nonNegativeNumberValidator,
             host: stringValidator,
             publicUrl: createValidator(z.url()),
+            mtlsPublicUrl: createValidator(z.url().nullable()),
+            certificateSource: createValidator(z.enum(CERTIFICATE_SOURCES)),
             trustedOrigins: createValidator(
                 z.array(z.string().refine((value) => {
                     try {

@@ -52,7 +52,7 @@ export class OAuth2AuthorizationCodeVerifier implements IOAuth2AuthorizationCode
 
         // Public clients MUST use PKCE (RFC 7636). Defense in depth in case
         // the authorize-side check was bypassed or the client's
-        // is_confidential flag changed between authorize and token.
+        // auth_method changed between authorize and token.
         if (options.clientIsPublic && !entity.code_challenge) {
             throw OAuth2GrantError.invalid('PKCE is required for public clients.');
         }

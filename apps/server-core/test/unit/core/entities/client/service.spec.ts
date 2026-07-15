@@ -261,7 +261,8 @@ describe('core/entities/client/service', () => {
             const result = await service.create(
                 {
                     name: 'confidential-client',
-                    is_confidential: true, 
+                    auth_method: 'secret',
+                    token_binding_method: 'none',
                 },
                 createAllowAllActor(),
             );
@@ -274,7 +275,8 @@ describe('core/entities/client/service', () => {
             const result = await service.create(
                 {
                     name: 'public-client',
-                    is_confidential: false, 
+                    auth_method: 'none',
+                    token_binding_method: 'none',
                 },
                 createAllowAllActor(),
             );
@@ -320,7 +322,8 @@ describe('core/entities/client/service', () => {
         it('should generate secret when confidential client has no secret', async () => {
             const entity = repository.seed(createFakeClient({
                 name: 'client',
-                is_confidential: true,
+                auth_method: 'secret',
+                token_binding_method: 'none',
                 secret: null,
             }));
 
@@ -332,11 +335,12 @@ describe('core/entities/client/service', () => {
         it('should clear secret when client is set to non-confidential', async () => {
             const entity = repository.seed(createFakeClient({
                 name: 'client',
-                is_confidential: true,
+                auth_method: 'secret',
+                token_binding_method: 'none',
                 secret: 'old-secret',
             }));
 
-            const result = await service.update(entity.id, { is_confidential: false }, createAllowAllActor());
+            const result = await service.update(entity.id, { auth_method: 'none', token_binding_method: 'none' }, createAllowAllActor());
             expect(result.secret).toBeNull();
         });
     });
