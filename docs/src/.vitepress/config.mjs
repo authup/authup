@@ -110,6 +110,10 @@ export default defineConfig({
                             text: 'Permissions & Policies',
                             link: '/guide/user/permissions-and-policies', 
                         },
+                        {
+                            text: 'Trust Anchors',
+                            link: '/guide/user/trust-anchors',
+                        },
                     ],
                 },
                 /*

@@ -59,6 +59,15 @@ server {
 
 The easiest way to set up a certificate is with the help of certbot. On a Linux based system, letsencrypt can be installed with the following command.
 
+::: tip Certificate roles
+
+The certificate configured in this section identifies the NGINX HTTPS endpoint
+to browsers and API clients. It is not an Authup client-certificate trust
+anchor. See [Trust Anchors (Trusted CAs)](../user/trust-anchors.md) for the
+difference and the planned mTLS topology.
+
+:::
+
 ```shell
 sudo apt install certbot python3-certbot-nginx
 ```
