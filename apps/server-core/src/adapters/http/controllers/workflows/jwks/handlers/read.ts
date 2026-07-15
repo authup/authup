@@ -12,27 +12,7 @@ import { JWKError, JWKType, JWKUse } from '@authup/specs';
 import type { Repository } from 'typeorm';
 import { In } from 'typeorm';
 import type { KeyEntity } from '../../../../../database/domains/index.ts';
-import { buildX5c, buildX5tS256, parseCertificateChain } from '../../../../../../core/index.ts';
-
-async function buildCertificateJwkFields(
-    certificate: string | null,
-): Promise<Partial<Pick<OAuth2JsonWebKey, 'x5c' | 'x5t#S256'>>> {
-    if (!certificate) {
-        return {};
-    }
-
-    try {
-        const chain = parseCertificateChain(certificate);
-        return {
-            x5c: buildX5c(chain),
-            'x5t#S256': await buildX5tS256(chain),
-        };
-    } catch {
-        // One malformed legacy/database row must not take down the realm's
-        // whole JWKS. Publish the usable public key without certificate data.
-        return {};
-    }
-}
+import { buildCertificateJwkFields } from '../../../../../../core/index.ts';
 
 export async function getJwksRouteHandler(
     repository: Repository<KeyEntity>,

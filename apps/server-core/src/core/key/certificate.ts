@@ -11,6 +11,7 @@ import {
 } from 'node:crypto';
 import { BadRequestError } from '@authup/errors';
 import { base64URLEncode } from '@authup/kit';
+import type { OAuth2JsonWebKey } from '@authup/specs';
 import { subtle } from 'uncrypto';
 import { KeyCertificateError } from './certificate-error.ts';
 
@@ -77,4 +78,29 @@ export async function buildX5tS256(chain: X509Certificate[]): Promise<string> {
     return base64URLEncode(
         String.fromCharCode(...new Uint8Array(digest)),
     );
+}
+
+/**
+ * Derive the RFC 7517 x5c / x5t#S256 JWK members from a stored PEM chain.
+ *
+ * Fail-open by design: one malformed legacy/database row must not take down
+ * the whole realm's JWKS — the usable public key is still published, just
+ * without the certificate members.
+ */
+export async function buildCertificateJwkFields(
+    certificate: string | null,
+): Promise<Partial<Pick<OAuth2JsonWebKey, 'x5c' | 'x5t#S256'>>> {
+    if (!certificate) {
+        return {};
+    }
+
+    try {
+        const chain = parseCertificateChain(certificate);
+        return {
+            x5c: buildX5c(chain),
+            'x5t#S256': await buildX5tS256(chain),
+        };
+    } catch {
+        return {};
+    }
 }
