@@ -18,7 +18,13 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import { dateToISOStringTransformer } from '../../helpers/index.ts';
-import type { Client, Policy, Realm } from '@authup/core-kit';
+import {
+    type Client,
+    ClientAuthMethod,
+    ClientTokenBindingMethod,
+    type Policy,
+    type Realm,
+} from '@authup/core-kit';
 import { PolicyEntity } from '../policy/index.ts';
 import { RealmEntity } from '../realm/index.ts';
 
@@ -43,10 +49,18 @@ export class ClientEntity implements Client {
     built_in: boolean;
 
     @Column({
-        type: 'boolean',
-        default: false,
+        type: 'varchar',
+        length: 16,
+        default: ClientAuthMethod.NONE,
     })
-    is_confidential: boolean;
+    auth_method: `${ClientAuthMethod}`;
+
+    @Column({
+        type: 'varchar',
+        length: 16,
+        default: ClientTokenBindingMethod.NONE,
+    })
+    token_binding_method: `${ClientTokenBindingMethod}`;
 
     // ------------------------------------------------------------------
 

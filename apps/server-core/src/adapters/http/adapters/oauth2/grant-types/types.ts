@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client, Robot, User } from '@authup/core-kit';
+import type { Robot, User } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { IAppEvent } from 'routup';
@@ -23,12 +23,14 @@ import type {
     OAuth2PasswordGrantContext,
     OAuth2RefreshTokenGrantContext,
 } from '../../../../../core/index.ts';
+import type { CertificateSource } from '../../../request/index.ts';
 
 export type HTTPOAuth2AuthorizeGrantContext = OAuth2AuthorizeGrantContext & {
     codeVerifier: IOAuth2AuthorizationCodeVerifier,
     clientAuthenticator: OAuth2ClientAuthenticator,
     realmRepository: IRealmRepository,
     accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,
+    certificateSource: CertificateSource,
 };
 
 export interface IHTTPOAuth2Grant {
@@ -43,15 +45,18 @@ export type HTTPOAuth2PasswordGrantContext = OAuth2PasswordGrantContext & {
     userAuthenticatorService?: IUserAuthenticatorService,
     mfaLoginService?: IOAuth2MfaLoginService,
     logger?: Logger,
+    certificateSource: CertificateSource,
 };
 
 export type HTTPOAuth2RefreshTokenGrantContext = OAuth2RefreshTokenGrantContext & {
     clientAuthenticator: OAuth2ClientAuthenticator,
     realmRepository: IRealmRepository,
+    certificateSource: CertificateSource,
 };
 
 export type HTTPOAuth2ClientCredentialsGrantContext = BaseGrantContext & {
-    authenticator : ICredentialsAuthenticator<Client>
+    clientAuthenticator: OAuth2ClientAuthenticator,
+    certificateSource: CertificateSource,
 };
 
 export type HTTPOAuth2RobotCredentialsGrantContext = BaseGrantContext & {

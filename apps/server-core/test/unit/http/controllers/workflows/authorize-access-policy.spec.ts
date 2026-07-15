@@ -75,7 +75,8 @@ describe('http/controllers/workflows/authorize (access policy, plan 052)', () =>
     const createGatedClient = async (accessPolicyId: string | null) => {
         const client = await suite.client.client.create(createFakeClient({
             realm_id: realm.id,
-            is_confidential: true,
+            auth_method: 'secret',
+            token_binding_method: 'none',
             access_policy_id: accessPolicyId,
         }));
         await suite.client.clientScope.create({

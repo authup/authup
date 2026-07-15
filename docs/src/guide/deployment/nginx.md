@@ -64,7 +64,7 @@ The easiest way to set up a certificate is with the help of certbot. On a Linux 
 The certificate configured in this section identifies the NGINX HTTPS endpoint
 to browsers and API clients. It is not an Authup client-certificate trust
 anchor. See [Trust Anchors (Trusted CAs)](../user/trust-anchors.md) for the
-difference and the planned mTLS topology.
+difference and the mTLS topology.
 
 :::
 
@@ -77,3 +77,72 @@ A certificate can be requested and installed with the following command.
 ```shell
 sudo certbot --nginx -d [DOMAIN]
 ```
+
+## TLS client certificates
+
+The recommended topology uses a dedicated hostname that requests a client
+certificate and routes to the same private Authup listener. Configure Authup:
+
+```dotenv
+CERTIFICATE_SOURCE=forwarded
+MTLS_PUBLIC_URL=https://mtls.auth.example.com
+```
+
+Then add an NGINX server/location for that hostname:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name mtls.auth.example.com;
+
+    ssl_certificate     /etc/letsencrypt/live/mtls.auth.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/mtls.auth.example.com/privkey.pem;
+
+    # Ask for a certificate but leave realm-specific trust decisions to Authup.
+    # This also permits self-signed certificates used only for token binding.
+    ssl_verify_client optional_no_ca;
+
+    location / {
+        proxy_pass http://127.0.0.1:[SERVER_CORE_PORT];
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Always derive this value from the current TLS handshake. Never pass
+        # through a public request's header value.
+        proxy_set_header X-Forwarded-Tls-Client-Cert $ssl_client_escaped_cert;
+    }
+}
+```
+
+If ordinary OAuth clients share the same hostname, `optional_no_ca` lets them
+connect without a certificate; Authup rejects only requests whose client or
+token configuration requires one. A separate mTLS hostname avoids browser
+certificate prompts on the normal UI origin and is published through
+`mtls_endpoint_aliases` when `MTLS_PUBLIC_URL` is set.
+
+The Authup listener must remain private. Any other proxy location that reaches
+it must clear the forwarding header:
+
+```nginx
+proxy_set_header X-Forwarded-Tls-Client-Cert "";
+```
+
+::: danger Native forwarded mode has no intermediate chain
+
+`$ssl_client_escaped_cert` contains the leaf certificate only. With
+`CERTIFICATE_SOURCE=forwarded`, a client using `auth_method: tls` must have a
+leaf signed directly by an enabled trust anchor in its realm.
+
+For a root → intermediate → leaf PKI, use an ingress that emits RFC 9440
+`Client-Cert` and `Client-Cert-Chain` and select
+`CERTIFICATE_SOURCE=standard`.
+
+:::
+
+NGINX requests and attests the handshake certificate; Authup validates TLS
+client-authentication chains against its live realm trust anchors. Do not copy
+those realm trust anchors into a second authorization CA store in NGINX. See
+[OAuth Client Certificates](../user/client-certificates.md) for client URI-SAN
+and token-binding requirements.

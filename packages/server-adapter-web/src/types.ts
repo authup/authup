@@ -10,4 +10,5 @@ import type { ITokenVerifier } from '@authup/server-adapter-kit';
 export type VerifyRequestOptions = {
     tokenVerifier: ITokenVerifier,
     tokenByRequest?: (request: Request) => string | undefined,
+    certificateThumbprintByRequest?: (request: Request) => string | undefined | Promise<string | undefined>,
 };

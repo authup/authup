@@ -63,7 +63,8 @@ describe('consent', () => {
     async function createScopedClient(scopeNames: string[] = [ScopeName.GLOBAL]): Promise<Client> {
         const client = await suite.client.client.create(createFakeClient({
             realm_id: realm.id,
-            is_confidential: true,
+            auth_method: 'secret',
+            token_binding_method: 'none',
         }));
 
         for (const name of scopeNames) {
@@ -156,7 +157,8 @@ describe('consent', () => {
         expect(joined!.grant_types).toBeUndefined();
         expect(joined!.base_url).toBeUndefined();
         expect(joined!.root_url).toBeUndefined();
-        expect(joined!.is_confidential).toBeUndefined();
+        expect(joined!.auth_method).toBeUndefined();
+        expect(joined!.token_binding_method).toBeUndefined();
         expect(joined!.access_policy_id).toBeUndefined();
         expect(joined!.secret_hashed).toBeUndefined();
         expect(joined!.secret_encrypted).toBeUndefined();

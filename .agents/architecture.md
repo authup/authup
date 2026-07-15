@@ -634,7 +634,7 @@ endpoint — the `/authorize` verifier already resolves clients via
 `findOneByIdOrName('web', realm_id)`.
 
 - **Attributes** (`buildWebClientAttributes`, `core/entities/client/web-client.ts`):
-  `is_confidential: false`, `built_in: true`, `active: true`,
+  `auth_method: 'none'`, `token_binding_method: 'none'`, `built_in: true`, `active: true`,
   `grant_types: 'authorization_code refresh_token'` (an enforced allowlist —
   see *Per-client grant allowlist* under the token-endpoint section),
   `scope: 'global openid'`, `redirect_uri` = one `<origin>/**` wildcard per
@@ -1018,11 +1018,15 @@ Each policy is a built-in `ATTRIBUTE_NAMES` policy with `invert: true`, where `n
 
 | Policy | Denylist `names` |
 |---|---|
-| `system.client-names-self-manage` | `active, realm_id, is_confidential, secret_hashed, secret_encrypted` |
+| `system.client-names-self-manage` | `active, realm_id, auth_method, token_binding_method, secret_hashed, secret_encrypted` |
 | `system.robot-names-self-manage` | `active, realm_id, user_id` |
 | `system.user-names-self-manage` | `active, name_locked, status, status_message, realm_id` |
 
-The client denylist additionally blocks `is_confidential` (toggling clears the secret) and the `secret_hashed` / `secret_encrypted` storage flags (downgrading either would persist the secret in plaintext). FK fields like `realm_id` are usually validator-stripped on UPDATE already, but stay in the denylist as defense in depth.
+The client denylist additionally blocks `auth_method` (switching away from
+`secret` clears the secret), `token_binding_method`, and the `secret_hashed` /
+`secret_encrypted` storage flags (downgrading either would persist the secret
+in plaintext). FK fields like `realm_id` are usually validator-stripped on
+UPDATE already, but stay in the denylist as defense in depth.
 
 Self-editable fields (e.g. `name`, `display_name`, `email`, `password`, `secret`, `redirect_uri`, etc.) are NOT enumerated — they're permitted by virtue of being absent from the denylist. The validator already strips system-managed columns (`built_in`, `id`, `created_at`, `updated_at`) before they reach the policy, so the denylist only needs to cover what validators let through but admin-only state should still block.
 
@@ -1575,16 +1579,20 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
 
 ## OAuth2 Token Endpoint Authentication
 
-The `/token` endpoint authenticates the calling client according to RFC 6749. Confidential clients MUST present a `client_secret`; public clients identify with `client_id` only.
+The `/token` endpoint authenticates the calling client according to its
+`auth_method`: `none` clients identify with `client_id`, `secret` clients must
+present the shared secret, and `tls` clients must present trusted certificate
+evidence. The methods are exclusive; a TLS client cannot fall back to a
+secret.
 
 ### Per-grant requirements
 
 | Grant | Client auth requirement |
 |---|---|
-| `client_credentials` | Authentication is the grant's purpose. Confidential client only — public clients are rejected. |
-| `authorization_code` | Confidential client MUST authenticate (RFC §4.1.3). Authenticated `client_id` MUST match the auth code's bound `client_id` — mismatch = `invalid_grant`. Client-by-name resolution is scoped by the shared realm hint (see *Token endpoint realm resolution*). |
-| `refresh_token` | Confidential client MUST authenticate (RFC §6). Authenticated `client_id` MUST match the token's bound `client_id` — mismatch = `invalid_grant`. **A public client is NOT required to authenticate** (RFC 6749 §10.4 — client auth is "not possible" for it): when a request presents no client credentials but the token carries a bound `client_id`, the grant resolves that client **from the signed token itself** (server-minted, so trusted) rather than demanding the caller re-send it — a public bound client proceeds (rotation/replay detection is the abuse control), while a **confidential** bound client presented without a secret is rejected `invalid_client` (`clientAuthenticator.authenticate(payload.client_id)` with no secret throws for it). This is why the `@authup/client-web-kit` store refreshes with just `{ refresh_token }` and does **not** parse/echo the `client_id` — interactive client-web login runs through the authorization-code flow against the public per-realm `web` client, so its refresh tokens are client-bound, but the server extraction handles it. Tokens with no bound client refresh without auth (legacy/no-client flow). Client-by-name resolution (when a client *does* authenticate) is scoped by the shared realm hint. |
-| `password` | Confidential client MUST authenticate (RFC §4.3.2). The token's `client_id` claim and the OpenID `aud` claim use the **authenticated** client's id, not any user-side association. The shared realm hint resolves the **user realm** and scopes the client leg. |
+| `client_credentials` | Authentication is the grant's purpose. `secret` or `tls` only — `none` clients are rejected. |
+| `authorization_code` | The client follows its configured method. Its `client_id` MUST match the auth code's bound `client_id` — mismatch = `invalid_grant`. Client-by-name resolution is scoped by the shared realm hint (see *Token endpoint realm resolution*). |
+| `refresh_token` | `secret` and `tls` clients MUST authenticate. The authenticated `client_id` MUST match the token's bound `client_id` — mismatch = `invalid_grant`. A `none` client is not required to authenticate: when the request omits `client_id` but the signed token carries one, the grant resolves that client from the token and permits it only when its current method is still `none`. A bound refresh token additionally requires the same certificate thumbprint before rotation. |
+| `password` | When a client is supplied, it follows its configured method. The token's `client_id` claim and the OpenID `aud` claim use that resolved client's id, not any user-side association. The shared realm hint resolves the **user realm** and scopes the client leg. |
 | `robot_credentials` | Authentication is the grant's purpose (Authup-specific extension). |
 
 ### Per-client grant allowlist (`grant_types`)
@@ -1616,7 +1624,7 @@ The provisioned per-realm `web` client lists `authorization_code refresh_token`
 
 ### Token endpoint realm resolution
 
-The three client-authenticating grants (`password`, `authorization_code`,
+The three realm-resolving grants (`password`, `authorization_code`,
 `refresh_token`) share ONE realm-hint semantic (helper `readRealmHint` in
 `adapters/http/adapters/oauth2/grant-types/utils/realm.ts`):
 
@@ -1671,19 +1679,63 @@ Per RFC 6749 §2.3.1, the server MUST NOT support multiple authentication method
 - Header: `Authorization: Basic base64(client_id:client_secret)`
 - Both at once → `invalid_request`
 
+TLS authentication uses a body `client_id` without `client_secret` plus the
+configured trusted-proxy certificate header. Supplying a secret/Basic header
+for a `tls` client is rejected as mixed authentication.
+
 `extractClientCredentialsFromRequest` (`adapters/http/adapters/oauth2/grant-types/utils/credentials.ts`) is the shared helper enforcing this. Used by all grants that authenticate clients.
 
 ### `OAuth2ClientAuthenticator`
 
-Single core class (`core/oauth2/client/authenticator.ts`) used by `authorization_code`, `refresh_token`, and `password` grants. Resolves the client by id/name, verifies `is_confidential`, and:
-- Confidential: requires `client_secret` and verifies via `ClientCredentialsService.verify`
-- Public: returns the client without secret check
+Single core class (`core/oauth2/client/authenticator.ts`) used by all standard
+client-resolving grants. It resolves the client by id/name and dispatches on
+`auth_method`:
 
-Distinct from `ClientAuthenticator` (`core/authentication/entities/client/module.ts`) which is used for `client_credentials` grant — that one rejects public clients outright since they can't authenticate themselves with credentials.
+- `none`: accepts a client id only and rejects a supplied secret;
+- `secret`: requires and verifies `client_secret`;
+- `tls`: rejects a supplied secret and validates the forwarded certificate
+  chain, client-auth purpose, and canonical URI SAN against enabled trust
+  anchors in the client's realm.
+
+`ClientAuthenticator` (`core/authentication/entities/client/module.ts`) remains
+the HTTP Basic management-API authenticator and only accepts `secret` clients.
+
+### Client-certificate boundary and token binding (plan 072)
+
+`certificateSource` is a global, explicit trusted-proxy contract:
+`disabled` (default), `standard` (RFC 9440 `Client-Cert` plus optional
+`Client-Cert-Chain` structured binary headers), or `forwarded`
+(`X-Forwarded-Tls-Client-Cert` URL-escaped PEM). The adapter normalizes the
+selected source into a leaf, optional intermediates, and a SHA-256 DER
+thumbprint. It never probes another header family as fallback. Enabling either
+source asserts that the backend listener is private and the proxy always
+removes/overwrites public certificate headers.
+
+For `auth_method = 'tls'`, the leaf must be current, non-CA, usable for client
+authentication (clientAuth EKU when present and digitalSignature key usage
+when present), chain through supplied intermediates to an enabled realm trust
+anchor, and contain exactly one Authup client URI SAN equal to
+`urn:authup:client:<client-uuid>`. Other SANs are permitted. Validation is
+offline: no AIA, CRL, or OCSP network lookup occurs on the request path.
+
+`token_binding_method` is independent (`none | tls`). When set to `tls`, every
+new access/refresh/MFA ticket carries `cnf: { "x5t#S256": <leaf thumbprint> }`.
+Binding-only evidence may be any current non-CA certificate, including an
+untrusted/self-signed leaf; the TLS handshake proves key possession while
+realm trust is only an authentication concern. Refresh must present the same
+thumbprint, and rotation preserves the claim. Authup's authorization
+middleware and `server-adapter-*` consumers fail closed on a bound token unless
+the resource request supplies that thumbprint; resource servers compare only
+the signed thumbprint and do not repeat chain validation.
 
 ### PKCE for public clients
 
-`/authorize` rejects public clients without `code_challenge` when an authorization code will be issued (RFC 7636 §4.4.1, OAuth 2.1). At `/token`, the code verifier double-checks: if the resolved client is public and the auth code has no challenge stored, reject. Defense in depth in case the authorize-side check was bypassed or the client's `is_confidential` flag changed mid-flow.
+`/authorize` rejects public (`auth_method = 'none'`) clients without
+`code_challenge` when an authorization code will be issued (RFC 7636 §4.4.1,
+OAuth 2.1). At `/token`, the code verifier double-checks: if the resolved client
+is public and the auth code has no challenge stored, reject. Defense in depth
+in case the authorize-side check was bypassed or the client's authentication
+method changed mid-flow.
 
 `code_challenge_method` defaults to `plain` per RFC 7636 §4.3 — only `S256` triggers SHA-256 verification.
 

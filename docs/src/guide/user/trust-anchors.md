@@ -12,17 +12,10 @@ A trust anchor is therefore both:
 The certificate alone contains no secret. The CA private key remains with the
 CA and must never be uploaded as a trust anchor.
 
-::: warning Current scope
-
-This release provides the realm-scoped Trust Anchors store, API, and admin UI.
-Authup does **not yet consume these anchors** for client authentication or
-certificate-bound tokens. That enforcement is planned as the next
-[RFC 8705](https://www.rfc-editor.org/rfc/rfc8705.html) stage.
-
-Adding a trust anchor today does not enable mTLS and does not change request or
-token validation by itself.
-
-:::
+Authup consumes enabled anchors when an OAuth client uses
+`auth_method: tls`. Adding an anchor alone does not turn clients into TLS
+clients; configure the client and trusted proxy separately. See
+[OAuth Client Certificates](./client-certificates.md).
 
 ## How certificate trust works
 
@@ -60,9 +53,10 @@ particular:
   different realms.
 - **CA rotation:** enable old and new CA certificates during a migration, then
   disable the old anchor after all client certificates have been replaced.
-- **Certificate-bound access tokens:** when combined with PKI client
-  authentication, support the future RFC 8705 flow where a copied access token
-  cannot be used without the corresponding client certificate and private key.
+- **Certificate-bound access tokens:** prevent a copied access or refresh token
+  from being used without the corresponding client certificate and private
+  key. Token binding is independently configurable and does not itself require
+  a trust anchor.
 
 Use a dedicated client-authentication CA or intermediate with a narrow issuance
 policy. Avoid adding a broad public Web PKI root merely because it is already
@@ -88,9 +82,10 @@ In particular, do not add the following as trust anchors:
 - a CA certificate whose operator and issuance policy you do not intentionally
   trust for client authentication.
 
-Self-signed client-certificate authentication is also a different mode. It
-requires registering a certificate directly with a client instead of trusting
-an issuing CA.
+Self-signed client-certificate **authentication** is a different mode and is
+not supported by `auth_method: tls`; authentication must chain to a realm
+anchor. A self-signed leaf can still be used for binding-only proof of
+possession when `token_binding_method: tls`.
 
 ## Realm scope and lifecycle
 
@@ -136,7 +131,7 @@ The responsibilities are separate:
 
 - NGINX owns the TLS connection and proves that certificate evidence came from
   the handshake.
-- Authup will own the realm-specific CA-chain and OAuth client-identity checks.
+- Authup owns the realm-specific CA-chain and OAuth client-identity checks.
 - The Authup listener must not be publicly reachable, because public callers
   must not be able to inject forwarded-certificate headers directly.
 - The proxy must remove or overwrite certificate headers received from the
@@ -144,13 +139,13 @@ The responsibilities are separate:
   negotiated.
 
 Trust anchors do not configure NGINX automatically and are not a replacement
-for the HTTPS server certificate installed at NGINX. The exact proxy-header and
-RFC 8705 configuration will be documented when the enforcement stage ships.
+for the HTTPS server certificate installed at NGINX. See the
+[NGINX](../deployment/nginx.md) or
+[Traefik](../deployment/traefik.md) forwarding configuration.
 
 ## When you do not need trust anchors
 
-You do not need a trust anchor for ordinary OAuth clients using a client
-secret, `private_key_jwt`, or another non-certificate authentication method
-when they are not configured for a certificate-based flow. You also do not
-need one merely to serve Authup over HTTPS or to publish token-signing
-certificates through JWKS.
+You do not need a trust anchor for ordinary OAuth clients using `none` or a
+shared secret, nor for binding-only certificates. You also do not need one
+merely to serve Authup over HTTPS or to publish token-signing certificates
+through JWKS.

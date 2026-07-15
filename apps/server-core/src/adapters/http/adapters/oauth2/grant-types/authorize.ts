@@ -6,6 +6,7 @@
  */
 
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
+import { isClientPublic } from '@authup/core-kit';
 import { OAuth2GrantError, OAuth2RequestError, OAuth2TokenGrant } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
@@ -19,7 +20,12 @@ import type {
     OAuth2ClientAuthenticator,
 } from '../../../../../core/index.ts';
 import type { HTTPOAuth2AuthorizeGrantContext, IHTTPOAuth2Grant } from './types.ts';
-import { extractClientCredentialsFromRequest, readRealmHint } from './utils/index.ts';
+import type { CertificateSource } from '../../../request/index.ts';
+import {
+    extractClientCredentialsFromRequest,
+    extractOAuth2ClientCertificateEvidence,
+    readRealmHint,
+} from './utils/index.ts';
 
 export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IHTTPOAuth2Grant {
     protected codeVerifier : IOAuth2AuthorizationCodeVerifier;
@@ -30,6 +36,8 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
 
     protected accessPolicyEvaluator? : IOAuth2AccessPolicyEvaluator;
 
+    protected certificateSource: CertificateSource;
+
     constructor(ctx: HTTPOAuth2AuthorizeGrantContext) {
         super(ctx);
 
@@ -37,6 +45,7 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
         this.clientAuthenticator = ctx.clientAuthenticator;
         this.realmRepository = ctx.realmRepository;
         this.accessPolicyEvaluator = ctx.accessPolicyEvaluator;
+        this.certificateSource = ctx.certificateSource ?? 'disabled';
     }
 
     async runWithRequest(event: IAppEvent): Promise<OAuth2TokenGrantResponse> {
@@ -52,8 +61,15 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
 
         const { clientId, clientSecret } = await extractClientCredentialsFromRequest(event);
         const realm = await this.realmRepository.resolve(readRealmHint(body, query), true);
+        const certificateEvidence = extractOAuth2ClientCertificateEvidence(event, this.certificateSource);
 
-        const client = await this.clientAuthenticator.authenticate(clientId, clientSecret, realm.id);
+        const client = await this.clientAuthenticator.authenticate(
+            clientId,
+            clientSecret,
+            realm.id,
+            certificateEvidence,
+        );
+        const confirmation = this.clientAuthenticator.resolveTokenBinding(client, certificateEvidence);
 
         assertClientGrantAllowed(client, OAuth2TokenGrant.AUTHORIZATION_CODE);
 
@@ -61,7 +77,7 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
             redirectUri,
             codeVerifier,
             clientId: client.id,
-            clientIsPublic: !client.is_confidential,
+            clientIsPublic: isClientPublic(client),
             realmId: client.realm_id,
         });
 
@@ -88,6 +104,7 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
         }
 
         return this.runWith(entity, {
+            confirmation,
             ipAddress: getRequestIP(event, { trustProxy: true }) ?? undefined,
             userAgent: getRequestHeader(event, 'user-agent') ?? undefined,
         });

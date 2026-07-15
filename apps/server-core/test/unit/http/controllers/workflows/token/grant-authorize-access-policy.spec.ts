@@ -56,7 +56,8 @@ describe('grant-authorize (access policy backstop)', () => {
             secret,
             secret_hashed: false,
             secret_encrypted: false,
-            is_confidential: true,
+            auth_method: 'secret',
+            token_binding_method: 'none',
         }));
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({

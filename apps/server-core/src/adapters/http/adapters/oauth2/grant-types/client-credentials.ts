@@ -6,24 +6,30 @@
  */
 
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
-import { OAuth2TokenGrant } from '@authup/specs';
+import { OAuth2ClientError, OAuth2TokenGrant  } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
-import type { Client } from '@authup/core-kit';
-import { EntityCredentialsInvalidError } from '@authup/errors';
+import { ClientAuthMethod } from '@authup/core-kit';
 import type { IAppEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
-import type { ICredentialsAuthenticator } from '../../../../../core/index.ts';
+import type { OAuth2ClientAuthenticator } from '../../../../../core/index.ts';
 import { ClientCredentialsGrant, assertClientGrantAllowed } from '../../../../../core/index.ts';
 import type { HTTPOAuth2ClientCredentialsGrantContext, IHTTPOAuth2Grant } from './types.ts';
-import { extractClientCredentialsFromRequest } from './utils/index.ts';
+import type { CertificateSource } from '../../../request/index.ts';
+import {
+    extractClientCredentialsFromRequest,
+    extractOAuth2ClientCertificateEvidence,
+} from './utils/index.ts';
 
 export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implements IHTTPOAuth2Grant {
-    protected authenticator : ICredentialsAuthenticator<Client>;
+    protected clientAuthenticator : OAuth2ClientAuthenticator;
+
+    protected certificateSource: CertificateSource;
 
     constructor(ctx: HTTPOAuth2ClientCredentialsGrantContext) {
         super(ctx);
 
-        this.authenticator = ctx.authenticator;
+        this.clientAuthenticator = ctx.clientAuthenticator;
+        this.certificateSource = ctx.certificateSource ?? 'disabled';
     }
 
     async runWithRequest(event: IAppEvent): Promise<OAuth2TokenGrantResponse> {
@@ -32,14 +38,25 @@ export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implement
         const realmId = body?.realm_id;
 
         if (!clientId) {
-            throw new EntityCredentialsInvalidError({ entity: 'client' });
+            throw OAuth2ClientError.invalid();
         }
 
-        const client = await this.authenticator.authenticate(clientId, clientSecret ?? '', realmId);
+        const certificateEvidence = extractOAuth2ClientCertificateEvidence(event, this.certificateSource);
+        const client = await this.clientAuthenticator.authenticate(
+            clientId,
+            clientSecret,
+            realmId,
+            certificateEvidence,
+        );
+        if (client.auth_method === ClientAuthMethod.NONE) {
+            throw OAuth2ClientError.invalid();
+        }
+        const confirmation = this.clientAuthenticator.resolveTokenBinding(client, certificateEvidence);
 
         assertClientGrantAllowed(client, OAuth2TokenGrant.CLIENT_CREDENTIALS);
 
         return this.runWith(client, {
+            confirmation,
             ipAddress: getRequestIP(event, { trustProxy: true }) ?? undefined,
             userAgent: getRequestHeader(event, 'user-agent') ?? undefined,
         });

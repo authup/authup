@@ -10,6 +10,7 @@ import { ValidatorGroup, isUUID } from '@authup/kit';
 import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import {
     CLIENT_RESERVED_NAMES,
+    ClientAuthMethod,
     ClientValidator,
     PermissionName,
 } from '@authup/core-kit';
@@ -265,7 +266,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 });
             }
 
-            if (entity.is_confidential) {
+            if (entity.auth_method === ClientAuthMethod.SECRET) {
                 if (!validated.secret && !entity.secret) {
                     validated.secret = credentialsService.generateSecret();
                 }
@@ -275,6 +276,8 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 }
             } else {
                 entity.secret = null;
+                entity.secret_hashed = false;
+                entity.secret_encrypted = false;
             }
 
             await this.repository.save(entity);
@@ -299,7 +302,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         entity = this.repository.create(validated);
 
-        if (entity.is_confidential) {
+        if (entity.auth_method === ClientAuthMethod.SECRET) {
             if (!validated.secret) {
                 validated.secret = credentialsService.generateSecret();
             }
@@ -307,6 +310,8 @@ export class ClientService extends AbstractEntityService implements IClientServi
             entity.secret = await credentialsService.protect(validated.secret, validated);
         } else {
             entity.secret = null;
+            entity.secret_hashed = false;
+            entity.secret_encrypted = false;
         }
 
         await this.repository.save(entity);

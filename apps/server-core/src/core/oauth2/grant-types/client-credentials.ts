@@ -38,6 +38,7 @@ export class ClientCredentialsGrant extends OAuth2BaseGrant<Client> {
             realm_id: input.realm.id,
             realm_name: input.realm.name,
             client_id: input.id,
+            ...(options.confirmation ? { cnf: options.confirmation } : {}),
         });
 
         return buildOAuth2BearerTokenResponse({

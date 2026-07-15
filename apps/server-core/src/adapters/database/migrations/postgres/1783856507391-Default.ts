@@ -31,6 +31,9 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  *   (plan 071 Stage A).
  * - Adds auth_trust_anchors: realm-scoped public CA certificates used by
  *   RFC 8705 PKI client authentication (plan 071 Stage C).
+ * - Replaces auth_clients.is_confidential with auth_method
+ *   (none/secret/tls) and adds token_binding_method (none/tls) for RFC 8705
+ *   client authentication and sender-constrained tokens (plan 072).
  */
 export class Default1783856507391 implements MigrationInterface {
     name = 'Default1783856507391';
@@ -161,9 +164,37 @@ export class Default1783856507391 implements MigrationInterface {
             ALTER TABLE "auth_trust_anchors"
             ADD CONSTRAINT "FK_auth_trust_anchors_realm_id" FOREIGN KEY ("realm_id") REFERENCES "auth_realms"("id") ON DELETE CASCADE ON UPDATE NO ACTION
         `);
+
+        // RFC 8705 client authentication and token binding (plan 072)
+        await queryRunner.query(`
+            ALTER TABLE "auth_clients" ADD "auth_method" character varying(16) NOT NULL DEFAULT 'none'
+        `);
+        await queryRunner.query(`
+            UPDATE "auth_clients" SET "auth_method" = 'secret' WHERE "is_confidential" = true
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "auth_clients" ADD "token_binding_method" character varying(16) NOT NULL DEFAULT 'none'
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "auth_clients" DROP COLUMN "is_confidential"
+        `);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
+        // RFC 8705 client authentication and token binding (plan 072)
+        await queryRunner.query(`
+            ALTER TABLE "auth_clients" ADD "is_confidential" boolean NOT NULL DEFAULT false
+        `);
+        await queryRunner.query(`
+            UPDATE "auth_clients" SET "is_confidential" = true WHERE "auth_method" <> 'none'
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "auth_clients" DROP COLUMN "token_binding_method"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "auth_clients" DROP COLUMN "auth_method"
+        `);
+
         // RFC 8705 realm trust anchors (plan 071 Stage C)
         await queryRunner.query(`
             ALTER TABLE "auth_trust_anchors" DROP CONSTRAINT "FK_auth_trust_anchors_realm_id"

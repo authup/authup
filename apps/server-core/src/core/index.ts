@@ -6,6 +6,7 @@
  */
 
 export * from './authentication/index.ts';
+export * from './client-certificate/index.ts';
 export * from './entities/index.ts';
 export * from './key/index.ts';
 export * from './mail/index.ts';

@@ -11,6 +11,7 @@ import type { ITokenVerifier, TokenVerificationData } from '@authup/server-adapt
 export type VerifyRequestOptions = {
     tokenVerifier: ITokenVerifier,
     tokenByRequest?: (req: IncomingMessage) => string | undefined,
+    certificateThumbprintByRequest?: (req: IncomingMessage) => string | undefined | Promise<string | undefined>,
 };
 
 export type MiddlewareOptions = VerifyRequestOptions & {

@@ -17,6 +17,25 @@ export const CLIENT_SYSTEM_NAME = 'system';
 export const CLIENT_WEB_NAME = 'web';
 
 /**
+ * How an OAuth client authenticates at the token endpoint.
+ */
+export enum ClientAuthMethod {
+    NONE = 'none',
+    SECRET = 'secret',
+    TLS = 'tls',
+}
+
+/**
+ * How access and refresh tokens issued to an OAuth client are sender-bound.
+ */
+export enum ClientTokenBindingMethod {
+    NONE = 'none',
+    TLS = 'tls',
+}
+
+export const CLIENT_CERTIFICATE_URI_PREFIX = 'urn:authup:client:';
+
+/**
  * Client names that are reserved for system-provisioned (built_in)
  * clients. API callers must not create or rename a client to one of
  * these — provisioning bypasses the API and is unaffected.

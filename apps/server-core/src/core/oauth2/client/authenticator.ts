@@ -5,26 +5,48 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client } from '@authup/core-kit';
-import { IdentityType } from '@authup/core-kit';
+import {
+    type Client,
+    ClientAuthMethod,
+    ClientTokenBindingMethod,
+    IdentityType,
+} from '@authup/core-kit';
+import type { OAuth2TokenConfirmation } from '@authup/specs';
 import { OAuth2ClientError } from '@authup/specs';
 import { ClientCredentialsService } from '../../authentication/credential/index.ts';
+import type {
+    ClientCertificateEvidence,
+    ClientCertificateValidator,
+} from '../../client-certificate/index.ts';
 import type { IIdentityResolver } from '../../identity/index.ts';
 
+export type OAuth2ClientAuthenticatorContext = {
+    identityResolver: IIdentityResolver,
+    certificateValidator: ClientCertificateValidator,
+};
+
 /**
- * Authenticates a client at the OAuth2 token endpoint. Confidential clients
- * MUST present a valid client_secret (RFC 6749 §3.2.1, §4.1.3, §4.3.2, §6);
- * public clients identify via client_id only.
+ * Authenticates a client at the OAuth2 token endpoint according to its
+ * exclusive method: public id only, shared secret, or trusted TLS evidence.
  *
- * Used by authorization_code, refresh_token, and password grants.
+ * Used by every standard client-resolving grant.
  */
 export class OAuth2ClientAuthenticator {
     protected identityResolver: IIdentityResolver;
 
     protected credentialsService: ClientCredentialsService;
 
-    constructor(identityResolver: IIdentityResolver) {
-        this.identityResolver = identityResolver;
+    protected certificateValidator?: ClientCertificateValidator;
+
+    constructor(ctx: IIdentityResolver | OAuth2ClientAuthenticatorContext) {
+        if ('identityResolver' in ctx) {
+            this.identityResolver = ctx.identityResolver;
+            this.certificateValidator = ctx.certificateValidator;
+        } else {
+            // Kept as a compatibility seam for focused secret/public-client
+            // unit tests. Production wiring always supplies the validator.
+            this.identityResolver = ctx;
+        }
         this.credentialsService = new ClientCredentialsService();
     }
 
@@ -32,11 +54,56 @@ export class OAuth2ClientAuthenticator {
         clientId: string | undefined,
         clientSecret?: string,
         realmId?: string,
+        certificateEvidence?: ClientCertificateEvidence,
     ): Promise<Client> {
         if (!clientId) {
             throw OAuth2ClientError.invalid();
         }
 
+        const client = await this.resolve(clientId, realmId);
+
+        switch (client.auth_method) {
+            case ClientAuthMethod.NONE:
+                if (typeof clientSecret === 'string') {
+                    throw OAuth2ClientError.invalid();
+                }
+                break;
+            case ClientAuthMethod.SECRET: {
+                if (!clientSecret) {
+                    throw OAuth2ClientError.invalid();
+                }
+
+                const verified = await this.credentialsService.verify(clientSecret, client);
+                if (!verified) {
+                    throw OAuth2ClientError.invalid();
+                }
+                break;
+            }
+            case ClientAuthMethod.TLS:
+                if (
+                    typeof clientSecret === 'string' ||
+                    !certificateEvidence ||
+                    !this.certificateValidator
+                ) {
+                    throw OAuth2ClientError.invalid();
+                }
+
+                try {
+                    await this.certificateValidator.validateForAuthentication(client, certificateEvidence);
+                } catch {
+                    // Authentication errors deliberately reveal neither the
+                    // certificate identity nor which realm anchor failed.
+                    throw OAuth2ClientError.invalid();
+                }
+                break;
+            default:
+                throw OAuth2ClientError.invalid();
+        }
+
+        return client;
+    }
+
+    async resolve(clientId: string, realmId?: string): Promise<Client> {
         const identity = await this.identityResolver.resolve(IdentityType.CLIENT, clientId, realmId);
         if (!identity || identity.type !== IdentityType.CLIENT) {
             throw OAuth2ClientError.invalid();
@@ -46,17 +113,37 @@ export class OAuth2ClientAuthenticator {
             throw OAuth2ClientError.inactive();
         }
 
-        if (identity.data.is_confidential) {
-            if (!clientSecret) {
-                throw OAuth2ClientError.invalid();
-            }
+        return identity.data;
+    }
 
-            const verified = await this.credentialsService.verify(clientSecret, identity.data);
-            if (!verified) {
-                throw OAuth2ClientError.invalid();
-            }
+    resolveTokenBinding(
+        client: Pick<Client, 'token_binding_method'>,
+        certificateEvidence?: ClientCertificateEvidence,
+    ): OAuth2TokenConfirmation | undefined {
+        if (client.token_binding_method === ClientTokenBindingMethod.NONE) {
+            return undefined;
         }
 
-        return identity.data;
+        if (client.token_binding_method !== ClientTokenBindingMethod.TLS) {
+            throw OAuth2ClientError.invalid();
+        }
+
+        return this.validateCertificateEvidenceForBinding(certificateEvidence);
+    }
+
+    validateCertificateEvidenceForBinding(
+        certificateEvidence?: ClientCertificateEvidence,
+    ): OAuth2TokenConfirmation {
+        if (!certificateEvidence || !this.certificateValidator) {
+            throw OAuth2ClientError.invalid();
+        }
+
+        try {
+            this.certificateValidator.validateForBinding(certificateEvidence);
+        } catch {
+            throw OAuth2ClientError.invalid();
+        }
+
+        return { 'x5t#S256': certificateEvidence.thumbprint };
     }
 }

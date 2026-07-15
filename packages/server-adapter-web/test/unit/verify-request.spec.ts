@@ -44,6 +44,35 @@ describe('verifyRequest', () => {
         expect(verify).toHaveBeenCalledWith('abc.def.ghi');
     });
 
+    it('fails closed for a certificate-bound token when no certificate is resolved', async () => {
+        const verify = vi.fn(async () => ({
+            ...sampleData,
+            cnf: { 'x5t#S256': 'expected-thumbprint' },
+        }));
+
+        await expect(verifyRequest(
+            new Request('http://localhost/', { headers: { authorization: 'Bearer bound-token' } }),
+            { tokenVerifier: createVerifier(verify) },
+        )).rejects.toThrow();
+    });
+
+    it('accepts a certificate-bound token only when the resolved thumbprint matches', async () => {
+        const data: TokenVerificationData = {
+            ...sampleData,
+            cnf: { 'x5t#S256': 'expected-thumbprint' },
+        };
+        const certificateThumbprintByRequest = vi.fn(async () => 'expected-thumbprint');
+
+        const request = new Request('http://localhost/', { headers: { authorization: 'Bearer bound-token' } });
+        const result = await verifyRequest(request, {
+            tokenVerifier: createVerifier(vi.fn(async () => data)),
+            certificateThumbprintByRequest,
+        });
+
+        expect(result).toBe(data);
+        expect(certificateThumbprintByRequest).toHaveBeenCalledWith(request);
+    });
+
     it('rejects with BearerTokenMalformedError for a malformed Authorization header', async () => {
         const verify = vi.fn();
         let caught: unknown;

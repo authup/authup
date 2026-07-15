@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { CLIENT_WEB_NAME, ScopeName  } from '@authup/core-kit';
+import {
+    CLIENT_WEB_NAME,
+    ClientAuthMethod,
+    ClientTokenBindingMethod,
+    ScopeName,
+} from '@authup/core-kit';
 import type { Client, Realm } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import type { IClientRepository, IWebClientProvisioner } from './types.ts';
@@ -40,7 +45,8 @@ export function buildWebClientAttributes(
     return {
         name: CLIENT_WEB_NAME,
         realm_id: realm.id,
-        is_confidential: false,
+        auth_method: ClientAuthMethod.NONE,
+        token_binding_method: ClientTokenBindingMethod.NONE,
         built_in: true,
         active: true,
         grant_types: 'authorization_code refresh_token',

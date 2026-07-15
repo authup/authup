@@ -13,11 +13,13 @@ import type {
     IOAuth2TokenVerifier, 
     ISessionManager, 
 } from '../../../../../core/index.ts';
+import type { CertificateSource } from '../../../request/index.ts';
 
 export type HTTPAuthorizationMiddlewareOptions = {
     clientAuthBasic?: boolean,
     robotAuthBasic?: boolean,
     userAuthBasic?: boolean,
+    certificateSource?: CertificateSource,
 };
 
 export type HTTPAuthorizationMiddlewareContext = {

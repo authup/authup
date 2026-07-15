@@ -26,7 +26,8 @@ function createEntity() : Client {
         id: 'f0b1e948-4e69-4b7e-9f0c-1a2b3c4d5e6f',
         active: true,
         built_in: false,
-        is_confidential: true,
+        auth_method: 'secret',
+        token_binding_method: 'none',
         name: 'my-app',
         display_name: null,
         description: null,
@@ -111,8 +112,12 @@ function mountForm(entity: Client) {
                     template: '<textarea />',
                 },
                 VCFormSwitch: {
-                    props: ['modelValue', 'label', 'labelContent'],
+                    props: ['modelValue', 'label', 'labelContent', 'disabled'],
                     template: '<input type="checkbox" />',
+                },
+                VCFormSelect: {
+                    props: ['modelValue', 'options'],
+                    template: '<select />',
                 },
             },
             plugins: [

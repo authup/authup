@@ -38,7 +38,8 @@ describe('refresh-token', () => {
                 secret: confidentialSecret,
                 secret_hashed: false,
                 secret_encrypted: false,
-                is_confidential: true,
+                auth_method: 'secret',
+                token_binding_method: 'none',
             }));
     });
 
@@ -127,7 +128,8 @@ describe('refresh-token', () => {
         const publicClient = await suite.client
             .client
             .create(createFakeClient({
-                is_confidential: false,
+                auth_method: 'none',
+                token_binding_method: 'none',
                 secret: null,
             }));
 
@@ -165,7 +167,8 @@ describe('refresh-token', () => {
                 secret: otherSecret,
                 secret_hashed: false,
                 secret_encrypted: false,
-                is_confidential: true,
+                auth_method: 'secret',
+                token_binding_method: 'none',
             }));
 
         const passwordResponse = await suite.client
@@ -219,7 +222,8 @@ describe('refresh-token', () => {
             secret: masterSecret,
             secret_hashed: false,
             secret_encrypted: false,
-            is_confidential: true,
+            auth_method: 'secret',
+            token_binding_method: 'none',
         }));
         await suite.client.client.create(createFakeClient({
             name,
@@ -227,7 +231,8 @@ describe('refresh-token', () => {
             secret: 'other-realm-secret',
             secret_hashed: false,
             secret_encrypted: false,
-            is_confidential: true,
+            auth_method: 'secret',
+            token_binding_method: 'none',
         }));
 
         const passwordResponse = await suite.client
@@ -258,7 +263,8 @@ describe('refresh-token', () => {
             secret,
             secret_hashed: false,
             secret_encrypted: false,
-            is_confidential: true,
+            auth_method: 'secret',
+            token_binding_method: 'none',
         }));
         const user = await suite.client.user.create(createFakeUser({
             realm_id: realm.id,
@@ -343,7 +349,8 @@ describe('refresh-token', () => {
         const realm = await suite.client.realm.create(createFakeRealm());
         const publicClient = await suite.client.client.create(createFakeClient({
             realm_id: realm.id,
-            is_confidential: false,
+            auth_method: 'none',
+            token_binding_method: 'none',
             secret: null,
         }));
 
@@ -366,7 +373,8 @@ describe('refresh-token', () => {
         const realm = await suite.client.realm.create(createFakeRealm());
         const publicClient = await suite.client.client.create(createFakeClient({
             realm_id: realm.id,
-            is_confidential: false,
+            auth_method: 'none',
+            token_binding_method: 'none',
             secret: null,
         }));
         const user = await suite.client.user.create(createFakeUser({
@@ -398,7 +406,7 @@ describe('refresh-token', () => {
         // confidential client's secret proves its identity, so it may refresh a
         // token minted for another realm — the documented cross-realm password
         // grant (a UUID-identified realm user authenticated via a master-realm
-        // confidential client). Dropping `!client.is_confidential` from the guard
+        // authenticated client). Dropping the public-client check from the guard
         // would break this leg; this is its control.
         const realm = await suite.client.realm.create(createFakeRealm());
         const user = await suite.client.user.create(createFakeUser({

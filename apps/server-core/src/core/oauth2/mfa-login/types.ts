@@ -6,7 +6,11 @@
  */
 
 import type { Session, User } from '@authup/core-kit';
-import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
+import type {
+    OAuth2TokenConfirmation,
+    OAuth2TokenGrantResponse,
+    OAuth2TokenPayload,
+} from '@authup/specs';
 import type { IEventService } from '../../entities/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 import type { ISessionManager } from '../../authentication/index.ts';
@@ -15,6 +19,7 @@ import type { IOAuth2TokenIssuer, IOAuth2TokenRepository } from '../token/index.
 export type OAuth2MfaLoginTicketIssueInput = {
     user: User,
     clientId?: string | null,
+    confirmation?: OAuth2TokenConfirmation,
 };
 
 export type OAuth2MfaLoginTicketIssueOptions = {

@@ -15,9 +15,9 @@ import {
 import { AuthHeaderError } from '@authup/errors';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import {
-    JWTError, 
-    OAuth2SubKind, 
-    OAuth2TokenKind, 
+    JWTError,
+    OAuth2SubKind,
+    OAuth2TokenKind,
     deserializeOAuth2Scope,
 } from '@authup/specs';
 import type { IAppEvent } from 'routup';
@@ -31,17 +31,19 @@ import {
     ClientAuthenticator,
     PolicyEngine,
     RobotAuthenticator,
-    UserAuthenticator, 
+    UserAuthenticator,
+    assertClientCertificateEvidenceValidForBinding,
 } from '../../../../../core/index.ts';
 import type {
-    ICredentialsAuthenticator, 
+    ICredentialsAuthenticator,
     IIdentityResolver,
-    IOAuth2TokenVerifier, 
+    IOAuth2TokenVerifier,
     ISessionManager,
 } from '../../../../../core/index.ts';
 import {
     RequestIdentity,
     RequestPermissionEvaluator,
+    extractClientCertificateEvidence,
     setRequestIdentity,
     setRequestMfaLoginTicket,
     setRequestPermissionEvaluator,
@@ -133,6 +135,7 @@ export class AuthorizationMiddleware {
         header: BearerAuthorizationHeader,
     ) {
         const payload = await this.oauth2TokenVerifier.verify(header.token);
+        this.verifyCertificateBinding(event, payload);
         if (payload.kind === OAuth2TokenKind.MFA) {
             await this.verifyMfaLoginTicket(event, payload);
             return;
@@ -190,6 +193,31 @@ export class AuthorizationMiddleware {
 
         if (identity) {
             setRequestIdentity(event, identity);
+        }
+    }
+
+    protected verifyCertificateBinding(event: IAppEvent, payload: OAuth2TokenPayload): void {
+        if (!payload.cnf) {
+            return;
+        }
+
+        const expectedThumbprint = payload.cnf['x5t#S256'];
+        if (typeof expectedThumbprint !== 'string' || expectedThumbprint.length === 0) {
+            throw JWTError.invalid();
+        }
+
+        try {
+            const evidence = extractClientCertificateEvidence(
+                event,
+                this.options.certificateSource ?? 'disabled',
+            );
+            if (!evidence || evidence.thumbprint !== expectedThumbprint) {
+                throw JWTError.invalid();
+            }
+
+            assertClientCertificateEvidenceValidForBinding(evidence);
+        } catch {
+            throw JWTError.invalid();
         }
     }
 

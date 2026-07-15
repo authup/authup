@@ -5,7 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client, Robot, User } from '@authup/core-kit';
+import type { Robot, User } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import type {
     IAuthFlowMetrics,
@@ -29,6 +29,7 @@ import type {
     IUserAuthenticatorService,
     OAuth2ClientAuthenticator,
 } from '../../../../../core/index.ts';
+import type { CertificateSource } from '../../../request/index.ts';
 
 export type TokenControllerContext = {
     codeVerifier: IOAuth2AuthorizationCodeVerifier,
@@ -57,11 +58,11 @@ export type TokenControllerContext = {
     identityResolver: IIdentityResolver,
     identityPermissionProvider: IIdentityPermissionProvider,
 
-    clientAuthenticator: ICredentialsAuthenticator<Client>
     robotAuthenticator: ICredentialsAuthenticator<Robot>
     userAuthenticator: ICredentialsAuthenticator<User>
 
     oauth2ClientAuthenticator: OAuth2ClientAuthenticator
 
-    realmRepository: IRealmRepository
+    realmRepository: IRealmRepository,
+    certificateSource: CertificateSource,
 };

@@ -114,6 +114,10 @@ export default defineConfig({
                             text: 'Trust Anchors',
                             link: '/guide/user/trust-anchors',
                         },
+                        {
+                            text: 'OAuth Client Certificates',
+                            link: '/guide/user/client-certificates',
+                        },
                     ],
                 },
                 /*
@@ -225,6 +229,10 @@ export default defineConfig({
                         {
                             text: 'Nginx',
                             link: '/guide/deployment/nginx',
+                        },
+                        {
+                            text: 'Traefik',
+                            link: '/guide/deployment/traefik',
                         },
                     ],
                 },

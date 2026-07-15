@@ -30,6 +30,12 @@ export type OAuth2TokenGrantResponse = {
 
 export type OAuth2TokenPayload = JWTClaims & {
     /**
+     * RFC 7800 / RFC 8705 proof-of-possession confirmation. A TLS-bound
+     * token carries the base64url SHA-256 thumbprint of its leaf certificate.
+     */
+    cnf?: OAuth2TokenConfirmation,
+
+    /**
      * Associated session.
      */
     session_id?: string,
@@ -126,6 +132,10 @@ export type OAuth2TokenPayload = JWTClaims & {
      * alongside (drives chain-aware access-token revocation).
      */
     refresh_token_id?: string
+};
+
+export type OAuth2TokenConfirmation = {
+    'x5t#S256': string,
 };
 
 export type OAuth2AccessGrantClaim = {

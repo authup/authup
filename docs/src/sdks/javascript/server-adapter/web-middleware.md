@@ -42,6 +42,26 @@ Contract:
 The optional `tokenByRequest` callback runs only when the `Authorization` header is absent. The consumer
 extracts the token from wherever they like (cookie, custom header, query string) — the adapter does not parse cookies.
 
+## Certificate-bound tokens
+
+If verification returns a token with `cnf.x5t#S256`, `verifyRequest` fails
+closed unless `certificateThumbprintByRequest` returns the same base64url
+SHA-256 thumbprint of the leaf certificate's DER encoding:
+
+```typescript
+const data = await verifyRequest(request, {
+    tokenVerifier,
+    certificateThumbprintByRequest: (request) =>
+        trustedProxyCertificateThumbprint(request),
+});
+```
+
+The callback is the application's TLS/proxy trust boundary. Derive its result
+from a direct TLS connection or a header that a trusted private proxy always
+removes and overwrites; do not return an unchecked public request header. The
+adapter compares the thumbprint only and deliberately does not repeat the
+authorization server's certificate-chain validation.
+
 ## Routup v5
 
 ```typescript
@@ -78,4 +98,3 @@ app.use('*', async (c, next) => {
     await next();
 });
 ```
-

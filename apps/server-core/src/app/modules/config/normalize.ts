@@ -80,6 +80,8 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         port,
         host,
         publicUrl,
+        mtlsPublicUrl: null,
+        certificateSource: 'disabled',
 
         middlewareBody: true,
         middlewareCookie: true,
@@ -145,6 +147,10 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
 
     if (config.mfaRequired && !config.mfaEnabled) {
         throw new AuthupError('mfaRequired requires mfaEnabled.');
+    }
+
+    if (config.mtlsPublicUrl && config.certificateSource === 'disabled') {
+        throw new AuthupError('mtlsPublicUrl requires certificateSource to be enabled.');
     }
 
     // fail loud at boot rather than at first key-store access: wrapped key

@@ -65,7 +65,8 @@ describe('event (realm isolation)', () => {
         // a restricted actor in master holding EVENT_READ at the default `own` scope
         const actorClient = await suite.client.client.create({
             ...createFakeClient(),
-            is_confidential: true,
+            auth_method: 'secret',
+            token_binding_method: 'none',
             secret: actorSecret,
             secret_hashed: false,
             secret_encrypted: false,

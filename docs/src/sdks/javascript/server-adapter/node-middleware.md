@@ -22,6 +22,27 @@ The `createMiddleware` method accepts a configuration object with a `tokenVerifi
 and a `tokenVerifierHandler` callback. The optional `tokenByRequest` callback lets you fall back to an alternative source
 (e.g. a cookie) when the `Authorization` header is missing — the consumer chooses how to extract the value.
 
+For certificate-bound tokens, provide `certificateThumbprintByRequest`. It must
+return the base64url SHA-256 thumbprint of the leaf certificate's DER encoding.
+A bound token fails verification when the callback is absent, returns no
+certificate, or returns a different thumbprint.
+
+With direct Node TLS, one possible resolver is:
+
+```typescript
+import { createHash } from 'node:crypto';
+import type { TLSSocket } from 'node:tls';
+
+const certificateThumbprintByRequest = (req) => {
+    const peer = (req.socket as TLSSocket).getPeerCertificate();
+    return peer.raw ? createHash('sha256').update(peer.raw).digest('base64url') : undefined;
+};
+```
+
+Behind a proxy, derive the value from the proxy's authenticated certificate
+contract instead. Never hash an unchecked public header; the proxy must remove
+and overwrite it, and the backend listener must be private.
+
 ```typescript
 import { Router } from 'routup';
 import { createMiddleware } from '@authup/server-adapter-node';
@@ -44,6 +65,7 @@ const tokenVerifier = new TokenVerifier({
 // setup middleware
 router.use(createMiddleware({
     tokenByRequest: (req) => req.cookies?.[CookieName.ACCESS_TOKEN],
+    certificateThumbprintByRequest,
     tokenVerifier,
     tokenVerifierHandler: (req, data) => {
         console.log(data);
@@ -71,4 +93,3 @@ const data = await verifyRequest(req, { tokenVerifier });
 
 `createMiddleware` is a thin wrapper around `verifyRequest` that calls your `tokenVerifierHandler` on success
 and forwards errors via `next(err)`.
-

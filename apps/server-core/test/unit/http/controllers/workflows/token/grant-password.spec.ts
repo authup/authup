@@ -63,7 +63,8 @@ describe('src/http/controllers/token', () => {
                 secret,
                 secret_hashed: false,
                 secret_encrypted: false,
-                is_confidential: true,
+                auth_method: 'secret',
+                token_binding_method: 'none',
             }));
 
         const response = await suite.client
@@ -87,7 +88,8 @@ describe('src/http/controllers/token', () => {
                 secret,
                 secret_hashed: false,
                 secret_encrypted: false,
-                is_confidential: true,
+                auth_method: 'secret',
+                token_binding_method: 'none',
             }));
 
         await expectClientError(
@@ -244,7 +246,8 @@ describe('src/http/controllers/token', () => {
                 secret,
                 secret_hashed: false,
                 secret_encrypted: false,
-                is_confidential: true,
+                auth_method: 'secret',
+                token_binding_method: 'none',
             }));
         const user = await suite.client.user.create(createFakeUser({
             realm_id: realm.id,

@@ -2,9 +2,10 @@
 
 import { storeToRefs } from 'pinia';
 import type { Client } from '@authup/core-kit';
-import { PermissionName } from '@authup/core-kit';
+import { ClientAuthMethod, PermissionName } from '@authup/core-kit';
 import {
     TranslatorTranslationAppKey,
+    TranslatorTranslationClientKey,
     TranslatorTranslationCommonKey,
     TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
@@ -59,8 +60,20 @@ export default defineComponent({
                 key: TranslatorTranslationCommonKey.ACTIVE,
             },
             {
-                namespace: TranslatorTranslationNamespace.COMMON,
-                key: TranslatorTranslationCommonKey.CONFIDENTIAL,
+                namespace: TranslatorTranslationNamespace.CLIENT,
+                key: TranslatorTranslationClientKey.AUTH_METHOD,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.CLIENT,
+                key: TranslatorTranslationClientKey.AUTH_METHOD_NONE,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.CLIENT,
+                key: TranslatorTranslationClientKey.AUTH_METHOD_SECRET,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.CLIENT,
+                key: TranslatorTranslationClientKey.AUTH_METHOD_TLS,
             },
             {
                 namespace: TranslatorTranslationNamespace.COMMON,
@@ -94,8 +107,8 @@ export default defineComponent({
                 cellClass: 'text-center',
             },
             {
-                key: 'is_confidential',
-                label: translations.confidential,
+                key: 'auth_method',
+                label: translations.authMethod,
                 headerClass: 'text-center',
                 cellClass: 'text-center',
             },
@@ -126,6 +139,17 @@ export default defineComponent({
 
         const NuxtLink = resolveComponent('NuxtLink');
 
+        const authMethodLabel = (method: `${ClientAuthMethod}`) => {
+            switch (method) {
+                case ClientAuthMethod.SECRET:
+                    return translations.authMethodSecret;
+                case ClientAuthMethod.TLS:
+                    return translations.authMethodTls;
+                default:
+                    return translations.authMethodNone;
+            }
+        };
+
         return {
             columns,
             hasEditPermission,
@@ -133,6 +157,7 @@ export default defineComponent({
             handleDeleted,
             query,
             translations,
+            authMethodLabel,
             NuxtLink,
         };
     },
@@ -169,11 +194,8 @@ export default defineComponent({
                         :class="row.active ? 'text-success-600' : 'text-error-600'"
                     />
                 </template>
-                <template #cell-is_confidential="{ row }">
-                    <VCIcon
-                        :name="row.is_confidential ? 'fa6-solid:check' : 'fa6-solid:xmark'"
-                        :class="row.is_confidential ? 'text-success-600' : 'text-error-600'"
-                    />
+                <template #cell-auth_method="{ row }">
+                    {{ authMethodLabel(row.auth_method) }}
                 </template>
                 <template #cell-built_in="{ row }">
                     <VCIcon

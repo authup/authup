@@ -6,7 +6,7 @@
  */
 
 import type { Client } from '@authup/core-kit';
-import { IdentityType } from '@authup/core-kit';
+import { ClientAuthMethod, IdentityType } from '@authup/core-kit';
 import { EntityCredentialsInvalidError, EntityInactiveError } from '@authup/errors';
 import { OAuth2ClientError } from '@authup/specs';
 import type { IIdentityResolver } from '../../../identity/index.ts';
@@ -35,7 +35,7 @@ export class ClientAuthenticator extends BaseCredentialsAuthenticator<Client> {
             throw new EntityInactiveError({ entity: 'client' });
         }
 
-        if (identity.data.is_confidential) {
+        if (identity.data.auth_method === ClientAuthMethod.SECRET) {
             const verified = await this.credentialsService.verify(secret, identity.data);
             if (!verified) {
                 throw new EntityCredentialsInvalidError({ entity: 'client' });

@@ -43,7 +43,8 @@ describe('src/http/controllers/token (id_token amr/acr claims)', () => {
             secret: clientSecret,
             secret_hashed: false,
             secret_encrypted: false,
-            is_confidential: true,
+            auth_method: 'secret',
+            token_binding_method: 'none',
         }));
         for (const name of [ScopeName.GLOBAL, ScopeName.OPEN_ID]) {
             const scope = await suite.client.scope.getOne(name);

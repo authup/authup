@@ -43,7 +43,8 @@ describe('end-session (/logout)', () => {
         realm = await suite.client.realm.create(createFakeRealm());
         client = await suite.client.client.create(createFakeClient({
             realm_id: realm.id,
-            is_confidential: false,
+            auth_method: 'none',
+            token_binding_method: 'none',
             secret: null,
             redirect_uri: REDIRECT_PATTERN,
             post_logout_redirect_uri: REDIRECT_PATTERN,

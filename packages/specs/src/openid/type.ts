@@ -44,6 +44,26 @@ export type OpenIDProviderMetadata = {
     token_endpoint: string,
 
     /**
+     * OAuth 2.0 client authentication methods accepted by the token endpoint.
+     */
+    token_endpoint_auth_methods_supported?: string[],
+
+    /**
+     * RFC 8705: this server can issue certificate-bound access tokens.
+     */
+    tls_client_certificate_bound_access_tokens?: boolean,
+
+    /**
+     * RFC 8705 endpoint aliases exposed through a dedicated mTLS origin.
+     */
+    mtls_endpoint_aliases?: {
+        token_endpoint?: string,
+        introspection_endpoint?: string,
+        revocation_endpoint?: string,
+        userinfo_endpoint?: string,
+    },
+
+    /**
      *  The fully qualified URL of the server’s introspection_endpoint defined by OAuth 2.0 Token Introspection
      */
     introspection_endpoint: string,
