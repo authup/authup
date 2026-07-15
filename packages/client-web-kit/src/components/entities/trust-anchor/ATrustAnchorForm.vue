@@ -123,19 +123,24 @@ export default defineComponent({
         initForm();
 
         const submit = async () => {
-            if (v.$invalid.value) {
+            if (busy.value || v.$invalid.value) {
                 return;
             }
 
-            if (isEditing.value) {
-                await manager.createOrUpdate({
-                    name: form.name,
-                    enabled: form.enabled,
-                });
-                return;
-            }
+            busy.value = true;
+            try {
+                if (isEditing.value) {
+                    await manager.createOrUpdate({
+                        name: form.name,
+                        enabled: form.enabled,
+                    });
+                    return;
+                }
 
-            await manager.createOrUpdate(form as Partial<TrustAnchor>);
+                await manager.createOrUpdate(form as Partial<TrustAnchor>);
+            } finally {
+                busy.value = false;
+            }
         };
 
         const translationsDefault = useTranslations([
