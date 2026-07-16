@@ -7,9 +7,9 @@
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import {
-    BadRequestError,
     EntityConflictError,
     EntityNotFoundError,
+    ValidationError,
     isError as isRawError,
 } from '@authup/errors';
 import type { Key } from '@authup/core-kit';
@@ -24,7 +24,7 @@ import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/serve
 import { AbstractEntityService, AsymmetricKey, createAsymmetricKeyPair } from '@authup/server-kit';
 import { JWKType, JWKUse, JWTAlgorithm } from '@authup/specs';
 import { getRandomValues } from 'uncrypto';
-import { assertCertificateMatchesKey, parseCertificateChain } from '../../key/index.ts';
+import { assertCertificateMatchesKey, isWrappedKeyMaterial, parseCertificateChain } from '../../key/index.ts';
 import type { IKeyRepository, IKeyService, KeyDeleteOptions } from './types.ts';
 
 export type KeyServiceContext = {
@@ -68,6 +68,10 @@ export class KeyService extends AbstractEntityService implements IKeyService {
                         ...this.resourceRealmMatch(entity),
                     }),
                 });
+                // Belt-and-braces: the read projection never selects private
+                // material, but null it explicitly so no future adapter change
+                // can leak it onto a read surface (cf. authentik CVE-2024-42490).
+                entity.decryption_key = null;
                 data.push(entity);
             } catch {
                 total -= 1;
@@ -103,6 +107,9 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             }),
         });
 
+        // Belt-and-braces null of private material (see getMany).
+        entity.decryption_key = null;
+
         return entity;
     }
 
@@ -115,7 +122,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         const validated = await this.validator.run(data, { group: ValidatorGroup.CREATE });
         const { use } = validated;
         if (!use) {
-            throw new BadRequestError('A key use must be specified.');
+            throw new ValidationError('A key use must be specified.');
         }
 
         await this.repository.validateJoinColumns(validated);
@@ -130,7 +137,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         // keys are realm-bound infrastructure — no global (null realm) keys
         // via the API.
         if (!validated.realm_id) {
-            throw new BadRequestError('A realm must be specified.');
+            throw new ValidationError('A realm must be specified.');
         }
 
         await actor.permissionEvaluator.evaluate({
@@ -159,7 +166,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
 
         const certificate = typeof validated.certificate === 'string' ? validated.certificate : null;
         if (certificate && (!validated.decryption_key || use !== JWKUse.SIGNATURE)) {
-            throw new BadRequestError('A certificate requires imported signature key material.');
+            throw new ValidationError('A certificate requires imported signature key material.');
         }
 
         const material = validated.decryption_key ?
@@ -168,14 +175,14 @@ export class KeyService extends AbstractEntityService implements IKeyService {
 
         if (certificate) {
             if (!material.encryptionKey) {
-                throw new BadRequestError('A certificate requires imported signature key material.');
+                throw new ValidationError('A certificate requires imported signature key material.');
             }
 
-            const chain = parseCertificateChain(certificate);
             try {
+                const chain = parseCertificateChain(certificate);
                 assertCertificateMatchesKey(chain, material.encryptionKey);
             } catch (e) {
-                throw new BadRequestError(
+                throw new ValidationError(
                     isRawError(e) ?
                         e.message :
                         'The certificate could not be matched against the imported key material.',
@@ -295,7 +302,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
     }> {
         if (use === JWKUse.ENCRYPTION) {
             if (validated.signature_algorithm) {
-                throw new BadRequestError('An encryption key can not carry a signature algorithm.');
+                throw new ValidationError('An encryption key can not carry a signature algorithm.');
             }
 
             const raw = new Uint8Array(32);
@@ -332,29 +339,36 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         encryptionKey: string | null,
     }> {
         if (!validated.decryption_key) {
-            throw new BadRequestError('Importing key material requires its private part (decryption_key).');
+            throw new ValidationError('Importing key material requires its private part (decryption_key).');
+        }
+
+        // Reject material masquerading as an at-rest KEK-wrapped blob — it
+        // would be treated as wrapped on the next read (and, with a KEK,
+        // fail GCM authentication).
+        if (isWrappedKeyMaterial(validated.decryption_key.trim())) {
+            throw new ValidationError('The imported key material is not valid.');
         }
 
         const decryptionKey = this.normalizeMaterial(validated.decryption_key);
 
         if (use === JWKUse.ENCRYPTION) {
             if (validated.signature_algorithm) {
-                throw new BadRequestError('An encryption key can not carry a signature algorithm.');
+                throw new ValidationError('An encryption key can not carry a signature algorithm.');
             }
 
             if (validated.encryption_key) {
-                throw new BadRequestError('An encryption key holds no public part.');
+                throw new ValidationError('An encryption key holds no public part.');
             }
 
             let byteLength : number;
             try {
                 byteLength = base64ToArrayBuffer(decryptionKey).byteLength;
             } catch {
-                throw new BadRequestError('The key material is not valid base64.');
+                throw new ValidationError('The key material is not valid base64.');
             }
 
             if (byteLength !== 32) {
-                throw new BadRequestError('The key material must be 32 base64-encoded bytes.');
+                throw new ValidationError('The key material must be 32 base64-encoded bytes.');
             }
 
             return {
@@ -366,7 +380,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         }
 
         if (!validated.encryption_key) {
-            throw new BadRequestError('Importing a signature key requires its public part (encryption_key, SPKI).');
+            throw new ValidationError('Importing a signature key requires its public part (encryption_key, SPKI).');
         }
 
         const encryptionKey = this.normalizeMaterial(validated.encryption_key);
@@ -391,7 +405,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             privateJwk = await privateKey.toJWK();
             publicJwk = await publicKey.toJWK();
         } catch {
-            throw new BadRequestError(`The key material could not be imported for ${algorithm}.`);
+            throw new ValidationError(`The key material could not be imported for ${algorithm}.`);
         }
 
         // the public components (RSA: n/e, EC: crv/x/y) must agree — a
@@ -403,7 +417,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
                 publicJwk[component] !== privateJwk[component],
         );
         if (mismatch) {
-            throw new BadRequestError('The private and public key material do not form a pair.');
+            throw new ValidationError('The private and public key material do not form a pair.');
         }
 
         return {
@@ -416,7 +430,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
 
     protected buildAsymmetricOptions(algorithm: `${JWTAlgorithm}`) {
         if (!/^(RS|ES)(256|384|512)$/.test(algorithm)) {
-            throw new BadRequestError(`The signature algorithm ${algorithm} is not supported for stored keys.`);
+            throw new ValidationError(`The signature algorithm ${algorithm} is not supported for stored keys.`);
         }
 
         return AsymmetricKey.buildImportOptionsForJWTAlgorithm(algorithm);

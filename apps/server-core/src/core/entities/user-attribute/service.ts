@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, PermissionError, definePolicyData } from '@authup/access';
-import { BadRequestError, EntityNotFoundError } from '@authup/errors';
+import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import { PermissionName } from '@authup/core-kit';
 import type { UserAttribute } from '@authup/core-kit';
 import { buildErrorMessageForAttribute } from 'validup';
@@ -116,7 +116,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         await this.repository.validateJoinColumns(data);
 
         if (typeof data.name === 'string' && this.reservedNames.has(data.name)) {
-            throw new BadRequestError(`The user-attribute name '${data.name}' collides with a User entity column.`);
+            throw new ValidationError(`The user-attribute name '${data.name}' collides with a User entity column.`);
         }
 
         if (data.user) {
@@ -128,7 +128,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             data.user_id = actor.identity.data.id;
             data.realm_id = actor.identity.data.realm_id;
         } else {
-            throw new BadRequestError(buildErrorMessageForAttribute('user_id'));
+            throw new ValidationError(buildErrorMessageForAttribute('user_id'));
         }
 
         const entity = this.repository.create(data);
@@ -158,7 +158,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         await this.repository.validateJoinColumns(data);
 
         if (typeof data.name === 'string' && this.reservedNames.has(data.name)) {
-            throw new BadRequestError(`The user-attribute name '${data.name}' collides with a User entity column.`);
+            throw new ValidationError(`The user-attribute name '${data.name}' collides with a User entity column.`);
         }
 
         let entity = await this.repository.findOneBy({ id });

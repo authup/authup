@@ -8,7 +8,7 @@
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import type { TrustAnchor } from '@authup/core-kit';
 import { PermissionName, TrustAnchorValidator } from '@authup/core-kit';
-import { BadRequestError, EntityNotFoundError } from '@authup/errors';
+import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
 import { AbstractEntityService } from '@authup/server-kit';
@@ -110,7 +110,7 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
         }
 
         if (!validated.realm_id) {
-            throw new BadRequestError('A realm must be specified.');
+            throw new ValidationError('A realm must be specified.');
         }
 
         await this.repository.validateJoinColumns(validated);
@@ -127,7 +127,7 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
 
         const chain = parseCertificateChain(validated.certificate as string);
         if (!chain[0] || !chain[0].ca) {
-            throw new BadRequestError('A trust anchor must contain a CA certificate.');
+            throw new ValidationError('A trust anchor must contain a CA certificate.');
         }
 
         if (typeof validated.enabled !== 'boolean') {

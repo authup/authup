@@ -7,7 +7,7 @@
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
-import { BadRequestError, EntityNotFoundError } from '@authup/errors';
+import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import {
     PermissionName,
     ROLE_ADMIN_NAME,
@@ -192,7 +192,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         }
 
         if (entity.name === ROLE_ADMIN_NAME) {
-            throw new BadRequestError('The default admin role can not be deleted.');
+            throw new ValidationError('The default admin role can not be deleted.');
         }
 
         await actor.permissionEvaluator.evaluate({

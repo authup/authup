@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
-import { BadRequestError, EntityNotFoundError } from '@authup/errors';
+import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import { PermissionName } from '@authup/core-kit';
 import type { RoleAttribute } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
@@ -112,7 +112,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         await this.repository.validateJoinColumns(data);
 
         if (typeof data.name === 'string' && this.reservedNames.has(data.name)) {
-            throw new BadRequestError(`The role-attribute name '${data.name}' collides with a Role entity column.`);
+            throw new ValidationError(`The role-attribute name '${data.name}' collides with a Role entity column.`);
         }
 
         data.realm_id = data.role.realm_id;
@@ -142,7 +142,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         await this.repository.validateJoinColumns(data);
 
         if (typeof data.name === 'string' && this.reservedNames.has(data.name)) {
-            throw new BadRequestError(`The role-attribute name '${data.name}' collides with a Role entity column.`);
+            throw new ValidationError(`The role-attribute name '${data.name}' collides with a Role entity column.`);
         }
 
         let entity = await this.repository.findOneBy({ id });

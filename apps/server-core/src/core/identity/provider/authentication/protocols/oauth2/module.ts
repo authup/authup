@@ -7,7 +7,7 @@
 
 import type { OAuth2IdentityProvider, OpenIDIdentityProvider, User } from '@authup/core-kit';
 import { buildIdentityProviderAuthorizeCallbackPath } from '@authup/core-kit';
-import { BadRequestError } from '@authup/errors';
+import { ValidationError } from '@authup/errors';
 import type { Result } from '@authup/kit';
 import { extractTokenPayload } from '@authup/server-kit';
 import type { AuthorizeParameters, TokenGrantResponse } from '@hapic/oauth2';
@@ -56,7 +56,7 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
         try {
             return this.client.authorize.buildURL(parameters);
         } catch {
-            throw new BadRequestError(
+            throw new ValidationError(
                 'The identity provider is misconfigured and has an invalid or missing authorize URL.',
             );
         }

@@ -6,6 +6,7 @@
  */
 
 import type { X509Certificate } from '@peculiar/x509';
+import type { Client } from '@authup/core-kit';
 import type { ITrustAnchorRepository } from '../entities/index.ts';
 
 /**
@@ -23,3 +24,11 @@ export type ClientCertificateValidatorContext = {
     trustAnchorRepository: Pick<ITrustAnchorRepository, 'findManyBy'>,
     crypto?: Crypto,
 };
+
+export interface IClientCertificateValidator {
+    validateForBinding(evidence: ClientCertificateEvidence): void;
+    validateForAuthentication(
+        client: Pick<Client, 'id' | 'realm_id'>,
+        evidence: ClientCertificateEvidence,
+    ): Promise<void>;
+}

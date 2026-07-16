@@ -9,7 +9,7 @@ import {
     X509Certificate,
     createPublicKey,
 } from 'node:crypto';
-import { BadRequestError } from '@authup/errors';
+import { ValidationError } from '@authup/errors';
 import { base64URLEncode } from '@authup/kit';
 import type { OAuth2JsonWebKey } from '@authup/specs';
 import { subtle } from 'uncrypto';
@@ -20,13 +20,13 @@ const CERTIFICATE_BLOCK_PATTERN = /-----BEGIN CERTIFICATE-----[\s\S]*?-----END C
 export function parseCertificateChain(pem: string): X509Certificate[] {
     const blocks = pem.match(CERTIFICATE_BLOCK_PATTERN);
     if (!blocks || blocks.length === 0) {
-        throw new BadRequestError('The certificate chain could not be parsed.');
+        throw new ValidationError('The certificate chain could not be parsed.');
     }
 
     try {
         return blocks.map((block) => new X509Certificate(block));
     } catch {
-        throw new BadRequestError('The certificate chain could not be parsed.');
+        throw new ValidationError('The certificate chain could not be parsed.');
     }
 }
 

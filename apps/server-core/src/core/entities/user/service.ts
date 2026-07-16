@@ -7,7 +7,7 @@
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { ValidatorGroup, isUUID } from '@authup/kit';
-import { BadRequestError, EntityNotFoundError } from '@authup/errors';
+import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import {
     PermissionName,
     UserValidator,
@@ -307,7 +307,7 @@ export class UserService extends AbstractEntityService implements IUserService {
             actor.identity.type === 'user' &&
             actor.identity.data.id === id
         ) {
-            throw new BadRequestError('The own user can not be deleted.');
+            throw new ValidationError('The own user can not be deleted.');
         }
 
         const entity = await this.repository.findOneBy({ id });

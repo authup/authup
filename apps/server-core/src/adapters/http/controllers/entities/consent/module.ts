@@ -19,7 +19,7 @@ import { useRequestQuery } from '@routup/basic/query';
 import type { EntityCollectionResponse } from '@authup/core-http-kit';
 import type { IConsentService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { buildActorContext } from '../../../request/index.ts';
+import { buildActorContext, getRequestRealmID } from '../../../request/index.ts';
 
 export type ConsentControllerContext = {
     service: IConsentService,
@@ -42,7 +42,7 @@ export class ConsentController {
         const {
             data,
             meta,
-        } = await this.service.getMany(useRequestQuery(event), actor);
+        } = await this.service.getMany(useRequestQuery(event), actor, { realmId: getRequestRealmID(event) });
 
         return {
             data,
@@ -57,7 +57,7 @@ export class ConsentController {
     ): Promise<Consent> {
         const actor = buildActorContext(event);
 
-        return this.service.getOne(id, actor);
+        return this.service.getOne(id, actor, { realmId: getRequestRealmID(event) });
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
@@ -67,7 +67,7 @@ export class ConsentController {
     ): Promise<Consent> {
         const actor = buildActorContext(event);
 
-        const entity = await this.service.delete(id, actor);
+        const entity = await this.service.delete(id, actor, { realmId: getRequestRealmID(event) });
 
         event.response.status = 202;
         return entity;

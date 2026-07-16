@@ -31,6 +31,13 @@ export class OAuth2TokenRevoker implements IOAuth2TokenRevoker {
 
         await this.repository.removeById(input.jti);
 
+        // Blocklist explicitly from the verified payload. `removeById` only
+        // writes the inactive marker when the id-keyed cache entry is still
+        // present, so after a cache flush/eviction an otherwise-valid access
+        // token would return 202 from /token/revoke yet stay active until its
+        // natural expiry. Idempotent with the removeById path on a cache hit.
+        await this.repository.setInactive(input.jti, input.exp);
+
         // Soft-revoke the durable row so a refresh grant (which trusts the row,
         // not the cache blocklist) rejects an explicitly revoked refresh token.
         if (this.sessionTokenRepository) {

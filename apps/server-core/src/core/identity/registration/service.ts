@@ -13,7 +13,7 @@ import {
     UserValidator,
 } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
-import { BadRequestError, EntityNotFoundError } from '@authup/errors';
+import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import { RegistrationDisabledError } from './error.ts';
 import { randomBytes } from 'node:crypto';
 import { Container } from 'validup';
@@ -101,7 +101,7 @@ export class RegistrationService implements IRegistrationService {
                 });
             } catch {
                 await this.repository.remove(entity);
-                throw new BadRequestError('Registration failed. Could not send activation email.');
+                throw new ValidationError('Registration failed. Could not send activation email.');
             }
         }
 

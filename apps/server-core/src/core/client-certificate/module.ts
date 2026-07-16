@@ -22,21 +22,53 @@ import {
     CLIENT_CERTIFICATE_URI_PREFIX,
     buildClientCertificateURI,
 } from '@authup/core-kit';
-import { BadRequestError } from '@authup/errors';
+import { ValidationError } from '@authup/errors';
 import { base64URLEncode } from '@authup/kit';
 import type {
     ClientCertificateEvidence,
     ClientCertificateValidatorContext,
+    IClientCertificateValidator,
 } from './types.ts';
 
 const MAX_CHAIN_DEPTH = 10;
 const CERTIFICATE_BLOCK_PATTERN = /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g;
 
 /**
+ * Hard ceiling on signature verifications performed while building a single
+ * certification path. A legitimate chain of the maximum accepted length only
+ * needs O(depth²) verifications; the ceiling exists purely to defuse the
+ * factorial backtracking blow-up an attacker can induce with certificates
+ * that mutually "issue" one another (shared key, identical subject/issuer
+ * DNs). Reaching the ceiling is treated as "no path found" (fail closed).
+ */
+const MAX_PATH_SIGNATURE_VERIFICATIONS = 64;
+
+/**
+ * OIDs of the certificate extensions this validator actually processes. A
+ * certificate carrying a *critical* extension outside this set is rejected
+ * (RFC 5280 §4.2): an unprocessed critical constraint must never be silently
+ * ignored. Because RFC 5280 requires the NameConstraints extension to be
+ * marked critical, this also fails a name-constrained CA closed rather than
+ * trusting a chain whose name constraints we do not evaluate.
+ */
+const HANDLED_CRITICAL_EXTENSION_OIDS = new Set<string>([
+    '2.5.29.19', // basicConstraints
+    '2.5.29.15', // keyUsage
+    '2.5.29.37', // extKeyUsage
+    '2.5.29.17', // subjectAltName
+    '2.5.29.35', // authorityKeyIdentifier
+    '2.5.29.14', // subjectKeyIdentifier
+]);
+
+const WEAK_SIGNATURE_HASHES = new Set<string>(['SHA-1', 'MD5', 'MD2', 'MD4']);
+
+type SignatureVerificationBudget = { remaining: number };
+
+/**
  * Validates client certificates without performing network I/O. AIA, CRL,
  * and OCSP retrieval are deliberately outside the external-PKI first slice.
  */
-export class ClientCertificateValidator {
+export class ClientCertificateValidator implements IClientCertificateValidator {
     protected trustAnchorRepository: ClientCertificateValidatorContext['trustAnchorRepository'];
 
     protected crypto?: Crypto;
@@ -57,6 +89,8 @@ export class ClientCertificateValidator {
         this.validateForBinding(evidence);
         assertClientCertificatePurpose(evidence.certificate);
         assertClientCertificateIdentity(evidence.certificate, client.id);
+        assertCertificateExtensionsUnderstood(evidence.certificate);
+        assertStrongSignature(evidence.certificate);
 
         const anchors = await this.trustAnchorRepository.findManyBy({
             realm_id: client.realm_id,
@@ -69,21 +103,29 @@ export class ClientCertificateValidator {
                 continue;
             }
 
+            const budget: SignatureVerificationBudget = { remaining: MAX_PATH_SIGNATURE_VERIFICATIONS };
             const path = await buildPath(
                 evidence.certificate,
                 evidence.chain,
                 anchorCertificate,
+                budget,
                 this.crypto,
             );
             if (!path) {
                 continue;
             }
 
-            assertCertificationPath(path);
-            return;
+            try {
+                assertCertificationPath(path);
+                return;
+            } catch {
+                // A chain reaching this anchor failed its CA constraints;
+                // another enabled anchor may still yield a valid path.
+                continue;
+            }
         }
 
-        throw new BadRequestError('The client certificate is not trusted in this realm.');
+        throw new ValidationError('The client certificate is not trusted in this realm.');
     }
 }
 
@@ -94,20 +136,20 @@ export function assertClientCertificateEvidenceValidForBinding(
 
     const constraints = evidence.certificate.getExtension(BasicConstraintsExtension);
     if (constraints?.ca) {
-        throw new BadRequestError('A CA certificate cannot be used as a client certificate.');
+        throw new ValidationError('A CA certificate cannot be used as a client certificate.');
     }
 }
 
 export function parseClientCertificateChain(pem: string): X509Certificate[] {
     const blocks = pem.match(CERTIFICATE_BLOCK_PATTERN);
     if (!blocks || blocks.length === 0) {
-        throw new BadRequestError('The certificate chain could not be parsed.');
+        throw new ValidationError('The certificate chain could not be parsed.');
     }
 
     try {
         return blocks.map((block) => new X509Certificate(block));
     } catch {
-        throw new BadRequestError('The certificate chain could not be parsed.');
+        throw new ValidationError('The certificate chain could not be parsed.');
     }
 }
 
@@ -137,9 +179,10 @@ async function buildPath(
     leaf: X509Certificate,
     intermediates: X509Certificate[],
     anchor: X509Certificate,
+    budget: SignatureVerificationBudget,
     crypto?: Crypto,
 ): Promise<X509Certificate[] | undefined> {
-    return continuePath(leaf, intermediates, anchor, [leaf], crypto);
+    return continuePath(leaf, intermediates, anchor, [leaf], budget, crypto);
 }
 
 async function continuePath(
@@ -147,6 +190,7 @@ async function continuePath(
     available: X509Certificate[],
     anchor: X509Certificate,
     path: X509Certificate[],
+    budget: SignatureVerificationBudget,
     crypto?: Crypto,
 ): Promise<X509Certificate[] | undefined> {
     if (path.length > MAX_CHAIN_DEPTH) {
@@ -157,7 +201,7 @@ async function continuePath(
         return path;
     }
 
-    if (await isIssuedBy(current, anchor, crypto)) {
+    if (await isIssuedBy(current, anchor, budget, crypto)) {
         return [...path, anchor];
     }
 
@@ -166,7 +210,7 @@ async function continuePath(
         if (
             !candidate ||
             sameCertificate(current, candidate) ||
-            !await isIssuedBy(current, candidate, crypto)
+            !await isIssuedBy(current, candidate, budget, crypto)
         ) {
             continue;
         }
@@ -176,6 +220,7 @@ async function continuePath(
             available.filter((_item, candidateIndex) => candidateIndex !== index),
             anchor,
             [...path, candidate],
+            budget,
             crypto,
         );
         if (next) {
@@ -189,6 +234,7 @@ async function continuePath(
 async function isIssuedBy(
     certificate: X509Certificate,
     issuer: X509Certificate,
+    budget: SignatureVerificationBudget,
     crypto?: Crypto,
 ): Promise<boolean> {
     if (certificate.issuer !== issuer.subject) {
@@ -202,6 +248,15 @@ async function isIssuedBy(
             return false;
         }
     }
+
+    // Spend from the shared verification budget only for the expensive
+    // cryptographic check (the DN / key-id pre-filters above are cheap). Once
+    // exhausted, treat every further edge as unverified so a maliciously
+    // crafted mutually-issuing certificate set cannot force factorial work.
+    if (budget.remaining <= 0) {
+        return false;
+    }
+    budget.remaining -= 1;
 
     try {
         return await certificate.verify({
@@ -223,24 +278,34 @@ function sameCertificate(left: X509Certificate, right: X509Certificate): boolean
 
 function assertCertificationPath(path: X509Certificate[]): void {
     if (path.length < 2) {
-        throw new BadRequestError('The client certificate chain is invalid.');
+        throw new ValidationError('The client certificate chain is invalid.');
     }
 
     for (let index = 1; index < path.length; index += 1) {
         const certificate = path[index];
         if (!certificate) {
-            throw new BadRequestError('The client certificate chain is invalid.');
+            throw new ValidationError('The client certificate chain is invalid.');
+        }
+
+        // The last path element is the configured trust anchor, trusted a
+        // priori — its self-signature algorithm and any critical extensions
+        // it carries are the operator's responsibility, so the RFC 5280
+        // conformance checks below apply only to the issued intermediates.
+        const isAnchor = index === path.length - 1;
+        if (!isAnchor) {
+            assertCertificateExtensionsUnderstood(certificate);
+            assertStrongSignature(certificate);
         }
 
         assertCertificateCurrent(certificate);
         const constraints = certificate.getExtension(BasicConstraintsExtension);
         if (!constraints?.ca) {
-            throw new BadRequestError('The client certificate chain contains a non-CA issuer.');
+            throw new ValidationError('The client certificate chain contains a non-CA issuer.');
         }
 
         const keyUsage = certificate.getExtension(KeyUsagesExtension);
         if (keyUsage && (keyUsage.usages & KeyUsageFlags.keyCertSign) === 0) {
-            throw new BadRequestError('A client certificate issuer cannot sign certificates.');
+            throw new ValidationError('A client certificate issuer cannot sign certificates.');
         }
 
         // `index - 1` is the number of non-leaf CA certificates below this
@@ -250,7 +315,7 @@ function assertCertificationPath(path: X509Certificate[]): void {
             typeof constraints.pathLength === 'number' &&
             (index - 1) > constraints.pathLength
         ) {
-            throw new BadRequestError('The client certificate chain exceeds a CA path-length constraint.');
+            throw new ValidationError('The client certificate chain exceeds a CA path-length constraint.');
         }
     }
 }
@@ -261,12 +326,12 @@ function assertClientCertificatePurpose(certificate: X509Certificate): void {
         extendedKeyUsage &&
         !extendedKeyUsage.usages.includes(ExtendedKeyUsage.clientAuth)
     ) {
-        throw new BadRequestError('The certificate is not valid for TLS client authentication.');
+        throw new ValidationError('The certificate is not valid for TLS client authentication.');
     }
 
     const keyUsage = certificate.getExtension(KeyUsagesExtension);
     if (keyUsage && (keyUsage.usages & KeyUsageFlags.digitalSignature) === 0) {
-        throw new BadRequestError('The certificate cannot prove possession of its private key.');
+        throw new ValidationError('The certificate cannot prove possession of its private key.');
     }
 }
 
@@ -281,7 +346,7 @@ function assertClientCertificateIdentity(certificate: X509Certificate, clientId:
 
     const expected = buildClientCertificateURI(clientId);
     if (authupUris.length !== 1 || authupUris[0] !== expected) {
-        throw new BadRequestError(`The certificate must contain exactly one Authup client URI SAN: ${expected}.`);
+        throw new ValidationError(`The certificate must contain exactly one Authup client URI SAN: ${expected}.`);
     }
 }
 
@@ -291,6 +356,23 @@ function assertCertificateCurrent(certificate: X509Certificate): void {
         certificate.notBefore.getTime() > now ||
         certificate.notAfter.getTime() < now
     ) {
-        throw new BadRequestError('The client certificate is not currently valid.');
+        throw new ValidationError('The client certificate is not currently valid.');
+    }
+}
+
+function assertCertificateExtensionsUnderstood(certificate: X509Certificate): void {
+    for (const extension of certificate.extensions) {
+        if (extension.critical && !HANDLED_CRITICAL_EXTENSION_OIDS.has(extension.type)) {
+            throw new ValidationError(
+                `The certificate carries an unsupported critical extension (${extension.type}).`,
+            );
+        }
+    }
+}
+
+function assertStrongSignature(certificate: X509Certificate): void {
+    const hash = certificate.signatureAlgorithm?.hash?.name;
+    if (typeof hash === 'string' && WEAK_SIGNATURE_HASHES.has(hash.toUpperCase())) {
+        throw new ValidationError(`The certificate is signed with a weak algorithm (${hash}).`);
     }
 }

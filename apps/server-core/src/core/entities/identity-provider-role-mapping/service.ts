@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, PermissionError, definePolicyData } from '@authup/access';
-import { BadRequestError, EntityConflictError, EntityNotFoundError } from '@authup/errors';
+import { EntityConflictError, EntityNotFoundError, ValidationError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
 import { IdentityProviderRoleMappingValidator, PermissionName } from '@authup/core-kit';
 import type { IdentityProviderRoleMapping, Role } from '@authup/core-kit';
@@ -108,7 +108,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
             validated.provider_realm_id &&
             validated.role_realm_id !== validated.provider_realm_id
         ) {
-            throw new BadRequestError('It is not possible to map an identity provider to a role of another realm.');
+            throw new ValidationError('It is not possible to map an identity provider to a role of another realm.');
         }
 
         if (validated.role && actor.identity) {

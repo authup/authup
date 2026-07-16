@@ -7,7 +7,7 @@
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
-import { BadRequestError, EntityNotFoundError } from '@authup/errors';
+import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import {
     PermissionName,
     REALM_MASTER_NAME,
@@ -133,7 +133,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
             });
 
             if (entity.name === REALM_MASTER_NAME && isPropertySet(validated, 'name') && entity.name !== validated.name) {
-                throw new BadRequestError(`The name of the ${REALM_MASTER_NAME} can not be changed.`);
+                throw new ValidationError(`The name of the ${REALM_MASTER_NAME} can not be changed.`);
             }
 
             entity = this.repository.merge(entity, validated);
@@ -195,7 +195,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
         }
 
         if (entity.built_in) {
-            throw new BadRequestError('A built-in realm can not be deleted.');
+            throw new ValidationError('A built-in realm can not be deleted.');
         }
 
         await actor.permissionEvaluator.evaluate({

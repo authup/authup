@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 import type { OAuth2IdentityProvider, OpenIDIdentityProvider, Realm } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
-import { BadRequestError, isBadRequestError } from '@authup/errors';
+import { ValidationError, isValidationError } from '@authup/errors';
 import type { IIdentityProviderAccountManager } from '../../../../../src/core';
 import {
     IdentityProviderGoogleAuthenticator,
@@ -79,21 +79,21 @@ describe('IdentityProviderOAuth2Authenticator', () => {
         expect(parsed.searchParams.get('state')).toEqual('abc');
     });
 
-    it('should throw a BadRequestError for a missing authorize url', () => {
+    it('should throw a ValidationError for a missing authorize url', () => {
         const authenticator = createAuthenticator('');
 
         expect(() => authenticator.buildRedirectURL({ state: 'abc' }))
-            .toThrow(BadRequestError);
+            .toThrow(ValidationError);
     });
 
-    it('should throw a BadRequestError for a malformed authorize url', () => {
+    it('should throw a ValidationError for a malformed authorize url', () => {
         const authenticator = createAuthenticator('not-a-valid-url');
 
         try {
             authenticator.buildRedirectURL({ state: 'abc' });
             expect.fail('Expected buildRedirectURL to throw');
         } catch (e) {
-            expect(isBadRequestError(e)).toBeTruthy();
+            expect(isValidationError(e)).toBeTruthy();
         }
     });
 

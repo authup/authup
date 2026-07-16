@@ -87,6 +87,12 @@ export class ConsentRepositoryAdapter implements IConsentRepository {
             });
         }
 
+        if (options.realmId) {
+            // nested `/realms/:realmId/consents` mount — mandatory constraint,
+            // not overridable by a rapiq filter
+            qb.andWhere('consent.realm_id = :realmId', { realmId: options.realmId });
+        }
+
         const [entities, total] = await qb.getManyAndCount();
 
         return {

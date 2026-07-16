@@ -13,16 +13,17 @@ import {
 } from '@authup/core-kit';
 import type { OAuth2TokenConfirmation } from '@authup/specs';
 import { OAuth2ClientError } from '@authup/specs';
+import { isValidationError } from '@authup/errors';
 import { ClientCredentialsService } from '../../authentication/credential/index.ts';
 import type {
     ClientCertificateEvidence,
-    ClientCertificateValidator,
+    IClientCertificateValidator,
 } from '../../client-certificate/index.ts';
 import type { IIdentityResolver } from '../../identity/index.ts';
 
 export type OAuth2ClientAuthenticatorContext = {
     identityResolver: IIdentityResolver,
-    certificateValidator: ClientCertificateValidator,
+    certificateValidator: IClientCertificateValidator,
 };
 
 /**
@@ -36,7 +37,7 @@ export class OAuth2ClientAuthenticator {
 
     protected credentialsService: ClientCredentialsService;
 
-    protected certificateValidator?: ClientCertificateValidator;
+    protected certificateValidator?: IClientCertificateValidator;
 
     constructor(ctx: IIdentityResolver | OAuth2ClientAuthenticatorContext) {
         if ('identityResolver' in ctx) {
@@ -90,10 +91,16 @@ export class OAuth2ClientAuthenticator {
 
                 try {
                     await this.certificateValidator.validateForAuthentication(client, certificateEvidence);
-                } catch {
-                    // Authentication errors deliberately reveal neither the
-                    // certificate identity nor which realm anchor failed.
-                    throw OAuth2ClientError.invalid();
+                } catch (e) {
+                    // A validation failure deliberately reveals neither the
+                    // certificate identity nor which realm anchor failed. An
+                    // infrastructure fault (e.g. the trust-anchor store being
+                    // unreachable) must NOT masquerade as a bad certificate —
+                    // let it surface as a server error instead.
+                    if (isValidationError(e)) {
+                        throw OAuth2ClientError.invalid();
+                    }
+                    throw e;
                 }
                 break;
             default:
