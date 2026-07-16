@@ -1732,7 +1732,15 @@ realm trust is only an authentication concern. Refresh must present the same
 thumbprint, and rotation preserves the claim. Authup's authorization
 middleware and `server-adapter-*` consumers fail closed on a bound token unless
 the resource request supplies that thumbprint; resource servers compare only
-the signed thumbprint and do not repeat chain validation.
+the signed thumbprint and do not repeat chain validation. On the adapter side
+the enforcement lives inside `@authup/server-adapter-kit`'s
+`TokenVerifier.verify(token, options?)` itself (issue #3268):
+`options.certificateThumbprint` takes the presented thumbprint as a value or a
+lazy provider (invoked only when the payload carries `cnf`), and the check runs
+on every verify — cached results included, since the binding is per-request
+evidence. The `verifyRequest`/`verifySocket` wrappers merely forward a lazy
+per-request provider; a direct `verify(token)` call on a bound token without a
+thumbprint fails closed (`JWTError`), never open.
 
 ### PKCE for public clients
 

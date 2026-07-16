@@ -29,6 +29,8 @@ const sampleData: TokenVerificationData = {
     permissions: [],
 };
 
+const verifyOptions = { certificateThumbprint: expect.any(Function) };
+
 describe('verifyRequest (node)', () => {
     it('resolves with undefined when no Authorization header and no fallback token', async () => {
         const verifier = createVerifier(vi.fn());
@@ -46,7 +48,31 @@ describe('verifyRequest (node)', () => {
         );
 
         expect(result).toBe(sampleData);
-        expect(verify).toHaveBeenCalledWith('abc.def.ghi');
+        expect(verify).toHaveBeenCalledWith('abc.def.ghi', verifyOptions);
+    });
+
+    // Binding enforcement lives inside TokenVerifier.verify() (see
+    // @authup/server-adapter-kit's verifier.spec) — the wrapper only
+    // forwards a lazy per-request thumbprint provider.
+    it('forwards a lazy certificate thumbprint provider into verify', async () => {
+        const verify = vi.fn<ITokenVerifier['verify']>(async () => sampleData);
+        const certificateThumbprintByRequest = vi.fn(async () => 'expected-thumbprint');
+
+        const req = createRequest({ authorization: 'Bearer abc' });
+        await verifyRequest(req, {
+            tokenVerifier: createVerifier(verify),
+            certificateThumbprintByRequest,
+        });
+
+        expect(certificateThumbprintByRequest).not.toHaveBeenCalled();
+
+        const [, options] = verify.mock.calls[0];
+        const provider = options?.certificateThumbprint;
+        expect(provider).toBeTypeOf('function');
+        if (typeof provider === 'function') {
+            await expect(provider()).resolves.toBe('expected-thumbprint');
+            expect(certificateThumbprintByRequest).toHaveBeenCalledWith(req);
+        }
     });
 
     it('rejects with BearerTokenMalformedError for a malformed Authorization header', async () => {
@@ -96,7 +122,7 @@ describe('verifyRequest (node)', () => {
 
         expect(result).toBe(sampleData);
         expect(tokenByRequest).toHaveBeenCalledWith(req);
-        expect(verify).toHaveBeenCalledWith('cookie-token');
+        expect(verify).toHaveBeenCalledWith('cookie-token', verifyOptions);
     });
 
     it('does not invoke tokenByRequest when the Authorization header is present', async () => {
@@ -112,7 +138,7 @@ describe('verifyRequest (node)', () => {
         );
 
         expect(tokenByRequest).not.toHaveBeenCalled();
-        expect(verify).toHaveBeenCalledWith('abc');
+        expect(verify).toHaveBeenCalledWith('abc', verifyOptions);
     });
 
     it('accepts a tokenByRequest value that already starts with Bearer', async () => {
@@ -124,7 +150,7 @@ describe('verifyRequest (node)', () => {
             tokenByRequest,
         });
 
-        expect(verify).toHaveBeenCalledWith('cookie-token');
+        expect(verify).toHaveBeenCalledWith('cookie-token', verifyOptions);
     });
 
     it('treats opaque tokens that share the "Bearer" prefix-letters as bare tokens', async () => {
@@ -136,6 +162,6 @@ describe('verifyRequest (node)', () => {
             tokenByRequest,
         });
 
-        expect(verify).toHaveBeenCalledWith('BearerLooksFakeButOpaque');
+        expect(verify).toHaveBeenCalledWith('BearerLooksFakeButOpaque', verifyOptions);
     });
 });

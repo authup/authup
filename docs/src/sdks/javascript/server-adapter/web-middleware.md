@@ -62,6 +62,12 @@ removes and overwrites; do not return an unchecked public request header. The
 adapter compares the thumbprint only and deliberately does not repeat the
 authorization server's certificate-chain validation.
 
+Enforcement lives inside `TokenVerifier.verify()` itself — the helper only
+forwards a lazy thumbprint provider. Calling `verify(token)` directly on a
+bound token therefore also fails closed; pass the presented thumbprint via
+`verify(token, { certificateThumbprint })` (a value or a provider, invoked
+only when the token carries a `cnf` binding).
+
 ## Routup v5
 
 ```typescript
