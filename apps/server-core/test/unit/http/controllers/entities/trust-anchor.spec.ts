@@ -136,4 +136,31 @@ describe('src/http/controllers/trust-anchor', () => {
             { status: 404 },
         );
     });
+
+    it('should record attributed, metadata-only lifecycle audit events', async () => {
+        const created = await suite.client.trustAnchor.create({
+            name: 'audited-client-ca',
+            certificate: CA_CERTIFICATE,
+            realm_id: realm.id,
+        });
+        await suite.client.trustAnchor.update(created.id, { enabled: false });
+        await suite.client.trustAnchor.delete(created.id);
+
+        const { data } = await suite.client.event.getMany({ filter: { ref_type: 'trustAnchor', ref_id: created.id } });
+
+        expect(data).toHaveLength(3);
+        expect(new Set(data.map((row) => row.name)))
+            .toEqual(new Set(['created', 'updated', 'deleted']));
+        for (const row of data) {
+            expect(row.realm_id).toEqual(realm.id);
+            expect(row.actor_type).toEqual('user');
+            expect(row.actor_name).toEqual('admin');
+            expect(row.data).toMatchObject({ name: 'audited-client-ca' });
+            // metadata only — never certificate bytes
+            expect(JSON.stringify(row.data)).not.toContain('BEGIN CERTIFICATE');
+        }
+
+        const updatedRow = data.find((row) => row.name === 'updated');
+        expect(updatedRow!.data!.diff).toEqual({ enabled: { next: false, previous: true } });
+    });
 });

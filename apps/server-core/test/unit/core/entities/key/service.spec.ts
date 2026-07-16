@@ -7,8 +7,15 @@
 
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import type { Key } from '@authup/core-kit';
-import { KeyStatus, PermissionName } from '@authup/core-kit';
+import type { Key, User } from '@authup/core-kit';
+import {
+    EntityType,
+    EventName,
+    EventScope,
+    IdentityType,
+    KeyStatus,
+    PermissionName,
+} from '@authup/core-kit';
 import { ErrorCode, isAuthupError } from '@authup/errors';
 import { AsymmetricKey, createAsymmetricKeyPair } from '@authup/server-kit';
 import { JWKType, JWKUse, JWTAlgorithm } from '@authup/specs';
@@ -24,6 +31,7 @@ import {
     createMasterRealmActor,
 } from '@authup/server-test-kit';
 import { KeyService } from '../../../../../src/core/entities/key/service.ts';
+import { FakeEventService } from '../../helpers/index.ts';
 import { FakeKeyRepository } from './fake-repository.ts';
 
 const CERTIFICATE = readFileSync(
@@ -374,6 +382,125 @@ describe('core/entities/key/service', () => {
 
             await service.delete(seeded.id, createAllowAllActor());
             expect(repository.getAll()).toHaveLength(0);
+        });
+    });
+
+    describe('audit events', () => {
+        let eventService: FakeEventService;
+
+        const buildActor = (actorId: string) => {
+            const actor = createAllowAllActor();
+            actor.identity = {
+                type: IdentityType.USER,
+                data: { id: actorId, name: 'admin' } as User,
+            };
+            return actor;
+        };
+
+        beforeEach(() => {
+            eventService = new FakeEventService();
+            service = new KeyService({
+                repository,
+                eventService,
+                requestContext: () => ({
+                    actorType: null,
+                    actorId: null,
+                    actorName: null,
+                    requestPath: '/keys',
+                    requestMethod: 'POST',
+                    requestIpAddress: '203.0.113.7',
+                    requestUserAgent: 'vitest',
+                }),
+            });
+        });
+
+        it('records a metadata-only created event (never key material)', async () => {
+            const actorId = randomUUID();
+            const realmId = randomUUID();
+            const entity = await service.create({ use: JWKUse.SIGNATURE, realm_id: realmId }, buildActor(actorId));
+
+            expect(eventService.recordCalls).toHaveLength(1);
+            const [call] = eventService.recordCalls;
+            expect(call).toMatchObject({
+                scope: EventScope.ENTITY,
+                name: EventName.CREATED,
+                refType: EntityType.KEY,
+                refId: entity.id,
+                realmId,
+                actorType: IdentityType.USER,
+                actorId,
+                actorName: 'admin',
+                requestPath: '/keys',
+                requestIpAddress: '203.0.113.7',
+            });
+            // exact payload — id/name/use/status metadata only
+            expect(call.data).toEqual({
+                name: entity.name,
+                use: JWKUse.SIGNATURE,
+                status: KeyStatus.ACTIVE,
+            });
+            const serialized = JSON.stringify(call);
+            expect(serialized).not.toContain('decryption_key');
+            expect(serialized).not.toContain('encryption_key');
+            expect(serialized).not.toContain('certificate');
+        });
+
+        it('records an updated event carrying the scalar diff (status change)', async () => {
+            const [seeded] = repository.seed([buildKey({ name: 'primary', status: KeyStatus.ACTIVE })]);
+
+            await service.update(seeded.id, { status: KeyStatus.DISABLED }, buildActor(randomUUID()));
+
+            expect(eventService.recordCalls).toHaveLength(1);
+            const [call] = eventService.recordCalls;
+            expect(call.name).toEqual(EventName.UPDATED);
+            expect(call.data).toEqual({
+                name: 'primary',
+                use: JWKUse.SIGNATURE,
+                status: KeyStatus.DISABLED,
+                diff: { status: { next: KeyStatus.DISABLED, previous: KeyStatus.ACTIVE } },
+            });
+        });
+
+        it('records an updated event without a diff when nothing changed', async () => {
+            const [seeded] = repository.seed([buildKey()]);
+
+            await service.update(seeded.id, {}, buildActor(randomUUID()));
+
+            expect(eventService.recordCalls).toHaveLength(1);
+            expect(eventService.recordCalls[0].data!.diff).toBeUndefined();
+        });
+
+        it('records a deleted event and flags a forced crypto-shred', async () => {
+            const [seeded] = repository.seed([buildKey({ use: JWKUse.ENCRYPTION, type: JWKType.OCT })]);
+            repository.blobReferences = 3;
+
+            await service.delete(seeded.id, buildActor(randomUUID()), { force: true });
+
+            expect(eventService.recordCalls).toHaveLength(1);
+            const [call] = eventService.recordCalls;
+            expect(call.name).toEqual(EventName.DELETED);
+            expect(call.refId).toEqual(seeded.id);
+            expect(call.data).toMatchObject({ use: JWKUse.ENCRYPTION, force: true });
+        });
+
+        it('records a plain deleted event without the force flag', async () => {
+            const [seeded] = repository.seed([buildKey()]);
+
+            await service.delete(seeded.id, buildActor(randomUUID()));
+
+            expect(eventService.recordCalls).toHaveLength(1);
+            expect(eventService.recordCalls[0].data!.force).toBeUndefined();
+        });
+
+        it('records nothing when the mutation fails', async () => {
+            await expect(service.update(randomUUID(), { name: 'renamed' }, buildActor(randomUUID())))
+                .rejects.toThrow();
+            const [seeded] = repository.seed([buildKey({ use: JWKUse.ENCRYPTION, type: JWKType.OCT })]);
+            repository.blobReferences = 1;
+            await expect(service.delete(seeded.id, buildActor(randomUUID())))
+                .rejects.toThrow();
+
+            expect(eventService.recordCalls).toHaveLength(0);
         });
     });
 });

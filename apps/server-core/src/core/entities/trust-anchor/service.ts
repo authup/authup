@@ -7,16 +7,26 @@
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import type { TrustAnchor } from '@authup/core-kit';
-import { PermissionName, TrustAnchorValidator } from '@authup/core-kit';
+import {
+    EntityType,
+    EventName,
+    EventScope,
+    PermissionName,
+    TrustAnchorValidator,
+} from '@authup/core-kit';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
 import { AbstractEntityService } from '@authup/server-kit';
+import { buildEntityDiff } from '../event/index.ts';
+import type { EventRequestContext, IEventService } from '../event/index.ts';
 import { parseCertificateChain } from '../../key/index.ts';
 import type { ITrustAnchorRepository, ITrustAnchorService } from './types.ts';
 
 export type TrustAnchorServiceContext = {
     repository: ITrustAnchorRepository,
+    eventService?: IEventService,
+    requestContext?: () => EventRequestContext | undefined,
 };
 
 const PERMISSION_NAMES = [
@@ -30,10 +40,16 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
 
     protected validator: TrustAnchorValidator;
 
+    protected eventService?: IEventService;
+
+    protected requestContext?: () => EventRequestContext | undefined;
+
     constructor(ctx: TrustAnchorServiceContext) {
         super();
         this.repository = ctx.repository;
         this.validator = new TrustAnchorValidator();
+        this.eventService = ctx.eventService;
+        this.requestContext = ctx.requestContext;
     }
 
     async getMany(
@@ -134,8 +150,12 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
             validated.enabled = true;
         }
 
-        const entity = this.repository.create(validated);
-        return this.repository.save(entity);
+        let entity = this.repository.create(validated);
+        entity = await this.repository.save(entity);
+
+        await this.recordEvent(EventName.CREATED, entity, actor);
+
+        return entity;
     }
 
     async update(
@@ -171,8 +191,15 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
             }, entity);
         }
 
+        const previous = this.pickAuditFields(entity);
+
         entity = this.repository.merge(entity, validated);
-        return this.repository.save(entity);
+        entity = await this.repository.save(entity);
+
+        const diff = buildEntityDiff(this.pickAuditFields(entity), previous);
+        await this.recordEvent(EventName.UPDATED, entity, actor, { ...(Object.keys(diff).length > 0 ? { diff } : {}) });
+
+        return entity;
     }
 
     async delete(
@@ -198,6 +225,55 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
         await this.repository.remove(entity);
         entity.id = entityId;
 
+        await this.recordEvent(EventName.DELETED, entity, actor);
+
         return entity;
+    }
+
+    // ------------------------------------------------------------------
+
+    /**
+     * Metadata-only audit trail for trust-anchor lifecycle operations
+     * (issue #3269) — trust anchors have no entity subscriber, so the
+     * security-relevant mutations (an enabled CA anchor turns on mTLS client
+     * auth for a realm) are recorded explicitly. The payload never carries
+     * certificate bytes.
+     */
+    protected async recordEvent(
+        name: `${EventName}`,
+        entity: TrustAnchor,
+        actor: ActorContext,
+        data: Record<string, any> = {},
+    ): Promise<void> {
+        const requestContext = this.requestContext ?
+            this.requestContext() :
+            undefined;
+
+        await this.eventService?.record({
+            scope: EventScope.ENTITY,
+            name,
+            refType: EntityType.TRUST_ANCHOR,
+            refId: entity.id,
+            realmId: entity.realm_id ?? null,
+            actorType: actor.identity?.type ?? null,
+            actorId: actor.identity?.data.id ?? null,
+            actorName: actor.identity?.data.name ?? null,
+            requestPath: requestContext?.requestPath ?? null,
+            requestMethod: requestContext?.requestMethod ?? null,
+            requestIpAddress: requestContext?.requestIpAddress ?? null,
+            requestUserAgent: requestContext?.requestUserAgent ?? null,
+            data: {
+                name: entity.name,
+                enabled: entity.enabled,
+                ...data,
+            },
+        });
+    }
+
+    protected pickAuditFields(entity: TrustAnchor): Record<string, any> {
+        return {
+            name: entity.name,
+            enabled: entity.enabled,
+        };
     }
 }

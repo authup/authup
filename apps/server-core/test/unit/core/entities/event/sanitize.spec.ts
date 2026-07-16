@@ -22,6 +22,12 @@ describe('sanitizeEventData', () => {
         ['session_id', 'b0e8b3d2-0000-0000-0000-000000000000'],
         ['jti', 'b0e8b3d2-1111-1111-1111-111111111111'],
         ['revoked_session_id', 'b0e8b3d2-2222-2222-2222-222222222222'],
+        ['name', 'sig-primary'],
+        ['use', 'enc'],
+        ['status', 'disabled'],
+        ['enabled', 'true'],
+        ['force', 'true'],
+        ['kind', 'totp'],
     ])('keeps the allowlisted scalar key %s', (key, value) => {
         expect(sanitizeEventData({ [key]: value })).toEqual({ [key]: value });
     });

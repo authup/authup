@@ -109,6 +109,7 @@ import {
     UserController,
     UserPermissionController,
     UserRoleController,
+    useRequestEventContext,
 } from '../../../../adapters/http/index.ts';
 import {
     ActivateController,
@@ -776,7 +777,11 @@ export class HTTPControllerModule {
     createKeyController(container: IContainer) {
         // the DI singleton carries the optional KEK cipher — never construct
         // a fresh adapter here.
-        const service = new KeyService({ repository: container.resolve(OAuth2InjectionToken.KeyStore) });
+        const service = new KeyService({
+            repository: container.resolve(OAuth2InjectionToken.KeyStore),
+            eventService: container.resolve(DatabaseInjectionKey.EventService),
+            requestContext: useRequestEventContext,
+        });
         return new KeyController({ service });
     }
 
@@ -784,7 +789,11 @@ export class HTTPControllerModule {
         const repository = new TrustAnchorRepositoryAdapter(
             container.resolve(DatabaseInjectionKey.DataSource),
         );
-        const service = new TrustAnchorService({ repository });
+        const service = new TrustAnchorService({
+            repository,
+            eventService: container.resolve(DatabaseInjectionKey.EventService),
+            requestContext: useRequestEventContext,
+        });
         return new TrustAnchorController({ service });
     }
 

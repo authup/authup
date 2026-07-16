@@ -2306,8 +2306,15 @@ every read and the create response null `decryption_key` (authentik
 CVE-2024-42490 is the cautionary tale). Typed client: `client.key.*`
 (`KeyCreatePayload`/`KeyUpdatePayload`; `delete(id, { force })`). Keys have
 **no entity subscriber** (deliberate — `afterInsert` content would carry raw
-private material onto the realtime bus), so no entity-CRUD audit rows;
-explicit `EventService` emits are a follow-up.
+private material onto the realtime bus); the audit trail comes from
+explicit, metadata-only `EventService.record()` emits inside `KeyService`
+(issue #3269): ENTITY-scope `created`/`updated`/`deleted` rows with
+`ref_type: key`, actor from the `ActorContext`, request attribution via the
+injected `useRequestEventContext` getter, `data` limited to
+`name`/`use`/`status` plus a scalar `diff` on update and `force: true` on a
+forced crypto-shred — never `decryption_key`/`encryption_key`/`certificate`.
+The emits ride the default (long) event retention, not the short
+entity-churn TTL, and are not gated by `eventLogEntityEnabled`.
 
 **Imported certificates (plan 071 Stage B):** create may attach an immutable
 PEM certificate chain only to an **imported signature key** (never generated
@@ -2338,7 +2345,11 @@ as keys. The web UI presents the collection as **Trusted CAs** inside `/keys`.
 Stage C intentionally provides only schema, CRUD API, typed client, and UI:
 the `enabled` anchors are consumed later by plan 072 when proxy-forwarded
 client certificates are authenticated for RFC 8705. Like keys, trust anchors
-have no entity subscriber. The table was folded into migration
+have no entity subscriber; `TrustAnchorService` records the same explicit
+ENTITY-scope lifecycle events as `KeyService` (`ref_type: trustAnchor`,
+`data`: `name`/`enabled` + update diff — never certificate bytes; creating
+an enabled CA anchor is what turns on mTLS client auth for a realm, so it
+must be visible in `auth_events`). The table was folded into migration
 `1783856507391` while its release window remained open.
 
 - **`use` hygiene is load-bearing:** the signer supports oct (HMAC) keys, so
@@ -2510,7 +2521,14 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   key), `REFRESH_REPLAY_DETECTED` (`revokeFamily`), `AUTHORIZE`
   (`OAuth2Authorization.authorize()`, `data.reason: autoConsent|consent` from
   `client.built_in`), `LOGOUT` (end-session hint revoke), `REGISTER` /
-  `ACCOUNT_ACTIVATED`, `PASSWORD_RESET_REQUESTED/COMPLETED`. Token issuance
+  `ACCOUNT_ACTIVATED`, `PASSWORD_RESET_REQUESTED/COMPLETED`, and the
+  **key / trust-anchor lifecycle** (issue #3269): `KeyService` /
+  `TrustAnchorService` record ENTITY-scope `created`/`updated`/`deleted`
+  rows themselves (both entities are deliberately subscriber-less, so the
+  CRUD bridge never sees them) — metadata-only `data`
+  (`name`/`use`/`status`/`enabled`, update `diff`, `force` on crypto-shred),
+  actor from the `ActorContext`, request attribution via the injected
+  `useRequestEventContext` getter, default (long) retention. Token issuance
   emits **no rows** (plan 016's `auth_session_tokens` already inventories every
   token; volume control).
 - **Entity-CRUD bridge (plan 057 Stage 2, hub's EntityEventHandler):**

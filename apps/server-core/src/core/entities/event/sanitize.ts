@@ -16,6 +16,9 @@ import { EVENT_DIFF_SECRET_KEY_REGEX } from './diff.ts';
  * smuggle a secret past the boundary (this subsumes a denylist: password,
  * client_secret, code, code_verifier, *token* etc. are simply never listed).
  * session_id / jti / revoked_session_id are opaque correlation ids, not PII.
+ * name / use / status / enabled / force describe key & trust-anchor lifecycle
+ * operations (issue #3269) — canonical identifiers and enum/flag metadata,
+ * never material. kind is the MFA authenticator kind (totp/email/...).
  *
  * The single structured exception is `diff` (entity-CRUD bridge): it survives
  * only as a one-level object of `{ next, previous }` scalar pairs, keys
@@ -35,6 +38,12 @@ const DATA_KEY_ALLOW_LIST = [
     'session_id',
     'jti',
     'revoked_session_id',
+    'name',
+    'use',
+    'status',
+    'enabled',
+    'force',
+    'kind',
 ] as const;
 
 const DATA_VALUE_MAX_LENGTH = 512;
