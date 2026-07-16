@@ -492,6 +492,15 @@ describe('core/entities/key/service', () => {
             expect(eventService.recordCalls[0].data!.force).toBeUndefined();
         });
 
+        it('never flags a signature-key delete as a crypto-shred (force is enc-only)', async () => {
+            const [seeded] = repository.seed([buildKey()]);
+
+            await service.delete(seeded.id, buildActor(randomUUID()), { force: true });
+
+            expect(eventService.recordCalls).toHaveLength(1);
+            expect(eventService.recordCalls[0].data!.force).toBeUndefined();
+        });
+
         it('records nothing when the mutation fails', async () => {
             await expect(service.update(randomUUID(), { name: 'renamed' }, buildActor(randomUUID())))
                 .rejects.toThrow();

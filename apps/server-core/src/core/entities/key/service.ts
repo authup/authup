@@ -310,7 +310,10 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         entity.id = entityId;
         entity.decryption_key = null;
 
-        await this.recordEvent(EventName.DELETED, entity, actor, { ...(options.force ? { force: true } : {}) });
+        // force only carries crypto-shred semantics for encryption keys — a
+        // sig-key delete with a stray force flag must not read as a shred.
+        const forcedCryptoShred = entity.use === JWKUse.ENCRYPTION && !!options.force;
+        await this.recordEvent(EventName.DELETED, entity, actor, { ...(forcedCryptoShred ? { force: true } : {}) });
 
         return entity;
     }
