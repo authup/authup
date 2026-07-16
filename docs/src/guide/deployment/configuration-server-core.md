@@ -9,6 +9,9 @@ The environment variables in the .env file variant can also be provided via runt
 Always change the default admin password (`start123`) and robot secret before deploying to production.
 :::
 
+For MFA enforcement behavior and its federated-login, password-grant, feature-toggle,
+and cache-availability boundaries, see [Multi-factor authentication](./configuration-server-core-mfa.md).
+
 ::: code-group
 
 ```typescript [authup.server.core.ts]

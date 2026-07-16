@@ -34,6 +34,20 @@ describe('src/cache/adapters/memory', () => {
             await cache.drop('lock');
             expect(await cache.add('lock', 1)).toBe(true);
         });
+
+        it('renews and releases only for the current owner', async () => {
+            const cache = new MemoryCache();
+
+            await cache.add('lock', 'first', { ttl: 5_000 });
+
+            expect(await cache.renewIfValue('lock', 'second', 10_000)).toBe(false);
+            expect(await cache.dropIfValue('lock', 'second')).toBe(false);
+            expect(await cache.get('lock')).toBe('first');
+
+            expect(await cache.renewIfValue('lock', 'first', 10_000)).toBe(true);
+            expect(await cache.dropIfValue('lock', 'first')).toBe(true);
+            expect(await cache.get('lock')).toBeNull();
+        });
     });
 
     describe('increment (atomic counter)', () => {

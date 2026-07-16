@@ -60,6 +60,23 @@ export class MemoryCache implements ICache {
         return true;
     }
 
+    async renewIfValue(key: string, value: string, ttl: number): Promise<boolean> {
+        if (this.instance.get(key) !== value) {
+            return false;
+        }
+
+        this.instance.set(key, value, { ttl });
+        return true;
+    }
+
+    async dropIfValue(key: string, value: string): Promise<boolean> {
+        if (this.instance.get(key) !== value) {
+            return false;
+        }
+
+        return this.instance.delete(key);
+    }
+
     async increment(key: string, value = 1, options: CacheSetOptions = {}): Promise<number> {
         // The read + write run in a single synchronous tick (no await
         // between), so this is atomic within the single-threaded process.
