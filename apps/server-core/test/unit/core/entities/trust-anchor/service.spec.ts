@@ -7,8 +7,14 @@
 
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import type { TrustAnchor } from '@authup/core-kit';
-import { PermissionName } from '@authup/core-kit';
+import type { TrustAnchor, User } from '@authup/core-kit';
+import {
+    EntityType,
+    EventName,
+    EventScope,
+    IdentityType,
+    PermissionName,
+} from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
 import {
     createAllowAllActor,
@@ -22,6 +28,7 @@ import {
     it,
 } from 'vitest';
 import { TrustAnchorService } from '../../../../../src/core/entities/trust-anchor/service.ts';
+import { FakeEventService } from '../../helpers/index.ts';
 import { FakeTrustAnchorRepository } from './fake-repository.ts';
 
 const CA_CERTIFICATE = readFileSync(
@@ -181,6 +188,100 @@ describe('core/entities/trust-anchor/service', () => {
             const deleted = await service.delete(seeded.id, createAllowAllActor());
             expect(deleted.id).toEqual(seeded.id);
             expect(repository.getAll()).toHaveLength(0);
+        });
+    });
+
+    describe('audit events', () => {
+        let eventService: FakeEventService;
+
+        const buildActor = (actorId: string) => {
+            const actor = createAllowAllActor();
+            actor.identity = {
+                type: IdentityType.USER,
+                data: { id: actorId, name: 'admin' } as User,
+            };
+            return actor;
+        };
+
+        beforeEach(() => {
+            eventService = new FakeEventService();
+            service = new TrustAnchorService({
+                repository,
+                eventService,
+                requestContext: () => ({
+                    actorType: null,
+                    actorId: null,
+                    actorName: null,
+                    requestPath: '/trust-anchors',
+                    requestMethod: 'POST',
+                    requestIpAddress: '203.0.113.7',
+                    requestUserAgent: 'vitest',
+                }),
+            });
+        });
+
+        it('records a metadata-only created event (never certificate bytes)', async () => {
+            const actorId = randomUUID();
+            const realmId = randomUUID();
+            const entity = await service.create({
+                name: 'audited-ca',
+                certificate: CA_CERTIFICATE,
+                realm_id: realmId,
+            }, buildActor(actorId));
+
+            expect(eventService.recordCalls).toHaveLength(1);
+            const [call] = eventService.recordCalls;
+            expect(call).toMatchObject({
+                scope: EventScope.ENTITY,
+                name: EventName.CREATED,
+                refType: EntityType.TRUST_ANCHOR,
+                refId: entity.id,
+                realmId,
+                actorType: IdentityType.USER,
+                actorId,
+                actorName: 'admin',
+                requestPath: '/trust-anchors',
+                requestIpAddress: '203.0.113.7',
+            });
+            expect(call.data).toEqual({ name: 'audited-ca', enabled: true });
+            expect(JSON.stringify(call)).not.toContain('BEGIN CERTIFICATE');
+        });
+
+        it('records an updated event carrying the scalar diff (enabled flip)', async () => {
+            const [seeded] = repository.seed([buildTrustAnchor({ name: 'primary-ca', enabled: true })]);
+
+            await service.update(seeded.id, { enabled: false }, buildActor(randomUUID()));
+
+            expect(eventService.recordCalls).toHaveLength(1);
+            const [call] = eventService.recordCalls;
+            expect(call.name).toEqual(EventName.UPDATED);
+            expect(call.data).toEqual({
+                name: 'primary-ca',
+                enabled: false,
+                diff: { enabled: { next: false, previous: true } },
+            });
+        });
+
+        it('records a deleted event', async () => {
+            const [seeded] = repository.seed([buildTrustAnchor()]);
+
+            await service.delete(seeded.id, buildActor(randomUUID()));
+
+            expect(eventService.recordCalls).toHaveLength(1);
+            const [call] = eventService.recordCalls;
+            expect(call.name).toEqual(EventName.DELETED);
+            expect(call.refType).toEqual(EntityType.TRUST_ANCHOR);
+            expect(call.refId).toEqual(seeded.id);
+        });
+
+        it('records nothing when the mutation fails', async () => {
+            await expect(service.create({
+                name: 'leaf-only',
+                certificate: NON_CA_CERTIFICATE,
+                realm_id: randomUUID(),
+            }, buildActor(randomUUID()))).rejects.toThrow();
+
+            expect(eventService.recordCalls).toHaveLength(0);
         });
     });
 });

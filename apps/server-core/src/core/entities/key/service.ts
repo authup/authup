@@ -13,22 +13,33 @@ import {
     isError as isRawError,
 } from '@authup/errors';
 import type { Key } from '@authup/core-kit';
-import { KeyStatus, KeyValidator, PermissionName } from '@authup/core-kit';
 import {
-    ValidatorGroup, 
-    arrayBufferToBase64, 
-    base64ToArrayBuffer, 
+    EntityType,
+    EventName,
+    EventScope,
+    KeyStatus,
+    KeyValidator,
+    PermissionName,
+} from '@authup/core-kit';
+import {
+    ValidatorGroup,
+    arrayBufferToBase64,
+    base64ToArrayBuffer,
     createNanoID,
 } from '@authup/kit';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
 import { AbstractEntityService, AsymmetricKey, createAsymmetricKeyPair } from '@authup/server-kit';
 import { JWKType, JWKUse, JWTAlgorithm } from '@authup/specs';
 import { getRandomValues } from 'uncrypto';
+import { buildEntityDiff } from '../event/index.ts';
+import type { EventRequestContext, IEventService } from '../event/index.ts';
 import { assertCertificateMatchesKey, isWrappedKeyMaterial, parseCertificateChain } from '../../key/index.ts';
 import type { IKeyRepository, IKeyService, KeyDeleteOptions } from './types.ts';
 
 export type KeyServiceContext = {
     repository: IKeyRepository;
+    eventService?: IEventService;
+    requestContext?: () => EventRequestContext | undefined;
 };
 
 const PERMISSION_NAMES = [
@@ -42,10 +53,16 @@ export class KeyService extends AbstractEntityService implements IKeyService {
 
     protected validator: KeyValidator;
 
+    protected eventService?: IEventService;
+
+    protected requestContext?: () => EventRequestContext | undefined;
+
     constructor(ctx: KeyServiceContext) {
         super();
         this.repository = ctx.repository;
         this.validator = new KeyValidator();
+        this.eventService = ctx.eventService;
+        this.requestContext = ctx.requestContext;
     }
 
     async getMany(
@@ -204,6 +221,8 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         // metadata + public part only (authentik CVE-2024-42490).
         entity.decryption_key = null;
 
+        await this.recordEvent(EventName.CREATED, entity, actor);
+
         return entity;
     }
 
@@ -242,10 +261,15 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             }, entity);
         }
 
+        const previous = this.pickAuditFields(entity);
+
         entity = this.repository.merge(entity, validated);
         await this.repository.save(entity);
 
         entity.decryption_key = null;
+
+        const diff = buildEntityDiff(this.pickAuditFields(entity), previous);
+        await this.recordEvent(EventName.UPDATED, entity, actor, { ...(Object.keys(diff).length > 0 ? { diff } : {}) });
 
         return entity;
     }
@@ -286,10 +310,61 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         entity.id = entityId;
         entity.decryption_key = null;
 
+        // force only carries crypto-shred semantics for encryption keys — a
+        // sig-key delete with a stray force flag must not read as a shred.
+        const forcedCryptoShred = entity.use === JWKUse.ENCRYPTION && !!options.force;
+        await this.recordEvent(EventName.DELETED, entity, actor, { ...(forcedCryptoShred ? { force: true } : {}) });
+
         return entity;
     }
 
     // ------------------------------------------------------------------
+
+    /**
+     * Metadata-only audit trail for key lifecycle operations (issue #3269) —
+     * keys deliberately have no entity subscriber (private material must stay
+     * off the realtime/audit bus), so the security-relevant mutations are
+     * recorded explicitly. The payload never carries key material.
+     */
+    protected async recordEvent(
+        name: `${EventName}`,
+        entity: Key,
+        actor: ActorContext,
+        data: Record<string, any> = {},
+    ): Promise<void> {
+        const requestContext = this.requestContext ?
+            this.requestContext() :
+            undefined;
+
+        await this.eventService?.record({
+            scope: EventScope.ENTITY,
+            name,
+            refType: EntityType.KEY,
+            refId: entity.id,
+            realmId: entity.realm_id ?? null,
+            actorType: actor.identity?.type ?? null,
+            actorId: actor.identity?.data.id ?? null,
+            actorName: actor.identity?.data.name ?? null,
+            requestPath: requestContext?.requestPath ?? null,
+            requestMethod: requestContext?.requestMethod ?? null,
+            requestIpAddress: requestContext?.requestIpAddress ?? null,
+            requestUserAgent: requestContext?.requestUserAgent ?? null,
+            data: {
+                name: entity.name,
+                use: entity.use,
+                status: entity.status,
+                ...data,
+            },
+        });
+    }
+
+    protected pickAuditFields(entity: Key): Record<string, any> {
+        return {
+            name: entity.name,
+            priority: entity.priority,
+            status: entity.status,
+        };
+    }
 
     protected async generateMaterial(
         validated: Partial<Key>,

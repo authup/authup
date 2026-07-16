@@ -236,4 +236,32 @@ describe('src/http/controllers/key', () => {
 
         expect(response.data.realm_id).toEqual(realm.id);
     });
+
+    it('should record attributed, metadata-only lifecycle audit events', async () => {
+        const created = await suite.client.key.create({
+            use: JWKUse.SIGNATURE,
+            name: 'audited-key',
+            realm_id: realm.id,
+        });
+        await suite.client.key.update(created.id, { status: KeyStatus.PASSIVE });
+        await suite.client.key.delete(created.id);
+
+        const { data } = await suite.client.event.getMany({ filter: { ref_type: 'key', ref_id: created.id } });
+
+        expect(data).toHaveLength(3);
+        expect(new Set(data.map((row) => row.name)))
+            .toEqual(new Set(['created', 'updated', 'deleted']));
+        for (const row of data) {
+            expect(row.realm_id).toEqual(realm.id);
+            expect(row.actor_type).toEqual('user');
+            expect(row.actor_name).toEqual('admin');
+            expect(row.request_method).toBeTruthy();
+            expect(row.data).toMatchObject({ name: 'audited-key', use: JWKUse.SIGNATURE });
+            // metadata only — never key material
+            expect(JSON.stringify(row.data)).not.toMatch(/decryption|encryption|certificate/);
+        }
+
+        const updatedRow = data.find((row) => row.name === 'updated');
+        expect(updatedRow!.data!.diff).toEqual({ status: { next: KeyStatus.PASSIVE, previous: KeyStatus.ACTIVE } });
+    });
 });
