@@ -134,7 +134,7 @@ export type UserAuthenticatorEnrollResultMeta = {
 };
 
 export type UserAuthenticatorEnrollResult = {
-    entity: UserAuthenticator,
+    data: UserAuthenticator,
     meta: UserAuthenticatorEnrollResultMeta,
 };
 
