@@ -13,8 +13,18 @@ import type { TokenCreator } from '@authup/core-http-kit';
 import type { ITokenVerifierCache } from './cache';
 
 export interface ITokenVerifier {
-    verify(token: string) : Promise<TokenVerificationData>
+    verify(token: string, options?: TokenVerifyOptions) : Promise<TokenVerificationData>
 }
+
+export type TokenVerifyOptions = {
+    /**
+     * RFC 8705: SHA-256 DER thumbprint of the client certificate presented
+     * alongside the token, or a lazy provider for it (only invoked when the
+     * token carries a `cnf` binding). A certificate-bound token fails
+     * verification unless the resolved thumbprint matches `cnf.x5t#S256`.
+     */
+    certificateThumbprint?: string | (() => string | undefined | Promise<string | undefined>),
+};
 
 export type TokenVerifierContext = {
     baseURL: string,

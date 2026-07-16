@@ -27,12 +27,14 @@ import {
     verifyToken,
 } from '@authup/server-kit';
 import { importJWK } from 'jose';
+import { assertTokenCertificateBinding } from '../certificate-binding';
 import type { ITokenVerifierCache } from './cache';
 import type {
-    ITokenVerifier, 
-    TokenVerificationData, 
-    TokenVerificationDataInput, 
+    ITokenVerifier,
+    TokenVerificationData,
+    TokenVerificationDataInput,
     TokenVerifierContext,
+    TokenVerifyOptions,
 } from './types';
 
 export class TokenVerifier implements ITokenVerifier {
@@ -62,15 +64,27 @@ export class TokenVerifier implements ITokenVerifier {
         }
     }
 
-    async verify(token: string) : Promise<TokenVerificationData> {
+    async verify(token: string, options: TokenVerifyOptions = {}) : Promise<TokenVerificationData> {
         if (this.interceptorMounted) {
-            return this.verifyRemote(token);
+            return this.verifyRemote(token, options);
         }
 
-        return this.verifyLocal(token);
+        return this.verifyLocal(token, options);
     }
 
-    async verifyLocal(token: string) : Promise<TokenVerificationData> {
+    async verifyLocal(token: string, options: TokenVerifyOptions = {}) : Promise<TokenVerificationData> {
+        const output = await this.resolveLocal(token);
+        await this.assertCertificateBinding(output, options);
+        return output;
+    }
+
+    async verifyRemote(token: string, options: TokenVerifyOptions = {}) : Promise<TokenVerificationData> {
+        const output = await this.resolveRemote(token);
+        await this.assertCertificateBinding(output, options);
+        return output;
+    }
+
+    protected async resolveLocal(token: string) : Promise<TokenVerificationData> {
         let output: TokenVerificationData | undefined;
         if (this.cache) {
             output = await this.cache.get(token);
@@ -136,7 +150,7 @@ export class TokenVerifier implements ITokenVerifier {
         return output;
     }
 
-    async verifyRemote(token: string) : Promise<TokenVerificationData> {
+    protected async resolveRemote(token: string) : Promise<TokenVerificationData> {
         let output: TokenVerificationData | undefined;
         if (this.cache) {
             output = await this.cache.get(token);
@@ -218,6 +232,29 @@ export class TokenVerifier implements ITokenVerifier {
         }
 
         return secondsDiff;
+    }
+
+    /**
+     * RFC 8705: a certificate-bound token (`cnf.x5t#S256`) fails closed
+     * unless the caller supplies the presented certificate's thumbprint.
+     * Runs on every verify — cached results included, since the binding is
+     * per-request evidence, not a property of the token alone.
+     *
+     * @protected
+     */
+    protected async assertCertificateBinding(
+        data: TokenVerificationData,
+        options: TokenVerifyOptions,
+    ) : Promise<void> {
+        if (!data.cnf) {
+            return;
+        }
+
+        const thumbprint = typeof options.certificateThumbprint === 'function' ?
+            await options.certificateThumbprint() :
+            options.certificateThumbprint;
+
+        assertTokenCertificateBinding(data, thumbprint);
     }
 
     protected transform(input: TokenVerificationDataInput) : TokenVerificationData {

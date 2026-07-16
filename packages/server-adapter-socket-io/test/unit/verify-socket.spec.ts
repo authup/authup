@@ -29,6 +29,8 @@ const sampleData: TokenVerificationData = {
     permissions: [],
 };
 
+const verifyOptions = { certificateThumbprint: expect.any(Function) };
+
 describe('verifySocket', () => {
     it('resolves with undefined when no token is present', async () => {
         const verify = vi.fn();
@@ -43,14 +45,38 @@ describe('verifySocket', () => {
         const result = await verifySocket(createSocket({ token: 'abc.def.ghi' }), { tokenVerifier: createVerifier(verify) });
 
         expect(result).toBe(sampleData);
-        expect(verify).toHaveBeenCalledWith('abc.def.ghi');
+        expect(verify).toHaveBeenCalledWith('abc.def.ghi', verifyOptions);
     });
 
     it('strips a Bearer prefix from the handshake token', async () => {
         const verify = vi.fn(async () => sampleData);
         await verifySocket(createSocket({ token: 'Bearer abc.def.ghi' }), { tokenVerifier: createVerifier(verify) });
 
-        expect(verify).toHaveBeenCalledWith('abc.def.ghi');
+        expect(verify).toHaveBeenCalledWith('abc.def.ghi', verifyOptions);
+    });
+
+    // Binding enforcement lives inside TokenVerifier.verify() (see
+    // @authup/server-adapter-kit's verifier.spec) — the wrapper only
+    // forwards a lazy per-socket thumbprint provider.
+    it('forwards a lazy certificate thumbprint provider into verify', async () => {
+        const verify = vi.fn<ITokenVerifier['verify']>(async () => sampleData);
+        const certificateThumbprintBySocket = vi.fn(async () => 'expected-thumbprint');
+
+        const socket = createSocket({ token: 'abc' });
+        await verifySocket(socket, {
+            tokenVerifier: createVerifier(verify),
+            certificateThumbprintBySocket,
+        });
+
+        expect(certificateThumbprintBySocket).not.toHaveBeenCalled();
+
+        const [, options] = verify.mock.calls[0];
+        const provider = options?.certificateThumbprint;
+        expect(provider).toBeTypeOf('function');
+        if (typeof provider === 'function') {
+            await expect(provider()).resolves.toBe('expected-thumbprint');
+            expect(certificateThumbprintBySocket).toHaveBeenCalledWith(socket);
+        }
     });
 
     it('rejects with BearerTokenMalformedError on a malformed Bearer-prefixed token', async () => {
@@ -94,7 +120,7 @@ describe('verifySocket', () => {
 
         expect(result).toBe(sampleData);
         expect(tokenBySocket).toHaveBeenCalledWith(socket);
-        expect(verify).toHaveBeenCalledWith('header-token');
+        expect(verify).toHaveBeenCalledWith('header-token', verifyOptions);
     });
 
     it('does not invoke tokenBySocket when handshake.auth.token is present', async () => {
@@ -107,6 +133,6 @@ describe('verifySocket', () => {
         });
 
         expect(tokenBySocket).not.toHaveBeenCalled();
-        expect(verify).toHaveBeenCalledWith('abc');
+        expect(verify).toHaveBeenCalledWith('abc', verifyOptions);
     });
 });

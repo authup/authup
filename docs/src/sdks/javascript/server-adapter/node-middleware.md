@@ -43,6 +43,11 @@ Behind a proxy, derive the value from the proxy's authenticated certificate
 contract instead. Never hash an unchecked public header; the proxy must remove
 and overwrite it, and the backend listener must be private.
 
+Enforcement lives inside `TokenVerifier.verify()` itself — the middleware only
+forwards a lazy thumbprint provider. Calling `verify(token)` directly on a
+bound token therefore also fails closed; pass the presented thumbprint via
+`verify(token, { certificateThumbprint })`.
+
 ```typescript
 import { Router } from 'routup';
 import { createMiddleware } from '@authup/server-adapter-node';

@@ -24,6 +24,8 @@ const sampleData: TokenVerificationData = {
     permissions: [],
 };
 
+const verifyOptions = { certificateThumbprint: expect.any(Function) };
+
 describe('verifyRequest', () => {
     it('resolves with undefined when no Authorization header and no fallback token', async () => {
         const verifier = createVerifier(vi.fn());
@@ -41,36 +43,31 @@ describe('verifyRequest', () => {
         );
 
         expect(result).toBe(sampleData);
-        expect(verify).toHaveBeenCalledWith('abc.def.ghi');
+        expect(verify).toHaveBeenCalledWith('abc.def.ghi', verifyOptions);
     });
 
-    it('fails closed for a certificate-bound token when no certificate is resolved', async () => {
-        const verify = vi.fn(async () => ({
-            ...sampleData,
-            cnf: { 'x5t#S256': 'expected-thumbprint' },
-        }));
-
-        await expect(verifyRequest(
-            new Request('http://localhost/', { headers: { authorization: 'Bearer bound-token' } }),
-            { tokenVerifier: createVerifier(verify) },
-        )).rejects.toThrow();
-    });
-
-    it('accepts a certificate-bound token only when the resolved thumbprint matches', async () => {
-        const data: TokenVerificationData = {
-            ...sampleData,
-            cnf: { 'x5t#S256': 'expected-thumbprint' },
-        };
+    // Binding enforcement lives inside TokenVerifier.verify() (see
+    // @authup/server-adapter-kit's verifier.spec) — the wrapper only
+    // forwards a lazy per-request thumbprint provider.
+    it('forwards a lazy certificate thumbprint provider into verify', async () => {
+        const verify = vi.fn<ITokenVerifier['verify']>(async () => sampleData);
         const certificateThumbprintByRequest = vi.fn(async () => 'expected-thumbprint');
 
-        const request = new Request('http://localhost/', { headers: { authorization: 'Bearer bound-token' } });
-        const result = await verifyRequest(request, {
-            tokenVerifier: createVerifier(vi.fn(async () => data)),
+        const request = new Request('http://localhost/', { headers: { authorization: 'Bearer abc' } });
+        await verifyRequest(request, {
+            tokenVerifier: createVerifier(verify),
             certificateThumbprintByRequest,
         });
 
-        expect(result).toBe(data);
-        expect(certificateThumbprintByRequest).toHaveBeenCalledWith(request);
+        expect(certificateThumbprintByRequest).not.toHaveBeenCalled();
+
+        const [, options] = verify.mock.calls[0];
+        const provider = options?.certificateThumbprint;
+        expect(provider).toBeTypeOf('function');
+        if (typeof provider === 'function') {
+            await expect(provider()).resolves.toBe('expected-thumbprint');
+            expect(certificateThumbprintByRequest).toHaveBeenCalledWith(request);
+        }
     });
 
     it('rejects with BearerTokenMalformedError for a malformed Authorization header', async () => {
@@ -120,7 +117,7 @@ describe('verifyRequest', () => {
 
         expect(result).toBe(sampleData);
         expect(tokenByRequest).toHaveBeenCalledWith(request);
-        expect(verify).toHaveBeenCalledWith('cookie-token');
+        expect(verify).toHaveBeenCalledWith('cookie-token', verifyOptions);
     });
 
     it('does not invoke tokenByRequest when the Authorization header is present', async () => {
@@ -136,7 +133,7 @@ describe('verifyRequest', () => {
         );
 
         expect(tokenByRequest).not.toHaveBeenCalled();
-        expect(verify).toHaveBeenCalledWith('abc');
+        expect(verify).toHaveBeenCalledWith('abc', verifyOptions);
     });
 
     it('accepts a tokenByRequest value that already starts with Bearer', async () => {
@@ -148,7 +145,7 @@ describe('verifyRequest', () => {
             tokenByRequest,
         });
 
-        expect(verify).toHaveBeenCalledWith('cookie-token');
+        expect(verify).toHaveBeenCalledWith('cookie-token', verifyOptions);
     });
 
     it('treats opaque tokens that share the "Bearer" prefix-letters as bare tokens', async () => {
@@ -160,6 +157,6 @@ describe('verifyRequest', () => {
             tokenByRequest,
         });
 
-        expect(verify).toHaveBeenCalledWith('BearerLooksFakeButOpaque');
+        expect(verify).toHaveBeenCalledWith('BearerLooksFakeButOpaque', verifyOptions);
     });
 });

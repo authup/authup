@@ -33,6 +33,15 @@ export const TokenPayload : OAuth2TokenIntrospectionResponse = {
     iat: Math.floor(Date.now() / 1000),
 };
 
+export const TokenCertificateThumbprint = 'expected-thumbprint';
+
+export const BoundTokenPayload : OAuth2TokenIntrospectionResponse = {
+    ...TokenPayload,
+    cnf: { 'x5t#S256': TokenCertificateThumbprint },
+};
+
+export const BoundTokenID = 'bound-token';
+
 export async function introspectToken(data: TokenIntrospectParameters = {}) : Promise<OAuth2TokenIntrospectionResponse> {
     switch (data.token) {
         case ErrorCode.JWT_INVALID: {
@@ -40,6 +49,9 @@ export async function introspectToken(data: TokenIntrospectParameters = {}) : Pr
         }
         case ErrorCode.JWT_EXPIRED: {
             throw createResponseError(JWTError.expired());
+        }
+        case BoundTokenID: {
+            return BoundTokenPayload;
         }
         default: {
             return TokenPayload;
