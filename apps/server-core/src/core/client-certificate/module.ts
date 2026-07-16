@@ -62,6 +62,9 @@ const HANDLED_CRITICAL_EXTENSION_OIDS = new Set<string>([
 
 const WEAK_SIGNATURE_HASHES = new Set<string>(['SHA-1', 'MD5', 'MD2', 'MD4']);
 
+// anyExtendedKeyUsage (RFC 5280 §4.2.1.12) — a CA carrying it is unconstrained.
+const ANY_EXTENDED_KEY_USAGE_OID = '2.5.29.37.0';
+
 type SignatureVerificationBudget = { remaining: number };
 
 /**
@@ -295,6 +298,7 @@ function assertCertificationPath(path: X509Certificate[]): void {
         if (!isAnchor) {
             assertCertificateExtensionsUnderstood(certificate);
             assertStrongSignature(certificate);
+            assertIssuerExtendedKeyUsage(certificate);
         }
 
         assertCertificateCurrent(certificate);
@@ -332,6 +336,24 @@ function assertClientCertificatePurpose(certificate: X509Certificate): void {
     const keyUsage = certificate.getExtension(KeyUsagesExtension);
     if (keyUsage && (keyUsage.usages & KeyUsageFlags.digitalSignature) === 0) {
         throw new ValidationError('The certificate cannot prove possession of its private key.');
+    }
+}
+
+/**
+ * EKU chaining (RFC 5280 §4.2.1.12): a CA whose Extended Key Usage is present
+ * but omits both `clientAuth` and `anyExtendedKeyUsage` is not permitted to
+ * issue TLS-client-authentication certificates, so a leaf beneath it must be
+ * rejected. (A CA's EKU may be non-critical, so the critical-extension check
+ * does not cover this.) A CA with no EKU extension is unconstrained.
+ */
+function assertIssuerExtendedKeyUsage(certificate: X509Certificate): void {
+    const extendedKeyUsage = certificate.getExtension(ExtendedKeyUsageExtension);
+    if (
+        extendedKeyUsage &&
+        !extendedKeyUsage.usages.includes(ExtendedKeyUsage.clientAuth) &&
+        !extendedKeyUsage.usages.includes(ANY_EXTENDED_KEY_USAGE_OID)
+    ) {
+        throw new ValidationError('A client certificate issuer is not permitted to issue TLS client-authentication certificates.');
     }
 }
 

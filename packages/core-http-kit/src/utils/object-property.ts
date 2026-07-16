@@ -6,13 +6,15 @@
  */
 
 export function nullifyEmptyObjectProperties<T extends Record<string, any>>(data: T) : T {
-    const keys : (keyof T)[] = Object.keys(data);
+    // Operate on a shallow copy — the caller's object is never mutated.
+    const output : T = { ...data };
+    const keys : (keyof T)[] = Object.keys(output);
 
     for (const key of keys) {
-        if (data[key] === '') {
-            data[key] = null as T[keyof T];
+        if (output[key] === '') {
+            output[key] = null as T[keyof T];
         }
     }
 
-    return data;
+    return output;
 }

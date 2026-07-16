@@ -115,16 +115,17 @@ export class OAuth2MfaLoginService implements IOAuth2MfaLoginService {
         // advertise the completed factor (amr +otp, acr urn:authup:mfa).
         const amrAcr = deriveAmrAcr(session);
 
-        // Single use: claim the ticket BEFORE minting so two concurrent
-        // completions (a mixed-kind user presenting two distinct fresh
-        // factors) cannot both issue a token pair. The trade-off vs. claiming
-        // after minting is that a mint failure burns the ticket — the safer
-        // bias for a single-use login credential (the user re-authenticates).
+        // Single use: atomically claim the ticket BEFORE minting so two
+        // concurrent completions (a mixed-kind user presenting two distinct
+        // fresh factors) cannot both issue a token pair — `claimInactive` is a
+        // set-if-absent write, so exactly one racer wins. The trade-off vs.
+        // claiming after minting is that a mint failure burns the ticket — the
+        // safer bias for a single-use login credential (the user re-authenticates).
         if (ticket.jti) {
-            if (await this.tokenRepository.isInactive(ticket.jti)) {
+            const claimed = await this.tokenRepository.claimInactive(ticket.jti, ticket.exp);
+            if (!claimed) {
                 throw OAuth2GrantError.invalid('mfa login ticket has already been used');
             }
-            await this.tokenRepository.setInactive(ticket.jti, ticket.exp);
         }
 
         const issuePayload : Partial<OAuth2TokenPayload> = {
