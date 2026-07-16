@@ -75,13 +75,15 @@ export class TokenVerifier implements ITokenVerifier {
     async verifyLocal(token: string, options: TokenVerifyOptions = {}) : Promise<TokenVerificationData> {
         const output = await this.resolveLocal(token);
         await this.assertCertificateBinding(output, options);
-        return output;
+        // never expose the cache-owned object: a caller mutating its result
+        // (e.g. stripping cnf) must not poison later cache hits.
+        return structuredClone(output);
     }
 
     async verifyRemote(token: string, options: TokenVerifyOptions = {}) : Promise<TokenVerificationData> {
         const output = await this.resolveRemote(token);
         await this.assertCertificateBinding(output, options);
-        return output;
+        return structuredClone(output);
     }
 
     protected async resolveLocal(token: string) : Promise<TokenVerificationData> {

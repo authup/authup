@@ -165,6 +165,26 @@ describe('verifier', () => {
             expect(certificateThumbprint).not.toHaveBeenCalled();
         });
 
+        // MemoryTokenVerifierCache retains object references — a caller
+        // mutating its result (e.g. stripping cnf) must not poison the
+        // cached entry and bypass the binding on later verifications.
+        it('should not let a caller mutation of the result poison the cached entry', async () => {
+            const cache = new MemoryTokenVerifierCache();
+            const tokenVerifier = new TokenVerifier({
+                baseURL: 'http://localhost:3001',
+                cache,
+            });
+
+            const output = await tokenVerifier.verify(boundToken, { certificateThumbprint: TokenCertificateThumbprint });
+            delete output.cnf;
+
+            const cached = await cache.get(boundToken);
+            expect(cached?.cnf).toEqual({ 'x5t#S256': TokenCertificateThumbprint });
+
+            await expect(tokenVerifier.verify(boundToken))
+                .rejects.toBeInstanceOf(JWTError);
+        });
+
         // The binding is per-request evidence, not a property of the token
         // alone — a cached verification result must not bypass it.
         it('should enforce the binding on cache hits', async () => {
