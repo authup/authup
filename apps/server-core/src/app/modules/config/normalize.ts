@@ -11,6 +11,7 @@ import process from 'node:process';
 import { USER_PASSWORD_MIN_LENGTH } from '@authup/core-kit';
 import { AuthupError } from '@authup/errors';
 import { EnvironmentName, base64ToArrayBuffer } from '@authup/kit';
+import { EVENT_LOG_RETENTION_DAYS_DEFAULT } from '../../../core/index.ts';
 import { toPublicHost } from '../../../utils/host.ts';
 import { expandToOrigins } from './origins.ts';
 import { parseConfig } from './parse.ts';
@@ -101,7 +102,7 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         passwordMinLength: USER_PASSWORD_MIN_LENGTH,
 
         eventLogEnabled: true,
-        eventLogRetentionDays: 365,
+        eventLogRetentionDays: EVENT_LOG_RETENTION_DAYS_DEFAULT,
         eventLogEntityEnabled: true,
         eventLogEntityRetentionDays: 7,
         loginAttemptThrottleEnabled: false,

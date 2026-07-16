@@ -158,10 +158,11 @@ export default {
     eventLogEnabled: true,
 
     /**
-     * Retention for persisted security events in days. 0 = keep forever.
-     * default: 365
+     * Retention for persisted security events in days. Raise it for
+     * longer compliance windows; 0 = keep forever.
+     * default: 90
      */
-    eventLogRetentionDays: 365,
+    eventLogRetentionDays: 90,
 
     /**
      * Additionally mirror every entity create/update/delete into the
@@ -319,7 +320,7 @@ emailVerificationEnabled=false
 passwordRecoveryEnabled=false
 passwordMinLength=10
 eventLogEnabled=true
-eventLogRetentionDays=365
+eventLogRetentionDays=90
 eventLogEntityEnabled=true
 eventLogEntityRetentionDays=7
 loginAttemptThrottleEnabled=false
@@ -350,7 +351,7 @@ EMAIL_VERIFICATION_ENABLED=false
 PASSWORD_RECOVERY_ENABLED=false
 PASSWORD_MIN_LENGTH=10
 EVENT_LOG_ENABLED=true
-EVENT_LOG_RETENTION_DAYS=365
+EVENT_LOG_RETENTION_DAYS=90
 EVENT_LOG_ENTITY_ENABLED=true
 EVENT_LOG_ENTITY_RETENTION_DAYS=7
 LOGIN_ATTEMPT_THROTTLE_ENABLED=false

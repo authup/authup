@@ -171,7 +171,7 @@ describe('src/config/*.ts', () => {
             const config = await normalizeConfig();
 
             expect(config.eventLogEnabled).toEqual(true);
-            expect(config.eventLogRetentionDays).toEqual(365);
+            expect(config.eventLogRetentionDays).toEqual(90);
             expect(config.eventLogEntityEnabled).toEqual(true);
             expect(config.eventLogEntityRetentionDays).toEqual(7);
             expect(config.loginAttemptThrottleEnabled).toEqual(false);

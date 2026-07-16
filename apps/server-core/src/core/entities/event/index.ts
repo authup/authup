@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './constants.ts';
 export * from './diff.ts';
 export * from './entity-event-handler.ts';
 export * from './sanitize.ts';

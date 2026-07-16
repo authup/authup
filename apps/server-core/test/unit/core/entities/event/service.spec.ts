@@ -140,7 +140,7 @@ describe('EventService', () => {
             expect(Math.abs(delta)).toBeLessThan(60_000);
         });
 
-        it('defaults the retention to 365 days', async () => {
+        it('defaults the retention to 90 days', async () => {
             await service.record({
                 scope: EventScope.OAUTH2,
                 name: EventName.LOGIN,
@@ -149,7 +149,7 @@ describe('EventService', () => {
             const [row] = repository.rows;
             expect(row.expires_at).not.toBeNull();
             const delta = new Date(row.expires_at!).getTime() -
-                (Date.now() + (365 * DAY_IN_MS));
+                (Date.now() + (90 * DAY_IN_MS));
             expect(Math.abs(delta)).toBeLessThan(60_000);
         });
 

@@ -2495,7 +2495,10 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
 - **Write path:** `EventService.record()` (`core/entities/event/`) is
   fire-and-forget-safe (a write failure logs and never fails the originating
   auth operation), stamps `expiring`/`expires_at` from `eventLogRetentionDays`
-  (`0` = keep forever → `expiring: false`, `expires_at` null), truncates
+  (default 90 days — `EVENT_LOG_RETENTION_DAYS_DEFAULT` in
+  `core/entities/event/constants.ts`, Okta-parity posture; raise via
+  config/env for longer compliance windows, `0` = keep forever →
+  `expiring: false`, `expires_at` null), truncates
   client-controlled strings to column
   widths, and passes `data` through `sanitizeEventData` — **allowlist-first,
   scalars only** (objects/arrays are dropped outright, so nothing nested can

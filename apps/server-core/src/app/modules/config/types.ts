@@ -240,9 +240,9 @@ export type Config = {
 
     /**
      * Per-row retention for persisted audit events in days (stamped as
-     * expires_at at write time, swept by the event cleaner).
-     * 0 = keep forever.
-     * default: 365
+     * expires_at at write time, swept by the event cleaner). Raise it for
+     * longer compliance windows; 0 = keep forever.
+     * default: 90
      */
     eventLogRetentionDays: number,
 
