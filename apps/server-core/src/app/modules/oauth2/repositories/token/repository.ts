@@ -124,6 +124,24 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
         );
     }
 
+    async claimInactive(key: string, exp?: number): Promise<boolean> {
+        const ttl = this.buildTTL(exp);
+
+        const cacheKey = buildCacheKey({
+            prefix: CacheOAuth2Prefix.TOKEN_INACTIVE,
+            key,
+        });
+
+        // set-if-absent (Redis SET NX / single-tick memory adapter) — returns
+        // true only for the caller that actually transitioned the token to
+        // inactive, so concurrent single-use claims cannot both succeed.
+        return this.cache.add(
+            cacheKey,
+            true,
+            { ttl },
+        );
+    }
+
     // -----------------------------------------------------
 
     /**

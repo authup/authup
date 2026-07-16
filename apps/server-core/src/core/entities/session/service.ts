@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
-import { EntityNotFoundError, UnauthorizedError } from '@authup/errors';
+import { AuthupError, EntityNotFoundError, ErrorCode } from '@authup/errors';
 import { isObject } from '@authup/kit';
 import { PermissionName } from '@authup/core-kit';
 import type { Session } from '@authup/core-kit';
@@ -141,7 +141,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
         options: SessionDeleteManyOptions = {},
     ): Promise<SessionDeleteManyResult> {
         if (!actor.identity) {
-            throw new UnauthorizedError();
+            throw new AuthupError({ code: ErrorCode.IDENTITY_UNAUTHORIZED, message: 'Authentication required.' });
         }
 
         if (this.hasTargetFilter(options.query)) {

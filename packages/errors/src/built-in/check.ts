@@ -10,6 +10,7 @@ import { ErrorCode } from '../constants.ts';
 import { hasInstanceof } from '@ebec/core';
 import { AUTH_HEADER_ERROR_INSTANCE, type AuthHeaderError } from './auth-header.ts';
 import { BAD_REQUEST_ERROR_INSTANCE, type BadRequestError } from './bad-request.ts';
+import { VALIDATION_ERROR_INSTANCE, type ValidationError } from './validation.ts';
 import { BEARER_TOKEN_MALFORMED_ERROR_INSTANCE, type BearerTokenMalformedError } from './bearer-token.ts';
 import { ENTITY_CONFLICT_ERROR_INSTANCE, type EntityConflictError } from './entity-conflict.ts';
 import { ENTITY_CREDENTIALS_INVALID_ERROR_INSTANCE, type EntityCredentialsInvalidError } from './entity-credentials-invalid.ts';
@@ -34,6 +35,12 @@ export function isBearerTokenMalformedError(input: unknown): input is BearerToke
 
 export function isBadRequestError(input: unknown): input is BadRequestError {
     if (hasInstanceof(input, BAD_REQUEST_ERROR_INSTANCE)) return true;
+    if (!isAuthupError(input)) return false;
+    return input.code === ErrorCode.BAD_REQUEST;
+}
+
+export function isValidationError(input: unknown): input is ValidationError {
+    if (hasInstanceof(input, VALIDATION_ERROR_INSTANCE)) return true;
     if (!isAuthupError(input)) return false;
     return input.code === ErrorCode.BAD_REQUEST;
 }

@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
-import { OAuth2SubKind, OAuth2TokenGrant } from '@authup/specs';
+import { OAuth2GrantError, OAuth2SubKind, OAuth2TokenGrant } from '@authup/specs';
 import {
     EventName,
     EventRefType,
@@ -115,6 +115,19 @@ export class OAuth2MfaLoginService implements IOAuth2MfaLoginService {
         // advertise the completed factor (amr +otp, acr urn:authup:mfa).
         const amrAcr = deriveAmrAcr(session);
 
+        // Single use: atomically claim the ticket BEFORE minting so two
+        // concurrent completions (a mixed-kind user presenting two distinct
+        // fresh factors) cannot both issue a token pair — `claimInactive` is a
+        // set-if-absent write, so exactly one racer wins. The trade-off vs.
+        // claiming after minting is that a mint failure burns the ticket — the
+        // safer bias for a single-use login credential (the user re-authenticates).
+        if (ticket.jti) {
+            const claimed = await this.tokenRepository.claimInactive(ticket.jti, ticket.exp);
+            if (!claimed) {
+                throw OAuth2GrantError.invalid('mfa login ticket has already been used');
+            }
+        }
+
         const issuePayload : Partial<OAuth2TokenPayload> = {
             client_id: session.client_id ?? undefined,
             session_id: session.id,
@@ -131,14 +144,6 @@ export class OAuth2MfaLoginService implements IOAuth2MfaLoginService {
 
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue(issuePayload);
         const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue(issuePayload);
-
-        // Single use: blocklist the ticket jti for its remaining lifetime.
-        // Consumed after minting so a mint failure keeps the ticket usable
-        // for a retry; concurrent completions are already serialized by the
-        // per-user verify lock, and every completion needs a fresh factor.
-        if (ticket.jti) {
-            await this.tokenRepository.setInactive(ticket.jti, ticket.exp);
-        }
 
         await this.eventService?.record({
             scope: EventScope.OAUTH2,

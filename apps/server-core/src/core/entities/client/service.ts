@@ -7,7 +7,7 @@
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { ValidatorGroup, isUUID } from '@authup/kit';
-import { BadRequestError, EntityNotFoundError } from '@authup/errors';
+import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import {
     CLIENT_RESERVED_NAMES,
     ClientAuthMethod,
@@ -230,7 +230,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
             CLIENT_RESERVED_NAMES.includes(validated.name) &&
             !(entity && entity.built_in && entity.name === validated.name)
         ) {
-            throw new BadRequestError(`The client name '${validated.name}' is reserved.`);
+            throw new ValidationError(`The client name '${validated.name}' is reserved.`);
         }
 
         await this.repository.validateJoinColumns(validated);

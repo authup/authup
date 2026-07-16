@@ -61,8 +61,8 @@ describe('src/http/controllers/key', () => {
         for (const entity of response.data) {
             expect(entity.status).toEqual(KeyStatus.ACTIVE);
             expect(entity.name).toBeTruthy();
-            // private material never leaves the server
-            expect(entity.decryption_key).toBeUndefined();
+            // private material never leaves the server (nulled on every surface)
+            expect(entity.decryption_key).toBeNull();
         }
     });
 

@@ -12,6 +12,8 @@ import type { IOAuth2TokenRepository } from '../../../../src/core/oauth2/token/r
 export class FakeOAuth2TokenRepository implements IOAuth2TokenRepository {
     public setInactiveCalls: { id: string; exp?: number }[] = [];
 
+    public claimInactiveCalls: { id: string; exp?: number }[] = [];
+
     public isInactiveCalls: string[] = [];
 
     public findOneByIdCalls: string[] = [];
@@ -35,6 +37,15 @@ export class FakeOAuth2TokenRepository implements IOAuth2TokenRepository {
     async setInactive(id: string, exp?: number): Promise<void> {
         this.setInactiveCalls.push({ id, exp });
         this.inactiveIds.add(id);
+    }
+
+    async claimInactive(id: string, exp?: number): Promise<boolean> {
+        this.claimInactiveCalls.push({ id, exp });
+        if (this.inactiveIds.has(id)) {
+            return false;
+        }
+        this.inactiveIds.add(id);
+        return true;
     }
 
     async isInactive(id: string): Promise<boolean> {

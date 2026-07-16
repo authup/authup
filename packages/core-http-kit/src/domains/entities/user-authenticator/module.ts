@@ -10,6 +10,7 @@ import { stringifyAuthorizationHeader } from 'hapic';
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { User, UserAuthenticator } from '@authup/core-kit';
+import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
@@ -45,7 +46,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
         userId: User['id'] | string,
         data: UserAuthenticatorCreatePayload,
     ): Promise<UserAuthenticatorEnrollResponse> {
-        const response = await this.client.post(`users/${userId}/authenticators`, data);
+        const response = await this.client.post(`users/${userId}/authenticators`, nullifyEmptyObjectProperties(data));
         return response.data;
     }
 

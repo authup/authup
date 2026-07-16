@@ -18,6 +18,7 @@ import {
 import type {
     ConsentCoveringInput,
     ConsentRecordInput,
+    ConsentServiceReadOptions,
     IConsentRepository,
     IConsentService,
 } from './types.ts';
@@ -55,6 +56,7 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
     async getMany(
         query: Record<string, any>,
         actor: ActorContext,
+        options: ConsentServiceReadOptions = {},
     ): Promise<EntityRepositoryFindManyResult<Consent>> {
         let canReadAll = true;
         try {
@@ -73,10 +75,11 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
                     sub: actor.identity!.data.id,
                     subKind: actor.identity!.type,
                 },
+                ...(options.realmId ? { realmId: options.realmId } : {}),
             });
         }
 
-        const { data: entities, meta } = await this.repository.findMany(query);
+        const { data: entities, meta } = await this.repository.findMany(query, { ...(options.realmId ? { realmId: options.realmId } : {}) });
 
         const data: Consent[] = [];
         let { total } = meta;
@@ -110,9 +113,11 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
         };
     }
 
-    async getOne(id: string, actor: ActorContext): Promise<Consent> {
+    async getOne(id: string, actor: ActorContext, options: ConsentServiceReadOptions = {}): Promise<Consent> {
         const entity = await this.repository.findOneById(id);
-        if (!entity) {
+        if (!entity || (options.realmId && entity.realm_id !== options.realmId)) {
+            // A realm mismatch on the nested mount fails as not-found (no
+            // cross-realm existence oracle).
             throw new EntityNotFoundError();
         }
 
@@ -130,9 +135,9 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
         return entity;
     }
 
-    async delete(id: string, actor: ActorContext): Promise<Consent> {
+    async delete(id: string, actor: ActorContext, options: ConsentServiceReadOptions = {}): Promise<Consent> {
         const entity = await this.repository.findOneById(id);
-        if (!entity) {
+        if (!entity || (options.realmId && entity.realm_id !== options.realmId)) {
             throw new EntityNotFoundError();
         }
 

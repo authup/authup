@@ -17,6 +17,17 @@ export interface IOAuth2TokenRepository {
     setInactive(id: string, exp?: number) : Promise<void>;
 
     /**
+     * Atomically mark a token inactive, returning whether THIS call performed
+     * the transition (true) or the token was already inactive (false). Backed
+     * by a set-if-absent write, so it is safe for single-use enforcement under
+     * concurrency (no isInactive→setInactive TOCTOU).
+     *
+     * @param id JTI
+     * @param exp Expiration date in unix timestamp
+     */
+    claimInactive(id: string, exp?: number) : Promise<boolean>;
+
+    /**
      * Check if a token by its jti is active.
      *
      * @param id JTI

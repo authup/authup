@@ -20,6 +20,32 @@ import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/Postgres
 import { ConfigEnvironmentVariableName } from '../constants.ts';
 import type { ConfigInput } from '../types.ts';
 
+const BOOLEAN_TRUE_VALUES = new Set(['true', 't', '1', 'yes', 'y', 'on']);
+const BOOLEAN_FALSE_VALUES = new Set(['false', 'f', '0', 'no', 'n', 'off']);
+
+/**
+ * Boolean env reader that FAILS LOUD on a set-but-unrecognized value instead
+ * of silently falling back to the default (envix's `readBool` swallows e.g.
+ * `MFA_REQUIRED=yes`). Reserved for security-relevant toggles where a silent
+ * default is a weakened posture. Returns `undefined` when the var is unset.
+ */
+function readBoolStrict(name: ConfigEnvironmentVariableName) : boolean | undefined {
+    const raw = read(name);
+    if (typeof raw !== 'string' || raw.trim().length === 0) {
+        return undefined;
+    }
+
+    const normalized = raw.trim().toLowerCase();
+    if (BOOLEAN_TRUE_VALUES.has(normalized)) {
+        return true;
+    }
+    if (BOOLEAN_FALSE_VALUES.has(normalized)) {
+        return false;
+    }
+
+    throw new Error(`The environment variable ${name} must be a boolean value (received "${raw}").`);
+}
+
 export function readConfigRawFromEnv() : ConfigInput {
     const options : ConfigInput = {};
 
@@ -137,7 +163,7 @@ export function readConfigRawFromEnv() : ConfigInput {
 
     // ---------------------------------------------------------------
 
-    const eventLogEnabled = readBool(ConfigEnvironmentVariableName.EVENT_LOG_ENABLED);
+    const eventLogEnabled = readBoolStrict(ConfigEnvironmentVariableName.EVENT_LOG_ENABLED);
     if (typeof eventLogEnabled !== 'undefined') {
         options.eventLogEnabled = eventLogEnabled;
     }
@@ -147,7 +173,7 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.eventLogRetentionDays = eventLogRetentionDays;
     }
 
-    const eventLogEntityEnabled = readBool(ConfigEnvironmentVariableName.EVENT_LOG_ENTITY_ENABLED);
+    const eventLogEntityEnabled = readBoolStrict(ConfigEnvironmentVariableName.EVENT_LOG_ENTITY_ENABLED);
     if (typeof eventLogEntityEnabled !== 'undefined') {
         options.eventLogEntityEnabled = eventLogEntityEnabled;
     }
@@ -157,7 +183,7 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.eventLogEntityRetentionDays = eventLogEntityRetentionDays;
     }
 
-    const loginAttemptThrottleEnabled = readBool(ConfigEnvironmentVariableName.LOGIN_ATTEMPT_THROTTLE_ENABLED);
+    const loginAttemptThrottleEnabled = readBoolStrict(ConfigEnvironmentVariableName.LOGIN_ATTEMPT_THROTTLE_ENABLED);
     if (typeof loginAttemptThrottleEnabled !== 'undefined') {
         options.loginAttemptThrottleEnabled = loginAttemptThrottleEnabled;
     }
@@ -174,12 +200,12 @@ export function readConfigRawFromEnv() : ConfigInput {
 
     // ---------------------------------------------------------------
 
-    const mfaEnabled = readBool(ConfigEnvironmentVariableName.MFA_ENABLED);
+    const mfaEnabled = readBoolStrict(ConfigEnvironmentVariableName.MFA_ENABLED);
     if (typeof mfaEnabled !== 'undefined') {
         options.mfaEnabled = mfaEnabled;
     }
 
-    const mfaRequired = readBool(ConfigEnvironmentVariableName.MFA_REQUIRED);
+    const mfaRequired = readBoolStrict(ConfigEnvironmentVariableName.MFA_REQUIRED);
     if (typeof mfaRequired !== 'undefined') {
         options.mfaRequired = mfaRequired;
     }

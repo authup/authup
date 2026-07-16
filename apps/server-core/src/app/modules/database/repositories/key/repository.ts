@@ -14,6 +14,7 @@ import {
     CryptoAsymmetricAlgorithm,
     type EntityRepositoryFindManyResult,
     type ISymmetricCipher,
+    type Logger,
     createAsymmetricKeyPair,
 } from '@authup/server-kit';
 import { JWKType, JWKUse, JWTAlgorithm } from '@authup/specs';
@@ -43,6 +44,7 @@ export type KeyRepositoryAdapterOptions = {
      * material is persisted wrapped and unwrapped transparently on read.
      */
     secretsCipher?: ISymmetricCipher | null,
+    logger?: Logger,
 };
 
 /**
@@ -58,9 +60,12 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
 
     protected realmRepository : IRealmRepository;
 
+    protected logger? : Logger;
+
     constructor(dataSource: DataSource, options: KeyRepositoryAdapterOptions = {}) {
         this.dataSource = dataSource;
         this.secretsCipher = options.secretsCipher ?? null;
+        this.logger = options.logger;
         this.realmRepository = new RealmRepositoryAdapter(dataSource.getRepository(RealmEntity));
     }
 
@@ -125,6 +130,15 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
 
     async resolveById(id: string): Promise<Key | null> {
         const { repository } = this;
+
+        // `id` reaches here from an attacker-controlled JWT `kid` header on the
+        // token-verification hot path. A non-UUID value binds against a
+        // postgres `uuid` column as a driver-level type error (500) instead of
+        // a clean miss — short-circuit to "not found" so a garbage kid is a
+        // plain verification failure.
+        if (!isUUID(id)) {
+            return null;
+        }
 
         const entity = await repository.findOne({
             select: {
@@ -229,8 +243,11 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
             const material = entity.decryption_key;
             try {
                 await repository.update(entity.id, { decryption_key: await wrapKeyMaterial(this.secretsCipher, material) });
-            } catch {
-                // ignore — the next read retries.
+            } catch (e) {
+                // Best-effort — the material stays readable and the next read
+                // retries. Surface it though: a persistent failure (e.g. a
+                // read-only replica) means the row is never hardened at rest.
+                this.logger?.warn(`Failed to wrap key material at rest for key ${entity.id}.`, { error: e });
             }
             entity.decryption_key = material;
         }

@@ -20,12 +20,11 @@ import {
 import type { User, UserAuthenticator } from '@authup/core-kit';
 import {
     AuthupError,
-    BadRequestError,
     EntityCredentialsInvalidError,
     EntityNotFoundError,
     ErrorCode,
     MfaThrottledError,
-    UnauthorizedError,
+    ValidationError,
     isMfaThrottledError,
 } from '@authup/errors';
 import { 
@@ -273,7 +272,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             actor.identity.type === IdentityType.USER &&
             actor.identity.data.id === user.id;
         if (!isSelfEnrollment && validated.kind !== UserAuthenticatorKind.EMAIL) {
-            throw new BadRequestError(
+            throw new ValidationError(
                 `A ${validated.kind} authenticator can only be enrolled by the account owner.`,
             );
         }
@@ -292,7 +291,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
                 return this.enrollWebauthn(user, validated.name ?? null);
             }
             default: {
-                throw new BadRequestError(`The authenticator kind ${validated.kind} can not be enrolled yet.`);
+                throw new ValidationError(`The authenticator kind ${validated.kind} can not be enrolled yet.`);
             }
         }
     }
@@ -353,7 +352,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         // the mailbox as an enrolled factor, codes are transient (cache).
         const email = user.email ?? (await this.userRepository.findOneByWithEmail({ id: user.id }))?.email;
         if (!email) {
-            throw new BadRequestError('The user has no email address to receive codes.');
+            throw new ValidationError('The user has no email address to receive codes.');
         }
 
         // one email factor per user — update the existing marker row in place
@@ -400,7 +399,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         if (!userId || (actorUser && actorUser.id === userId)) {
             if (!actorUser) {
-                throw new UnauthorizedError();
+                throw new AuthupError({ code: ErrorCode.IDENTITY_UNAUTHORIZED, message: 'Authentication required.' });
             }
 
             return actorUser;
@@ -530,7 +529,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         }
 
         if (entity.kind !== UserAuthenticatorKind.TOTP) {
-            throw new BadRequestError(`The authenticator kind ${entity.kind} can not be confirmed with a code.`);
+            throw new ValidationError(`The authenticator kind ${entity.kind} can not be confirmed with a code.`);
         }
 
         await this.assertNotThrottledOrRetry(entity.user_id);
@@ -581,7 +580,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         try {
             parsed = JSON.parse(response) as RegistrationResponseJSON;
         } catch {
-            throw new BadRequestError('The registration response is malformed.');
+            throw new ValidationError('The registration response is malformed.');
         }
 
         const credential = await verifyWebauthnRegistration(ctx, parsed, state.challenge);

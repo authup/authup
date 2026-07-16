@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError, ErrorCode, markInstanceof } from '@authup/errors';
+import { ErrorCode, ValidationError, markInstanceof } from '@authup/errors';
 
 export const PASSWORD_RECOVERY_DISABLED_ERROR_INSTANCE = Symbol.for('@authup/server-core/PasswordRecoveryDisabledError');
 
-export class PasswordRecoveryDisabledError extends BadRequestError {
+export class PasswordRecoveryDisabledError extends ValidationError {
     constructor() {
         super({
             code: ErrorCode.PASSWORD_RECOVERY_DISABLED,

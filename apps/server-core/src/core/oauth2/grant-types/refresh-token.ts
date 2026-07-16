@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
-import { JWTError, OAuth2GrantError } from '@authup/specs';
+import { JWTError, OAuth2GrantError, OAuth2TokenKind } from '@authup/specs';
 import { EventName, EventRefType, EventScope } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import type { IEventService } from '../../entities/index.ts';
@@ -68,6 +68,15 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         }
         if (!payload.session_id) {
             throw JWTError.payloadPropertyInvalid('session_id');
+        }
+
+        // Explicit kind guard (defense in depth). Authup signs access tokens
+        // and the MFA-pending login ticket with the same keys; only a refresh
+        // token may be exchanged here. The ticket is also rejected implicitly
+        // (it writes no auth_session_tokens row), but do not rely on that
+        // second-order fact alone.
+        if (payload.kind && payload.kind !== OAuth2TokenKind.REFRESH) {
+            throw OAuth2GrantError.invalid('unexpected token kind');
         }
 
         const row = await this.sessionTokenRepository.findOneById(payload.jti);

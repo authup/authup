@@ -86,16 +86,14 @@ export class KeyEntity implements Key {
     signature_algorithm: Key['signature_algorithm'];
 
     @Column({
-        type: 'varchar',
-        length: 4096,
+        type: 'text',
         default: null,
         select: false,
     })
     decryption_key: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 4096,
+        type: 'text',
         default: null,
     })
     encryption_key: string | null;

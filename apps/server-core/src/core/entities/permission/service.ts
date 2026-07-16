@@ -12,7 +12,7 @@ import {
     definePolicyData, 
 } from '@authup/access';
 import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
-import { AuthupError, BadRequestError, EntityNotFoundError } from '@authup/errors';
+import { AuthupError, EntityNotFoundError, ValidationError } from '@authup/errors';
 import {
     PermissionName,
     PermissionValidator,
@@ -211,7 +211,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
                 isPropertySet(validated, 'name') &&
                 entity.name !== validated.name
             ) {
-                throw new BadRequestError('The name of a built-in permission can not be changed.');
+                throw new ValidationError('The name of a built-in permission can not be changed.');
             }
 
             await actor.permissionEvaluator.evaluate({
@@ -273,7 +273,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         }
 
         if (entity.built_in) {
-            throw new BadRequestError('A built-in permission can not be deleted.');
+            throw new ValidationError('A built-in permission can not be deleted.');
         }
 
         await actor.permissionEvaluator.evaluate({

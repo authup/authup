@@ -40,6 +40,15 @@ export type ConsentFindManyOptions = {
      * mandatory WHERE that a rapiq query filter cannot override.
      */
     owner?: ConsentOwner,
+    /**
+     * Restrict the result to a single realm (the `/realms/:realmId/consents`
+     * nested mount). Mandatory WHERE, not overridable by a rapiq filter.
+     */
+    realmId?: string,
+};
+
+export type ConsentServiceReadOptions = {
+    realmId?: string,
 };
 
 export type ConsentRecordInput = {
@@ -91,17 +100,17 @@ export interface IConsentService {
      * rows (self-service); an actor with `CONSENT_READ` sees every row its
      * realm reach permits.
      */
-    getMany(query: Record<string, any>, actor: ActorContext): Promise<EntityRepositoryFindManyResult<Consent>>;
+    getMany(query: Record<string, any>, actor: ActorContext, options?: ConsentServiceReadOptions): Promise<EntityRepositoryFindManyResult<Consent>>;
 
     /**
      * Read a single consent by id. Own rows need no permission.
      */
-    getOne(id: string, actor: ActorContext): Promise<Consent>;
+    getOne(id: string, actor: ActorContext, options?: ConsentServiceReadOptions): Promise<Consent>;
 
     /**
      * Revoke (delete) a single consent by id. Own rows need no permission.
      */
-    delete(id: string, actor: ActorContext): Promise<Consent>;
+    delete(id: string, actor: ActorContext, options?: ConsentServiceReadOptions): Promise<Consent>;
 
     /**
      * Flow integration (POST /authorize approval) — no permission checks:

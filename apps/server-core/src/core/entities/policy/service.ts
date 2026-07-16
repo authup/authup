@@ -13,7 +13,7 @@ import {
     isUUID,
     removeObjectProperty,
 } from '@authup/kit';
-import { BadRequestError, EntityNotFoundError } from '@authup/errors';
+import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import {
     PermissionName,
     PolicyValidator,
@@ -152,12 +152,12 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
             validated.parent &&
             validated.parent.type !== BuiltInPolicyType.COMPOSITE
         ) {
-            throw new BadRequestError('The parent policy must be of type group.');
+            throw new ValidationError('The parent policy must be of type group.');
         }
 
         if (entity) {
             if (entity.built_in) {
-                throw new BadRequestError('A built-in policy can not be updated.');
+                throw new ValidationError('A built-in policy can not be updated.');
             }
 
             await actor.permissionEvaluator.evaluate({
@@ -236,7 +236,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         }
 
         if (entity.built_in) {
-            throw new BadRequestError('A built-in policy can not be deleted.');
+            throw new ValidationError('A built-in policy can not be deleted.');
         }
 
         await actor.permissionEvaluator.evaluate({

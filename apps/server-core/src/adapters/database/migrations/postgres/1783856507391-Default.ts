@@ -144,6 +144,14 @@ export class Default1783856507391 implements MigrationInterface {
         await queryRunner.query(`
             ALTER TABLE "auth_keys" ADD "certificate" text
         `);
+        // Widen the key-material columns: an imported RSA-4096 private key
+        // wrapped under a SECRETS_ENCRYPTION_KEY exceeds character varying(4096).
+        await queryRunner.query(`
+            ALTER TABLE "auth_keys" ALTER COLUMN "decryption_key" TYPE text
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "auth_keys" ALTER COLUMN "encryption_key" TYPE text
+        `);
 
         // RFC 8705 realm trust anchors (plan 071 Stage C)
         await queryRunner.query(`
@@ -205,6 +213,12 @@ export class Default1783856507391 implements MigrationInterface {
         `);
 
         // key management API (plan 071 Stage A) — reverse last-in-first-out
+        await queryRunner.query(`
+            ALTER TABLE "auth_keys" ALTER COLUMN "encryption_key" TYPE character varying(4096)
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "auth_keys" ALTER COLUMN "decryption_key" TYPE character varying(4096)
+        `);
         await queryRunner.query(`
             ALTER TABLE "auth_keys" DROP COLUMN "certificate"
         `);

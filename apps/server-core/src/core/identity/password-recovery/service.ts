@@ -13,7 +13,7 @@ import {
     USER_PASSWORD_MAX_LENGTH,
     USER_PASSWORD_MIN_LENGTH,
 } from '@authup/core-kit';
-import { BadRequestError, EntityNotFoundError } from '@authup/errors';
+import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import { PasswordRecoveryDisabledError } from './disabled.ts';
 import { EmailVerificationRequiredError } from './email-verification-required.ts';
 import { ResetTokenExpiredError } from './token-expired.ts';
@@ -123,7 +123,7 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
             });
             await this.repository.save(merged);
 
-            throw new BadRequestError('Password recovery failed. Could not send reset email.');
+            throw new ValidationError('Password recovery failed. Could not send reset email.');
         }
 
         await this.eventService?.record({

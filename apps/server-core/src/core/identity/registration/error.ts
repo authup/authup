@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError, ErrorCode, markInstanceof } from '@authup/errors';
+import { ErrorCode, ValidationError, markInstanceof } from '@authup/errors';
 
 export const REGISTRATION_DISABLED_ERROR_INSTANCE = Symbol.for('@authup/server-core/RegistrationDisabledError');
 
-export class RegistrationDisabledError extends BadRequestError {
+export class RegistrationDisabledError extends ValidationError {
     constructor() {
         super({
             code: ErrorCode.REGISTRATION_DISABLED,

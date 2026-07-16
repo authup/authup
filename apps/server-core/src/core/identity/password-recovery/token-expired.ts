@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError, ErrorCode, markInstanceof } from '@authup/errors';
+import { ErrorCode, ValidationError, markInstanceof } from '@authup/errors';
 
 export const RESET_TOKEN_EXPIRED_ERROR_INSTANCE = Symbol.for('@authup/server-core/ResetTokenExpiredError');
 
-export class ResetTokenExpiredError extends BadRequestError {
+export class ResetTokenExpiredError extends ValidationError {
     constructor() {
         super({
             code: ErrorCode.RESET_TOKEN_EXPIRED,
