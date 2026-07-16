@@ -47,6 +47,33 @@ describe('http/middleware/prometheus', () => {
         expect(body).toContain('path="/authorize"');
     });
 
+    it('should label parameterized routes by their route template', async () => {
+        const idOne = '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d';
+        const idTwo = '1c9e5c8e-0f2a-4b8e-9d3e-5a1b2c3d4e5f';
+
+        await httpRequest(suite, 'GET', `/users/${idOne}`);
+        await httpRequest(suite, 'GET', `/users/${idTwo}`);
+        await httpRequest(suite, 'GET', `/realms/master/users/${idOne}`);
+
+        const response = await httpRequest(suite, 'GET', '/metrics');
+        expect(response.status).toEqual(200);
+
+        const body = await response.text();
+        expect(body).toContain('path="/users/:id"');
+        expect(body).toContain('path="/realms/:realmId/users/:id"');
+        expect(body).not.toContain(idOne);
+        expect(body).not.toContain(idTwo);
+    });
+
+    it('should collapse unregistered paths into a single unmatched bucket', async () => {
+        await httpRequest(suite, 'GET', '/no-such-route/e5f6a7b8-c9d0-1234-5678-90abcdef1234');
+
+        const response = await httpRequest(suite, 'GET', '/metrics');
+        const body = await response.text();
+        expect(body).toContain('path="/{unmatched}"');
+        expect(body).not.toContain('no-such-route');
+    });
+
     it('should not meter the metrics self-scrape or the root status endpoint', async () => {
         await httpRequest(suite, 'GET', '/');
         await httpRequest(suite, 'GET', '/metrics');

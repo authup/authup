@@ -2577,6 +2577,15 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   `authup_authorize_total{outcome}` (`denied` live since plan 052),
   `authup_refresh_replay_total`. Bounded label sets only — subject-level
   attribution belongs in the security event log, never in metric labels.
+  The `@routup/prometheus` `http_request_duration` `path` label follows the
+  same rule (issue #3253): `registerPrometheusMiddleware` supplies a
+  `normalizePath` (`createRouteTemplateNormalizePath`) that labels each
+  request by its registered route template (`/users/:id`,
+  `/realms/:realmId/users/:id`), read from the router's own route table
+  (routup flattens controller child-apps into the root with full patterns);
+  method-agnostic mounts label as `<mount>/**` (`/docs/**`, `/public/**`)
+  and anything unregistered collapses into a single `/{unmatched}` bucket —
+  raw ids/names never become label values, even on 401/404 probes.
 
 ## Provisioning Permissions With Policies
 
