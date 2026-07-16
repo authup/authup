@@ -89,10 +89,10 @@ export class UserAuthenticatorController {
         const userId = this.resolveUserId(id, event);
 
         // route wins silently over body
-        const result = await this.service.enroll({ ...data, user_id: userId }, actor);
+        const { entity, meta } = await this.service.enroll({ ...data, user_id: userId }, actor);
 
         event.response.status = 201;
-        return result;
+        return { data: entity, meta };
     }
 
     @DGet('/:deviceId', [ForceLoggedInMiddleware])

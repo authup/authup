@@ -10,6 +10,18 @@ import type { RequestBaseOptions, Response } from 'hapic';
 import type { BuildInput } from 'rapiq';
 
 export type EntityRecordResponse<R> = R;
+
+/**
+ * The target wire shape for entity-record responses: the record under
+ * `data`, response-scoped extras under `meta` (mirroring
+ * `EntityCollectionResponse`). Adopted per endpoint — bare-record
+ * responses (`EntityRecordResponse`) converge on this shape over time.
+ */
+export type EntityRecordWrappedResponse<R, M extends Record<string, any> = Record<string, any>> = {
+    data: R,
+    meta: M,
+};
+
 export type EntityCollectionResponse<R> = {
     data: R[],
     meta: {

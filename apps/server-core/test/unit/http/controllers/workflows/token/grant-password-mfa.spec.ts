@@ -63,18 +63,18 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
 
         // 2) enroll + confirm a TOTP device on @me
         const enrolled = await bearer.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.TOTP });
-        expect(enrolled.secret).toBeDefined();
-        expect(enrolled.uri).toContain('otpauth://totp/');
-        expect(enrolled.qr).toContain('data:image/png');
+        expect(enrolled.meta.secret).toBeDefined();
+        expect(enrolled.meta.uri).toContain('otpauth://totp/');
+        expect(enrolled.meta.qr).toContain('data:image/png');
 
         const totp = new TOTP({
             algorithm: 'SHA1',
             digits: 6,
             period: 30,
-            secret: Secret.fromBase32(enrolled.secret!),
+            secret: Secret.fromBase32(enrolled.meta.secret!),
         });
 
-        const confirmed = await bearer.userAuthenticator.confirm('@me', enrolled.entity.id, { code: totp.generate() });
+        const confirmed = await bearer.userAuthenticator.confirm('@me', enrolled.data.id, { code: totp.generate() });
         expect(confirmed.confirmed).toBeTruthy();
 
         // the read surface never carries secret material
@@ -177,9 +177,9 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
         bearer.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
 
         const enrolled = await bearer.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.RECOVERY });
-        expect(enrolled.codes).toHaveLength(10);
+        expect(enrolled.meta.codes).toHaveLength(10);
 
-        const [code] = enrolled.codes!;
+        const [code] = enrolled.meta.codes!;
         const withRecovery = await httpRequest(suite, 'POST', '/token', {
             form: {
                 grant_type: 'password',

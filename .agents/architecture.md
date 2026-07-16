@@ -2050,8 +2050,11 @@ realtime), port `IUserAuthenticatorRepository` + `UserAuthenticatorService` in
   them ONLY via `findOneWithSecretsById` / `findAllWithSecretsByUser`
   (verification paths). Every read surface (`getMany`/`getOne`/enroll response
   entity) nulls both — the raw seed/URI/QR/codes appear exactly once, in the
-  enroll response (`{ entity, secret?, uri?, qr?, codes? }`; QR is a
-  server-rendered PNG data-URI via the `qrcode` dep, TOTP via `otpauth`).
+  enroll response (`{ data: <entity>, meta: { secret?, uri?, qr?, codes?,
+  webauthn? } }` — the entity under `data`, the shown-once provisioning
+  material under `meta`, the `EntityRecordWrappedResponse` envelope entity
+  record responses converge on; QR is a server-rendered PNG data-URI via the
+  `qrcode` dep, TOTP via `otpauth`).
 - The `findMany` adapter follows the plan-039 discipline
   (`applyRealmScopeSelect(qb, 'userAuthenticator', ['user_id'])`).
 

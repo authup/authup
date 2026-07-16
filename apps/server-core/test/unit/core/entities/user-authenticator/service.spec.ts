@@ -148,9 +148,9 @@ describe('UserAuthenticatorService', () => {
         it('enrolls an unconfirmed totp device with encrypted seed', async () => {
             const result = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
 
-            expect(result.secret).toBeDefined();
-            expect(result.uri).toContain('otpauth://totp/');
-            expect(result.qr).toContain('data:image/png');
+            expect(result.meta.secret).toBeDefined();
+            expect(result.meta.uri).toContain('otpauth://totp/');
+            expect(result.meta.qr).toContain('data:image/png');
             expect(result.entity.confirmed).toBeFalsy();
             expect(result.entity.secret).toBeNull();
             expect(result.entity.user_id).toEqual(userId);
@@ -159,7 +159,7 @@ describe('UserAuthenticatorService', () => {
             // at rest the seed is encrypted — never the raw base32
             const [stored] = await repository.findAllWithSecretsByUser(userId);
             expect(stored.secret).toBeDefined();
-            expect(stored.secret).not.toEqual(result.secret);
+            expect(stored.secret).not.toEqual(result.meta.secret);
         });
 
         it('fails closed when the feature is disabled', async () => {
@@ -247,7 +247,7 @@ describe('UserAuthenticatorService', () => {
 
             const confirmed = await service.confirm(
                 first.entity.id,
-                totpCode(first.secret!),
+                totpCode(first.meta.secret!),
                 makeActor(),
             );
             expect(confirmed.confirmed).toBeTruthy();
@@ -267,12 +267,12 @@ describe('UserAuthenticatorService', () => {
     describe('enroll (recovery)', () => {
         it('issues single-use codes, hashed at rest, with regenerate semantics', async () => {
             const first = await service.enroll({ kind: UserAuthenticatorKind.RECOVERY }, makeActor());
-            expect(first.codes).toHaveLength(10);
+            expect(first.meta.codes).toHaveLength(10);
             expect(first.entity.confirmed).toBeTruthy();
             expect(first.entity.codes).toBeNull();
 
             const [stored] = await repository.findAllWithSecretsByUser(userId);
-            expect(stored.codes).not.toContain(first.codes![0]);
+            expect(stored.codes).not.toContain(first.meta.codes![0]);
 
             // regenerate replaces the previous set
             const second = await service.enroll({ kind: UserAuthenticatorKind.RECOVERY }, makeActor());
@@ -281,7 +281,7 @@ describe('UserAuthenticatorService', () => {
 
             const verified = await service.verify(userId, {
                 kind: UserAuthenticatorKind.RECOVERY,
-                response: first.codes![0],
+                response: first.meta.codes![0],
             });
             expect(verified).toBeFalsy();
 
@@ -289,14 +289,14 @@ describe('UserAuthenticatorService', () => {
             service = buildService();
             const verifiedSecond = await service.verify(userId, {
                 kind: UserAuthenticatorKind.RECOVERY,
-                response: second.codes![0],
+                response: second.meta.codes![0],
             });
             expect(verifiedSecond).toBeTruthy();
         });
 
         it('accepts a recovery code exactly once', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.RECOVERY }, makeActor());
-            const [code] = enrolled.codes!;
+            const [code] = enrolled.meta.codes!;
 
             expect(await service.verify(userId, { kind: UserAuthenticatorKind.RECOVERY, response: code })).toBeTruthy();
             expect(await service.verify(userId, { kind: UserAuthenticatorKind.RECOVERY, response: code })).toBeFalsy();
@@ -306,11 +306,11 @@ describe('UserAuthenticatorService', () => {
     describe('verify (totp)', () => {
         it('verifies a valid code and stamps last_used_at', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
-            await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
+            await service.confirm(enrolled.entity.id, totpCode(enrolled.meta.secret!), makeActor());
 
             const verified = await service.verify(userId, {
                 kind: UserAuthenticatorKind.TOTP,
-                response: totpCode(enrolled.secret!),
+                response: totpCode(enrolled.meta.secret!),
             });
             expect(verified).toBeTruthy();
 
@@ -320,9 +320,9 @@ describe('UserAuthenticatorService', () => {
 
         it('rejects replay of an already-used login code within its window (#3237)', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
-            await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
+            await service.confirm(enrolled.entity.id, totpCode(enrolled.meta.secret!), makeActor());
 
-            const code = totpCode(enrolled.secret!);
+            const code = totpCode(enrolled.meta.secret!);
             // the first LOGIN with this code is accepted (the confirmation does
             // not consume the step); a replay of the same code is rejected —
             // the consumed step is persisted and must strictly advance.
@@ -335,13 +335,13 @@ describe('UserAuthenticatorService', () => {
 
         it('bails without consuming the factor when the verify lock is held', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
-            await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
+            await service.confirm(enrolled.entity.id, totpCode(enrolled.meta.secret!), makeActor());
 
             // simulate a concurrent verify holding the per-user lock
             const lockKey = buildCacheKey({ prefix: USER_AUTHENTICATOR_VERIFY_LOCK_CACHE_PREFIX, key: userId });
             expect(await cache.add(lockKey, 1)).toBeTruthy();
 
-            const code = totpCode(enrolled.secret!);
+            const code = totpCode(enrolled.meta.secret!);
             expect(await service.verify(userId, { kind: UserAuthenticatorKind.TOTP, response: code })).toBeFalsy();
 
             // the step was NOT consumed — the same code succeeds once the lock frees
@@ -351,7 +351,7 @@ describe('UserAuthenticatorService', () => {
 
         it('keeps the verify lock beyond its base TTL while the success hook is in flight', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.RECOVERY }, makeActor());
-            const [code] = enrolled.codes!;
+            const [code] = enrolled.meta.codes!;
 
             let markStarted! : () => void;
             const started = new Promise<void>((resolve) => { markStarted = resolve; });
@@ -392,13 +392,13 @@ describe('UserAuthenticatorService', () => {
 
         it('fails verification closed when the cache is unavailable', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
-            await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
+            await service.confirm(enrolled.entity.id, totpCode(enrolled.meta.secret!), makeActor());
 
             cache.get = async () => { throw new Error('cache unavailable'); };
 
             await expect(service.verify(userId, {
                 kind: UserAuthenticatorKind.TOTP,
-                response: totpCode(enrolled.secret!),
+                response: totpCode(enrolled.meta.secret!),
             })).resolves.toBeFalsy();
         });
 
@@ -411,7 +411,7 @@ describe('UserAuthenticatorService', () => {
 
             expect.assertions(1);
             try {
-                await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
+                await service.confirm(enrolled.entity.id, totpCode(enrolled.meta.secret!), makeActor());
             } catch (e) {
                 expect(isMfaThrottledError(e)).toBeTruthy();
             }
@@ -422,14 +422,14 @@ describe('UserAuthenticatorService', () => {
 
             const verified = await service.verify(userId, {
                 kind: UserAuthenticatorKind.TOTP,
-                response: totpCode(enrolled.secret!),
+                response: totpCode(enrolled.meta.secret!),
             });
             expect(verified).toBeFalsy();
         });
 
         it('fails closed (a plain verification failure) when the seed blob references an unknown key', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
-            await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
+            await service.confirm(enrolled.entity.id, totpCode(enrolled.meta.secret!), makeActor());
 
             // same device rows, but a cipher whose key store no longer
             // resolves the blob's key id — verify must return false, not 500.
@@ -443,14 +443,14 @@ describe('UserAuthenticatorService', () => {
 
             const verified = await service.verify(userId, {
                 kind: UserAuthenticatorKind.TOTP,
-                response: totpCode(enrolled.secret!),
+                response: totpCode(enrolled.meta.secret!),
             });
             expect(verified).toBeFalsy();
         });
 
         it('lets infrastructure errors during seed decryption bubble (attempt not burned)', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
-            await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
+            await service.confirm(enrolled.entity.id, totpCode(enrolled.meta.secret!), makeActor());
 
             // a cipher failing with a NON-blob-semantics error (database
             // outage, KEK misconfiguration) must surface as a thrown error —
@@ -472,7 +472,7 @@ describe('UserAuthenticatorService', () => {
 
             await expect(service.verify(userId, {
                 kind: UserAuthenticatorKind.TOTP,
-                response: totpCode(enrolled.secret!),
+                response: totpCode(enrolled.meta.secret!),
             })).rejects.toThrow('database gone');
 
             const attempts = await cache.get(buildCacheKey({
@@ -486,7 +486,7 @@ describe('UserAuthenticatorService', () => {
     describe('per-account backoff', () => {
         it('locks after a failed attempt and releases after the window', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
-            await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
+            await service.confirm(enrolled.entity.id, totpCode(enrolled.meta.secret!), makeActor());
 
             const failed = await service.verify(userId, { kind: UserAuthenticatorKind.TOTP, response: '000000' });
             expect(failed).toBeFalsy();
@@ -503,14 +503,14 @@ describe('UserAuthenticatorService', () => {
 
             const verified = await service.verify(userId, {
                 kind: UserAuthenticatorKind.TOTP,
-                response: totpCode(enrolled.secret!),
+                response: totpCode(enrolled.meta.secret!),
             });
             expect(verified).toBeTruthy();
         });
 
         it('counts concurrent failures atomically (#3237)', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
-            await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
+            await service.confirm(enrolled.entity.id, totpCode(enrolled.meta.secret!), makeActor());
 
             expect(await service.verify(userId, { kind: UserAuthenticatorKind.TOTP, response: '000000' })).toBeFalsy();
 
@@ -522,7 +522,7 @@ describe('UserAuthenticatorService', () => {
 
         it('recovers from a legacy (non-numeric) attempt-counter value', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
-            await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
+            await service.confirm(enrolled.entity.id, totpCode(enrolled.meta.secret!), makeActor());
 
             // a pre-upgrade deployment stored the state as a JSON object
             const key = buildCacheKey({ prefix: USER_AUTHENTICATOR_ATTEMPT_CACHE_PREFIX, key: userId });
@@ -538,7 +538,7 @@ describe('UserAuthenticatorService', () => {
     describe('verify unit of work (#3237)', () => {
         it('does not consume a recovery code when the onVerified hook fails', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.RECOVERY }, makeActor());
-            const [code] = enrolled.codes!;
+            const [code] = enrolled.meta.codes!;
 
             await expect(service.verify(
                 userId,
@@ -553,9 +553,9 @@ describe('UserAuthenticatorService', () => {
 
         it('does not consume the TOTP step when the onVerified hook fails', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
-            await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
+            await service.confirm(enrolled.entity.id, totpCode(enrolled.meta.secret!), makeActor());
 
-            const code = totpCode(enrolled.secret!);
+            const code = totpCode(enrolled.meta.secret!);
             await expect(service.verify(
                 userId,
                 { kind: UserAuthenticatorKind.TOTP, response: code },
@@ -590,7 +590,7 @@ describe('UserAuthenticatorService', () => {
 
         it('runs the onVerified hook on success only, never on a failed code', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.RECOVERY }, makeActor());
-            const [code] = enrolled.codes!;
+            const [code] = enrolled.meta.codes!;
 
             let calls = 0;
             const onVerified = async () => { calls += 1; };
@@ -630,7 +630,7 @@ describe('UserAuthenticatorService', () => {
             let status = await service.challenge(userId);
             expect(status.required).toBeFalsy();
 
-            await service.confirm(enrolled.entity.id, totpCode(enrolled.secret!), makeActor());
+            await service.confirm(enrolled.entity.id, totpCode(enrolled.meta.secret!), makeActor());
             status = await service.challenge(userId);
             expect(status.required).toBeTruthy();
             expect(status.kinds).toEqual([UserAuthenticatorKind.TOTP]);
@@ -801,9 +801,9 @@ describe('UserAuthenticatorService', () => {
 
             expect(result.entity.kind).toEqual(UserAuthenticatorKind.WEBAUTHN);
             expect(result.entity.confirmed).toBeFalsy();
-            expect(result.webauthn).toBeDefined();
-            expect((result.webauthn as any).challenge).toBeDefined();
-            expect((result.webauthn as any).rp.id).toEqual('localhost');
+            expect(result.meta.webauthn).toBeDefined();
+            expect((result.meta.webauthn as any).challenge).toBeDefined();
+            expect((result.meta.webauthn as any).rp.id).toEqual('localhost');
 
             // a challenge nonce was cached for the confirm ceremony, keyed by
             // the new row id (not the user id) so ceremonies don't collide

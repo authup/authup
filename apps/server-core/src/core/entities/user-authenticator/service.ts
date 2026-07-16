@@ -339,7 +339,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         return {
             entity: this.sanitize(entity),
-            webauthn: options,
+            meta: { webauthn: options },
         };
     }
 
@@ -385,7 +385,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         await this.recordEvent(EventName.MFA_ENROLLED, entity);
 
-        return { entity: this.sanitize(entity) };
+        return { entity: this.sanitize(entity), meta: {} };
     }
 
     protected async resolveTargetUser(
@@ -453,9 +453,11 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         return {
             entity: this.sanitize(entity),
-            secret: secret.base32,
-            uri,
-            qr: await QRCode.toDataURL(uri),
+            meta: {
+                secret: secret.base32,
+                uri,
+                qr: await QRCode.toDataURL(uri),
+            },
         };
     }
 
@@ -495,7 +497,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         return {
             entity: this.sanitize(entity),
-            codes,
+            meta: { codes },
         };
     }
 

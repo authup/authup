@@ -24,21 +24,22 @@ function buildHandlers(recoveryTotal: number) {
             const body = (req.body ?? {}) as Record<string, any>;
             if (body.kind === 'recovery') {
                 return {
-                    entity: {
-                        id: 'recovery-1', 
-                        kind: 'recovery', 
-                        confirmed: true, 
+                    data: {
+                        id: 'recovery-1',
+                        kind: 'recovery',
+                        confirmed: true,
                     },
-                    codes: ['aaaa-bbbb', 'cccc-dddd'],
+                    meta: { codes: ['aaaa-bbbb', 'cccc-dddd'] },
                 };
             }
 
             return {
-                entity: {
-                    id: 'email-1', 
-                    kind: 'email', 
-                    confirmed: true, 
-                }, 
+                data: {
+                    id: 'email-1',
+                    kind: 'email',
+                    confirmed: true,
+                },
+                meta: {},
             };
         },
         'GET /users/:id/authenticators': () => ({
