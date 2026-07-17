@@ -29,7 +29,7 @@ import { PolicyEntity } from '../policy/index.ts';
 import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_clients' })
-@Unique(['name', 'realm_id'])
+@Unique(['name', 'realmId'])
 export class ClientEntity implements Client {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -46,21 +46,21 @@ export class ClientEntity implements Client {
         type: 'boolean',
         default: false,
     })
-    built_in: boolean;
+    builtIn: boolean;
 
     @Column({
         type: 'varchar',
         length: 16,
         default: ClientAuthMethod.NONE,
     })
-    auth_method: `${ClientAuthMethod}`;
+    authMethod: `${ClientAuthMethod}`;
 
     @Column({
         type: 'varchar',
         length: 16,
         default: ClientTokenBindingMethod.NONE,
     })
-    token_binding_method: `${ClientTokenBindingMethod}`;
+    tokenBindingMethod: `${ClientTokenBindingMethod}`;
 
     // ------------------------------------------------------------------
 
@@ -75,7 +75,7 @@ export class ClientEntity implements Client {
         length: 256,
         nullable: true, 
     })
-    display_name: string | null;
+    displayName: string | null;
 
     @Column({
         type: 'text',
@@ -97,13 +97,13 @@ export class ClientEntity implements Client {
         type: 'boolean',
         default: false,
     })
-    secret_hashed: boolean;
+    secretHashed: boolean;
 
     @Column({
         type: 'boolean',
         default: false,
     })
-    secret_encrypted: boolean;
+    secretEncrypted: boolean;
 
     // ------------------------------------------------------------------
 
@@ -111,36 +111,36 @@ export class ClientEntity implements Client {
         type: 'text',
         nullable: true,
     })
-    redirect_uri: string | null;
+    redirectUri: string | null;
 
-    // `text` (not varchar) to match `redirect_uri` — the provisioner writes the
+    // `text` (not varchar) to match `redirectUri` — the provisioner writes the
     // same origin-pattern string to both, so a large trusted-origin set must
     // not overflow only this column.
     @Column({
         type: 'text',
         nullable: true,
     })
-    post_logout_redirect_uri: string | null;
+    postLogoutRedirectUri: string | null;
 
     @Column({
         nullable: true,
         type: 'uuid',
     })
-    access_policy_id: string | null;
+    accessPolicyId: string | null;
 
     @ManyToOne(() => PolicyEntity, {
         onDelete: 'SET NULL',
         nullable: true,
     })
     @JoinColumn({ name: 'access_policy_id' })
-    access_policy: Policy | null;
+    accessPolicy: Policy | null;
 
     @Column({
         type: 'varchar',
         length: 512,
         nullable: true,
     })
-    grant_types: string | null;
+    grantTypes: string | null;
 
     @Column({
         type: 'varchar',
@@ -155,27 +155,27 @@ export class ClientEntity implements Client {
         length: 2000,
         nullable: true,
     })
-    base_url: string | null;
+    baseUrl: string | null;
 
     @Column({
         type: 'varchar',
         length: 2000,
         nullable: true,
     })
-    root_url: string | null;
+    rootUrl: string | null;
 
     // ------------------------------------------------------------------
 
     @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    createdAt: string;
 
     @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    updatedAt: string;
 
     // ------------------------------------------------------------------
 
     @Column()
-    realm_id: Realm['id'];
+    realmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
@@ -187,10 +187,10 @@ export class ClientEntity implements Client {
     @BeforeUpdate()
     setDisplayName() {
         if (
-            typeof this.display_name !== 'string' ||
-            this.display_name.length === 0
+            typeof this.displayName !== 'string' ||
+            this.displayName.length === 0
         ) {
-            this.display_name = this.name;
+            this.displayName = this.name;
         }
     }
 }

@@ -79,28 +79,28 @@ export class UserAuthenticatorEntity implements UserAuthenticator {
         nullable: true,
         default: null,
     })
-    last_used_at: string | null;
+    lastUsedAt: string | null;
 
     // ------------------------------------------------------------------
 
     @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    createdAt: string;
 
     @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    updatedAt: string;
 
     // ------------------------------------------------------------------
 
     @Index()
     @Column({ type: 'uuid' })
-    user_id: User['id'];
+    userId: User['id'];
 
     @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
     user: UserEntity;
 
     @Column({ type: 'uuid' })
-    realm_id: Realm['id'];
+    realmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })

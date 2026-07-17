@@ -48,17 +48,17 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
                 default: [
                     'id',
                     'name',
-                    'display_name',
+                    'displayName',
                     'protocol',
                     'preset',
                     'enabled',
-                    'realm_id',
-                    'created_at',
-                    'updated_at',
+                    'realmId',
+                    'createdAt',
+                    'updatedAt',
                 ],
             },
-            filters: { allowed: ['name', 'protocol', 'enabled', 'realm_id', 'realm.name'] },
-            sort: { allowed: ['id', 'created_at', 'updated_at'] },
+            filters: { allowed: ['name', 'protocol', 'enabled', 'realmId', 'realm.name'] },
+            sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
             pagination: { maxLimit: 50 },
         });
 
@@ -90,7 +90,7 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
             if (!realmId) {
                 return null;
             }
-            qb.andWhere('provider.realm_id = :realmId', { realmId });
+            qb.andWhere('provider.realmId = :realmId', { realmId });
         }
 
         const entity = await qb.getOne();
@@ -168,7 +168,7 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
             if (!realmId) {
                 return [];
             }
-            qb.andWhere('provider.realm_id = :realmId', { realmId });
+            qb.andWhere('provider.realmId = :realmId', { realmId });
         }
 
         const entities = await qb.getMany();

@@ -29,7 +29,7 @@ import { dateToISOStringTransformer } from '../../helpers/index.ts';
 // plain columns without FKs — a row must survive deletion of everything it
 // references. Not cached, not realtime-broadcast: no subscriber.
 @Index(['name', 'scope'])
-@Index(['ref_type', 'ref_id'])
+@Index(['refType', 'refId'])
 @Entity({ name: 'auth_events' })
 export class EventEntity implements Event {
     @PrimaryColumn({ type: 'uuid' })
@@ -53,7 +53,7 @@ export class EventEntity implements Event {
         nullable: true,
         default: null,
     })
-    ref_type: string | null;
+    refType: string | null;
 
     @Column({
         type: 'varchar',
@@ -61,7 +61,7 @@ export class EventEntity implements Event {
         nullable: true,
         default: null,
     })
-    ref_id: string | null;
+    refId: string | null;
 
     @Index()
     @Column({
@@ -69,7 +69,7 @@ export class EventEntity implements Event {
         nullable: true,
         default: null,
     })
-    client_id: string | null;
+    clientId: string | null;
 
     @Column({
         type: 'varchar',
@@ -77,7 +77,7 @@ export class EventEntity implements Event {
         nullable: true,
         default: null,
     })
-    actor_type: `${IdentityType}` | null;
+    actorType: `${IdentityType}` | null;
 
     @Index()
     @Column({
@@ -85,7 +85,7 @@ export class EventEntity implements Event {
         nullable: true,
         default: null,
     })
-    actor_id: string | null;
+    actorId: string | null;
 
     @Index()
     @Column({
@@ -94,7 +94,7 @@ export class EventEntity implements Event {
         nullable: true,
         default: null,
     })
-    actor_name: string | null;
+    actorName: string | null;
 
     @Column({
         type: 'varchar',
@@ -102,7 +102,7 @@ export class EventEntity implements Event {
         nullable: true,
         default: null,
     })
-    request_path: string | null;
+    requestPath: string | null;
 
     @Column({
         type: 'varchar',
@@ -110,7 +110,7 @@ export class EventEntity implements Event {
         nullable: true,
         default: null,
     })
-    request_method: string | null;
+    requestMethod: string | null;
 
     @Index()
     @Column({
@@ -119,7 +119,7 @@ export class EventEntity implements Event {
         nullable: true,
         default: null,
     })
-    request_ip_address: string | null;
+    requestIpAddress: string | null;
 
     @Column({
         type: 'varchar',
@@ -127,7 +127,7 @@ export class EventEntity implements Event {
         nullable: true,
         default: null,
     })
-    request_user_agent: string | null;
+    requestUserAgent: string | null;
 
     @Index()
     @Column({
@@ -135,7 +135,7 @@ export class EventEntity implements Event {
         nullable: true,
         default: null,
     })
-    realm_id: Realm['id'] | null;
+    realmId: Realm['id'] | null;
 
     @Column({
         type: 'text',
@@ -167,9 +167,9 @@ export class EventEntity implements Event {
         nullable: true,
         default: null,
     })
-    expires_at: string | null;
+    expiresAt: string | null;
 
     @Index()
     @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    createdAt: string;
 }

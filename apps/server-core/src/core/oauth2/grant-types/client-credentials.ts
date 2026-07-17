@@ -20,17 +20,17 @@ import type { OAuth2GrantRunWIthOptions } from './types.ts';
 export class ClientCredentialsGrant extends OAuth2BaseGrant<Client> {
     async runWith(input: Client, options: OAuth2GrantRunWIthOptions = {}) : Promise<OAuth2TokenGrantResponse> {
         const session = await this.sessionManager.create({
-            user_agent: options.userAgent,
-            ip_address: options.ipAddress,
-            realm_id: input.realm_id,
+            userAgent: options.userAgent,
+            ipAddress: options.ipAddress,
+            realmId: input.realmId,
             sub: input.id,
-            sub_kind: IdentityType.CLIENT,
-            auth_method: SessionAuthMethod.CLIENT,
+            subKind: IdentityType.CLIENT,
+            authMethod: SessionAuthMethod.CLIENT,
         });
 
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
-            user_agent: session.user_agent,
-            remote_address: session.ip_address,
+            user_agent: session.userAgent,
+            remote_address: session.ipAddress,
             session_id: session.id,
             scope: ScopeName.GLOBAL,
             sub: input.id,

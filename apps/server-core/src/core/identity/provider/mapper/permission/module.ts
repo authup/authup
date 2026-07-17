@@ -27,8 +27,8 @@ export class IdentityProviderPermissionMapper extends IdentityProviderAccountBas
             const [operation] = this.resolve(identity, entity);
 
             items.push({
-                value: entity.permission_id,
-                realmId: entity.permission_realm_id,
+                value: entity.permissionId,
+                realmId: entity.permissionRealmId,
                 operation,
             });
         }

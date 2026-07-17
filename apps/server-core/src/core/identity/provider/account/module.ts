@@ -63,13 +63,13 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
         const user = await this.saveUser(identity);
 
         account = await this.repository.save({
-            provider_id: identity.provider.id,
-            provider_user_id: identity.id,
-            provider_user_name: user.name, // todo: parse identity.name
-            provider_realm_id: identity.provider.realm_id,
+            providerId: identity.provider.id,
+            providerUserId: identity.id,
+            providerUserName: user.name, // todo: parse identity.name
+            providerRealmId: identity.provider.realmId,
             user,
-            user_id: user.id,
-            user_realm_id: user.realm_id,
+            userId: user.id,
+            userRealmId: user.realmId,
         });
 
         await this.saveRoles(identity, account.user);
@@ -98,10 +98,10 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
         }
 
         if (!user) {
-            entity.realm_id = identity.provider.realm_id;
+            entity.realmId = identity.provider.realmId;
             entity.active = true;
-            entity.name_locked = true;
-            entity.client_id = identity.clientId || null;
+            entity.nameLocked = true;
+            entity.clientId = identity.clientId || null;
         }
 
         const attributesSelf = await this.validateAttributes(entity, identity, 10);

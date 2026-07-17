@@ -20,6 +20,6 @@ export class IdentityProviderAttributeMappingRepository implements IIdentityProv
     async findByProviderId(providerId: string): Promise<IdentityProviderAttributeMapping[]> {
         const repository = this.dataSource.getRepository(IdentityProviderAttributeMappingEntity);
 
-        return repository.findBy({ provider_id: providerId });
+        return repository.findBy({ providerId });
     }
 }

@@ -18,19 +18,19 @@ export class UserPermissionRequestValidator extends Container<
         super.initialize();
 
         this.mount(
-            'user_id',
+            'userId',
             { group: RequestHandlerOperation.CREATE },
             createValidator(z.uuid()),
         );
 
         this.mount(
-            'permission_id',
+            'permissionId',
             { group: RequestHandlerOperation.CREATE },
             createValidator(z.uuid()),
         );
 
         this.mount(
-            'policy_id',
+            'policyId',
             { optional: true },
             createValidator(z.uuid().nullable()),
         );

@@ -36,11 +36,11 @@ export class RealmCipher implements IRealmCipher {
 
     async encrypt(plain: string, realmId: string) : Promise<string> {
         const key = await this.keyStore.resolveOrCreate(realmId, JWKUse.ENCRYPTION);
-        if (!key.decryption_key) {
+        if (!key.decryptionKey) {
             throw new AuthupError(`An encryption key could not be resolved for realm ${realmId}.`);
         }
 
-        const cipher = this.resolveCipher(key.id, key.decryption_key);
+        const cipher = this.resolveCipher(key.id, key.decryptionKey);
 
         return [
             REALM_CIPHER_BLOB_VERSION,
@@ -61,7 +61,7 @@ export class RealmCipher implements IRealmCipher {
         if (
             !key ||
             key.use !== JWKUse.ENCRYPTION ||
-            !key.decryption_key
+            !key.decryptionKey
         ) {
             throw new RealmCipherBlobError(`The cipher blob references an unknown encryption key (${keyId}).`);
         }
@@ -70,11 +70,11 @@ export class RealmCipher implements IRealmCipher {
             throw new RealmCipherBlobError(`The cipher blob references a disabled encryption key (${keyId}).`);
         }
 
-        if (key.realm_id !== realmId) {
+        if (key.realmId !== realmId) {
             throw new RealmCipherBlobError(`The cipher blob references a foreign realm's encryption key (${keyId}).`);
         }
 
-        const cipher = this.resolveCipher(key.id, key.decryption_key);
+        const cipher = this.resolveCipher(key.id, key.decryptionKey);
 
         try {
             return await cipher.decrypt(payload);

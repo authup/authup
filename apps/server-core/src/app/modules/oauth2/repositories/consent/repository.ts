@@ -45,29 +45,29 @@ export class ConsentRepositoryAdapter implements IConsentRepository {
                 // mysql rejects under the client join (see helpers.ts).
                 default: [
                     'id',
-                    'client_id',
-                    'realm_id',
-                    'user_id',
+                    'clientId',
+                    'realmId',
+                    'userId',
                     'sub',
-                    'sub_kind',
+                    'subKind',
                     'scope',
-                    'expires_at',
-                    'created_at',
-                    'updated_at',
+                    'expiresAt',
+                    'createdAt',
+                    'updatedAt',
                 ],
             },
             filters: { allowed: [...CONSENT_FILTER_KEYS] },
             relations: { allowed: ['realm'] },
-            sort: { allowed: ['created_at', 'updated_at', 'scope'] },
+            sort: { allowed: ['createdAt', 'updatedAt', 'scope'] },
             pagination: { maxLimit: 50 },
         });
 
-        applyRealmScopeSelect(qb, 'consent', ['sub', 'sub_kind']);
+        applyRealmScopeSelect(qb, 'consent', ['sub', 'subKind']);
 
-        // Always expose only a client SUMMARY (id / name / display_name /
-        // built_in) — NEVER the full ClientEntity (redirect_uri + post-logout
-        // patterns = the trusted-origin set, grant_types, base_url/root_url,
-        // secret-storage flags, access_policy_id). `client` is deliberately
+        // Always expose only a client SUMMARY (id / name / displayName /
+        // builtIn) — NEVER the full ClientEntity (redirectUri + post-logout
+        // patterns = the trusted-origin set, grantTypes, baseUrl/rootUrl,
+        // secret-storage flags, accessPolicyId). `client` is deliberately
         // absent from relations.allowed so a raw ?include=client cannot force
         // the full-column join; the self-service Applications tab still gets
         // the display name from this fixed projection.
@@ -75,13 +75,13 @@ export class ConsentRepositoryAdapter implements IConsentRepository {
             .addSelect([
                 'client.id',
                 'client.name',
-                'client.display_name',
-                'client.built_in',
+                'client.displayName',
+                'client.builtIn',
             ]);
 
         if (options.owner) {
             // mandatory constraint — not overridable by a rapiq filter
-            qb.andWhere('consent.sub = :ownerSub AND consent.sub_kind = :ownerSubKind', {
+            qb.andWhere('consent.sub = :ownerSub AND consent.subKind = :ownerSubKind', {
                 ownerSub: options.owner.sub,
                 ownerSubKind: options.owner.subKind,
             });
@@ -90,7 +90,7 @@ export class ConsentRepositoryAdapter implements IConsentRepository {
         if (options.realmId) {
             // nested `/realms/:realmId/consents` mount — mandatory constraint,
             // not overridable by a rapiq filter
-            qb.andWhere('consent.realm_id = :realmId', { realmId: options.realmId });
+            qb.andWhere('consent.realmId = :realmId', { realmId: options.realmId });
         }
 
         const [entities, total] = await qb.getManyAndCount();
@@ -110,7 +110,7 @@ export class ConsentRepositoryAdapter implements IConsentRepository {
 
     async findAllBySubjectClient(clientId: string, owner: ConsentOwner): Promise<Consent[]> {
         const qb = this.repository.createQueryBuilder('consent');
-        qb.where('consent.client_id = :clientId AND consent.sub = :sub AND consent.sub_kind = :subKind', {
+        qb.where('consent.clientId = :clientId AND consent.sub = :sub AND consent.subKind = :subKind', {
             clientId,
             sub: owner.sub,
             subKind: owner.subKind,
@@ -135,7 +135,7 @@ export class ConsentRepositoryAdapter implements IConsentRepository {
         // uncached read — the diff must see the latest rows, and the covering
         // cache entry must not be refreshed on the write path.
         const existing = await this.repository.createQueryBuilder('consent')
-            .where('consent.client_id = :clientId AND consent.sub = :sub AND consent.sub_kind = :subKind', {
+            .where('consent.clientId = :clientId AND consent.sub = :sub AND consent.subKind = :subKind', {
                 clientId: input.clientId,
                 sub: input.owner.sub,
                 subKind: input.owner.subKind,
@@ -149,7 +149,7 @@ export class ConsentRepositoryAdapter implements IConsentRepository {
         // ConsentEntitySubscriber — covering-cache invalidation, realtime
         // destinations and audit mirroring depend on it. A duplicate-key
         // violation is the benign race outcome under the unique index.
-        // Set the user_id FK only when the subject is a user, so a user
+        // Set the userId FK only when the subject is a user, so a user
         // deletion cascade-drops its consent rows; non-user subjects leave it
         // null (the row is still cleaned up when its client/realm is deleted).
         const userId = input.owner.subKind === IdentityType.USER ?
@@ -158,13 +158,13 @@ export class ConsentRepositoryAdapter implements IConsentRepository {
 
         for (const scope of missing) {
             const entity = this.repository.create({
-                client_id: input.clientId,
-                realm_id: input.realmId,
-                user_id: userId,
+                clientId: input.clientId,
+                realmId: input.realmId,
+                userId,
                 sub: input.owner.sub,
-                sub_kind: input.owner.subKind,
+                subKind: input.owner.subKind,
                 scope,
-                expires_at: null,
+                expiresAt: null,
             });
 
             try {

@@ -36,7 +36,7 @@ export class UserAuthenticatorRepositoryAdapter implements IUserAuthenticatorRep
     }
 
     async removeAllByUser(userId: string, kind: `${UserAuthenticatorKind}`): Promise<void> {
-        await this.repository.delete({ user_id: userId, kind });
+        await this.repository.delete({ userId, kind });
     }
 
     async findOneById(id: string): Promise<UserAuthenticator | null> {
@@ -51,7 +51,7 @@ export class UserAuthenticatorRepositoryAdapter implements IUserAuthenticatorRep
     }
 
     async findAllByUser(userId: string): Promise<UserAuthenticator[]> {
-        return this.repository.find({ where: { user_id: userId } });
+        return this.repository.find({ where: { userId } });
     }
 
     async findAllWithSecretsByUser(
@@ -60,7 +60,7 @@ export class UserAuthenticatorRepositoryAdapter implements IUserAuthenticatorRep
     ): Promise<UserAuthenticator[]> {
         const qb = this.repository.createQueryBuilder('userAuthenticator')
             .addSelect(['userAuthenticator.secret', 'userAuthenticator.codes'])
-            .where('userAuthenticator.user_id = :userId', { userId });
+            .where('userAuthenticator.userId = :userId', { userId });
 
         if (filter.kind) {
             qb.andWhere('userAuthenticator.kind = :kind', { kind: filter.kind });
@@ -74,7 +74,7 @@ export class UserAuthenticatorRepositoryAdapter implements IUserAuthenticatorRep
     }
 
     async hasConfirmedByUser(userId: string): Promise<boolean> {
-        const count = await this.repository.countBy({ user_id: userId, confirmed: true });
+        const count = await this.repository.countBy({ userId, confirmed: true });
         return count > 0;
     }
 
@@ -92,23 +92,23 @@ export class UserAuthenticatorRepositoryAdapter implements IUserAuthenticatorRep
                     'kind',
                     'name',
                     'confirmed',
-                    'last_used_at',
-                    'created_at',
-                    'updated_at',
-                    'user_id',
-                    'realm_id',
+                    'lastUsedAt',
+                    'createdAt',
+                    'updatedAt',
+                    'userId',
+                    'realmId',
                 ],
             },
-            filters: { allowed: ['id', 'kind', 'confirmed', 'user_id', 'realm_id'] },
-            sort: { allowed: ['created_at', 'updated_at', 'last_used_at'] },
+            filters: { allowed: ['id', 'kind', 'confirmed', 'userId', 'realmId'] },
+            sort: { allowed: ['createdAt', 'updatedAt', 'lastUsedAt'] },
             pagination: { maxLimit: 50 },
         });
 
-        applyRealmScopeSelect(qb, 'userAuthenticator', ['user_id']);
+        applyRealmScopeSelect(qb, 'userAuthenticator', ['userId']);
 
         if (options.owner) {
             // mandatory constraint — not overridable by a rapiq filter
-            qb.andWhere('userAuthenticator.user_id = :ownerUserId', { ownerUserId: options.owner.userId });
+            qb.andWhere('userAuthenticator.userId = :ownerUserId', { ownerUserId: options.owner.userId });
         }
 
         const [entities, total] = await qb.getManyAndCount();

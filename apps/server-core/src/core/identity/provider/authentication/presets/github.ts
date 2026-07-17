@@ -15,9 +15,9 @@ import { IdentityProviderOAuth2Authenticator } from '../protocols/index.ts';
 export class IdentityProviderGithubAuthenticator extends IdentityProviderOAuth2Authenticator {
     constructor(ctx: IdentityProviderOAuth2AuthenticatorContext) {
         ctx.provider.scope = mergeOAuth2Scopes('user:email', ctx.provider.scope);
-        ctx.provider.authorize_url = 'https://github.com/login/oauth/authorize';
-        ctx.provider.token_url = 'https://github.com/login/oauth/access_token';
-        ctx.provider.user_info_url = 'https://api.github.com/user';
+        ctx.provider.authorizeUrl = 'https://github.com/login/oauth/authorize';
+        ctx.provider.tokenUrl = 'https://github.com/login/oauth/access_token';
+        ctx.provider.userInfoUrl = 'https://api.github.com/user';
 
         super(ctx);
     }

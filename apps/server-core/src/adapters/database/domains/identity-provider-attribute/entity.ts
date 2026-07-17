@@ -24,7 +24,7 @@ import {
 import { IdentityProviderEntity } from '../identity-provider/entity.ts';
 import { RealmEntity } from '../realm/index.ts';
 
-@Unique(['name', 'provider_id'])
+@Unique(['name', 'providerId'])
 @Entity({ name: 'auth_identity_provider_attributes' })
 export class IdentityProviderAttributeEntity implements IdentityProviderAttribute {
     @PrimaryGeneratedColumn('uuid')
@@ -53,7 +53,7 @@ export class IdentityProviderAttributeEntity implements IdentityProviderAttribut
     // ------------------------------------------------------------------
 
     @Column()
-    provider_id: IdentityProvider['id'];
+    providerId: IdentityProvider['id'];
 
     @ManyToOne(() => IdentityProviderEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'provider_id' })
@@ -61,7 +61,7 @@ export class IdentityProviderAttributeEntity implements IdentityProviderAttribut
 
     // ------------------------------------------------------------------
     @Column({ nullable: true })
-    realm_id: Realm['id'] | null;
+    realmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
@@ -73,8 +73,8 @@ export class IdentityProviderAttributeEntity implements IdentityProviderAttribut
     // ------------------------------------------------------------------
 
     @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    createdAt: string;
 
     @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    updatedAt: string;
 }

@@ -32,7 +32,7 @@ export class ClientScopeRepositoryAdapter implements IClientScopeRepository {
                     q.addGroupBy(`${key}.id`);
                 },
             },
-            filters: { allowed: ['client_id', 'scope_id', 'default', 'scope.name'] },
+            filters: { allowed: ['clientId', 'scopeId', 'default', 'scope.name'] },
             pagination: { maxLimit: 50 },
         });
 

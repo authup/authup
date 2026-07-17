@@ -40,18 +40,18 @@ export class ScopeRepositoryAdapter implements IScopeRepository {
             fields: {
                 allowed: [
                     'id',
-                    'built_in',
+                    'builtIn',
                     'name',
-                    'display_name',
+                    'displayName',
                     'description',
-                    'realm_id',
-                    'created_at',
-                    'updated_at',
+                    'realmId',
+                    'createdAt',
+                    'updatedAt',
                 ],
             },
-            filters: { allowed: ['id', 'built_in', 'name', 'realm_id'] },
+            filters: { allowed: ['id', 'builtIn', 'name', 'realmId'] },
             pagination: { maxLimit: 50 },
-            sort: { allowed: ['id', 'name', 'updated_at', 'created_at'] },
+            sort: { allowed: ['id', 'name', 'updatedAt', 'createdAt'] },
         });
 
         const [entities, total] = await qb.getManyAndCount();
@@ -78,7 +78,7 @@ export class ScopeRepositoryAdapter implements IScopeRepository {
             if (!realmId) {
                 return null;
             }
-            qb.andWhere('scope.realm_id = :realmId', { realmId });
+            qb.andWhere('scope.realmId = :realmId', { realmId });
         }
 
         return qb.getOne();

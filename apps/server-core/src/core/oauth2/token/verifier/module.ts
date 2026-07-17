@@ -80,7 +80,7 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
 
         switch (key.type) {
             case JWKType.OCT: {
-                if (!key.decryption_key) {
+                if (!key.decryptionKey) {
                     throw JWKError.decryptionKeyMissing();
                 }
 
@@ -88,14 +88,14 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
                     token,
                     {
                         type: JWKType.OCT,
-                        key: key.decryption_key,
+                        key: key.decryptionKey,
                     },
                     { ignoreExpiry: options.ignoreExpiry },
                 );
                 break;
             }
             case JWKType.EC: {
-                if (!key.encryption_key) {
+                if (!key.encryptionKey) {
                     throw JWKError.decryptionKeyMissing();
                 }
 
@@ -103,10 +103,10 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
                     token,
                     {
                         type: key.type,
-                        key: key.encryption_key,
+                        key: key.encryptionKey,
                         ...(
-                            key.signature_algorithm ?
-                                { algorithms: [key.signature_algorithm] } :
+                            key.signatureAlgorithm ?
+                                { algorithms: [key.signatureAlgorithm] } :
                                 []
                         ) as TokenECAlgorithm[],
                     },
@@ -115,7 +115,7 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
                 break;
             }
             default: {
-                if (!key.encryption_key) {
+                if (!key.encryptionKey) {
                     throw JWKError.decryptionKeyMissing();
                 }
 
@@ -123,10 +123,10 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
                     token,
                     {
                         type: key.type,
-                        key: key.encryption_key,
+                        key: key.encryptionKey,
                         ...(
-                            key.signature_algorithm ?
-                                { algorithms: [key.signature_algorithm] } :
+                            key.signatureAlgorithm ?
+                                { algorithms: [key.signatureAlgorithm] } :
                                 []
                         ) as TokenRSAAlgorithm[],
                     },

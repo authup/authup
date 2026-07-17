@@ -13,10 +13,10 @@ import type { Robot } from '@authup/core-kit';
 export type RobotCreatePayload = Pick<Robot, 'name'> &
     Partial<Pick<Robot, 'secret' |
         'active' |
-        'display_name' |
+        'displayName' |
         'description' |
-        'user_id' |
-        'realm_id'>>;
+        'userId' |
+        'realmId'>>;
 export type RobotUpdatePayload = Partial<RobotCreatePayload>;
 export type RobotSavePayload = RobotCreatePayload;
 

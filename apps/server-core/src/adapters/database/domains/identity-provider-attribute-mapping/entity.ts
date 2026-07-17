@@ -21,7 +21,7 @@ import { IdentityProviderEntity } from '../identity-provider/index.ts';
 import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_identity_provider_attribute_mappings' })
-@Index(['provider_id', 'target_name'], { unique: true })
+@Index(['providerId', 'targetName'], { unique: true })
 export class IdentityProviderAttributeMappingEntity implements IdentityProviderAttributeMapping {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -31,7 +31,7 @@ export class IdentityProviderAttributeMappingEntity implements IdentityProviderA
         length: 64,
         nullable: true, 
     })
-    synchronization_mode: `${IdentityProviderMappingSyncMode}` | null;
+    synchronizationMode: `${IdentityProviderMappingSyncMode}` | null;
 
     @Column({
         type: 'varchar',
@@ -51,40 +51,40 @@ export class IdentityProviderAttributeMappingEntity implements IdentityProviderA
         type: 'boolean',
         default: false, 
     })
-    value_is_regex: boolean;
+    valueIsRegex: boolean;
 
     @Column({
         type: 'varchar',
         length: 64, 
     })
-    target_name: string;
+    targetName: string;
 
     @Column({
         type: 'varchar',
         length: 128,
         nullable: true, 
     })
-    target_value: string | null;
+    targetValue: string | null;
 
     @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    createdAt: string;
 
     @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    updatedAt: string;
 
     // -----------------------------------------------
 
     @Column()
-    provider_id: string;
+    providerId: string;
 
     @ManyToOne(() => IdentityProviderEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'provider_id' })
     provider: IdentityProviderEntity;
 
     @Column()
-    provider_realm_id: Realm['id'];
+    providerRealmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'provider_realm_id' })
-    provider_realm: RealmEntity;
+    providerRealm: RealmEntity;
 }

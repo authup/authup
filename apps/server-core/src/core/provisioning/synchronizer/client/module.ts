@@ -48,13 +48,13 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
 
         this.permissionJunction = new ProvisioningJunctionSynchronizer({
             repository: ctx.clientPermissionRepository,
-            ownerKey: 'client_id',
-            ownerRealmKey: 'client_realm_id',
+            ownerKey: 'clientId',
+            ownerRealmKey: 'clientRealmId',
         });
         this.roleJunction = new ProvisioningJunctionSynchronizer({
             repository: ctx.clientRoleRepository,
-            ownerKey: 'client_id',
-            ownerRealmKey: 'client_realm_id',
+            ownerKey: 'clientId',
+            ownerRealmKey: 'clientRealmId',
         });
 
         this.permissionSynchronizer = ctx.permissionSynchronizer;
@@ -68,7 +68,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
 
         let attributes = await this.clientRepository.findOneBy({
             name: input.attributes.name,
-            realm_id: input.attributes.realm_id || null,
+            realmId: input.attributes.realmId || null,
         });
 
         if (strategy.type === ProvisioningEntityStrategyType.ABSENT) {
@@ -106,10 +106,10 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
             ...await this.permissionResolver.resolveGlobal(
                 input.relations && input.relations.globalPermissions,
             ),
-            ...(attributes.realm_id ?
+            ...(attributes.realmId ?
                 await this.permissionResolver.resolveRealm(
                     input.relations && input.relations.realmPermissions,
-                    attributes.realm_id,
+                    attributes.realmId,
                 ) :
                 []),
         ];
@@ -118,8 +118,8 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
             await this.permissionJunction.synchronize(
                 attributes,
                 permissions,
-                'permission_id',
-                'permission_realm_id',
+                'permissionId',
+                'permissionRealmId',
             );
         }
 
@@ -128,10 +128,10 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
             ...await this.roleResolver.resolveGlobal(
                 input.relations && input.relations.globalRoles,
             ),
-            ...(attributes.realm_id ?
+            ...(attributes.realmId ?
                 await this.roleResolver.resolveRealm(
                     input.relations && input.relations.realmRoles,
-                    attributes.realm_id,
+                    attributes.realmId,
                 ) :
                 []),
         ];
@@ -140,8 +140,8 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
             await this.roleJunction.synchronize(
                 attributes,
                 roles,
-                'role_id',
-                'role_realm_id',
+                'roleId',
+                'roleRealmId',
             );
         }
 
@@ -149,7 +149,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
 
         if (input.relations && input.relations.permissions) {
             const children = input.relations.permissions.map((child) => {
-                child.attributes.client_id = attributes.id;
+                child.attributes.clientId = attributes.id;
                 child.attributes.client = attributes;
                 return child;
             });
@@ -159,7 +159,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
 
         if (input.relations && input.relations.roles) {
             const children = input.relations.roles.map((child) => {
-                child.attributes.client_id = attributes.id;
+                child.attributes.clientId = attributes.id;
                 child.attributes.client = attributes;
                 return child;
             });

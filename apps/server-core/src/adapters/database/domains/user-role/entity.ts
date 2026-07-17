@@ -27,7 +27,7 @@ import { UserEntity } from '../user/entity.ts';
 import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_user_roles' })
-@Index(['role_id', 'user_id'], { unique: true })
+@Index(['roleId', 'userId'], { unique: true })
 export class UserRoleEntity implements UserRole {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -35,44 +35,44 @@ export class UserRoleEntity implements UserRole {
     // ------------------------------------------------------------------
 
     @Column()
-    role_id: string;
+    roleId: string;
 
     @ManyToOne(() => RoleEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'role_id' })
     role: Role;
 
     @Column({ nullable: true })
-    role_realm_id: Realm['id'] | null;
+    roleRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
         nullable: true, 
     })
     @JoinColumn({ name: 'role_realm_id' })
-    role_realm: Realm | null;
+    roleRealm: Realm | null;
 
     @Column()
-    user_id: string;
+    userId: string;
 
     @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
     user: User;
 
     @Column({ nullable: true })
-    user_realm_id: Realm['id'] | null;
+    userRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
         nullable: true, 
     })
     @JoinColumn({ name: 'user_realm_id' })
-    user_realm: Realm | null;
+    userRealm: Realm | null;
 
     // ------------------------------------------------------------------
 
     @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    createdAt: string;
 
     @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    updatedAt: string;
 }

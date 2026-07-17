@@ -62,7 +62,7 @@ export class UserIdentityRepository implements IUserIdentityRepository {
 
             if (realmKey) {
                 if (isUUID(realmKey)) {
-                    query.andWhere('user.realm_id = :realmId', { realmId: realmKey });
+                    query.andWhere('user.realmId = :realmId', { realmId: realmKey });
                 } else {
                     query.andWhere('realm.name = :realmName', { realmName: realmKey.trim().toLowerCase() });
                 }
@@ -72,7 +72,7 @@ export class UserIdentityRepository implements IUserIdentityRepository {
         const { columns } = this.repository.metadata;
         for (const column of columns) {
             if (!column.isSelect) {
-                query.addSelect(`user.${column.databaseName}`);
+                query.addSelect(`user.${column.propertyName}`);
             }
         }
 
@@ -109,13 +109,13 @@ export class UserIdentityRepository implements IUserIdentityRepository {
             .map((item) => item.value);
 
         const entities = await repository.findBy({
-            user_id: user.id,
-            permission_id: In(ids),
+            userId: user.id,
+            permissionId: In(ids),
         });
 
         const entitiesToDelete : UserPermission[] = [];
         for (const entity of entities) {
-            const index = idsToDelete.indexOf(entity.permission_id);
+            const index = idsToDelete.indexOf(entity.permissionId);
             if (index === -1) {
                 continue;
             }
@@ -134,17 +134,17 @@ export class UserIdentityRepository implements IUserIdentityRepository {
             }
 
             const index = entities.findIndex(
-                (entity) => entity.permission_id === item.value,
+                (entity) => entity.permissionId === item.value,
             );
             if (index !== -1) {
                 continue;
             }
 
             const entity = repository.create({
-                user_id: user.id,
-                user_realm_id: user.realm_id,
-                permission_id: item.value as string,
-                permission_realm_id: item.realmId as string,
+                userId: user.id,
+                userRealmId: user.realmId,
+                permissionId: item.value as string,
+                permissionRealmId: item.realmId as string,
             });
 
             entitiesToCreate.push(entity);
@@ -165,13 +165,13 @@ export class UserIdentityRepository implements IUserIdentityRepository {
             .map((item) => item.value);
 
         const entities = await repository.findBy({
-            user_id: user.id,
-            role_id: In(ids),
+            userId: user.id,
+            roleId: In(ids),
         });
 
         const entitiesToDelete : UserRole[] = [];
         for (const entity of entities) {
-            const index = idsToDelete.indexOf(entity.role_id);
+            const index = idsToDelete.indexOf(entity.roleId);
             if (index === -1) {
                 continue;
             }
@@ -189,16 +189,16 @@ export class UserIdentityRepository implements IUserIdentityRepository {
                 continue;
             }
 
-            const index = entities.findIndex((entity) => entity.role_id === item.value);
+            const index = entities.findIndex((entity) => entity.roleId === item.value);
             if (index !== -1) {
                 continue;
             }
 
             const entity = repository.create({
-                user_id: user.id,
-                user_realm_id: user.realm_id,
-                role_id: item.value as string,
-                role_realm_id: item.realmId as string,
+                userId: user.id,
+                userRealmId: user.realmId,
+                roleId: item.value as string,
+                roleRealmId: item.realmId as string,
             });
 
             entitiesToCreate.push(entity);

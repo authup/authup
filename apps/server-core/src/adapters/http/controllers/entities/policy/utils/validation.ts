@@ -16,7 +16,7 @@ import type { PolicyEntity } from '../../../../../database/domains/index.ts';
 import { RequestHandlerOperation } from '../../../../request/index.ts';
 import { PolicyAttributesValidator } from './attributes-validator.ts';
 
-export class PolicyValidator extends Container<PolicyEntity & { parent_id?: string | null }> {
+export class PolicyValidator extends Container<PolicyEntity & { parentId?: string | null }> {
     protected initialize() {
         super.initialize();
 
@@ -46,7 +46,7 @@ export class PolicyValidator extends Container<PolicyEntity & { parent_id?: stri
         }, nameValidator);
 
         this.mount(
-            'display_name',
+            'displayName',
             { optional: true },
             createValidator(z.string().min(3).max(256).nullable()),
         );
@@ -64,13 +64,13 @@ export class PolicyValidator extends Container<PolicyEntity & { parent_id?: stri
         );
 
         this.mount(
-            'parent_id',
+            'parentId',
             { optional: true },
             createValidator(z.uuid().nullable()),
         );
 
         this.mount(
-            'realm_id',
+            'realmId',
             { group: RequestHandlerOperation.CREATE },
             createValidator(z.uuid().nullable()),
         );

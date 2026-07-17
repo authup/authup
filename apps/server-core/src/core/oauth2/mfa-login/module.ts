@@ -70,15 +70,15 @@ export class OAuth2MfaLoginService implements IOAuth2MfaLoginService {
         const expiresAt = this.ticketIssuer.buildExp();
 
         const session = await this.sessionManager.create({
-            user_agent: options.userAgent,
-            ip_address: options.ipAddress,
-            realm_id: user.realm_id,
-            client_id: clientId,
+            userAgent: options.userAgent,
+            ipAddress: options.ipAddress,
+            realmId: user.realmId,
+            clientId,
             sub: user.id,
-            sub_kind: IdentityType.USER,
-            mfa_at: null,
-            auth_method: SessionAuthMethod.PASSWORD,
-            expires_at: new Date(expiresAt * 1000).toISOString(),
+            subKind: IdentityType.USER,
+            mfaAt: null,
+            authMethod: SessionAuthMethod.PASSWORD,
+            expiresAt: new Date(expiresAt * 1000).toISOString(),
         });
 
         // No scope, no role claims — the ticket is not a bearer; it only
@@ -86,11 +86,11 @@ export class OAuth2MfaLoginService implements IOAuth2MfaLoginService {
         const [token, payload] = await this.ticketIssuer.issue({
             client_id: clientId,
             session_id: session.id,
-            user_agent: session.user_agent,
-            remote_address: session.ip_address,
+            user_agent: session.userAgent,
+            remote_address: session.ipAddress,
             sub: user.id,
             sub_kind: OAuth2SubKind.USER,
-            realm_id: user.realm_id,
+            realm_id: user.realmId,
             realm_name: user.realm?.name,
             ...(input.confirmation ? { cnf: input.confirmation } : {}),
             exp: expiresAt,
@@ -111,7 +111,7 @@ export class OAuth2MfaLoginService implements IOAuth2MfaLoginService {
         // lifetime — the login is complete now.
         const session = await this.sessionManager.refresh(input.session);
 
-        // mfa_at was stamped inside the verify unit of work, so the claims
+        // mfaAt was stamped inside the verify unit of work, so the claims
         // advertise the completed factor (amr +otp, acr urn:authup:mfa).
         const amrAcr = deriveAmrAcr(session);
 
@@ -129,14 +129,14 @@ export class OAuth2MfaLoginService implements IOAuth2MfaLoginService {
         }
 
         const issuePayload : Partial<OAuth2TokenPayload> = {
-            client_id: session.client_id ?? undefined,
+            client_id: session.clientId ?? undefined,
             session_id: session.id,
-            user_agent: session.user_agent,
-            remote_address: session.ip_address,
+            user_agent: session.userAgent,
+            remote_address: session.ipAddress,
             scope: ScopeName.GLOBAL,
             sub: session.sub,
             sub_kind: OAuth2SubKind.USER,
-            realm_id: session.realm_id,
+            realm_id: session.realmId,
             realm_name: ticket.realm_name,
             ...(ticket.cnf ? { cnf: ticket.cnf } : {}),
             ...amrAcr,
@@ -150,16 +150,16 @@ export class OAuth2MfaLoginService implements IOAuth2MfaLoginService {
             name: EventName.LOGIN,
             refType: EventRefType.SESSION,
             refId: session.id,
-            clientId: session.client_id ?? null,
+            clientId: session.clientId ?? null,
             actorType: IdentityType.USER,
             actorId: session.sub,
             actorName: input.userName ?? null,
-            realmId: session.realm_id,
-            requestIpAddress: session.ip_address ?? null,
-            requestUserAgent: session.user_agent ?? null,
+            realmId: session.realmId,
+            requestIpAddress: session.ipAddress ?? null,
+            requestUserAgent: session.userAgent ?? null,
             data: {
-                grant_type: OAuth2TokenGrant.PASSWORD,
-                session_id: session.id,
+                grantType: OAuth2TokenGrant.PASSWORD,
+                sessionId: session.id,
             },
         });
         this.metrics?.recordLogin('success');

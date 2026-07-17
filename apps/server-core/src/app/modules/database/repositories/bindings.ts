@@ -28,8 +28,8 @@ export type LoadBoundPermissionsOptions<E extends ObjectLiteral> = {
 
 type PermissionJunction = {
     permission: Permission;
-    policy_id?: string | null;
-    realm_scope?: `${RealmScope}` | null;
+    policyId?: string | null;
+    realmScope?: `${RealmScope}` | null;
 };
 
 export async function loadBoundPermissions<E extends PermissionJunction & ObjectLiteral>(
@@ -49,8 +49,8 @@ export async function loadBoundPermissions<E extends PermissionJunction & Object
 
     const policyIds = new Set<string>();
     for (const entry of entries) {
-        if (entry.policy_id) {
-            policyIds.add(entry.policy_id);
+        if (entry.policyId) {
+            policyIds.add(entry.policyId);
         }
     }
 
@@ -58,8 +58,8 @@ export async function loadBoundPermissions<E extends PermissionJunction & Object
 
     return entries.map((entry) => {
         const policies: BasePolicy[] = [];
-        if (entry.policy_id && policyTrees[entry.policy_id]) {
-            policies.push(policyTrees[entry.policy_id]);
+        if (entry.policyId && policyTrees[entry.policyId]) {
+            policies.push(policyTrees[entry.policyId]);
         }
 
         return {
@@ -67,7 +67,7 @@ export async function loadBoundPermissions<E extends PermissionJunction & Object
             policies: policies.length > 0 ? policies : undefined,
             // Fail-closed coercion: a missing column (stale cache / pre-migration row)
             // becomes the most restrictive `own`.
-            realm_scope: entry.realm_scope ?? RealmScope.OWN,
+            realmScope: entry.realmScope ?? RealmScope.OWN,
         };
     });
 }

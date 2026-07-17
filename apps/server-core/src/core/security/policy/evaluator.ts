@@ -94,8 +94,8 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
                     return false;
                 }
 
-                return (binding.permission.realm_id ?? null) === (item.permission.realm_id ?? null) &&
-                    (binding.permission.client_id ?? null) === (item.permission.client_id ?? null);
+                return (binding.permission.realmId ?? null) === (item.permission.realmId ?? null) &&
+                    (binding.permission.clientId ?? null) === (item.permission.clientId ?? null);
             }));
 
         if (identityBindings.length === 0) {
@@ -110,7 +110,7 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
         // identityBindings is filtered to a single (name, realm_id, client_id) key, so the
         // aggregate yields exactly one entry whose `grants` are the actor's per-grant
         // (realm_scope, policy) disjunction terms; access is the DISJUNCTION over them:
-        //   ∃ grant . realmScopeMatches(grant.realm_scope, resource) ∧ (grant.policy passes)
+        //   ∃ grant . realmScopeMatches(grant.realmScope, resource) ∧ (grant.policy passes)
         // Pairing each grant's realm reach with its OWN policy is what fixes both the mixed
         // policy-free + policy-bound UNDER-grant (a policy-free `own` grant must not mask a
         // policy-bound `any` grant's wider reach) and the symmetric OVER-grant (an `own`
@@ -119,12 +119,12 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
         for (const grant of aggr.grants) {
             // Realm reach (coarse, actor-relative) — a SEPARATE factor from the grant's
             // policy, ANDed with it. The realm-match evaluator runs in SCOPE MODE: it reads the
-            // resource realm from ctx.data[REALM_MATCH] (fallback ATTRIBUTES.realm_id) and
+            // resource realm from ctx.data[REALM_MATCH] (fallback ATTRIBUTES.realmId) and
             // neutral-passes when absent (preEvaluate / gate checks / realm-less resources) —
             // key-PRESENCE is the discriminator. Invoked DIRECTLY (not via PolicyEngine —
             // REALM_MATCH is in policiesExcluded, so the engine would skip it).
             const realmOutcome = await this.realmMatchEvaluator.evaluate(
-                { scope: grant.realm_scope },
+                { scope: grant.realmScope },
                 ctx,
             );
             if (!realmOutcome.success) {

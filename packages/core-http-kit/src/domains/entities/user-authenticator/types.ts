@@ -14,7 +14,7 @@ import type { EntityCollectionResponse, EntityRecordResponse, EntityRecordWrappe
 export type UserAuthenticatorCreatePayload = {
     kind: `${UserAuthenticatorKind}`,
     name?: string | null,
-    user_id?: string,
+    userId?: string,
 };
 
 /**

@@ -24,7 +24,7 @@ export class UserAttributeRequestValidator extends Container<
         );
 
         this.mount(
-            'user_id',
+            'userId',
             {
                 group: RequestHandlerOperation.CREATE,
                 optional: true,

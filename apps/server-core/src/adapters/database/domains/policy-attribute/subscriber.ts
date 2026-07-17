@@ -19,13 +19,13 @@ export class PolicyAttributeSubscriber extends EntitySubscriber<PolicyAttribute>
         super({
             type: EntityType.POLICY_ATTRIBUTE,
             target: PolicyAttributeEntity,
-            destinations: buildEntityDestinations(EntityType.POLICY_ATTRIBUTE, (data) => [data.realm_id]),
+            destinations: buildEntityDestinations(EntityType.POLICY_ATTRIBUTE, (data) => [data.realmId]),
             cache: {
                 onInsert: true,
                 keys: (data) => [
                     buildRedisKeyPath({
                         prefix: CachePrefix.POLICY_OWNED_ATTRIBUTES,
-                        key: data.policy_id,
+                        key: data.policyId,
                     }),
                 ],
             },

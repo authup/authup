@@ -27,7 +27,7 @@ import { RoleEntity } from '../role/index.ts';
 import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_identity_provider_role_mappings' })
-@Index(['provider_id', 'role_id'], { unique: true })
+@Index(['providerId', 'roleId'], { unique: true })
 export class IdentityProviderRoleMappingEntity implements IdentityProviderRoleMapping {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -37,7 +37,7 @@ export class IdentityProviderRoleMappingEntity implements IdentityProviderRoleMa
         length: 64,
         nullable: true, 
     })
-    synchronization_mode: `${IdentityProviderMappingSyncMode}` | null;
+    synchronizationMode: `${IdentityProviderMappingSyncMode}` | null;
 
     @Column({
         type: 'varchar',
@@ -57,44 +57,44 @@ export class IdentityProviderRoleMappingEntity implements IdentityProviderRoleMa
         type: 'boolean',
         default: false, 
     })
-    value_is_regex: boolean;
+    valueIsRegex: boolean;
 
     @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    createdAt: string;
 
     @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    updatedAt: string;
 
     // -----------------------------------------------
 
     @Column()
-    role_id: string;
+    roleId: string;
 
     @ManyToOne(() => RoleEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'role_id' })
     role: Role;
 
     @Column({ nullable: true })
-    role_realm_id: Realm['id'] | null;
+    roleRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
         nullable: true, 
     })
     @JoinColumn({ name: 'role_realm_id' })
-    role_realm: RealmEntity | null;
+    roleRealm: RealmEntity | null;
 
     @Column()
-    provider_id: string;
+    providerId: string;
 
     @ManyToOne(() => IdentityProviderEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'provider_id' })
     provider: IdentityProviderEntity;
 
     @Column()
-    provider_realm_id: Realm['id'];
+    providerRealmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'provider_realm_id' })
-    provider_realm: RealmEntity;
+    providerRealm: RealmEntity;
 }

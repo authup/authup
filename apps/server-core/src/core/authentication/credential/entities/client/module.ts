@@ -12,11 +12,11 @@ import type { ICredentialService } from '../../types.ts';
 
 export class ClientCredentialsService implements ICredentialService<Client> {
     async verify(input: string, entity: Client): Promise<boolean> {
-        if (!entity.secret || entity.auth_method !== ClientAuthMethod.SECRET) {
+        if (!entity.secret || entity.authMethod !== ClientAuthMethod.SECRET) {
             return false;
         }
 
-        if (entity.secret_hashed) {
+        if (entity.secretHashed) {
             return compare(input, entity.secret);
         }
 
@@ -25,8 +25,8 @@ export class ClientCredentialsService implements ICredentialService<Client> {
         return input === entity.secret;
     }
 
-    async protect(input: string, entity: Pick<Client, 'secret_hashed'>): Promise<string> {
-        if (entity.secret_hashed) {
+    async protect(input: string, entity: Pick<Client, 'secretHashed'>): Promise<string> {
+        if (entity.secretHashed) {
             return isBCryptHash(input) ?
                 input :
                 hash(input);

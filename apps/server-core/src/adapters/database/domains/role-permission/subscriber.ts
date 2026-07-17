@@ -20,15 +20,15 @@ export class RolePermissionSubscriber extends EntitySubscriber<RolePermission> {
             type: EntityType.ROLE_PERMISSION,
             target: RolePermissionEntity,
             destinations: buildEntityDestinations(EntityType.ROLE_PERMISSION, (data) => [
-                data.role_realm_id,
-                data.permission_realm_id,
+                data.roleRealmId,
+                data.permissionRealmId,
             ]),
             cache: {
                 onInsert: true,
                 keys: (data) => [
                     buildRedisKeyPath({
                         prefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
-                        key: data.role_id,
+                        key: data.roleId,
                     }),
                 ],
             },

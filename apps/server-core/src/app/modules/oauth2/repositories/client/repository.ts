@@ -30,7 +30,7 @@ export class OAuth2ClientRepository implements IOAuth2ClientRepository {
 
             if (realmKey) {
                 if (isUUID(realmKey)) {
-                    query.andWhere('client.realm_id = :realmId', { realmId: realmKey });
+                    query.andWhere('client.realmId = :realmId', { realmId: realmKey });
                 } else {
                     query.andWhere('realm.name = :realmName', { realmName: realmKey.trim().toLowerCase() });
                 }

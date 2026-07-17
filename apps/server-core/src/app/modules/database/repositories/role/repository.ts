@@ -47,17 +47,17 @@ export class RoleRepositoryAdapter implements IRoleRepository {
                 allowed: [
                     'id',
                     'name',
-                    'display_name',
+                    'displayName',
                     'target',
                     'description',
-                    'realm_id',
-                    'created_at',
-                    'updated_at',
+                    'realmId',
+                    'createdAt',
+                    'updatedAt',
                 ],
             },
-            filters: { allowed: ['id', 'name', 'target', 'realm_id'] },
+            filters: { allowed: ['id', 'name', 'target', 'realmId'] },
             pagination: { maxLimit: 50 },
-            sort: { allowed: ['id', 'name', 'updated_at', 'created_at'] },
+            sort: { allowed: ['id', 'name', 'updatedAt', 'createdAt'] },
         });
 
         const [entities, total] = await qb.getManyAndCount();
@@ -84,7 +84,7 @@ export class RoleRepositoryAdapter implements IRoleRepository {
             if (!realmId) {
                 return null;
             }
-            qb.andWhere('role.realm_id = :realmId', { realmId });
+            qb.andWhere('role.realmId = :realmId', { realmId });
         }
 
         return qb.getOne();
@@ -145,7 +145,7 @@ export class RoleRepositoryAdapter implements IRoleRepository {
         return loadBoundPermissions({
             manager: this.repository.manager,
             junctionTarget: RolePermissionEntity,
-            where: { role_id: id },
+            where: { roleId: id },
             cachePrefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
             cacheKey: id,
         });

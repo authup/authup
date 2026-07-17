@@ -20,15 +20,15 @@ export class RobotPermissionSubscriber extends EntitySubscriber<RobotPermission>
             type: EntityType.ROBOT_PERMISSION,
             target: RobotPermissionEntity,
             destinations: buildEntityDestinations(EntityType.ROBOT_PERMISSION, (data) => [
-                data.robot_realm_id,
-                data.permission_realm_id,
+                data.robotRealmId,
+                data.permissionRealmId,
             ]),
             cache: {
                 onInsert: true,
                 keys: (data) => [
                     buildRedisKeyPath({
                         prefix: CachePrefix.ROBOT_OWNED_PERMISSIONS,
-                        key: data.robot_id,
+                        key: data.robotId,
                     }),
                 ],
             },

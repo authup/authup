@@ -15,9 +15,9 @@ import { IdentityProviderOAuth2Authenticator } from '../protocols/index.ts';
 export class IdentityProviderPaypalAuthenticator extends IdentityProviderOAuth2Authenticator {
     constructor(ctx: IdentityProviderOAuth2AuthenticatorContext) {
         ctx.provider.scope = mergeOAuth2Scopes('openid profile email', ctx.provider.scope);
-        ctx.provider.authorize_url = 'https://www.paypal.com/signin/authorize';
-        ctx.provider.token_url = 'https://api.paypal.com/v1/identity/openidconnect/tokenservice';
-        ctx.provider.user_info_url = 'https://api.paypal.com/v1/oauth2/token/userinfo?schema=openid';
+        ctx.provider.authorizeUrl = 'https://www.paypal.com/signin/authorize';
+        ctx.provider.tokenUrl = 'https://api.paypal.com/v1/identity/openidconnect/tokenservice';
+        ctx.provider.userInfoUrl = 'https://api.paypal.com/v1/oauth2/token/userinfo?schema=openid';
 
         super(ctx);
     }

@@ -24,11 +24,11 @@ export class ProvisioningJunctionSynchronizer<T extends ObjectLiteral = ObjectLi
     async synchronize(
         owner: {
             id: string,
-            realm_id?: string | null 
+            realmId?: string | null 
         },
         targets: Array<{
             id: string,
-            realm_id?: string | null 
+            realmId?: string | null 
         }>,
         targetKey: string,
         targetRealmKey: string,
@@ -43,9 +43,9 @@ export class ProvisioningJunctionSynchronizer<T extends ObjectLiteral = ObjectLi
             if (!existing) {
                 const entity = this.ctx.repository.create({
                     [this.ctx.ownerKey]: owner.id,
-                    [this.ctx.ownerRealmKey]: owner.realm_id,
+                    [this.ctx.ownerRealmKey]: owner.realmId,
                     [targetKey]: target.id,
-                    [targetRealmKey]: target.realm_id,
+                    [targetRealmKey]: target.realmId,
                     ...(extraAttributes || {}),
                 } as Partial<T>);
 

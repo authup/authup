@@ -16,13 +16,13 @@ export class ClientScopeRequestValidator extends Container<ClientScopeEntity> {
         super.initialize();
 
         this.mount(
-            'client_id',
+            'clientId',
             { group: RequestHandlerOperation.CREATE },
             createValidator(z.uuid()),
         );
 
         this.mount(
-            'scope_id',
+            'scopeId',
             { group: RequestHandlerOperation.CREATE },
             createValidator(z.uuid()),
         );

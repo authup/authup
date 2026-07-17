@@ -48,9 +48,9 @@ export class EventService extends AbstractEntityService implements IEventService
 
     protected isOwnedBy(entity: Event, actor: ActorContext): boolean {
         return !!actor.identity &&
-            !!entity.actor_id &&
-            entity.actor_id === actor.identity.data.id &&
-            entity.actor_type === actor.identity.type;
+            !!entity.actorId &&
+            entity.actorId === actor.identity.data.id &&
+            entity.actorType === actor.identity.type;
     }
 
     protected async canReadRealm(actor: ActorContext, realmId: string | null): Promise<boolean> {
@@ -110,12 +110,12 @@ export class EventService extends AbstractEntityService implements IEventService
         this.logger?.info(`audit: ${input.scope}.${input.name}`, {
             scope: input.scope,
             name: input.name,
-            ref_type: input.refType ?? null,
-            ref_id: input.refId ?? null,
-            client_id: input.clientId ?? null,
-            actor_type: input.actorType ?? null,
-            actor_id: input.actorId ?? null,
-            realm_id: input.realmId ?? null,
+            refType: input.refType ?? null,
+            refId: input.refId ?? null,
+            clientId: input.clientId ?? null,
+            actorType: input.actorType ?? null,
+            actorId: input.actorId ?? null,
+            realmId: input.realmId ?? null,
             ...(data ? { data } : {}),
         });
 
@@ -130,20 +130,20 @@ export class EventService extends AbstractEntityService implements IEventService
                 id: randomUUID(),
                 scope: input.scope,
                 name: input.name,
-                ref_type: truncate(input.refType, 64),
-                ref_id: truncate(input.refId, 64),
-                client_id: input.clientId ?? null,
-                actor_type: input.actorType ?? null,
-                actor_id: input.actorId ?? null,
-                actor_name: truncate(input.actorName, 128),
-                request_path: truncate(input.requestPath, 256),
-                request_method: truncate(input.requestMethod, 10),
-                request_ip_address: truncate(input.requestIpAddress, 45),
-                request_user_agent: truncate(input.requestUserAgent, 512),
-                realm_id: input.realmId ?? null,
+                refType: truncate(input.refType, 64),
+                refId: truncate(input.refId, 64),
+                clientId: input.clientId ?? null,
+                actorType: input.actorType ?? null,
+                actorId: input.actorId ?? null,
+                actorName: truncate(input.actorName, 128),
+                requestPath: truncate(input.requestPath, 256),
+                requestMethod: truncate(input.requestMethod, 10),
+                requestIpAddress: truncate(input.requestIpAddress, 45),
+                requestUserAgent: truncate(input.requestUserAgent, 512),
+                realmId: input.realmId ?? null,
                 data,
                 expiring: retentionDays > 0,
-                expires_at: retentionDays > 0 ?
+                expiresAt: retentionDays > 0 ?
                     new Date(Date.now() + (retentionDays * DAY_IN_MS)).toISOString() :
                     null,
             });
@@ -220,7 +220,7 @@ export class EventService extends AbstractEntityService implements IEventService
 
     async getOne(id: string, actor: ActorContext, options: EventServiceReadOptions = {}): Promise<Event> {
         const entity = await this.repository.findOneById(id);
-        if (!entity || (options.realmId && entity.realm_id !== options.realmId)) {
+        if (!entity || (options.realmId && entity.realmId !== options.realmId)) {
             throw new EntityNotFoundError();
         }
 

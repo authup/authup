@@ -48,23 +48,23 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
             fields: {
                 default: [
                     'id',
-                    'built_in',
+                    'builtIn',
                     'type',
-                    'display_name',
+                    'displayName',
                     'name',
                     'description',
                     'invert',
-                    'parent_id',
-                    'realm_id',
-                    'created_at',
-                    'updated_at',
+                    'parentId',
+                    'realmId',
+                    'createdAt',
+                    'updatedAt',
                 ],
             },
             filters: {
                 // @ts-expect-error realm.name filter requires relation join
-                allowed: ['id', 'name', 'type', 'parent_id', 'realm_id', 'realm.name'],
+                allowed: ['id', 'name', 'type', 'parentId', 'realmId', 'realm.name'],
             },
-            sort: { allowed: ['id', 'created_at', 'updated_at'] },
+            sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
             pagination: { maxLimit: 50 },
         });
 
@@ -97,7 +97,7 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
             if (!realmId) {
                 return null;
             }
-            qb.andWhere('policy.realm_id = :realmId', { realmId });
+            qb.andWhere('policy.realmId = :realmId', { realmId });
         }
 
         const entity = await qb.getOne();

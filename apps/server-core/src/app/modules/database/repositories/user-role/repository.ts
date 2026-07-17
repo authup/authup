@@ -26,7 +26,7 @@ export class UserRoleRepositoryAdapter implements IUserRoleRepository {
 
         const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'userRole',
-            filters: { allowed: ['role_id', 'user_id'] },
+            filters: { allowed: ['roleId', 'userId'] },
             relations: {
                 allowed: ['user', 'role'],
                 onJoin: (_property: string, key: string, q: any) => {
@@ -36,8 +36,8 @@ export class UserRoleRepositoryAdapter implements IUserRoleRepository {
             sort: {
                 allowed: [
                     'id',
-                    'created_at',
-                    'updated_at',
+                    'createdAt',
+                    'updatedAt',
                 ],
             },
             pagination: { maxLimit: 50 },

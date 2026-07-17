@@ -28,7 +28,7 @@ export class ScopeProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
         let attributes = await this.repository.findOneBy({
             name: input.attributes.name,
-            realm_id: input.attributes.realm_id || null,
+            realmId: input.attributes.realmId || null,
         });
 
         if (strategy.type === ProvisioningEntityStrategyType.ABSENT) {

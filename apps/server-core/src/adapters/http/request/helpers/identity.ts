@@ -25,7 +25,7 @@ export class RequestIdentity {
             return raw.data.id;
         }
 
-        return raw.data.client_id || null;
+        return raw.data.clientId || null;
     }
 
     get data() {
@@ -41,7 +41,7 @@ export class RequestIdentity {
     }
 
     get realmId() {
-        return this.raw.data.realm_id || this.raw.data.realm?.id;
+        return this.raw.data.realmId || this.raw.data.realm?.id;
     }
 
     get realmName() {

@@ -19,7 +19,7 @@ export type ClientScopeServiceContext = {
 };
 
 export class ClientScopeService extends JunctionEntityService implements IClientScopeService {
-    protected readonly ownerRealmKey = 'client_realm_id';
+    protected readonly ownerRealmKey = 'clientRealmId';
 
     protected repository: IClientScopeRepository;
 
@@ -79,22 +79,22 @@ export class ClientScopeService extends JunctionEntityService implements IClient
         await this.repository.validateJoinColumns(validated);
 
         const existing = await this.repository.findOneBy({
-            client_id: validated.client_id,
-            scope_id: validated.scope_id,
+            clientId: validated.clientId,
+            scopeId: validated.scopeId,
         });
         if (existing) {
             throw new EntityConflictError({ entity: 'client-scope' });
         }
 
         if (validated.client) {
-            validated.client_realm_id = validated.client.realm_id;
+            validated.clientRealmId = validated.client.realmId;
         }
 
         if (validated.scope) {
-            validated.scope_realm_id = validated.scope.realm_id;
+            validated.scopeRealmId = validated.scope.realmId;
         }
 
-        // Stamp the owner (client) realm so the realm_scope factor gates cross-realm writes.
+        // Stamp the owner (client) realm so the realmScope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_SCOPE_CREATE,
             data: definePolicyData({
@@ -120,7 +120,7 @@ export class ClientScopeService extends JunctionEntityService implements IClient
             throw new EntityNotFoundError();
         }
 
-        // Stamp the owner (client) realm so the realm_scope factor gates cross-realm writes.
+        // Stamp the owner (client) realm so the realmScope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_SCOPE_DELETE,
             data: definePolicyData({

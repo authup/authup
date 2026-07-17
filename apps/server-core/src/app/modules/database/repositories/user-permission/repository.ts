@@ -28,8 +28,8 @@ export class UserPermissionRepositoryAdapter implements IUserPermissionRepositor
             defaultAlias: 'userPermission',
             filters: {
                 allowed: [
-                    'user_id',
-                    'permission_id',
+                    'userId',
+                    'permissionId',
                 ],
             },
             relations: {
@@ -44,8 +44,8 @@ export class UserPermissionRepositoryAdapter implements IUserPermissionRepositor
             sort: {
                 allowed: [
                     'id',
-                    'created_at',
-                    'updated_at',
+                    'createdAt',
+                    'updatedAt',
                 ],
             },
             pagination: { maxLimit: 50 },

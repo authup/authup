@@ -32,7 +32,7 @@ export class RealmEntity implements Realm {
         length: 256,
         nullable: true, 
     })
-    display_name: string | null;
+    displayName: string | null;
 
     @Column({
         type: 'text',
@@ -45,11 +45,11 @@ export class RealmEntity implements Realm {
         type: 'boolean',
         default: false, 
     })
-    built_in: boolean;
+    builtIn: boolean;
 
     @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    createdAt: string;
 
     @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    updatedAt: string;
 }

@@ -10,11 +10,11 @@ import type { Key } from '@authup/core-kit';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
 // Mirrors `KeyValidator` mounts in @authup/core-kit. Without material
-// (decryption_key) the server GENERATES a key; with it, the material is
+// (decryptionKey) the server GENERATES a key; with it, the material is
 // IMPORTED (sig: pkcs8 + spki, base64 or PEM; enc: 32 base64 bytes).
-// Responses never carry decryption_key.
+// Responses never carry decryptionKey.
 export type KeyCreatePayload = Pick<Key, 'use'> &
-    Partial<Pick<Key, 'name' | 'priority' | 'status' | 'signature_algorithm' | 'realm_id' | 'decryption_key' | 'encryption_key' | 'certificate'>>;
+    Partial<Pick<Key, 'name' | 'priority' | 'status' | 'signatureAlgorithm' | 'realmId' | 'decryptionKey' | 'encryptionKey' | 'certificate'>>;
 export type KeyUpdatePayload = Partial<Pick<Key, 'name' | 'priority' | 'status'>>;
 
 export type KeyDeleteOptions = {

@@ -41,7 +41,7 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
     ) : Promise<OAuth2TokenGrantResponse> {
         const session = await this.resolveSession(authorizationCode, options);
 
-        // amr/acr derive from the RESOLVED session (auth_method + mfa_at) —
+        // amr/acr derive from the RESOLVED session (authMethod + mfaAt) —
         // deliberately on every token kind, not only the id_token, so
         // resource servers can read the method without parsing an id_token.
         const amrAcr = deriveAmrAcr(session);
@@ -96,7 +96,7 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
                 ...(typeof authorizationCode.auth_time === 'number' ? { auth_time: authorizationCode.auth_time } : {}),
                 ...amrAcr,
                 sid: session.id,
-                at_hash: await buildOAuth2TokenHash(accessToken, key.signature_algorithm),
+                at_hash: await buildOAuth2TokenHash(accessToken, key.signatureAlgorithm),
             });
 
             buildContext.idToken = idToken;
@@ -127,23 +127,23 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
             if (
                 existing &&
                 existing.sub === authorizationCode.sub &&
-                existing.sub_kind === authorizationCode.sub_kind &&
-                existing.realm_id === authorizationCode.realm_id
+                existing.subKind === authorizationCode.sub_kind &&
+                existing.realmId === authorizationCode.realm_id
             ) {
-                existing.client_id = authorizationCode.client_id || null;
+                existing.clientId = authorizationCode.client_id || null;
 
                 return this.sessionManager.refresh(existing);
             }
         }
 
         return this.sessionManager.create({
-            user_agent: options.userAgent,
-            ip_address: options.ipAddress,
-            realm_id: authorizationCode.realm_id,
-            client_id: authorizationCode.client_id,
-            sub_kind: authorizationCode.sub_kind,
+            userAgent: options.userAgent,
+            ipAddress: options.ipAddress,
+            realmId: authorizationCode.realm_id,
+            clientId: authorizationCode.client_id,
+            subKind: authorizationCode.sub_kind,
             sub: authorizationCode.sub,
-            auth_method: authorizationCode.auth_method ?? null,
+            authMethod: authorizationCode.auth_method ?? null,
         });
     }
 }

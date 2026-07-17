@@ -43,7 +43,7 @@ export class IdentityRoleProvider implements IIdentityRoleProvider {
         return [];
     }
 
-    private reduceByIdentityClient<T extends { client_id?: string | null }>(
+    private reduceByIdentityClient<T extends { clientId?: string | null }>(
         entities: T[],
         identity: IdentityPolicyData,
     ): T[] {
@@ -51,13 +51,13 @@ export class IdentityRoleProvider implements IIdentityRoleProvider {
             return entities;
         }
 
-        // Keep client-agnostic (global / realm) roles — client_id null — in
+        // Keep client-agnostic (global / realm) roles — clientId null — in
         // addition to roles scoped to the authenticating client. Dropping the
         // null case stripped every global/realm role from a token issued via
         // a real client (e.g. the per-realm `web` client used by the
         // realm-selection login), leaving permissions/roles empty.
         return entities.filter(
-            (entity) => !entity.client_id || entity.client_id === identity.clientId,
+            (entity) => !entity.clientId || entity.clientId === identity.clientId,
         );
     }
 }

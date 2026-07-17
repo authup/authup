@@ -64,7 +64,7 @@ export interface IEventRepository {
     countRecent(filter: EventCountRecentFilter): Promise<number>;
 
     /**
-     * Retention sweep: drop every expiring row whose expires_at lies before
+     * Retention sweep: drop every expiring row whose expiresAt lies before
      * the given instant (non-expiring rows are kept forever). Returns the
      * number of removed rows.
      */
@@ -88,7 +88,7 @@ export type EventRecordInput = {
     data?: Record<string, any> | null,
     /**
      * Per-event retention override in days — wins over the service-level
-     * retentionDays; 0 = keep forever. expiring/expires_at derive from the
+     * retentionDays; 0 = keep forever. expiring/expiresAt derive from the
      * effective value.
      */
     retentionDays?: number,
@@ -101,8 +101,8 @@ export type EventServiceOptions = {
      */
     enabled?: boolean,
     /**
-     * config.eventLogRetentionDays — stamped per row as expiring/expires_at
-     * at write time; 0 = keep forever (expiring stays false, expires_at null).
+     * config.eventLogRetentionDays — stamped per row as expiring/expiresAt
+     * at write time; 0 = keep forever (expiring stays false, expiresAt null).
      */
     retentionDays?: number,
 };

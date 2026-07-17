@@ -20,6 +20,6 @@ export class IdentityProviderRoleMappingRepository implements IIdentityProviderR
     async findByProviderId(providerId: string): Promise<IdentityProviderRoleMapping[]> {
         const repository = this.dataSource.getRepository(IdentityProviderRoleMappingEntity);
 
-        return repository.findBy({ provider_id: providerId });
+        return repository.findBy({ providerId });
     }
 }

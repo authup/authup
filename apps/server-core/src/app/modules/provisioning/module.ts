@@ -239,7 +239,7 @@ export class ProvisionerModule implements IModule {
         // ---------------------------------------------------------------
         // Per-realm public `web` client. Single provisioning mechanism:
         // list every realm (incl. pre-existing) and upsert its web client.
-        // Idempotent; guarded on built_in inside the provisioner.
+        // Idempotent; guarded on builtIn inside the provisioner.
         // ---------------------------------------------------------------
         const webClientProvisioner = new WebClientProvisioner({
             clientRepository,
@@ -287,14 +287,14 @@ export class ProvisionerModule implements IModule {
 
         const permissions = await permissionRepo.find();
         for (const permission of permissions) {
-            const hasAnyPolicy = await junctionRepo.findOneBy({ permission_id: permission.id });
+            const hasAnyPolicy = await junctionRepo.findOneBy({ permissionId: permission.id });
 
             if (!hasAnyPolicy) {
                 await junctionRepo.save(junctionRepo.create({
-                    permission_id: permission.id,
-                    permission_realm_id: permission.realm_id,
-                    policy_id: defaultPolicy.id,
-                    policy_realm_id: defaultPolicy.realm_id,
+                    permissionId: permission.id,
+                    permissionRealmId: permission.realmId,
+                    policyId: defaultPolicy.id,
+                    policyRealmId: defaultPolicy.realmId,
                 }));
             }
         }

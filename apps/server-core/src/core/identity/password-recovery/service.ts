@@ -68,12 +68,12 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
 
         const validated = await this.runForgotPasswordValidator(data);
 
-        const realm = await this.realmRepository.resolve(validated.realm_id, true);
+        const realm = await this.realmRepository.resolve(validated.realmId, true);
 
         const where: Record<string, any> = {
             ...(validated.name ? { name: validated.name } : {}),
             ...(validated.email ? { email: validated.email } : {}),
-            realm_id: realm.id,
+            realmId: realm.id,
         };
 
         const entity = await this.repository.findOneByWithEmail(where);
@@ -83,29 +83,29 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         }
 
         const merged = this.repository.merge(entity, {
-            reset_expires: new Date(
+            resetExpires: new Date(
                 Date.now() + (1000 * 60 * PASSWORD_RESET_EXPIRES_IN_MINUTES),
             ).toISOString(),
-            reset_hash: randomBytes(32).toString('hex'),
+            resetHash: randomBytes(32).toString('hex'),
         });
 
         await this.repository.save(merged);
 
         try {
-            // realm_id MUST ride the link: resetPassword resolves the realm
+            // realmId MUST ride the link: resetPassword resolves the realm
             // from the request and filters the lookup by it, so a realm-less
             // link resolves to the master realm and never matches a
             // non-master user.
             const resetUrl = this.options.publicUrl ?
                 `${this.options.publicUrl.replace(/\/+$/, '')}/password-reset` +
-                `?token=${encodeURIComponent(merged.reset_hash!)}` +
-                `&realm_id=${encodeURIComponent(entity.realm_id)}` :
+                `?token=${encodeURIComponent(merged.resetHash!)}` +
+                `&realmId=${encodeURIComponent(entity.realmId)}` :
                 undefined;
 
             const mail = await this.mailTemplateRenderer.render({
                 template: MailTemplateName.PASSWORD_RESET,
                 params: {
-                    code: merged.reset_hash!,
+                    code: merged.resetHash!,
                     url: resetUrl,
                     expiresInMinutes: PASSWORD_RESET_EXPIRES_IN_MINUTES,
                 },
@@ -118,8 +118,8 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
             });
         } catch {
             this.repository.merge(merged, {
-                reset_hash: null,
-                reset_expires: null,
+                resetHash: null,
+                resetExpires: null,
             });
             await this.repository.save(merged);
 
@@ -134,10 +134,10 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
             actorType: IdentityType.USER,
             actorId: merged.id,
             actorName: merged.name,
-            realmId: merged.realm_id,
+            realmId: merged.realmId,
         });
 
-        return { reset_expires: merged.reset_expires! };
+        return { resetExpires: merged.resetExpires! };
     }
 
     async resetPassword(data: Record<string, any>): Promise<PasswordResetResult> {
@@ -149,13 +149,13 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
 
         await this.repository.validateJoinColumns(validated);
 
-        const realm = await this.realmRepository.resolve(validated.realm_id, true);
+        const realm = await this.realmRepository.resolve(validated.realmId, true);
 
         const where: Record<string, any> = {
             ...(validated.name ? { name: validated.name } : {}),
             ...(validated.email ? { email: validated.email } : {}),
-            reset_hash: validated.token,
-            realm_id: realm.id,
+            resetHash: validated.token,
+            realmId: realm.id,
         };
 
         const entity = await this.repository.findOneBy(where);
@@ -163,7 +163,7 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
             throw new EntityNotFoundError();
         }
 
-        if (!entity.reset_expires || new Date(entity.reset_expires) < new Date()) {
+        if (!entity.resetExpires || new Date(entity.resetExpires) < new Date()) {
             throw new ResetTokenExpiredError();
         }
 
@@ -171,9 +171,9 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         const hashedPassword = await credentialsService.protect(validated.password);
 
         const merged = this.repository.merge(entity, {
-            reset_at: new Date().toISOString(),
-            reset_hash: null,
-            reset_expires: null,
+            resetAt: new Date().toISOString(),
+            resetHash: null,
+            resetExpires: null,
             password: hashedPassword,
         });
 
@@ -187,10 +187,10 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
             actorType: IdentityType.USER,
             actorId: merged.id,
             actorName: merged.name,
-            realmId: merged.realm_id,
+            realmId: merged.realmId,
         });
 
-        return { reset_at: merged.reset_at! };
+        return { resetAt: merged.resetAt! };
     }
 
     private async runForgotPasswordValidator(data: Record<string, any>) {
@@ -217,7 +217,7 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         validator.mount(oneOfContainer);
 
         validator.mount(
-            'realm_id',
+            'realmId',
             { optional: true },
             createValidator(z.uuid().nullable()),
         );
@@ -247,7 +247,7 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         validator.mount(oneOfContainer);
 
         validator.mount(
-            'realm_id',
+            'realmId',
             { optional: true },
             createValidator(z.uuid().nullable()),
         );

@@ -10,7 +10,7 @@ import type { BuildInput } from 'rapiq';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
 export type TrustAnchorCreatePayload = Pick<TrustAnchor, 'name' | 'certificate'> &
-    Partial<Pick<TrustAnchor, 'enabled' | 'realm_id'>>;
+    Partial<Pick<TrustAnchor, 'enabled' | 'realmId'>>;
 export type TrustAnchorUpdatePayload = Partial<Pick<TrustAnchor, 'name' | 'enabled'>>;
 
 export interface ITrustAnchorAPI {

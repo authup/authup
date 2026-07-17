@@ -27,7 +27,7 @@ import { RealmEntity } from '../realm/index.ts';
 import { ScopeEntity } from '../scope/index.ts';
 
 @Entity({ name: 'auth_client_scopes' })
-@Unique(['client_id', 'scope_id'])
+@Unique(['clientId', 'scopeId'])
 export class ClientScopeEntity implements ClientScope {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -41,46 +41,46 @@ export class ClientScopeEntity implements ClientScope {
     // ------------------------------------------------------------------
 
     @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    createdAt: string;
 
     @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    updatedAt: string;
 
     // ------------------------------------------------------------------
 
     @Column()
-    client_id: Client['id'];
+    clientId: Client['id'];
 
     @ManyToOne(() => ClientEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'client_id' })
     client: Client;
 
     @Column({ nullable: true })
-    client_realm_id: Realm['id'] | null;
+    clientRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
         nullable: true, 
     })
     @JoinColumn({ name: 'client_realm_id' })
-    client_realm: RealmEntity | null;
+    clientRealm: RealmEntity | null;
 
     // ------------------------------------------------------------------
 
     @Column()
-    scope_id: Scope['id'];
+    scopeId: Scope['id'];
 
     @ManyToOne(() => ScopeEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'scope_id' })
     scope: Scope;
 
     @Column({ nullable: true })
-    scope_realm_id: Realm['id'] | null;
+    scopeRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
         nullable: true, 
     })
     @JoinColumn({ name: 'scope_realm_id' })
-    scope_realm: RealmEntity | null;
+    scopeRealm: RealmEntity | null;
 }

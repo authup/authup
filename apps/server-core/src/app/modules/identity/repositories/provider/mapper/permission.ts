@@ -20,6 +20,6 @@ export class IdentityProviderPermissionMappingRepository implements IIdentityPro
     async findByProviderId(providerId: string): Promise<IdentityProviderPermissionMapping[]> {
         const repository = this.dataSource.getRepository(IdentityProviderPermissionMappingEntity);
 
-        return repository.findBy({ provider_id: providerId });
+        return repository.findBy({ providerId });
     }
 }

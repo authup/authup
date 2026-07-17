@@ -54,11 +54,11 @@ export class HTTPOAuth2Authorizer extends OAuth2Authorization {
         // authorize() above, so a denied identity never writes a row.
         // built_in clients keep zero rows (locked); insert-missing makes
         // re-recording idempotent (union/keep).
-        if (this.consentService && client && !client.built_in) {
+        if (this.consentService && client && !client.builtIn) {
             try {
                 await this.consentService.record({
                     clientId: client.id,
-                    realmId: client.realm_id,
+                    realmId: client.realmId,
                     owner: {
                         sub: identity.raw.data.id,
                         subKind: identity.raw.type,

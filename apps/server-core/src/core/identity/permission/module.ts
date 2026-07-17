@@ -94,13 +94,13 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             }
 
             if (typeof options.realmId !== 'undefined') {
-                if ((b.permission.realm_id ?? null) !== (options.realmId ?? null)) {
+                if ((b.permission.realmId ?? null) !== (options.realmId ?? null)) {
                     return false;
                 }
             }
 
             if (typeof options.clientId !== 'undefined') {
-                if ((b.permission.client_id ?? null) !== (options.clientId ?? null)) {
+                if ((b.permission.clientId ?? null) !== (options.clientId ?? null)) {
                     return false;
                 }
             }
@@ -127,7 +127,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         // (e.g. own+no-policy and any+policy) thus propagates its policy-free own grant for an
         // own request instead of inheriting the wider grant's policy. The selected grant is
         // returned UNCAPPED so the consumer's own cap (`min(requested, realmScope)`) and its
-        // "actor is unrestricted-any?" check (which honours an explicit policy_id) still hold.
+        // "actor is unrestricted-any?" check (which honours an explicit policyId) still hold.
         const requested = options.realmScope ?? RealmScope.OWN;
         const selected = selectGrantForRequest(grants, requested);
 
@@ -144,7 +144,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             policy = selected.policy;
         }
 
-        return { policy, realmScope: selected.realm_scope };
+        return { policy, realmScope: selected.realmScope };
     }
 
     async getFor(identity: IdentityPolicyData) : Promise<PermissionPolicyBinding[]> {
@@ -221,7 +221,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             return bindings;
         }
 
-        return bindings.filter((binding) => binding.permission.client_id === identity.clientId);
+        return bindings.filter((binding) => binding.permission.clientId === identity.clientId);
     }
 }
 
@@ -229,12 +229,12 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
  * Select the held grant that confers the least-restrictive junction for `requested` reach.
  *
  * Each grant is ranked by the reach it can actually confer for THIS request — its own
- * `realm_scope` capped to `requested` — so a lower-scoped policy-free grant beats a
+ * `realmScope` capped to `requested` — so a lower-scoped policy-free grant beats a
  * higher-scoped policy-bound grant when both cap to the same requested reach (the mixed-grant
  * fix, #3160). On equal capped reach, a policy-free grant wins (least restrictive). The
  * ORIGINAL (uncapped) grant is returned: the consumer applies the `min` cap itself, and its
- * uncapped `realm_scope`/`policy` drive the "actor is unrestricted-any?" check that decides
- * whether an explicitly-requested `policy_id` may stand.
+ * uncapped `realmScope`/`policy` drive the "actor is unrestricted-any?" check that decides
+ * whether an explicitly-requested `policyId` may stand.
  *
  * The ordering is TOTAL and deterministic (independent of grant/repository order): ties between
  * two policy-bound grants on equal capped reach are broken by higher uncapped reach, then a
@@ -255,8 +255,8 @@ function isGrantPreferred(
     requested: `${RealmScope}`,
 ): boolean {
     const byCapped = compareRealmScope(
-        minRealmScope([candidate.realm_scope, requested]),
-        minRealmScope([incumbent.realm_scope, requested]),
+        minRealmScope([candidate.realmScope, requested]),
+        minRealmScope([incumbent.realmScope, requested]),
     );
     if (byCapped !== 0) {
         return byCapped > 0;
@@ -268,7 +268,7 @@ function isGrantPreferred(
     }
 
     // Deterministic tie-break for two policy-bound grants on equal capped reach.
-    const byUncapped = compareRealmScope(candidate.realm_scope, incumbent.realm_scope);
+    const byUncapped = compareRealmScope(candidate.realmScope, incumbent.realmScope);
     if (byUncapped !== 0) {
         return byUncapped > 0;
     }

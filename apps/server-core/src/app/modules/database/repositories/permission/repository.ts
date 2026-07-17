@@ -37,10 +37,10 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
 
         const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'permission',
-            filters: { allowed: ['id', 'display_name', 'name', 'built_in'] },
+            filters: { allowed: ['id', 'displayName', 'name', 'builtIn'] },
             pagination: { maxLimit: 50 },
             relations: { allowed: [] },
-            sort: { allowed: ['id', 'name', 'created_at', 'updated_at'] },
+            sort: { allowed: ['id', 'name', 'createdAt', 'updatedAt'] },
         });
 
         const [entities, total] = await qb.getManyAndCount();
@@ -67,7 +67,7 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
             if (!realmId) {
                 return null;
             }
-            qb.andWhere('permission.realm_id = :realmId', { realmId });
+            qb.andWhere('permission.realmId = :realmId', { realmId });
         }
 
         return qb.getOne();

@@ -26,7 +26,7 @@ export class RobotRoleRepositoryAdapter implements IRobotRoleRepository {
 
         const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'robotRole',
-            filters: { allowed: ['robot_id', 'role_id'] },
+            filters: { allowed: ['robotId', 'roleId'] },
             relations: {
                 allowed: ['robot', 'role'],
                 onJoin: (_property: string, key: string, q: any) => {
@@ -36,8 +36,8 @@ export class RobotRoleRepositoryAdapter implements IRobotRoleRepository {
             sort: {
                 allowed: [
                     'id',
-                    'created_at',
-                    'updated_at',
+                    'createdAt',
+                    'updatedAt',
                 ],
             },
             pagination: { maxLimit: 50 },

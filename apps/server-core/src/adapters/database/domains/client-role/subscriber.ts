@@ -20,15 +20,15 @@ export class ClientRoleSubscriber extends EntitySubscriber<ClientRole> {
             type: EntityType.CLIENT_ROLE,
             target: ClientRoleEntity,
             destinations: buildEntityDestinations(EntityType.CLIENT_ROLE, (data) => [
-                data.client_realm_id,
-                data.role_realm_id,
+                data.clientRealmId,
+                data.roleRealmId,
             ]),
             cache: {
                 onInsert: true,
                 keys: (data) => [
                     buildRedisKeyPath({
                         prefix: CachePrefix.CLIENT_OWNED_ROLES,
-                        key: data.client_id,
+                        key: data.clientId,
                     }),
                 ],
             },

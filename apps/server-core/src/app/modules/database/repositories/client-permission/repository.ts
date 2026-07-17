@@ -26,7 +26,7 @@ export class ClientPermissionRepositoryAdapter implements IClientPermissionRepos
 
         const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'clientPermission',
-            filters: { allowed: ['client_id', 'permission_id'] },
+            filters: { allowed: ['clientId', 'permissionId'] },
             relations: {
                 allowed: [
                     'client',
@@ -39,8 +39,8 @@ export class ClientPermissionRepositoryAdapter implements IClientPermissionRepos
             sort: {
                 allowed: [
                     'id',
-                    'created_at',
-                    'updated_at',
+                    'createdAt',
+                    'updatedAt',
                 ],
             },
             pagination: { maxLimit: 50 },

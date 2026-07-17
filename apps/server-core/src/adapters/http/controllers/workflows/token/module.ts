@@ -177,8 +177,8 @@ export class TokenController {
                         if (!acc[key]) {
                             acc[key] = {
                                 name: binding.permission.name,
-                                client_id: binding.permission.client_id,
-                                realm_id: binding.permission.realm_id,
+                                client_id: binding.permission.clientId,
+                                realm_id: binding.permission.realmId,
                             } as OAuth2TokenPermission;
                         }
                         return acc;

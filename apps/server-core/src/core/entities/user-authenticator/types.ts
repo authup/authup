@@ -17,11 +17,11 @@ import type { IMailClient, IMailTemplateRenderer } from '../../mail/index.ts';
 import type { IUserRepository } from '../user/index.ts';
 
 export const USER_AUTHENTICATOR_FILTER_KEYS = [
-    'id', 
-    'kind', 
-    'confirmed', 
-    'user_id', 
-    'realm_id',
+    'id',
+    'kind',
+    'confirmed',
+    'userId',
+    'realmId',
 ] as const;
 
 export type UserAuthenticatorOwner = {
@@ -174,7 +174,7 @@ export type UserAuthenticatorVerifyContext = {
      * BEFORE the consumption (TOTP step / recovery used_at / email code)
      * is persisted. A throw aborts the verify without consuming the factor
      * — the seam for binding the proof to another aggregate (the session
-     * mfa_at stamp) so a stamp failure never burns a single-use code.
+     * mfaAt stamp) so a stamp failure never burns a single-use code.
      */
     onVerified?: () => Promise<void>,
 };

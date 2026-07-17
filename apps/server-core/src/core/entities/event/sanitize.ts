@@ -15,7 +15,7 @@ import { EVENT_DIFF_SECRET_KEY_REGEX } from './diff.ts';
  * objects and arrays are dropped outright, so a nested structure can never
  * smuggle a secret past the boundary (this subsumes a denylist: password,
  * client_secret, code, code_verifier, *token* etc. are simply never listed).
- * session_id / jti / revoked_session_id are opaque correlation ids, not PII.
+ * sessionId / jti / revokedSessionId are opaque correlation ids, not PII.
  * name / use / status / enabled / force describe key & trust-anchor lifecycle
  * operations (issue #3269) — canonical identifiers and enum/flag metadata,
  * never material. kind is the MFA authenticator kind (totp/email/...).
@@ -26,18 +26,18 @@ import { EVENT_DIFF_SECRET_KEY_REGEX } from './diff.ts';
  * choke point even though buildEntityDiff pre-sanitizes.
  */
 const DATA_KEY_ALLOW_LIST = [
-    'grant_type',
+    'grantType',
     'scope',
-    'response_type',
+    'responseType',
     'prompt',
     'error',
-    'error_code',
+    'errorCode',
     'reason',
-    'client_name',
-    'realm_name',
-    'session_id',
+    'clientName',
+    'realmName',
+    'sessionId',
     'jti',
-    'revoked_session_id',
+    'revokedSessionId',
     'name',
     'use',
     'status',

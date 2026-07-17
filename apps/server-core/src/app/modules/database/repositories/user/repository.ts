@@ -50,20 +50,20 @@ export class UserRepositoryAdapter implements IUserRepository {
                 default: [
                     'id',
                     'name',
-                    'name_locked',
-                    'first_name',
-                    'last_name',
-                    'display_name',
+                    'nameLocked',
+                    'firstName',
+                    'lastName',
+                    'displayName',
                     'avatar',
                     'cover',
                     'active',
-                    'created_at',
-                    'updated_at',
-                    'realm_id',
+                    'createdAt',
+                    'updatedAt',
+                    'realmId',
                 ],
                 allowed: ['email'],
             },
-            filters: { allowed: ['id', 'name', 'realm_id'] },
+            filters: { allowed: ['id', 'name', 'realmId'] },
             pagination: { maxLimit: 50 },
             relations: {
                 allowed: ['realm'],
@@ -71,7 +71,7 @@ export class UserRepositoryAdapter implements IUserRepository {
                     q.addGroupBy(`${key}.id`);
                 },
             },
-            sort: { allowed: ['id', 'name', 'display_name', 'created_at', 'updated_at'] },
+            sort: { allowed: ['id', 'name', 'displayName', 'createdAt', 'updatedAt'] },
         });
 
         applyRealmScopeSelect(qb, 'user', ['id']);
@@ -106,7 +106,7 @@ export class UserRepositoryAdapter implements IUserRepository {
             if (!realmId) {
                 return null;
             }
-            qb.andWhere('user.realm_id = :realmId', { realmId });
+            qb.andWhere('user.realmId = :realmId', { realmId });
         }
 
         const entity = await qb.getOne();
@@ -135,7 +135,7 @@ export class UserRepositoryAdapter implements IUserRepository {
                 if (!realmId) {
                     return null;
                 }
-                qb.andWhere('user.realm_id = :realmId', { realmId });
+                qb.andWhere('user.realmId = :realmId', { realmId });
             }
         }
 
@@ -145,16 +145,16 @@ export class UserRepositoryAdapter implements IUserRepository {
                 default: [
                     'id',
                     'name',
-                    'name_locked',
-                    'first_name',
-                    'last_name',
-                    'display_name',
+                    'nameLocked',
+                    'firstName',
+                    'lastName',
+                    'displayName',
                     'avatar',
                     'cover',
                     'active',
-                    'created_at',
-                    'updated_at',
-                    'realm_id',
+                    'createdAt',
+                    'updatedAt',
+                    'realmId',
                 ],
                 allowed: ['email'],
             },
@@ -227,7 +227,7 @@ export class UserRepositoryAdapter implements IUserRepository {
         const entries = await this.repository.manager
             .getRepository(UserRoleEntity)
             .find({
-                where: { user_id: id },
+                where: { userId: id },
                 relations: { role: true },
                 cache: {
                     id: buildRedisKeyPath({
@@ -246,7 +246,7 @@ export class UserRepositoryAdapter implements IUserRepository {
         return loadBoundPermissions({
             manager: this.repository.manager,
             junctionTarget: UserPermissionEntity,
-            where: { user_id: id },
+            where: { userId: id },
             cachePrefix: CachePrefix.USER_OWNED_PERMISSIONS,
             cacheKey: id,
         });

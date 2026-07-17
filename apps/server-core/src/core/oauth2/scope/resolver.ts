@@ -19,18 +19,18 @@ type ScopeFields<T extends ObjectLiteral = ObjectLiteral> = {
 export class OAuth2ScopeAttributesResolver {
     protected clientAttributes : ScopeFields<Client> = {
         [ScopeName.IDENTITY]: ['name'],
-        [ScopeName.OPEN_ID]: ['name', 'display_name', 'updated_at', 'active'],
+        [ScopeName.OPEN_ID]: ['name', 'displayName', 'updatedAt', 'active'],
     };
 
     protected robotAttributes : ScopeFields<Robot> = {
         [ScopeName.IDENTITY]: ['name'],
-        [ScopeName.OPEN_ID]: ['name', 'display_name', 'updated_at', 'active'],
+        [ScopeName.OPEN_ID]: ['name', 'displayName', 'updatedAt', 'active'],
     };
 
     protected userAttributes : ScopeFields<User> = {
-        [ScopeName.IDENTITY]: ['name', 'display_name', 'last_name', 'first_name'],
+        [ScopeName.IDENTITY]: ['name', 'displayName', 'lastName', 'firstName'],
         [ScopeName.EMAIL]: ['email'],
-        [ScopeName.OPEN_ID]: ['name', 'updated_at', 'first_name', 'last_name', 'display_name', 'active', 'email'],
+        [ScopeName.OPEN_ID]: ['name', 'updatedAt', 'firstName', 'lastName', 'displayName', 'active', 'email'],
     };
 
     /**

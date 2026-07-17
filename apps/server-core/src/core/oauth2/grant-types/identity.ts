@@ -31,30 +31,30 @@ export class IdentityGrantType extends OAuth2BaseGrant<Identity> {
         options: OAuth2GrantRunWIthOptions = {},
     ): Promise<OAuth2TokenGrantResponse> {
         const session : Partial<Session> = {
-            user_agent: options.userAgent,
-            ip_address: options.ipAddress,
-            realm_id: identity.data.realm_id,
+            userAgent: options.userAgent,
+            ipAddress: options.ipAddress,
+            realmId: identity.data.realmId,
             sub: identity.data.id,
-            sub_kind: identity.type,
-            auth_method: SessionAuthMethod.EXTERNAL,
+            subKind: identity.type,
+            authMethod: SessionAuthMethod.EXTERNAL,
         };
 
         const { id: sessionId } = await this.sessionManager.create(session);
 
-        // amr/acr derive from the session's auth_method + mfa_at — deliberately
+        // amr/acr derive from the session's authMethod + mfaAt — deliberately
         // on every token kind, so a direct identity grant's tokens advertise the
         // (external) method the same way the authorization_code exchange does.
         const amrAcr = deriveAmrAcr({
-            auth_method: session.auth_method ?? null,
-            mfa_at: session.mfa_at ?? null,
+            authMethod: session.authMethod ?? null,
+            mfaAt: session.mfaAt ?? null,
         });
 
         const issuePayload : Partial<OAuth2TokenPayload> = {
             session_id: sessionId,
-            user_agent: session.user_agent,
-            remote_address: session.ip_address,
+            user_agent: session.userAgent,
+            remote_address: session.ipAddress,
             scope: ScopeName.GLOBAL,
-            realm_id: identity.data.realm_id,
+            realm_id: identity.data.realmId,
             realm_name: identity.data.realm?.name,
             sub: identity.data.id,
             sub_kind: identity.type,

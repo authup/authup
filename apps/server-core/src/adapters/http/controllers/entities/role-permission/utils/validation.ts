@@ -18,19 +18,19 @@ export class RolePermissionRequestValidator extends Container<
         super.initialize();
 
         this.mount(
-            'role_id',
+            'roleId',
             { group: RequestHandlerOperation.CREATE },
             createValidator(z.uuid()),
         );
 
         this.mount(
-            'permission_id',
+            'permissionId',
             { group: RequestHandlerOperation.CREATE },
             createValidator(z.uuid()),
         );
 
         this.mount(
-            'policy_id',
+            'policyId',
             { optional: true },
             createValidator(z.uuid().nullable()),
         );

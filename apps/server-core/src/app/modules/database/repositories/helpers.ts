@@ -11,8 +11,8 @@ import { In, IsNull } from 'typeorm';
 /**
  * Force-load the columns a realm-gated `getMany` per-row check depends on.
  * rapiq honors a client `fields` projection over the adapter `default`, so a
- * projection omitting `realm_id` would otherwise leave the per-row
- * `resourceRealmMatch` with no realm to match — neutralizing the realm_scope
+ * projection omitting `realmId` would otherwise leave the per-row
+ * `resourceRealmMatch` with no realm to match — neutralizing the realmScope
  * reach factor and leaking cross-realm rows to an own/ownOrNull-scoped reader.
  * Call it AFTER `applyQuery`. Columns already in the projection must be
  * skipped: `addSelect` emits a second identically-aliased column, and under a
@@ -25,7 +25,7 @@ export function applyRealmScopeSelect<T extends ObjectLiteral>(
     extraColumns: string[] = [],
 ): void {
     const existing = new Set(qb.expressionMap.selects.map((select) => select.selection));
-    const selections = ['realm_id', ...extraColumns]
+    const selections = ['realmId', ...extraColumns]
         .map((column) => `${alias}.${column}`)
         .filter((selection) => !existing.has(selection));
 

@@ -23,7 +23,7 @@ import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type { Policy, Realm } from '@authup/core-kit';
 import { RealmEntity } from '../realm/index.ts';
 
-@Unique(['name', 'realm_id'])
+@Unique(['name', 'realmId'])
 @Entity({ name: 'auth_policies' })
 @Tree('closure-table', {
     closureTableName: 'auth_policy_tree',
@@ -38,7 +38,7 @@ export class PolicyEntity implements Policy {
         type: 'boolean',
         default: false, 
     })
-    built_in: boolean;
+    builtIn: boolean;
 
     @Column({
         type: 'varchar',
@@ -57,7 +57,7 @@ export class PolicyEntity implements Policy {
         length: 256,
         nullable: true, 
     })
-    display_name: string | null;
+    displayName: string | null;
 
     @Column({
         type: 'text',
@@ -75,7 +75,7 @@ export class PolicyEntity implements Policy {
     children: PolicyEntity[];
 
     @Column({ nullable: true })
-    parent_id: Policy['id'] | null;
+    parentId: Policy['id'] | null;
 
     @TreeParent({ onDelete: 'CASCADE' })
     @JoinColumn({ name: 'parent_id' })
@@ -83,7 +83,7 @@ export class PolicyEntity implements Policy {
 
     @Index()
     @Column({ nullable: true })
-    realm_id: Realm['id'] | null;
+    realmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
@@ -93,8 +93,8 @@ export class PolicyEntity implements Policy {
     realm: Realm | null;
 
     @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    createdAt: string;
 
     @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    updatedAt: string;
 }

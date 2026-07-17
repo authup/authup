@@ -115,7 +115,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
             throw new ValidationError(`The role-attribute name '${data.name}' collides with a Role entity column.`);
         }
 
-        data.realm_id = data.role.realm_id;
+        data.realmId = data.role.realmId;
 
         const entity = this.repository.create(data);
 
@@ -150,14 +150,14 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
             throw new EntityNotFoundError();
         }
 
-        // An attribute belongs to a fixed role; its owner (and the role-derived realm_id) is
+        // An attribute belongs to a fixed role; its owner (and the role-derived realmId) is
         // IMMUTABLE on update — strip both from the body. This blocks reassigning the attribute
         // to another role (which would otherwise be authorized against the new realm, not the
-        // one the attribute currently lives in) and blocks a caller-supplied realm_id that would
+        // one the attribute currently lives in) and blocks a caller-supplied realmId that would
         // gate ROLE_UPDATE against a realm of their choosing. To move an attribute, delete + recreate.
-        delete data.role_id;
+        delete data.roleId;
         delete data.role;
-        delete data.realm_id;
+        delete data.realmId;
 
         entity = this.repository.merge(entity, data);
 

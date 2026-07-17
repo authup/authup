@@ -21,7 +21,7 @@ import { deserialize, serialize } from '@authup/kit';
 import { RealmEntity } from '../realm/index.ts';
 import { UserEntity } from '../user/entity.ts';
 
-@Unique(['name', 'user_id'])
+@Unique(['name', 'userId'])
 @Entity({ name: 'auth_user_attributes' })
 export class UserAttributeEntity implements UserAttribute {
     @PrimaryGeneratedColumn('uuid')
@@ -50,14 +50,14 @@ export class UserAttributeEntity implements UserAttribute {
     // ------------------------------------------------------------------
 
     @Column()
-    realm_id: Realm['id'];
+    realmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
     realm: RealmEntity;
 
     @Column()
-    user_id: User['id'];
+    userId: User['id'];
 
     @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
@@ -66,8 +66,8 @@ export class UserAttributeEntity implements UserAttribute {
     // ------------------------------------------------------------------
 
     @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    createdAt: string;
 
     @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    updatedAt: string;
 }

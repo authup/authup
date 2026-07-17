@@ -21,11 +21,11 @@ export type SessionOwner = {
 export const SESSION_FILTER_KEYS = [
     'id',
     'sub',
-    'sub_kind',
-    'user_id',
-    'client_id',
-    'robot_id',
-    'realm_id',
+    'subKind',
+    'userId',
+    'clientId',
+    'robotId',
+    'realmId',
 ] as const;
 
 export type SessionFindManyOptions = {
@@ -79,21 +79,21 @@ export interface ISessionManager {
     create(session: Partial<Session>): Promise<Session>;
 
     /**
-     * Updates seen_at with current time.
+     * Updates seenAt with current time.
      *
      * @param session
      */
     ping(session: Session) : Promise<Session>;
 
     /**
-     * Updates refreshed_at, seen_at with current time.
+     * Updates refreshedAt, seenAt with current time.
      *
      * @param session
      */
     refresh(session: Session) : Promise<Session>;
 
     /**
-     * Stamp a successful second-factor challenge (mfa_at) onto the session.
+     * Stamp a successful second-factor challenge (mfaAt) onto the session.
      *
      * @param session
      */

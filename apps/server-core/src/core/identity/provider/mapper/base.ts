@@ -20,7 +20,7 @@ export abstract class IdentityProviderAccountBaseMapper implements IIdentityProv
     ) : [IdentityProviderMapperOperation, unknown] | [IdentityProviderMapperOperation] {
         let operation : IdentityProviderMapperOperation;
         if (
-            mapping.synchronization_mode === IdentityProviderMappingSyncMode.ONCE &&
+            mapping.synchronizationMode === IdentityProviderMappingSyncMode.ONCE &&
             identity.operation === IdentityProviderIdentityOperation.UPDATE
         ) {
             operation = IdentityProviderMapperOperation.NONE;
@@ -38,7 +38,7 @@ export abstract class IdentityProviderAccountBaseMapper implements IIdentityProv
             identity.data,
             mapping.name,
             mapping.value,
-            mapping.value_is_regex,
+            mapping.valueIsRegex,
         );
 
         if (value.length === 0) {

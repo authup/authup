@@ -46,21 +46,21 @@ export class SessionEntity implements Session {
         type: 'varchar',
         length: 64, 
     })
-    sub_kind: string;
+    subKind: string;
 
     @Index()
     @Column({
         type: 'varchar',
         length: 45,
     })
-    ip_address: string;
+    ipAddress: string;
 
     @Index()
     @Column({
         type: 'varchar',
         length: 512, 
     })
-    user_agent: string;
+    userAgent: string;
 
     // ------------------------------------------------------------------
 
@@ -68,41 +68,41 @@ export class SessionEntity implements Session {
         type: 'varchar',
         length: 28,
     })
-    expires_at: string;
+    expiresAt: string;
 
     @Column({
         type: 'varchar',
         length: 28,
         nullable: true,
     })
-    refreshed_at: string | null;
+    refreshedAt: string | null;
 
     @Column({
         type: 'varchar',
         length: 28,
         nullable: true,
     })
-    seen_at: string | null;
+    seenAt: string | null;
 
     @Column({
         type: 'varchar',
         length: 28,
         nullable: true,
     })
-    mfa_at: string | null;
+    mfaAt: string | null;
 
     @Column({
         type: 'varchar',
         length: 16,
         nullable: true,
     })
-    auth_method: `${SessionAuthMethod}` | null;
+    authMethod: `${SessionAuthMethod}` | null;
 
     @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    updatedAt: string;
 
     @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    createdAt: string;
 
     // ------------------------------------------------------------------
 
@@ -110,7 +110,7 @@ export class SessionEntity implements Session {
         nullable: true,
         default: null, 
     })
-    client_id: Client['id'] | null;
+    clientId: Client['id'] | null;
 
     @ManyToOne(() => ClientEntity, {
         onDelete: 'CASCADE',
@@ -123,7 +123,7 @@ export class SessionEntity implements Session {
         nullable: true,
         default: null, 
     })
-    user_id: User['id'] | null;
+    userId: User['id'] | null;
 
     @ManyToOne(() => UserEntity, {
         onDelete: 'CASCADE',
@@ -136,7 +136,7 @@ export class SessionEntity implements Session {
         nullable: true,
         default: null, 
     })
-    robot_id: Robot['id'] | null;
+    robotId: Robot['id'] | null;
 
     @ManyToOne(() => RobotEntity, {
         onDelete: 'CASCADE',
@@ -146,7 +146,7 @@ export class SessionEntity implements Session {
     robot: RobotEntity | null;
 
     @Column()
-    realm_id: Realm['id'];
+    realmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })

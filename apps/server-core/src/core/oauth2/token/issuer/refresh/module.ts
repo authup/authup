@@ -50,12 +50,12 @@ export class OAuth2RefreshTokenIssuer extends OAuth2BaseTokenIssuer implements I
         if (this.sessionTokenRepository && data.session_id && data.jti && typeof data.exp === 'number') {
             await this.sessionTokenRepository.create({
                 id: data.jti,
-                session_id: data.session_id,
+                sessionId: data.session_id,
                 kind: 'refresh',
-                parent_id: input.parent_id ?? null,
-                ip_address: data.remote_address ?? '',
-                user_agent: data.user_agent ?? '',
-                expires_at: new Date(data.exp * 1000).toISOString(),
+                parentId: input.parent_id ?? null,
+                ipAddress: data.remote_address ?? '',
+                userAgent: data.user_agent ?? '',
+                expiresAt: new Date(data.exp * 1000).toISOString(),
             });
         }
 

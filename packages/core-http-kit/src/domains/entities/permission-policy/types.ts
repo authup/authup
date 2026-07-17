@@ -10,7 +10,7 @@ import type { IEntityAPISlim } from '../../types-base';
 import type { PermissionPolicy } from '@authup/core-kit';
 
 // Mirrors `PermissionPolicyValidator` mounts in @authup/core-kit.
-export type PermissionPolicyCreatePayload = Pick<PermissionPolicy, 'permission_id' | 'policy_id'>;
+export type PermissionPolicyCreatePayload = Pick<PermissionPolicy, 'permissionId' | 'policyId'>;
 export type PermissionPolicyUpdatePayload = Partial<PermissionPolicyCreatePayload>;
 
 export interface IPermissionPolicyAPI extends IEntityAPISlim<PermissionPolicy, PermissionPolicyCreatePayload> {}

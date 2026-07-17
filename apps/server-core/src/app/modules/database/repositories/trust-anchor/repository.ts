@@ -41,14 +41,14 @@ export class TrustAnchorRepositoryAdapter implements ITrustAnchorRepository {
                     'name',
                     'certificate',
                     'enabled',
-                    'realm_id',
-                    'created_at',
-                    'updated_at',
+                    'realmId',
+                    'createdAt',
+                    'updatedAt',
                 ],
             },
-            filters: { allowed: ['id', 'name', 'enabled', 'realm_id'] },
+            filters: { allowed: ['id', 'name', 'enabled', 'realmId'] },
             pagination: { maxLimit: 50 },
-            sort: { allowed: ['id', 'name', 'enabled', 'created_at', 'updated_at'] },
+            sort: { allowed: ['id', 'name', 'enabled', 'createdAt', 'updatedAt'] },
         });
 
         applyRealmScopeSelect(qb, 'trustAnchor');
@@ -77,7 +77,7 @@ export class TrustAnchorRepositoryAdapter implements ITrustAnchorRepository {
                 return null;
             }
 
-            where.realm_id = realmId;
+            where.realmId = realmId;
         }
 
         return this.repository.findOneBy(where);

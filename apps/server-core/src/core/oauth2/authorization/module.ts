@@ -105,7 +105,7 @@ export class OAuth2Authorization {
                 actorName: identity.data.name,
                 realmId: data.realm_id ?? null,
                 data: {
-                    reason: options.client?.built_in ? 'autoConsent' : 'consent',
+                    reason: options.client?.builtIn ? 'autoConsent' : 'consent',
                     ...(data.scope ? { scope: data.scope } : {}),
                 },
             });
@@ -182,13 +182,13 @@ export class OAuth2Authorization {
         // same realm — otherwise a lingering session for realm A could silently
         // mint a code/token for realm B's client (confused deputy). The error body
         // deliberately carries no identity data (no realm-enumeration oracle).
-        // The comparison reads the scalar realm_id column, NOT the realm
+        // The comparison reads the scalar realmId column, NOT the realm
         // relation — the relation may simply not be loaded on the resolved
-        // identity. An identity without a realm_id fails closed the same way —
+        // identity. An identity without a realmId fails closed the same way —
         // clean login_required, never a TypeError.
         if (
             data.realm_id &&
-            identity.data.realm_id !== data.realm_id
+            identity.data.realmId !== data.realm_id
         ) {
             throw OAuth2LoginRequiredError.realmMismatch();
         }
@@ -202,8 +202,8 @@ export class OAuth2Authorization {
         let session : Session | null = null;
         if (options.sessionId) {
             session = await this.sessionManager.findOneById(options.sessionId);
-            if (session && session.created_at) {
-                authTime = Math.floor(new Date(session.created_at).getTime() / 1000);
+            if (session && session.createdAt) {
+                authTime = Math.floor(new Date(session.createdAt).getTime() / 1000);
             }
         }
 
@@ -220,7 +220,7 @@ export class OAuth2Authorization {
                 identity.data.id,
                 { issueMaterial: false },
             );
-            if (challenge.required && !session?.mfa_at) {
+            if (challenge.required && !session?.mfaAt) {
                 throw OAuth2MfaRequiredError.challengeRequired();
             }
 
@@ -238,8 +238,8 @@ export class OAuth2Authorization {
             if (challenge.required && data.acr_values) {
                 const acrValues = data.acr_values.split(' ');
                 if (acrValues.includes(OAuth2AuthenticationContextClass.MFA)) {
-                    const mfaAtSeconds = session?.mfa_at ?
-                        Math.floor(new Date(session.mfa_at).getTime() / 1000) :
+                    const mfaAtSeconds = session?.mfaAt ?
+                        Math.floor(new Date(session.mfaAt).getTime() / 1000) :
                         null;
                     if (mfaAtSeconds === null || nowSeconds - mfaAtSeconds > this.mfaFreshnessMaxAge) {
                         throw OAuth2MfaRequiredError.stepUpRequired();
@@ -278,13 +278,13 @@ export class OAuth2Authorization {
         // no wired evaluator denies too (never silently allow a configured
         // gate). The redirect target rides the error only when the
         // redirect_uri was pattern-verified (RFC 6749 §4.1.2.1).
-        if (options.client?.access_policy_id) {
+        if (options.client?.accessPolicyId) {
             let allowed = false;
 
             const subject = toIdentityPolicyData(identity);
             if (this.accessPolicyEvaluator && subject) {
                 allowed = await this.accessPolicyEvaluator.evaluate(
-                    options.client.access_policy_id,
+                    options.client.accessPolicyId,
                     subject,
                 );
             }
@@ -307,7 +307,7 @@ export class OAuth2Authorization {
             {
                 sessionId: options.sessionId,
                 authTime,
-                authMethod: session?.auth_method ?? null,
+                authMethod: session?.authMethod ?? null,
             },
         );
 

@@ -18,13 +18,13 @@ export class ClientRoleRequestValidator extends Container<
         super.initialize();
 
         this.mount(
-            'client_id',
+            'clientId',
             { group: RequestHandlerOperation.CREATE },
             createValidator(z.uuid()),
         );
 
         this.mount(
-            'role_id',
+            'roleId',
             { group: RequestHandlerOperation.CREATE },
             createValidator(z.uuid()),
         );

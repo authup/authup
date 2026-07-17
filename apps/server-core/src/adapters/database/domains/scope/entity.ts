@@ -21,7 +21,7 @@ import type { Realm, Scope } from '@authup/core-kit';
 import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_scopes' })
-@Unique(['name', 'realm_id'])
+@Unique(['name', 'realmId'])
 export class ScopeEntity implements Scope {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -30,7 +30,7 @@ export class ScopeEntity implements Scope {
         type: 'boolean',
         default: false, 
     })
-    built_in: boolean;
+    builtIn: boolean;
 
     @Column({
         type: 'varchar',
@@ -43,7 +43,7 @@ export class ScopeEntity implements Scope {
         length: 256,
         nullable: true, 
     })
-    display_name: string | null;
+    displayName: string | null;
 
     @Column({
         type: 'text',
@@ -54,16 +54,16 @@ export class ScopeEntity implements Scope {
     // ------------------------------------------------------------------
 
     @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    createdAt: string;
 
     @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    updatedAt: string;
 
     // ------------------------------------------------------------------
 
     @Index()
     @Column({ nullable: true })
-    realm_id: Realm['id'] | null;
+    realmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',

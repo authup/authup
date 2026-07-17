@@ -25,7 +25,7 @@ export class SessionTokenEntity implements SessionToken {
 
     @Index()
     @Column({ type: 'uuid' })
-    session_id: Session['id'];
+    sessionId: Session['id'];
 
     @ManyToOne(() => SessionEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'session_id' })
@@ -45,26 +45,26 @@ export class SessionTokenEntity implements SessionToken {
         nullable: true,
         default: null,
     })
-    parent_id: string | null;
+    parentId: string | null;
 
     @Column({
         type: 'uuid',
         nullable: true,
         default: null,
     })
-    refresh_token_id: string | null;
+    refreshTokenId: string | null;
 
     @Column({
         type: 'varchar',
         length: 45,
     })
-    ip_address: string;
+    ipAddress: string;
 
     @Column({
         type: 'varchar',
         length: 512,
     })
-    user_agent: string;
+    userAgent: string;
 
     @Column({
         type: 'varchar',
@@ -72,7 +72,7 @@ export class SessionTokenEntity implements SessionToken {
         nullable: true,
         default: null,
     })
-    consumed_at: string | null;
+    consumedAt: string | null;
 
     @Column({
         type: 'varchar',
@@ -80,15 +80,15 @@ export class SessionTokenEntity implements SessionToken {
         nullable: true,
         default: null,
     })
-    revoked_at: string | null;
+    revokedAt: string | null;
 
     @Index()
     @Column({
         type: 'varchar',
         length: 28,
     })
-    expires_at: string;
+    expiresAt: string;
 
     @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    createdAt: string;
 }

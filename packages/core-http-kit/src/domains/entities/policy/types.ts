@@ -25,7 +25,7 @@ export type BuiltInPolicyResponse<
 // Mirrors `PolicyValidator` mounts in @authup/core-kit. Policies carry dynamic per-type
 // attributes loaded as extra-attributes; the `& Record<string, any>` keeps those open.
 type PolicyValidatedFields = Pick<Policy, 'name' | 'type'> &
-    Partial<Pick<Policy, 'display_name' | 'invert' | 'parent_id' | 'realm_id'>>;
+    Partial<Pick<Policy, 'displayName' | 'invert' | 'parentId' | 'realmId'>>;
 export type PolicyCreatePayload = PolicyValidatedFields & Record<string, any>;
 export type PolicyUpdatePayload = Partial<PolicyValidatedFields> & Record<string, any>;
 export type PolicySavePayload = PolicyCreatePayload;
@@ -39,7 +39,7 @@ export type BuiltInPolicyUpdatePayload<
 
 export interface IPolicyAPI {
     getMany<OUTPUT extends PolicyResponse = PolicyResponse>(
-        data?: BuildInput<Policy & { parent_id?: string | null }>,
+        data?: BuildInput<Policy & { parentId?: string | null }>,
     ) : Promise<EntityCollectionResponse<OUTPUT>>;
     delete<OUTPUT extends PolicyResponse = PolicyResponse>(id: Policy['id']) : Promise<EntityRecordResponse<OUTPUT>>;
     getOne<OUTPUT extends PolicyResponse = PolicyResponse>(id: Policy['id'], record?: BuildInput<Policy>) : Promise<EntityRecordResponse<OUTPUT>>;

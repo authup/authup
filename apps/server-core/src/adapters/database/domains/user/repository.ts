@@ -16,15 +16,15 @@ export class UserRepository extends EARepository<User, UserAttribute> {
     constructor(instance: DataSource | EntityManager) {
         super(instance, {
             attributeProperties: (input, parent) => {
-                input.user_id = parent.id;
-                input.realm_id = parent.realm_id;
+                input.userId = parent.id;
+                input.realmId = parent.realmId;
 
                 return input;
             },
             entity: UserEntity,
             entityPrimaryColumn: 'id',
             attributeEntity: UserAttributeEntity,
-            attributeForeignColumn: 'user_id',
+            attributeForeignColumn: 'userId',
             cachePrefix: CachePrefix.USER_OWNED_ATTRIBUTES,
         });
     }

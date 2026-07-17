@@ -19,7 +19,7 @@ export type PermissionPolicyServiceContext = {
 };
 
 export class PermissionPolicyService extends JunctionEntityService implements IPermissionPolicyService {
-    protected readonly ownerRealmKey = 'permission_realm_id';
+    protected readonly ownerRealmKey = 'permissionRealmId';
 
     protected repository: IPermissionPolicyRepository;
 
@@ -75,22 +75,22 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
         await this.repository.validateJoinColumns(validated);
 
         const existing = await this.repository.findOneBy({
-            permission_id: validated.permission_id,
-            policy_id: validated.policy_id,
+            permissionId: validated.permissionId,
+            policyId: validated.policyId,
         });
         if (existing) {
             throw new EntityConflictError({ entity: 'permission-policy' });
         }
 
         if (validated.permission) {
-            validated.permission_realm_id = validated.permission.realm_id;
+            validated.permissionRealmId = validated.permission.realmId;
         }
 
         if (validated.policy) {
-            validated.policy_realm_id = validated.policy.realm_id;
+            validated.policyRealmId = validated.policy.realmId;
         }
 
-        // Stamp the owner (permission) realm so the realm_scope factor gates cross-realm writes.
+        // Stamp the owner (permission) realm so the realmScope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.PERMISSION_UPDATE,
             data: definePolicyData({
@@ -116,7 +116,7 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
             throw new EntityNotFoundError();
         }
 
-        // Stamp the owner (permission) realm so the realm_scope factor gates cross-realm writes.
+        // Stamp the owner (permission) realm so the realmScope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.PERMISSION_UPDATE,
             data: definePolicyData({

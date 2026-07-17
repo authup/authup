@@ -47,7 +47,7 @@ export class ClientIdentityRepository implements IClientIdentityRepository {
 
             if (realmKey) {
                 if (isUUID(realmKey)) {
-                    query.andWhere('client.realm_id = :realmId', { realmId: realmKey });
+                    query.andWhere('client.realmId = :realmId', { realmId: realmKey });
                 } else {
                     query.andWhere('realm.name = :realmName', { realmName: realmKey.trim().toLowerCase() });
                 }
@@ -56,7 +56,7 @@ export class ClientIdentityRepository implements IClientIdentityRepository {
         const { columns } = this.repository.metadata;
         for (const column of columns) {
             if (!column.isSelect) {
-                query.addSelect(`client.${column.databaseName}`);
+                query.addSelect(`client.${column.propertyName}`);
             }
         }
 

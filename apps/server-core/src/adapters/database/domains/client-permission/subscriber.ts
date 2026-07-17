@@ -20,15 +20,15 @@ export class ClientPermissionSubscriber extends EntitySubscriber<ClientPermissio
             type: EntityType.CLIENT_PERMISSION,
             target: ClientPermissionEntity,
             destinations: buildEntityDestinations(EntityType.CLIENT_PERMISSION, (data) => [
-                data.client_realm_id,
-                data.permission_realm_id,
+                data.clientRealmId,
+                data.permissionRealmId,
             ]),
             cache: {
                 onInsert: true,
                 keys: (data) => [
                     buildRedisKeyPath({
                         prefix: CachePrefix.CLIENT_OWNED_PERMISSIONS,
-                        key: data.client_id,
+                        key: data.clientId,
                     }),
                 ],
             },

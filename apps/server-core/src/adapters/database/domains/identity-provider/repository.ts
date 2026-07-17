@@ -22,15 +22,15 @@ export class IdentityProviderRepository extends EARepository<
             InstanceChecker.isDataSource(instance) ? instance.manager : instance,
             {
                 attributeProperties: (entity, parent) => {
-                    entity.provider_id = parent.id;
-                    entity.realm_id = parent.realm_id;
+                    entity.providerId = parent.id;
+                    entity.realmId = parent.realmId;
 
                     return entity;
                 },
                 entity: IdentityProviderEntity,
                 entityPrimaryColumn: 'id',
                 attributeEntity: IdentityProviderAttributeEntity,
-                attributeForeignColumn: 'provider_id',
+                attributeForeignColumn: 'providerId',
                 cachePrefix: CachePrefix.IDENTITY_PROVIDER_ATTRIBUTE,
             },
         );

@@ -22,7 +22,7 @@ export type IdentityProviderRoleMappingServiceContext = {
 };
 
 export class IdentityProviderRoleMappingService extends JunctionEntityService implements IIdentityProviderRoleMappingService {
-    protected readonly ownerRealmKey = 'provider_realm_id';
+    protected readonly ownerRealmKey = 'providerRealmId';
 
     protected repository: IIdentityProviderRoleMappingRepository;
 
@@ -88,25 +88,25 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
         await this.repository.validateJoinColumns(validated);
 
         const existing = await this.repository.findOneBy({
-            provider_id: validated.provider_id,
-            role_id: validated.role_id,
+            providerId: validated.providerId,
+            roleId: validated.roleId,
         });
         if (existing) {
             throw new EntityConflictError({ entity: 'identity-provider-role-mapping' });
         }
 
         if (validated.provider) {
-            validated.provider_realm_id = validated.provider.realm_id;
+            validated.providerRealmId = validated.provider.realmId;
         }
 
         if (validated.role) {
-            validated.role_realm_id = validated.role.realm_id;
+            validated.roleRealmId = validated.role.realmId;
         }
 
         if (
-            validated.role_realm_id &&
-            validated.provider_realm_id &&
-            validated.role_realm_id !== validated.provider_realm_id
+            validated.roleRealmId &&
+            validated.providerRealmId &&
+            validated.roleRealmId !== validated.providerRealmId
         ) {
             throw new ValidationError('It is not possible to map an identity provider to a role of another realm.');
         }
@@ -119,8 +119,8 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
                 },
                 {
                     type: 'role',
-                    id: validated.role_id,
-                    clientId: validated.role.client_id,
+                    id: validated.roleId,
+                    clientId: validated.role.clientId,
                 },
             );
             if (!hasPermissions) {
@@ -128,7 +128,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
             }
         }
 
-        // Stamp the owner (identity-provider) realm so the realm_scope factor gates cross-realm writes.
+        // Stamp the owner (identity-provider) realm so the realmScope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.IDENTITY_PROVIDER_ROLE_CREATE,
             data: definePolicyData({
@@ -159,12 +159,12 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
 
         await this.repository.validateJoinColumns(validated);
 
-        // `role_id` is immutable on update (CREATE-group only in the validator), so the conferred
+        // `roleId` is immutable on update (CREATE-group only in the validator), so the conferred
         // role never changes here — only the attribute-matching criteria do. Still re-verify the
         // actor OWNS that role before letting it edit (e.g. broaden) the mapping, mirroring create()
         // and the permission-junction member gate (#3164): you may not modify a role-conferring
         // mapping for a role you no longer own.
-        const role = await this.roleRepository.findOneById(entity.role_id);
+        const role = await this.roleRepository.findOneById(entity.roleId);
         if (role && actor.identity) {
             const hasPermissions = await this.identityPermissionProvider.isSuperset(
                 {
@@ -174,7 +174,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
                 {
                     type: 'role',
                     id: role.id,
-                    clientId: role.client_id,
+                    clientId: role.clientId,
                 },
             );
             if (!hasPermissions) {
@@ -184,7 +184,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
 
         const merged = this.repository.merge(entity, validated);
 
-        // Stamp the owner (identity-provider) realm so the realm_scope factor gates cross-realm writes.
+        // Stamp the owner (identity-provider) realm so the realmScope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE,
             data: definePolicyData({
@@ -207,7 +207,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
             throw new EntityNotFoundError();
         }
 
-        // Stamp the owner (identity-provider) realm so the realm_scope factor gates cross-realm writes.
+        // Stamp the owner (identity-provider) realm so the realmScope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.IDENTITY_PROVIDER_ROLE_DELETE,
             data: definePolicyData({

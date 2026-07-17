@@ -55,7 +55,7 @@ export class KeyController {
         if (realmId) {
             query.filter = {
                 ...(query.filter && typeof query.filter === 'object' ? query.filter : {}),
-                realm_id: realmId,
+                realmId,
             };
         }
 

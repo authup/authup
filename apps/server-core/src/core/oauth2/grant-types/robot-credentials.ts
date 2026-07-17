@@ -20,24 +20,24 @@ import type { OAuth2GrantRunWIthOptions } from './types.ts';
 export class RobotCredentialsGrant extends OAuth2BaseGrant<Robot> {
     async runWith(input: Robot, options: OAuth2GrantRunWIthOptions = {}) : Promise<OAuth2TokenGrantResponse> {
         const session = await this.sessionManager.create({
-            user_agent: options.userAgent,
-            ip_address: options.ipAddress,
-            realm_id: input.realm_id,
+            userAgent: options.userAgent,
+            ipAddress: options.ipAddress,
+            realmId: input.realmId,
             sub: input.id,
-            sub_kind: IdentityType.ROBOT,
-            auth_method: SessionAuthMethod.ROBOT,
+            subKind: IdentityType.ROBOT,
+            authMethod: SessionAuthMethod.ROBOT,
         });
 
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
             session_id: session.id,
-            user_agent: session.user_agent,
-            remote_address: session.ip_address,
+            user_agent: session.userAgent,
+            remote_address: session.ipAddress,
             scope: ScopeName.GLOBAL,
             sub: input.id,
             sub_kind: OAuth2SubKind.ROBOT,
             realm_id: input.realm.id,
             realm_name: input.realm.name,
-            client_id: input.client_id || undefined,
+            client_id: input.clientId || undefined,
         });
 
         return buildOAuth2BearerTokenResponse({

@@ -18,7 +18,7 @@ export interface IRealmRepository extends IEntityRepository<Realm> {
 
     /**
      * Resolve a realm key (UUID or name) to a realm id for use in a
-     * realm_id predicate. A UUID key is returned as-is without existence
+     * realmId predicate. A UUID key is returned as-is without existence
      * verification (binding an unknown UUID matches zero rows — fail-closed
      * by construction). A name key resolves through the canonicalizing
      * findOneByName; null means "no such realm" and the caller MUST fail

@@ -85,10 +85,10 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
             // (hard cutover). Either way the client must re-authenticate.
             throw OAuth2GrantError.invalid('refresh token is unknown');
         }
-        if (row.revoked_at) {
+        if (row.revokedAt) {
             throw OAuth2GrantError.invalid('refresh token has been revoked');
         }
-        if (row.session_id !== payload.session_id) {
+        if (row.sessionId !== payload.session_id) {
             // The row is written with the token's own session_id and jti is
             // globally unique, so a mismatch means corruption / jti reuse — fail
             // closed rather than refresh or revoke against the wrong session.
@@ -105,7 +105,7 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
             // absorbs.
             const withinGrace = await this.isWithinGraceWindow(payload.jti, now);
             if (!withinGrace) {
-                await this.revokeFamily(row.session_id, payload.jti, nowISO);
+                await this.revokeFamily(row.sessionId, payload.jti, nowISO);
                 throw OAuth2GrantError.invalid('refresh token replay detected; session revoked');
             }
         }
@@ -123,18 +123,18 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         await this.sessionManager.verify(session);
 
         if (options.userAgent) {
-            session.user_agent = options.userAgent;
+            session.userAgent = options.userAgent;
         }
         if (options.ipAddress) {
-            session.ip_address = options.ipAddress;
+            session.ipAddress = options.ipAddress;
         }
         await this.sessionManager.refresh(session);
 
         const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue({
             ...payload,
             ...(options.confirmation ? { cnf: options.confirmation } : {}),
-            user_agent: session.user_agent,
-            remote_address: session.ip_address,
+            user_agent: session.userAgent,
+            remote_address: session.ipAddress,
             exp: this.refreshTokenIssuer.buildExp(),
             parent_id: payload.jti,
         });
@@ -142,8 +142,8 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
             ...payload,
             ...(options.confirmation ? { cnf: options.confirmation } : {}),
-            user_agent: session.user_agent,
-            remote_address: session.ip_address,
+            user_agent: session.userAgent,
+            remote_address: session.ipAddress,
             exp: this.accessTokenIssuer.buildExp(),
             refresh_token_id: refreshTokenPayload.jti,
         });
@@ -170,9 +170,9 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         const current = await this.sessionTokenRepository.findOneById(jti);
         if (
             !current ||
-            current.revoked_at !== null ||
-            current.consumed_at === null ||
-            (now.getTime() - new Date(current.consumed_at).getTime()) > this.gracePeriod * 1_000
+            current.revokedAt !== null ||
+            current.consumedAt === null ||
+            (now.getTime() - new Date(current.consumedAt).getTime()) > this.gracePeriod * 1_000
         ) {
             return false;
         }
@@ -191,7 +191,7 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
      */
     protected async revokeFamily(sessionId: string, jti: string, at: string) : Promise<void> {
         this.logger?.warn('OAuth2 refresh token replay detected; revoking session', {
-            session_id: sessionId,
+            sessionId,
             jti,
         });
 
@@ -212,7 +212,7 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         const rows = await this.sessionTokenRepository.revokeBySessionId(sessionId, at);
         await Promise.allSettled(rows.map((row) => this.tokenRepository.setInactive(
             row.id,
-            Math.floor(new Date(row.expires_at).getTime() / 1_000),
+            Math.floor(new Date(row.expiresAt).getTime() / 1_000),
         )));
 
         await this.sessionManager.revoke(sessionId);

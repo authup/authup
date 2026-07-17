@@ -24,7 +24,7 @@ import {
 import { RealmEntity } from '../realm/index.ts';
 import { RoleEntity } from '../role/entity.ts';
 
-@Unique(['name', 'role_id'])
+@Unique(['name', 'roleId'])
 @Entity({ name: 'auth_role_attributes' })
 export class RoleAttributeEntity implements RoleAttribute {
     @PrimaryGeneratedColumn('uuid')
@@ -53,7 +53,7 @@ export class RoleAttributeEntity implements RoleAttribute {
     // ------------------------------------------------------------------
 
     @Column({ nullable: true })
-    realm_id: Realm['id'] | null;
+    realmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
@@ -63,7 +63,7 @@ export class RoleAttributeEntity implements RoleAttribute {
     realm: RealmEntity | null;
 
     @Column()
-    role_id: Role['id'];
+    roleId: Role['id'];
 
     @ManyToOne(() => RoleEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'role_id' })
@@ -72,8 +72,8 @@ export class RoleAttributeEntity implements RoleAttribute {
     // ------------------------------------------------------------------
 
     @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    createdAt: string;
 
     @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    updatedAt: string;
 }

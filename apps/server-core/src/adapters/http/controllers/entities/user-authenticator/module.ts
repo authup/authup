@@ -89,7 +89,7 @@ export class UserAuthenticatorController {
         const userId = this.resolveUserId(id, event);
 
         // route wins silently over body
-        const result = await this.service.enroll({ ...data, user_id: userId }, actor);
+        const result = await this.service.enroll({ ...data, userId }, actor);
 
         event.response.status = 201;
         return result;

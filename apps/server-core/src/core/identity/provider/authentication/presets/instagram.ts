@@ -15,9 +15,9 @@ import { IdentityProviderOAuth2Authenticator } from '../protocols/index.ts';
 export class IdentityProviderInstagramAuthenticator extends IdentityProviderOAuth2Authenticator {
     constructor(ctx: IdentityProviderOAuth2AuthenticatorContext) {
         ctx.provider.scope = mergeOAuth2Scopes('user_profile', ctx.provider.scope);
-        ctx.provider.authorize_url = 'https://api.instagram.com/oauth/authorize';
-        ctx.provider.token_url = 'https://api.instagram.com/oauth/access_token';
-        ctx.provider.user_info_url = 'https://graph.instagram.com/me?fields=id,username';
+        ctx.provider.authorizeUrl = 'https://api.instagram.com/oauth/authorize';
+        ctx.provider.tokenUrl = 'https://api.instagram.com/oauth/access_token';
+        ctx.provider.userInfoUrl = 'https://graph.instagram.com/me?fields=id,username';
 
         super(ctx);
     }

@@ -28,7 +28,7 @@ import { UserEntity } from '../user/index.ts';
 import { IdentityProviderEntity } from '../identity-provider/index.ts';
 
 @Entity({ name: 'auth_identity_provider_accounts' })
-@Index(['provider_id', 'user_id'], { unique: true })
+@Index(['providerId', 'userId'], { unique: true })
 export class IdentityProviderAccountEntity implements IdentityProviderAccount {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -38,20 +38,20 @@ export class IdentityProviderAccountEntity implements IdentityProviderAccount {
         nullable: true,
         default: null, 
     })
-    access_token: string;
+    accessToken: string;
 
     @Column({
         type: 'text',
         nullable: true,
         default: null, 
     })
-    refresh_token: string;
+    refreshToken: string;
 
     @Column({
         type: 'varchar',
         length: 256, 
     })
-    provider_user_id: string;
+    providerUserId: string;
 
     @Column({
         type: 'varchar',
@@ -59,7 +59,7 @@ export class IdentityProviderAccountEntity implements IdentityProviderAccount {
         nullable: true,
         default: null,
     })
-    provider_user_name: string;
+    providerUserName: string;
 
     @Column({
         type: 'varchar',
@@ -67,7 +67,7 @@ export class IdentityProviderAccountEntity implements IdentityProviderAccount {
         nullable: true,
         default: null,
     })
-    provider_user_email: string;
+    providerUserEmail: string;
 
     @Column({
         type: 'int',
@@ -75,7 +75,7 @@ export class IdentityProviderAccountEntity implements IdentityProviderAccount {
         nullable: true,
         default: null,
     })
-    expires_in: number | null;
+    expiresIn: number | null;
 
     @Column({
         type: 'varchar',
@@ -83,49 +83,49 @@ export class IdentityProviderAccountEntity implements IdentityProviderAccount {
         nullable: true,
         default: null,
     })
-    expires_at: string | null;
+    expiresAt: string | null;
 
     @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    createdAt: string;
 
     @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    updatedAt: string;
 
     // -----------------------------------------------
 
     @Column()
-    user_id: User['id'];
+    userId: User['id'];
 
     @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
     user: UserEntity;
 
     @Column({ nullable: true })
-    user_realm_id: Realm['id'] | null;
+    userRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
         nullable: true, 
     })
     @JoinColumn({ name: 'user_realm_id' })
-    user_realm: RealmEntity | null;
+    userRealm: RealmEntity | null;
 
     // -----------------------------------------------
 
     @Column()
-    provider_id: IdentityProvider['id'];
+    providerId: IdentityProvider['id'];
 
     @ManyToOne(() => IdentityProviderEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'provider_id' })
     provider: IdentityProviderEntity;
 
     @Column({ nullable: true })
-    provider_realm_id: Realm['id'] | null;
+    providerRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
         nullable: true, 
     })
     @JoinColumn({ name: 'provider_realm_id' })
-    provider_realm: RealmEntity | null;
+    providerRealm: RealmEntity | null;
 }

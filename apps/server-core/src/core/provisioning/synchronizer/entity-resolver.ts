@@ -25,15 +25,15 @@ export class ProvisioningEntityResolver<T extends ObjectLiteral = ObjectLiteral>
         const hasWildcard = names.includes('*');
         if (hasWildcard) {
             return this.repository.findManyBy({
-                realm_id: null,
-                client_id: null,
+                realmId: null,
+                clientId: null,
             });
         }
 
         return this.repository.findManyBy({
             name: names,
-            realm_id: null,
-            client_id: null,
+            realmId: null,
+            clientId: null,
         });
     }
 
@@ -47,15 +47,15 @@ export class ProvisioningEntityResolver<T extends ObjectLiteral = ObjectLiteral>
         const hasWildcard = names.includes('*');
         if (hasWildcard) {
             return this.repository.findManyBy({
-                realm_id: realmId,
-                client_id: null,
+                realmId,
+                clientId: null,
             });
         }
 
         return this.repository.findManyBy({
             name: names,
-            realm_id: realmId,
-            client_id: null,
+            realmId,
+            clientId: null,
         });
     }
 
@@ -69,15 +69,15 @@ export class ProvisioningEntityResolver<T extends ObjectLiteral = ObjectLiteral>
         const hasWildcard = names.includes('*');
         if (hasWildcard) {
             return this.repository.findManyBy({
-                realm_id: realmId,
-                client_id: clientId,
+                realmId,
+                clientId,
             });
         }
 
         return this.repository.findManyBy({
             name: names,
-            realm_id: realmId,
-            client_id: clientId,
+            realmId,
+            clientId,
         });
     }
 }

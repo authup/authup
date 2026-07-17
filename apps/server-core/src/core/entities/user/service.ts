@@ -165,8 +165,8 @@ export class UserService extends AbstractEntityService implements IUserService {
     }> {
         let group: string;
 
-        const realm = typeof data.realm_id === 'string' ?
-            await this.realmRepository.resolve(data.realm_id) :
+        const realm = typeof data.realmId === 'string' ?
+            await this.realmRepository.resolve(data.realmId) :
             undefined;
 
         let entity: User | null | undefined;
@@ -179,7 +179,7 @@ export class UserService extends AbstractEntityService implements IUserService {
             }
 
             if (realm) {
-                where.realm_id = realm.id;
+                where.realmId = realm.id;
             }
 
             entity = await this.repository.findOneBy(where);
@@ -221,7 +221,7 @@ export class UserService extends AbstractEntityService implements IUserService {
 
         if (entity) {
             const originalName = entity.name;
-            const originalNameLocked = entity.name_locked;
+            const originalNameLocked = entity.nameLocked;
 
             if (isSelfEdit) {
                 await actor.permissionEvaluator.evaluate({
@@ -236,11 +236,11 @@ export class UserService extends AbstractEntityService implements IUserService {
                 validated.name &&
                 validated.name !== originalName
             ) {
-                if (validated.name_locked) {
-                    entity.name_locked = validated.name_locked;
+                if (validated.nameLocked) {
+                    entity.nameLocked = validated.nameLocked;
                 }
 
-                if (originalNameLocked && validated.name_locked !== false) {
+                if (originalNameLocked && validated.nameLocked !== false) {
                     entity.name = originalName;
                 }
             }
@@ -253,7 +253,7 @@ export class UserService extends AbstractEntityService implements IUserService {
                             ...entity,
                             ...validated,
                         },
-                        [BuiltInPolicyType.REALM_MATCH]: validated.realm_id ?? entity.realm_id ?? null,
+                        [BuiltInPolicyType.REALM_MATCH]: validated.realmId ?? entity.realmId ?? null,
                     }),
                 });
             }
@@ -270,10 +270,10 @@ export class UserService extends AbstractEntityService implements IUserService {
             };
         }
 
-        if (!validated.realm_id) {
+        if (!validated.realmId) {
             const actorRealmId = this.getActorRealmId(actor);
             if (actorRealmId) {
-                validated.realm_id = actorRealmId;
+                validated.realmId = actorRealmId;
             }
         }
 

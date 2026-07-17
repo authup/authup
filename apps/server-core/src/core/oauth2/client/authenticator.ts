@@ -63,7 +63,7 @@ export class OAuth2ClientAuthenticator {
 
         const client = await this.resolve(clientId, realmId);
 
-        switch (client.auth_method) {
+        switch (client.authMethod) {
             case ClientAuthMethod.NONE:
                 if (typeof clientSecret === 'string') {
                     throw OAuth2ClientError.invalid();
@@ -124,14 +124,14 @@ export class OAuth2ClientAuthenticator {
     }
 
     resolveTokenBinding(
-        client: Pick<Client, 'token_binding_method'>,
+        client: Pick<Client, 'tokenBindingMethod'>,
         certificateEvidence?: ClientCertificateEvidence,
     ): OAuth2TokenConfirmation | undefined {
-        if (client.token_binding_method === ClientTokenBindingMethod.NONE) {
+        if (client.tokenBindingMethod === ClientTokenBindingMethod.NONE) {
             return undefined;
         }
 
-        if (client.token_binding_method !== ClientTokenBindingMethod.TLS) {
+        if (client.tokenBindingMethod !== ClientTokenBindingMethod.TLS) {
             throw OAuth2ClientError.invalid();
         }
 

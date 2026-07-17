@@ -71,7 +71,7 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
         // can never be matched — reject outright instead of trusting whatever
         // redirect_uri the request carries (the server would otherwise issue a
         // code to an attacker-supplied URI).
-        if (!client.redirect_uri) {
+        if (!client.redirectUri) {
             throw OAuth2GrantError.redirectUriMismatch();
         }
 
@@ -92,7 +92,7 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
         }
 
         data.client_id = client.id;
-        data.realm_id = client.realm_id;
+        data.realm_id = client.realmId;
 
         const scopes = await this.scopeRepository.findByClientId(client.id);
         const scopeNames = scopes.map((scope) => scope.name);
@@ -113,7 +113,7 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
         // consumers never auto-redirect without a match.
         const redirectUriVerified = !!data.redirect_uri;
         if (data.redirect_uri) {
-            const redirectUris = client.redirect_uri.split(',');
+            const redirectUris = client.redirectUri.split(',');
 
             if (!isSimpleMatch(data.redirect_uri, redirectUris)) {
                 throw OAuth2GrantError.redirectUriMismatch();

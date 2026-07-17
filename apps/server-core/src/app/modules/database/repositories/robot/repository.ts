@@ -52,16 +52,16 @@ export class RobotRepositoryAdapter implements IRobotRepository {
                 default: [
                     'id',
                     'name',
-                    'display_name',
+                    'displayName',
                     'description',
                     'active',
-                    'user_id',
-                    'realm_id',
-                    'created_at',
-                    'updated_at',
+                    'userId',
+                    'realmId',
+                    'createdAt',
+                    'updatedAt',
                 ],
             },
-            filters: { allowed: ['id', 'name', 'realm_id', 'user_id'] },
+            filters: { allowed: ['id', 'name', 'realmId', 'userId'] },
             pagination: { maxLimit: 50 },
             relations: {
                 // @ts-expect-error onJoin is not in the type definition
@@ -70,7 +70,7 @@ export class RobotRepositoryAdapter implements IRobotRepository {
                     q.addGroupBy(`${key}.id`);
                 },
             },
-            sort: { allowed: ['id', 'realm_id', 'user_id', 'updated_at', 'created_at'] },
+            sort: { allowed: ['id', 'realmId', 'userId', 'updatedAt', 'createdAt'] },
         });
 
         applyRealmScopeSelect(qb, 'robot', ['id']);
@@ -99,7 +99,7 @@ export class RobotRepositoryAdapter implements IRobotRepository {
             if (!realmId) {
                 return null;
             }
-            qb.andWhere('robot.realm_id = :realmId', { realmId });
+            qb.andWhere('robot.realmId = :realmId', { realmId });
         }
 
         return qb.getOne();
@@ -124,7 +124,7 @@ export class RobotRepositoryAdapter implements IRobotRepository {
                 if (!realmId) {
                     return null;
                 }
-                qb.andWhere('robot.realm_id = :realmId', { realmId });
+                qb.andWhere('robot.realmId = :realmId', { realmId });
             }
         }
 
@@ -134,13 +134,13 @@ export class RobotRepositoryAdapter implements IRobotRepository {
                 default: [
                     'id',
                     'name',
-                    'display_name',
+                    'displayName',
                     'description',
                     'active',
-                    'user_id',
-                    'realm_id',
-                    'created_at',
-                    'updated_at',
+                    'userId',
+                    'realmId',
+                    'createdAt',
+                    'updatedAt',
                 ],
                 allowed: ['secret'],
             },
@@ -214,7 +214,7 @@ export class RobotRepositoryAdapter implements IRobotRepository {
         const entries = await this.repository.manager
             .getRepository(RobotRoleEntity)
             .find({
-                where: { robot_id: id },
+                where: { robotId: id },
                 relations: { role: true },
                 cache: {
                     id: buildRedisKeyPath({
@@ -233,7 +233,7 @@ export class RobotRepositoryAdapter implements IRobotRepository {
         return loadBoundPermissions({
             manager: this.repository.manager,
             junctionTarget: RobotPermissionEntity,
-            where: { robot_id: id },
+            where: { robotId: id },
             cachePrefix: CachePrefix.ROBOT_OWNED_PERMISSIONS,
             cacheKey: id,
         });

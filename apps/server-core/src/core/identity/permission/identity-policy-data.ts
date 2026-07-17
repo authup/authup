@@ -19,13 +19,13 @@ export function toIdentityPolicyData(identity: Identity | undefined): IdentityPo
     let clientId: string | null;
     if (type === IdentityType.CLIENT) {
         clientId = data.id;
-    } else if ('client_id' in data) {
-        clientId = data.client_id ?? null;
+    } else if ('clientId' in data) {
+        clientId = data.clientId ?? null;
     } else {
         clientId = null;
     }
 
-    let realmId: string | null = data.realm_id ?? null;
+    let realmId: string | null = data.realmId ?? null;
     if (!realmId && data.realm && data.realm.id) {
         realmId = data.realm.id ?? null;
     }

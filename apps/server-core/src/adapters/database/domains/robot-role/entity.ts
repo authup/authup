@@ -27,7 +27,7 @@ import { RobotEntity } from '../robot/entity.ts';
 import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_robot_roles' })
-@Index(['role_id', 'robot_id'], { unique: true })
+@Index(['roleId', 'robotId'], { unique: true })
 export class RobotRoleEntity implements RobotRole {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -35,44 +35,44 @@ export class RobotRoleEntity implements RobotRole {
     // ------------------------------------------------------------------
 
     @Column()
-    role_id: string;
+    roleId: string;
 
     @ManyToOne(() => RoleEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'role_id' })
     role: Role;
 
     @Column({ nullable: true })
-    role_realm_id: Realm['id'] | null;
+    roleRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
         nullable: true, 
     })
     @JoinColumn({ name: 'role_realm_id' })
-    role_realm: Realm | null;
+    roleRealm: Realm | null;
 
     @Column()
-    robot_id: string;
+    robotId: string;
 
     @ManyToOne(() => RobotEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'robot_id' })
     robot: Robot;
 
     @Column({ nullable: true })
-    robot_realm_id: Realm['id'] | null;
+    robotRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
         nullable: true, 
     })
     @JoinColumn({ name: 'robot_realm_id' })
-    robot_realm: Realm | null;
+    robotRealm: Realm | null;
 
     // ------------------------------------------------------------------
 
     @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    createdAt: string;
 
     @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    updatedAt: string;
 }

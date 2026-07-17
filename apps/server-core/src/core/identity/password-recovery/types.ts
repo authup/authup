@@ -26,11 +26,11 @@ export type PasswordRecoveryServiceContext = {
 };
 
 export type PasswordForgotResult = {
-    reset_expires: string,
+    resetExpires: string,
 };
 
 export type PasswordResetResult = {
-    reset_at: string,
+    resetAt: string,
 };
 
 export interface IPasswordRecoveryService {

@@ -51,7 +51,7 @@ export type KeyRepositoryAdapterOptions = {
  * One adapter, two ports: the entity CRUD surface (IKeyRepository) for the
  * key management API and the material-resolving store (IKeyStore) for the
  * signer / verifier / realm cipher. Entity reads never select
- * decryption_key; only the IKeyStore surface hands out (unwrapped) material.
+ * decryptionKey; only the IKeyStore surface hands out (unwrapped) material.
  */
 export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
     protected dataSource : DataSource;
@@ -87,22 +87,22 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
                 type: true,
                 use: true,
                 status: true,
-                signature_algorithm: true,
-                encryption_key: true,
-                decryption_key: true,
-                realm_id: true,
+                signatureAlgorithm: true,
+                encryptionKey: true,
+                decryptionKey: true,
+                realmId: true,
             },
             where: {
-                realm_id: realmId,
+                realmId,
                 use,
                 status: KeyStatus.ACTIVE,
             },
-            // created_at + id break priority ties deterministically (e.g.
+            // createdAt + id break priority ties deterministically (e.g.
             // duplicate mints from a concurrent zero-row backstop race —
             // benign, both keys verify, but selection must be stable).
             order: {
                 priority: 'DESC', 
-                created_at: 'DESC', 
+                createdAt: 'DESC', 
                 id: 'ASC', 
             },
         });
@@ -111,7 +111,7 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
             return this.afterLoad(repository, entity);
         }
 
-        const total = await repository.countBy({ realm_id: realmId, use });
+        const total = await repository.countBy({ realmId, use });
         if (total > 0) {
             // an admin who disabled every key meant it — do not silently
             // re-mint around the kill switch.
@@ -147,10 +147,10 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
                 type: true,
                 use: true,
                 status: true,
-                signature_algorithm: true,
-                encryption_key: true,
-                decryption_key: true,
-                realm_id: true,
+                signatureAlgorithm: true,
+                encryptionKey: true,
+                decryptionKey: true,
+                realmId: true,
             },
             where: { id },
         });
@@ -178,16 +178,16 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
             type: JWKType.RSA,
             use: JWKUse.SIGNATURE,
             status: KeyStatus.ACTIVE,
-            decryption_key: await this.protect(material),
-            encryption_key: await publicKeyContainer.toBase64(),
-            realm_id: realmId,
-            signature_algorithm: `${JWTAlgorithm.RS256}`,
+            decryptionKey: await this.protect(material),
+            encryptionKey: await publicKeyContainer.toBase64(),
+            realmId,
+            signatureAlgorithm: `${JWTAlgorithm.RS256}`,
         });
 
         await repository.save(entity);
 
         // hand the caller usable material regardless of the persisted form.
-        entity.decryption_key = material;
+        entity.decryptionKey = material;
 
         return entity;
     }
@@ -206,15 +206,15 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
             type: JWKType.OCT,
             use: JWKUse.ENCRYPTION,
             status: KeyStatus.ACTIVE,
-            decryption_key: await this.protect(material),
-            encryption_key: null,
-            realm_id: realmId,
-            signature_algorithm: null,
+            decryptionKey: await this.protect(material),
+            encryptionKey: null,
+            realmId,
+            signatureAlgorithm: null,
         });
 
         await repository.save(entity);
 
-        entity.decryption_key = material;
+        entity.decryptionKey = material;
 
         return entity;
     }
@@ -227,12 +227,12 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
         repository: Repository<KeyEntity>,
         entity: KeyEntity,
     ) : Promise<Key> {
-        if (!entity.decryption_key) {
+        if (!entity.decryptionKey) {
             return entity;
         }
 
-        if (isWrappedKeyMaterial(entity.decryption_key)) {
-            entity.decryption_key = await unwrapKeyMaterial(this.secretsCipher, entity.decryption_key);
+        if (isWrappedKeyMaterial(entity.decryptionKey)) {
+            entity.decryptionKey = await unwrapKeyMaterial(this.secretsCipher, entity.decryptionKey);
             return entity;
         }
 
@@ -240,16 +240,16 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
             // lazy wrap-on-read: a KEK added to a running deployment
             // hardens existing rows without a migration step. Best-effort —
             // the material stays readable either way.
-            const material = entity.decryption_key;
+            const material = entity.decryptionKey;
             try {
-                await repository.update(entity.id, { decryption_key: await wrapKeyMaterial(this.secretsCipher, material) });
+                await repository.update(entity.id, { decryptionKey: await wrapKeyMaterial(this.secretsCipher, material) });
             } catch (e) {
                 // Best-effort — the material stays readable and the next read
                 // retries. Surface it though: a persistent failure (e.g. a
                 // read-only replica) means the row is never hardened at rest.
                 this.logger?.warn(`Failed to wrap key material at rest for key ${entity.id}.`, { error: e });
             }
-            entity.decryption_key = material;
+            entity.decryptionKey = material;
         }
 
         return entity;
@@ -281,16 +281,16 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
                     'use',
                     'priority',
                     'status',
-                    'signature_algorithm',
-                    'realm_id',
-                    'created_at',
-                    'updated_at',
+                    'signatureAlgorithm',
+                    'realmId',
+                    'createdAt',
+                    'updatedAt',
                 ],
-                allowed: ['encryption_key', 'certificate'],
+                allowed: ['encryptionKey', 'certificate'],
             },
-            filters: { allowed: ['id', 'name', 'type', 'use', 'status', 'realm_id'] },
+            filters: { allowed: ['id', 'name', 'type', 'use', 'status', 'realmId'] },
             pagination: { maxLimit: 50 },
-            sort: { allowed: ['id', 'name', 'priority', 'use', 'status', 'created_at', 'updated_at'] },
+            sort: { allowed: ['id', 'name', 'priority', 'use', 'status', 'createdAt', 'updatedAt'] },
         });
 
         applyRealmScopeSelect(qb, 'keyEntity');
@@ -319,7 +319,7 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
                 return null;
             }
 
-            where.realm_id = realmId;
+            where.realmId = realmId;
         }
 
         return this.repository.findOneBy(where);
@@ -349,14 +349,14 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
 
     async save(entity: Key): Promise<Key> {
         if (
-            entity.decryption_key &&
+            entity.decryptionKey &&
             this.secretsCipher &&
-            !isWrappedKeyMaterial(entity.decryption_key)
+            !isWrappedKeyMaterial(entity.decryptionKey)
         ) {
-            const material = entity.decryption_key;
-            entity.decryption_key = await wrapKeyMaterial(this.secretsCipher, material);
+            const material = entity.decryptionKey;
+            entity.decryptionKey = await wrapKeyMaterial(this.secretsCipher, material);
             const saved = await this.repository.save(entity as KeyEntity);
-            saved.decryption_key = material;
+            saved.decryptionKey = material;
             return saved;
         }
 
@@ -392,6 +392,6 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
     }
 
     async findHighestPriority(realmId: string, use: string): Promise<number | null> {
-        return this.repository.maximum('priority', { realm_id: realmId, use: use as `${JWKUse}` });
+        return this.repository.maximum('priority', { realmId, use: use as `${JWKUse}` });
     }
 }

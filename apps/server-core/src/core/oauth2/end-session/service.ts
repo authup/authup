@@ -135,7 +135,7 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
             clientName = client.name;
             if (
                 data.post_logout_redirect_uri &&
-                this.isValidPostLogoutRedirect(client.post_logout_redirect_uri, data.post_logout_redirect_uri)
+                this.isValidPostLogoutRedirect(client.postLogoutRedirectUri, data.post_logout_redirect_uri)
             ) {
                 redirectUri = data.post_logout_redirect_uri;
             }
@@ -161,7 +161,7 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
         }
 
         // Never revoke a session that does not belong to the hint's subject.
-        if (session.sub !== sub || session.sub_kind !== subKind) {
+        if (session.sub !== sub || session.subKind !== subKind) {
             return false;
         }
 
@@ -172,10 +172,10 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
             name: EventName.LOGOUT,
             refType: EventRefType.SESSION,
             refId: sessionId,
-            actorType: session.sub_kind as `${IdentityType}`,
+            actorType: session.subKind as `${IdentityType}`,
             actorId: session.sub,
-            realmId: session.realm_id,
-            data: { revoked_session_id: sessionId },
+            realmId: session.realmId,
+            data: { revokedSessionId: sessionId },
         });
 
         return true;

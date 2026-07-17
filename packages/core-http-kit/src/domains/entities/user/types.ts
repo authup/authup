@@ -10,25 +10,25 @@ import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
 import type { User } from '@authup/core-kit';
 
 // Mirrors `UserValidator` mounts in @authup/core-kit.
-// `password_repeat` is NOT validator-mounted but is accepted by the controller for password
+// `passwordRepeat` is NOT validator-mounted but is accepted by the controller for password
 // confirmation; it is only carried on update/save shapes.
-type UserOptionalFields = Pick<User, 'name_locked' |
-    'first_name' |
-    'last_name' |
-    'display_name' |
+type UserOptionalFields = Pick<User, 'nameLocked' |
+    'firstName' |
+    'lastName' |
+    'displayName' |
     'password' |
     'active' |
-    'realm_id' |
+    'realmId' |
     'status' |
-    'status_message'>;
+    'statusMessage'>;
 
 export type UserCreatePayload = Pick<User, 'name' | 'email'> &
     Partial<UserOptionalFields>;
 
-export type UserUpdatePayload = Partial<UserCreatePayload> & { password_repeat?: User['password'] };
-export type UserSavePayload = UserCreatePayload & { password_repeat?: User['password'] };
+export type UserUpdatePayload = Partial<UserCreatePayload> & { passwordRepeat?: User['password'] };
+export type UserSavePayload = UserCreatePayload & { passwordRepeat?: User['password'] };
 
-export type RegisterPayload = Partial<Pick<User, 'email' | 'name' | 'password' | 'realm_id'>>;
+export type RegisterPayload = Partial<Pick<User, 'email' | 'name' | 'password' | 'realmId'>>;
 export type RegisterResponse = {
     active: boolean,
 };
@@ -38,17 +38,17 @@ export type ActivatePayload = {
 };
 export type ActivateResponse = null;
 
-export type PasswordForgotPayload = Partial<Pick<User, 'email' | 'name' | 'realm_id'>>;
+export type PasswordForgotPayload = Partial<Pick<User, 'email' | 'name' | 'realmId'>>;
 export type PasswordForgotResponse = {
-    reset_expires: string,
+    resetExpires: string,
 };
 
-export type PasswordResetPayload = Partial<Pick<User, 'email' | 'name' | 'realm_id'>> & {
+export type PasswordResetPayload = Partial<Pick<User, 'email' | 'name' | 'realmId'>> & {
     token: string,
     password: string,
 };
 export type PasswordResetResponse = {
-    reset_at: string,
+    resetAt: string,
 };
 
 export interface IUserAPI extends IEntityAPI<User, UserCreatePayload, UserUpdatePayload> {

@@ -23,7 +23,7 @@ import type { Realm, User } from '@authup/core-kit';
 import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_users' })
-@Unique(['name', 'realm_id'])
+@Unique(['name', 'realmId'])
 export class UserEntity implements User {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -39,28 +39,28 @@ export class UserEntity implements User {
         type: 'boolean',
         default: true, 
     })
-    name_locked: boolean;
+    nameLocked: boolean;
 
     @Column({
         type: 'varchar',
         length: 128,
         nullable: true, 
     })
-    first_name: string | null;
+    firstName: string | null;
 
     @Column({
         type: 'varchar',
         length: 128,
         nullable: true, 
     })
-    last_name: string | null;
+    lastName: string | null;
 
     @Column({
         type: 'varchar',
         length: 256,
         nullable: true, 
     })
-    display_name: string | null;
+    displayName: string | null;
 
     @Index()
     @Column({
@@ -104,7 +104,7 @@ export class UserEntity implements User {
         default: null,
         select: false,
     })
-    reset_hash: string | null;
+    resetHash: string | null;
 
     @Column({
         type: 'varchar',
@@ -113,7 +113,7 @@ export class UserEntity implements User {
         default: null,
         select: false,
     })
-    reset_at: string | null;
+    resetAt: string | null;
 
     @Column({
         type: 'varchar',
@@ -122,7 +122,7 @@ export class UserEntity implements User {
         default: null,
         select: false,
     })
-    reset_expires: string | null;
+    resetExpires: string | null;
 
     // ------------------------------------------------------------------
 
@@ -140,7 +140,7 @@ export class UserEntity implements User {
         nullable: true,
         default: null,
     })
-    status_message: string | null;
+    statusMessage: string | null;
 
     // ------------------------------------------------------------------
 
@@ -157,21 +157,21 @@ export class UserEntity implements User {
         default: null,
         select: false,
     })
-    activate_hash: string | null;
+    activateHash: string | null;
 
     // ------------------------------------------------------------------
 
     @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    createdAt: string;
 
     @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    updatedAt: string;
 
     // ------------------------------------------------------------------
 
     @Index()
     @Column()
-    realm_id: Realm['id'];
+    realmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
@@ -183,10 +183,10 @@ export class UserEntity implements User {
     @BeforeUpdate()
     setDisplayName() {
         if (
-            typeof this.display_name !== 'string' ||
-            this.display_name.length === 0
+            typeof this.displayName !== 'string' ||
+            this.displayName.length === 0
         ) {
-            this.display_name = this.name;
+            this.displayName = this.name;
         }
     }
 }

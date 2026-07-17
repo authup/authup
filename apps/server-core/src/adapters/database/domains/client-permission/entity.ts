@@ -30,7 +30,7 @@ import { ClientEntity } from '../client/entity.ts';
 import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_client_permissions' })
-@Index(['client_id', 'permission_id'], { unique: true })
+@Index(['clientId', 'permissionId'], { unique: true })
 export class ClientPermissionEntity implements ClientPermission {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -38,7 +38,7 @@ export class ClientPermissionEntity implements ClientPermission {
     // ------------------------------------------------------------------
 
     @Column({ nullable: true })
-    policy_id: string | null;
+    policyId: string | null;
 
     @ManyToOne(() => PolicyEntity, {
         onDelete: 'SET NULL',
@@ -52,47 +52,47 @@ export class ClientPermissionEntity implements ClientPermission {
         length: 50,
         default: 'own',
     })
-    realm_scope: RealmScopeValue;
+    realmScope: RealmScopeValue;
 
     @Column()
-    client_id: string;
+    clientId: string;
 
     @ManyToOne(() => ClientEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'client_id' })
     client: Client;
 
     @Column({ nullable: true })
-    client_realm_id: Client['id'] | null;
+    clientRealmId: Client['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
         nullable: true, 
     })
     @JoinColumn({ name: 'client_realm_id' })
-    client_realm: Realm | null;
+    clientRealm: Realm | null;
 
     @Column({ type: 'varchar' })
-    permission_id: string;
+    permissionId: string;
 
     @ManyToOne(() => PermissionEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'permission_id' })
     permission: Permission;
 
     @Column({ nullable: true })
-    permission_realm_id: Realm['id'] | null;
+    permissionRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
         nullable: true, 
     })
     @JoinColumn({ name: 'permission_realm_id' })
-    permission_realm: Realm | null;
+    permissionRealm: Realm | null;
 
     // ------------------------------------------------------------------
 
     @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    createdAt: string;
 
     @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    updatedAt: string;
 }

@@ -21,7 +21,7 @@ export type UserRoleServiceContext = {
 };
 
 export class UserRoleService extends JunctionEntityService implements IUserRoleService {
-    protected readonly ownerRealmKey = 'user_realm_id';
+    protected readonly ownerRealmKey = 'userRealmId';
 
     protected repository: IUserRoleRepository;
 
@@ -82,19 +82,19 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
         await this.repository.validateJoinColumns(validated);
 
         const existing = await this.repository.findOneBy({
-            role_id: validated.role_id,
-            user_id: validated.user_id,
+            roleId: validated.roleId,
+            userId: validated.userId,
         });
         if (existing) {
             throw new EntityConflictError({ entity: 'user-role' });
         }
 
         if (validated.role) {
-            validated.role_realm_id = validated.role.realm_id;
+            validated.roleRealmId = validated.role.realmId;
         }
 
         if (validated.user) {
-            validated.user_realm_id = validated.user.realm_id;
+            validated.userRealmId = validated.user.realmId;
         }
 
         if (validated.role && actor.identity) {
@@ -105,8 +105,8 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
                 },
                 {
                     type: 'role',
-                    id: validated.role_id,
-                    clientId: validated.role.client_id,
+                    id: validated.roleId,
+                    clientId: validated.role.clientId,
                 },
             );
             if (!hasPermissions) {
@@ -114,7 +114,7 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
             }
         }
 
-        // Stamp the owner (user) realm so the realm_scope factor gates cross-realm writes.
+        // Stamp the owner (user) realm so the realmScope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_ROLE_CREATE,
             data: definePolicyData({
@@ -140,7 +140,7 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
             throw new EntityNotFoundError();
         }
 
-        // Stamp the owner (user) realm so the realm_scope factor gates cross-realm writes.
+        // Stamp the owner (user) realm so the realmScope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_ROLE_DELETE,
             data: definePolicyData({

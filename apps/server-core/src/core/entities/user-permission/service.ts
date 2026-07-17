@@ -27,7 +27,7 @@ export type UserPermissionServiceContext = {
 };
 
 export class UserPermissionService extends JunctionEntityService implements IUserPermissionService {
-    protected readonly ownerRealmKey = 'user_realm_id';
+    protected readonly ownerRealmKey = 'userRealmId';
 
     protected repository: IUserPermissionRepository;
 
@@ -91,25 +91,25 @@ export class UserPermissionService extends JunctionEntityService implements IUse
         await this.repository.validateJoinColumns(validated);
 
         const existing = await this.repository.findOneBy({
-            permission_id: validated.permission_id,
-            user_id: validated.user_id,
+            permissionId: validated.permissionId,
+            userId: validated.userId,
         });
         if (existing) {
             throw new EntityConflictError({ entity: 'user-permission' });
         }
 
         if (validated.permission) {
-            validated.permission_realm_id = validated.permission.realm_id;
+            validated.permissionRealmId = validated.permission.realmId;
 
             await actor.permissionEvaluator.preEvaluate({
                 name: validated.permission.name,
-                realmId: validated.permission.realm_id,
-                clientId: validated.permission.client_id,
+                realmId: validated.permission.realmId,
+                clientId: validated.permission.clientId,
             });
         }
 
         if (validated.user) {
-            validated.user_realm_id = validated.user.realm_id;
+            validated.userRealmId = validated.user.realmId;
         }
 
         if (validated.permission && actor.identity) {
@@ -120,9 +120,9 @@ export class UserPermissionService extends JunctionEntityService implements IUse
                 },
                 {
                     name: validated.permission.name,
-                    realmId: validated.permission.realm_id,
-                    clientId: validated.permission.client_id,
-                    realmScope: validated.realm_scope ?? RealmScope.OWN,
+                    realmId: validated.permission.realmId,
+                    clientId: validated.permission.clientId,
+                    realmScope: validated.realmScope ?? RealmScope.OWN,
                 },
             );
 
@@ -157,14 +157,14 @@ export class UserPermissionService extends JunctionEntityService implements IUse
 
         const validated = await this.validator.run(data, { group: ValidatorGroup.UPDATE });
 
-        const permission = await this.permissionRepository.findOneById(entity.permission_id);
+        const permission = await this.permissionRepository.findOneById(entity.permissionId);
         if (permission) {
             // Member-permission gate: an actor may only modify a binding for a permission it
             // holds (mirrors create()).
             await actor.permissionEvaluator.preEvaluate({
                 name: permission.name,
-                realmId: permission.realm_id,
-                clientId: permission.client_id,
+                realmId: permission.realmId,
+                clientId: permission.clientId,
             });
         }
 
@@ -176,9 +176,9 @@ export class UserPermissionService extends JunctionEntityService implements IUse
                 { type: actor.identity.type, id: actor.identity.data.id },
                 {
                     name: permission.name,
-                    realmId: permission.realm_id,
-                    clientId: permission.client_id,
-                    realmScope: validated.realm_scope ?? entity.realm_scope,
+                    realmId: permission.realmId,
+                    clientId: permission.clientId,
+                    realmScope: validated.realmScope ?? entity.realmScope,
                 },
             );
             actorScope = grant.realmScope;
@@ -190,7 +190,7 @@ export class UserPermissionService extends JunctionEntityService implements IUse
 
         const updateData = buildJunctionUpdateData({
             data: validated,
-            existingScope: entity.realm_scope,
+            existingScope: entity.realmScope,
             actorScope,
             actorPolicyFree,
             actorPolicyId,

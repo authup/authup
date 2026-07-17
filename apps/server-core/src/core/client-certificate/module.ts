@@ -86,7 +86,7 @@ export class ClientCertificateValidator implements IClientCertificateValidator {
     }
 
     async validateForAuthentication(
-        client: Pick<Client, 'id' | 'realm_id'>,
+        client: Pick<Client, 'id' | 'realmId'>,
         evidence: ClientCertificateEvidence,
     ): Promise<void> {
         this.validateForBinding(evidence);
@@ -96,7 +96,7 @@ export class ClientCertificateValidator implements IClientCertificateValidator {
         assertStrongSignature(evidence.certificate);
 
         const anchors = await this.trustAnchorRepository.findManyBy({
-            realm_id: client.realm_id,
+            realmId: client.realmId,
             enabled: true,
         });
 

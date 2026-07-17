@@ -26,8 +26,8 @@ export class RoleAttributeRepositoryAdapter implements IRoleAttributeRepository 
 
         const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'roleAttribute',
-            filters: { allowed: ['id', 'name', 'role_id', 'realm_id'] },
-            sort: { allowed: ['id', 'name', 'role_id', 'realm_id', 'created_at', 'updated_at'] },
+            filters: { allowed: ['id', 'name', 'roleId', 'realmId'] },
+            sort: { allowed: ['id', 'name', 'roleId', 'realmId', 'createdAt', 'updatedAt'] },
             pagination: { maxLimit: 50 },
         });
 

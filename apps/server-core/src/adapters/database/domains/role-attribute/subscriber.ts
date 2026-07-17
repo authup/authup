@@ -19,13 +19,13 @@ export class RoleAttributeSubscriber extends EntitySubscriber<RoleAttribute> {
         super({
             type: EntityType.ROLE_ATTRIBUTE,
             target: RoleAttributeEntity,
-            destinations: buildEntityDestinations(EntityType.ROLE_ATTRIBUTE, (data) => [data.realm_id]),
+            destinations: buildEntityDestinations(EntityType.ROLE_ATTRIBUTE, (data) => [data.realmId]),
             cache: {
                 onInsert: true,
                 keys: (data) => [
                     buildRedisKeyPath({
                         prefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
-                        key: data.role_id,
+                        key: data.roleId,
                     }),
                 ],
             },

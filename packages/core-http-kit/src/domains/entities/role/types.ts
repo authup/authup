@@ -11,7 +11,7 @@ import type { Role } from '@authup/core-kit';
 
 // Mirrors `RoleValidator` mounts in @authup/core-kit.
 export type RoleCreatePayload = Pick<Role, 'name'> &
-    Partial<Pick<Role, 'display_name' | 'description' | 'client_id' | 'realm_id'>>;
+    Partial<Pick<Role, 'displayName' | 'description' | 'clientId' | 'realmId'>>;
 export type RoleUpdatePayload = Partial<RoleCreatePayload>;
 export type RoleSavePayload = RoleCreatePayload;
 

@@ -24,7 +24,7 @@ export class RoleAttributeRequestValidator extends Container<
         );
 
         this.mount(
-            'role_id',
+            'roleId',
             { group: RequestHandlerOperation.CREATE },
             createValidator(z.uuid()),
         );

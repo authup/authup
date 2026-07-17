@@ -26,7 +26,7 @@ export class RolePermissionRepositoryAdapter implements IRolePermissionRepositor
 
         const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'rolePermission',
-            filters: { allowed: ['role_id', 'permission_id'] },
+            filters: { allowed: ['roleId', 'permissionId'] },
             relations: {
                 allowed: [
                     'role',
@@ -39,8 +39,8 @@ export class RolePermissionRepositoryAdapter implements IRolePermissionRepositor
             sort: {
                 allowed: [
                     'id',
-                    'created_at',
-                    'updated_at',
+                    'createdAt',
+                    'updatedAt',
                 ],
             },
             pagination: { maxLimit: 50 },

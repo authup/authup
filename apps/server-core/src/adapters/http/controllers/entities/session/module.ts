@@ -70,7 +70,7 @@ export class SessionController {
     ): Promise<SessionDeleteManyResponse> {
         const actor = buildActorContext(event);
 
-        // A recognized target filter (e.g. `?filter[user_id]=<uuid>`) → admin
+        // A recognized target filter (e.g. `?filter[userId]=<uuid>`) → admin
         // force-logout (SESSION_DELETE + per-session realm-match). No filter →
         // self-service "log out my other devices" (keeps the current session).
         const result = await this.service.deleteMany(actor, {

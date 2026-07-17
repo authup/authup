@@ -58,7 +58,7 @@ export type OAuth2MfaLoginCompleteInput = {
  */
 export interface IOAuth2MfaLoginService {
     /**
-     * Create the pending session (mfa_at: null, ticket-scoped lifetime)
+     * Create the pending session (mfaAt: null, ticket-scoped lifetime)
      * and mint the mfa_token bound to it.
      */
     issueTicket(

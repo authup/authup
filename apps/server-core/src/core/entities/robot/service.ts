@@ -164,8 +164,8 @@ export class RobotService extends AbstractEntityService implements IRobotService
     }> {
         let group: string;
 
-        const realm = typeof data.realm_id === 'string' ?
-            await this.realmRepository.resolve(data.realm_id) :
+        const realm = typeof data.realmId === 'string' ?
+            await this.realmRepository.resolve(data.realmId) :
             undefined;
 
         let entity: Robot | null | undefined;
@@ -178,7 +178,7 @@ export class RobotService extends AbstractEntityService implements IRobotService
             }
 
             if (realm) {
-                where.realm_id = realm.id;
+                where.realmId = realm.id;
             }
 
             entity = await this.repository.findOneBy(where);
@@ -232,7 +232,7 @@ export class RobotService extends AbstractEntityService implements IRobotService
                             ...entity,
                             ...validated,
                         },
-                        [BuiltInPolicyType.REALM_MATCH]: validated.realm_id ?? entity.realm_id ?? null,
+                        [BuiltInPolicyType.REALM_MATCH]: validated.realmId ?? entity.realmId ?? null,
                     }),
                 });
             }
@@ -254,10 +254,10 @@ export class RobotService extends AbstractEntityService implements IRobotService
             };
         }
 
-        if (!validated.realm_id) {
+        if (!validated.realmId) {
             const actorRealmId = this.getActorRealmId(actor);
             if (actorRealmId) {
-                validated.realm_id = actorRealmId;
+                validated.realmId = actorRealmId;
             }
         }
 
@@ -290,10 +290,10 @@ export class RobotService extends AbstractEntityService implements IRobotService
             throw new EntityNotFoundError();
         }
 
-        const isOwner = entity.user_id &&
+        const isOwner = entity.userId &&
             actor.identity &&
             actor.identity.type === 'user' &&
-            actor.identity.data.id === entity.user_id;
+            actor.identity.data.id === entity.userId;
 
         let isSelfDelete = false;
         try {

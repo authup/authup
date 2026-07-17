@@ -20,8 +20,8 @@ export class IdentityProviderRoleSubscriber extends EntitySubscriber<IdentityPro
             type: EntityType.IDENTITY_PROVIDER_ROLE_MAPPING,
             target: IdentityProviderRoleMappingEntity,
             destinations: buildEntityDestinations(EntityType.IDENTITY_PROVIDER_ROLE_MAPPING, (data) => [
-                data.provider_realm_id,
-                data.role_realm_id,
+                data.providerRealmId,
+                data.roleRealmId,
             ]),
             cache: {
                 keys: (data) => [

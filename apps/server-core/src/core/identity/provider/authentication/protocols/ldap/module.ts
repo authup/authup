@@ -32,11 +32,11 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
         this.client = ctx.clientFactory.create({
             url: ctx.provider.url,
             tls: ctx.provider.tls,
-            startTLS: ctx.provider.start_tls,
-            baseDn: ctx.provider.base_dn,
+            startTLS: ctx.provider.startTls,
+            baseDn: ctx.provider.baseDn,
             user: ctx.provider.user,
             password: ctx.provider.password,
-            userNameAttribute: ctx.provider.user_name_attribute,
+            userNameAttribute: ctx.provider.userNameAttribute,
         });
     }
 
@@ -58,11 +58,11 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
             id: entity.dn,
             attributeCandidates: {
                 name: [
-                    entity[this.provider.user_name_attribute || 'cn'],
+                    entity[this.provider.userNameAttribute || 'cn'],
                     this.extractCnFromDn(entity.dn),
                 ],
                 email: [
-                    entity[this.provider.user_mail_attribute || 'mail'],
+                    entity[this.provider.userMailAttribute || 'mail'],
                 ],
             },
             data: entity,
@@ -93,8 +93,8 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
         }
 
         if (!this.client.isDn(user)) {
-            const nameAttribute = this.provider.user_name_attribute || 'cn';
-            user = `${nameAttribute}=${user},${this.client.resolveDn(this.provider.user_base_dn, this.provider.base_dn)}`;
+            const nameAttribute = this.provider.userNameAttribute || 'cn';
+            user = `${nameAttribute}=${user},${this.client.resolveDn(this.provider.userBaseDn, this.provider.baseDn)}`;
         }
 
         return this.client.bind(user, password);
@@ -139,16 +139,16 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
     protected async findOneByName(input: string) : Promise<Record<string, any> | null> {
         let filter : Filter | string;
 
-        if (this.provider.user_filter) {
-            filter = template(this.provider.user_filter, {
+        if (this.provider.userFilter) {
+            filter = template(this.provider.userFilter, {
                 input,
-                name_attribute: this.provider.user_name_attribute || 'cn',
-                mail_attribute: this.provider.user_mail_attribute || 'mail',
-                display_name_attribute: this.provider.user_display_name_attribute || 'cn',
+                name_attribute: this.provider.userNameAttribute || 'cn',
+                mail_attribute: this.provider.userMailAttribute || 'mail',
+                display_name_attribute: this.provider.userDisplayNameAttribute || 'cn',
             });
-        } else if (this.provider.user_name_attribute) {
+        } else if (this.provider.userNameAttribute) {
             filter = new ldap.EqualityFilter({
-                attribute: this.provider.user_name_attribute,
+                attribute: this.provider.userNameAttribute,
                 value: input,
             });
         } else {
@@ -169,7 +169,7 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
         const entities = await this.client.search({
             filter,
             scope: 'sub',
-        }, this.client.resolveDn(this.provider.user_base_dn, this.provider.base_dn));
+        }, this.client.resolveDn(this.provider.userBaseDn, this.provider.baseDn));
 
         if (entities.length === 0) {
             return null;
@@ -184,12 +184,12 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
     }
 
     public async findUserGroups(user: Record<string, any>) : Promise<string[]> {
-        const nameAttribute = this.provider.group_name_attribute || 'cn';
-        const memberAttribute = this.provider.group_member_attribute || 'member';
+        const nameAttribute = this.provider.groupNameAttribute || 'cn';
+        const memberAttribute = this.provider.groupMemberAttribute || 'member';
 
         let filter : Filter | string;
-        if (this.provider.group_filter) {
-            filter = template(this.provider.group_filter, {
+        if (this.provider.groupFilter) {
+            filter = template(this.provider.groupFilter, {
                 ...user,
                 name_attribute: nameAttribute,
                 member_attribute: memberAttribute,
@@ -199,11 +199,11 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
                 filters: [
                     new ldap.EqualityFilter({
                         attribute: 'objectClass',
-                        value: this.provider.group_class || 'group',
+                        value: this.provider.groupClass || 'group',
                     }),
                     new ldap.EqualityFilter({
                         attribute: memberAttribute,
-                        value: user[this.provider.group_member_user_attribute || 'dn'],
+                        value: user[this.provider.groupMemberUserAttribute || 'dn'],
                     }),
                 ],
             });
@@ -212,13 +212,13 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
         const entities = await this.client.search({
             filter,
             scope: 'sub',
-        }, this.client.resolveDn(this.provider.group_base_dn, this.provider.base_dn));
+        }, this.client.resolveDn(this.provider.groupBaseDn, this.provider.baseDn));
 
         if (entities.length === 0) {
             return [];
         }
 
-        const attributeKey = this.provider.group_name_attribute || 'cn';
+        const attributeKey = this.provider.groupNameAttribute || 'cn';
         const names : string[] = [];
         for (const entity of entities) {
             const attribute = entity[attributeKey];

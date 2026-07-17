@@ -133,7 +133,7 @@ export class IdentityProviderController {
                 try {
                     await permissionEvaluator.evaluate({
                         name: PermissionName.IDENTITY_PROVIDER_READ,
-                        data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: datum, [BuiltInPolicyType.REALM_MATCH]: datum.realm_id ?? null }),
+                        data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: datum, [BuiltInPolicyType.REALM_MATCH]: datum.realmId ?? null }),
                     });
                 } catch {
                     // do nothing
@@ -169,7 +169,7 @@ export class IdentityProviderController {
             const permissionEvaluator = useRequestPermissionEvaluator(event);
             await permissionEvaluator.evaluate({
                 name: PermissionName.IDENTITY_PROVIDER_READ,
-                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, [BuiltInPolicyType.REALM_MATCH]: entity.realm_id ?? null }),
+                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, [BuiltInPolicyType.REALM_MATCH]: entity.realmId ?? null }),
             });
         } catch {
             // do nothing
@@ -214,7 +214,7 @@ export class IdentityProviderController {
 
         await permissionEvaluator.evaluate({
             name: PermissionName.IDENTITY_PROVIDER_DELETE,
-            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, [BuiltInPolicyType.REALM_MATCH]: entity.realm_id ?? null }),
+            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, [BuiltInPolicyType.REALM_MATCH]: entity.realmId ?? null }),
         });
 
         const { id: entityId } = entity;
@@ -273,9 +273,9 @@ export class IdentityProviderController {
             const data = await this.codeRequestVerifier.verify(codeRequestValidated);
 
             if (
-                data.client.realm_id &&
-                entity.realm_id &&
-                entity.realm_id !== data.client.realm_id
+                data.client.realmId &&
+                entity.realmId &&
+                entity.realmId !== data.client.realmId
             ) {
                 throw OAuth2RequestError.malformed('The provider and client realm do not match.');
             }
@@ -303,10 +303,10 @@ export class IdentityProviderController {
 
         const data = await this.verifyAuthorizationState(event);
         if (
-            entity.realm_id &&
+            entity.realmId &&
             data.codeRequest &&
             data.codeRequest.realm_id &&
-            data.codeRequest.realm_id !== entity.realm_id
+            data.codeRequest.realm_id !== entity.realmId
         ) {
             throw OAuth2RequestError.malformed('The provider and client realm do not match.');
         }
@@ -324,7 +324,7 @@ export class IdentityProviderController {
 
         const user = await authenticator.authenticate(code);
 
-        const realm = await this.realmRepository.resolve(entity.realm_id, true);
+        const realm = await this.realmRepository.resolve(entity.realmId, true);
 
         // Application access policy (plan 052), federated leg: the callback
         // never redirects to the RP directly — a denial bounces back to the
@@ -338,7 +338,7 @@ export class IdentityProviderController {
                 data.codeRequest.realm_id,
             );
 
-            if (client?.access_policy_id) {
+            if (client?.accessPolicyId) {
                 let allowed = false;
 
                 const subject = toIdentityPolicyData({
@@ -350,7 +350,7 @@ export class IdentityProviderController {
                 });
                 if (this.accessPolicyEvaluator && subject) {
                     allowed = await this.accessPolicyEvaluator.evaluate(
-                        client.access_policy_id,
+                        client.accessPolicyId,
                         subject,
                     );
                 }
@@ -415,7 +415,7 @@ export class IdentityProviderController {
             }
 
             if (realmId) {
-                where.realm_id = realmId;
+                where.realmId = realmId;
             }
 
             entity = await this.repository.findOneBy(where);
@@ -453,18 +453,18 @@ export class IdentityProviderController {
                         ...entity,
                         ...data,
                     },
-                    [BuiltInPolicyType.REALM_MATCH]: data.realm_id ?? entity.realm_id ?? null,
+                    [BuiltInPolicyType.REALM_MATCH]: data.realmId ?? entity.realmId ?? null,
                 }),
             });
         } else {
-            if (!data.realm_id) {
+            if (!data.realmId) {
                 const identity = useRequestIdentityOrFail(event);
-                data.realm_id = identity.realmId;
+                data.realmId = identity.realmId;
             }
 
             await permissionEvaluator.evaluate({
                 name: PermissionName.IDENTITY_PROVIDER_CREATE,
-                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: data, [BuiltInPolicyType.REALM_MATCH]: data.realm_id ?? null }),
+                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: data, [BuiltInPolicyType.REALM_MATCH]: data.realmId ?? null }),
             });
         }
 

@@ -31,8 +31,8 @@ import { OAuth2AuthorizationCodeRequestValidator } from '../../../../../core/ind
 import type { AuthorizeControllerContext, AuthorizeControllerOptions } from './types.ts';
 import { sanitizeError } from '../../../../../utils/index.ts';
 
-type RealmSummary = Pick<Realm, 'id' | 'name' | 'display_name'>;
-type ClientSummary = Pick<Client, 'id' | 'name' | 'display_name' | 'built_in' | 'created_at'>;
+type RealmSummary = Pick<Realm, 'id' | 'name' | 'displayName'>;
+type ClientSummary = Pick<Client, 'id' | 'name' | 'displayName' | 'builtIn' | 'createdAt'>;
 
 @DController('/authorize')
 export class AuthorizeController {
@@ -142,9 +142,9 @@ export class AuthorizeController {
             client = {
                 id: result.client.id,
                 name: result.client.name,
-                display_name: result.client.display_name,
-                built_in: result.client.built_in,
-                created_at: result.client.created_at,
+                displayName: result.client.displayName,
+                builtIn: result.client.builtIn,
+                createdAt: result.client.createdAt,
             };
             scopes = result.scopes;
             redirectUriVerified = result.redirectUriVerified;
@@ -153,7 +153,7 @@ export class AuthorizeController {
                 realm = {
                     id: result.client.realm.id,
                     name: result.client.realm.name,
-                    display_name: result.client.realm.display_name,
+                    displayName: result.client.realm.displayName,
                 };
             }
 

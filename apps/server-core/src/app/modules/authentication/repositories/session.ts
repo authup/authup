@@ -65,33 +65,33 @@ export class SessionRepository implements ISessionRepository {
             defaultAlias: 'session',
             fields: {
                 allowed: [
-                    'id', 
-                    'sub', 
-                    'sub_kind', 
-                    'ip_address', 
-                    'user_agent',
-                    'expires_at', 
-                    'refreshed_at', 
-                    'seen_at', 
-                    'created_at', 
-                    'updated_at',
-                    'user_id', 
-                    'client_id', 
-                    'robot_id', 
-                    'realm_id',
+                    'id',
+                    'sub',
+                    'subKind',
+                    'ipAddress',
+                    'userAgent',
+                    'expiresAt',
+                    'refreshedAt',
+                    'seenAt',
+                    'createdAt',
+                    'updatedAt',
+                    'userId',
+                    'clientId',
+                    'robotId',
+                    'realmId',
                 ],
             },
             filters: { allowed: [...SESSION_FILTER_KEYS] },
             relations: { allowed: ['realm'] },
-            sort: { allowed: ['seen_at', 'expires_at', 'created_at', 'updated_at'] },
+            sort: { allowed: ['seenAt', 'expiresAt', 'createdAt', 'updatedAt'] },
             pagination: { maxLimit: 50 },
         });
 
-        applyRealmScopeSelect(qb, 'session', ['sub', 'sub_kind']);
+        applyRealmScopeSelect(qb, 'session', ['sub', 'subKind']);
 
         if (options.owner) {
             // mandatory constraint — not overridable by a rapiq filter
-            qb.andWhere('session.sub = :ownerSub AND session.sub_kind = :ownerSubKind', {
+            qb.andWhere('session.sub = :ownerSub AND session.subKind = :ownerSubKind', {
                 ownerSub: options.owner.sub,
                 ownerSubKind: options.owner.subKind,
             });
@@ -110,7 +110,7 @@ export class SessionRepository implements ISessionRepository {
 
     async findAllByOwner(owner: SessionOwner): Promise<Session[]> {
         return this.repository.createQueryBuilder('session')
-            .where('session.sub = :sub AND session.sub_kind = :subKind', {
+            .where('session.sub = :sub AND session.subKind = :subKind', {
                 sub: owner.sub,
                 subKind: owner.subKind,
             })
@@ -129,7 +129,7 @@ export class SessionRepository implements ISessionRepository {
             filters: { allowed: [...SESSION_FILTER_KEYS] },
         });
 
-        applyRealmScopeSelect(qb, 'session', ['sub', 'sub_kind']);
+        applyRealmScopeSelect(qb, 'session', ['sub', 'subKind']);
 
         return qb.getMany();
     }
@@ -146,7 +146,7 @@ export class SessionRepository implements ISessionRepository {
                 key: session.id, 
             }),
             session,
-            { ttl: new Date(session.expires_at).getTime() - Date.now() },
+            { ttl: new Date(session.expiresAt).getTime() - Date.now() },
         );
 
         return session;

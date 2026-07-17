@@ -194,7 +194,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
             throw new EntityNotFoundError();
         }
 
-        if (entity.built_in) {
+        if (entity.builtIn) {
             throw new ValidationError('A built-in realm can not be deleted.');
         }
 

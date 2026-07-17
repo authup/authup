@@ -20,7 +20,7 @@ export class OAuth2ScopeRepository implements IOAuth2ScopeRepository {
 
     async findByClientId(clientId: string): Promise<Scope[]> {
         const clientScopes = await this.repository.find({
-            where: { client_id: clientId },
+            where: { clientId },
             relations: { scope: true },
         });
 
