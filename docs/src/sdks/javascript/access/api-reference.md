@@ -37,9 +37,9 @@ import type { PolicyWithType } from '@authup/access';
 export type PermissionBinding = {
     permission: {
         name: string,
-        client_id?: string | null,
-        realm_id?: string | null,
-        decision_strategy?: string | null,
+        clientId?: string | null,
+        realmId?: string | null,
+        decisionStrategy?: string | null,
     },
     policies?: PolicyWithType[],
 };

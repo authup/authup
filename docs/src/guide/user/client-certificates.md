@@ -4,8 +4,8 @@ Authup supports two independent uses of a TLS client certificate:
 
 | Client setting | Purpose | Certificate trust requirement |
 |---|---|---|
-| `auth_method: tls` | Authenticates the OAuth client at `/token` instead of a shared secret | Must chain to an enabled trust anchor in the client's realm |
-| `token_binding_method: tls` | Binds issued tokens to the certificate so a copied token is unusable by itself | Any currently valid non-CA certificate, including self-signed |
+| `authMethod: tls` | Authenticates the OAuth client at `/token` instead of a shared secret | Must chain to an enabled trust anchor in the client's realm |
+| `tokenBindingMethod: tls` | Binds issued tokens to the certificate so a copied token is unusable by itself | Any currently valid non-CA certificate, including self-signed |
 
 You can enable either setting or both. TLS authentication does not
 automatically bind tokens, and token binding does not automatically make the
@@ -25,8 +25,8 @@ The API fields are:
 
 ```json
 {
-  "auth_method": "tls",
-  "token_binding_method": "tls"
+  "authMethod": "tls",
+  "tokenBindingMethod": "tls"
 }
 ```
 
@@ -58,7 +58,7 @@ one URI SAN in the `urn:authup:client:` namespace, and that URI must match the
 requested client's UUID. Mutable client and realm names are deliberately not
 certificate identities.
 
-For `auth_method: tls`, Authup also checks:
+For `authMethod: tls`, Authup also checks:
 
 - the leaf and every selected issuer are currently valid;
 - the leaf is not a CA certificate;
@@ -75,7 +75,7 @@ existing sessions/tokens separately.
 
 ## Token binding
 
-With `token_binding_method: tls`, Authup places the presented leaf
+With `tokenBindingMethod: tls`, Authup places the presented leaf
 certificate's SHA-256 DER thumbprint in each access and refresh token:
 
 ```json

@@ -13,7 +13,7 @@ The certificate alone contains no secret. The CA private key remains with the
 CA and must never be uploaded as a trust anchor.
 
 Authup consumes enabled anchors when an OAuth client uses
-`auth_method: tls`. Adding an anchor alone does not turn clients into TLS
+`authMethod: tls`. Adding an anchor alone does not turn clients into TLS
 clients; configure the client and trusted proxy separately. See
 [OAuth Client Certificates](./client-certificates.md).
 
@@ -83,9 +83,9 @@ In particular, do not add the following as trust anchors:
   trust for client authentication.
 
 Self-signed client-certificate **authentication** is a different mode and is
-not supported by `auth_method: tls`; authentication must chain to a realm
+not supported by `authMethod: tls`; authentication must chain to a realm
 anchor. A self-signed leaf can still be used for binding-only proof of
-possession when `token_binding_method: tls`.
+possession when `tokenBindingMethod: tls`.
 
 ## Realm scope and lifecycle
 

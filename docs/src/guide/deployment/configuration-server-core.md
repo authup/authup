@@ -300,7 +300,7 @@ export default {
 
     /**
      * Auto-assign the system.default policy to new permissions
-     * created without an explicit policy_id.
+     * created without an explicit policyId.
      * Transitional option — will be removed in the next major release.
      * Set to false to opt into the allow-by-default model.
      * default: true

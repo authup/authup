@@ -114,13 +114,13 @@ To test policies/permissions under a non-admin identity (e.g. `*_SELF_MANAGE` fl
 const created = await suite.client.client.create({
     ...createFakeClient(),
     secret: knownSecret,
-    secret_hashed: false,
-    secret_encrypted: false,
+    secretHashed: false,
+    secretEncrypted: false,
 });
 const permission = await suite.client.permission.getOne(PermissionName.CLIENT_SELF_MANAGE);
 await suite.client.clientPermission.create({
-    client_id: created.id,
-    permission_id: permission.id,
+    clientId: created.id,
+    permissionId: permission.id,
 });
 const token = await suite.client.token.createWithClientCredentials({
     client_id: created.id,

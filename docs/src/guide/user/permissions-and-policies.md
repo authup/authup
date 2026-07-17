@@ -9,7 +9,7 @@ Authup implements an **allow-by-default** authorization model:
 
 - A **permission** represents the ability to perform an action.
 - Permissions are **not restricted by default**.
-- **Policies** restrict permissions. Permissions can have **multiple policies** attached (n:m), combined using a `decision_strategy`.
+- **Policies** restrict permissions. Permissions can have **multiple policies** attached (n:m), combined using a `decisionStrategy`.
 - If no policies are attached to a permission, the permission is **publicly executable**.
 
 This applies to authenticated users, anonymous users, and machine clients alike.
@@ -61,19 +61,19 @@ These are created and maintained automatically on startup:
 - `system.permission-binding` — checks that the identity has the permission assigned, and enforces the grant's **realm reach** (see [Realm Scoping](#realm-scoping))
 
 > Realm isolation is **no longer a policy**. It lives on each permission grant as the
-> coarse, fail-closed `realm_scope` column and is enforced as a separate factor inside
+> coarse, fail-closed `realmScope` column and is enforced as a separate factor inside
 > `system.permission-binding`. The former `system.realm-match` / `system.realm-bound` /
 > `system.realm-or-global` policies have been removed. The `realm_match` policy *type*
 > remains available for user-defined policies.
 
 System policies:
-- Are marked as `built_in` and cannot be modified or deleted via the API
+- Are marked as `builtIn` and cannot be modified or deleted via the API
 - Are synchronized to the database on every startup
 
 ### Policy Assignment
 
 Permissions reference policies through the `auth_permission_policies` junction table.
-Multiple policies can be attached to a single permission, and the `decision_strategy` on the permission controls how they are combined:
+Multiple policies can be attached to a single permission, and the `decisionStrategy` on the permission controls how they are combined:
 
 - **UNANIMOUS** (default) — all attached policies must pass
 - **AFFIRMATIVE** — at least one attached policy must pass
@@ -89,23 +89,23 @@ The system only manages built-in policies. Users can create and assign custom po
 
 Authup distinguishes between **global** and **realm-scoped** entities:
 
-- **Global entities** (permissions, roles, scopes, policies) can have `realm_id = null` — they exist outside any realm and are reusable across all realms.
+- **Global entities** (permissions, roles, scopes, policies) can have `realmId = null` — they exist outside any realm and are reusable across all realms.
 - **Realm-scoped entities** (users, clients, robots) always belong to a specific realm.
 
-To create a global entity via the API, explicitly pass `realm_id: null`. If omitted, `realm_id` defaults to the actor's realm.
+To create a global entity via the API, explicitly pass `realmId: null`. If omitted, `realmId` defaults to the actor's realm.
 
-### Realm reach (`realm_scope`)
+### Realm reach (`realmScope`)
 
-Each permission **grant** (the row that assigns a permission to a role / user / client / robot) carries a coarse, **actor-relative** realm reach in its `realm_scope` column — which realms the holder may act on *when using that permission*:
+Each permission **grant** (the row that assigns a permission to a role / user / client / robot) carries a coarse, **actor-relative** realm reach in its `realmScope` column — which realms the holder may act on *when using that permission*:
 
-| `realm_scope` | the grant lets the holder act on… | typical use |
+| `realmScope` | the grant lets the holder act on… | typical use |
 |---|---|---|
 | **`own`** (default) | only the holder's own realm | the safe default; `realm_admin` writes |
-| **`ownOrNull`** | the holder's own realm **and** global (`realm_id = null`) resources | `realm_admin` reads — to use global building blocks |
+| **`ownOrNull`** | the holder's own realm **and** global (`realmId = null`) resources | `realm_admin` reads — to use global building blocks |
 | **`any`** | any realm, including global | `admin` |
 | **`none`** | nothing (reserved) | — |
 
-It is **fail-closed**: a grant with no explicit `realm_scope` defaults to `own`. The reach is matched against the realm of the resource being acted on, **independently of and in addition to** any policy on the grant.
+It is **fail-closed**: a grant with no explicit `realmScope` defaults to `own`. The reach is matched against the realm of the resource being acted on, **independently of and in addition to** any policy on the grant.
 
 The two built-in admin roles are expressed purely through this reach:
 
@@ -120,7 +120,7 @@ Realm reach also gates **assignments** (granting a role to a user, a permission 
 
 ### Setting a custom reach
 
-When an `admin` assigns a permission, the realm reach can be set per grant — via the API (`realm_scope` on the create/update payload of `role-permission`, `user-permission`, `client-permission`, `robot-permission`) and in the UI (the **Realm Scope** selector beside the policy selector on a permission assignment). A restricted actor's chosen reach is always **capped to its own ceiling** — it can narrow but never widen. To scope a grant to a *specific set* of realms, set `realm_scope: any` and attach a `policy_id` ATTRIBUTES policy `{ realm_id: { $in: ["…"] } }` on top.
+When an `admin` assigns a permission, the realm reach can be set per grant — via the API (`realmScope` on the create/update payload of `role-permission`, `user-permission`, `client-permission`, `robot-permission`) and in the UI (the **Realm Scope** selector beside the policy selector on a permission assignment). A restricted actor's chosen reach is always **capped to its own ceiling** — it can narrow but never widen. To scope a grant to a *specific set* of realms, set `realmScope: any` and attach a `policyId` ATTRIBUTES policy `{ realmId: { $in: ["…"] } }` on top.
 
 ## Permission Evaluation
 
@@ -128,14 +128,14 @@ When a permission is checked, the following flow applies:
 
 1. Look up the requested permission
 2. If the permission has no policies attached → **allow** (unrestricted)
-3. If the permission has policies attached → evaluate all policies, combining results with the permission's `decision_strategy`
-4. Enforce the realm reach of the grant that conferred the permission — the grant's [`realm_scope`](#realm-reach-realm_scope) against the target resource's realm
-5. If that grant also carries a **junction policy** (`policy_id`), evaluate it as a further restriction
+3. If the permission has policies attached → evaluate all policies, combining results with the permission's `decisionStrategy`
+4. Enforce the realm reach of the grant that conferred the permission — the grant's [`realmScope`](#realm-reach-realmscope) against the target resource's realm
+5. If that grant also carries a **junction policy** (`policyId`), evaluate it as a further restriction
 6. The permission's policies pass **and** the realm reach matches **and** any junction policy passes → **allow**; any required factor fails → **deny**
 
 ## Decision Strategy
 
-When a permission has multiple policies attached, the `decision_strategy` on the permission controls how results are combined:
+When a permission has multiple policies attached, the `decisionStrategy` on the permission controls how results are combined:
 
 | Strategy | Behavior |
 |---|---|
@@ -148,10 +148,10 @@ The decision strategy is set per permission. Most built-in permissions use `unan
 
 Permission assignments (role-permission, user-permission, client-permission, robot-permission) carry two independent controls on the junction table:
 
-- **`realm_scope`** — the coarse [realm reach](#realm-reach-realm_scope) of the grant (`own` / `ownOrNull` / `any`). This is how the built-in `realm_admin` is confined to its own realm and `admin` reaches every realm.
-- **`policy_id`** — an optional **junction policy** that adds a further restriction on top of the permission's own policies, e.g. an ATTRIBUTES policy `{ realm_id: { $in: ["…"] } }` to limit a grant to a specific set of realms.
+- **`realmScope`** — the coarse [realm reach](#realm-reach-realmscope) of the grant (`own` / `ownOrNull` / `any`). This is how the built-in `realm_admin` is confined to its own realm and `admin` reaches every realm.
+- **`policyId`** — an optional **junction policy** that adds a further restriction on top of the permission's own policies, e.g. an ATTRIBUTES policy `{ realmId: { $in: ["…"] } }` to limit a grant to a specific set of realms.
 
-Both are evaluated as additional, ANDed factors: the holder must satisfy the permission's own policies, the grant's `realm_scope`, **and** any junction `policy_id`. Only an unrestricted (`any`, policy-free) actor may attach an explicit `policy_id`; a restricted actor inherits its own grant's policy, so it cannot detach a restriction to widen access.
+Both are evaluated as additional, ANDed factors: the holder must satisfy the permission's own policies, the grant's `realmScope`, **and** any junction `policyId`. Only an unrestricted (`any`, policy-free) actor may attach an explicit `policyId`; a restricted actor inherits its own grant's policy, so it cannot detach a restriction to widen access.
 
 ## Privilege Escalation Prevention
 

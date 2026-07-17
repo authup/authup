@@ -135,7 +135,7 @@ proxy_set_header X-Forwarded-Tls-Client-Cert "";
 ::: danger Native forwarded mode has no intermediate chain
 
 `$ssl_client_escaped_cert` contains the leaf certificate only. With
-`CERTIFICATE_SOURCE=forwarded`, a client using `auth_method: tls` must have a
+`CERTIFICATE_SOURCE=forwarded`, a client using `authMethod: tls` must have a
 leaf signed directly by an enabled trust anchor in its realm.
 
 For a root → intermediate → leaf PKI, use an ingress that emits RFC 9440

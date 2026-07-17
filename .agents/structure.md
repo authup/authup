@@ -99,7 +99,7 @@ Apps:
 
 **Entity-type collections always get a top-level page** (`/users`, `/roles`,
 `/keys`, `/events`, …), scoped to the active realm by the header realm
-switcher (`filter: { realm_id: [realmManagementId ?? null, null] }` — active
+switcher (`filter: { realmId: [realmManagementId ?? null, null] }` — active
 realm + global rows). The realm switcher makes the realm context global
 chrome, so realm-scoped entities do NOT move under `/realms/[id]` — a realm
 tab would only duplicate the switcher (settled 2026-07-14, plan 071: keys
