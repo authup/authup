@@ -232,16 +232,16 @@ export default defineComponent({
                 // webauthn: run the registration ceremony immediately and
                 // confirm with the attestation (no display).
                 if (kind === UserAuthenticatorKind.WEBAUTHN) {
-                    if (!response.webauthn) {
+                    if (!response.meta.webauthn) {
                         throw new Error('The server did not return WebAuthn registration options.');
                     }
                     // the http-kit response type is intentionally framework-agnostic
                     // (Record<string, unknown>); assert the browser lib's shape here.
-                    const optionsJSON = response.webauthn as unknown as PublicKeyCredentialCreationOptionsJSON;
+                    const optionsJSON = response.meta.webauthn as unknown as PublicKeyCredentialCreationOptionsJSON;
                     const attestation = await startRegistration({ optionsJSON });
                     const entity = await apiClient.userAuthenticator.confirm(
                         props.userId,
-                        response.entity.id,
+                        response.data.id,
                         { code: JSON.stringify(attestation) },
                     );
                     await finishEnrollment(entity, kind);
@@ -251,7 +251,7 @@ export default defineComponent({
                 // email is confirmed on creation and has nothing to display —
                 // just signal completion (via the recovery nudge).
                 if (kind === UserAuthenticatorKind.EMAIL) {
-                    await finishEnrollment(response.entity, kind);
+                    await finishEnrollment(response.data, kind);
                     return;
                 }
 
@@ -260,7 +260,7 @@ export default defineComponent({
 
                 // recovery is confirmed on creation — the codes are shown once
                 if (kind === UserAuthenticatorKind.RECOVERY) {
-                    emit('done', response.entity);
+                    emit('done', response.data);
                 }
             } catch (e) {
                 error.value = extractErrorContext(e).message ?? null;
@@ -280,7 +280,7 @@ export default defineComponent({
             try {
                 const entity = await apiClient.userAuthenticator.confirm(
                     props.userId,
-                    enrollment.value.entity.id,
+                    enrollment.value.data.id,
                     { code: confirmCode.value.trim() },
                 );
                 emit('done', entity);
@@ -294,11 +294,11 @@ export default defineComponent({
         };
 
         const downloadRecoveryCodes = () => {
-            if (typeof window === 'undefined' || !enrollment.value?.codes) {
+            if (typeof window === 'undefined' || !enrollment.value?.meta.codes) {
                 return;
             }
 
-            const blob = new Blob([enrollment.value.codes.join('\n')], { type: 'text/plain' });
+            const blob = new Blob([enrollment.value.meta.codes.join('\n')], { type: 'text/plain' });
             const url = window.URL.createObjectURL(blob);
             const anchor = window.document.createElement('a');
             anchor.href = url;
@@ -403,11 +403,11 @@ export default defineComponent({
                 {{ translations.mfaScanQr }}
             </p>
             <div
-                v-if="enrollment.qr"
+                v-if="enrollment.meta.qr"
                 class="flex justify-center my-3"
             >
                 <img
-                    :src="enrollment.qr"
+                    :src="enrollment.meta.qr"
                     alt="QR"
                     class="max-w-[200px]"
                 >
@@ -416,7 +416,7 @@ export default defineComponent({
                 {{ translations.mfaManualKey }}
             </p>
             <p class="text-center font-mono break-all mb-3">
-                {{ enrollment.secret }}
+                {{ enrollment.meta.secret }}
             </p>
 
             <form @submit.prevent="confirm">
@@ -462,7 +462,7 @@ export default defineComponent({
             <p>{{ translations.mfaRecoveryIntro }}</p>
             <ul class="font-mono my-3 grid grid-cols-2 gap-1">
                 <li
-                    v-for="(code, index) in enrollment.codes"
+                    v-for="(code, index) in enrollment.meta.codes"
                     :key="index"
                 >
                     {{ code }}

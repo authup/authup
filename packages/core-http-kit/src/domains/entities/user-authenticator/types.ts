@@ -9,7 +9,7 @@ import type { AuthorizationHeader } from 'hapic';
 import type { BuildInput } from 'rapiq';
 import type { User, UserAuthenticator, UserAuthenticatorKind } from '@authup/core-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordResponse, EntityRecordWrappedResponse } from '../../types-base';
 
 export type UserAuthenticatorCreatePayload = {
     kind: `${UserAuthenticatorKind}`,
@@ -17,8 +17,11 @@ export type UserAuthenticatorCreatePayload = {
     user_id?: string,
 };
 
-export type UserAuthenticatorEnrollResponse = {
-    entity: UserAuthenticator,
+/**
+ * Shown-once provisioning material riding the enroll response `meta` —
+ * never part of the entity record, never in a subsequent read.
+ */
+export type UserAuthenticatorEnrollResponseMeta = {
     /**
      * TOTP: raw base32 seed — present in this response only.
      */
@@ -41,6 +44,11 @@ export type UserAuthenticatorEnrollResponse = {
      */
     webauthn?: Record<string, unknown>,
 };
+
+export type UserAuthenticatorEnrollResponse = EntityRecordWrappedResponse<
+    UserAuthenticator,
+    UserAuthenticatorEnrollResponseMeta
+>;
 
 export type UserAuthenticatorConfirmPayload = {
     code: string,

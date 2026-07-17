@@ -104,8 +104,11 @@ export type UserAuthenticatorWebauthnParameters = {
     transports?: string[],
 };
 
-export type UserAuthenticatorEnrollResult = {
-    entity: UserAuthenticator,
+/**
+ * Kind-specific shown-once provisioning material — returned alongside the
+ * enrolled entity exactly once, never in a subsequent read.
+ */
+export type UserAuthenticatorEnrollResultMeta = {
     /**
      * TOTP: the raw base32 seed — present in the enroll response only,
      * never in a subsequent read.
@@ -128,6 +131,11 @@ export type UserAuthenticatorEnrollResult = {
      * `navigator.credentials.create()` (SimpleWebAuthn `startRegistration`).
      */
     webauthn?: Record<string, unknown>,
+};
+
+export type UserAuthenticatorEnrollResult = {
+    data: UserAuthenticator,
+    meta: UserAuthenticatorEnrollResultMeta,
 };
 
 export type UserAuthenticatorChallengeStatus = {

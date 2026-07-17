@@ -52,15 +52,15 @@ describe('src/http realm key store (zero-config MFA + jwks hygiene)', () => {
         bearer.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
 
         const enrolled = await bearer.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.TOTP });
-        expect(enrolled.secret).toBeDefined();
+        expect(enrolled.meta.secret).toBeDefined();
 
         const totp = new TOTP({
             algorithm: 'SHA1',
             digits: 6,
             period: 30,
-            secret: Secret.fromBase32(enrolled.secret!),
+            secret: Secret.fromBase32(enrolled.meta.secret!),
         });
-        const confirmed = await bearer.userAuthenticator.confirm('@me', enrolled.entity.id, { code: totp.generate() });
+        const confirmed = await bearer.userAuthenticator.confirm('@me', enrolled.data.id, { code: totp.generate() });
         expect(confirmed.confirmed).toBeTruthy();
 
         // an enc key exists for the user's realm ...
@@ -74,13 +74,13 @@ describe('src/http realm key store (zero-config MFA + jwks hygiene)', () => {
         const device = await suite.dataSource.getRepository(UserAuthenticatorEntity)
             .createQueryBuilder('device')
             .addSelect('device.secret')
-            .where('device.id = :id', { id: enrolled.entity.id })
+            .where('device.id = :id', { id: enrolled.data.id })
             .getOne();
 
         const [version, keyId] = device!.secret!.split('.');
         expect(version).toEqual('v1');
         expect(encKeys.map((key) => key.id)).toContain(keyId);
-        expect(device!.secret).not.toContain(enrolled.secret!);
+        expect(device!.secret).not.toContain(enrolled.meta.secret!);
     });
 
     it('never surfaces enc keys via jwks', async () => {

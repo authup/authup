@@ -152,9 +152,9 @@ describe('src/http/controllers/token (id_token amr/acr claims)', () => {
             algorithm: 'SHA1',
             digits: 6,
             period: 30,
-            secret: Secret.fromBase32(enrolled.secret!),
+            secret: Secret.fromBase32(enrolled.meta.secret!),
         });
-        await enrollBearer.userAuthenticator.confirm('@me', enrolled.entity.id, { code: totp.generate() });
+        await enrollBearer.userAuthenticator.confirm('@me', enrolled.data.id, { code: totp.generate() });
 
         // fresh login WITH the second factor — the session carries mfa_at
         const withOtp = await httpRequest(suite, 'POST', '/token', {

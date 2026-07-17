@@ -203,9 +203,9 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
             algorithm: 'SHA1',
             digits: 6,
             period: 30,
-            secret: Secret.fromBase32(enrolled.secret!),
+            secret: Secret.fromBase32(enrolled.meta.secret!),
         });
-        await bearer.userAuthenticator.confirm('@me', enrolled.entity.id, { code: totp.generate() });
+        await bearer.userAuthenticator.confirm('@me', enrolled.data.id, { code: totp.generate() });
 
         const rejected = await passwordGrant({ username: user.name, password });
         expect(rejected.status).toEqual(400);
@@ -234,11 +234,11 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
             algorithm: 'SHA1',
             digits: 6,
             period: 30,
-            secret: Secret.fromBase32(enrolled.secret!),
+            secret: Secret.fromBase32(enrolled.meta.secret!),
         });
         // confirm with the PREVIOUS step's code so the verify below can use
         // the current one (each TOTP use advances the persisted step).
-        await bearer.userAuthenticator.confirm('@me', enrolled.entity.id, { code: totp.generate({ timestamp: Date.now() - 30_000 }) });
+        await bearer.userAuthenticator.confirm('@me', enrolled.data.id, { code: totp.generate({ timestamp: Date.now() - 30_000 }) });
 
         const rejected = await passwordGrant({ username: user.name, password });
         const rejectedBody = await rejected.json();

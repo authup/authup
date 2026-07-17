@@ -48,8 +48,8 @@ describe('src/http/controllers/user-authenticator', () => {
         // secret-bearing factors are self-enrollment only — the user enrolls
         // their own recovery set (the admin never sees the codes).
         const enrolled = await userClient.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.RECOVERY });
-        expect(enrolled.codes).toHaveLength(10);
-        expect(enrolled.entity.user_id).toEqual(userId);
+        expect(enrolled.meta.codes).toHaveLength(10);
+        expect(enrolled.data.user_id).toEqual(userId);
 
         // the admin can list it (secrets nulled) ...
         const list = await suite.client.userAuthenticator.getMany(userId);
@@ -57,8 +57,8 @@ describe('src/http/controllers/user-authenticator', () => {
         expect(list.data[0].codes ?? null).toBeNull();
 
         // ... and reset it by deleting (the sanctioned admin management path)
-        const deleted = await suite.client.userAuthenticator.delete(userId, enrolled.entity.id);
-        expect(deleted.id).toEqual(enrolled.entity.id);
+        const deleted = await suite.client.userAuthenticator.delete(userId, enrolled.data.id);
+        expect(deleted.id).toEqual(enrolled.data.id);
 
         const after = await suite.client.userAuthenticator.getMany(userId);
         expect(after.data).toHaveLength(0);
@@ -98,14 +98,14 @@ describe('src/http/controllers/user-authenticator', () => {
         );
 
         await expectClientError(
-            () => stranger.client.userAuthenticator.delete(owner.id, enrolled.entity.id),
+            () => stranger.client.userAuthenticator.delete(owner.id, enrolled.data.id),
             { status: 403 },
         );
 
         // a foreign device id under the OWN nested route is a 404, never
         // an existence oracle
         await expectClientError(
-            () => stranger.client.userAuthenticator.getOne('@me', enrolled.entity.id),
+            () => stranger.client.userAuthenticator.getOne('@me', enrolled.data.id),
             { status: 404 },
         );
     });
