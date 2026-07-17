@@ -150,7 +150,7 @@ export default defineComponent({
                 <template #cell-options="{ row }">
                     <VCButton
                         :as="NuxtLink"
-                        :to="`/keys/trust-anchors/${row.id}`"
+                        :to="`/trust-anchors/${row.id}`"
                         :aria-label="translations.details"
                         :title="translations.details"
                         size="sm"

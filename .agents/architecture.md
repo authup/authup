@@ -2344,7 +2344,9 @@ the chain with `X509Certificate` and requires the first certificate's CA basic
 constraint; replacement is delete + create. `TrustAnchorService` and the
 dual-mounted `/trust-anchors` + `/realms/:realmId/trust-anchors` controller
 reuse `KEY_*` administration permissions and the same realm-scope discipline
-as keys. The web UI presents the collection as **Trusted CAs** inside `/keys`.
+as keys. The web UI presents the collection as **Trusted CAs** on its own
+top-level `/trust-anchors` page group (overview + add + detail) with a
+dedicated sidebar entry, gated on the `KEY_*` family like `/keys`.
 Stage C intentionally provides only schema, CRUD API, typed client, and UI:
 the `enabled` anchors are consumed later by plan 072 when proxy-forwarded
 client certificates are authenticated for RFC 8705. Like keys, trust anchors

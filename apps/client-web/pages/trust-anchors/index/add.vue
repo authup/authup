@@ -5,7 +5,7 @@ import { PermissionName } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
 import { defineNuxtComponent, navigateTo } from '#app';
 import { definePageMeta } from '#imports';
-import { LayoutKey } from '../../../../config/layout';
+import { LayoutKey } from '../../../config/layout';
 
 export default defineNuxtComponent({
     components: { ATrustAnchorForm },
@@ -21,7 +21,7 @@ export default defineNuxtComponent({
 
         return {
             realmManagementId,
-            handleCreated: (entity: TrustAnchor) => navigateTo({ path: `/keys/trust-anchors/${entity.id}` }),
+            handleCreated: (entity: TrustAnchor) => navigateTo({ path: `/trust-anchors/${entity.id}` }),
             handleFailed: (e: Error) => emit('failed', e),
         };
     },

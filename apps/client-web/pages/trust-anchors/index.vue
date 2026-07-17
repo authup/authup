@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import type { Key } from '@authup/core-kit';
+import type { TrustAnchor } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
     TranslatorTranslationActionKey,
@@ -52,7 +52,7 @@ export default defineNuxtComponent({
             },
             {
                 namespace: TranslatorTranslationNamespace.ENTITY,
-                key: TranslatorTranslationEntityKey.KEY,
+                key: TranslatorTranslationEntityKey.TRUST_ANCHOR,
                 count: 2,
             },
         ]);
@@ -70,16 +70,16 @@ export default defineNuxtComponent({
             {
                 name: translationsDefault.overview,
                 icon: 'fa6-solid:bars',
-                url: '/keys',
+                url: '/trust-anchors',
             },
             {
                 name: translationsDefault.add,
                 icon: 'fa6-solid:plus',
-                url: '/keys/add',
+                url: '/trust-anchors/add',
             },
         ]);
 
-        const handleDeleted = async (e: Key) => {
+        const handleDeleted = async (e: TrustAnchor) => {
             if (toast) {
                 toast.show({
                     variant: 'success',
@@ -89,7 +89,7 @@ export default defineNuxtComponent({
                         data: {
                             entity: await translate({
                                 namespace: TranslatorTranslationNamespace.ENTITY,
-                                key: TranslatorTranslationEntityKey.KEY,
+                                key: TranslatorTranslationEntityKey.TRUST_ANCHOR,
                                 count: 1,
                             }),
                             name: e.name,
@@ -114,9 +114,9 @@ export default defineNuxtComponent({
     <div>
         <h1 class="title no-border mb-3">
             <VCIcon
-                name="fa6-solid:key"
+                name="fa6-solid:certificate"
                 class="me-1"
-            /> {{ translationsDefault.key }}
+            /> {{ translationsDefault.trustAnchor }}
             <span class="sub-title ms-1">{{ translationsApp.management }}</span>
         </h1>
         <div class="content-wrapper">

@@ -147,6 +147,26 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         },
     },
     {
+        name: 'Trusted CAs',
+        type: 'link',
+        url: '/trust-anchors',
+        icon: 'fa6-solid:certificate',
+        meta: {
+            [LayoutKey.REQUIRED_LOGGED_IN]: true,
+            i18n: {
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.TRUST_ANCHOR,
+                count: 2,
+            },
+            [LayoutKey.REQUIRED_PERMISSIONS]: [
+                PermissionName.KEY_READ,
+                PermissionName.KEY_CREATE,
+                PermissionName.KEY_UPDATE,
+                PermissionName.KEY_DELETE,
+            ],
+        },
+    },
+    {
         name: 'Robots',
         type: 'link',
         url: '/robots',

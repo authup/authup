@@ -106,10 +106,10 @@ allows an overlap period.
 To manage anchors in the admin UI:
 
 1. Select the target realm.
-2. Open **Keys**.
-3. Select **Trusted CAs**. The API and domain model call these trust anchors.
-4. Add the PEM-encoded CA certificate and choose a descriptive name.
-5. Leave the anchor enabled only while that CA should be trusted.
+2. Open **Trusted CAs** in the sidebar. The API and domain model call these
+   trust anchors.
+3. Add the PEM-encoded CA certificate and choose a descriptive name.
+4. Leave the anchor enabled only while that CA should be trusted.
 
 Trust-anchor administration uses the same `KEY_*` permissions as key
 management. Realm administrators can manage anchors only in their own realm.
