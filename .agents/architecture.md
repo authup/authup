@@ -2353,7 +2353,7 @@ ENTITY-scope lifecycle events as `KeyService` (`ref_type: trustAnchor`,
 `data`: `name`/`enabled` + update diff — never certificate bytes; creating
 an enabled CA anchor is what turns on mTLS client auth for a realm, so it
 must be visible in `auth_events`). The table was folded into migration
-`1783856507391` while its release window remained open.
+`1783769340000` while its release window remained open (the beta.53 fold — one migration file per dialect per release).
 
 - **`use` hygiene is load-bearing:** the signer supports oct (HMAC) keys, so
   without the filter it could sign tokens with a realm's *enc* key. Every sig
