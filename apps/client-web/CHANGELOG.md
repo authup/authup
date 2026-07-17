@@ -1,5 +1,41 @@
 # Change Log
 
+## [1.0.0-beta.53](https://github.com/authup/authup/compare/v1.0.0-beta.52...v1.0.0-beta.53) (2026-07-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* replace Client.is_confidential with auth_method and token_binding_method.
+
+### Features
+
+* add OAuth mutual TLS authentication ([#3261](https://github.com/authup/authup/issues/3261)) ([d3d88c6](https://github.com/authup/authup/commit/d3d88c6942059bf1a460d41f0a19c31932893b1c))
+* add realm trust anchor management ([#3260](https://github.com/authup/authup/issues/3260)) ([3a822d8](https://github.com/authup/authup/commit/3a822d836a852dc8af3547ea288f10a45c2a583d))
+* authorize access policy + persisted per-scope consent ([#3246](https://github.com/authup/authup/issues/3246)) ([b4b96c7](https://github.com/authup/authup/commit/b4b96c74e0bec4d332c39f5477744aa8cca1d44f))
+* **client-web-kit:** mfa challenge step, enrollment ui, settings + admin tabs ([#3234](https://github.com/authup/authup/issues/3234)) ([aca3fd7](https://github.com/authup/authup/commit/aca3fd7d307b67bdb9bf996a8fb3022c37aa5cad))
+* **client-web-kit:** mfa enrollment picker tiles + modal add flow, split settings security tab ([66eb500](https://github.com/authup/authup/commit/66eb5006d153bdf64be253355d61f23e177dc297))
+* key management api + lifecycle states ([#3256](https://github.com/authup/authup/issues/3256)) ([c69e9a2](https://github.com/authup/authup/commit/c69e9a2fc070a2c6bea71ec9e89bee2341e0cd88))
+* security event log with entity tracking, login throttle, metrics & admin ui ([#3229](https://github.com/authup/authup/issues/3229)) ([5a30950](https://github.com/authup/authup/commit/5a30950a4c819206a1cbafd221a0c3be692f53e6))
+
+
+### Bug Fixes
+
+* **deps:** bump @vuecs/forms to v5.3.3 and @vuecs/theme-tailwind to v6.3.1 ([d3bb7fd](https://github.com/authup/authup/commit/d3bb7fdf565c16999c017c6fda75a58ef0d74538))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/client-web-nuxt bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/client-web-theme bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/core-http-kit bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/core-kit bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/i18n bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/kit bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+
 ## [1.0.0-beta.52](https://github.com/authup/authup/compare/v1.0.0-beta.51...v1.0.0-beta.52) (2026-07-11)
 
 

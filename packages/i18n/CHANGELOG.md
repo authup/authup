@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.0.0-beta.53](https://github.com/authup/authup/compare/v1.0.0-beta.52...v1.0.0-beta.53) (2026-07-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* replace Client.is_confidential with auth_method and token_binding_method.
+
+### Features
+
+* add OAuth mutual TLS authentication ([#3261](https://github.com/authup/authup/issues/3261)) ([d3d88c6](https://github.com/authup/authup/commit/d3d88c6942059bf1a460d41f0a19c31932893b1c))
+* add realm trust anchor management ([#3260](https://github.com/authup/authup/issues/3260)) ([3a822d8](https://github.com/authup/authup/commit/3a822d836a852dc8af3547ea288f10a45c2a583d))
+* authorize access policy + persisted per-scope consent ([#3246](https://github.com/authup/authup/issues/3246)) ([b4b96c7](https://github.com/authup/authup/commit/b4b96c74e0bec4d332c39f5477744aa8cca1d44f))
+* **client-web-kit:** mfa challenge step, enrollment ui, settings + admin tabs ([#3234](https://github.com/authup/authup/issues/3234)) ([aca3fd7](https://github.com/authup/authup/commit/aca3fd7d307b67bdb9bf996a8fb3022c37aa5cad))
+* email otp as a second-factor kind ([#3235](https://github.com/authup/authup/issues/3235)) ([23fe82f](https://github.com/authup/authup/commit/23fe82f1b579d2722e092f94a309603f46a8bfda))
+* key management api + lifecycle states ([#3256](https://github.com/authup/authup/issues/3256)) ([c69e9a2](https://github.com/authup/authup/commit/c69e9a2fc070a2c6bea71ec9e89bee2341e0cd88))
+* mfa authenticator devices - totp + recovery codes ([#3232](https://github.com/authup/authup/issues/3232)) ([6d0422a](https://github.com/authup/authup/commit/6d0422a44a1205267dfb7fdb7e395147277c58dd))
+* nudge recovery-code enrollment after email/webauthn factors ([#3247](https://github.com/authup/authup/issues/3247)) ([1642ca0](https://github.com/authup/authup/commit/1642ca076e202cc50953e3b90b12285f041de088))
+* publish imported key certificates in JWKS ([#3257](https://github.com/authup/authup/issues/3257)) ([e59a075](https://github.com/authup/authup/commit/e59a0753bc2d7264ed4ad9dfa2a797d787d5a359))
+* security event log with entity tracking, login throttle, metrics & admin ui ([#3229](https://github.com/authup/authup/issues/3229)) ([5a30950](https://github.com/authup/authup/commit/5a30950a4c819206a1cbafd221a0c3be692f53e6))
+* webauthn / passkeys as a second factor ([#3236](https://github.com/authup/authup/issues/3236)) ([0e30e59](https://github.com/authup/authup/commit/0e30e59739fdad2b2f70c4d302c50e841741dabb))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+
 ## [1.0.0-beta.52](https://github.com/authup/authup/compare/v1.0.0-beta.51...v1.0.0-beta.52) (2026-07-11)
 
 

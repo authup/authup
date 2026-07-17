@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.0.0-beta.53](https://github.com/authup/authup/compare/v1.0.0-beta.52...v1.0.0-beta.53) (2026-07-17)
+
+
+### Bug Fixes
+
+* **deps:** bump @vuecs/forms to v5.3.3 and @vuecs/theme-tailwind to v6.3.1 ([d3bb7fd](https://github.com/authup/authup/commit/d3bb7fdf565c16999c017c6fda75a58ef0d74538))
+* ensure consistent version for release ([280b376](https://github.com/authup/authup/commit/280b3761e423c554193401499e2ee155f18c55bc))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+
 ## [1.0.0-beta.52](https://github.com/authup/authup/compare/v1.0.0-beta.51...v1.0.0-beta.52) (2026-07-11)
 
 

@@ -1,5 +1,53 @@
 # Change Log
 
+## [1.0.0-beta.53](https://github.com/authup/authup/compare/v1.0.0-beta.52...v1.0.0-beta.53) (2026-07-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-core:** wrap authenticator enroll response in data/meta envelope ([#3272](https://github.com/authup/authup/issues/3272))
+* replace Client.is_confidential with auth_method and token_binding_method.
+
+### Features
+
+* add OAuth mutual TLS authentication ([#3261](https://github.com/authup/authup/issues/3261)) ([d3d88c6](https://github.com/authup/authup/commit/d3d88c6942059bf1a460d41f0a19c31932893b1c))
+* add realm trust anchor management ([#3260](https://github.com/authup/authup/issues/3260)) ([3a822d8](https://github.com/authup/authup/commit/3a822d836a852dc8af3547ea288f10a45c2a583d))
+* authorize access policy + persisted per-scope consent ([#3246](https://github.com/authup/authup/issues/3246)) ([b4b96c7](https://github.com/authup/authup/commit/b4b96c74e0bec4d332c39f5477744aa8cca1d44f))
+* **client-web-kit:** mfa challenge step, enrollment ui, settings + admin tabs ([#3234](https://github.com/authup/authup/issues/3234)) ([aca3fd7](https://github.com/authup/authup/commit/aca3fd7d307b67bdb9bf996a8fb3022c37aa5cad))
+* **client-web-kit:** mfa enrollment picker tiles + modal add flow, split settings security tab ([66eb500](https://github.com/authup/authup/commit/66eb5006d153bdf64be253355d61f23e177dc297))
+* email otp as a second-factor kind ([#3235](https://github.com/authup/authup/issues/3235)) ([23fe82f](https://github.com/authup/authup/commit/23fe82f1b579d2722e092f94a309603f46a8bfda))
+* key management api + lifecycle states ([#3256](https://github.com/authup/authup/issues/3256)) ([c69e9a2](https://github.com/authup/authup/commit/c69e9a2fc070a2c6bea71ec9e89bee2341e0cd88))
+* nudge recovery-code enrollment after email/webauthn factors ([#3247](https://github.com/authup/authup/issues/3247)) ([1642ca0](https://github.com/authup/authup/commit/1642ca076e202cc50953e3b90b12285f041de088))
+* publish imported key certificates in JWKS ([#3257](https://github.com/authup/authup/issues/3257)) ([e59a075](https://github.com/authup/authup/commit/e59a0753bc2d7264ed4ad9dfa2a797d787d5a359))
+* security event log with entity tracking, login throttle, metrics & admin ui ([#3229](https://github.com/authup/authup/issues/3229)) ([5a30950](https://github.com/authup/authup/commit/5a30950a4c819206a1cbafd221a0c3be692f53e6))
+* webauthn / passkeys as a second factor ([#3236](https://github.com/authup/authup/issues/3236)) ([0e30e59](https://github.com/authup/authup/commit/0e30e59739fdad2b2f70c4d302c50e841741dabb))
+
+
+### Bug Fixes
+
+* **client-web-kit:** render client secret and certificate fields per auth method ([0186dba](https://github.com/authup/authup/commit/0186dbad4a0038d27a4f07b21641c3bab0441263))
+* complete fresh email/webauthn-only mfa logins via a pending ticket ([#3244](https://github.com/authup/authup/issues/3244)) ([fe28588](https://github.com/authup/authup/commit/fe2858810e47af248b677db47816daa7a50294ff))
+* **deps:** bump @vuecs/forms to v5.3.3 and @vuecs/theme-tailwind to v6.3.1 ([d3bb7fd](https://github.com/authup/authup/commit/d3bb7fdf565c16999c017c6fda75a58ef0d74538))
+* make MFA login work + stop admins planting a user's second factor ([#3241](https://github.com/authup/authup/issues/3241)) ([3756869](https://github.com/authup/authup/commit/3756869289f2bb2e32bfd5d28a1abb00e83c8a0b))
+
+
+### Code Refactoring
+
+* **server-core:** wrap authenticator enroll response in data/meta envelope ([#3272](https://github.com/authup/authup/issues/3272)) ([85b855c](https://github.com/authup/authup/commit/85b855ceaccd39ef132c3033c4484ce15bc4a68b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/core-http-kit bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/core-kit bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/i18n bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/kit bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/specs bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+
 ## [1.0.0-beta.52](https://github.com/authup/authup/compare/v1.0.0-beta.51...v1.0.0-beta.52) (2026-07-11)
 
 

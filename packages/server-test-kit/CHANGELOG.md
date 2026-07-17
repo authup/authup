@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.0.0-beta.53](https://github.com/authup/authup/compare/v1.0.0-beta.52...v1.0.0-beta.53) (2026-07-17)
+
+
+### Features
+
+* key management api + lifecycle states ([#3256](https://github.com/authup/authup/issues/3256)) ([c69e9a2](https://github.com/authup/authup/commit/c69e9a2fc070a2c6bea71ec9e89bee2341e0cd88))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/core-kit bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/kit bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/server-kit bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+
 ## [1.0.0-beta.52](https://github.com/authup/authup/compare/v1.0.0-beta.51...v1.0.0-beta.52) (2026-07-11)
 
 

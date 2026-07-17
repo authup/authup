@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.0.0-beta.53](https://github.com/authup/authup/compare/v1.0.0-beta.52...v1.0.0-beta.53) (2026-07-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-adapter:** TokenVerifier.verify(token) without a thumbprint now fails closed (JWTError) on a certificate-bound token instead of returning it. Direct callers must pass the presented certificate's SHA-256 DER thumbprint via verify(token, { certificateThumbprint }).
+* replace Client.is_confidential with auth_method and token_binding_method.
+
+### Features
+
+* add OAuth mutual TLS authentication ([#3261](https://github.com/authup/authup/issues/3261)) ([d3d88c6](https://github.com/authup/authup/commit/d3d88c6942059bf1a460d41f0a19c31932893b1c))
+
+
+### Bug Fixes
+
+* complete fresh email/webauthn-only mfa logins via a pending ticket ([#3244](https://github.com/authup/authup/issues/3244)) ([fe28588](https://github.com/authup/authup/commit/fe2858810e47af248b677db47816daa7a50294ff))
+* **server-adapter:** enforce certificate binding inside TokenVerifier.verify() ([#3270](https://github.com/authup/authup/issues/3270)) ([0741dbc](https://github.com/authup/authup/commit/0741dbc0cd84fd0ee077d4ad5428556fde40efa7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-http-kit bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/core-kit bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/errors bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/kit bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/server-kit bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/specs bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+
 ## [1.0.0-beta.52](https://github.com/authup/authup/compare/v1.0.0-beta.51...v1.0.0-beta.52) (2026-07-11)
 
 
