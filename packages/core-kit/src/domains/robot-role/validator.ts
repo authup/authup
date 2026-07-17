@@ -18,13 +18,13 @@ export class RobotRoleValidator extends Container<
         super.initialize();
 
         this.mount(
-            'robot_id',
+            'robotId',
             { group: ValidatorGroup.CREATE },
             createValidator(z.uuid()),
         );
 
         this.mount(
-            'role_id',
+            'roleId',
             { group: ValidatorGroup.CREATE },
             createValidator(z.uuid()),
         );

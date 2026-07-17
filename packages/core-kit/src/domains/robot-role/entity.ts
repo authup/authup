@@ -12,27 +12,27 @@ import type { Realm } from '../realm';
 export interface RobotRole {
     id: string;
 
-    robot_id: string;
+    robotId: string;
 
-    role_id: string;
+    roleId: string;
 
     // ------------------------------------------------------------------
 
     role: Role;
 
-    role_realm_id: Realm['id'] | null;
+    roleRealmId: Realm['id'] | null;
 
-    role_realm: Realm | null;
+    roleRealm: Realm | null;
 
     robot: Robot;
 
-    robot_realm_id: Realm['id'] | null;
+    robotRealmId: Realm['id'] | null;
 
-    robot_realm: Realm | null;
+    robotRealm: Realm | null;
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 }

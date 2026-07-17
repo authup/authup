@@ -25,44 +25,44 @@ export interface Event {
     /**
      * Kind of the affected resource, e.g. session, user, client.
      */
-    ref_type: string | null;
+    refType: string | null;
 
     /**
      * Identifier of the affected resource.
      */
-    ref_id: string | null;
+    refId: string | null;
 
     /**
      * The OAuth2 client involved, if any.
      */
-    client_id: string | null;
+    clientId: string | null;
 
     // ------------------------------------------------------------------
 
-    actor_type: `${IdentityType}` | null;
+    actorType: `${IdentityType}` | null;
 
-    actor_id: string | null;
+    actorId: string | null;
 
     /**
      * Denormalized actor display snapshot — survives actor deletion.
      * On loginFailed it carries the canonicalized submitted identifier
-     * (the throttle key) while actor_id stays null.
+     * (the throttle key) while actorId stays null.
      */
-    actor_name: string | null;
+    actorName: string | null;
 
     // ------------------------------------------------------------------
 
-    request_path: string | null;
+    requestPath: string | null;
 
-    request_method: string | null;
+    requestMethod: string | null;
 
-    request_ip_address: string | null;
+    requestIpAddress: string | null;
 
-    request_user_agent: string | null;
+    requestUserAgent: string | null;
 
     // ------------------------------------------------------------------
 
-    realm_id: Realm['id'] | null;
+    realmId: Realm['id'] | null;
 
     /**
      * PII-stripped context dict (allowlisted keys only).
@@ -72,7 +72,7 @@ export interface Event {
     // ------------------------------------------------------------------
 
     /**
-     * default: false — rows with a stamped expires_at are expiring and get
+     * default: false — rows with a stamped expiresAt are expiring and get
      * swept.
      */
     expiring: boolean;
@@ -81,10 +81,10 @@ export interface Event {
      * Expiration date (iso) — stamped at write from the retention config;
      * null = keep forever. Drives the retention sweep.
      */
-    expires_at: string | null;
+    expiresAt: string | null;
 
     /**
      * Creation date (iso).
      */
-    created_at: string;
+    createdAt: string;
 }

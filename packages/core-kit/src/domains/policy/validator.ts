@@ -45,7 +45,7 @@ export class PolicyValidator extends Container<
         }, nameValidator);
 
         this.mount(
-            'display_name',
+            'displayName',
             { optional: true },
             createValidator(z.string().min(3).max(256).nullable()),
         );
@@ -63,13 +63,13 @@ export class PolicyValidator extends Container<
         );
 
         this.mount(
-            'parent_id',
+            'parentId',
             { optional: true },
             createValidator(z.uuid().nullable()),
         );
 
         this.mount(
-            'realm_id',
+            'realmId',
             {
                 group: [ValidatorGroup.CREATE, ValidatorGroup.PROVISIONING],
                 optional: true,
@@ -78,7 +78,7 @@ export class PolicyValidator extends Container<
         );
 
         this.mount(
-            'built_in',
+            'builtIn',
             {
                 group: ValidatorGroup.PROVISIONING,
                 optional: true,

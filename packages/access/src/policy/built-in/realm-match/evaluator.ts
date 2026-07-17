@@ -46,7 +46,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
             };
         }
 
-        // SCOPE MODE: coarse, actor-relative realm reach (the realm_scope mechanism lives
+        // SCOPE MODE: coarse, actor-relative realm reach (the realmScope mechanism lives
         // here). The resource realm is supplied under the REALM_MATCH data key. Key-PRESENCE
         // is the discriminator: an ABSENT realm neutral-passes (gate check / realm-less
         // resource), while a present `null` (global resource) is matched (and `own` correctly
@@ -88,11 +88,11 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
         }
 
         let keys : string[];
-        if (policy.attribute_name) {
-            if (Array.isArray(policy.attribute_name)) {
-                keys = policy.attribute_name;
+        if (policy.attributeName) {
+            if (Array.isArray(policy.attributeName)) {
+                keys = policy.attributeName;
             } else {
-                keys = [policy.attribute_name];
+                keys = [policy.attributeName];
             }
         } else {
             keys = [
@@ -102,11 +102,11 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
                 'realmName',
             ];
 
-            policy.decision_strategy = DecisionStrategy.CONSENSUS;
+            policy.decisionStrategy = DecisionStrategy.CONSENSUS;
         }
 
-        const attribute_name_strict = policy.attribute_name_strict ?? true;
-        if (!attribute_name_strict) {
+        const attributeNameStrict = policy.attributeNameStrict ?? true;
+        if (!attributeNameStrict) {
             const resourceKeys = Object.keys(attributes);
             const keysToAdd : string[] = [];
             for (const resourceKey of resourceKeys) {
@@ -148,7 +148,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
 
             if (
                 attributeValue === null &&
-                policy.attribute_null_match_all
+                policy.attributeNullMatchAll
             ) {
                 outcome = true;
             } else if (
@@ -159,13 +159,13 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
             }
 
             if (outcome) {
-                if (policy.decision_strategy === DecisionStrategy.AFFIRMATIVE) {
+                if (policy.decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
                     return { success: maybeInvertPolicyOutcome(true, policy.invert) };
                 }
 
                 count++;
             } else {
-                if (policy.decision_strategy === DecisionStrategy.UNANIMOUS) {
+                if (policy.decisionStrategy === DecisionStrategy.UNANIMOUS) {
                     return { success: maybeInvertPolicyOutcome(false, policy.invert) };
                 }
 

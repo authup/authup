@@ -23,7 +23,7 @@ export interface Consent {
     /**
      * Subject kind (e.g. user, robot, client)
      */
-    sub_kind: string,
+    subKind: string,
 
     /**
      * One lowercase OAuth2 scope token.
@@ -35,33 +35,33 @@ export interface Consent {
     /**
      * Expiration date (iso). Null = does not expire.
      */
-    expires_at: string | null,
+    expiresAt: string | null,
 
     /**
      * Last update date (iso).
      */
-    updated_at: string,
+    updatedAt: string,
 
     /**
      * Creation date (iso).
      */
-    created_at: string,
+    createdAt: string,
 
     // ------------------------------------------------------------------
 
-    client_id: Client['id'];
+    clientId: Client['id'];
 
     client: Client;
 
-    realm_id: Realm['id'];
+    realmId: Realm['id'];
 
     realm: Realm;
 
     /**
-     * Owning user, set only when the subject is a user (sub_kind = user), so a
+     * Owning user, set only when the subject is a user (subKind = user), so a
      * user deletion cascade-drops its consent rows. Null for non-user subjects.
      */
-    user_id: User['id'] | null;
+    userId: User['id'] | null;
 
     user?: User | null;
 }

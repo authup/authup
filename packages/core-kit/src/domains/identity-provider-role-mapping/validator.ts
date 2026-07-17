@@ -19,13 +19,13 @@ export class IdentityProviderRoleMappingValidator extends Container<
         super.initialize();
 
         this.mount(
-            'provider_id',
+            'providerId',
             { group: ValidatorGroup.CREATE },
             createValidator(z.uuid()),
         );
 
         this.mount(
-            'role_id',
+            'roleId',
             { group: ValidatorGroup.CREATE },
             createValidator(z.uuid()),
         );
@@ -43,13 +43,13 @@ export class IdentityProviderRoleMappingValidator extends Container<
         );
 
         this.mount(
-            'value_is_regex',
+            'valueIsRegex',
             { optional: true },
             createValidator(z.boolean()),
         );
 
         this.mount(
-            'synchronization_mode',
+            'synchronizationMode',
             { optional: true },
             createValidator(z.nativeEnum(IdentityProviderMappingSyncMode).nullable()),
         );

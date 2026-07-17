@@ -56,7 +56,7 @@ export class TrustAnchorValidator extends Container<TrustAnchor> {
         );
 
         this.mount(
-            'realm_id',
+            'realmId',
             {
                 group: ValidatorGroup.CREATE,
                 optional: true,

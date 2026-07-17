@@ -16,7 +16,7 @@ export class CompositePolicyValidator extends Container<CompositePolicy> {
         super.initialize();
 
         this.mount(
-            'decision_strategy',
+            'decisionStrategy',
             createValidator(
                 z.enum(DecisionStrategy)
                     .or(z.null())

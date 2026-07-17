@@ -26,13 +26,13 @@ export class ClientValidator extends Container<Client> {
         );
 
         this.mount(
-            'auth_method',
+            'authMethod',
             { optional: true },
             createValidator(z.enum(ClientAuthMethod)),
         );
 
         this.mount(
-            'token_binding_method',
+            'tokenBindingMethod',
             { optional: true },
             createValidator(z.enum(ClientTokenBindingMethod)),
         );
@@ -74,7 +74,7 @@ export class ClientValidator extends Container<Client> {
         );
 
         this.mount(
-            'display_name',
+            'displayName',
             { optional: true },
             createValidator(z.string().min(3).max(256).nullable()),
         );
@@ -94,13 +94,13 @@ export class ClientValidator extends Container<Client> {
         );
 
         this.mount(
-            'secret_encrypted',
+            'secretEncrypted',
             { optional: true },
             createValidator(z.boolean()),
         );
 
         this.mount(
-            'secret_hashed',
+            'secretHashed',
             { optional: true },
             createValidator(z.boolean()),
         );
@@ -108,7 +108,7 @@ export class ClientValidator extends Container<Client> {
         // ----------------------------------------------
 
         this.mount(
-            'redirect_uri',
+            'redirectUri',
             { optional: true },
             createValidator(
                 z
@@ -123,7 +123,7 @@ export class ClientValidator extends Container<Client> {
                                 ctx.issues.push({
                                     input: url,
                                     code: 'custom',
-                                    message: e instanceof Error ? e.message : 'The redirect_uri is not valid.',
+                                    message: e instanceof Error ? e.message : 'The redirectUri is not valid.',
                                 });
                             }
                         }
@@ -133,7 +133,7 @@ export class ClientValidator extends Container<Client> {
         );
 
         this.mount(
-            'post_logout_redirect_uri',
+            'postLogoutRedirectUri',
             { optional: true },
             createValidator(
                 z
@@ -148,7 +148,7 @@ export class ClientValidator extends Container<Client> {
                                 ctx.issues.push({
                                     input: url,
                                     code: 'custom',
-                                    message: e instanceof Error ? e.message : 'The post_logout_redirect_uri is not valid.',
+                                    message: e instanceof Error ? e.message : 'The postLogoutRedirectUri is not valid.',
                                 });
                             }
                         }
@@ -158,7 +158,7 @@ export class ClientValidator extends Container<Client> {
         );
 
         this.mount(
-            'base_url',
+            'baseUrl',
             { optional: true },
             createValidator(
                 z.url().nullable(),
@@ -166,7 +166,7 @@ export class ClientValidator extends Container<Client> {
         );
 
         this.mount(
-            'root_url',
+            'rootUrl',
             { optional: true },
             createValidator(
                 z.url().nullable(),
@@ -174,7 +174,7 @@ export class ClientValidator extends Container<Client> {
         );
 
         this.mount(
-            'grant_types',
+            'grantTypes',
             { optional: true },
             createValidator(z.string().min(3).max(512).nullable()),
         );
@@ -186,7 +186,7 @@ export class ClientValidator extends Container<Client> {
         );
 
         this.mount(
-            'access_policy_id',
+            'accessPolicyId',
             { optional: true },
             createValidator(z.uuid().nullable()),
         );
@@ -194,7 +194,7 @@ export class ClientValidator extends Container<Client> {
         // ----------------------------------------------
 
         this.mount(
-            'realm_id',
+            'realmId',
             {
                 group: [ValidatorGroup.CREATE, ValidatorGroup.PROVISIONING],
                 optional: true,
@@ -203,9 +203,9 @@ export class ClientValidator extends Container<Client> {
         );
 
         // deliberately NOT mounted for CREATE/UPDATE — no API caller may
-        // self-assign built_in; only provisioned entities carry it
+        // self-assign builtIn; only provisioned entities carry it
         this.mount(
-            'built_in',
+            'builtIn',
             {
                 group: ValidatorGroup.PROVISIONING,
                 optional: true,

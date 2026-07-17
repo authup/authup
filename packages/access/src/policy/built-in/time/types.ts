@@ -27,15 +27,15 @@ export interface TimePolicy extends BasePolicy {
     /**
      *  0 (Sunday) - 6 (Saturday)
      */
-    day_of_week?: number,
+    dayOfWeek?: number,
 
     /**
      * 1 - 31
      */
-    day_of_month?: number,
+    dayOfMonth?: number,
 
     /**
      * 1 - 365
      */
-    day_of_year?: number,
+    dayOfYear?: number,
 }

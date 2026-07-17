@@ -65,7 +65,7 @@ export class RobotValidator extends Container<
         );
 
         this.mount(
-            'display_name',
+            'displayName',
             { optional: true },
             createValidator(z.string().min(3).max(256).nullable()),
         );
@@ -77,13 +77,13 @@ export class RobotValidator extends Container<
         );
 
         this.mount(
-            'user_id',
+            'userId',
             { optional: true },
             createValidator(z.uuid()),
         );
 
         this.mount(
-            'realm_id',
+            'realmId',
             {
                 group: [ValidatorGroup.CREATE, ValidatorGroup.PROVISIONING],
                 optional: true,

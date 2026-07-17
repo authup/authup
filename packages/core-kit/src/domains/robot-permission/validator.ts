@@ -19,25 +19,25 @@ export class RobotPermissionValidator extends Container<
         super.initialize();
 
         this.mount(
-            'robot_id',
+            'robotId',
             { group: ValidatorGroup.CREATE },
             createValidator(z.uuid()),
         );
 
         this.mount(
-            'permission_id',
+            'permissionId',
             { group: ValidatorGroup.CREATE },
             createValidator(z.uuid()),
         );
 
         this.mount(
-            'policy_id',
+            'policyId',
             { optional: true },
             createValidator(z.uuid().nullable()),
         );
 
         this.mount(
-            'realm_scope',
+            'realmScope',
             { optional: true },
             createValidator(z.enum(REALM_SCOPE)),
         );

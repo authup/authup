@@ -14,17 +14,17 @@ export interface RobotPermission extends PermissionRelation {
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 
     // ------------------------------------------------------------------
 
-    robot_id: string;
+    robotId: string;
 
     robot: Robot;
 
-    robot_realm_id: Realm['id'] | null;
+    robotRealmId: Realm['id'] | null;
 
-    robot_realm: Realm | null;
+    robotRealm: Realm | null;
 }

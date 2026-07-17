@@ -12,7 +12,7 @@ import type { Realm } from '../realm';
 import type { RealmScopeValue } from './constants.ts';
 
 export interface PermissionRelation {
-    policy_id: Policy['id'] | null;
+    policyId: Policy['id'] | null;
 
     policy: Policy | null;
 
@@ -20,45 +20,45 @@ export interface PermissionRelation {
      * Relative realm reach of this grant (none/own/ownOrNull/any). Fail-closed
      * default `own`. See {@link REALM_SCOPE}.
      */
-    realm_scope: RealmScopeValue;
+    realmScope: RealmScopeValue;
 
-    permission_id: Permission['id'];
+    permissionId: Permission['id'];
 
     permission: Permission;
 
-    permission_realm_id: Realm['id'] | null;
+    permissionRealmId: Realm['id'] | null;
 
-    permission_realm: Realm | null;
+    permissionRealm: Realm | null;
 }
 
 export interface Permission {
     id: string;
 
-    built_in: boolean;
+    builtIn: boolean;
 
     name: string;
 
-    display_name: string | null;
+    displayName: string | null;
 
     description: string | null;
 
-    decision_strategy: `${DecisionStrategy}` | null;
+    decisionStrategy: `${DecisionStrategy}` | null;
 
     // ------------------------------------------------------------------
 
-    client_id: Client['id'] | null;
+    clientId: Client['id'] | null;
 
     client: Client | null;
 
     // ------------------------------------------------------------------
 
-    realm_id: Realm['id'] | null;
+    realmId: Realm['id'] | null;
 
     realm: Realm | null;
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 }

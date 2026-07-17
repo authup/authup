@@ -12,13 +12,13 @@ export interface User {
 
     name: string;
 
-    name_locked: boolean;
+    nameLocked: boolean;
 
-    first_name: string | null;
+    firstName: string | null;
 
-    last_name: string | null;
+    lastName: string | null;
 
-    display_name: string | null;
+    displayName: string | null;
 
     email: string;
 
@@ -32,33 +32,33 @@ export interface User {
 
     // ------------------------------------------------------------------
 
-    reset_hash: string | null;
+    resetHash: string | null;
 
-    reset_at: string | null;
+    resetAt: string | null;
 
-    reset_expires: string | null;
+    resetExpires: string | null;
 
     // ------------------------------------------------------------------
 
     status: string | null;
 
-    status_message: string | null;
+    statusMessage: string | null;
 
     // ------------------------------------------------------------------
 
     active: boolean;
 
-    activate_hash: string | null;
+    activateHash: string | null;
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 
     // ------------------------------------------------------------------
 
-    realm_id: Realm['id'];
+    realmId: Realm['id'];
 
     realm: Realm;
 

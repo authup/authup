@@ -12,27 +12,27 @@ import type { Realm } from '../realm';
 export interface ClientRole {
     id: string;
 
-    client_id: string;
+    clientId: string;
 
-    role_id: string;
+    roleId: string;
 
     // ------------------------------------------------------------------
 
     role: Role;
 
-    role_realm_id: Realm['id'] | null;
+    roleRealmId: Realm['id'] | null;
 
-    role_realm: Realm | null;
+    roleRealm: Realm | null;
 
     client: Client;
 
-    client_realm_id: Realm['id'] | null;
+    clientRealmId: Realm['id'] | null;
 
-    client_realm: Realm | null;
+    clientRealm: Realm | null;
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 }

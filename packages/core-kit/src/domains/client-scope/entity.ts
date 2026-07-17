@@ -14,15 +14,15 @@ export interface ClientScope {
 
     default: boolean;
 
-    client_id: Client['id'];
+    clientId: Client['id'];
     client: Client;
 
-    client_realm_id: Realm['id'] | null;
-    client_realm: Realm | null;
+    clientRealmId: Realm['id'] | null;
+    clientRealm: Realm | null;
 
-    scope_id: Scope['id'];
+    scopeId: Scope['id'];
     scope: Scope;
 
-    scope_realm_id: Realm['id'] | null;
-    scope_realm: Realm | null;
+    scopeRealmId: Realm['id'] | null;
+    scopeRealm: Realm | null;
 }

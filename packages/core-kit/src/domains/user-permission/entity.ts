@@ -14,17 +14,17 @@ export interface UserPermission extends PermissionRelation {
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 
     // ------------------------------------------------------------------
 
-    user_id: User['id'];
+    userId: User['id'];
 
     user: User;
 
-    user_realm_id: Realm['id'] | null;
+    userRealmId: Realm['id'] | null;
 
-    user_realm: Realm | null;
+    userRealm: Realm | null;
 }

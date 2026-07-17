@@ -13,30 +13,30 @@ export interface RealmMatchPolicy extends BasePolicy {
     /**
      * Determines how realm-id/name matches are handled.
      */
-    decision_strategy?: `${DecisionStrategy}`,
+    decisionStrategy?: `${DecisionStrategy}`,
 
     /**
      * Specifies the name(s) of the realm-id/name attribute(s) used for matching.
      * Can be a single attribute name or an array of attribute names.
      */
-    attribute_name?: string | string[],
+    attributeName?: string | string[],
 
     /**
      * Only match if the attribute is strict equal to the name.
      */
-    attribute_name_strict?: boolean,
+    attributeNameStrict?: boolean,
 
     /**
      * Determines if resources with null realm-id/name value should match all identity realms.
      * If true, any identity realm can access resources with null realm-id/name values.
      */
-    attribute_null_match_all?: boolean,
+    attributeNullMatchAll?: boolean,
 
     /**
      * Coarse, actor-relative realm reach (none/own/ownOrNull/any). When set, the evaluator
      * runs in SCOPE MODE: it matches the resource realm read from the REALM_MATCH data key
-     * against the identity realm via `realmScopeMatches`, and ignores `attribute_name` /
-     * `attribute_null_match_all`. With no REALM_MATCH key present it neutral-passes.
+     * against the identity realm via `realmScopeMatches`, and ignores `attributeName` /
+     * `attributeNullMatchAll`. With no REALM_MATCH key present it neutral-passes.
      */
     scope?: `${RealmScope}`
 }

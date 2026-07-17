@@ -39,7 +39,7 @@ export interface UserAuthenticator {
     parameters: string | null;
 
     /**
-     * Recovery: JSON array of single-use hashed codes ({ hash, used_at }).
+     * Recovery: JSON array of single-use hashed codes ({ hash, usedAt }).
      * Never returned by any read endpoint.
      */
     codes: string | null;
@@ -53,24 +53,24 @@ export interface UserAuthenticator {
     /**
      * Last successful challenge verification (iso).
      */
-    last_used_at: string | null;
+    lastUsedAt: string | null;
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 
     // ------------------------------------------------------------------
 
-    user_id: User['id'];
+    userId: User['id'];
 
     user: User;
 
     /**
      * Denormalized from the owning user for realm-scope gating.
      */
-    realm_id: Realm['id'];
+    realmId: Realm['id'];
 
     realm: Realm;
 }

@@ -37,7 +37,7 @@ export class FakeEntityRepository<T extends ObjectLiteral> implements IEntityRep
     async findOneByName(name: string, realm?: string): Promise<T | null> {
         return this.store.find((e) => {
             if (e.name !== name) return false;
-            if (realm !== undefined && e.realm_id !== realm) return false;
+            if (realm !== undefined && e.realmId !== realm) return false;
             return true;
         }) ?? null;
     }

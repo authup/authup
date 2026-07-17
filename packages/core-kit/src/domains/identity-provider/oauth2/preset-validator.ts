@@ -34,12 +34,12 @@ export class IdentityProviderOAuth2PresetAttributesValidator extends Container<O
         );
 
         this.mount(
-            'client_id',
+            'clientId',
             createValidator(z.string().min(3).max(128)),
         );
 
         this.mount(
-            'client_secret',
+            'clientSecret',
             { optional: true },
             createValidator(z.string().min(3).max(128).optional()
                 .nullable()),

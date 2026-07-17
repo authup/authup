@@ -18,13 +18,13 @@ export class UserRoleValidator extends Container<
         super.initialize();
 
         this.mount(
-            'user_id',
+            'userId',
             { group: ValidatorGroup.CREATE },
             createValidator(z.uuid()),
         );
 
         this.mount(
-            'role_id',
+            'roleId',
             { group: ValidatorGroup.CREATE },
             createValidator(z.uuid()),
         );

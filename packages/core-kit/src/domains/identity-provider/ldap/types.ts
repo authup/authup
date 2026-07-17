@@ -27,7 +27,7 @@ export interface LdapIdentityProvider extends IdentityProvider {
     /**
      * Enables use of the LDAP StartTLS process which is not commonly used.
      */
-    start_tls?: boolean,
+    startTls?: boolean,
 
     /**
      * Controls the TLS connection validation process.
@@ -37,7 +37,7 @@ export interface LdapIdentityProvider extends IdentityProvider {
     /**
      * Sets the base distinguished name container for all LDAP queries.
      */
-    base_dn: string,
+    baseDn: string,
 
     /**
      * The DN of the administrator.
@@ -54,58 +54,58 @@ export interface LdapIdentityProvider extends IdentityProvider {
      * The ldap base DN to search the user.
      * @example dc=example,dc=com
      */
-    user_base_dn?: string,
+    userBaseDn?: string,
 
     /**
      * The LDAP filter to narrow down which users are valid
      */
-    user_filter?: string,
+    userFilter?: string,
 
     /**
      *  It will be used with the value in username to
      *  construct a ldap filter as ({attribute}={username}) to find the user and get user details in LDAP
      */
-    user_name_attribute?: string,
+    userNameAttribute?: string,
 
     /**
      * The attribute to retrieve which contains the users email addresses.
      */
-    user_mail_attribute?: string,
+    userMailAttribute?: string,
 
     /**
      * The attribute to retrieve which is shown on the Web UI to the user when they log in.
      */
-    user_display_name_attribute?: string,
+    userDisplayNameAttribute?: string,
 
     /**
      * Ff specified with groupClass, will serve as search base for authenticated user groups
      */
-    group_base_dn?: string,
+    groupBaseDn?: string,
 
     /**
-     * Similar to user_filter, but it applies to group searches.
+     * Similar to userFilter, but it applies to group searches.
      */
-    group_filter?: string,
+    groupFilter?: string,
 
     /**
      * The LDAP attribute that is used to determine the group name.
      */
-    group_name_attribute?: string,
+    groupNameAttribute?: string,
 
     /**
      * If specified with groupsSearchBase, will be used as objectClass in search filter for authenticated user groups
      */
-    group_class?: string,
+    groupClass?: string,
 
     /**
      * if specified with groupClass and groupsSearchBase,
      * will be used as member name (if not specified this defaults to member) in search filter for authenticated user groups
      */
-    group_member_attribute?: string,
+    groupMemberAttribute?: string,
 
     /**
      * if specified with groupClass and groupsSearchBase,
      * will be used as the attribute on the user object (if not specified this defaults to dn) in search filter for authenticated user groups
      */
-    group_member_user_attribute?: string
+    groupMemberUserAttribute?: string
 }

@@ -14,25 +14,25 @@ export interface UserRole {
 
     // ------------------------------------------------------------------
 
-    role_id: Role['id'];
+    roleId: Role['id'];
 
     role: Role;
 
-    role_realm_id: Realm['id'] | null;
+    roleRealmId: Realm['id'] | null;
 
-    role_realm: Realm | null;
+    roleRealm: Realm | null;
 
-    user_id: User['id'];
+    userId: User['id'];
 
     user: User;
 
-    user_realm_id: Realm['id'] | null;
+    userRealmId: Realm['id'] | null;
 
-    user_realm: Realm | null;
+    userRealm: Realm | null;
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 }

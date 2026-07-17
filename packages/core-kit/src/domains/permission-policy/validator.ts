@@ -18,13 +18,13 @@ export class PermissionPolicyValidator extends Container<
         super.initialize();
 
         this.mount(
-            'permission_id',
+            'permissionId',
             { group: ValidatorGroup.CREATE },
             createValidator(z.uuid()),
         );
 
         this.mount(
-            'policy_id',
+            'policyId',
             { group: ValidatorGroup.CREATE },
             createValidator(z.uuid()),
         );

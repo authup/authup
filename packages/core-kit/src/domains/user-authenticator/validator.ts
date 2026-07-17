@@ -31,7 +31,7 @@ export class UserAuthenticatorValidator extends Container<
         );
 
         this.mount(
-            'user_id',
+            'userId',
             {
                 group: ValidatorGroup.CREATE,
                 optional: true,

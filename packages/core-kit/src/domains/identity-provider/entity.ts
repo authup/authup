@@ -14,7 +14,7 @@ export interface IdentityProvider {
 
     name: string,
 
-    display_name: string | null;
+    displayName: string | null;
 
     protocol: `${IdentityProviderProtocol}` | null;
 
@@ -22,11 +22,11 @@ export interface IdentityProvider {
 
     enabled: boolean;
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 
-    realm_id: Realm['id'];
+    realmId: Realm['id'];
 
     realm: Realm;
 }
@@ -36,15 +36,15 @@ export interface IdentityProviderBaseMapping {
 
     value: string | null;
 
-    value_is_regex: boolean;
+    valueIsRegex: boolean;
 
-    synchronization_mode: `${IdentityProviderMappingSyncMode}` | null;
+    synchronizationMode: `${IdentityProviderMappingSyncMode}` | null;
 
-    provider_id: IdentityProvider['id'];
+    providerId: IdentityProvider['id'];
 
     provider: IdentityProvider;
 
-    provider_realm_id: Realm['id'];
+    providerRealmId: Realm['id'];
 
-    provider_realm: Realm;
+    providerRealm: Realm;
 }

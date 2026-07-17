@@ -32,12 +32,12 @@ export class IdentityProviderLDAPAttributesValidator extends Container<LdapIdent
 
         this.mount('timeout', { optional: true }, createValidator(z.number().min(0).optional().nullable()));
 
-        this.mount('start_tls', { optional: true }, createValidator(z.boolean().optional().nullable()));
+        this.mount('startTls', { optional: true }, createValidator(z.boolean().optional().nullable()));
 
         this.mount('tls', { optional: true }, createValidator(z.any().optional().nullable()));
 
         this.mount(
-            'base_dn',
+            'baseDn',
             { optional: true },
             createValidator(z.string().min(3).max(2000).optional()
                 .nullable()),
@@ -46,26 +46,26 @@ export class IdentityProviderLDAPAttributesValidator extends Container<LdapIdent
 
         this.mount('password', createValidator(z.string().min(3)));
 
-        this.mount('user_base_dn', { optional: true }, createValidator(z.string().optional().nullable()));
+        this.mount('userBaseDn', { optional: true }, createValidator(z.string().optional().nullable()));
 
-        this.mount('user_filter', { optional: true }, createValidator(z.string().optional().nullable()));
+        this.mount('userFilter', { optional: true }, createValidator(z.string().optional().nullable()));
 
-        this.mount('user_name_attribute', { optional: true }, createValidator(z.string().optional().nullable()));
+        this.mount('userNameAttribute', { optional: true }, createValidator(z.string().optional().nullable()));
 
-        this.mount('user_mail_attribute', { optional: true }, createValidator(z.string().optional().nullable()));
+        this.mount('userMailAttribute', { optional: true }, createValidator(z.string().optional().nullable()));
 
-        this.mount('user_display_name_attribute', { optional: true }, createValidator(z.string().optional().nullable()));
+        this.mount('userDisplayNameAttribute', { optional: true }, createValidator(z.string().optional().nullable()));
 
-        this.mount('group_base_dn', { optional: true }, createValidator(z.string().optional().nullable()));
+        this.mount('groupBaseDn', { optional: true }, createValidator(z.string().optional().nullable()));
 
-        this.mount('group_filter', { optional: true }, createValidator(z.string().optional().nullable()));
+        this.mount('groupFilter', { optional: true }, createValidator(z.string().optional().nullable()));
 
-        this.mount('group_name_attribute', { optional: true }, createValidator(z.string().optional().nullable()));
+        this.mount('groupNameAttribute', { optional: true }, createValidator(z.string().optional().nullable()));
 
-        this.mount('group_class', { optional: true }, createValidator(z.string().optional().nullable()));
+        this.mount('groupClass', { optional: true }, createValidator(z.string().optional().nullable()));
 
-        this.mount('group_member_attribute', { optional: true }, createValidator(z.string().optional().nullable()));
+        this.mount('groupMemberAttribute', { optional: true }, createValidator(z.string().optional().nullable()));
 
-        this.mount('group_member_user_attribute', { optional: true }, createValidator(z.string().optional().nullable()));
+        this.mount('groupMemberUserAttribute', { optional: true }, createValidator(z.string().optional().nullable()));
     }
 }
