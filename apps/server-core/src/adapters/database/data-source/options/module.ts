@@ -72,6 +72,7 @@ import {
     UserRoleSubscriber,
     UserSubscriber,
 } from '../../domains/index.ts';
+import { SnakeNamingStrategy } from './naming-strategy.ts';
 
 export class DataSourceOptionsBuilder {
     buildWithEnv() {
@@ -102,6 +103,7 @@ export class DataSourceOptionsBuilder {
         options = {
             ...options,
             logging: false,
+            namingStrategy: new SnakeNamingStrategy(),
             entities: [
                 ...(options.entities ? options.entities : []) as string[],
                 KeyEntity,
