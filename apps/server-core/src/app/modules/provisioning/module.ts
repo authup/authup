@@ -104,7 +104,10 @@ export class ProvisionerModule implements IModule {
         const config = container.resolve(ConfigInjectionKey);
         const provisioningDir = path.join(config.writableDirectoryPath, 'provisioning');
         if (fs.existsSync(provisioningDir)) {
-            sources.push(new FileProvisioningSource({ cwd: provisioningDir }));
+            sources.push(new FileProvisioningSource({
+                cwd: provisioningDir,
+                logger: container.resolve(LoggerInjectionKey),
+            }));
         }
 
         const composite = new CompositeProvisioningSource(sources);
