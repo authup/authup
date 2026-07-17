@@ -164,6 +164,7 @@ export default defineComponent({
         });
 
         const isSecretAuthentication = computed(() => form.auth_method === ClientAuthMethod.SECRET);
+        const isTLSAuthentication = computed(() => form.auth_method === ClientAuthMethod.TLS);
         watch(isSecretAuthentication, (val, oldValue) => {
             if (val === oldValue) return;
 
@@ -281,6 +282,7 @@ export default defineComponent({
             isBusy: manager.busy.value,
             isEditing,
             isSecretAuthentication,
+            isTLSAuthentication,
             isSecretHashed,
             authMethodOptions,
             tokenBindingMethodOptions,
@@ -367,14 +369,14 @@ export default defineComponent({
                     />
                 </VCFormGroup>
             </IFieldValidation>
-            <template v-if="clientCertificateURI">
+            <template v-if="isTLSAuthentication && clientCertificateURI">
                 <VCFormGroup>
                     <template #label>
                         {{ translationsClient.clientCertificateUri }}
                     </template>
                     <VCFormInput
                         :model-value="clientCertificateURI"
-                        :readonly="true"
+                        :disabled="true"
                     />
                     <template #hint>
                         {{ translationsClient.clientCertificateUriHint }}
@@ -382,6 +384,7 @@ export default defineComponent({
                 </VCFormGroup>
             </template>
             <IFieldValidation
+                v-if="isSecretAuthentication"
                 v-slot="{ value }"
                 :field="v.fields.secret"
             >
@@ -396,13 +399,15 @@ export default defineComponent({
                     </template>
                     <ASecretInput
                         :model-value="v.fields.secret.$model.value ?? ''"
-                        :disabled="!isSecretAuthentication"
                         @update:model-value="(next: string) => { v.fields.secret.$model.value = next; }"
                     />
                 </VCFormGroup>
             </IFieldValidation>
             <div class="flex flex-wrap -mx-2">
-                <div class="flex-1 basis-0 px-2">
+                <div
+                    v-if="isSecretAuthentication"
+                    class="flex-1 basis-0 px-2"
+                >
                     <IFieldValidation
                         v-slot="{ value }"
                         :field="v.fields.secret_hashed"
@@ -410,7 +415,6 @@ export default defineComponent({
                         <VCFormGroup :validation="value">
                             <VCFormSwitch
                                 v-model="v.fields.secret_hashed.$model.value"
-                                :disabled="!isSecretAuthentication"
                                 :label="true"
                                 :label-content="translationsClient.hashSecret"
                             />
