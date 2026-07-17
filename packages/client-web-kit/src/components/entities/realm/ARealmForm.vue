@@ -53,7 +53,7 @@ export default defineComponent({
         const nameSeed = useId();
         const form = reactive({
             name: '',
-            display_name: '',
+            displayName: '',
             description: '',
         });
 
@@ -154,15 +154,15 @@ export default defineComponent({
 
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.display_name"
+            :field="v.fields.displayName"
         >
             <VCFormGroup :validation="value">
                 <template #label>
                     {{ translationsDefault.displayName }}
                 </template>
                 <VCFormInput
-                    :model-value="v.fields.display_name.$model.value ?? ''"
-                    @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
+                    :model-value="v.fields.displayName.$model.value ?? ''"
+                    @update:model-value="(next: string) => { v.fields.displayName.$model.value = next; }"
                 />
             </VCFormGroup>
         </IFieldValidation>

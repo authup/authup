@@ -38,7 +38,7 @@ export default defineComponent({
         const nameSeed = useId();
         const form = reactive({
             name: '',
-            display_name: '',
+            displayName: '',
             enabled: true,
         });
 
@@ -47,12 +47,12 @@ export default defineComponent({
         // Shared `IdentityProviderValidator` from `@authup/core-kit`, scoped
         // via `pathsToInclude` to the keys this sub-form owns — the validator
         // also mounts `protocol` (required in every group, owned by the
-        // parent form) and `realm_id`; unscoped, those would keep the
+        // parent form) and `realmId`; unscoped, those would keep the
         // sub-form permanently invalid with the issue on an unrendered
         // field. Registers under the parent `<AIdentityProviderOAuth2Form>` /
         // `<AIdentityProviderLdapForm>` collectors via `name: 'basic'`.
         const v = useValidup(
-            new IdentityProviderValidator({ pathsToInclude: ['name', 'display_name', 'enabled'] }),
+            new IdentityProviderValidator({ pathsToInclude: ['name', 'displayName', 'enabled'] }),
             form,
             {
                 name: 'basic',
@@ -139,15 +139,15 @@ export default defineComponent({
 
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.display_name"
+            :field="v.fields.displayName"
         >
             <VCFormGroup :validation="value">
                 <template #label>
                     {{ translationsDefault.displayName }}
                 </template>
                 <VCFormInput
-                    :model-value="v.fields.display_name.$model.value ?? ''"
-                    @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
+                    :model-value="v.fields.displayName.$model.value ?? ''"
+                    @update:model-value="(next: string) => { v.fields.displayName.$model.value = next; }"
                 />
             </VCFormGroup>
         </IFieldValidation>

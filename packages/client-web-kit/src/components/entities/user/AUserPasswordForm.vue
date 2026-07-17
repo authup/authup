@@ -31,8 +31,8 @@ import { z } from 'zod';
 import { AFormSubmit } from '../../utility';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
-// Cross-field equality between `password` and `password_repeat` — runs
-// as a second mount on `password_repeat` so the first mount's length
+// Cross-field equality between `password` and `passwordRepeat` — runs
+// as a second mount on `passwordRepeat` so the first mount's length
 // validator surfaces its own message independently.
 const createSameAsPassword = (message: () => string): Validator => (ctx) => {
     const { value } = ctx;
@@ -51,7 +51,7 @@ const createSameAsPassword = (message: () => string): Validator => (ctx) => {
         // — bare-code + message gets the same end-user experience and
         // sidesteps the type-juggling. validup's run loop prefixes the
         // mount key on re-throw, so the issue lands under
-        // `password_repeat` in `$errors`.
+        // `passwordRepeat` in `$errors`.
         const path: PropertyKey[] = [];
         throw new ValidupError([defineIssueItem({
             path,
@@ -64,15 +64,15 @@ const createSameAsPassword = (message: () => string): Validator => (ctx) => {
 // Inline validator — there's no `UserPasswordValidator` in core-kit;
 // `UserValidator` covers `password` for the entity-edit path. This
 // password-only form has its own length + match contract.
-class UserPasswordValidator extends Container<{ password: string; password_repeat: string }> {
+class UserPasswordValidator extends Container<{ password: string; passwordRepeat: string }> {
     constructor(sameAsPassword: Validator) {
         super();
 
-        // Two mounts on `password_repeat` — length first (from
+        // Two mounts on `passwordRepeat` — length first (from
         // `initialize`), equality second. Container runs mounts in order;
         // a failure in the first short-circuits the key, so consumers
         // only see one issue at a time.
-        this.mount('password_repeat', sameAsPassword);
+        this.mount('passwordRepeat', sameAsPassword);
     }
 
     protected override initialize() {
@@ -80,7 +80,7 @@ class UserPasswordValidator extends Container<{ password: string; password_repea
 
         const passwordValidator = createValidator(z.string().min(5).max(100));
         this.mount('password', passwordValidator);
-        this.mount('password_repeat', passwordValidator);
+        this.mount('passwordRepeat', passwordValidator);
     }
 }
 
@@ -105,7 +105,7 @@ export default defineComponent({
         const busy = ref(false);
         const form = reactive({
             password: '',
-            password_repeat: '',
+            passwordRepeat: '',
         });
 
         const passwordShow = ref(false);
@@ -150,7 +150,7 @@ export default defineComponent({
             try {
                 const user = await apiClient.user.update(props.id, {
                     password: form.password,
-                    password_repeat: form.password_repeat,
+                    passwordRepeat: form.passwordRepeat,
                 });
 
                 ctx.emit('updated', user);
@@ -197,14 +197,14 @@ export default defineComponent({
 
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.password_repeat"
+            :field="v.fields.passwordRepeat"
         >
             <VCFormGroup :validation="value">
                 <template #label>
                     {{ translations.passwordRepeat }}
                 </template>
                 <VCFormInput
-                    v-model="v.fields.password_repeat.$model.value"
+                    v-model="v.fields.passwordRepeat.$model.value"
                     :type="passwordShow ? 'text' : 'password'"
                     autocomplete="new-password"
                 />

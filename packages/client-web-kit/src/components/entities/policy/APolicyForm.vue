@@ -109,7 +109,7 @@ export default defineComponent({
             if (manager.data.value) {
                 if (items.length > 0) {
                     for (const item of items) {
-                        await httpClient.policy.update(item, { parent_id: manager.data.value.id });
+                        await httpClient.policy.update(item, { parentId: manager.data.value.id });
                     }
                 }
             }

@@ -29,11 +29,11 @@ export default defineComponent({
     emits: ['updated'],
     setup(props) {
         const form = reactive({
-            user_filter: '',
-            user_base_dn: '',
-            user_name_attribute: '',
-            user_mail_attribute: '',
-            user_display_name_attribute: '',
+            userFilter: '',
+            userBaseDn: '',
+            userNameAttribute: '',
+            userMailAttribute: '',
+            userDisplayNameAttribute: '',
         });
 
         const v = useValidup(new Container<typeof form>(), form, { name: 'user' });
@@ -80,60 +80,60 @@ export default defineComponent({
     <div>
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.user_filter"
+            :field="v.fields.userFilter"
         >
             <VCFormGroup :validation="value">
                 <template #label>
                     {{ translations.filter }}
                 </template>
                 <VCFormInput
-                    v-model="v.fields.user_filter.$model.value"
+                    v-model="v.fields.userFilter.$model.value"
                     placeholder="(|({name_attribute}={{input}})({mail_attribute}={{input}}))"
                 />
             </VCFormGroup>
         </IFieldValidation>
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.user_base_dn"
+            :field="v.fields.userBaseDn"
         >
             <VCFormGroup :validation="value">
                 <template #label>
                     {{ translations.baseDn }}
                 </template>
-                <VCFormInput v-model="v.fields.user_base_dn.$model.value" />
+                <VCFormInput v-model="v.fields.userBaseDn.$model.value" />
             </VCFormGroup>
         </IFieldValidation>
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.user_name_attribute"
+            :field="v.fields.userNameAttribute"
         >
             <VCFormGroup :validation="value">
                 <template #label>
                     {{ translations.nameAttribute }}
                 </template>
-                <VCFormInput v-model="v.fields.user_name_attribute.$model.value" />
+                <VCFormInput v-model="v.fields.userNameAttribute.$model.value" />
             </VCFormGroup>
         </IFieldValidation>
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.user_mail_attribute"
+            :field="v.fields.userMailAttribute"
         >
             <VCFormGroup :validation="value">
                 <template #label>
                     {{ translations.mailAttribute }}
                 </template>
-                <VCFormInput v-model="v.fields.user_mail_attribute.$model.value" />
+                <VCFormInput v-model="v.fields.userMailAttribute.$model.value" />
             </VCFormGroup>
         </IFieldValidation>
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.user_display_name_attribute"
+            :field="v.fields.userDisplayNameAttribute"
         >
             <VCFormGroup :validation="value">
                 <template #label>
                     {{ translations.displayNameAttribute }}
                 </template>
-                <VCFormInput v-model="v.fields.user_display_name_attribute.$model.value" />
+                <VCFormInput v-model="v.fields.userDisplayNameAttribute.$model.value" />
             </VCFormGroup>
         </IFieldValidation>
     </div>

@@ -35,9 +35,9 @@ export default defineComponent({
     props: { entity: { type: Object as PropType<Partial<Policy>> } },
     emits: ['updated'],
     setup(props, setup) {
-        const form = reactive<{ items: string[], decision_strategy: string }>({
+        const form = reactive<{ items: string[], decisionStrategy: string }>({
             items: [],
-            decision_strategy: '',
+            decisionStrategy: '',
         });
 
         const decisionStrategyOptions: FormOption[] = Object.values(DecisionStrategy)
@@ -55,26 +55,26 @@ export default defineComponent({
 
         const v = useValidup(new Container<typeof form>(), form, { name: 'type' });
 
-        const query = computed<BuildInput<Policy & { parent_id?: string | null }>>(() => {
-            const filters: FiltersBuildInput<Policy & { parent_id?: string | null }> = {};
+        const query = computed<BuildInput<Policy & { parentId?: string | null }>>(() => {
+            const filters: FiltersBuildInput<Policy & { parentId?: string | null }> = {};
             if (props.entity) {
                 // todo: maybe respect manual realmId component prop
-                if (props.entity.realm_id) {
-                    filters.realm_id = props.entity.realm_id;
+                if (props.entity.realmId) {
+                    filters.realmId = props.entity.realmId;
                 }
 
-                if (props.entity.parent_id) {
+                if (props.entity.parentId) {
                     filters.id = [
                         `!${props.entity.id}`,
-                        `!${props.entity.parent_id}`,
+                        `!${props.entity.parentId}`,
                     ];
                 } else {
                     filters.id = `!${props.entity.id}`;
                 }
 
-                filters.parent_id = [null, `${props.entity.id}`];
+                filters.parentId = [null, `${props.entity.id}`];
             } else {
-                filters.parent_id = null;
+                filters.parentId = null;
             }
 
             return {
@@ -93,10 +93,10 @@ export default defineComponent({
             }
 
             const record = data as Record<string, unknown>;
-            if (typeof record.decision_strategy === 'string') {
-                form.decision_strategy = record.decision_strategy;
+            if (typeof record.decisionStrategy === 'string') {
+                form.decisionStrategy = record.decisionStrategy;
             } else {
-                form.decision_strategy = '';
+                form.decisionStrategy = '';
             }
         }
 
@@ -110,7 +110,7 @@ export default defineComponent({
         const emitUpdated = () => {
             setup.emit('updated', {
                 data: [...form.items],
-                decision_strategy: form.decision_strategy || undefined,
+                decisionStrategy: form.decisionStrategy || undefined,
                 valid: !v.$invalid.value,
             });
         };
@@ -152,7 +152,7 @@ export default defineComponent({
         ]);
 
         const decisionStrategyHint = computed(() => {
-            switch (form.decision_strategy) {
+            switch (form.decisionStrategy) {
                 case DecisionStrategy.AFFIRMATIVE:
                     return translations.decisionStrategyHintAffirmative;
                 case DecisionStrategy.CONSENSUS:
@@ -185,14 +185,14 @@ export default defineComponent({
     <div>
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.decision_strategy"
+            :field="v.fields.decisionStrategy"
         >
             <VCFormGroup :validation="value">
                 <template #label>
                     {{ translations.decisionStrategy }}
                 </template>
                 <VCFormSelect
-                    v-model="v.fields.decision_strategy.$model.value"
+                    v-model="v.fields.decisionStrategy.$model.value"
                     :options="decisionStrategyOptions"
                     :placeholder="translations.optionNoneUnanimous"
                     @update:model-value="handleDecisionStrategyUpdated"

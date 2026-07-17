@@ -119,7 +119,7 @@ export default defineComponent({
                     name: form.name,
                     email: form.email,
                     password: form.password,
-                    ...(props.realmId ? { realm_id: props.realmId } : {}),
+                    ...(props.realmId ? { realmId: props.realmId } : {}),
                 });
 
                 if (response.active) {

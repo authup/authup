@@ -29,12 +29,12 @@ export default defineComponent({
     emits: ['updated'],
     setup(props) {
         const form = reactive({
-            group_filter: '',
-            group_base_dn: '',
-            group_name_attribute: '',
-            group_class: '',
-            group_member_attribute: '',
-            group_member_user_attribute: '',
+            groupFilter: '',
+            groupBaseDn: '',
+            groupNameAttribute: '',
+            groupClass: '',
+            groupMemberAttribute: '',
+            groupMemberUserAttribute: '',
         });
 
         const v = useValidup(new Container<typeof form>(), form, { name: 'group' });
@@ -85,71 +85,71 @@ export default defineComponent({
     <div>
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.group_filter"
+            :field="v.fields.groupFilter"
         >
             <VCFormGroup :validation="value">
                 <template #label>
                     {{ translations.filter }}
                 </template>
                 <VCFormInput
-                    v-model="v.fields.group_filter.$model.value"
+                    v-model="v.fields.groupFilter.$model.value"
                     placeholder="(member={{dn}})"
                 />
             </VCFormGroup>
         </IFieldValidation>
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.group_base_dn"
+            :field="v.fields.groupBaseDn"
         >
             <VCFormGroup :validation="value">
                 <template #label>
                     {{ translations.baseDn }}
                 </template>
-                <VCFormInput v-model="v.fields.group_base_dn.$model.value" />
+                <VCFormInput v-model="v.fields.groupBaseDn.$model.value" />
             </VCFormGroup>
         </IFieldValidation>
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.group_class"
+            :field="v.fields.groupClass"
         >
             <VCFormGroup :validation="value">
                 <template #label>
                     {{ translations.class }}
                 </template>
-                <VCFormInput v-model="v.fields.group_class.$model.value" />
+                <VCFormInput v-model="v.fields.groupClass.$model.value" />
             </VCFormGroup>
         </IFieldValidation>
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.group_name_attribute"
+            :field="v.fields.groupNameAttribute"
         >
             <VCFormGroup :validation="value">
                 <template #label>
                     {{ translations.nameAttribute }}
                 </template>
-                <VCFormInput v-model="v.fields.group_name_attribute.$model.value" />
+                <VCFormInput v-model="v.fields.groupNameAttribute.$model.value" />
             </VCFormGroup>
         </IFieldValidation>
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.group_member_attribute"
+            :field="v.fields.groupMemberAttribute"
         >
             <VCFormGroup :validation="value">
                 <template #label>
                     {{ translations.memberAttribute }}
                 </template>
-                <VCFormInput v-model="v.fields.group_member_attribute.$model.value" />
+                <VCFormInput v-model="v.fields.groupMemberAttribute.$model.value" />
             </VCFormGroup>
         </IFieldValidation>
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.group_member_user_attribute"
+            :field="v.fields.groupMemberUserAttribute"
         >
             <VCFormGroup :validation="value">
                 <template #label>
                     {{ translations.memberUserAttribute }}
                 </template>
-                <VCFormInput v-model="v.fields.group_member_user_attribute.$model.value" />
+                <VCFormInput v-model="v.fields.groupMemberUserAttribute.$model.value" />
             </VCFormGroup>
         </IFieldValidation>
     </div>

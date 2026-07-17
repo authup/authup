@@ -42,7 +42,7 @@ export default defineComponent({
         const resetPath = (() => {
             const params = new URLSearchParams();
             if (payload.data.realmId) {
-                params.set('realm_id', payload.data.realmId);
+                params.set('realmId', payload.data.realmId);
             }
             if (payload.data.redirect) {
                 params.set('redirect', payload.data.redirect);

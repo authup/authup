@@ -44,8 +44,8 @@ export default defineComponent({
         // would otherwise see every session here); non-admins are self-scoped by
         // the server regardless.
         const query = computed<BuildInput<Session>>(() => ({
-            filter: { user_id: userId.value ?? undefined },
-            sort: { seen_at: 'DESC' },
+            filter: { userId: userId.value ?? undefined },
+            sort: { seenAt: 'DESC' },
         }));
 
         const translations = useTranslations([
@@ -68,25 +68,25 @@ export default defineComponent({
 
         const columns = computed<TableColumn<Session>[]>(() => [
             {
-                key: 'ip_address',
+                key: 'ipAddress',
                 label: translations.ipAddress,
                 headerClass: 'text-left',
                 cellClass: 'text-left',
             },
             {
-                key: 'user_agent',
+                key: 'userAgent',
                 label: translations.userAgent,
                 headerClass: 'text-left',
                 cellClass: 'text-left',
             },
             {
-                key: 'seen_at',
+                key: 'seenAt',
                 label: translations.seenAt,
                 headerClass: 'text-center',
                 cellClass: 'text-center',
             },
             {
-                key: 'expires_at',
+                key: 'expiresAt',
                 label: translations.expiresAt,
                 headerClass: 'text-center',
                 cellClass: 'text-center',
@@ -197,18 +197,18 @@ export default defineComponent({
                     :columns="columns"
                     :busy="props.busy"
                 >
-                    <template #cell-user_agent="{ row }">
-                        <span :title="row.user_agent">{{ row.user_agent }}</span>
+                    <template #cell-userAgent="{ row }">
+                        <span :title="row.userAgent">{{ row.userAgent }}</span>
                     </template>
-                    <template #cell-seen_at="{ row }">
+                    <template #cell-seenAt="{ row }">
                         <VCTimeago
-                            v-if="row.seen_at"
-                            :datetime="row.seen_at"
+                            v-if="row.seenAt"
+                            :datetime="row.seenAt"
                         />
                         <span v-else>&ndash;</span>
                     </template>
-                    <template #cell-expires_at="{ row }">
-                        <VCTimeago :datetime="row.expires_at" />
+                    <template #cell-expiresAt="{ row }">
+                        <VCTimeago :datetime="row.expiresAt" />
                     </template>
                     <template #cell-options="{ row }">
                         <span

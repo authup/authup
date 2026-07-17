@@ -29,14 +29,14 @@ export default defineComponent({
             setup,
             query: () => ({
                 filters: {
-                    robot_id: props.robotId,
-                    permission_id: props.permissionId,
+                    robotId: props.robotId,
+                    permissionId: props.permissionId,
                 },
             }),
             socket: {
                 processEvent(event) {
-                    return event.data.permission_id === props.permissionId &&
-                        event.data.robot_id === props.robotId;
+                    return event.data.permissionId === props.permissionId &&
+                        event.data.robotId === props.robotId;
                 },
             },
         });
@@ -44,8 +44,8 @@ export default defineComponent({
         await manager.resolve({
             query: {
                 filters: {
-                    robot_id: props.robotId,
-                    permission_id: props.permissionId,
+                    robotId: props.robotId,
+                    permissionId: props.permissionId,
                 },
             },
         });
@@ -53,8 +53,8 @@ export default defineComponent({
         const handleChanged = (value: boolean) => {
             if (value) {
                 return manager.create({
-                    robot_id: props.robotId,
-                    permission_id: props.permissionId,
+                    robotId: props.robotId,
+                    permissionId: props.permissionId,
                 });
             }
 
@@ -73,8 +73,8 @@ export default defineComponent({
         // no id → the binding control treats it as create mode. Memoized so the template keeps a
         // stable reference while unassigned.
         const bindingEntity = computed<Partial<RobotPermission>>(() => manager.data.value || {
-            robot_id: props.robotId,
-            permission_id: props.permissionId,
+            robotId: props.robotId,
+            permissionId: props.permissionId,
         });
 
         return {

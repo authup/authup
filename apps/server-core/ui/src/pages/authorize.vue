@@ -19,7 +19,7 @@ import { computed, defineComponent } from 'vue';
 import { useBasePath } from '../base-path';
 import { injectPayload } from '../di';
 
-type RealmSummary = Pick<Realm, 'id' | 'name' | 'display_name'>;
+type RealmSummary = Pick<Realm, 'id' | 'name' | 'displayName'>;
 
 export default defineComponent({
     components: { AAuthorize },
@@ -40,7 +40,7 @@ export default defineComponent({
         const buildWorkflowLink = (path: string) : LinkProperties => {
             const params = new URLSearchParams();
             if (app.data.codeRequest && app.data.codeRequest.realm_id) {
-                params.set('realm_id', app.data.codeRequest.realm_id);
+                params.set('realmId', app.data.codeRequest.realm_id);
             }
             if (app.data.requestPath) {
                 params.set('redirect', app.data.requestPath);

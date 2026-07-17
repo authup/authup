@@ -51,7 +51,7 @@ export default defineNuxtComponent({
         </h6>
         <ARobotForm
             :entity="entity"
-            :realm-id="entity.realm_id"
+            :realm-id="entity.realmId"
             @updated="handleUpdated"
             @failed="handleFailed"
         />

@@ -45,8 +45,8 @@ export default defineNuxtComponent({
         definePageMeta({ [LayoutKey.REQUIRED_PERMISSIONS]: [PermissionName.SESSION_READ] });
 
         const query = computed<BuildInput<Session>>(() => ({
-            filter: { user_id: props.entity.id },
-            sort: { seen_at: 'DESC' },
+            filter: { userId: props.entity.id },
+            sort: { seenAt: 'DESC' },
         }));
 
         const hasDropPermission = usePermissionCheck({ name: PermissionName.SESSION_DELETE });
@@ -65,25 +65,25 @@ export default defineNuxtComponent({
 
         const columns = computed<TableColumn<Session>[]>(() => [
             {
-                key: 'ip_address',
+                key: 'ipAddress',
                 label: translations.ipAddress,
                 headerClass: 'text-left',
                 cellClass: 'text-left',
             },
             {
-                key: 'user_agent',
+                key: 'userAgent',
                 label: translations.userAgent,
                 headerClass: 'text-left',
                 cellClass: 'text-left',
             },
             {
-                key: 'seen_at',
+                key: 'seenAt',
                 label: translations.seenAt,
                 headerClass: 'text-center',
                 cellClass: 'text-center',
             },
             {
-                key: 'expires_at',
+                key: 'expiresAt',
                 label: translations.expiresAt,
                 headerClass: 'text-center',
                 cellClass: 'text-center',
@@ -102,7 +102,7 @@ export default defineNuxtComponent({
         const confirmDialog = useAlertDialog();
         const revoking = ref(false);
 
-        // Admin "Log out everywhere" — DELETE /sessions?filter[user_id]=<id> revokes
+        // Admin "Log out everywhere" — DELETE /sessions?filter[userId]=<id> revokes
         // every session of the target user on all devices (SESSION_DELETE + realm reach).
         const revokeAll = async (reload: () => Promise<void>) => {
             if (revoking.value) {
@@ -123,7 +123,7 @@ export default defineNuxtComponent({
 
             revoking.value = true;
             try {
-                const response = await httpClient.session.deleteMany({ filter: { user_id: props.entity.id } });
+                const response = await httpClient.session.deleteMany({ filter: { userId: props.entity.id } });
 
                 toast.show({
                     variant: 'success',
@@ -191,18 +191,18 @@ export default defineNuxtComponent({
                 :columns="columns"
                 :busy="props.busy"
             >
-                <template #cell-user_agent="{ row }">
-                    <span :title="row.user_agent">{{ row.user_agent }}</span>
+                <template #cell-userAgent="{ row }">
+                    <span :title="row.userAgent">{{ row.userAgent }}</span>
                 </template>
-                <template #cell-seen_at="{ row }">
+                <template #cell-seenAt="{ row }">
                     <VCTimeago
-                        v-if="row.seen_at"
-                        :datetime="row.seen_at"
+                        v-if="row.seenAt"
+                        :datetime="row.seenAt"
                     />
                     <span v-else>&ndash;</span>
                 </template>
-                <template #cell-expires_at="{ row }">
-                    <VCTimeago :datetime="row.expires_at" />
+                <template #cell-expiresAt="{ row }">
+                    <VCTimeago :datetime="row.expiresAt" />
                 </template>
                 <template #cell-options="{ row }">
                     <AEntityDelete

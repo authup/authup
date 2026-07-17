@@ -40,7 +40,7 @@ export default defineComponent({
         const store = injectStore();
         const { realmManagementId } = storeToRefs(store);
 
-        const query : BuildInput<Permission> = { filters: { realm_id: [realmManagementId.value ?? null, null] } };
+        const query : BuildInput<Permission> = { filters: { realmId: [realmManagementId.value ?? null, null] } };
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.PERMISSION_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.PERMISSION_DELETE });
@@ -60,7 +60,7 @@ export default defineComponent({
                 cellClass: 'text-left',
             },
             {
-                key: 'built_in',
+                key: 'builtIn',
                 label: 'Built in?',
                 headerClass: 'text-center',
                 cellClass: 'text-center',
@@ -72,13 +72,13 @@ export default defineComponent({
                 cellClass: 'text-center',
             },
             {
-                key: 'created_at',
+                key: 'createdAt',
                 label: 'Created at',
                 headerClass: 'text-center',
                 cellClass: 'text-center',
             },
             {
-                key: 'updated_at',
+                key: 'updatedAt',
                 label: 'Updated at',
                 headerClass: 'text-center',
                 cellClass: 'text-center',
@@ -129,23 +129,23 @@ export default defineComponent({
                 :columns="columns"
                 :busy="props.busy"
             >
-                <template #cell-built_in="{ row }">
+                <template #cell-builtIn="{ row }">
                     <VCIcon
-                        :name="row.built_in ? 'fa6-solid:check' : 'fa6-solid:xmark'"
-                        :class="row.built_in ? 'text-success-600' : 'text-error-600'"
+                        :name="row.builtIn ? 'fa6-solid:check' : 'fa6-solid:xmark'"
+                        :class="row.builtIn ? 'text-success-600' : 'text-error-600'"
                     />
                 </template>
                 <template #cell-global="{ row }">
                     <VCIcon
-                        :name="!row.realm_id ? 'fa6-solid:check' : 'fa6-solid:xmark'"
-                        :class="!row.realm_id ? 'text-success-600' : 'text-error-600'"
+                        :name="!row.realmId ? 'fa6-solid:check' : 'fa6-solid:xmark'"
+                        :class="!row.realmId ? 'text-success-600' : 'text-error-600'"
                     />
                 </template>
-                <template #cell-created_at="{ row }">
-                    <VCTimeago :datetime="row.created_at" />
+                <template #cell-createdAt="{ row }">
+                    <VCTimeago :datetime="row.createdAt" />
                 </template>
-                <template #cell-updated_at="{ row }">
-                    <VCTimeago :datetime="row.updated_at" />
+                <template #cell-updatedAt="{ row }">
+                    <VCTimeago :datetime="row.updatedAt" />
                 </template>
                 <template #cell-options="{ row }">
                     <VCButton
@@ -167,7 +167,7 @@ export default defineComponent({
                         :entity-id="row.id"
                         entity-type="permission"
                         :with-text="false"
-                        :disabled="row.built_in || !hasDropPermission"
+                        :disabled="row.builtIn || !hasDropPermission"
                         @deleted="props.deleted"
                     />
                 </template>

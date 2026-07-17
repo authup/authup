@@ -56,7 +56,7 @@ const wrapChild = (child: VNodeChild) => h(
     { default: () => child },
 );
 
-type RealmSummary = Pick<Realm, 'id' | 'name' | 'display_name'>;
+type RealmSummary = Pick<Realm, 'id' | 'name' | 'displayName'>;
 
 export default defineComponent({
     components: {
@@ -218,9 +218,9 @@ export default defineComponent({
             // own rows, but an actor holding CONSENT_READ (admin / realm_admin)
             // would otherwise receive every subject's rows — so the request is
             // explicitly subject-filtered and the covering match re-checks
-            // sub/sub_kind (defense in depth: never auto-consent off another
+            // sub/subKind (defense in depth: never auto-consent off another
             // subject's grant).
-            if (!props.client || props.client.built_in) {
+            if (!props.client || props.client.builtIn) {
                 consentStatus.value = { covered: false };
                 return;
             }
@@ -239,9 +239,9 @@ export default defineComponent({
             try {
                 const { data } = await httpClient.consent.getMany({
                     filter: {
-                        client_id: props.client.id,
+                        clientId: props.client.id,
                         sub: subjectId,
-                        sub_kind: 'user',
+                        subKind: 'user',
                     },
                     pagination: { limit: 50 },
                 });
@@ -258,8 +258,8 @@ export default defineComponent({
                     requestedScopeTokens.value.every((token) => data.some(
                         (row) => row.scope === token &&
                             row.sub === subjectId &&
-                            row.sub_kind === 'user' &&
-                            (!row.expires_at || row.expires_at > now),
+                            row.subKind === 'user' &&
+                            (!row.expiresAt || row.expiresAt > now),
                     ));
 
                 consentStatus.value = { covered };
@@ -461,7 +461,7 @@ export default defineComponent({
 
                 return wrapChild(h(AuthorizeRealmMismatch, {
                     clientName: props.client?.name ?? '',
-                    targetRealmName: props.realm?.display_name || props.realm?.name || '',
+                    targetRealmName: props.realm?.displayName || props.realm?.name || '',
                     redirectUri: props.codeRequest.redirect_uri,
                     state: props.codeRequest.state,
                     redirectUriVerified: props.redirectUriVerified,
@@ -494,7 +494,7 @@ export default defineComponent({
                 }
 
                 return wrapChild(h(AAccountPrompt, {
-                    identityName: user.value.name ?? user.value.display_name ?? '',
+                    identityName: user.value.name ?? user.value.displayName ?? '',
                     onContinue: () => { accountConfirmedLocal.value = true; },
                     onSwitch: switchAccount,
                 }));
@@ -547,7 +547,7 @@ export default defineComponent({
             // probe (today's auto-consent flow preserved exactly), and the
             // logged-out branches returned earlier. Silent requests must wait
             // here too, or they'd race to a false consent_required redirect.
-            if (!client.value.built_in && consentStatus.value === null) {
+            if (!client.value.builtIn && consentStatus.value === null) {
                 return wrapChild(h(AuthorizeText, { message: consentStatusLoadingText.value }));
             }
 
@@ -556,7 +556,7 @@ export default defineComponent({
             // otherwise consent_required.
             if (
                 isSilent &&
-                !client.value.built_in &&
+                !client.value.builtIn &&
                 consentStatus.value?.covered !== true
             ) {
                 const redirect = silentRedirect(OAuth2ErrorCode.CONSENT_REQUIRED);
@@ -573,7 +573,7 @@ export default defineComponent({
                     // "Signed in as X — Not you?" switch affordance on the manual
                     // consent screen (present even when the RP sent no
                     // prompt=select_account).
-                    identityName: user.value?.name ?? user.value?.display_name ?? '',
+                    identityName: user.value?.name ?? user.value?.displayName ?? '',
                     // abort()'s access_denied redirect is gated on the verified
                     // redirect_uri, like every other redirect in the ladder.
                     redirectUriVerified: props.redirectUriVerified,

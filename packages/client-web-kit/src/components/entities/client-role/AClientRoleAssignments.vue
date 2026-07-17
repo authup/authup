@@ -17,7 +17,7 @@ export default defineComponent({
         realmId: String,
     },
     setup(props, { slots }) {
-        const query = computed(() => ({ filters: { realm_id: [...(props.realmId ? [props.realmId] : []), null] } }));
+        const query = computed(() => ({ filters: { realmId: [...(props.realmId ? [props.realmId] : []), null] } }));
         const forwardedSlots = computed(() => Object.fromEntries(Object.entries(slots).filter(([name]) => name !== 'itemActions')));
 
         return { query, forwardedSlots };

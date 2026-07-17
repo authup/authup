@@ -37,9 +37,9 @@ export default defineComponent({
             start: '',
             end: '',
             interval: '',
-            day_of_week: '',
-            day_of_month: '',
-            day_of_year: '',
+            dayOfWeek: '',
+            dayOfMonth: '',
+            dayOfYear: '',
         });
 
         const intervalOptions: FormOption[] = Object.values(TimePolicyInterval)
@@ -109,13 +109,13 @@ export default defineComponent({
 
         const handleIntervalUpdated = (value: string) => {
             if (!isIntervalForDayOfWeek(value)) {
-                v.fields.day_of_week.$model.value = '';
+                v.fields.dayOfWeek.$model.value = '';
             }
             if (!isIntervalForDayOfMonth(value)) {
-                v.fields.day_of_month.$model.value = '';
+                v.fields.dayOfMonth.$model.value = '';
             }
             if (!isIntervalForDayOfYear(value)) {
-                v.fields.day_of_year.$model.value = '';
+                v.fields.dayOfYear.$model.value = '';
             }
             handleUpdated();
         };
@@ -196,14 +196,14 @@ export default defineComponent({
             >
                 <IFieldValidation
                     v-slot="{ value }"
-                    :field="v.fields.day_of_week"
+                    :field="v.fields.dayOfWeek"
                 >
                     <VCFormGroup :validation="value">
                         <template #label>
                             {{ translationsDefault.dayOfWeek }}
                         </template>
                         <VCFormInput
-                            v-model="v.fields.day_of_week.$model.value"
+                            v-model="v.fields.dayOfWeek.$model.value"
                             placeholder="0-6"
                             type="number"
                             @change="handleUpdated"
@@ -217,14 +217,14 @@ export default defineComponent({
             >
                 <IFieldValidation
                     v-slot="{ value }"
-                    :field="v.fields.day_of_month"
+                    :field="v.fields.dayOfMonth"
                 >
                     <VCFormGroup :validation="value">
                         <template #label>
                             {{ translationsDefault.dayOfMonth }}
                         </template>
                         <VCFormInput
-                            v-model="v.fields.day_of_month.$model.value"
+                            v-model="v.fields.dayOfMonth.$model.value"
                             placeholder="1-31"
                             type="number"
                             @change="handleUpdated"
@@ -238,14 +238,14 @@ export default defineComponent({
             >
                 <IFieldValidation
                     v-slot="{ value }"
-                    :field="v.fields.day_of_year"
+                    :field="v.fields.dayOfYear"
                 >
                     <VCFormGroup :validation="value">
                         <template #label>
                             {{ translationsDefault.dayOfYear }}
                         </template>
                         <VCFormInput
-                            v-model="v.fields.day_of_year.$model.value"
+                            v-model="v.fields.dayOfYear.$model.value"
                             type="number"
                             placeholder="1-365"
                             @change="handleUpdated"

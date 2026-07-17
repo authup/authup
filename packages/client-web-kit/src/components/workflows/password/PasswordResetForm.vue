@@ -113,7 +113,7 @@ export default defineComponent({
                     ...(identifier.includes('@') ? { email: identifier } : { name: identifier }),
                     token: form.token,
                     password: form.password,
-                    ...(props.realmId ? { realm_id: props.realmId } : {}),
+                    ...(props.realmId ? { realmId: props.realmId } : {}),
                 });
 
                 finished.value = true;

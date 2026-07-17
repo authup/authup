@@ -90,17 +90,17 @@ export default defineComponent({
         const form = reactive({
             active: true,
             name: '',
-            display_name: '',
+            displayName: '',
             description: '',
-            realm_id: '',
-            redirect_uri: '',
-            base_url: '',
-            root_url: '',
-            auth_method: `${ClientAuthMethod.SECRET}` as `${ClientAuthMethod}`,
-            token_binding_method: `${ClientTokenBindingMethod.NONE}` as `${ClientTokenBindingMethod}`,
+            realmId: '',
+            redirectUri: '',
+            baseUrl: '',
+            rootUrl: '',
+            authMethod: `${ClientAuthMethod.SECRET}` as `${ClientAuthMethod}`,
+            tokenBindingMethod: `${ClientTokenBindingMethod.NONE}` as `${ClientTokenBindingMethod}`,
             secret: '',
-            secret_hashed: false,
-            access_policy_id: null as string | null,
+            secretHashed: false,
+            accessPolicyId: null as string | null,
         });
 
         const manager = defineEntityManager({
@@ -127,7 +127,7 @@ export default defineComponent({
 
         const isNameFixed = computed(() => !!props.name && props.name.length > 0);
         const realmId = computed(() => (manager.data.value ?
-            manager.data.value.realm_id :
+            manager.data.value.realmId :
             storeRefs.realmId.value));
 
         const isSecretHashed = computed(
@@ -151,20 +151,20 @@ export default defineComponent({
                 form.name = generateName(nameSeed);
             }
 
-            form.realm_id = realmId.value ?? '';
+            form.realmId = realmId.value ?? '';
         }
 
         // Secrets must stay unpredictable, so they can't be seeded from a
         // hydration-stable value the way names are. Generate the initial secret
         // client-side only to keep full entropy without an SSR hydration mismatch.
         onMounted(() => {
-            if (form.auth_method === ClientAuthMethod.SECRET && form.secret.length === 0) {
+            if (form.authMethod === ClientAuthMethod.SECRET && form.secret.length === 0) {
                 form.secret = generateSecret();
             }
         });
 
-        const isSecretAuthentication = computed(() => form.auth_method === ClientAuthMethod.SECRET);
-        const isTLSAuthentication = computed(() => form.auth_method === ClientAuthMethod.TLS);
+        const isSecretAuthentication = computed(() => form.authMethod === ClientAuthMethod.SECRET);
+        const isTLSAuthentication = computed(() => form.authMethod === ClientAuthMethod.TLS);
         watch(isSecretAuthentication, (val, oldValue) => {
             if (val === oldValue) return;
 
@@ -172,7 +172,7 @@ export default defineComponent({
                 form.secret = manager.data.value?.secret || generateSecret();
             } else {
                 form.secret = '';
-                form.secret_hashed = false;
+                form.secretHashed = false;
             }
         });
 
@@ -254,11 +254,11 @@ export default defineComponent({
         );
 
         const redirectUris = computed(() => {
-            const value = v.fields.redirect_uri.$model.value as string | undefined;
+            const value = v.fields.redirectUri.$model.value as string | undefined;
             return value ? value.split(',') : [];
         });
 
-        const policyQuery = computed(() => ({ filters: { realm_id: [...(form.realm_id ? [form.realm_id] : []), null] } }));
+        const policyQuery = computed(() => ({ filters: { realmId: [...(form.realmId ? [form.realmId] : []), null] } }));
 
         const authMethodOptions = computed<FormOption[]>(() => [
             { value: `${ClientAuthMethod.NONE}`, label: translationsClient.authMethodNone },
@@ -328,43 +328,43 @@ export default defineComponent({
             </IFieldValidation>
             <IFieldValidation
                 v-slot="{ value }"
-                :field="v.fields.display_name"
+                :field="v.fields.displayName"
             >
                 <VCFormGroup :validation="value">
                     <template #label>
                         {{ translationsDefault.displayName }}
                     </template>
                     <VCFormInput
-                        :model-value="v.fields.display_name.$model.value ?? ''"
+                        :model-value="v.fields.displayName.$model.value ?? ''"
                         :disabled="isNameFixed"
-                        @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
+                        @update:model-value="(next: string) => { v.fields.displayName.$model.value = next; }"
                     />
                 </VCFormGroup>
             </IFieldValidation>
             <IFieldValidation
                 v-slot="{ value }"
-                :field="v.fields.auth_method"
+                :field="v.fields.authMethod"
             >
                 <VCFormGroup :validation="value">
                     <template #label>
                         {{ translationsClient.authMethod }}
                     </template>
                     <VCFormSelect
-                        v-model="v.fields.auth_method.$model.value"
+                        v-model="v.fields.authMethod.$model.value"
                         :options="authMethodOptions"
                     />
                 </VCFormGroup>
             </IFieldValidation>
             <IFieldValidation
                 v-slot="{ value }"
-                :field="v.fields.token_binding_method"
+                :field="v.fields.tokenBindingMethod"
             >
                 <VCFormGroup :validation="value">
                     <template #label>
                         {{ translationsClient.tokenBindingMethod }}
                     </template>
                     <VCFormSelect
-                        v-model="v.fields.token_binding_method.$model.value"
+                        v-model="v.fields.tokenBindingMethod.$model.value"
                         :options="tokenBindingMethodOptions"
                     />
                 </VCFormGroup>
@@ -410,11 +410,11 @@ export default defineComponent({
                 >
                     <IFieldValidation
                         v-slot="{ value }"
-                        :field="v.fields.secret_hashed"
+                        :field="v.fields.secretHashed"
                     >
                         <VCFormGroup :validation="value">
                             <VCFormSwitch
-                                v-model="v.fields.secret_hashed.$model.value"
+                                v-model="v.fields.secretHashed.$model.value"
                                 :label="true"
                                 :label-content="translationsClient.hashSecret"
                             />
@@ -440,7 +440,7 @@ export default defineComponent({
             <template v-if="!realmId && !isEditing">
                 <IFieldValidation
                     v-slot="{ value }"
-                    :field="v.fields.realm_id"
+                    :field="v.fields.realmId"
                 >
                     <VCFormGroup :validation="value">
                         <template #label>
@@ -448,9 +448,9 @@ export default defineComponent({
                         </template>
                         <template #default>
                             <ARealmPicker
-                                :value="v.fields.realm_id.$model.value"
+                                :value="v.fields.realmId.$model.value"
                                 @change="(input: string[]) => {
-                                    v.fields.realm_id.$model.value = input.length > 0 ? input[0] ?? '' : '';
+                                    v.fields.realmId.$model.value = input.length > 0 ? input[0] ?? '' : '';
                                 }"
                             />
                         </template>
@@ -463,10 +463,10 @@ export default defineComponent({
                 :names="redirectUris"
                 @changed="(value) => {
                     if (value.length === 0) {
-                        v.fields.redirect_uri.$model.value = '';
+                        v.fields.redirectUri.$model.value = '';
                         return;
                     }
-                    v.fields.redirect_uri.$model.value = value.join(',');
+                    v.fields.redirectUri.$model.value = value.join(',');
                 }"
             >
                 <template #label>
@@ -496,7 +496,7 @@ export default defineComponent({
             </IFieldValidation>
             <IFieldValidation
                 v-slot="{ value }"
-                :field="v.fields.access_policy_id"
+                :field="v.fields.accessPolicyId"
             >
                 <VCFormGroup :validation="value">
                     <template #label>
@@ -504,10 +504,10 @@ export default defineComponent({
                     </template>
                     <template #default>
                         <APolicyPicker
-                            :value="v.fields.access_policy_id.$model.value"
+                            :value="v.fields.accessPolicyId.$model.value"
                             :query="policyQuery"
                             @change="(input: string[]) => {
-                                v.fields.access_policy_id.$model.value = input.length > 0 ? input[0] ?? null : null;
+                                v.fields.accessPolicyId.$model.value = input.length > 0 ? input[0] ?? null : null;
                             }"
                         />
                     </template>

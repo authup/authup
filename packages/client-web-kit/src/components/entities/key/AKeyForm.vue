@@ -77,12 +77,12 @@ export default defineComponent({
         const form = reactive({
             name: '',
             use: `${JWKUse.SIGNATURE}`,
-            signature_algorithm: `${JWTAlgorithm.RS256}`,
+            signatureAlgorithm: `${JWTAlgorithm.RS256}`,
             priority: 0,
             status: `${KeyStatus.ACTIVE}`,
-            realm_id: '',
-            decryption_key: '',
-            encryption_key: '',
+            realmId: '',
+            decryptionKey: '',
+            encryptionKey: '',
             certificate: '',
         });
 
@@ -142,7 +142,7 @@ export default defineComponent({
             }
 
             return manager.data.value ?
-                manager.data.value.realm_id :
+                manager.data.value.realmId :
                 null;
         });
 
@@ -156,7 +156,7 @@ export default defineComponent({
             assignFormProperties(form, manager.data.value, { fields: v.fields });
 
             if (props.realmId) {
-                form.realm_id = props.realmId;
+                form.realmId = props.realmId;
             }
 
             if (form.name.length === 0) {
@@ -180,14 +180,14 @@ export default defineComponent({
 
             if (!isEditing.value) {
                 if (!importEnabled.value) {
-                    form.decryption_key = '';
-                    form.encryption_key = '';
+                    form.decryptionKey = '';
+                    form.encryptionKey = '';
                     form.certificate = '';
                 }
 
                 if (isEnc.value) {
-                    form.signature_algorithm = '';
-                    form.encryption_key = '';
+                    form.signatureAlgorithm = '';
+                    form.encryptionKey = '';
                     form.certificate = '';
                 }
             }
@@ -297,14 +297,14 @@ export default defineComponent({
         <template v-if="!isEditing && !isEnc">
             <IFieldValidation
                 v-slot="{ value }"
-                :field="v.fields.signature_algorithm"
+                :field="v.fields.signatureAlgorithm"
             >
                 <VCFormGroup :validation="value">
                     <template #label>
                         {{ translationsDefault.signatureAlgorithm }}
                     </template>
                     <VCFormSelect
-                        v-model="v.fields.signature_algorithm.$model.value"
+                        v-model="v.fields.signatureAlgorithm.$model.value"
                         :options="algorithmOptions"
                     />
                 </VCFormGroup>
@@ -356,16 +356,16 @@ export default defineComponent({
             <template v-if="importEnabled">
                 <IFieldValidation
                     v-slot="{ value }"
-                    :field="v.fields.decryption_key"
+                    :field="v.fields.decryptionKey"
                 >
                     <VCFormGroup :validation="value">
                         <template #label>
                             {{ isEnc ? translationsClient.keyMaterialOct : translationsClient.keyMaterialPrivate }}
                         </template>
                         <VCFormTextarea
-                            :model-value="v.fields.decryption_key.$model.value ?? ''"
+                            :model-value="v.fields.decryptionKey.$model.value ?? ''"
                             :rows="5"
-                            @update:model-value="(next: string) => { v.fields.decryption_key.$model.value = next; }"
+                            @update:model-value="(next: string) => { v.fields.decryptionKey.$model.value = next; }"
                         />
                     </VCFormGroup>
                 </IFieldValidation>
@@ -373,16 +373,16 @@ export default defineComponent({
                 <template v-if="!isEnc">
                     <IFieldValidation
                         v-slot="{ value }"
-                        :field="v.fields.encryption_key"
+                        :field="v.fields.encryptionKey"
                     >
                         <VCFormGroup :validation="value">
                             <template #label>
                                 {{ translationsClient.keyMaterialPublic }}
                             </template>
                             <VCFormTextarea
-                                :model-value="v.fields.encryption_key.$model.value ?? ''"
+                                :model-value="v.fields.encryptionKey.$model.value ?? ''"
                                 :rows="5"
-                                @update:model-value="(next: string) => { v.fields.encryption_key.$model.value = next; }"
+                                @update:model-value="(next: string) => { v.fields.encryptionKey.$model.value = next; }"
                             />
                         </VCFormGroup>
                     </IFieldValidation>
@@ -409,16 +409,16 @@ export default defineComponent({
             <template v-if="!realmLock">
                 <IFieldValidation
                     v-slot="{ value }"
-                    :field="v.fields.realm_id"
+                    :field="v.fields.realmId"
                 >
                     <VCFormGroup :validation="value">
                         <template #label>
                             {{ translationsDefault.realm }}
                         </template>
                         <ARealmPicker
-                            :value="v.fields.realm_id.$model.value"
+                            :value="v.fields.realmId.$model.value"
                             @change="(input: string[]) => {
-                                v.fields.realm_id.$model.value = input.length > 0 ? input[0] ?? '' : '';
+                                v.fields.realmId.$model.value = input.length > 0 ? input[0] ?? '' : '';
                             }"
                         />
                     </VCFormGroup>

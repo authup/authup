@@ -63,9 +63,9 @@ export default defineComponent({
         const nameSeed = useId();
         const form = reactive({
             name: '',
-            display_name: '',
+            displayName: '',
             description: '',
-            realm_id: '',
+            realmId: '',
         });
 
         const manager = defineEntityManager({
@@ -101,7 +101,7 @@ export default defineComponent({
             }
 
             return manager.data.value ?
-                manager.data.value.realm_id :
+                manager.data.value.realmId :
                 null;
         });
 
@@ -110,9 +110,9 @@ export default defineComponent({
         function initForm() {
             assignFormProperties(form, manager.data.value, { fields: v.fields });
 
-            // locked-realm prop wins over any realm_id pulled from the entity
+            // locked-realm prop wins over any realmId pulled from the entity
             if (props.realmId) {
-                form.realm_id = props.realmId;
+                form.realmId = props.realmId;
             }
 
             if (form.name.length === 0) {
@@ -188,15 +188,15 @@ export default defineComponent({
 
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.display_name"
+            :field="v.fields.displayName"
         >
             <VCFormGroup :validation="value">
                 <template #label>
                     {{ translationsDefault.displayName }}
                 </template>
                 <VCFormInput
-                    :model-value="v.fields.display_name.$model.value ?? ''"
-                    @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
+                    :model-value="v.fields.displayName.$model.value ?? ''"
+                    @update:model-value="(next: string) => { v.fields.displayName.$model.value = next; }"
                 />
             </VCFormGroup>
         </IFieldValidation>
@@ -220,16 +220,16 @@ export default defineComponent({
         <template v-if="!realmLock && !isEditing">
             <IFieldValidation
                 v-slot="{ value }"
-                :field="v.fields.realm_id"
+                :field="v.fields.realmId"
             >
                 <VCFormGroup :validation="value">
                     <template #label>
                         {{ translationsDefault.realm }}
                     </template>
                     <ARealmPicker
-                        :value="v.fields.realm_id.$model.value"
+                        :value="v.fields.realmId.$model.value"
                         @change="(input: string[]) => {
-                            v.fields.realm_id.$model.value = input.length > 0 ? input[0] ?? '' : '';
+                            v.fields.realmId.$model.value = input.length > 0 ? input[0] ?? '' : '';
                         }"
                     />
                 </VCFormGroup>

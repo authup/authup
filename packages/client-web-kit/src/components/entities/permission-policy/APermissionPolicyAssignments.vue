@@ -74,7 +74,7 @@ export default defineComponent({
 </script>
 <template>
     <div>
-        <APolicies :query="{ filters: { parent_id: null } }">
+        <APolicies :query="{ filters: { parentId: null } }">
             <template #item="{ data }">
                 <div>{{ data.name }}</div>
                 <APolicyInlineInfo

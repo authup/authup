@@ -106,17 +106,17 @@ export default defineComponent({
             }
 
             return items.value.filter((realm) => {
-                const haystack = `${realm.display_name || ''} ${realm.name || ''}`.toLowerCase();
+                const haystack = `${realm.displayName || ''} ${realm.name || ''}`.toLowerCase();
                 return haystack.includes(term);
             });
         });
 
-        const labelFor = (realm: Realm) => realm.display_name || realm.name;
+        const labelFor = (realm: Realm) => realm.displayName || realm.name;
 
         // Show the technical name beneath the label only when a display
         // name shadows it — otherwise the tile would repeat itself.
         const slugFor = (realm: Realm) => (
-            realm.display_name && realm.display_name !== realm.name ?
+            realm.displayName && realm.displayName !== realm.name ?
                 realm.name :
                 null
         );

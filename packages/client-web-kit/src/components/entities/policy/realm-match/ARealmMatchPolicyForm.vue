@@ -28,23 +28,23 @@ export default defineComponent({
     emits: ['updated'],
     setup(props, setup) {
         const form = reactive({
-            attribute_name_strict: false,
-            attribute_null_match_all: false,
-            attribute_name: [] as string[],
+            attributeNameStrict: false,
+            attributeNullMatchAll: false,
+            attributeName: [] as string[],
         });
 
         const v = useValidup(new Container<typeof form>(), form, { name: 'type' });
 
         function assign(input: Partial<RealmMatchPolicy> = {}) {
-            const { attribute_name, ...data } = input;
+            const { attributeName, ...data } = input;
             let names : string[] = [];
-            if (attribute_name) {
-                names = typeof attribute_name === 'string' ? [attribute_name] : attribute_name;
+            if (attributeName) {
+                names = typeof attributeName === 'string' ? [attributeName] : attributeName;
             }
 
             assignFormProperties(form, {
                 ...data,
-                attribute_name: names,
+                attributeName: names,
             } as Record<string, unknown>, { fields: v.fields });
         }
 
@@ -63,7 +63,7 @@ export default defineComponent({
         };
 
         const handleAttributeNameChanged = (data: string[]) => {
-            v.fields.attribute_name.$model.value = data;
+            v.fields.attributeName.$model.value = data;
             handleUpdated();
         };
 
@@ -88,11 +88,11 @@ export default defineComponent({
         <div class="w-7/12 px-2">
             <IFieldValidation
                 v-slot="{ value }"
-                :field="v.fields.attribute_name"
+                :field="v.fields.attributeName"
             >
                 <VCFormGroup :validation="value">
                     <AFormInputList
-                        :names="v.fields.attribute_name.$model.value"
+                        :names="v.fields.attributeName.$model.value"
                         @changed="handleAttributeNameChanged"
                     />
                 </VCFormGroup>
@@ -101,11 +101,11 @@ export default defineComponent({
         <div class="w-5/12 px-2">
             <IFieldValidation
                 v-slot="{ value }"
-                :field="v.fields.attribute_name_strict"
+                :field="v.fields.attributeNameStrict"
             >
                 <VCFormGroup :validation="value">
                     <VCFormSwitch
-                        v-model="v.fields.attribute_name_strict.$model.value"
+                        v-model="v.fields.attributeNameStrict.$model.value"
                         :label="true"
                         @change="handleUpdated"
                     >
@@ -119,11 +119,11 @@ export default defineComponent({
             </IFieldValidation>
             <IFieldValidation
                 v-slot="{ value }"
-                :field="v.fields.attribute_null_match_all"
+                :field="v.fields.attributeNullMatchAll"
             >
                 <VCFormGroup :validation="value">
                     <VCFormSwitch
-                        v-model="v.fields.attribute_null_match_all.$model.value"
+                        v-model="v.fields.attributeNullMatchAll.$model.value"
                         :label="true"
                         @change="handleUpdated"
                     >

@@ -53,13 +53,13 @@ import { IFieldValidation } from '@ilingo/validup-vue';
 class LoginCredentialsValidator extends Container<{
     name: string;
     password: string;
-    realm_id: string;
+    realmId: string;
 }> {
     protected override initialize() {
         super.initialize();
         this.mount('name', createValidator(z.string().min(3).max(255)));
         this.mount('password', createValidator(z.string().min(3).max(255)));
-        this.mount('realm_id', { optional: true }, createValidator(z.string()));
+        this.mount('realmId', { optional: true }, createValidator(z.string()));
     }
 }
 
@@ -98,7 +98,7 @@ export default defineComponent({
         const form = reactive({
             name: props.usernameHint ?? '',
             password: '',
-            realm_id: '',
+            realmId: '',
         });
 
         const v = useValidup(new LoginCredentialsValidator(), form);
@@ -227,7 +227,7 @@ export default defineComponent({
         const resetIdentityProviderQuery = () => {
             identityProviderQuery.value = {
                 filters: {
-                    realm_id: form.realm_id || '',
+                    realmId: form.realmId || '',
                     protocol: `!${IdentityProviderProtocol.LDAP}`,
                     enabled: true,
                 },
@@ -247,7 +247,7 @@ export default defineComponent({
         };
 
         const updateRealmId = (realmId: string | string[]) => {
-            form.realm_id = Array.isArray(realmId) ? realmId[0] ?? '' : realmId;
+            form.realmId = Array.isArray(realmId) ? realmId[0] ?? '' : realmId;
 
             resetIdentityProviderQuery();
 
@@ -259,7 +259,7 @@ export default defineComponent({
         watch(
             () => (props.codeRequest ? props.codeRequest.realm_id : undefined),
             (value) => {
-                if (value && value !== form.realm_id) {
+                if (value && value !== form.realmId) {
                     updateRealmId(value);
                 }
             },
@@ -283,7 +283,7 @@ export default defineComponent({
                 await store.login({
                     name: form.name,
                     password: form.password,
-                    realmId: form.realm_id,
+                    realmId: form.realmId,
                     ...(mfaRequired.value && otp.value.trim() ? { otp: otp.value.trim() } : {}),
                 });
 
@@ -525,7 +525,7 @@ export default defineComponent({
 
                     <template v-if="!codeRequest || !codeRequest.realm_id">
                         <ARealmPicker
-                            :value="form.realm_id"
+                            :value="form.realmId"
                             @change="updateRealmId"
                         />
                     </template>

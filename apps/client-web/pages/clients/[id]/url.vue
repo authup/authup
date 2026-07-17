@@ -73,7 +73,7 @@ export default defineNuxtComponent({
         };
 
         const query : BuildInput<ClientScope> = {
-            filter: { client_id: props.entity.id },
+            filter: { clientId: props.entity.id },
             relations: ['scope'],
         };
 

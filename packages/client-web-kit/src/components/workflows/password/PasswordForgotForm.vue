@@ -91,7 +91,7 @@ export default defineComponent({
                 const identifier = form.identifier.trim();
                 const response = await apiClient.user.passwordForgot({
                     ...(identifier.includes('@') ? { email: identifier } : { name: identifier }),
-                    ...(props.realmId ? { realm_id: props.realmId } : {}),
+                    ...(props.realmId ? { realmId: props.realmId } : {}),
                 });
 
                 sent.value = true;
