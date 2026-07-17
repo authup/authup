@@ -78,9 +78,9 @@ set `builtIn: true` on policies, permissions, scopes, roles, realms, and
 clients, and a user's `email` is optional (a placeholder is generated).
 
 Attribute keys use **camelCase** (`realmId`, `displayName`, `authMethod`, …).
-The former snake_case keys (`realm_id`, `display_name`, …) are still accepted
-for one release and emit a deprecation warning; migrate your files before the
-next major release.
+Snake_case keys (`realm_id`, `display_name`, …) are not accepted — unmounted
+keys are stripped by the validator, so a stale snake_case key is silently
+dropped. Write provisioning files in camelCase.
 
 ### Docker / Kubernetes
 

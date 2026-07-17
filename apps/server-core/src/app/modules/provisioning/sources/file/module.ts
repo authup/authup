@@ -12,7 +12,6 @@ import type { RootProvisioningEntity } from '../../../../../core/provisioning/en
 import { RootProvisioningValidator } from '../../../../../core/provisioning/entities/index.ts';
 import type { IProvisioningSource } from '../../../../../core/provisioning/types.ts';
 import { CompositeProvisioningSource } from '../composite/index.ts';
-import { normalizeProvisioningEntityKeys } from './normalize.ts';
 import type { FileEntitySchemaImporterOptions } from './types.ts';
 
 // Extensions locter loads as an ES module namespace ({ default, ...named }),
@@ -59,28 +58,14 @@ export class FileProvisioningSource implements IProvisioningSource {
                 throw new Error(`The provisioning file "${location.path}" must contain an object at its root.`);
             }
 
-            // One-release dual-accept (plan 073): snake_case keys are
-            // normalized to camelCase with a deprecation warning; removed the
-            // release after v1.0.0.
-            const normalized = normalizeProvisioningEntityKeys(entity);
-            if (normalized.convertedKeys.size > 0) {
-                this.options.logger?.warn(
-                    `The provisioning file "${location.path}" uses deprecated snake_case keys ` +
-                    `(${[...normalized.convertedKeys].join(', ')}). ` +
-                    'Rename them to camelCase; snake_case support will be removed in the next release.',
-                );
-            }
-            if (normalized.staleNameValues.size > 0) {
-                this.options.logger?.warn(
-                    `The provisioning file "${location.path}" declares attribute-names policy entries ` +
-                    `(${[...normalized.staleNameValues].join(', ')}) that look like pre-1.0 snake_case ` +
-                    'property names. Entity properties are camelCase now — stale entries never match ' +
-                    'and the policy fails open for those fields.',
-                );
-            }
-
+            // Provisioning files use the camelCase management vocabulary
+            // (plan 073). Keys are NOT rewritten here: a blanket snake->camel
+            // pass cannot tell a schema property from a data-identifier map key
+            // (`clientPermissions`/`clientRoles` are keyed by client name, and
+            // client names may contain underscores), so it would silently
+            // corrupt those keys. Unmounted keys are stripped by the validator.
             const data = await this.rootValidator.run(
-                normalized.data as Record<string, any>,
+                entity as Record<string, any>,
                 { group: ValidatorGroup.PROVISIONING },
             );
 

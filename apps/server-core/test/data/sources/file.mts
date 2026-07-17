@@ -13,7 +13,7 @@ const DATA : RootProvisioningEntity = {
             attributes: {
                 name: 'file-policy',
                 type: 'composite',
-                built_in: true,
+                builtIn: true,
             },
         },
     ],
@@ -23,7 +23,7 @@ const DATA : RootProvisioningEntity = {
             relations: { globalPermissions: ['foo'] },
         },
         {
-            attributes: { name: 'bar', built_in: true },
+            attributes: { name: 'bar', builtIn: true },
             relations: { globalPermissions: ['*'] },
         },
     ],
