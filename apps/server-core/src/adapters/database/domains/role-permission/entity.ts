@@ -37,15 +37,15 @@ export class RolePermissionEntity implements RolePermission {
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 
     // ------------------------------------------------------------------
 
-    @Column({ nullable: true })
+    @Column({ name: 'policy_id', nullable: true })
     policyId: string | null;
 
     @ManyToOne(() => PolicyEntity, {
@@ -56,20 +56,21 @@ export class RolePermissionEntity implements RolePermission {
     policy: Policy | null;
 
     @Column({
-        type: 'varchar',
-        length: 50,
-        default: 'own',
+        name: 'realm_scope', 
+        type: 'varchar', 
+        length: 50, 
+        default: 'own', 
     })
     realmScope: RealmScopeValue;
 
-    @Column()
+    @Column({ name: 'role_id' })
     roleId: string;
 
     @ManyToOne(() => RoleEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'role_id' })
     role: Role;
 
-    @Column({ nullable: true })
+    @Column({ name: 'role_realm_id', nullable: true })
     roleRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
@@ -79,14 +80,14 @@ export class RolePermissionEntity implements RolePermission {
     @JoinColumn({ name: 'role_realm_id' })
     roleRealm: Realm | null;
 
-    @Column()
+    @Column({ name: 'permission_id' })
     permissionId: string;
 
     @ManyToOne(() => PermissionEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'permission_id' })
     permission: Permission;
 
-    @Column({ nullable: true })
+    @Column({ name: 'permission_realm_id', nullable: true })
     permissionRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {

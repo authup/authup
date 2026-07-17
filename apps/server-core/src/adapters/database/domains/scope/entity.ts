@@ -27,7 +27,8 @@ export class ScopeEntity implements Scope {
     id: string;
 
     @Column({
-        type: 'boolean',
+        name: 'built_in', 
+        type: 'boolean', 
         default: false, 
     })
     builtIn: boolean;
@@ -39,8 +40,9 @@ export class ScopeEntity implements Scope {
     name: string;
 
     @Column({
-        type: 'varchar',
-        length: 256,
+        name: 'display_name', 
+        type: 'varchar', 
+        length: 256, 
         nullable: true, 
     })
     displayName: string | null;
@@ -53,16 +55,16 @@ export class ScopeEntity implements Scope {
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 
     // ------------------------------------------------------------------
 
     @Index()
-    @Column({ nullable: true })
+    @Column({ name: 'realm_id', nullable: true })
     realmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {

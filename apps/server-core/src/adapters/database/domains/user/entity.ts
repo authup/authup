@@ -36,28 +36,32 @@ export class UserEntity implements User {
     name: string;
 
     @Column({
-        type: 'boolean',
+        name: 'name_locked', 
+        type: 'boolean', 
         default: true, 
     })
     nameLocked: boolean;
 
     @Column({
-        type: 'varchar',
-        length: 128,
+        name: 'first_name', 
+        type: 'varchar', 
+        length: 128, 
         nullable: true, 
     })
     firstName: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 128,
+        name: 'last_name', 
+        type: 'varchar', 
+        length: 128, 
         nullable: true, 
     })
     lastName: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 256,
+        name: 'display_name', 
+        type: 'varchar', 
+        length: 256, 
         nullable: true, 
     })
     displayName: string | null;
@@ -98,29 +102,32 @@ export class UserEntity implements User {
     // ------------------------------------------------------------------
 
     @Column({
-        type: 'varchar',
-        length: 256,
-        nullable: true,
-        default: null,
-        select: false,
+        name: 'reset_hash', 
+        type: 'varchar', 
+        length: 256, 
+        nullable: true, 
+        default: null, 
+        select: false, 
     })
     resetHash: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 28,
-        nullable: true,
-        default: null,
-        select: false,
+        name: 'reset_at', 
+        type: 'varchar', 
+        length: 28, 
+        nullable: true, 
+        default: null, 
+        select: false, 
     })
     resetAt: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 28,
-        nullable: true,
-        default: null,
-        select: false,
+        name: 'reset_expires', 
+        type: 'varchar', 
+        length: 28, 
+        nullable: true, 
+        default: null, 
+        select: false, 
     })
     resetExpires: string | null;
 
@@ -135,10 +142,11 @@ export class UserEntity implements User {
     status: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 256,
-        nullable: true,
-        default: null,
+        name: 'status_message', 
+        type: 'varchar', 
+        length: 256, 
+        nullable: true, 
+        default: null, 
     })
     statusMessage: string | null;
 
@@ -151,26 +159,27 @@ export class UserEntity implements User {
     active: boolean;
 
     @Column({
-        type: 'varchar',
-        length: 256,
-        nullable: true,
-        default: null,
-        select: false,
+        name: 'activate_hash', 
+        type: 'varchar', 
+        length: 256, 
+        nullable: true, 
+        default: null, 
+        select: false, 
     })
     activateHash: string | null;
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 
     // ------------------------------------------------------------------
 
     @Index()
-    @Column()
+    @Column({ name: 'realm_id' })
     realmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })

@@ -34,14 +34,14 @@ export class RobotRoleEntity implements RobotRole {
 
     // ------------------------------------------------------------------
 
-    @Column()
+    @Column({ name: 'role_id' })
     roleId: string;
 
     @ManyToOne(() => RoleEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'role_id' })
     role: Role;
 
-    @Column({ nullable: true })
+    @Column({ name: 'role_realm_id', nullable: true })
     roleRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
@@ -51,14 +51,14 @@ export class RobotRoleEntity implements RobotRole {
     @JoinColumn({ name: 'role_realm_id' })
     roleRealm: Realm | null;
 
-    @Column()
+    @Column({ name: 'robot_id' })
     robotId: string;
 
     @ManyToOne(() => RobotEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'robot_id' })
     robot: Robot;
 
-    @Column({ nullable: true })
+    @Column({ name: 'robot_realm_id', nullable: true })
     robotRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
@@ -70,9 +70,9 @@ export class RobotRoleEntity implements RobotRole {
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 }

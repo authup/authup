@@ -42,8 +42,9 @@ export class ConsentEntity implements Consent {
     sub: string;
 
     @Column({
-        type: 'varchar',
-        length: 64,
+        name: 'sub_kind', 
+        type: 'varchar', 
+        length: 64, 
     })
     subKind: string;
 
@@ -56,23 +57,24 @@ export class ConsentEntity implements Consent {
     // ------------------------------------------------------------------
 
     @Column({
-        type: 'varchar',
-        length: 28,
-        nullable: true,
-        default: null,
+        name: 'expires_at', 
+        type: 'varchar', 
+        length: 28, 
+        nullable: true, 
+        default: null, 
     })
     expiresAt: string | null;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
     // ------------------------------------------------------------------
 
     @Index()
-    @Column({ type: 'uuid' })
+    @Column({ name: 'client_id', type: 'uuid' })
     clientId: Client['id'];
 
     @ManyToOne(() => ClientEntity, { onDelete: 'CASCADE' })
@@ -80,7 +82,7 @@ export class ConsentEntity implements Consent {
     client: ClientEntity;
 
     @Index()
-    @Column({ type: 'uuid' })
+    @Column({ name: 'realm_id', type: 'uuid' })
     realmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
@@ -89,6 +91,7 @@ export class ConsentEntity implements Consent {
 
     @Index()
     @Column({
+        name: 'user_id', 
         type: 'uuid', 
         nullable: true, 
         default: null, 

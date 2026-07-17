@@ -49,8 +49,9 @@ export class RobotEntity implements Robot {
     name: string;
 
     @Column({
-        type: 'varchar',
-        length: 256,
+        name: 'display_name', 
+        type: 'varchar', 
+        length: 256, 
         nullable: true, 
     })
     displayName: string | null;
@@ -69,16 +70,17 @@ export class RobotEntity implements Robot {
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 
     // ------------------------------------------------------------------
 
     @Column({
-        nullable: true,
+        name: 'user_id', 
+        nullable: true, 
         default: null, 
     })
     userId: User['id'] | null;
@@ -93,7 +95,7 @@ export class RobotEntity implements Robot {
     // ------------------------------------------------------------------
 
     @Index()
-    @Column({ nullable: true })
+    @Column({ name: 'client_id', nullable: true })
     clientId: Client['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
@@ -106,7 +108,7 @@ export class RobotEntity implements Robot {
     // ------------------------------------------------------------------
 
     @Index()
-    @Column()
+    @Column({ name: 'realm_id' })
     realmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })

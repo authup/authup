@@ -27,8 +27,9 @@ export class IdentityProviderAttributeMappingEntity implements IdentityProviderA
     id: string;
 
     @Column({
-        type: 'varchar',
-        length: 64,
+        name: 'synchronization_mode', 
+        type: 'varchar', 
+        length: 64, 
         nullable: true, 
     })
     synchronizationMode: `${IdentityProviderMappingSyncMode}` | null;
@@ -48,40 +49,43 @@ export class IdentityProviderAttributeMappingEntity implements IdentityProviderA
     value: string | null;
 
     @Column({
-        type: 'boolean',
+        name: 'value_is_regex', 
+        type: 'boolean', 
         default: false, 
     })
     valueIsRegex: boolean;
 
     @Column({
-        type: 'varchar',
+        name: 'target_name', 
+        type: 'varchar', 
         length: 64, 
     })
     targetName: string;
 
     @Column({
-        type: 'varchar',
-        length: 128,
+        name: 'target_value', 
+        type: 'varchar', 
+        length: 128, 
         nullable: true, 
     })
     targetValue: string | null;
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 
     // -----------------------------------------------
 
-    @Column()
+    @Column({ name: 'provider_id' })
     providerId: string;
 
     @ManyToOne(() => IdentityProviderEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'provider_id' })
     provider: IdentityProviderEntity;
 
-    @Column()
+    @Column({ name: 'provider_realm_id' })
     providerRealmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })

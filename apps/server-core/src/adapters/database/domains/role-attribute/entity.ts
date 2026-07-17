@@ -52,7 +52,7 @@ export class RoleAttributeEntity implements RoleAttribute {
 
     // ------------------------------------------------------------------
 
-    @Column({ nullable: true })
+    @Column({ name: 'realm_id', nullable: true })
     realmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
@@ -62,7 +62,7 @@ export class RoleAttributeEntity implements RoleAttribute {
     @JoinColumn({ name: 'realm_id' })
     realm: RealmEntity | null;
 
-    @Column()
+    @Column({ name: 'role_id' })
     roleId: Role['id'];
 
     @ManyToOne(() => RoleEntity, { onDelete: 'CASCADE' })
@@ -71,9 +71,9 @@ export class RoleAttributeEntity implements RoleAttribute {
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 }

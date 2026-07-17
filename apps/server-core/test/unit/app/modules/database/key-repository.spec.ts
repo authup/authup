@@ -17,7 +17,6 @@ import {
     it,
 } from 'vitest';
 import { KeyEntity, RealmEntity } from '../../../../../src/adapters/database/domains/index.ts';
-import { SnakeNamingStrategy } from '../../../../../src/adapters/database/data-source/options/naming-strategy.ts';
 import { WRAPPED_KEY_MATERIAL_PREFIX } from '../../../../../src/core/index.ts';
 import { KeyRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/key/repository.ts';
 
@@ -35,7 +34,6 @@ describe('app/modules/database/repositories/key', () => {
             type: 'better-sqlite3',
             database: ':memory:',
             entities: [RealmEntity, KeyEntity],
-            namingStrategy: new SnakeNamingStrategy(),
             synchronize: true,
         });
         await dataSource.initialize();

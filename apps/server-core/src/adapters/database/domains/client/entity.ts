@@ -43,22 +43,25 @@ export class ClientEntity implements Client {
     active: boolean;
 
     @Column({
-        type: 'boolean',
-        default: false,
+        name: 'built_in', 
+        type: 'boolean', 
+        default: false, 
     })
     builtIn: boolean;
 
     @Column({
-        type: 'varchar',
-        length: 16,
-        default: ClientAuthMethod.NONE,
+        name: 'auth_method', 
+        type: 'varchar', 
+        length: 16, 
+        default: ClientAuthMethod.NONE, 
     })
     authMethod: `${ClientAuthMethod}`;
 
     @Column({
-        type: 'varchar',
-        length: 16,
-        default: ClientTokenBindingMethod.NONE,
+        name: 'token_binding_method', 
+        type: 'varchar', 
+        length: 16, 
+        default: ClientTokenBindingMethod.NONE, 
     })
     tokenBindingMethod: `${ClientTokenBindingMethod}`;
 
@@ -71,8 +74,9 @@ export class ClientEntity implements Client {
     name: string;
 
     @Column({
-        type: 'varchar',
-        length: 256,
+        name: 'display_name', 
+        type: 'varchar', 
+        length: 256, 
         nullable: true, 
     })
     displayName: string | null;
@@ -94,22 +98,25 @@ export class ClientEntity implements Client {
     secret: string | null;
 
     @Column({
-        type: 'boolean',
-        default: false,
+        name: 'secret_hashed', 
+        type: 'boolean', 
+        default: false, 
     })
     secretHashed: boolean;
 
     @Column({
-        type: 'boolean',
-        default: false,
+        name: 'secret_encrypted', 
+        type: 'boolean', 
+        default: false, 
     })
     secretEncrypted: boolean;
 
     // ------------------------------------------------------------------
 
     @Column({
-        type: 'text',
-        nullable: true,
+        name: 'redirect_uri', 
+        type: 'text', 
+        nullable: true, 
     })
     redirectUri: string | null;
 
@@ -117,14 +124,16 @@ export class ClientEntity implements Client {
     // same origin-pattern string to both, so a large trusted-origin set must
     // not overflow only this column.
     @Column({
-        type: 'text',
-        nullable: true,
+        name: 'post_logout_redirect_uri', 
+        type: 'text', 
+        nullable: true, 
     })
     postLogoutRedirectUri: string | null;
 
     @Column({
-        nullable: true,
-        type: 'uuid',
+        name: 'access_policy_id', 
+        nullable: true, 
+        type: 'uuid', 
     })
     accessPolicyId: string | null;
 
@@ -136,9 +145,10 @@ export class ClientEntity implements Client {
     accessPolicy: Policy | null;
 
     @Column({
-        type: 'varchar',
-        length: 512,
-        nullable: true,
+        name: 'grant_types', 
+        type: 'varchar', 
+        length: 512, 
+        nullable: true, 
     })
     grantTypes: string | null;
 
@@ -151,30 +161,32 @@ export class ClientEntity implements Client {
     scope: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 2000,
-        nullable: true,
+        name: 'base_url', 
+        type: 'varchar', 
+        length: 2000, 
+        nullable: true, 
     })
     baseUrl: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 2000,
-        nullable: true,
+        name: 'root_url', 
+        type: 'varchar', 
+        length: 2000, 
+        nullable: true, 
     })
     rootUrl: string | null;
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 
     // ------------------------------------------------------------------
 
-    @Column()
+    @Column({ name: 'realm_id' })
     realmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })

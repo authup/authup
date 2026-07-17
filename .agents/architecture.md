@@ -12,10 +12,14 @@ The project follows hexagonal architecture (ports & adapters), separating core b
 
 Entity/domain properties and the management API (request payloads, responses, and
 the rapiq filter/sort/field vocabulary) are **camelCase**. The physical **DB column
-names stay snake_case**, mapped by the `SnakeNamingStrategy`
-(`adapters/database/data-source/options/naming-strategy.ts`) so TypeORM translates
-camelCase property paths (`role.realmId`, `entity.createdAt`) onto the existing
-columns — repository query-builder strings therefore use property paths, not column
+names stay snake_case**, pinned per column by an explicit
+`@Column({ name: 'realm_id' })` on every camelCase property (and
+`@JoinColumn({ name })` on every relation) — deliberately NOT a global naming
+strategy: an explicit name is immune to a transform edge-case silently mismapping a
+future column (a divergence the `synchronize()`-based sqlite tests would not catch,
+since they stay self-consistent) and to a single global point of failure. TypeORM
+still translates camelCase property paths (`role.realmId`, `entity.createdAt`) onto
+those columns, so repository query-builder strings use property paths, not column
 names. The OAuth2/OIDC protocol surface (endpoint params, JWT claims,
 introspection/discovery fields) and JWT payloads are **frozen snake_case**, as are
 table names, enum string values (permission/role/scope/event names), env vars, and

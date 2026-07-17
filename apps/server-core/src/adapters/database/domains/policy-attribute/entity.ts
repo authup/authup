@@ -52,7 +52,7 @@ export class PolicyAttributeEntity implements PolicyAttribute {
 
     // ------------------------------------------------------------------
 
-    @Column({ nullable: true })
+    @Column({ name: 'realm_id', nullable: true })
     realmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
@@ -64,7 +64,7 @@ export class PolicyAttributeEntity implements PolicyAttribute {
 
     // ------------------------------------------------------------------
 
-    @Column()
+    @Column({ name: 'policy_id' })
     policyId: Policy['id'];
 
     @ManyToOne(() => PolicyEntity, { onDelete: 'CASCADE' })
@@ -73,9 +73,9 @@ export class PolicyAttributeEntity implements PolicyAttribute {
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 }

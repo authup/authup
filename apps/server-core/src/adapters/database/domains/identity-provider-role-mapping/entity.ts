@@ -33,8 +33,9 @@ export class IdentityProviderRoleMappingEntity implements IdentityProviderRoleMa
     id: string;
 
     @Column({
-        type: 'varchar',
-        length: 64,
+        name: 'synchronization_mode', 
+        type: 'varchar', 
+        length: 64, 
         nullable: true, 
     })
     synchronizationMode: `${IdentityProviderMappingSyncMode}` | null;
@@ -54,27 +55,28 @@ export class IdentityProviderRoleMappingEntity implements IdentityProviderRoleMa
     value: string | null;
 
     @Column({
-        type: 'boolean',
+        name: 'value_is_regex', 
+        type: 'boolean', 
         default: false, 
     })
     valueIsRegex: boolean;
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 
     // -----------------------------------------------
 
-    @Column()
+    @Column({ name: 'role_id' })
     roleId: string;
 
     @ManyToOne(() => RoleEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'role_id' })
     role: Role;
 
-    @Column({ nullable: true })
+    @Column({ name: 'role_realm_id', nullable: true })
     roleRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
@@ -84,14 +86,14 @@ export class IdentityProviderRoleMappingEntity implements IdentityProviderRoleMa
     @JoinColumn({ name: 'role_realm_id' })
     roleRealm: RealmEntity | null;
 
-    @Column()
+    @Column({ name: 'provider_id' })
     providerId: string;
 
     @ManyToOne(() => IdentityProviderEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'provider_id' })
     provider: IdentityProviderEntity;
 
-    @Column()
+    @Column({ name: 'provider_realm_id' })
     providerRealmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })

@@ -35,7 +35,8 @@ export class PolicyEntity implements Policy {
     id: string;
 
     @Column({
-        type: 'boolean',
+        name: 'built_in', 
+        type: 'boolean', 
         default: false, 
     })
     builtIn: boolean;
@@ -53,8 +54,9 @@ export class PolicyEntity implements Policy {
     name: string;
 
     @Column({
-        type: 'varchar',
-        length: 256,
+        name: 'display_name', 
+        type: 'varchar', 
+        length: 256, 
         nullable: true, 
     })
     displayName: string | null;
@@ -74,7 +76,7 @@ export class PolicyEntity implements Policy {
     @TreeChildren({ cascade: true })
     children: PolicyEntity[];
 
-    @Column({ nullable: true })
+    @Column({ name: 'parent_id', nullable: true })
     parentId: Policy['id'] | null;
 
     @TreeParent({ onDelete: 'CASCADE' })
@@ -82,7 +84,7 @@ export class PolicyEntity implements Policy {
     parent: Policy | null;
 
     @Index()
-    @Column({ nullable: true })
+    @Column({ name: 'realm_id', nullable: true })
     realmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
@@ -92,9 +94,9 @@ export class PolicyEntity implements Policy {
     @JoinColumn({ name: 'realm_id' })
     realm: Realm | null;
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 }

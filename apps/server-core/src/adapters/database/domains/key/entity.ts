@@ -79,38 +79,42 @@ export class KeyEntity implements Key {
     certificate: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 64,
-        default: null,
+        name: 'signature_algorithm', 
+        type: 'varchar', 
+        length: 64, 
+        default: null, 
     })
     signatureAlgorithm: Key['signatureAlgorithm'];
 
     @Column({
-        type: 'text',
-        default: null,
-        select: false,
+        name: 'decryption_key', 
+        type: 'text', 
+        default: null, 
+        select: false, 
     })
     decryptionKey: string | null;
 
     @Column({
-        type: 'text',
-        default: null,
+        name: 'encryption_key', 
+        type: 'text', 
+        default: null, 
     })
     encryptionKey: string | null;
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 
     // ------------------------------------------------------------------
 
     @Index()
     @Column({
-        nullable: true,
+        name: 'realm_id', 
+        nullable: true, 
         default: null, 
     })
     realmId: Realm['id'];

@@ -40,22 +40,22 @@ export class ClientScopeEntity implements ClientScope {
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 
     // ------------------------------------------------------------------
 
-    @Column()
+    @Column({ name: 'client_id' })
     clientId: Client['id'];
 
     @ManyToOne(() => ClientEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'client_id' })
     client: Client;
 
-    @Column({ nullable: true })
+    @Column({ name: 'client_realm_id', nullable: true })
     clientRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
@@ -67,14 +67,14 @@ export class ClientScopeEntity implements ClientScope {
 
     // ------------------------------------------------------------------
 
-    @Column()
+    @Column({ name: 'scope_id' })
     scopeId: Scope['id'];
 
     @ManyToOne(() => ScopeEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'scope_id' })
     scope: Scope;
 
-    @Column({ nullable: true })
+    @Column({ name: 'scope_realm_id', nullable: true })
     scopeRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {

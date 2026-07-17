@@ -24,7 +24,7 @@ export class SessionTokenEntity implements SessionToken {
     id: string;
 
     @Index()
-    @Column({ type: 'uuid' })
+    @Column({ name: 'session_id', type: 'uuid' })
     sessionId: Session['id'];
 
     @ManyToOne(() => SessionEntity, { onDelete: 'CASCADE' })
@@ -41,54 +41,61 @@ export class SessionTokenEntity implements SessionToken {
     // Informational lineage columns (no referential FK — the row is inventory
     // metadata; the replay reaction is session-scoped, not chain-walked).
     @Column({
-        type: 'uuid',
-        nullable: true,
-        default: null,
+        name: 'parent_id', 
+        type: 'uuid', 
+        nullable: true, 
+        default: null, 
     })
     parentId: string | null;
 
     @Column({
-        type: 'uuid',
-        nullable: true,
-        default: null,
+        name: 'refresh_token_id', 
+        type: 'uuid', 
+        nullable: true, 
+        default: null, 
     })
     refreshTokenId: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 45,
+        name: 'ip_address', 
+        type: 'varchar', 
+        length: 45, 
     })
     ipAddress: string;
 
     @Column({
-        type: 'varchar',
-        length: 512,
+        name: 'user_agent', 
+        type: 'varchar', 
+        length: 512, 
     })
     userAgent: string;
 
     @Column({
-        type: 'varchar',
-        length: 28,
-        nullable: true,
-        default: null,
+        name: 'consumed_at', 
+        type: 'varchar', 
+        length: 28, 
+        nullable: true, 
+        default: null, 
     })
     consumedAt: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 28,
-        nullable: true,
-        default: null,
+        name: 'revoked_at', 
+        type: 'varchar', 
+        length: 28, 
+        nullable: true, 
+        default: null, 
     })
     revokedAt: string | null;
 
     @Index()
     @Column({
-        type: 'varchar',
-        length: 28,
+        name: 'expires_at', 
+        type: 'varchar', 
+        length: 28, 
     })
     expiresAt: string;
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 }

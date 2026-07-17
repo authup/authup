@@ -32,22 +32,22 @@ export class PermissionPolicyEntity implements PermissionPolicy {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 
     // ------------------------------------------------------------------
 
-    @Column()
+    @Column({ name: 'permission_id' })
     permissionId: string;
 
     @ManyToOne(() => PermissionEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'permission_id' })
     permission: Permission;
 
-    @Column({ nullable: true })
+    @Column({ name: 'permission_realm_id', nullable: true })
     permissionRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
@@ -59,14 +59,14 @@ export class PermissionPolicyEntity implements PermissionPolicy {
 
     // ------------------------------------------------------------------
 
-    @Column()
+    @Column({ name: 'policy_id' })
     policyId: string;
 
     @ManyToOne(() => PolicyEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'policy_id' })
     policy: Policy;
 
-    @Column({ nullable: true })
+    @Column({ name: 'policy_realm_id', nullable: true })
     policyRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {

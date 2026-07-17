@@ -74,32 +74,33 @@ export class UserAuthenticatorEntity implements UserAuthenticator {
     confirmed: boolean;
 
     @Column({
-        type: 'varchar',
-        length: 28,
-        nullable: true,
-        default: null,
+        name: 'last_used_at', 
+        type: 'varchar', 
+        length: 28, 
+        nullable: true, 
+        default: null, 
     })
     lastUsedAt: string | null;
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 
     // ------------------------------------------------------------------
 
     @Index()
-    @Column({ type: 'uuid' })
+    @Column({ name: 'user_id', type: 'uuid' })
     userId: User['id'];
 
     @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
     user: UserEntity;
 
-    @Column({ type: 'uuid' })
+    @Column({ name: 'realm_id', type: 'uuid' })
     realmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })

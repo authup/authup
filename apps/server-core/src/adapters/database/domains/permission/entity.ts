@@ -29,7 +29,8 @@ export class PermissionEntity {
     id: string;
 
     @Column({
-        type: 'boolean',
+        name: 'built_in', 
+        type: 'boolean', 
         default: false, 
     })
     builtIn: boolean;
@@ -41,8 +42,9 @@ export class PermissionEntity {
     name: string;
 
     @Column({
-        type: 'varchar',
-        length: 256,
+        name: 'display_name', 
+        type: 'varchar', 
+        length: 256, 
         nullable: true, 
     })
     displayName: string | null;
@@ -54,9 +56,10 @@ export class PermissionEntity {
     description: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 50,
-        nullable: true,
+        name: 'decision_strategy', 
+        type: 'varchar', 
+        length: 50, 
+        nullable: true, 
         default: null, 
     })
     decisionStrategy: `${DecisionStrategy}` | null;
@@ -64,7 +67,7 @@ export class PermissionEntity {
     // ------------------------------------------------------------------
 
     @Index()
-    @Column({ nullable: true })
+    @Column({ name: 'client_id', nullable: true })
     clientId: Client['id'] | null;
 
     @ManyToOne(() => ClientEntity, {
@@ -77,7 +80,7 @@ export class PermissionEntity {
     // ------------------------------------------------------------------
 
     @Index()
-    @Column({ nullable: true })
+    @Column({ name: 'realm_id', nullable: true })
     realmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
@@ -89,9 +92,9 @@ export class PermissionEntity {
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 }

@@ -37,7 +37,7 @@ export class RobotPermissionEntity implements RobotPermission {
 
     // ------------------------------------------------------------------
 
-    @Column({ nullable: true })
+    @Column({ name: 'policy_id', nullable: true })
     policyId: string | null;
 
     @ManyToOne(() => PolicyEntity, {
@@ -48,20 +48,21 @@ export class RobotPermissionEntity implements RobotPermission {
     policy: Policy | null;
 
     @Column({
-        type: 'varchar',
-        length: 50,
-        default: 'own',
+        name: 'realm_scope', 
+        type: 'varchar', 
+        length: 50, 
+        default: 'own', 
     })
     realmScope: RealmScopeValue;
 
-    @Column()
+    @Column({ name: 'robot_id' })
     robotId: string;
 
     @ManyToOne(() => RobotEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'robot_id' })
     robot: Robot;
 
-    @Column({ nullable: true })
+    @Column({ name: 'robot_realm_id', nullable: true })
     robotRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
@@ -71,14 +72,14 @@ export class RobotPermissionEntity implements RobotPermission {
     @JoinColumn({ name: 'robot_realm_id' })
     robotRealm: Realm | null;
 
-    @Column({ type: 'varchar' })
+    @Column({ name: 'permission_id', type: 'varchar' })
     permissionId: string;
 
     @ManyToOne(() => PermissionEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'permission_id' })
     permission: Permission;
 
-    @Column({ nullable: true })
+    @Column({ name: 'permission_realm_id', nullable: true })
     permissionRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
@@ -90,9 +91,9 @@ export class RobotPermissionEntity implements RobotPermission {
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 }

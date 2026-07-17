@@ -49,14 +49,14 @@ export class UserAttributeEntity implements UserAttribute {
 
     // ------------------------------------------------------------------
 
-    @Column()
+    @Column({ name: 'realm_id' })
     realmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
     realm: RealmEntity;
 
-    @Column()
+    @Column({ name: 'user_id' })
     userId: User['id'];
 
     @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
@@ -65,9 +65,9 @@ export class UserAttributeEntity implements UserAttribute {
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 }

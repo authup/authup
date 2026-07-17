@@ -34,14 +34,14 @@ export class UserRoleEntity implements UserRole {
 
     // ------------------------------------------------------------------
 
-    @Column()
+    @Column({ name: 'role_id' })
     roleId: string;
 
     @ManyToOne(() => RoleEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'role_id' })
     role: Role;
 
-    @Column({ nullable: true })
+    @Column({ name: 'role_realm_id', nullable: true })
     roleRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
@@ -51,14 +51,14 @@ export class UserRoleEntity implements UserRole {
     @JoinColumn({ name: 'role_realm_id' })
     roleRealm: Realm | null;
 
-    @Column()
+    @Column({ name: 'user_id' })
     userId: string;
 
     @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
     user: User;
 
-    @Column({ nullable: true })
+    @Column({ name: 'user_realm_id', nullable: true })
     userRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
@@ -70,9 +70,9 @@ export class UserRoleEntity implements UserRole {
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 }

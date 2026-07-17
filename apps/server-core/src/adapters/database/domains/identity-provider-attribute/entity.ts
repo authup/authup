@@ -52,7 +52,7 @@ export class IdentityProviderAttributeEntity implements IdentityProviderAttribut
 
     // ------------------------------------------------------------------
 
-    @Column()
+    @Column({ name: 'provider_id' })
     providerId: IdentityProvider['id'];
 
     @ManyToOne(() => IdentityProviderEntity, { onDelete: 'CASCADE' })
@@ -60,7 +60,7 @@ export class IdentityProviderAttributeEntity implements IdentityProviderAttribut
     provider: IdentityProviderEntity;
 
     // ------------------------------------------------------------------
-    @Column({ nullable: true })
+    @Column({ name: 'realm_id', nullable: true })
     realmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
@@ -72,9 +72,9 @@ export class IdentityProviderAttributeEntity implements IdentityProviderAttribut
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 }
