@@ -80,7 +80,7 @@ describe('core/identity/permission/checker', () => {
         const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
         const permission = await permissionRepository.save(permissionRepository.create({
             name: createNanoID(),
-            built_in: true,
+            builtIn: true,
         }));
 
         await expect(
@@ -93,27 +93,27 @@ describe('core/identity/permission/checker', () => {
         const policy = await policyRepository.save(policyRepository.create({
             type: BuiltInPolicyType.PERMISSION_BINDING,
             name: BuiltInPolicyType.PERMISSION_BINDING,
-            built_in: true,
+            builtIn: true,
         }));
 
         const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
         const permission = await permissionRepository.save(permissionRepository.create({
             name: createNanoID(),
-            built_in: true,
+            builtIn: true,
         }));
 
         const permissionPolicyRepository = suite.dataSource.getRepository(PermissionPolicyEntity);
         await permissionPolicyRepository.save(permissionPolicyRepository.create({
-            permission_id: permission.id,
-            policy_id: policy.id,
+            permissionId: permission.id,
+            policyId: policy.id,
         }));
 
         const userPermissionRepository = suite.dataSource.getRepository(UserPermissionEntity);
         await userPermissionRepository.save(userPermissionRepository.create({
-            user_id: adminUser.id,
-            user_realm_id: adminUser.realm_id,
-            permission_id: permission.id,
-            permission_realm_id: permission.realm_id,
+            userId: adminUser.id,
+            userRealmId: adminUser.realmId,
+            permissionId: permission.id,
+            permissionRealmId: permission.realmId,
         }));
 
         await expect(service.check(
@@ -131,7 +131,7 @@ describe('core/identity/permission/checker', () => {
         const policy = await policyRepository.save(policyRepository.create({
             type: BuiltInPolicyType.PERMISSION_BINDING,
             name: BuiltInPolicyType.PERMISSION_BINDING,
-            built_in: true,
+            builtIn: true,
         }));
 
         const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
@@ -139,8 +139,8 @@ describe('core/identity/permission/checker', () => {
 
         const permissionPolicyRepository = suite.dataSource.getRepository(PermissionPolicyEntity);
         await permissionPolicyRepository.save(permissionPolicyRepository.create({
-            permission_id: permission.id,
-            policy_id: policy.id,
+            permissionId: permission.id,
+            policyId: policy.id,
         }));
 
         await expect(service.check(
@@ -155,14 +155,14 @@ describe('core/identity/permission/checker', () => {
 
     it('gates on the resource realm from body attributes (realmMatch, own scope)', async () => {
         // own-scoped grant: a binding-protected permission granted to a fresh master-realm
-        // user with realm_scope=own. The checker must route body attributes.realm_id into the
-        // realm_scope reach factor (under the realmMatch key) — a cross-realm resource realm
+        // user with realmScope=own. The checker must route body attributes.realmId into the
+        // realmScope reach factor (under the realmMatch key) — a cross-realm resource realm
         // is denied, the own realm passes.
         const userRepository = new UserRepository(suite.dataSource);
         const user = await userRepository.save(userRepository.create({
             name: createNanoID(),
             email: `${createNanoID()}@example.com`,
-            realm_id: adminUser.realm_id,
+            realmId: adminUser.realmId,
             active: true,
         })) as unknown as UserEntity;
 
@@ -170,28 +170,28 @@ describe('core/identity/permission/checker', () => {
         const policy = await policyRepository.save(policyRepository.create({
             type: BuiltInPolicyType.PERMISSION_BINDING,
             name: BuiltInPolicyType.PERMISSION_BINDING,
-            built_in: true,
+            builtIn: true,
         }));
 
         const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
         const permission = await permissionRepository.save(permissionRepository.create({
             name: createNanoID(),
-            built_in: true,
+            builtIn: true,
         }));
 
         const permissionPolicyRepository = suite.dataSource.getRepository(PermissionPolicyEntity);
         await permissionPolicyRepository.save(permissionPolicyRepository.create({
-            permission_id: permission.id,
-            policy_id: policy.id,
+            permissionId: permission.id,
+            policyId: policy.id,
         }));
 
         const userPermissionRepository = suite.dataSource.getRepository(UserPermissionEntity);
         await userPermissionRepository.save(userPermissionRepository.create({
-            user_id: user.id,
-            user_realm_id: user.realm_id,
-            permission_id: permission.id,
-            permission_realm_id: permission.realm_id,
-            realm_scope: RealmScope.OWN,
+            userId: user.id,
+            userRealmId: user.realmId,
+            permissionId: permission.id,
+            permissionRealmId: permission.realmId,
+            realmScope: RealmScope.OWN,
         }));
 
         const realmRepository = suite.dataSource.getRepository(RealmEntity);
@@ -205,14 +205,14 @@ describe('core/identity/permission/checker', () => {
         // cross-realm resource realm -> denied under own
         await expect(service.check(
             permission.id,
-            { [BuiltInPolicyType.ATTRIBUTES]: { realm_id: otherRealm.id } },
+            { [BuiltInPolicyType.ATTRIBUTES]: { realmId: otherRealm.id } },
             actor,
         )).rejects.toThrow();
 
         // own realm -> allowed
         await expect(service.check(
             permission.id,
-            { [BuiltInPolicyType.ATTRIBUTES]: { realm_id: user.realm_id } },
+            { [BuiltInPolicyType.ATTRIBUTES]: { realmId: user.realmId } },
             actor,
         )).resolves.toBeUndefined();
     });

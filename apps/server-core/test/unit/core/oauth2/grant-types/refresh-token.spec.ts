@@ -74,11 +74,11 @@ describe('OAuth2RefreshTokenGrant', () => {
 
         await sessionTokenRepository.create({
             id: refreshJti,
-            session_id: sessionId,
+            sessionId,
             kind,
-            ip_address: '127.0.0.1',
-            user_agent: 'test-agent',
-            expires_at: new Date(Date.now() + 100_000).toISOString(),
+            ipAddress: '127.0.0.1',
+            userAgent: 'test-agent',
+            expiresAt: new Date(Date.now() + 100_000).toISOString(),
         });
 
         return {
@@ -115,7 +115,7 @@ describe('OAuth2RefreshTokenGrant', () => {
 
         // the presented refresh token row was consumed
         const row = await sessionTokenRepository.findOneById(refreshJti);
-        expect(row?.consumed_at).not.toBeNull();
+        expect(row?.consumedAt).not.toBeNull();
 
         // exactly one new refresh + access token issued
         expect(refreshTokenIssuer.issueCalls).toHaveLength(1);
@@ -303,12 +303,12 @@ describe('OAuth2RefreshTokenGrant', () => {
         const childJti = randomUUID();
         await sessionTokenRepository.create({
             id: childJti,
-            session_id: sessionId,
+            sessionId,
             kind: 'refresh',
-            parent_id: refreshJti,
-            ip_address: '127.0.0.1',
-            user_agent: 'test-agent',
-            expires_at: new Date(Date.now() + 100_000).toISOString(),
+            parentId: refreshJti,
+            ipAddress: '127.0.0.1',
+            userAgent: 'test-agent',
+            expiresAt: new Date(Date.now() + 100_000).toISOString(),
         });
         await sessionTokenRepository.markRefreshConsumed(childJti, new Date().toISOString());
 

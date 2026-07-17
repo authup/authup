@@ -91,18 +91,18 @@ describe('deriveAmrAcr', () => {
         [SessionAuthMethod.EXTERNAL, null, { amr: ['ext'], acr: 'urn:authup:pwd' }],
         [SessionAuthMethod.EXTERNAL, at, { amr: ['ext', 'otp'], acr: 'urn:authup:mfa' }],
     ] as const)('should derive claims for auth_method=%s (mfa_at=%s)', (authMethod, mfaAt, expected) => {
-        expect(deriveAmrAcr({ auth_method: authMethod, mfa_at: mfaAt })).toEqual(expected);
+        expect(deriveAmrAcr({ authMethod, mfaAt })).toEqual(expected);
     });
 
     it.each([
         [SessionAuthMethod.CLIENT],
         [SessionAuthMethod.ROBOT],
     ])('should yield no claims for the M2M method %s', (authMethod) => {
-        expect(deriveAmrAcr({ auth_method: authMethod, mfa_at: null })).toEqual({});
+        expect(deriveAmrAcr({ authMethod, mfaAt: null })).toEqual({});
     });
 
     it('should yield no claims for a pre-column session (null auth_method)', () => {
-        expect(deriveAmrAcr({ auth_method: null, mfa_at: at })).toEqual({});
+        expect(deriveAmrAcr({ authMethod: null, mfaAt: at })).toEqual({});
         expect(deriveAmrAcr(null)).toEqual({});
     });
 });

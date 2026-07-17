@@ -40,12 +40,12 @@ describe('src/http/controllers/role-permission', () => {
         entity = await suite.client
             .rolePermission
             .create({
-                role_id: role.id,
-                permission_id: permission.id,
+                roleId: role.id,
+                permissionId: permission.id,
             });
 
-        expect(entity.role_id).toEqual(role.id);
-        expect(entity.permission_id).toEqual(permission.id);
+        expect(entity.roleId).toEqual(role.id);
+        expect(entity.permissionId).toEqual(permission.id);
     });
 
     it('should read collection', async () => {

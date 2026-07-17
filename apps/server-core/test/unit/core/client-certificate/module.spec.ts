@@ -52,7 +52,7 @@ function createValidator(enabled = true, crypto?: Crypto) {
     const anchor = {
         certificate: ROOT_PEM,
         enabled,
-        realm_id: REALM_ID,
+        realmId: REALM_ID,
     } as TrustAnchor;
     const findManyBy = vi.fn(async () => (enabled ? [anchor] : []));
 
@@ -65,8 +65,8 @@ function createValidator(enabled = true, crypto?: Crypto) {
     };
 }
 
-function client(): Pick<Client, 'id' | 'realm_id'> {
-    return { id: CLIENT_ID, realm_id: REALM_ID };
+function client(): Pick<Client, 'id' | 'realmId'> {
+    return { id: CLIENT_ID, realmId: REALM_ID };
 }
 
 function event(headers: HeadersInit): IAppEvent {
@@ -83,7 +83,7 @@ describe('ClientCertificateValidator', () => {
 
         await expect(validator.validateForAuthentication(client(), evidence(DIRECT_LEAF_PEM)))
             .resolves.toBeUndefined();
-        expect(findManyBy).toHaveBeenCalledWith({ realm_id: REALM_ID, enabled: true });
+        expect(findManyBy).toHaveBeenCalledWith({ realmId: REALM_ID, enabled: true });
     });
 
     it('accepts a supplied intermediate chain and permits unrelated SAN entries', async () => {

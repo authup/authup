@@ -26,10 +26,10 @@ describe('refresh-token', () => {
 
         const input = createFakeClient();
         input.active = true;
-        input.auth_method = 'secret';
-        input.token_binding_method = 'none';
-        input.secret_hashed = false;
-        input.secret_encrypted = false;
+        input.authMethod = 'secret';
+        input.tokenBindingMethod = 'none';
+        input.secretHashed = false;
+        input.secretEncrypted = false;
 
         entity = await suite.client.client.create(input);
     });

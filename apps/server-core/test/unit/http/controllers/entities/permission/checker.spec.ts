@@ -47,7 +47,7 @@ describe('http/controllers/entities/permission/checker', () => {
         const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
         const permission = await permissionRepository.save(permissionRepository.create({
             name: createNanoID(),
-            built_in: true,
+            builtIn: true,
         }));
 
         const response = await suite.client.permission.check(permission.id);

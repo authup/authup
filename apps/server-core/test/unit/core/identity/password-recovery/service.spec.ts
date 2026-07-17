@@ -82,13 +82,13 @@ describe('core/identity/password-recovery/service', () => {
             ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
-        it('should set reset_hash and reset_expires and send email', async () => {
+        it('should set resetHash and resetExpires and send email', async () => {
             const email = faker.internet.email().toLowerCase();
             const masterRealm = realmRepository.getMasterRealm();
             repository.seed([createFakeUser({
                 name: 'test-user',
                 email,
-                realm_id: masterRealm.id,
+                realmId: masterRealm.id,
             })]);
 
             const service = new PasswordRecoveryService({
@@ -104,25 +104,25 @@ describe('core/identity/password-recovery/service', () => {
 
             const result = await service.forgotPassword({ email });
 
-            expect(result.reset_expires).toBeDefined();
+            expect(result.resetExpires).toBeDefined();
             expect(mailClient.sent).toHaveLength(1);
             expect(mailClient.sent[0]).toMatchObject({ to: email });
             expect(mailClient.sent[0].subject).toContain('Reset');
 
             const user = await repository.findOneBy({
                 email,
-                realm_id: masterRealm.id, 
+                realmId: masterRealm.id, 
             });
-            expect(user!.reset_hash).toBeDefined();
-            expect(user!.reset_hash).not.toBeNull();
-            expect(user!.reset_expires).toBeDefined();
+            expect(user!.resetHash).toBeDefined();
+            expect(user!.resetHash).not.toBeNull();
+            expect(user!.resetExpires).toBeDefined();
         });
 
         it('should accept name instead of email for lookup', async () => {
             const masterRealm = realmRepository.getMasterRealm();
             repository.seed([createFakeUser({
                 name: 'forgot-user',
-                realm_id: masterRealm.id,
+                realmId: masterRealm.id,
             })]);
 
             const service = new PasswordRecoveryService({
@@ -137,7 +137,7 @@ describe('core/identity/password-recovery/service', () => {
             });
 
             const result = await service.forgotPassword({ name: 'forgot-user' });
-            expect(result.reset_expires).toBeDefined();
+            expect(result.resetExpires).toBeDefined();
         });
 
         it('should localize the reset mail and mention the expiry window', async () => {
@@ -146,7 +146,7 @@ describe('core/identity/password-recovery/service', () => {
             repository.seed([createFakeUser({
                 name: 'locale-user',
                 email,
-                realm_id: masterRealm.id,
+                realmId: masterRealm.id,
             })]);
 
             const service = new PasswordRecoveryService({
@@ -167,13 +167,13 @@ describe('core/identity/password-recovery/service', () => {
             expect(mailClient.sent[0].text).toContain('30 minutes');
         });
 
-        it('should set reset_expires to ~30 minutes from now', async () => {
+        it('should set resetExpires to ~30 minutes from now', async () => {
             const email = faker.internet.email().toLowerCase();
             const masterRealm = realmRepository.getMasterRealm();
             repository.seed([createFakeUser({
                 name: 'timer-user',
                 email,
-                realm_id: masterRealm.id,
+                realmId: masterRealm.id,
             })]);
 
             const service = new PasswordRecoveryService({
@@ -191,7 +191,7 @@ describe('core/identity/password-recovery/service', () => {
             const result = await service.forgotPassword({ email });
             const after = Date.now();
 
-            const expires = new Date(result.reset_expires).getTime();
+            const expires = new Date(result.resetExpires).getTime();
             const thirtyMinutes = 1000 * 60 * 30;
             expect(expires).toBeGreaterThanOrEqual(before + thirtyMinutes - 1000);
             expect(expires).toBeLessThanOrEqual(after + thirtyMinutes + 1000);
@@ -203,7 +203,7 @@ describe('core/identity/password-recovery/service', () => {
             const entity = repository.seed(createFakeUser({
                 name: 'mail-fail-user',
                 email,
-                realm_id: masterRealm.id,
+                realmId: masterRealm.id,
             }));
 
             mailClient.failNext(new Error('SMTP error'));
@@ -222,8 +222,8 @@ describe('core/identity/password-recovery/service', () => {
             await expect(service.forgotPassword({ email })).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
 
             const user = await repository.findOneById(entity.id);
-            expect(user!.reset_hash).toBeNull();
-            expect(user!.reset_expires).toBeNull();
+            expect(user!.resetHash).toBeNull();
+            expect(user!.resetExpires).toBeNull();
         });
     });
 
@@ -251,9 +251,9 @@ describe('core/identity/password-recovery/service', () => {
             repository.seed([createFakeUser({
                 name: 'reset-user',
                 email: 'reset@example.com',
-                reset_hash: 'valid-token',
-                reset_expires: new Date(Date.now() + 60000).toISOString(),
-                realm_id: masterRealm.id,
+                resetHash: 'valid-token',
+                resetExpires: new Date(Date.now() + 60000).toISOString(),
+                realmId: masterRealm.id,
             })]);
 
             const service = new PasswordRecoveryService({
@@ -281,9 +281,9 @@ describe('core/identity/password-recovery/service', () => {
             repository.seed([createFakeUser({
                 name: 'expired-user',
                 email: 'expired@example.com',
-                reset_hash: 'expired-token',
-                reset_expires: new Date(Date.now() - 60000).toISOString(),
-                realm_id: masterRealm.id,
+                resetHash: 'expired-token',
+                resetExpires: new Date(Date.now() - 60000).toISOString(),
+                realmId: masterRealm.id,
             })]);
 
             const service = new PasswordRecoveryService({
@@ -311,9 +311,9 @@ describe('core/identity/password-recovery/service', () => {
             const entity = repository.seed(createFakeUser({
                 name: 'valid-user',
                 email: 'valid@example.com',
-                reset_hash: 'valid-token',
-                reset_expires: new Date(Date.now() + 60000).toISOString(),
-                realm_id: masterRealm.id,
+                resetHash: 'valid-token',
+                resetExpires: new Date(Date.now() + 60000).toISOString(),
+                realmId: masterRealm.id,
             }));
 
             const service = new PasswordRecoveryService({
@@ -333,11 +333,11 @@ describe('core/identity/password-recovery/service', () => {
                 password: 'newpass123',
             });
 
-            expect(result.reset_at).toBeDefined();
+            expect(result.resetAt).toBeDefined();
 
             const user = await repository.findOneById(entity.id);
-            expect(user!.reset_hash).toBeNull();
-            expect(user!.reset_expires).toBeNull();
+            expect(user!.resetHash).toBeNull();
+            expect(user!.resetExpires).toBeNull();
             expect(user!.password).toMatch(/^\$2[aby]\$/);
             expect(user!.password).not.toBe('newpass123');
         });
@@ -347,9 +347,9 @@ describe('core/identity/password-recovery/service', () => {
             repository.seed([createFakeUser({
                 name: 'short-pass-user',
                 email: 'short-pass@example.com',
-                reset_hash: 'short-pass-token',
-                reset_expires: new Date(Date.now() + 60000).toISOString(),
-                realm_id: masterRealm.id,
+                resetHash: 'short-pass-token',
+                resetExpires: new Date(Date.now() + 60000).toISOString(),
+                realmId: masterRealm.id,
             })]);
 
             const service = new PasswordRecoveryService({
@@ -377,9 +377,9 @@ describe('core/identity/password-recovery/service', () => {
             repository.seed([createFakeUser({
                 name: 'strict-pass-user',
                 email: 'strict-pass@example.com',
-                reset_hash: 'strict-pass-token',
-                reset_expires: new Date(Date.now() + 60000).toISOString(),
-                realm_id: masterRealm.id,
+                resetHash: 'strict-pass-token',
+                resetExpires: new Date(Date.now() + 60000).toISOString(),
+                realmId: masterRealm.id,
             })]);
 
             const service = new PasswordRecoveryService({
@@ -407,16 +407,16 @@ describe('core/identity/password-recovery/service', () => {
                 token: 'strict-pass-token',
                 password: 'a'.repeat(12),
             });
-            expect(result.reset_at).toBeDefined();
+            expect(result.resetAt).toBeDefined();
         });
 
         it('should reset password by name instead of email', async () => {
             const masterRealm = realmRepository.getMasterRealm();
             const entity = repository.seed(createFakeUser({
                 name: 'name-reset-user',
-                reset_hash: 'name-token',
-                reset_expires: new Date(Date.now() + 60000).toISOString(),
-                realm_id: masterRealm.id,
+                resetHash: 'name-token',
+                resetExpires: new Date(Date.now() + 60000).toISOString(),
+                realmId: masterRealm.id,
             }));
 
             const service = new PasswordRecoveryService({
@@ -436,10 +436,10 @@ describe('core/identity/password-recovery/service', () => {
                 password: 'newpass456',
             });
 
-            expect(result.reset_at).toBeDefined();
+            expect(result.resetAt).toBeDefined();
 
             const user = await repository.findOneById(entity.id);
-            expect(user!.reset_hash).toBeNull();
+            expect(user!.resetHash).toBeNull();
         });
     });
 });

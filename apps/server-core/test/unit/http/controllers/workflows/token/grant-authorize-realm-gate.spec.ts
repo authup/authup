@@ -49,15 +49,15 @@ describe('grant-authorize realm gate (layer 2)', () => {
 
         // a public (PKCE) client living in realm B
         clientB = await suite.client.client.create(createFakeClient({
-            realm_id: realmB.id,
-            auth_method: 'none',
-            token_binding_method: 'none',
+            realmId: realmB.id,
+            authMethod: 'none',
+            tokenBindingMethod: 'none',
             secret: null,
-            redirect_uri: `${REDIRECT_URI.replace('/cb', '')}/**`,
+            redirectUri: `${REDIRECT_URI.replace('/cb', '')}/**`,
         }));
 
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
-        await suite.client.clientScope.create({ scope_id: scope.id, client_id: clientB.id });
+        await suite.client.clientScope.create({ scopeId: scope.id, clientId: clientB.id });
 
         codeIssuer = suite.container.resolve(OAuth2InjectionToken.AuthorizationCodeIssuer);
     });
@@ -68,7 +68,7 @@ describe('grant-authorize realm gate (layer 2)', () => {
 
     it('rejects a code bound to another realm at /token with invalid_grant', async () => {
         // a real realm-A user gives the code a genuine sub/realm
-        const user = await suite.client.user.create(createFakeUser({ realm_id: realmA.id }));
+        const user = await suite.client.user.create(createFakeUser({ realmId: realmA.id }));
 
         const codeVerifier = generateOAuth2CodeVerifier();
         const codeChallenge = await buildOAuth2CodeChallenge(codeVerifier);
@@ -110,7 +110,7 @@ describe('grant-authorize realm gate (layer 2)', () => {
 
     it('accepts a realm-consistent code at /token', async () => {
         // control: the same shape, but the identity's realm matches the client's
-        const user = await suite.client.user.create(createFakeUser({ realm_id: realmB.id }));
+        const user = await suite.client.user.create(createFakeUser({ realmId: realmB.id }));
 
         const codeVerifier = generateOAuth2CodeVerifier();
         const codeChallenge = await buildOAuth2CodeChallenge(codeVerifier);

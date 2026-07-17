@@ -53,10 +53,10 @@ function buildKey(overrides: Partial<Key> = {}): Partial<Key> {
         type: JWKType.RSA,
         use: JWKUse.SIGNATURE,
         status: KeyStatus.ACTIVE,
-        signature_algorithm: JWTAlgorithm.RS256,
+        signatureAlgorithm: JWTAlgorithm.RS256,
         priority: 0,
-        encryption_key: 'public-material',
-        realm_id: randomUUID(),
+        encryptionKey: 'public-material',
+        realmId: randomUUID(),
         ...overrides,
     };
 }
@@ -105,53 +105,53 @@ describe('core/entities/key/service', () => {
     describe('create — generate', () => {
         it('generates an RSA signature key by default (metadata only in the response)', async () => {
             const realmId = randomUUID();
-            const entity = await service.create({ use: JWKUse.SIGNATURE, realm_id: realmId }, createAllowAllActor());
+            const entity = await service.create({ use: JWKUse.SIGNATURE, realmId }, createAllowAllActor());
 
             expect(entity.type).toEqual(JWKType.RSA);
-            expect(entity.signature_algorithm).toEqual(JWTAlgorithm.RS256);
+            expect(entity.signatureAlgorithm).toEqual(JWTAlgorithm.RS256);
             expect(entity.status).toEqual(KeyStatus.ACTIVE);
             expect(entity.name).toMatch(/^sig-/);
             expect(entity.priority).toEqual(0);
-            expect(entity.realm_id).toEqual(realmId);
+            expect(entity.realmId).toEqual(realmId);
             // private material never leaves the server
-            expect(entity.decryption_key).toBeNull();
-            expect(entity.encryption_key).toBeTruthy();
+            expect(entity.decryptionKey).toBeNull();
+            expect(entity.encryptionKey).toBeTruthy();
         });
 
         it('generates an EC key for an ES algorithm', async () => {
             const entity = await service.create({
                 use: JWKUse.SIGNATURE,
-                signature_algorithm: JWTAlgorithm.ES256,
-                realm_id: randomUUID(),
+                signatureAlgorithm: JWTAlgorithm.ES256,
+                realmId: randomUUID(),
             }, createAllowAllActor());
 
             expect(entity.type).toEqual(JWKType.EC);
-            expect(entity.signature_algorithm).toEqual(JWTAlgorithm.ES256);
+            expect(entity.signatureAlgorithm).toEqual(JWTAlgorithm.ES256);
         });
 
         it('rejects an HMAC signature algorithm (JWKS cannot publish shared secrets)', async () => {
             await expect(service.create({
                 use: JWKUse.SIGNATURE,
-                signature_algorithm: JWTAlgorithm.HS256,
-                realm_id: randomUUID(),
+                signatureAlgorithm: JWTAlgorithm.HS256,
+                realmId: randomUUID(),
             }, createAllowAllActor())).rejects.toThrow(/not supported/);
         });
 
         it('generates oct material for an encryption key', async () => {
-            const entity = await service.create({ use: JWKUse.ENCRYPTION, realm_id: randomUUID() }, createAllowAllActor());
+            const entity = await service.create({ use: JWKUse.ENCRYPTION, realmId: randomUUID() }, createAllowAllActor());
 
             expect(entity.type).toEqual(JWKType.OCT);
-            expect(entity.signature_algorithm).toBeNull();
-            expect(entity.decryption_key).toBeNull();
-            expect(entity.encryption_key).toBeNull();
+            expect(entity.signatureAlgorithm).toBeNull();
+            expect(entity.decryptionKey).toBeNull();
+            expect(entity.encryptionKey).toBeNull();
             expect(entity.name).toMatch(/^enc-/);
         });
 
         it('increments the priority above the realm\'s highest (generate = rotate)', async () => {
             const realmId = randomUUID();
-            repository.seed([buildKey({ realm_id: realmId, priority: 3 })]);
+            repository.seed([buildKey({ realmId, priority: 3 })]);
 
-            const entity = await service.create({ use: JWKUse.SIGNATURE, realm_id: realmId }, createAllowAllActor());
+            const entity = await service.create({ use: JWKUse.SIGNATURE, realmId }, createAllowAllActor());
             expect(entity.priority).toEqual(4);
         });
 
@@ -159,7 +159,7 @@ describe('core/entities/key/service', () => {
             const actor = createMasterRealmActor();
             const entity = await service.create({ use: JWKUse.SIGNATURE }, actor);
 
-            expect(entity.realm_id).toEqual(actor.identity!.data.realm_id);
+            expect(entity.realmId).toEqual(actor.identity!.data.realmId);
         });
 
         it('rejects a realm-less create (keys are realm-bound)', async () => {
@@ -169,19 +169,19 @@ describe('core/entities/key/service', () => {
 
         it('rejects a duplicate name per realm', async () => {
             const realmId = randomUUID();
-            repository.seed([buildKey({ realm_id: realmId, name: 'primary' })]);
+            repository.seed([buildKey({ realmId, name: 'primary' })]);
 
             await expect(service.create({
                 use: JWKUse.SIGNATURE,
                 name: 'primary',
-                realm_id: realmId,
+                realmId,
             }, createAllowAllActor())).rejects.toThrow();
         });
 
         it('rejects an actor without KEY_CREATE', async () => {
             expect.assertions(1);
             try {
-                await service.create({ use: JWKUse.SIGNATURE, realm_id: randomUUID() }, createDenyAllActor());
+                await service.create({ use: JWKUse.SIGNATURE, realmId: randomUUID() }, createDenyAllActor());
             } catch (e) {
                 expect(isAuthupError(e)).toBeTruthy();
             }
@@ -189,7 +189,7 @@ describe('core/entities/key/service', () => {
 
         it('runs the full KEY_CREATE evaluation with attributes', async () => {
             const actor = createAllowAllActor();
-            await service.create({ use: JWKUse.SIGNATURE, realm_id: randomUUID() }, actor);
+            await service.create({ use: JWKUse.SIGNATURE, realmId: randomUUID() }, actor);
 
             const call = actor.permissionEvaluator.evaluateCalls.find(
                 (c) => c.name === PermissionName.KEY_CREATE,
@@ -202,15 +202,15 @@ describe('core/entities/key/service', () => {
         it('accepts a matching certificate on an imported signature key', async () => {
             const entity = await service.create({
                 use: JWKUse.SIGNATURE,
-                decryption_key: PRIVATE_KEY,
-                encryption_key: PUBLIC_KEY,
+                decryptionKey: PRIVATE_KEY,
+                encryptionKey: PUBLIC_KEY,
                 certificate: CERTIFICATE,
-                realm_id: randomUUID(),
+                realmId: randomUUID(),
             }, createAllowAllActor());
 
             expect(entity.type).toEqual(JWKType.RSA);
             expect(entity.certificate).toEqual(CERTIFICATE);
-            expect(entity.decryption_key).toBeNull();
+            expect(entity.decryptionKey).toBeNull();
         });
 
         it('rejects a certificate that does not match the imported signature key', async () => {
@@ -219,10 +219,10 @@ describe('core/entities/key/service', () => {
 
             await expect(service.create({
                 use: JWKUse.SIGNATURE,
-                decryption_key: await new AsymmetricKey(keyPair.privateKey).toBase64(),
-                encryption_key: await new AsymmetricKey(keyPair.publicKey).toBase64(),
+                decryptionKey: await new AsymmetricKey(keyPair.privateKey).toBase64(),
+                encryptionKey: await new AsymmetricKey(keyPair.publicKey).toBase64(),
                 certificate: CERTIFICATE,
-                realm_id: randomUUID(),
+                realmId: randomUUID(),
             }, createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
         });
 
@@ -230,16 +230,16 @@ describe('core/entities/key/service', () => {
             await expect(service.create({
                 use: JWKUse.SIGNATURE,
                 certificate: CERTIFICATE,
-                realm_id: randomUUID(),
+                realmId: randomUUID(),
             }, createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
         });
 
         it('rejects a certificate on imported encryption key material', async () => {
             await expect(service.create({
                 use: JWKUse.ENCRYPTION,
-                decryption_key: Buffer.alloc(32, 7).toString('base64'),
+                decryptionKey: Buffer.alloc(32, 7).toString('base64'),
                 certificate: CERTIFICATE,
-                realm_id: randomUUID(),
+                realmId: randomUUID(),
             }, createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
         });
 
@@ -249,13 +249,13 @@ describe('core/entities/key/service', () => {
 
             const entity = await service.create({
                 use: JWKUse.SIGNATURE,
-                decryption_key: await new AsymmetricKey(keyPair.privateKey).toBase64(),
-                encryption_key: await new AsymmetricKey(keyPair.publicKey).toBase64(),
-                realm_id: randomUUID(),
+                decryptionKey: await new AsymmetricKey(keyPair.privateKey).toBase64(),
+                encryptionKey: await new AsymmetricKey(keyPair.publicKey).toBase64(),
+                realmId: randomUUID(),
             }, createAllowAllActor());
 
             expect(entity.type).toEqual(JWKType.RSA);
-            expect(entity.decryption_key).toBeNull();
+            expect(entity.decryptionKey).toBeNull();
         });
 
         it('rejects a signature import without its public part', async () => {
@@ -264,17 +264,17 @@ describe('core/entities/key/service', () => {
 
             await expect(service.create({
                 use: JWKUse.SIGNATURE,
-                decryption_key: await new AsymmetricKey(keyPair.privateKey).toBase64(),
-                realm_id: randomUUID(),
+                decryptionKey: await new AsymmetricKey(keyPair.privateKey).toBase64(),
+                realmId: randomUUID(),
             }, createAllowAllActor())).rejects.toThrow(/public part/);
         });
 
         it('rejects garbage signature material', async () => {
             await expect(service.create({
                 use: JWKUse.SIGNATURE,
-                decryption_key: Buffer.alloc(64, 1).toString('base64'),
-                encryption_key: Buffer.alloc(64, 2).toString('base64'),
-                realm_id: randomUUID(),
+                decryptionKey: Buffer.alloc(64, 1).toString('base64'),
+                encryptionKey: Buffer.alloc(64, 2).toString('base64'),
+                realmId: randomUUID(),
             }, createAllowAllActor())).rejects.toThrow(/could not be imported/);
         });
 
@@ -285,28 +285,28 @@ describe('core/entities/key/service', () => {
 
             await expect(service.create({
                 use: JWKUse.SIGNATURE,
-                decryption_key: await new AsymmetricKey(pairA.privateKey).toBase64(),
-                encryption_key: await new AsymmetricKey(pairB.publicKey).toBase64(),
-                realm_id: randomUUID(),
+                decryptionKey: await new AsymmetricKey(pairA.privateKey).toBase64(),
+                encryptionKey: await new AsymmetricKey(pairB.publicKey).toBase64(),
+                realmId: randomUUID(),
             }, createAllowAllActor())).rejects.toThrow(/do not form a pair/);
         });
 
         it('imports 32 base64 bytes as an encryption key', async () => {
             const entity = await service.create({
                 use: JWKUse.ENCRYPTION,
-                decryption_key: Buffer.alloc(32, 7).toString('base64'),
-                realm_id: randomUUID(),
+                decryptionKey: Buffer.alloc(32, 7).toString('base64'),
+                realmId: randomUUID(),
             }, createAllowAllActor());
 
             expect(entity.type).toEqual(JWKType.OCT);
-            expect(entity.decryption_key).toBeNull();
+            expect(entity.decryptionKey).toBeNull();
         });
 
         it('rejects enc material that is not 32 bytes', async () => {
             await expect(service.create({
                 use: JWKUse.ENCRYPTION,
-                decryption_key: Buffer.alloc(16, 7).toString('base64'),
-                realm_id: randomUUID(),
+                decryptionKey: Buffer.alloc(16, 7).toString('base64'),
+                realmId: randomUUID(),
             }, createAllowAllActor())).rejects.toThrow(/32 base64-encoded bytes/);
         });
     });
@@ -320,8 +320,8 @@ describe('core/entities/key/service', () => {
                 priority: 9,
                 status: KeyStatus.PASSIVE,
                 use: JWKUse.ENCRYPTION,
-                decryption_key: 'evil',
-                realm_id: randomUUID(),
+                decryptionKey: 'evil',
+                realmId: randomUUID(),
             }, createAllowAllActor());
 
             expect(entity.name).toEqual('renamed');
@@ -329,7 +329,7 @@ describe('core/entities/key/service', () => {
             expect(entity.status).toEqual(KeyStatus.PASSIVE);
             // CREATE-only mounts are stripped by the UPDATE group
             expect(entity.use).toEqual(JWKUse.SIGNATURE);
-            expect(entity.realm_id).toEqual(seeded.realm_id);
+            expect(entity.realmId).toEqual(seeded.realmId);
         });
 
         it('rejects an unknown key', async () => {
@@ -417,7 +417,7 @@ describe('core/entities/key/service', () => {
         it('records a metadata-only created event (never key material)', async () => {
             const actorId = randomUUID();
             const realmId = randomUUID();
-            const entity = await service.create({ use: JWKUse.SIGNATURE, realm_id: realmId }, buildActor(actorId));
+            const entity = await service.create({ use: JWKUse.SIGNATURE, realmId }, buildActor(actorId));
 
             expect(eventService.recordCalls).toHaveLength(1);
             const [call] = eventService.recordCalls;
@@ -440,8 +440,8 @@ describe('core/entities/key/service', () => {
                 status: KeyStatus.ACTIVE,
             });
             const serialized = JSON.stringify(call);
-            expect(serialized).not.toContain('decryption_key');
-            expect(serialized).not.toContain('encryption_key');
+            expect(serialized).not.toContain('decryptionKey');
+            expect(serialized).not.toContain('encryptionKey');
             expect(serialized).not.toContain('certificate');
         });
 

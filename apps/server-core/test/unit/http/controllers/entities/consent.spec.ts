@@ -41,7 +41,7 @@ describe('consent', () => {
 
         const password = generateOAuth2CodeVerifier();
         user = await suite.client.user.create(createFakeUser({
-            realm_id: realm.id,
+            realmId: realm.id,
             password,
         }));
 
@@ -62,16 +62,16 @@ describe('consent', () => {
 
     async function createScopedClient(scopeNames: string[] = [ScopeName.GLOBAL]): Promise<Client> {
         const client = await suite.client.client.create(createFakeClient({
-            realm_id: realm.id,
-            auth_method: 'secret',
-            token_binding_method: 'none',
+            realmId: realm.id,
+            authMethod: 'secret',
+            tokenBindingMethod: 'none',
         }));
 
         for (const name of scopeNames) {
             const scope = await suite.client.scope.getOne(name);
             await suite.client.clientScope.create({
-                scope_id: scope.id,
-                client_id: client.id,
+                scopeId: scope.id,
+                clientId: client.id,
             });
         }
 
@@ -92,21 +92,21 @@ describe('consent', () => {
         const response = await confirm(client.id, `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}`);
         expect(new URL(response.url).searchParams.get('code')).toBeTruthy();
 
-        const { data } = await userClient.consent.getMany({ filter: { client_id: client.id } });
+        const { data } = await userClient.consent.getMany({ filter: { clientId: client.id } });
         expect(data).toHaveLength(2);
         expect(data.map((row) => row.scope).sort()).toEqual([ScopeName.GLOBAL, ScopeName.OPEN_ID].sort());
         expect(data.every((row) => row.sub === user.id &&
-            row.sub_kind === IdentityType.USER &&
-            row.user_id === user.id &&
-            row.client_id === client.id &&
-            row.realm_id === realm.id &&
-            row.expires_at === null)).toBe(true);
+            row.subKind === IdentityType.USER &&
+            row.userId === user.id &&
+            row.clientId === client.id &&
+            row.realmId === realm.id &&
+            row.expiresAt === null)).toBe(true);
     });
 
     it('cascade-drops a user\'s consent rows when the user is deleted', async () => {
         const password = generateOAuth2CodeVerifier();
         const victim = await suite.client.user.create(createFakeUser({
-            realm_id: realm.id,
+            realmId: realm.id,
             password,
         }));
         const login = await suite.client.token.createWithPassword({
@@ -126,13 +126,13 @@ describe('consent', () => {
             state: generateOAuth2CodeVerifier(),
         });
 
-        const before = await suite.client.consent.getMany({ filter: { sub: victim.id, sub_kind: IdentityType.USER } });
+        const before = await suite.client.consent.getMany({ filter: { sub: victim.id, subKind: IdentityType.USER } });
         expect(before.data.length).toBeGreaterThan(0);
-        expect(before.data.every((row) => row.user_id === victim.id)).toBe(true);
+        expect(before.data.every((row) => row.userId === victim.id)).toBe(true);
 
         await suite.client.user.delete(victim.id);
 
-        const after = await suite.client.consent.getMany({ filter: { sub: victim.id, sub_kind: IdentityType.USER } });
+        const after = await suite.client.consent.getMany({ filter: { sub: victim.id, subKind: IdentityType.USER } });
         expect(after.data).toHaveLength(0);
     });
 
@@ -144,7 +144,7 @@ describe('consent', () => {
         // relation — the response must carry only a summary, never the
         // trusted-origin patterns / grant_types / secret-storage flags.
         const { data } = await userClient.consent.getMany({
-            filter: { client_id: client.id },
+            filter: { clientId: client.id },
             include: ['client'] as any,
         });
 
@@ -152,26 +152,26 @@ describe('consent', () => {
         const joined = data[0].client as Record<string, any> | undefined;
         expect(joined).toBeTruthy();
         expect(joined!.id).toEqual(client.id);
-        expect(joined!.redirect_uri).toBeUndefined();
-        expect(joined!.post_logout_redirect_uri).toBeUndefined();
-        expect(joined!.grant_types).toBeUndefined();
-        expect(joined!.base_url).toBeUndefined();
-        expect(joined!.root_url).toBeUndefined();
-        expect(joined!.auth_method).toBeUndefined();
-        expect(joined!.token_binding_method).toBeUndefined();
-        expect(joined!.access_policy_id).toBeUndefined();
-        expect(joined!.secret_hashed).toBeUndefined();
-        expect(joined!.secret_encrypted).toBeUndefined();
+        expect(joined!.redirectUri).toBeUndefined();
+        expect(joined!.postLogoutRedirectUri).toBeUndefined();
+        expect(joined!.grantTypes).toBeUndefined();
+        expect(joined!.baseUrl).toBeUndefined();
+        expect(joined!.rootUrl).toBeUndefined();
+        expect(joined!.authMethod).toBeUndefined();
+        expect(joined!.tokenBindingMethod).toBeUndefined();
+        expect(joined!.accessPolicyId).toBeUndefined();
+        expect(joined!.secretHashed).toBeUndefined();
+        expect(joined!.secretEncrypted).toBeUndefined();
     });
 
     it('keeps a second identical authorize idempotent (no duplicate rows)', async () => {
         const client = await createScopedClient([ScopeName.GLOBAL, ScopeName.OPEN_ID]);
 
         await confirm(client.id, `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}`);
-        const before = await userClient.consent.getMany({ filter: { client_id: client.id } });
+        const before = await userClient.consent.getMany({ filter: { clientId: client.id } });
 
         await confirm(client.id, `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}`);
-        const after = await userClient.consent.getMany({ filter: { client_id: client.id } });
+        const after = await userClient.consent.getMany({ filter: { clientId: client.id } });
 
         expect(after.data).toHaveLength(before.data.length);
         expect(after.data.map((row) => row.id).sort()).toEqual(before.data.map((row) => row.id).sort());
@@ -181,11 +181,11 @@ describe('consent', () => {
         const client = await createScopedClient([ScopeName.GLOBAL, ScopeName.OPEN_ID]);
 
         await confirm(client.id, ScopeName.GLOBAL);
-        const before = await userClient.consent.getMany({ filter: { client_id: client.id } });
+        const before = await userClient.consent.getMany({ filter: { clientId: client.id } });
         expect(before.data).toHaveLength(1);
 
         await confirm(client.id, `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}`);
-        const after = await userClient.consent.getMany({ filter: { client_id: client.id } });
+        const after = await userClient.consent.getMany({ filter: { clientId: client.id } });
 
         expect(after.data).toHaveLength(2);
         // the original row survives by identity (union/keep — never delete)
@@ -197,15 +197,15 @@ describe('consent', () => {
 
         await confirm(client.id, 'Global OpenID');
 
-        const { data } = await userClient.consent.getMany({ filter: { client_id: client.id } });
+        const { data } = await userClient.consent.getMany({ filter: { clientId: client.id } });
         expect(data.map((row) => row.scope).sort()).toEqual(['global', 'openid']);
     });
 
     it('writes zero rows for a built_in client', async () => {
-        const { data: webClients } = await suite.client.client.getMany({ filter: { name: CLIENT_WEB_NAME, realm_id: realm.id } });
+        const { data: webClients } = await suite.client.client.getMany({ filter: { name: CLIENT_WEB_NAME, realmId: realm.id } });
         expect(webClients).toHaveLength(1);
         const [webClient] = webClients;
-        expect(webClient.built_in).toBe(true);
+        expect(webClient.builtIn).toBe(true);
 
         // the per-realm web client is public: PKCE + state are mandatory, and
         // its redirect patterns cover the trusted dev origin
@@ -219,7 +219,7 @@ describe('consent', () => {
         });
         expect(new URL(response.url).searchParams.get('code')).toBeTruthy();
 
-        const { data } = await userClient.consent.getMany({ filter: { client_id: webClient.id } });
+        const { data } = await userClient.consent.getMany({ filter: { clientId: webClient.id } });
         expect(data).toHaveLength(0);
     });
 
@@ -230,7 +230,7 @@ describe('consent', () => {
         // a second non-admin user in the same realm sees none of the first user's rows
         const password = generateOAuth2CodeVerifier();
         const otherUser = await suite.client.user.create(createFakeUser({
-            realm_id: realm.id,
+            realmId: realm.id,
             password,
         }));
         const otherLogin = await suite.client.token.createWithPassword({
@@ -255,7 +255,7 @@ describe('consent', () => {
         const client = await createScopedClient();
         await confirm(client.id, ScopeName.GLOBAL);
 
-        const { data } = await userClient.consent.getMany({ filter: { client_id: client.id } });
+        const { data } = await userClient.consent.getMany({ filter: { clientId: client.id } });
         expect(data).toHaveLength(1);
         const [row] = data;
 
@@ -268,7 +268,7 @@ describe('consent', () => {
         const body = await response.json();
         expect(body.id).toEqual(row.id);
 
-        const after = await userClient.consent.getMany({ filter: { client_id: client.id } });
+        const after = await userClient.consent.getMany({ filter: { clientId: client.id } });
         expect(after.data).toHaveLength(0);
     });
 
@@ -276,12 +276,12 @@ describe('consent', () => {
         const client = await createScopedClient();
         await confirm(client.id, ScopeName.GLOBAL);
 
-        const { data } = await userClient.consent.getMany({ filter: { client_id: client.id } });
+        const { data } = await userClient.consent.getMany({ filter: { clientId: client.id } });
         const [row] = data;
 
         const password = generateOAuth2CodeVerifier();
         const intruder = await suite.client.user.create(createFakeUser({
-            realm_id: realm.id,
+            realmId: realm.id,
             password,
         }));
         const intruderLogin = await suite.client.token.createWithPassword({
@@ -302,7 +302,7 @@ describe('consent', () => {
         );
 
         // the row survives the denied delete
-        const after = await userClient.consent.getMany({ filter: { client_id: client.id } });
+        const after = await userClient.consent.getMany({ filter: { clientId: client.id } });
         expect(after.data.some((r) => r.id === row.id)).toBe(true);
     });
 
@@ -312,14 +312,14 @@ describe('consent', () => {
 
         // the suite admin lives in the master realm; the rows live in another
         // realm — its `any` reach covers them
-        const { data } = await suite.client.consent.getMany({ filter: { client_id: client.id } });
+        const { data } = await suite.client.consent.getMany({ filter: { clientId: client.id } });
         expect(data).toHaveLength(1);
         expect(data[0].sub).toEqual(user.id);
 
         const removed = await suite.client.consent.delete(data[0].id);
         expect(removed.id).toEqual(data[0].id);
 
-        const after = await suite.client.consent.getMany({ filter: { client_id: client.id } });
+        const after = await suite.client.consent.getMany({ filter: { clientId: client.id } });
         expect(after.data).toHaveLength(0);
     });
 });

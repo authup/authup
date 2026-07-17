@@ -28,13 +28,13 @@ describe('core/entities/client/web-client', () => {
             const attributes = buildWebClientAttributes({ id: realmId }, appOrigins);
 
             expect(attributes.name).toBe(CLIENT_WEB_NAME);
-            expect(attributes.realm_id).toBe(realmId);
-            expect(attributes.auth_method).toBe('none');
-            expect(attributes.token_binding_method).toBe('none');
-            expect(attributes.built_in).toBe(true);
+            expect(attributes.realmId).toBe(realmId);
+            expect(attributes.authMethod).toBe('none');
+            expect(attributes.tokenBindingMethod).toBe('none');
+            expect(attributes.builtIn).toBe(true);
             expect(attributes.active).toBe(true);
             expect(attributes.scope).toBe(`${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}`);
-            expect(attributes.redirect_uri).toBe(
+            expect(attributes.redirectUri).toBe(
                 'http://localhost:3000/**,https://app.example.com/**',
             );
         });
@@ -58,13 +58,13 @@ describe('core/entities/client/web-client', () => {
 
             const created = await repository.findOneBy({
                 name: CLIENT_WEB_NAME,
-                realm_id: realmId,
+                realmId,
             });
 
             expect(created).not.toBeNull();
-            expect(created!.built_in).toBe(true);
-            expect(created!.auth_method).toBe('none');
-            expect(created!.token_binding_method).toBe('none');
+            expect(created!.builtIn).toBe(true);
+            expect(created!.authMethod).toBe('none');
+            expect(created!.tokenBindingMethod).toBe('none');
         });
 
         it('should be idempotent across repeated runs', async () => {
@@ -75,23 +75,23 @@ describe('core/entities/client/web-client', () => {
 
             const result = await repository.findMany({});
             const webClients = result.data.filter(
-                (c) => c.name === CLIENT_WEB_NAME && c.realm_id === realmId,
+                (c) => c.name === CLIENT_WEB_NAME && c.realmId === realmId,
             );
 
             expect(webClients).toHaveLength(1);
         });
 
-        it('should refresh redirect_uri on an existing built-in web client', async () => {
+        it('should refresh redirectUri on an existing built-in web client', async () => {
             const realmId = randomUUID();
             repository.seed([
                 {
                     id: randomUUID(),
                     name: CLIENT_WEB_NAME,
-                    realm_id: realmId,
-                    built_in: true,
-                    auth_method: 'none',
-                    token_binding_method: 'none',
-                    redirect_uri: 'http://stale.example.com/**',
+                    realmId,
+                    builtIn: true,
+                    authMethod: 'none',
+                    tokenBindingMethod: 'none',
+                    redirectUri: 'http://stale.example.com/**',
                 } as any,
             ]);
 
@@ -99,10 +99,10 @@ describe('core/entities/client/web-client', () => {
 
             const updated = await repository.findOneBy({
                 name: CLIENT_WEB_NAME,
-                realm_id: realmId,
+                realmId,
             });
 
-            expect(updated!.redirect_uri).toBe(
+            expect(updated!.redirectUri).toBe(
                 'http://localhost:3000/**,https://app.example.com/**',
             );
         });
@@ -113,11 +113,11 @@ describe('core/entities/client/web-client', () => {
                 {
                     id: randomUUID(),
                     name: CLIENT_WEB_NAME,
-                    realm_id: realmId,
-                    built_in: false,
-                    auth_method: 'secret',
-                    token_binding_method: 'none',
-                    redirect_uri: 'http://user-owned.example.com/**',
+                    realmId,
+                    builtIn: false,
+                    authMethod: 'secret',
+                    tokenBindingMethod: 'none',
+                    redirectUri: 'http://user-owned.example.com/**',
                 } as any,
             ]);
 
@@ -125,12 +125,12 @@ describe('core/entities/client/web-client', () => {
 
             const existing = await repository.findOneBy({
                 name: CLIENT_WEB_NAME,
-                realm_id: realmId,
+                realmId,
             });
 
-            expect(existing!.built_in).toBe(false);
-            expect(existing!.auth_method).toBe('secret');
-            expect(existing!.redirect_uri).toBe('http://user-owned.example.com/**');
+            expect(existing!.builtIn).toBe(false);
+            expect(existing!.authMethod).toBe('secret');
+            expect(existing!.redirectUri).toBe('http://user-owned.example.com/**');
         });
     });
 });

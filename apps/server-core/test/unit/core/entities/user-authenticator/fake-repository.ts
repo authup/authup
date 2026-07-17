@@ -27,9 +27,9 @@ export class FakeUserAuthenticatorRepository implements IUserAuthenticatorReposi
             parameters: null,
             codes: null,
             confirmed: false,
-            last_used_at: null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+            lastUsedAt: null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
             ...input,
         } as UserAuthenticator;
         this.entities.set(entity.id, entity);
@@ -47,7 +47,7 @@ export class FakeUserAuthenticatorRepository implements IUserAuthenticatorReposi
             secret: null,
             parameters: null,
             codes: null,
-            last_used_at: null,
+            lastUsedAt: null,
             ...data,
         } as UserAuthenticator;
     }
@@ -72,7 +72,7 @@ export class FakeUserAuthenticatorRepository implements IUserAuthenticatorReposi
 
     async removeAllByUser(userId: string, kind: `${UserAuthenticatorKind}`): Promise<void> {
         for (const entity of this.entities.values()) {
-            if (entity.user_id === userId && entity.kind === kind) {
+            if (entity.userId === userId && entity.kind === kind) {
                 this.entities.delete(entity.id);
             }
         }
@@ -100,7 +100,7 @@ export class FakeUserAuthenticatorRepository implements IUserAuthenticatorReposi
 
     async findAllByUser(userId: string): Promise<UserAuthenticator[]> {
         return this.getAll()
-            .filter((entity) => entity.user_id === userId)
+            .filter((entity) => entity.userId === userId)
             .map((entity) => this.sanitize(entity));
     }
 
@@ -109,7 +109,7 @@ export class FakeUserAuthenticatorRepository implements IUserAuthenticatorReposi
         filter: UserAuthenticatorSecretsFilter = {},
     ): Promise<UserAuthenticator[]> {
         return this.getAll().filter((entity) => {
-            if (entity.user_id !== userId) return false;
+            if (entity.userId !== userId) return false;
             if (filter.kind && entity.kind !== filter.kind) return false;
             if (typeof filter.confirmed !== 'undefined' && entity.confirmed !== filter.confirmed) return false;
             return true;
@@ -117,7 +117,7 @@ export class FakeUserAuthenticatorRepository implements IUserAuthenticatorReposi
     }
 
     async hasConfirmedByUser(userId: string): Promise<boolean> {
-        return this.getAll().some((entity) => entity.user_id === userId && entity.confirmed);
+        return this.getAll().some((entity) => entity.userId === userId && entity.confirmed);
     }
 
     async findMany(
@@ -126,7 +126,7 @@ export class FakeUserAuthenticatorRepository implements IUserAuthenticatorReposi
     ): Promise<EntityRepositoryFindManyResult<UserAuthenticator>> {
         let data = this.getAll();
         if (options.owner) {
-            data = data.filter((entity) => entity.user_id === options.owner!.userId);
+            data = data.filter((entity) => entity.userId === options.owner!.userId);
         }
 
         data = data.map((entity) => this.sanitize(entity));

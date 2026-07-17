@@ -93,8 +93,8 @@ describe('core/identity/registration/service', () => {
 
             const saved = await repository.findOneByName(data.name);
             expect(saved).not.toBeNull();
-            expect(saved!.activate_hash).toBeDefined();
-            expect(saved!.activate_hash).not.toBeNull();
+            expect(saved!.activateHash).toBeDefined();
+            expect(saved!.activateHash).not.toBeNull();
 
             expect(mailClient.sent).toHaveLength(1);
             expect(mailClient.sent[0]).toMatchObject({ to: data.email });
@@ -175,7 +175,7 @@ describe('core/identity/registration/service', () => {
             expect(saved!.email).toBe(data.email);
         });
 
-        it('should resolve realm_id to master realm when not provided', async () => {
+        it('should resolve realmId to master realm when not provided', async () => {
             const service = new RegistrationService({
                 options: { registrationEnabled: true },
                 mailClient,
@@ -187,7 +187,7 @@ describe('core/identity/registration/service', () => {
             await service.register(createValidRegistrationData());
 
             const masterRealm = realmRepository.getMasterRealm();
-            const users = await repository.findManyBy({ realm_id: masterRealm.id });
+            const users = await repository.findManyBy({ realmId: masterRealm.id });
             expect(users).toHaveLength(1);
         });
 
@@ -284,7 +284,7 @@ describe('core/identity/registration/service', () => {
             const entity = repository.seed(createFakeUser({
                 name: 'inactive-user',
                 active: false,
-                activate_hash: activateHash,
+                activateHash,
             }));
 
             const service = new RegistrationService({
@@ -302,7 +302,7 @@ describe('core/identity/registration/service', () => {
 
             const user = await repository.findOneById(entity.id);
             expect(user!.active).toBe(true);
-            expect(user!.activate_hash).toBeNull();
+            expect(user!.activateHash).toBeNull();
         });
 
         it('should throw NotFoundError when token is invalid', async () => {

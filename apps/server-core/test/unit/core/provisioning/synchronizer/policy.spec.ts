@@ -43,24 +43,24 @@ describe('core/provisioning/synchronizer/policy', () => {
                 attributes: {
                     name: 'system.default',
                     type: BuiltInPolicyType.COMPOSITE,
-                    built_in: true,
-                    realm_id: null,
+                    builtIn: true,
+                    realmId: null,
                 },
                 children: [
                     {
                         attributes: {
                             name: 'system.identity',
                             type: BuiltInPolicyType.IDENTITY,
-                            built_in: true,
-                            realm_id: null,
+                            builtIn: true,
+                            realmId: null,
                         },
                     },
                     {
                         attributes: {
                             name: 'system.permission-binding',
                             type: BuiltInPolicyType.PERMISSION_BINDING,
-                            built_in: true,
-                            realm_id: null,
+                            builtIn: true,
+                            realmId: null,
                         },
                     },
                 ],
@@ -79,13 +79,13 @@ describe('core/provisioning/synchronizer/policy', () => {
             expect(all).toHaveLength(3);
         });
 
-        it('should not create duplicates for global policies (realm_id: null)', async () => {
+        it('should not create duplicates for global policies (realmId: null)', async () => {
             const input: PolicyProvisioningEntity = {
                 attributes: {
                     name: 'system.realm-bound',
                     type: BuiltInPolicyType.REALM_MATCH,
-                    built_in: true,
-                    realm_id: null,
+                    builtIn: true,
+                    realmId: null,
                 },
             };
 
@@ -103,16 +103,16 @@ describe('core/provisioning/synchronizer/policy', () => {
                 attributes: {
                     name: 'system.default',
                     type: BuiltInPolicyType.COMPOSITE,
-                    built_in: true,
-                    realm_id: null,
+                    builtIn: true,
+                    realmId: null,
                 },
                 children: [
                     {
                         attributes: {
                             name: ' Mixed-Child ',
                             type: BuiltInPolicyType.IDENTITY,
-                            built_in: true,
-                            realm_id: null,
+                            builtIn: true,
+                            realmId: null,
                         },
                     },
                 ],
@@ -120,7 +120,7 @@ describe('core/provisioning/synchronizer/policy', () => {
 
             const child = policyRepository.getAll().find((p) => p.name === 'mixed-child');
             expect(child).toBeDefined();
-            expect(child?.parent_id).toBeTruthy();
+            expect(child?.parentId).toBeTruthy();
         });
 
         it('should delete unreferenced children when parent policy children change', async () => {
@@ -128,24 +128,24 @@ describe('core/provisioning/synchronizer/policy', () => {
                 attributes: {
                     name: 'system.default',
                     type: BuiltInPolicyType.COMPOSITE,
-                    built_in: true,
-                    realm_id: null,
+                    builtIn: true,
+                    realmId: null,
                 },
                 children: [
                     {
                         attributes: {
                             name: 'old-child',
                             type: BuiltInPolicyType.IDENTITY,
-                            built_in: true,
-                            realm_id: null,
+                            builtIn: true,
+                            realmId: null,
                         },
                     },
                     {
                         attributes: {
                             name: 'kept-child',
                             type: BuiltInPolicyType.IDENTITY,
-                            built_in: true,
-                            realm_id: null,
+                            builtIn: true,
+                            realmId: null,
                         },
                     },
                 ],
@@ -158,24 +158,24 @@ describe('core/provisioning/synchronizer/policy', () => {
                 attributes: {
                     name: 'system.default',
                     type: BuiltInPolicyType.COMPOSITE,
-                    built_in: true,
-                    realm_id: null,
+                    builtIn: true,
+                    realmId: null,
                 },
                 children: [
                     {
                         attributes: {
                             name: 'kept-child',
                             type: BuiltInPolicyType.IDENTITY,
-                            built_in: true,
-                            realm_id: null,
+                            builtIn: true,
+                            realmId: null,
                         },
                     },
                     {
                         attributes: {
                             name: 'new-child',
                             type: BuiltInPolicyType.PERMISSION_BINDING,
-                            built_in: true,
-                            realm_id: null,
+                            builtIn: true,
+                            realmId: null,
                         },
                     },
                 ],
@@ -198,16 +198,16 @@ describe('core/provisioning/synchronizer/policy', () => {
                 attributes: {
                     name: 'system.default',
                     type: BuiltInPolicyType.COMPOSITE,
-                    built_in: true,
-                    realm_id: null,
+                    builtIn: true,
+                    realmId: null,
                 },
                 children: [
                     {
                         attributes: {
                             name: 'referenced-child',
                             type: BuiltInPolicyType.IDENTITY,
-                            built_in: true,
-                            realm_id: null,
+                            builtIn: true,
+                            realmId: null,
                         },
                     },
                 ],
@@ -218,16 +218,16 @@ describe('core/provisioning/synchronizer/policy', () => {
             const referencedChild = policyRepository.getAll().find((p) => p.name === 'referenced-child')!;
 
             permissionPolicyRepository.seed({
-                permission_id: 'some-permission-id',
-                policy_id: referencedChild.id,
+                permissionId: 'some-permission-id',
+                policyId: referencedChild.id,
             });
 
             const updatedInput: PolicyProvisioningEntity = {
                 attributes: {
                     name: 'system.default',
                     type: BuiltInPolicyType.COMPOSITE,
-                    built_in: true,
-                    realm_id: null,
+                    builtIn: true,
+                    realmId: null,
                 },
                 children: [],
             };
@@ -238,8 +238,8 @@ describe('core/provisioning/synchronizer/policy', () => {
             const detached = all.find((p) => p.name === 'referenced-child');
 
             expect(detached).toBeDefined();
-            expect(detached!.parent_id).toBeNull();
-            expect(detached!.built_in).toBe(false);
+            expect(detached!.parentId).toBeNull();
+            expect(detached!.builtIn).toBe(false);
         });
 
         it('should clean up stale children even when children is undefined', async () => {
@@ -247,16 +247,16 @@ describe('core/provisioning/synchronizer/policy', () => {
                 attributes: {
                     name: 'system.default',
                     type: BuiltInPolicyType.COMPOSITE,
-                    built_in: true,
-                    realm_id: null,
+                    builtIn: true,
+                    realmId: null,
                 },
                 children: [
                     {
                         attributes: {
                             name: 'stale-child',
                             type: BuiltInPolicyType.IDENTITY,
-                            built_in: true,
-                            realm_id: null,
+                            builtIn: true,
+                            realmId: null,
                         },
                     },
                 ],
@@ -269,8 +269,8 @@ describe('core/provisioning/synchronizer/policy', () => {
                 attributes: {
                     name: 'system.default',
                     type: BuiltInPolicyType.COMPOSITE,
-                    built_in: true,
-                    realm_id: null,
+                    builtIn: true,
+                    realmId: null,
                 },
             };
 
@@ -286,24 +286,24 @@ describe('core/provisioning/synchronizer/policy', () => {
                 attributes: {
                     name: 'old-parent',
                     type: BuiltInPolicyType.COMPOSITE,
-                    built_in: true,
-                    realm_id: null,
+                    builtIn: true,
+                    realmId: null,
                 },
                 children: [
                     {
                         attributes: {
                             name: 'old-child-a',
                             type: BuiltInPolicyType.IDENTITY,
-                            built_in: true,
-                            realm_id: null,
+                            builtIn: true,
+                            realmId: null,
                         },
                     },
                     {
                         attributes: {
                             name: 'old-child-b',
                             type: BuiltInPolicyType.PERMISSION_BINDING,
-                            built_in: true,
-                            realm_id: null,
+                            builtIn: true,
+                            realmId: null,
                         },
                     },
                 ],
@@ -316,16 +316,16 @@ describe('core/provisioning/synchronizer/policy', () => {
                 attributes: {
                     name: 'new-parent',
                     type: BuiltInPolicyType.COMPOSITE,
-                    built_in: true,
-                    realm_id: null,
+                    builtIn: true,
+                    realmId: null,
                 },
                 children: [
                     {
                         attributes: {
                             name: 'new-child-a',
                             type: BuiltInPolicyType.IDENTITY,
-                            built_in: true,
-                            realm_id: null,
+                            builtIn: true,
+                            realmId: null,
                         },
                     },
                 ],
@@ -351,8 +351,8 @@ describe('core/provisioning/synchronizer/policy', () => {
                 attributes: {
                     name: 'system.default',
                     type: BuiltInPolicyType.COMPOSITE,
-                    built_in: true,
-                    realm_id: null,
+                    builtIn: true,
+                    realmId: null,
                 },
             };
 
@@ -362,8 +362,8 @@ describe('core/provisioning/synchronizer/policy', () => {
                 attributes: {
                     name: 'system.default',
                     type: BuiltInPolicyType.COMPOSITE,
-                    built_in: false,
-                    realm_id: null,
+                    builtIn: false,
+                    realmId: null,
                 },
             };
 
@@ -371,7 +371,7 @@ describe('core/provisioning/synchronizer/policy', () => {
 
             const all = policyRepository.getAll();
             expect(all).toHaveLength(1);
-            expect(all[0].built_in).toBe(false);
+            expect(all[0].builtIn).toBe(false);
         });
     });
 });

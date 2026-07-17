@@ -20,11 +20,11 @@ function buildRealm(id: string): Realm {
     return {
         id,
         name: 'master',
-        display_name: null,
+        displayName: null,
         description: null,
-        built_in: true,
-        created_at: TIMESTAMP,
-        updated_at: TIMESTAMP,
+        builtIn: true,
+        createdAt: TIMESTAMP,
+        updatedAt: TIMESTAMP,
     };
 }
 
@@ -35,13 +35,13 @@ function buildEncKey(realmId: string, overrides: Partial<Key> = {}): Key {
         type: JWKType.OCT,
         use: JWKUse.ENCRYPTION,
         status: KeyStatus.ACTIVE,
-        signature_algorithm: null,
+        signatureAlgorithm: null,
         priority: 0,
-        decryption_key: Buffer.alloc(32, 5).toString('base64'),
-        encryption_key: null,
-        created_at: TIMESTAMP,
-        updated_at: TIMESTAMP,
-        realm_id: realmId,
+        decryptionKey: Buffer.alloc(32, 5).toString('base64'),
+        encryptionKey: null,
+        createdAt: TIMESTAMP,
+        updatedAt: TIMESTAMP,
+        realmId,
         realm: buildRealm(realmId),
         ...overrides,
     };

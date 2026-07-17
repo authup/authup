@@ -30,8 +30,8 @@ import { createFakeTimePolicy } from '../../../../utils/domains/policy';
 /**
  * STRUCTURAL GUARD for the junction realm-isolation contract (plan 033, Layer 2).
  *
- * Every junction service stamps its OWNER realm as the canonical `realm_id` so the
- * realm_scope factor gates the write. This spec is the coverage contract: for EVERY
+ * Every junction service stamps its OWNER realm as the canonical `realmId` so the
+ * realmScope factor gates the write. This spec is the coverage contract: for EVERY
  * junction it asserts a restricted realm-A actor (own scope) (a) CAN write a junction
  * owned by its own realm — proving the setup is otherwise valid — and (b) CANNOT write
  * the same junction owned by realm B. A junction whose service forgets the stamp would
@@ -52,36 +52,36 @@ describe('http/controllers/security (junction realm-isolation — all junctions)
         // --- restricted actor C_A in the master realm (realm A), every grant `own` ---
         const cA = await suite.client.client.create({
             ...createFakeClient(),
-            auth_method: 'secret',
-            token_binding_method: 'none',
+            authMethod: 'secret',
+            tokenBindingMethod: 'none',
             secret: knownSecret,
-            secret_hashed: false,
-            secret_encrypted: false,
+            secretHashed: false,
+            secretEncrypted: false,
         });
-        const masterRealmId = cA.realm_id;
+        const masterRealmId = cA.realmId;
 
         // --- owner entities, one per realm (A = the actor's own realm, B = foreign) ---
-        ctx.roleA = await suite.client.role.create(createFakeRole({ realm_id: masterRealmId }));
-        ctx.roleB = await suite.client.role.create(createFakeRole({ realm_id: realmB.id }));
-        ctx.userA = await suite.client.user.create(createFakeUser({ realm_id: masterRealmId }));
-        ctx.userB = await suite.client.user.create(createFakeUser({ realm_id: realmB.id }));
-        ctx.clientA = await suite.client.client.create({ ...createFakeClient(), realm_id: masterRealmId });
-        ctx.clientB = await suite.client.client.create({ ...createFakeClient(), realm_id: realmB.id });
-        ctx.robotA = await suite.client.robot.create(createFakeRobot({ realm_id: masterRealmId }));
-        ctx.robotB = await suite.client.robot.create(createFakeRobot({ realm_id: realmB.id }));
-        ctx.providerA = await suite.client.identityProvider.create({ ...createFakeOAuth2IdentityProvider(), realm_id: masterRealmId });
-        ctx.providerB = await suite.client.identityProvider.create({ ...createFakeOAuth2IdentityProvider(), realm_id: realmB.id });
-        ctx.permissionA = await suite.client.permission.create({ ...createFakePermission(), realm_id: masterRealmId });
-        ctx.permissionB = await suite.client.permission.create({ ...createFakePermission(), realm_id: realmB.id });
+        ctx.roleA = await suite.client.role.create(createFakeRole({ realmId: masterRealmId }));
+        ctx.roleB = await suite.client.role.create(createFakeRole({ realmId: realmB.id }));
+        ctx.userA = await suite.client.user.create(createFakeUser({ realmId: masterRealmId }));
+        ctx.userB = await suite.client.user.create(createFakeUser({ realmId: realmB.id }));
+        ctx.clientA = await suite.client.client.create({ ...createFakeClient(), realmId: masterRealmId });
+        ctx.clientB = await suite.client.client.create({ ...createFakeClient(), realmId: realmB.id });
+        ctx.robotA = await suite.client.robot.create(createFakeRobot({ realmId: masterRealmId }));
+        ctx.robotB = await suite.client.robot.create(createFakeRobot({ realmId: realmB.id }));
+        ctx.providerA = await suite.client.identityProvider.create({ ...createFakeOAuth2IdentityProvider(), realmId: masterRealmId });
+        ctx.providerB = await suite.client.identityProvider.create({ ...createFakeOAuth2IdentityProvider(), realmId: realmB.id });
+        ctx.permissionA = await suite.client.permission.create({ ...createFakePermission(), realmId: masterRealmId });
+        ctx.permissionB = await suite.client.permission.create({ ...createFakePermission(), realmId: realmB.id });
 
         // --- members the actor can legitimately reference (own/global) ---
         const roleReadPermission = await suite.client.permission.getOne(PermissionName.ROLE_READ);
         ctx.roleReadPermissionId = roleReadPermission.id;
-        ctx.emptyRoleId = (await suite.client.role.create(createFakeRole({ realm_id: null }))).id; // no perms => supersettable
-        ctx.globalScopeId = (await suite.client.scope.create(createFakeScope({ realm_id: null }))).id;
+        ctx.emptyRoleId = (await suite.client.role.create(createFakeRole({ realmId: null }))).id; // no perms => supersettable
+        ctx.globalScopeId = (await suite.client.scope.create(createFakeScope({ realmId: null }))).id;
         ctx.globalPolicyId = (await suite.client.policy.create(createFakeTimePolicy())).id;
 
-        // --- grant the actor every operation permission (default realm_scope: own) ---
+        // --- grant the actor every operation permission (default realmScope: own) ---
         const grants = [
             PermissionName.ROLE_PERMISSION_CREATE,
             PermissionName.USER_PERMISSION_CREATE,
@@ -98,7 +98,7 @@ describe('http/controllers/security (junction realm-isolation — all junctions)
         ];
         for (const name of grants) {
             const permission = await suite.client.permission.getOne(name);
-            await suite.client.clientPermission.create({ client_id: cA.id, permission_id: permission.id });
+            await suite.client.clientPermission.create({ clientId: cA.id, permissionId: permission.id });
         }
 
         const token = await suite.client.token.createWithClientCredentials({
@@ -115,7 +115,7 @@ describe('http/controllers/security (junction realm-isolation — all junctions)
 
     it('CONTROL: rejects creating a base entity (role) in another realm', async () => {
         await expect(
-            actor.role.create(createFakeRole({ realm_id: ctx.roleB.realm_id })),
+            actor.role.create(createFakeRole({ realmId: ctx.roleB.realmId })),
         ).rejects.toThrow();
     });
 
@@ -131,70 +131,70 @@ describe('http/controllers/security (junction realm-isolation — all junctions)
             api: 'rolePermission', 
             ownerA: 'roleA', 
             ownerB: 'roleB', 
-            body: (id, c) => ({ role_id: id, permission_id: c.roleReadPermissionId }), 
+            body: (id, c) => ({ roleId: id, permissionId: c.roleReadPermissionId }), 
         },
         {
             name: 'user-permission', 
             api: 'userPermission', 
             ownerA: 'userA', 
             ownerB: 'userB', 
-            body: (id, c) => ({ user_id: id, permission_id: c.roleReadPermissionId }), 
+            body: (id, c) => ({ userId: id, permissionId: c.roleReadPermissionId }), 
         },
         {
             name: 'client-permission', 
             api: 'clientPermission', 
             ownerA: 'clientA', 
             ownerB: 'clientB', 
-            body: (id, c) => ({ client_id: id, permission_id: c.roleReadPermissionId }), 
+            body: (id, c) => ({ clientId: id, permissionId: c.roleReadPermissionId }), 
         },
         {
             name: 'robot-permission', 
             api: 'robotPermission', 
             ownerA: 'robotA', 
             ownerB: 'robotB', 
-            body: (id, c) => ({ robot_id: id, permission_id: c.roleReadPermissionId }), 
+            body: (id, c) => ({ robotId: id, permissionId: c.roleReadPermissionId }), 
         },
         {
             name: 'user-role', 
             api: 'userRole', 
             ownerA: 'userA', 
             ownerB: 'userB', 
-            body: (id, c) => ({ user_id: id, role_id: c.emptyRoleId }), 
+            body: (id, c) => ({ userId: id, roleId: c.emptyRoleId }), 
         },
         {
             name: 'client-role', 
             api: 'clientRole', 
             ownerA: 'clientA', 
             ownerB: 'clientB', 
-            body: (id, c) => ({ client_id: id, role_id: c.emptyRoleId }), 
+            body: (id, c) => ({ clientId: id, roleId: c.emptyRoleId }), 
         },
         {
             name: 'robot-role', 
             api: 'robotRole', 
             ownerA: 'robotA', 
             ownerB: 'robotB', 
-            body: (id, c) => ({ robot_id: id, role_id: c.emptyRoleId }), 
+            body: (id, c) => ({ robotId: id, roleId: c.emptyRoleId }), 
         },
         {
             name: 'client-scope', 
             api: 'clientScope', 
             ownerA: 'clientA', 
             ownerB: 'clientB', 
-            body: (id, c) => ({ client_id: id, scope_id: c.globalScopeId }), 
+            body: (id, c) => ({ clientId: id, scopeId: c.globalScopeId }), 
         },
         {
             name: 'identity-provider-role-mapping', 
             api: 'identityProviderRoleMapping', 
             ownerA: 'providerA', 
             ownerB: 'providerB', 
-            body: (id, c) => ({ provider_id: id, role_id: c.emptyRoleId }), 
+            body: (id, c) => ({ providerId: id, roleId: c.emptyRoleId }), 
         },
         {
             name: 'permission-policy', 
             api: 'permissionPolicy', 
             ownerA: 'permissionA', 
             ownerB: 'permissionB', 
-            body: (id, c) => ({ permission_id: id, policy_id: c.globalPolicyId }), 
+            body: (id, c) => ({ permissionId: id, policyId: c.globalPolicyId }), 
         },
     ];
 

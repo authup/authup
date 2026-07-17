@@ -36,13 +36,13 @@ describe('src/http/controllers/client-role', () => {
         entity = await suite.client
             .clientRole
             .create({
-                client_id: client.id,
-                role_id: role.id,
+                clientId: client.id,
+                roleId: role.id,
             });
 
         expect(entity).toBeDefined();
-        expect(entity.client_id).toEqual(client.id);
-        expect(entity.role_id).toEqual(role.id);
+        expect(entity.clientId).toEqual(client.id);
+        expect(entity.roleId).toEqual(role.id);
     });
 
     it('should read collection', async () => {

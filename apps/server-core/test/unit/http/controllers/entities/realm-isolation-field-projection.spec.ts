@@ -27,9 +27,9 @@ import {
 
 /**
  * Regression (plan 039): an own-scoped `<ENTITY>_READ` holder must not be able
- * to surface another realm's rows by projecting `realm_id` (or the other
+ * to surface another realm's rows by projecting `realmId` (or the other
  * columns the per-row gate reads) out of the SQL SELECT via `fields[...]` —
- * that would otherwise neutralize the per-row realm_scope gate.
+ * that would otherwise neutralize the per-row realmScope gate.
  */
 describe('realm isolation (field projection)', () => {
     const suite = createTestApplication();
@@ -64,60 +64,60 @@ describe('realm isolation (field projection)', () => {
 
         const ownUser = await suite.client.user.create(createFakeUser());
         ownUserId = ownUser.id;
-        const foreignUser = await suite.client.user.create(createFakeUser({ realm_id: realmB.id }));
+        const foreignUser = await suite.client.user.create(createFakeUser({ realmId: realmB.id }));
         foreignUserId = foreignUser.id;
 
         const ownRobot = await suite.client.robot.create(createFakeRobot());
         ownRobotId = ownRobot.id;
-        const foreignRobot = await suite.client.robot.create(createFakeRobot({ realm_id: realmB.id }));
+        const foreignRobot = await suite.client.robot.create(createFakeRobot({ realmId: realmB.id }));
         foreignRobotId = foreignRobot.id;
 
         const ownClient = await suite.client.client.create({
             ...createFakeClient(),
             secret: ownClientSecret,
-            secret_hashed: false,
-            secret_encrypted: false,
+            secretHashed: false,
+            secretEncrypted: false,
         });
         ownClientId = ownClient.id;
         const foreignClient = await suite.client.client.create({
             ...createFakeClient(),
-            realm_id: realmB.id,
+            realmId: realmB.id,
             secret: foreignClientSecret,
-            secret_hashed: false,
-            secret_encrypted: false,
+            secretHashed: false,
+            secretEncrypted: false,
         });
         foreignClientId = foreignClient.id;
 
         const ownRole = await suite.client.role.create({ name: 'realm-iso-own-role' });
         const ownRoleAttribute = await suite.client.roleAttribute.create({
             ...createFakeRoleAttribute(),
-            role_id: ownRole.id,
+            roleId: ownRole.id,
         });
         ownRoleAttributeId = ownRoleAttribute.id;
-        const foreignRole = await suite.client.role.create({ name: 'realm-iso-foreign-role', realm_id: realmB.id });
+        const foreignRole = await suite.client.role.create({ name: 'realm-iso-foreign-role', realmId: realmB.id });
         const foreignRoleAttribute = await suite.client.roleAttribute.create({
             ...createFakeRoleAttribute(),
-            role_id: foreignRole.id,
+            roleId: foreignRole.id,
         });
         foreignRoleAttributeId = foreignRoleAttribute.id;
 
         const ownUserAttribute = await suite.client.userAttribute.create(
-            createFakeUserAttribute({ user_id: ownUser.id }),
+            createFakeUserAttribute({ userId: ownUser.id }),
         );
         ownUserAttributeId = ownUserAttribute.id;
         const foreignUserAttribute = await suite.client.userAttribute.create(
-            createFakeUserAttribute({ user_id: foreignUser.id }),
+            createFakeUserAttribute({ userId: foreignUser.id }),
         );
         foreignUserAttributeId = foreignUserAttribute.id;
 
         // a restricted actor in master holding the READ permissions at the default `own` scope
         const actorClient = await suite.client.client.create({
             ...createFakeClient(),
-            auth_method: 'secret',
-            token_binding_method: 'none',
+            authMethod: 'secret',
+            tokenBindingMethod: 'none',
             secret: actorSecret,
-            secret_hashed: false,
-            secret_encrypted: false,
+            secretHashed: false,
+            secretEncrypted: false,
         });
         const permissionNames = [
             PermissionName.USER_READ,
@@ -129,8 +129,8 @@ describe('realm isolation (field projection)', () => {
         for (const name of permissionNames) {
             const permission = await suite.client.permission.getOne(name);
             await suite.client.clientPermission.create({
-                client_id: actorClient.id,
-                permission_id: permission.id,
+                clientId: actorClient.id,
+                permissionId: permission.id,
             });
         }
 
@@ -142,20 +142,20 @@ describe('realm isolation (field projection)', () => {
         actor.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
 
         // a reader at `ownOrNull` scope (realm_admin read reach) — the scope for
-        // which a stripped realm_id reads as a null/global resource and leaks
+        // which a stripped realmId reads as a null/global resource and leaks
         const readerClient = await suite.client.client.create({
             ...createFakeClient(),
-            auth_method: 'secret',
-            token_binding_method: 'none',
+            authMethod: 'secret',
+            tokenBindingMethod: 'none',
             secret: readerActorSecret,
-            secret_hashed: false,
-            secret_encrypted: false,
+            secretHashed: false,
+            secretEncrypted: false,
         });
         const userRead = await suite.client.permission.getOne(PermissionName.USER_READ);
         await suite.client.clientPermission.create({
-            client_id: readerClient.id,
-            permission_id: userRead.id,
-            realm_scope: RealmScope.OWN_OR_NULL,
+            clientId: readerClient.id,
+            permissionId: userRead.id,
+            realmScope: RealmScope.OWN_OR_NULL,
         });
         const readerToken = await suite.client.token.createWithClientCredentials({
             client_id: readerClient.id,
@@ -169,7 +169,7 @@ describe('realm isolation (field projection)', () => {
         await suite.teardown();
     });
 
-    it('keeps a foreign-realm user hidden even when realm_id is projected away', async () => {
+    it('keeps a foreign-realm user hidden even when realmId is projected away', async () => {
         const own = await actor.user.getMany({ filter: { id: ownUserId }, fields: ['id', 'name'] });
         expect(own.data.some((entity) => entity.id === ownUserId)).toBe(true);
 
@@ -177,7 +177,7 @@ describe('realm isolation (field projection)', () => {
         expect(foreign.data.some((entity) => entity.id === foreignUserId)).toBe(false);
     });
 
-    it('keeps a foreign-realm user hidden from an ownOrNull-scoped reader when realm_id is projected away', async () => {
+    it('keeps a foreign-realm user hidden from an ownOrNull-scoped reader when realmId is projected away', async () => {
         const own = await readerActor.user.getMany({ filter: { id: ownUserId }, fields: ['id', 'name'] });
         expect(own.data.some((entity) => entity.id === ownUserId)).toBe(true);
 
@@ -185,7 +185,7 @@ describe('realm isolation (field projection)', () => {
         expect(foreign.data.some((entity) => entity.id === foreignUserId)).toBe(false);
     });
 
-    it('keeps a foreign-realm robot hidden even when realm_id is projected away', async () => {
+    it('keeps a foreign-realm robot hidden even when realmId is projected away', async () => {
         const own = await actor.robot.getMany({ filter: { id: ownRobotId }, fields: ['id', 'name'] });
         expect(own.data.some((entity) => entity.id === ownRobotId)).toBe(true);
 
@@ -193,7 +193,7 @@ describe('realm isolation (field projection)', () => {
         expect(foreign.data.some((entity) => entity.id === foreignRobotId)).toBe(false);
     });
 
-    it('keeps a foreign-realm plaintext client secret hidden even when realm_id and the secret flags are projected away', async () => {
+    it('keeps a foreign-realm plaintext client secret hidden even when realmId and the secret flags are projected away', async () => {
         const own = await actor.client.getMany({ filter: { id: ownClientId }, fields: ['id', 'secret'] });
         const ownEntity = own.data.find((entity) => entity.id === ownClientId);
         expect(ownEntity).toBeDefined();

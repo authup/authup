@@ -44,7 +44,7 @@ function createUserActorAsOwner(userId: string): FakeActorContext {
             type: IdentityType.USER,
             data: {
                 id: userId,
-                realm_id: realmId,
+                realmId,
                 realm: {
                     id: realmId,
                     name: 'test',
@@ -89,7 +89,7 @@ describe('core/entities/robot/service', () => {
                     type: IdentityType.ROBOT,
                     data: {
                         id: selfRobot.id,
-                        realm_id: realmId,
+                        realmId,
                         realm: {
                             id: realmId,
                             name: 'test',
@@ -250,12 +250,12 @@ describe('core/entities/robot/service', () => {
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
-        it('should set realm_id from actor for non-master realm', async () => {
+        it('should set realmId from actor for non-master realm', async () => {
             const realmId = randomUUID();
             const actor = createNonMasterRealmActor(realmId);
 
             const result = await service.create({ name: 'realm-robot' }, actor);
-            expect(result.realm_id).toBe(realmId);
+            expect(result.realmId).toBe(realmId);
         });
     });
 
@@ -290,7 +290,7 @@ describe('core/entities/robot/service', () => {
                     type: IdentityType.ROBOT,
                     data: {
                         id: robotId,
-                        realm_id: realmId,
+                        realmId,
                         realm: {
                             id: realmId,
                             name: 'test',
@@ -310,8 +310,8 @@ describe('core/entities/robot/service', () => {
                 }
             });
 
-            const result = await service.update(entity.id, { display_name: 'Self Updated' }, actor);
-            expect(result.display_name).toBe('Self Updated');
+            const result = await service.update(entity.id, { displayName: 'Self Updated' }, actor);
+            expect(result.displayName).toBe('Self Updated');
 
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROBOT_SELF_MANAGE });
             expect(actor.permissionEvaluator.evaluateCalls).toContainEqual(
@@ -341,8 +341,8 @@ describe('core/entities/robot/service', () => {
             const attrs = selfManageCall!.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
             expect(attrs).toHaveProperty('description', 'updated-desc');
             expect(attrs).not.toHaveProperty('id');
-            expect(attrs).not.toHaveProperty('user_id');
-            expect(attrs).not.toHaveProperty('client_id');
+            expect(attrs).not.toHaveProperty('userId');
+            expect(attrs).not.toHaveProperty('clientId');
         });
 
         it('should allow self-rotation of secret', async () => {
@@ -370,7 +370,7 @@ describe('core/entities/robot/service', () => {
             });
 
             await expect(
-                service.update(entity.id, { display_name: 'forbidden' }, actor),
+                service.update(entity.id, { displayName: 'forbidden' }, actor),
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
@@ -381,7 +381,7 @@ describe('core/entities/robot/service', () => {
             actor.permissionEvaluator.denyAll();
 
             await expect(
-                service.update(entity.id, { display_name: 'forbidden' }, actor),
+                service.update(entity.id, { displayName: 'forbidden' }, actor),
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
@@ -398,7 +398,7 @@ describe('core/entities/robot/service', () => {
         });
 
         it('should call preCheck with ROBOT_DELETE for non-owner', async () => {
-            const entity = repository.seed(createFakeRobot({ user_id: null }));
+            const entity = repository.seed(createFakeRobot({ userId: null }));
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROBOT_DELETE });
@@ -408,7 +408,7 @@ describe('core/entities/robot/service', () => {
             const userId = randomUUID();
             const entity = repository.seed(createFakeRobot({
                 name: 'owned',
-                user_id: userId,
+                userId,
             }));
 
             const actor = createUserActorAsOwner(userId);
@@ -426,7 +426,7 @@ describe('core/entities/robot/service', () => {
 
         it('should allow owner to delete with ROBOT_SELF_MANAGE when ROBOT_DELETE is denied', async () => {
             const userId = randomUUID();
-            const entity = repository.seed(createFakeRobot({ user_id: userId }));
+            const entity = repository.seed(createFakeRobot({ userId }));
 
             const actor = createUserActorAsOwner(userId);
             actor.permissionEvaluator.setBehavior((call) => {
@@ -441,7 +441,7 @@ describe('core/entities/robot/service', () => {
 
         it('should reject owner delete when both ROBOT_DELETE and ROBOT_SELF_MANAGE are denied', async () => {
             const userId = randomUUID();
-            const entity = repository.seed(createFakeRobot({ user_id: userId }));
+            const entity = repository.seed(createFakeRobot({ userId }));
 
             const actor = createUserActorAsOwner(userId);
             actor.permissionEvaluator.deny('preEvaluate');
@@ -450,7 +450,7 @@ describe('core/entities/robot/service', () => {
         });
 
         it('should require permission check for robots not owned by actor', async () => {
-            const entity = repository.seed(createFakeRobot({ user_id: randomUUID() }));
+            const entity = repository.seed(createFakeRobot({ userId: randomUUID() }));
 
             const actor = createUserActorAsOwner(randomUUID());
             actor.permissionEvaluator.deny('evaluate');
@@ -458,8 +458,8 @@ describe('core/entities/robot/service', () => {
             await expect(service.delete(entity.id, actor)).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
-        it('should require permission check for robots with no user_id', async () => {
-            const entity = repository.seed(createFakeRobot({ user_id: null }));
+        it('should require permission check for robots with no userId', async () => {
+            const entity = repository.seed(createFakeRobot({ userId: null }));
 
             const actor = createUserActorAsOwner(randomUUID());
             actor.permissionEvaluator.deny('evaluate');

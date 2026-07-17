@@ -14,7 +14,7 @@ export function createFakeRobot(data: Partial<Robot> = {}) {
             casing: 'lower',
             length: 10, 
         }),
-        display_name: faker.internet.displayName(),
+        displayName: faker.internet.displayName(),
         secret: faker.string.alphanumeric({ length: 64 }),
         active: true,
         ...data,

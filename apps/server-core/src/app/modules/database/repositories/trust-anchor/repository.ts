@@ -9,10 +9,10 @@ import type { TrustAnchor } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { DataSource, FindOptionsWhere, Repository } from 'typeorm';
-import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
+import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import { DatabaseConflictError, RealmEntity, TrustAnchorEntity } from '../../../../../adapters/database/index.ts';
 import type { IRealmRepository, ITrustAnchorRepository } from '../../../../../core/index.ts';
-import { applyRealmScopeSelect, translateWhereConditions } from '../helpers.ts';
+import { applyRealmScopeSelect, isEntityUnique, translateWhereConditions } from '../helpers.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export class TrustAnchorRepositoryAdapter implements ITrustAnchorRepository {

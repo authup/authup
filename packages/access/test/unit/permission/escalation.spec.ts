@@ -165,14 +165,14 @@ describe('escalation prevention', () => {
             {
                 permission: { name: 'user_update' },
                 policies: [policyDeptX],
-                realm_scope: RealmScope.ANY,
+                realmScope: RealmScope.ANY,
             },
         ];
         const child: PermissionPolicyBinding[] = [
             {
                 permission: { name: 'user_update' },
                 policies: [policyDeptY],
-                realm_scope: RealmScope.OWN,
+                realmScope: RealmScope.OWN,
             },
         ];
 
@@ -313,22 +313,22 @@ describe('escalation prevention', () => {
         expect(isSupersetPolicyAware(parent, child)).toBe(false);
     });
 
-    // --- realm_scope disjunction (#3155): reach is paired with policy PER grant ---
+    // --- realmScope disjunction (#3155): reach is paired with policy PER grant ---
 
     it('should block: mixed-grant actor (own no-policy + any policy) assigning an unconditional any role', () => {
         // The actor's `any` reach is gated by a policy; it does NOT hold unconditional `any`,
         // so it must not assign a role granting unconditional (any, no-policy). (No collapsed
         // fold can confer this — the child `any` grant is dominated by no parent grant.)
         const parent: PermissionPolicyBinding[] = [
-            { permission: { name: 'user_read' }, realm_scope: RealmScope.OWN },
+            { permission: { name: 'user_read' }, realmScope: RealmScope.OWN },
             {
                 permission: { name: 'user_read' }, 
                 policies: [realmBoundPolicy], 
-                realm_scope: RealmScope.ANY, 
+                realmScope: RealmScope.ANY, 
             },
         ];
         const child: PermissionPolicyBinding[] = [
-            { permission: { name: 'user_read' }, realm_scope: RealmScope.ANY },
+            { permission: { name: 'user_read' }, realmScope: RealmScope.ANY },
         ];
 
         expect(isSupersetPolicyAware(parent, child)).toBe(false);
@@ -336,15 +336,15 @@ describe('escalation prevention', () => {
 
     it('should allow: mixed-grant actor assigning an own no-policy role (own grant dominates)', () => {
         const parent: PermissionPolicyBinding[] = [
-            { permission: { name: 'user_read' }, realm_scope: RealmScope.OWN },
+            { permission: { name: 'user_read' }, realmScope: RealmScope.OWN },
             {
                 permission: { name: 'user_read' }, 
                 policies: [realmBoundPolicy], 
-                realm_scope: RealmScope.ANY, 
+                realmScope: RealmScope.ANY, 
             },
         ];
         const child: PermissionPolicyBinding[] = [
-            { permission: { name: 'user_read' }, realm_scope: RealmScope.OWN },
+            { permission: { name: 'user_read' }, realmScope: RealmScope.OWN },
         ];
 
         expect(isSupersetPolicyAware(parent, child)).toBe(true);
@@ -352,18 +352,18 @@ describe('escalation prevention', () => {
 
     it('should allow: mixed-grant actor assigning an any policy-bound role (any+policy grant dominates)', () => {
         const parent: PermissionPolicyBinding[] = [
-            { permission: { name: 'user_read' }, realm_scope: RealmScope.OWN },
+            { permission: { name: 'user_read' }, realmScope: RealmScope.OWN },
             {
                 permission: { name: 'user_read' }, 
                 policies: [realmBoundPolicy], 
-                realm_scope: RealmScope.ANY, 
+                realmScope: RealmScope.ANY, 
             },
         ];
         const child: PermissionPolicyBinding[] = [
             {
                 permission: { name: 'user_read' }, 
                 policies: [realmBoundPolicy], 
-                realm_scope: RealmScope.ANY, 
+                realmScope: RealmScope.ANY, 
             },
         ];
 
@@ -372,21 +372,21 @@ describe('escalation prevention', () => {
 
     it('should block: own-scoped actor assigning an any-scoped role (insufficient reach)', () => {
         const parent: PermissionPolicyBinding[] = [
-            { permission: { name: 'user_read' }, realm_scope: RealmScope.OWN },
+            { permission: { name: 'user_read' }, realmScope: RealmScope.OWN },
         ];
         const child: PermissionPolicyBinding[] = [
-            { permission: { name: 'user_read' }, realm_scope: RealmScope.ANY },
+            { permission: { name: 'user_read' }, realmScope: RealmScope.ANY },
         ];
 
         expect(isSupersetPolicyAware(parent, child)).toBe(false);
     });
 
-    it('should respect permission identity: same name, different realm_id', () => {
+    it('should respect permission identity: same name, different realmId', () => {
         const parent: PermissionPolicyBinding[] = [
             {
                 permission: {
                     name: 'user_read',
-                    realm_id: 'realm-a',
+                    realmId: 'realm-a',
                 },
             },
         ];
@@ -394,7 +394,7 @@ describe('escalation prevention', () => {
             {
                 permission: {
                     name: 'user_read',
-                    realm_id: 'realm-b',
+                    realmId: 'realm-b',
                 },
             },
         ];
@@ -403,7 +403,7 @@ describe('escalation prevention', () => {
     });
 });
 
-// Direct contract of the per-grant domination primitive used by isSuperset. realm_scope is held
+// Direct contract of the per-grant domination primitive used by isSuperset. realmScope is held
 // equal so each case isolates the policy-content decision (the #3159 crux), except where noted.
 describe('grantDominates', () => {
     const own = RealmScope.OWN;
@@ -420,28 +420,28 @@ describe('grantDominates', () => {
     } as any;
 
     it('dominates when both grants are unrestricted at equal reach', () => {
-        expect(grantDominates({ realm_scope: own }, { realm_scope: own })).toBe(true);
+        expect(grantDominates({ realmScope: own }, { realmScope: own })).toBe(true);
     });
 
     it('an unrestricted parent dominates a restricted child', () => {
-        expect(grantDominates({ realm_scope: own }, { realm_scope: own, policy: policyA })).toBe(true);
+        expect(grantDominates({ realmScope: own }, { realmScope: own, policy: policyA })).toBe(true);
     });
 
     it('a restricted parent does NOT dominate an unrestricted child', () => {
-        expect(grantDominates({ realm_scope: own, policy: policyA }, { realm_scope: own })).toBe(false);
+        expect(grantDominates({ realmScope: own, policy: policyA }, { realmScope: own })).toBe(false);
     });
 
     it('dominates when both reference the same persisted policy (same id)', () => {
         expect(grantDominates(
-            { realm_scope: own, policy: { type: BuiltInPolicyType.ATTRIBUTES, id: 'a' } as any },
-            { realm_scope: own, policy: { type: BuiltInPolicyType.ATTRIBUTES, id: 'a' } as any },
+            { realmScope: own, policy: { type: BuiltInPolicyType.ATTRIBUTES, id: 'a' } as any },
+            { realmScope: own, policy: { type: BuiltInPolicyType.ATTRIBUTES, id: 'a' } as any },
         )).toBe(true);
     });
 
     it('dominates two distinct rows (different id) with identical config (value-compare)', () => {
         expect(grantDominates(
             {
-                realm_scope: own,
+                realmScope: own,
                 policy: {
                     type: BuiltInPolicyType.ATTRIBUTES, 
                     id: 'r1', 
@@ -449,7 +449,7 @@ describe('grantDominates', () => {
                 } as any, 
             },
             {
-                realm_scope: own,
+                realmScope: own,
                 policy: {
                     type: BuiltInPolicyType.ATTRIBUTES, 
                     id: 'r2', 
@@ -461,38 +461,38 @@ describe('grantDominates', () => {
 
     it('does NOT dominate two policies with different configuration', () => {
         // Same type, disjoint queries — a shared type is not equivalence (department=X vs =Y).
-        expect(grantDominates({ realm_scope: own, policy: policyA }, { realm_scope: own, policy: policyB })).toBe(false);
+        expect(grantDominates({ realmScope: own, policy: policyA }, { realmScope: own, policy: policyB })).toBe(false);
     });
 
     it('dominates id-less policies with identical config (value-compare handles missing id)', () => {
         expect(grantDominates(
-            { realm_scope: own, policy: { type: BuiltInPolicyType.COMPOSITE, children: [policyA] } as any },
-            { realm_scope: own, policy: { type: BuiltInPolicyType.COMPOSITE, children: [policyA] } as any },
+            { realmScope: own, policy: { type: BuiltInPolicyType.COMPOSITE, children: [policyA] } as any },
+            { realmScope: own, policy: { type: BuiltInPolicyType.COMPOSITE, children: [policyA] } as any },
         )).toBe(true);
     });
 
     it('does NOT dominate id-less policies whose config differs (fail closed)', () => {
         expect(grantDominates(
-            { realm_scope: own, policy: { type: BuiltInPolicyType.COMPOSITE, children: [policyA] } as any },
-            { realm_scope: own, policy: { type: BuiltInPolicyType.COMPOSITE, children: [policyB] } as any },
+            { realmScope: own, policy: { type: BuiltInPolicyType.COMPOSITE, children: [policyA] } as any },
+            { realmScope: own, policy: { type: BuiltInPolicyType.COMPOSITE, children: [policyB] } as any },
         )).toBe(false);
     });
 
     it('does NOT dominate when the parent reaches less far, even for the same policy', () => {
         expect(grantDominates(
-            { realm_scope: own, policy: policyA },
-            { realm_scope: RealmScope.ANY, policy: policyA },
+            { realmScope: own, policy: policyA },
+            { realmScope: RealmScope.ANY, policy: policyA },
         )).toBe(false);
     });
 
     it('a wider ownOrNull parent dominates an own child; the reverse does not (ordered reach)', () => {
         expect(grantDominates(
-            { realm_scope: RealmScope.OWN_OR_NULL },
-            { realm_scope: own },
+            { realmScope: RealmScope.OWN_OR_NULL },
+            { realmScope: own },
         )).toBe(true);
         expect(grantDominates(
-            { realm_scope: own },
-            { realm_scope: RealmScope.OWN_OR_NULL },
+            { realmScope: own },
+            { realmScope: RealmScope.OWN_OR_NULL },
         )).toBe(false);
     });
 });

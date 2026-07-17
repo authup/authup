@@ -11,13 +11,13 @@ import { faker } from '@faker-js/faker';
 import type { PolicyEntity } from '../../../src';
 
 type TimePolicyExtended = TimePolicy & PolicyEntity & {
-    parent_id?: string
+    parentId?: string
 };
 
 export function createFakeTimePolicy(data: Partial<TimePolicyExtended> = {}) {
     return {
         name: faker.internet.username().toLowerCase(),
-        display_name: faker.internet.displayName(),
+        displayName: faker.internet.displayName(),
         type: BuiltInPolicyType.TIME,
         start: '08:00:00',
         end: '16:00:00',

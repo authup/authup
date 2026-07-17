@@ -27,14 +27,14 @@ describe('src/policy/attribute-realm', () => {
                     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
                     realmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
                 },
-                [BuiltInPolicyType.ATTRIBUTES]: { realm_id: 'c641912c-21e5-4cb4-84b6-169e2b2bb023' },
+                [BuiltInPolicyType.ATTRIBUTES]: { realmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023' },
             }),
         }));
         expect(outcome.success).toBeTruthy();
     });
 
     it('should permit by lazy attribute name matching', async () => {
-        const config : RealmMatchPolicy = { attribute_name_strict: true };
+        const config : RealmMatchPolicy = { attributeNameStrict: true };
 
         const evaluator = new RealmMatchPolicyEvaluator();
 
@@ -47,8 +47,8 @@ describe('src/policy/attribute-realm', () => {
                     realmName: 'master',
                 },
                 [BuiltInPolicyType.ATTRIBUTES]: {
-                    user_realm_id: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
-                    permission_realm_id: null,
+                    userRealmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
+                    permissionRealmId: null,
                 },
             }),
         }));
@@ -67,7 +67,7 @@ describe('src/policy/attribute-realm', () => {
                     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
                     realmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
                 },
-                [BuiltInPolicyType.ATTRIBUTES]: { realm_id: '1b17ab3d-3e87-4d63-9997-374ed9a58c23' },
+                [BuiltInPolicyType.ATTRIBUTES]: { realmId: '1b17ab3d-3e87-4d63-9997-374ed9a58c23' },
             }),
         }));
         expect(outcome.success).toBeFalsy();
@@ -85,7 +85,7 @@ describe('src/policy/attribute-realm', () => {
                     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
                     realmName: 'master',
                 },
-                [BuiltInPolicyType.ATTRIBUTES]: { realm_id: '1b17ab3d-3e87-4d63-9997-374ed9a58c23' },
+                [BuiltInPolicyType.ATTRIBUTES]: { realmId: '1b17ab3d-3e87-4d63-9997-374ed9a58c23' },
             }),
         }));
         expect(outcome.success).toBeFalsy();
@@ -157,12 +157,12 @@ describe('src/policy/realm-match scope mode', () => {
         expect(o.success).toBe(true);
     });
 
-    it('reads ONLY the REALM_MATCH key — an ATTRIBUTES.realm_id is not a realm source', async () => {
+    it('reads ONLY the REALM_MATCH key — an ATTRIBUTES.realmId is not a realm source', async () => {
         // Single-source: with no REALM_MATCH key the gate neutral-passes, even when
-        // ATTRIBUTES carries a (foreign) realm_id.
+        // ATTRIBUTES carries a (foreign) realmId.
         const o = await run({ scope: 'own' }, {
             [BuiltInPolicyType.IDENTITY]: identityA,
-            [BuiltInPolicyType.ATTRIBUTES]: { realm_id: REALM_B },
+            [BuiltInPolicyType.ATTRIBUTES]: { realmId: REALM_B },
         });
         expect(o.success).toBe(true);
     });

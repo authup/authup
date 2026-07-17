@@ -11,7 +11,7 @@ import { BuiltInPolicyType, PolicyData, definePolicyData } from '../../../src';
 describe('src/policy/input', () => {
     it('builds a PolicyData carrying the well-known keys', () => {
         const data = definePolicyData({
-            [BuiltInPolicyType.ATTRIBUTES]: { realm_id: 'r1' },
+            [BuiltInPolicyType.ATTRIBUTES]: { realmId: 'r1' },
             [BuiltInPolicyType.REALM_MATCH]: 'r1',
         });
 

@@ -48,18 +48,18 @@ describe('http/controllers/client', () => {
     it('should create resource (generate secret)', async () => {
         const {
             name,
-            display_name: displayName,
-            redirect_uri: redirectUri,
+            displayName,
+            redirectUri,
         } = createFakeClient();
 
         const input: ClientCreatePayload = {
             name,
-            display_name: displayName,
-            redirect_uri: redirectUri,
-            auth_method: 'none',
-            token_binding_method: 'none',
-            secret_hashed: false,
-            secret_encrypted: false,
+            displayName,
+            redirectUri,
+            authMethod: 'none',
+            tokenBindingMethod: 'none',
+            secretHashed: false,
+            secretEncrypted: false,
         };
 
         const response = await suite.client
@@ -75,19 +75,19 @@ describe('http/controllers/client', () => {
     it('should create resource (hash secret)', async () => {
         const {
             name,
-            display_name: displayName,
-            redirect_uri: redirectUri,
+            displayName,
+            redirectUri,
         } = createFakeClient();
 
         const input: ClientCreatePayload = {
             name,
-            display_name: displayName,
-            redirect_uri: redirectUri,
-            auth_method: 'secret',
-            token_binding_method: 'none',
+            displayName,
+            redirectUri,
+            authMethod: 'secret',
+            tokenBindingMethod: 'none',
             secret: 'foo',
-            secret_hashed: true,
-            secret_encrypted: false,
+            secretHashed: true,
+            secretEncrypted: false,
         };
 
         const response = await suite.client
@@ -142,8 +142,8 @@ describe('http/controllers/client', () => {
 
         expect(response).toBeDefined();
         expectPropertiesEqualToSrc(entity, response, [
-            'created_at',
-            'updated_at',
+            'createdAt',
+            'updatedAt',
         ]);
     });
 
@@ -181,31 +181,31 @@ describe('http/controllers/client', () => {
         expect(response.id).toEqual(id);
     });
 
-    it('should round-trip access_policy_id through create, update and read', async () => {
+    it('should round-trip accessPolicyId through create, update and read', async () => {
         const policy = await suite.client.policy.create(createFakeTimePolicy());
         const nextPolicy = await suite.client.policy.create(createFakeTimePolicy());
 
         const created = await suite.client
             .client
-            .create(createFakeClient({ access_policy_id: policy.id }));
+            .create(createFakeClient({ accessPolicyId: policy.id }));
 
-        expect(created.access_policy_id).toEqual(policy.id);
+        expect(created.accessPolicyId).toEqual(policy.id);
 
         let read = await suite.client.client.getOne(created.id);
-        expect(read.access_policy_id).toEqual(policy.id);
+        expect(read.accessPolicyId).toEqual(policy.id);
 
         let updated = await suite.client
             .client
-            .update(created.id, { access_policy_id: nextPolicy.id });
-        expect(updated.access_policy_id).toEqual(nextPolicy.id);
+            .update(created.id, { accessPolicyId: nextPolicy.id });
+        expect(updated.accessPolicyId).toEqual(nextPolicy.id);
 
         // clearing detaches the policy (null = default allow)
         updated = await suite.client
             .client
-            .update(created.id, { access_policy_id: null });
-        expect(updated.access_policy_id).toBeNull();
+            .update(created.id, { accessPolicyId: null });
+        expect(updated.accessPolicyId).toBeNull();
 
         read = await suite.client.client.getOne(created.id);
-        expect(read.access_policy_id).toBeNull();
+        expect(read.accessPolicyId).toBeNull();
     });
 });

@@ -8,13 +8,13 @@
 import type { IdentityProvider, IdentityProviderProtocol, Realm } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
+import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IIdentityProviderRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
 import type { IdentityProviderRepository } from '../../../../../adapters/database/domains/index.ts';
 import { IdentityProviderEntity } from '../../../../../adapters/database/domains/index.ts';
-import { translateWhereConditions } from '../helpers.ts';
+import { isEntityUnique, translateWhereConditions } from '../helpers.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export type IdentityProviderRepositoryAdapterContext = {

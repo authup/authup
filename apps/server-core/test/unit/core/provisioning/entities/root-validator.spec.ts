@@ -23,7 +23,7 @@ describe('core/provisioning/entities/root-validator', () => {
     });
 
     it('should reject a missing entity name', async () => {
-        await expect(run({ roles: [{ attributes: { display_name: 'No Name' } }] })).rejects.toThrow();
+        await expect(run({ roles: [{ attributes: { displayName: 'No Name' } }] })).rejects.toThrow();
     });
 
     it('should reject an invalid nested realm-relation entity', async () => {
@@ -43,24 +43,24 @@ describe('core/provisioning/entities/root-validator', () => {
         expect(output.roles![0].attributes.name).toEqual('foo');
     });
 
-    it('should preserve built_in in the run output', async () => {
+    it('should preserve builtIn in the run output', async () => {
         const output = await run({
-            roles: [{ attributes: { name: 'foo', built_in: true } }],
-            permissions: [{ attributes: { name: 'foo', built_in: true } }],
-            scopes: [{ attributes: { name: 'foo', built_in: true } }],
+            roles: [{ attributes: { name: 'foo', builtIn: true } }],
+            permissions: [{ attributes: { name: 'foo', builtIn: true } }],
+            scopes: [{ attributes: { name: 'foo', builtIn: true } }],
             realms: [
                 {
-                    attributes: { name: 'foo', built_in: true },
-                    relations: { clients: [{ attributes: { name: 'foo', built_in: true } }] },
+                    attributes: { name: 'foo', builtIn: true },
+                    relations: { clients: [{ attributes: { name: 'foo', builtIn: true } }] },
                 },
             ],
         });
 
-        expect(output.roles![0].attributes.built_in).toBe(true);
-        expect(output.permissions![0].attributes.built_in).toBe(true);
-        expect(output.scopes![0].attributes.built_in).toBe(true);
-        expect(output.realms![0].attributes.built_in).toBe(true);
-        expect(output.realms![0].relations!.clients![0].attributes.built_in).toBe(true);
+        expect(output.roles![0].attributes.builtIn).toBe(true);
+        expect(output.permissions![0].attributes.builtIn).toBe(true);
+        expect(output.scopes![0].attributes.builtIn).toBe(true);
+        expect(output.realms![0].attributes.builtIn).toBe(true);
+        expect(output.realms![0].relations!.clients![0].attributes.builtIn).toBe(true);
     });
 
     it('should strip unmounted attribute keys', async () => {
@@ -145,7 +145,7 @@ describe('core/provisioning/entities/root-validator', () => {
                     attributes: {
                         name: 'my-policy',
                         type: BuiltInPolicyType.COMPOSITE,
-                        built_in: true,
+                        builtIn: true,
                     },
                     extraAttributes: { decisionStrategy: 'unanimous' },
                     children: [
@@ -164,7 +164,7 @@ describe('core/provisioning/entities/root-validator', () => {
 
         const [policy] = output.policies!;
         expect(policy.attributes.name).toEqual('my-policy');
-        expect(policy.attributes.built_in).toBe(true);
+        expect(policy.attributes.builtIn).toBe(true);
         expect(policy.extraAttributes).toEqual({ decisionStrategy: 'unanimous' });
         expect(policy.children![0].attributes.name).toEqual('my-child');
         expect(policy.children![0].extraAttributes).toEqual({ names: ['active'] });
@@ -198,12 +198,12 @@ describe('core/provisioning/entities/root-validator', () => {
         const output = await run({
             roles: [
                 {
-                    strategy: { type: 'merge', attributes: ['built_in'] },
-                    attributes: { name: 'foo', built_in: true },
+                    strategy: { type: 'merge', attributes: ['builtIn'] },
+                    attributes: { name: 'foo', builtIn: true },
                 },
             ],
         });
 
-        expect(output.roles![0].strategy).toEqual({ type: 'merge', attributes: ['built_in'] });
+        expect(output.roles![0].strategy).toEqual({ type: 'merge', attributes: ['builtIn'] });
     });
 });

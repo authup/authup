@@ -49,7 +49,7 @@ describe('http/controllers/entities/policy/checker', () => {
         const policy = await policyRepository.save(policyRepository.create({
             type: BuiltInPolicyType.IDENTITY,
             name: BuiltInPolicyType.IDENTITY,
-            built_in: true,
+            builtIn: true,
         }));
 
         const response = await suite.client.policy.check(policy.id);

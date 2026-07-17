@@ -22,7 +22,7 @@ import {
 } from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
 
-describe('token grant_types enforcement', () => {
+describe('token grantTypes enforcement', () => {
     const suite = createTestApplication();
 
     let username : string;
@@ -44,11 +44,11 @@ describe('token grant_types enforcement', () => {
     const createConfidentialClient = (grantTypes: string | null) : Promise<Client> => {
         const input = createFakeClient();
         input.active = true;
-        input.auth_method = 'secret';
-        input.token_binding_method = 'none';
-        input.secret_hashed = false;
-        input.secret_encrypted = false;
-        input.grant_types = grantTypes;
+        input.authMethod = 'secret';
+        input.tokenBindingMethod = 'none';
+        input.secretHashed = false;
+        input.secretEncrypted = false;
+        input.grantTypes = grantTypes;
 
         return suite.client.client.create(input);
     };
@@ -64,7 +64,7 @@ describe('token grant_types enforcement', () => {
         expect(response.access_token).toBeDefined();
     });
 
-    it('should grant every grant when grant_types is null', async () => {
+    it('should grant every grant when grantTypes is null', async () => {
         const entity = await createConfidentialClient(null);
 
         const response = await suite.client.token.createWithClientCredentials({

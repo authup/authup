@@ -39,31 +39,31 @@ describe('domains/validator-groups', () => {
     it('should keep name optional at UPDATE', async () => {
         const validator = new RealmValidator();
 
-        const output = await validator.run({ display_name: 'Foo Bar' }, { group: ValidatorGroup.UPDATE });
+        const output = await validator.run({ displayName: 'Foo Bar' }, { group: ValidatorGroup.UPDATE });
 
-        expect(output.display_name).toEqual('Foo Bar');
+        expect(output.displayName).toEqual('Foo Bar');
     });
 
-    it('should strip built_in at CREATE/UPDATE but accept it at PROVISIONING', async () => {
+    it('should strip builtIn at CREATE/UPDATE but accept it at PROVISIONING', async () => {
         const validator = new ClientValidator();
 
         const created = await validator.run(
-            { name: 'foo', built_in: true },
+            { name: 'foo', builtIn: true },
             { group: ValidatorGroup.CREATE },
         );
-        expect(created).not.toHaveProperty('built_in');
+        expect(created).not.toHaveProperty('builtIn');
 
         const updated = await validator.run(
-            { built_in: true },
+            { builtIn: true },
             { group: ValidatorGroup.UPDATE },
         );
-        expect(updated).not.toHaveProperty('built_in');
+        expect(updated).not.toHaveProperty('builtIn');
 
         const provisioned = await validator.run(
-            { name: 'foo', built_in: true },
+            { name: 'foo', builtIn: true },
             { group: ValidatorGroup.PROVISIONING },
         );
-        expect(provisioned.built_in).toBe(true);
+        expect(provisioned.builtIn).toBe(true);
     });
 
     it('should require email at CREATE but not at PROVISIONING', async () => {
@@ -97,11 +97,11 @@ describe('domains/validator-groups', () => {
             {
                 name: 'foo', 
                 type: 'composite', 
-                built_in: true, 
+                builtIn: true, 
             },
             { group: ValidatorGroup.PROVISIONING },
         );
         expect(provisioned.type).toEqual('composite');
-        expect(provisioned.built_in).toBe(true);
+        expect(provisioned.builtIn).toBe(true);
     });
 });

@@ -15,7 +15,7 @@ import type {
 } from '../../../../../src/core/index';
 
 function role(name: string, clientId: string | null): Role {
-    return { name, client_id: clientId } as Role;
+    return { name, clientId } as Role;
 }
 
 function createProvider(boundRoles: Role[]) {

@@ -20,28 +20,28 @@ function createProvider(data: Partial<OAuth2IdentityProvider> = {}) : OAuth2Iden
     const realm: Realm = {
         id: createNanoID(),
         name: 'master',
-        display_name: null,
+        displayName: null,
         description: null,
-        built_in: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        builtIn: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
     };
 
     return {
         id: createNanoID(),
         name: 'idp',
-        display_name: null,
+        displayName: null,
         protocol: IdentityProviderProtocol.OAUTH2,
         preset: null,
         enabled: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        realm_id: realm.id,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        realmId: realm.id,
         realm,
-        client_id: 'client-id',
-        client_secret: 'client-secret',
-        token_url: 'https://idp.example.com/token',
-        authorize_url: 'https://idp.example.com/authorize',
+        clientId: 'client-id',
+        clientSecret: 'client-secret',
+        tokenUrl: 'https://idp.example.com/token',
+        authorizeUrl: 'https://idp.example.com/authorize',
         ...data,
     };
 }
@@ -64,7 +64,7 @@ function createAuthenticatorContext(provider: OAuth2IdentityProvider | OpenIDIde
 
 function createAuthenticator(authorizeURL: string) {
     return new IdentityProviderOAuth2Authenticator(
-        createAuthenticatorContext(createProvider({ authorize_url: authorizeURL })),
+        createAuthenticatorContext(createProvider({ authorizeUrl: authorizeURL })),
     );
 }
 

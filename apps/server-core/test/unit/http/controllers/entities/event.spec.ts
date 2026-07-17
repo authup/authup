@@ -43,24 +43,24 @@ describe('src/http/controllers/entities/event', () => {
         });
         expect(response.access_token).toBeDefined();
 
-        const { data } = await suite.client.event.getMany({ filter: { name: EventName.LOGIN, actor_id: userId } });
+        const { data } = await suite.client.event.getMany({ filter: { name: EventName.LOGIN, actorId: userId } });
         expect(data.length).toBeGreaterThanOrEqual(1);
 
         const [row] = data;
         expect(row.scope).toEqual(EventScope.OAUTH2);
         expect(row.name).toEqual(EventName.LOGIN);
-        expect(row.actor_type).toEqual(IdentityType.USER);
-        expect(row.actor_id).toEqual(userId);
-        expect(row.actor_name).toEqual(user.name);
-        expect(row.realm_id).toBeTruthy();
-        expect(row.ref_type).toEqual('session');
-        expect(row.ref_id).toBeTruthy();
+        expect(row.actorType).toEqual(IdentityType.USER);
+        expect(row.actorId).toEqual(userId);
+        expect(row.actorName).toEqual(user.name);
+        expect(row.realmId).toBeTruthy();
+        expect(row.refType).toEqual('session');
+        expect(row.refId).toBeTruthy();
 
         // context data carries the grant type + session correlation id —
         // and never any credential material.
         expect(row.data).toBeTruthy();
-        expect(row.data!.grant_type).toEqual('password');
-        expect(row.data!.session_id).toEqual(row.ref_id);
+        expect(row.data!.grantType).toEqual('password');
+        expect(row.data!.sessionId).toEqual(row.refId);
         expect(row.data!.password).toBeUndefined();
         expect(JSON.stringify(row.data)).not.toContain(user.password);
     });
@@ -74,18 +74,18 @@ describe('src/http/controllers/entities/event', () => {
             { status: 400 },
         );
 
-        const { data } = await suite.client.event.getMany({ filter: { name: EventName.LOGIN_FAILED, actor_name: user.name } });
+        const { data } = await suite.client.event.getMany({ filter: { name: EventName.LOGIN_FAILED, actorName: user.name } });
         expect(data.length).toBeGreaterThanOrEqual(1);
 
         const [row] = data;
         expect(row.scope).toEqual(EventScope.OAUTH2);
-        expect(row.actor_id).toBeNull();
-        expect(row.actor_type).toBeNull();
+        expect(row.actorId).toBeNull();
+        expect(row.actorType).toBeNull();
         // the submitted identifier, canonicalized (trim + lowercase)
-        expect(row.actor_name).toEqual(user.name);
-        expect(row.request_ip_address).toBeTruthy();
+        expect(row.actorName).toEqual(user.name);
+        expect(row.requestIpAddress).toBeTruthy();
         expect(row.data).toBeTruthy();
-        expect(row.data!.error_code).toEqual(ErrorCode.ENTITY_CREDENTIALS_INVALID);
+        expect(row.data!.errorCode).toEqual(ErrorCode.ENTITY_CREDENTIALS_INVALID);
         expect(JSON.stringify(row.data)).not.toContain('this-is-not-the-password');
     });
 
@@ -97,7 +97,7 @@ describe('src/http/controllers/entities/event', () => {
     });
 
     it('reads a single audit event', async () => {
-        const { data } = await suite.client.event.getMany({ filter: { name: EventName.LOGIN, actor_id: userId } });
+        const { data } = await suite.client.event.getMany({ filter: { name: EventName.LOGIN, actorId: userId } });
         expect(data.length).toBeGreaterThanOrEqual(1);
 
         const row = await suite.client.event.getOne(data[0].id);
@@ -117,7 +117,7 @@ describe('src/http/controllers/entities/event', () => {
         });
         expect([404, 405]).toContain(post.status);
 
-        const { data } = await suite.client.event.getMany({ filter: { name: EventName.LOGIN, actor_id: userId } });
+        const { data } = await suite.client.event.getMany({ filter: { name: EventName.LOGIN, actorId: userId } });
         expect(data.length).toBeGreaterThanOrEqual(1);
 
         const del = await httpRequest(suite, 'DELETE', `/events/${data[0].id}`, { headers: { Authorization: adminAuthorization } });

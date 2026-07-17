@@ -127,14 +127,14 @@ describe('OIDC conformance smoke', () => {
     it('issues an id_token with the required claims, consistent with discovery', async () => {
         // full auth-code flow: password login → authorize → exchange
         const client: Client = await suite.client.client.create(createFakeClient({
-            auth_method: 'none',
-            token_binding_method: 'none',
+            authMethod: 'none',
+            tokenBindingMethod: 'none',
             secret: null,
-            redirect_uri: 'https://app.example.com/**',
+            redirectUri: 'https://app.example.com/**',
         }));
         for (const scopeName of [ScopeName.GLOBAL, ScopeName.OPEN_ID]) {
             const scope = await suite.client.scope.getOne(scopeName);
-            await suite.client.clientScope.create({ scope_id: scope.id, client_id: client.id });
+            await suite.client.clientScope.create({ scopeId: scope.id, clientId: client.id });
         }
 
         const password = generateOAuth2CodeVerifier();

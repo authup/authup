@@ -10,18 +10,18 @@ import { sanitizeEventData } from '../../../../../src/core/entities/event/saniti
 
 describe('sanitizeEventData', () => {
     it.each([
-        ['grant_type', 'password'],
+        ['grantType', 'password'],
         ['scope', 'global openid'],
-        ['response_type', 'code'],
+        ['responseType', 'code'],
         ['prompt', 'login'],
         ['error', 'invalid_grant'],
-        ['error_code', 'entity_credentials_invalid'],
+        ['errorCode', 'entity_credentials_invalid'],
         ['reason', 'replay'],
-        ['client_name', 'web'],
-        ['realm_name', 'master'],
-        ['session_id', 'b0e8b3d2-0000-0000-0000-000000000000'],
+        ['clientName', 'web'],
+        ['realmName', 'master'],
+        ['sessionId', 'b0e8b3d2-0000-0000-0000-000000000000'],
         ['jti', 'b0e8b3d2-1111-1111-1111-111111111111'],
-        ['revoked_session_id', 'b0e8b3d2-2222-2222-2222-222222222222'],
+        ['revokedSessionId', 'b0e8b3d2-2222-2222-2222-222222222222'],
         ['name', 'sig-primary'],
         ['use', 'enc'],
         ['status', 'disabled'],
@@ -50,8 +50,8 @@ describe('sanitizeEventData', () => {
         expect(sanitizeEventData({ [key]: 'super-secret-value' })).toBeNull();
 
         // and never lets it ride alongside an allowlisted key
-        const mixed = sanitizeEventData({ grant_type: 'password', [key]: 'super-secret-value' });
-        expect(mixed).toEqual({ grant_type: 'password' });
+        const mixed = sanitizeEventData({ grantType: 'password', [key]: 'super-secret-value' });
+        expect(mixed).toEqual({ grantType: 'password' });
     });
 
     it('drops arbitrary non-allowlisted keys', () => {
@@ -70,12 +70,12 @@ describe('sanitizeEventData', () => {
 
     it('cannot smuggle a secret through a nested structure under an allowlisted key', () => {
         const output = sanitizeEventData({
-            grant_type: 'password',
+            grantType: 'password',
             reason: { password: 'super-secret' },
             scope: ['refresh_token', { client_secret: 'oops' }],
         });
 
-        expect(output).toEqual({ grant_type: 'password' });
+        expect(output).toEqual({ grantType: 'password' });
         expect(JSON.stringify(output)).not.toContain('super-secret');
         expect(JSON.stringify(output)).not.toContain('oops');
     });
@@ -108,7 +108,7 @@ describe('sanitizeEventData', () => {
                 diff: {
                     description: { next: 'after', previous: 'before' },
                     active: { next: false, previous: true },
-                    display_name: { next: 'set', previous: null },
+                    displayName: { next: 'set', previous: null },
                 },
             });
 
@@ -116,7 +116,7 @@ describe('sanitizeEventData', () => {
                 diff: {
                     description: { next: 'after', previous: 'before' },
                     active: { next: false, previous: true },
-                    display_name: { next: 'set', previous: null },
+                    displayName: { next: 'set', previous: null },
                 },
             });
         });
@@ -124,7 +124,7 @@ describe('sanitizeEventData', () => {
         it.each([
             ['password'],
             ['secret'],
-            ['secret_hashed'],
+            ['secretHashed'],
             ['token'],
             ['credential'],
         ])('drops the secret-denylisted diff key %s', (key) => {

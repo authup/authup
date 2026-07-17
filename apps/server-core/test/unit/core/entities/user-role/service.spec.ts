@@ -72,53 +72,53 @@ describe('core/entities/user-role/service', () => {
             const roleRealmId = randomUUID();
 
             repository.onValidateJoinColumns((data: any) => {
-                data.user = { realm_id: userRealmId };
-                data.role = { realm_id: roleRealmId };
+                data.user = { realmId: userRealmId };
+                data.role = { realmId: roleRealmId };
             });
 
             const data = {
-                user_id: randomUUID(),
-                role_id: randomUUID(),
+                userId: randomUUID(),
+                roleId: randomUUID(),
             };
 
             const result = await service.create(data, createAllowAllActor());
             expect(result.id).toBeDefined();
-            expect(result.user_realm_id).toBe(userRealmId);
-            expect(result.role_realm_id).toBe(roleRealmId);
+            expect(result.userRealmId).toBe(userRealmId);
+            expect(result.roleRealmId).toBe(roleRealmId);
         });
 
         it('should call preCheck with USER_ROLE_CREATE', async () => {
             const actor = createAllowAllActor();
             await service.create({
-                user_id: randomUUID(),
-                role_id: randomUUID(), 
+                userId: randomUUID(),
+                roleId: randomUUID(), 
             }, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.USER_ROLE_CREATE });
         });
 
-        it('should throw validation error when user_id is missing', async () => {
+        it('should throw validation error when userId is missing', async () => {
             await expect(
-                service.create({ role_id: randomUUID() }, createAllowAllActor()),
-            ).rejects.toThrow(/user_id/);
+                service.create({ roleId: randomUUID() }, createAllowAllActor()),
+            ).rejects.toThrow(/userId/);
         });
 
-        it('should throw validation error when role_id is missing', async () => {
+        it('should throw validation error when roleId is missing', async () => {
             await expect(
-                service.create({ user_id: randomUUID() }, createAllowAllActor()),
-            ).rejects.toThrow(/role_id/);
+                service.create({ userId: randomUUID() }, createAllowAllActor()),
+            ).rejects.toThrow(/roleId/);
         });
 
-        it('should throw validation error when user_id is not a valid UUID', async () => {
+        it('should throw validation error when userId is not a valid UUID', async () => {
             await expect(
-                service.create({ user_id: 'not-a-uuid', role_id: randomUUID() }, createAllowAllActor()),
-            ).rejects.toThrow(/user_id/);
+                service.create({ userId: 'not-a-uuid', roleId: randomUUID() }, createAllowAllActor()),
+            ).rejects.toThrow(/userId/);
         });
 
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({
-                    user_id: randomUUID(),
-                    role_id: randomUUID(),
+                    userId: randomUUID(),
+                    roleId: randomUUID(),
                 }, createDenyAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
@@ -129,14 +129,14 @@ describe('core/entities/user-role/service', () => {
             const svc = new UserRoleService({ repository, identityPermissionProvider: identityPermissionProviderDeny });
 
             repository.onValidateJoinColumns((data: any) => {
-                data.role = { realm_id: null, client_id: null };
-                data.user = { realm_id: null };
+                data.role = { realmId: null, clientId: null };
+                data.user = { realmId: null };
             });
 
             await expect(
                 svc.create({
-                    user_id: randomUUID(),
-                    role_id: randomUUID(),
+                    userId: randomUUID(),
+                    roleId: randomUUID(),
                 }, createMasterRealmActor()),
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
@@ -145,10 +145,10 @@ describe('core/entities/user-role/service', () => {
             const roleId = randomUUID();
             const userId = randomUUID();
 
-            repository.seed({ role_id: roleId, user_id: userId });
+            repository.seed({ roleId, userId });
 
             await expect(
-                service.create({ role_id: roleId, user_id: userId }, createAllowAllActor()),
+                service.create({ roleId, userId }, createAllowAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.ENTITY_CONFLICT });
         });
     });

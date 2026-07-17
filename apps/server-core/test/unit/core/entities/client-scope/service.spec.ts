@@ -64,53 +64,53 @@ describe('core/entities/client-scope/service', () => {
             const scopeRealmId = randomUUID();
 
             repository.onValidateJoinColumns((data: any) => {
-                data.client = { realm_id: clientRealmId };
-                data.scope = { realm_id: scopeRealmId };
+                data.client = { realmId: clientRealmId };
+                data.scope = { realmId: scopeRealmId };
             });
 
             const data = {
-                client_id: randomUUID(),
-                scope_id: randomUUID(),
+                clientId: randomUUID(),
+                scopeId: randomUUID(),
             };
 
             const result = await service.create(data, createAllowAllActor());
             expect(result.id).toBeDefined();
-            expect(result.client_realm_id).toBe(clientRealmId);
-            expect(result.scope_realm_id).toBe(scopeRealmId);
+            expect(result.clientRealmId).toBe(clientRealmId);
+            expect(result.scopeRealmId).toBe(scopeRealmId);
         });
 
         it('should call preCheck with CLIENT_SCOPE_CREATE', async () => {
             const actor = createAllowAllActor();
             await service.create({
-                client_id: randomUUID(),
-                scope_id: randomUUID(), 
+                clientId: randomUUID(),
+                scopeId: randomUUID(), 
             }, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.CLIENT_SCOPE_CREATE });
         });
 
-        it('should throw validation error when client_id is missing', async () => {
+        it('should throw validation error when clientId is missing', async () => {
             await expect(
-                service.create({ scope_id: randomUUID() }, createAllowAllActor()),
-            ).rejects.toThrow(/client_id/);
+                service.create({ scopeId: randomUUID() }, createAllowAllActor()),
+            ).rejects.toThrow(/clientId/);
         });
 
-        it('should throw validation error when scope_id is missing', async () => {
+        it('should throw validation error when scopeId is missing', async () => {
             await expect(
-                service.create({ client_id: randomUUID() }, createAllowAllActor()),
-            ).rejects.toThrow(/scope_id/);
+                service.create({ clientId: randomUUID() }, createAllowAllActor()),
+            ).rejects.toThrow(/scopeId/);
         });
 
-        it('should throw validation error when client_id is not a valid UUID', async () => {
+        it('should throw validation error when clientId is not a valid UUID', async () => {
             await expect(
-                service.create({ client_id: 'not-a-uuid', scope_id: randomUUID() }, createAllowAllActor()),
-            ).rejects.toThrow(/client_id/);
+                service.create({ clientId: 'not-a-uuid', scopeId: randomUUID() }, createAllowAllActor()),
+            ).rejects.toThrow(/clientId/);
         });
 
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({
-                    client_id: randomUUID(),
-                    scope_id: randomUUID(),
+                    clientId: randomUUID(),
+                    scopeId: randomUUID(),
                 }, createDenyAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
@@ -119,10 +119,10 @@ describe('core/entities/client-scope/service', () => {
             const clientId = randomUUID();
             const scopeId = randomUUID();
 
-            repository.seed({ client_id: clientId, scope_id: scopeId });
+            repository.seed({ clientId, scopeId });
 
             await expect(
-                service.create({ client_id: clientId, scope_id: scopeId }, createAllowAllActor()),
+                service.create({ clientId, scopeId }, createAllowAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.ENTITY_CONFLICT });
         });
     });

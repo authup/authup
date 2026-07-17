@@ -10,11 +10,11 @@ import type { PermissionPolicyBinding } from '@authup/access';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
+import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IRealmRepository, IRobotRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
-import { applyRealmScopeSelect, translateWhereConditions } from '../helpers.ts';
+import { applyRealmScopeSelect, isEntityUnique, translateWhereConditions } from '../helpers.ts';
 import { loadBoundPermissions } from '../bindings.ts';
 import {
     CachePrefix,

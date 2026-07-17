@@ -18,7 +18,7 @@ describe('OAuth2ScopeAttributesResolver', () => {
             expect(resolver.resolveFor(OAuth2SubKind.CLIENT, ScopeName.IDENTITY)).toEqual(['name']);
             expect(resolver.resolveFor(OAuth2SubKind.ROBOT, ScopeName.IDENTITY)).toEqual(['name']);
             expect(resolver.resolveFor(OAuth2SubKind.USER, ScopeName.IDENTITY))
-                .toEqual(expect.arrayContaining(['name', 'display_name', 'last_name', 'first_name']));
+                .toEqual(expect.arrayContaining(['name', 'displayName', 'lastName', 'firstName']));
         });
     });
 
@@ -28,8 +28,8 @@ describe('OAuth2ScopeAttributesResolver', () => {
             ['resolveForRobot', (s: string | string[]) => resolver.resolveForRobot(s)],
         ] as const)('%s should resolve scope attributes', (_, resolve) => {
             expect(resolve(ScopeName.IDENTITY)).toEqual(['name']);
-            expect(resolve(ScopeName.OPEN_ID)).toEqual(expect.arrayContaining(['name', 'display_name', 'updated_at', 'active']));
-            expect(resolve(ScopeName.GLOBAL)).toEqual(expect.arrayContaining(['name', 'display_name', 'updated_at', 'active']));
+            expect(resolve(ScopeName.OPEN_ID)).toEqual(expect.arrayContaining(['name', 'displayName', 'updatedAt', 'active']));
+            expect(resolve(ScopeName.GLOBAL)).toEqual(expect.arrayContaining(['name', 'displayName', 'updatedAt', 'active']));
             expect(resolve('unknown-scope')).toEqual([]);
         });
     });
@@ -37,16 +37,16 @@ describe('OAuth2ScopeAttributesResolver', () => {
     describe('resolveForUser', () => {
         it('should resolve per-scope attributes', () => {
             expect(resolver.resolveForUser(ScopeName.IDENTITY))
-                .toEqual(expect.arrayContaining(['name', 'display_name', 'last_name', 'first_name']));
+                .toEqual(expect.arrayContaining(['name', 'displayName', 'lastName', 'firstName']));
             expect(resolver.resolveForUser(ScopeName.EMAIL)).toEqual(['email']);
             expect(resolver.resolveForUser(ScopeName.OPEN_ID))
-                .toEqual(expect.arrayContaining(['name', 'updated_at', 'first_name', 'last_name', 'display_name', 'active', 'email']));
+                .toEqual(expect.arrayContaining(['name', 'updatedAt', 'firstName', 'lastName', 'displayName', 'active', 'email']));
         });
 
         it('should resolve global scope to all attributes', () => {
             const result = resolver.resolveForUser(ScopeName.GLOBAL);
             expect(result).toEqual(expect.arrayContaining(
-                ['name', 'display_name', 'last_name', 'first_name', 'email', 'updated_at', 'active'],
+                ['name', 'displayName', 'lastName', 'firstName', 'email', 'updatedAt', 'active'],
             ));
         });
 

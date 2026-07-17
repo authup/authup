@@ -8,11 +8,11 @@
 import type { Realm, Scope } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
+import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IRealmRepository, IScopeRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
-import { translateWhereConditions } from '../helpers.ts';
+import { isEntityUnique, translateWhereConditions } from '../helpers.ts';
 import { ScopeEntity } from '../../../../../adapters/database/domains/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 

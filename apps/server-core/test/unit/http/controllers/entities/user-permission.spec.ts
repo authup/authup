@@ -40,12 +40,12 @@ describe('src/http/controllers/user-permission', () => {
         details = await suite.client
             .userPermission
             .create({
-                user_id: user.id,
-                permission_id: permission.id,
+                userId: user.id,
+                permissionId: permission.id,
             });
 
-        expect(details.user_id).toEqual(user.id);
-        expect(details.permission_id).toEqual(permission.id);
+        expect(details.userId).toEqual(user.id);
+        expect(details.permissionId).toEqual(permission.id);
     });
 
     it('should read collection', async () => {

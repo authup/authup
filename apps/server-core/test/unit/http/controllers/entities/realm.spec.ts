@@ -90,13 +90,13 @@ describe('src/http/controllers/realm', () => {
         // prime the id-keyed query cache
         await suite.client.realm.getOne(entity.id);
 
-        await suite.client.realm.update(entity.id, { display_name: 'cache-invalidation-check' });
+        await suite.client.realm.update(entity.id, { displayName: 'cache-invalidation-check' });
 
         const response = await suite.client
             .realm
             .getOne(entity.id);
 
-        expect(response.display_name).toEqual('cache-invalidation-check');
+        expect(response.displayName).toEqual('cache-invalidation-check');
     });
 
     it('should not serve a deleted resource from the id-keyed cache', async () => {

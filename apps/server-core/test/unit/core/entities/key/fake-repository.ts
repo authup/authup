@@ -18,7 +18,7 @@ export class FakeKeyRepository extends FakeEntityRepository<Key> implements IKey
     override async checkUniqueness(data: Partial<Key>, existing?: Key): Promise<void> {
         const conflict = this.getAll().find(
             (entity) => entity.name === data.name &&
-                entity.realm_id === data.realm_id &&
+                entity.realmId === data.realmId &&
                 (!existing || entity.id !== existing.id),
         );
 
@@ -34,7 +34,7 @@ export class FakeKeyRepository extends FakeEntityRepository<Key> implements IKey
 
     async findHighestPriority(realmId: string, use: string): Promise<number | null> {
         const priorities = this.getAll()
-            .filter((entity) => entity.realm_id === realmId && entity.use === use)
+            .filter((entity) => entity.realmId === realmId && entity.use === use)
             .map((entity) => entity.priority);
 
         return priorities.length > 0 ? Math.max(...priorities) : null;

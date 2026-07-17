@@ -69,30 +69,30 @@ describe('core/entities/robot-permission/service', () => {
             const permissionRealmId = randomUUID();
 
             repository.onValidateJoinColumns((data: any) => {
-                data.robot = { realm_id: robotRealmId };
-                data.permission = { realm_id: permissionRealmId, name: 'test-perm' };
+                data.robot = { realmId: robotRealmId };
+                data.permission = { realmId: permissionRealmId, name: 'test-perm' };
             });
 
             const data = {
-                robot_id: randomUUID(),
-                permission_id: randomUUID(),
+                robotId: randomUUID(),
+                permissionId: randomUUID(),
             };
 
             const result = await service.create(data, createAllowAllActor());
             expect(result.id).toBeDefined();
-            expect(result.robot_realm_id).toBe(robotRealmId);
-            expect(result.permission_realm_id).toBe(permissionRealmId);
+            expect(result.robotRealmId).toBe(robotRealmId);
+            expect(result.permissionRealmId).toBe(permissionRealmId);
         });
 
         it('should preCheck permission name when permission is provided', async () => {
             repository.onValidateJoinColumns((data: any) => {
-                data.permission = { name: 'custom-perm', realm_id: null };
+                data.permission = { name: 'custom-perm', realmId: null };
             });
 
             const actor = createAllowAllActor();
             await service.create({
-                robot_id: randomUUID(),
-                permission_id: randomUUID(),
+                robotId: randomUUID(),
+                permissionId: randomUUID(),
             }, actor);
 
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({
@@ -102,29 +102,29 @@ describe('core/entities/robot-permission/service', () => {
             });
         });
 
-        it('should throw validation error when robot_id is missing', async () => {
+        it('should throw validation error when robotId is missing', async () => {
             await expect(
-                service.create({ permission_id: randomUUID() }, createAllowAllActor()),
-            ).rejects.toThrow(/robot_id/);
+                service.create({ permissionId: randomUUID() }, createAllowAllActor()),
+            ).rejects.toThrow(/robotId/);
         });
 
-        it('should throw validation error when permission_id is missing', async () => {
+        it('should throw validation error when permissionId is missing', async () => {
             await expect(
-                service.create({ robot_id: randomUUID() }, createAllowAllActor()),
-            ).rejects.toThrow(/permission_id/);
+                service.create({ robotId: randomUUID() }, createAllowAllActor()),
+            ).rejects.toThrow(/permissionId/);
         });
 
-        it('should throw validation error when robot_id is not a valid UUID', async () => {
+        it('should throw validation error when robotId is not a valid UUID', async () => {
             await expect(
-                service.create({ robot_id: 'not-a-uuid', permission_id: randomUUID() }, createAllowAllActor()),
-            ).rejects.toThrow(/robot_id/);
+                service.create({ robotId: 'not-a-uuid', permissionId: randomUUID() }, createAllowAllActor()),
+            ).rejects.toThrow(/robotId/);
         });
 
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({
-                    robot_id: randomUUID(),
-                    permission_id: randomUUID(),
+                    robotId: randomUUID(),
+                    permissionId: randomUUID(),
                 }, createDenyAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
@@ -133,62 +133,62 @@ describe('core/entities/robot-permission/service', () => {
             const permissionId = randomUUID();
             const robotId = randomUUID();
 
-            repository.seed({ permission_id: permissionId, robot_id: robotId });
+            repository.seed({ permissionId, robotId });
 
             await expect(
-                service.create({ permission_id: permissionId, robot_id: robotId }, createAllowAllActor()),
+                service.create({ permissionId, robotId }, createAllowAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.ENTITY_CONFLICT });
         });
     });
 
     describe('update', () => {
-        it('should update policy_id on an existing entity', async () => {
-            const entity = repository.seed({ policy_id: null });
+        it('should update policyId on an existing entity', async () => {
+            const entity = repository.seed({ policyId: null });
             const policyId = randomUUID();
 
-            const result = await service.update(entity.id, { policy_id: policyId }, createAllowAllActor());
-            expect(result.policy_id).toBe(policyId);
+            const result = await service.update(entity.id, { policyId }, createAllowAllActor());
+            expect(result.policyId).toBe(policyId);
         });
 
-        it('should clear policy_id when set to null', async () => {
-            const entity = repository.seed({ policy_id: randomUUID() });
+        it('should clear policyId when set to null', async () => {
+            const entity = repository.seed({ policyId: randomUUID() });
 
-            const result = await service.update(entity.id, { policy_id: null }, createAllowAllActor());
-            expect(result.policy_id).toBeNull();
+            const result = await service.update(entity.id, { policyId: null }, createAllowAllActor());
+            expect(result.policyId).toBeNull();
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
-                service.update('non-existent-id', { policy_id: randomUUID() }, createAllowAllActor()),
+                service.update('non-existent-id', { policyId: randomUUID() }, createAllowAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should call preCheck with ROBOT_PERMISSION_UPDATE', async () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
-            await service.update(entity.id, { policy_id: null }, actor);
+            await service.update(entity.id, { policyId: null }, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROBOT_PERMISSION_UPDATE });
         });
 
         it('should throw when actor lacks permission', async () => {
             const entity = repository.seed({});
             await expect(
-                service.update(entity.id, { policy_id: randomUUID() }, createDenyAllActor()),
+                service.update(entity.id, { policyId: randomUUID() }, createDenyAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
-        it('should only update policy_id and not other fields', async () => {
+        it('should only update policyId and not other fields', async () => {
             const originalRobotId = randomUUID();
-            const entity = repository.seed({ robot_id: originalRobotId, policy_id: null });
+            const entity = repository.seed({ robotId: originalRobotId, policyId: null });
             const policyId = randomUUID();
 
             const result = await service.update(
                 entity.id,
-                { policy_id: policyId, robot_id: randomUUID() },
+                { policyId, robotId: randomUUID() },
                 createAllowAllActor(),
             );
-            expect(result.policy_id).toBe(policyId);
-            expect(result.robot_id).toBe(originalRobotId);
+            expect(result.policyId).toBe(policyId);
+            expect(result.robotId).toBe(originalRobotId);
         });
     });
 

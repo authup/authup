@@ -40,7 +40,7 @@ function createSelfActor(userId: string, userName?: string, realmId?: string): F
             data: {
                 id: userId,
                 name: userName || 'self-user',
-                realm_id: rId,
+                realmId: rId,
                 realm: {
                     id: rId,
                     name: 'test-realm',
@@ -213,7 +213,7 @@ describe('core/entities/user/service', () => {
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
-        it('should set realm_id from actor for non-master realm', async () => {
+        it('should set realmId from actor for non-master realm', async () => {
             const realmId = randomUUID();
             const actor = createNonMasterRealmActor(realmId);
 
@@ -221,7 +221,7 @@ describe('core/entities/user/service', () => {
                 name: 'realm-user',
                 email: 'realm@example.com',
             }, actor);
-            expect(result.realm_id).toBe(realmId);
+            expect(result.realmId).toBe(realmId);
         });
 
         it('should reject a password below the default minimum length', async () => {
@@ -272,13 +272,13 @@ describe('core/entities/user/service', () => {
         it('should update an existing user', async () => {
             const entity = repository.seed(createFakeUser({ name: 'old-name' }));
 
-            const result = await service.update(entity.id, { display_name: 'New Display' }, createAllowAllActor());
-            expect(result.display_name).toBe('New Display');
+            const result = await service.update(entity.id, { displayName: 'New Display' }, createAllowAllActor());
+            expect(result.displayName).toBe('New Display');
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
-                service.update('non-existent-id', { display_name: 'x' }, createAllowAllActor()),
+                service.update('non-existent-id', { displayName: 'x' }, createAllowAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
@@ -305,8 +305,8 @@ describe('core/entities/user/service', () => {
             const actor = createSelfActor(entity.id);
             denyOnlyUserUpdate(actor);
 
-            const result = await service.update(entity.id, { display_name: 'Updated' }, actor);
-            expect(result.display_name).toBe('Updated');
+            const result = await service.update(entity.id, { displayName: 'Updated' }, actor);
+            expect(result.displayName).toBe('Updated');
 
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.USER_SELF_MANAGE });
             expect(actor.permissionEvaluator.evaluateCalls).toContainEqual(
@@ -320,17 +320,17 @@ describe('core/entities/user/service', () => {
             const actor = createSelfActor(entity.id);
             denyOnlyUserUpdate(actor);
 
-            await service.update(entity.id, { display_name: 'Updated' }, actor);
+            await service.update(entity.id, { displayName: 'Updated' }, actor);
 
             const selfManageCall = actor.permissionEvaluator.evaluateCalls.find(
                 (c) => c.name === PermissionName.USER_SELF_MANAGE,
             );
             expect(selfManageCall).toBeDefined();
             const attrs = selfManageCall!.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
-            expect(attrs).toHaveProperty('display_name', 'Updated');
+            expect(attrs).toHaveProperty('displayName', 'Updated');
             expect(attrs).not.toHaveProperty('id');
             expect(attrs).not.toHaveProperty('active');
-            expect(attrs).not.toHaveProperty('realm_id');
+            expect(attrs).not.toHaveProperty('realmId');
         });
 
         it('should throw when non-self user lacks USER_UPDATE', async () => {
@@ -340,7 +340,7 @@ describe('core/entities/user/service', () => {
             denyOnlyUserUpdate(actor);
 
             await expect(
-                service.update(entity.id, { display_name: 'forbidden' }, actor),
+                service.update(entity.id, { displayName: 'forbidden' }, actor),
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
@@ -351,16 +351,16 @@ describe('core/entities/user/service', () => {
             actor.permissionEvaluator.denyAll();
 
             await expect(
-                service.update(entity.id, { display_name: 'forbidden' }, actor),
+                service.update(entity.id, { displayName: 'forbidden' }, actor),
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 
     describe('name-lock protection', () => {
-        it('should prevent name change when name_locked is true and not unlocked', async () => {
+        it('should prevent name change when nameLocked is true and not unlocked', async () => {
             const entity = repository.seed(createFakeUser({
                 name: 'locked-name',
-                name_locked: true, 
+                nameLocked: true, 
             }));
 
             const result = await service.update(
@@ -372,36 +372,36 @@ describe('core/entities/user/service', () => {
             expect(result.name).toBe('locked-name');
         });
 
-        it('should allow name change when name_locked is explicitly set to false', async () => {
+        it('should allow name change when nameLocked is explicitly set to false', async () => {
             const entity = repository.seed(createFakeUser({
                 name: 'locked-name',
-                name_locked: true, 
+                nameLocked: true, 
             }));
 
             const result = await service.update(
                 entity.id,
                 {
                     name: 'new-name',
-                    name_locked: false, 
+                    nameLocked: false, 
                 },
                 createAllowAllActor(),
             );
 
             expect(result.name).toBe('new-name');
-            expect(result.name_locked).toBe(false);
+            expect(result.nameLocked).toBe(false);
         });
 
-        it('should prevent name change when re-locking with name_locked: true', async () => {
+        it('should prevent name change when re-locking with nameLocked: true', async () => {
             const entity = repository.seed(createFakeUser({
                 name: 'locked-name',
-                name_locked: true, 
+                nameLocked: true, 
             }));
 
             const result = await service.update(
                 entity.id,
                 {
                     name: 'new-name',
-                    name_locked: true, 
+                    nameLocked: true, 
                 },
                 createAllowAllActor(),
             );
@@ -412,7 +412,7 @@ describe('core/entities/user/service', () => {
         it('should allow name change when name was not locked', async () => {
             const entity = repository.seed(createFakeUser({
                 name: 'old-name',
-                name_locked: false, 
+                nameLocked: false, 
             }));
 
             const result = await service.update(
@@ -484,7 +484,7 @@ describe('core/entities/user/service', () => {
 
             const { created } = await service.save(
                 entity.id,
-                { display_name: 'updated' },
+                { displayName: 'updated' },
                 createAllowAllActor(),
             );
 

@@ -43,19 +43,19 @@ describe('http/controllers/workflows/authorize (access policy, plan 052)', () =>
             type: BuiltInPolicyType.IDENTITY,
             invert: false,
             types: [IdentityType.ROBOT],
-            realm_id: null,
+            realmId: null,
         });
         allowPolicy = await suite.client.policy.createBuiltIn({
             name: 'authorize-access-allow',
             type: BuiltInPolicyType.IDENTITY,
             invert: false,
-            realm_id: null,
+            realmId: null,
         });
 
         // non-admin bearer: a plain user in the client's realm
         const password = generateOAuth2CodeVerifier();
         const user = await suite.client.user.create(createFakeUser({
-            realm_id: realm.id,
+            realmId: realm.id,
             password,
         }));
         const login = await suite.client.token.createWithPassword({
@@ -74,14 +74,14 @@ describe('http/controllers/workflows/authorize (access policy, plan 052)', () =>
 
     const createGatedClient = async (accessPolicyId: string | null) => {
         const client = await suite.client.client.create(createFakeClient({
-            realm_id: realm.id,
-            auth_method: 'secret',
-            token_binding_method: 'none',
-            access_policy_id: accessPolicyId,
+            realmId: realm.id,
+            authMethod: 'secret',
+            tokenBindingMethod: 'none',
+            accessPolicyId,
         }));
         await suite.client.clientScope.create({
-            scope_id: scope.id,
-            client_id: client.id,
+            scopeId: scope.id,
+            clientId: client.id,
         });
         return client;
     };

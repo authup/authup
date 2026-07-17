@@ -141,17 +141,17 @@ describe('OAuth2AccessTokenIssuer', () => {
                 {
                     id: randomUUID(),
                     name: 'editor',
-                    realm_id: realmId,
+                    realmId,
                 } as Role,
                 {
                     id: randomUUID(),
                     name: 'viewer',
-                    realm_id: realmId,
+                    realmId,
                 } as Role,
                 {
                     id: randomUUID(),
                     name: 'admin',
-                    realm_id: null,
+                    realmId: null,
                 } as Role,
             ];
             const provider = new FakeIdentityRoleProvider(roles);
@@ -191,17 +191,17 @@ describe('OAuth2AccessTokenIssuer', () => {
                 {
                     id: randomUUID(),
                     name: 'editor',
-                    realm_id: realmId,
+                    realmId,
                 } as Role,
                 {
                     id: randomUUID(),
                     name: 'foreign',
-                    realm_id: otherRealmId,
+                    realmId: otherRealmId,
                 } as Role,
                 {
                     id: randomUUID(),
                     name: 'admin',
-                    realm_id: null,
+                    realmId: null,
                 } as Role,
             ];
             const provider = new FakeIdentityRoleProvider(roles);
@@ -223,12 +223,12 @@ describe('OAuth2AccessTokenIssuer', () => {
                 {
                     id: randomUUID(),
                     name: 'editor',
-                    realm_id: realmId,
+                    realmId,
                 } as Role,
                 {
                     id: randomUUID(),
                     name: 'admin',
-                    realm_id: null,
+                    realmId: null,
                 } as Role,
             ];
             const provider = new FakeIdentityRoleProvider(roles);

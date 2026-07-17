@@ -84,39 +84,39 @@ describe('core/entities/role-permission/service', () => {
             const permissionRealmId = randomUUID();
 
             repository.onValidateJoinColumns((data: any) => {
-                data.role = { realm_id: roleRealmId };
-                data.permission = { realm_id: permissionRealmId, name: 'test-perm' };
+                data.role = { realmId: roleRealmId };
+                data.permission = { realmId: permissionRealmId, name: 'test-perm' };
             });
 
             const data = {
-                role_id: randomUUID(),
-                permission_id: randomUUID(),
+                roleId: randomUUID(),
+                permissionId: randomUUID(),
             };
 
             const result = await service.create(data, createAllowAllActor());
             expect(result.id).toBeDefined();
-            expect(result.role_realm_id).toBe(roleRealmId);
-            expect(result.permission_realm_id).toBe(permissionRealmId);
+            expect(result.roleRealmId).toBe(roleRealmId);
+            expect(result.permissionRealmId).toBe(permissionRealmId);
         });
 
         it('should call preCheck with ROLE_PERMISSION_CREATE', async () => {
             const actor = createAllowAllActor();
             await service.create({
-                role_id: randomUUID(),
-                permission_id: randomUUID(),
+                roleId: randomUUID(),
+                permissionId: randomUUID(),
             }, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROLE_PERMISSION_CREATE });
         });
 
         it('should preCheck permission name when permission is provided', async () => {
             repository.onValidateJoinColumns((data: any) => {
-                data.permission = { name: 'custom-perm', realm_id: null };
+                data.permission = { name: 'custom-perm', realmId: null };
             });
 
             const actor = createAllowAllActor();
             await service.create({
-                role_id: randomUUID(),
-                permission_id: randomUUID(),
+                roleId: randomUUID(),
+                permissionId: randomUUID(),
             }, actor);
 
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({
@@ -128,14 +128,14 @@ describe('core/entities/role-permission/service', () => {
 
         it('should run the permission name preCheck uniformly for the admin role (no bypass)', async () => {
             repository.onValidateJoinColumns((data: any) => {
-                data.role = { name: ROLE_ADMIN_NAME, realm_id: null };
-                data.permission = { name: 'custom-perm', realm_id: null };
+                data.role = { name: ROLE_ADMIN_NAME, realmId: null };
+                data.permission = { name: 'custom-perm', realmId: null };
             });
 
             const actor = createAllowAllActor();
             await service.create({
-                role_id: randomUUID(),
-                permission_id: randomUUID(),
+                roleId: randomUUID(),
+                permissionId: randomUUID(),
             }, actor);
 
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({
@@ -145,7 +145,7 @@ describe('core/entities/role-permission/service', () => {
             });
         });
 
-        it('caps realm_scope to the actor ceiling and ignores explicit policy_id for a restricted actor', async () => {
+        it('caps realmScope to the actor ceiling and ignores explicit policyId for a restricted actor', async () => {
             const provider = new FakeIdentityPermissionProvider();
             provider.setJunctionRealmScope(RealmScope.OWN);
             provider.setJunctionPolicy(undefined);
@@ -156,22 +156,22 @@ describe('core/entities/role-permission/service', () => {
             });
 
             repository.onValidateJoinColumns((data: any) => {
-                data.permission = { name: 'custom-perm', realm_id: null };
+                data.permission = { name: 'custom-perm', realmId: null };
             });
 
             const result = await scopedService.create({
-                role_id: randomUUID(),
-                permission_id: randomUUID(),
-                realm_scope: 'any',
-                policy_id: randomUUID(),
+                roleId: randomUUID(),
+                permissionId: randomUUID(),
+                realmScope: 'any',
+                policyId: randomUUID(),
             }, createNonMasterRealmActor());
 
-            // restricted (own) actor: requested 'any' capped to 'own', explicit policy_id ignored.
-            expect(result.realm_scope).toBe(RealmScope.OWN);
-            expect(result.policy_id).toBeNull();
+            // restricted (own) actor: requested 'any' capped to 'own', explicit policyId ignored.
+            expect(result.realmScope).toBe(RealmScope.OWN);
+            expect(result.policyId).toBeNull();
         });
 
-        it('lets an any-scoped actor set a broader realm_scope', async () => {
+        it('lets an any-scoped actor set a broader realmScope', async () => {
             const provider = new FakeIdentityPermissionProvider();
             provider.setJunctionRealmScope(RealmScope.ANY);
             const scopedService = new RolePermissionService({
@@ -181,41 +181,41 @@ describe('core/entities/role-permission/service', () => {
             });
 
             repository.onValidateJoinColumns((data: any) => {
-                data.permission = { name: 'custom-perm', realm_id: null };
+                data.permission = { name: 'custom-perm', realmId: null };
             });
 
             const result = await scopedService.create({
-                role_id: randomUUID(),
-                permission_id: randomUUID(),
-                realm_scope: 'ownOrNull',
+                roleId: randomUUID(),
+                permissionId: randomUUID(),
+                realmScope: 'ownOrNull',
             }, createNonMasterRealmActor());
 
-            expect(result.realm_scope).toBe(RealmScope.OWN_OR_NULL);
+            expect(result.realmScope).toBe(RealmScope.OWN_OR_NULL);
         });
 
-        it('should throw validation error when role_id is missing', async () => {
+        it('should throw validation error when roleId is missing', async () => {
             await expect(
-                service.create({ permission_id: randomUUID() }, createAllowAllActor()),
-            ).rejects.toThrow(/role_id/);
+                service.create({ permissionId: randomUUID() }, createAllowAllActor()),
+            ).rejects.toThrow(/roleId/);
         });
 
-        it('should throw validation error when permission_id is missing', async () => {
+        it('should throw validation error when permissionId is missing', async () => {
             await expect(
-                service.create({ role_id: randomUUID() }, createAllowAllActor()),
-            ).rejects.toThrow(/permission_id/);
+                service.create({ roleId: randomUUID() }, createAllowAllActor()),
+            ).rejects.toThrow(/permissionId/);
         });
 
-        it('should throw validation error when role_id is not a valid UUID', async () => {
+        it('should throw validation error when roleId is not a valid UUID', async () => {
             await expect(
-                service.create({ role_id: 'not-a-uuid', permission_id: randomUUID() }, createAllowAllActor()),
-            ).rejects.toThrow(/role_id/);
+                service.create({ roleId: 'not-a-uuid', permissionId: randomUUID() }, createAllowAllActor()),
+            ).rejects.toThrow(/roleId/);
         });
 
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({
-                    role_id: randomUUID(),
-                    permission_id: randomUUID(),
+                    roleId: randomUUID(),
+                    permissionId: randomUUID(),
                 }, createDenyAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
@@ -224,63 +224,63 @@ describe('core/entities/role-permission/service', () => {
             const roleId = randomUUID();
             const permissionId = randomUUID();
 
-            repository.seed({ role_id: roleId, permission_id: permissionId });
+            repository.seed({ roleId, permissionId });
 
             await expect(
-                service.create({ role_id: roleId, permission_id: permissionId }, createAllowAllActor()),
+                service.create({ roleId, permissionId }, createAllowAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.ENTITY_CONFLICT });
         });
     });
 
     describe('update', () => {
-        it('should update policy_id on an existing entity', async () => {
-            const entity = repository.seed({ policy_id: null });
+        it('should update policyId on an existing entity', async () => {
+            const entity = repository.seed({ policyId: null });
             const policyId = randomUUID();
 
-            const result = await service.update(entity.id, { policy_id: policyId }, createAllowAllActor());
-            expect(result.policy_id).toBe(policyId);
+            const result = await service.update(entity.id, { policyId }, createAllowAllActor());
+            expect(result.policyId).toBe(policyId);
         });
 
-        it('should clear policy_id when set to null', async () => {
+        it('should clear policyId when set to null', async () => {
             const policyId = randomUUID();
-            const entity = repository.seed({ policy_id: policyId });
+            const entity = repository.seed({ policyId });
 
-            const result = await service.update(entity.id, { policy_id: null }, createAllowAllActor());
-            expect(result.policy_id).toBeNull();
+            const result = await service.update(entity.id, { policyId: null }, createAllowAllActor());
+            expect(result.policyId).toBeNull();
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
-                service.update('non-existent-id', { policy_id: randomUUID() }, createAllowAllActor()),
+                service.update('non-existent-id', { policyId: randomUUID() }, createAllowAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should call preCheck with ROLE_PERMISSION_UPDATE', async () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
-            await service.update(entity.id, { policy_id: null }, actor);
+            await service.update(entity.id, { policyId: null }, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROLE_PERMISSION_UPDATE });
         });
 
         it('should throw when actor lacks permission', async () => {
             const entity = repository.seed({});
             await expect(
-                service.update(entity.id, { policy_id: randomUUID() }, createDenyAllActor()),
+                service.update(entity.id, { policyId: randomUUID() }, createDenyAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
-        it('should only update policy_id and not other fields', async () => {
+        it('should only update policyId and not other fields', async () => {
             const originalRoleId = randomUUID();
-            const entity = repository.seed({ role_id: originalRoleId, policy_id: null });
+            const entity = repository.seed({ roleId: originalRoleId, policyId: null });
             const policyId = randomUUID();
 
             const result = await service.update(
                 entity.id,
-                { policy_id: policyId, role_id: randomUUID() },
+                { policyId, roleId: randomUUID() },
                 createAllowAllActor(),
             );
-            expect(result.policy_id).toBe(policyId);
-            expect(result.role_id).toBe(originalRoleId);
+            expect(result.policyId).toBe(policyId);
+            expect(result.roleId).toBe(originalRoleId);
         });
     });
 

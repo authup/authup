@@ -102,7 +102,7 @@ describe('src/http/controllers/identity-provider', () => {
 
     it('should update resource', async () => {
         oAuth2IdentityProvider.name = 'testa';
-        oAuth2IdentityProvider.client_secret = 'start1234';
+        oAuth2IdentityProvider.clientSecret = 'start1234';
         oAuth2IdentityProvider.scope = 'openid profile';
 
         const response = await suite.client
@@ -130,7 +130,7 @@ describe('src/http/controllers/identity-provider', () => {
             .toEqual('code');
 
         expect(responseURL.searchParams.get('client_id'))
-            .toEqual(oAuth2IdentityProvider.client_id);
+            .toEqual(oAuth2IdentityProvider.clientId);
 
         expect(
             responseURL.searchParams.get('redirect_uri')!.endsWith(buildIdentityProviderAuthorizeCallbackPath(oAuth2IdentityProvider.id!)),

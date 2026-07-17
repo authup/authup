@@ -20,7 +20,7 @@ import {
 import { JWKType, JWKUse, JWTAlgorithm } from '@authup/specs';
 import type { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { Like } from 'typeorm';
-import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
+import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import { getRandomValues } from 'uncrypto';
 import {
     DatabaseConflictError,
@@ -35,7 +35,7 @@ import {
     unwrapKeyMaterial,
     wrapKeyMaterial,
 } from '../../../../../core/index.ts';
-import { applyRealmScopeSelect, translateWhereConditions } from '../helpers.ts';
+import { applyRealmScopeSelect, isEntityUnique, translateWhereConditions } from '../helpers.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export type KeyRepositoryAdapterOptions = {

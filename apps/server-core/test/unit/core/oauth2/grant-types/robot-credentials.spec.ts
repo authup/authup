@@ -30,8 +30,8 @@ describe('RobotCredentialsGrant', () => {
 
     const robot = {
         id: robotId,
-        realm_id: realmId,
-        client_id: clientId,
+        realmId,
+        clientId,
         realm: {
             id: realmId,
             name: 'master',
@@ -74,10 +74,10 @@ describe('RobotCredentialsGrant', () => {
 
         expect(sessionManager.createCalls).toContainEqual(
             expect.objectContaining({
-                realm_id: realmId,
+                realmId,
                 sub: robotId,
-                sub_kind: IdentityType.ROBOT,
-                auth_method: 'robot',
+                subKind: IdentityType.ROBOT,
+                authMethod: 'robot',
             }),
         );
     });

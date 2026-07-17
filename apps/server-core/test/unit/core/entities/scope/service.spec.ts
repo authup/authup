@@ -173,34 +173,34 @@ describe('core/entities/scope/service', () => {
     });
 
     describe('realm defaulting', () => {
-        it('should set realm_id for non-master realm actor on create', async () => {
+        it('should set realmId for non-master realm actor on create', async () => {
             const realmId = randomUUID();
             const actor = createNonMasterRealmActor(realmId);
 
             const result = await service.create({ name: 'realm-scope' }, actor);
-            expect(result.realm_id).toBe(realmId);
+            expect(result.realmId).toBe(realmId);
         });
 
-        it('should set realm_id to master realm for master realm actor on create', async () => {
+        it('should set realmId to master realm for master realm actor on create', async () => {
             const actor = createMasterRealmActor();
-            const masterRealmId = actor.identity!.data.realm_id;
+            const masterRealmId = actor.identity!.data.realmId;
 
             const result = await service.create({ name: 'global-scope' }, actor);
-            expect(result.realm_id).toBe(masterRealmId);
+            expect(result.realmId).toBe(masterRealmId);
         });
 
-        it('should preserve realm_id: null when explicitly provided on create', async () => {
+        it('should preserve realmId: null when explicitly provided on create', async () => {
             const actor = createNonMasterRealmActor();
 
             const result = await service.create(
                 {
                     name: 'global-scope',
-                    realm_id: null, 
+                    realmId: null, 
                 },
                 actor,
             );
 
-            expect(result.realm_id).toBeNull();
+            expect(result.realmId).toBeNull();
         });
     });
 

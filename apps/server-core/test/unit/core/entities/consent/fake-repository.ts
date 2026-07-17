@@ -33,9 +33,9 @@ export class FakeConsentRepository implements IConsentRepository {
     seed(consent: Partial<Consent>): Consent {
         const entity = {
             id: consent.id || randomUUID(),
-            expires_at: null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+            expiresAt: null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
             ...consent,
         } as Consent;
         this.consents.set(entity.id, entity);
@@ -73,7 +73,7 @@ export class FakeConsentRepository implements IConsentRepository {
 
     async findAllBySubjectClient(clientId: string, owner: ConsentOwner): Promise<Consent[]> {
         return this.rows().filter(
-            (consent) => consent.client_id === clientId && this.ownedBy(consent, owner),
+            (consent) => consent.clientId === clientId && this.ownedBy(consent, owner),
         );
     }
 
@@ -89,12 +89,12 @@ export class FakeConsentRepository implements IConsentRepository {
             }
 
             this.seed({
-                client_id: input.clientId,
-                realm_id: input.realmId,
+                clientId: input.clientId,
+                realmId: input.realmId,
                 sub: input.owner.sub,
-                sub_kind: input.owner.subKind,
+                subKind: input.owner.subKind,
                 scope,
-                expires_at: null,
+                expiresAt: null,
             });
         }
     }
@@ -105,6 +105,6 @@ export class FakeConsentRepository implements IConsentRepository {
     }
 
     private ownedBy(consent: Consent, owner: ConsentOwner): boolean {
-        return consent.sub === owner.sub && consent.sub_kind === owner.subKind;
+        return consent.sub === owner.sub && consent.subKind === owner.subKind;
     }
 }

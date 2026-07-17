@@ -50,7 +50,7 @@ function buildPublishContext(input: PublishContextInput = {}): DomainEventPublis
         content: {
             type: 'role',
             event: 'created',
-            data: { id: entityId, realm_id: realmId },
+            data: { id: entityId, realmId },
             ...content,
         },
         destinations: [],
@@ -99,19 +99,19 @@ describe('EntityEventHandler', () => {
     });
 
     it.each([
-        [EntityType.CLIENT_PERMISSION, 'client_realm_id'],
-        [EntityType.CLIENT_ROLE, 'client_realm_id'],
-        [EntityType.CLIENT_SCOPE, 'client_realm_id'],
-        [EntityType.IDENTITY_PROVIDER_ACCOUNT, 'user_realm_id'],
-        [EntityType.IDENTITY_PROVIDER_ATTRIBUTE_MAPPING, 'provider_realm_id'],
-        [EntityType.IDENTITY_PROVIDER_PERMISSION_MAPPING, 'provider_realm_id'],
-        [EntityType.IDENTITY_PROVIDER_ROLE_MAPPING, 'provider_realm_id'],
-        [EntityType.PERMISSION_POLICY, 'permission_realm_id'],
-        [EntityType.ROBOT_PERMISSION, 'robot_realm_id'],
-        [EntityType.ROBOT_ROLE, 'robot_realm_id'],
-        [EntityType.ROLE_PERMISSION, 'role_realm_id'],
-        [EntityType.USER_PERMISSION, 'user_realm_id'],
-        [EntityType.USER_ROLE, 'user_realm_id'],
+        [EntityType.CLIENT_PERMISSION, 'clientRealmId'],
+        [EntityType.CLIENT_ROLE, 'clientRealmId'],
+        [EntityType.CLIENT_SCOPE, 'clientRealmId'],
+        [EntityType.IDENTITY_PROVIDER_ACCOUNT, 'userRealmId'],
+        [EntityType.IDENTITY_PROVIDER_ATTRIBUTE_MAPPING, 'providerRealmId'],
+        [EntityType.IDENTITY_PROVIDER_PERMISSION_MAPPING, 'providerRealmId'],
+        [EntityType.IDENTITY_PROVIDER_ROLE_MAPPING, 'providerRealmId'],
+        [EntityType.PERMISSION_POLICY, 'permissionRealmId'],
+        [EntityType.ROBOT_PERMISSION, 'robotRealmId'],
+        [EntityType.ROBOT_ROLE, 'robotRealmId'],
+        [EntityType.ROLE_PERMISSION, 'roleRealmId'],
+        [EntityType.USER_PERMISSION, 'userRealmId'],
+        [EntityType.USER_ROLE, 'userRealmId'],
     ])('attributes %s events to the canonical owner realm', async (type, key) => {
         await buildHandler().handle(buildPublishContext({
             content: {
@@ -143,8 +143,8 @@ describe('EntityEventHandler', () => {
                 type: EntityType.ROLE_PERMISSION,
                 data: {
                     id: entityId,
-                    role_realm_id: null,
-                    permission_realm_id: realmId,
+                    roleRealmId: null,
+                    permissionRealmId: realmId,
                 },
             },
         }));
@@ -161,7 +161,7 @@ describe('EntityEventHandler', () => {
             },
             dataPrevious: {
                 id: entityId,
-                user_realm_id: realmId,
+                userRealmId: realmId,
             },
         }));
 
@@ -208,13 +208,13 @@ describe('EntityEventHandler', () => {
                 event: 'updated',
                 data: {
                     id: entityId, 
-                    realm_id: realmId, 
+                    realmId, 
                     description: 'after', 
                 },
             },
             dataPrevious: {
                 id: entityId, 
-                realm_id: realmId, 
+                realmId, 
                 description: 'before', 
             },
         }));
@@ -235,13 +235,13 @@ describe('EntityEventHandler', () => {
                 event: 'updated',
                 data: {
                     id: entityId, 
-                    realm_id: realmId, 
+                    realmId, 
                     description: 'same', 
                 },
             },
             dataPrevious: {
                 id: entityId, 
-                realm_id: realmId, 
+                realmId, 
                 description: 'same', 
             },
         }));

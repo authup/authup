@@ -38,15 +38,15 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
         it('blocks a mixed-grant actor (own no-policy + any policy) from assigning an unconditional any role', async () => {
             const provider = createProvider({
                 parent: [
-                    { permission: { name: 'user_read' }, realm_scope: RealmScope.OWN },
+                    { permission: { name: 'user_read' }, realmScope: RealmScope.OWN },
                     {
                         permission: { name: 'user_read' }, 
                         policies: [policy], 
-                        realm_scope: RealmScope.ANY, 
+                        realmScope: RealmScope.ANY, 
                     },
                 ],
                 child: [
-                    { permission: { name: 'user_read' }, realm_scope: RealmScope.ANY },
+                    { permission: { name: 'user_read' }, realmScope: RealmScope.ANY },
                 ],
             });
 
@@ -57,15 +57,15 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
         it('allows a mixed-grant actor to assign an own no-policy role', async () => {
             const provider = createProvider({
                 parent: [
-                    { permission: { name: 'user_read' }, realm_scope: RealmScope.OWN },
+                    { permission: { name: 'user_read' }, realmScope: RealmScope.OWN },
                     {
                         permission: { name: 'user_read' }, 
                         policies: [policy], 
-                        realm_scope: RealmScope.ANY, 
+                        realmScope: RealmScope.ANY, 
                     },
                 ],
                 child: [
-                    { permission: { name: 'user_read' }, realm_scope: RealmScope.OWN },
+                    { permission: { name: 'user_read' }, realmScope: RealmScope.OWN },
                 ],
             });
 
@@ -75,8 +75,8 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
 
         it('blocks an own-scoped actor from assigning an any-scoped role (insufficient reach)', async () => {
             const provider = createProvider({
-                parent: [{ permission: { name: 'user_read' }, realm_scope: RealmScope.OWN }],
-                child: [{ permission: { name: 'user_read' }, realm_scope: RealmScope.ANY }],
+                parent: [{ permission: { name: 'user_read' }, realmScope: RealmScope.OWN }],
+                child: [{ permission: { name: 'user_read' }, realmScope: RealmScope.ANY }],
             });
 
             const result = await provider.isSuperset({ type: 'role', id: 'parent' }, { type: 'role', id: 'child' });
@@ -144,11 +144,11 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
         // The actor holds BOTH (own, no-policy) and (any, IDENTITY-policy) for one permission.
         const mixedActor = () => createProvider({
             actor: [
-                { permission: { name: 'user_read' }, realm_scope: RealmScope.OWN },
+                { permission: { name: 'user_read' }, realmScope: RealmScope.OWN },
                 {
                     permission: { name: 'user_read' },
                     policies: [policy],
-                    realm_scope: RealmScope.ANY,
+                    realmScope: RealmScope.ANY,
                 },
             ],
         });
@@ -189,9 +189,9 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                     {
                         permission: { name: 'user_read' },
                         policies: [policy],
-                        realm_scope: RealmScope.ANY,
+                        realmScope: RealmScope.ANY,
                     },
-                    { permission: { name: 'user_read' }, realm_scope: RealmScope.ANY },
+                    { permission: { name: 'user_read' }, realmScope: RealmScope.ANY },
                 ],
             });
 
@@ -219,7 +219,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                     {
                         permission: { name: 'user_read' },
                         policies: [policy, { type: BuiltInPolicyType.REALM_MATCH } as any],
-                        realm_scope: RealmScope.ANY,
+                        realmScope: RealmScope.ANY,
                     },
                 ],
             });
@@ -240,12 +240,12 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                     {
                         permission: { name: 'user_read' }, 
                         policies: [policy], 
-                        realm_scope: RealmScope.ANY, 
+                        realmScope: RealmScope.ANY, 
                     },
                     {
                         permission: { name: 'user_read' }, 
                         policies: [policyOther], 
-                        realm_scope: RealmScope.ANY, 
+                        realmScope: RealmScope.ANY, 
                     },
                 ],
             });
@@ -254,12 +254,12 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                     {
                         permission: { name: 'user_read' }, 
                         policies: [policyOther], 
-                        realm_scope: RealmScope.ANY, 
+                        realmScope: RealmScope.ANY, 
                     },
                     {
                         permission: { name: 'user_read' }, 
                         policies: [policy], 
-                        realm_scope: RealmScope.ANY, 
+                        realmScope: RealmScope.ANY, 
                     },
                 ],
             });
@@ -282,11 +282,11 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             // a non-propagatable composite policy (the old global-ceiling collapse failed closed here).
             const provider = createProvider({
                 actor: [
-                    { permission: { name: 'user_read' }, realm_scope: RealmScope.OWN },
+                    { permission: { name: 'user_read' }, realmScope: RealmScope.OWN },
                     {
                         permission: { name: 'user_read' },
                         policies: [policy, { type: BuiltInPolicyType.REALM_MATCH } as any],
-                        realm_scope: RealmScope.ANY,
+                        realmScope: RealmScope.ANY,
                     },
                 ],
             });

@@ -30,7 +30,7 @@ function withIdentity(actor: ActorContext, id: string = userId): ActorContext {
         type: IdentityType.USER,
         data: {
             id,
-            realm_id: realmId,
+            realmId,
         } as User,
     };
     return actor;
@@ -49,19 +49,19 @@ describe('ConsentService', () => {
 
     function seedOwn(scope = 'global'): Consent {
         return repository.seed({
-            client_id: clientId,
-            realm_id: realmId,
+            clientId,
+            realmId,
             sub: userId,
-            sub_kind: IdentityType.USER,
+            subKind: IdentityType.USER,
             scope,
         });
     }
     function seedOther(scope = 'global'): Consent {
         return repository.seed({
-            client_id: clientId,
-            realm_id: realmId,
+            clientId,
+            realmId,
             sub: otherUserId,
-            sub_kind: IdentityType.USER,
+            subKind: IdentityType.USER,
             scope,
         });
     }
@@ -78,10 +78,10 @@ describe('ConsentService', () => {
             const rows = repository.rows();
             expect(rows).toHaveLength(2);
             expect(rows.map((row) => row.scope).sort()).toEqual(['global', 'openid']);
-            expect(rows.every((row) => row.client_id === clientId &&
-                row.realm_id === realmId &&
+            expect(rows.every((row) => row.clientId === clientId &&
+                row.realmId === realmId &&
                 row.sub === userId &&
-                row.sub_kind === IdentityType.USER)).toBe(true);
+                row.subKind === IdentityType.USER)).toBe(true);
         });
 
         it('is idempotent on an identical re-record (union/keep, no duplicates)', async () => {
@@ -237,12 +237,12 @@ describe('ConsentService', () => {
         it('is false when the matching row is expired', async () => {
             seedOwn('global');
             repository.seed({
-                client_id: clientId,
-                realm_id: realmId,
+                clientId,
+                realmId,
                 sub: userId,
-                sub_kind: IdentityType.USER,
+                subKind: IdentityType.USER,
                 scope: 'openid',
-                expires_at: new Date(Date.now() - 1_000).toISOString(),
+                expiresAt: new Date(Date.now() - 1_000).toISOString(),
             });
 
             await expect(service.isCovering({
@@ -252,14 +252,14 @@ describe('ConsentService', () => {
             })).resolves.toBe(false);
         });
 
-        it('honors an unexpired (future) expires_at', async () => {
+        it('honors an unexpired (future) expiresAt', async () => {
             repository.seed({
-                client_id: clientId,
-                realm_id: realmId,
+                clientId,
+                realmId,
                 sub: userId,
-                sub_kind: IdentityType.USER,
+                subKind: IdentityType.USER,
                 scope: 'global',
-                expires_at: new Date(Date.now() + 60_000).toISOString(),
+                expiresAt: new Date(Date.now() + 60_000).toISOString(),
             });
 
             await expect(service.isCovering({
@@ -314,10 +314,10 @@ describe('ConsentService', () => {
             seedOwn('global');
             const foreign = seedOther('global');
             repository.seed({
-                client_id: clientId,
-                realm_id: randomUUID(),
+                clientId,
+                realmId: randomUUID(),
                 sub: otherUserId,
-                sub_kind: IdentityType.USER,
+                subKind: IdentityType.USER,
                 scope: 'openid',
             });
 
@@ -337,7 +337,7 @@ describe('ConsentService', () => {
             });
             const actor: ActorContext = {
                 permissionEvaluator: evaluator,
-                identity: { type: IdentityType.USER, data: { id: userId, realm_id: realmId } as User },
+                identity: { type: IdentityType.USER, data: { id: userId, realmId } as User },
             };
 
             const { data, meta } = await service.getMany({}, actor);

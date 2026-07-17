@@ -44,12 +44,12 @@ describe('src/http/controllers/trust-anchor', () => {
         const created = await suite.client.trustAnchor.create({
             name: 'primary-client-ca',
             certificate: CA_CERTIFICATE,
-            realm_id: realm.id,
+            realmId: realm.id,
         });
 
         expect(created.enabled).toBe(true);
         expect(created.certificate).toEqual(CA_CERTIFICATE);
-        expect(created.realm_id).toEqual(realm.id);
+        expect(created.realmId).toEqual(realm.id);
 
         const byId = await suite.client.trustAnchor.getOne(created.id);
         expect(byId.id).toEqual(created.id);
@@ -62,14 +62,14 @@ describe('src/http/controllers/trust-anchor', () => {
         const response = await suite.client.get(`realms/${realm.id}/trust-anchors`);
 
         expect(response.data.data)
-            .toEqual(expect.arrayContaining([expect.objectContaining({ realm_id: realm.id })]));
+            .toEqual(expect.arrayContaining([expect.objectContaining({ realmId: realm.id })]));
     });
 
     it('should update name and enabled but keep certificate immutable', async () => {
         const created = await suite.client.trustAnchor.create({
             name: 'update-client-ca',
             certificate: CA_CERTIFICATE,
-            realm_id: realm.id,
+            realmId: realm.id,
         });
 
         const response = await suite.client.post(`trust-anchors/${created.id}`, {
@@ -89,7 +89,7 @@ describe('src/http/controllers/trust-anchor', () => {
             () => suite.client.trustAnchor.create({
                 name: 'leaf-certificate',
                 certificate: NON_CA_CERTIFICATE,
-                realm_id: realm.id,
+                realmId: realm.id,
             }),
             { status: 400 },
         );
@@ -99,14 +99,14 @@ describe('src/http/controllers/trust-anchor', () => {
         await suite.client.trustAnchor.create({
             name: 'unique-client-ca',
             certificate: CA_CERTIFICATE,
-            realm_id: realm.id,
+            realmId: realm.id,
         });
 
         await expectClientError(
             () => suite.client.trustAnchor.create({
                 name: 'unique-client-ca',
                 certificate: CA_CERTIFICATE,
-                realm_id: realm.id,
+                realmId: realm.id,
             }),
             { status: 409 },
         );
@@ -118,14 +118,14 @@ describe('src/http/controllers/trust-anchor', () => {
             certificate: CA_CERTIFICATE,
         });
 
-        expect(response.data.realm_id).toEqual(realm.id);
+        expect(response.data.realmId).toEqual(realm.id);
     });
 
     it('should delete a trust anchor', async () => {
         const created = await suite.client.trustAnchor.create({
             name: 'delete-client-ca',
             certificate: CA_CERTIFICATE,
-            realm_id: realm.id,
+            realmId: realm.id,
         });
 
         const deleted = await suite.client.trustAnchor.delete(created.id);
@@ -141,20 +141,20 @@ describe('src/http/controllers/trust-anchor', () => {
         const created = await suite.client.trustAnchor.create({
             name: 'audited-client-ca',
             certificate: CA_CERTIFICATE,
-            realm_id: realm.id,
+            realmId: realm.id,
         });
         await suite.client.trustAnchor.update(created.id, { enabled: false });
         await suite.client.trustAnchor.delete(created.id);
 
-        const { data } = await suite.client.event.getMany({ filter: { ref_type: 'trustAnchor', ref_id: created.id } });
+        const { data } = await suite.client.event.getMany({ filter: { refType: 'trustAnchor', refId: created.id } });
 
         expect(data).toHaveLength(3);
         expect(new Set(data.map((row) => row.name)))
             .toEqual(new Set(['created', 'updated', 'deleted']));
         for (const row of data) {
-            expect(row.realm_id).toEqual(realm.id);
-            expect(row.actor_type).toEqual('user');
-            expect(row.actor_name).toEqual('admin');
+            expect(row.realmId).toEqual(realm.id);
+            expect(row.actorType).toEqual('user');
+            expect(row.actorName).toEqual('admin');
             expect(row.data).toMatchObject({ name: 'audited-client-ca' });
             // metadata only — never certificate bytes
             expect(JSON.stringify(row.data)).not.toContain('BEGIN CERTIFICATE');

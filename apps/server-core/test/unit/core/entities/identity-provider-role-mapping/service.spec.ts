@@ -77,31 +77,31 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
             const realmId = randomUUID();
 
             repository.onValidateJoinColumns((data: any) => {
-                data.provider = { realm_id: realmId };
-                data.role = { realm_id: realmId, client_id: null };
+                data.provider = { realmId };
+                data.role = { realmId, clientId: null };
             });
 
             const data = {
-                provider_id: randomUUID(),
-                role_id: randomUUID(),
+                providerId: randomUUID(),
+                roleId: randomUUID(),
             };
 
             const result = await service.create(data, createMasterRealmActor());
             expect(result.id).toBeDefined();
-            expect(result.provider_realm_id).toBe(realmId);
-            expect(result.role_realm_id).toBe(realmId);
+            expect(result.providerRealmId).toBe(realmId);
+            expect(result.roleRealmId).toBe(realmId);
         });
 
         it('should call preEvaluate with IDENTITY_PROVIDER_ROLE_CREATE', async () => {
             repository.onValidateJoinColumns((data: any) => {
-                data.provider = { realm_id: null };
-                data.role = { realm_id: null, client_id: null };
+                data.provider = { realmId: null };
+                data.role = { realmId: null, clientId: null };
             });
 
             const actor = createAllowAllActor();
             await service.create({
-                provider_id: randomUUID(),
-                role_id: randomUUID(),
+                providerId: randomUUID(),
+                roleId: randomUUID(),
             }, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.IDENTITY_PROVIDER_ROLE_CREATE });
         });
@@ -109,27 +109,27 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({
-                    provider_id: randomUUID(),
-                    role_id: randomUUID(),
+                    providerId: randomUUID(),
+                    roleId: randomUUID(),
                 }, createDenyAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
-        it('should throw ConflictError on duplicate provider_id + role_id', async () => {
+        it('should throw ConflictError on duplicate providerId + roleId', async () => {
             const providerId = randomUUID();
             const roleId = randomUUID();
 
             repository.onValidateJoinColumns((data: any) => {
-                data.provider = { realm_id: null };
-                data.role = { realm_id: null, client_id: null };
+                data.provider = { realmId: null };
+                data.role = { realmId: null, clientId: null };
             });
 
-            repository.seed({ provider_id: providerId, role_id: roleId });
+            repository.seed({ providerId, roleId });
 
             await expect(
                 service.create({
-                    provider_id: providerId,
-                    role_id: roleId,
+                    providerId,
+                    roleId,
                 }, createAllowAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.ENTITY_CONFLICT });
         });
@@ -139,50 +139,50 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
             const roleRealmId = randomUUID();
 
             repository.onValidateJoinColumns((data: any) => {
-                data.provider = { realm_id: providerRealmId };
-                data.role = { realm_id: roleRealmId, client_id: null };
+                data.provider = { realmId: providerRealmId };
+                data.role = { realmId: roleRealmId, clientId: null };
             });
 
             await expect(
                 service.create({
-                    provider_id: randomUUID(),
-                    role_id: randomUUID(),
+                    providerId: randomUUID(),
+                    roleId: randomUUID(),
                 }, createAllowAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
         });
 
-        it('should throw validation error when provider_id is missing', async () => {
+        it('should throw validation error when providerId is missing', async () => {
             await expect(
-                service.create({ role_id: randomUUID() }, createAllowAllActor()),
-            ).rejects.toThrow(/provider_id/);
+                service.create({ roleId: randomUUID() }, createAllowAllActor()),
+            ).rejects.toThrow(/providerId/);
         });
 
-        it('should throw validation error when role_id is missing', async () => {
+        it('should throw validation error when roleId is missing', async () => {
             await expect(
-                service.create({ provider_id: randomUUID() }, createAllowAllActor()),
-            ).rejects.toThrow(/role_id/);
+                service.create({ providerId: randomUUID() }, createAllowAllActor()),
+            ).rejects.toThrow(/roleId/);
         });
 
-        it('should throw validation error when provider_id is not a valid UUID', async () => {
+        it('should throw validation error when providerId is not a valid UUID', async () => {
             await expect(
-                service.create({ provider_id: 'not-a-uuid', role_id: randomUUID() }, createAllowAllActor()),
-            ).rejects.toThrow(/provider_id/);
+                service.create({ providerId: 'not-a-uuid', roleId: randomUUID() }, createAllowAllActor()),
+            ).rejects.toThrow(/providerId/);
         });
 
         it('should throw ForbiddenError when superset check fails', async () => {
             const realmId = randomUUID();
 
             repository.onValidateJoinColumns((data: any) => {
-                data.provider = { realm_id: realmId };
-                data.role = { realm_id: realmId, client_id: null };
+                data.provider = { realmId };
+                data.role = { realmId, clientId: null };
             });
 
             identityPermissionProvider.setSuperset(false);
 
             await expect(
                 service.create({
-                    provider_id: randomUUID(),
-                    role_id: randomUUID(),
+                    providerId: randomUUID(),
+                    roleId: randomUUID(),
                 }, createMasterRealmActor()),
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
@@ -191,8 +191,8 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
     describe('update', () => {
         it('should update optional fields', async () => {
             const entity = repository.seed({
-                provider_id: randomUUID(),
-                role_id: randomUUID(),
+                providerId: randomUUID(),
+                roleId: randomUUID(),
                 name: 'old-name',
                 value: 'old-value',
             });
@@ -224,10 +224,10 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
 
         it('re-checks role ownership on update and blocks when the superset check fails (#3166)', async () => {
             const roleId = randomUUID();
-            roleRepository.seed({ id: roleId, client_id: null } as Partial<Role>);
+            roleRepository.seed({ id: roleId, clientId: null } as Partial<Role>);
             const entity = repository.seed({
-                provider_id: randomUUID(), 
-                role_id: roleId, 
+                providerId: randomUUID(), 
+                roleId, 
                 name: 'old', 
             });
 
@@ -240,10 +240,10 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
 
         it('allows the update when the actor still owns the role', async () => {
             const roleId = randomUUID();
-            roleRepository.seed({ id: roleId, client_id: null } as Partial<Role>);
+            roleRepository.seed({ id: roleId, clientId: null } as Partial<Role>);
             const entity = repository.seed({
-                provider_id: randomUUID(), 
-                role_id: roleId, 
+                providerId: randomUUID(), 
+                roleId, 
                 name: 'old', 
             });
 
@@ -253,25 +253,25 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
             expect(result.name).toBe('new');
         });
 
-        it('should not allow changing provider_id or role_id', async () => {
+        it('should not allow changing providerId or roleId', async () => {
             const originalProviderId = randomUUID();
             const originalRoleId = randomUUID();
             const entity = repository.seed({
-                provider_id: originalProviderId,
-                role_id: originalRoleId,
+                providerId: originalProviderId,
+                roleId: originalRoleId,
             });
 
             const result = await service.update(
                 entity.id,
                 {
-                    provider_id: randomUUID(), 
-                    role_id: randomUUID(), 
+                    providerId: randomUUID(), 
+                    roleId: randomUUID(), 
                     name: 'updated', 
                 },
                 createAllowAllActor(),
             );
-            expect(result.provider_id).toBe(originalProviderId);
-            expect(result.role_id).toBe(originalRoleId);
+            expect(result.providerId).toBe(originalProviderId);
+            expect(result.roleId).toBe(originalRoleId);
         });
     });
 

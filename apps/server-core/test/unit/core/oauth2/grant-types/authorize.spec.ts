@@ -45,21 +45,21 @@ describe('OAuth2AuthorizeGrant', () => {
         type: JWKType.RSA,
         use: JWKUse.SIGNATURE,
         status: 'active',
-        signature_algorithm: JWTAlgorithm.RS256,
+        signatureAlgorithm: JWTAlgorithm.RS256,
         priority: 0,
-        decryption_key: 'rsa-private-key',
-        encryption_key: 'rsa-public-key',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        realm_id: realmId,
+        decryptionKey: 'rsa-private-key',
+        encryptionKey: 'rsa-public-key',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        realmId,
         realm: {
             id: realmId,
             name: 'master',
-            display_name: null,
+            displayName: null,
             description: null,
-            built_in: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+            builtIn: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
         },
     });
 
@@ -102,12 +102,12 @@ describe('OAuth2AuthorizeGrant', () => {
         expect(sessionManager.findOneByIdCalls).toHaveLength(0);
         expect(sessionManager.createCalls[0]).toEqual(
             expect.objectContaining({
-                realm_id: realmId,
+                realmId,
                 sub: userId,
-                sub_kind: OAuth2SubKind.USER,
-                client_id: clientId,
-                user_agent: 'TestAgent',
-                ip_address: '10.0.0.1',
+                subKind: OAuth2SubKind.USER,
+                clientId,
+                userAgent: 'TestAgent',
+                ipAddress: '10.0.0.1',
             }),
         );
 
@@ -121,9 +121,9 @@ describe('OAuth2AuthorizeGrant', () => {
         await sessionManager.create({
             id: sessionId,
             sub: userId,
-            sub_kind: OAuth2SubKind.USER,
-            realm_id: realmId,
-            client_id: null,
+            subKind: OAuth2SubKind.USER,
+            realmId,
+            clientId: null,
         });
         sessionManager.createCalls.length = 0;
 
@@ -135,7 +135,7 @@ describe('OAuth2AuthorizeGrant', () => {
         expect(sessionManager.refreshCalls).toHaveLength(1);
         // the reused session gets the authorize client stamped onto it
         expect(sessionManager.refreshCalls[0]).toEqual(
-            expect.objectContaining({ id: sessionId, client_id: clientId }),
+            expect.objectContaining({ id: sessionId, clientId }),
         );
 
         // the issued tokens reference the reused session
@@ -158,9 +158,9 @@ describe('OAuth2AuthorizeGrant', () => {
         await sessionManager.create({
             id: sessionId,
             sub: randomUUID(), // different subject
-            sub_kind: OAuth2SubKind.USER,
-            realm_id: realmId,
-            client_id: null,
+            subKind: OAuth2SubKind.USER,
+            realmId,
+            clientId: null,
         });
         sessionManager.createCalls.length = 0;
 
@@ -175,9 +175,9 @@ describe('OAuth2AuthorizeGrant', () => {
         await sessionManager.create({
             id: sessionId,
             sub: userId,
-            sub_kind: OAuth2SubKind.USER,
-            realm_id: randomUUID(), // different realm
-            client_id: null,
+            subKind: OAuth2SubKind.USER,
+            realmId: randomUUID(), // different realm
+            clientId: null,
         });
         sessionManager.createCalls.length = 0;
 
@@ -202,9 +202,9 @@ describe('OAuth2AuthorizeGrant', () => {
         await sessionManager.create({
             id: sessionId,
             sub: userId,
-            sub_kind: OAuth2SubKind.USER,
-            realm_id: realmId,
-            client_id: null,
+            subKind: OAuth2SubKind.USER,
+            realmId,
+            clientId: null,
         });
         sessionManager.createCalls.length = 0;
 
@@ -263,7 +263,7 @@ describe('OAuth2AuthorizeGrant', () => {
         expect(openIdTokenIssuer.issueCalls[0].at_hash).toHaveLength(22);
 
         // RS512 key → SHA-512 left half (32 bytes → 43 base64url chars)
-        keyStore.setKey({ ...buildKey(), signature_algorithm: JWTAlgorithm.RS512 });
+        keyStore.setKey({ ...buildKey(), signatureAlgorithm: JWTAlgorithm.RS512 });
         openIdTokenIssuer.issueCalls.length = 0;
 
         await grant.runWith(buildCode({ scope: `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}` }));
@@ -285,7 +285,7 @@ describe('OAuth2AuthorizeGrant', () => {
         await grant.runWith(buildCode({ auth_method: 'ext' }));
 
         expect(sessionManager.createCalls[0]).toEqual(
-            expect.objectContaining({ auth_method: 'ext' }),
+            expect.objectContaining({ authMethod: 'ext' }),
         );
     });
 
@@ -294,11 +294,11 @@ describe('OAuth2AuthorizeGrant', () => {
         await sessionManager.create({
             id: sessionId,
             sub: userId,
-            sub_kind: OAuth2SubKind.USER,
-            realm_id: realmId,
-            client_id: null,
-            auth_method: 'pwd',
-            mfa_at: null,
+            subKind: OAuth2SubKind.USER,
+            realmId,
+            clientId: null,
+            authMethod: 'pwd',
+            mfaAt: null,
         });
 
         await grant.runWith(buildCode({
@@ -317,11 +317,11 @@ describe('OAuth2AuthorizeGrant', () => {
         await sessionManager.create({
             id: sessionId,
             sub: userId,
-            sub_kind: OAuth2SubKind.USER,
-            realm_id: realmId,
-            client_id: null,
-            auth_method: 'pwd',
-            mfa_at: new Date().toISOString(),
+            subKind: OAuth2SubKind.USER,
+            realmId,
+            clientId: null,
+            authMethod: 'pwd',
+            mfaAt: new Date().toISOString(),
         });
 
         await grant.runWith(buildCode({
@@ -339,9 +339,9 @@ describe('OAuth2AuthorizeGrant', () => {
         await sessionManager.create({
             id: sessionId,
             sub: userId,
-            sub_kind: OAuth2SubKind.USER,
-            realm_id: realmId,
-            client_id: null,
+            subKind: OAuth2SubKind.USER,
+            realmId,
+            clientId: null,
         });
 
         await grant.runWith(buildCode({

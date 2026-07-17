@@ -36,12 +36,12 @@ describe('src/http/controllers/robot-permission', () => {
         entity = await suite.client
             .robotPermission
             .create({
-                robot_id: robot.id,
-                permission_id: permission.id,
+                robotId: robot.id,
+                permissionId: permission.id,
             });
 
-        expect(entity.robot_id).toEqual(robot.id);
-        expect(entity.permission_id).toEqual(permission.id);
+        expect(entity.robotId).toEqual(robot.id);
+        expect(entity.permissionId).toEqual(permission.id);
     });
 
     it('should read collection', async () => {

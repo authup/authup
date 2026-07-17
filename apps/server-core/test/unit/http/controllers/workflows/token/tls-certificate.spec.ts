@@ -68,17 +68,17 @@ describe('OAuth2 TLS client authentication and certificate-bound tokens', () => 
         await suite.client.trustAnchor.create({
             name: 'oauth-client-root',
             certificate: ROOT_PEM,
-            realm_id: realm.id,
+            realmId: realm.id,
         });
 
         await suite.dataSource.getRepository(ClientEntity).save({
             id: TLS_CLIENT_ID,
             name: 'tls-client',
             active: true,
-            auth_method: 'tls',
-            token_binding_method: 'tls',
-            grant_types: 'client_credentials',
-            realm_id: realm.id,
+            authMethod: 'tls',
+            tokenBindingMethod: 'tls',
+            grantTypes: 'client_credentials',
+            realmId: realm.id,
         });
     });
 
@@ -148,11 +148,11 @@ describe('OAuth2 TLS client authentication and certificate-bound tokens', () => 
 
     it('accepts an untrusted self-signed certificate for binding and requires it again on refresh', async () => {
         const client: Client = await suite.client.client.create(createFakeClient({
-            auth_method: 'none',
-            token_binding_method: 'tls',
+            authMethod: 'none',
+            tokenBindingMethod: 'tls',
             secret: null,
-            realm_id: realm.id,
-            grant_types: 'password refresh_token',
+            realmId: realm.id,
+            grantTypes: 'password refresh_token',
         }));
 
         const login = await httpRequest(suite, 'POST', '/token', {
