@@ -1,5 +1,31 @@
 # Change Log
 
+## [1.0.0-beta.53](https://github.com/authup/authup/compare/v1.0.0-beta.52...v1.0.0-beta.53) (2026-07-17)
+
+
+### Features
+
+* mfa authenticator devices - totp + recovery codes ([#3232](https://github.com/authup/authup/issues/3232)) ([6d0422a](https://github.com/authup/authup/commit/6d0422a44a1205267dfb7fdb7e395147277c58dd))
+* security event log with entity tracking, login throttle, metrics & admin ui ([#3229](https://github.com/authup/authup/issues/3229)) ([5a30950](https://github.com/authup/authup/commit/5a30950a4c819206a1cbafd221a0c3be692f53e6))
+
+
+### Bug Fixes
+
+* harden mfa verify path - atomic attempt counter + stamp-first unit of work ([#3239](https://github.com/authup/authup/issues/3239)) ([358a121](https://github.com/authup/authup/commit/358a121f05b9d28af2a27f0acff1149e4f1b241a)), closes [#3237](https://github.com/authup/authup/issues/3237)
+* make MFA login work + stop admins planting a user's second factor ([#3241](https://github.com/authup/authup/issues/3241)) ([3756869](https://github.com/authup/authup/commit/3756869289f2bb2e32bfd5d28a1abb00e83c8a0b))
+* **server-core:** harden mfa verification locking ([#3264](https://github.com/authup/authup/issues/3264)) ([f39cbd1](https://github.com/authup/authup/commit/f39cbd14ba7c7a5d86226443af339f9e8699a553))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/core-kit bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/kit bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+    * @authup/specs bumped from ^1.0.0-beta.52 to ^1.0.0-beta.53
+
 ## [1.0.0-beta.52](https://github.com/authup/authup/compare/v1.0.0-beta.51...v1.0.0-beta.52) (2026-07-11)
 
 

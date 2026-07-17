@@ -8,7 +8,7 @@
         "url": "https://github.com/tada5hi"
     },
     "license": "AGPL-3.0-only",
-    "version": "1.0.0-beta.52",
+    "version": "1.0.0-beta.53",
     "workspaces": [
         "docs",
         "apps/*",

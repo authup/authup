@@ -3,6 +3,60 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.53](https://github.com/authup/authup/compare/v1.0.0-beta.52...v1.0.0-beta.53) (2026-07-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-core:** wrap authenticator enroll response in data/meta envelope ([#3272](https://github.com/authup/authup/issues/3272))
+* **server-core:** newly written security events expire after 90 days instead of 365 unless EVENT_LOG_RETENTION_DAYS is set explicitly. Existing rows keep the expires_at stamped at write time.
+* **server-adapter:** TokenVerifier.verify(token) without a thumbprint now fails closed (JWTError) on a certificate-bound token instead of returning it. Direct callers must pass the presented certificate's SHA-256 DER thumbprint via verify(token, { certificateThumbprint }).
+* replace Client.is_confidential with auth_method and token_binding_method.
+
+### Features
+
+* add OAuth mutual TLS authentication ([#3261](https://github.com/authup/authup/issues/3261)) ([d3d88c6](https://github.com/authup/authup/commit/d3d88c6942059bf1a460d41f0a19c31932893b1c))
+* add realm trust anchor management ([#3260](https://github.com/authup/authup/issues/3260)) ([3a822d8](https://github.com/authup/authup/commit/3a822d836a852dc8af3547ea288f10a45c2a583d))
+* authorize access policy + persisted per-scope consent ([#3246](https://github.com/authup/authup/issues/3246)) ([b4b96c7](https://github.com/authup/authup/commit/b4b96c74e0bec4d332c39f5477744aa8cca1d44f))
+* **client-web-kit:** mfa challenge step, enrollment ui, settings + admin tabs ([#3234](https://github.com/authup/authup/issues/3234)) ([aca3fd7](https://github.com/authup/authup/commit/aca3fd7d307b67bdb9bf996a8fb3022c37aa5cad))
+* **client-web-kit:** mfa enrollment picker tiles + modal add flow, split settings security tab ([66eb500](https://github.com/authup/authup/commit/66eb5006d153bdf64be253355d61f23e177dc297))
+* email otp as a second-factor kind ([#3235](https://github.com/authup/authup/issues/3235)) ([23fe82f](https://github.com/authup/authup/commit/23fe82f1b579d2722e092f94a309603f46a8bfda))
+* key management api + lifecycle states ([#3256](https://github.com/authup/authup/issues/3256)) ([c69e9a2](https://github.com/authup/authup/commit/c69e9a2fc070a2c6bea71ec9e89bee2341e0cd88))
+* mfa authenticator devices - totp + recovery codes ([#3232](https://github.com/authup/authup/issues/3232)) ([6d0422a](https://github.com/authup/authup/commit/6d0422a44a1205267dfb7fdb7e395147277c58dd))
+* nudge recovery-code enrollment after email/webauthn factors ([#3247](https://github.com/authup/authup/issues/3247)) ([1642ca0](https://github.com/authup/authup/commit/1642ca076e202cc50953e3b90b12285f041de088))
+* publish imported key certificates in JWKS ([#3257](https://github.com/authup/authup/issues/3257)) ([e59a075](https://github.com/authup/authup/commit/e59a0753bc2d7264ed4ad9dfa2a797d787d5a359))
+* realm key store - zero-config mfa seed encryption + optional secrets kek ([#3255](https://github.com/authup/authup/issues/3255)) ([090998f](https://github.com/authup/authup/commit/090998fa08256a981a0dde50e5eb5eb85e75b6ce))
+* security event log with entity tracking, login throttle, metrics & admin ui ([#3229](https://github.com/authup/authup/issues/3229)) ([5a30950](https://github.com/authup/authup/commit/5a30950a4c819206a1cbafd221a0c3be692f53e6))
+* **server-core:** emit audit events for key & trust-anchor lifecycle operations ([#3271](https://github.com/authup/authup/issues/3271)) ([5676e1e](https://github.com/authup/authup/commit/5676e1e36ee8e8ee6d18d8954c58f39ee5f68e92))
+* **server-core:** lower default security event retention to 90 days ([85bf630](https://github.com/authup/authup/commit/85bf63019640a27541624def6986caba49e40ca6))
+* session auth-method recording with amr/acr claims + step-up ([#3233](https://github.com/authup/authup/issues/3233)) ([fc561a9](https://github.com/authup/authup/commit/fc561a92d7516d571d44198eb2a989a945abed57))
+* webauthn / passkeys as a second factor ([#3236](https://github.com/authup/authup/issues/3236)) ([0e30e59](https://github.com/authup/authup/commit/0e30e59739fdad2b2f70c4d302c50e841741dabb))
+
+
+### Bug Fixes
+
+* **client-web-kit:** render client secret and certificate fields per auth method ([0186dba](https://github.com/authup/authup/commit/0186dbad4a0038d27a4f07b21641c3bab0441263))
+* complete fresh email/webauthn-only mfa logins via a pending ticket ([#3244](https://github.com/authup/authup/issues/3244)) ([fe28588](https://github.com/authup/authup/commit/fe2858810e47af248b677db47816daa7a50294ff))
+* dedupe realm-scope gate selects - postgres list queries with include failed ([#3243](https://github.com/authup/authup/issues/3243)) ([0f9fd5d](https://github.com/authup/authup/commit/0f9fd5d982d4ef333bb104e61de99f44f31a649b))
+* **deps:** bump @vuecs/forms to v5.3.3 and @vuecs/theme-tailwind to v6.3.1 ([d3bb7fd](https://github.com/authup/authup/commit/d3bb7fdf565c16999c017c6fda75a58ef0d74538))
+* ensure consistent version for release ([280b376](https://github.com/authup/authup/commit/280b3761e423c554193401499e2ee155f18c55bc))
+* harden mfa verify path - atomic attempt counter + stamp-first unit of work ([#3239](https://github.com/authup/authup/issues/3239)) ([358a121](https://github.com/authup/authup/commit/358a121f05b9d28af2a27f0acff1149e4f1b241a)), closes [#3237](https://github.com/authup/authup/issues/3237)
+* make MFA login work + stop admins planting a user's second factor ([#3241](https://github.com/authup/authup/issues/3241)) ([3756869](https://github.com/authup/authup/commit/3756869289f2bb2e32bfd5d28a1abb00e83c8a0b))
+* **server-adapter:** enforce certificate binding inside TokenVerifier.verify() ([#3270](https://github.com/authup/authup/issues/3270)) ([0741dbc](https://github.com/authup/authup/commit/0741dbc0cd84fd0ee077d4ad5428556fde40efa7))
+* **server-core:** bound prometheus path-label cardinality via route templates ([#3266](https://github.com/authup/authup/issues/3266)) ([0746e27](https://github.com/authup/authup/commit/0746e277971b68d8bfb58a0f444dc3454f8a179d)), closes [#3253](https://github.com/authup/authup/issues/3253)
+* **server-core:** give the consent findMany a fields.default (mysql duplicate column) ([#3254](https://github.com/authup/authup/issues/3254)) ([c83bdd3](https://github.com/authup/authup/commit/c83bdd3434600b9f7d0c5a21dc59781d8f0c1989))
+* **server-core:** harden mfa verification locking ([#3264](https://github.com/authup/authup/issues/3264)) ([f39cbd1](https://github.com/authup/authup/commit/f39cbd14ba7c7a5d86226443af339f9e8699a553))
+* **server-core:** harden mTLS/key-store/oauth2 review findings + core error taxonomy ([#3267](https://github.com/authup/authup/issues/3267)) ([350fb78](https://github.com/authup/authup/commit/350fb78fa46392ea270d369cc2c27a5c30405401))
+* **server-core:** load yaml/json provisioning files ([#3263](https://github.com/authup/authup/issues/3263)) ([0c5547c](https://github.com/authup/authup/commit/0c5547cfea57366e87b26ca1bd6ad77256d953d8))
+* **server-core:** policy-check denial + typed descendant-tree loading ([#3245](https://github.com/authup/authup/issues/3245)) ([e4c944a](https://github.com/authup/authup/commit/e4c944adc2bdad1d36ef3c413ad9e5eb615e001d))
+* **server-core:** prevent cross-realm audit event disclosure ([#3262](https://github.com/authup/authup/issues/3262)) ([18cd4d2](https://github.com/authup/authup/commit/18cd4d244818486f8bb0adff6a092e19e932a7f8))
+* **server-core:** revoke expired/inactive tokens per RFC 7009 ([a85cfb6](https://github.com/authup/authup/commit/a85cfb6346bf2f61d9904cd84f851245355ddbfd))
+
+
+### Code Refactoring
+
+* **server-core:** wrap authenticator enroll response in data/meta envelope ([#3272](https://github.com/authup/authup/issues/3272)) ([85b855c](https://github.com/authup/authup/commit/85b855ceaccd39ef132c3033c4484ce15bc4a68b))
+
 ## [1.0.0-beta.52](https://github.com/authup/authup/compare/v1.0.0-beta.51...v1.0.0-beta.52) (2026-07-11)
 
 

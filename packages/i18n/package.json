@@ -1,7 +1,7 @@
 {
     "name": "@authup/i18n",
     "type": "module",
-    "version": "1.0.0-beta.52",
+    "version": "1.0.0-beta.53",
     "description": "Framework-agnostic translation catalogs and locale registry.",
     "license": "Apache-2.0",
     "exports": {
@@ -49,7 +49,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/errors": "^1.0.0-beta.52",
+        "@authup/errors": "^1.0.0-beta.53",
         "ilingo": "^6.0.0"
     },
     "devDependencies": {
