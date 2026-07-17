@@ -54,13 +54,13 @@
   "devDependencies": {
     "@vuecs/core": "^3.4.0",
     "@vuecs/design": "^1.0.8",
-    "@vuecs/theme-tailwind": "^6.3.0",
+    "@vuecs/theme-tailwind": "^6.3.1",
     "tailwindcss": "^4.3.2"
   },
   "peerDependencies": {
     "@vuecs/core": "^3.4.0",
     "@vuecs/design": "^1.0.8",
-    "@vuecs/theme-tailwind": "^6.3.0",
+    "@vuecs/theme-tailwind": "^6.3.1",
     "tailwindcss": "^4.3.2"
   },
   "publishConfig": {
