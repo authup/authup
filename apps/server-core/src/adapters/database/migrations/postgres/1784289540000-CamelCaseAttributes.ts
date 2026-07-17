@@ -5,125 +5,65 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { camelCase, snakeCase } from 'change-case';
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 /**
- * camelCase entity properties (plan 073) — data migration for persisted
- * property KEYS. Schema/column names are untouched (the snake_case naming
- * strategy pins them); this migration rewrites rows whose VALUES are entity
- * property names:
- *
- * - auth_identity_provider_attributes.name: identity providers are
- *   admin-created (never re-provisioned), so their stored OAuth2/OIDC/LDAP
- *   config keys must be renamed or existing providers break.
- * - auth_policy_attributes.name: policy-type config keys (realm-match, time,
- *   composite) for user-authored policies.
- * - auth_policy_attributes.value where name = 'names': attribute-names
- *   policy denylists enumerate entity property names; a stale snake entry
- *   FAILS OPEN against the camelCase ATTRIBUTES bag. The provisioner MERGE
- *   rewrites the built-in system.*-names-self-manage sets on boot — this is
- *   the belt to that suspender, and it also covers user-authored policies.
- * - auth_user_attributes.name = 'client_id': written by the identity-provider
- *   account manager onto provisioned users (collision-guarded — a row is
- *   skipped when the user already carries a 'clientId' attribute).
+ * Rewrite every distinct property-name key in `valueColumn` through `transform`.
+ * These columns hold entity property names set by authup (identity-provider
+ * attribute keys / targets, user-attribute names), so a blanket transform is
+ * correct. The unique `(owner, value)` index means a rename can collide with an
+ * already-migrated row; the source duplicate is removed first to keep the
+ * update constraint-safe.
  */
+async function renameKeys(
+    queryRunner: QueryRunner,
+    table: string,
+    ownerColumn: string,
+    valueColumn: string,
+    transform: (value: string) => string,
+): Promise<void> {
+    const rows: { value: string }[] = await queryRunner.query(
+        `SELECT DISTINCT "${valueColumn}" AS "value" FROM "${table}" WHERE "${valueColumn}" IS NOT NULL`,
+    );
 
-const IDENTITY_PROVIDER_ATTRIBUTE_KEYS: [string, string][] = [
-    ['authorize_url', 'authorizeUrl'],
-    ['token_url', 'tokenUrl'],
-    ['token_revoke_url', 'tokenRevokeUrl'],
-    ['user_info_url', 'userInfoUrl'],
-    ['client_id', 'clientId'],
-    ['client_secret', 'clientSecret'],
-    ['base_dn', 'baseDn'],
-    ['user_base_dn', 'userBaseDn'],
-    ['user_name_attribute', 'userNameAttribute'],
-    ['user_mail_attribute', 'userMailAttribute'],
-    ['user_display_name_attribute', 'userDisplayNameAttribute'],
-    ['user_filter', 'userFilter'],
-    ['group_base_dn', 'groupBaseDn'],
-    ['group_name_attribute', 'groupNameAttribute'],
-    ['group_member_attribute', 'groupMemberAttribute'],
-    ['group_member_user_attribute', 'groupMemberUserAttribute'],
-    ['group_filter', 'groupFilter'],
-    ['group_class', 'groupClass'],
-    ['start_tls', 'startTls'],
-];
+    for (const { value } of rows) {
+        const next = transform(value);
+        if (next === value) {
+            continue;
+        }
 
-const POLICY_ATTRIBUTE_KEYS: [string, string][] = [
-    ['attribute_name', 'attributeName'],
-    ['attribute_name_strict', 'attributeNameStrict'],
-    ['attribute_null_match_all', 'attributeNullMatchAll'],
-    ['day_of_week', 'dayOfWeek'],
-    ['day_of_month', 'dayOfMonth'],
-    ['day_of_year', 'dayOfYear'],
-    ['decision_strategy', 'decisionStrategy'],
-];
+        await queryRunner.query(
+            `DELETE FROM "${table}" AS "source" USING "${table}" AS "target" ` +
+            `WHERE "source"."${ownerColumn}" = "target"."${ownerColumn}" ` +
+            `AND "source"."${valueColumn}" = $1 AND "target"."${valueColumn}" = $2`,
+            [value, next],
+        );
 
-const POLICY_NAMES_VALUES: [string, string][] = [
-    ['name_locked', 'nameLocked'],
-    ['status_message', 'statusMessage'],
-    ['realm_id', 'realmId'],
-    ['auth_method', 'authMethod'],
-    ['token_binding_method', 'tokenBindingMethod'],
-    ['secret_hashed', 'secretHashed'],
-    ['secret_encrypted', 'secretEncrypted'],
-    ['access_policy_id', 'accessPolicyId'],
-    ['user_id', 'userId'],
-];
+        await queryRunner.query(
+            `UPDATE "${table}" SET "${valueColumn}" = $1 WHERE "${valueColumn}" = $2`,
+            [next, value],
+        );
+    }
+}
 
+/**
+ * Plan 073 data migration. Database identifiers remain snake_case; values which
+ * encode management/entity property names move to camelCase. Built-in policy
+ * data is intentionally excluded — the provisioner overwrites it on every boot.
+ */
 export class CamelCaseAttributes1784289540000 implements MigrationInterface {
     name = 'CamelCaseAttributes1784289540000';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        for (const [from, to] of IDENTITY_PROVIDER_ATTRIBUTE_KEYS) {
-            await queryRunner.query(
-                'UPDATE "auth_identity_provider_attributes" SET "name" = $1 WHERE "name" = $2',
-                [to, from],
-            );
-        }
-
-        for (const [from, to] of POLICY_ATTRIBUTE_KEYS) {
-            await queryRunner.query(
-                'UPDATE "auth_policy_attributes" SET "name" = $1 WHERE "name" = $2',
-                [to, from],
-            );
-        }
-
-        for (const [from, to] of POLICY_NAMES_VALUES) {
-            await queryRunner.query(
-                `UPDATE "auth_policy_attributes" SET "value" = REPLACE("value", '"${from}"', '"${to}"') WHERE "name" = 'names' AND "value" IS NOT NULL`,
-            );
-        }
-
-        await queryRunner.query(
-            'UPDATE "auth_user_attributes" SET "name" = \'clientId\' WHERE "name" = \'client_id\' AND NOT EXISTS (SELECT 1 FROM "auth_user_attributes" "b" WHERE "b"."user_id" = "auth_user_attributes"."user_id" AND "b"."name" = \'clientId\')',
-        );
+        await renameKeys(queryRunner, 'auth_identity_provider_attributes', 'provider_id', 'name', camelCase);
+        await renameKeys(queryRunner, 'auth_identity_provider_attribute_mappings', 'provider_id', 'target_name', camelCase);
+        await renameKeys(queryRunner, 'auth_user_attributes', 'user_id', 'name', camelCase);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(
-            'UPDATE "auth_user_attributes" SET "name" = \'client_id\' WHERE "name" = \'clientId\' AND NOT EXISTS (SELECT 1 FROM "auth_user_attributes" "b" WHERE "b"."user_id" = "auth_user_attributes"."user_id" AND "b"."name" = \'client_id\')',
-        );
-
-        for (const [from, to] of POLICY_NAMES_VALUES) {
-            await queryRunner.query(
-                `UPDATE "auth_policy_attributes" SET "value" = REPLACE("value", '"${to}"', '"${from}"') WHERE "name" = 'names' AND "value" IS NOT NULL`,
-            );
-        }
-
-        for (const [from, to] of POLICY_ATTRIBUTE_KEYS) {
-            await queryRunner.query(
-                'UPDATE "auth_policy_attributes" SET "name" = $1 WHERE "name" = $2',
-                [from, to],
-            );
-        }
-
-        for (const [from, to] of IDENTITY_PROVIDER_ATTRIBUTE_KEYS) {
-            await queryRunner.query(
-                'UPDATE "auth_identity_provider_attributes" SET "name" = $1 WHERE "name" = $2',
-                [from, to],
-            );
-        }
+        await renameKeys(queryRunner, 'auth_user_attributes', 'user_id', 'name', snakeCase);
+        await renameKeys(queryRunner, 'auth_identity_provider_attribute_mappings', 'provider_id', 'target_name', snakeCase);
+        await renameKeys(queryRunner, 'auth_identity_provider_attributes', 'provider_id', 'name', snakeCase);
     }
 }
