@@ -30,7 +30,7 @@ import {
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
-import type { BuildInput } from 'rapiq';
+import type { QueryInput } from '../../../core';
 import { VCButton } from '@vuecs/button';
 import { VCAlert } from '@vuecs/elements';
 import { VCFormGroup, VCFormInput, useSubmitButton } from '@vuecs/forms';
@@ -223,12 +223,12 @@ export default defineComponent({
             mfaKinds.value.includes(UserAuthenticatorKind.TOTP) ||
             mfaKinds.value.includes(UserAuthenticatorKind.RECOVERY));
 
-        const identityProviderQuery: Ref<BuildInput<IdentityProvider>> = ref({});
+        const identityProviderQuery: Ref<QueryInput<IdentityProvider>> = ref({});
         const resetIdentityProviderQuery = () => {
             identityProviderQuery.value = {
                 filters: {
                     realmId: form.realmId || '',
-                    protocol: `!${IdentityProviderProtocol.LDAP}`,
+                    protocol: { $ne: IdentityProviderProtocol.LDAP },
                     enabled: true,
                 },
             };

@@ -1,5 +1,6 @@
 <script lang="ts">
 
+import type { QueryInput } from '@authup/client-web-kit';
 import type { Event as EventEntity } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
@@ -14,7 +15,6 @@ import {
     ATitle,
     useTranslations,
 } from '@authup/client-web-kit';
-import type { BuildInput } from 'rapiq';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
 import type { TableColumn } from '@vuecs/table';
@@ -39,7 +39,7 @@ export default defineComponent({
             emit('failed', e);
         };
 
-        const query : BuildInput<EventEntity> = { sort: { createdAt: 'DESC' } };
+        const query : QueryInput<EventEntity> = { sort: { createdAt: 'DESC' } };
 
         const translations = useTranslations([
             {

@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { QueryInput } from '@authup/client-web-kit';
 import type { Session, User } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
@@ -16,7 +17,6 @@ import {
     useTranslations,
     useTranslator,
 } from '@authup/client-web-kit';
-import type { BuildInput } from 'rapiq';
 import type { TableColumn } from '@vuecs/table';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
@@ -44,8 +44,8 @@ export default defineNuxtComponent({
     setup(props) {
         definePageMeta({ [LayoutKey.REQUIRED_PERMISSIONS]: [PermissionName.SESSION_READ] });
 
-        const query = computed<BuildInput<Session>>(() => ({
-            filter: { userId: props.entity.id },
+        const query = computed<QueryInput<Session>>(() => ({
+            filters: { userId: props.entity.id },
             sort: { seenAt: 'DESC' },
         }));
 
@@ -123,7 +123,7 @@ export default defineNuxtComponent({
 
             revoking.value = true;
             try {
-                const response = await httpClient.session.deleteMany({ filter: { userId: props.entity.id } });
+                const response = await httpClient.session.deleteMany({ filters: { userId: props.entity.id } });
 
                 toast.show({
                     variant: 'success',

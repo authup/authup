@@ -9,7 +9,7 @@ import type { IEntityAPI } from '@authup/core-http-kit';
 import type { EntityTypeMap } from '@authup/core-kit';
 import type { ObjectLiteral } from '@authup/kit';
 import { extendObject, hasOwnProperty } from '@authup/kit';
-import type { BuildInput } from 'rapiq';
+import type { QueryInput } from '../../../../core';
 import { isObject } from 'smob';
 import type { Ref, VNodeChild } from 'vue';
 import {
@@ -302,9 +302,9 @@ function create<
             return;
         }
 
-        let query : BuildInput<RECORD> | undefined;
+        let query : QueryInput<RECORD> | undefined;
         if (rctx.query) {
-            query = rctx.query as BuildInput<RECORD>;
+            query = rctx.query as QueryInput<RECORD>;
         }
 
         let { id } = rctx;
@@ -327,12 +327,12 @@ function create<
             }
 
             if (ctx.props.queryFilters) {
-                query = query || {} as BuildInput<RECORD>;
+                query = query || {} as QueryInput<RECORD>;
                 (query as any).filters = ctx.props.queryFilters;
             }
 
             if (ctx.props.queryFields) {
-                query = query || {} as BuildInput<RECORD>;
+                query = query || {} as QueryInput<RECORD>;
                 (query as any).fields = ctx.props.queryFields;
             }
 
@@ -349,7 +349,7 @@ function create<
 
         if (id) {
             try {
-                entity.value = await domainAPI.getOne(id, query as BuildInput<any>);
+                entity.value = await domainAPI.getOne(id, query as any);
 
                 if (socket) {
                     socket.mount();

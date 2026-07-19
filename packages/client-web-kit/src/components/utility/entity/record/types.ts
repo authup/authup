@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BuildInput, FieldsBuildInput, FiltersBuildInput } from 'rapiq';
+import type { QueryFieldsInput, QueryFiltersInput, QueryInput } from '../../../../core';
 import type {
     MaybeRef, 
     Ref, 
@@ -28,7 +28,7 @@ export type ResourceManagerRenderFn = () => VNodeChild;
 
 export type ResourceManagerResolveContext<T> = {
     id?: EntityID<T>,
-    query?: T extends Record<string, any> ? BuildInput<T> : never
+    query?: T extends Record<string, any> ? QueryInput<T> : never
 };
 
 export type EntityManager<T> = {
@@ -53,8 +53,8 @@ export type EntityManager<T> = {
 export type EntityVProps<T> = {
     entity?: T | null,
     entityId?: EntityID<T>,
-    queryFilters?: T extends Record<string, any> ? FiltersBuildInput<T> : never,
-    queryFields?: T extends Record<string, any> ? FieldsBuildInput<T> : never
+    queryFilters?: T extends Record<string, any> ? QueryFiltersInput<T> : never,
+    queryFields?: T extends Record<string, any> ? QueryFieldsInput<T> : never
 };
 
 export type EntityVSlotProps<T> = {
@@ -86,7 +86,7 @@ export type EntityManagerCreateContext<
         SlotsType<EntityVSlots<T>>
     >>,
     props?: EntityVProps<T>,
-    query?: () => T extends Record<string, any> ? BuildInput<T> : never,
+    query?: () => T extends Record<string, any> ? QueryInput<T> : never,
     realmId?: MaybeRef<string> | ((entity: T | undefined) => string | undefined),
     onResolved?(entity?: T) : any,
     onCreated?(entity: T): any,

@@ -1,5 +1,6 @@
 <script lang="ts">
 
+import type { QueryInput } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { Client } from '@authup/core-kit';
 import { ClientAuthMethod, PermissionName } from '@authup/core-kit';
@@ -20,7 +21,6 @@ import {
     usePermissionCheck,
     useTranslations,
 } from '@authup/client-web-kit';
-import type { BuildInput } from 'rapiq';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
 import type { TableColumn } from '@vuecs/table';
@@ -45,7 +45,7 @@ export default defineComponent({
         const store = injectStore();
         const { realmManagementId } = storeToRefs(store);
 
-        const query : BuildInput<Client> = { filters: { realmId: [realmManagementId.value ?? null, null] } };
+        const query : QueryInput<Client> = { filters: { realmId: [realmManagementId.value ?? null, null] } };
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.CLIENT_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.CLIENT_DELETE });

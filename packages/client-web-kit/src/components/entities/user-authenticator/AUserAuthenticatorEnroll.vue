@@ -156,7 +156,7 @@ export default defineComponent({
 
             try {
                 const { meta } = await apiClient.userAuthenticator.getMany(props.userId, {
-                    filter: { kind: UserAuthenticatorKind.RECOVERY },
+                    filters: { kind: UserAuthenticatorKind.RECOVERY },
                     pagination: { limit: 1 },
                 });
                 if (meta.total > 0) {

@@ -9,6 +9,7 @@ import {
     usePermissionCheck,
     useTranslations,
 } from '@authup/client-web-kit';
+import type { QueryInput } from '@authup/client-web-kit';
 import type { TrustAnchor } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
@@ -22,7 +23,6 @@ import { VCIcon } from '@vuecs/icon';
 import type { TableColumn } from '@vuecs/table';
 import { VCTimeago } from '@vuecs/timeago';
 import { storeToRefs } from 'pinia';
-import type { BuildInput } from 'rapiq';
 import { computed, defineComponent, resolveComponent } from 'vue';
 
 // VCTable deliberately stays globally registered; see structure.md → Table usage.
@@ -41,7 +41,7 @@ export default defineComponent({
     setup(_props, { emit }) {
         const store = injectStore();
         const { realmManagementId } = storeToRefs(store);
-        const query: BuildInput<TrustAnchor> = { filter: { realmId: [realmManagementId.value ?? null, null] } };
+        const query: QueryInput<TrustAnchor> = { filters: { realmId: [realmManagementId.value ?? null, null] } };
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.KEY_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.KEY_DELETE });
