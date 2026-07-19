@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BuildInput } from 'rapiq';
-import { buildQuery } from 'rapiq';
+import type { EntityQueryInput } from '../../../helpers';
+import { buildQueryString } from '../../../helpers';
 import type { Policy } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
@@ -25,8 +25,8 @@ import type {
 export class PolicyAPI extends BaseAPI implements IPolicyAPI {
     async getMany<
         OUTPUT extends PolicyResponse = PolicyResponse,
-    >(data?: BuildInput<Policy & { parentId?: string | null }>): Promise<EntityCollectionResponse<OUTPUT>> {
-        const response = await this.client.get(`policies${buildQuery(data)}`);
+    >(data?: EntityQueryInput<Policy & { parentId?: string | null }>): Promise<EntityCollectionResponse<OUTPUT>> {
+        const response = await this.client.get(`policies${buildQueryString(data)}`);
         return response.data;
     }
 
@@ -40,16 +40,16 @@ export class PolicyAPI extends BaseAPI implements IPolicyAPI {
 
     async getOne<
         OUTPUT extends PolicyResponse = PolicyResponse,
-    >(id: Policy['id'], record?: BuildInput<Policy>) : Promise<EntityRecordResponse<OUTPUT>> {
-        const response = await this.client.get(`policies/${id}${buildQuery(record)}`);
+    >(id: Policy['id'], record?: EntityQueryInput<Policy>) : Promise<EntityRecordResponse<OUTPUT>> {
+        const response = await this.client.get(`policies/${id}${buildQueryString(record)}`);
 
         return response.data;
     }
 
     async getOneExpanded<
         OUTPUT extends PolicyResponse = PolicyResponse,
-    >(id: Policy['id'], record?: BuildInput<Policy>) : Promise<EntityRecordResponse<OUTPUT>> {
-        const response = await this.client.get(`policies/${id}/expanded${buildQuery(record)}`);
+    >(id: Policy['id'], record?: EntityQueryInput<Policy>) : Promise<EntityRecordResponse<OUTPUT>> {
+        const response = await this.client.get(`policies/${id}/expanded${buildQueryString(record)}`);
 
         return response.data;
     }

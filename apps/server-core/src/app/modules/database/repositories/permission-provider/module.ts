@@ -70,7 +70,7 @@ export class PermissionDatabaseProvider implements IPermissionProvider {
         if (entity) {
             const junctions = await this.permissionPolicyRepository.find({
                 where: { permissionId: entity.id },
-                relations: ['policy'],
+                relations: { policy: true },
             });
 
             const policies : BasePolicy[] = [];

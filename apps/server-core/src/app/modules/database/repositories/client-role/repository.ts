@@ -6,8 +6,10 @@
  */
 
 import type { ClientRole } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
+import { validateEntityJoinColumns } from 'typeorm-extension';
+import { applyRequestQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IClientRoleRepository } from '../../../../../core/entities/client-role/types.ts';
 import { ClientRoleEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -24,24 +26,7 @@ export class ClientRoleRepositoryAdapter implements IClientRoleRepository {
         const qb = this.repository.createQueryBuilder('clientRole');
         qb.groupBy('clientRole.id');
 
-        const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'clientRole',
-            filters: { allowed: ['clientId', 'roleId'] },
-            relations: {
-                allowed: ['client', 'role'],
-                onJoin: (_property: string, key: string, q: any) => {
-                    q.addGroupBy(`${key}.id`);
-                },
-            },
-            sort: {
-                allowed: [
-                    'id',
-                    'createdAt',
-                    'updatedAt',
-                ],
-            },
-            pagination: { maxLimit: 50 },
-        });
+        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.CLIENT_ROLE });
 
         const [entities, total] = await qb.getManyAndCount();
 

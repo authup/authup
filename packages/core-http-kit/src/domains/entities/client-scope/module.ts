@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BuildInput } from 'rapiq';
-import { buildQuery } from 'rapiq';
+import type { EntityQueryInput } from '../../../helpers';
+import { buildQueryString } from '../../../helpers';
 import type { ClientScope } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
@@ -16,13 +16,13 @@ import type {
 } from './types';
 
 export class ClientScopeAPI extends BaseAPI implements IClientScopeAPI {
-    async getMany(data?: BuildInput<ClientScope>) : Promise<EntityCollectionResponse<ClientScope>> {
-        const response = await this.client.get(`client-scopes${buildQuery(data)}`);
+    async getMany(data?: EntityQueryInput<ClientScope>) : Promise<EntityCollectionResponse<ClientScope>> {
+        const response = await this.client.get(`client-scopes${buildQueryString(data)}`);
         return response.data;
     }
 
-    async getOne(id: ClientScope['id'], record?: BuildInput<ClientScope>) : Promise<EntityRecordResponse<ClientScope>> {
-        const response = await this.client.get(`client-scopes/${id}${buildQuery(record)}`);
+    async getOne(id: ClientScope['id'], record?: EntityQueryInput<ClientScope>) : Promise<EntityRecordResponse<ClientScope>> {
+        const response = await this.client.get(`client-scopes/${id}${buildQueryString(record)}`);
 
         return response.data;
     }

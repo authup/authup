@@ -160,44 +160,44 @@ describe('realm isolation (field projection)', () => {
     });
 
     it('keeps a foreign-realm user hidden even when realmId is projected away', async () => {
-        const own = await actor.user.getMany({ filter: { id: ownUserId }, fields: ['id', 'name'] });
+        const own = await actor.user.getMany({ filters: { id: ownUserId }, fields: ['id', 'name'] });
         expect(own.data.some((entity) => entity.id === ownUserId)).toBe(true);
 
-        const foreign = await actor.user.getMany({ filter: { id: foreignUserId }, fields: ['id', 'name'] });
+        const foreign = await actor.user.getMany({ filters: { id: foreignUserId }, fields: ['id', 'name'] });
         expect(foreign.data.some((entity) => entity.id === foreignUserId)).toBe(false);
     });
 
     it('keeps a foreign-realm user hidden from an ownOrNull-scoped reader when realmId is projected away', async () => {
-        const own = await readerActor.user.getMany({ filter: { id: ownUserId }, fields: ['id', 'name'] });
+        const own = await readerActor.user.getMany({ filters: { id: ownUserId }, fields: ['id', 'name'] });
         expect(own.data.some((entity) => entity.id === ownUserId)).toBe(true);
 
-        const foreign = await readerActor.user.getMany({ filter: { id: foreignUserId }, fields: ['id', 'name'] });
+        const foreign = await readerActor.user.getMany({ filters: { id: foreignUserId }, fields: ['id', 'name'] });
         expect(foreign.data.some((entity) => entity.id === foreignUserId)).toBe(false);
     });
 
     it('keeps a foreign-realm plaintext client secret hidden even when realmId and the secret flags are projected away', async () => {
-        const own = await actor.client.getMany({ filter: { id: ownClientId }, fields: ['id', 'secret'] });
+        const own = await actor.client.getMany({ filters: { id: ownClientId }, fields: ['id', 'secret'] });
         const ownEntity = own.data.find((entity) => entity.id === ownClientId);
         expect(ownEntity).toBeDefined();
         expect(ownEntity!.secret).toEqual(ownClientSecret);
 
-        const foreign = await actor.client.getMany({ filter: { id: foreignClientId }, fields: ['id', 'secret'] });
+        const foreign = await actor.client.getMany({ filters: { id: foreignClientId }, fields: ['id', 'secret'] });
         expect(foreign.data.some((entity) => entity.id === foreignClientId)).toBe(false);
     });
 
     it('keeps a foreign-realm role-attribute hidden even when a field projection is attempted', async () => {
-        const own = await actor.roleAttribute.getMany({ filter: { id: ownRoleAttributeId }, fields: ['id', 'name'] });
+        const own = await actor.roleAttribute.getMany({ filters: { id: ownRoleAttributeId }, fields: ['id', 'name'] });
         expect(own.data.some((entity) => entity.id === ownRoleAttributeId)).toBe(true);
 
-        const foreign = await actor.roleAttribute.getMany({ filter: { id: foreignRoleAttributeId }, fields: ['id', 'name'] });
+        const foreign = await actor.roleAttribute.getMany({ filters: { id: foreignRoleAttributeId }, fields: ['id', 'name'] });
         expect(foreign.data.some((entity) => entity.id === foreignRoleAttributeId)).toBe(false);
     });
 
     it('keeps a foreign-realm user-attribute hidden even when a field projection is attempted', async () => {
-        const own = await actor.userAttribute.getMany({ filter: { id: ownUserAttributeId }, fields: ['id', 'name'] });
+        const own = await actor.userAttribute.getMany({ filters: { id: ownUserAttributeId }, fields: ['id', 'name'] });
         expect(own.data.some((entity) => entity.id === ownUserAttributeId)).toBe(true);
 
-        const foreign = await actor.userAttribute.getMany({ filter: { id: foreignUserAttributeId }, fields: ['id', 'name'] });
+        const foreign = await actor.userAttribute.getMany({ filters: { id: foreignUserAttributeId }, fields: ['id', 'name'] });
         expect(foreign.data.some((entity) => entity.id === foreignUserAttributeId)).toBe(false);
     });
 });

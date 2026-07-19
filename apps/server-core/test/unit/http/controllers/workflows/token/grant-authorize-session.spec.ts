@@ -98,7 +98,7 @@ describe('grant-authorize session reuse', () => {
         expect(exchangeIntrospect.session_id).toEqual(loginSessionId);
 
         // 4) exactly ONE session exists for the user — no duplicate on login
-        const sessions = await suite.client.session.getMany({ filter: { sub: userId } });
+        const sessions = await suite.client.session.getMany({ filters: { sub: userId } });
         const own = sessions.data.filter((s) => s.sub === userId);
         expect(own).toHaveLength(1);
         expect(own[0].id).toEqual(loginSessionId);

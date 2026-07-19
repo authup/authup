@@ -1,5 +1,6 @@
 <script lang="ts">
 
+import type { QueryInput } from '@authup/client-web-kit';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
 import { VCTimeago } from '@vuecs/timeago';
@@ -17,7 +18,6 @@ import {
     useTranslations,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
-import type { BuildInput } from 'rapiq';
 import type { TableColumn } from '@vuecs/table';
 import { computed, defineComponent, resolveComponent } from 'vue';
 
@@ -41,7 +41,7 @@ export default defineComponent({
         const store = injectStore();
         const { realmManagementId } = storeToRefs(store);
 
-        const query : BuildInput<IdentityProvider> = { filter: { realmId: [realmManagementId.value ?? null, null] } };
+        const query : QueryInput<IdentityProvider> = { filters: { realmId: [realmManagementId.value ?? null, null] } };
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.IDENTITY_PROVIDER_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.IDENTITY_PROVIDER_DELETE });

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BuildInput } from 'rapiq';
-import { buildQuery } from 'rapiq';
+import type { EntityQueryInput } from '../../../helpers';
+import { buildQueryString } from '../../../helpers';
 import type { IdentityProvider } from '@authup/core-kit';
 import { buildIdentityProviderAuthorizePath } from '@authup/core-kit';
 import { cleanDoubleSlashes, nullifyEmptyObjectProperties } from '../../../utils';
@@ -24,17 +24,17 @@ export class IdentityProviderAPI extends BaseAPI implements IIdentityProviderAPI
         return cleanDoubleSlashes(`${this.client.getBaseURL()}/${buildIdentityProviderAuthorizePath(id)}`);
     }
 
-    async getMany(record?: BuildInput<IdentityProvider>): Promise<EntityCollectionResponse<IdentityProvider>> {
-        const response = await this.client.get(`identity-providers${buildQuery(record)}`);
+    async getMany(record?: EntityQueryInput<IdentityProvider>): Promise<EntityCollectionResponse<IdentityProvider>> {
+        const response = await this.client.get(`identity-providers${buildQueryString(record)}`);
 
         return response.data;
     }
 
     async getOne(
         id: IdentityProvider['id'],
-        record?: BuildInput<IdentityProvider>,
+        record?: EntityQueryInput<IdentityProvider>,
     ): Promise<EntityRecordResponse<IdentityProvider>> {
-        const response = await this.client.get(`identity-providers/${id}${buildQuery(record)}`);
+        const response = await this.client.get(`identity-providers/${id}${buildQueryString(record)}`);
 
         return response.data;
     }

@@ -8,9 +8,9 @@
 import { USER_PASSWORD_MAX_LENGTH } from '@authup/core-kit';
 import { isObject } from '@authup/kit';
 import { createValidator } from '@validup/zod';
-import type { BetterSqlite3ConnectionOptions } from 'typeorm/driver/better-sqlite3/BetterSqlite3ConnectionOptions.js';
-import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions.js';
-import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions.js';
+import type { BetterSqlite3DataSourceOptions } from 'typeorm/driver/better-sqlite3/BetterSqlite3DataSourceOptions.js';
+import type { MysqlDataSourceOptions } from 'typeorm/driver/mysql/MysqlDataSourceOptions.js';
+import type { PostgresDataSourceOptions } from 'typeorm/driver/postgres/PostgresDataSourceOptions.js';
 import type { ValidatorDescriptor } from 'validup';
 import { Container } from 'validup';
 import { z } from 'zod';
@@ -45,7 +45,7 @@ export class ConfigValidator extends Container<Config> {
 
             logger: booleanValidator,
             db: createValidator(
-                z.custom<MysqlConnectionOptions | PostgresConnectionOptions | BetterSqlite3ConnectionOptions>(
+                z.custom<MysqlDataSourceOptions | PostgresDataSourceOptions | BetterSqlite3DataSourceOptions>(
                     (value) => isObject(value),
                 ),
             ),

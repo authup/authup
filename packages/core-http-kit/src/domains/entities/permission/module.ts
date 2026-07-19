@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BuildInput } from 'rapiq';
-import { buildQuery } from 'rapiq';
+import type { EntityQueryInput } from '../../../helpers';
+import { buildQueryString } from '../../../helpers';
 import type { Permission } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
@@ -20,8 +20,8 @@ import type {
 } from './types';
 
 export class PermissionAPI extends BaseAPI implements IPermissionAPI {
-    async getMany(data?: BuildInput<Permission>): Promise<EntityCollectionResponse<Permission>> {
-        const response = await this.client.get(`permissions${buildQuery(data)}`);
+    async getMany(data?: EntityQueryInput<Permission>): Promise<EntityCollectionResponse<Permission>> {
+        const response = await this.client.get(`permissions${buildQueryString(data)}`);
         return response.data;
     }
 
@@ -31,8 +31,8 @@ export class PermissionAPI extends BaseAPI implements IPermissionAPI {
         return response.data;
     }
 
-    async getOne(id: Permission['id'], record?: BuildInput<Permission>): Promise<EntityRecordResponse<Permission>> {
-        const response = await this.client.get(`permissions/${id}${buildQuery(record)}`);
+    async getOne(id: Permission['id'], record?: EntityQueryInput<Permission>): Promise<EntityRecordResponse<Permission>> {
+        const response = await this.client.get(`permissions/${id}${buildQueryString(record)}`);
 
         return response.data;
     }

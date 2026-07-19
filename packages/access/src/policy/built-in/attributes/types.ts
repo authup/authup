@@ -5,10 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { MongoQuery } from '@ucast/mongo2js';
+import type { MongoFiltersParserInput } from '@rapiq/parser-mongo';
 import type { BasePolicy } from '../../types';
 
-export type AttributesPolicyQuery<T> = MongoQuery<T>;
+export type AttributesPolicyQuery<
+    T extends Record<string, any> = Record<string, any>,
+> = MongoFiltersParserInput<T>;
 
 export interface AttributesPolicy<
     T extends Record<string, any> = Record<string, any>,

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BuildInput } from 'rapiq';
-import { buildQuery } from 'rapiq';
+import type { EntityQueryInput } from '../../../helpers';
+import { buildQueryString } from '../../../helpers';
 import type { UserAttribute } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
@@ -18,14 +18,14 @@ import type {
 } from './types';
 
 export class UserAttributeAPI extends BaseAPI implements IUserAttributeAPI {
-    async getMany(data?: BuildInput<UserAttribute>): Promise<EntityCollectionResponse<UserAttribute>> {
-        const response = await this.client.get(`user-attributes${buildQuery(data)}`);
+    async getMany(data?: EntityQueryInput<UserAttribute>): Promise<EntityCollectionResponse<UserAttribute>> {
+        const response = await this.client.get(`user-attributes${buildQueryString(data)}`);
 
         return response.data;
     }
 
-    async getOne(roleId: UserAttribute['id'], record?: BuildInput<UserAttribute>): Promise<EntityRecordResponse<UserAttribute>> {
-        const response = await this.client.get(`user-attributes/${roleId}${buildQuery(record)}`);
+    async getOne(roleId: UserAttribute['id'], record?: EntityQueryInput<UserAttribute>): Promise<EntityRecordResponse<UserAttribute>> {
+        const response = await this.client.get(`user-attributes/${roleId}${buildQueryString(record)}`);
 
         return response.data;
     }

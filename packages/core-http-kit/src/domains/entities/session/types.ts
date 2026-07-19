@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BuildInput } from 'rapiq';
+import type { EntityQueryInput } from '../../../helpers';
 import type { Session } from '@authup/core-kit';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
@@ -14,9 +14,9 @@ export type SessionDeleteManyResponse = {
 };
 
 export interface ISessionAPI {
-    getMany(data?: BuildInput<Session>): Promise<EntityCollectionResponse<Session>>;
+    getMany(data?: EntityQueryInput<Session>): Promise<EntityCollectionResponse<Session>>;
 
-    getOne(id: Session['id'], record?: BuildInput<Session>): Promise<EntityRecordResponse<Session>>;
+    getOne(id: Session['id'], record?: EntityQueryInput<Session>): Promise<EntityRecordResponse<Session>>;
 
     delete(id: Session['id']): Promise<EntityRecordResponse<Session>>;
 
@@ -30,5 +30,5 @@ export interface ISessionAPI {
      *   `SESSION_DELETE` + per-session realm reach). `filter[userId]` accepts a
      *   comma list to target multiple subjects at once.
      */
-    deleteMany(data?: BuildInput<Session>): Promise<SessionDeleteManyResponse>;
+    deleteMany(data?: EntityQueryInput<Session>): Promise<SessionDeleteManyResponse>;
 }

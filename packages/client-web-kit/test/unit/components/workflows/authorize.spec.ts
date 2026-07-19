@@ -524,8 +524,10 @@ describe('AAuthorize consent covering probe (plan 055)', () => {
         const probe = httpClient.requests.find((request) => request.url.includes('consents'));
         expect(probe).toBeTruthy();
         const probeUrl = decodeURIComponent(probe!.url);
-        expect(probeUrl).toContain('filter[sub]=user-1');
-        expect(probeUrl).toContain('filter[subKind]=user');
+        // v2 expression dialect: the subject filter travels as an
+        // and(...) expression inside the single filter parameter.
+        expect(probeUrl).toContain("eq(sub,'user-1')");
+        expect(probeUrl).toContain("eq(subKind,'user')");
     });
 
     it('does NOT cover when the matching rows belong to another subject', async () => {

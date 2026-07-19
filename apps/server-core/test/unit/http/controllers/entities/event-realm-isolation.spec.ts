@@ -54,11 +54,11 @@ describe('event (realm isolation)', () => {
             password: userM.password!,
         });
 
-        const foreignRows = await suite.client.event.getMany({ filter: { name: EventName.LOGIN, actorId: createdB.id } });
+        const foreignRows = await suite.client.event.getMany({ filters: { name: EventName.LOGIN, actorId: createdB.id } });
         expect(foreignRows.data.length).toBeGreaterThanOrEqual(1);
         foreignRowId = foreignRows.data[0].id;
 
-        const ownRows = await suite.client.event.getMany({ filter: { name: EventName.LOGIN, actorId: createdM.id } });
+        const ownRows = await suite.client.event.getMany({ filters: { name: EventName.LOGIN, actorId: createdM.id } });
         expect(ownRows.data.length).toBeGreaterThanOrEqual(1);
         ownRowId = ownRows.data[0].id;
 
@@ -92,14 +92,14 @@ describe('event (realm isolation)', () => {
     it('keeps a foreign-realm audit event hidden even when realm_id is projected away', async () => {
         // control: the own-realm row IS visible to the own-scoped reader
         const own = await actor.event.getMany({
-            filter: { id: ownRowId },
+            filters: { id: ownRowId },
             fields: ['id', 'name'],
         });
         expect(own.data.some((row) => row.id === ownRowId)).toBe(true);
 
         // the foreign-realm row must NOT appear despite fields=id,name omitting realm_id
         const foreign = await actor.event.getMany({
-            filter: { id: foreignRowId },
+            filters: { id: foreignRowId },
             fields: ['id', 'name'],
         });
         expect(foreign.data.some((row) => row.id === foreignRowId)).toBe(false);

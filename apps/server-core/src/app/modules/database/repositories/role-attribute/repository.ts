@@ -6,8 +6,10 @@
  */
 
 import type { RoleAttribute } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
+import { validateEntityJoinColumns } from 'typeorm-extension';
+import { applyRequestQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IRoleAttributeRepository } from '../../../../../core/index.ts';
 import { RoleAttributeEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -24,12 +26,7 @@ export class RoleAttributeRepositoryAdapter implements IRoleAttributeRepository 
         const qb = this.repository.createQueryBuilder('roleAttribute');
         qb.groupBy('roleAttribute.id');
 
-        const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'roleAttribute',
-            filters: { allowed: ['id', 'name', 'roleId', 'realmId'] },
-            sort: { allowed: ['id', 'name', 'roleId', 'realmId', 'createdAt', 'updatedAt'] },
-            pagination: { maxLimit: 50 },
-        });
+        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.ROLE_ATTRIBUTE });
 
         applyRealmScopeSelect(qb, 'roleAttribute');
 

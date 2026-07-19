@@ -6,8 +6,10 @@
  */
 
 import type { UserPermission } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
+import { validateEntityJoinColumns } from 'typeorm-extension';
+import { applyRequestQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IUserPermissionRepository } from '../../../../../core/index.ts';
 import { UserPermissionEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -24,32 +26,7 @@ export class UserPermissionRepositoryAdapter implements IUserPermissionRepositor
         const qb = this.repository.createQueryBuilder('userPermission');
         qb.groupBy('userPermission.id');
 
-        const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'userPermission',
-            filters: {
-                allowed: [
-                    'userId',
-                    'permissionId',
-                ],
-            },
-            relations: {
-                allowed: [
-                    'user',
-                    'permission',
-                ],
-                onJoin: (_property: string, key: string, q: any) => {
-                    q.addGroupBy(`${key}.id`);
-                },
-            },
-            sort: {
-                allowed: [
-                    'id',
-                    'createdAt',
-                    'updatedAt',
-                ],
-            },
-            pagination: { maxLimit: 50 },
-        });
+        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.USER_PERMISSION });
 
         const [entities, total] = await qb.getManyAndCount();
 

@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BuildInput } from 'rapiq';
+import type { EntityQueryInput } from '../../../helpers';
 import type { Consent } from '@authup/core-kit';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
 export interface IConsentAPI {
-    getMany(data?: BuildInput<Consent>): Promise<EntityCollectionResponse<Consent>>;
+    getMany(data?: EntityQueryInput<Consent>): Promise<EntityCollectionResponse<Consent>>;
 
-    getOne(id: Consent['id'], record?: BuildInput<Consent>): Promise<EntityRecordResponse<Consent>>;
+    getOne(id: Consent['id'], record?: EntityQueryInput<Consent>): Promise<EntityRecordResponse<Consent>>;
 
     delete(id: Consent['id']): Promise<EntityRecordResponse<Consent>>;
 }

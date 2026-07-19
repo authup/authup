@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { BuildInput, FiltersBuildInput } from 'rapiq';
+import type { QueryFiltersInput, QueryInput } from '../../../../core';
 import {
     type PropType,
     computed,
@@ -55,21 +55,20 @@ export default defineComponent({
 
         const v = useValidup(new Container<typeof form>(), form, { name: 'type' });
 
-        const query = computed<BuildInput<Policy & { parentId?: string | null }>>(() => {
-            const filters: FiltersBuildInput<Policy & { parentId?: string | null }> = {};
+        const query = computed<QueryInput<Policy & { parentId?: string | null }>>(() => {
+            const filters: QueryFiltersInput<Policy & { parentId?: string | null }> = {};
             if (props.entity) {
                 // todo: maybe respect manual realmId component prop
                 if (props.entity.realmId) {
                     filters.realmId = props.entity.realmId;
                 }
 
-                if (props.entity.parentId) {
-                    filters.id = [
-                        `!${props.entity.id}`,
-                        `!${props.entity.parentId}`,
-                    ];
-                } else {
-                    filters.id = `!${props.entity.id}`;
+                const excluded = [props.entity.id, props.entity.parentId]
+                    .filter((value): value is string => typeof value === 'string');
+                if (excluded.length === 1) {
+                    filters.id = { $ne: excluded[0] };
+                } else if (excluded.length > 1) {
+                    filters.id = { $nin: excluded };
                 }
 
                 filters.parentId = [null, `${props.entity.id}`];

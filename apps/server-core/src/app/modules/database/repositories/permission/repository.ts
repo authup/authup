@@ -6,9 +6,11 @@
  */
 
 import type { Permission, Realm } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
+import { validateEntityJoinColumns } from 'typeorm-extension';
+import { applyRequestQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IPermissionRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
@@ -35,13 +37,7 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
         const qb = this.repository.createQueryBuilder('permission');
         qb.groupBy('permission.id');
 
-        const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'permission',
-            filters: { allowed: ['id', 'displayName', 'name', 'builtIn'] },
-            pagination: { maxLimit: 50 },
-            relations: { allowed: [] },
-            sort: { allowed: ['id', 'name', 'createdAt', 'updatedAt'] },
-        });
+        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.PERMISSION });
 
         const [entities, total] = await qb.getManyAndCount();
 

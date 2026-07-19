@@ -5,22 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BuildInput } from 'rapiq';
-import { buildQuery } from 'rapiq';
+import type { EntityQueryInput } from '../../../helpers';
+import { buildQueryString } from '../../../helpers';
 import type { Session } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type { ISessionAPI, SessionDeleteManyResponse } from './types';
 
 export class SessionAPI extends BaseAPI implements ISessionAPI {
-    async getMany(data?: BuildInput<Session>): Promise<EntityCollectionResponse<Session>> {
-        const response = await this.client.get(`sessions${buildQuery(data)}`);
+    async getMany(data?: EntityQueryInput<Session>): Promise<EntityCollectionResponse<Session>> {
+        const response = await this.client.get(`sessions${buildQueryString(data)}`);
 
         return response.data;
     }
 
-    async getOne(id: Session['id'], record?: BuildInput<Session>): Promise<EntityRecordResponse<Session>> {
-        const response = await this.client.get(`sessions/${id}${buildQuery(record)}`);
+    async getOne(id: Session['id'], record?: EntityQueryInput<Session>): Promise<EntityRecordResponse<Session>> {
+        const response = await this.client.get(`sessions/${id}${buildQueryString(record)}`);
 
         return response.data;
     }
@@ -31,8 +31,8 @@ export class SessionAPI extends BaseAPI implements ISessionAPI {
         return response.data;
     }
 
-    async deleteMany(data?: BuildInput<Session>): Promise<SessionDeleteManyResponse> {
-        const response = await this.client.delete(`sessions${buildQuery(data)}`);
+    async deleteMany(data?: EntityQueryInput<Session>): Promise<SessionDeleteManyResponse> {
+        const response = await this.client.delete(`sessions${buildQueryString(data)}`);
 
         return response.data;
     }

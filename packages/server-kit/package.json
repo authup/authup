@@ -65,7 +65,6 @@
         "@node-rs/bcrypt": "^1.10.7",
         "@node-rs/jsonwebtoken": "^0.5.9",
         "@socket.io/redis-emitter": "^5.1.0",
-        "rapiq": "^0.9.0",
         "redis-extension": "^2.0.4",
         "smob": "^1.6.1",
         "uncrypto": "^0.1.3",

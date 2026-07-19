@@ -6,10 +6,12 @@
  */
 
 import type { Realm, Role } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { PermissionPolicyBinding } from '@authup/access';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
+import { validateEntityJoinColumns } from 'typeorm-extension';
+import { applyRequestQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IRealmRepository, IRoleRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
@@ -41,24 +43,7 @@ export class RoleRepositoryAdapter implements IRoleRepository {
         const qb = this.repository.createQueryBuilder('role');
         qb.groupBy('role.id');
 
-        const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'role',
-            fields: {
-                allowed: [
-                    'id',
-                    'name',
-                    'displayName',
-                    'target',
-                    'description',
-                    'realmId',
-                    'createdAt',
-                    'updatedAt',
-                ],
-            },
-            filters: { allowed: ['id', 'name', 'target', 'realmId'] },
-            pagination: { maxLimit: 50 },
-            sort: { allowed: ['id', 'name', 'updatedAt', 'createdAt'] },
-        });
+        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.ROLE });
 
         const [entities, total] = await qb.getManyAndCount();
 

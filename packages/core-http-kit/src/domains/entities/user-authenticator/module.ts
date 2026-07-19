@@ -7,8 +7,8 @@
 
 import type { RequestBaseOptions } from 'hapic';
 import { stringifyAuthorizationHeader } from 'hapic';
-import type { BuildInput } from 'rapiq';
-import { buildQuery } from 'rapiq';
+import type { EntityQueryInput } from '../../../helpers';
+import { buildQueryString } from '../../../helpers';
 import type { User, UserAuthenticator } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
@@ -28,9 +28,9 @@ import type {
 export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorAPI {
     async getMany(
         userId: User['id'] | string,
-        data?: BuildInput<UserAuthenticator>,
+        data?: EntityQueryInput<UserAuthenticator>,
     ): Promise<EntityCollectionResponse<UserAuthenticator>> {
-        const response = await this.client.get(`users/${userId}/authenticators${buildQuery(data)}`);
+        const response = await this.client.get(`users/${userId}/authenticators${buildQueryString(data)}`);
         return response.data;
     }
 

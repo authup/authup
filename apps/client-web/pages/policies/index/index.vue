@@ -1,5 +1,6 @@
 <script lang="ts">
 
+import type { QueryInput } from '@authup/client-web-kit';
 import { defineComponent, resolveComponent } from 'vue';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
@@ -18,7 +19,6 @@ import type { Policy } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { storeToRefs } from 'pinia';
-import type { BuildInput } from 'rapiq';
 import type { TableColumn } from '@vuecs/table';
 
 export default defineComponent({
@@ -41,7 +41,7 @@ export default defineComponent({
         const store = injectStore();
         const { realmManagementId } = storeToRefs(store);
 
-        const query : BuildInput<Policy> = { filters: { realmId: [realmManagementId.value ?? null, null] } };
+        const query : QueryInput<Policy> = { filters: { realmId: [realmManagementId.value ?? null, null] } };
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.PERMISSION_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.PERMISSION_DELETE });

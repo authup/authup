@@ -6,7 +6,7 @@
  */
 
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
-import type { BuildInput } from 'rapiq';
+import type { EntityQueryInput } from '../../../helpers';
 
 import type { BuiltInPolicies } from '@authup/access';
 import type { Policy } from '@authup/core-kit';
@@ -39,11 +39,11 @@ export type BuiltInPolicyUpdatePayload<
 
 export interface IPolicyAPI {
     getMany<OUTPUT extends PolicyResponse = PolicyResponse>(
-        data?: BuildInput<Policy & { parentId?: string | null }>,
+        data?: EntityQueryInput<Policy & { parentId?: string | null }>,
     ) : Promise<EntityCollectionResponse<OUTPUT>>;
     delete<OUTPUT extends PolicyResponse = PolicyResponse>(id: Policy['id']) : Promise<EntityRecordResponse<OUTPUT>>;
-    getOne<OUTPUT extends PolicyResponse = PolicyResponse>(id: Policy['id'], record?: BuildInput<Policy>) : Promise<EntityRecordResponse<OUTPUT>>;
-    getOneExpanded<OUTPUT extends PolicyResponse = PolicyResponse>(id: Policy['id'], record?: BuildInput<Policy>) : Promise<EntityRecordResponse<OUTPUT>>;
+    getOne<OUTPUT extends PolicyResponse = PolicyResponse>(id: Policy['id'], record?: EntityQueryInput<Policy>) : Promise<EntityRecordResponse<OUTPUT>>;
+    getOneExpanded<OUTPUT extends PolicyResponse = PolicyResponse>(id: Policy['id'], record?: EntityQueryInput<Policy>) : Promise<EntityRecordResponse<OUTPUT>>;
     create<INPUT extends PolicyCreatePayload = PolicyCreatePayload, OUTPUT extends PolicyResponse = PolicyResponse>(
         data: INPUT,
     ) : Promise<EntityRecordResponse<OUTPUT>>;

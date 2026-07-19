@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { QueryInput } from '@authup/client-web-kit';
 import type { Consent } from '@authup/core-kit';
 import {
     TranslatorTranslationActionKey,
@@ -13,7 +14,6 @@ import {
     useTranslations,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
-import type { BuildInput } from 'rapiq';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
 import { VCTimeago } from '@vuecs/timeago';
@@ -47,8 +47,8 @@ export default defineComponent({
         // CONSENT_READ would otherwise see every row here); non-admins are
         // self-scoped by the server regardless. The server always joins a
         // client summary (id/name/displayName), so no relation is requested.
-        const query = computed<BuildInput<Consent>>(() => ({
-            filter: { sub: userId.value ?? undefined, subKind: 'user' },
+        const query = computed<QueryInput<Consent>>(() => ({
+            filters: { sub: userId.value ?? undefined, subKind: 'user' },
             sort: { createdAt: 'DESC' },
         }));
 
@@ -142,7 +142,7 @@ export default defineComponent({
                 // and a "revoke all" that stopped at the visible page would
                 // leave some scopes granted.
                 const { data: rows } = await httpClient.consent.getMany({
-                    filter: {
+                    filters: {
                         clientId: group.clientId,
                         sub: userId.value ?? undefined,
                         subKind: 'user',

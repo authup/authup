@@ -7,7 +7,7 @@
 
 import type { ObjectLiteral } from '@authup/kit';
 import type { RequestBaseOptions, Response } from 'hapic';
-import type { BuildInput } from 'rapiq';
+import type { EntityQueryInput } from '../helpers';
 
 export type EntityRecordResponse<R> = R;
 
@@ -43,8 +43,8 @@ export interface IEntityAPISlim<
     T extends ObjectLiteral,
     TCreate = Partial<T>,
 > {
-    getMany(record?: BuildInput<T>) : Promise<EntityCollectionResponse<T>>;
-    getOne(id: DomainEntityID<T>, record?: BuildInput<T>) : Promise<EntityRecordResponse<T>>;
+    getMany(record?: EntityQueryInput<T>) : Promise<EntityCollectionResponse<T>>;
+    getOne(id: DomainEntityID<T>, record?: EntityQueryInput<T>) : Promise<EntityRecordResponse<T>>;
     delete(id: DomainEntityID<T>) : Promise<EntityRecordResponse<T>>;
     create(data: TCreate) : Promise<EntityRecordResponse<T>>;
 }

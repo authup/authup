@@ -6,11 +6,12 @@
  */
 
 import type { Realm } from '@authup/core-kit';
-import { REALM_MASTER_NAME } from '@authup/core-kit';
+import { EntityType, REALM_MASTER_NAME  } from '@authup/core-kit';
 import { InternalError } from '@authup/errors';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
+import { validateEntityJoinColumns } from 'typeorm-extension';
+import { applyRequestQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { IRealmRepository } from '../../../../../core/index.ts';
@@ -49,13 +50,7 @@ export class RealmRepositoryAdapter implements IRealmRepository {
         const qb = this.repository.createQueryBuilder('realm');
         qb.groupBy('realm.id');
 
-        const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'realm',
-            filters: { allowed: ['id', 'builtIn', 'displayName', 'name'] },
-            pagination: { maxLimit: 50 },
-            fields: { allowed: ['id', 'name', 'description', 'builtIn', 'createdAt', 'updatedAt'] },
-            sort: { allowed: ['id', 'name', 'createdAt', 'updatedAt'] },
-        });
+        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.REALM });
 
         const [entities, total] = await qb.getManyAndCount();
 

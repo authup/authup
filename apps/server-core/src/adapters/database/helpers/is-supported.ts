@@ -15,7 +15,7 @@ export function isDatabaseTypeSupported(type: DatabaseType) : boolean {
 
 export function isDatabaseTypeSupportedForEnvironment(type: DatabaseType, env: string) : boolean {
     if (env === EnvironmentName.PRODUCTION) {
-        return type !== 'better-sqlite3' && type !== 'sqlite';
+        return type !== 'better-sqlite3';
     }
 
     return true;

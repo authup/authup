@@ -6,8 +6,10 @@
  */
 
 import type { ClientScope } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
+import { validateEntityJoinColumns } from 'typeorm-extension';
+import { applyRequestQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IClientScopeRepository } from '../../../../../core/entities/client-scope/types.ts';
 import { ClientScopeEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -24,17 +26,7 @@ export class ClientScopeRepositoryAdapter implements IClientScopeRepository {
         const qb = this.repository.createQueryBuilder('clientScope');
         qb.groupBy('clientScope.id');
 
-        const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'clientScope',
-            relations: {
-                allowed: ['client', 'scope'],
-                onJoin: (_property: string, key: string, q: any) => {
-                    q.addGroupBy(`${key}.id`);
-                },
-            },
-            filters: { allowed: ['clientId', 'scopeId', 'default', 'scope.name'] },
-            pagination: { maxLimit: 50 },
-        });
+        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.CLIENT_SCOPE });
 
         const [entities, total] = await qb.getManyAndCount();
 

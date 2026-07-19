@@ -53,7 +53,7 @@ describe('src/http/controllers/key', () => {
     });
 
     it('should eagerly provision sig + enc keys at realm creation (plan 071 hybrid)', async () => {
-        const response = await suite.client.key.getMany({ filter: { realmId: realm.id } });
+        const response = await suite.client.key.getMany({ filters: { realmId: realm.id } });
 
         const uses = response.data.map((entity) => entity.use).sort();
         expect(uses).toEqual([JWKUse.ENCRYPTION, JWKUse.SIGNATURE]);
@@ -246,7 +246,7 @@ describe('src/http/controllers/key', () => {
         await suite.client.key.update(created.id, { status: KeyStatus.PASSIVE });
         await suite.client.key.delete(created.id);
 
-        const { data } = await suite.client.event.getMany({ filter: { refType: 'key', refId: created.id } });
+        const { data } = await suite.client.event.getMany({ filters: { refType: 'key', refId: created.id } });
 
         expect(data).toHaveLength(3);
         expect(new Set(data.map((row) => row.name)))

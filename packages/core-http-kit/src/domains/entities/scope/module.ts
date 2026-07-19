@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BuildInput } from 'rapiq';
-import { buildQuery } from 'rapiq';
+import type { EntityQueryInput } from '../../../helpers';
+import { buildQueryString } from '../../../helpers';
 import type { Scope } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
@@ -19,14 +19,14 @@ import type {
 } from './types';
 
 export class ScopeAPI extends BaseAPI implements IScopeAPI {
-    async getMany(data?: BuildInput<Scope>): Promise<EntityCollectionResponse<Scope>> {
-        const response = await this.client.get(`scopes${buildQuery(data)}`);
+    async getMany(data?: EntityQueryInput<Scope>): Promise<EntityCollectionResponse<Scope>> {
+        const response = await this.client.get(`scopes${buildQueryString(data)}`);
 
         return response.data;
     }
 
-    async getOne(id: Scope['id'], record?: BuildInput<Scope>): Promise<EntityRecordResponse<Scope>> {
-        const response = await this.client.get(`scopes/${id}${buildQuery(record)}`);
+    async getOne(id: Scope['id'], record?: EntityQueryInput<Scope>): Promise<EntityRecordResponse<Scope>> {
+        const response = await this.client.get(`scopes/${id}${buildQueryString(record)}`);
 
         return response.data;
     }

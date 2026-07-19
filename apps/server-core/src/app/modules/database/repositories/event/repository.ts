@@ -6,9 +6,10 @@
  */
 
 import type { Event } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
 import { LessThan } from 'typeorm';
-import { applyQuery } from 'typeorm-extension';
+import { applyRequestQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
     EventCountRecentFilter,
@@ -42,50 +43,7 @@ export class EventRepositoryAdapter implements IEventRepository {
     ): Promise<EntityRepositoryFindManyResult<Event>> {
         const qb = this.repository.createQueryBuilder('event');
 
-        const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'event',
-            fields: {
-                allowed: [
-                    'id',
-                    'scope',
-                    'name',
-                    'refType',
-                    'refId',
-                    'clientId',
-                    'actorType',
-                    'actorId',
-                    'actorName',
-                    'requestPath',
-                    'requestMethod',
-                    'requestIpAddress',
-                    'requestUserAgent',
-                    'realmId',
-                    'data',
-                    'expiring',
-                    'expiresAt',
-                    'createdAt',
-                ],
-            },
-            filters: {
-                allowed: [
-                    'id',
-                    'scope',
-                    'name',
-                    'refType',
-                    'refId',
-                    'clientId',
-                    'actorType',
-                    'actorId',
-                    'actorName',
-                    'requestIpAddress',
-                    'realmId',
-                    'expiring',
-                    'createdAt',
-                ],
-            },
-            sort: { allowed: ['createdAt'] },
-            pagination: { maxLimit: 50 },
-        });
+        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.EVENT });
 
         applyRealmScopeSelect(qb, 'event', ['actorId', 'actorType']);
 

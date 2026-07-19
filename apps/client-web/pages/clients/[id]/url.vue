@@ -1,9 +1,9 @@
 <script lang="ts">
+import type { QueryInput } from '@authup/client-web-kit';
 import { TranslatorTranslationAppKey, TranslatorTranslationEntityKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { AClientScopes, useTranslations, useTranslationsForNamespace } from '@authup/client-web-kit';
 import type { Client, ClientScope } from '@authup/core-kit';
 import { VCFormInput, VCFormSwitch } from '@vuecs/forms';
-import type { BuildInput } from 'rapiq';
 import type { PropType } from 'vue';
 import { computed, ref } from 'vue';
 import { useRuntimeConfig } from '#app';
@@ -72,8 +72,8 @@ export default defineNuxtComponent({
             }
         };
 
-        const query : BuildInput<ClientScope> = {
-            filter: { clientId: props.entity.id },
+        const query : QueryInput<ClientScope> = {
+            filters: { clientId: props.entity.id },
             relations: ['scope'],
         };
 

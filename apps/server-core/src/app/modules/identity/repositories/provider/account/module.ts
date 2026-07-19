@@ -25,7 +25,7 @@ export class IdentityProviderAccountRepository implements IIdentityProviderAccou
                 providerUserId: identity.id,
                 providerId: identity.provider.id,
             },
-            relations: ['user'],
+            relations: { user: true },
         });
     }
 

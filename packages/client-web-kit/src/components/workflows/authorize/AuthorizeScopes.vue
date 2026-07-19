@@ -47,7 +47,7 @@ export default defineComponent({
             if (props.client.id) {
                 const { data: clientScopes } = await httpClient.clientScope.getMany({
                     filters: { clientId: props.client.id },
-                    include: ['scope'],
+                    relations: ['scope'],
                 });
 
                 scopesAvailableNormalized.value = clientScopes.map((clientScope) => clientScope.scope);

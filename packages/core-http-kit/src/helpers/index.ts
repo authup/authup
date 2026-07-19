@@ -7,3 +7,4 @@
 
 export * from './error-code';
 export * from './header';
+export * from './query';

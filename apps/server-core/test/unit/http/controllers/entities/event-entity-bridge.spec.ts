@@ -47,7 +47,7 @@ describe('event (entity-CRUD bridge)', () => {
     beforeAll(async () => {
         await suite.setup();
 
-        const { data } = await suite.client.user.getMany({ filter: { name: 'admin' } });
+        const { data } = await suite.client.user.getMany({ filters: { name: 'admin' } });
         expect(data).toHaveLength(1);
         adminUserId = data[0].id;
     });
@@ -60,7 +60,7 @@ describe('event (entity-CRUD bridge)', () => {
         const role = await suite.client.role.create(createFakeRole());
 
         const { data } = await suite.client.event.getMany({
-            filter: {
+            filters: {
                 scope: EventScope.ENTITY,
                 name: EventName.CREATED,
                 refId: role.id,
@@ -87,7 +87,7 @@ describe('event (entity-CRUD bridge)', () => {
         await suite.client.role.update(role.id, { description: 'after' });
 
         const { data } = await suite.client.event.getMany({
-            filter: {
+            filters: {
                 scope: EventScope.ENTITY,
                 name: EventName.UPDATED,
                 refId: role.id,
@@ -119,7 +119,7 @@ describe('event (entity-CRUD bridge)', () => {
         await suite.client.client.update(client.id, { secret: nextSecret });
 
         const { data } = await suite.client.event.getMany({
-            filter: {
+            filters: {
                 scope: EventScope.ENTITY,
                 name: EventName.UPDATED,
                 refId: client.id,
@@ -142,7 +142,7 @@ describe('event (entity-CRUD bridge)', () => {
         await suite.client.role.delete(role.id);
 
         const { data } = await suite.client.event.getMany({
-            filter: {
+            filters: {
                 scope: EventScope.ENTITY,
                 name: EventName.DELETED,
                 refId: role.id,
@@ -189,7 +189,7 @@ describe('event (entity-CRUD bridge)', () => {
 
         // control: the own-realm entity row IS visible
         const own = await actor.event.getMany({
-            filter: {
+            filters: {
                 scope: EventScope.ENTITY,
                 name: EventName.CREATED,
                 refId: ownRole.id,
@@ -199,7 +199,7 @@ describe('event (entity-CRUD bridge)', () => {
 
         // the foreign-realm entity row must NOT appear
         const foreign = await actor.event.getMany({
-            filter: {
+            filters: {
                 scope: EventScope.ENTITY,
                 name: EventName.CREATED,
                 refId: foreignRole.id,
@@ -220,7 +220,7 @@ describe('event (entity-CRUD bridge)', () => {
         });
 
         const recorded = await suite.client.event.getMany({
-            filter: {
+            filters: {
                 scope: EventScope.ENTITY,
                 name: EventName.CREATED,
                 refId: binding.id,
@@ -230,7 +230,7 @@ describe('event (entity-CRUD bridge)', () => {
         expect(recorded.data[0].refType).toEqual('rolePermission');
         expect(recorded.data[0].realmId).toEqual(realmB.id);
 
-        const query = buildQuery({ filter: { id: recorded.data[0].id } });
+        const query = buildQuery({ filters: { id: recorded.data[0].id } });
         const ownRouteResponse = await httpRequest(
             suite,
             'GET',
@@ -282,12 +282,12 @@ describe('event (entity-CRUD bridge)', () => {
         const actor = new HTTPClient({ baseURL: suite.baseURL });
         actor.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
 
-        const foreign = await actor.event.getMany({ filter: { id: recorded.data[0].id } });
+        const foreign = await actor.event.getMany({ filters: { id: recorded.data[0].id } });
         expect(foreign.data).toHaveLength(0);
         expect(foreign.meta.total).toEqual(0);
 
         const foreignBeyondPage = await actor.event.getMany({
-            filter: { id: recorded.data[0].id },
+            filters: { id: recorded.data[0].id },
             pagination: { limit: 1, offset: 1 },
         });
         expect(foreignBeyondPage.data).toHaveLength(0);

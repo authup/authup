@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BuildInput } from 'rapiq';
-import { buildQuery } from 'rapiq';
+import type { EntityQueryInput } from '../../../helpers';
+import { buildQueryString } from '../../../helpers';
 import type { Key } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
@@ -19,14 +19,14 @@ import type {
 } from './types';
 
 export class KeyAPI extends BaseAPI implements IKeyAPI {
-    async getMany(data?: BuildInput<Key>): Promise<EntityCollectionResponse<Key>> {
-        const response = await this.client.get(`keys${buildQuery(data)}`);
+    async getMany(data?: EntityQueryInput<Key>): Promise<EntityCollectionResponse<Key>> {
+        const response = await this.client.get(`keys${buildQueryString(data)}`);
 
         return response.data;
     }
 
-    async getOne(id: Key['id'], record?: BuildInput<Key>): Promise<EntityRecordResponse<Key>> {
-        const response = await this.client.get(`keys/${id}${buildQuery(record)}`);
+    async getOne(id: Key['id'], record?: EntityQueryInput<Key>): Promise<EntityRecordResponse<Key>> {
+        const response = await this.client.get(`keys/${id}${buildQueryString(record)}`);
 
         return response.data;
     }

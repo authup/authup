@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { QueryInput } from '@authup/client-web-kit';
 import type { Session } from '@authup/core-kit';
 import {
     TranslatorTranslationActionKey,
@@ -17,7 +18,6 @@ import {
     useTranslator,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
-import type { BuildInput } from 'rapiq';
 import type { TableColumn } from '@vuecs/table';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
@@ -43,8 +43,8 @@ export default defineComponent({
         // Scope to the current user's own sessions (an admin holding SESSION_READ
         // would otherwise see every session here); non-admins are self-scoped by
         // the server regardless.
-        const query = computed<BuildInput<Session>>(() => ({
-            filter: { userId: userId.value ?? undefined },
+        const query = computed<QueryInput<Session>>(() => ({
+            filters: { userId: userId.value ?? undefined },
             sort: { seenAt: 'DESC' },
         }));
 

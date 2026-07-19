@@ -238,7 +238,7 @@ export default defineComponent({
 
             try {
                 const { data } = await httpClient.consent.getMany({
-                    filter: {
+                    filters: {
                         clientId: props.client.id,
                         sub: subjectId,
                         subKind: 'user',

@@ -5,12 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type {
-    BuildInput,
-    BuildParameterInput,
-    FiltersBuildInput,
-    Parameter,
-} from 'rapiq';
+import type { QueryFiltersInput, QueryInput } from '../../../../core';
 import type {
     MaybeRef,
     Ref,
@@ -28,9 +23,7 @@ export type ListLoadFn<M = any> = (meta?: M) => Promise<void>;
 export type ListMeta<T extends Record<string, any>> = {
     total?: number,
     busy?: boolean
-} & {
-    [K in Parameter as `${K}`]?: BuildParameterInput<K, T>
-};
+} & QueryInput<T>;
 
 /** Minimal slot-prop shape — superset of what the @vuecs/list-controls 2.x types exposed. */
 export type ListSlotProps<T, M = any> = {
@@ -93,7 +86,7 @@ export type EntityCollectionRenderOptions<T> = {
 
 export type EntityCollectionVProps<T> = {
     realmId?: string,
-    query?: BuildInput<Entity<T>>,
+    query?: QueryInput<Entity<T>>,
     loadOnSetup?: boolean,
 } & EntityCollectionRenderOptions<T>;
 
@@ -137,8 +130,8 @@ export type EntityCollectionManagerCreateContext<
     setup: SetupContext<EntityCollectionVEmitOptions<RECORD>>,
     props: EntityCollectionVProps<RECORD>,
     loadAll?: boolean,
-    query?: BuildInput<Entity<RECORD>> | (() => BuildInput<Entity<RECORD>>),
-    queryFilters?: ((q: string) => FiltersBuildInput<Entity<RECORD>>),
+    query?: QueryInput<Entity<RECORD>> | (() => QueryInput<Entity<RECORD>>),
+    queryFilters?: ((q: string) => QueryFiltersInput<Entity<RECORD>>),
     onCreated?: (entity: RECORD, meta: ListMeta<RECORD>) => void | Promise<void>,
     socket?: boolean | Omit<EntitySocketManagerCreateContext<TYPE, RECORD>, 'type'>
 };

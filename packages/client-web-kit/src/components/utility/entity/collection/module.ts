@@ -15,7 +15,7 @@ import {
     VCListItem,
     VCListLoading,
 } from '@vuecs/list';
-import type { BuildInput, FiltersBuildInput } from 'rapiq';
+import type { QueryFiltersInput, QueryInput } from '../../../../core';
 import type { Ref, VNodeChild } from 'vue';
 import {
     Fragment,
@@ -90,7 +90,7 @@ function create<
         domainAPI = client[context.type] as any;
     }
 
-    let query : BuildInput<Entity<RECORD>> | undefined;
+    let query : QueryInput<Entity<RECORD>> | undefined;
 
     const failed = (error: Error) => {
         if (context.setup && typeof context.setup.emit === 'function') {
@@ -110,7 +110,7 @@ function create<
         meta.value.busy = true;
 
         try {
-            let filters : FiltersBuildInput<Entity<RECORD>> | undefined;
+            let filters : QueryFiltersInput<Entity<RECORD>> | undefined;
             if (
                 context.queryFilters &&
                 input.filters &&
@@ -118,7 +118,7 @@ function create<
                 typeof input.filters.name === 'string'
             ) {
                 // todo: queryFilters should customize full filters object!
-                filters = context.queryFilters(input.filters.name) as FiltersBuildInput<Entity<RECORD>>;
+                filters = context.queryFilters(input.filters.name) as QueryFiltersInput<Entity<RECORD>>;
             }
 
             query = undefined;
@@ -151,7 +151,7 @@ function create<
             );
 
             const response = await domainAPI.getMany(
-                nextQuery as BuildInput<Entity<RECORD>>,
+                nextQuery as QueryInput<Entity<RECORD>>,
             );
 
             meta.value = nextQuery;

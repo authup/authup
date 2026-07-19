@@ -54,7 +54,7 @@ describe('src/http/controllers/user', () => {
     it('should read collection with realm include', async () => {
         const response = await suite.client
             .user
-            .getMany({ include: ['realm'] });
+            .getMany({ relations: ['realm'] });
 
         expect(response.data.length).toBeGreaterThanOrEqual(2);
         expect(response.data[0].realm).toBeDefined();
@@ -65,7 +65,7 @@ describe('src/http/controllers/user', () => {
             .user
             .getMany({
                 fields: ['id', 'name'],
-                include: ['realm'],
+                relations: ['realm'],
             });
 
         expect(response.data.length).toBeGreaterThanOrEqual(2);
