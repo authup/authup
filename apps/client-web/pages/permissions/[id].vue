@@ -60,11 +60,6 @@ export default defineComponent({
                 },
                 {
                     namespace: TranslatorTranslationNamespace.ENTITY,
-                    key: TranslatorTranslationEntityKey.ROBOT,
-                    count: 2,
-                },
-                {
-                    namespace: TranslatorTranslationNamespace.ENTITY,
                     key: TranslatorTranslationEntityKey.ROLE,
                     count: 2,
                 },
@@ -119,11 +114,6 @@ export default defineComponent({
                 name: translationsDefault.client,
                 icon: 'fa6-solid:ghost',
                 url: `/permissions/${entity.value.id}/clients`,
-            },
-            {
-                name: translationsDefault.robot,
-                icon: 'fa6-solid:robot',
-                url: `/permissions/${entity.value.id}/robots`,
             },
             {
                 name: translationsDefault.role,

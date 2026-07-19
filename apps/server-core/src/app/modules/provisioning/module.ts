@@ -10,9 +10,6 @@ import type {
     ClientRole,
     PermissionPolicy,
     Realm,
-    Robot,
-    RobotPermission,
-    RobotRole,
     Role,
     RolePermission,
     Scope,
@@ -26,9 +23,6 @@ import {
     ClientRoleEntity,
     PermissionEntity,
     RealmEntity,
-    RobotEntity,
-    RobotPermissionEntity,
-    RobotRoleEntity,
     RoleEntity,
     RolePermissionEntity,
     ScopeEntity,
@@ -48,7 +42,6 @@ import {
     PermissionProvisioningSynchronizer,
     PolicyProvisioningSynchronizer,
     RealmProvisioningSynchronizer,
-    RobotProvisioningSynchronizer,
     RoleProvisioningSynchronizer,
     ScopeProvisioningSynchronizer,
     UserProvisioningSynchronizer,
@@ -63,9 +56,6 @@ import {
     PermissionRepositoryAdapter,
     PolicyRepositoryAdapter,
     RealmRepositoryAdapter,
-    RobotPermissionRepositoryAdapter,
-    RobotRepositoryAdapter,
-    RobotRoleRepositoryAdapter,
     RolePermissionRepositoryAdapter,
     RoleRepositoryAdapter,
     ScopeRepositoryAdapter,
@@ -195,22 +185,6 @@ export class ProvisionerModule implements IModule {
             permissionRepository,
         });
 
-        const robotSynchronizer = new RobotProvisioningSynchronizer({
-            robotRepository: new RobotRepositoryAdapter({
-                repository: container.resolve<Repository<Robot>>(RobotEntity),
-                realmRepository,
-            }),
-            robotRoleRepository: new RobotRoleRepositoryAdapter(
-                container.resolve<Repository<RobotRole>>(RobotRoleEntity),
-            ),
-            robotPermissionRepository: new RobotPermissionRepositoryAdapter(
-                container.resolve<Repository<RobotPermission>>(RobotPermissionEntity),
-            ),
-
-            roleRepository,
-            permissionRepository,
-        });
-
         const scopeRepository = new ScopeRepositoryAdapter({
             repository: container.resolve<Repository<Scope>>(ScopeEntity),
             realmRepository,
@@ -225,7 +199,6 @@ export class ProvisionerModule implements IModule {
             roleSynchronizer,
             permissionSynchronizer,
             userSynchronizer,
-            robotSynchronizer,
             scopeSynchronizer,
         });
 

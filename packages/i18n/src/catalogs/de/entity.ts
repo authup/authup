@@ -18,7 +18,6 @@ export const TranslatorTranslationEntityGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationEntityKey.PERMISSION]: definePlural({ one: 'Berechtigung', other: 'Berechtigungen' }),
     [TranslatorTranslationEntityKey.POLICY]: definePlural({ one: 'Richtlinie', other: 'Richtlinien' }),
     [TranslatorTranslationEntityKey.REALM]: definePlural({ one: 'Organisation', other: 'Organisationen' }),
-    [TranslatorTranslationEntityKey.ROBOT]: definePlural({ one: 'Roboter', other: 'Roboter' }),
     [TranslatorTranslationEntityKey.ROLE]: definePlural({ one: 'Rolle', other: 'Rollen' }),
     [TranslatorTranslationEntityKey.SCOPE]: definePlural({ one: 'Bereich', other: 'Bereiche' }),
     [TranslatorTranslationEntityKey.SESSION]: definePlural({ one: 'Sitzung', other: 'Sitzungen' }),

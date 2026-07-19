@@ -46,10 +46,6 @@ export class SessionManager implements ISessionManager {
                 input.clientId = input.sub;
                 break;
             }
-            case IdentityType.ROBOT: {
-                input.robotId = input.sub;
-                break;
-            }
             case IdentityType.USER: {
                 input.userId = input.sub;
                 break;

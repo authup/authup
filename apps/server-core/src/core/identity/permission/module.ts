@@ -21,7 +21,6 @@ import {
 import type { Policy } from '@authup/core-kit';
 import { isPolicy } from '@authup/core-kit';
 import type { IClientRepository } from '../../entities/client/types.ts';
-import type { IRobotRepository } from '../../entities/robot/types.ts';
 import type { IRoleRepository } from '../../entities/role/types.ts';
 import type { IUserRepository } from '../../entities/user/types.ts';
 import type { IIdentityRoleProvider } from '../role/types.ts';
@@ -39,15 +38,12 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
 
     protected roleRepository: IRoleRepository;
 
-    protected robotRepository: IRobotRepository;
-
     protected roleProvider: IIdentityRoleProvider;
 
     constructor(ctx: IdentityPermissionProviderContext) {
         this.clientRepository = ctx.clientRepository;
         this.userRepository = ctx.userRepository;
         this.roleRepository = ctx.roleRepository;
-        this.robotRepository = ctx.robotRepository;
         this.roleProvider = ctx.roleProvider;
     }
 
@@ -155,9 +151,6 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             case 'user': {
                 return this.getForUser(identity);
             }
-            case 'robot': {
-                return this.getForRobot(identity);
-            }
             case 'role': {
                 return this.getForRole(identity);
             }
@@ -176,14 +169,6 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
     async getForUser(identity: IdentityPolicyData) : Promise<PermissionPolicyBinding[]> {
         return this.combineWithRoleBindings(
             this.userRepository.getBoundPermissions(identity.id)
-                .then((data) => this.reduceBindingsByIdentityClient(data, identity)),
-            identity,
-        );
-    }
-
-    async getForRobot(identity: IdentityPolicyData) : Promise<PermissionPolicyBinding[]> {
-        return this.combineWithRoleBindings(
-            this.robotRepository.getBoundPermissions(identity.id)
                 .then((data) => this.reduceBindingsByIdentityClient(data, identity)),
             identity,
         );

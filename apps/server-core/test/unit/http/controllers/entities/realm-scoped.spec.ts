@@ -106,7 +106,6 @@ describe('src/http/controllers/realm-scoped', () => {
 
     describe.each([
         ['clients'],
-        ['robots'],
         ['permissions'],
         ['policies'],
         ['identity-providers'],

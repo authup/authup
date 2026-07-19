@@ -51,6 +51,5 @@ export const SystemPolicyName = {
     PERMISSION_BINDING: 'system.permission-binding',
     REALM_MATCH: 'system.realm-match',
     CLIENT_NAMES_SELF_MANAGE: 'system.client-names-self-manage',
-    ROBOT_NAMES_SELF_MANAGE: 'system.robot-names-self-manage',
     USER_NAMES_SELF_MANAGE: 'system.user-names-self-manage',
 } as const;

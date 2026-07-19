@@ -22,7 +22,6 @@ import type {
     TokenPasswordGrantParameters,
     TokenRefreshTokenGrantParameters,
     TokenRevokeParameters,
-    TokenRobotCredentialsGrantParameters,
 } from '@hapic/oauth2';
 import type { AuthorizationHeader, Response } from 'hapic';
 
@@ -49,7 +48,6 @@ export type OAuth2TokenPasswordGrantParameters = TokenPasswordGrantParameters & 
 };
 export type OAuth2TokenAuthorizationCodeGrantParameters = TokenAuthorizationCodeGrantParameters;
 export type OAuth2TokenRefreshTokenGrantParameters = TokenRefreshTokenGrantParameters;
-export type OAuth2TokenRobotCredentialsGrantParameters = TokenRobotCredentialsGrantParameters;
 export type OAuth2TokenGrantParameters = TokenGrantParameters;
 
 export type OAuth2TokenRevokeParameters = TokenRevokeParameters;
@@ -78,11 +76,6 @@ export interface IOAuth2TokenAPI {
 
     createWithAuthorizationCode(
         parameters: Omit<OAuth2TokenAuthorizationCodeGrantParameters, 'grant_type'>,
-        options?: OAuth2TokenRequestOptions,
-    ) : Promise<OAuth2TokenGrantResponse>;
-
-    createWithRobotCredentials(
-        parameters: Omit<OAuth2TokenRobotCredentialsGrantParameters, 'grant_type'>,
         options?: OAuth2TokenRequestOptions,
     ) : Promise<OAuth2TokenGrantResponse>;
 

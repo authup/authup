@@ -167,26 +167,6 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         },
     },
     {
-        name: 'Robots',
-        type: 'link',
-        url: '/robots',
-        icon: 'fa6-solid:robot',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: {
-                namespace: TranslatorTranslationNamespace.ENTITY, 
-                key: TranslatorTranslationEntityKey.ROBOT, 
-                count: 2, 
-            },
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.ROBOT_READ,
-                PermissionName.ROBOT_CREATE,
-                PermissionName.ROBOT_UPDATE,
-                PermissionName.ROBOT_DELETE,
-            ],
-        },
-    },
-    {
         name: 'Users',
         type: 'link',
         url: '/users',

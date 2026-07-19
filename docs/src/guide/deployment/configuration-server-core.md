@@ -6,7 +6,7 @@ such as `authup.server.core.{conf,js,ts,...}`.
 The environment variables in the .env file variant can also be provided via runtime environment.
 
 ::: danger Security
-Always change the default admin password (`start123`) and robot secret before deploying to production.
+Always change the default admin password (`start123`) before deploying to production.
 :::
 
 For MFA enforcement behavior and its federated-login, password-grant, feature-toggle,
@@ -277,26 +277,6 @@ export default {
     userAdminPasswordReset: false,
 
     // ----------------------------------------------------
-    
-    /**
-     * Enable a global robot account.
-     * default: false
-     */
-    robotAdminEnabled: false,
-    
-    /**
-     * The secret of the default robot.
-     * default: 'start123'
-     */
-    robotAdminSecret: 'start123',
-    
-    /**
-     * Reset the robot secret on application startup.
-     * default: false
-     */
-    robotAdminSecretReset: false,
-
-    // ----------------------------------------------------
 
     /**
      * Auto-assign the system.default policy to new permissions
@@ -333,9 +313,6 @@ mfaFreshnessMaxAge=60
 mfaTicketMaxAge=600
 userAdminPassword=start123
 userAdminPasswordReset=false
-robotAdminEnabled=false
-robotAdminSecret=start123
-robotAdminSecretReset=false
 permissionsDefaultPolicyAssignment=true
 
 ```
@@ -364,9 +341,6 @@ MFA_FRESHNESS_MAX_AGE=60
 MFA_TICKET_MAX_AGE=600
 USER_ADMIN_PASSWORD=start123
 USER_ADMIN_PASSWORD_RESET=false
-ROBOT_ADMIN_ENABLED=false
-ROBOT_ADMIN_SECRET=start123
-ROBOT_ADMIN_SECRET_RESET=false
 PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT=true
 
 ```

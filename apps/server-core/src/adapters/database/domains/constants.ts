@@ -34,9 +34,6 @@ export enum CachePrefix {
 
     POLICY_OWNED_ATTRIBUTES = 'policy_owned_attributes',
 
-    ROBOT = 'robot',
-    ROBOT_OWNED_PERMISSIONS = 'robot_owned_permissions',
-    ROBOT_OWNED_ROLES = 'robot_owned_roles',
 
     ROLE = 'role',
     ROLE_OWNED_PERMISSIONS = 'role_owned_permissions',

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client, Robot, User } from '@authup/core-kit';
+import type { Client, User } from '@authup/core-kit';
 import { OAuth2SubKind } from '@authup/specs';
 import { describe, expect, it } from 'vitest';
 import { OAuth2OpenIDClaimsBuilder } from '../../../../../src/core/oauth2/openid/claims.ts';
@@ -21,15 +21,6 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
                 data: client,
             });
             expect(result.name).toBe('test-client');
-        });
-
-        it('should dispatch to fromRobot for ROBOT type', () => {
-            const robot = { name: 'test-robot' } as Robot;
-            const result = builder.fromIdentity({
-                type: OAuth2SubKind.ROBOT,
-                data: robot,
-            });
-            expect(result.name).toBe('test-robot');
         });
 
         it('should dispatch to fromUser for USER type', () => {
@@ -71,30 +62,10 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
             expect(result).not.toHaveProperty('name');
             expect(result).not.toHaveProperty('updated_at');
         });
-    });
-
-    describe('fromRobot', () => {
-        it('should map name to name, nickname, and preferred_username', () => {
-            const robot = { name: 'my-robot' } as Robot;
-            const result = builder.fromRobot(robot);
-            expect(result.name).toBe('my-robot');
-            expect(result.nickname).toBe('my-robot');
-            expect(result.preferred_username).toBe('my-robot');
-        });
-
-        it('should transform string updated_at to unix timestamp in seconds per OIDC §5.1', () => {
-            const dateStr = '2025-06-01T00:00:00Z';
-            const robot = {
-                name: 'r',
-                updatedAt: dateStr,
-            } as Robot;
-            const result = builder.fromRobot(robot);
-            expect(result.updated_at).toBe(Math.floor(new Date(dateStr).getTime() / 1000));
-        });
 
         it('should not have email or family_name', () => {
-            const robot = { name: 'r' } as Robot;
-            const result = builder.fromRobot(robot);
+            const client = { name: 'c' } as Client;
+            const result = builder.fromClient(client);
             expect(result).not.toHaveProperty('email');
             expect(result).not.toHaveProperty('family_name');
             expect(result).not.toHaveProperty('given_name');

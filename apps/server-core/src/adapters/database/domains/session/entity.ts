@@ -19,13 +19,11 @@ import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type {
     Client,
     Realm,
-    Robot,
     Session,
     SessionAuthMethod,
     User,
 } from '@authup/core-kit';
 import { ClientEntity } from '../client/index.ts';
-import { RobotEntity } from '../robot/index.ts';
 import { RealmEntity } from '../realm/index.ts';
 import { UserEntity } from '../user/index.ts';
 
@@ -141,20 +139,6 @@ export class SessionEntity implements Session {
     })
     @JoinColumn({ name: 'user_id' })
     user: UserEntity | null;
-
-    @Column({
-        name: 'robot_id', 
-        nullable: true, 
-        default: null, 
-    })
-    robotId: Robot['id'] | null;
-
-    @ManyToOne(() => RobotEntity, {
-        onDelete: 'CASCADE',
-        nullable: true, 
-    })
-    @JoinColumn({ name: 'robot_id' })
-    robot: RobotEntity | null;
 
     @Column({ name: 'realm_id' })
     realmId: Realm['id'];

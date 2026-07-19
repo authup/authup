@@ -1,7 +1,7 @@
 # Token Creator
 
 A `TokenCreator` is a function that obtains a token on demand using a specific strategy.
-The package provides three built-in creator functions, one for each grant type.
+The package provides two built-in creator functions, one for each grant type.
 
 ```typescript
 type TokenCreator = () => Promise<TokenGrantResponse>;
@@ -20,26 +20,6 @@ const creator: TokenCreator = createUserTokenCreator({
     password: 'start123',
     // realmId: 'xxx',
     // realmName: 'xxx',
-}, {
-    client: { baseURL: 'http://localhost:3010' },
-});
-
-const tokenPayload = await creator();
-console.log(tokenPayload);
-// { access_token: '...', refresh_token: '...', expires_in: 3600, ... }
-```
-
-## Robot Strategy
-
-Uses the robot credentials grant to obtain a token.
-
-```typescript
-import type { TokenCreator } from '@authup/core-http-kit';
-import { createRobotTokenCreator } from '@authup/core-http-kit';
-
-const creator: TokenCreator = createRobotTokenCreator({
-    id: 'xxx',
-    secret: 'xxx',
 }, {
     client: { baseURL: 'http://localhost:3010' },
 });

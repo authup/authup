@@ -107,8 +107,6 @@ describe('EntityEventHandler', () => {
         [EntityType.IDENTITY_PROVIDER_PERMISSION_MAPPING, 'providerRealmId'],
         [EntityType.IDENTITY_PROVIDER_ROLE_MAPPING, 'providerRealmId'],
         [EntityType.PERMISSION_POLICY, 'permissionRealmId'],
-        [EntityType.ROBOT_PERMISSION, 'robotRealmId'],
-        [EntityType.ROBOT_ROLE, 'robotRealmId'],
         [EntityType.ROLE_PERMISSION, 'roleRealmId'],
         [EntityType.USER_PERMISSION, 'userRealmId'],
         [EntityType.USER_ROLE, 'userRealmId'],

@@ -8,7 +8,6 @@
 import type {
     Client, 
     Identity, 
-    Robot, 
     User,
 } from '@authup/core-kit';
 import { hasOwnProperty } from '@authup/kit';
@@ -27,22 +26,6 @@ keyof T | AttributeMapTuple<T>
 
 export class OAuth2OpenIDClaimsBuilder {
     protected clientMap : AttributeMap<Client> = {
-        name: 'name',
-        nickname: 'name',
-        preferred_username: 'name',
-        updated_at: [
-            'updatedAt',
-            (value: unknown) => {
-                if (typeof value === 'string') {
-                    return Math.floor(new Date(value).getTime() / 1000);
-                }
-
-                return value;
-            },
-        ],
-    };
-
-    protected robotMap : AttributeMap<Robot> = {
         name: 'name',
         nickname: 'name',
         preferred_username: 'name',
@@ -89,19 +72,11 @@ export class OAuth2OpenIDClaimsBuilder {
             return this.fromClient(identity.data);
         }
 
-        if (identity.type === OAuth2SubKind.ROBOT) {
-            return this.fromRobot(identity.data);
-        }
-
         return this.fromUser(identity.data);
     }
 
     fromClient(input: Client) : OpenIDTokenPayload {
         return this.extract(this.clientMap, input);
-    }
-
-    fromRobot(input: Robot): OpenIDTokenPayload {
-        return this.extract(this.robotMap, input);
     }
 
     fromUser(input: User) : OpenIDTokenPayload {

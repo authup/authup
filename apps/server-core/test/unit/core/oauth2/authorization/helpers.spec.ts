@@ -96,7 +96,6 @@ describe('deriveAmrAcr', () => {
 
     it.each([
         [SessionAuthMethod.CLIENT],
-        [SessionAuthMethod.ROBOT],
     ])('should yield no claims for the M2M method %s', (authMethod) => {
         expect(deriveAmrAcr({ authMethod, mfaAt: null })).toEqual({});
     });

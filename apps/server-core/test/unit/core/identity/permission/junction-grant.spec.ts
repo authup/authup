@@ -14,7 +14,7 @@ import {
 
 /**
  * Exhaustive coverage of the shared permission-binding cap/inherit/re-cap rule used by all four
- * junction services (role/user/client/robot-permission). The security invariant: the resulting
+ * junction services (role/user/client-permission). The security invariant: the resulting
  * (realmScope, policyId) must always be dominated by the actor's selected grant — never widen
  * reach nor drop a policy the actor lacks.
  */

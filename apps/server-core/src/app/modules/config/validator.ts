@@ -115,11 +115,6 @@ export class ConfigValidator extends Container<Config> {
             userAdminPassword: secretValidator,
             userAdminPasswordReset: booleanValidator,
 
-            robotAuthBasic: booleanValidator,
-            robotAdminEnabled: booleanValidator,
-            robotAdminSecret: secretValidator,
-            robotAdminSecretReset: booleanValidator,
-
             permissions: createValidator(
                 z.string().or(z.array(z.string())),
             ),

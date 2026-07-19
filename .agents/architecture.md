@@ -118,8 +118,8 @@ Port interface names follow `I{Entity}Repository` (no "HTTP" or "Database" prefi
 |---|---|---|
 | **Simple CRUD** | realm, scope, role-attribute, user-attribute | None or `checkUniqueness()` |
 | **CRUD + uniqueness** | role, scope | `checkUniqueness()` |
-| **Junction/association** | client-permission, client-role, robot-role, user-role | None (base is sufficient) |
-| **Complex with secrets** | client, robot | `checkUniqueness()`, `findOneWithSecret()` |
+| **Junction/association** | client-permission, client-role, user-role | None (base is sufficient) |
+| **Complex with secrets** | client | `checkUniqueness()`, `findOneWithSecret()` |
 | **Complex with EA** | user, policy, identity-provider | `checkUniqueness()`, `saveWithEA()`, `deleteFromTree()`, `findByProtocol()` |
 
 EA = Extra Attributes (key-value pairs stored in a separate table, dynamically loaded onto the entity).
@@ -177,7 +177,7 @@ export type ActorContext = {
 ```
 
 - `permissionEvaluator` — evaluates permissions (`evaluate`, `preEvaluate`, `evaluateOneOf`, `preEvaluateOneOf`)
-- `identity` — the actor's identity (user, client, robot)
+- `identity` — the actor's identity (user, client)
 
 #### RequestPermissionEvaluator
 
@@ -274,11 +274,11 @@ Service responsibility:
 | Category | Examples | Service Characteristics |
 |---|---|---|
 | **Simple CRUD** | role, scope, realm, permission | Validator + validateJoinColumns + checkUniqueness + permission checks |
-| **Junction** | client-permission, robot-permission, user-permission, client-scope, role-permission, permission-policy | Validator (UUID fields), validateJoinColumns populates join entities, duplicate check on unique key, realmId extraction from joins |
-| **Junction with superset check** | client-role, robot-role, user-role, identity-provider-role-mapping | Same as junction + `identityPermissionProvider.isSuperset()` in service to verify actor owns all permissions in target role |
+| **Junction** | client-permission, user-permission, client-scope, role-permission, permission-policy | Validator (UUID fields), validateJoinColumns populates join entities, duplicate check on unique key, realmId extraction from joins |
+| **Junction with superset check** | client-role, user-role, identity-provider-role-mapping | Same as junction + `identityPermissionProvider.isSuperset()` in service to verify actor owns all permissions in target role |
 | **Attribute** | role-attribute, user-attribute | Per-record permission filtering in `getMany`, managed under parent entity's UPDATE permission |
-| **Complex with secrets** | client, robot | Uses `{Entity}CredentialsService` for secret handling, per-record secret filtering in `getMany` |
-| **Complex with self-access** | client, robot, user | Self-edit fallback via `{ENTITY}_SELF_MANAGE` permission with ATTRIBUTE_NAMES policy, self-access detection in `getOne`, name-lock protection (user) |
+| **Complex with secrets** | client | Uses `{Entity}CredentialsService` for secret handling, per-record secret filtering in `getMany` |
+| **Complex with self-access** | client, user | Self-edit fallback via `{ENTITY}_SELF_MANAGE` permission with ATTRIBUTE_NAMES policy, self-access detection in `getOne`, name-lock protection (user) |
 | **Policy** | policy | Built-in protection, parent type validation, uses PERMISSION_* permissions (intentional — policies are managed under permission domain) |
 
 #### Workflow Services
@@ -523,7 +523,7 @@ Controller conventions:
 - For non-200 statuses, set `event.response.status = 201/202` and return the value — never use `sendCreated`/`sendAccepted` because they erase the typed return value that trapi extracts.
 
 Exceptions where controllers retain some logic:
-- **Self-access resolution** (client, robot, user): Resolve `@me`/`@self` tokens to actual IDs before delegating
+- **Self-access resolution** (client, user): Resolve `@me`/`@self` tokens to actual IDs before delegating
 
 No controller (or service) reaches for global singletons — cross-cutting services (logger, domain-event publisher) are constructor-injected from the DI container by the factories in `app/modules/http/modules/controller.ts`.
 
@@ -639,7 +639,7 @@ dropped from the validator output) are validated via
 `ProvisionerModule` runs (1) `GraphProvisioningSynchronizer`, (2) backfill via `assignDefaultPolicy` (config-gated, deprecated).
 
 `GraphProvisioningSynchronizer` processes in order: policies → permissions → roles → scopes → realms.
-`RealmProvisioningSynchronizer` processes per realm: clients → permissions → roles → users → robots → scopes.
+`RealmProvisioningSynchronizer` processes per realm: clients → permissions → roles → users → scopes.
 
 ### Per-Realm Public `web` Client
 
@@ -776,7 +776,7 @@ app/modules/provisioning/
 | Category | Entities | `realmId: null` allowed |
 |----------|----------|--------------------------|
 | **Global** | permission, role, scope, policy | Yes — system-level building blocks reusable across realms |
-| **Realm-bound** | client, robot, user | No — always belong to a specific realm |
+| **Realm-bound** | client, user | No — always belong to a specific realm |
 | **Junction** | role-permission, user-role, etc. | Inherit realm from parent entities |
 
 ### Realm Defaulting
@@ -794,7 +794,7 @@ To create a global entity (`realmId: null`), the caller must explicitly pass `re
 ### Realm reach is a coarse `realmScope` enum on the grant (NOT a policy)
 
 There is no special "master realm" bypass, and realm reach is **not** a policy. Each
-permission-junction row (`role/user/client/robot_permission`) carries a `realm_scope`
+permission-junction row (`role/user/client_permission`) carries a `realm_scope`
 enum column (`@authup/access` `RealmScope`), a coarse, **actor-relative** reach with a
 total order and a fail-closed default:
 
@@ -834,7 +834,7 @@ junctions.** Entity services derive it from the ATTRIBUTES `realmId` via
 `AbstractEntityService.resourceRealmMatch` (set only when the source carries `realmId`, so a
 self-edit UPDATE — where the validator strips `realmId` — leaves the key absent and
 neutral-passes; `realmId` also stays in ATTRIBUTES for the self-manage denylists). Junction
-services (`role/user/client/robot-permission`, `user/client/robot-role`, `client-scope`,
+services (`role/user/client-permission`, `user/client-role`, `client-scope`,
 `identity-provider-role-mapping`, `permission-policy`) carry no top-level `realmId`
 (only `ownerRealmId`/`permissionRealmId`), so they set their **OWNER realm**
 (`roleRealmId` for role-permission, `userRealmId` for user-role, `clientRealmId`
@@ -889,7 +889,7 @@ Realm-scoped controllers are dual-mounted via `@routup/decorators` array paths:
 export class UserController { ... }
 ```
 
-This applies to the controllers that read realm context: `client`, `robot`, `user`, `permission`, `policy`, `identity-provider`, and `event`. Junction controllers (e.g. `client-role`, `user-permission`) are mounted flat — their realm is implicit via the parent entity's joins.
+This applies to the controllers that read realm context: `client`, `user`, `permission`, `policy`, `identity-provider`, and `event`. Junction controllers (e.g. `client-role`, `user-permission`) are mounted flat — their realm is implicit via the parent entity's joins.
 
 **Request flow**:
 
@@ -903,7 +903,7 @@ name lookup by a realm key routes it through `IRealmRepository.resolveId(key)`
 canonicalizing lookup, `null` on miss) and **fails closed** — `return null` /
 `[]` — instead of silently dropping the filter. This covers the
 `findOneByName` / `findOne` / `findByProtocol` blocks in the
-identity-provider, user, client, robot, role, scope, permission, and policy
+identity-provider, user, client, role, scope, permission, and policy
 adapters plus the permission/policy checker services (`EntityNotFoundError`
 on an unknown realm key; a realm-less check still runs unfiltered). Never
 reintroduce the fail-open `resolve(...)` + `if (realm)` filter-drop shape — it
@@ -995,7 +995,7 @@ expressed via a `policyId` `ATTRIBUTES` policy. See
 
 ### Superset Check
 
-When assigning a role to an identity or identity-provider (user-role, client-role, robot-role, identity-provider-role-mapping), `IdentityPermissionProvider.isSuperset(parent, child)` verifies the actor (`parent`) owns at least what the target role (`child`) confers. It is **disjunction-aware and policy-aware** — there is no lossy collapse (the old `mergePermissionBindings` AFFIRMATIVE fold was removed in #3158):
+When assigning a role to an identity or identity-provider (user-role, client-role, identity-provider-role-mapping), `IdentityPermissionProvider.isSuperset(parent, child)` verifies the actor (`parent`) owns at least what the target role (`child`) confers. It is **disjunction-aware and policy-aware** — there is no lossy collapse (the old `mergePermissionBindings` AFFIRMATIVE fold was removed in #3158):
 
 1. `aggregatePermissionPolicyBindings` groups each side's raw bindings into per-permission **grant disjunctions** (`{ realmScope, policy }[]`).
 2. For each target permission (matched by `name + realmId + clientId`): if the actor holds no grant for it → fail.
@@ -1010,7 +1010,7 @@ An actor with both `admin` (unrestricted) and `realm_admin` (restricted) grants 
 
 ### Junction Policy Propagation
 
-When creating or updating any permission-binding junction (role-permission, user-permission, client-permission, robot-permission):
+When creating or updating any permission-binding junction (role-permission, user-permission, client-permission):
 
 1. The service calls `this.identityPermissionProvider.resolveJunctionGrant(identity, { name, realmId, clientId, realmScope })`, passing the **requested** reach (`validated.realmScope ?? own` on create; `data.realmScope ?? entity.realmScope` on update — the *resulting* junction reach, so a policy-only update can't silently widen).
 2. It aggregates the actor's grants for that permission and selects the grant **relative to the requested reach** (`selectGrantForRequest`, #3160): each grant is ranked by the reach it can confer *for this request* — its `realmScope` capped to `realmScope` — so a lower-scoped policy-free grant beats a higher-scoped policy-bound grant when both cap to the same requested reach (highest *capped* reach, policy-free preferred on a tie). This is **not** a global "ceiling" — a mixed-grant actor (e.g. `own`+no-policy *and* `any`+policy) propagates its policy-free `own` grant for an `own` request instead of inheriting the wider grant's policy.
@@ -1021,14 +1021,13 @@ This prevents privilege escalation: a `realm_admin` cannot create unrestricted p
 
 ## Self-Edit Pattern (declarative field denylists)
 
-Identities (clients, robots, users) can update their own properties via dedicated `*_SELF_MANAGE` permissions, with admin-only fields constrained by an inverted ATTRIBUTE_NAMES policy attached to each permission. There is no hardcoded field-stripping in the services — the access decision is fully data-driven.
+Identities (clients, users) can update their own properties via dedicated `*_SELF_MANAGE` permissions, with admin-only fields constrained by an inverted ATTRIBUTE_NAMES policy attached to each permission. There is no hardcoded field-stripping in the services — the access decision is fully data-driven.
 
 ### Permissions
 
 | Permission | Identity type | Denylist policy |
 |---|---|---|
 | `client_self_manage` | client | `system.client-names-self-manage` (`invert: true`) |
-| `robot_self_manage` | robot | `system.robot-names-self-manage` (`invert: true`) |
 | `user_self_manage` | user (own User columns and own UserAttribute rows) | `system.user-names-self-manage` (`invert: true`) |
 
 Each policy is a built-in `ATTRIBUTE_NAMES` policy with `invert: true`, where `names` enumerates fields a self-edit must REJECT; everything else is permitted. The defaults:
@@ -1036,7 +1035,6 @@ Each policy is a built-in `ATTRIBUTE_NAMES` policy with `invert: true`, where `n
 | Policy | Denylist `names` |
 |---|---|
 | `system.client-names-self-manage` | `active, realmId, authMethod, tokenBindingMethod, secretHashed, secretEncrypted` |
-| `system.robot-names-self-manage` | `active, realmId, userId` |
 | `system.user-names-self-manage` | `active, nameLocked, status, statusMessage, realmId` |
 
 The client denylist additionally blocks `authMethod` (switching away from
@@ -1057,7 +1055,7 @@ UserAttribute names are still filtered against User entity columns by `UserAttri
 
 ### Service flow
 
-In `{Client,Robot,User}Service.save()`:
+In `{Client,User}Service.save()`:
 
 ```typescript
 let isSelfEdit = false;
@@ -1187,7 +1185,7 @@ authenticated`), so a just-completed credential entry (which IS the account
 selection) proceeds straight to consent instead of re-prompting "continue as X"
 for the account just authenticated; the branch also waits for the store's `user`
 to resolve to avoid a "Continue as \<empty\>" flash — but only while resolution
-is genuinely in flight: once it settles without a user (a non-user client/robot
+is genuinely in flight: once it settles without a user (a non-user client
 lingering session, or a failed `userInfo` lookup), the chooser renders a
 "use another account" escape hatch instead of spinning forever (plan 047.2 —
 `Authorize.vue` tracks this with a local `userSettled` ref over the store's
@@ -1583,7 +1581,7 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
 - **Subject deletion:** the subject is polymorphic (`sub`/`subKind`), but a
   **nullable `userId` FK** (`ON DELETE CASCADE`) is populated whenever
   `subKind = user`, so deleting a user cascade-drops its consent rows. A
-  non-user subject (client/robot) leaves `userId` null and its rows are
+  non-user subject (client) leaves `userId` null and its rows are
   cleaned up when the client/realm is deleted (both CASCADE). No expiry sweep
   yet (`expires_at` is always null in Stage 1) — a Stage-2 addition.
 - **Over-long scope token** (>128 chars, only reachable via a non-standard
@@ -1610,7 +1608,6 @@ secret.
 | `authorization_code` | The client follows its configured method. Its `client_id` MUST match the auth code's bound `client_id` — mismatch = `invalid_grant`. Client-by-name resolution is scoped by the shared realm hint (see *Token endpoint realm resolution*). |
 | `refresh_token` | `secret` and `tls` clients MUST authenticate. The authenticated `client_id` MUST match the token's bound `client_id` — mismatch = `invalid_grant`. A `none` client is not required to authenticate: when the request omits `client_id` but the signed token carries one, the grant resolves that client from the token and permits it only when its current method is still `none`. A bound refresh token additionally requires the same certificate thumbprint before rotation. |
 | `password` | When a client is supplied, it follows its configured method. The token's `client_id` claim and the OpenID `aud` claim use that resolved client's id, not any user-side association. The shared realm hint resolves the **user realm** and scopes the client leg. |
-| `robot_credentials` | Authentication is the grant's purpose (Authup-specific extension). |
 
 ### Per-client grant allowlist (`grantTypes`)
 
@@ -1626,9 +1623,9 @@ at both chokepoints:
 1. **`/token`** — after client resolution in `authorization_code`,
    `refresh_token` (including the bound-client-from-token path, so public-client
    refreshes that never send `client_id` are covered), `client_credentials`, and
-   `password` when a client authenticates. `robot_credentials` resolves no
-   client and is exempt. `/token/introspect` and `/token/revoke` are deliberately
-   NOT gated — RFC 7662/7009 operations are not grants.
+   `password` when a client authenticates. `/token/introspect` and
+   `/token/revoke` are deliberately NOT gated — RFC 7662/7009 operations are
+   not grants.
 2. **`/authorize` code-request verifier** — a non-null list must include
    `authorization_code`; denied before the consent UI renders (an RP
    misconfiguration fails at the front door, not at code redemption).
@@ -1684,9 +1681,9 @@ The three realm-resolving grants (`password`, `authorization_code`,
   `UserAuthenticator` class but is intentionally untouched — realm-less
   Basic-auth-by-name resolution is unchanged (and never carries a realm
   hint). The same raw, fallback-less `realm_id` handling remains on
-  `robot_credentials` / `client_credentials` (robot/client names are unique
-  per `(name, realm_id)`) and on the `/authorize` code-request verifier's
-  `data.realm_id` — see plan 037/038 non-goals.
+  `client_credentials` (client names are unique per `(name, realm_id)`) and on
+  the `/authorize` code-request verifier's `data.realm_id` — see plan 037/038
+  non-goals.
 
 ### Credential transport
 
@@ -1825,8 +1822,8 @@ blocklist the old jti in cache (`setInactive(jti, exp)` — cache-only, **not** 
 DB revoke, so grace stays intact), refresh the session, issue RT (`parentId =
 old jti`) then AT (`refreshTokenId = new RT jti`). On consume-failure →
 `revokeFamily`. Each issuer writes the row after `saveWithSignature` when
-`sessionId` is present (M2M client/robot-credentials write only an access row —
-they mint no RT).
+`sessionId` is present (M2M client-credentials writes only an access row —
+it mints no RT).
 
 ### Family revoke = the `auth_sessions` row, never a wider SSO session
 
@@ -1867,7 +1864,7 @@ A REST surface over `auth_sessions` for "see all my sessions / force logout":
   `preEvaluate` denial and passes `findMany(query, { owner })`, a mandatory
   `andWhere` a rapiq filter cannot override). An actor **with** `SESSION_READ`
   sees every session its realm reach permits (per-row `evaluate` + `resourceRealmMatch`,
-  same drop-unauthorized-rows shape as `RobotService.getMany`).
+  same drop-unauthorized-rows shape as `ClientService.getMany`).
 - `GET /sessions/:id` — read one. Own session → no permission; else
   `SESSION_READ` + realm-match. `@me`/`@self` resolve to the caller's current
   session (`useRequestSessionId`).
@@ -1880,7 +1877,7 @@ A REST surface over `auth_sessions` for "see all my sessions / force logout":
   authorization middleware's session check).
 - `DELETE /sessions` — bulk revoke, discriminated by whether the rapiq query
   carries a **recognized target filter** (`SESSION_FILTER_KEYS` = `id`, `sub`,
-  `subKind`, `userId`, `clientId`, `robotId`, `realmId`; the same
+  `subKind`, `userId`, `clientId`, `realmId`; the same
   vocabulary `getMany` filters on):
   - **No target filter →** self-service: revoke every own session except the
     current one ("log out my other devices"). No permission; the current session
@@ -1903,9 +1900,9 @@ A REST surface over `auth_sessions` for "see all my sessions / force logout":
   (self) / `deleteMany({ filter: { userId } })` (admin).
 
 **Ownership** = `session.sub === actor.identity.data.id && session.subKind ===
-actor.identity.type` (sessions have a polymorphic subject — user/client/robot —
+actor.identity.type` (sessions have a polymorphic subject — user/client —
 which is why dedicated `SESSION_READ`/`SESSION_DELETE` beat reusing the parent
-`USER_*`/`CLIENT_*`/`ROBOT_*` families). Both auto-provision (enum-iterated) and
+`USER_*`/`CLIENT_*` families). Both auto-provision (enum-iterated) and
 grant to `admin` (`any`) + `realm_admin` (`ownOrNull` read / `own` delete). The
 list read path bypasses the session cache (id-keyed only, no list index) and goes
 straight to TypeORM. **Every realm-gated `findMany` adapter force-selects the
@@ -1916,8 +1913,8 @@ reader could strip `realmId` and neutralize the realmScope reach factor
 (cross-realm leak; for an `ownOrNull` reader the stripped realm reads as a
 null/global resource). The shared helper `applyRealmScopeSelect(qb, alias,
 extraColumns?)` (`app/modules/database/repositories/helpers.ts`) is called AFTER
-`applyQuery` in: `session` (`+ sub, subKind` — ownership check), `user` /
-`robot` (`+ id` — self short-circuit), `client` (`+ secretHashed,
+`applyQuery` in: `session` (`+ sub, subKind` — ownership check), `user`
+(`+ id` — self short-circuit), `client` (`+ secretHashed,
 secretEncrypted` — the plaintext-secret gate precondition), `role-attribute`,
 `user-attribute` (`+ userId` — isMe check; the two attribute adapters configure
 no `fields`, so the call is pinning defense in depth there). `role` / `scope` /
@@ -1931,7 +1928,7 @@ wrapper's `ORDER BY "<alias>_id"` as ambiguous (mysql: duplicate column name), s
 every `include=` list query on these adapters 500'd. Regression specs:
 `session-realm-isolation.spec.ts` and
 `realm-isolation-field-projection.spec.ts`, plus the `include=realm` collection
-cases in `user.spec.ts` / `robot.spec.ts`. When adding a per-row gate to a new
+cases in `user.spec.ts`. When adding a per-row gate to a new
 `getMany`, wire `applyRealmScopeSelect` into its adapter with every column the
 gate reads.
 
@@ -2468,13 +2465,13 @@ locales. Kit test `test/unit/components/workflows/mfa-challenge.spec.ts`.
 
 **HOW the subject authenticated is recorded on the session**
 (`auth_sessions.auth_method`, `SessionAuthMethod` enum in core-kit:
-`pwd | ldap | ext | client | robot`; `ldap` is reserved — the password grant
+`pwd | ldap | ext | client`; `ldap` is reserved — the password grant
 currently stamps `pwd` for both, the LDAP distinction is the deferred Stage 1b).
 Every session-creation site stamps it: password grant (`pwd`), identity grant +
 the federated IdP callback (`ext` — threaded through the code blob's
 `auth_method`, which the authorization_code grant's fallback-create inherits;
-the reuse branch inherits from the bearer session row), robot/client
-credentials (`robot`/`client`, session-inventory only). Pre-column sessions
+the reuse branch inherits from the bearer session row), client
+credentials (`client`, session-inventory only). Pre-column sessions
 carry `NULL` → **no amr/acr claims** (authup cannot retroactively know).
 
 **amr/acr are derived at the `/token` exchange mint site** from the *resolved*
@@ -2660,7 +2657,7 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
 
 Identifier-style columns are stored in canonical form: `LOWER(TRIM(value))`. This applies to:
 
-- `name` on every named entity (`client`, `robot`, `user`, `role`, `scope`, `permission`, `policy`, `realm`, `identity-provider`)
+- `name` on every named entity (`client`, `user`, `role`, `scope`, `permission`, `policy`, `realm`, `identity-provider`)
 - `email` on `user`
 
 `displayName` and other free-form labels (`description`, `firstName`, `lastName`) preserve original casing — the canonical-form rule is only for columns used as identifiers in lookups / unique constraints.
@@ -2681,7 +2678,7 @@ Canonical form is enforced at four boundaries (defense-in-depth):
 1. **Validator transform** — every `name` / `email` validator chains `.trim().toLowerCase()` before its format check (Zod path) or `.matches(...)` (validup path). Mixed-case input is silently lowercased; callers see canonical form in the response.
 2. **Validator regex** — the format check (`isNameValid` for names: `/^[a-z0-9-_.]+$/`; emails: `/^[^A-Z]+$/`) operates on the post-transform value. After `.toLowerCase()` the regex always passes; it remains as documentation of the contract and as a catch for code paths that bypass the transform.
 3. **External boundary canonicalization** — when an identifier enters Authup outside the validator chain, it is lowercased at the ingress. Currently: `IdentityProviderAccountManager` taking attribute candidates from external IdPs (so external mixed-case usernames don't fall through to the random-nanoid fallback), and the OAuth2 password grant's `realm_id`/`realm_name` hint.
-4. **Repository-level lookup canonicalization** — name-based *lookups* on the authentication surface canonicalize the key before binding it: the identity repositories (`app/modules/identity/repositories/{user,client,robot}.ts`, both the name and a realm-name filter), `OAuth2ClientRepository.findOneByIdOrName` (the `/authorize` client resolution), and `RealmRepositoryAdapter.findOneByName`. An auth ingress that misses layer 3 (the `/realms/<key>` URL segment specifically, an HTTP Basic username, a token-body credential key) still matches canonically stored rows instead of diverging by database collation. Lookup-only, auth-surface-only — write paths rely on layers 1–3, and the entity repository adapters' `findOneByName` (`GET /roles/<name>` etc.) still bind raw (see plan 038).
+4. **Repository-level lookup canonicalization** — name-based *lookups* on the authentication surface canonicalize the key before binding it: the identity repositories (`app/modules/identity/repositories/{user,client}.ts`, both the name and a realm-name filter), `OAuth2ClientRepository.findOneByIdOrName` (the `/authorize` client resolution), and `RealmRepositoryAdapter.findOneByName`. An auth ingress that misses layer 3 (the `/realms/<key>` URL segment specifically, an HTTP Basic username, a token-body credential key) still matches canonically stored rows instead of diverging by database collation. Lookup-only, auth-surface-only — write paths rely on layers 1–3, and the entity repository adapters' `findOneByName` (`GET /roles/<name>` etc.) still bind raw (see plan 038).
 
 ### Adding a new identifier column
 
@@ -2986,8 +2983,8 @@ of authup. The
 `EntityCollectionSlotName` enum extended via `SlotName.X`
 references. The `@vuecs/list` 1.0 compound rewrite removed the
 enum. Authup keeps the string vocabulary locally in
-`packages/client-web-kit/src/core/slot.ts` so the six consumer
-files (`AUserForm`, `ARobotForm`, `APermissionPolicyBindingButton`,
+`packages/client-web-kit/src/core/slot.ts` so the consumer
+files (`AUserForm`, `APermissionPolicyBindingButton`,
 `APermissionCheck`, `APolicyPicker`, `ATranslation`) and
 `EntityCollectionSlotName` keep compiling. New code should prefer
 the compound `<VCList*>` parts directly over slot-name dispatch.

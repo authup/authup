@@ -29,9 +29,4 @@ export enum SessionAuthMethod {
      * client_credentials grant (M2M — no id_token).
      */
     CLIENT = 'client',
-
-    /**
-     * robot_credentials grant (M2M — no id_token).
-     */
-    ROBOT = 'robot',
 }

@@ -35,15 +35,6 @@ export async function guessOauth2GrantTypeByRequest(
 
     // ------------------------------------------------------------------
 
-    const robotId = pick('id');
-    const robotSecret = pick('secret');
-
-    if (robotId && robotSecret) {
-        return OAuth2TokenGrant.ROBOT_CREDENTIALS;
-    }
-
-    // ------------------------------------------------------------------
-
     const refreshToken = pick('refresh_token');
     if (refreshToken) {
         return OAuth2TokenGrant.REFRESH_TOKEN;

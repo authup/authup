@@ -24,9 +24,6 @@ import type {
     IPermissionPolicyAPI,
     IPolicyAPI,
     IRealmAPI,
-    IRobotAPI,
-    IRobotPermissionAPI,
-    IRobotRoleAPI,
     IRoleAPI,
     IRoleAttributeAPI,
     IRolePermissionAPI,
@@ -76,12 +73,6 @@ export interface IClient extends IBaseClient {
     readonly policy : IPolicyAPI;
 
     readonly realm : IRealmAPI;
-
-    readonly robot : IRobotAPI;
-
-    readonly robotPermission : IRobotPermissionAPI;
-
-    readonly robotRole : IRobotRoleAPI;
 
     readonly role : IRoleAPI;
 

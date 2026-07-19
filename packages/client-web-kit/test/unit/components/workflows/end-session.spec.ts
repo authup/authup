@@ -175,7 +175,7 @@ describe('AEndSessionForm', () => {
     });
 
     it('should NOT auto-sign-out for a non-user subject kind, even on a matching sub', async () => {
-        // a client/robot session's sub lives in a different id namespace — a
+        // a client session's sub lives in a different id namespace — a
         // collision with the local user id must never count as identity.
         const { logout } = mountEndSession(
             {

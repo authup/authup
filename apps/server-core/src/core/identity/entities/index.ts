@@ -7,4 +7,3 @@
 
 export * from './client/index.ts';
 export * from './user/index.ts';
-export * from './robot/index.ts';

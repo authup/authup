@@ -17,7 +17,6 @@ import type { CertificateSource } from '../../../request/index.ts';
 
 export type HTTPAuthorizationMiddlewareOptions = {
     clientAuthBasic?: boolean,
-    robotAuthBasic?: boolean,
     userAuthBasic?: boolean,
     certificateSource?: CertificateSource,
 };

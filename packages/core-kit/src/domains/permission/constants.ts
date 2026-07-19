@@ -70,22 +70,6 @@ export enum PermissionName {
     REALM_UPDATE = 'realm_update',
     REALM_READ = 'realm_read',
 
-    ROBOT_CREATE = 'robot_create',
-    ROBOT_DELETE = 'robot_delete',
-    ROBOT_UPDATE = 'robot_update',
-    ROBOT_READ = 'robot_read',
-    ROBOT_SELF_MANAGE = 'robot_self_manage',
-
-    ROBOT_PERMISSION_CREATE = 'robot_permission_create',
-    ROBOT_PERMISSION_DELETE = 'robot_permission_delete',
-    ROBOT_PERMISSION_READ = 'robot_permission_read',
-    ROBOT_PERMISSION_UPDATE = 'robot_permission_update',
-
-    ROBOT_ROLE_CREATE = 'robot_role_create',
-    ROBOT_ROLE_DELETE = 'robot_role_delete',
-    ROBOT_ROLE_UPDATE = 'robot_role_update',
-    ROBOT_ROLE_READ = 'robot_role_read',
-
     ROLE_CREATE = 'role_create',
     ROLE_DELETE = 'role_delete',
     ROLE_UPDATE = 'role_update',

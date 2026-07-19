@@ -9,7 +9,6 @@ The package contains a **record** component for the following resources:
 - **APermission**
 - **APolicy**
 - **ARealm**
-- **ARobot**
 - **ARole**
 - **AScope**
 - **AUser**

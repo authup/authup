@@ -15,7 +15,6 @@ import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import {
     OAuth2TokenAPI,
     createClientTokenCreator,
-    createRobotTokenCreator,
     createUserTokenCreator,
 } from '../../src';
 
@@ -29,9 +28,6 @@ const tokenGrantResponse : OAuth2TokenGrantResponse = {
 vi.spyOn(OAuth2TokenAPI.prototype, 'createWithClientCredentials')
     .mockImplementation(() => Promise.resolve(tokenGrantResponse));
 
-vi.spyOn(OAuth2TokenAPI.prototype, 'createWithRobotCredentials')
-    .mockImplementation(() => Promise.resolve(tokenGrantResponse));
-
 vi.spyOn(OAuth2TokenAPI.prototype, 'createWithPassword')
     .mockImplementation(() => Promise.resolve(tokenGrantResponse));
 
@@ -42,18 +38,6 @@ describe('src/creator', () => {
             password: 'start123',
             realmId: 'foo',
             realmName: 'bar',
-        });
-
-        expect(creator).toBeDefined();
-
-        const output = await creator();
-        expect(output).toEqual(tokenGrantResponse);
-    });
-
-    it('should create token grant response with robot', async () => {
-        const creator = createRobotTokenCreator({
-            id: 'SYSTEM',
-            secret: 'start123',
         });
 
         expect(creator).toBeDefined();

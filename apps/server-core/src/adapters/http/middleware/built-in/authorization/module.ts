@@ -7,7 +7,7 @@
 
 import type { IPermissionEvaluator } from '@authup/access';
 import { PermissionEvaluator } from '@authup/access';
-import type { Client, Robot, User } from '@authup/core-kit';
+import type { Client, User } from '@authup/core-kit';
 import {
     IdentityType,
     ScopeName,
@@ -30,7 +30,6 @@ import {
 import {
     ClientAuthenticator,
     PolicyEngine,
-    RobotAuthenticator,
     UserAuthenticator,
     assertClientCertificateEvidenceValidForBinding,
 } from '../../../../../core/index.ts';
@@ -72,8 +71,6 @@ export class AuthorizationMiddleware {
 
     protected clientAuthenticator : ICredentialsAuthenticator<Client>;
 
-    protected robotAuthenticator : ICredentialsAuthenticator<Robot>;
-
     protected userAuthenticator : ICredentialsAuthenticator<User>;
 
     // --------------------------------------
@@ -85,7 +82,6 @@ export class AuthorizationMiddleware {
         this.sessionManager = ctx.sessionManager;
 
         this.clientAuthenticator = new ClientAuthenticator(ctx.identityResolver);
-        this.robotAuthenticator = new RobotAuthenticator(ctx.identityResolver);
         this.userAuthenticator = new UserAuthenticator(ctx.identityResolver);
 
         this.oauth2TokenVerifier = ctx.oauth2TokenVerifier;
@@ -315,22 +311,6 @@ export class AuthorizationMiddleware {
                 setRequestScopes(event, [ScopeName.GLOBAL]);
                 setRequestIdentity(event, {
                     type: IdentityType.USER,
-                    data: authenticated.data,
-                });
-
-                return;
-            }
-        }
-
-        if (this.options.robotAuthBasic) {
-            const authenticated = await this.robotAuthenticator.safeAuthenticate(
-                header.username,
-                header.password,
-            );
-            if (authenticated.success) {
-                setRequestScopes(event, [ScopeName.GLOBAL]);
-                setRequestIdentity(event, {
-                    type: IdentityType.ROBOT,
                     data: authenticated.data,
                 });
             }

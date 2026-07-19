@@ -11,7 +11,7 @@ const SECRET_ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRS
 const SECRET_LENGTH = 32;
 
 /**
- * Generate a cryptographically strong client/robot secret.
+ * Generate a cryptographically strong client secret.
  *
  * Unlike {@link generateName}, this never accepts a seed: a secret must stay
  * unpredictable, so it must not be derived from a hydration-stable value. Call

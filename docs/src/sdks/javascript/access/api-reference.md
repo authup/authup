@@ -79,7 +79,7 @@ Each built-in policy type uses a specific key to look up its data:
 ```typescript
 export type IdentityPolicyData = {
     /**
-     * user, client, robot
+     * user, client
      */
     type: string,
     /**

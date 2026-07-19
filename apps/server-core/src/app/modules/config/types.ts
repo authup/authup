@@ -382,31 +382,6 @@ export type Config = {
     // ----------------------------------------------------
 
     /**
-     * default: false
-     */
-    robotAuthBasic: boolean,
-
-    /**
-     * Enable a global robot account.
-     * default: false
-     */
-    robotAdminEnabled: boolean,
-
-    /**
-     * The secret of the default admin user.
-     * default: (**generated**)
-     */
-    robotAdminSecret: string,
-
-    /**
-     * Reset the robot secret on application startup.
-     * default: false
-     */
-    robotAdminSecretReset: boolean,
-
-    // ----------------------------------------------------
-
-    /**
      * default: []
      */
     permissions: string | string[],

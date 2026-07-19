@@ -22,9 +22,6 @@ import type { PermissionPolicy } from './permission-policy';
 import type { Policy } from './policy';
 import type { PolicyAttribute } from './policy-attribute';
 import type { Realm } from './realm';
-import type { Robot } from './robot';
-import type { RobotPermission } from './robot-permission';
-import type { RobotRole } from './robot-role';
 import type { Role } from './role';
 import type { RoleAttribute } from './role-attribute';
 import type { RolePermission } from './role-permission';
@@ -53,9 +50,6 @@ type EntityTypeMapRaw = {
     [EntityType.PERMISSION]: Permission,
     [EntityType.PERMISSION_POLICY]: PermissionPolicy,
     [EntityType.REALM]: Realm,
-    [EntityType.ROBOT]: Robot,
-    [EntityType.ROBOT_PERMISSION]: RobotPermission,
-    [EntityType.ROBOT_ROLE]: RobotRole,
     [EntityType.ROLE]: Role,
     [EntityType.ROLE_ATTRIBUTE]: RoleAttribute,
     [EntityType.ROLE_PERMISSION]: RolePermission,

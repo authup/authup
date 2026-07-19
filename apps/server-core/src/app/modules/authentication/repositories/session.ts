@@ -77,7 +77,6 @@ export class SessionRepository implements ISessionRepository {
                     'updatedAt',
                     'userId',
                     'clientId',
-                    'robotId',
                     'realmId',
                 ],
             },

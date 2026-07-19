@@ -8,7 +8,6 @@
 import type {
     Client,
     Realm,
-    Robot,
     Role,
     UserPermission,
     UserRole,
@@ -20,7 +19,6 @@ import {
     IdentityProviderAttributeMappingRepository,
     IdentityProviderPermissionMappingRepository,
     IdentityProviderRoleMappingRepository,
-    RobotIdentityRepository,
     UserIdentityRepository,
 } from './repositories/index.ts';
 import { DatabaseInjectionKey, IdentityProviderRepositoryAdapter } from '../database/index.ts';
@@ -28,7 +26,6 @@ import {
     ClientEntity,
     IdentityProviderRepository,
     RealmEntity,
-    RobotEntity,
     RoleEntity,
     UserPermissionEntity,
     UserRepository,
@@ -36,7 +33,6 @@ import {
 } from '../../../adapters/database/domains/index.ts';
 import {
     ClientRepositoryAdapter,
-    RobotRepositoryAdapter,
     RoleRepositoryAdapter,
     UserRepositoryAdapter,
 } from '../database/repositories/index.ts';
@@ -74,9 +70,6 @@ export class IdentityModule implements IModule {
         const clientRepository = new ClientIdentityRepository(
             container.resolve<Repository<Client>>(ClientEntity),
         );
-        const robotRepository = new RobotIdentityRepository(
-            container.resolve<Repository<Robot>>(RobotEntity),
-        );
         const userRepository = new UserIdentityRepository({
             repository: new UserRepository(dataSource),
             userPermissionRepository: container.resolve<Repository<UserPermission>>(UserPermissionEntity),
@@ -86,7 +79,6 @@ export class IdentityModule implements IModule {
         container.register(IdentityInjectionKey.Resolver, {
             useFactory: () => new IdentityResolver({
                 clientRepository,
-                robotRepository,
                 userRepository,
             }),
         });
@@ -101,10 +93,6 @@ export class IdentityModule implements IModule {
             repository: new UserRepository(dataSource),
             realmRepository,
         });
-        const robotRepositoryAdapter = new RobotRepositoryAdapter({
-            repository: container.resolve<Repository<Robot>>(RobotEntity),
-            realmRepository,
-        });
         const roleRepositoryAdapter = new RoleRepositoryAdapter({
             repository: container.resolve<Repository<Role>>(RoleEntity),
             realmRepository,
@@ -114,7 +102,6 @@ export class IdentityModule implements IModule {
             useFactory: () => new IdentityRoleProvider({
                 clientRepository: clientRepositoryAdapter,
                 userRepository: userRepositoryAdapter,
-                robotRepository: robotRepositoryAdapter,
             }),
         });
 
@@ -122,7 +109,6 @@ export class IdentityModule implements IModule {
             useFactory: (c) => new IdentityPermissionProvider({
                 clientRepository: clientRepositoryAdapter,
                 userRepository: userRepositoryAdapter,
-                robotRepository: robotRepositoryAdapter,
                 roleRepository: roleRepositoryAdapter,
                 roleProvider: c.resolve(IdentityInjectionKey.RoleProvider),
             }),

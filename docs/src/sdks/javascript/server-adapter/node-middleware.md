@@ -16,7 +16,7 @@ npm install @authup/server-adapter-node --save
 The middleware should be injected at the beginning of the chain.
 
 It validates the Bearer token from the `Authorization` header (or, optionally, from any consumer-supplied source like a cookie),
-and calls a handler callback with the verification data (realm, permissions, user/robot info, etc.).
+and calls a handler callback with the verification data (realm, permissions, user/client info, etc.).
 
 The `createMiddleware` method accepts a configuration object with a `tokenVerifier` (from `@authup/server-adapter-kit`)
 and a `tokenVerifierHandler` callback. The optional `tokenByRequest` callback lets you fall back to an alternative source

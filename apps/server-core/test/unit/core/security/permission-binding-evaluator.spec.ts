@@ -42,9 +42,9 @@ describe('core/security/policy — PermissionBindingPolicyEvaluator disjunction 
     const PERMISSION_NAME = 'user_read';
 
     // A policy that PASSES for identityA (an `identity` policy with no type restriction
-    // permits every identity) and one that FAILS (restricts to `robot`, identityA is a user).
+    // permits every identity) and one that FAILS (restricts to `client`, identityA is a user).
     const passingPolicy = { type: BuiltInPolicyType.IDENTITY };
-    const failingPolicy = { type: BuiltInPolicyType.IDENTITY, types: ['robot'] };
+    const failingPolicy = { type: BuiltInPolicyType.IDENTITY, types: ['client'] };
 
     type RunOptions = {
         bindings: PermissionPolicyBinding[],

@@ -166,7 +166,6 @@ export class HTTPMiddlewareModule {
             sessionManager,
             options: {
                 clientAuthBasic: config.clientAuthBasic,
-                robotAuthBasic: config.robotAuthBasic,
                 userAuthBasic: config.userAuthBasic,
                 certificateSource: config.certificateSource,
             },

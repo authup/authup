@@ -59,7 +59,7 @@ export type ActorContext = {
 ```
 
 - `permissionEvaluator` — evaluates permissions (`evaluate`, `preEvaluate`, `evaluateOneOf`, `preEvaluateOneOf`).
-- `identity` — the actor's identity (`user`, `client`, `robot`), present on authenticated requests.
+- `identity` — the actor's identity (`user`, `client`), present on authenticated requests.
 
 **Example**
 ```ts

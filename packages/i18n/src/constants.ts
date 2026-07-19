@@ -302,7 +302,6 @@ export enum TranslatorTranslationEntityKey {
     PERMISSION = 'permission',
     POLICY = 'policy',
     REALM = 'realm',
-    ROBOT = 'robot',
     ROLE = 'role',
     SCOPE = 'scope',
     SESSION = 'session',

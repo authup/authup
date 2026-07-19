@@ -8,14 +8,12 @@
 import type { Identity, IdentityType } from '@authup/core-kit';
 import type {
     IClientIdentityRepository,
-    IRobotIdentityRepository,
     IUserIdentityRepository,
 } from '../entities/index.ts';
 
 export type IdentityResolverContext = {
     clientRepository: IClientIdentityRepository,
-    userRepository: IUserIdentityRepository,
-    robotRepository: IRobotIdentityRepository
+    userRepository: IUserIdentityRepository
 };
 
 export interface IIdentityResolver {

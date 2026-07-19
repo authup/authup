@@ -37,7 +37,7 @@ export default defineComponent({
             {
                 icon: '🛡️',
                 title: 'Identity & Access',
-                detail: 'Manage users, clients, robots, roles and permissions through one declarative API. Multi-tenant by design with realms.',
+                detail: 'Manage users, clients, roles and permissions through one declarative API. Multi-tenant by design with realms.',
             },
             {
                 icon: '📜',

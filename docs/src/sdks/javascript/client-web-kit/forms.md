@@ -8,7 +8,6 @@ The package contains a **form** component for the following resources:
 - **APermissionForm**
 - **APolicyForm**
 - **ARealmForm**
-- **ARobotForm**
 - **ARoleForm**
 - **AScopeForm**
 - **AUserForm**

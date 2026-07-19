@@ -36,7 +36,7 @@ describe('grant-authorize (access policy backstop)', () => {
             name: 'token-access-deny',
             type: BuiltInPolicyType.IDENTITY,
             invert: false,
-            types: [IdentityType.ROBOT],
+            types: [IdentityType.CLIENT],
             realmId: null,
         });
         allowPolicy = await suite.client.policy.createBuiltIn({

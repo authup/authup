@@ -10,7 +10,6 @@ import { describe, expect, it } from 'vitest';
 import { IdentityRoleProvider } from '../../../../../src/core/identity/role/module';
 import type {
     IClientRepository,
-    IRobotRepository,
     IUserRepository,
 } from '../../../../../src/core/index';
 
@@ -24,7 +23,6 @@ function createProvider(boundRoles: Role[]) {
     return new IdentityRoleProvider({
         userRepository,
         clientRepository: {} as IClientRepository,
-        robotRepository: {} as IRobotRepository,
     });
 }
 

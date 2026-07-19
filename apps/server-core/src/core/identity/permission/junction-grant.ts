@@ -11,7 +11,7 @@ import type { ResolveJunctionGrantResult } from './types.ts';
 
 /**
  * The privilege-escalation boundary for permission-binding junctions, shared verbatim by
- * role/user/client/robot-permission. Kept in ONE place (rather than copied into each service)
+ * role/user/client-permission. Kept in ONE place (rather than copied into each service)
  * so the fail-closed cap/inherit rule is audited and changed once — see #3160 / #3158 / #3159,
  * which each had to patch this rule across all four services.
  *

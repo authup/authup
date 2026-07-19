@@ -126,11 +126,6 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         userAdminPassword: 'start123',
         userAdminPasswordReset: false,
 
-        robotAuthBasic: false,
-        robotAdminEnabled: false,
-        robotAdminSecret: 'start123',
-        robotAdminSecretReset: false,
-
         permissions: [],
         permissionsDefaultPolicyAssignment: true,
         ...parsed,

@@ -57,7 +57,7 @@ Authup ships with built-in **system policies** that define default security rest
 These are created and maintained automatically on startup:
 
 - `system.default` — a composite policy (UNANIMOUS) that bundles the standard restrictions
-- `system.identity` — requires a valid identity (user, robot, or client)
+- `system.identity` — requires a valid identity (user or client)
 - `system.permission-binding` — checks that the identity has the permission assigned, and enforces the grant's **realm reach** (see [Realm Scoping](#realm-scoping))
 
 > Realm isolation is **no longer a policy**. It lives on each permission grant as the
@@ -90,13 +90,13 @@ The system only manages built-in policies. Users can create and assign custom po
 Authup distinguishes between **global** and **realm-scoped** entities:
 
 - **Global entities** (permissions, roles, scopes, policies) can have `realmId = null` — they exist outside any realm and are reusable across all realms.
-- **Realm-scoped entities** (users, clients, robots) always belong to a specific realm.
+- **Realm-scoped entities** (users, clients) always belong to a specific realm.
 
 To create a global entity via the API, explicitly pass `realmId: null`. If omitted, `realmId` defaults to the actor's realm.
 
 ### Realm reach (`realmScope`)
 
-Each permission **grant** (the row that assigns a permission to a role / user / client / robot) carries a coarse, **actor-relative** realm reach in its `realmScope` column — which realms the holder may act on *when using that permission*:
+Each permission **grant** (the row that assigns a permission to a role / user / client) carries a coarse, **actor-relative** realm reach in its `realmScope` column — which realms the holder may act on *when using that permission*:
 
 | `realmScope` | the grant lets the holder act on… | typical use |
 |---|---|---|
@@ -116,11 +116,11 @@ There is no special "master realm" privilege.
 
 ### Cross-realm protection for assignments
 
-Realm reach also gates **assignments** (granting a role to a user, a permission to a role, a scope to a client, …): the write is gated by the realm of the **owner** entity — the user / role / client / robot whose access you are changing. So a `realm_admin` in realm A cannot grant a role to a user in realm B, even with an otherwise-valid permission.
+Realm reach also gates **assignments** (granting a role to a user, a permission to a role, a scope to a client, …): the write is gated by the realm of the **owner** entity — the user / role / client whose access you are changing. So a `realm_admin` in realm A cannot grant a role to a user in realm B, even with an otherwise-valid permission.
 
 ### Setting a custom reach
 
-When an `admin` assigns a permission, the realm reach can be set per grant — via the API (`realmScope` on the create/update payload of `role-permission`, `user-permission`, `client-permission`, `robot-permission`) and in the UI (the **Realm Scope** selector beside the policy selector on a permission assignment). A restricted actor's chosen reach is always **capped to its own ceiling** — it can narrow but never widen. To scope a grant to a *specific set* of realms, set `realmScope: any` and attach a `policyId` ATTRIBUTES policy `{ realmId: { $in: ["…"] } }` on top.
+When an `admin` assigns a permission, the realm reach can be set per grant — via the API (`realmScope` on the create/update payload of `role-permission`, `user-permission`, `client-permission`) and in the UI (the **Realm Scope** selector beside the policy selector on a permission assignment). A restricted actor's chosen reach is always **capped to its own ceiling** — it can narrow but never widen. To scope a grant to a *specific set* of realms, set `realmScope: any` and attach a `policyId` ATTRIBUTES policy `{ realmId: { $in: ["…"] } }` on top.
 
 ## Permission Evaluation
 
@@ -146,7 +146,7 @@ The decision strategy is set per permission. Most built-in permissions use `unan
 
 ## Junction Policies
 
-Permission assignments (role-permission, user-permission, client-permission, robot-permission) carry two independent controls on the junction table:
+Permission assignments (role-permission, user-permission, client-permission) carry two independent controls on the junction table:
 
 - **`realmScope`** — the coarse [realm reach](#realm-reach-realmscope) of the grant (`own` / `ownOrNull` / `any`). This is how the built-in `realm_admin` is confined to its own realm and `admin` reaches every realm.
 - **`policyId`** — an optional **junction policy** that adds a further restriction on top of the permission's own policies, e.g. an ATTRIBUTES policy `{ realmId: { $in: ["…"] } }` to limit a grant to a specific set of realms.
@@ -159,7 +159,7 @@ Authup prevents privilege escalation through two mechanisms:
 
 ### Superset Check
 
-When assigning a role to an identity (user, client, or robot), the system verifies that the assigning actor
+When assigning a role to an identity (user or client), the system verifies that the assigning actor
 owns **all** permissions contained in the target role. This check is policy-aware:
 
 - If the actor has a restricted binding (junction policy) for a permission, but the target role has an unrestricted
@@ -172,7 +172,7 @@ cannot assign the `admin` role — because the admin role contains unrestricted 
 
 ### Junction Policy Propagation
 
-When creating any permission binding (role-permission, user-permission, client-permission, robot-permission),
+When creating any permission binding (role-permission, user-permission, client-permission),
 the system automatically propagates the actor's own junction policy to the new binding.
 
 If a `realm_admin` assigns a permission to a role, the new role-permission entry inherits the
