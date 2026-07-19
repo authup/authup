@@ -83,4 +83,53 @@ describe('src/policy/attributes', () => {
 
         expect(outcome.success).toBeFalsy();
     });
+
+    it('should compare equality case-sensitively', async () => {
+        const casePolicy : AttributesPolicy<User> = { query: { name: { $eq: 'admin' } } };
+
+        const evaluate = (name: string) => evaluator.evaluate(
+            casePolicy,
+            definePolicyEvaluationContext({ data: new PolicyData({ attributes: { name, age: 30 } }) }),
+        );
+
+        expect((await evaluate('admin')).success).toBeTruthy();
+        expect((await evaluate('Admin')).success).toBeFalsy();
+        expect((await evaluate('ADMIN')).success).toBeFalsy();
+    });
+
+    it('should compare $in membership case-sensitively', async () => {
+        const inPolicy : AttributesPolicy<User> = { query: { name: { $in: ['admin', 'root'] } } };
+
+        const evaluate = (name: string) => evaluator.evaluate(
+            inPolicy,
+            definePolicyEvaluationContext({ data: new PolicyData({ attributes: { name, age: 30 } }) }),
+        );
+
+        expect((await evaluate('root')).success).toBeTruthy();
+        expect((await evaluate('Root')).success).toBeFalsy();
+    });
+
+    it('should support $regex as slash-literal string', async () => {
+        const regexPolicy : AttributesPolicy<User> = { query: { name: { $regex: '/^pet/i' } } };
+
+        const outcome = await evaluator.evaluate(
+            regexPolicy,
+            definePolicyEvaluationContext({ data: new PolicyData({ attributes: { name: 'Peter', age: 30 } }) }),
+        );
+
+        expect(outcome.success).toBeTruthy();
+    });
+
+    it('should fail with issue for a malformed query', async () => {
+        const malformedPolicy = { query: { name: { $unknownOperator: 'foo' } } } as unknown as AttributesPolicy<User>;
+
+        const outcome = await evaluator.evaluate(
+            malformedPolicy,
+            definePolicyEvaluationContext({ data: new PolicyData({ attributes: { name: 'Peter', age: 30 } }) }),
+        );
+
+        expect(outcome.success).toBeFalsy();
+        expect(outcome.issues).toBeDefined();
+        expect(outcome.issues?.length).toBeGreaterThan(0);
+    });
 });
