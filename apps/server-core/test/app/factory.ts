@@ -29,8 +29,6 @@ async function buildTestConfig(alter?: (config: Config) => void): Promise<Config
     config.userAdminEnabled = true;
     config.userAuthBasic = true;
 
-    config.robotAdminEnabled = true;
-
     config.redis = false;
 
     config.registrationEnabled = true;

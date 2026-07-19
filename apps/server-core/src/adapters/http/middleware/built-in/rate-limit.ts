@@ -20,7 +20,6 @@ export function registerRateLimitMiddleware(router: App, input?: OptionsInput) {
             }
 
             switch (identity.type) {
-                case 'robot':
                 case 'client': {
                     return 60 * 5_000; // 1000 req p. sec
                 }

@@ -72,7 +72,7 @@ export type OAuth2TokenPayload = JWTClaims & {
     kind?: `${OAuth2TokenKind}`,
 
     /**
-     * Self: Subject type (robot | user | client)
+     * Self: Subject type (user | client)
      */
     sub_kind?: `${OAuth2SubKind}`,
 

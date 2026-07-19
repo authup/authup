@@ -24,7 +24,6 @@ export const SESSION_FILTER_KEYS = [
     'subKind',
     'userId',
     'clientId',
-    'robotId',
     'realmId',
 ] as const;
 

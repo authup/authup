@@ -35,7 +35,7 @@ export default defineComponent({
         },
         // The `sub_kind` of the revoked session. The auto-cleanup gate below
         // compares hintSub against the local USER id, so a non-user subject
-        // (client/robot) must never match — and a missing kind fails closed.
+        // (client) must never match — and a missing kind fails closed.
         hintSubKind: {
             type: String,
             default: undefined,
@@ -105,7 +105,7 @@ export default defineComponent({
             // whoever's browser rendered the page, not on the hint's subject.
             //
             // The subject kind must be `user` too — hintSub is compared against
-            // the local USER id, so a client/robot session's sub (a different
+            // the local USER id, so a client session's sub (a different
             // id namespace) matching a user id would be a confusion, not an
             // identity. A missing kind fails closed.
             if (

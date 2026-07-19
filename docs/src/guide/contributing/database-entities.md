@@ -15,9 +15,6 @@ The following entities are available:
 - `OAuth2RefreshTokenEntity`
 - `PermissionEntity`
 - `RealmEntity`
-- `RobotEntity`
-- `RobotPermissionEntity`
-- `RobotRoleEntity`
 - `RoleEntity`
 - `RoleAttributeEntity`
 - `RolePermissionEntity`

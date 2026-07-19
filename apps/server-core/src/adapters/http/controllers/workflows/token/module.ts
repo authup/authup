@@ -33,7 +33,6 @@ import {
     HTTPOAuth2AuthorizeGrant,
     HTTPOAuth2RefreshTokenGrant,
     HTTPPasswordGrant,
-    HTTPRobotCredentialsGrant,
     guessOauth2GrantTypeByRequest,
 } from '../../../adapters/index.ts';
 import { extractTokenFromRequest } from './utils/index.ts';
@@ -86,11 +85,6 @@ export class TokenController {
                 clientAuthenticator: ctx.oauth2ClientAuthenticator,
                 sessionManager: ctx.sessionManager,
                 certificateSource: ctx.certificateSource,
-            }),
-            [OAuth2TokenGrant.ROBOT_CREDENTIALS]: new HTTPRobotCredentialsGrant({
-                accessTokenIssuer: ctx.accessTokenIssuer,
-                authenticator: ctx.robotAuthenticator,
-                sessionManager: ctx.sessionManager,
             }),
             [OAuth2TokenGrant.PASSWORD]: new HTTPPasswordGrant({
                 accessTokenIssuer: ctx.accessTokenIssuer,
@@ -153,7 +147,7 @@ export class TokenController {
 
             const identity = await this.identityResolver.resolve(payload.sub_kind, payload.sub);
             if (!identity) {
-                // todo: differentiate between client, robot & user
+                // todo: differentiate between client & user
                 throw OAuth2RequestError.identityInvalid();
             }
 

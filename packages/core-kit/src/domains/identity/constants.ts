@@ -7,6 +7,5 @@
 
 export enum IdentityType {
     CLIENT = 'client',
-    ROBOT = 'robot',
     USER = 'user',
 }

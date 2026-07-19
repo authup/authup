@@ -20,7 +20,6 @@ import {
     createFakeOAuth2IdentityProvider,
     createFakePermission,
     createFakeRealm,
-    createFakeRobot,
     createFakeRole,
     createFakeScope,
     createFakeUser,
@@ -67,8 +66,6 @@ describe('http/controllers/security (junction realm-isolation — all junctions)
         ctx.userB = await suite.client.user.create(createFakeUser({ realmId: realmB.id }));
         ctx.clientA = await suite.client.client.create({ ...createFakeClient(), realmId: masterRealmId });
         ctx.clientB = await suite.client.client.create({ ...createFakeClient(), realmId: realmB.id });
-        ctx.robotA = await suite.client.robot.create(createFakeRobot({ realmId: masterRealmId }));
-        ctx.robotB = await suite.client.robot.create(createFakeRobot({ realmId: realmB.id }));
         ctx.providerA = await suite.client.identityProvider.create({ ...createFakeOAuth2IdentityProvider(), realmId: masterRealmId });
         ctx.providerB = await suite.client.identityProvider.create({ ...createFakeOAuth2IdentityProvider(), realmId: realmB.id });
         ctx.permissionA = await suite.client.permission.create({ ...createFakePermission(), realmId: masterRealmId });
@@ -86,10 +83,8 @@ describe('http/controllers/security (junction realm-isolation — all junctions)
             PermissionName.ROLE_PERMISSION_CREATE,
             PermissionName.USER_PERMISSION_CREATE,
             PermissionName.CLIENT_PERMISSION_CREATE,
-            PermissionName.ROBOT_PERMISSION_CREATE,
             PermissionName.USER_ROLE_CREATE,
             PermissionName.CLIENT_ROLE_CREATE,
-            PermissionName.ROBOT_ROLE_CREATE,
             PermissionName.CLIENT_SCOPE_CREATE,
             PermissionName.IDENTITY_PROVIDER_ROLE_CREATE,
             PermissionName.PERMISSION_UPDATE,
@@ -148,13 +143,6 @@ describe('http/controllers/security (junction realm-isolation — all junctions)
             body: (id, c) => ({ clientId: id, permissionId: c.roleReadPermissionId }), 
         },
         {
-            name: 'robot-permission', 
-            api: 'robotPermission', 
-            ownerA: 'robotA', 
-            ownerB: 'robotB', 
-            body: (id, c) => ({ robotId: id, permissionId: c.roleReadPermissionId }), 
-        },
-        {
             name: 'user-role', 
             api: 'userRole', 
             ownerA: 'userA', 
@@ -167,13 +155,6 @@ describe('http/controllers/security (junction realm-isolation — all junctions)
             ownerA: 'clientA', 
             ownerB: 'clientB', 
             body: (id, c) => ({ clientId: id, roleId: c.emptyRoleId }), 
-        },
-        {
-            name: 'robot-role', 
-            api: 'robotRole', 
-            ownerA: 'robotA', 
-            ownerB: 'robotB', 
-            body: (id, c) => ({ robotId: id, roleId: c.emptyRoleId }), 
         },
         {
             name: 'client-scope', 

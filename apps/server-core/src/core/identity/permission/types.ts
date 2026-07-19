@@ -12,7 +12,6 @@ import type {
     RealmScope,
 } from '@authup/access';
 import type { IClientRepository } from '../../entities/client/types.ts';
-import type { IRobotRepository } from '../../entities/robot/types.ts';
 import type { IRoleRepository } from '../../entities/role/types.ts';
 import type { IUserRepository } from '../../entities/user/types.ts';
 import type { IIdentityRoleProvider } from '../role/types.ts';
@@ -53,7 +52,6 @@ export interface IIdentityPermissionProvider {
 export type IdentityPermissionProviderContext = {
     clientRepository: IClientRepository;
     userRepository: IUserRepository;
-    robotRepository: IRobotRepository;
     roleRepository: IRoleRepository;
     roleProvider: IIdentityRoleProvider;
 };

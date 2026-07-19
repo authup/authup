@@ -8,7 +8,6 @@
 import type { Client } from '../client';
 import type { Realm } from '../realm';
 import type { User } from '../user';
-import type { Robot } from '../robot';
 import type { SessionAuthMethod } from './constants';
 
 export interface Session {
@@ -23,7 +22,7 @@ export interface Session {
     sub: string,
 
     /**
-     * Subject kind (e.g. user, robot, client)
+     * Subject kind (e.g. user, client)
      */
     subKind: string,
 
@@ -85,10 +84,6 @@ export interface Session {
     userId: User['id'] | null,
 
     user: User | null,
-
-    robotId: Robot['id'] | null,
-
-    robot: Robot | null,
 
     realmId: Realm['id'];
 

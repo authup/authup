@@ -63,7 +63,7 @@ describe('core/oauth2/access-policy — OAuth2AccessPolicyEvaluator', () => {
     it('should deny access when the policy fails for the subject', async () => {
         const provider = new FakePolicyProvider({
             type: BuiltInPolicyType.IDENTITY,
-            types: ['robot'],
+            types: ['client'],
         } as BasePolicy);
         const evaluator = buildEvaluator(provider);
 
@@ -100,7 +100,7 @@ describe('core/oauth2/access-policy — OAuth2AccessPolicyEvaluator', () => {
             type: BuiltInPolicyType.COMPOSITE,
             children: [
                 { type: BuiltInPolicyType.IDENTITY },
-                { type: BuiltInPolicyType.IDENTITY, types: ['robot'] },
+                { type: BuiltInPolicyType.IDENTITY, types: ['client'] },
             ],
         } as BasePolicy));
 

@@ -6,5 +6,4 @@
  */
 
 export * from './client.ts';
-export * from './robot.ts';
 export * from './user.ts';

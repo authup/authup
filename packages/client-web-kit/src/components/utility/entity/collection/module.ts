@@ -377,7 +377,7 @@ function create<
                             // the row label. Bootstrap `ms-auto` keeps the
                             // label left-aligned and floats the actions to
                             // the right — matches every junction picker
-                            // (client/user/robot/policy roles) consumer.
+                            // (client/user/policy roles) consumer.
                             const actionsNodes: VNodeChild[] = [];
                             if (itemActionsSlot) {
                                 actionsNodes.push(itemActionsSlot(itemSlotProps));
@@ -407,7 +407,7 @@ function create<
             // `@vuecs/list-controls@2.x` `buildListNoMore` semantics:
             // rendered ONLY when the list is empty (`total === 0`) and
             // not currently loading. Entity wrappers (AIdentityProviders,
-            // ARobots, …) pass `noMore: { content: translation.value }`
+            // AClients, …) pass `noMore: { content: translation.value }`
             // expecting it to fire as the "no items available" message;
             // it should NOT fire when the list has items (that would
             // produce a stray "no more entries" tag below a populated

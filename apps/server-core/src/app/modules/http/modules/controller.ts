@@ -15,9 +15,6 @@ import type {
     Permission,
     PermissionPolicy,
     Realm,
-    Robot,
-    RobotPermission,
-    RobotRole,
     Role,
     RoleAttribute,
     RolePermission,
@@ -40,9 +37,6 @@ import {
     PermissionPolicyEntity,
     PolicyRepository,
     RealmEntity,
-    RobotEntity,
-    RobotPermissionEntity,
-    RobotRoleEntity,
     RoleAttributeEntity,
     RoleEntity,
     RolePermissionEntity,
@@ -67,9 +61,6 @@ import {
     PermissionRepositoryAdapter,
     PolicyRepositoryAdapter,
     RealmRepositoryAdapter,
-    RobotPermissionRepositoryAdapter,
-    RobotRepositoryAdapter,
-    RobotRoleRepositoryAdapter,
     RoleAttributeRepositoryAdapter,
     RolePermissionRepositoryAdapter,
     RoleRepositoryAdapter,
@@ -95,9 +86,6 @@ import {
     PermissionPolicyController,
     PolicyController,
     RealmController,
-    RobotController,
-    RobotPermissionController,
-    RobotRoleController,
     RoleAttributeController,
     RoleController,
     RolePermissionController,
@@ -150,10 +138,6 @@ import {
     RealmCipher,
     RealmService,
     RegistrationService,
-    RobotAuthenticator,
-    RobotPermissionService,
-    RobotRoleService,
-    RobotService,
     RoleAttributeService,
     RolePermissionService,
     RoleService,
@@ -187,12 +171,9 @@ export class HTTPControllerModule {
         const permissionController = await this.createPermissionController(container);
         const permissionPolicyController = this.createPermissionPolicyController(container);
         const clientController = this.createClientController(container);
-        const robotController = this.createRobotController(container);
         const clientPermissionController = this.createClientPermissionController(container);
         const clientRoleController = this.createClientRoleController(container);
         const clientScopeController = this.createClientScopeController(container);
-        const robotPermissionController = this.createRobotPermissionController(container);
-        const robotRoleController = this.createRobotRoleController(container);
         const roleAttributeController = this.createRoleAttributeController(container);
         const rolePermissionController = this.createRolePermissionController(container);
         const scopeController = this.createScopeController(container);
@@ -236,9 +217,6 @@ export class HTTPControllerModule {
                 permissionController,
                 permissionPolicyController,
                 policyController,
-                robotController,
-                robotPermissionController,
-                robotRoleController,
                 realmController,
                 roleController,
                 roleAttributeController,
@@ -315,8 +293,6 @@ export class HTTPControllerModule {
 
         const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
 
-        const robotAuthenticator = new RobotAuthenticator(identityResolver);
-
         const userAuthenticator = new CredentialsAuthenticator([
             identityProviderLdapCollectionAuthenticator,
             new UserAuthenticator(identityResolver),
@@ -365,7 +341,6 @@ export class HTTPControllerModule {
             identityResolver,
             identityPermissionProvider,
 
-            robotAuthenticator,
             userAuthenticator,
 
             oauth2ClientAuthenticator,
@@ -572,26 +547,6 @@ export class HTTPControllerModule {
         });
     }
 
-    createRobotController(container: IContainer) {
-        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
-        const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
-        const repository = new RobotRepositoryAdapter({
-            repository: container.resolve<Repository<Robot>>(RobotEntity),
-            realmRepository,
-        });
-        const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository);
-        const service = new RobotService({
-            repository,
-            realmRepository: realmRepositoryAdapter,
-        });
-        return new RobotController({
-            service,
-            repository,
-            realmRepository: realmRepositoryAdapter,
-            dataSource,
-        });
-    }
-
     private createPermissionRepository(container: IContainer): PermissionRepositoryAdapter {
         return new PermissionRepositoryAdapter({
             repository: container.resolve<Repository<Permission>>(PermissionEntity),
@@ -700,29 +655,6 @@ export class HTTPControllerModule {
         );
         const service = new ClientScopeService({ repository });
         return new ClientScopeController({ service });
-    }
-
-    createRobotPermissionController(container: IContainer) {
-        const repository = new RobotPermissionRepositoryAdapter(
-            container.resolve<Repository<RobotPermission>>(RobotPermissionEntity),
-        );
-        const permissionRepository = this.createPermissionRepository(container);
-        const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
-        const service = new RobotPermissionService({
-            repository,
-            permissionRepository,
-            identityPermissionProvider,
-        });
-        return new RobotPermissionController({ service });
-    }
-
-    createRobotRoleController(container: IContainer) {
-        const repository = new RobotRoleRepositoryAdapter(
-            container.resolve<Repository<RobotRole>>(RobotRoleEntity),
-        );
-        const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
-        const service = new RobotRoleService({ repository, identityPermissionProvider });
-        return new RobotRoleController({ service });
     }
 
     createRoleAttributeController(container: IContainer) {

@@ -228,7 +228,7 @@ export default defineComponent({
             const subjectId = user.value?.id;
             if (!subjectId) {
                 // No resolved user yet: stay pending (loading text) until the
-                // session settles; a settled non-user session (client/robot)
+                // session settles; a settled non-user session (client)
                 // then falls through to manual consent — never auto-consent.
                 if (userSettled.value) {
                     consentStatus.value = { covered: false };
@@ -289,7 +289,7 @@ export default defineComponent({
 
         // The chooser needs the resolved user for "Continue as X" — but
         // loggedIn/realmId are truthy for ANY identity (token introspection),
-        // while the userinfo fetch fails for a non-user (client/robot)
+        // while the userinfo fetch fails for a non-user (client)
         // session, or transiently for a cookie-restored one. Re-resolve and
         // track settlement so the chooser can offer an escape hatch instead
         // of spinning forever on the loading text.

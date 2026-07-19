@@ -10,7 +10,6 @@ import type { IRealmRepository } from '../../../entities/index.ts';
 import type { ClientProvisioningEntity, ScopeProvisioningEntity } from '../../entities/index.ts';
 import type { PermissionProvisioningEntity } from '../../entities/permission/index.ts';
 import type { RealmProvisioningEntity } from '../../entities/realm/index.ts';
-import type { RobotProvisioningEntity } from '../../entities/robot/index.ts';
 import type { RoleProvisioningEntity } from '../../entities/role/index.ts';
 import type { UserProvisioningEntity } from '../../entities/user/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
@@ -29,8 +28,6 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
     protected userSynchronizer: IProvisioningSynchronizer<UserProvisioningEntity>;
 
-    protected robotSynchronizer: IProvisioningSynchronizer<RobotProvisioningEntity>;
-
     protected scopeSynchronizer : IProvisioningSynchronizer<ScopeProvisioningEntity>;
 
     constructor(ctx: RealmProvisioningSynchronizerContext) {
@@ -41,7 +38,6 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
         this.permissionSynchronizer = ctx.permissionSynchronizer;
         this.roleSynchronizer = ctx.roleSynchronizer;
         this.userSynchronizer = ctx.userSynchronizer;
-        this.robotSynchronizer = ctx.robotSynchronizer;
         this.scopeSynchronizer = ctx.scopeSynchronizer;
     }
 
@@ -122,16 +118,6 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             });
 
             await this.userSynchronizer.synchronizeMany(users);
-        }
-
-        if (input.relations && input.relations.robots) {
-            const robots = input.relations.robots.map((child) => {
-                child.attributes.realmId = attributes.id;
-                child.attributes.realm = attributes;
-                return child;
-            });
-
-            await this.robotSynchronizer.synchronizeMany(robots);
         }
 
         if (input.relations && input.relations.scopes) {

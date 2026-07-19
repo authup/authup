@@ -7,7 +7,6 @@
 import type { Realm } from '@authup/core-kit';
 import type { ClientProvisioningEntity } from '../client/index.ts';
 import type { PermissionProvisioningEntity } from '../permission';
-import type { RobotProvisioningEntity } from '../robot';
 import type { RoleProvisioningEntity } from '../role';
 import type { ScopeProvisioningEntity } from '../scope';
 import type { BaseProvisioningEntity } from '../types.ts';
@@ -15,8 +14,6 @@ import type { UserProvisioningEntity } from '../user';
 
 export type RealmProvisioningRelations = {
     users?: UserProvisioningEntity[],
-
-    robots?: RobotProvisioningEntity[]
 
     clients?: ClientProvisioningEntity[]
 

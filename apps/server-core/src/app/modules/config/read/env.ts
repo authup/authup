@@ -271,28 +271,6 @@ export function readConfigRawFromEnv() : ConfigInput {
 
     // ---------------------------------------------------------------
 
-    const robotBasicAuth = readBool(ConfigEnvironmentVariableName.ROBOT_AUTH_BASIC);
-    if (typeof robotBasicAuth !== 'undefined') {
-        options.robotAuthBasic = robotBasicAuth;
-    }
-
-    const robotAdminEnabled = readBool(ConfigEnvironmentVariableName.ROBOT_ADMIN_ENABLED);
-    if (typeof robotAdminEnabled !== 'undefined') {
-        options.robotAdminEnabled = robotAdminEnabled;
-    }
-
-    const robotAdminSecret = read(ConfigEnvironmentVariableName.ROBOT_ADMIN_SECRET);
-    if (robotAdminSecret) {
-        options.robotAdminSecret = robotAdminSecret;
-    }
-
-    const robotAdminSecretReset = readBool(ConfigEnvironmentVariableName.ROBOT_ADMIN_SECRET_RESET);
-    if (typeof robotAdminSecretReset !== 'undefined') {
-        options.robotAdminSecretReset = robotAdminSecretReset;
-    }
-
-    // ---------------------------------------------------------------
-
     const permissions = readArray(ConfigEnvironmentVariableName.PERMISSIONS);
     if (permissions && permissions.length > 0) {
         options.permissions = permissions;

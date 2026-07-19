@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client, Robot, User } from '@authup/core-kit';
+import type { Client, User } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import { hasOwnProperty } from '@authup/kit';
 import { OAuth2SubKind, unwrapOAuth2Scope } from '@authup/specs';
@@ -18,11 +18,6 @@ type ScopeFields<T extends ObjectLiteral = ObjectLiteral> = {
 
 export class OAuth2ScopeAttributesResolver {
     protected clientAttributes : ScopeFields<Client> = {
-        [ScopeName.IDENTITY]: ['name'],
-        [ScopeName.OPEN_ID]: ['name', 'displayName', 'updatedAt', 'active'],
-    };
-
-    protected robotAttributes : ScopeFields<Robot> = {
         [ScopeName.IDENTITY]: ['name'],
         [ScopeName.OPEN_ID]: ['name', 'displayName', 'updatedAt', 'active'],
     };
@@ -44,10 +39,6 @@ export class OAuth2ScopeAttributesResolver {
             return this.resolveForClient(scope);
         }
 
-        if (type === OAuth2SubKind.ROBOT) {
-            return this.resolveForRobot(scope);
-        }
-
         return this.resolveForUser(scope);
     }
 
@@ -62,24 +53,6 @@ export class OAuth2ScopeAttributesResolver {
 
             if (scope === ScopeName.GLOBAL) {
                 attributes.push(...Object.values(this.clientAttributes).flat());
-                break;
-            }
-        }
-
-        return distinctArray(attributes);
-    }
-
-    resolveForRobot(scope: string | string[]) : string[] {
-        const attributes : string[] = [];
-        const scopes = unwrapOAuth2Scope(scope);
-
-        for (const scope of scopes) {
-            if (hasOwnProperty(this.robotAttributes, scope)) {
-                attributes.push(...this.robotAttributes[scope]);
-            }
-
-            if (scope === ScopeName.GLOBAL) {
-                attributes.push(...Object.values(this.robotAttributes).flat());
                 break;
             }
         }

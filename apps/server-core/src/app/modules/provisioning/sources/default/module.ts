@@ -10,7 +10,6 @@ import { DecisionStrategy } from '@authup/kit';
 import type {
     Client, 
     Permission, 
-    Robot, 
     Role, 
     Scope, 
     User,
@@ -28,7 +27,6 @@ import {
 import type { IContainer } from 'eldin';
 import {
     ClientCredentialsService,
-    RobotCredentialsService,
     UserCredentialsService,
 } from '../../../../../core/index.ts';
 import type { Config } from '../../../config/index.ts';
@@ -105,22 +103,6 @@ export class DefaultProvisioningSource implements IProvisioningSource {
             },
             {
                 attributes: {
-                    name: SystemPolicyName.ROBOT_NAMES_SELF_MANAGE,
-                    type: BuiltInPolicyType.ATTRIBUTE_NAMES,
-                    invert: true,
-                    builtIn: true,
-                    realmId: null,
-                },
-                extraAttributes: {
-                    names: [
-                        'active',
-                        'realmId',
-                        'userId',
-                    ],
-                },
-            },
-            {
-                attributes: {
                     name: SystemPolicyName.USER_NAMES_SELF_MANAGE,
                     type: BuiltInPolicyType.ATTRIBUTE_NAMES,
                     invert: true,
@@ -143,7 +125,6 @@ export class DefaultProvisioningSource implements IProvisioningSource {
     buildPermissions(): PermissionProvisioningEntity[] {
         const policiesByPermission: Partial<Record<string, string[]>> = {
             [PermissionName.CLIENT_SELF_MANAGE]: [SystemPolicyName.DEFAULT, SystemPolicyName.CLIENT_NAMES_SELF_MANAGE],
-            [PermissionName.ROBOT_SELF_MANAGE]: [SystemPolicyName.DEFAULT, SystemPolicyName.ROBOT_NAMES_SELF_MANAGE],
             [PermissionName.USER_SELF_MANAGE]: [SystemPolicyName.DEFAULT, SystemPolicyName.USER_NAMES_SELF_MANAGE],
         };
 
@@ -235,9 +216,6 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                             PermissionName.PERMISSION_CREATE,
                             PermissionName.PERMISSION_UPDATE,
                             PermissionName.PERMISSION_DELETE,
-                            PermissionName.ROBOT_CREATE,
-                            PermissionName.ROBOT_UPDATE,
-                            PermissionName.ROBOT_DELETE,
                             PermissionName.ROLE_CREATE,
                             PermissionName.ROLE_UPDATE,
                             PermissionName.ROLE_DELETE,
@@ -322,29 +300,6 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     secret: await clientCredentialsService.protect(config.clientSystemSecret, { secretHashed: false }),
                     secretHashed: false,
                     active: config.clientSystemEnabled,
-                },
-                relations: { globalRoles: [ROLE_ADMIN_NAME] },
-            },
-        ];
-
-        const robotCredentialsService = new RobotCredentialsService();
-
-        let robotStrategy : ProvisioningEntityStrategy<Robot> | undefined;
-        if (config.robotAdminSecretReset) {
-            robotStrategy = {
-                type: ProvisioningEntityStrategyType.MERGE,
-                attributes: ['secret'],
-            };
-        }
-
-        masterRealm.relations = masterRealm.relations || {};
-        masterRealm.relations.robots = [
-            {
-                strategy: robotStrategy,
-                attributes: {
-                    name: 'system',
-                    secret: await robotCredentialsService.protect(config.robotAdminSecret),
-                    active: config.robotAdminEnabled,
                 },
                 relations: { globalRoles: [ROLE_ADMIN_NAME] },
             },

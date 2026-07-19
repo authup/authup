@@ -298,12 +298,12 @@ describe('identity-provider authorization code grant', () => {
     // redirects to the RP directly — a denial bounces back to the hosted
     // authorize page with error=access_denied, and NO code is issued.
     it('should bounce a policy-denied federated login back to the hosted authorize page', async () => {
-        // an identity policy restricted to robots denies the federated user
+        // an identity policy restricted to clients denies the federated user
         const denyPolicy = await suite.client.policy.createBuiltIn({
             name: 'idp-access-deny',
             type: BuiltInPolicyType.IDENTITY,
             invert: false,
-            types: [IdentityType.ROBOT],
+            types: [IdentityType.CLIENT],
             realmId: null,
         });
         await suite.client.client.update(client.id, { accessPolicyId: denyPolicy.id });

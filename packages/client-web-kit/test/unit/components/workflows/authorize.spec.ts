@@ -40,7 +40,7 @@ const REALM = { id: 'realm-x', name: 'master' };
 
 // A logged-in, fully-resolved store — the state in which prompt=select_account
 // would render the chooser (mimics a lingering session restored from cookies).
-// `withUser: false` mimics a lingering NON-user (client/robot) session, or a
+// `withUser: false` mimics a lingering NON-user (client) session, or a
 // cookie-restored one whose userinfo fetch failed: loggedIn/realm are set from
 // token introspection, but the user never resolves.
 function seedLoggedIn(store: Store, realmId = REALM.id, withUser = true) {
@@ -299,7 +299,7 @@ describe('AAuthorize prompt=select_account', () => {
 
     it('offers the account switch (not an indefinite spinner) when the user never resolves', async () => {
         // loggedIn/realmId are truthy for ANY identity, but userinfo fails for
-        // a non-user (client/robot) session — once resolution settles, the
+        // a non-user (client) session — once resolution settles, the
         // chooser must render its escape hatch instead of the loading text.
         const { wrapper } = mountAuthorize({ withUser: false });
         await flushPromises();

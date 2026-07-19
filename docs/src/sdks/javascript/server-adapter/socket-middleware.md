@@ -15,7 +15,7 @@ npm install @authup/server-adapter-socket-io --save
 The socket middleware should be injected at the beginning of the chain.
 
 The middleware validates the token from `socket.handshake.auth.token` and calls a handler
-with the verification data (realm, permissions, user/robot info, etc.).
+with the verification data (realm, permissions, user/client info, etc.).
 
 The `createMiddleware` method accepts a configuration object with a `tokenVerifier` (from `@authup/server-adapter-kit`)
 and a `tokenVerifierHandler` callback.

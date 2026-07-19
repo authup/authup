@@ -16,16 +16,14 @@ describe('OAuth2ScopeAttributesResolver', () => {
     describe('resolveFor', () => {
         it('should dispatch to correct resolver per sub kind', () => {
             expect(resolver.resolveFor(OAuth2SubKind.CLIENT, ScopeName.IDENTITY)).toEqual(['name']);
-            expect(resolver.resolveFor(OAuth2SubKind.ROBOT, ScopeName.IDENTITY)).toEqual(['name']);
             expect(resolver.resolveFor(OAuth2SubKind.USER, ScopeName.IDENTITY))
                 .toEqual(expect.arrayContaining(['name', 'displayName', 'lastName', 'firstName']));
         });
     });
 
-    describe('resolveForClient / resolveForRobot (identical maps)', () => {
+    describe('resolveForClient', () => {
         it.each([
             ['resolveForClient', (s: string | string[]) => resolver.resolveForClient(s)],
-            ['resolveForRobot', (s: string | string[]) => resolver.resolveForRobot(s)],
         ] as const)('%s should resolve scope attributes', (_, resolve) => {
             expect(resolve(ScopeName.IDENTITY)).toEqual(['name']);
             expect(resolve(ScopeName.OPEN_ID)).toEqual(expect.arrayContaining(['name', 'displayName', 'updatedAt', 'active']));

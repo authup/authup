@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client, Identity, Robot } from '@authup/core-kit';
+import type { Client, Identity, User } from '@authup/core-kit';
 import { IdentityType } from '@authup/core-kit';
 import { UnauthorizedError } from '@authup/errors';
 import { FakePermissionEvaluator } from '@authup/server-test-kit';
@@ -32,8 +32,8 @@ function clientIdentity(data: Partial<Client>): Identity {
     return { type: IdentityType.CLIENT, data: data as Client };
 }
 
-function robotIdentity(data: Partial<Robot>): Identity {
-    return { type: IdentityType.ROBOT, data: data as Robot };
+function userIdentity(data: Partial<User>): Identity {
+    return { type: IdentityType.USER, data: data as User };
 }
 
 describe('RequestIdentity', () => {
@@ -46,19 +46,19 @@ describe('RequestIdentity', () => {
     });
 
     it('should derive a non-client clientId from the clientId field', () => {
-        const identity = new RequestIdentity(robotIdentity({ id: 'r1', clientId: 'c9' }));
+        const identity = new RequestIdentity(userIdentity({ id: 'u1', clientId: 'c9' }));
         expect(identity.clientId).toEqual('c9');
     });
 
     it('should return null clientId when clientId is null', () => {
-        const identity = new RequestIdentity(robotIdentity({ id: 'r1', clientId: null }));
+        const identity = new RequestIdentity(userIdentity({ id: 'u1', clientId: null }));
         expect(identity.clientId).toBeNull();
     });
 
     it('should read realm id/name from the nested realm relation', () => {
-        const identity = new RequestIdentity(robotIdentity({
-            id: 'r1',
-            realm: { id: 'r2', name: 'second' } as Robot['realm'],
+        const identity = new RequestIdentity(userIdentity({
+            id: 'u1',
+            realm: { id: 'r2', name: 'second' } as User['realm'],
         }));
         expect(identity.realmId).toEqual('r2');
         expect(identity.realmName).toEqual('second');

@@ -25,7 +25,6 @@ function createProvider(bindingsById: Record<string, PermissionPolicyBinding[]>)
         roleRepository: roleRepository as any,
         clientRepository: {} as any,
         userRepository: {} as any,
-        robotRepository: {} as any,
         roleProvider: { getRolesFor: async () => [] } as any,
     });
 }

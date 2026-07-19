@@ -5,7 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import type { Robot, User } from '@authup/core-kit';
+import type { User } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import type {
     IAuthFlowMetrics,
@@ -58,7 +58,6 @@ export type TokenControllerContext = {
     identityResolver: IIdentityResolver,
     identityPermissionProvider: IIdentityPermissionProvider,
 
-    robotAuthenticator: ICredentialsAuthenticator<Robot>
     userAuthenticator: ICredentialsAuthenticator<User>
 
     oauth2ClientAuthenticator: OAuth2ClientAuthenticator

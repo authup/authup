@@ -31,9 +31,6 @@ The `Client` exposes the following sub-API clients as instance properties:
 | `policy` | `PolicyAPI` | Policy management |
 | `permission` | `PermissionAPI` | Permission management |
 | `realm` | `RealmAPI` | Realm management |
-| `robot` | `RobotAPI` | Robot management |
-| `robotPermission` | `RobotPermissionAPI` | Robot-permission associations |
-| `robotRole` | `RobotRoleAPI` | Robot-role associations |
 | `role` | `RoleAPI` | Role management |
 | `roleAttribute` | `RoleAttributeAPI` | Role attribute management |
 | `rolePermission` | `RolePermissionAPI` | Role-permission associations |

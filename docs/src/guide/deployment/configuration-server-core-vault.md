@@ -1,6 +1,6 @@
 # Vault
 
-Vault is used to securely manage the credentials of robot accounts in plain text.
+Vault is used to securely manage credentials in plain text.
 
 ::: warning
 

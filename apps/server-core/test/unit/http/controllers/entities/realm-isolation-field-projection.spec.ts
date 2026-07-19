@@ -19,7 +19,6 @@ import { createTestApplication } from '../../../../app';
 import {
     createFakeClient,
     createFakeRealm,
-    createFakeRobot,
     createFakeRoleAttribute,
     createFakeUser,
     createFakeUserAttribute,
@@ -39,9 +38,6 @@ describe('realm isolation (field projection)', () => {
 
     let ownUserId: string;
     let foreignUserId: string;
-
-    let ownRobotId: string;
-    let foreignRobotId: string;
 
     let ownClientId: string;
     let foreignClientId: string;
@@ -66,11 +62,6 @@ describe('realm isolation (field projection)', () => {
         ownUserId = ownUser.id;
         const foreignUser = await suite.client.user.create(createFakeUser({ realmId: realmB.id }));
         foreignUserId = foreignUser.id;
-
-        const ownRobot = await suite.client.robot.create(createFakeRobot());
-        ownRobotId = ownRobot.id;
-        const foreignRobot = await suite.client.robot.create(createFakeRobot({ realmId: realmB.id }));
-        foreignRobotId = foreignRobot.id;
 
         const ownClient = await suite.client.client.create({
             ...createFakeClient(),
@@ -122,7 +113,6 @@ describe('realm isolation (field projection)', () => {
         const permissionNames = [
             PermissionName.USER_READ,
             PermissionName.USER_UPDATE,
-            PermissionName.ROBOT_READ,
             PermissionName.CLIENT_READ,
             PermissionName.ROLE_READ,
         ];
@@ -183,14 +173,6 @@ describe('realm isolation (field projection)', () => {
 
         const foreign = await readerActor.user.getMany({ filter: { id: foreignUserId }, fields: ['id', 'name'] });
         expect(foreign.data.some((entity) => entity.id === foreignUserId)).toBe(false);
-    });
-
-    it('keeps a foreign-realm robot hidden even when realmId is projected away', async () => {
-        const own = await actor.robot.getMany({ filter: { id: ownRobotId }, fields: ['id', 'name'] });
-        expect(own.data.some((entity) => entity.id === ownRobotId)).toBe(true);
-
-        const foreign = await actor.robot.getMany({ filter: { id: foreignRobotId }, fields: ['id', 'name'] });
-        expect(foreign.data.some((entity) => entity.id === foreignRobotId)).toBe(false);
     });
 
     it('keeps a foreign-realm plaintext client secret hidden even when realmId and the secret flags are projected away', async () => {

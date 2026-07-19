@@ -45,12 +45,6 @@ import {
     PolicySubscriber,
     RealmEntity,
     RealmSubscriber,
-    RobotEntity,
-    RobotPermissionEntity,
-    RobotPermissionSubscriber,
-    RobotRoleEntity,
-    RobotRoleSubscriber,
-    RobotSubscriber,
     RoleAttributeEntity,
     RoleAttributeSubscriber,
     RoleEntity,
@@ -135,9 +129,6 @@ export class DataSourceOptionsBuilder {
 
                 RealmEntity,
 
-                RobotEntity,
-                RobotPermissionEntity,
-                RobotRoleEntity,
 
                 RoleEntity,
                 RoleAttributeEntity,
@@ -173,9 +164,6 @@ export class DataSourceOptionsBuilder {
 
                 RealmSubscriber,
 
-                RobotSubscriber,
-                RobotRoleSubscriber,
-                RobotPermissionSubscriber,
 
                 RoleSubscriber,
                 RoleAttributeSubscriber,

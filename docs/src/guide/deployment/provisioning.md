@@ -1,7 +1,7 @@
 # Provisioning
 
 Provisioning allows you to declaratively define the initial state of your Authup instance:
-users, roles, permissions, scopes, clients, robots, and their relationships.
+users, roles, permissions, scopes, clients, and their relationships.
 
 On every server startup, the provisioning system synchronizes the declared state into the database.
 Built-in defaults (admin user, admin role, system permissions) are always applied first.
@@ -130,12 +130,6 @@ export default {
                     {
                         attributes: { name: 'acme-app', authMethod: 'secret', secret: 'my-secret' },
                         relations: { globalPermissions: ['*'] },
-                    },
-                ],
-                robots: [
-                    {
-                        attributes: { name: 'ci-bot', secret: 'bot-secret' },
-                        relations: { globalPermissions: ['project_read'] },
                     },
                 ],
             },
@@ -277,7 +271,6 @@ policies:
 | `roles`       | `RoleProvisioning[]`          | Realm-scoped roles               |
 | `users`       | `UserProvisioning[]`          | Users in this realm              |
 | `clients`     | `ClientProvisioning[]`        | OAuth2 clients in this realm     |
-| `robots`      | `RobotProvisioning[]`         | Robot accounts in this realm     |
 
 ### User
 
@@ -322,25 +315,6 @@ Clients (OAuth2 applications) must be nested inside a realm.
 | `realmPermissions`  | `string[]`                    | Assign realm permissions. `'*'` = all.                  |
 | `globalRoles`       | `string[]`                    | Assign global roles. `'*'` = all.                       |
 | `realmRoles`        | `string[]`                    | Assign realm roles. `'*'` = all.                        |
-
-### Robot
-
-Robot (service) accounts must be nested inside a realm.
-
-| Field        | Type               | Description                          |
-|--------------|--------------------|--------------------------------------|
-| `strategy`   | `Strategy`         | Sync strategy (optional)             |
-| `attributes` | object             | `name` (required), `secret`, `active`, `displayName` |
-| `relations`  | object             | See below                            |
-
-**Robot relations:**
-
-| Field               | Type       | Description                                              |
-|---------------------|------------|----------------------------------------------------------|
-| `globalPermissions` | `string[]` | Global permission names. `'*'` = all.                   |
-| `realmPermissions`  | `string[]` | Realm permission names. `'*'` = all.                    |
-| `globalRoles`       | `string[]` | Global role names. `'*'` = all.                         |
-| `realmRoles`        | `string[]` | Realm role names. `'*'` = all.                          |
 
 ## Strategies
 
@@ -454,7 +428,6 @@ Entities are synchronized in dependency order:
    2. Permissions (realm-scoped)
    3. Roles (realm-scoped, with permission assignments)
    4. Users (with permission/role assignments)
-   5. Robots (with permission/role assignments)
-   6. Scopes (realm-scoped)
+   5. Scopes (realm-scoped)
 
 Define entities before referencing them. For example, create a permission before assigning it to a role.

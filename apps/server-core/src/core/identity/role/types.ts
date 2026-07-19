@@ -8,7 +8,6 @@
 import type { Role } from '@authup/core-kit';
 import type { IdentityPolicyData } from '@authup/access';
 import type { IClientRepository } from '../../entities/client/types.ts';
-import type { IRobotRepository } from '../../entities/robot/types.ts';
 import type { IUserRepository } from '../../entities/user/types.ts';
 
 export interface IIdentityRoleProvider {
@@ -18,5 +17,4 @@ export interface IIdentityRoleProvider {
 export type IdentityRoleProviderContext = {
     clientRepository: IClientRepository;
     userRepository: IUserRepository;
-    robotRepository: IRobotRepository;
 };

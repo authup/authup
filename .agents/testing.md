@@ -39,7 +39,7 @@ Generic fakes from `@authup/server-test-kit`:
 
 Domain fakes colocated under each entity's test dir as `test/unit/core/entities/<entity>/fake-repository.ts`:
 - `FakeRoleRepository`, `FakeRealmRepository` (pre-seeds master realm + `resolve()` helper), `FakePolicyRepository`, `FakePermissionRepository`
-- `FakeUserRepository`, `FakeClientRepository`, `FakeRobotRepository`
+- `FakeUserRepository`, `FakeClientRepository`
 
 Workflow / orchestration helpers still in `test/unit/core/helpers/`:
 - `FakeMailClient`, `FakeIdentityPermissionProvider`, `FakeIdentityResolver`, `FakeIdentityRoleProvider`, `FakeOAuth2KeyRepository`, `FakeOAuth2TokenIssuer`, `FakeOAuth2TokenRepository`, `FakeOAuth2TokenSigner`, `FakeOAuth2TokenVerifier`, `FakeSessionManager`, `FakeSessionTokenRepository` (in-memory `ISessionTokenRepository` for refresh-rotation grant tests — `create`/`markRefreshConsumed`/`hasConsumedChild`/`revokeBySessionId`/... with call recording). `helpers/index.ts` also re-exports everything from `@authup/server-test-kit` for terse spec imports.

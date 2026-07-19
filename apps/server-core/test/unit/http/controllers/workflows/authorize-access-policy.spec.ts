@@ -36,13 +36,13 @@ describe('http/controllers/workflows/authorize (access policy, plan 052)', () =>
         realm = await suite.client.realm.create(createFakeRealm());
         scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
 
-        // an identity policy restricted to robots denies every user; without
+        // an identity policy restricted to clients denies every user; without
         // a type restriction it permits every identity
         denyPolicy = await suite.client.policy.createBuiltIn({
             name: 'authorize-access-deny',
             type: BuiltInPolicyType.IDENTITY,
             invert: false,
-            types: [IdentityType.ROBOT],
+            types: [IdentityType.CLIENT],
             realmId: null,
         });
         allowPolicy = await suite.client.policy.createBuiltIn({

@@ -35,7 +35,6 @@ import type {
     AIdentityProviders,
     APermission,
     APermissionClientAssignments,
-    APermissionRobotAssignments,
     APermissionRoleAssignments,
     APermissionUserAssignments,
     APermissions,
@@ -47,19 +46,11 @@ import type {
     ARealmForm,
     ARealmMatchPolicyForm,
     ARealms,
-    ARobot,
-    ARobotForm,
-    ARobotPermissionAssignment,
-    ARobotPermissionAssignments,
-    ARobotRoleAssignment,
-    ARobotRoleAssignments,
-    ARobots,
     ARole,
     ARoleClientAssignments,
     ARoleForm,
     ARolePermissionAssignment,
     ARolePermissionAssignments,
-    ARoleRobotAssignments,
     ARoleUserAssignments,
     ARoles,
     AScope,
@@ -157,7 +148,6 @@ declare module '@vue/runtime-core' {
         APermissions: typeof APermissions;
 
         APermissionClientAssignments: typeof APermissionClientAssignments;
-        APermissionRobotAssignments: typeof APermissionRobotAssignments;
         APermissionRoleAssignments: typeof APermissionRoleAssignments;
         APermissionUserAssignments: typeof APermissionUserAssignments;
 
@@ -176,16 +166,6 @@ declare module '@vue/runtime-core' {
         ARealms: typeof ARealms;
         ARealmForm: typeof ARealmForm;
 
-        ARobot: typeof ARobot;
-        ARobots: typeof ARobots;
-        ARobotForm: typeof ARobotForm;
-
-        ARobotPermissionAssignment: typeof ARobotPermissionAssignment;
-        ARobotPermissionAssignments: typeof ARobotPermissionAssignments;
-
-        ARobotRoleAssignment: typeof ARobotRoleAssignment;
-        ARobotRoleAssignments: typeof ARobotRoleAssignments;
-
         ARole: typeof ARole;
         ARoles: typeof ARoles;
         ARoleForm: typeof ARoleForm;
@@ -194,7 +174,6 @@ declare module '@vue/runtime-core' {
         ARolePermissionAssignments: typeof ARolePermissionAssignments;
 
         ARoleClientAssignments: typeof ARoleClientAssignments;
-        ARoleRobotAssignments: typeof ARoleRobotAssignments;
         ARoleUserAssignments: typeof ARoleUserAssignments;
 
         AScope: typeof AScope;

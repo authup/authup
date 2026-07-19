@@ -13,6 +13,5 @@ export * from './policy/index.ts';
 export * from './realm/index.ts';
 export * from './role/index.ts';
 export * from './root/index.ts';
-export * from './robot/index.ts';
 export * from './scope/index.ts';
 export * from './user/index.ts';

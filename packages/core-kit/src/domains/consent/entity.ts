@@ -21,7 +21,7 @@ export interface Consent {
     sub: string,
 
     /**
-     * Subject kind (e.g. user, robot, client)
+     * Subject kind (e.g. user, client)
      */
     subKind: string,
 

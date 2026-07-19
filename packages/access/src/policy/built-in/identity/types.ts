@@ -16,7 +16,7 @@ export interface IdentityPolicy extends BasePolicy {
 
 export type IdentityPolicyData = {
     /**
-     * user, client, robot
+     * user, client
      */
     type: string,
     /**

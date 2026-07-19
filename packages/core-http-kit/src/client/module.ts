@@ -24,9 +24,6 @@ import {
     PermissionPolicyAPI,
     PolicyAPI,
     RealmAPI,
-    RobotAPI,
-    RobotPermissionAPI,
-    RobotRoleAPI,
     RoleAPI,
     RoleAttributeAPI,
     RolePermissionAPI,
@@ -73,12 +70,6 @@ export class Client extends BaseClient implements IClient {
     public readonly permissionPolicy : PermissionPolicyAPI;
 
     public readonly realm : RealmAPI;
-
-    public readonly robot : RobotAPI;
-
-    public readonly robotPermission : RobotPermissionAPI;
-
-    public readonly robotRole : RobotRoleAPI;
 
     public readonly role : RoleAPI;
 
@@ -156,9 +147,6 @@ export class Client extends BaseClient implements IClient {
 
         this.realm = new RealmAPI({ client: this });
 
-        this.robot = new RobotAPI({ client: this });
-        this.robotPermission = new RobotPermissionAPI({ client: this });
-        this.robotRole = new RobotRoleAPI({ client: this });
 
         this.role = new RoleAPI({ client: this });
         this.roleAttribute = new RoleAttributeAPI({ client: this });

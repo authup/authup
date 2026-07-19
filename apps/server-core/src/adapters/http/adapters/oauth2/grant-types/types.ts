@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Robot, User } from '@authup/core-kit';
+import type { User } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { IAppEvent } from 'routup';
@@ -59,6 +59,3 @@ export type HTTPOAuth2ClientCredentialsGrantContext = BaseGrantContext & {
     certificateSource: CertificateSource,
 };
 
-export type HTTPOAuth2RobotCredentialsGrantContext = BaseGrantContext & {
-    authenticator : ICredentialsAuthenticator<Robot>
-};
