@@ -17,19 +17,19 @@ export interface PolicyAttribute {
 
     // ------------------------------------------------------------------
 
-    realm_id: Policy['id'] | null;
+    realmId: Policy['id'] | null;
 
     realm: Realm | null;
 
     // ------------------------------------------------------------------
 
-    policy_id: Policy['id'];
+    policyId: Policy['id'];
 
     policy: Policy;
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 }

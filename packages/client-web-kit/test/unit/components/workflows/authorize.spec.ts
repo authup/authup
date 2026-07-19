@@ -55,32 +55,32 @@ function seedLoggedIn(store: Store, realmId = REALM.id, withUser = true) {
     const user: User = {
         id: 'user-1',
         name: 'jdoe',
-        name_locked: false,
-        first_name: null,
-        last_name: null,
-        display_name: null,
+        nameLocked: false,
+        firstName: null,
+        lastName: null,
+        displayName: null,
         email: 'jdoe@example.com',
         password: null,
         avatar: null,
         cover: null,
-        reset_hash: null,
-        reset_at: null,
-        reset_expires: null,
+        resetHash: null,
+        resetAt: null,
+        resetExpires: null,
         status: null,
-        status_message: null,
+        statusMessage: null,
         active: true,
-        activate_hash: null,
-        created_at: now,
-        updated_at: now,
-        realm_id: realmId,
+        activateHash: null,
+        createdAt: now,
+        updatedAt: now,
+        realmId,
         realm: {
             id: realmId,
             name: REALM.name,
-            display_name: null,
+            displayName: null,
             description: null,
-            built_in: false,
-            created_at: now,
-            updated_at: now,
+            builtIn: false,
+            createdAt: now,
+            updatedAt: now,
         },
     };
     store.setUser(user);
@@ -92,15 +92,15 @@ function consentRow(scope: string, expiresAt: string | null = null): Consent {
     const now = new Date(0).toISOString();
     return {
         id: `consent-${scope}`,
-        client_id: 'client-1',
-        realm_id: REALM.id,
-        user_id: 'user-1',
+        clientId: 'client-1',
+        realmId: REALM.id,
+        userId: 'user-1',
         sub: 'user-1',
-        sub_kind: 'user',
+        subKind: 'user',
         scope,
-        expires_at: expiresAt,
-        created_at: now,
-        updated_at: now,
+        expiresAt,
+        createdAt: now,
+        updatedAt: now,
     };
 }
 
@@ -170,32 +170,32 @@ function mountAuthorize(overrides: MountOverrides = {}) {
     const client: Client = {
         id: 'client-1',
         active: true,
-        built_in: clientBuiltIn,
-        auth_method: 'none',
-        token_binding_method: 'none',
+        builtIn: clientBuiltIn,
+        authMethod: 'none',
+        tokenBindingMethod: 'none',
         name: 'web',
-        display_name: 'Web',
+        displayName: 'Web',
         description: null,
         secret: null,
-        secret_hashed: false,
-        secret_encrypted: false,
-        redirect_uri: null,
-        post_logout_redirect_uri: null,
-        grant_types: null,
+        secretHashed: false,
+        secretEncrypted: false,
+        redirectUri: null,
+        postLogoutRedirectUri: null,
+        grantTypes: null,
         scope: null,
-        base_url: null,
-        root_url: null,
-        created_at: clientTimestamp,
-        updated_at: clientTimestamp,
-        realm_id: REALM.id,
+        baseUrl: null,
+        rootUrl: null,
+        createdAt: clientTimestamp,
+        updatedAt: clientTimestamp,
+        realmId: REALM.id,
         realm: {
             id: REALM.id,
             name: REALM.name,
-            display_name: null,
+            displayName: null,
             description: null,
-            built_in: false,
-            created_at: clientTimestamp,
-            updated_at: clientTimestamp,
+            builtIn: false,
+            createdAt: clientTimestamp,
+            updatedAt: clientTimestamp,
         },
     };
 
@@ -208,7 +208,7 @@ function mountAuthorize(overrides: MountOverrides = {}) {
             realm: {
                 id: REALM.id,
                 name: REALM.name,
-                display_name: 'Master',
+                displayName: 'Master',
             },
             scopes: [],
             redirectUriVerified,
@@ -512,7 +512,7 @@ describe('AAuthorize consent covering probe (plan 055)', () => {
         ).toBe(false);
     });
 
-    it('scopes the probe request to the current subject (sub + sub_kind)', async () => {
+    it('scopes the probe request to the current subject (sub + subKind)', async () => {
         // an actor holding CONSENT_READ would otherwise receive every
         // subject's rows — the probe must always send the subject filter.
         const { httpClient } = mountAuthorize({
@@ -525,7 +525,7 @@ describe('AAuthorize consent covering probe (plan 055)', () => {
         expect(probe).toBeTruthy();
         const probeUrl = decodeURIComponent(probe!.url);
         expect(probeUrl).toContain('filter[sub]=user-1');
-        expect(probeUrl).toContain('filter[sub_kind]=user');
+        expect(probeUrl).toContain('filter[subKind]=user');
     });
 
     it('does NOT cover when the matching rows belong to another subject', async () => {

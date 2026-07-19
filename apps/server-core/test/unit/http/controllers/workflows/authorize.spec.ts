@@ -29,8 +29,8 @@ describe('src/http/controllers/token', () => {
         const client = await suite.client.client.create(createFakeClient());
 
         await suite.client.clientScope.create({
-            scope_id: scope.id,
-            client_id: client.id,
+            scopeId: scope.id,
+            clientId: client.id,
         });
 
         payload = {

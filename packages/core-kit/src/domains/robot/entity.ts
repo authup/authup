@@ -16,7 +16,7 @@ export interface Robot {
 
     name: string;
 
-    display_name: string | null;
+    displayName: string | null;
 
     description: string;
 
@@ -24,25 +24,25 @@ export interface Robot {
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 
     // ------------------------------------------------------------------
 
-    user_id: User['id'] | null;
+    userId: User['id'] | null;
 
     user: User | null;
 
     // ------------------------------------------------------------------
 
-    client_id: Client['id'] | null;
+    clientId: Client['id'] | null;
 
     client: Client | null;
 
     // ------------------------------------------------------------------
 
-    realm_id: Realm['id'];
+    realmId: Realm['id'];
 
     realm: Realm;
 }

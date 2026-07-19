@@ -43,8 +43,8 @@ describe('adapters/database/timestamp', () => {
             .getRepository(RealmEntity)
             .findOneByOrFail({ id: created.id });
 
-        expectISOString(entity.created_at);
-        expectISOString(entity.updated_at);
+        expectISOString(entity.createdAt);
+        expectISOString(entity.updatedAt);
     });
 
     it('should hydrate user timestamps as ISO strings', async () => {
@@ -54,7 +54,7 @@ describe('adapters/database/timestamp', () => {
             .getRepository(UserEntity)
             .findOneByOrFail({ id: created.id });
 
-        expectISOString(entity.created_at);
-        expectISOString(entity.updated_at);
+        expectISOString(entity.createdAt);
+        expectISOString(entity.updatedAt);
     });
 });

@@ -11,11 +11,11 @@ import type { Realm } from '../realm';
 export interface Role {
     id: string;
 
-    built_in: boolean;
+    builtIn: boolean;
 
     name: string;
 
-    display_name: string | null;
+    displayName: string | null;
 
     target: string | null;
 
@@ -23,18 +23,18 @@ export interface Role {
 
     // ------------------------------------------------------------------
 
-    client_id: Client['id'] | null;
+    clientId: Client['id'] | null;
 
     client: Client | null;
 
     // ------------------------------------------------------------------
-    realm_id: Realm['id'] | null;
+    realmId: Realm['id'] | null;
 
     realm: Realm | null;
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 }

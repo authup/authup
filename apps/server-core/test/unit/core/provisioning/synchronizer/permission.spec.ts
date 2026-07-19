@@ -45,7 +45,7 @@ describe('core/provisioning/synchronizer/permission', () => {
                 strategy: { type: ProvisioningEntityStrategyType.MERGE },
                 attributes: {
                     name: 'test_permission',
-                    built_in: true,
+                    builtIn: true,
                 },
             };
 
@@ -54,7 +54,7 @@ describe('core/provisioning/synchronizer/permission', () => {
             const all = permissionRepository.getAll();
             expect(all).toHaveLength(1);
             expect(all[0].name).toBe('test_permission');
-            expect(all[0].built_in).toBe(true);
+            expect(all[0].builtIn).toBe(true);
         });
 
         it('should not create duplicates on re-sync', async () => {
@@ -62,9 +62,9 @@ describe('core/provisioning/synchronizer/permission', () => {
                 strategy: { type: ProvisioningEntityStrategyType.MERGE },
                 attributes: {
                     name: 'test_permission',
-                    built_in: true,
-                    realm_id: null,
-                    client_id: null,
+                    builtIn: true,
+                    realmId: null,
+                    clientId: null,
                 },
             };
 
@@ -77,16 +77,16 @@ describe('core/provisioning/synchronizer/permission', () => {
         it('should remove the permission when strategy is ABSENT', async () => {
             permissionRepository.seed({
                 name: 'test_permission',
-                realm_id: null,
-                client_id: null,
+                realmId: null,
+                clientId: null,
             });
 
             const input: PermissionProvisioningEntity = {
                 strategy: { type: ProvisioningEntityStrategyType.ABSENT },
                 attributes: {
                     name: 'test_permission',
-                    realm_id: null,
-                    client_id: null,
+                    realmId: null,
+                    clientId: null,
                 },
             };
 
@@ -104,9 +104,9 @@ describe('core/provisioning/synchronizer/permission', () => {
                 strategy: { type: ProvisioningEntityStrategyType.MERGE },
                 attributes: {
                     name: 'test_permission',
-                    built_in: true,
-                    realm_id: null,
-                    client_id: null,
+                    builtIn: true,
+                    realmId: null,
+                    clientId: null,
                 },
                 relations: { policies: ['system.test-policy'] },
             };
@@ -118,8 +118,8 @@ describe('core/provisioning/synchronizer/permission', () => {
 
             const junctions = permissionPolicyRepository.getAll();
             expect(junctions).toHaveLength(1);
-            expect(junctions[0].permission_id).toBe(permission.id);
-            expect(junctions[0].policy_id).toBe(policy.id);
+            expect(junctions[0].permissionId).toBe(permission.id);
+            expect(junctions[0].policyId).toBe(policy.id);
         });
 
         it('should attach multiple declared policies', async () => {
@@ -130,9 +130,9 @@ describe('core/provisioning/synchronizer/permission', () => {
                 strategy: { type: ProvisioningEntityStrategyType.MERGE },
                 attributes: {
                     name: 'test_permission',
-                    built_in: true,
-                    realm_id: null,
-                    client_id: null,
+                    builtIn: true,
+                    realmId: null,
+                    clientId: null,
                 },
                 relations: { policies: ['system.policy-a', 'system.policy-b'] },
             };
@@ -140,7 +140,7 @@ describe('core/provisioning/synchronizer/permission', () => {
             await synchronizer.synchronize(input);
 
             const junctions = permissionPolicyRepository.getAll();
-            const policyIds = junctions.map((j) => j.policy_id).sort();
+            const policyIds = junctions.map((j) => j.policyId).sort();
             expect(policyIds).toEqual([policyA.id, policyB.id].sort());
         });
 
@@ -151,9 +151,9 @@ describe('core/provisioning/synchronizer/permission', () => {
                 strategy: { type: ProvisioningEntityStrategyType.MERGE },
                 attributes: {
                     name: 'test_permission',
-                    built_in: true,
-                    realm_id: null,
-                    client_id: null,
+                    builtIn: true,
+                    realmId: null,
+                    clientId: null,
                 },
                 relations: { policies: ['system.test-policy'] },
             };
@@ -173,9 +173,9 @@ describe('core/provisioning/synchronizer/permission', () => {
                 strategy: { type: ProvisioningEntityStrategyType.MERGE },
                 attributes: {
                     name: 'test_permission',
-                    built_in: true,
-                    realm_id: null,
-                    client_id: null,
+                    builtIn: true,
+                    realmId: null,
+                    clientId: null,
                 },
                 relations: { policies: ['system.policy-a'] },
             });
@@ -186,9 +186,9 @@ describe('core/provisioning/synchronizer/permission', () => {
                 strategy: { type: ProvisioningEntityStrategyType.MERGE },
                 attributes: {
                     name: 'test_permission',
-                    built_in: true,
-                    realm_id: null,
-                    client_id: null,
+                    builtIn: true,
+                    realmId: null,
+                    clientId: null,
                 },
                 relations: { policies: ['system.policy-a', 'system.policy-b'] },
             });
@@ -196,19 +196,19 @@ describe('core/provisioning/synchronizer/permission', () => {
             expect(permissionPolicyRepository.getAll()).toHaveLength(2);
         });
 
-        it('should set permission_realm_id and policy_realm_id on the junction', async () => {
+        it('should set permissionRealmId and policyRealmId on the junction', async () => {
             policyRepository.seed({
                 name: 'system.test-policy',
-                realm_id: 'policy-realm',
+                realmId: 'policy-realm',
             });
 
             const input: PermissionProvisioningEntity = {
                 strategy: { type: ProvisioningEntityStrategyType.MERGE },
                 attributes: {
                     name: 'test_permission',
-                    built_in: true,
-                    realm_id: 'permission-realm',
-                    client_id: null,
+                    builtIn: true,
+                    realmId: 'permission-realm',
+                    clientId: null,
                 },
                 relations: { policies: ['system.test-policy'] },
             };
@@ -216,8 +216,8 @@ describe('core/provisioning/synchronizer/permission', () => {
             await synchronizer.synchronize(input);
 
             const junction = permissionPolicyRepository.getAll()[0];
-            expect(junction.permission_realm_id).toBe('permission-realm');
-            expect(junction.policy_realm_id).toBe('policy-realm');
+            expect(junction.permissionRealmId).toBe('permission-realm');
+            expect(junction.policyRealmId).toBe('policy-realm');
         });
 
         it('should throw when a referenced policy is not provisioned', async () => {
@@ -225,9 +225,9 @@ describe('core/provisioning/synchronizer/permission', () => {
                 strategy: { type: ProvisioningEntityStrategyType.MERGE },
                 attributes: {
                     name: 'test_permission',
-                    built_in: true,
-                    realm_id: null,
-                    client_id: null,
+                    builtIn: true,
+                    realmId: null,
+                    clientId: null,
                 },
                 relations: { policies: ['system.missing-policy'] },
             };
@@ -242,9 +242,9 @@ describe('core/provisioning/synchronizer/permission', () => {
                 strategy: { type: ProvisioningEntityStrategyType.MERGE },
                 attributes: {
                     name: 'test_permission',
-                    built_in: true,
-                    realm_id: null,
-                    client_id: null,
+                    builtIn: true,
+                    realmId: null,
+                    clientId: null,
                 },
                 relations: { policies: ['system.test-policy'] },
             };
@@ -259,9 +259,9 @@ describe('core/provisioning/synchronizer/permission', () => {
                 strategy: { type: ProvisioningEntityStrategyType.MERGE },
                 attributes: {
                     name: 'test_permission',
-                    built_in: true,
-                    realm_id: null,
-                    client_id: null,
+                    builtIn: true,
+                    realmId: null,
+                    clientId: null,
                 },
             };
 
@@ -273,9 +273,9 @@ describe('core/provisioning/synchronizer/permission', () => {
                 strategy: { type: ProvisioningEntityStrategyType.MERGE },
                 attributes: {
                     name: 'test_permission',
-                    built_in: true,
-                    realm_id: null,
-                    client_id: null,
+                    builtIn: true,
+                    realmId: null,
+                    clientId: null,
                 },
                 relations: { policies: [] },
             };

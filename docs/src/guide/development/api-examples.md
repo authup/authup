@@ -24,16 +24,16 @@ curl -X GET 'http://localhost:3001/permissions' \
     "data": [
         {
             "id": "xxx",
-            "built_in": true,
+            "builtIn": true,
             "name": "user_read",
-            "display_name": "Read Users",
+            "displayName": "Read Users",
             "description": "Allows reading user data."
         },
         {
             "id": "xxx",
-            "built_in": true,
+            "builtIn": true,
             "name": "role_edit",
-            "display_name": "Manage Roles",
+            "displayName": "Manage Roles",
             "description": "Allows updating roles."
         }
     ],
@@ -59,9 +59,9 @@ curl -X GET 'http://localhost:3001/permissions/user_read' \
 ```json
 {
     "id": "xxx",
-    "built_in": true,
+    "builtIn": true,
     "name": "user_read",
-    "display_name": "Read Users",
+    "displayName": "Read Users",
     "description": "Allows reading user data."
 }
 ```
@@ -74,7 +74,7 @@ curl -X POST 'http://localhost:3001/permissions' \
   -H 'Content-Type: application/json' \
   -d '{
         "name": "profile_edit",
-        "display_name": "Edit Profile",
+        "displayName": "Edit Profile",
         "description": "Allows users to edit their own profile."
       }'
 ```
@@ -84,9 +84,9 @@ curl -X POST 'http://localhost:3001/permissions' \
 ```json
 {
   "id": "***",
-  "built_in": false,
+  "builtIn": false,
   "name": "profile_edit",
-  "display_name": "Edit Profile",
+  "displayName": "Edit Profile",
   "description": "Allows users to edit their own profile."
 }
 ```
@@ -98,7 +98,7 @@ curl -X POST 'http://localhost:3001/permissions/profile_edit' \
   -H 'Authorization: Bearer ***' \
   -H 'Content-Type: application/json' \
   -d '{
-        "display_name": "Modify Profile",
+        "displayName": "Modify Profile",
         "description": "Allows users to modify their own profile information."
       }'
 ```
@@ -107,9 +107,9 @@ curl -X POST 'http://localhost:3001/permissions/profile_edit' \
 ````json
 {
   "id": "***",
-  "built_in": false,
+  "builtIn": false,
   "name": "profile_edit",
-  "display_name": "Modify Profile",
+  "displayName": "Modify Profile",
   "description": "Allows users to modify their own profile information."
 }
 ````
@@ -126,9 +126,9 @@ curl -X DELETE 'http://localhost:3001/permissions/profile_edit' \
 ````json
 {
   "id": "***",
-  "built_in": false,
+  "builtIn": false,
   "name": "profile_edit",
-  "display_name": "Modify Profile",
+  "displayName": "Modify Profile",
   "description": "Allows users to modify their own profile information."
 }
 ````

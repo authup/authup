@@ -9,18 +9,18 @@ import type { SessionToken, SessionTokenKind } from '@authup/core-kit';
 
 export type SessionTokenCreateInput = {
     id: string,
-    session_id: string,
+    sessionId: string,
     kind: SessionTokenKind,
-    parent_id?: string | null,
-    refresh_token_id?: string | null,
-    ip_address: string,
-    user_agent: string,
-    expires_at: string,
+    parentId?: string | null,
+    refreshTokenId?: string | null,
+    ipAddress: string,
+    userAgent: string,
+    expiresAt: string,
 };
 
 export type SessionTokenRef = {
     id: string,
-    expires_at: string,
+    expiresAt: string,
 };
 
 export interface ISessionTokenRepository {
@@ -78,7 +78,7 @@ export interface ISessionTokenRepository {
     revokeBySessionId(sessionId: string, at: string): Promise<SessionTokenRef[]>;
 
     /**
-     * Delete every token row whose `expires_at` is before the given timestamp.
+     * Delete every token row whose `expiresAt` is before the given timestamp.
      *
      * @param before iso timestamp
      */

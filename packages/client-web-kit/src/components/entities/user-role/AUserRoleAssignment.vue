@@ -28,14 +28,14 @@ export default defineComponent({
             setup,
             query: () => ({
                 filters: {
-                    user_id: props.userId,
-                    role_id: props.roleId,
+                    userId: props.userId,
+                    roleId: props.roleId,
                 },
             }),
             socket: {
                 processEvent(event) {
-                    return event.data.role_id === props.roleId &&
-                        event.data.user_id === props.userId;
+                    return event.data.roleId === props.roleId &&
+                        event.data.userId === props.userId;
                 },
             },
         });
@@ -43,8 +43,8 @@ export default defineComponent({
         await manager.resolve({
             query: {
                 filters: {
-                    user_id: props.userId,
-                    role_id: props.roleId,
+                    userId: props.userId,
+                    roleId: props.roleId,
                 },
             },
         });
@@ -52,8 +52,8 @@ export default defineComponent({
         const handleChanged = (value: boolean) => {
             if (value) {
                 return manager.create({
-                    user_id: props.userId,
-                    role_id: props.roleId,
+                    userId: props.userId,
+                    roleId: props.roleId,
                 });
             }
 

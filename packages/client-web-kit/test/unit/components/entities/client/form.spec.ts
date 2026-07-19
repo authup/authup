@@ -25,34 +25,34 @@ function createEntity() : Client {
     return {
         id: 'f0b1e948-4e69-4b7e-9f0c-1a2b3c4d5e6f',
         active: true,
-        built_in: false,
-        auth_method: 'secret',
-        token_binding_method: 'none',
+        builtIn: false,
+        authMethod: 'secret',
+        tokenBindingMethod: 'none',
         name: 'my-app',
-        display_name: null,
+        displayName: null,
         description: null,
         secret: 'known-secret',
-        secret_hashed: false,
-        secret_encrypted: false,
-        redirect_uri: 'https://app.example.com/cb',
-        post_logout_redirect_uri: null,
-        grant_types: null,
+        secretHashed: false,
+        secretEncrypted: false,
+        redirectUri: 'https://app.example.com/cb',
+        postLogoutRedirectUri: null,
+        grantTypes: null,
         scope: null,
-        base_url: null,
-        root_url: null,
-        access_policy_id: '9c7a1f4e-0d2b-4a6c-8e1f-3b5d7a9c0e2f',
-        access_policy: null,
-        created_at: now,
-        updated_at: now,
-        realm_id: 'realm-1',
+        baseUrl: null,
+        rootUrl: null,
+        accessPolicyId: '9c7a1f4e-0d2b-4a6c-8e1f-3b5d7a9c0e2f',
+        accessPolicy: null,
+        createdAt: now,
+        updatedAt: now,
+        realmId: 'realm-1',
         realm: {
             id: 'realm-1',
             name: 'master',
-            display_name: null,
+            displayName: null,
             description: null,
-            built_in: true,
-            created_at: now,
-            updated_at: now,
+            builtIn: true,
+            createdAt: now,
+            updatedAt: now,
         },
     };
 }
@@ -64,7 +64,7 @@ function mountForm(entity: Client) {
             'POST /clients/:id': (request: FakeRequest) => ({
                 ...entity,
                 ...(request.body as Record<string, any>),
-                updated_at: '2026-01-02T00:00:00.000Z',
+                updatedAt: '2026-01-02T00:00:00.000Z',
             }),
         },
     });
@@ -146,11 +146,11 @@ describe('AClientForm access policy', () => {
 
         const picker = wrapper.findComponent({ name: 'APolicyPicker' });
         expect(picker.exists()).toBe(true);
-        expect(picker.props('value')).toEqual(entity.access_policy_id);
-        expect(picker.props('query')).toEqual({ filters: { realm_id: ['realm-1', null] } });
+        expect(picker.props('value')).toEqual(entity.accessPolicyId);
+        expect(picker.props('query')).toEqual({ filters: { realmId: ['realm-1', null] } });
     });
 
-    it('submits a changed access_policy_id on update', async () => {
+    it('submits a changed accessPolicyId on update', async () => {
         const entity = createEntity();
         const { wrapper, httpClient } = mountForm(entity);
         await flushPromises();
@@ -164,7 +164,7 @@ describe('AClientForm access policy', () => {
 
         const request = findUpdateRequest(httpClient);
         expect(request).toBeDefined();
-        expect(request!.body).toMatchObject({ access_policy_id: '1b2c3d4e-5f60-4172-8394-a5b6c7d8e9f0' });
+        expect(request!.body).toMatchObject({ accessPolicyId: '1b2c3d4e-5f60-4172-8394-a5b6c7d8e9f0' });
     });
 
     it('submits null when the picker selection is cleared', async () => {
@@ -181,6 +181,6 @@ describe('AClientForm access policy', () => {
 
         const request = findUpdateRequest(httpClient);
         expect(request).toBeDefined();
-        expect(request!.body).toHaveProperty('access_policy_id', null);
+        expect(request!.body).toHaveProperty('accessPolicyId', null);
     });
 });

@@ -16,7 +16,7 @@ export interface SessionToken {
     /**
      * Owning session.
      */
-    session_id: string;
+    sessionId: string;
 
     /**
      * Token kind.
@@ -27,42 +27,42 @@ export interface SessionToken {
      * Refresh tokens: previous refresh token in the rotation chain.
      * Informational — null on the initial refresh token and on access tokens.
      */
-    parent_id: string | null;
+    parentId: string | null;
 
     /**
      * Access tokens: the refresh token this access token was issued alongside.
      * Informational — null on refresh tokens.
      */
-    refresh_token_id: string | null;
+    refreshTokenId: string | null;
 
     /**
      * IP address captured from the issuing request.
      */
-    ip_address: string;
+    ipAddress: string;
 
     /**
      * User agent captured from the issuing request.
      */
-    user_agent: string;
+    userAgent: string;
 
     /**
      * Refresh tokens: timestamp the token was consumed by a rotation (iso).
      * null on access tokens and on a not-yet-used refresh token.
      */
-    consumed_at: string | null;
+    consumedAt: string | null;
 
     /**
      * Timestamp the token was revoked (iso) — single-token revoke or family revoke.
      */
-    revoked_at: string | null;
+    revokedAt: string | null;
 
     /**
      * Expiration date (iso) — mirrors the JWT exp. Drives cleanup.
      */
-    expires_at: string;
+    expiresAt: string;
 
     /**
      * Creation date (iso).
      */
-    created_at: string;
+    createdAt: string;
 }

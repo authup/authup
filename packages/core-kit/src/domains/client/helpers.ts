@@ -14,8 +14,8 @@ export function isClientNameValid(name: string, options: NameValidOptions = {}) 
     return isNameValid(name, options);
 }
 
-export function isClientPublic(client: Pick<Client, 'auth_method'>): boolean {
-    return client.auth_method === ClientAuthMethod.NONE;
+export function isClientPublic(client: Pick<Client, 'authMethod'>): boolean {
+    return client.authMethod === ClientAuthMethod.NONE;
 }
 
 export function buildClientCertificateURI(clientId: string): string {

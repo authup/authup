@@ -148,7 +148,7 @@ export class RobotController {
             if (entity) {
                 const robotRepository = this.dataSource.getRepository(RobotEntity);
                 const validAttributes = robotRepository.metadata.columns.map(
-                    (column) => column.databaseName,
+                    (column) => column.propertyName,
                 );
                 for (const attribute of attributes) {
                     const isValid = validAttributes.includes(attribute);

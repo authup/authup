@@ -29,36 +29,36 @@ const clientId = randomUUID();
 const realm: Realm = {
     id: realmId,
     name: 'master',
-    display_name: null,
+    displayName: null,
     description: null,
-    built_in: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    builtIn: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
 };
 
 const client: Client = {
     id: clientId,
     active: true,
-    built_in: true,
-    auth_method: 'none',
-    token_binding_method: 'none',
+    builtIn: true,
+    authMethod: 'none',
+    tokenBindingMethod: 'none',
     name: 'web',
-    display_name: null,
+    displayName: null,
     description: null,
     secret: null,
-    secret_hashed: false,
-    secret_encrypted: false,
-    redirect_uri: 'https://app.example.com/**',
-    post_logout_redirect_uri: 'https://app.example.com/**',
-    grant_types: null,
+    secretHashed: false,
+    secretEncrypted: false,
+    redirectUri: 'https://app.example.com/**',
+    postLogoutRedirectUri: 'https://app.example.com/**',
+    grantTypes: null,
     scope: null,
-    base_url: null,
-    root_url: null,
-    access_policy_id: null,
-    access_policy: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    realm_id: realmId,
+    baseUrl: null,
+    rootUrl: null,
+    accessPolicyId: null,
+    accessPolicy: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    realmId,
     realm,
 };
 
@@ -169,7 +169,7 @@ describe('OAuth2EndSessionService', () => {
             ...realm, 
             id: randomUUID(), 
             name: 'tenant-a', 
-            built_in: false,
+            builtIn: false,
         };
         const scopedRealmRepository = new FakeRealmRepository();
         scopedRealmRepository.seed([hintRealm]);
@@ -379,8 +379,8 @@ describe('OAuth2EndSessionService', () => {
         // post-logout allow-list does NOT — the redirect must be dropped
         const narrowClient: Client = {
             ...client,
-            redirect_uri: 'https://app.example.com/**',
-            post_logout_redirect_uri: 'https://app.example.com/only-here/**',
+            redirectUri: 'https://app.example.com/**',
+            postLogoutRedirectUri: 'https://app.example.com/only-here/**',
         };
         const service = new OAuth2EndSessionService({
             tokenVerifier: buildVerifier(async () => validPayload),
@@ -428,8 +428,8 @@ describe('OAuth2EndSessionService', () => {
         await sessionManager.create({
             id: sessionId,
             sub,
-            sub_kind: OAuth2SubKind.USER,
-            realm_id: realmId,
+            subKind: OAuth2SubKind.USER,
+            realmId,
         });
 
         const service = buildService(async () => validPayload);
@@ -443,8 +443,8 @@ describe('OAuth2EndSessionService', () => {
         await sessionManager.create({
             id: sessionId,
             sub: randomUUID(), // different subject
-            sub_kind: OAuth2SubKind.USER,
-            realm_id: realmId,
+            subKind: OAuth2SubKind.USER,
+            realmId,
         });
 
         const service = buildService(async () => validPayload);

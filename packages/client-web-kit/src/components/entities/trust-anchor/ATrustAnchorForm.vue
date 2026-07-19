@@ -69,7 +69,7 @@ export default defineComponent({
             name: '',
             certificate: '',
             enabled: true,
-            realm_id: '',
+            realmId: '',
         });
 
         const manager = defineEntityManager({
@@ -96,7 +96,7 @@ export default defineComponent({
                 return storeRefs.realmId.value;
             }
 
-            return manager.data.value ? manager.data.value.realm_id : null;
+            return manager.data.value ? manager.data.value.realmId : null;
         });
 
         const updatedAt = useUpdatedAt(() => props.entity);
@@ -105,7 +105,7 @@ export default defineComponent({
             assignFormProperties(form, manager.data.value, { fields: v.fields });
 
             if (props.realmId) {
-                form.realm_id = props.realmId;
+                form.realmId = props.realmId;
             }
 
             if (form.name.length === 0) {
@@ -222,16 +222,16 @@ export default defineComponent({
             <template v-if="!realmLock">
                 <IFieldValidation
                     v-slot="{ value }"
-                    :field="v.fields.realm_id"
+                    :field="v.fields.realmId"
                 >
                     <VCFormGroup :validation="value">
                         <template #label>
                             {{ translationsDefault.realm }}
                         </template>
                         <ARealmPicker
-                            :value="v.fields.realm_id.$model.value"
+                            :value="v.fields.realmId.$model.value"
                             @change="(input: string[]) => {
-                                v.fields.realm_id.$model.value = input.length > 0 ? input[0] ?? '' : '';
+                                v.fields.realmId.$model.value = input.length > 0 ? input[0] ?? '' : '';
                             }"
                         />
                     </VCFormGroup>

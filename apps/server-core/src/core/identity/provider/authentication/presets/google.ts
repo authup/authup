@@ -17,9 +17,9 @@ import { IdentityProviderOAuth2Authenticator } from '../protocols/index.ts';
 export class IdentityProviderGoogleAuthenticator extends IdentityProviderOAuth2Authenticator {
     constructor(ctx: IdentityProviderOAuth2AuthenticatorContext) {
         ctx.provider.scope = mergeOAuth2Scopes('openid profile email', ctx.provider.scope);
-        ctx.provider.authorize_url = 'https://accounts.google.com/o/oauth2/v2/auth';
-        ctx.provider.token_url = 'https://oauth2.googleapis.com/token';
-        ctx.provider.user_info_url = 'https://openidconnect.googleapis.com/v1/userinfo';
+        ctx.provider.authorizeUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
+        ctx.provider.tokenUrl = 'https://oauth2.googleapis.com/token';
+        ctx.provider.userInfoUrl = 'https://openidconnect.googleapis.com/v1/userinfo';
 
         super(ctx);
     }
@@ -43,10 +43,10 @@ export class IdentityProviderGoogleAuthenticator extends IdentityProviderOAuth2A
                 idTokenPayload.email,
             ];
 
-            attributeCandidates.first_name = [
+            attributeCandidates.firstName = [
                 idTokenPayload.given_name,
             ];
-            attributeCandidates.last_name = [
+            attributeCandidates.lastName = [
                 idTokenPayload.family_name,
             ];
         }

@@ -12,7 +12,7 @@ export interface CompositePolicy extends BasePolicy {
     /**
      * How to decide if a policy evaluates to true.
      */
-    decision_strategy?: `${DecisionStrategy}`,
+    decisionStrategy?: `${DecisionStrategy}`,
     /**
      * Child policies.
      */

@@ -70,10 +70,10 @@ export default defineComponent({
 
         const form = reactive({
             name: '',
-            display_name: '',
+            displayName: '',
             description: '',
-            decision_strategy: '',
-            realm_id: '',
+            decisionStrategy: '',
+            realmId: '',
         });
 
         const decisionStrategyOptions: FormOption[] = Object.values(DecisionStrategy)
@@ -87,7 +87,7 @@ export default defineComponent({
 
         const isEditing = useIsEditing(manager.data);
 
-        // `decision_strategy: ''` is the form's "no selection" sentinel
+        // `decisionStrategy: ''` is the form's "no selection" sentinel
         // (submitted as `null`); excess-property checks reject it against the
         // entity's DecisionStrategy union, so we narrow to Partial<Permission>.
         const v = useValidup(
@@ -105,12 +105,12 @@ export default defineComponent({
             }
 
             return manager.data.value ?
-                manager.data.value.realm_id :
+                manager.data.value.realmId :
                 null;
         });
 
         const updatedAt = useUpdatedAt(() => props.entity);
-        const isBuiltIn = computed(() => !!(manager.data.value && manager.data.value.built_in));
+        const isBuiltIn = computed(() => !!(manager.data.value && manager.data.value.builtIn));
 
         function initForm() {
             assignFormProperties(form, manager.data.value, { fields: v.fields });
@@ -120,7 +120,7 @@ export default defineComponent({
             }
 
             if (realmId.value) {
-                form.realm_id = realmId.value;
+                form.realmId = realmId.value;
             }
         }
 
@@ -142,7 +142,7 @@ export default defineComponent({
             try {
                 const data: Record<string, unknown> = {
                     ...form,
-                    decision_strategy: form.decision_strategy || null,
+                    decisionStrategy: form.decisionStrategy || null,
                 };
 
                 await manager.createOrUpdate(data);
@@ -189,7 +189,7 @@ export default defineComponent({
         );
 
         const decisionStrategyHintComputed = computed(() => {
-            switch (form.decision_strategy) {
+            switch (form.decisionStrategy) {
                 case DecisionStrategy.AFFIRMATIVE:
                     return translationsClient.decisionStrategyHintAffirmative;
                 case DecisionStrategy.CONSENSUS:
@@ -237,15 +237,15 @@ export default defineComponent({
 
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.display_name"
+            :field="v.fields.displayName"
         >
             <VCFormGroup :validation="value">
                 <template #label>
                     {{ translationsDefault.displayName }}
                 </template>
                 <VCFormInput
-                    :model-value="v.fields.display_name.$model.value ?? ''"
-                    @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
+                    :model-value="v.fields.displayName.$model.value ?? ''"
+                    @update:model-value="(next: string) => { v.fields.displayName.$model.value = next; }"
                 />
             </VCFormGroup>
         </IFieldValidation>
@@ -268,14 +268,14 @@ export default defineComponent({
 
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.decision_strategy"
+            :field="v.fields.decisionStrategy"
         >
             <VCFormGroup :validation="value">
                 <template #label>
                     {{ translationsDefault.decisionStrategy }}
                 </template>
                 <VCFormSelect
-                    v-model="v.fields.decision_strategy.$model.value"
+                    v-model="v.fields.decisionStrategy.$model.value"
                     :options="decisionStrategyOptions"
                     :placeholder="translationsClient.optionNoneUnanimous"
                 />
@@ -293,17 +293,17 @@ export default defineComponent({
         <template v-if="!realmId && !isEditing">
             <IFieldValidation
                 v-slot="{ value }"
-                :field="v.fields.realm_id"
+                :field="v.fields.realmId"
             >
                 <VCFormGroup :validation="value">
                     <template #label>
                         {{ translationsDefault.realm }}
                     </template>
                     <ARealmPicker
-                        :value="v.fields.realm_id.$model.value"
+                        :value="v.fields.realmId.$model.value"
                         :multiple="false"
                         @change="(input: string[]) => {
-                            v.fields.realm_id.$model.value = input.length > 0 ? input[0] ?? '' : '';
+                            v.fields.realmId.$model.value = input.length > 0 ? input[0] ?? '' : '';
                         }"
                     />
                 </VCFormGroup>

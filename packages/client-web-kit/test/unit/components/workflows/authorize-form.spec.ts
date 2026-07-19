@@ -37,35 +37,35 @@ const now = new Date(0).toISOString();
 const realm: Realm = {
     id: 'realm-x',
     name: 'master',
-    display_name: null,
+    displayName: null,
     description: null,
-    built_in: true,
-    created_at: now,
-    updated_at: now,
+    builtIn: true,
+    createdAt: now,
+    updatedAt: now,
 };
 
 // built_in → auto-consent fires the POST /authorize on mount.
 const client: Client = {
     id: 'client-1',
     active: true,
-    built_in: true,
-    auth_method: 'none',
-    token_binding_method: 'none',
+    builtIn: true,
+    authMethod: 'none',
+    tokenBindingMethod: 'none',
     name: 'web',
-    display_name: 'Web',
+    displayName: 'Web',
     description: null,
     secret: null,
-    secret_hashed: false,
-    secret_encrypted: false,
-    redirect_uri: null,
-    post_logout_redirect_uri: null,
-    grant_types: null,
+    secretHashed: false,
+    secretEncrypted: false,
+    redirectUri: null,
+    postLogoutRedirectUri: null,
+    grantTypes: null,
     scope: null,
-    base_url: null,
-    root_url: null,
-    created_at: now,
-    updated_at: now,
-    realm_id: 'realm-x',
+    baseUrl: null,
+    rootUrl: null,
+    createdAt: now,
+    updatedAt: now,
+    realmId: 'realm-x',
     realm,
 };
 
@@ -196,7 +196,7 @@ describe('AuthorizeForm dead-bearer resilience', () => {
 describe('AuthorizeForm abort redirect gate', () => {
     // non-built_in → no auto-consent; the manual consent UI (with the abort
     // action) renders immediately.
-    const interactiveClient: Client = { ...client, built_in: false };
+    const interactiveClient: Client = { ...client, builtIn: false };
 
     beforeEach(() => {
         Object.defineProperty(window, 'location', {
@@ -253,7 +253,7 @@ describe('AuthorizeForm abort redirect gate', () => {
 
 describe('AuthorizeForm persisted-consent auto-consent (plan 055)', () => {
     // non-built_in → auto-consent may only ride the consentGranted prop
-    const interactiveClient: Client = { ...client, built_in: false };
+    const interactiveClient: Client = { ...client, builtIn: false };
 
     it('auto-submits POST /authorize when consentGranted and no prompt=consent', async () => {
         let authorizeCalls = 0;

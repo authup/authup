@@ -90,7 +90,7 @@ describe('src/http/controllers/realm-scoped', () => {
             // route says master. If the override works, the user lands in
             // master and the permission check passes (admin is in master).
             // If body won instead, the request would 403.
-            const payload = { ...createFakeUser(), realm_id: scopedRealm.id };
+            const payload = { ...createFakeUser(), realmId: scopedRealm.id };
 
             const response = await httpRequest(suite, 'POST', `/realms/${masterRealm.id}/users`, {
                 headers: { Authorization: basicAuth, 'Content-Type': 'application/json' },
@@ -99,8 +99,8 @@ describe('src/http/controllers/realm-scoped', () => {
 
             expect(response.status).toEqual(201);
             const body = await response.json();
-            expect(body.realm_id).toEqual(masterRealm.id);
-            expect(body.realm_id).not.toEqual(scopedRealm.id);
+            expect(body.realmId).toEqual(masterRealm.id);
+            expect(body.realmId).not.toEqual(scopedRealm.id);
         });
     });
 

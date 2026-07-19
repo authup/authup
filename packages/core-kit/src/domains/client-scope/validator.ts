@@ -18,13 +18,13 @@ export class ClientScopeValidator extends Container<
         super.initialize();
 
         this.mount(
-            'client_id',
+            'clientId',
             { group: ValidatorGroup.CREATE },
             createValidator(z.uuid()),
         );
 
         this.mount(
-            'scope_id',
+            'scopeId',
             { group: ValidatorGroup.CREATE },
             createValidator(z.uuid()),
         );

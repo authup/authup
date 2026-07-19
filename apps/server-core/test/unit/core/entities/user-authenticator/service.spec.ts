@@ -56,21 +56,21 @@ function buildRealmCipher() {
         type: JWKType.OCT,
         use: JWKUse.ENCRYPTION,
         status: 'active',
-        signature_algorithm: null,
+        signatureAlgorithm: null,
         priority: 0,
-        decryption_key: cipherKey,
-        encryption_key: null,
-        created_at: timestamp,
-        updated_at: timestamp,
-        realm_id: realmId,
+        decryptionKey: cipherKey,
+        encryptionKey: null,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        realmId,
         realm: {
             id: realmId,
             name: 'master',
-            display_name: null,
+            displayName: null,
             description: null,
-            built_in: true,
-            created_at: timestamp,
-            updated_at: timestamp,
+            builtIn: true,
+            createdAt: timestamp,
+            updatedAt: timestamp,
         },
     };
 
@@ -94,7 +94,7 @@ function makeActor(options: {
             data: {
                 id: options.id ?? userId,
                 name: 'test-user',
-                realm_id: realmId,
+                realmId,
             } as User,
         };
     }
@@ -153,8 +153,8 @@ describe('UserAuthenticatorService', () => {
             expect(result.meta.qr).toContain('data:image/png');
             expect(result.data.confirmed).toBeFalsy();
             expect(result.data.secret).toBeNull();
-            expect(result.data.user_id).toEqual(userId);
-            expect(result.data.realm_id).toEqual(realmId);
+            expect(result.data.userId).toEqual(userId);
+            expect(result.data.realmId).toEqual(realmId);
 
             // at rest the seed is encrypted — never the raw base32
             const [stored] = await repository.findAllWithSecretsByUser(userId);
@@ -178,13 +178,13 @@ describe('UserAuthenticatorService', () => {
             userRepository.seed({
                 id: otherUserId, 
                 name: 'other', 
-                realm_id: realmId, 
+                realmId, 
             } as Partial<User>);
 
             expect.assertions(1);
             try {
                 await service.enroll(
-                    { kind: UserAuthenticatorKind.TOTP, user_id: otherUserId },
+                    { kind: UserAuthenticatorKind.TOTP, userId: otherUserId },
                     makeActor({ allow: false }),
                 );
             } catch (e) {
@@ -207,12 +207,12 @@ describe('UserAuthenticatorService', () => {
                 userRepository.seed({
                     id: otherUserId,
                     name: 'other',
-                    realm_id: realmId,
+                    realmId,
                 } as Partial<User>);
 
                 expect.assertions(2);
                 try {
-                    await service.enroll({ kind, user_id: otherUserId }, makeActor());
+                    await service.enroll({ kind, userId: otherUserId }, makeActor());
                 } catch (e) {
                     expect(isAuthupError(e)).toBeTruthy();
                     expect((e as { code?: string }).code).toEqual(ErrorCode.BAD_REQUEST);
@@ -228,15 +228,15 @@ describe('UserAuthenticatorService', () => {
                 id: otherUserId,
                 name: 'other',
                 email: 'other@example.com',
-                realm_id: realmId,
+                realmId,
             } as Partial<User>);
 
             const result = await service.enroll(
-                { kind: UserAuthenticatorKind.EMAIL, user_id: otherUserId },
+                { kind: UserAuthenticatorKind.EMAIL, userId: otherUserId },
                 makeActor(),
             );
 
-            expect(result.data.user_id).toEqual(otherUserId);
+            expect(result.data.userId).toEqual(otherUserId);
             expect(result.data.confirmed).toBeTruthy();
         });
     });
@@ -304,7 +304,7 @@ describe('UserAuthenticatorService', () => {
     });
 
     describe('verify (totp)', () => {
-        it('verifies a valid code and stamps last_used_at', async () => {
+        it('verifies a valid code and stamps lastUsedAt', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
             await service.confirm(enrolled.data.id, totpCode(enrolled.meta.secret!), makeActor());
 
@@ -315,7 +315,7 @@ describe('UserAuthenticatorService', () => {
             expect(verified).toBeTruthy();
 
             const [stored] = await repository.findAllWithSecretsByUser(userId);
-            expect(stored.last_used_at).toBeDefined();
+            expect(stored.lastUsedAt).toBeDefined();
         });
 
         it('rejects replay of an already-used login code within its window (#3237)', async () => {
@@ -570,7 +570,7 @@ describe('UserAuthenticatorService', () => {
                 id: userId,
                 name: 'test-user',
                 email: 'user@example.com',
-                realm_id: realmId,
+                realmId,
             } as Partial<User>);
             await service.enroll({ kind: UserAuthenticatorKind.EMAIL }, makeActor());
             await service.sendChallenge(userId, UserAuthenticatorKind.EMAIL);
@@ -650,7 +650,7 @@ describe('UserAuthenticatorService', () => {
                 id: userId,
                 name: 'test-user',
                 email: 'user@example.com',
-                realm_id: realmId,
+                realmId,
             } as Partial<User>);
         }
 
@@ -670,7 +670,7 @@ describe('UserAuthenticatorService', () => {
             userRepository.seed({
                 id: userId, 
                 name: 'no-email', 
-                realm_id: realmId,
+                realmId,
             } as Partial<User>);
 
             expect.assertions(1);
@@ -868,8 +868,8 @@ describe('UserAuthenticatorService', () => {
             // seed a confirmed webauthn device with credential parameters
             repository.seed({
                 kind: UserAuthenticatorKind.WEBAUTHN,
-                user_id: userId,
-                realm_id: realmId,
+                userId,
+                realmId,
                 confirmed: true,
                 parameters: JSON.stringify({
                     rp_id: 'localhost',
@@ -946,8 +946,8 @@ describe('UserAuthenticatorService', () => {
         it('denies foreign device access without permission', async () => {
             const entity = repository.seed({
                 kind: UserAuthenticatorKind.TOTP,
-                user_id: otherUserId,
-                realm_id: realmId,
+                userId: otherUserId,
+                realmId,
                 confirmed: true,
             });
 
@@ -969,8 +969,8 @@ describe('UserAuthenticatorService', () => {
         it('scopes a device to its owner on the nested route (404 across users)', async () => {
             const entity = repository.seed({
                 kind: UserAuthenticatorKind.TOTP,
-                user_id: otherUserId,
-                realm_id: realmId,
+                userId: otherUserId,
+                realmId,
             });
 
             expect.assertions(1);

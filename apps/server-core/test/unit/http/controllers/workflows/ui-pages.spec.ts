@@ -49,8 +49,8 @@ describe('src/http/controllers/workflows (SSR pages)', () => {
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
         const client = await suite.client.client.create(createFakeClient());
         await suite.client.clientScope.create({
-            scope_id: scope.id,
-            client_id: client.id,
+            scopeId: scope.id,
+            clientId: client.id,
         });
 
         const query = new URLSearchParams({
@@ -75,9 +75,9 @@ describe('src/http/controllers/workflows (SSR pages)', () => {
         expect(payload.data.error).toBeUndefined();
         expect(payload.data.client.id).toEqual(client.id);
         // the anonymous hydration payload carries only the trimmed client DTO —
-        // never redirect_uri patterns, grant_types, internal URLs, or the secret
-        expect(payload.data.client.redirect_uri).toBeUndefined();
-        expect(payload.data.client.grant_types).toBeUndefined();
+        // never redirectUri patterns, grantTypes, internal URLs, or the secret
+        expect(payload.data.client.redirectUri).toBeUndefined();
+        expect(payload.data.client.grantTypes).toBeUndefined();
         expect(payload.data.client.secret).toBeUndefined();
         expect(payload.data.codeRequest.client_id).toEqual(client.id);
         expect(payload.data.features).toBeDefined();

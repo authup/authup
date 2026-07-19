@@ -84,7 +84,7 @@ export abstract class AbstractEntityService {
 ```
 
 - `isActorMasterRealmMember(actor)` — `true` when the actor's identity belongs to the master realm.
-- `getActorRealmId(actor)` — extracts the actor's realm id, checking both `data.realm_id` and `data.realm.id`.
+- `getActorRealmId(actor)` — extracts the actor's realm id, checking both `data.realmId` and `data.realm.id`.
 
 **Example**
 ```ts
@@ -93,8 +93,8 @@ import type { ActorContext } from '@authup/server-kit';
 
 export class RoleService extends AbstractEntityService {
     async create(data: Record<string, any>, actor: ActorContext) {
-        if (!data.realm_id && actor.identity) {
-            data.realm_id = this.getActorRealmId(actor) || null;
+        if (!data.realmId && actor.identity) {
+            data.realmId = this.getActorRealmId(actor) || null;
         }
         // ...
     }

@@ -28,7 +28,7 @@ export type ClientCertificateValidatorContext = {
 export interface IClientCertificateValidator {
     validateForBinding(evidence: ClientCertificateEvidence): void;
     validateForAuthentication(
-        client: Pick<Client, 'id' | 'realm_id'>,
+        client: Pick<Client, 'id' | 'realmId'>,
         evidence: ClientCertificateEvidence,
     ): Promise<void>;
 }

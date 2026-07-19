@@ -28,11 +28,12 @@ export class RealmEntity implements Realm {
     name: string;
 
     @Column({
-        type: 'varchar',
-        length: 256,
+        name: 'display_name', 
+        type: 'varchar', 
+        length: 256, 
         nullable: true, 
     })
-    display_name: string | null;
+    displayName: string | null;
 
     @Column({
         type: 'text',
@@ -42,14 +43,15 @@ export class RealmEntity implements Realm {
     description: string | null;
 
     @Column({
-        type: 'boolean',
+        name: 'built_in', 
+        type: 'boolean', 
         default: false, 
     })
-    built_in: boolean;
+    builtIn: boolean;
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
+    createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
+    updatedAt: string;
 }

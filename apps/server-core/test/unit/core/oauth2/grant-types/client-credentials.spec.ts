@@ -29,7 +29,7 @@ describe('ClientCredentialsGrant', () => {
 
     const client = {
         id: clientId,
-        realm_id: realmId,
+        realmId,
         realm: {
             id: realmId,
             name: 'master',
@@ -72,10 +72,10 @@ describe('ClientCredentialsGrant', () => {
 
         expect(sessionManager.createCalls).toContainEqual(
             expect.objectContaining({
-                realm_id: realmId,
+                realmId,
                 sub: clientId,
-                sub_kind: IdentityType.CLIENT,
-                auth_method: 'client',
+                subKind: IdentityType.CLIENT,
+                authMethod: 'client',
             }),
         );
     });

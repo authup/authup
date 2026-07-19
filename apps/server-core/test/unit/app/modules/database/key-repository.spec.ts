@@ -39,7 +39,7 @@ describe('app/modules/database/repositories/key', () => {
         await dataSource.initialize();
 
         const realm = await dataSource.getRepository(RealmEntity).save(
-            dataSource.getRepository(RealmEntity).create({ name: 'master', built_in: true }),
+            dataSource.getRepository(RealmEntity).create({ name: 'master', builtIn: true }),
         );
         realmId = realm.id;
     });
@@ -51,11 +51,11 @@ describe('app/modules/database/repositories/key', () => {
     async function readRawMaterial(id: string) : Promise<string | null> {
         const row = await dataSource.getRepository(KeyEntity)
             .createQueryBuilder('key')
-            .addSelect('key.decryption_key')
+            .addSelect('key.decryptionKey')
             .where('key.id = :id', { id })
             .getOne();
 
-        return row?.decryption_key ?? null;
+        return row?.decryptionKey ?? null;
     }
 
     it('creates sig and enc keys lazily per (realm, use) — idempotent', async () => {
@@ -65,18 +65,18 @@ describe('app/modules/database/repositories/key', () => {
         expect(sig).toBeDefined();
         expect(sig!.type).toEqual(JWKType.RSA);
         expect(sig!.use).toEqual(JWKUse.SIGNATURE);
-        expect(sig!.signature_algorithm).toEqual('RS256');
-        expect(sig!.decryption_key).toBeDefined();
-        expect(sig!.encryption_key).toBeDefined();
+        expect(sig!.signatureAlgorithm).toEqual('RS256');
+        expect(sig!.decryptionKey).toBeDefined();
+        expect(sig!.encryptionKey).toBeDefined();
 
         const enc = await repository.resolveOrCreate(realmId, JWKUse.ENCRYPTION);
         expect(enc).toBeDefined();
         expect(enc!.type).toEqual(JWKType.OCT);
         expect(enc!.use).toEqual(JWKUse.ENCRYPTION);
-        expect(enc!.signature_algorithm).toBeNull();
-        expect(enc!.encryption_key).toBeNull();
+        expect(enc!.signatureAlgorithm).toBeNull();
+        expect(enc!.encryptionKey).toBeNull();
         // 32 bytes of oct material, usable as a cipher key as-is
-        expect(() => new SymmetricCipher(enc!.decryption_key!)).not.toThrow();
+        expect(() => new SymmetricCipher(enc!.decryptionKey!)).not.toThrow();
 
         expect(enc!.id).not.toEqual(sig!.id);
 
@@ -85,7 +85,7 @@ describe('app/modules/database/repositories/key', () => {
         const encAgain = await repository.resolveOrCreate(realmId, JWKUse.ENCRYPTION);
         expect(sigAgain!.id).toEqual(sig!.id);
         expect(encAgain!.id).toEqual(enc!.id);
-        expect(encAgain!.decryption_key).toEqual(enc!.decryption_key);
+        expect(encAgain!.decryptionKey).toEqual(enc!.decryptionKey);
 
         // minted keys carry a generated canonical name + active status
         expect(sig!.name).toMatch(/^sig-[a-z0-9]+$/);
@@ -109,10 +109,10 @@ describe('app/modules/database/repositories/key', () => {
             use: JWKUse.SIGNATURE,
             status: KeyStatus.PASSIVE,
             priority: 99,
-            encryption_key: 'stub-public',
-            decryption_key: 'stub-private',
-            signature_algorithm: 'RS256',
-            realm_id: realm.id,
+            encryptionKey: 'stub-public',
+            decryptionKey: 'stub-private',
+            signatureAlgorithm: 'RS256',
+            realmId: realm.id,
         }));
 
         const resolved = await repository.resolveOrCreate(realm.id, JWKUse.SIGNATURE);
@@ -146,14 +146,14 @@ describe('app/modules/database/repositories/key', () => {
 
         const enc = await repository.resolveOrCreate(realm.id, JWKUse.ENCRYPTION);
         // the caller always receives usable material ...
-        expect(() => new SymmetricCipher(enc!.decryption_key!)).not.toThrow();
+        expect(() => new SymmetricCipher(enc!.decryptionKey!)).not.toThrow();
 
         // ... while the row stores it wrapped
         const raw = await readRawMaterial(enc!.id);
         expect(raw!.startsWith(WRAPPED_KEY_MATERIAL_PREFIX)).toBeTruthy();
 
         const reRead = await repository.resolveById(enc!.id);
-        expect(reRead!.decryption_key).toEqual(enc!.decryption_key);
+        expect(reRead!.decryptionKey).toEqual(enc!.decryptionKey);
     });
 
     it('lazily wraps pre-existing plaintext rows once a KEK appears', async () => {
@@ -167,14 +167,14 @@ describe('app/modules/database/repositories/key', () => {
 
         const wrappedRepository = new KeyRepositoryAdapter(dataSource, { secretsCipher: KEK });
         const reRead = await wrappedRepository.resolveById(enc!.id);
-        expect(reRead!.decryption_key).toEqual(enc!.decryption_key);
+        expect(reRead!.decryptionKey).toEqual(enc!.decryptionKey);
 
         // the read wrote the wrapped form back
         expect((await readRawMaterial(enc!.id))!.startsWith(WRAPPED_KEY_MATERIAL_PREFIX)).toBeTruthy();
 
         // and it still round-trips through the wrapped repository
         const again = await wrappedRepository.resolveById(enc!.id);
-        expect(again!.decryption_key).toEqual(enc!.decryption_key);
+        expect(again!.decryptionKey).toEqual(enc!.decryptionKey);
     });
 
     it('fails loud when wrapped material meets a KEK-less repository', async () => {

@@ -29,14 +29,14 @@ export default defineComponent({
             setup,
             query: () => ({
                 filters: {
-                    user_id: props.userId,
-                    permission_id: props.permissionId,
+                    userId: props.userId,
+                    permissionId: props.permissionId,
                 },
             }),
             socket: {
                 processEvent(event) {
-                    return event.data.permission_id === props.permissionId &&
-                        event.data.user_id === props.userId;
+                    return event.data.permissionId === props.permissionId &&
+                        event.data.userId === props.userId;
                 },
             },
         });
@@ -44,8 +44,8 @@ export default defineComponent({
         await manager.resolve({
             query: {
                 filters: {
-                    user_id: props.userId,
-                    permission_id: props.permissionId,
+                    userId: props.userId,
+                    permissionId: props.permissionId,
                 },
             },
         });
@@ -53,8 +53,8 @@ export default defineComponent({
         const handleChanged = (value: boolean) => {
             if (value) {
                 return manager.create({
-                    user_id: props.userId,
-                    permission_id: props.permissionId,
+                    userId: props.userId,
+                    permissionId: props.permissionId,
                 });
             }
 
@@ -73,8 +73,8 @@ export default defineComponent({
         // no id → the binding control treats it as create mode. Memoized so the template keeps a
         // stable reference while unassigned.
         const bindingEntity = computed<Partial<UserPermission>>(() => manager.data.value || {
-            user_id: props.userId,
-            permission_id: props.permissionId,
+            userId: props.userId,
+            permissionId: props.permissionId,
         });
 
         return {

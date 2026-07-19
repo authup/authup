@@ -20,11 +20,11 @@ export class FakeRealmRepository extends FakeEntityRepository<Realm> implements 
         this.masterRealm = {
             id: randomUUID(),
             name: REALM_MASTER_NAME,
-            display_name: null,
+            displayName: null,
             description: null,
-            built_in: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+            builtIn: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
         };
         this.seed([this.masterRealm]);
     }

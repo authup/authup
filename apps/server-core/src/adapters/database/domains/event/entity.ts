@@ -29,7 +29,7 @@ import { dateToISOStringTransformer } from '../../helpers/index.ts';
 // plain columns without FKs — a row must survive deletion of everything it
 // references. Not cached, not realtime-broadcast: no subscriber.
 @Index(['name', 'scope'])
-@Index(['ref_type', 'ref_id'])
+@Index(['refType', 'refId'])
 @Entity({ name: 'auth_events' })
 export class EventEntity implements Event {
     @PrimaryColumn({ type: 'uuid' })
@@ -48,94 +48,105 @@ export class EventEntity implements Event {
     name: `${EventName}`;
 
     @Column({
-        type: 'varchar',
-        length: 64,
-        nullable: true,
-        default: null,
+        name: 'ref_type', 
+        type: 'varchar', 
+        length: 64, 
+        nullable: true, 
+        default: null, 
     })
-    ref_type: string | null;
+    refType: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 64,
-        nullable: true,
-        default: null,
+        name: 'ref_id', 
+        type: 'varchar', 
+        length: 64, 
+        nullable: true, 
+        default: null, 
     })
-    ref_id: string | null;
-
-    @Index()
-    @Column({
-        type: 'uuid',
-        nullable: true,
-        default: null,
-    })
-    client_id: string | null;
-
-    @Column({
-        type: 'varchar',
-        length: 16,
-        nullable: true,
-        default: null,
-    })
-    actor_type: `${IdentityType}` | null;
+    refId: string | null;
 
     @Index()
     @Column({
-        type: 'uuid',
-        nullable: true,
-        default: null,
+        name: 'client_id', 
+        type: 'uuid', 
+        nullable: true, 
+        default: null, 
     })
-    actor_id: string | null;
+    clientId: string | null;
+
+    @Column({
+        name: 'actor_type', 
+        type: 'varchar', 
+        length: 16, 
+        nullable: true, 
+        default: null, 
+    })
+    actorType: `${IdentityType}` | null;
 
     @Index()
     @Column({
-        type: 'varchar',
-        length: 128,
-        nullable: true,
-        default: null,
+        name: 'actor_id', 
+        type: 'uuid', 
+        nullable: true, 
+        default: null, 
     })
-    actor_name: string | null;
-
-    @Column({
-        type: 'varchar',
-        length: 256,
-        nullable: true,
-        default: null,
-    })
-    request_path: string | null;
-
-    @Column({
-        type: 'varchar',
-        length: 10,
-        nullable: true,
-        default: null,
-    })
-    request_method: string | null;
+    actorId: string | null;
 
     @Index()
     @Column({
-        type: 'varchar',
-        length: 45,
-        nullable: true,
-        default: null,
+        name: 'actor_name', 
+        type: 'varchar', 
+        length: 128, 
+        nullable: true, 
+        default: null, 
     })
-    request_ip_address: string | null;
+    actorName: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 512,
-        nullable: true,
-        default: null,
+        name: 'request_path', 
+        type: 'varchar', 
+        length: 256, 
+        nullable: true, 
+        default: null, 
     })
-    request_user_agent: string | null;
+    requestPath: string | null;
+
+    @Column({
+        name: 'request_method', 
+        type: 'varchar', 
+        length: 10, 
+        nullable: true, 
+        default: null, 
+    })
+    requestMethod: string | null;
 
     @Index()
     @Column({
-        type: 'uuid',
-        nullable: true,
-        default: null,
+        name: 'request_ip_address', 
+        type: 'varchar', 
+        length: 45, 
+        nullable: true, 
+        default: null, 
     })
-    realm_id: Realm['id'] | null;
+    requestIpAddress: string | null;
+
+    @Column({
+        name: 'request_user_agent', 
+        type: 'varchar', 
+        length: 512, 
+        nullable: true, 
+        default: null, 
+    })
+    requestUserAgent: string | null;
+
+    @Index()
+    @Column({
+        name: 'realm_id', 
+        type: 'uuid', 
+        nullable: true, 
+        default: null, 
+    })
+    realmId: Realm['id'] | null;
 
     @Column({
         type: 'text',
@@ -162,14 +173,15 @@ export class EventEntity implements Event {
 
     @Index()
     @Column({
-        type: 'varchar',
-        length: 28,
-        nullable: true,
-        default: null,
+        name: 'expires_at', 
+        type: 'varchar', 
+        length: 28, 
+        nullable: true, 
+        default: null, 
     })
-    expires_at: string | null;
+    expiresAt: string | null;
 
     @Index()
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
+    createdAt: string;
 }

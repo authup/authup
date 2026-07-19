@@ -8,13 +8,13 @@
 import type { IdentityProvider, IdentityProviderProtocol, Realm } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
+import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IIdentityProviderRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
 import type { IdentityProviderRepository } from '../../../../../adapters/database/domains/index.ts';
 import { IdentityProviderEntity } from '../../../../../adapters/database/domains/index.ts';
-import { translateWhereConditions } from '../helpers.ts';
+import { isEntityUnique, translateWhereConditions } from '../helpers.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export type IdentityProviderRepositoryAdapterContext = {
@@ -48,17 +48,17 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
                 default: [
                     'id',
                     'name',
-                    'display_name',
+                    'displayName',
                     'protocol',
                     'preset',
                     'enabled',
-                    'realm_id',
-                    'created_at',
-                    'updated_at',
+                    'realmId',
+                    'createdAt',
+                    'updatedAt',
                 ],
             },
-            filters: { allowed: ['name', 'protocol', 'enabled', 'realm_id', 'realm.name'] },
-            sort: { allowed: ['id', 'created_at', 'updated_at'] },
+            filters: { allowed: ['name', 'protocol', 'enabled', 'realmId', 'realm.name'] },
+            sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
             pagination: { maxLimit: 50 },
         });
 
@@ -90,7 +90,7 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
             if (!realmId) {
                 return null;
             }
-            qb.andWhere('provider.realm_id = :realmId', { realmId });
+            qb.andWhere('provider.realmId = :realmId', { realmId });
         }
 
         const entity = await qb.getOne();
@@ -168,7 +168,7 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
             if (!realmId) {
                 return [];
             }
-            qb.andWhere('provider.realm_id = :realmId', { realmId });
+            qb.andWhere('provider.realmId = :realmId', { realmId });
         }
 
         const entities = await qb.getMany();

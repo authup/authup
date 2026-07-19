@@ -78,7 +78,7 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
             codeVerifier,
             clientId: client.id,
             clientIsPublic: isClientPublic(client),
-            realmId: client.realm_id,
+            realmId: client.realmId,
         });
 
         // Application access policy (plan 052), /token backstop: a code
@@ -86,10 +86,10 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
         // must not redeem. The subject is built from the code-blob scalars —
         // no DB identity load; attribute-rich policies are enforced at the
         // issuance legs. Denial = invalid_grant, never access_denied here.
-        if (client.access_policy_id) {
+        if (client.accessPolicyId) {
             let allowed = false;
             if (this.accessPolicyEvaluator) {
-                allowed = await this.accessPolicyEvaluator.evaluate(client.access_policy_id, {
+                allowed = await this.accessPolicyEvaluator.evaluate(client.accessPolicyId, {
                     type: entity.sub_kind,
                     id: entity.sub,
                     realmId: entity.realm_id ?? null,

@@ -19,7 +19,7 @@ export class ClientSubscriber extends EntitySubscriber<Client> {
         super({
             type: EntityType.CLIENT,
             target: ClientEntity,
-            destinations: buildEntityDestinations(EntityType.CLIENT, (data) => [data.realm_id]),
+            destinations: buildEntityDestinations(EntityType.CLIENT, (data) => [data.realmId]),
             cache: {
                 keys: (data) => [
                     buildRedisKeyPath({

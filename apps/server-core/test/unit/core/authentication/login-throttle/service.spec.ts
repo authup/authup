@@ -54,10 +54,10 @@ describe('LoginThrottleService', () => {
         repository.seed({
             scope: EventScope.OAUTH2,
             name: EventName.LOGIN_FAILED,
-            actor_name: data.identifier ?? IDENTIFIER,
-            request_ip_address: data.ip ?? IP,
-            realm_id: typeof data.realm === 'undefined' ? realmId : data.realm,
-            created_at: new Date(Date.now() - ((data.ageSeconds ?? 0) * 1_000)).toISOString(),
+            actorName: data.identifier ?? IDENTIFIER,
+            requestIpAddress: data.ip ?? IP,
+            realmId: typeof data.realm === 'undefined' ? realmId : data.realm,
+            createdAt: new Date(Date.now() - ((data.ageSeconds ?? 0) * 1_000)).toISOString(),
         });
     }
 

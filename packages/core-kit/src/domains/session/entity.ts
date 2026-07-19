@@ -25,72 +25,72 @@ export interface Session {
     /**
      * Subject kind (e.g. user, robot, client)
      */
-    sub_kind: string,
+    subKind: string,
 
     /**
      * Last used ip address.
      */
-    ip_address: string,
+    ipAddress: string,
 
     /**
      * Last used user agent.
      */
-    user_agent: string,
+    userAgent: string,
 
     // ------------------------------------------------------------------
 
     /**
      * Expiration date (iso)
      */
-    expires_at: string,
+    expiresAt: string,
 
     /**
      * Time session was renewed.
      */
-    refreshed_at: string | null,
+    refreshedAt: string | null,
 
     /**
      * Last time subject was seen.
      */
-    seen_at: string | null,
+    seenAt: string | null,
 
     /**
      * Time the subject last passed a second-factor (MFA) challenge for
      * this session (iso). Null when no challenge was performed.
      */
-    mfa_at: string | null,
+    mfaAt: string | null,
 
     /**
      * How the subject authenticated (see SessionAuthMethod).
      * Null for sessions created before the column existed.
      */
-    auth_method: `${SessionAuthMethod}` | null,
+    authMethod: `${SessionAuthMethod}` | null,
 
     /**
      * Last time new access-token, refresh-token created for session.
      */
-    updated_at: string,
+    updatedAt: string,
 
     /**
      * Creation date of session
      */
-    created_at: string,
+    createdAt: string,
 
     // ------------------------------------------------------------------
 
-    client_id: Client['id'] | null;
+    clientId: Client['id'] | null;
 
     client: Client | null;
 
-    user_id: User['id'] | null,
+    userId: User['id'] | null,
 
     user: User | null,
 
-    robot_id: Robot['id'] | null,
+    robotId: Robot['id'] | null,
 
     robot: Robot | null,
 
-    realm_id: Realm['id'];
+    realmId: Realm['id'];
 
     realm: Realm;
 }

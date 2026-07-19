@@ -38,7 +38,7 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
     protected isOwnedBy(consent: Consent, actor: ActorContext): boolean {
         return !!actor.identity &&
             consent.sub === actor.identity.data.id &&
-            consent.sub_kind === actor.identity.type;
+            consent.subKind === actor.identity.type;
     }
 
     protected normalizeScopeTokens(scope: string | string[] | null): string[] {
@@ -115,7 +115,7 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
 
     async getOne(id: string, actor: ActorContext, options: ConsentServiceReadOptions = {}): Promise<Consent> {
         const entity = await this.repository.findOneById(id);
-        if (!entity || (options.realmId && entity.realm_id !== options.realmId)) {
+        if (!entity || (options.realmId && entity.realmId !== options.realmId)) {
             // A realm mismatch on the nested mount fails as not-found (no
             // cross-realm existence oracle).
             throw new EntityNotFoundError();
@@ -137,7 +137,7 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
 
     async delete(id: string, actor: ActorContext, options: ConsentServiceReadOptions = {}): Promise<Consent> {
         const entity = await this.repository.findOneById(id);
-        if (!entity || (options.realmId && entity.realm_id !== options.realmId)) {
+        if (!entity || (options.realmId && entity.realmId !== options.realmId)) {
             throw new EntityNotFoundError();
         }
 
@@ -184,7 +184,7 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
 
         return tokens.every((token) => rows.some(
             (row) => row.scope === token &&
-                (row.expires_at === null || row.expires_at > now),
+                (row.expiresAt === null || row.expiresAt > now),
         ));
     }
 }

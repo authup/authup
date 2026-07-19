@@ -49,7 +49,7 @@ describe('src/policy', () => {
         compositePolicy = definePolicyWithType(
             BuiltInPolicyType.COMPOSITE,
             {
-                decision_strategy: DecisionStrategy.UNANIMOUS,
+                decisionStrategy: DecisionStrategy.UNANIMOUS,
                 children: [
                     attributePolicy,
                     attributeNamesPolicy,

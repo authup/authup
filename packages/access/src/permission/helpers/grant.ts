@@ -14,9 +14,9 @@ import type { PermissionGrant } from '../types';
  * Policy fields that do NOT affect evaluation — persisted identity, audit and label columns plus
  * the loaded `parent` / `realm` relation objects. They are stripped before the structural compare
  * in isPolicyEquivalent so two DISTINCT rows with identical configuration still match. Verified
- * against every built-in evaluator, which read only `type`, `invert`, `decision_strategy`,
+ * against every built-in evaluator, which read only `type`, `invert`, `decisionStrategy`,
  * `children` and the type-specific config (query / names / types / start / end / interval /
- * day_of_* / attribute_name* / scope). `parent` is additionally a circular back-reference and
+ * dayOf* / attributeName* / scope). `parent` is additionally a circular back-reference and
  * `realm` a nested object with its own id, so leaving either in would break the deep compare.
  *
  * SECURITY INVARIANT: every key here MUST stay non-evaluation-affecting. Adding an
@@ -25,16 +25,16 @@ import type { PermissionGrant } from '../types';
  */
 const NON_SEMANTIC_POLICY_KEYS = new Set<string>([
     'id',
-    'built_in',
+    'builtIn',
     'name',
-    'display_name',
+    'displayName',
     'description',
-    'parent_id',
+    'parentId',
     'parent',
-    'realm_id',
+    'realmId',
     'realm',
-    'created_at',
-    'updated_at',
+    'createdAt',
+    'updatedAt',
 ]);
 
 /**
@@ -122,7 +122,7 @@ function policyDominates(parent?: BasePolicy, child?: BasePolicy): boolean {
  * every child grant must be dominated by SOME parent grant.
  */
 export function grantDominates(parent: PermissionGrant, child: PermissionGrant): boolean {
-    if (compareRealmScope(parent.realm_scope, child.realm_scope) < 0) {
+    if (compareRealmScope(parent.realmScope, child.realmScope) < 0) {
         return false;
     }
 

@@ -19,7 +19,7 @@ export class UserSubscriber extends EntitySubscriber<User> {
         super({
             type: EntityType.USER,
             target: UserEntity,
-            destinations: buildEntityDestinations(EntityType.USER, (data) => [data.realm_id]),
+            destinations: buildEntityDestinations(EntityType.USER, (data) => [data.realmId]),
             cache: {
                 keys: (data) => [
                     buildRedisKeyPath({

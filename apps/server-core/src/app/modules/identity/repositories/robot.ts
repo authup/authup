@@ -47,7 +47,7 @@ export class RobotIdentityRepository implements IRobotIdentityRepository {
 
             if (realmKey) {
                 if (isUUID(realmKey)) {
-                    query.andWhere('robot.realm_id = :realmId', { realmId: realmKey });
+                    query.andWhere('robot.realmId = :realmId', { realmId: realmKey });
                 } else {
                     query.andWhere('realm.name = :realmName', { realmName: realmKey.trim().toLowerCase() });
                 }
@@ -57,7 +57,7 @@ export class RobotIdentityRepository implements IRobotIdentityRepository {
         const { columns } = this.repository.metadata;
         for (const column of columns) {
             if (!column.isSelect) {
-                query.addSelect(`robot.${column.databaseName}`);
+                query.addSelect(`robot.${column.propertyName}`);
             }
         }
 

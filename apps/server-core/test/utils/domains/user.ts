@@ -8,7 +8,7 @@
 import { faker } from '@faker-js/faker';
 import type { User } from '@authup/core-kit';
 
-// UserValidator requires >=3 characters for name/first_name/last_name;
+// UserValidator requires >=3 characters for name/firstName/lastName;
 // faker occasionally draws shorter values (e.g. "Al"), which made the
 // suite flaky.
 function atLeast(value: string, min = 3): string {
@@ -18,12 +18,12 @@ function atLeast(value: string, min = 3): string {
 export function createFakeUser(data: Partial<User> = {}) {
     return {
         name: atLeast(faker.internet.username().toLowerCase()),
-        display_name: faker.internet.displayName(),
+        displayName: faker.internet.displayName(),
         email: faker.internet.email().toLowerCase(),
-        name_locked: false,
+        nameLocked: false,
         active: true,
-        first_name: atLeast(faker.person.firstName()),
-        last_name: atLeast(faker.person.lastName()),
+        firstName: atLeast(faker.person.firstName()),
+        lastName: atLeast(faker.person.lastName()),
         password: faker.string.alphanumeric({ length: 64 }),
         ...data,
     } satisfies Partial<User>;

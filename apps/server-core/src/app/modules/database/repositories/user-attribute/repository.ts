@@ -26,12 +26,12 @@ export class UserAttributeRepositoryAdapter implements IUserAttributeRepository 
 
         const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'userAttribute',
-            filters: { allowed: ['id', 'name', 'user_id', 'realm_id'] },
-            sort: { allowed: ['id', 'name', 'user_id', 'realm_id', 'created_at', 'updated_at'] },
+            filters: { allowed: ['id', 'name', 'userId', 'realmId'] },
+            sort: { allowed: ['id', 'name', 'userId', 'realmId', 'createdAt', 'updatedAt'] },
             pagination: { maxLimit: 50 },
         });
 
-        applyRealmScopeSelect(qb, 'userAttribute', ['user_id']);
+        applyRealmScopeSelect(qb, 'userAttribute', ['userId']);
 
         const [entities, total] = await qb.getManyAndCount();
 

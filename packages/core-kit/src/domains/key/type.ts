@@ -28,7 +28,7 @@ export interface Key {
     /**
      * Algorithm for signing and verifying. Null for enc keys.
      */
-    signature_algorithm: `${JWTAlgorithm}` | null
+    signatureAlgorithm: `${JWTAlgorithm}` | null
 
     /**
      * Usage priority.
@@ -49,22 +49,22 @@ export interface Key {
     /**
      * aka private key
      */
-    decryption_key: string | null,
+    decryptionKey: string | null,
 
     /**
      * aka public key
      */
-    encryption_key: string | null,
+    encryptionKey: string | null,
 
     // ------------------------------------------------------------------
 
-    created_at: string,
+    createdAt: string,
 
-    updated_at: string,
+    updatedAt: string,
 
     // ------------------------------------------------------------------
 
-    realm_id: Realm['id'],
+    realmId: Realm['id'],
 
     realm: Realm
 }

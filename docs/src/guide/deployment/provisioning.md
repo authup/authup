@@ -16,27 +16,27 @@ redirects the browser to `/authorize?client_id=web&realm_id=<id>`.
 
 The client is provisioned for every existing realm on startup and for any
 realm created at runtime. Provisioning is idempotent: re-runs refresh the
-client's `redirect_uri` allowlist but never duplicate it.
+client's `redirectUri` allowlist but never duplicate it.
 
 Its attributes are fixed:
 
 | Attribute         | Value                                                              |
 |-------------------|--------------------------------------------------------------------|
 | `name`            | `web`                                                              |
-| `auth_method`     | `none` (public — no secret, PKCE required)                        |
-| `token_binding_method` | `none`                                                       |
-| `built_in`        | `true`                                                            |
-| `grant_types`     | `authorization_code refresh_token`                                |
+| `authMethod`      | `none` (public — no secret, PKCE required)                        |
+| `tokenBindingMethod` | `none`                                                         |
+| `builtIn`         | `true`                                                            |
+| `grantTypes`      | `authorization_code refresh_token`                                |
 | `scope`           | `global openid`                                                  |
-| `redirect_uri`    | `<origin>/**` for every trusted app origin (see below)            |
+| `redirectUri`     | `<origin>/**` for every trusted app origin (see below)            |
 
-Because the `web` client is built-in and `built_in` is stripped from any
+Because the `web` client is built-in and `builtIn` is stripped from any
 client you create yourself, the name `web` (and `system`) is reserved —
 attempting to create or rename a client to it returns a `400 Bad Request`.
 
 ### Trusted app origins
 
-The `redirect_uri` allowlist is derived from the set of trusted app origins:
+The `redirectUri` allowlist is derived from the set of trusted app origins:
 the origin of `publicUrl` plus every entry in `trustedOrigins`
 (`TRUSTED_ORIGINS`). An entry may be a full http(s) origin
 (`https://app.example.com`; other protocols are rejected) or a bare host
@@ -74,8 +74,13 @@ invalid `email`, unknown policy `type`, ...) aborts startup with a validation
 error instead of being silently provisioned. Identifier fields are
 canonicalized (trimmed and lowercased), and attribute keys that are not part
 of the entity's schema are stripped. Unlike the API, provisioning files may
-set `built_in: true` on policies, permissions, scopes, roles, realms, and
+set `builtIn: true` on policies, permissions, scopes, roles, realms, and
 clients, and a user's `email` is optional (a placeholder is generated).
+
+Attribute keys use **camelCase** (`realmId`, `displayName`, `authMethod`, …).
+Snake_case keys (`realm_id`, `display_name`, …) are not accepted — unmounted
+keys are stripped by the validator, so a stale snake_case key is silently
+dropped. Write provisioning files in camelCase.
 
 ### Docker / Kubernetes
 
@@ -123,7 +128,7 @@ export default {
                 ],
                 clients: [
                     {
-                        attributes: { name: 'acme-app', auth_method: 'secret', secret: 'my-secret' },
+                        attributes: { name: 'acme-app', authMethod: 'secret', secret: 'my-secret' },
                         relations: { globalPermissions: ['*'] },
                     },
                 ],
@@ -188,22 +193,22 @@ The top-level object has five optional arrays. Items at this level are **global*
 
 | Field              | Type                     | Description                          |
 |--------------------|--------------------------|--------------------------------------|
-| `attributes`       | object                   | `name` (required), `type`, `built_in`, `realm_id` |
-| `extraAttributes`  | object                   | Policy-specific configuration (e.g. `decision_strategy`, `attribute_name`) |
+| `attributes`       | object                   | `name` (required), `type`, `builtIn`, `realmId` |
+| `extraAttributes`  | object                   | Policy-specific configuration (e.g. `decisionStrategy`, `attributeName`) |
 | `children`         | `PolicyProvisioning[]`   | Child policies (for composite policies) |
 
 ### Policy Extra Attributes
 
-Policies use `extraAttributes` for their type-specific configuration. All attribute keys use **snake_case**.
+Policies use `extraAttributes` for their type-specific configuration. All attribute keys use **camelCase** (the policy `type` values, e.g. `realm_match`, remain snake_case — they are enum values, not property keys).
 
 | Policy Type | Attribute | Type | Description |
 |---|---|---|---|
-| `composite` | `decision_strategy` | `string` | `unanimous` or `affirmative` |
-| `realm_match` | `attribute_name` | `string[]` | Entity attributes to match against identity realm |
-| `realm_match` | `attribute_name_strict` | `boolean` | Require all listed attributes to match |
-| `realm_match` | `identity_master_match_all` | `boolean` | Whether master realm identities bypass realm checks |
-| `realm_match` | `attribute_null_match_all` | `boolean` | Whether `null` attribute values match any realm |
-| `attributes` | `query` | `object` | MongoDB-style query (e.g. `{ realm_id: { $ne: null } }`) |
+| `composite` | `decisionStrategy` | `string` | `unanimous` or `affirmative` |
+| `realm_match` | `attributeName` | `string[]` | Entity attributes to match against identity realm |
+| `realm_match` | `attributeNameStrict` | `boolean` | Require all listed attributes to match |
+| `realm_match` | `identityMasterMatchAll` | `boolean` | Whether master realm identities bypass realm checks |
+| `realm_match` | `attributeNullMatchAll` | `boolean` | Whether `null` attribute values match any realm |
+| `attributes` | `query` | `object` | MongoDB-style query (e.g. `{ realmId: { $ne: null } }`) |
 | `time` | `start` | `string` | ISO 8601 start datetime |
 | `time` | `end` | `string` | ISO 8601 end datetime |
 
@@ -214,13 +219,13 @@ policies:
   - attributes:
       name: system.realm-match
       type: realm_match
-      built_in: true
+      builtIn: true
     extraAttributes:
-      attribute_name:
-        - realm_id
-      attribute_name_strict: false
-      identity_master_match_all: false
-      attribute_null_match_all: true
+      attributeName:
+        - realmId
+      attributeNameStrict: false
+      identityMasterMatchAll: false
+      attributeNullMatchAll: true
 ```
 
 ### Permission
@@ -228,21 +233,21 @@ policies:
 | Field        | Type               | Description                          |
 |--------------|--------------------|--------------------------------------|
 | `strategy`   | `Strategy`         | Sync strategy (optional)             |
-| `attributes` | object             | `name` (required), `description`, `display_name` |
+| `attributes` | object             | `name` (required), `description`, `displayName` |
 
 ### Scope
 
 | Field        | Type               | Description                          |
 |--------------|--------------------|--------------------------------------|
 | `strategy`   | `Strategy`         | Sync strategy (optional)             |
-| `attributes` | object             | `name` (required), `description`, `display_name` |
+| `attributes` | object             | `name` (required), `description`, `displayName` |
 
 ### Role
 
 | Field        | Type               | Description                          |
 |--------------|--------------------|--------------------------------------|
 | `strategy`   | `Strategy`         | Sync strategy (optional)             |
-| `attributes` | object             | `name` (required), `description`, `display_name` |
+| `attributes` | object             | `name` (required), `description`, `displayName` |
 | `relations`  | object             | See below                            |
 
 **Role relations:**
@@ -251,8 +256,8 @@ policies:
 |--------------------------------|------------|--------------------------------------------------------------------------------------|
 | `globalPermissions`                | `string[]`              | Permission names to assign (global scope). `'*'` = all.                             |
 | `globalPermissionsExclude`         | `string[]`              | Permission names to exclude when using `'*'` wildcard in `globalPermissions`.        |
-| `globalPermissionsRealmScope`      | `string`                | Default `realm_scope` (`own`, `ownOrNull`, `any`) stamped on each `globalPermissions` junction entry. |
-| `globalPermissionsRealmScopeOverrides` | `Record<string, string[]>` | Per-permission `realm_scope` overrides. Key = `realm_scope` value, value = permission names. |
+| `globalPermissionsRealmScope`      | `string`                | Default `realmScope` (`own`, `ownOrNull`, `any`) stamped on each `globalPermissions` junction entry. |
+| `globalPermissionsRealmScopeOverrides` | `Record<string, string[]>` | Per-permission `realmScope` overrides. Key = `realmScope` value, value = permission names. |
 | `realmPermissions`                 | `string[]`              | Permission names to assign (realm scope). `'*'` = all.                              |
 
 ### Realm
@@ -260,7 +265,7 @@ policies:
 | Field        | Type               | Description                          |
 |--------------|--------------------|--------------------------------------|
 | `strategy`   | `Strategy`         | Sync strategy (optional)             |
-| `attributes` | object             | `name` (required), `description`, `display_name` |
+| `attributes` | object             | `name` (required), `description`, `displayName` |
 | `relations`  | object             | See below                            |
 
 **Realm relations** (all optional):
@@ -281,7 +286,7 @@ Users must be nested inside a realm.
 | Field        | Type               | Description                          |
 |--------------|--------------------|--------------------------------------|
 | `strategy`   | `Strategy`         | Sync strategy (optional)             |
-| `attributes` | object             | `name` (required), `email`, `password`, `active`, `display_name` |
+| `attributes` | object             | `name` (required), `email`, `password`, `active`, `displayName` |
 | `relations`  | object             | See below                            |
 
 If `email` is omitted, a placeholder is generated automatically.
@@ -304,7 +309,7 @@ Clients (OAuth2 applications) must be nested inside a realm.
 | Field        | Type               | Description                          |
 |--------------|--------------------|--------------------------------------|
 | `strategy`   | `Strategy`         | Sync strategy (optional)             |
-| `attributes` | object             | `name` (required), `auth_method`, `token_binding_method`, `secret`, `display_name`, `redirect_uri` |
+| `attributes` | object             | `name` (required), `authMethod`, `tokenBindingMethod`, `secret`, `displayName`, `redirectUri` |
 | `relations`  | object             | See below                            |
 
 **Client relations:**
@@ -325,7 +330,7 @@ Robot (service) accounts must be nested inside a realm.
 | Field        | Type               | Description                          |
 |--------------|--------------------|--------------------------------------|
 | `strategy`   | `Strategy`         | Sync strategy (optional)             |
-| `attributes` | object             | `name` (required), `secret`, `active`, `display_name` |
+| `attributes` | object             | `name` (required), `secret`, `active`, `displayName` |
 | `relations`  | object             | See below                            |
 
 **Robot relations:**
@@ -365,7 +370,7 @@ strategy:
   type: merge
   attributes:
     - description
-    - display_name
+    - displayName
 ```
 
 ### `replace`
@@ -402,13 +407,13 @@ roles:
 ```
 
 Use `globalPermissionsExclude` to exclude specific permissions from a wildcard,
-`globalPermissionsRealmScope` to set the default junction `realm_scope`,
+`globalPermissionsRealmScope` to set the default junction `realmScope`,
 and `globalPermissionsRealmScopeOverrides` to override the scope for specific permissions:
 
 ```typescript
 roles: [
     {
-        attributes: { name: 'realm_admin', built_in: true },
+        attributes: { name: 'realm_admin', builtIn: true },
         relations: {
             globalPermissions: ['*'],
             globalPermissionsExclude: ['realm_create', 'realm_update', 'realm_delete'],
@@ -431,7 +436,7 @@ This creates a `realm_admin` role that:
 ## Merging Behavior
 
 When multiple provisioning files (or sources) define the same entity, the **last one wins**.
-Entity identity is determined by the composite key: `name` + `realm_id` + `client_id`.
+Entity identity is determined by the composite key: `name` + `realmId` + `clientId`.
 
 The built-in defaults are always loaded first, so your files can override default entities
 using the `merge` or `replace` strategy.

@@ -30,21 +30,21 @@ export class FakeEventRepository implements IEventRepository {
     create(data: Partial<Event>): Event {
         return {
             id: randomUUID(),
-            ref_type: null,
-            ref_id: null,
-            client_id: null,
-            actor_type: null,
-            actor_id: null,
-            actor_name: null,
-            request_path: null,
-            request_method: null,
-            request_ip_address: null,
-            request_user_agent: null,
-            realm_id: null,
+            refType: null,
+            refId: null,
+            clientId: null,
+            actorType: null,
+            actorId: null,
+            actorName: null,
+            requestPath: null,
+            requestMethod: null,
+            requestIpAddress: null,
+            requestUserAgent: null,
+            realmId: null,
             data: null,
             expiring: false,
-            expires_at: null,
-            created_at: new Date().toISOString(),
+            expiresAt: null,
+            createdAt: new Date().toISOString(),
             ...data,
         } as Event;
     }
@@ -78,16 +78,16 @@ export class FakeEventRepository implements IEventRepository {
 
         if (options.owner) {
             const { owner } = options;
-            data = data.filter((row) => row.actor_id === owner.actorId &&
-                row.actor_type === owner.actorType);
+            data = data.filter((row) => row.actorId === owner.actorId &&
+                row.actorType === owner.actorType);
         }
         if (options.realmId) {
-            data = data.filter((row) => row.realm_id === options.realmId);
+            data = data.filter((row) => row.realmId === options.realmId);
         }
         if (options.visibility) {
             const { owner, realmIds } = options.visibility;
-            data = data.filter((row) => realmIds.includes(row.realm_id) ||
-                (!!owner && row.actor_id === owner.actorId && row.actor_type === owner.actorType));
+            data = data.filter((row) => realmIds.includes(row.realmId) ||
+                (!!owner && row.actorId === owner.actorId && row.actorType === owner.actorType));
         }
 
         return {
@@ -107,21 +107,21 @@ export class FakeEventRepository implements IEventRepository {
             if (row.name !== filter.name) {
                 return false;
             }
-            if (new Date(row.created_at).getTime() <= since) {
+            if (new Date(row.createdAt).getTime() <= since) {
                 return false;
             }
-            if (filter.actorName && row.actor_name !== filter.actorName) {
+            if (filter.actorName && row.actorName !== filter.actorName) {
                 return false;
             }
-            if (filter.requestIpAddress && row.request_ip_address !== filter.requestIpAddress) {
+            if (filter.requestIpAddress && row.requestIpAddress !== filter.requestIpAddress) {
                 return false;
             }
             if (typeof filter.realmId !== 'undefined') {
                 if (filter.realmId === null) {
-                    if (row.realm_id !== null) {
+                    if (row.realmId !== null) {
                         return false;
                     }
-                } else if (row.realm_id !== filter.realmId) {
+                } else if (row.realmId !== filter.realmId) {
                     return false;
                 }
             }
@@ -135,8 +135,8 @@ export class FakeEventRepository implements IEventRepository {
         const before = this.rows.length;
 
         this.rows = this.rows.filter((row) => !row.expiring ||
-            row.expires_at === null ||
-            new Date(row.expires_at).getTime() >= nowTime);
+            row.expiresAt === null ||
+            new Date(row.expiresAt).getTime() >= nowTime);
 
         return before - this.rows.length;
     }

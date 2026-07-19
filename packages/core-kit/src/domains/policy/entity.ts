@@ -17,13 +17,13 @@ export type PolicyWithType<
 export interface Policy {
     id: string;
 
-    built_in: boolean;
+    builtIn: boolean;
 
     type: string;
 
     name: string;
 
-    display_name: string | null;
+    displayName: string | null;
 
     description: string | null;
 
@@ -31,19 +31,19 @@ export interface Policy {
 
     children: PolicyWithType<Policy>[];
 
-    parent_id: Policy['id'] | null;
+    parentId: Policy['id'] | null;
 
     parent: PolicyWithType<Policy> | null;
 
     // ------------------------------------------------------------------
 
-    realm_id: Realm['id'] | null;
+    realmId: Realm['id'] | null;
 
     realm: Realm | null;
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 }

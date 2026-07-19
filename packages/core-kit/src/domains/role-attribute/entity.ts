@@ -17,17 +17,17 @@ export interface RoleAttribute {
 
     // ------------------------------------------------------------------
 
-    role_id: Role['id'];
+    roleId: Role['id'];
 
     role: Role;
 
-    realm_id: Realm['id'] | null;
+    realmId: Realm['id'] | null;
 
     realm: Realm | null;
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 }

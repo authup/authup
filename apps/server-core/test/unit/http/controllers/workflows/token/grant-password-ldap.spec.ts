@@ -52,8 +52,8 @@ describe('src/http/controllers/identity-provider', () => {
             url: createLdapTestClientURL(),
             user: 'cn=admin,dc=example,dc=com',
             password: 'password',
-            base_dn: 'dc=example,dc=com',
-            user_name_attribute: 'cn',
+            baseDn: 'dc=example,dc=com',
+            userNameAttribute: 'cn',
         });
 
         const response = await suite.client

@@ -28,15 +28,15 @@ export class IdentityProviderRoleMappingRepositoryAdapter implements IIdentityPr
             defaultAlias: 'providerRole',
             filters: {
                 allowed: [
-                    'role_id',
-                    'provider_id',
+                    'roleId',
+                    'providerId',
                 ],
             },
             sort: {
                 allowed: [
                     'id',
-                    'created_at',
-                    'updated_at',
+                    'createdAt',
+                    'updatedAt',
                 ],
             },
             relations: {

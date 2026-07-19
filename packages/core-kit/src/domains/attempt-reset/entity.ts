@@ -8,15 +8,15 @@
 export interface AttemptReset {
     id: string,
 
-    ip_address: string,
+    ipAddress: string,
 
-    user_agent: string,
+    userAgent: string,
 
     email: string,
 
     token: string | null,
 
-    created_at: string,
+    createdAt: string,
 
-    updated_at: string,
+    updatedAt: string,
 }

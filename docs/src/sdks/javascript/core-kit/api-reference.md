@@ -13,17 +13,17 @@ interface Client {
 
     active: boolean;
 
-    built_in: boolean;
+    builtIn: boolean;
 
-    auth_method: 'none' | 'secret' | 'tls',
+    authMethod: 'none' | 'secret' | 'tls',
 
-    token_binding_method: 'none' | 'tls',
+    tokenBindingMethod: 'none' | 'tls',
 
     // ------------------------------------------------------------------
 
     name: string,
 
-    display_name: string | null;
+    displayName: string | null;
 
     description: string | null,
 
@@ -31,31 +31,31 @@ interface Client {
 
     secret: string | null,
 
-    secret_hashed: boolean,
+    secretHashed: boolean,
 
-    secret_encrypted: boolean,
+    secretEncrypted: boolean,
 
     // ------------------------------------------------------------------
 
-    redirect_uri: string | null,
+    redirectUri: string | null,
 
-    grant_types: string | null,
+    grantTypes: string | null,
 
     scope: string | null,
 
-    base_url: string | null,
+    baseUrl: string | null,
 
-    root_url: string | null,
-
-    // ------------------------------------------------------------------
-
-    created_at: string,
-
-    updated_at: string,
+    rootUrl: string | null,
 
     // ------------------------------------------------------------------
 
-    realm_id: Realm['id'],
+    createdAt: string,
+
+    updatedAt: string,
+
+    // ------------------------------------------------------------------
+
+    realmId: Realm['id'],
 
     realm: Realm,
 }
@@ -79,7 +79,7 @@ interface IdentityProvider {
 
     name: string,
 
-    display_name: string | null;
+    displayName: string | null;
 
     protocol: `${IdentityProviderProtocol}` | null;
 
@@ -87,11 +87,11 @@ interface IdentityProvider {
 
     enabled: boolean;
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 
-    realm_id: Realm['id'];
+    realmId: Realm['id'];
 
     realm: Realm;
 }
@@ -141,33 +141,33 @@ import {
 interface IdentityProviderAccount {
     id: string;
 
-    provider_user_id: string;
+    providerUserId: string;
 
-    provider_user_name: string;
+    providerUserName: string;
 
-    provider_user_email: string;
+    providerUserEmail: string;
 
-    created_at: Date;
+    createdAt: Date;
 
-    updated_at: Date;
+    updatedAt: Date;
 
     // -----------------------------------------------
 
-    user_id: string;
+    userId: string;
 
     user: User;
 
-    user_realm_id: Realm['id'] | null;
+    userRealmId: Realm['id'] | null;
 
-    user_realm: Realm | null;
+    userRealm: Realm | null;
 
-    provider_id: IdentityProvider['id'];
+    providerId: IdentityProvider['id'];
 
     provider: IdentityProvider;
 
-    provider_realm_id: Realm['id'] | null;
+    providerRealmId: Realm['id'] | null;
 
-    provider_realm: Realm | null;
+    providerRealm: Realm | null;
 }
 ```
 **References**
@@ -188,19 +188,19 @@ import {
 interface IdentityProviderRoleMapping extends IdentityProviderBaseMapping {
     id: string;
 
-    created_at: Date;
+    createdAt: Date;
 
-    updated_at: Date;
+    updatedAt: Date;
 
     // -----------------------------------------------
 
-    role_id: string;
+    roleId: string;
 
     role: Role;
 
-    role_realm_id: Realm['id'] | null;
+    roleRealmId: Realm['id'] | null;
 
-    role_realm: Realm | null;
+    roleRealm: Realm | null;
 }
 ```
 
@@ -224,17 +224,17 @@ interface IdentityProviderBaseMapping {
 
     value: string | null;
 
-    value_is_regex: boolean;
+    valueIsRegex: boolean;
 
-    synchronization_mode: `${IdentityProviderMappingSyncMode}` | null;
+    synchronizationMode: `${IdentityProviderMappingSyncMode}` | null;
 
-    provider_id: IdentityProvider['id'];
+    providerId: IdentityProvider['id'];
 
     provider: IdentityProvider;
 
-    provider_realm_id: Realm['id'];
+    providerRealmId: Realm['id'];
 
-    provider_realm: Realm;
+    providerRealm: Realm;
 }
 ```
 
@@ -262,13 +262,13 @@ import { PolicyWithType, Realm } from '@authup/core-kit';
 interface Policy {
     id: string;
 
-    built_in: boolean;
+    builtIn: boolean;
 
     type: string;
 
     name: string;
 
-    display_name: string | null;
+    displayName: string | null;
 
     description: string | null;
 
@@ -276,21 +276,21 @@ interface Policy {
 
     children: PolicyWithType<Policy>[];
 
-    parent_id: Policy['id'] | null;
+    parentId: Policy['id'] | null;
 
     parent: PolicyWithType<Policy> | null;
 
     // ------------------------------------------------------------------
 
-    realm_id: Realm['id'] | null;
+    realmId: Realm['id'] | null;
 
     realm: Realm | null;
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 }
 ```
 
@@ -306,37 +306,37 @@ import { Client, Policy, Realm } from '@authup/core-kit';
 interface Permission {
     id: string;
 
-    built_in: boolean;
+    builtIn: boolean;
 
     name: string;
 
-    display_name: string | null;
+    displayName: string | null;
 
     description: string | null;
 
     // ------------------------------------------------------------------
 
-    policy_id: Policy['id'] | null;
+    policyId: Policy['id'] | null;
 
     policy: Policy | null;
 
     // ------------------------------------------------------------------
 
-    client_id: Client['id'] | null;
+    clientId: Client['id'] | null;
 
     client: Client | null;
 
     // ------------------------------------------------------------------
 
-    realm_id: Realm['id'] | null;
+    realmId: Realm['id'] | null;
 
     realm: Realm | null;
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 }
 ```
 
@@ -352,17 +352,17 @@ interface Permission {
 import { Permission, Policy, Realm } from '@authup/core-kit';
 
 interface PermissionRelation {
-    policy_id: Policy['id'] | null;
+    policyId: Policy['id'] | null;
 
     policy: Policy | null;
 
-    permission_id: Permission['id'];
+    permissionId: Permission['id'];
 
     permission: Permission;
 
-    permission_realm_id: Realm['id'] | null;
+    permissionRealmId: Realm['id'] | null;
 
-    permission_realm: Realm | null;
+    permissionRealm: Realm | null;
 }
 ```
 
@@ -380,15 +380,15 @@ interface Realm {
 
     name: string;
 
-    display_name: string | null;
+    displayName: string | null;
 
     description: string | null;
 
-    built_in: boolean;
+    builtIn: boolean;
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 }
 ```
 
@@ -405,7 +405,7 @@ interface Robot {
 
     name: string;
 
-    display_name: string | null;
+    displayName: string | null;
 
     description: string;
 
@@ -413,25 +413,25 @@ interface Robot {
 
     // ------------------------------------------------------------------
 
-    created_at: Date;
+    createdAt: Date;
 
-    updated_at: Date;
+    updatedAt: Date;
 
     // ------------------------------------------------------------------
 
-    user_id: User['id'] | null;
+    userId: User['id'] | null;
 
     user: User | null;
 
     // ------------------------------------------------------------------
 
-    client_id: Client['id'] | null;
+    clientId: Client['id'] | null;
 
     client: Client | null;
 
     // ------------------------------------------------------------------
 
-    realm_id: Realm['id'];
+    realmId: Realm['id'];
 
     realm: Realm;
 }
@@ -453,19 +453,19 @@ interface RobotPermission extends PermissionRelation {
 
     // ------------------------------------------------------------------
 
-    created_at: Date;
+    createdAt: Date;
 
-    updated_at: Date;
+    updatedAt: Date;
 
     // ------------------------------------------------------------------
 
-    robot_id: string;
+    robotId: string;
 
     robot: Robot;
 
-    robot_realm_id: Realm['id'] | null;
+    robotRealmId: Realm['id'] | null;
 
-    robot_realm: Realm | null;
+    robotRealm: Realm | null;
 }
 ```
 
@@ -483,29 +483,29 @@ import { Realm, Robot, Role } from '@authup/core-kit';
 interface RobotRole {
     id: string;
 
-    robot_id: string;
+    robotId: string;
 
-    role_id: string;
+    roleId: string;
 
     // ------------------------------------------------------------------
 
     role: Role;
 
-    role_realm_id: Realm['id'] | null;
+    roleRealmId: Realm['id'] | null;
 
-    role_realm: Realm | null;
+    roleRealm: Realm | null;
 
     robot: Robot;
 
-    robot_realm_id: Realm['id'] | null;
+    robotRealmId: Realm['id'] | null;
 
-    robot_realm: Realm | null;
+    robotRealm: Realm | null;
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 }
 ```
 
@@ -523,11 +523,11 @@ import { Client, Realm } from '@authup/core-kit';
 interface Role {
     id: string;
 
-    built_in: boolean;
+    builtIn: boolean;
 
     name: string;
 
-    display_name: string | null;
+    displayName: string | null;
 
     target: string | null;
 
@@ -535,21 +535,21 @@ interface Role {
 
     // ------------------------------------------------------------------
 
-    client_id: Client['id'] | null;
+    clientId: Client['id'] | null;
 
     client: Client | null;
 
     // ------------------------------------------------------------------
 
-    realm_id: Realm['id'] | null;
+    realmId: Realm['id'] | null;
 
     realm: Realm | null;
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 }
 
 ```
@@ -573,19 +573,19 @@ interface RoleAttribute {
 
     // ------------------------------------------------------------------
 
-    role_id: Role['id'];
+    roleId: Role['id'];
 
     role: Role;
 
-    realm_id: Realm['id'] | null;
+    realmId: Realm['id'] | null;
 
     realm: Realm | null;
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 }
 ```
 
@@ -604,19 +604,19 @@ interface RolePermission extends PermissionRelation {
 
     // ------------------------------------------------------------------
 
-    created_at: Date;
+    createdAt: Date;
 
-    updated_at: Date;
+    updatedAt: Date;
 
     // ------------------------------------------------------------------
 
-    role_id: string;
+    roleId: string;
 
     role: Role;
 
-    role_realm_id: Realm['id'] | null;
+    roleRealmId: Realm['id'] | null;
 
-    role_realm: Realm | null;
+    roleRealm: Realm | null;
 }
 ```
 
@@ -636,13 +636,13 @@ interface User {
 
     name: string;
 
-    name_locked: boolean;
+    nameLocked: boolean;
 
-    first_name: string | null;
+    firstName: string | null;
 
-    last_name: string | null;
+    lastName: string | null;
 
-    display_name: string | null;
+    displayName: string | null;
 
     email: string;
 
@@ -656,39 +656,39 @@ interface User {
 
     // ------------------------------------------------------------------
 
-    reset_hash: string | null;
+    resetHash: string | null;
 
-    reset_at: string | null;
+    resetAt: string | null;
 
-    reset_expires: string | null;
+    resetExpires: string | null;
 
     // ------------------------------------------------------------------
 
     status: string | null;
 
-    status_message: string | null;
+    statusMessage: string | null;
 
     // ------------------------------------------------------------------
 
     active: boolean;
 
-    activate_hash: string | null;
+    activateHash: string | null;
 
     // ------------------------------------------------------------------
 
-    created_at: Date;
+    createdAt: Date;
 
-    updated_at: Date;
+    updatedAt: Date;
 
     // ------------------------------------------------------------------
 
-    client_id: Client['id'] | null;
+    clientId: Client['id'] | null;
 
     client: Client | null;
 
     // ------------------------------------------------------------------
 
-    realm_id: Realm['id'];
+    realmId: Realm['id'];
 
     realm: Realm;
 
@@ -717,19 +717,19 @@ interface UserAttribute {
 
     // ------------------------------------------------------------------
 
-    user_id: User['id'];
+    userId: User['id'];
 
     user: User;
 
-    realm_id: Realm['id'];
+    realmId: Realm['id'];
 
     realm: Realm;
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 }
 ```
 
@@ -748,19 +748,19 @@ interface UserPermission extends PermissionRelation {
 
     // ------------------------------------------------------------------
 
-    created_at: Date;
+    createdAt: Date;
 
-    updated_at: Date;
+    updatedAt: Date;
 
     // ------------------------------------------------------------------
 
-    user_id: User['id'];
+    userId: User['id'];
 
     user: User;
 
-    user_realm_id: Realm['id'] | null;
+    userRealmId: Realm['id'] | null;
 
-    user_realm: Realm | null;
+    userRealm: Realm | null;
 }
 ```
 
@@ -780,27 +780,27 @@ interface UserRole {
 
     // ------------------------------------------------------------------
 
-    role_id: Role['id'];
+    roleId: Role['id'];
 
     role: Role;
 
-    role_realm_id: Realm['id'] | null;
+    roleRealmId: Realm['id'] | null;
 
-    role_realm: Realm | null;
+    roleRealm: Realm | null;
 
-    user_id: User['id'];
+    userId: User['id'];
 
     user: User;
 
-    user_realm_id: Realm['id'] | null;
+    userRealmId: Realm['id'] | null;
 
-    user_realm: Realm | null;
+    userRealm: Realm | null;
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 }
 ```
 

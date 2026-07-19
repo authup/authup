@@ -266,7 +266,7 @@ export class AuthorizationMiddleware {
         // ticket subject.
         if (
             session.sub !== payload.sub ||
-            session.sub_kind !== IdentityType.USER
+            session.subKind !== IdentityType.USER
         ) {
             throw JWTError.expired();
         }

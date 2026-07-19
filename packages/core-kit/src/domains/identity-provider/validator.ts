@@ -43,7 +43,7 @@ export class IdentityProviderValidator extends Container<IdentityProvider> {
             optional: true,
         }, nameValidator);
 
-        this.mount('display_name', { optional: true }, createValidator(
+        this.mount('displayName', { optional: true }, createValidator(
             zod.string().min(3).max(256).nullable(),
         ));
 
@@ -55,7 +55,7 @@ export class IdentityProviderValidator extends Container<IdentityProvider> {
         }, enabledValidator);
 
         this.mount(
-            'realm_id',
+            'realmId',
             {
                 group: ValidatorGroup.CREATE,
                 optional: true,

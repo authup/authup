@@ -31,8 +31,8 @@ async function renderAuthorizePage(suite: TestHTTPApplication) : Promise<string>
     const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
     const client = await suite.client.client.create(createFakeClient());
     await suite.client.clientScope.create({
-        scope_id: scope.id,
-        client_id: client.id,
+        scopeId: scope.id,
+        clientId: client.id,
     });
 
     const query = new URLSearchParams({

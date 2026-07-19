@@ -27,10 +27,10 @@ export const CONSENT_SCOPE_MAX_LENGTH = 128;
  */
 export const CONSENT_FILTER_KEYS = [
     'id',
-    'client_id',
-    'realm_id',
+    'clientId',
+    'realmId',
     'sub',
-    'sub_kind',
+    'subKind',
     'scope',
 ] as const;
 

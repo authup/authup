@@ -30,6 +30,6 @@ describe('http/controller/password', () => {
             .user
             .passwordForgot({ name: 'admin' });
 
-        expect(response.reset_expires).toBeDefined();
+        expect(response.resetExpires).toBeDefined();
     });
 });

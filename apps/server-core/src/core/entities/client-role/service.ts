@@ -21,7 +21,7 @@ export type ClientRoleServiceContext = {
 };
 
 export class ClientRoleService extends JunctionEntityService implements IClientRoleService {
-    protected readonly ownerRealmKey = 'client_realm_id';
+    protected readonly ownerRealmKey = 'clientRealmId';
 
     protected repository: IClientRoleRepository;
 
@@ -82,19 +82,19 @@ export class ClientRoleService extends JunctionEntityService implements IClientR
         await this.repository.validateJoinColumns(validated);
 
         const existing = await this.repository.findOneBy({
-            role_id: validated.role_id,
-            client_id: validated.client_id,
+            roleId: validated.roleId,
+            clientId: validated.clientId,
         });
         if (existing) {
             throw new EntityConflictError({ entity: 'client-role' });
         }
 
         if (validated.role) {
-            validated.role_realm_id = validated.role.realm_id;
+            validated.roleRealmId = validated.role.realmId;
         }
 
         if (validated.client) {
-            validated.client_realm_id = validated.client.realm_id;
+            validated.clientRealmId = validated.client.realmId;
         }
 
         if (validated.role && actor.identity) {
@@ -105,8 +105,8 @@ export class ClientRoleService extends JunctionEntityService implements IClientR
                 },
                 {
                     type: 'role',
-                    id: validated.role_id,
-                    clientId: validated.role.client_id,
+                    id: validated.roleId,
+                    clientId: validated.role.clientId,
                 },
             );
             if (!hasPermissions) {
@@ -114,7 +114,7 @@ export class ClientRoleService extends JunctionEntityService implements IClientR
             }
         }
 
-        // Stamp the owner (client) realm so the realm_scope factor gates cross-realm writes.
+        // Stamp the owner (client) realm so the realmScope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_ROLE_CREATE,
             data: definePolicyData({
@@ -140,7 +140,7 @@ export class ClientRoleService extends JunctionEntityService implements IClientR
             throw new EntityNotFoundError();
         }
 
-        // Stamp the owner (client) realm so the realm_scope factor gates cross-realm writes.
+        // Stamp the owner (client) realm so the realmScope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_ROLE_DELETE,
             data: definePolicyData({

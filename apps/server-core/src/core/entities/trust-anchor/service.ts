@@ -118,14 +118,14 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
 
         const validated = await this.validator.run(data, { group: ValidatorGroup.CREATE });
 
-        if (!validated.realm_id && actor.identity) {
+        if (!validated.realmId && actor.identity) {
             const actorRealmId = this.getActorRealmId(actor);
             if (actorRealmId) {
-                validated.realm_id = actorRealmId;
+                validated.realmId = actorRealmId;
             }
         }
 
-        if (!validated.realm_id) {
+        if (!validated.realmId) {
             throw new ValidationError('A realm must be specified.');
         }
 
@@ -187,7 +187,7 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
         if (validated.name && validated.name !== entity.name) {
             await this.repository.checkUniqueness({
                 name: validated.name,
-                realm_id: entity.realm_id,
+                realmId: entity.realmId,
             }, entity);
         }
 
@@ -254,7 +254,7 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
             name,
             refType: EntityType.TRUST_ANCHOR,
             refId: entity.id,
-            realmId: entity.realm_id ?? null,
+            realmId: entity.realmId ?? null,
             actorType: actor.identity?.type ?? null,
             actorId: actor.identity?.data.id ?? null,
             actorName: actor.identity?.data.name ?? null,

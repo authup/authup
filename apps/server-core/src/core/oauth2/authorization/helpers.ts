@@ -17,24 +17,24 @@ import { subtle } from 'uncrypto';
 
 /**
  * Derive the OIDC `amr` / `acr` claims from the backing session's
- * auth_method + mfa_at (plan 050). Pre-column sessions (null auth_method)
+ * authMethod + mfaAt (plan 050). Pre-column sessions (null authMethod)
  * yield no claims — authup cannot retroactively know how an old session
  * authenticated. M2M methods yield none either (amr/acr are user-flow
  * claims; those grants mint no id_token).
  */
 export function deriveAmrAcr(
-    session: Pick<Session, 'auth_method' | 'mfa_at'> | null,
+    session: Pick<Session, 'authMethod' | 'mfaAt'> | null,
 ): Pick<OAuth2TokenPayload, 'amr' | 'acr'> {
-    if (!session || !session.auth_method) {
+    if (!session || !session.authMethod) {
         return {};
     }
 
     const amr : string[] = [];
-    switch (session.auth_method) {
+    switch (session.authMethod) {
         case SessionAuthMethod.PASSWORD:
         case SessionAuthMethod.LDAP: {
             // LDAP is still a password factor for amr — the finer
-            // distinction lives in the authup-local auth_method.
+            // distinction lives in the authup-local authMethod.
             amr.push(OAuth2AuthenticationMethodReference.PASSWORD);
             break;
         }
@@ -47,13 +47,13 @@ export function deriveAmrAcr(
         }
     }
 
-    if (session.mfa_at) {
+    if (session.mfaAt) {
         amr.push(OAuth2AuthenticationMethodReference.OTP);
     }
 
     return {
         amr,
-        acr: session.mfa_at ?
+        acr: session.mfaAt ?
             OAuth2AuthenticationContextClass.MFA :
             OAuth2AuthenticationContextClass.PASSWORD,
     };

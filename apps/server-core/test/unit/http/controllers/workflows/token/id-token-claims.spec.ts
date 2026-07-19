@@ -41,16 +41,16 @@ describe('src/http/controllers/token (id_token amr/acr claims)', () => {
 
         oauthClient = await suite.client.client.create(createFakeClient({
             secret: clientSecret,
-            secret_hashed: false,
-            secret_encrypted: false,
-            auth_method: 'secret',
-            token_binding_method: 'none',
+            secretHashed: false,
+            secretEncrypted: false,
+            authMethod: 'secret',
+            tokenBindingMethod: 'none',
         }));
         for (const name of [ScopeName.GLOBAL, ScopeName.OPEN_ID]) {
             const scope = await suite.client.scope.getOne(name);
             await suite.client.clientScope.create({
-                scope_id: scope.id,
-                client_id: oauthClient.id,
+                scopeId: scope.id,
+                clientId: oauthClient.id,
             });
         }
     });
@@ -156,7 +156,7 @@ describe('src/http/controllers/token (id_token amr/acr claims)', () => {
         });
         await enrollBearer.userAuthenticator.confirm('@me', enrolled.data.id, { code: totp.generate() });
 
-        // fresh login WITH the second factor — the session carries mfa_at
+        // fresh login WITH the second factor — the session carries mfaAt
         const withOtp = await httpRequest(suite, 'POST', '/token', {
             form: {
                 grant_type: 'password',

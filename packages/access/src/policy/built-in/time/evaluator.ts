@@ -98,25 +98,25 @@ export class TimePolicyEvaluator implements IPolicyEvaluator {
         if (policy.interval) {
             if (
                 isIntervalForDayOfWeek(policy.interval) &&
-                policy.day_of_week
+                policy.dayOfWeek
             ) {
-                if (now.getDay() !== policy.day_of_week) {
+                if (now.getDay() !== policy.dayOfWeek) {
                     return { success: maybeInvertPolicyOutcome(false, policy.invert) };
                 }
             }
 
             if (
                 isIntervalForDayOfMonth(policy.interval) &&
-                policy.day_of_month
+                policy.dayOfMonth
             ) {
-                if (now.getDate() !== policy.day_of_month) {
+                if (now.getDate() !== policy.dayOfMonth) {
                     return { success: maybeInvertPolicyOutcome(false, policy.invert) };
                 }
             }
 
             if (
                 isIntervalForDayOfYear(policy.interval) &&
-                policy.day_of_year
+                policy.dayOfYear
             ) {
                 const start = new Date(now.getFullYear(), 0, 0);
                 const diff = (now.getTime() - start.getTime()) +
@@ -125,7 +125,7 @@ export class TimePolicyEvaluator implements IPolicyEvaluator {
                 const oneDay = 1000 * 60 * 60 * 24;
                 const dayOfYear = Math.floor(diff / oneDay);
 
-                if (dayOfYear !== policy.day_of_year) {
+                if (dayOfYear !== policy.dayOfYear) {
                     return { success: maybeInvertPolicyOutcome(false, policy.invert) };
                 }
             }

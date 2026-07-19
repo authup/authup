@@ -96,7 +96,7 @@ describe('src/permission/realm-scope', () => {
             expect(realmScopeMatches(RealmScope.NONE, null, A)).toBe(false);
         });
 
-        describe('multi-realm resource (realm_id array)', () => {
+        describe('multi-realm resource (realmId array)', () => {
             it('requires the scope to reach EVERY listed realm (unanimous, fail-closed)', () => {
                 // own actor in A: [A] reachable, [A,B] not (B out of reach)
                 expect(realmScopeMatches(RealmScope.OWN, [A], A)).toBe(true);

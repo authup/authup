@@ -16,7 +16,7 @@ import type {
 import { buildPermissionKey } from './key';
 
 type CompositePolicy = BasePolicy & {
-    decision_strategy?: `${DecisionStrategy}`,
+    decisionStrategy?: `${DecisionStrategy}`,
     children: BasePolicy[],
 };
 
@@ -24,7 +24,7 @@ type CompositePolicy = BasePolicy & {
  * One disjunction term per raw binding: the grant's realm reach (fail-closed `own` default)
  * paired with its policy — the raw single policy (its `id` preserved for junction propagation),
  * a composite over multiple policies (Layer-1 permission policies, combined under the
- * permission's decision_strategy), or `undefined` when the grant is unrestricted.
+ * permission's decisionStrategy), or `undefined` when the grant is unrestricted.
  */
 function buildGrant(binding: PermissionPolicyBinding): PermissionGrant {
     let policy: BasePolicy | undefined;
@@ -33,21 +33,21 @@ function buildGrant(binding: PermissionPolicyBinding): PermissionGrant {
     } else if (binding.policies && binding.policies.length > 1) {
         const composite: CompositePolicy = {
             type: 'composite',
-            decision_strategy: binding.permission.decision_strategy || DecisionStrategy.UNANIMOUS,
+            decisionStrategy: binding.permission.decisionStrategy || DecisionStrategy.UNANIMOUS,
             children: binding.policies,
         };
         policy = composite;
     }
 
     return {
-        realm_scope: normalizeRealmScope(binding.realm_scope),
+        realmScope: normalizeRealmScope(binding.realmScope),
         policy,
     };
 }
 
 /**
  * Group raw permission-policy bindings by permission key into the actor's disjunction of
- * `(realm_scope, policy)` grants per permission — with NO lossy collapse. Every consumer
+ * `(realmScope, policy)` grants per permission — with NO lossy collapse. Every consumer
  * (the binding evaluator, isSuperset, junction propagation, the memory provider) evaluates the
  * grant disjunction directly, so each grant's realm reach stays paired with the policy that
  * gates it.

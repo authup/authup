@@ -26,9 +26,9 @@ export class IdentityProviderAttributeMapper extends IdentityProviderAccountBase
             const [operation, value] = this.resolve(identity, entity);
 
             items.push({
-                key: entity.target_name,
-                value: entity.target_value ? entity.target_value : value,
-                realmId: entity.provider_realm_id,
+                key: entity.targetName,
+                value: entity.targetValue ? entity.targetValue : value,
+                realmId: entity.providerRealmId,
                 operation,
             });
         }

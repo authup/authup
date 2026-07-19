@@ -101,7 +101,7 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
         const userAgent = getRequestHeader(event, 'user-agent') ?? undefined;
 
         // canonical identifier form (layer 3) — the throttle key and the
-        // loginFailed actor_name must match what canonically stored rows carry.
+        // loginFailed actorName must match what canonically stored rows carry.
         const identifier = username.trim().toLowerCase();
 
         await this.loginThrottleService?.assertNotThrottled({
@@ -127,7 +127,7 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
                     requestUserAgent: userAgent ?? null,
                     requestPath: event.path,
                     requestMethod: event.method,
-                    data: { error_code: e.code },
+                    data: { errorCode: e.code },
                 });
                 this.metrics?.recordLogin('failure');
             }

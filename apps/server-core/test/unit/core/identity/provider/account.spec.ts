@@ -63,14 +63,14 @@ describe('core/identity/provider/account', () => {
 
         const repository = new IdentityProviderRepository(suite.dataSource);
         provider = {
-            authorize_url: '',
-            token_url: '',
+            authorizeUrl: '',
+            tokenUrl: '',
             name: 'keycloak',
             enabled: true,
             protocol: IdentityProviderProtocol.OAUTH2,
-            client_id: 'client',
-            client_secret: 'start123',
-            realm_id: realm.id,
+            clientId: 'client',
+            clientSecret: 'start123',
+            realmId: realm.id,
         } as OAuth2IdentityProvider;
 
         await repository.save(provider);
@@ -184,13 +184,13 @@ describe('core/identity/provider/account', () => {
 
         const idpRoleMappingRepository = suite.dataSource.getRepository(IdentityProviderRoleMappingEntity);
         const idpRoleMapping = idpRoleMappingRepository.create({
-            synchronization_mode: 'always',
+            synchronizationMode: 'always',
             name: 'realm_access.roles.*',
             value: 'movies:read',
-            role_id: role.id,
-            role_realm_id: role.realm_id,
-            provider_id: provider.id,
-            provider_realm_id: provider.realm_id,
+            roleId: role.id,
+            roleRealmId: role.realmId,
+            providerId: provider.id,
+            providerRealmId: provider.realmId,
         });
 
         await idpRoleMappingRepository.save(idpRoleMapping);
@@ -201,8 +201,8 @@ describe('core/identity/provider/account', () => {
         const userRoleRepository = suite.dataSource.getRepository(UserRoleEntity);
         const userRole = await userRoleRepository.find({
             where: {
-                role_id: role.id,
-                user_id: account.user_id,
+                roleId: role.id,
+                userId: account.userId,
             },
         });
 
@@ -217,13 +217,13 @@ describe('core/identity/provider/account', () => {
 
         const roleMappingRepository = suite.dataSource.getRepository(IdentityProviderRoleMappingEntity);
         const roleMapping = roleMappingRepository.create({
-            synchronization_mode: 'always',
+            synchronizationMode: 'always',
             name: 'realm_access.roles.*',
             value: 'admin',
-            role_id: role.id,
-            role_realm_id: role.realm_id,
-            provider_id: provider.id,
-            provider_realm_id: provider.realm_id,
+            roleId: role.id,
+            roleRealmId: role.realmId,
+            providerId: provider.id,
+            providerRealmId: provider.realmId,
         });
 
         await roleMappingRepository.save(roleMapping);
@@ -234,8 +234,8 @@ describe('core/identity/provider/account', () => {
         const userRoleRepository = suite.dataSource.getRepository(UserRoleEntity);
         const userRole = await userRoleRepository.findOne({
             where: {
-                role_id: role.id,
-                user_id: account.user_id,
+                roleId: role.id,
+                userId: account.userId,
             },
         });
 
@@ -250,13 +250,13 @@ describe('core/identity/provider/account', () => {
 
         const idpPermissionMappingRepository = suite.dataSource.getRepository(IdentityProviderPermissionMappingEntity);
         const idpPermissionMapping = idpPermissionMappingRepository.create({
-            synchronization_mode: 'always',
+            synchronizationMode: 'always',
             name: 'realm_access.roles.*',
             value: 'movies:read',
-            permission_id: permission.id,
-            permission_realm_id: permission.realm_id,
-            provider_id: provider.id,
-            provider_realm_id: provider.realm_id,
+            permissionId: permission.id,
+            permissionRealmId: permission.realmId,
+            providerId: provider.id,
+            providerRealmId: provider.realmId,
         });
 
         await idpPermissionMappingRepository.save(idpPermissionMapping);
@@ -267,8 +267,8 @@ describe('core/identity/provider/account', () => {
         const userPermissionRepository = suite.dataSource.getRepository(UserPermissionEntity);
         const userPermission = await userPermissionRepository.findOne({
             where: {
-                permission_id: permission.id,
-                user_id: account.user_id,
+                permissionId: permission.id,
+                userId: account.userId,
             },
         });
 
@@ -291,13 +291,13 @@ describe('core/identity/provider/account', () => {
             .getRepository(IdentityProviderPermissionMappingEntity);
 
         const idpPermissionMapping = idpPermissionMappingRepository.create({
-            synchronization_mode: 'always',
+            synchronizationMode: 'always',
             name: 'realm_access.roles.*',
             value: 'admin',
-            permission_id: permission.id,
-            permission_realm_id: permission.realm_id,
-            provider_id: provider.id,
-            provider_realm_id: provider.realm_id,
+            permissionId: permission.id,
+            permissionRealmId: permission.realmId,
+            providerId: provider.id,
+            providerRealmId: provider.realmId,
         });
 
         await idpPermissionMappingRepository.save(idpPermissionMapping);
@@ -308,8 +308,8 @@ describe('core/identity/provider/account', () => {
         const userPermissionRepository = suite.dataSource.getRepository(UserPermissionEntity);
         const userPermission = await userPermissionRepository.findOne({
             where: {
-                permission_id: permission.id,
-                user_id: account.user_id,
+                permissionId: permission.id,
+                userId: account.userId,
             },
         });
 

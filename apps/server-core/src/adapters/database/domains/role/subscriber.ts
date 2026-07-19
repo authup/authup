@@ -19,7 +19,7 @@ export class RoleSubscriber extends EntitySubscriber<Role> {
         super({
             type: EntityType.ROLE,
             target: RoleEntity,
-            destinations: buildEntityDestinations(EntityType.ROLE, (data) => [data.realm_id]),
+            destinations: buildEntityDestinations(EntityType.ROLE, (data) => [data.realmId]),
             cache: {
                 keys: (data) => [
                     buildRedisKeyPath({

@@ -17,7 +17,7 @@ export enum RealmScope {
     NONE = 'none',
     /** Own realm only — resource realm must equal the actor's realm. */
     OWN = 'own',
-    /** Own realm or null/global resources (realm_id === null). */
+    /** Own realm or null/global resources (realmId === null). */
     OWN_OR_NULL = 'ownOrNull',
     /** Any realm, including null/global. */
     ANY = 'any',

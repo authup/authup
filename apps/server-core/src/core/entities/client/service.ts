@@ -62,8 +62,8 @@ export class ClientService extends AbstractEntityService implements IClientServi
         for (const entity of entities) {
             if (
                 entity.secret &&
-                !entity.secret_encrypted &&
-                !entity.secret_hashed
+                !entity.secretEncrypted &&
+                !entity.secretHashed
             ) {
                 try {
                     await actor.permissionEvaluator.evaluateOneOf({
@@ -130,8 +130,8 @@ export class ClientService extends AbstractEntityService implements IClientServi
         if (
             !isMe &&
             entity.secret &&
-            !entity.secret_encrypted &&
-            !entity.secret_hashed
+            !entity.secretEncrypted &&
+            !entity.secretHashed
         ) {
             await actor.permissionEvaluator.evaluateOneOf({
                 name: permissionNames,
@@ -170,8 +170,8 @@ export class ClientService extends AbstractEntityService implements IClientServi
     }> {
         let group: string;
 
-        const realm = typeof data.realm_id === 'string' ?
-            await this.realmRepository.resolve(data.realm_id) :
+        const realm = typeof data.realmId === 'string' ?
+            await this.realmRepository.resolve(data.realmId) :
             undefined;
 
         let entity: Client | null | undefined;
@@ -184,7 +184,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
             }
 
             if (realm) {
-                where.realm_id = realm.id;
+                where.realmId = realm.id;
             }
 
             entity = await this.repository.findOneWithSecret(where);
@@ -220,15 +220,15 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         // Reserve the system-provisioned client names (`system`, `web`) so an
         // API caller can't create or rename a client onto them — that would
-        // collide on unique(name, realm_id) or shadow the built_in client.
+        // collide on unique(name, realmId) or shadow the builtIn client.
         // Provisioning and runtime hooks bypass this service, so they remain
-        // free to manage the reserved clients. built_in clients are exempt
+        // free to manage the reserved clients. builtIn clients are exempt
         // (they ARE the provisioned ones) but API callers can never produce a
-        // built_in client since the validator strips the flag.
+        // builtIn client since the validator strips the flag.
         if (
             typeof validated.name === 'string' &&
             CLIENT_RESERVED_NAMES.includes(validated.name) &&
-            !(entity && entity.built_in && entity.name === validated.name)
+            !(entity && entity.builtIn && entity.name === validated.name)
         ) {
             throw new ValidationError(`The client name '${validated.name}' is reserved.`);
         }
@@ -241,12 +241,12 @@ export class ClientService extends AbstractEntityService implements IClientServi
         if (entity) {
             if (
                 !isSelfEdit &&
-                !validated.realm_id &&
-                !entity.realm_id
+                !validated.realmId &&
+                !entity.realmId
             ) {
                 const actorRealmId = this.getActorRealmId(actor);
                 if (actorRealmId) {
-                    validated.realm_id = actorRealmId;
+                    validated.realmId = actorRealmId;
                 }
             }
 
@@ -266,7 +266,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 });
             }
 
-            if (entity.auth_method === ClientAuthMethod.SECRET) {
+            if (entity.authMethod === ClientAuthMethod.SECRET) {
                 if (!validated.secret && !entity.secret) {
                     validated.secret = credentialsService.generateSecret();
                 }
@@ -276,8 +276,8 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 }
             } else {
                 entity.secret = null;
-                entity.secret_hashed = false;
-                entity.secret_encrypted = false;
+                entity.secretHashed = false;
+                entity.secretEncrypted = false;
             }
 
             await this.repository.save(entity);
@@ -288,10 +288,10 @@ export class ClientService extends AbstractEntityService implements IClientServi
             };
         }
 
-        if (!validated.realm_id) {
+        if (!validated.realmId) {
             const actorRealmId = this.getActorRealmId(actor);
             if (actorRealmId) {
-                validated.realm_id = actorRealmId;
+                validated.realmId = actorRealmId;
             }
         }
 
@@ -302,7 +302,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         entity = this.repository.create(validated);
 
-        if (entity.auth_method === ClientAuthMethod.SECRET) {
+        if (entity.authMethod === ClientAuthMethod.SECRET) {
             if (!validated.secret) {
                 validated.secret = credentialsService.generateSecret();
             }
@@ -310,8 +310,8 @@ export class ClientService extends AbstractEntityService implements IClientServi
             entity.secret = await credentialsService.protect(validated.secret, validated);
         } else {
             entity.secret = null;
-            entity.secret_hashed = false;
-            entity.secret_encrypted = false;
+            entity.secretHashed = false;
+            entity.secretEncrypted = false;
         }
 
         await this.repository.save(entity);

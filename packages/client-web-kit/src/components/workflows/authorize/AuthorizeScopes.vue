@@ -46,7 +46,7 @@ export default defineComponent({
 
             if (props.client.id) {
                 const { data: clientScopes } = await httpClient.clientScope.getMany({
-                    filters: { client_id: props.client.id },
+                    filters: { clientId: props.client.id },
                     include: ['scope'],
                 });
 

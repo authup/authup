@@ -37,7 +37,7 @@ function createUserActor(userId: string, realmId?: string): FakeActorContext {
             type: IdentityType.USER,
             data: {
                 id: userId,
-                realm_id: rId,
+                realmId: rId,
                 realm: {
                     id: rId,
                     name: 'test-realm',
@@ -59,7 +59,7 @@ describe('core/entities/user-attribute/service', () => {
     describe('getMany', () => {
         it('should return entities when actor has permission', async () => {
             repository.seed([
-                createFakeUserAttribute({ user_id: randomUUID() }),
+                createFakeUserAttribute({ userId: randomUUID() }),
             ]);
             const result = await service.getMany({}, createAllowAllActor());
             expect(result.data).toHaveLength(1);
@@ -72,11 +72,11 @@ describe('core/entities/user-attribute/service', () => {
             repository.seed([
                 createFakeUserAttribute({
                     name: 'mine',
-                    user_id: userId, 
+                    userId, 
                 }),
                 createFakeUserAttribute({
                     name: 'other',
-                    user_id: otherId, 
+                    userId: otherId, 
                 }),
             ]);
 
@@ -100,13 +100,13 @@ describe('core/entities/user-attribute/service', () => {
 
     describe('getOne', () => {
         it('should return entity when actor can manage', async () => {
-            const entity = repository.seed(createFakeUserAttribute({ user_id: randomUUID() }));
+            const entity = repository.seed(createFakeUserAttribute({ userId: randomUUID() }));
             const result = await service.getOne(entity.id, createAllowAllActor());
             expect(result.id).toBe(entity.id);
         });
 
         it('should throw ForbiddenError when actor cannot manage', async () => {
-            const entity = repository.seed(createFakeUserAttribute({ user_id: randomUUID() }));
+            const entity = repository.seed(createFakeUserAttribute({ userId: randomUUID() }));
 
             const actor = createUserActor(randomUUID());
             actor.permissionEvaluator.deny('evaluate');
@@ -126,16 +126,16 @@ describe('core/entities/user-attribute/service', () => {
             const data = {
                 name: 'new-attr',
                 value: 'val',
-                user_id: userId,
-                user: { realm_id: userRealmId },
+                userId,
+                user: { realmId: userRealmId },
             };
 
             const result = await service.create(data, createAllowAllActor());
             expect(result.id).toBeDefined();
-            expect(result.realm_id).toBe(userRealmId);
+            expect(result.realmId).toBe(userRealmId);
         });
 
-        it('should default user_id from actor identity when no user provided', async () => {
+        it('should default userId from actor identity when no user provided', async () => {
             const userId = randomUUID();
             const realmId = randomUUID();
             const actor = createUserActor(userId, realmId);
@@ -144,11 +144,11 @@ describe('core/entities/user-attribute/service', () => {
                 name: 'attr',
                 value: 'val', 
             }, actor);
-            expect(result.user_id).toBe(userId);
-            expect(result.realm_id).toBe(realmId);
+            expect(result.userId).toBe(userId);
+            expect(result.realmId).toBe(realmId);
         });
 
-        it('should throw BadRequestError when no user_id and no user identity', async () => {
+        it('should throw BadRequestError when no userId and no user identity', async () => {
             const actor = createAllowAllActor();
             actor.identity = undefined;
 
@@ -182,7 +182,7 @@ describe('core/entities/user-attribute/service', () => {
             await service.create({
                 name: 'theme',
                 value: 'dark',
-                user_id: userId,
+                userId,
             }, actor);
 
             const selfManageCalls = actor.permissionEvaluator.evaluateCalls.filter(
@@ -208,7 +208,7 @@ describe('core/entities/user-attribute/service', () => {
                 value: 'dark',
                 user: {
                     id: userId,
-                    realm_id: realmId,
+                    realmId,
                 },
             }, actor);
 
@@ -229,8 +229,8 @@ describe('core/entities/user-attribute/service', () => {
             await service.create({
                 name: 'theme',
                 value: 'dark',
-                user_id: otherUserId,
-                user: { realm_id: realmId },
+                userId: otherUserId,
+                user: { realmId },
             }, actor);
 
             const updateCalls = actor.permissionEvaluator.evaluateCalls.filter(
@@ -245,7 +245,7 @@ describe('core/entities/user-attribute/service', () => {
         });
 
         it('should reject creating user-attribute with name colliding with User column', async () => {
-            const reservedNames = new Set(['email', 'password', 'first_name']);
+            const reservedNames = new Set(['email', 'password', 'firstName']);
             const localService = new UserAttributeService({
                 repository,
                 reservedNames,
@@ -265,7 +265,7 @@ describe('core/entities/user-attribute/service', () => {
             const entity = repository.seed(createFakeUserAttribute({
                 name: 'old',
                 value: 'old-val',
-                user_id: randomUUID(),
+                userId: randomUUID(),
             }));
 
             const result = await service.update(entity.id, { value: 'new-val' }, createAllowAllActor());
@@ -275,7 +275,7 @@ describe('core/entities/user-attribute/service', () => {
         it('should preEvaluate USER_UPDATE to gate access', async () => {
             const entity = repository.seed(createFakeUserAttribute({
                 value: 'val',
-                user_id: randomUUID(),
+                userId: randomUUID(),
             }));
 
             const actor = createAllowAllActor();
@@ -293,7 +293,7 @@ describe('core/entities/user-attribute/service', () => {
         it('should throw ForbiddenError when actor cannot manage', async () => {
             const entity = repository.seed(createFakeUserAttribute({
                 value: 'val',
-                user_id: randomUUID(),
+                userId: randomUUID(),
             }));
 
             const actor = createUserActor(randomUUID());
@@ -302,11 +302,11 @@ describe('core/entities/user-attribute/service', () => {
             await expect(service.update(entity.id, { value: 'new' }, actor)).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
-        it('ignores a caller-supplied realm_id (no USER_UPDATE gate bypass)', async () => {
+        it('ignores a caller-supplied realmId (no USER_UPDATE gate bypass)', async () => {
             const entity = repository.seed(createFakeUserAttribute({
                 value: 'val',
-                user_id: randomUUID(),
-                realm_id: 'realm-b',
+                userId: randomUUID(),
+                realmId: 'realm-b',
             } as Partial<UserAttribute>));
             const actor = createAllowAllActor();
             actor.permissionEvaluator.setBehavior((call) => {
@@ -323,13 +323,13 @@ describe('core/entities/user-attribute/service', () => {
             // The actor supplies their own realm to gate the write against it; it must be
             // ignored, so USER_UPDATE still evaluates against the user realm (realm-b).
             await expect(
-                service.update(entity.id, { value: 'x', realm_id: 'realm-a' }, actor),
+                service.update(entity.id, { value: 'x', realmId: 'realm-a' }, actor),
             ).rejects.toBeInstanceOf(PermissionError);
         });
 
         it('treats the owner user as immutable on self-manage (cannot reassign to another user)', async () => {
             const ownerId = randomUUID();
-            const entity = repository.seed(createFakeUserAttribute({ user_id: ownerId, value: 'v' }));
+            const entity = repository.seed(createFakeUserAttribute({ userId: ownerId, value: 'v' }));
             // the owner, forced onto the self-manage path (lacks USER_UPDATE)
             const actor = createUserActor(ownerId);
             actor.permissionEvaluator.setBehavior((call) => {
@@ -338,14 +338,14 @@ describe('core/entities/user-attribute/service', () => {
                 }
             });
 
-            const result = await service.update(entity.id, { value: 'x', user_id: randomUUID() }, actor);
-            expect(result.user_id).toBe(ownerId);
+            const result = await service.update(entity.id, { value: 'x', userId: randomUUID() }, actor);
+            expect(result.userId).toBe(ownerId);
         });
     });
 
     describe('delete', () => {
         it('should delete an existing attribute', async () => {
-            const entity = repository.seed(createFakeUserAttribute({ user_id: randomUUID() }));
+            const entity = repository.seed(createFakeUserAttribute({ userId: randomUUID() }));
 
             const result = await service.delete(entity.id, createAllowAllActor());
             expect(result.id).toBe(entity.id);
@@ -359,7 +359,7 @@ describe('core/entities/user-attribute/service', () => {
             const userId = randomUUID();
             const entity = repository.seed(createFakeUserAttribute({
                 name: 'my-attr',
-                user_id: userId, 
+                userId, 
             }));
 
             const actor = createUserActor(userId);
@@ -368,7 +368,7 @@ describe('core/entities/user-attribute/service', () => {
         });
 
         it('should throw ForbiddenError when actor cannot manage others attributes', async () => {
-            const entity = repository.seed(createFakeUserAttribute({ user_id: randomUUID() }));
+            const entity = repository.seed(createFakeUserAttribute({ userId: randomUUID() }));
 
             const actor = createUserActor(randomUUID());
             actor.permissionEvaluator.deny('evaluate');

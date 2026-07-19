@@ -58,12 +58,12 @@ export class OAuth2AccessTokenIssuer extends OAuth2BaseTokenIssuer implements IO
         if (this.sessionTokenRepository && data.session_id && data.jti && typeof data.exp === 'number') {
             await this.sessionTokenRepository.create({
                 id: data.jti,
-                session_id: data.session_id,
+                sessionId: data.session_id,
                 kind: 'access',
-                refresh_token_id: input.refresh_token_id ?? null,
-                ip_address: data.remote_address ?? '',
-                user_agent: data.user_agent ?? '',
-                expires_at: new Date(data.exp * 1000).toISOString(),
+                refreshTokenId: input.refresh_token_id ?? null,
+                ipAddress: data.remote_address ?? '',
+                userAgent: data.user_agent ?? '',
+                expiresAt: new Date(data.exp * 1000).toISOString(),
             });
         }
 
@@ -87,9 +87,9 @@ export class OAuth2AccessTokenIssuer extends OAuth2BaseTokenIssuer implements IO
         const globalRoles: string[] = [];
 
         for (const role of roles) {
-            if (!role.realm_id) {
+            if (!role.realmId) {
                 globalRoles.push(role.name);
-            } else if (input.realm_id && role.realm_id === input.realm_id) {
+            } else if (input.realm_id && role.realmId === input.realm_id) {
                 realmRoles.push(role.name);
             }
         }

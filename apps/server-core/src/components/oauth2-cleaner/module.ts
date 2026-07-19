@@ -32,10 +32,10 @@ export function createOAuth2CleanerComponent(
                     // volume dominates (one row per access token, ~15min TTL) and a
                     // deleted session cascade-drops its remaining rows anyway.
                     await sessionTokenRepository
-                        .delete({ expires_at: LessThan(isoDate) });
+                        .delete({ expiresAt: LessThan(isoDate) });
 
                     await sessionRepository
-                        .delete({ expires_at: LessThan(isoDate) });
+                        .delete({ expiresAt: LessThan(isoDate) });
                 } catch (e) {
                     logger?.warn('Sweeping expired sessions failed.');
                     logger?.warn(e);

@@ -8,6 +8,23 @@ The project follows hexagonal architecture (ports & adapters), separating core b
 - **Dependency Inversion Principle (DIP)**: Adapters in server-core use DIP to inject implementations from core and app (infrastructure). No injection tokens or service locator — use DIP via constructor arguments directly.
 - **TypeScript & ESM**: All packages use TypeScript with strict typing and modern ES module syntax.
 
+### Naming split (plan 073)
+
+Entity/domain properties and the management API (request payloads, responses, and
+the rapiq filter/sort/field vocabulary) are **camelCase**. The physical **DB column
+names stay snake_case**, pinned per column by an explicit
+`@Column({ name: 'realm_id' })` on every camelCase property (and
+`@JoinColumn({ name })` on every relation) — deliberately NOT a global naming
+strategy: an explicit name is immune to a transform edge-case silently mismapping a
+future column (a divergence the `synchronize()`-based sqlite tests would not catch,
+since they stay self-consistent) and to a single global point of failure. TypeORM
+still translates camelCase property paths (`role.realmId`, `entity.createdAt`) onto
+those columns, so repository query-builder strings use property paths, not column
+names. The OAuth2/OIDC protocol surface (endpoint params, JWT claims,
+introspection/discovery fields) and JWT payloads are **frozen snake_case**, as are
+table names, enum string values (permission/role/scope/event names), env vars, and
+config keys.
+
 ## apps/server-core
 
 The server-core package contains the server-side logic, organized into three layers:
@@ -222,8 +239,8 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         await this.repository.validateJoinColumns(validated);
 
         // Realm defaulting — always default to actor's realm
-        if (!validated.realm_id && actor.identity) {
-            validated.realm_id = this.getActorRealmId(actor) || null;
+        if (!validated.realmId && actor.identity) {
+            validated.realmId = this.getActorRealmId(actor) || null;
         }
 
         await actor.permissionEvaluator.evaluate({
@@ -257,7 +274,7 @@ Service responsibility:
 | Category | Examples | Service Characteristics |
 |---|---|---|
 | **Simple CRUD** | role, scope, realm, permission | Validator + validateJoinColumns + checkUniqueness + permission checks |
-| **Junction** | client-permission, robot-permission, user-permission, client-scope, role-permission, permission-policy | Validator (UUID fields), validateJoinColumns populates join entities, duplicate check on unique key, realm_id extraction from joins |
+| **Junction** | client-permission, robot-permission, user-permission, client-scope, role-permission, permission-policy | Validator (UUID fields), validateJoinColumns populates join entities, duplicate check on unique key, realmId extraction from joins |
 | **Junction with superset check** | client-role, robot-role, user-role, identity-provider-role-mapping | Same as junction + `identityPermissionProvider.isSuperset()` in service to verify actor owns all permissions in target role |
 | **Attribute** | role-attribute, user-attribute | Per-record permission filtering in `getMany`, managed under parent entity's UPDATE permission |
 | **Complex with secrets** | client, robot | Uses `{Entity}CredentialsService` for secret handling, per-record secret filtering in `getMany` |
@@ -337,7 +354,7 @@ mechanism has three layers:
   is not http(s) (`isSafeActionURL` — defense in depth against
   `javascript:` URLs), and `PASSWORD_RESET_EXPIRES_IN_MINUTES`
   (`core/identity/password-recovery/constants.ts`) drives both the
-  persisted `reset_expires` and the expiry note in the mail.
+  persisted `resetExpires` and the expiry note in the mail.
 
 The recipient locale is threaded from the HTTP adapter:
 `useRequestLocale(event)` (`adapters/http/request/helpers/locale.ts`)
@@ -360,8 +377,8 @@ every template × locale).
 
 **Mail deep links:** when `publicUrl` is set, the renderer receives a `url`
 param — `<publicUrl>/activate?token=<hash>` for activation and
-`<publicUrl>/password-reset?token=<hash>&realm_id=<id>` for reset (the
-`realm_id` is required so a non-master user's reset link resolves the right
+`<publicUrl>/password-reset?token=<hash>&realmId=<id>` for reset (the
+`realmId` is required so a non-master user's reset link resolves the right
 realm) — rendered as the call-to-action link. Both land on backend-served SSR
 pages (see *Auth Workflow UI* below) that prefill the code from the query.
 The raw code stays in the mail body for copy/paste; no identifier/PII is put
@@ -588,7 +605,7 @@ The provisioning system declaratively synchronizes entities (permissions, roles,
 - **app/modules/provisioning/sources/**: Data sources that produce `RootProvisioningEntity`
   - `default/`: Built-in defaults (system policies, admin user, system client, all permissions/scopes)
   - `file/`: Loads `.json`, `.yaml`, `.ts`, `.js` files from a directory
-  - `composite/`: Merges multiple sources with dedup by composite key (`name:realm_id:client_id`)
+  - `composite/`: Merges multiple sources with dedup by composite key (`name:realmId:clientId`)
 - **app/modules/provisioning/module.ts**: `ProvisionerModule` — creates shared repository adapter instances and wires them to synchronizers
 
 ### File-Source Validation (`ValidatorGroup.PROVISIONING`)
@@ -605,8 +622,8 @@ check closures don't inherit the validup run group), assigns the result back
 synchronizers), and prefixes the array index onto issue paths.
 
 The PROVISIONING group lives in the core-kit entity validators alongside
-CREATE/UPDATE: identifier fields (`name`, `realm_id`, policy `type`) are
-mounted `[CREATE, PROVISIONING]`; `built_in` is mounted **only** under
+CREATE/UPDATE: identifier fields (`name`, `realmId`, policy `type`) are
+mounted `[CREATE, PROVISIONING]`; `builtIn` is mounted **only** under
 PROVISIONING (the API groups deliberately strip it — no HTTP service ever
 runs the PROVISIONING group); `user.email` is optional under PROVISIONING
 (the user synchronizer backfills a placeholder) while staying required at
@@ -631,13 +648,13 @@ Every realm auto-provisions a public OAuth2 client named **`web`** (constant
 downstream UI embedding `client-web-kit`. It powers the realm-selection login
 flow (auth-code + PKCE), so there is no per-realm FK, no migration, and no new
 endpoint — the `/authorize` verifier already resolves clients via
-`findOneByIdOrName('web', realm_id)`.
+`findOneByIdOrName('web', realmId)`.
 
 - **Attributes** (`buildWebClientAttributes`, `core/entities/client/web-client.ts`):
-  `auth_method: 'none'`, `token_binding_method: 'none'`, `built_in: true`, `active: true`,
-  `grant_types: 'authorization_code refresh_token'` (an enforced allowlist —
+  `authMethod: 'none'`, `tokenBindingMethod: 'none'`, `builtIn: true`, `active: true`,
+  `grantTypes: 'authorization_code refresh_token'` (an enforced allowlist —
   see *Per-client grant allowlist* under the token-endpoint section),
-  `scope: 'global openid'`, `redirect_uri` = one `<origin>/**` wildcard per
+  `scope: 'global openid'`, `redirectUri` = one `<origin>/**` wildcard per
   trusted app origin (matched by `isSimpleMatch`).
 - **App origins** come from `getAppOrigins(config)` = publicUrl's origin +
   `config.trustedOrigins` merged verbatim. A `trustedOrigins` entry may carry
@@ -652,7 +669,7 @@ endpoint — the `/authorize` verifier already resolves clients via
   map is the compile-time exhaustiveness guard — an unmounted Config key fails
   the build instead of being silently stripped), making
   `parseConfig`/`normalizeConfig` async. `TRUSTED_ORIGINS` (env, comma-separated) is
-  **security-sensitive**: the `web` client is `built_in` (auto-consent) + `global`
+  **security-sensitive**: the `web` client is `builtIn` (auto-consent) + `global`
   scope, so any allowlisted origin can obtain a full-permission user token.
   The origin list does NOT drive CORS — CORS reflects any origin by default
   (auth is header-based only, and OAuth2 clients are registered at runtime on
@@ -663,18 +680,18 @@ endpoint — the `/authorize` verifier already resolves clients via
   mechanism, run two ways and sharing the same factory so they can't drift:
   1. **Startup** — `ProvisionerModule` lists every realm (incl. pre-existing)
      after the graph sync and upserts each realm's `web` client (MERGE — refreshes
-     `redirect_uri` when config changes).
+     `redirectUri` when config changes).
   2. **Runtime** — `RealmService.save()` calls `ensureForRealm` when it *creates*
      a new realm, via the injected `webClientProvisioner` (system-level, ungated —
      a realm creator may lack `CLIENT_CREATE`). Not called on update.
-  Idempotent; guarded on `built_in` — a non-built-in client named `web` is never
+  Idempotent; guarded on `builtIn` — a non-built-in client named `web` is never
   overwritten (skip + warn).
 - **Guardrails:** `web` and `system` are reserved client names — `ClientService.save()`
   rejects API attempts to create/rename a client onto them (`CLIENT_RESERVED_NAMES`).
-  The client validator strips `built_in` on create/update, so no API caller can
-  self-assign it — only provisioned clients are `built_in`. The SSR `AuthorizeForm`
-  auto-submits consent for `built_in` clients (skips the Allow/Deny step); user-
-  created clients are never `built_in` and still show consent.
+  The client validator strips `builtIn` on create/update, so no API caller can
+  self-assign it — only provisioned clients are `builtIn`. The SSR `AuthorizeForm`
+  auto-submits consent for `builtIn` clients (skips the Allow/Deny step); user-
+  created clients are never `builtIn` and still show consent.
 
 ### File Structure
 
@@ -756,7 +773,7 @@ app/modules/provisioning/
 
 ### Entity Categories
 
-| Category | Entities | `realm_id: null` allowed |
+| Category | Entities | `realmId: null` allowed |
 |----------|----------|--------------------------|
 | **Global** | permission, role, scope, policy | Yes — system-level building blocks reusable across realms |
 | **Realm-bound** | client, robot, user | No — always belong to a specific realm |
@@ -764,32 +781,32 @@ app/modules/provisioning/
 
 ### Realm Defaulting
 
-All entity services default `realm_id` to the actor's realm when not provided:
+All entity services default `realmId` to the actor's realm when not provided:
 
 ```typescript
-if (!validated.realm_id && actor.identity) {
-    validated.realm_id = this.getActorRealmId(actor) || null;
+if (!validated.realmId && actor.identity) {
+    validated.realmId = this.getActorRealmId(actor) || null;
 }
 ```
 
-To create a global entity (`realm_id: null`), the caller must explicitly pass `realm_id: null`. The policy engine controls whether the actor is authorized to do so.
+To create a global entity (`realmId: null`), the caller must explicitly pass `realmId: null`. The policy engine controls whether the actor is authorized to do so.
 
-### Realm reach is a coarse `realm_scope` enum on the grant (NOT a policy)
+### Realm reach is a coarse `realmScope` enum on the grant (NOT a policy)
 
 There is no special "master realm" bypass, and realm reach is **not** a policy. Each
 permission-junction row (`role/user/client/robot_permission`) carries a `realm_scope`
 enum column (`@authup/access` `RealmScope`), a coarse, **actor-relative** reach with a
 total order and a fail-closed default:
 
-| `realm_scope` | matches resource realm `R` vs actor realm `A` | who |
+| `realmScope` | matches resource realm `R` vs actor realm `A` | who |
 |---|---|---|
 | **`own`** (default) | `R === A` only — own realm, not null, not other realms | safe default; `realm_admin` writes |
 | **`ownOrNull`** | `R === A` or `R === null` (global/null resources) | `realm_admin` reads (use global building blocks) |
 | **`any`** | always — any realm incl. null | `admin` |
 
 It is enforced inside the server-core `PermissionBindingPolicyEvaluator` (a separate
-factor, ANDed with the junction's `policy_id` policies) by invoking the
-`RealmMatchPolicyEvaluator` in **SCOPE MODE**: a grant's `realm_scope` is matched
+factor, ANDed with the junction's `policyId` policies) by invoking the
+`RealmMatchPolicyEvaluator` in **SCOPE MODE**: a grant's `realmScope` is matched
 against the resource realm supplied under the **`realmMatch` PolicyData key** (a single id,
 `null`, or an array of ids — `realmScopeMatches` requires the scope to reach every listed
 realm). The realm-match call is made **directly** (not via the policy engine — `realmMatch`
@@ -800,27 +817,27 @@ key is present (`preEvaluate` / gate checks / realm-less resources).
 
 **Reach and policy are paired PER GRANT — a disjunction, not a folded MAX (issue #3155,
 plan 036).** An actor can hold several grants for the *same* permission with different
-`(realm_scope, policy_id)`. `aggregatePermissionPolicyBindings` groups the raw bindings into a
-`PermissionPolicyBindingAggregated` = `{ permission, grants: { realm_scope, policy }[] }` — the
+`(realmScope, policyId)`. `aggregatePermissionPolicyBindings` groups the raw bindings into a
+`PermissionPolicyBindingAggregated` = `{ permission, grants: { realmScope, policy }[] }` — the
 actor's **disjunction** of grants, with **no lossy collapse**. Every consumer evaluates that
-disjunction directly: access is granted iff **∃ grant . `realmScopeMatches(grant.realm_scope,
+disjunction directly: access is granted iff **∃ grant . `realmScopeMatches(grant.realmScope,
 resource)` ∧ (grant's `policy` passes)**, so each grant's reach stays paired with its OWN
 policy. This is needed in both directions: a policy-free `own` grant must not MASK a
 policy-bound `any` grant's wider reach (the under-grant the issue reported), and an `own`
 grant's passing policy must not RIDE an `any` grant's wider reach when that `any` grant's own
-policy fails (the symmetric over-grant). There is no collapsed `realm_scope` anymore — the
-predecessor `mergePermissionPolicyBindings`, which folded a single lossy `(realm_scope,
+policy fails (the symmetric over-grant). There is no collapsed `realmScope` anymore — the
+predecessor `mergePermissionPolicyBindings`, which folded a single lossy `(realmScope,
 policies)` per key, was removed in favour of the disjunction.
 
 **Resources present their realm under the `realmMatch` PolicyData key — entities AND
-junctions.** Entity services derive it from the ATTRIBUTES `realm_id` via
-`AbstractEntityService.resourceRealmMatch` (set only when the source carries `realm_id`, so a
-self-edit UPDATE — where the validator strips `realm_id` — leaves the key absent and
-neutral-passes; `realm_id` also stays in ATTRIBUTES for the self-manage denylists). Junction
+junctions.** Entity services derive it from the ATTRIBUTES `realmId` via
+`AbstractEntityService.resourceRealmMatch` (set only when the source carries `realmId`, so a
+self-edit UPDATE — where the validator strips `realmId` — leaves the key absent and
+neutral-passes; `realmId` also stays in ATTRIBUTES for the self-manage denylists). Junction
 services (`role/user/client/robot-permission`, `user/client/robot-role`, `client-scope`,
-`identity-provider-role-mapping`, `permission-policy`) carry no top-level `realm_id`
-(only `owner_realm_id`/`permission_realm_id`), so they set their **OWNER realm**
-(`role_realm_id` for role-permission, `user_realm_id` for user-role, `client_realm_id`
+`identity-provider-role-mapping`, `permission-policy`) carry no top-level `realmId`
+(only `ownerRealmId`/`permissionRealmId`), so they set their **OWNER realm**
+(`roleRealmId` for role-permission, `userRealmId` for user-role, `clientRealmId`
 for client-scope, … via `JunctionEntityService.junctionResourceRealm`) under the `realmMatch`
 key — junction ATTRIBUTES carry only genuine columns. So a junction write to another realm's
 entity is realm-gated like a direct entity write — a `realm_admin` in realm A cannot bind a
@@ -831,11 +848,11 @@ denies, consistent with a `realm_admin` not being able to write a global base en
 
 > **One evaluator, no ATTRIBUTES pollution (plan 035):** the resource realm rides the dedicated
 > `realmMatch` PolicyData key — a legit policy-type slot read only by `RealmMatchPolicyEvaluator`
-> — instead of being stamped into the ATTRIBUTES bag. So `realm_scope` reach and user-authored
+> — instead of being stamped into the ATTRIBUTES bag. So `realmScope` reach and user-authored
 > realm-match policies share **one** evaluator (SCOPE MODE vs attribute-name mode), and an
-> `ATTRIBUTE_NAMES` allowlist on a junction permission no longer mis-sees a synthetic `realm_id`
+> `ATTRIBUTE_NAMES` allowlist on a junction permission no longer mis-sees a synthetic `realmId`
 > (junction ATTRIBUTES carry only genuine columns). The realm-match evaluator reads the realm
-> ONLY from `realmMatch` (single-source — an ATTRIBUTES `realm_id` is not a realm source for the
+> ONLY from `realmMatch` (single-source — an ATTRIBUTES `realmId` is not a realm source for the
 > scope factor).
 
 > **Dependency:** this factor runs inside `PermissionBindingPolicyEvaluator`, i.e. only when
@@ -844,21 +861,21 @@ denies, consistent with a `realm_admin` not being able to write a global base en
 > deprecated). With it disabled, the realm gate (and all permission-binding policy enforcement)
 > weakens — a pre-existing coupling the realm isolation rides on.
 
-`policy_id` remains for **additional** restrictions ANDed on top — and a realm
-restriction *can* still be authored as a `policy_id` `ATTRIBUTES` policy
-(`{ realm_id: { $in: [...] } }`); it is evaluated but is **NOT** part of the realm-scope
-cap/superset (a restricted actor's explicit `policy_id` is ignored on create/update), so
+`policyId` remains for **additional** restrictions ANDed on top — and a realm
+restriction *can* still be authored as a `policyId` `ATTRIBUTES` policy
+(`{ realmId: { $in: [...] } }`); it is evaluated but is **NOT** part of the realm-scope
+cap/superset (a restricted actor's explicit `policyId` is ignored on create/update), so
 it is an extra ANDed restriction, never a reach control.
 
-**Propagation CAPs, not inherits**: a creator may only stamp a `realm_scope` ≤ its own
+**Propagation CAPs, not inherits**: a creator may only stamp a `realmScope` ≤ its own
 ceiling for that permission (ordered `min`); only an `any`-scoped actor may set an
-explicit `policy_id` (a restricted actor's explicit `policy_id` on create/update is
+explicit `policyId` (a restricted actor's explicit `policyId` on create/update is
 ignored — no widen via attach/detach). `isSuperset` additionally requires the parent's
-`realm_scope` ≥ the child's per permission (ordered compare).
+`realmScope` ≥ the child's per permission (ordered compare).
 
 ### Admin Roles
 
-| Role | Scope | Realm reach (junction `realm_scope`) |
+| Role | Scope | Realm reach (junction `realmScope`) |
 |------|-------|-----------------|
 | `admin` | All permissions, no restrictions | `any` — acts on all realms + `null` global, **from an identity in ANY realm** |
 | `realm_admin` | All permissions except `realm_create`, `realm_update`, `realm_delete` | `ownOrNull` (reads) / `own` (direct entity CUD) |
@@ -892,15 +909,15 @@ on an unknown realm key; a realm-less check still runs unfiltered). Never
 reintroduce the fail-open `resolve(...)` + `if (realm)` filter-drop shape — it
 let `GET /realms/<unknown-uuid>/users/<name>` match a cross-realm row.
 
-**Route-realm precedence (writes)**: controllers call `applyRouteRealmIDToBody(event, data)` at the top of `add`/`edit`/`put` (and inside `IdentityProviderController.write()`). When the route has `:realmId`, the helper overwrites `data.realm_id` with the route value — *route wins silently over body* (no `BadRequestError` for mismatch; the body value is simply discarded).
+**Route-realm precedence (writes)**: controllers call `applyRouteRealmIDToBody(event, data)` at the top of `add`/`edit`/`put` (and inside `IdentityProviderController.write()`). When the route has `:realmId`, the helper overwrites `data.realmId` with the route value — *route wins silently over body* (no `BadRequestError` for mismatch; the body value is simply discarded).
 
-**Permission model**: the `realm_scope` enum evaluates against the resolved `entity.realm_id`. Mounting `/realms/:realmId/users` does not by itself grant cross-realm write access — the dual mount is a routing convenience, not an authorization shortcut. The global `admin` role (`realm_scope: any`) **can** act cross-realm from any realm; a `realm_admin` (`own`/`ownOrNull`) cannot. (Route-realm precedence still applies to the body `realm_id`.)
+**Permission model**: the `realmScope` enum evaluates against the resolved `entity.realmId`. Mounting `/realms/:realmId/users` does not by itself grant cross-realm write access — the dual mount is a routing convenience, not an authorization shortcut. The global `admin` role (`realmScope: any`) **can** act cross-realm from any realm; a `realm_admin` (`own`/`ownOrNull`) cannot. (Route-realm precedence still applies to the body `realmId`.)
 
 **`RealmController` is unaffected**: the middleware is mounted at `/realms/:realmId/:nested` (not just `/realms/:realmId`) so it only fires when there's at least one path segment after `:realmId`. Bare realm CRUD routes (`GET/POST/PUT/DELETE /realms/:id`) and sub-resource routes that belong to `RealmController` itself (`/realms/:id/.well-known/openid-configuration`, `/realms/:id/jwks`, `/realms/:id/jwks/:keyId`) are not intercepted. This is important for `PUT /realms/:id` upsert semantics — an unknown realm name in the path is a valid "create" intent, not a lookup miss.
 
 ## Policy-Permission Model (n:m)
 
-Permissions reference policies through a junction table (`auth_permission_policies`), not a direct FK. Each permission has a `decision_strategy` (default: `unanimous`) controlling how multiple policies are combined.
+Permissions reference policies through a junction table (`auth_permission_policies`), not a direct FK. Each permission has a `decisionStrategy` (default: `unanimous`) controlling how multiple policies are combined.
 
 ### Evaluation Layers
 
@@ -908,20 +925,20 @@ Permissions reference policies through a junction table (`auth_permission_polici
 Layer 1: Permission-level policies (from auth_permission_policies)
   └── system.default (composite, UNANIMOUS)
         ├── system.identity
-        └── system.permission-binding   (also enforces the realm_scope enum + Layer-2 policy)
+        └── system.permission-binding   (also enforces the realmScope enum + Layer-2 policy)
 
-Layer 2: per-grant junction (from role-permission.policy_id + realm_scope, etc.)
-  ├── realm_scope enum  (coarse realm reach — own / ownOrNull / any)
-  └── policy_id policy  (optional additional ATTRIBUTES/IDENTITY restriction)
+Layer 2: per-grant junction (from role-permission.policyId + realmScope, etc.)
+  ├── realmScope enum  (coarse realm reach — own / ownOrNull / any)
+  └── policyId policy  (optional additional ATTRIBUTES/IDENTITY restriction)
 ```
 
 Both layers must pass for access to be granted. Layer 1 is evaluated by the
 `PermissionEvaluator` in `@authup/access`. The server-core `PermissionBindingPolicyEvaluator`
 (invoked via `system.permission-binding`) loads the actor's grants for the permission and
-evaluates the **per-grant disjunction**: for each grant it matches that grant's `realm_scope`
-against the resource `realm_id` (when present) AND evaluates that grant's `policy_id` policies,
+evaluates the **per-grant disjunction**: for each grant it matches that grant's `realmScope`
+against the resource `realmId` (when present) AND evaluates that grant's `policyId` policies,
 and grants iff some grant passes both (see
-[Realm reach](#realm-reach-is-a-coarse-realm_scope-enum-on-the-grant-not-a-policy)). The
+[Realm reach](#realm-reach-is-a-coarse-realmScope-enum-on-the-grant-not-a-policy)). The
 baseline `system.realm-match` child and
 the `system.realm-bound` / `system.realm-or-global` policies were **removed** in favour of the
 enum; the `REALM_MATCH` policy *type* is retained for user-defined actor-relative policies.
@@ -934,19 +951,19 @@ enum; the `REALM_MATCH` policy *type* is retained for user-defined actor-relativ
 export type PermissionPolicyBinding = {
     permission: {
         name: string,
-        client_id?: string | null,
-        realm_id?: string | null,
-        decision_strategy?: string | null,
+        clientId?: string | null,
+        realmId?: string | null,
+        decisionStrategy?: string | null,
     },
     policies?: PolicyWithType[],
     // realm reach of this grant (a separate factor from `policies`)
-    realm_scope?: 'none' | 'own' | 'ownOrNull' | 'any',  // relative, default own
+    realmScope?: 'none' | 'own' | 'ownOrNull' | 'any',  // relative, default own
 };
 
 // aggregatePermissionPolicyBindings(raw[]) groups by permission key into the actor's
 // disjunction of grants — the lossless replacement for the old collapsed binding.
 export type PermissionGrant = {
-    realm_scope: 'none' | 'own' | 'ownOrNull' | 'any',   // normalized, fail-closed default own
+    realmScope: 'none' | 'own' | 'ownOrNull' | 'any',   // normalized, fail-closed default own
     policy?: PolicyWithType,                             // single junction policy (id kept) or a composite
 };
 export type PermissionPolicyBindingAggregated = {
@@ -956,23 +973,23 @@ export type PermissionPolicyBindingAggregated = {
 ```
 
 A raw `PermissionPolicyBinding` wraps a permission entity with its associated policies. The
-permission is uniquely identified by `name + client_id + realm_id`. The `policies` array
+permission is uniquely identified by `name + clientId + realmId`. The `policies` array
 contains:
 - **Permission-level** (Layer 1): n:m policies from `auth_permission_policies` (loaded by `PermissionDatabaseProvider`)
 - **Junction-level** (Layer 2): the single junction policy from `role_permission.policy_id` etc. (loaded by `getBoundPermissions()`)
 
-Each grant carries its **realm reach** (`realm_scope`) as a **separate factor from its
+Each grant carries its **realm reach** (`realmScope`) as a **separate factor from its
 `policy`** — a coarse, actor-relative enum (`none < own < ownOrNull < any`), ANDed with that
 grant's policy and evaluated inside `system.permission-binding` against the resource
-`realm_id`. It is **not** part of the binding identity key and is never folded into the policy
+`realmId`. It is **not** part of the binding identity key and is never folded into the policy
 expression (so it is immune to the fail-open policy merge). When an actor holds multiple grants
-for one permission key, `aggregatePermissionPolicyBindings` keeps each `(realm_scope, policy)`
+for one permission key, `aggregatePermissionPolicyBindings` keeps each `(realmScope, policy)`
 as a distinct grant and every consumer — the binding evaluator, `isSuperset`, junction-grant
 propagation, the memory provider — evaluates the disjunction directly (see
-[Realm reach](#realm-reach-is-a-coarse-realm_scope-enum-on-the-grant-not-a-policy)). There
+[Realm reach](#realm-reach-is-a-coarse-realmScope-enum-on-the-grant-not-a-policy)). There
 is no absolute realm-id allowlist on the grant — a specific-realm-set restriction is
-expressed via a `policy_id` `ATTRIBUTES` policy. See
-[Realm reach is a coarse `realm_scope` enum on the grant](#realm-reach-is-a-coarse-realm_scope-enum-on-the-grant-not-a-policy).
+expressed via a `policyId` `ATTRIBUTES` policy. See
+[Realm reach is a coarse `realmScope` enum on the grant](#realm-reach-is-a-coarse-realmScope-enum-on-the-grant-not-a-policy).
 
 ## Security: Permission Assignment
 
@@ -980,14 +997,14 @@ expressed via a `policy_id` `ATTRIBUTES` policy. See
 
 When assigning a role to an identity or identity-provider (user-role, client-role, robot-role, identity-provider-role-mapping), `IdentityPermissionProvider.isSuperset(parent, child)` verifies the actor (`parent`) owns at least what the target role (`child`) confers. It is **disjunction-aware and policy-aware** — there is no lossy collapse (the old `mergePermissionBindings` AFFIRMATIVE fold was removed in #3158):
 
-1. `aggregatePermissionPolicyBindings` groups each side's raw bindings into per-permission **grant disjunctions** (`{ realm_scope, policy }[]`).
-2. For each target permission (matched by `name + realm_id + client_id`): if the actor holds no grant for it → fail.
+1. `aggregatePermissionPolicyBindings` groups each side's raw bindings into per-permission **grant disjunctions** (`{ realmScope, policy }[]`).
+2. For each target permission (matched by `name + realmId + clientId`): if the actor holds no grant for it → fail.
 3. For each target **grant**, require that **some** actor grant **dominates** it (`grantDominates`). Because access is the OR over grants, child-access ⊆ actor-access iff every child grant is covered by some actor grant.
 
 **`grantDominates(parent, child)`** (`@authup/access`, `permission/helpers/grant.ts`) — a parent grant covers a child grant iff:
 
-- **Reach:** `compareRealmScope(parent.realm_scope, child.realm_scope) >= 0` (ordered `none < own < ownOrNull < any`), AND
-- **Policy** (`policyDominates`): an unrestricted parent covers any child; a restricted parent never covers an *unrestricted* child (it cannot confer the wider policy-free reach it lacks); two restricted grants cover one another **only when their policies are provably the same** (`isPolicyEquivalent`), never by evaluated effect. Provably-same means **either** the same persisted row (equal primary-key `id`) **or** structurally-identical configuration — a value-compare (`smob` `isEqual`) over the policy after `normalizePolicyForEquality` strips the non-evaluation-affecting columns (`id, built_in, name, display_name, description, parent_id, parent, realm_id, realm, created_at, updated_at`) recursively through `children`. So two *distinct rows with identical config* (same predicate) dominate, but a genuinely **different** configuration does not. A shared `type` is **not** equivalence (two `attributes` policies are both `type: attributes`, but `{department:X}` ≠ `{department:Y}`). Deciding `child ⊆ parent` for *different* trees is undecidable (a policy is a predicate over `PolicyData`), so we accept only provable identity/equality and treat anything else as distinct (#3159 — the predecessor treated any two policy-bound grants as mutually dominating: a latent over-permit across disjoint policy scopes, e.g. a `department=X` actor conferring a `department=Y` grant). Fail-closed; may under-permit only when the two equal predicates are not provably equal (e.g. composite children in different order). **Security invariant:** every key in `NON_SEMANTIC_POLICY_KEYS` must stay non-evaluation-affecting — adding an evaluation-relevant field there would widen equivalence into an over-permit (new *config* fields need not be added; they are compared by default).
+- **Reach:** `compareRealmScope(parent.realmScope, child.realmScope) >= 0` (ordered `none < own < ownOrNull < any`), AND
+- **Policy** (`policyDominates`): an unrestricted parent covers any child; a restricted parent never covers an *unrestricted* child (it cannot confer the wider policy-free reach it lacks); two restricted grants cover one another **only when their policies are provably the same** (`isPolicyEquivalent`), never by evaluated effect. Provably-same means **either** the same persisted row (equal primary-key `id`) **or** structurally-identical configuration — a value-compare (`smob` `isEqual`) over the policy after `normalizePolicyForEquality` strips the non-evaluation-affecting columns (`id, builtIn, name, displayName, description, parentId, parent, realmId, realm, createdAt, updatedAt`) recursively through `children`. So two *distinct rows with identical config* (same predicate) dominate, but a genuinely **different** configuration does not. A shared `type` is **not** equivalence (two `attributes` policies are both `type: attributes`, but `{department:X}` ≠ `{department:Y}`). Deciding `child ⊆ parent` for *different* trees is undecidable (a policy is a predicate over `PolicyData`), so we accept only provable identity/equality and treat anything else as distinct (#3159 — the predecessor treated any two policy-bound grants as mutually dominating: a latent over-permit across disjoint policy scopes, e.g. a `department=X` actor conferring a `department=Y` grant). Fail-closed; may under-permit only when the two equal predicates are not provably equal (e.g. composite children in different order). **Security invariant:** every key in `NON_SEMANTIC_POLICY_KEYS` must stay non-evaluation-affecting — adding an evaluation-relevant field there would widen equivalence into an over-permit (new *config* fields need not be added; they are compared by default).
 
 An actor with both `admin` (unrestricted) and `realm_admin` (restricted) grants for a permission gets the union: the unrestricted grant dominates anything, so the disjunction stays permissive without any "least-restrictive-wins" fold.
 
@@ -995,10 +1012,10 @@ An actor with both `admin` (unrestricted) and `realm_admin` (restricted) grants 
 
 When creating or updating any permission-binding junction (role-permission, user-permission, client-permission, robot-permission):
 
-1. The service calls `this.identityPermissionProvider.resolveJunctionGrant(identity, { name, realmId, clientId, realmScope })`, passing the **requested** reach (`validated.realm_scope ?? own` on create; `data.realm_scope ?? entity.realm_scope` on update — the *resulting* junction reach, so a policy-only update can't silently widen).
-2. It aggregates the actor's grants for that permission and selects the grant **relative to the requested reach** (`selectGrantForRequest`, #3160): each grant is ranked by the reach it can confer *for this request* — its `realm_scope` capped to `realmScope` — so a lower-scoped policy-free grant beats a higher-scoped policy-bound grant when both cap to the same requested reach (highest *capped* reach, policy-free preferred on a tie). This is **not** a global "ceiling" — a mixed-grant actor (e.g. `own`+no-policy *and* `any`+policy) propagates its policy-free `own` grant for an `own` request instead of inheriting the wider grant's policy.
-3. The selected grant is returned **uncapped**; the new junction is then capped by the consumer: `realm_scope = min(requested, selected.realm_scope)`, and the selected grant's **own** `policy` (its `id`) is propagated as `policy_id` — never the target's. (If the selected grant is policy-restricted but its policy is not a propagatable `Policy` — e.g. an id-less composite — it fails closed to `realm_scope: none`. A clean lower-scoped grant covering the request avoids that fail-closed.)
-4. Returning the selected grant uncapped preserves the "only an unrestricted (`any`, policy-free) actor may set an explicit `policy_id`" rule: that check reads the selected grant's uncapped `realm_scope`/`policy`, so it still fires exactly when the actor genuinely holds an `any` policy-free grant.
+1. The service calls `this.identityPermissionProvider.resolveJunctionGrant(identity, { name, realmId, clientId, realmScope })`, passing the **requested** reach (`validated.realmScope ?? own` on create; `data.realmScope ?? entity.realmScope` on update — the *resulting* junction reach, so a policy-only update can't silently widen).
+2. It aggregates the actor's grants for that permission and selects the grant **relative to the requested reach** (`selectGrantForRequest`, #3160): each grant is ranked by the reach it can confer *for this request* — its `realmScope` capped to `realmScope` — so a lower-scoped policy-free grant beats a higher-scoped policy-bound grant when both cap to the same requested reach (highest *capped* reach, policy-free preferred on a tie). This is **not** a global "ceiling" — a mixed-grant actor (e.g. `own`+no-policy *and* `any`+policy) propagates its policy-free `own` grant for an `own` request instead of inheriting the wider grant's policy.
+3. The selected grant is returned **uncapped**; the new junction is then capped by the consumer: `realmScope = min(requested, selected.realmScope)`, and the selected grant's **own** `policy` (its `id`) is propagated as `policyId` — never the target's. (If the selected grant is policy-restricted but its policy is not a propagatable `Policy` — e.g. an id-less composite — it fails closed to `realmScope: none`. A clean lower-scoped grant covering the request avoids that fail-closed.)
+4. Returning the selected grant uncapped preserves the "only an unrestricted (`any`, policy-free) actor may set an explicit `policyId`" rule: that check reads the selected grant's uncapped `realmScope`/`policy`, so it still fires exactly when the actor genuinely holds an `any` policy-free grant.
 
 This prevents privilege escalation: a `realm_admin` cannot create unrestricted permission bindings, and (post-#3160) a mixed-grant actor neither under-propagates (spurious policy inheritance on a narrow request) nor over-propagates (riding a wider grant's reach with a narrower grant's policy). Because the actor only ever propagates its *own* policy (not the target's), this path needs no policy-content comparison — the asymmetry with the superset check, which must compare against fixed target grants.
 
@@ -1018,17 +1035,17 @@ Each policy is a built-in `ATTRIBUTE_NAMES` policy with `invert: true`, where `n
 
 | Policy | Denylist `names` |
 |---|---|
-| `system.client-names-self-manage` | `active, realm_id, auth_method, token_binding_method, secret_hashed, secret_encrypted` |
-| `system.robot-names-self-manage` | `active, realm_id, user_id` |
-| `system.user-names-self-manage` | `active, name_locked, status, status_message, realm_id` |
+| `system.client-names-self-manage` | `active, realmId, authMethod, tokenBindingMethod, secretHashed, secretEncrypted` |
+| `system.robot-names-self-manage` | `active, realmId, userId` |
+| `system.user-names-self-manage` | `active, nameLocked, status, statusMessage, realmId` |
 
-The client denylist additionally blocks `auth_method` (switching away from
-`secret` clears the secret), `token_binding_method`, and the `secret_hashed` /
-`secret_encrypted` storage flags (downgrading either would persist the secret
-in plaintext). FK fields like `realm_id` are usually validator-stripped on
+The client denylist additionally blocks `authMethod` (switching away from
+`secret` clears the secret), `tokenBindingMethod`, and the `secretHashed` /
+`secretEncrypted` storage flags (downgrading either would persist the secret
+in plaintext). FK fields like `realmId` are usually validator-stripped on
 UPDATE already, but stay in the denylist as defense in depth.
 
-Self-editable fields (e.g. `name`, `display_name`, `email`, `password`, `secret`, `redirect_uri`, etc.) are NOT enumerated — they're permitted by virtue of being absent from the denylist. The validator already strips system-managed columns (`built_in`, `id`, `created_at`, `updated_at`) before they reach the policy, so the denylist only needs to cover what validators let through but admin-only state should still block.
+Self-editable fields (e.g. `name`, `displayName`, `email`, `password`, `secret`, `redirectUri`, etc.) are NOT enumerated — they're permitted by virtue of being absent from the denylist. The validator already strips system-managed columns (`builtIn`, `id`, `createdAt`, `updatedAt`) before they reach the policy, so the denylist only needs to cover what validators let through but admin-only state should still block.
 
 **Trade-off:** denylist semantics are fail-open. A new column added to the entity (e.g. a new `User.role_metadata` field mounted in the validator) is self-editable by default until added to the denylist. When adding admin-only state to an entity, extend the relevant denylist alongside the migration.
 
@@ -1071,7 +1088,7 @@ if (isSelfEdit) {
 ```
 
 Two-layer rejection:
-1. **Validator** silently strips fields it doesn't mount (e.g. `built_in`, `realm_id` on UPDATE) — these never reach the policy.
+1. **Validator** silently strips fields it doesn't mount (e.g. `builtIn`, `realmId` on UPDATE) — these never reach the policy.
 2. **ATTRIBUTE_NAMES policy** rejects validated fields not in the allowlist (e.g. `active` on a client) — produces a `value_invalid` issue and the request fails.
 
 ### preEvaluate auto-exclusion
@@ -1096,15 +1113,15 @@ Enforced server-side at **three** points — the kit UI (realm-mismatch card in
 1. **`POST /authorize` issuance** — `OAuth2Authorization.authorize()` throws
    `OAuth2LoginRequiredError` (`ErrorCode.OAUTH_LOGIN_REQUIRED` / OIDC
    `login_required`, HTTP 400, **no identity data in the body** — no
-   realm-enumeration oracle) when `identity.data.realm_id !== data.realm_id`
+   realm-enumeration oracle) when `identity.data.realmId !== data.realm_id`
    (the client realm the code-request verifier stamped). The gate reads the
-   scalar `realm_id` column, not the `realm` relation — the relation may not
-   be loaded on the resolved identity. An identity carrying no `realm_id`
+   scalar `realmId` column, not the `realm` relation — the relation may not
+   be loaded on the resolved identity. An identity carrying no `realmId`
    fails closed the same way (plan 047.6 — a clean `login_required`, never a
    raw TypeError/500); the code issuer keeps its own null-guard on the loaded
    relation (it stamps `realm_name`) and fails closed with `invalid_request`.
 2. **`/token` code redemption** — the code verifier's `realmId` option (fed
-   `client.realm_id` by the HTTP authorize grant) rejects
+   `client.realmId` by the HTTP authorize grant) rejects
    `code.realm_id !== realmId` with `invalid_grant`. Covers codes minted outside
    `authorize()` (identity-provider callback) and in-flight pre-deploy codes.
 3. **`/token` refresh parity** — a **public** client refreshing a token whose
@@ -1142,7 +1159,7 @@ the `/token` exchange mints and returns the id_token. Discovery
 public clients **unconditionally** (the former `willIssueCode` gate is gone —
 every verified request issues a code). The verifier also rejects a
 **pattern-less client** outright (plan 047.1, OAuth 2.1 posture): a client with
-no registered `redirect_uri` patterns cannot use `/authorize` at all —
+no registered `redirectUri` patterns cannot use `/authorize` at all —
 previously its `data.redirect_uri` went unchecked (any value passed, merely
 flagged `redirectUriVerified=false`), letting a misconfigured client issue
 codes to arbitrary attacker-supplied URIs. `redirectUriVerified` is now `false`
@@ -1159,7 +1176,7 @@ only when the request itself carries no `redirect_uri`.
 behavior for every RP (kit or not): `prompt=select_account` shows an
 `AAccountPrompt` "continue as / use another account" chooser instead of silently
 continuing; `login_hint` pre-fills the identifier; `prompt=consent` suppresses
-the `built_in` auto-consent. `buildAuthorizeURL` (kit) **defaults
+the `builtIn` auto-consent. `buildAuthorizeURL` (kit) **defaults
 `prompt=select_account`** (overridable) so kit apps inherit account-switching.
 The chooser targets a **lingering** session only: `Authorize.vue` watches the
 kit store's `lastAuthOrigin` for a change to `login` during its mount (plan 045
@@ -1193,8 +1210,8 @@ with `error=access_denied` (a user-click open redirect otherwise).
 
 `prompt=login` / `max_age` freshness is enforced **server-side** in
 `OAuth2Authorization.authorize()` (the authoritative backstop; the hosted UI is
-convenience): the authentication time is the backing session's `created_at`
-(**never** `refreshed_at` — a token refresh must not reset it; a session-less
+convenience): the authentication time is the backing session's `createdAt`
+(**never** `refreshedAt` — a token refresh must not reset it; a session-less
 Basic-auth authorize counts as "now"), and a violation throws
 `login_required`. The window is `config.promptLoginMaxAge`
 (`PROMPT_LOGIN_MAX_AGE`, default 60s) — a documented stateless
@@ -1251,11 +1268,11 @@ client-side (the kit store's cookie), so the SSR page — which every RP (kit or
 not) is redirected to — owns the decision. The kit ladder, evaluated after the
 SSR app's router guard `await store.resolve()` settles the session:
 - **`prompt=none`**: not-logged-in / realm-mismatch → redirect
-  `redirect_uri?error=login_required&state`; non-`built_in` client →
+  `redirect_uri?error=login_required&state`; non-`builtIn` client →
   the kit probes the persisted consent first (plan 055, see *OAuth2 Consent*)
   and only redirects `consent_required` when no covering consent exists —
   a covering grant falls through to the auto-consent path and issues the
-  code silently; `built_in`
+  code silently; `builtIn`
   + logged-in + realm-match → the existing auto-consent path issues the code
   silently; a max_age/freshness `login_required` from the POST is redirected as
   `login_required`. Every silent error redirect is gated on
@@ -1277,9 +1294,9 @@ server-side silent answer would require cookie-based session recognition on
 separately as plan 063.
 
 The anonymous `GET /authorize` hydration payload carries a **trimmed client
-DTO** (`ClientSummary` = `id`/`name`/`display_name`/`built_in`/`created_at`) plus
-the `RealmSummary` and scopes — never the client's `redirect_uri` patterns (the
-trusted-origin set), `grant_types`, internal `base_url`/`root_url`, or the
+DTO** (`ClientSummary` = `id`/`name`/`displayName`/`builtIn`/`createdAt`) plus
+the `RealmSummary` and scopes — never the client's `redirectUri` patterns (the
+trusted-origin set), `grantTypes`, internal `baseUrl`/`rootUrl`, or the
 secret storage flags. `ClientEntity.secret` is additionally `select:false`, but
 the DTO must not rely on that alone.
 
@@ -1338,26 +1355,26 @@ app (kit or non-kit) ends a lingering authup session on its own logout, so
   sub-matched session its `sid` references.
 - A signature-verified hint carrying `sid` → the referenced session is revoked
   **immediately** (`ISessionManager.revoke`), but **only** after
-  `session.sub`/`sub_kind` match the hint's subject (never revoke someone else's
+  `session.sub`/`subKind` match the hint's subject (never revoke someone else's
   session). Without a hint the endpoint mutates nothing — the SSR page's sign-out
   is a click-gated, bearer-authenticated `store.logout()`.
 - `post_logout_redirect_uri` is honored **only** when it is absolute http(s) AND
   `isSimpleMatch`es a registered pattern in the client's dedicated
   `post_logout_redirect_uri` column (open-redirect guard); otherwise dropped,
   and `state` rides only alongside a validated redirect. **The column is
-  separate from `redirect_uri` (plan 042 item 9)** — login and logout redirect
-  surfaces are no longer conflated: a URI that matches the login `redirect_uri`
+  separate from `redirectUri` (plan 042 item 9)** — login and logout redirect
+  surfaces are no longer conflated: a URI that matches the login `redirectUri`
   but not the post-logout allow-list is rejected. It is a nullable
   `text` column on `ClientEntity` + core-kit `Client` + `ClientValidator`
   (the 2000-char cap is on the inbound `post_logout_redirect_uri` **request
   param** in `OAuth2EndSessionRequestValidator`, not the column;
-  comma-separated wildcard patterns, same shape as `redirect_uri`; mounted in
+  comma-separated wildcard patterns, same shape as `redirectUri`; mounted in
   every group, **not** in the self-manage denylist, **not** in the trimmed
   `ClientSummary` DTO, **added** to the client repository `fields.default`
   allow-list so reads return it). The migration is folded into the
   still-unreleased `1783325495597-Default.ts` (both dialects, up/down verified
   by the `tests-migrations` round-trip). `buildWebClientAttributes` sets it to
-  the same `<origin>/**`-per-app-origin patterns as `redirect_uri`, so
+  the same `<origin>/**`-per-app-origin patterns as `redirectUri`, so
   `WebClientProvisioner`'s MERGE widens it on the next startup.
 - **The server-side bounce fires ONLY when the logout was actually performed**
   (`serverRevoked` — a verified hint revoked the session). A hint-less or
@@ -1414,7 +1431,7 @@ session reuse → self-DoS of fresh logins).
 
 ## Application Access Policy (plan 052)
 
-`Client.access_policy_id` is an optional FK onto `auth_policies`
+`Client.accessPolicyId` is an optional FK onto `auth_policies`
 (`ON DELETE SET NULL`) gating **who may obtain a token for that client** via
 the interactive code flow. `null` = default-allow (every existing client
 behaves as before); a bound policy is evaluated against the authenticated
@@ -1433,7 +1450,7 @@ neutral message: no identity/policy detail, no enumeration oracle).
   identity's attribute bag is deliberately not loaded at the gate. **Fail
   closed everywhere**: unresolvable/dangling policy id, tree-load failure,
   evaluation error, and even a policy-carrying client with **no wired
-  evaluator** all deny. Only a genuinely-null `access_policy_id` allows (a
+  evaluator** all deny. Only a genuinely-null `accessPolicyId` allows (a
   deleted policy degrades to null via `SET NULL`).
 - **Three enforcement legs** (plan-041 layered-enforcement shape): (1)
   `OAuth2Authorization.authorizeInner` — the LAST gate before code issuance
@@ -1458,7 +1475,7 @@ neutral message: no identity/policy detail, no enumeration oracle).
   URI). The error's `redirectUri`/`state` ride **non-enumerable class
   fields** on `OAuth2AccessDeniedError`, so they never serialize into the
   wire body.
-- **Guardrails**: `access_policy_id` is in the `system.client-names-self-manage`
+- **Guardrails**: `accessPolicyId` is in the `system.client-names-self-manage`
   ATTRIBUTE_NAMES denylist (a self-managing client cannot change its own
   gate), stays **out** of the anonymous `GET /authorize` `ClientSummary` DTO,
   and is mounted `{ optional: true, nullable }` in every validator group so
@@ -1510,7 +1527,7 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   audit). A grant only shrinks via explicit revoke.
 - **Persist site — exactly one:** `HTTPOAuth2Authorizer.authorizeWithRequest`,
   AFTER `authorize()` succeeds (an access-policy denial throws before it —
-  a denied identity never writes a row), skipping `built_in` clients (zero
+  a denied identity never writes a row), skipping `builtIn` clients (zero
   rows, parity with auto-consent) and wrapped try/catch (a consent-write
   failure never fails an issued code). Deliberately NOT recorded at the
   federated-IdP callback or `/token` — no synthetic consent for flows that
@@ -1527,46 +1544,46 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   delete at `own`, read at default `ownOrNull`); a reader without
   `CONSENT_READ` is force-scoped to its own rows, own-row get/delete needs no
   permission, foreign rows take per-row `evaluate` + `resourceRealmMatch`.
-  The adapter force-selects `realm_id`/`sub`/`sub_kind` (plan-039 discipline).
+  The adapter force-selects `realmId`/`sub`/`subKind` (plan-039 discipline).
   Typed client: `client.consent.getMany/getOne/delete`.
 - **Kit skip (client-side, since GET /authorize is anonymous):**
   `Authorize.vue` probes `httpClient.consent.getMany` **filtered by the
-  resolved user subject** (`sub` = `store.user.id`, `sub_kind: 'user'`, plus
-  `client_id`) alongside the MFA status fetch (same ref-plus-loading-return
+  resolved user subject** (`sub` = `store.user.id`, `subKind: 'user'`, plus
+  `clientId`) alongside the MFA status fetch (same ref-plus-loading-return
   pattern as `mfaStatus` — the ladder stays a sync render fn). The subject
   filter is load-bearing: the server only force-scopes a *permissionless*
   caller to its own rows, so an admin / realm_admin holding `CONSENT_READ`
   would otherwise get every subject's rows back and auto-consent off a
   stranger's grant — the covering match therefore also re-checks
-  `row.sub`/`row.sub_kind` (defense in depth). The probe is driven by the
+  `row.sub`/`row.subKind` (defense in depth). The probe is driven by the
   resolved user id (not the access-token-derived `loggedIn`, which flips
   before `userInfo` resolves) and drops any in-flight response whose subject
-  is no longer current (logout / account switch mid-probe). `built_in`
+  is no longer current (logout / account switch mid-probe). `builtIn`
   clients and non-user / logged-out sessions never auto-consent (they settle
   to not-covered once the session settles); probe failure → not covered →
   re-prompt (fail safe). `AuthorizeForm.autoConsent` =
-  `(built_in || consentGranted) && !prompt.includes('consent')` — so a
+  `(builtIn || consentGranted) && !prompt.includes('consent')` — so a
   covering consent auto-submits, and `prompt=consent` always re-prompts. The
   silent (`prompt=none`) branch redirects `consent_required` only when the
   settled probe found no covering consent — persisted consent is what makes
-  `prompt=none` meaningful for non-`built_in` clients.
+  `prompt=none` meaningful for non-`builtIn` clients.
 - **UI:** 4th settings tab "Applications"
   (`apps/client-web/pages/settings/index/applications.vue`) over the kit
   `<AConsents>` collection — rows grouped per client, granted scopes rendered
   as per-scope revoke chips plus a per-app "Revoke access" (looped per-row
   DELETEs behind an error-tone `useAlertDialog`). The self-service list
-  endpoint joins only a **client summary** (id / name / display_name /
-  built_in) — never the full `ClientEntity` (`client` is deliberately absent
+  endpoint joins only a **client summary** (id / name / displayName /
+  builtIn) — never the full `ClientEntity` (`client` is deliberately absent
   from the adapter's `relations.allowed`, so a raw `?include=client` cannot
-  force the full-column join and leak redirect_uri patterns / grant_types /
-  secret-storage flags / `access_policy_id` to a self-service user without
+  force the full-column join and leak redirectUri patterns / grantTypes /
+  secret-storage flags / `accessPolicyId` to a self-service user without
   `CLIENT_READ`). Revoking consent stops the next silent/auto issue;
   already-issued tokens are unaffected (revoke those via the sessions API —
   stated limitation).
-- **Subject deletion:** the subject is polymorphic (`sub`/`sub_kind`), but a
-  **nullable `user_id` FK** (`ON DELETE CASCADE`) is populated whenever
-  `sub_kind = user`, so deleting a user cascade-drops its consent rows. A
-  non-user subject (client/robot) leaves `user_id` null and its rows are
+- **Subject deletion:** the subject is polymorphic (`sub`/`subKind`), but a
+  **nullable `userId` FK** (`ON DELETE CASCADE`) is populated whenever
+  `subKind = user`, so deleting a user cascade-drops its consent rows. A
+  non-user subject (client/robot) leaves `userId` null and its rows are
   cleaned up when the client/realm is deleted (both CASCADE). No expiry sweep
   yet (`expires_at` is always null in Stage 1) — a Stage-2 addition.
 - **Over-long scope token** (>128 chars, only reachable via a non-standard
@@ -1580,7 +1597,7 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
 ## OAuth2 Token Endpoint Authentication
 
 The `/token` endpoint authenticates the calling client according to its
-`auth_method`: `none` clients identify with `client_id`, `secret` clients must
+`authMethod`: `none` clients identify with `client_id`, `secret` clients must
 present the shared secret, and `tls` clients must present trusted certificate
 evidence. The methods are exclusive; a TLS client cannot fall back to a
 secret.
@@ -1595,10 +1612,10 @@ secret.
 | `password` | When a client is supplied, it follows its configured method. The token's `client_id` claim and the OpenID `aud` claim use that resolved client's id, not any user-side association. The shared realm hint resolves the **user realm** and scopes the client leg. |
 | `robot_credentials` | Authentication is the grant's purpose (Authup-specific extension). |
 
-### Per-client grant allowlist (`grant_types`)
+### Per-client grant allowlist (`grantTypes`)
 
 Independent of client authentication, every client-resolving grant enforces
-`Client.grant_types` as an **opt-in allowlist** via `assertClientGrantAllowed`
+`Client.grantTypes` as an **opt-in allowlist** via `assertClientGrantAllowed`
 (`core/oauth2/client/grant-type.ts`): when the column is non-null (space- or
 comma-delimited values), the requested grant must be listed — otherwise the
 request fails with `unauthorized_client` (RFC 6749 §5.2,
@@ -1689,7 +1706,7 @@ for a `tls` client is rejected as mixed authentication.
 
 Single core class (`core/oauth2/client/authenticator.ts`) used by all standard
 client-resolving grants. It resolves the client by id/name and dispatches on
-`auth_method`:
+`authMethod`:
 
 - `none`: accepts a client id only and rejects a supplied secret;
 - `secret`: requires and verifies `client_secret`;
@@ -1717,14 +1734,14 @@ certificate-path signature edge use the WebCrypto API. The validator accepts
 an optional `Crypto` provider for future browser/server reuse; when omitted,
 Peculiar uses the runtime's global WebCrypto provider.
 
-For `auth_method = 'tls'`, the leaf must be current, non-CA, usable for client
+For `authMethod = 'tls'`, the leaf must be current, non-CA, usable for client
 authentication (clientAuth EKU when present and digitalSignature key usage
 when present), chain through supplied intermediates to an enabled realm trust
 anchor, and contain exactly one Authup client URI SAN equal to
 `urn:authup:client:<client-uuid>`. Other SANs are permitted. Validation is
 offline: no AIA, CRL, or OCSP network lookup occurs on the request path.
 
-`token_binding_method` is independent (`none | tls`). When set to `tls`, every
+`tokenBindingMethod` is independent (`none | tls`). When set to `tls`, every
 new access/refresh/MFA ticket carries `cnf: { "x5t#S256": <leaf thumbprint> }`.
 Binding-only evidence may be any current non-CA certificate, including an
 untrusted/self-signed leaf; the TLS handshake proves key possession while
@@ -1744,7 +1761,7 @@ thumbprint fails closed (`JWTError`), never open.
 
 ### PKCE for public clients
 
-`/authorize` rejects public (`auth_method = 'none'`) clients without
+`/authorize` rejects public (`authMethod = 'none'`) clients without
 `code_challenge` when an authorization code will be issued (RFC 7636 §4.4.1,
 OAuth 2.1). At `/token`, the code verifier double-checks: if the resolved client
 is public and the auth code has no challenge stored, reject. Defense in depth
@@ -1784,7 +1801,7 @@ still enforced; only the cache blocklist is skipped) and decides on the DB row �
 so family-revocation-on-replay is deterministic regardless of cache state (a warm
 cache would otherwise reject a consumed RT *before* `runWith`). Consequently
 `/token/revoke` must also soft-revoke the row: `OAuth2TokenRevoker` takes an
-optional `sessionTokenRepository` and sets `revoked_at` alongside the cache
+optional `sessionTokenRepository` and sets `revokedAt` alongside the cache
 blocklist. **Do not remove the `skipActiveCheck` on the refresh path** without
 re-adding a cache-based replay reaction — they are coupled.
 
@@ -1801,20 +1818,20 @@ revocation on the reused session).
 ### Grant flow (`core/oauth2/grant-types/refresh-token.ts`)
 
 `findOneById(jti)` → reject (`invalid_grant`) if **missing** (expired-and-swept or
-hard-cutover legacy — no `legacyRefresh`), **wrong kind**, or **`revoked_at` set**
+hard-cutover legacy — no `legacyRefresh`), **wrong kind**, or **`revokedAt` set**
 → `markRefreshConsumed(jti, now)` (atomic conditional UPDATE:
 `consumed_at IS NULL AND revoked_at IS NULL AND kind='refresh'`). On success:
 blocklist the old jti in cache (`setInactive(jti, exp)` — cache-only, **not** a
-DB revoke, so grace stays intact), refresh the session, issue RT (`parent_id =
-old jti`) then AT (`refresh_token_id = new RT jti`). On consume-failure →
+DB revoke, so grace stays intact), refresh the session, issue RT (`parentId =
+old jti`) then AT (`refreshTokenId = new RT jti`). On consume-failure →
 `revokeFamily`. Each issuer writes the row after `saveWithSignature` when
-`session_id` is present (M2M client/robot-credentials write only an access row —
+`sessionId` is present (M2M client/robot-credentials write only an access row —
 they mint no RT).
 
 ### Family revoke = the `auth_sessions` row, never a wider SSO session
 
 `revokeFamily`: `revokeBySessionId` soft-revokes every row and returns
-`{id, expires_at}[]`; each jti is cache-blocklisted **with its real expiry**
+`{id, expiresAt}[]`; each jti is cache-blocklisted **with its real expiry**
 (never the fallback 1h TTL — a 3-day RT must not resurface as `active` in
 introspection); then `sessionManager.revoke(sessionId)` deletes the session
 (cascade drops the rows) so its access tokens stop verifying on authup's own API.
@@ -1823,7 +1840,7 @@ Replay is logged (`logger?.warn`) and surfaced as `invalid_grant`.
 ### Grace period (`tokenRefreshGracePeriod`, seconds, default 0 = strict)
 
 On consume-failure, `isWithinGraceWindow(jti)` returns true only when
-`gracePeriod > 0` AND the row is unrevoked AND `now - consumed_at ≤ gracePeriod`
+`gracePeriod > 0` AND the row is unrevoked AND `now - consumedAt ≤ gracePeriod`
 AND the token is the **chain tip** (`hasConsumedChild(jti)` is false). The chain-tip
 check is load-bearing: without it a stolen *older* consumed RT replayed inside its
 window would fork a parallel session instead of tripping replay detection. A
@@ -1834,7 +1851,7 @@ the extra queries entirely (strict: any consumed-RT replay → family revoke).
 ### Cleanup
 
 `components/oauth2-cleaner` sweeps `auth_session_tokens` where
-`expires_at < now` (every minute, alongside the existing session sweep). AT rows
+`expiresAt < now` (every minute, alongside the existing session sweep). AT rows
 dominate volume; a deleted session cascade-drops its remaining rows.
 
 ## Session Management API (plan 016, PR G)
@@ -1863,15 +1880,15 @@ A REST surface over `auth_sessions` for "see all my sessions / force logout":
   authorization middleware's session check).
 - `DELETE /sessions` — bulk revoke, discriminated by whether the rapiq query
   carries a **recognized target filter** (`SESSION_FILTER_KEYS` = `id`, `sub`,
-  `sub_kind`, `user_id`, `client_id`, `robot_id`, `realm_id`; the same
+  `subKind`, `userId`, `clientId`, `robotId`, `realmId`; the same
   vocabulary `getMany` filters on):
   - **No target filter →** self-service: revoke every own session except the
     current one ("log out my other devices"). No permission; the current session
     id comes from the bearer token (stashed by the authorization middleware via
     `setRequestSessionId`), never from the client. An **unrecognized/empty**
     filter falls through here too — a typo can never trigger a mass delete.
-  - **A target filter (e.g. `?filter[user_id]=<uuid>`, comma-list for several
-    subjects, or `?filter[realm_id]=…`) →** admin force-logout:
+  - **A target filter (e.g. `?filter[userId]=<uuid>`, comma-list for several
+    subjects, or `?filter[realmId]=…`) →** admin force-logout:
     `SessionService.deleteManyByQuery` loads **every** matching session
     (`ISessionRepository.findAllByQuery` — deliberately **unbounded**, no
     pagination cap: reusing the paginated `findMany` would silently truncate at
@@ -1879,13 +1896,13 @@ A REST surface over `auth_sessions` for "see all my sessions / force logout":
     `resourceRealmMatch`** (same drop-unauthorized shape as `getMany`). Filter
     breadth **cannot escalate** — the actor only deletes what it is already
     authorized to delete, so a `realm_admin` in realm A silently drops a target's
-    realm-B sessions, and `filter[realm_id]` is bounded to its reach.
-  A non-admin sending a target filter (even its own `user_id`) takes the admin
+    realm-B sessions, and `filter[realmId]` is bounded to its reach.
+  A non-admin sending a target filter (even its own `userId`) takes the admin
   path and gets `403`; self-service is the no-filter call. Typed client mirrors
   `getMany`: `client.session.deleteMany(data?: BuildInput<Session>)` — `deleteMany()`
-  (self) / `deleteMany({ filter: { user_id } })` (admin).
+  (self) / `deleteMany({ filter: { userId } })` (admin).
 
-**Ownership** = `session.sub === actor.identity.data.id && session.sub_kind ===
+**Ownership** = `session.sub === actor.identity.data.id && session.subKind ===
 actor.identity.type` (sessions have a polymorphic subject — user/client/robot —
 which is why dedicated `SESSION_READ`/`SESSION_DELETE` beat reusing the parent
 `USER_*`/`CLIENT_*`/`ROBOT_*` families). Both auto-provision (enum-iterated) and
@@ -1893,16 +1910,16 @@ grant to `admin` (`any`) + `realm_admin` (`ownOrNull` read / `own` delete). The
 list read path bypasses the session cache (id-keyed only, no list index) and goes
 straight to TypeORM. **Every realm-gated `findMany` adapter force-selects the
 columns its per-row gate reads, regardless of the client `fields` projection**
-(plan 039) — the gate reads `entity.realm_id` via `resourceRealmMatch`, and rapiq
+(plan 039) — the gate reads `entity.realmId` via `resourceRealmMatch`, and rapiq
 honors a `fields` projection over `default`, so without the force-select a scoped
-reader could strip `realm_id` and neutralize the realm_scope reach factor
+reader could strip `realmId` and neutralize the realmScope reach factor
 (cross-realm leak; for an `ownOrNull` reader the stripped realm reads as a
 null/global resource). The shared helper `applyRealmScopeSelect(qb, alias,
 extraColumns?)` (`app/modules/database/repositories/helpers.ts`) is called AFTER
-`applyQuery` in: `session` (`+ sub, sub_kind` — ownership check), `user` /
-`robot` (`+ id` — self short-circuit), `client` (`+ secret_hashed,
-secret_encrypted` — the plaintext-secret gate precondition), `role-attribute`,
-`user-attribute` (`+ user_id` — isMe check; the two attribute adapters configure
+`applyQuery` in: `session` (`+ sub, subKind` — ownership check), `user` /
+`robot` (`+ id` — self short-circuit), `client` (`+ secretHashed,
+secretEncrypted` — the plaintext-secret gate precondition), `role-attribute`,
+`user-attribute` (`+ userId` — isMe check; the two attribute adapters configure
 no `fields`, so the call is pinning defense in depth there). `role` / `scope` /
 `permission` / `policy` list paths carry no per-row realm gate (their
 `resourceRealmMatch` usages are write paths on server-loaded data), so they are
@@ -1920,7 +1937,7 @@ gate reads.
 
 **UI:** two `<VCTable>` pages backed by the kit `<ASessions>` collection —
 `pages/settings/index/sessions.vue` (the actor's **own** sessions, `filter:
-{ user_id }`) and `pages/users/[id]/sessions.vue` (an admin viewing a user's
+{ userId }`) and `pages/users/[id]/sessions.vue` (an admin viewing a user's
 sessions). The settings page carries a **"log out other devices"** button
 (`authupApp` `SESSION_REVOKE_OTHERS*` keys) that confirms via `useAlertDialog`
 then calls `client.session.deleteMany()` (`DELETE /sessions` — revoke-all-but-
@@ -1936,7 +1953,7 @@ enforced on direct navigation).
 The admin page carries a **"Log out everywhere"** button (`authupApp`
 `SESSION_REVOKE_ALL*` keys, gated on `SESSION_DELETE` via `usePermissionCheck`,
 error-tone confirm) that calls
-`client.session.deleteMany({ filter: { user_id: entity.id } })` — the admin
+`client.session.deleteMany({ filter: { userId: entity.id } })` — the admin
 force-logout path above. The self page marks the caller's **current
 row** with a "This device" badge (`SESSION_CURRENT` key) and omits its per-row
 delete button (a lone current-session delete would be a confusing silent
@@ -1966,7 +1983,7 @@ auth-code blob:
   `OAuth2AuthorizationCodeIssuer.issue(..., { sessionId })` → `entity.session_id`.
 - `OAuth2AuthorizeGrant.resolveSession` reuses the referenced session iff it
   still exists **and** matches the code's `sub` / `sub_kind` / `realm_id`
-  (defense in depth); it stamps the authorizing `client_id` onto the row and
+  (defense in depth); it stamps the authorizing `clientId` onto the row and
   `sessionManager.refresh()`es it. Any mismatch, or a **session-less** authorize
   flow (external-IdP callback — `IdentityProviderController` issues its code with
   no `sessionId`; non-interactive clients), falls back to `sessionManager.create()`,
@@ -2034,17 +2051,17 @@ realtime), port `IUserAuthenticatorRepository` + `UserAuthenticatorService` in
   **AES-256-GCM-encrypted at rest** under the user's realm enc key from the
   **realm key store** (plan 069 — see *Realm Key Store* below): the service's
   `cipher` ctx is an `IRealmCipher` (`core/key/`), enroll encrypts via
-  `cipher.encrypt(user.realm_id, seed)` into a self-describing
+  `cipher.encrypt(user.realmId, seed)` into a self-describing
   `v1.<key_id>.<blob>` and verify decrypts by the blob's key id with a
-  `device.realm_id` binding assert. Keys are auto-generated per realm on first
+  `device.realmId` binding assert. Keys are auto-generated per realm on first
   use — **zero key configuration** (`MFA_ENABLED=true` suffices; the former
   `MFA_ENCRYPTION_KEY` was removed unreleased). A blob referencing an
   unknown/foreign key fails closed as a plain verification failure (never a
   500); the TOTP `MFA_NOT_CONFIGURABLE` path is gone (it remains for
   WebAuthn-without-`publicUrl` and email-without-mail-transport).
 - Recovery codes are **bcrypt-hashed** (`hash`/`compare` from server-kit),
-  stored as a JSON `{hash, used_at}[]` blob on a single `kind:'recovery'` row
-  (regenerate semantics — re-enrolling replaces the set); single-use (`used_at`
+  stored as a JSON `{hash, usedAt}[]` blob on a single `kind:'recovery'` row
+  (regenerate semantics — re-enrolling replaces the set); single-use (`usedAt`
   stamped on match).
 - `secret` and `codes` are `select:false` columns; the repository re-selects
   them ONLY via `findOneWithSecretsById` / `findAllWithSecretsByUser`
@@ -2056,7 +2073,7 @@ realtime), port `IUserAuthenticatorRepository` + `UserAuthenticatorService` in
   record responses converge on; QR is a server-rendered PNG data-URI via the
   `qrcode` dep, TOTP via `otpauth`).
 - The `findMany` adapter follows the plan-039 discipline
-  (`applyRealmScopeSelect(qb, 'userAuthenticator', ['user_id'])`).
+  (`applyRealmScopeSelect(qb, 'userAuthenticator', ['userId'])`).
 
 **Enrollment is two-step** (except recovery, which is usable immediately):
 `POST /users/:id/authenticators` creates an *unconfirmed* row and returns the
@@ -2092,7 +2109,7 @@ mirrors this — when `userId !== '@me'` it offers only the email button
    (`ErrorCode.OAUTH_MFA_REQUIRED` / wire `error: mfa_required` — a dedicated
    code, deliberately NOT `login_required`, so RPs can tell "log in again" from
    "complete the challenge") when the user holds a confirmed device and the
-   backing session carries no `mfa_at`. A session-less flow (HTTP Basic) fails
+   backing session carries no `mfaAt`. A session-less flow (HTTP Basic) fails
    closed the same way. `GET /authenticators/challenge` reports
    `{ required, enrollmentRequired, kinds, challenge? }` — the kind-generic wire
    shape (the optional `challenge` payload carries WebAuthn request options in
@@ -2103,7 +2120,7 @@ mirrors this — when `userId !== '@me'` it offers only the email button
    `guessUserAuthenticatorKindByResponse`: all-digits → totp) or the grant
    throws `mfa_required` (the error `data.kinds` carries the challengeable kinds
    so a client can pick the right step). On success the created session is
-   stamped (`mfa_at`), so the subsequent SSR `POST /authorize` passes the
+   stamped (`mfaAt`), so the subsequent SSR `POST /authorize` passes the
    backstop. Users *without* a device pass through (they could never enroll
    otherwise) — `mfaRequired` (configure-inline) is enforced at `/authorize`
    (`enrollmentRequired` → the hosted UI routes to inline enrollment), not at
@@ -2119,7 +2136,7 @@ stored and reactivate when the feature is enabled again. Finally, the device-les
 direct password-grant pass-through above is the bootstrap the hosted UI needs to
 reach configure-inline enrollment; clients that require enrollment before an
 application token must use the authorization-code flow and exclude `password`
-from their `grant_types` allowlist. These boundaries are operator-facing in
+from their `grantTypes` allowlist. These boundaries are operator-facing in
 `docs/src/guide/deployment/configuration-server-core-mfa.md`.
 
 **The password grant is the single MFA chokepoint for credential login — the
@@ -2141,8 +2158,8 @@ interactive status endpoint).
 for factor kinds that cannot ride the single grant POST (email / WebAuthn; the
 Auth0 `mfa_token` pattern). When the credential-only password grant hits
 `mfa_required` and the user's kinds include an interactive one, the grant does
-NOT just fail closed: it creates a **pending session** (`mfa_at: null`,
-`expires_at` = ticket lifetime, so an abandoned login self-expires into the
+NOT just fail closed: it creates a **pending session** (`mfaAt: null`,
+`expiresAt` = ticket lifetime, so an abandoned login self-expires into the
 regular session sweep) and mints a restricted ticket riding the error `data`
 (`mfa_token` + `mfa_token_expires_in`, alongside `kinds`) — never an
 access/refresh pair. TOTP/recovery-only users get no ticket (the inline `otp`
@@ -2163,7 +2180,7 @@ Mechanics:
   resolves its actor as request-identity OR stashed ticket (the former
   `ForceLoggedInMiddleware` contract widened by exactly one bearer kind).
 - **Completion**: a ticket-authenticated `POST /authenticators/challenge`
-  verify — after `markMfaVerified` stamps `mfa_at` inside the verify unit of
+  verify — after `markMfaVerified` stamps `mfaAt` inside the verify unit of
   work — calls `OAuth2MfaLoginService.complete()`
   (`core/oauth2/mfa-login/`): extends the pending session to the regular
   lifetime (`sessionManager.refresh`), mints the full AT+RT pair for it
@@ -2171,7 +2188,7 @@ Mechanics:
   the ticket (jti blocklist — single use), records the `LOGIN` security event
   and returns the grant on the verify response (`{ verified: true, token }`).
   One round-trip, no second exchange; the belt-and-suspenders stays — a
-  pending session has `mfa_at: null`, so a replayed ticket toward
+  pending session has `mfaAt: null`, so a replayed ticket toward
   `/authorize` still hits the backstop.
 - **Kit**: `LoginForm` reads `data.mfa_token` and renders `AMfaChallengeForm`
   against the ticket (per-request `authorizationHeader` override on the
@@ -2204,10 +2221,10 @@ renewed every third of the TTL through `ICache.renewIfValue`; release uses
 `ICache.dropIfValue`, so an expired owner can neither extend nor delete a
 successor's lock. A held lock, unavailable cache, lost lease, or failed renewal
 bails `false` without penalty for every factor kind (fail closed); the persisted
-TOTP step-counter / recovery `used_at` remain defense in depth, not an outage
+TOTP step-counter / recovery `usedAt` remain defense in depth, not an outage
 fail-open path. Consumption is ordered **stamp-first**: the optional
 `UserAuthenticatorVerifyContext.onVerified` hook — the challenge controller
-stamps `session.mfa_at` (`ISessionManager.markMfaVerified`) inside it — runs
+stamps `session.mfaAt` (`ISessionManager.markMfaVerified`) inside it — runs
 after the factor matched but BEFORE the consumption persists (the device-row
 save; the email-code / webauthn-challenge cache drops are deferred to the
 same success block), so a session-stamp failure aborts the verify with
@@ -2241,13 +2258,13 @@ matrix incl. backoff + single-use + select:false modeling),
 `test/unit/http/controllers/entities/user-authenticator.spec.ts` (permission
 surfaces), `test/unit/http/controllers/workflows/token/grant-password-mfa.spec.ts`
 (end-to-end: enroll → confirm → grant gated → otp accepted → authorize backstop
-→ challenge stamps `mfa_at` → authorize passes; recovery replay rejected).
+→ challenge stamps `mfaAt` → authorize passes; recovery replay rejected).
 
 ## Realm Key Store (plans 069 + 071 Stages A-C)
 
 `auth_keys` is the general **per-realm key store**, discriminated by the JWK
 `use` column (`sig` | `enc`, RFC 7517 §4.2 — `JWKUse` in `@authup/specs`;
-core-kit `Key.use`, `signature_algorithm` nullable for enc keys). Every key
+core-kit `Key.use`, `signatureAlgorithm` nullable for enc keys). Every key
 is a **full named entity** (canonical `name`, unique per `(name, realm_id)` —
 `UQ_auth_keys_name_realm_id`; auto-minted keys get `<use>-<nanoid>`) with a
 **lifecycle `status`** (`KeyStatus`: `active` signs/encrypts + verifies/
@@ -2269,7 +2286,7 @@ decrypts, `passive` verify/decrypt-only, `disabled` neither) and an optional
 - `IKeyRepository` (`core/entities/key/types.ts`) — the entity CRUD surface
   for the management API (+ `checkUniqueness`, `countBlobReferences(keyId)`
   — counts `v1.<key_id>.%` cipher blobs, today the MFA seeds —
-  `findHighestPriority`). Entity reads never select `decryption_key`; the
+  `findHighestPriority`). Entity reads never select `decryptionKey`; the
   adapter's `save()` KEK-wraps inbound material centrally.
 
 **Minting is hybrid (eager + self-healing backstop):** `KeyProvisioner
@@ -2305,17 +2322,17 @@ and 32 base64 bytes for enc. Update mounts only `name`/`priority`/`status`
 blob references answers **409 + `data.references`** unless `?force=true`
 (crypto-shred confirm; no re-encrypt sweep exists, so a hard block would
 make such keys undeletable). **Private material never leaves the server** —
-every read and the create response null `decryption_key` (authentik
+every read and the create response null `decryptionKey` (authentik
 CVE-2024-42490 is the cautionary tale). Typed client: `client.key.*`
 (`KeyCreatePayload`/`KeyUpdatePayload`; `delete(id, { force })`). Keys have
 **no entity subscriber** (deliberate — `afterInsert` content would carry raw
 private material onto the realtime bus); the audit trail comes from
 explicit, metadata-only `EventService.record()` emits inside `KeyService`
 (issue #3269): ENTITY-scope `created`/`updated`/`deleted` rows with
-`ref_type: key`, actor from the `ActorContext`, request attribution via the
+`refType: key`, actor from the `ActorContext`, request attribution via the
 injected `useRequestEventContext` getter, `data` limited to
 `name`/`use`/`status` plus a scalar `diff` on update and `force: true` on a
-forced crypto-shred — never `decryption_key`/`encryption_key`/`certificate`.
+forced crypto-shred — never `decryptionKey`/`encryptionKey`/`certificate`.
 The emits ride the default (long) event retention, not the short
 entity-churn TTL, and are not gated by `eventLogEntityEnabled`.
 
@@ -2351,7 +2368,7 @@ Stage C intentionally provides only schema, CRUD API, typed client, and UI:
 the `enabled` anchors are consumed later by plan 072 when proxy-forwarded
 client certificates are authenticated for RFC 8705. Like keys, trust anchors
 have no entity subscriber; `TrustAnchorService` records the same explicit
-ENTITY-scope lifecycle events as `KeyService` (`ref_type: trustAnchor`,
+ENTITY-scope lifecycle events as `KeyService` (`refType: trustAnchor`,
 `data`: `name`/`enabled` + update diff — never certificate bytes; creating
 an enabled CA anchor is what turns on mTLS client auth for a realm, so it
 must be visible in `auth_events`). The table was folded into migration
@@ -2374,11 +2391,11 @@ must be visible in `auth_events`). The table was folded into migration
   scope argument; every consumer knows its entity's realm, so a skippable
   assert would only invite forgetting it). Consumer today: the MFA seed
   cipher (`UserAuthenticatorService` ctx); plan 070 adds client
-  `secret_encrypted`, IdP `client_secret`, LDAP bind password.
+  `secretEncrypted`, IdP `clientSecret`, LDAP bind password.
 - **Optional KEK — config `secretsEncryptionKey` (`SECRETS_ENCRYPTION_KEY`,
   base64 32 bytes, boot-validated when set):** the adapter persists
-  `decryption_key` material (RSA private keys AND oct material — never the
-  public `encryption_key`) wrapped as `wrapped.v1.<blob>`
+  `decryptionKey` material (RSA private keys AND oct material — never the
+  public `encryptionKey`) wrapped as `wrapped.v1.<blob>`
   (`wrapKeyMaterial`/`unwrapKeyMaterial` in `core/key/wrap.ts`), unwraps
   transparently on read, and **lazily wraps** pre-existing plaintext rows on
   read (best-effort write-back), so adding a KEK to a running deployment
@@ -2421,9 +2438,9 @@ enc-exclusion), enc-key `kid` + disabled-key rejection in
 `extractErrorContext` failures. The hosted `Authorize.vue` ladder gates on it
 **interactively only**: after login a `watch(loggedIn)` fetches
 `GET /authenticators/challenge` into `mfaStatus`; consent is blocked until it
-resolves (a `built_in` client auto-submits, so it must not render before the
+resolves (a `builtIn` client auto-submits, so it must not render before the
 factor requirement is known); `required` → `AMfaChallengeForm` before consent
-(its `done` = the endpoint stamped `mfa_at`, so the consent POST passes the
+(its `done` = the endpoint stamped `mfaAt`, so the consent POST passes the
 backstop), `enrollmentRequired` → inline `AUserAuthenticatorEnroll`. Silent
 (`prompt=none`) flows skip the form and let the auto-consent hit the server
 backstop → `interaction_required` redirect. Enrollment components
@@ -2463,8 +2480,8 @@ carry `NULL` → **no amr/acr claims** (authup cannot retroactively know).
 **amr/acr are derived at the `/token` exchange mint site** from the *resolved*
 session via `deriveAmrAcr(session)`
 (`core/oauth2/authorization/helpers.ts`): `pwd|ldap → amr ['pwd']`,
-`ext → ['ext']`, plus `'otp'` appended when `session.mfa_at` is set;
-`acr = urn:authup:mfa` when `mfa_at` set, else `urn:authup:pwd`
+`ext → ['ext']`, plus `'otp'` appended when `session.mfaAt` is set;
+`acr = urn:authup:mfa` when `mfaAt` set, else `urn:authup:pwd`
 (`OAuth2AuthenticationMethodReference` / `OAuth2AuthenticationContextClass`
 enums in `@authup/specs` — urn-style only, never the reserved `"0"`).
 **Deliberately emitted on every token kind** (access/refresh too, not only the
@@ -2480,7 +2497,7 @@ the ACHIEVED acr. `urn:authup:mfa` acts as a **step-up TRIGGER**
 (Auth0/Keycloak stance), enforced in `OAuth2Authorization.authorizeInner`
 **only while the user actually holds a confirmed factor** (an unsatisfiable
 request degrades to the achieved acr instead of bricking the RP): the session's
-`mfa_at` must be within `mfaFreshnessMaxAge` (config, env
+`mfaAt` must be within `mfaFreshnessMaxAge` (config, env
 `MFA_FRESHNESS_MAX_AGE`, **default 60s** — deliberately NOT 0, deviating from
 the plan-050 sketch: the hosted challenge round-trip takes seconds, a 0-window
 could never be satisfied and would loop the ladder; the window mirrors
@@ -2498,23 +2515,23 @@ decoding in
 
 `auth_events` is the persisted, PII-stripped security audit trail — the single
 login-event surface. The record shape is derived from PrivateAIM/hub's
-Authentik-lineage telemetry `Event` (`(scope, name)` verb pair, `ref_type`/
-`ref_id` target reference, denormalized `actor_type`/`actor_id`/`actor_name`
-snapshot that survives actor deletion, `request_*` context group, per-row
-`expiring` + `expires_at` retention, serialize-transformer `data` text column
+Authentik-lineage telemetry `Event` (`(scope, name)` verb pair, `refType`/
+`refId` target reference, denormalized `actorType`/`actorId`/`actorName`
+snapshot that survives actor deletion, `request*` context group, per-row
+`expiring` + `expiresAt` retention, serialize-transformer `data` text column
 — null-guarded so absent context stays SQL NULL) hardened with the discipline
 hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
 `packages/core-kit/src/domains/event/` — never free text), **append-only**
-(read-only HTTP surface, no update/delete API, no `updated_at`), and a central
+(read-only HTTP surface, no update/delete API, no `updatedAt`), and a central
 **PII write boundary**.
 
 - **Write path:** `EventService.record()` (`core/entities/event/`) is
   fire-and-forget-safe (a write failure logs and never fails the originating
-  auth operation), stamps `expiring`/`expires_at` from `eventLogRetentionDays`
+  auth operation), stamps `expiring`/`expiresAt` from `eventLogRetentionDays`
   (default 90 days — `EVENT_LOG_RETENTION_DAYS_DEFAULT` in
   `core/entities/event/constants.ts`, Okta-parity posture; raise via
   config/env for longer compliance windows, `0` = keep forever →
-  `expiring: false`, `expires_at` null), truncates
+  `expiring: false`, `expiresAt` null), truncates
   client-controlled strings to column
   widths, and passes `data` through `sanitizeEventData` — **allowlist-first,
   scalars only** (objects/arrays are dropped outright, so nothing nested can
@@ -2524,11 +2541,11 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
 - **Emit sites** (explicit `record()` calls via optional `eventService?`
   ctx — security events never ride the CRUD subscriber bus): password grant
   `LOGIN` (core `runWith`, after issuance) and `LOGIN_FAILED` (HTTP adapter
-  catch — carries the **canonicalized attempted identifier in `actor_name`**
-  with `actor_id` null; the deliberate PII-posture call, it is the throttle
+  catch — carries the **canonicalized attempted identifier in `actorName`**
+  with `actorId` null; the deliberate PII-posture call, it is the throttle
   key), `REFRESH_REPLAY_DETECTED` (`revokeFamily`), `AUTHORIZE`
   (`OAuth2Authorization.authorize()`, `data.reason: autoConsent|consent` from
-  `client.built_in`), `LOGOUT` (end-session hint revoke), `REGISTER` /
+  `client.builtIn`), `LOGOUT` (end-session hint revoke), `REGISTER` /
   `ACCOUNT_ACTIVATED`, `PASSWORD_RESET_REQUESTED/COMPLETED`, and the
   **key / trust-anchor lifecycle** (issue #3269): `KeyService` /
   `TrustAnchorService` record ENTITY-scope `created`/`updated`/`deleted`
@@ -2545,7 +2562,7 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   `DatabaseModule.registerEventPublisher` when `eventLogEnabled &&
   eventLogEntityEnabled`) mirrors every entity create/update/delete already
   published by the 22+ `EntitySubscriber`s into scope-`entity`
-  `created|updated|deleted` rows (`ref_type` = entity type, `ref_id` = id).
+  `created|updated|deleted` rows (`refType` = entity type, `refId` = id).
   The pre-update snapshot rides the publish **context** as `dataPrevious`
   (`afterUpdate` passes `event.databaseEntity`) — **never inside `content`**,
   the shared realtime wire payload the redis/socket handlers ship. Actor +
@@ -2563,13 +2580,13 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   `EventRecordInput.retentionDays` (config `eventLogEntityEnabled` default
   `true` / `eventLogEntityRetentionDays` default `7` days, env
   `EVENT_LOG_ENTITY_*`). Realm attribution uses the resource's canonical
-  owner realm: direct entities use `realm_id`, junctions use the owner-side
-  key (`role_realm_id`, `user_realm_id`, `client_realm_id`, ...), identity
-  provider accounts use `user_realm_id`, and a realm uses its own `id`.
+  owner realm: direct entities use `realmId`, junctions use the owner-side
+  key (`roleRealmId`, `userRealmId`, `clientRealmId`, ...), identity
+  provider accounts use `userRealmId`, and a realm uses its own `id`.
 - **Read API:** `GET /events` (+ `/realms/:realmId/events`),
   read-only, gated by `EVENT_READ` with the session-service shape: a reader
-  without the permission is force-scoped to its own rows (`actor_id` +
-  `actor_type`), a scoped reader gets per-row realm_scope drops, and the
+  without the permission is force-scoped to its own rows (`actorId` +
+  `actorType`), a scoped reader gets per-row realmScope drops, and the
   repository force-selects the gate columns (`applyRealmScopeSelect`, plan-039
   discipline). Nested `/realms/:realmId/events` reads add a mandatory
   repository realm predicate (and single-record reads fail as not found on a
@@ -2584,13 +2601,13 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   (`index.vue` + `index/index.vue`; kit collection `<AEvents>`
   (`EntityType.EVENT`, no server-side subscriber — the socket subscription is
   inert, same as sessions) rendering a `<VCTable>` with name/scope, ref,
-  actor, IP and created_at columns + `ASearch` name filter) and a detail page
+  actor, IP and createdAt columns + `ASearch` name filter) and a detail page
   (`[id]/index.vue`; General / Actor / Request cards + pretty-printed `data`
   dict). Nav entry + pages are gated on `EVENT_READ`
   (`LayoutKey.REQUIRED_PERMISSIONS`); no create/update/delete surface exists
   (append-only).
 - **Retention:** `components/event-cleaner` (every minute, oauth2-cleaner
-  mirror) deletes `expiring = true AND expires_at < now` (hub's cleaner shape);
+  mirror) deletes `expiring = true AND expiresAt < now` (hub's cleaner shape);
   scheduled only when
   `eventLogEnabled && eventLogRetentionDays > 0`. Per-action retention later is
   per-action stamping — no schema change.
@@ -2627,7 +2644,7 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
 
 ```typescript
 {
-    attributes: { name: PermissionName.CLIENT_SELF_MANAGE, built_in: true },
+    attributes: { name: PermissionName.CLIENT_SELF_MANAGE, builtIn: true },
     relations: {
         policies: [
             SystemPolicyName.DEFAULT,
@@ -2646,7 +2663,7 @@ Identifier-style columns are stored in canonical form: `LOWER(TRIM(value))`. Thi
 - `name` on every named entity (`client`, `robot`, `user`, `role`, `scope`, `permission`, `policy`, `realm`, `identity-provider`)
 - `email` on `user`
 
-`display_name` and other free-form labels (`description`, `first_name`, `last_name`) preserve original casing — the canonical-form rule is only for columns used as identifiers in lookups / unique constraints.
+`displayName` and other free-form labels (`description`, `firstName`, `lastName`) preserve original casing — the canonical-form rule is only for columns used as identifiers in lookups / unique constraints.
 
 ### Why canonical form
 
@@ -2790,7 +2807,7 @@ Per-cell rendering flows through the `#cell-<key>` template slots that
 is now generic over `Row`, and the inference flows from `:columns` /
 `:data` into the `#cell-*` slot props. Each page types its columns as
 `TableColumn<Entity>[]` (e.g. `computed<TableColumn<Role>[]>(...)`), and the
-cell slots are written **without** a row annotation — `#cell-built_in="{ row }"`
+cell slots are written **without** a row annotation — `#cell-builtIn="{ row }"`
 — so `row` infers as the entity type (verified: a bogus `row.<field>` access
 is a compile error). The old `#cell-<key>="{ row }: { row: any }"` widening is
 gone. **`VCTable` must stay globally registered** (`app.use(vuecs, …)`): the

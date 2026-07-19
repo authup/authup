@@ -168,22 +168,22 @@ export default defineComponent({
                 </div>
                 <div class="flex justify-between gap-2 border-b border-border py-1 text-sm">
                     <span class="text-fg-muted">{{ translations.ref }} ({{ translations.type }})</span>
-                    <span class="text-right break-all">{{ entity.ref_type ?? '–' }}</span>
+                    <span class="text-right break-all">{{ entity.refType ?? '–' }}</span>
                 </div>
                 <div class="flex justify-between gap-2 border-b border-border py-1 text-sm">
                     <span class="text-fg-muted">{{ translations.ref }} ({{ translations.id }})</span>
-                    <span class="text-right break-all font-mono">{{ entity.ref_id ?? '–' }}</span>
+                    <span class="text-right break-all font-mono">{{ entity.refId ?? '–' }}</span>
                 </div>
                 <div class="flex justify-between gap-2 border-b border-border py-1 text-sm">
                     <span class="text-fg-muted">{{ translations.createdAt }}</span>
-                    <span class="text-right"><VCTimeago :datetime="entity.created_at" /></span>
+                    <span class="text-right"><VCTimeago :datetime="entity.createdAt" /></span>
                 </div>
                 <div class="flex justify-between gap-2 py-1 text-sm">
                     <span class="text-fg-muted">{{ translations.expiresAt }}</span>
                     <span
-                        v-if="entity.expiring && entity.expires_at"
+                        v-if="entity.expiring && entity.expiresAt"
                         class="text-right"
-                    ><VCTimeago :datetime="entity.expires_at" /></span>
+                    ><VCTimeago :datetime="entity.expiresAt" /></span>
                     <span
                         v-else
                         class="text-right"
@@ -196,15 +196,15 @@ export default defineComponent({
                 </h6>
                 <div class="flex justify-between gap-2 border-b border-border py-1 text-sm">
                     <span class="text-fg-muted">{{ translations.type }}</span>
-                    <span class="text-right break-all">{{ entity.actor_type ?? '–' }}</span>
+                    <span class="text-right break-all">{{ entity.actorType ?? '–' }}</span>
                 </div>
                 <div class="flex justify-between gap-2 border-b border-border py-1 text-sm">
                     <span class="text-fg-muted">{{ translations.id }}</span>
-                    <span class="text-right break-all font-mono">{{ entity.actor_id ?? '–' }}</span>
+                    <span class="text-right break-all font-mono">{{ entity.actorId ?? '–' }}</span>
                 </div>
                 <div class="flex justify-between gap-2 py-1 text-sm">
                     <span class="text-fg-muted">{{ translations.name }}</span>
-                    <span class="text-right break-all">{{ entity.actor_name ?? '–' }}</span>
+                    <span class="text-right break-all">{{ entity.actorName ?? '–' }}</span>
                 </div>
             </div>
             <div class="w-full md:w-1/3 px-2 mb-3">
@@ -213,19 +213,19 @@ export default defineComponent({
                 </h6>
                 <div class="flex justify-between gap-2 border-b border-border py-1 text-sm">
                     <span class="text-fg-muted">{{ translations.path }}</span>
-                    <span class="text-right break-all font-mono">{{ entity.request_path ?? '–' }}</span>
+                    <span class="text-right break-all font-mono">{{ entity.requestPath ?? '–' }}</span>
                 </div>
                 <div class="flex justify-between gap-2 border-b border-border py-1 text-sm">
                     <span class="text-fg-muted">{{ translations.method }}</span>
-                    <span class="text-right break-all">{{ entity.request_method ?? '–' }}</span>
+                    <span class="text-right break-all">{{ entity.requestMethod ?? '–' }}</span>
                 </div>
                 <div class="flex justify-between gap-2 border-b border-border py-1 text-sm">
                     <span class="text-fg-muted">{{ translations.ipAddress }}</span>
-                    <span class="text-right break-all">{{ entity.request_ip_address ?? '–' }}</span>
+                    <span class="text-right break-all">{{ entity.requestIpAddress ?? '–' }}</span>
                 </div>
                 <div class="flex justify-between gap-2 py-1 text-sm">
                     <span class="text-fg-muted">{{ translations.userAgent }}</span>
-                    <span class="text-right break-all">{{ entity.request_user_agent ?? '–' }}</span>
+                    <span class="text-right break-all">{{ entity.requestUserAgent ?? '–' }}</span>
                 </div>
             </div>
         </div>

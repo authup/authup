@@ -37,13 +37,13 @@ describe('grant-authorize (access policy backstop)', () => {
             type: BuiltInPolicyType.IDENTITY,
             invert: false,
             types: [IdentityType.ROBOT],
-            realm_id: null,
+            realmId: null,
         });
         allowPolicy = await suite.client.policy.createBuiltIn({
             name: 'token-access-allow',
             type: BuiltInPolicyType.IDENTITY,
             invert: false,
-            realm_id: null,
+            realmId: null,
         });
     });
 
@@ -54,15 +54,15 @@ describe('grant-authorize (access policy backstop)', () => {
     const createClientWithScope = async (secret: string): Promise<Client> => {
         const client = await suite.client.client.create(createFakeClient({
             secret,
-            secret_hashed: false,
-            secret_encrypted: false,
-            auth_method: 'secret',
-            token_binding_method: 'none',
+            secretHashed: false,
+            secretEncrypted: false,
+            authMethod: 'secret',
+            tokenBindingMethod: 'none',
         }));
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
-            scope_id: scope.id,
-            client_id: client.id,
+            scopeId: scope.id,
+            clientId: client.id,
         });
         return client;
     };
@@ -85,7 +85,7 @@ describe('grant-authorize (access policy backstop)', () => {
         const code = await issueCode(client.id);
 
         // attach the policy AFTER issuance — the /authorize gate never saw it
-        await suite.client.client.update(client.id, { access_policy_id: denyPolicy.id });
+        await suite.client.client.update(client.id, { accessPolicyId: denyPolicy.id });
 
         await expectClientError(
             () => suite.client.token.createWithAuthorizationCode({
@@ -108,7 +108,7 @@ describe('grant-authorize (access policy backstop)', () => {
 
         const code = await issueCode(client.id);
 
-        await suite.client.client.update(client.id, { access_policy_id: allowPolicy.id });
+        await suite.client.client.update(client.id, { accessPolicyId: allowPolicy.id });
 
         const tokenResponse = await suite.client.token.createWithAuthorizationCode({
             client_id: client.id,

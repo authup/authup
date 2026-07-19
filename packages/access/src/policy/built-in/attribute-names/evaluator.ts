@@ -44,8 +44,8 @@ export class AttributeNamesPolicyEvaluator implements IPolicyEvaluator {
         // `{user: {name: 'x'}}` flattens to `{'user.name': 'x'}` and is matched
         // against `names` entries with dotted notation. Allowlists/denylists
         // that need to govern nested fields must use the dotted-path form
-        // (e.g. `'user.realm_id'`); a top-level entry like `'realm_id'` will
-        // NOT catch a nested `user.realm_id` write — that's by design, the
+        // (e.g. `'user.realmId'`); a top-level entry like `'realmId'` will
+        // NOT catch a nested `user.realmId` write — that's by design, the
         // policy is precise about which path it covers.
         const attributes = flattenObject(data);
         const keys = Object.keys(attributes);

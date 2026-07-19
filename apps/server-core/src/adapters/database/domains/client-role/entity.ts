@@ -27,52 +27,52 @@ import { ClientEntity } from '../client/entity.ts';
 import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_client_roles' })
-@Index(['role_id', 'client_id'], { unique: true })
+@Index(['roleId', 'clientId'], { unique: true })
 export class ClientRoleEntity implements ClientRole {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
     // ------------------------------------------------------------------
 
-    @Column()
-    role_id: string;
+    @Column({ name: 'role_id' })
+    roleId: string;
 
     @ManyToOne(() => RoleEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'role_id' })
     role: Role;
 
-    @Column({ nullable: true })
-    role_realm_id: Realm['id'] | null;
+    @Column({ name: 'role_realm_id', nullable: true })
+    roleRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
         nullable: true, 
     })
     @JoinColumn({ name: 'role_realm_id' })
-    role_realm: Realm | null;
+    roleRealm: Realm | null;
 
-    @Column()
-    client_id: string;
+    @Column({ name: 'client_id' })
+    clientId: string;
 
     @ManyToOne(() => ClientEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'client_id' })
     client: Client;
 
-    @Column({ nullable: true })
-    client_realm_id: Realm['id'] | null;
+    @Column({ name: 'client_realm_id', nullable: true })
+    clientRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
         nullable: true, 
     })
     @JoinColumn({ name: 'client_realm_id' })
-    client_realm: Realm | null;
+    clientRealm: Realm | null;
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
+    createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
+    updatedAt: string;
 }

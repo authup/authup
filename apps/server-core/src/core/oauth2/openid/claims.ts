@@ -31,7 +31,7 @@ export class OAuth2OpenIDClaimsBuilder {
         nickname: 'name',
         preferred_username: 'name',
         updated_at: [
-            'updated_at',
+            'updatedAt',
             (value: unknown) => {
                 if (typeof value === 'string') {
                     return Math.floor(new Date(value).getTime() / 1000);
@@ -47,7 +47,7 @@ export class OAuth2OpenIDClaimsBuilder {
         nickname: 'name',
         preferred_username: 'name',
         updated_at: [
-            'updated_at',
+            'updatedAt',
             (value: unknown) => {
                 if (typeof value === 'string') {
                     return Math.floor(new Date(value).getTime() / 1000);
@@ -60,12 +60,12 @@ export class OAuth2OpenIDClaimsBuilder {
 
     protected userMap : AttributeMap<User> = {
         name: 'name',
-        family_name: 'last_name',
-        given_name: 'first_name',
-        nickname: 'display_name',
-        preferred_username: 'display_name',
+        family_name: 'lastName',
+        given_name: 'firstName',
+        nickname: 'displayName',
+        preferred_username: 'displayName',
         updated_at: [
-            'updated_at',
+            'updatedAt',
             (value: unknown) => {
                 if (typeof value === 'string') {
                     return Math.floor(new Date(value).getTime() / 1000);

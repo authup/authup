@@ -150,7 +150,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
     protected isOwnedBy(entity: UserAuthenticator, actor: ActorContext): boolean {
         return !!actor.identity &&
             actor.identity.type === IdentityType.USER &&
-            entity.user_id === actor.identity.data.id;
+            entity.userId === actor.identity.data.id;
     }
 
     /**
@@ -243,7 +243,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         const entity = await this.repository.findOneById(id);
         // a device of another user is a 404 on the nested route — never
         // an existence oracle across users.
-        if (!entity || (userId && entity.user_id !== userId)) {
+        if (!entity || (userId && entity.userId !== userId)) {
             throw new EntityNotFoundError();
         }
 
@@ -257,7 +257,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         const validated = await this.validator.run(data, { group: ValidatorGroup.CREATE });
 
-        const user = await this.resolveTargetUser(validated.user_id, actor, validated);
+        const user = await this.resolveTargetUser(validated.userId, actor, validated);
 
         // Only EMAIL may be provisioned FOR another user: its code is mailed to
         // the user's own (already-verified) mailbox, so the enroller never
@@ -319,8 +319,8 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             kind: UserAuthenticatorKind.WEBAUTHN,
             name,
             confirmed: false,
-            user_id: user.id,
-            realm_id: user.realm_id,
+            userId: user.id,
+            realmId: user.realmId,
         });
         entity = await this.repository.save(entity);
 
@@ -377,8 +377,8 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
                 kind: UserAuthenticatorKind.EMAIL,
                 name,
                 confirmed: true,
-                user_id: user.id,
-                realm_id: user.realm_id,
+                userId: user.id,
+                realmId: user.realmId,
             });
             entity = await this.repository.save(entity);
         }
@@ -414,7 +414,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_AUTHENTICATOR_CREATE,
             data: definePolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: { ...validated, realm_id: target.realm_id },
+                [BuiltInPolicyType.ATTRIBUTES]: { ...validated, realmId: target.realmId },
                 ...this.resourceRealmMatch(target),
             }),
         });
@@ -443,11 +443,11 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         let entity = this.repository.create({
             kind: UserAuthenticatorKind.TOTP,
             name,
-            secret: await this.cipher.encrypt(secret.base32, user.realm_id),
+            secret: await this.cipher.encrypt(secret.base32, user.realmId),
             parameters: JSON.stringify(parameters),
             confirmed: false,
-            user_id: user.id,
-            realm_id: user.realm_id,
+            userId: user.id,
+            realmId: user.realmId,
         });
         entity = await this.repository.save(entity);
 
@@ -487,8 +487,8 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
                 name,
                 codes: JSON.stringify(stored),
                 confirmed: true,
-                user_id: user.id,
-                realm_id: user.realm_id,
+                userId: user.id,
+                realmId: user.realmId,
             });
             entity = await this.repository.save(entity);
         }
@@ -534,7 +534,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             throw new ValidationError(`The authenticator kind ${entity.kind} can not be confirmed with a code.`);
         }
 
-        await this.assertNotThrottledOrRetry(entity.user_id);
+        await this.assertNotThrottledOrRetry(entity.userId);
 
         const withSecrets = await this.repository.findOneWithSecretsById(entity.id);
         if (!withSecrets) {
@@ -542,11 +542,11 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         }
 
         if (!await this.verifyTotp(withSecrets, code)) {
-            await this.bumpAttempts(entity.user_id);
+            await this.bumpAttempts(entity.userId);
             throw new EntityCredentialsInvalidError();
         }
 
-        await this.resetAttempts(entity.user_id);
+        await this.resetAttempts(entity.userId);
 
         entity.confirmed = true;
         // The consumed step is tracked only on the login-verify path (below),
@@ -566,7 +566,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         // brute-force throttle, same lifecycle as the TOTP confirm branch — the
         // attestation verify is a real crypto call and must not be retryable
         // without backoff.
-        await this.assertNotThrottledOrRetry(entity.user_id);
+        await this.assertNotThrottledOrRetry(entity.userId);
 
         // challenge is keyed by the enrollment row id (see enrollWebauthn), so
         // overlapping ceremonies do not collide.
@@ -574,7 +574,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         const state = await this.cache.get<WebauthnChallengeState>(cacheKey);
         if (!state || state.expiresAt < Date.now()) {
-            await this.bumpAttempts(entity.user_id);
+            await this.bumpAttempts(entity.userId);
             throw new EntityCredentialsInvalidError();
         }
 
@@ -587,11 +587,11 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         const credential = await verifyWebauthnRegistration(ctx, parsed, state.challenge);
         if (!credential) {
-            await this.bumpAttempts(entity.user_id);
+            await this.bumpAttempts(entity.userId);
             throw new EntityCredentialsInvalidError();
         }
 
-        await this.resetAttempts(entity.user_id);
+        await this.resetAttempts(entity.userId);
         await this.cache.drop(cacheKey);
 
         entity.parameters = JSON.stringify(credential);
@@ -714,7 +714,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
                 return false;
             }
 
-            // Bind the proof to the caller's aggregate (the session mfa_at
+            // Bind the proof to the caller's aggregate (the session mfaAt
             // stamp) BEFORE any consumption persists: a hook failure aborts
             // the verify with nothing consumed — never a burned single-use
             // code without a completed MFA. The residual (a failure AFTER the
@@ -728,7 +728,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
                 return false;
             }
 
-            matched.last_used_at = new Date().toISOString();
+            matched.lastUsedAt = new Date().toISOString();
             await this.repository.save(matched);
 
             // cache-borne single-use artifacts (email code, webauthn challenge
@@ -762,7 +762,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         try {
             // key-id-addressed blob; one referencing an unknown or foreign
             // key fails closed as a verification failure, never a 500.
-            seed = await this.cipher.decrypt(device.secret, device.realm_id);
+            seed = await this.cipher.decrypt(device.secret, device.realmId);
         } catch (e) {
             // ... but ONLY for blob-semantics failures. Infrastructure errors
             // (database outage, KEK misconfiguration) must bubble — mapping
@@ -1232,8 +1232,8 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             refType: EventRefType.USER_AUTHENTICATOR,
             refId: entity.id,
             actorType: IdentityType.USER,
-            actorId: entity.user_id,
-            realmId: entity.realm_id,
+            actorId: entity.userId,
+            realmId: entity.realmId,
             data: { kind: entity.kind },
         });
     }
@@ -1253,7 +1253,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             actorType: IdentityType.USER,
             actorId: userId,
             clientId: ctx.clientId ?? null,
-            realmId: entity?.realm_id ?? null,
+            realmId: entity?.realmId ?? null,
             requestIpAddress: ctx.ipAddress ?? null,
             requestUserAgent: ctx.userAgent ?? null,
             data: { kind },

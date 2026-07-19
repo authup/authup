@@ -39,7 +39,7 @@ export default defineComponent({
             emit('failed', e);
         };
 
-        const query : BuildInput<EventEntity> = { sort: { created_at: 'DESC' } };
+        const query : BuildInput<EventEntity> = { sort: { createdAt: 'DESC' } };
 
         const translations = useTranslations([
             {
@@ -88,13 +88,13 @@ export default defineComponent({
                 cellClass: 'text-left',
             },
             {
-                key: 'request_ip_address',
+                key: 'requestIpAddress',
                 label: translations.ipAddress,
                 headerClass: 'text-left',
                 cellClass: 'text-left',
             },
             {
-                key: 'created_at',
+                key: 'createdAt',
                 label: translations.createdAt,
                 headerClass: 'text-center',
                 cellClass: 'text-center',
@@ -156,41 +156,41 @@ export default defineComponent({
                 </template>
                 <template #cell-ref="{ row }">
                     <div
-                        v-if="row.ref_type"
+                        v-if="row.refType"
                         class="leading-tight"
                     >
-                        {{ row.ref_type }}
+                        {{ row.refType }}
                         <div
-                            v-if="row.ref_id"
+                            v-if="row.refId"
                             class="text-xs text-fg-muted font-mono"
-                            :title="row.ref_id"
+                            :title="row.refId"
                         >
-                            {{ shortenId(row.ref_id) }}
+                            {{ shortenId(row.refId) }}
                         </div>
                     </div>
                     <span v-else>&ndash;</span>
                 </template>
                 <template #cell-actor="{ row }">
                     <div
-                        v-if="row.actor_name || row.actor_id"
+                        v-if="row.actorName || row.actorId"
                         class="leading-tight"
                     >
-                        {{ row.actor_name ?? row.actor_id }}
+                        {{ row.actorName ?? row.actorId }}
                         <div
-                            v-if="row.actor_type"
+                            v-if="row.actorType"
                             class="text-xs text-fg-muted"
                         >
-                            {{ row.actor_type }}
+                            {{ row.actorType }}
                         </div>
                     </div>
                     <span v-else>&ndash;</span>
                 </template>
-                <template #cell-request_ip_address="{ row }">
-                    <span v-if="row.request_ip_address">{{ row.request_ip_address }}</span>
+                <template #cell-requestIpAddress="{ row }">
+                    <span v-if="row.requestIpAddress">{{ row.requestIpAddress }}</span>
                     <span v-else>&ndash;</span>
                 </template>
-                <template #cell-created_at="{ row }">
-                    <VCTimeago :datetime="row.created_at" />
+                <template #cell-createdAt="{ row }">
+                    <VCTimeago :datetime="row.createdAt" />
                 </template>
                 <template #cell-options="{ row }">
                     <VCButton

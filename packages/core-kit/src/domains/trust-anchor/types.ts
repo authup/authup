@@ -19,11 +19,11 @@ export interface TrustAnchor {
 
     enabled: boolean,
 
-    created_at: string,
+    createdAt: string,
 
-    updated_at: string,
+    updatedAt: string,
 
-    realm_id: Realm['id'],
+    realmId: Realm['id'],
 
     realm: Realm,
 }

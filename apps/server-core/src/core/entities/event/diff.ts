@@ -9,7 +9,7 @@ import { isEqual } from 'smob';
 
 /**
  * Secret denylist for entity-diff keys (fail-closed: losing a
- * "secret_hashed flipped" diff entry is acceptable, leaking a hash is not).
+ * "secretHashed flipped" diff entry is acceptable, leaking a hash is not).
  * Shared with the sanitizer's `diff` branch so both boundaries agree.
  */
 export const EVENT_DIFF_SECRET_KEY_REGEX = /(password|secret|hash|token|credential)/i;
@@ -36,9 +36,9 @@ function truncateScalar(value: string | number | boolean | null): string | numbe
 /**
  * PII-safe scalar diff between the updated entity and its pre-mutation
  * snapshot: only keys with scalar values (string/number/boolean/null) on BOTH
- * sides, skipping timestamp columns (`*_at`) and any key matching the secret
- * denylist, including only keys whose value actually changed. String values
- * are truncated to {@link EVENT_DIFF_VALUE_MAX_LENGTH}.
+ * sides, skipping timestamp columns (`*_at` / `*At`) and any key matching the
+ * secret denylist, including only keys whose value actually changed. String
+ * values are truncated to {@link EVENT_DIFF_VALUE_MAX_LENGTH}.
  */
 export function buildEntityDiff(
     next: Record<string, any>,
@@ -52,7 +52,7 @@ export function buildEntityDiff(
     ]);
 
     for (const key of keys) {
-        if (key.endsWith('_at')) {
+        if (key.endsWith('_at') || key.endsWith('At')) {
             continue;
         }
 

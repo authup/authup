@@ -9,10 +9,10 @@ import type { TrustAnchor } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { DataSource, FindOptionsWhere, Repository } from 'typeorm';
-import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
+import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import { DatabaseConflictError, RealmEntity, TrustAnchorEntity } from '../../../../../adapters/database/index.ts';
 import type { IRealmRepository, ITrustAnchorRepository } from '../../../../../core/index.ts';
-import { applyRealmScopeSelect, translateWhereConditions } from '../helpers.ts';
+import { applyRealmScopeSelect, isEntityUnique, translateWhereConditions } from '../helpers.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export class TrustAnchorRepositoryAdapter implements ITrustAnchorRepository {
@@ -41,14 +41,14 @@ export class TrustAnchorRepositoryAdapter implements ITrustAnchorRepository {
                     'name',
                     'certificate',
                     'enabled',
-                    'realm_id',
-                    'created_at',
-                    'updated_at',
+                    'realmId',
+                    'createdAt',
+                    'updatedAt',
                 ],
             },
-            filters: { allowed: ['id', 'name', 'enabled', 'realm_id'] },
+            filters: { allowed: ['id', 'name', 'enabled', 'realmId'] },
             pagination: { maxLimit: 50 },
-            sort: { allowed: ['id', 'name', 'enabled', 'created_at', 'updated_at'] },
+            sort: { allowed: ['id', 'name', 'enabled', 'createdAt', 'updatedAt'] },
         });
 
         applyRealmScopeSelect(qb, 'trustAnchor');
@@ -77,7 +77,7 @@ export class TrustAnchorRepositoryAdapter implements ITrustAnchorRepository {
                 return null;
             }
 
-            where.realm_id = realmId;
+            where.realmId = realmId;
         }
 
         return this.repository.findOneBy(where);

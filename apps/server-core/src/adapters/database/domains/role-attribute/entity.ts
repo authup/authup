@@ -24,7 +24,7 @@ import {
 import { RealmEntity } from '../realm/index.ts';
 import { RoleEntity } from '../role/entity.ts';
 
-@Unique(['name', 'role_id'])
+@Unique(['name', 'roleId'])
 @Entity({ name: 'auth_role_attributes' })
 export class RoleAttributeEntity implements RoleAttribute {
     @PrimaryGeneratedColumn('uuid')
@@ -52,8 +52,8 @@ export class RoleAttributeEntity implements RoleAttribute {
 
     // ------------------------------------------------------------------
 
-    @Column({ nullable: true })
-    realm_id: Realm['id'] | null;
+    @Column({ name: 'realm_id', nullable: true })
+    realmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
@@ -62,8 +62,8 @@ export class RoleAttributeEntity implements RoleAttribute {
     @JoinColumn({ name: 'realm_id' })
     realm: RealmEntity | null;
 
-    @Column()
-    role_id: Role['id'];
+    @Column({ name: 'role_id' })
+    roleId: Role['id'];
 
     @ManyToOne(() => RoleEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'role_id' })
@@ -71,9 +71,9 @@ export class RoleAttributeEntity implements RoleAttribute {
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
+    createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
+    updatedAt: string;
 }

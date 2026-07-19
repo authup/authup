@@ -49,7 +49,7 @@ describe('src/http/controllers/user-authenticator', () => {
         // their own recovery set (the admin never sees the codes).
         const enrolled = await userClient.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.RECOVERY });
         expect(enrolled.meta.codes).toHaveLength(10);
-        expect(enrolled.data.user_id).toEqual(userId);
+        expect(enrolled.data.userId).toEqual(userId);
 
         // the admin can list it (secrets nulled) ...
         const list = await suite.client.userAuthenticator.getMany(userId);

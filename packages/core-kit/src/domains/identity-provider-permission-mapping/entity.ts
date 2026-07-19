@@ -12,17 +12,17 @@ import type { Realm } from '../realm';
 export interface IdentityProviderPermissionMapping extends IdentityProviderBaseMapping {
     id: string;
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 
     // -----------------------------------------------
 
-    permission_id: string;
+    permissionId: string;
 
     permission: Role;
 
-    permission_realm_id: Realm['id'] | null;
+    permissionRealmId: Realm['id'] | null;
 
-    permission_realm: Realm | null;
+    permissionRealm: Realm | null;
 }

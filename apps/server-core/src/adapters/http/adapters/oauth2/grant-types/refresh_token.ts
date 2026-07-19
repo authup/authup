@@ -133,7 +133,7 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
             client &&
             isClientPublic(client) &&
             payload.realm_id &&
-            payload.realm_id !== client.realm_id
+            payload.realm_id !== client.realmId
         ) {
             throw OAuth2GrantError.invalid();
         }

@@ -29,7 +29,7 @@ import { PolicyEntity } from '../policy/index.ts';
 import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_clients' })
-@Unique(['name', 'realm_id'])
+@Unique(['name', 'realmId'])
 export class ClientEntity implements Client {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -43,24 +43,27 @@ export class ClientEntity implements Client {
     active: boolean;
 
     @Column({
-        type: 'boolean',
-        default: false,
+        name: 'built_in', 
+        type: 'boolean', 
+        default: false, 
     })
-    built_in: boolean;
+    builtIn: boolean;
 
     @Column({
-        type: 'varchar',
-        length: 16,
-        default: ClientAuthMethod.NONE,
+        name: 'auth_method', 
+        type: 'varchar', 
+        length: 16, 
+        default: ClientAuthMethod.NONE, 
     })
-    auth_method: `${ClientAuthMethod}`;
+    authMethod: `${ClientAuthMethod}`;
 
     @Column({
-        type: 'varchar',
-        length: 16,
-        default: ClientTokenBindingMethod.NONE,
+        name: 'token_binding_method', 
+        type: 'varchar', 
+        length: 16, 
+        default: ClientTokenBindingMethod.NONE, 
     })
-    token_binding_method: `${ClientTokenBindingMethod}`;
+    tokenBindingMethod: `${ClientTokenBindingMethod}`;
 
     // ------------------------------------------------------------------
 
@@ -71,11 +74,12 @@ export class ClientEntity implements Client {
     name: string;
 
     @Column({
-        type: 'varchar',
-        length: 256,
+        name: 'display_name', 
+        type: 'varchar', 
+        length: 256, 
         nullable: true, 
     })
-    display_name: string | null;
+    displayName: string | null;
 
     @Column({
         type: 'text',
@@ -94,53 +98,59 @@ export class ClientEntity implements Client {
     secret: string | null;
 
     @Column({
-        type: 'boolean',
-        default: false,
+        name: 'secret_hashed', 
+        type: 'boolean', 
+        default: false, 
     })
-    secret_hashed: boolean;
+    secretHashed: boolean;
 
     @Column({
-        type: 'boolean',
-        default: false,
+        name: 'secret_encrypted', 
+        type: 'boolean', 
+        default: false, 
     })
-    secret_encrypted: boolean;
+    secretEncrypted: boolean;
 
     // ------------------------------------------------------------------
 
     @Column({
-        type: 'text',
-        nullable: true,
+        name: 'redirect_uri', 
+        type: 'text', 
+        nullable: true, 
     })
-    redirect_uri: string | null;
+    redirectUri: string | null;
 
-    // `text` (not varchar) to match `redirect_uri` — the provisioner writes the
+    // `text` (not varchar) to match `redirectUri` — the provisioner writes the
     // same origin-pattern string to both, so a large trusted-origin set must
     // not overflow only this column.
     @Column({
-        type: 'text',
-        nullable: true,
+        name: 'post_logout_redirect_uri', 
+        type: 'text', 
+        nullable: true, 
     })
-    post_logout_redirect_uri: string | null;
+    postLogoutRedirectUri: string | null;
 
     @Column({
-        nullable: true,
-        type: 'uuid',
+        name: 'access_policy_id', 
+        nullable: true, 
+        type: 'uuid', 
     })
-    access_policy_id: string | null;
+    accessPolicyId: string | null;
 
     @ManyToOne(() => PolicyEntity, {
         onDelete: 'SET NULL',
         nullable: true,
     })
     @JoinColumn({ name: 'access_policy_id' })
-    access_policy: Policy | null;
+    accessPolicy: Policy | null;
 
     @Column({
-        type: 'varchar',
-        length: 512,
-        nullable: true,
+        name: 'grant_types', 
+        type: 'varchar', 
+        length: 512, 
+        nullable: true, 
     })
-    grant_types: string | null;
+    grantTypes: string | null;
 
     @Column({
         type: 'varchar',
@@ -151,31 +161,33 @@ export class ClientEntity implements Client {
     scope: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 2000,
-        nullable: true,
+        name: 'base_url', 
+        type: 'varchar', 
+        length: 2000, 
+        nullable: true, 
     })
-    base_url: string | null;
+    baseUrl: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 2000,
-        nullable: true,
+        name: 'root_url', 
+        type: 'varchar', 
+        length: 2000, 
+        nullable: true, 
     })
-    root_url: string | null;
+    rootUrl: string | null;
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
+    createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
+    updatedAt: string;
 
     // ------------------------------------------------------------------
 
-    @Column()
-    realm_id: Realm['id'];
+    @Column({ name: 'realm_id' })
+    realmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
@@ -187,10 +199,10 @@ export class ClientEntity implements Client {
     @BeforeUpdate()
     setDisplayName() {
         if (
-            typeof this.display_name !== 'string' ||
-            this.display_name.length === 0
+            typeof this.displayName !== 'string' ||
+            this.displayName.length === 0
         ) {
-            this.display_name = this.name;
+            this.displayName = this.name;
         }
     }
 }

@@ -29,8 +29,8 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         this.permissionResolver = new ProvisioningEntityResolver(ctx.permissionRepository);
         this.permissionJunction = new ProvisioningJunctionSynchronizer({
             repository: ctx.rolePermissionRepository,
-            ownerKey: 'role_id',
-            ownerRealmKey: 'role_realm_id',
+            ownerKey: 'roleId',
+            ownerRealmKey: 'roleRealmId',
         });
     }
 
@@ -40,8 +40,8 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         const strategy = normalizeEntityProvisioningStrategy(input.strategy);
         let attributes = await this.repository.findOneBy({
             name: input.attributes.name,
-            realm_id: input.attributes.realm_id || null,
-            client_id: input.attributes.client_id || null,
+            realmId: input.attributes.realmId || null,
+            clientId: input.attributes.clientId || null,
         });
 
         if (strategy.type === ProvisioningEntityStrategyType.ABSENT) {
@@ -89,8 +89,8 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             globalPermissions = globalPermissions.filter((p) => !excludeSet.has(p.name));
         }
 
-        const realmPermissions = attributes.realm_id ?
-            await this.permissionResolver.resolveRealm(input.relations.realmPermissions, attributes.realm_id) :
+        const realmPermissions = attributes.realmId ?
+            await this.permissionResolver.resolveRealm(input.relations.realmPermissions, attributes.realmId) :
             [];
 
         const permissions = [
@@ -108,17 +108,17 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
                     await this.permissionJunction.synchronize(
                         attributes,
                         [permission],
-                        'permission_id',
-                        'permission_realm_id',
-                        { realm_scope: realmScope },
+                        'permissionId',
+                        'permissionRealmId',
+                        { realmScope },
                     );
                 }
             } else {
                 await this.permissionJunction.synchronize(
                     attributes,
                     permissions,
-                    'permission_id',
-                    'permission_realm_id',
+                    'permissionId',
+                    'permissionRealmId',
                 );
             }
         }

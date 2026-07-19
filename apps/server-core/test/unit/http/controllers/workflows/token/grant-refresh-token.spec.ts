@@ -36,10 +36,10 @@ describe('refresh-token', () => {
             .client
             .create(createFakeClient({
                 secret: confidentialSecret,
-                secret_hashed: false,
-                secret_encrypted: false,
-                auth_method: 'secret',
-                token_binding_method: 'none',
+                secretHashed: false,
+                secretEncrypted: false,
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
             }));
     });
 
@@ -128,8 +128,8 @@ describe('refresh-token', () => {
         const publicClient = await suite.client
             .client
             .create(createFakeClient({
-                auth_method: 'none',
-                token_binding_method: 'none',
+                authMethod: 'none',
+                tokenBindingMethod: 'none',
                 secret: null,
             }));
 
@@ -165,10 +165,10 @@ describe('refresh-token', () => {
             .client
             .create(createFakeClient({
                 secret: otherSecret,
-                secret_hashed: false,
-                secret_encrypted: false,
-                auth_method: 'secret',
-                token_binding_method: 'none',
+                secretHashed: false,
+                secretEncrypted: false,
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
             }));
 
         const passwordResponse = await suite.client
@@ -220,19 +220,19 @@ describe('refresh-token', () => {
         await suite.client.client.create(createFakeClient({
             name,
             secret: masterSecret,
-            secret_hashed: false,
-            secret_encrypted: false,
-            auth_method: 'secret',
-            token_binding_method: 'none',
+            secretHashed: false,
+            secretEncrypted: false,
+            authMethod: 'secret',
+            tokenBindingMethod: 'none',
         }));
         await suite.client.client.create(createFakeClient({
             name,
-            realm_id: realm.id,
+            realmId: realm.id,
             secret: 'other-realm-secret',
-            secret_hashed: false,
-            secret_encrypted: false,
-            auth_method: 'secret',
-            token_binding_method: 'none',
+            secretHashed: false,
+            secretEncrypted: false,
+            authMethod: 'secret',
+            tokenBindingMethod: 'none',
         }));
 
         const passwordResponse = await suite.client
@@ -259,15 +259,15 @@ describe('refresh-token', () => {
         const realm = await suite.client.realm.create(createFakeRealm());
         const secret = 'realm-refresh-secret';
         const client = await suite.client.client.create(createFakeClient({
-            realm_id: realm.id,
+            realmId: realm.id,
             secret,
-            secret_hashed: false,
-            secret_encrypted: false,
-            auth_method: 'secret',
-            token_binding_method: 'none',
+            secretHashed: false,
+            secretEncrypted: false,
+            authMethod: 'secret',
+            tokenBindingMethod: 'none',
         }));
         const user = await suite.client.user.create(createFakeUser({
-            realm_id: realm.id,
+            realmId: realm.id,
             password: 'realm-user-secret',
         }));
 
@@ -348,9 +348,9 @@ describe('refresh-token', () => {
         // tokens minted before the authorize-side realm gate existed.
         const realm = await suite.client.realm.create(createFakeRealm());
         const publicClient = await suite.client.client.create(createFakeClient({
-            realm_id: realm.id,
-            auth_method: 'none',
-            token_binding_method: 'none',
+            realmId: realm.id,
+            authMethod: 'none',
+            tokenBindingMethod: 'none',
             secret: null,
         }));
 
@@ -372,13 +372,13 @@ describe('refresh-token', () => {
         // a same-realm token normally.
         const realm = await suite.client.realm.create(createFakeRealm());
         const publicClient = await suite.client.client.create(createFakeClient({
-            realm_id: realm.id,
-            auth_method: 'none',
-            token_binding_method: 'none',
+            realmId: realm.id,
+            authMethod: 'none',
+            tokenBindingMethod: 'none',
             secret: null,
         }));
         const user = await suite.client.user.create(createFakeUser({
-            realm_id: realm.id,
+            realmId: realm.id,
             password: 'realm-public-refresh',
         }));
 
@@ -410,7 +410,7 @@ describe('refresh-token', () => {
         // would break this leg; this is its control.
         const realm = await suite.client.realm.create(createFakeRealm());
         const user = await suite.client.user.create(createFakeUser({
-            realm_id: realm.id,
+            realmId: realm.id,
             password: 'confidential-cross-realm',
         }));
 

@@ -32,7 +32,7 @@ export function createMasterRealmActor(realmId?: string): FakeActorContext {
         identity: {
             type: IdentityType.USER,
             data: {
-                realm_id: id,
+                realmId: id,
                 realm: {
                     id,
                     name: REALM_MASTER_NAME,
@@ -49,7 +49,7 @@ export function createNonMasterRealmActor(realmId?: string): FakeActorContext {
         identity: {
             type: IdentityType.USER,
             data: {
-                realm_id: id,
+                realmId: id,
                 realm: {
                     id,
                     name: 'test-realm',

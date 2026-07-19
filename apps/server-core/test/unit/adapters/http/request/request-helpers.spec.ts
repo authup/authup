@@ -38,20 +38,20 @@ function robotIdentity(data: Partial<Robot>): Identity {
 
 describe('RequestIdentity', () => {
     it('should expose a client identity id as its clientId', () => {
-        const identity = new RequestIdentity(clientIdentity({ id: 'c1', realm_id: 'r1' }));
+        const identity = new RequestIdentity(clientIdentity({ id: 'c1', realmId: 'r1' }));
         expect(identity.clientId).toEqual('c1');
         expect(identity.id).toEqual('c1');
         expect(identity.type).toEqual(IdentityType.CLIENT);
         expect(identity.realmId).toEqual('r1');
     });
 
-    it('should derive a non-client clientId from the client_id field', () => {
-        const identity = new RequestIdentity(robotIdentity({ id: 'r1', client_id: 'c9' }));
+    it('should derive a non-client clientId from the clientId field', () => {
+        const identity = new RequestIdentity(robotIdentity({ id: 'r1', clientId: 'c9' }));
         expect(identity.clientId).toEqual('c9');
     });
 
-    it('should return null clientId when client_id is null', () => {
-        const identity = new RequestIdentity(robotIdentity({ id: 'r1', client_id: null }));
+    it('should return null clientId when clientId is null', () => {
+        const identity = new RequestIdentity(robotIdentity({ id: 'r1', clientId: null }));
         expect(identity.clientId).toBeNull();
     });
 
@@ -140,15 +140,15 @@ describe('request realm id', () => {
 
     it('should apply the route realm over a body realm', () => {
         const event = createFakeEvent({ params: { realmId: 'route' } });
-        const body: Record<string, any> = { realm_id: 'body', name: 'x' };
+        const body: Record<string, any> = { realmId: 'body', name: 'x' };
         applyRouteRealmIDToBody(event, body);
-        expect(body.realm_id).toEqual('route');
+        expect(body.realmId).toEqual('route');
     });
 
     it('should leave the body realm untouched when no realm is known', () => {
-        const body: Record<string, any> = { realm_id: 'body' };
+        const body: Record<string, any> = { realmId: 'body' };
         applyRouteRealmIDToBody(createFakeEvent(), body);
-        expect(body.realm_id).toEqual('body');
+        expect(body.realmId).toEqual('body');
     });
 });
 

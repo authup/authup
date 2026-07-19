@@ -35,23 +35,23 @@ export class SessionManager implements ISessionManager {
      * @param input
      */
     async create(input: Partial<Session>): Promise<Session> {
-        input.ip_address = input.ip_address || '127.0.0.1';
-        input.user_agent = input.user_agent || 'system';
-        input.expires_at = input.expires_at || new Date(
+        input.ipAddress = input.ipAddress || '127.0.0.1';
+        input.userAgent = input.userAgent || 'system';
+        input.expiresAt = input.expiresAt || new Date(
             Date.now() + (this.options.maxAge * 1_000),
         ).toISOString();
 
-        switch (input.sub_kind) {
+        switch (input.subKind) {
             case IdentityType.CLIENT: {
-                input.client_id = input.sub;
+                input.clientId = input.sub;
                 break;
             }
             case IdentityType.ROBOT: {
-                input.robot_id = input.sub;
+                input.robotId = input.sub;
                 break;
             }
             case IdentityType.USER: {
-                input.user_id = input.sub;
+                input.userId = input.sub;
                 break;
             }
         }
@@ -62,8 +62,8 @@ export class SessionManager implements ISessionManager {
     // -----------------------------------------------------
 
     async ping(session: Session): Promise<Session> {
-        if (session.seen_at) {
-            const seenAt = new Date(session.seen_at).getTime();
+        if (session.seenAt) {
+            const seenAt = new Date(session.seenAt).getTime();
             const threshold = seenAt + (5 * 1_000);
 
             if (threshold > Date.now()) {
@@ -71,7 +71,7 @@ export class SessionManager implements ISessionManager {
             }
         }
 
-        session.seen_at = new Date().toISOString();
+        session.seenAt = new Date().toISOString();
 
         return this.repository.save(session);
     }
@@ -80,10 +80,10 @@ export class SessionManager implements ISessionManager {
 
     async refresh(session: Session): Promise<Session> {
         const now = new Date().toISOString();
-        session.refreshed_at = now;
-        session.seen_at = now;
+        session.refreshedAt = now;
+        session.seenAt = now;
 
-        session.expires_at = new Date(
+        session.expiresAt = new Date(
             Date.now() + (this.options.maxAge * 1_000),
         ).toISOString();
 
@@ -93,7 +93,7 @@ export class SessionManager implements ISessionManager {
     // -----------------------------------------------------
 
     async markMfaVerified(session: Session): Promise<Session> {
-        session.mfa_at = new Date().toISOString();
+        session.mfaAt = new Date().toISOString();
 
         return this.repository.save(session);
     }
@@ -119,7 +119,7 @@ export class SessionManager implements ISessionManager {
     // -----------------------------------------------------
 
     async verify(session: Session): Promise<void> {
-        const ms = new Date(session.expires_at).getTime();
+        const ms = new Date(session.expiresAt).getTime();
         if (Date.now() > ms) {
             await this.repository.remove(session);
 

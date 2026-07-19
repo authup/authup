@@ -51,10 +51,10 @@ export class RealmRepositoryAdapter implements IRealmRepository {
 
         const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'realm',
-            filters: { allowed: ['id', 'built_in', 'display_name', 'name'] },
+            filters: { allowed: ['id', 'builtIn', 'displayName', 'name'] },
             pagination: { maxLimit: 50 },
-            fields: { allowed: ['id', 'name', 'description', 'built_in', 'created_at', 'updated_at'] },
-            sort: { allowed: ['id', 'name', 'created_at', 'updated_at'] },
+            fields: { allowed: ['id', 'name', 'description', 'builtIn', 'createdAt', 'updatedAt'] },
+            sort: { allowed: ['id', 'name', 'createdAt', 'updatedAt'] },
         });
 
         const [entities, total] = await qb.getManyAndCount();

@@ -39,20 +39,20 @@ export class CompositeProvisioningSource implements IProvisioningSource {
     private buildEntityKey(
         attributes: {
             name?: string,
-            realm_id?: string | null,
-            client_id?: string | null
+            realmId?: string | null,
+            clientId?: string | null
         },
     ): string | undefined {
         if (!attributes.name) return undefined;
-        return `${attributes.name}:${attributes.realm_id || ''}:${attributes.client_id || ''}`;
+        return `${attributes.name}:${attributes.realmId || ''}:${attributes.clientId || ''}`;
     }
 
     private mergeEntities<
         T extends {
             attributes: {
                 name?: string,
-                realm_id?: string | null,
-                client_id?: string | null
+                realmId?: string | null,
+                clientId?: string | null
             }
         },
     >(

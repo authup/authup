@@ -18,15 +18,15 @@ export class PolicyRepository extends EATreeRepository<Policy, PolicyAttribute> 
     constructor(instance: DataSource | EntityManager) {
         super(instance, {
             attributeProperties: (input, parent) => {
-                input.policy_id = parent.id;
-                input.realm_id = parent.realm_id;
+                input.policyId = parent.id;
+                input.realmId = parent.realmId;
 
                 return input;
             },
             entity: PolicyEntity,
             entityPrimaryColumn: 'id',
             attributeEntity: PolicyAttributeEntity,
-            attributeForeignColumn: 'policy_id',
+            attributeForeignColumn: 'policyId',
             cachePrefix: CachePrefix.POLICY_OWNED_ATTRIBUTES,
         });
     }
@@ -35,7 +35,7 @@ export class PolicyRepository extends EATreeRepository<Policy, PolicyAttribute> 
         // The root must be a fully-loaded row: findDescendantsTree() mutates
         // the passed entity (children + EA) but never populates its base
         // columns — an id-only stub would yield a `type`-less tree that every
-        // engine consumer fails closed on (policy_evaluator_not_found).
+        // engine consumer fails closed on (policyEvaluatorNotFound).
         const entity = await this.findOneBy({ id });
         if (!entity) {
             return null;

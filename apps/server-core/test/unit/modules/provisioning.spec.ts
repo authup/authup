@@ -94,8 +94,8 @@ describe('app/modules/provisioning', () => {
         expect(output.realms).toHaveLength(1);
 
         // validated output preserves provisioning-only fields and relations
-        expect(output.policies![0].attributes.built_in).toBe(true);
-        expect(output.roles![1].attributes.built_in).toBe(true);
+        expect(output.policies![0].attributes.builtIn).toBe(true);
+        expect(output.roles![1].attributes.builtIn).toBe(true);
         expect(output.permissions![0].relations?.policies).toEqual(['file-policy']);
 
         const [realm] = output.realms!;
@@ -140,21 +140,21 @@ describe('app/modules/provisioning', () => {
         const roles = await roleRepository.findBy({ name: 'foo' });
         expect(roles).toHaveLength(2);
 
-        const builtInRole = await roleRepository.findOneBy({ name: 'bar', realm_id: IsNull() });
-        expect(builtInRole?.built_in).toBe(true);
+        const builtInRole = await roleRepository.findOneBy({ name: 'bar', realmId: IsNull() });
+        expect(builtInRole?.builtIn).toBe(true);
 
         const filePolicy = await policyRepositoryAdapter.findOneByName('file-policy');
         expect(filePolicy).toBeDefined();
-        expect(filePolicy?.built_in).toBe(true);
+        expect(filePolicy?.builtIn).toBe(true);
 
         const permissionRepository = di.resolve<Repository<Permission>>(PermissionEntity);
-        const permission = await permissionRepository.findOneBy({ name: 'foo', realm_id: IsNull() });
+        const permission = await permissionRepository.findOneBy({ name: 'foo', realmId: IsNull() });
         expect(permission).toBeDefined();
 
         const permissionPolicyRepository = di.resolve<Repository<PermissionPolicy>>(PermissionPolicyEntity);
         const junction = await permissionPolicyRepository.findOneBy({
-            permission_id: permission!.id,
-            policy_id: filePolicy!.id,
+            permissionId: permission!.id,
+            policyId: filePolicy!.id,
         });
         expect(junction).toBeDefined();
     });
@@ -166,7 +166,7 @@ describe('app/modules/provisioning', () => {
     describe('policy provisioning', () => {
         // ---------------------------------------------------------------
         // Backfill — must run before any policy sync so the permission
-        // has created_at < default policy created_at
+        // has createdAt < default policy createdAt
         // ---------------------------------------------------------------
 
         it('should assign default policy to permissions without it via junction table', async () => {
@@ -178,33 +178,33 @@ describe('app/modules/provisioning', () => {
 
             const oldPermission = await permissionRepo.save(permissionRepo.create({
                 name: 'old_permission_backfill',
-                built_in: false,
+                builtIn: false,
             }));
 
             // Verify no junction exists yet
             const before = await junctionRepo.findOneBy({
-                permission_id: oldPermission.id,
-                policy_id: defaultPolicy!.id,
+                permissionId: oldPermission.id,
+                policyId: defaultPolicy!.id,
             });
             expect(before).toBeNull();
 
             // Run assignDefaultPolicy manually (avoid full provisioning to prevent SQLite nested transaction)
             const existing = await junctionRepo.findOneBy({
-                permission_id: oldPermission.id,
-                policy_id: defaultPolicy!.id,
+                permissionId: oldPermission.id,
+                policyId: defaultPolicy!.id,
             });
             if (!existing) {
                 await junctionRepo.save(junctionRepo.create({
-                    permission_id: oldPermission.id,
-                    permission_realm_id: oldPermission.realm_id,
-                    policy_id: defaultPolicy!.id,
-                    policy_realm_id: defaultPolicy!.realm_id,
+                    permissionId: oldPermission.id,
+                    permissionRealmId: oldPermission.realmId,
+                    policyId: defaultPolicy!.id,
+                    policyRealmId: defaultPolicy!.realmId,
                 }));
             }
 
             const after = await junctionRepo.findOneBy({
-                permission_id: oldPermission.id,
-                policy_id: defaultPolicy!.id,
+                permissionId: oldPermission.id,
+                policyId: defaultPolicy!.id,
             });
             expect(after).toBeDefined();
         });
@@ -221,27 +221,27 @@ describe('app/modules/provisioning', () => {
             expect(permission).toBeDefined();
 
             const countBefore = await junctionRepo.countBy({
-                permission_id: permission!.id,
-                policy_id: defaultPolicy!.id,
+                permissionId: permission!.id,
+                policyId: defaultPolicy!.id,
             });
 
             // Attempt to re-assign — should be idempotent
             const existing = await junctionRepo.findOneBy({
-                permission_id: permission!.id,
-                policy_id: defaultPolicy!.id,
+                permissionId: permission!.id,
+                policyId: defaultPolicy!.id,
             });
             if (!existing) {
                 await junctionRepo.save(junctionRepo.create({
-                    permission_id: permission!.id,
-                    permission_realm_id: permission!.realm_id,
-                    policy_id: defaultPolicy!.id,
-                    policy_realm_id: defaultPolicy!.realm_id,
+                    permissionId: permission!.id,
+                    permissionRealmId: permission!.realmId,
+                    policyId: defaultPolicy!.id,
+                    policyRealmId: defaultPolicy!.realmId,
                 }));
             }
 
             const countAfter = await junctionRepo.countBy({
-                permission_id: permission!.id,
-                policy_id: defaultPolicy!.id,
+                permissionId: permission!.id,
+                policyId: defaultPolicy!.id,
             });
             expect(countAfter).toBe(countBefore);
         });
@@ -250,20 +250,20 @@ describe('app/modules/provisioning', () => {
         // Policy sync tests — policies already exist from backfill test
         // ---------------------------------------------------------------
 
-        it('should create all leaf policies with correct type and built_in', async () => {
+        it('should create all leaf policies with correct type and builtIn', async () => {
             const identity = await policyRepositoryAdapter.findOneByName(SystemPolicyName.IDENTITY);
             expect(identity).toBeDefined();
             expect(identity!.type).toBe(BuiltInPolicyType.IDENTITY);
-            expect(identity!.built_in).toBe(true);
-            expect(identity!.realm_id).toBeNull();
+            expect(identity!.builtIn).toBe(true);
+            expect(identity!.realmId).toBeNull();
 
             const permBinding = await policyRepositoryAdapter.findOneByName(SystemPolicyName.PERMISSION_BINDING);
             expect(permBinding).toBeDefined();
             expect(permBinding!.type).toBe(BuiltInPolicyType.PERMISSION_BINDING);
-            expect(permBinding!.built_in).toBe(true);
+            expect(permBinding!.builtIn).toBe(true);
 
             // The realm-match baseline child + the standalone realm policies were removed
-            // in favour of the realm_scope enum on junctions.
+            // in favour of the realmScope enum on junctions.
             expect(await policyRepositoryAdapter.findOneByName(SystemPolicyName.REALM_MATCH)).toBeNull();
             expect(await policyRepositoryAdapter.findOneByName('system.realm-bound')).toBeNull();
             expect(await policyRepositoryAdapter.findOneByName('system.realm-or-global')).toBeNull();
@@ -273,12 +273,12 @@ describe('app/modules/provisioning', () => {
             const defaultPolicy = await policyRepositoryAdapter.findOneByName(SystemPolicyName.DEFAULT);
             expect(defaultPolicy).toBeDefined();
             expect(defaultPolicy!.type).toBe(BuiltInPolicyType.COMPOSITE);
-            expect(defaultPolicy!.built_in).toBe(true);
-            expect(defaultPolicy!.realm_id).toBeNull();
+            expect(defaultPolicy!.builtIn).toBe(true);
+            expect(defaultPolicy!.realmId).toBeNull();
             const defaultPolicyEA: Partial<CompositePolicy> = defaultPolicy!;
-            expect(defaultPolicyEA.decision_strategy).toBe(DecisionStrategy.UNANIMOUS);
+            expect(defaultPolicyEA.decisionStrategy).toBe(DecisionStrategy.UNANIMOUS);
 
-            const children = await policyRepositoryAdapter.findManyBy({ parent_id: defaultPolicy!.id });
+            const children = await policyRepositoryAdapter.findManyBy({ parentId: defaultPolicy!.id });
             expect(children).toHaveLength(2);
 
             const childNames = children.map((c) => c.name).sort();
@@ -335,8 +335,8 @@ describe('app/modules/provisioning', () => {
                         attributes: {
                             name: 'system.stale-child',
                             type: BuiltInPolicyType.IDENTITY,
-                            built_in: true,
-                            realm_id: null,
+                            builtIn: true,
+                            realmId: null,
                         },
                     },
                 ],
@@ -371,8 +371,8 @@ describe('app/modules/provisioning', () => {
                         attributes: {
                             name: 'system.referenced-child',
                             type: BuiltInPolicyType.IDENTITY,
-                            built_in: true,
-                            realm_id: null,
+                            builtIn: true,
+                            realmId: null,
                         },
                     },
                 ],
@@ -387,15 +387,15 @@ describe('app/modules/provisioning', () => {
             const testPermission = await permissionRepo.save(
                 permissionRepo.create({
                     name: 'test_permission_ref',
-                    built_in: false,
+                    builtIn: false,
                 }),
             );
 
             const junctionRepo = di.resolve<Repository<PermissionPolicy>>(PermissionPolicyEntity);
             await junctionRepo.save(
                 junctionRepo.create({
-                    permission_id: testPermission.id,
-                    policy_id: referencedChild!.id,
+                    permissionId: testPermission.id,
+                    policyId: referencedChild!.id,
                 }),
             );
 
@@ -403,8 +403,8 @@ describe('app/modules/provisioning', () => {
 
             const detached = await policyRepositoryAdapter.findOneByName('system.referenced-child');
             expect(detached).toBeDefined();
-            expect(detached!.parent_id).toBeNull();
-            expect(detached!.built_in).toBe(false);
+            expect(detached!.parentId).toBeNull();
+            expect(detached!.builtIn).toBe(false);
         });
 
         // ---------------------------------------------------------------
@@ -422,8 +422,8 @@ describe('app/modules/provisioning', () => {
             expect(permission).toBeDefined();
 
             const junction = await junctionRepo.findOneBy({
-                permission_id: permission!.id,
-                policy_id: defaultPolicy!.id,
+                permissionId: permission!.id,
+                policyId: defaultPolicy!.id,
             });
             expect(junction).toBeDefined();
         });
@@ -439,26 +439,26 @@ describe('app/modules/provisioning', () => {
             expect(permission).toBeDefined();
 
             const countBefore = await junctionRepo.countBy({
-                permission_id: permission!.id,
-                policy_id: defaultPolicy!.id,
+                permissionId: permission!.id,
+                policyId: defaultPolicy!.id,
             });
             expect(countBefore).toBe(1);
 
             // Attempt duplicate insert — idempotent check
             const existing = await junctionRepo.findOneBy({
-                permission_id: permission!.id,
-                policy_id: defaultPolicy!.id,
+                permissionId: permission!.id,
+                policyId: defaultPolicy!.id,
             });
             if (!existing) {
                 await junctionRepo.save(junctionRepo.create({
-                    permission_id: permission!.id,
-                    policy_id: defaultPolicy!.id,
+                    permissionId: permission!.id,
+                    policyId: defaultPolicy!.id,
                 }));
             }
 
             const countAfter = await junctionRepo.countBy({
-                permission_id: permission!.id,
-                policy_id: defaultPolicy!.id,
+                permissionId: permission!.id,
+                policyId: defaultPolicy!.id,
             });
 
             expect(countAfter).toBe(countBefore);

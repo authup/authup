@@ -9,17 +9,17 @@ import type { IdentityProvider } from '../entity';
 import type { IdentityProviderProtocol } from '../constants';
 
 export interface OAuth2IdentityProviderBase {
-    client_id: string;
+    clientId: string;
 
-    client_secret: string;
+    clientSecret: string;
 
-    token_url: string;
+    tokenUrl: string;
 
-    token_revoke_url?: string | null;
+    tokenRevokeUrl?: string | null;
 
-    authorize_url: string;
+    authorizeUrl: string;
 
-    user_info_url?: string | null;
+    userInfoUrl?: string | null;
 
     scope?: string | null;
 }

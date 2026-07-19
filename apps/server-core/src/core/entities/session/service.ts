@@ -31,7 +31,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
     protected isOwnedBy(session: Session, actor: ActorContext): boolean {
         return !!actor.identity &&
             session.sub === actor.identity.data.id &&
-            session.sub_kind === actor.identity.type;
+            session.subKind === actor.identity.type;
     }
 
     async getMany(

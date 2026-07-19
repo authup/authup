@@ -40,7 +40,7 @@ function makeActor(options: { allow: boolean, identity?: boolean } = { allow: tr
             type: IdentityType.USER,
             data: {
                 id: userId,
-                realm_id: realmId,
+                realmId,
             } as User,
         };
     }
@@ -65,9 +65,9 @@ describe('EventService', () => {
         return repository.seed({
             scope: EventScope.OAUTH2,
             name: EventName.LOGIN,
-            actor_type: IdentityType.USER,
-            actor_id: userId,
-            realm_id: realmId,
+            actorType: IdentityType.USER,
+            actorId: userId,
+            realmId,
             ...data,
         });
     }
@@ -76,9 +76,9 @@ describe('EventService', () => {
         return repository.seed({
             scope: EventScope.OAUTH2,
             name: EventName.LOGIN,
-            actor_type: IdentityType.USER,
-            actor_id: otherUserId,
-            realm_id: realmId,
+            actorType: IdentityType.USER,
+            actorId: otherUserId,
+            realmId,
             ...data,
         });
     }
@@ -100,10 +100,10 @@ describe('EventService', () => {
             expect(row.id.length).toBeGreaterThan(0);
             expect(row.scope).toEqual(EventScope.OAUTH2);
             expect(row.name).toEqual(EventName.LOGIN);
-            expect(row.actor_type).toEqual(IdentityType.USER);
-            expect(row.actor_id).toEqual(userId);
-            expect(row.actor_name).toEqual('test-user');
-            expect(row.realm_id).toEqual(realmId);
+            expect(row.actorType).toEqual(IdentityType.USER);
+            expect(row.actorId).toEqual(userId);
+            expect(row.actorName).toEqual('test-user');
+            expect(row.realmId).toEqual(realmId);
         });
 
         it('strips secrets from the context data via the sanitizer', async () => {
@@ -111,8 +111,8 @@ describe('EventService', () => {
                 scope: EventScope.OAUTH2,
                 name: EventName.LOGIN_FAILED,
                 data: {
-                    grant_type: 'password',
-                    error_code: 'entity_credentials_invalid',
+                    grantType: 'password',
+                    errorCode: 'entity_credentials_invalid',
                     password: 'super-secret',
                     client_secret: 'also-secret',
                 },
@@ -120,8 +120,8 @@ describe('EventService', () => {
 
             expect(repository.rows).toHaveLength(1);
             expect(repository.rows[0].data).toEqual({
-                grant_type: 'password',
-                error_code: 'entity_credentials_invalid',
+                grantType: 'password',
+                errorCode: 'entity_credentials_invalid',
             });
         });
 
@@ -134,8 +134,8 @@ describe('EventService', () => {
 
             const [row] = repository.rows;
             expect(row.expiring).toBeTruthy();
-            expect(row.expires_at).not.toBeNull();
-            const delta = new Date(row.expires_at!).getTime() -
+            expect(row.expiresAt).not.toBeNull();
+            const delta = new Date(row.expiresAt!).getTime() -
                 (Date.now() + (retentionDays * DAY_IN_MS));
             expect(Math.abs(delta)).toBeLessThan(60_000);
         });
@@ -147,8 +147,8 @@ describe('EventService', () => {
             });
 
             const [row] = repository.rows;
-            expect(row.expires_at).not.toBeNull();
-            const delta = new Date(row.expires_at!).getTime() -
+            expect(row.expiresAt).not.toBeNull();
+            const delta = new Date(row.expiresAt!).getTime() -
                 (Date.now() + (90 * DAY_IN_MS));
             expect(Math.abs(delta)).toBeLessThan(60_000);
         });
@@ -163,8 +163,8 @@ describe('EventService', () => {
 
             const [row] = repository.rows;
             expect(row.expiring).toBeTruthy();
-            expect(row.expires_at).not.toBeNull();
-            const delta = new Date(row.expires_at!).getTime() -
+            expect(row.expiresAt).not.toBeNull();
+            const delta = new Date(row.expiresAt!).getTime() -
                 (Date.now() + (retentionDays * DAY_IN_MS));
             expect(Math.abs(delta)).toBeLessThan(60_000);
         });
@@ -178,7 +178,7 @@ describe('EventService', () => {
 
             const [row] = repository.rows;
             expect(row.expiring).toBeFalsy();
-            expect(row.expires_at).toBeNull();
+            expect(row.expiresAt).toBeNull();
         });
 
         it('keeps rows forever when retentionDays is 0', async () => {
@@ -189,7 +189,7 @@ describe('EventService', () => {
 
             expect(repository.rows).toHaveLength(1);
             expect(repository.rows[0].expiring).toBeFalsy();
-            expect(repository.rows[0].expires_at).toBeNull();
+            expect(repository.rows[0].expiresAt).toBeNull();
         });
 
         it('persists nothing when disabled', async () => {
@@ -223,7 +223,7 @@ describe('EventService', () => {
             const { data } = await service.getMany({}, actor);
 
             expect(data).toHaveLength(2);
-            expect(data.every((row) => row.actor_id === userId)).toBe(true);
+            expect(data.every((row) => row.actorId === userId)).toBe(true);
             expect(data.some((row) => row.id === foreign.id)).toBe(false);
         });
 
@@ -245,7 +245,7 @@ describe('EventService', () => {
 
         it('applies the route realm as a mandatory repository constraint', async () => {
             const ownRealm = seedForeign();
-            seedForeign({ realm_id: otherRealmId });
+            seedForeign({ realmId: otherRealmId });
 
             const actor = makeActor({ allow: true });
             const { data, meta } = await service.getMany({}, actor, { realmId });
@@ -256,7 +256,7 @@ describe('EventService', () => {
 
         it('combines the route realm with the self-service owner constraint', async () => {
             const ownRealm = seedOwn();
-            seedOwn({ realm_id: otherRealmId });
+            seedOwn({ realmId: otherRealmId });
 
             const actor = makeActor({ allow: false });
             const { data, meta } = await service.getMany({}, actor, { realmId });
@@ -267,8 +267,8 @@ describe('EventService', () => {
 
         it('applies actor realm reach before pagination', async () => {
             const ownRealm = seedForeign();
-            const global = seedForeign({ realm_id: null });
-            seedForeign({ realm_id: otherRealmId });
+            const global = seedForeign({ realmId: null });
+            seedForeign({ realmId: otherRealmId });
 
             const actor = makeActor({ allow: true });
             (actor.permissionEvaluator as FakePermissionEvaluator).setBehavior(({ method, ctx }) => {
@@ -345,14 +345,14 @@ describe('EventService', () => {
             evaluator.deny('evaluate');
             const actor: ActorContext = {
                 permissionEvaluator: evaluator,
-                identity: { type: IdentityType.USER, data: { id: userId, realm_id: realmId } as User },
+                identity: { type: IdentityType.USER, data: { id: userId, realmId } as User },
             };
 
             const { data, meta } = await service.getMany({}, actor);
 
             // only the actor's own rows survive (owned rows skip the evaluate)
             expect(data).toHaveLength(1);
-            expect(data[0].actor_id).toEqual(userId);
+            expect(data[0].actorId).toEqual(userId);
             expect(meta.total).toEqual(1);
         });
     });
@@ -383,7 +383,7 @@ describe('EventService', () => {
         });
 
         it('hides a row outside the route realm before checking ownership', async () => {
-            const row = seedOwn({ realm_id: otherRealmId });
+            const row = seedOwn({ realmId: otherRealmId });
             const actor = makeActor({ allow: false });
 
             await expect(service.getOne(row.id, actor, { realmId })).rejects.toBeDefined();

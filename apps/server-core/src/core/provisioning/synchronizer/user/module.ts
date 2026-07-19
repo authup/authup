@@ -48,13 +48,13 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
 
         this.permissionJunction = new ProvisioningJunctionSynchronizer({
             repository: ctx.userPermissionRepository,
-            ownerKey: 'user_id',
-            ownerRealmKey: 'user_realm_id',
+            ownerKey: 'userId',
+            ownerRealmKey: 'userRealmId',
         });
         this.roleJunction = new ProvisioningJunctionSynchronizer({
             repository: ctx.userRoleRepository,
-            ownerKey: 'user_id',
-            ownerRealmKey: 'user_realm_id',
+            ownerKey: 'userId',
+            ownerRealmKey: 'userRealmId',
         });
     }
 
@@ -65,7 +65,7 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
 
         let attributes = await this.userRepository.findOneBy({
             name: input.attributes.name,
-            realm_id: input.attributes.realm_id || null,
+            realmId: input.attributes.realmId || null,
         });
 
         if (strategy.type === ProvisioningEntityStrategyType.ABSENT) {
@@ -121,10 +121,10 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
             ...await this.permissionResolver.resolveGlobal(
                 input.relations && input.relations.globalPermissions,
             ),
-            ...(attributes.realm_id ?
+            ...(attributes.realmId ?
                 await this.permissionResolver.resolveRealm(
                     input.relations && input.relations.realmPermissions,
-                    attributes.realm_id,
+                    attributes.realmId,
                 ) :
                 []),
         ];
@@ -134,13 +134,13 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
             for (const clientKey of clientKeys) {
                 const client = await this.clientRepository.findOneBy({
                     name: clientKey,
-                    realm_id: attributes.realm_id,
+                    realmId: attributes.realmId,
                 });
 
                 if (client) {
                     const entities = await this.permissionResolver.resolveClient(
                         input.relations.clientPermissions[clientKey],
-                        attributes.realm_id,
+                        attributes.realmId,
                         client.id,
                     );
                     permissions.push(...entities);
@@ -152,8 +152,8 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
             await this.permissionJunction.synchronize(
                 attributes,
                 permissions,
-                'permission_id',
-                'permission_realm_id',
+                'permissionId',
+                'permissionRealmId',
             );
         }
 
@@ -162,10 +162,10 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
             ...await this.roleResolver.resolveGlobal(
                 input.relations && input.relations.globalRoles,
             ),
-            ...(attributes.realm_id ?
+            ...(attributes.realmId ?
                 await this.roleResolver.resolveRealm(
                     input.relations && input.relations.realmRoles,
-                    attributes.realm_id,
+                    attributes.realmId,
                 ) :
                 []),
         ];
@@ -175,13 +175,13 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
             for (const clientKey of clientKeys) {
                 const client = await this.clientRepository.findOneBy({
                     name: clientKey,
-                    realm_id: attributes.realm_id,
+                    realmId: attributes.realmId,
                 });
 
                 if (client) {
                     const entities = await this.roleResolver.resolveClient(
                         input.relations.clientRoles[clientKey],
-                        attributes.realm_id,
+                        attributes.realmId,
                         client.id,
                     );
                     roles.push(...entities);
@@ -193,8 +193,8 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
             await this.roleJunction.synchronize(
                 attributes,
                 roles,
-                'role_id',
-                'role_realm_id',
+                'roleId',
+                'roleRealmId',
             );
         }
 

@@ -40,22 +40,22 @@ export default defineComponent({
     emits: ['updated'],
     setup(props) {
         const form = reactive({
-            client_id: '', 
-            client_secret: '', 
+            clientId: '', 
+            clientSecret: '', 
             scope: '', 
         });
 
         const secretShow = ref(false);
 
         // Shared server-side validator, scoped to the keys this sub-form
-        // owns via `pathsToInclude` — `client_id` stays required for every
-        // OAuth2/OIDC flavor, `client_secret` optional (a secret-less
+        // owns via `pathsToInclude` — `clientId` stays required for every
+        // OAuth2/OIDC flavor, `clientSecret` optional (a secret-less
         // public-client token exchange is a valid provider config), `scope`
         // optional (blank = protocol/preset default). The remaining mounts
         // (`preset`, endpoint URLs) belong to sibling sub-forms and are
         // filtered out here.
         const v = useValidup(
-            new IdentityProviderOAuth2AttributesValidator({ pathsToInclude: ['client_id', 'client_secret', 'scope'] }),
+            new IdentityProviderOAuth2AttributesValidator({ pathsToInclude: ['clientId', 'clientSecret', 'scope'] }),
             form,
             { name: 'client' },
         );
@@ -118,25 +118,25 @@ export default defineComponent({
     <div>
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.client_id"
+            :field="v.fields.clientId"
         >
             <VCFormGroup :validation="value">
                 <template #label>
                     {{ translations.clientId }}
                 </template>
-                <VCFormInput v-model="v.fields.client_id.$model.value" />
+                <VCFormInput v-model="v.fields.clientId.$model.value" />
             </VCFormGroup>
         </IFieldValidation>
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.client_secret"
+            :field="v.fields.clientSecret"
         >
             <VCFormGroup :validation="value">
                 <template #label>
                     {{ translations.clientSecret }}
                 </template>
                 <VCFormInput
-                    v-model="v.fields.client_secret.$model.value"
+                    v-model="v.fields.clientSecret.$model.value"
                     :type="secretShow ? 'text' : 'password'"
                     autocomplete="new-password"
                 >

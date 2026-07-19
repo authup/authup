@@ -36,8 +36,8 @@ describe('http/controllers/robot (self-manage)', () => {
 
         const permission = await suite.client.permission.getOne(PermissionName.ROBOT_SELF_MANAGE);
         await suite.client.robotPermission.create({
-            robot_id: entity.id,
-            permission_id: permission.id,
+            robotId: entity.id,
+            permissionId: permission.id,
         });
 
         const tokenResponse = await suite.client.token.createWithRobotCredentials({
@@ -62,10 +62,10 @@ describe('http/controllers/robot (self-manage)', () => {
         expect(response.description).toBe('self-described');
     });
 
-    it('should allow robot to update its own display_name (not in denylist)', async () => {
-        const response = await selfClient.robot.update(entity.id, { display_name: 'self-renamed' });
+    it('should allow robot to update its own displayName (not in denylist)', async () => {
+        const response = await selfClient.robot.update(entity.id, { displayName: 'self-renamed' });
 
-        expect(response.display_name).toBe('self-renamed');
+        expect(response.displayName).toBe('self-renamed');
     });
 
     it('should allow robot to rotate its own secret (not in denylist)', async () => {
@@ -80,20 +80,20 @@ describe('http/controllers/robot (self-manage)', () => {
         ).rejects.toThrow();
     });
 
-    it('should silently strip self-update of realm_id (validator drops on UPDATE)', async () => {
-        const originalRealmId = entity.realm_id;
-        const response = await selfClient.robot.update(entity.id, { realm_id: '00000000-0000-0000-0000-000000000000' } as Partial<RobotEntity>);
+    it('should silently strip self-update of realmId (validator drops on UPDATE)', async () => {
+        const originalRealmId = entity.realmId;
+        const response = await selfClient.robot.update(entity.id, { realmId: '00000000-0000-0000-0000-000000000000' } as Partial<RobotEntity>);
 
-        expect(response.realm_id).toBe(originalRealmId);
+        expect(response.realmId).toBe(originalRealmId);
     });
 
-    it('should reject self-update of user_id (denylisted)', async () => {
-        // user_id is mounted in the validator (both CREATE and UPDATE), so it
+    it('should reject self-update of userId (denylisted)', async () => {
+        // userId is mounted in the validator (both CREATE and UPDATE), so it
         // reaches the policy. The denylist rejects it. (The validateJoinColumns
         // step may also reject if the UUID is non-existent — either way, no
         // rebinding to a different owner.)
         await expect(
-            selfClient.robot.update(entity.id, { user_id: '00000000-0000-0000-0000-000000000000' } as Partial<RobotEntity>),
+            selfClient.robot.update(entity.id, { userId: '00000000-0000-0000-0000-000000000000' } as Partial<RobotEntity>),
         ).rejects.toThrow();
     });
 

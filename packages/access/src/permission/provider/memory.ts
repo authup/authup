@@ -21,8 +21,8 @@ export class PermissionMemoryProvider implements IPermissionProvider {
     ): Promise<PermissionPolicyBindingAggregated | null> {
         const key = buildPermissionKey({
             name: options.name,
-            client_id: options.clientId,
-            realm_id: options.realmId,
+            clientId: options.clientId,
+            realmId: options.realmId,
         });
 
         const entry = this.items[key];

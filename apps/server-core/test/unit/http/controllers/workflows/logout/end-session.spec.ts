@@ -42,17 +42,17 @@ describe('end-session (/logout)', () => {
 
         realm = await suite.client.realm.create(createFakeRealm());
         client = await suite.client.client.create(createFakeClient({
-            realm_id: realm.id,
-            auth_method: 'none',
-            token_binding_method: 'none',
+            realmId: realm.id,
+            authMethod: 'none',
+            tokenBindingMethod: 'none',
             secret: null,
-            redirect_uri: REDIRECT_PATTERN,
-            post_logout_redirect_uri: REDIRECT_PATTERN,
+            redirectUri: REDIRECT_PATTERN,
+            postLogoutRedirectUri: REDIRECT_PATTERN,
         }));
 
         for (const scopeName of [ScopeName.GLOBAL, ScopeName.OPEN_ID]) {
             const scope = await suite.client.scope.getOne(scopeName);
-            await suite.client.clientScope.create({ scope_id: scope.id, client_id: client.id });
+            await suite.client.clientScope.create({ scopeId: scope.id, clientId: client.id });
         }
     });
 
@@ -65,7 +65,7 @@ describe('end-session (/logout)', () => {
     // belongs to the same session, so it is our "is the session alive?" probe).
     const mintTokens = async () => {
         const password = generateOAuth2CodeVerifier();
-        const user = await suite.client.user.create(createFakeUser({ realm_id: realm.id, password }));
+        const user = await suite.client.user.create(createFakeUser({ realmId: realm.id, password }));
 
         const login = await suite.client.token.createWithPassword({
             username: user.name,

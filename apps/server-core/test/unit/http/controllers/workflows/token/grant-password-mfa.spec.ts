@@ -115,15 +115,15 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
         const clientSecret = generateOAuth2CodeVerifier();
         const oauthClient = await suite.client.client.create(createFakeClient({
             secret: clientSecret,
-            secret_hashed: false,
-            secret_encrypted: false,
-            auth_method: 'secret',
-            token_binding_method: 'none',
+            secretHashed: false,
+            secretEncrypted: false,
+            authMethod: 'secret',
+            tokenBindingMethod: 'none',
         }));
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
-            scope_id: scope.id,
-            client_id: oauthClient.id,
+            scopeId: scope.id,
+            clientId: oauthClient.id,
         });
 
         const authorizeInput = {
@@ -143,7 +143,7 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
             },
         );
 
-        // 6) the challenge endpoint stamps mfa_at onto the bearer session,
+        // 6) the challenge endpoint stamps mfaAt onto the bearer session,
         // after which the same bearer authorizes
         const verified = await bearer.userAuthenticator.verifyChallenge({
             kind: UserAuthenticatorKind.TOTP,

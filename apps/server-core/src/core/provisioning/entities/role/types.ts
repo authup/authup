@@ -20,14 +20,14 @@ export type RoleProvisioningRelations = {
     globalPermissionsExclude?: string[],
 
     /**
-     * Default realm_scope (own | ownOrNull | any) to stamp on each
+     * Default realmScope (own | ownOrNull | any) to stamp on each
      * role-permission junction entry. Realm reach is a coarse, actor-relative
      * enum on the junction (not a policy).
      */
     globalPermissionsRealmScope?: RealmScope,
 
     /**
-     * Per-permission realm_scope overrides. Maps a realm_scope value to the
+     * Per-permission realmScope overrides. Maps a realmScope value to the
      * permission names that should use that scope instead of the default.
      */
     globalPermissionsRealmScopeOverrides?: Partial<Record<RealmScope, string[]>>,

@@ -10,10 +10,10 @@ import type { IEntityAPI } from '../../types-base';
 import type { RoleAttribute } from '@authup/core-kit';
 
 // `RoleAttribute` has no dedicated validator class — `RoleAttributeService` validates
-// inline. `role_id` is required at runtime: the service sets
-// `data.realm_id = data.role.realm_id` after `validateJoinColumns` populates `data.role`
-// from the `role_id` FK, so omitting `role_id` causes a TypeError.
-export type RoleAttributeCreatePayload = Pick<RoleAttribute, 'name' | 'role_id'> &
+// inline. `roleId` is required at runtime: the service sets
+// `data.realmId = data.role.realmId` after `validateJoinColumns` populates `data.role`
+// from the `roleId` FK, so omitting `roleId` causes a TypeError.
+export type RoleAttributeCreatePayload = Pick<RoleAttribute, 'name' | 'roleId'> &
     Partial<Pick<RoleAttribute, 'value'>>;
 export type RoleAttributeUpdatePayload = Partial<RoleAttributeCreatePayload>;
 export type RoleAttributeSavePayload = RoleAttributeCreatePayload;

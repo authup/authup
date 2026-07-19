@@ -36,8 +36,8 @@ export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchron
 
         let attributes = await this.repository.findOneBy({
             name: input.attributes.name,
-            realm_id: input.attributes.realm_id || null,
-            client_id: input.attributes.client_id || null,
+            realmId: input.attributes.realmId || null,
+            clientId: input.attributes.clientId || null,
         });
 
         if (strategy.type === ProvisioningEntityStrategyType.ABSENT) {
@@ -97,18 +97,18 @@ export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchron
             }
 
             const existing = await this.permissionPolicyRepository.findOneBy({
-                permission_id: permission.id,
-                policy_id: policy.id,
+                permissionId: permission.id,
+                policyId: policy.id,
             });
             if (existing) {
                 continue;
             }
 
             const entry = this.permissionPolicyRepository.create({
-                permission_id: permission.id,
-                permission_realm_id: permission.realm_id,
-                policy_id: policy.id,
-                policy_realm_id: policy.realm_id,
+                permissionId: permission.id,
+                permissionRealmId: permission.realmId,
+                policyId: policy.id,
+                policyRealmId: policy.realmId,
             });
             await this.permissionPolicyRepository.save(entry);
         }

@@ -29,14 +29,14 @@ export default defineComponent({
             setup,
             query: () => ({
                 filters: {
-                    client_id: props.clientId,
-                    permission_id: props.permissionId,
+                    clientId: props.clientId,
+                    permissionId: props.permissionId,
                 },
             }),
             socket: {
                 processEvent(event) {
-                    return event.data.permission_id === props.permissionId &&
-                        event.data.client_id === props.clientId;
+                    return event.data.permissionId === props.permissionId &&
+                        event.data.clientId === props.clientId;
                 },
             },
         });
@@ -44,8 +44,8 @@ export default defineComponent({
         await manager.resolve({
             query: {
                 filters: {
-                    client_id: props.clientId,
-                    permission_id: props.permissionId,
+                    clientId: props.clientId,
+                    permissionId: props.permissionId,
                 },
             },
         });
@@ -53,8 +53,8 @@ export default defineComponent({
         const handleChanged = (value: boolean) => {
             if (value) {
                 return manager.create({
-                    client_id: props.clientId,
-                    permission_id: props.permissionId,
+                    clientId: props.clientId,
+                    permissionId: props.permissionId,
                 });
             }
 
@@ -73,8 +73,8 @@ export default defineComponent({
         // no id → the binding control treats it as create mode. Memoized so the template keeps a
         // stable reference while unassigned.
         const bindingEntity = computed<Partial<ClientPermission>>(() => manager.data.value || {
-            client_id: props.clientId,
-            permission_id: props.permissionId,
+            clientId: props.clientId,
+            permissionId: props.permissionId,
         });
 
         return {

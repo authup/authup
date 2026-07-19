@@ -45,7 +45,7 @@ export default defineComponent({
         const store = injectStore();
         const { realmManagementId } = storeToRefs(store);
 
-        const query : BuildInput<Client> = { filters: { realm_id: [realmManagementId.value ?? null, null] } };
+        const query : BuildInput<Client> = { filters: { realmId: [realmManagementId.value ?? null, null] } };
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.CLIENT_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.CLIENT_DELETE });
@@ -107,25 +107,25 @@ export default defineComponent({
                 cellClass: 'text-center',
             },
             {
-                key: 'auth_method',
+                key: 'authMethod',
                 label: translations.authMethod,
                 headerClass: 'text-center',
                 cellClass: 'text-center',
             },
             {
-                key: 'built_in',
+                key: 'builtIn',
                 label: translations.builtIn,
                 headerClass: 'text-center',
                 cellClass: 'text-center',
             },
             {
-                key: 'created_at',
+                key: 'createdAt',
                 label: translations.createdAt,
                 headerClass: 'text-center',
                 cellClass: 'text-center',
             },
             {
-                key: 'updated_at',
+                key: 'updatedAt',
                 label: translations.updatedAt,
                 headerClass: 'text-center',
                 cellClass: 'text-center',
@@ -194,20 +194,20 @@ export default defineComponent({
                         :class="row.active ? 'text-success-600' : 'text-error-600'"
                     />
                 </template>
-                <template #cell-auth_method="{ row }">
-                    {{ authMethodLabel(row.auth_method) }}
+                <template #cell-authMethod="{ row }">
+                    {{ authMethodLabel(row.authMethod) }}
                 </template>
-                <template #cell-built_in="{ row }">
+                <template #cell-builtIn="{ row }">
                     <VCIcon
-                        :name="row.built_in ? 'fa6-solid:check' : 'fa6-solid:xmark'"
-                        :class="row.built_in ? 'text-success-600' : 'text-error-600'"
+                        :name="row.builtIn ? 'fa6-solid:check' : 'fa6-solid:xmark'"
+                        :class="row.builtIn ? 'text-success-600' : 'text-error-600'"
                     />
                 </template>
-                <template #cell-created_at="{ row }">
-                    <VCTimeago :datetime="row.created_at" />
+                <template #cell-createdAt="{ row }">
+                    <VCTimeago :datetime="row.createdAt" />
                 </template>
-                <template #cell-updated_at="{ row }">
-                    <VCTimeago :datetime="row.updated_at" />
+                <template #cell-updatedAt="{ row }">
+                    <VCTimeago :datetime="row.updatedAt" />
                 </template>
                 <template #cell-options="{ row }">
                     <VCButton

@@ -10,6 +10,6 @@ import type { IEntityAPISlim } from '../../types-base';
 import type { ClientScope } from '@authup/core-kit';
 
 // Mirrors `ClientScopeValidator` mounts in @authup/core-kit.
-export type ClientScopeCreatePayload = Pick<ClientScope, 'client_id' | 'scope_id'>;
+export type ClientScopeCreatePayload = Pick<ClientScope, 'clientId' | 'scopeId'>;
 
 export interface IClientScopeAPI extends IEntityAPISlim<ClientScope, ClientScopeCreatePayload> {}

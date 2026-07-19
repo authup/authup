@@ -94,8 +94,8 @@ describe('src/http/controllers/user', () => {
 
     it('should update resource', async () => {
         details.name = 'testa';
-        details.first_name = 'bar';
-        details.last_name = 'baz';
+        details.firstName = 'bar';
+        details.lastName = 'baz';
 
         const response = await suite.client
             .user

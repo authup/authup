@@ -39,12 +39,12 @@ describe('src/http/controllers/user-role', () => {
         details = await suite.client
             .userRole
             .create({
-                user_id: user.id,
-                role_id: role.id,
+                userId: user.id,
+                roleId: role.id,
             });
 
-        expect(details.user_id).toEqual(user.id);
-        expect(details.role_id).toEqual(role.id);
+        expect(details.userId).toEqual(user.id);
+        expect(details.roleId).toEqual(role.id);
     });
 
     it('should read collection', async () => {

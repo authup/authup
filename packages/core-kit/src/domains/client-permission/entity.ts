@@ -14,17 +14,17 @@ export interface ClientPermission extends PermissionRelation {
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 
     // ------------------------------------------------------------------
 
-    client_id: string;
+    clientId: string;
 
     client: Client;
 
-    client_realm_id: Realm['id'] | null;
+    clientRealmId: Realm['id'] | null;
 
-    client_realm: Realm | null;
+    clientRealm: Realm | null;
 }

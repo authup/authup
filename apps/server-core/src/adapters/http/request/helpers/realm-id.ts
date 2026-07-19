@@ -25,6 +25,6 @@ export function getRequestRealmID(event: IAppEvent): string | undefined {
 export function applyRouteRealmIDToBody(event: IAppEvent, data: Record<string, any>): void {
     const routeRealmId = getRequestRealmID(event);
     if (routeRealmId) {
-        data.realm_id = routeRealmId;
+        data.realmId = routeRealmId;
     }
 }

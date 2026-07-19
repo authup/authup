@@ -28,14 +28,14 @@ export default defineComponent({
             setup,
             query: () => ({
                 filters: {
-                    client_id: props.clientId,
-                    scope_id: props.scopeId,
+                    clientId: props.clientId,
+                    scopeId: props.scopeId,
                 },
             }),
             socket: {
                 processEvent(event) {
-                    return event.data.client_id === props.clientId &&
-                        event.data.scope_id === props.scopeId;
+                    return event.data.clientId === props.clientId &&
+                        event.data.scopeId === props.scopeId;
                 },
             },
         });
@@ -43,8 +43,8 @@ export default defineComponent({
         await manager.resolve({
             query: {
                 filters: {
-                    client_id: props.clientId,
-                    scope_id: props.scopeId,
+                    clientId: props.clientId,
+                    scopeId: props.scopeId,
                 },
             },
         });
@@ -52,8 +52,8 @@ export default defineComponent({
         const handleChanged = (value: boolean) => {
             if (value) {
                 return manager.create({
-                    client_id: props.clientId,
-                    scope_id: props.scopeId,
+                    clientId: props.clientId,
+                    scopeId: props.scopeId,
                 });
             }
 

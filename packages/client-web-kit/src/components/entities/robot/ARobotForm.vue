@@ -59,8 +59,8 @@ export default defineComponent({
         const nameSeed = useId();
         const form = reactive({
             name: '',
-            display_name: '',
-            realm_id: '',
+            displayName: '',
+            realmId: '',
             secret: '',
         });
 
@@ -94,7 +94,7 @@ export default defineComponent({
             // Apply caller-fixed props AFTER assign so the entity payload
             // can't overwrite a locked name / realm.
             if (props.name) form.name = props.name;
-            if (props.realmId) form.realm_id = props.realmId;
+            if (props.realmId) form.realmId = props.realmId;
 
             if (form.name.length === 0) {
                 form.name = generateName(nameSeed);
@@ -210,15 +210,15 @@ export default defineComponent({
 
                 <IFieldValidation
                     v-slot="{ value }"
-                    :field="v.fields.display_name"
+                    :field="v.fields.displayName"
                 >
                     <VCFormGroup :validation="value">
                         <template #label>
                             {{ translationsDefault.displayName }}
                         </template>
                         <VCFormInput
-                            :model-value="v.fields.display_name.$model.value ?? ''"
-                            @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
+                            :model-value="v.fields.displayName.$model.value ?? ''"
+                            @update:model-value="(next: string) => { v.fields.displayName.$model.value = next; }"
                         />
                     </VCFormGroup>
                 </IFieldValidation>
@@ -262,9 +262,9 @@ export default defineComponent({
                 <ARealms>
                     <template #itemActions="pickerProps">
                         <AToggleButton
-                            :value="form.realm_id === pickerProps.data.id"
+                            :value="form.realmId === pickerProps.data.id"
                             :is-busy="pickerProps.busy"
-                            @changed="(value: boolean) => { v.fields.realm_id.$model.value = value ? pickerProps.data.id : ''; }"
+                            @changed="(value: boolean) => { v.fields.realmId.$model.value = value ? pickerProps.data.id : ''; }"
                         />
                     </template>
                 </ARealms>

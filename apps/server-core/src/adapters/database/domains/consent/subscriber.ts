@@ -19,7 +19,7 @@ export class ConsentEntitySubscriber extends EntitySubscriber<Consent> {
         super({
             type: EntityType.CONSENT,
             target: ConsentEntity,
-            destinations: buildEntityDestinations(EntityType.CONSENT, (data) => [data.realm_id]),
+            destinations: buildEntityDestinations(EntityType.CONSENT, (data) => [data.realmId]),
             cache: {
                 // union/keep is INSERT-heavy — inserts must invalidate the
                 // covering lookup, not only updates/removes.
@@ -27,7 +27,7 @@ export class ConsentEntitySubscriber extends EntitySubscriber<Consent> {
                 keys: (data) => [
                     buildRedisKeyPath({
                         prefix: CachePrefix.CONSENT_COVERING,
-                        key: `${data.client_id}:${data.sub_kind}:${data.sub}`,
+                        key: `${data.clientId}:${data.subKind}:${data.sub}`,
                     }),
                 ],
             },

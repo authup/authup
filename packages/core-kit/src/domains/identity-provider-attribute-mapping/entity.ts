@@ -10,11 +10,11 @@ import type { IdentityProviderBaseMapping } from '../identity-provider';
 export interface IdentityProviderAttributeMapping extends IdentityProviderBaseMapping {
     id: string;
 
-    target_name: string;
+    targetName: string;
 
-    target_value: string | null;
+    targetValue: string | null;
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 }

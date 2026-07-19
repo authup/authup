@@ -61,13 +61,13 @@ export default defineComponent({
                 cellClass: 'text-left',
             },
             {
-                key: 'updated_at',
+                key: 'updatedAt',
                 label: 'Updated At',
                 headerClass: 'text-center',
                 cellClass: 'text-center',
             },
             {
-                key: 'created_at',
+                key: 'createdAt',
                 label: 'Created At',
                 headerClass: 'text-center',
                 cellClass: 'text-center',
@@ -118,11 +118,11 @@ export default defineComponent({
                 :columns="columns"
                 :busy="props.busy"
             >
-                <template #cell-created_at="{ row }">
-                    <VCTimeago :datetime="row.created_at" />
+                <template #cell-createdAt="{ row }">
+                    <VCTimeago :datetime="row.createdAt" />
                 </template>
-                <template #cell-updated_at="{ row }">
-                    <VCTimeago :datetime="row.updated_at" />
+                <template #cell-updatedAt="{ row }">
+                    <VCTimeago :datetime="row.updatedAt" />
                 </template>
                 <template #cell-options="{ row }">
                     <VCButton
@@ -157,7 +157,7 @@ export default defineComponent({
                         :entity-id="row.id"
                         entity-type="realm"
                         :with-text="false"
-                        :disabled="row.built_in || !hasDropPermission"
+                        :disabled="row.builtIn || !hasDropPermission"
                         @deleted="props.deleted"
                     />
                 </template>

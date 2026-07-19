@@ -30,7 +30,7 @@ The following boundaries are intentional:
   the initial session even when `mfaRequired` is enabled. The hosted login uses
   that same bootstrap session to reach inline enrollment, which cannot be
   completed inside a single password-grant request. Restrict the `password`
-  grant with each client's `grant_types` allowlist and use the authorization
+  grant with each client's `grantTypes` allowlist and use the authorization
   code flow when enrollment must be enforced before issuing an application
   token.
 

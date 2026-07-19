@@ -41,7 +41,7 @@ export class PolicyCheckerService implements IPolicyCheckerService {
                 if (!realmId) {
                     throw new EntityNotFoundError();
                 }
-                criteria.realm_id = realmId;
+                criteria.realmId = realmId;
             }
         }
 

@@ -25,7 +25,7 @@ import type {
 } from '@authup/core-kit';
 import { RealmEntity } from '../realm/index.ts';
 
-@Unique(['name', 'realm_id'])
+@Unique(['name', 'realmId'])
 @Entity({ name: 'auth_identity_providers' })
 export class IdentityProviderEntity implements IdentityProvider {
     @PrimaryGeneratedColumn('uuid')
@@ -38,11 +38,12 @@ export class IdentityProviderEntity implements IdentityProvider {
     name: string;
 
     @Column({
-        type: 'varchar',
-        length: 256,
+        name: 'display_name', 
+        type: 'varchar', 
+        length: 256, 
         nullable: true, 
     })
-    display_name: string | null;
+    displayName: string | null;
 
     @Column({
         type: 'varchar',
@@ -64,15 +65,15 @@ export class IdentityProviderEntity implements IdentityProvider {
     })
     enabled: boolean;
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
+    createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
+    updatedAt: string;
 
     @Index()
-    @Column()
-    realm_id: string;
+    @Column({ name: 'realm_id' })
+    realmId: string;
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })

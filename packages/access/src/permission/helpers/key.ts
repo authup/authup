@@ -15,5 +15,5 @@ function formatKeySegment(value?: string | null): string {
 export function buildPermissionKey(
     input: BasePermission,
 ) {
-    return `${formatKeySegment(input.realm_id)}/${formatKeySegment(input.client_id)}/${input.name}`;
+    return `${formatKeySegment(input.realmId)}/${formatKeySegment(input.clientId)}/${input.name}`;
 }

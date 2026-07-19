@@ -12,31 +12,31 @@ import type { IdentityProvider } from '../identity-provider';
 export interface IdentityProviderAccount {
     id: string;
 
-    provider_user_id: string;
+    providerUserId: string;
 
-    provider_user_name: string;
+    providerUserName: string;
 
-    provider_user_email: string;
+    providerUserEmail: string;
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 
     // -----------------------------------------------
 
-    user_id: string;
+    userId: string;
 
     user: User;
 
-    user_realm_id: Realm['id'] | null;
+    userRealmId: Realm['id'] | null;
 
-    user_realm: Realm | null;
+    userRealm: Realm | null;
 
-    provider_id: IdentityProvider['id'];
+    providerId: IdentityProvider['id'];
 
     provider: IdentityProvider;
 
-    provider_realm_id: Realm['id'] | null;
+    providerRealmId: Realm['id'] | null;
 
-    provider_realm: Realm | null;
+    providerRealm: Realm | null;
 }

@@ -31,8 +31,8 @@ export class PermissionSubscriber extends EntitySubscriber<Permission> {
                         prefix: CachePrefix.PERMISSION,
                         key: buildPermissionKey({
                             name: data.name,
-                            client_id: data.client_id,
-                            realm_id: data.realm_id,
+                            clientId: data.clientId,
+                            realmId: data.realmId,
                         }),
                     }),
                 ],

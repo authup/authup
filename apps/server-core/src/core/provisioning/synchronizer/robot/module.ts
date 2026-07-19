@@ -41,13 +41,13 @@ export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
         this.permissionJunction = new ProvisioningJunctionSynchronizer({
             repository: ctx.robotPermissionRepository,
-            ownerKey: 'robot_id',
-            ownerRealmKey: 'robot_realm_id',
+            ownerKey: 'robotId',
+            ownerRealmKey: 'robotRealmId',
         });
         this.roleJunction = new ProvisioningJunctionSynchronizer({
             repository: ctx.robotRoleRepository,
-            ownerKey: 'robot_id',
-            ownerRealmKey: 'robot_realm_id',
+            ownerKey: 'robotId',
+            ownerRealmKey: 'robotRealmId',
         });
     }
 
@@ -58,7 +58,7 @@ export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
         let attributes = await this.robotRepository.findOneBy({
             name: input.attributes.name,
-            ...(input.attributes.realm_id ? { realm_id: input.attributes.realm_id } : { realm_id: null }),
+            ...(input.attributes.realmId ? { realmId: input.attributes.realmId } : { realmId: null }),
         });
 
         if (strategy.type === ProvisioningEntityStrategyType.ABSENT) {
@@ -97,10 +97,10 @@ export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             ...await this.permissionResolver.resolveGlobal(
                 input.relations && input.relations.globalPermissions,
             ),
-            ...(attributes.realm_id ?
+            ...(attributes.realmId ?
                 await this.permissionResolver.resolveRealm(
                     input.relations && input.relations.realmPermissions,
-                    attributes.realm_id,
+                    attributes.realmId,
                 ) :
                 []),
         ];
@@ -109,8 +109,8 @@ export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             await this.permissionJunction.synchronize(
                 attributes,
                 permissions,
-                'permission_id',
-                'permission_realm_id',
+                'permissionId',
+                'permissionRealmId',
             );
         }
 
@@ -119,10 +119,10 @@ export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             ...await this.roleResolver.resolveGlobal(
                 input.relations && input.relations.globalRoles,
             ),
-            ...(attributes.realm_id ?
+            ...(attributes.realmId ?
                 await this.roleResolver.resolveRealm(
                     input.relations && input.relations.realmRoles,
-                    attributes.realm_id,
+                    attributes.realmId,
                 ) :
                 []),
         ];
@@ -131,8 +131,8 @@ export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             await this.roleJunction.synchronize(
                 attributes,
                 roles,
-                'role_id',
-                'role_realm_id',
+                'roleId',
+                'roleRealmId',
             );
         }
 

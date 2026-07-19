@@ -55,12 +55,12 @@ describe('OAuth2TokenSigner', () => {
         await expect(signer.sign(createPayload())).rejects.toThrow(/no active/i);
     });
 
-    it('should throw JWKError when key has no decryption_key', async () => {
+    it('should throw JWKError when key has no decryptionKey', async () => {
         const key = {
             id: randomUUID(),
             type: JWKType.OCT,
-            decryption_key: null,
-            realm_id: randomUUID(),
+            decryptionKey: null,
+            realmId: randomUUID(),
         } as unknown as Key;
         const keyRepo = new FakeKeyStore(key);
         const signer = new OAuth2TokenSigner(keyRepo);
@@ -72,8 +72,8 @@ describe('OAuth2TokenSigner', () => {
         const key = {
             id: randomUUID(),
             type: JWKType.OCT,
-            decryption_key: 'secret-key',
-            realm_id: randomUUID(),
+            decryptionKey: 'secret-key',
+            realmId: randomUUID(),
         } as unknown as Key;
         const keyRepo = new FakeKeyStore(key);
         const signer = new OAuth2TokenSigner(keyRepo);
@@ -92,9 +92,9 @@ describe('OAuth2TokenSigner', () => {
         const key = {
             id: randomUUID(),
             type: JWKType.EC,
-            decryption_key: 'ec-private-key',
-            signature_algorithm: 'ES256',
-            realm_id: randomUUID(),
+            decryptionKey: 'ec-private-key',
+            signatureAlgorithm: 'ES256',
+            realmId: randomUUID(),
         } as unknown as Key;
         const keyRepo = new FakeKeyStore(key);
         const signer = new OAuth2TokenSigner(keyRepo);
@@ -113,9 +113,9 @@ describe('OAuth2TokenSigner', () => {
         const key = {
             id: randomUUID(),
             type: JWKType.RSA,
-            decryption_key: 'rsa-private-key',
-            signature_algorithm: 'RS256',
-            realm_id: randomUUID(),
+            decryptionKey: 'rsa-private-key',
+            signatureAlgorithm: 'RS256',
+            realmId: randomUUID(),
         } as unknown as Key;
         const keyRepo = new FakeKeyStore(key);
         const signer = new OAuth2TokenSigner(keyRepo);

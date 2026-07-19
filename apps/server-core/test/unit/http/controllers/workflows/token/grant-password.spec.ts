@@ -61,10 +61,10 @@ describe('src/http/controllers/token', () => {
             .client
             .create(createFakeClient({
                 secret,
-                secret_hashed: false,
-                secret_encrypted: false,
-                auth_method: 'secret',
-                token_binding_method: 'none',
+                secretHashed: false,
+                secretEncrypted: false,
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
             }));
 
         const response = await suite.client
@@ -86,10 +86,10 @@ describe('src/http/controllers/token', () => {
             .client
             .create(createFakeClient({
                 secret,
-                secret_hashed: false,
-                secret_encrypted: false,
-                auth_method: 'secret',
-                token_binding_method: 'none',
+                secretHashed: false,
+                secretEncrypted: false,
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
             }));
 
         await expectClientError(
@@ -147,7 +147,7 @@ describe('src/http/controllers/token', () => {
         }));
         await suite.client.user.create(createFakeUser({
             name,
-            realm_id: realm.id,
+            realmId: realm.id,
             password: 'other-secret-123',
         }));
 
@@ -172,7 +172,7 @@ describe('src/http/controllers/token', () => {
     it('should grant token with password for a realm selected via realm hint', async () => {
         const realm = await suite.client.realm.create(createFakeRealm());
         const user = await suite.client.user.create(createFakeUser({
-            realm_id: realm.id,
+            realmId: realm.id,
             password: 'realm-user-secret',
         }));
 
@@ -242,15 +242,15 @@ describe('src/http/controllers/token', () => {
         const client = await suite.client
             .client
             .create(createFakeClient({
-                realm_id: realm.id,
+                realmId: realm.id,
                 secret,
-                secret_hashed: false,
-                secret_encrypted: false,
-                auth_method: 'secret',
-                token_binding_method: 'none',
+                secretHashed: false,
+                secretEncrypted: false,
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
             }));
         const user = await suite.client.user.create(createFakeUser({
-            realm_id: realm.id,
+            realmId: realm.id,
             password: 'realm-user-secret',
         }));
 
@@ -317,7 +317,7 @@ describe('src/http/controllers/token', () => {
     it('should resolve a UUID username globally regardless of realm hint', async () => {
         const realm = await suite.client.realm.create(createFakeRealm());
         const user = await suite.client.user.create(createFakeUser({
-            realm_id: realm.id,
+            realmId: realm.id,
             password: 'uuid-user-secret',
         }));
 

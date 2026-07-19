@@ -15,9 +15,9 @@ export type ServeWorkflowPageOptions = {
     url: string,
     baseURL: string,
     features: StatusResponseFeatures,
-    // Whether the page consumes the `realm_id` / `token` query params (e.g.
-    // prefill from an email deep link). Off by default so a page never
-    // reflects a param it doesn't use.
+    // Whether the page consumes the `realmId` (legacy `realm_id`) / `token`
+    // query params (e.g. prefill from an email deep link). Off by default so
+    // a page never reflects a param it doesn't use.
     realmAware?: boolean,
     tokenAware?: boolean,
 };
@@ -39,7 +39,8 @@ export function serveWorkflowPage(
     };
 
     if (options.realmAware) {
-        data.realmId = typeof query.realm_id === 'string' ? query.realm_id : undefined;
+        const realmId = typeof query.realmId === 'string' ? query.realmId : query.realm_id;
+        data.realmId = typeof realmId === 'string' ? realmId : undefined;
     }
 
     if (options.tokenAware) {

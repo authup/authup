@@ -8,13 +8,13 @@
 import type { Policy, Realm } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
+import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IPolicyRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
 import type { PolicyRepository } from '../../../../../adapters/database/domains/index.ts';
 import { PolicyEntity } from '../../../../../adapters/database/domains/index.ts';
-import { translateWhereConditions } from '../helpers.ts';
+import { isEntityUnique, translateWhereConditions } from '../helpers.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export type PolicyRepositoryAdapterContext = {
@@ -48,23 +48,23 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
             fields: {
                 default: [
                     'id',
-                    'built_in',
+                    'builtIn',
                     'type',
-                    'display_name',
+                    'displayName',
                     'name',
                     'description',
                     'invert',
-                    'parent_id',
-                    'realm_id',
-                    'created_at',
-                    'updated_at',
+                    'parentId',
+                    'realmId',
+                    'createdAt',
+                    'updatedAt',
                 ],
             },
             filters: {
                 // @ts-expect-error realm.name filter requires relation join
-                allowed: ['id', 'name', 'type', 'parent_id', 'realm_id', 'realm.name'],
+                allowed: ['id', 'name', 'type', 'parentId', 'realmId', 'realm.name'],
             },
-            sort: { allowed: ['id', 'created_at', 'updated_at'] },
+            sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
             pagination: { maxLimit: 50 },
         });
 
@@ -97,7 +97,7 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
             if (!realmId) {
                 return null;
             }
-            qb.andWhere('policy.realm_id = :realmId', { realmId });
+            qb.andWhere('policy.realmId = :realmId', { realmId });
         }
 
         const entity = await qb.getOne();

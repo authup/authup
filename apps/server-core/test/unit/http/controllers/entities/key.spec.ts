@@ -53,7 +53,7 @@ describe('src/http/controllers/key', () => {
     });
 
     it('should eagerly provision sig + enc keys at realm creation (plan 071 hybrid)', async () => {
-        const response = await suite.client.key.getMany({ filter: { realm_id: realm.id } });
+        const response = await suite.client.key.getMany({ filter: { realmId: realm.id } });
 
         const uses = response.data.map((entity) => entity.use).sort();
         expect(uses).toEqual([JWKUse.ENCRYPTION, JWKUse.SIGNATURE]);
@@ -62,7 +62,7 @@ describe('src/http/controllers/key', () => {
             expect(entity.status).toEqual(KeyStatus.ACTIVE);
             expect(entity.name).toBeTruthy();
             // private material never leaves the server (nulled on every surface)
-            expect(entity.decryption_key).toBeNull();
+            expect(entity.decryptionKey).toBeNull();
         }
     });
 
@@ -70,13 +70,13 @@ describe('src/http/controllers/key', () => {
         const entity = await suite.client.key.create({
             use: JWKUse.SIGNATURE,
             name: 'generated-sig',
-            realm_id: realm.id,
+            realmId: realm.id,
         });
 
         expect(entity.type).toEqual(JWKType.RSA);
-        expect(entity.signature_algorithm).toEqual('RS256');
+        expect(entity.signatureAlgorithm).toEqual('RS256');
         expect(entity.status).toEqual(KeyStatus.ACTIVE);
-        expect(entity.decryption_key).toBeNull();
+        expect(entity.decryptionKey).toBeNull();
         // the provisioned key holds priority 0 → generate = rotate
         expect(entity.priority).toBeGreaterThanOrEqual(1);
     });
@@ -85,7 +85,7 @@ describe('src/http/controllers/key', () => {
         const created = await suite.client.key.create({
             use: JWKUse.ENCRYPTION,
             name: 'read-target',
-            realm_id: realm.id,
+            realmId: realm.id,
         });
 
         const byId = await suite.client.key.getOne(created.id);
@@ -99,7 +99,7 @@ describe('src/http/controllers/key', () => {
         const created = await suite.client.key.create({
             use: JWKUse.SIGNATURE,
             name: 'update-target',
-            realm_id: realm.id,
+            realmId: realm.id,
         });
 
         const updated = await suite.client.key.update(created.id, {
@@ -118,7 +118,7 @@ describe('src/http/controllers/key', () => {
         const created = await suite.client.key.create({
             use: JWKUse.SIGNATURE,
             name: 'jwks-lifecycle',
-            realm_id: realm.id,
+            realmId: realm.id,
         });
 
         let jwks = await suite.client.get(`realms/${realm.id}/jwks`);
@@ -136,12 +136,12 @@ describe('src/http/controllers/key', () => {
         const imported = await suite.client.key.create({
             use: JWKUse.SIGNATURE,
             name: 'jwks-certificate',
-            decryption_key: PRIVATE_KEY,
-            encryption_key: PUBLIC_KEY,
+            decryptionKey: PRIVATE_KEY,
+            encryptionKey: PUBLIC_KEY,
             certificate: CERTIFICATE,
-            realm_id: realm.id,
+            realmId: realm.id,
         });
-        expect(imported.decryption_key).toBeNull();
+        expect(imported.decryptionKey).toBeNull();
         expect(imported.certificate).toEqual(CERTIFICATE);
 
         const certificate = new X509Certificate(CERTIFICATE);
@@ -176,7 +176,7 @@ describe('src/http/controllers/key', () => {
         const withoutCertificate = await suite.client.key.create({
             use: JWKUse.SIGNATURE,
             name: 'jwks-no-certificate',
-            realm_id: realm.id,
+            realmId: realm.id,
         });
 
         let response = await suite.client.get(`realms/${realm.id}/jwks`);
@@ -199,14 +199,14 @@ describe('src/http/controllers/key', () => {
         await suite.client.key.create({
             use: JWKUse.SIGNATURE,
             name: 'unique-name',
-            realm_id: realm.id,
+            realmId: realm.id,
         });
 
         await expectClientError(
             () => suite.client.key.create({
                 use: JWKUse.SIGNATURE,
                 name: 'unique-name',
-                realm_id: realm.id,
+                realmId: realm.id,
             }),
             { status: 409 },
         );
@@ -216,7 +216,7 @@ describe('src/http/controllers/key', () => {
         const created = await suite.client.key.create({
             use: JWKUse.ENCRYPTION,
             name: 'delete-target',
-            realm_id: realm.id,
+            realmId: realm.id,
         });
 
         const deleted = await suite.client.key.delete(created.id);
@@ -234,28 +234,28 @@ describe('src/http/controllers/key', () => {
             name: 'nested-create',
         });
 
-        expect(response.data.realm_id).toEqual(realm.id);
+        expect(response.data.realmId).toEqual(realm.id);
     });
 
     it('should record attributed, metadata-only lifecycle audit events', async () => {
         const created = await suite.client.key.create({
             use: JWKUse.SIGNATURE,
             name: 'audited-key',
-            realm_id: realm.id,
+            realmId: realm.id,
         });
         await suite.client.key.update(created.id, { status: KeyStatus.PASSIVE });
         await suite.client.key.delete(created.id);
 
-        const { data } = await suite.client.event.getMany({ filter: { ref_type: 'key', ref_id: created.id } });
+        const { data } = await suite.client.event.getMany({ filter: { refType: 'key', refId: created.id } });
 
         expect(data).toHaveLength(3);
         expect(new Set(data.map((row) => row.name)))
             .toEqual(new Set(['created', 'updated', 'deleted']));
         for (const row of data) {
-            expect(row.realm_id).toEqual(realm.id);
-            expect(row.actor_type).toEqual('user');
-            expect(row.actor_name).toEqual('admin');
-            expect(row.request_method).toBeTruthy();
+            expect(row.realmId).toEqual(realm.id);
+            expect(row.actorType).toEqual('user');
+            expect(row.actorName).toEqual('admin');
+            expect(row.requestMethod).toBeTruthy();
             expect(row.data).toMatchObject({ name: 'audited-key', use: JWKUse.SIGNATURE });
             // metadata only — never key material
             expect(JSON.stringify(row.data)).not.toMatch(/decryption|encryption|certificate/);

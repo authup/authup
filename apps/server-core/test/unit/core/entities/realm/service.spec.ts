@@ -133,7 +133,7 @@ describe('core/entities/realm/service', () => {
 
             const entity = repository.seed(createFakeRealm({
                 name: 'existing-realm',
-                built_in: false,
+                builtIn: false,
             }));
 
             await service.update(entity.id, { description: 'updated description' }, createAllowAllActor());
@@ -168,7 +168,7 @@ describe('core/entities/realm/service', () => {
         it('should update an existing realm', async () => {
             const entity = repository.seed(createFakeRealm({
                 name: 'old-realm',
-                built_in: false, 
+                builtIn: false, 
             }));
 
             const result = await service.update(entity.id, { name: 'new-realm' }, createAllowAllActor());
@@ -220,7 +220,7 @@ describe('core/entities/realm/service', () => {
         it('should update when entity found', async () => {
             const entity = repository.seed(createFakeRealm({
                 name: 'old-realm',
-                built_in: false, 
+                builtIn: false, 
             }));
 
             const { created } = await service.save(
@@ -241,7 +241,7 @@ describe('core/entities/realm/service', () => {
 
     describe('delete', () => {
         it('should delete a non-built-in realm', async () => {
-            const entity = repository.seed(createFakeRealm({ built_in: false }));
+            const entity = repository.seed(createFakeRealm({ builtIn: false }));
 
             const result = await service.delete(entity.id, createAllowAllActor());
             expect(result.id).toBe(entity.id);
@@ -265,7 +265,7 @@ describe('core/entities/realm/service', () => {
         });
 
         it('should call preCheck with REALM_DELETE permission', async () => {
-            const entity = repository.seed(createFakeRealm({ built_in: false }));
+            const entity = repository.seed(createFakeRealm({ builtIn: false }));
 
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
@@ -274,7 +274,7 @@ describe('core/entities/realm/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            const entity = repository.seed(createFakeRealm({ built_in: false }));
+            const entity = repository.seed(createFakeRealm({ builtIn: false }));
 
             await expect(
                 service.delete(entity.id, createDenyAllActor()),

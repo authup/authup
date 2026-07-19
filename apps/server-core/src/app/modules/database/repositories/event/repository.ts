@@ -49,21 +49,21 @@ export class EventRepositoryAdapter implements IEventRepository {
                     'id',
                     'scope',
                     'name',
-                    'ref_type',
-                    'ref_id',
-                    'client_id',
-                    'actor_type',
-                    'actor_id',
-                    'actor_name',
-                    'request_path',
-                    'request_method',
-                    'request_ip_address',
-                    'request_user_agent',
-                    'realm_id',
+                    'refType',
+                    'refId',
+                    'clientId',
+                    'actorType',
+                    'actorId',
+                    'actorName',
+                    'requestPath',
+                    'requestMethod',
+                    'requestIpAddress',
+                    'requestUserAgent',
+                    'realmId',
                     'data',
                     'expiring',
-                    'expires_at',
-                    'created_at',
+                    'expiresAt',
+                    'createdAt',
                 ],
             },
             filters: {
@@ -71,34 +71,34 @@ export class EventRepositoryAdapter implements IEventRepository {
                     'id',
                     'scope',
                     'name',
-                    'ref_type',
-                    'ref_id',
-                    'client_id',
-                    'actor_type',
-                    'actor_id',
-                    'actor_name',
-                    'request_ip_address',
-                    'realm_id',
+                    'refType',
+                    'refId',
+                    'clientId',
+                    'actorType',
+                    'actorId',
+                    'actorName',
+                    'requestIpAddress',
+                    'realmId',
                     'expiring',
-                    'created_at',
+                    'createdAt',
                 ],
             },
-            sort: { allowed: ['created_at'] },
+            sort: { allowed: ['createdAt'] },
             pagination: { maxLimit: 50 },
         });
 
-        applyRealmScopeSelect(qb, 'event', ['actor_id', 'actor_type']);
+        applyRealmScopeSelect(qb, 'event', ['actorId', 'actorType']);
 
         if (options.owner) {
             // mandatory constraint — not overridable by a rapiq filter
-            qb.andWhere('event.actor_id = :ownerActorId AND event.actor_type = :ownerActorType', {
+            qb.andWhere('event.actorId = :ownerActorId AND event.actorType = :ownerActorType', {
                 ownerActorId: options.owner.actorId,
                 ownerActorType: options.owner.actorType,
             });
         }
 
         if (options.realmId) {
-            qb.andWhere('event.realm_id = :routeRealmId', { routeRealmId: options.realmId });
+            qb.andWhere('event.realmId = :routeRealmId', { routeRealmId: options.realmId });
         }
 
         if (options.visibility) {
@@ -108,14 +108,14 @@ export class EventRepositoryAdapter implements IEventRepository {
                 .filter((realmId): realmId is string => realmId !== null);
 
             if (realmIds.length > 0) {
-                constraints.push('event.realm_id IN (:...visibleRealmIds)');
+                constraints.push('event.realmId IN (:...visibleRealmIds)');
                 parameters.visibleRealmIds = realmIds;
             }
             if (options.visibility.realmIds.includes(null)) {
-                constraints.push('event.realm_id IS NULL');
+                constraints.push('event.realmId IS NULL');
             }
             if (options.visibility.owner) {
-                constraints.push('(event.actor_id = :visibleActorId AND event.actor_type = :visibleActorType)');
+                constraints.push('(event.actorId = :visibleActorId AND event.actorType = :visibleActorType)');
                 parameters.visibleActorId = options.visibility.owner.actorId;
                 parameters.visibleActorType = options.visibility.owner.actorType;
             }
@@ -137,21 +137,21 @@ export class EventRepositoryAdapter implements IEventRepository {
     async countRecent(filter: EventCountRecentFilter): Promise<number> {
         const qb = this.repository.createQueryBuilder('event')
             .where('event.name = :name', { name: filter.name })
-            .andWhere('event.created_at > :since', { since: new Date(filter.since) });
+            .andWhere('event.createdAt > :since', { since: new Date(filter.since) });
 
         if (filter.actorName) {
-            qb.andWhere('event.actor_name = :actorName', { actorName: filter.actorName });
+            qb.andWhere('event.actorName = :actorName', { actorName: filter.actorName });
         }
 
         if (filter.requestIpAddress) {
-            qb.andWhere('event.request_ip_address = :requestIpAddress', { requestIpAddress: filter.requestIpAddress });
+            qb.andWhere('event.requestIpAddress = :requestIpAddress', { requestIpAddress: filter.requestIpAddress });
         }
 
         if (typeof filter.realmId !== 'undefined') {
             if (filter.realmId === null) {
-                qb.andWhere('event.realm_id IS NULL');
+                qb.andWhere('event.realmId IS NULL');
             } else {
-                qb.andWhere('event.realm_id = :realmId', { realmId: filter.realmId });
+                qb.andWhere('event.realmId = :realmId', { realmId: filter.realmId });
             }
         }
 
@@ -161,7 +161,7 @@ export class EventRepositoryAdapter implements IEventRepository {
     async deleteExpired(now: string): Promise<number> {
         const result = await this.repository.delete({
             expiring: true,
-            expires_at: LessThan(now),
+            expiresAt: LessThan(now),
         });
 
         return result.affected ?? 0;

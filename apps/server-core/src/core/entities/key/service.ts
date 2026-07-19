@@ -88,7 +88,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
                 // Belt-and-braces: the read projection never selects private
                 // material, but null it explicitly so no future adapter change
                 // can leak it onto a read surface (cf. authentik CVE-2024-42490).
-                entity.decryption_key = null;
+                entity.decryptionKey = null;
                 data.push(entity);
             } catch {
                 total -= 1;
@@ -125,7 +125,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         });
 
         // Belt-and-braces null of private material (see getMany).
-        entity.decryption_key = null;
+        entity.decryptionKey = null;
 
         return entity;
     }
@@ -144,16 +144,16 @@ export class KeyService extends AbstractEntityService implements IKeyService {
 
         await this.repository.validateJoinColumns(validated);
 
-        if (!validated.realm_id && actor.identity) {
+        if (!validated.realmId && actor.identity) {
             const actorRealmId = this.getActorRealmId(actor);
             if (actorRealmId) {
-                validated.realm_id = actorRealmId;
+                validated.realmId = actorRealmId;
             }
         }
 
         // keys are realm-bound infrastructure — no global (null realm) keys
         // via the API.
-        if (!validated.realm_id) {
+        if (!validated.realmId) {
             throw new ValidationError('A realm must be specified.');
         }
 
@@ -172,7 +172,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         await this.repository.checkUniqueness(validated);
 
         if (typeof validated.priority !== 'number') {
-            const highest = await this.repository.findHighestPriority(validated.realm_id, use);
+            const highest = await this.repository.findHighestPriority(validated.realmId, use);
             // generate doubles as rotate: a new key outranks the current one.
             validated.priority = typeof highest === 'number' ? highest + 1 : 0;
         }
@@ -182,11 +182,11 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         }
 
         const certificate = typeof validated.certificate === 'string' ? validated.certificate : null;
-        if (certificate && (!validated.decryption_key || use !== JWKUse.SIGNATURE)) {
+        if (certificate && (!validated.decryptionKey || use !== JWKUse.SIGNATURE)) {
             throw new ValidationError('A certificate requires imported signature key material.');
         }
 
-        const material = validated.decryption_key ?
+        const material = validated.decryptionKey ?
             await this.importMaterial(validated, use) :
             await this.generateMaterial(validated, use);
 
@@ -210,16 +210,16 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         let entity = this.repository.create({
             ...validated,
             type: material.type,
-            signature_algorithm: material.signatureAlgorithm,
-            decryption_key: material.decryptionKey,
-            encryption_key: material.encryptionKey,
+            signatureAlgorithm: material.signatureAlgorithm,
+            decryptionKey: material.decryptionKey,
+            encryptionKey: material.encryptionKey,
         });
 
         entity = await this.repository.save(entity);
 
         // private material never leaves the server — the response carries
         // metadata + public part only (authentik CVE-2024-42490).
-        entity.decryption_key = null;
+        entity.decryptionKey = null;
 
         await this.recordEvent(EventName.CREATED, entity, actor);
 
@@ -257,7 +257,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         if (validated.name && validated.name !== entity.name) {
             await this.repository.checkUniqueness({
                 name: validated.name,
-                realm_id: entity.realm_id,
+                realmId: entity.realmId,
             }, entity);
         }
 
@@ -266,7 +266,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         entity = this.repository.merge(entity, validated);
         await this.repository.save(entity);
 
-        entity.decryption_key = null;
+        entity.decryptionKey = null;
 
         const diff = buildEntityDiff(this.pickAuditFields(entity), previous);
         await this.recordEvent(EventName.UPDATED, entity, actor, { ...(Object.keys(diff).length > 0 ? { diff } : {}) });
@@ -308,7 +308,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         const { id: entityId } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
-        entity.decryption_key = null;
+        entity.decryptionKey = null;
 
         // force only carries crypto-shred semantics for encryption keys — a
         // sig-key delete with a stray force flag must not read as a shred.
@@ -341,7 +341,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             name,
             refType: EntityType.KEY,
             refId: entity.id,
-            realmId: entity.realm_id ?? null,
+            realmId: entity.realmId ?? null,
             actorType: actor.identity?.type ?? null,
             actorId: actor.identity?.data.id ?? null,
             actorName: actor.identity?.data.name ?? null,
@@ -376,7 +376,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         encryptionKey: string | null,
     }> {
         if (use === JWKUse.ENCRYPTION) {
-            if (validated.signature_algorithm) {
+            if (validated.signatureAlgorithm) {
                 throw new ValidationError('An encryption key can not carry a signature algorithm.');
             }
 
@@ -391,7 +391,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             };
         }
 
-        const algorithm = validated.signature_algorithm ?? JWTAlgorithm.RS256;
+        const algorithm = validated.signatureAlgorithm ?? JWTAlgorithm.RS256;
         const options = this.buildAsymmetricOptions(algorithm);
 
         const keyPair = await createAsymmetricKeyPair(options);
@@ -413,25 +413,25 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         decryptionKey: string,
         encryptionKey: string | null,
     }> {
-        if (!validated.decryption_key) {
-            throw new ValidationError('Importing key material requires its private part (decryption_key).');
+        if (!validated.decryptionKey) {
+            throw new ValidationError('Importing key material requires its private part (decryptionKey).');
         }
 
         // Reject material masquerading as an at-rest KEK-wrapped blob — it
         // would be treated as wrapped on the next read (and, with a KEK,
         // fail GCM authentication).
-        if (isWrappedKeyMaterial(validated.decryption_key.trim())) {
+        if (isWrappedKeyMaterial(validated.decryptionKey.trim())) {
             throw new ValidationError('The imported key material is not valid.');
         }
 
-        const decryptionKey = this.normalizeMaterial(validated.decryption_key);
+        const decryptionKey = this.normalizeMaterial(validated.decryptionKey);
 
         if (use === JWKUse.ENCRYPTION) {
-            if (validated.signature_algorithm) {
+            if (validated.signatureAlgorithm) {
                 throw new ValidationError('An encryption key can not carry a signature algorithm.');
             }
 
-            if (validated.encryption_key) {
+            if (validated.encryptionKey) {
                 throw new ValidationError('An encryption key holds no public part.');
             }
 
@@ -454,12 +454,12 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             };
         }
 
-        if (!validated.encryption_key) {
-            throw new ValidationError('Importing a signature key requires its public part (encryption_key, SPKI).');
+        if (!validated.encryptionKey) {
+            throw new ValidationError('Importing a signature key requires its public part (encryptionKey, SPKI).');
         }
 
-        const encryptionKey = this.normalizeMaterial(validated.encryption_key);
-        const algorithm = validated.signature_algorithm ?? JWTAlgorithm.RS256;
+        const encryptionKey = this.normalizeMaterial(validated.encryptionKey);
+        const algorithm = validated.signatureAlgorithm ?? JWTAlgorithm.RS256;
         const options = this.buildAsymmetricOptions(algorithm);
 
         let privateJwk : JsonWebKey;

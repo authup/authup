@@ -46,10 +46,10 @@ export default defineComponent({
         // Scope to the current user's own consent rows (an admin holding
         // CONSENT_READ would otherwise see every row here); non-admins are
         // self-scoped by the server regardless. The server always joins a
-        // client summary (id/name/display_name), so no relation is requested.
+        // client summary (id/name/displayName), so no relation is requested.
         const query = computed<BuildInput<Consent>>(() => ({
-            filter: { sub: userId.value ?? undefined, sub_kind: 'user' },
-            sort: { created_at: 'DESC' },
+            filter: { sub: userId.value ?? undefined, subKind: 'user' },
+            sort: { createdAt: 'DESC' },
         }));
 
         const translations = useTranslations([
@@ -67,21 +67,21 @@ export default defineComponent({
             const groups = new Map<string, ConsentGroup>();
 
             rows.forEach((row) => {
-                let group = groups.get(row.client_id);
+                let group = groups.get(row.clientId);
                 if (!group) {
                     group = {
-                        clientId: row.client_id,
-                        name: row.client?.display_name || row.client?.name || row.client_id,
-                        createdAt: row.created_at,
+                        clientId: row.clientId,
+                        name: row.client?.displayName || row.client?.name || row.clientId,
+                        createdAt: row.createdAt,
                         rows: [],
                     };
-                    groups.set(row.client_id, group);
+                    groups.set(row.clientId, group);
                 }
 
                 group.rows.push(row);
 
-                if (row.created_at < group.createdAt) {
-                    group.createdAt = row.created_at;
+                if (row.createdAt < group.createdAt) {
+                    group.createdAt = row.createdAt;
                 }
             });
 
@@ -143,9 +143,9 @@ export default defineComponent({
                 // leave some scopes granted.
                 const { data: rows } = await httpClient.consent.getMany({
                     filter: {
-                        client_id: group.clientId,
+                        clientId: group.clientId,
                         sub: userId.value ?? undefined,
-                        sub_kind: 'user',
+                        subKind: 'user',
                     },
                     pagination: { limit: 1000 },
                 });

@@ -14,7 +14,7 @@ export class FakeTrustAnchorRepository extends FakeEntityRepository<TrustAnchor>
     override async checkUniqueness(data: Partial<TrustAnchor>, existing?: TrustAnchor): Promise<void> {
         const conflict = this.getAll().find(
             (entity) => entity.name === data.name &&
-                entity.realm_id === data.realm_id &&
+                entity.realmId === data.realmId &&
                 (!existing || entity.id !== existing.id),
         );
 

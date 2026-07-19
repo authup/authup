@@ -39,13 +39,13 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
 
         this.client = new OAuth2Client({
             options: {
-                clientId: ctx.provider.client_id,
-                clientSecret: ctx.provider.client_secret,
+                clientId: ctx.provider.clientId,
+                clientSecret: ctx.provider.clientSecret,
                 redirectUri: `${ctx.options.baseURL}${buildIdentityProviderAuthorizeCallbackPath(ctx.provider.id)}`,
                 scope: ctx.provider.scope || undefined,
-                authorizationEndpoint: ctx.provider.authorize_url,
-                tokenEndpoint: ctx.provider.token_url,
-                userinfoEndpoint: ctx.provider.user_info_url || undefined,
+                authorizationEndpoint: ctx.provider.authorizeUrl,
+                tokenEndpoint: ctx.provider.tokenUrl,
+                userinfoEndpoint: ctx.provider.userInfoUrl || undefined,
             },
         });
     }

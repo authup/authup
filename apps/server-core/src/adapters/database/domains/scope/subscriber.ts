@@ -17,7 +17,7 @@ export class ScopeSubscriber extends EntitySubscriber<Scope> {
         super({
             type: EntityType.SCOPE,
             target: ScopeEntity,
-            destinations: buildEntityDestinations(EntityType.SCOPE, (data) => [data.realm_id]),
+            destinations: buildEntityDestinations(EntityType.SCOPE, (data) => [data.realmId]),
         });
     }
 }

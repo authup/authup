@@ -45,7 +45,7 @@ function buildTrustAnchor(overrides: Partial<TrustAnchor> = {}): Partial<TrustAn
         name: `ca-${randomUUID().slice(0, 8)}`,
         certificate: CA_CERTIFICATE,
         enabled: true,
-        realm_id: randomUUID(),
+        realmId: randomUUID(),
         ...overrides,
     };
 }
@@ -97,20 +97,20 @@ describe('core/entities/trust-anchor/service', () => {
             const entity = await service.create({
                 name: '  Primary-CA  ',
                 certificate: CA_CERTIFICATE,
-                realm_id: realmId,
+                realmId,
             }, createAllowAllActor());
 
             expect(entity.name).toEqual('primary-ca');
             expect(entity.certificate).toEqual(CA_CERTIFICATE);
             expect(entity.enabled).toBe(true);
-            expect(entity.realm_id).toEqual(realmId);
+            expect(entity.realmId).toEqual(realmId);
         });
 
         it('rejects a non-CA certificate', async () => {
             await expect(service.create({
                 name: 'leaf-certificate',
                 certificate: NON_CA_CERTIFICATE,
-                realm_id: randomUUID(),
+                realmId: randomUUID(),
             }, createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
         });
 
@@ -118,7 +118,7 @@ describe('core/entities/trust-anchor/service', () => {
             await expect(service.create({
                 name: 'malformed-ca',
                 certificate: 'x'.repeat(64),
-                realm_id: randomUUID(),
+                realmId: randomUUID(),
             }, createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
         });
 
@@ -129,7 +129,7 @@ describe('core/entities/trust-anchor/service', () => {
                 certificate: CA_CERTIFICATE,
             }, actor);
 
-            expect(entity.realm_id).toEqual(actor.identity!.data.realm_id);
+            expect(entity.realmId).toEqual(actor.identity!.data.realmId);
         });
 
         it('rejects a realm-less anchor', async () => {
@@ -141,12 +141,12 @@ describe('core/entities/trust-anchor/service', () => {
 
         it('rejects a duplicate name in the same realm', async () => {
             const realmId = randomUUID();
-            repository.seed(buildTrustAnchor({ name: 'duplicate-ca', realm_id: realmId }));
+            repository.seed(buildTrustAnchor({ name: 'duplicate-ca', realmId }));
 
             await expect(service.create({
                 name: 'duplicate-ca',
                 certificate: CA_CERTIFICATE,
-                realm_id: realmId,
+                realmId,
             }, createAllowAllActor())).rejects.toThrow();
         });
 
@@ -155,7 +155,7 @@ describe('core/entities/trust-anchor/service', () => {
             await service.create({
                 name: 'permission-ca',
                 certificate: CA_CERTIFICATE,
-                realm_id: randomUUID(),
+                realmId: randomUUID(),
             }, actor);
 
             expect(actor.permissionEvaluator.evaluateCalls)
@@ -171,13 +171,13 @@ describe('core/entities/trust-anchor/service', () => {
                 name: 'renamed-ca',
                 enabled: false,
                 certificate: NON_CA_CERTIFICATE,
-                realm_id: randomUUID(),
+                realmId: randomUUID(),
             }, createAllowAllActor());
 
             expect(entity.name).toEqual('renamed-ca');
             expect(entity.enabled).toBe(false);
             expect(entity.certificate).toEqual(CA_CERTIFICATE);
-            expect(entity.realm_id).toEqual(seeded.realm_id);
+            expect(entity.realmId).toEqual(seeded.realmId);
         });
     });
 
@@ -226,7 +226,7 @@ describe('core/entities/trust-anchor/service', () => {
             const entity = await service.create({
                 name: 'audited-ca',
                 certificate: CA_CERTIFICATE,
-                realm_id: realmId,
+                realmId,
             }, buildActor(actorId));
 
             expect(eventService.recordCalls).toHaveLength(1);
@@ -278,7 +278,7 @@ describe('core/entities/trust-anchor/service', () => {
             await expect(service.create({
                 name: 'leaf-only',
                 certificate: NON_CA_CERTIFICATE,
-                realm_id: randomUUID(),
+                realmId: randomUUID(),
             }, buildActor(randomUUID()))).rejects.toThrow();
 
             expect(eventService.recordCalls).toHaveLength(0);

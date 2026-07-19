@@ -30,7 +30,7 @@ import { RealmEntity } from '../realm/index.ts';
 import { UserEntity } from '../user/index.ts';
 
 @Entity({ name: 'auth_robots' })
-@Unique(['name', 'realm_id'])
+@Unique(['name', 'realmId'])
 export class RobotEntity implements Robot {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -49,11 +49,12 @@ export class RobotEntity implements Robot {
     name: string;
 
     @Column({
-        type: 'varchar',
-        length: 256,
+        name: 'display_name', 
+        type: 'varchar', 
+        length: 256, 
         nullable: true, 
     })
-    display_name: string | null;
+    displayName: string | null;
 
     @Column({
         type: 'text',
@@ -69,19 +70,20 @@ export class RobotEntity implements Robot {
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
+    createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
+    updatedAt: string;
 
     // ------------------------------------------------------------------
 
     @Column({
-        nullable: true,
+        name: 'user_id', 
+        nullable: true, 
         default: null, 
     })
-    user_id: User['id'] | null;
+    userId: User['id'] | null;
 
     @ManyToOne(() => UserEntity, {
         onDelete: 'CASCADE',
@@ -93,8 +95,8 @@ export class RobotEntity implements Robot {
     // ------------------------------------------------------------------
 
     @Index()
-    @Column({ nullable: true })
-    client_id: Client['id'] | null;
+    @Column({ name: 'client_id', nullable: true })
+    clientId: Client['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
@@ -106,8 +108,8 @@ export class RobotEntity implements Robot {
     // ------------------------------------------------------------------
 
     @Index()
-    @Column()
-    realm_id: Realm['id'];
+    @Column({ name: 'realm_id' })
+    realmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })

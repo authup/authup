@@ -46,22 +46,22 @@ export class JwkController {
                 use: JWKUse.SIGNATURE,
                 // active + passive verify; disabled keys never publish.
                 status: In([KeyStatus.ACTIVE, KeyStatus.PASSIVE]),
-                ...(realmId ? { realm_id: realmId } : {}),
+                ...(realmId ? { realmId } : {}),
             },
             order: { priority: 'DESC' },
         });
 
         const promises = entities
             .filter(
-                (entity): entity is KeyEntity & { encryption_key: string, signature_algorithm: `${JWTAlgorithm}` } => !!entity.encryption_key &&
-                    !!entity.signature_algorithm,
+                (entity): entity is KeyEntity & { encryptionKey: string, signatureAlgorithm: `${JWTAlgorithm}` } => !!entity.encryptionKey &&
+                    !!entity.signatureAlgorithm,
             )
             .map(
                 (entity) => AsymmetricKey
                     .fromBase64({
                         format: 'spki',
-                        key: entity.encryption_key,
-                        options: AsymmetricKey.buildImportOptionsForJWTAlgorithm(entity.signature_algorithm),
+                        key: entity.encryptionKey,
+                        options: AsymmetricKey.buildImportOptionsForJWTAlgorithm(entity.signatureAlgorithm),
                     })
                     .then((container) => container.toJWK())
                     .then(async (key) => {
@@ -70,7 +70,7 @@ export class JwkController {
                         return {
                             ...key,
                             kid: entity.id,
-                            alg: entity.signature_algorithm,
+                            alg: entity.signatureAlgorithm,
                             ...certificateFields,
                         };
                     }),
@@ -96,15 +96,15 @@ export class JwkController {
             throw JWKError.notFound(id);
         }
 
-        if (!entity.encryption_key || !entity.signature_algorithm) {
+        if (!entity.encryptionKey || !entity.signatureAlgorithm) {
             throw JWKError.encryptionKeyMissing();
         }
 
         const container = await AsymmetricKey
             .fromBase64({
                 format: 'spki',
-                key: entity.encryption_key,
-                options: AsymmetricKey.buildImportOptionsForJWTAlgorithm(entity.signature_algorithm),
+                key: entity.encryptionKey,
+                options: AsymmetricKey.buildImportOptionsForJWTAlgorithm(entity.signatureAlgorithm),
             });
 
         const jsonWebKey = await container.toJWK();
@@ -113,7 +113,7 @@ export class JwkController {
         return {
             ...jsonWebKey,
             kid: entity.id,
-            alg: entity.signature_algorithm,
+            alg: entity.signatureAlgorithm,
             ...certificateFields,
         };
     }

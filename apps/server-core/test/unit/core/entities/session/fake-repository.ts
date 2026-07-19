@@ -89,6 +89,6 @@ export class FakeSessionRepository implements ISessionRepository {
     }
 
     private ownedBy(session: Session, owner: SessionOwner): boolean {
-        return session.sub === owner.sub && session.sub_kind === owner.subKind;
+        return session.sub === owner.sub && session.subKind === owner.subKind;
     }
 }

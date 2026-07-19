@@ -28,104 +28,111 @@ import { UserEntity } from '../user/index.ts';
 import { IdentityProviderEntity } from '../identity-provider/index.ts';
 
 @Entity({ name: 'auth_identity_provider_accounts' })
-@Index(['provider_id', 'user_id'], { unique: true })
+@Index(['providerId', 'userId'], { unique: true })
 export class IdentityProviderAccountEntity implements IdentityProviderAccount {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
     @Column({
-        type: 'text',
-        nullable: true,
+        name: 'access_token', 
+        type: 'text', 
+        nullable: true, 
         default: null, 
     })
-    access_token: string;
+    accessToken: string;
 
     @Column({
-        type: 'text',
-        nullable: true,
+        name: 'refresh_token', 
+        type: 'text', 
+        nullable: true, 
         default: null, 
     })
-    refresh_token: string;
+    refreshToken: string;
 
     @Column({
-        type: 'varchar',
+        name: 'provider_user_id', 
+        type: 'varchar', 
         length: 256, 
     })
-    provider_user_id: string;
+    providerUserId: string;
 
     @Column({
-        type: 'varchar',
-        length: 256,
-        nullable: true,
-        default: null,
+        name: 'provider_user_name', 
+        type: 'varchar', 
+        length: 256, 
+        nullable: true, 
+        default: null, 
     })
-    provider_user_name: string;
+    providerUserName: string;
 
     @Column({
-        type: 'varchar',
-        length: 512,
-        nullable: true,
-        default: null,
+        name: 'provider_user_email', 
+        type: 'varchar', 
+        length: 512, 
+        nullable: true, 
+        default: null, 
     })
-    provider_user_email: string;
+    providerUserEmail: string;
 
     @Column({
-        type: 'int',
-        unsigned: true,
-        nullable: true,
-        default: null,
+        name: 'expires_in', 
+        type: 'int', 
+        unsigned: true, 
+        nullable: true, 
+        default: null, 
     })
-    expires_in: number | null;
+    expiresIn: number | null;
 
     @Column({
-        type: 'varchar',
-        length: 28,
-        nullable: true,
-        default: null,
+        name: 'expires_at', 
+        type: 'varchar', 
+        length: 28, 
+        nullable: true, 
+        default: null, 
     })
-    expires_at: string | null;
+    expiresAt: string | null;
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
+    createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
+    updatedAt: string;
 
     // -----------------------------------------------
 
-    @Column()
-    user_id: User['id'];
+    @Column({ name: 'user_id' })
+    userId: User['id'];
 
     @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
     user: UserEntity;
 
-    @Column({ nullable: true })
-    user_realm_id: Realm['id'] | null;
+    @Column({ name: 'user_realm_id', nullable: true })
+    userRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
         nullable: true, 
     })
     @JoinColumn({ name: 'user_realm_id' })
-    user_realm: RealmEntity | null;
+    userRealm: RealmEntity | null;
 
     // -----------------------------------------------
 
-    @Column()
-    provider_id: IdentityProvider['id'];
+    @Column({ name: 'provider_id' })
+    providerId: IdentityProvider['id'];
 
     @ManyToOne(() => IdentityProviderEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'provider_id' })
     provider: IdentityProviderEntity;
 
-    @Column({ nullable: true })
-    provider_realm_id: Realm['id'] | null;
+    @Column({ name: 'provider_realm_id', nullable: true })
+    providerRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
         nullable: true, 
     })
     @JoinColumn({ name: 'provider_realm_id' })
-    provider_realm: RealmEntity | null;
+    providerRealm: RealmEntity | null;
 }

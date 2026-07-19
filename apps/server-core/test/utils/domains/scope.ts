@@ -14,7 +14,7 @@ export function createFakeScope(data: Partial<Scope> = {}) {
             casing: 'lower',
             length: 10, 
         }),
-        display_name: faker.internet.displayName(),
+        displayName: faker.internet.displayName(),
         description: faker.string.alpha({ length: 256 }),
         ...data,
     } satisfies Partial<Scope>;

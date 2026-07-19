@@ -27,52 +27,52 @@ import { RobotEntity } from '../robot/entity.ts';
 import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_robot_roles' })
-@Index(['role_id', 'robot_id'], { unique: true })
+@Index(['roleId', 'robotId'], { unique: true })
 export class RobotRoleEntity implements RobotRole {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
     // ------------------------------------------------------------------
 
-    @Column()
-    role_id: string;
+    @Column({ name: 'role_id' })
+    roleId: string;
 
     @ManyToOne(() => RoleEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'role_id' })
     role: Role;
 
-    @Column({ nullable: true })
-    role_realm_id: Realm['id'] | null;
+    @Column({ name: 'role_realm_id', nullable: true })
+    roleRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
         nullable: true, 
     })
     @JoinColumn({ name: 'role_realm_id' })
-    role_realm: Realm | null;
+    roleRealm: Realm | null;
 
-    @Column()
-    robot_id: string;
+    @Column({ name: 'robot_id' })
+    robotId: string;
 
     @ManyToOne(() => RobotEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'robot_id' })
     robot: Robot;
 
-    @Column({ nullable: true })
-    robot_realm_id: Realm['id'] | null;
+    @Column({ name: 'robot_realm_id', nullable: true })
+    robotRealmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
         nullable: true, 
     })
     @JoinColumn({ name: 'robot_realm_id' })
-    robot_realm: Realm | null;
+    robotRealm: Realm | null;
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
+    createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
+    updatedAt: string;
 }

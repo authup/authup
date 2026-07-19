@@ -19,13 +19,13 @@ export class UserAttributeSubscriber extends EntitySubscriber<UserAttribute> {
         super({
             type: EntityType.USER_ATTRIBUTE,
             target: UserAttributeEntity,
-            destinations: buildEntityDestinations(EntityType.USER_ATTRIBUTE, (data) => [data.realm_id]),
+            destinations: buildEntityDestinations(EntityType.USER_ATTRIBUTE, (data) => [data.realmId]),
             cache: {
                 onInsert: true,
                 keys: (data) => [
                     buildRedisKeyPath({
                         prefix: CachePrefix.USER_OWNED_ATTRIBUTES,
-                        key: data.user_id,
+                        key: data.userId,
                     }),
                 ],
             },

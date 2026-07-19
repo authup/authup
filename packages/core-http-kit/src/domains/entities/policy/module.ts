@@ -25,7 +25,7 @@ import type {
 export class PolicyAPI extends BaseAPI implements IPolicyAPI {
     async getMany<
         OUTPUT extends PolicyResponse = PolicyResponse,
-    >(data?: BuildInput<Policy & { parent_id?: string | null }>): Promise<EntityCollectionResponse<OUTPUT>> {
+    >(data?: BuildInput<Policy & { parentId?: string | null }>): Promise<EntityCollectionResponse<OUTPUT>> {
         const response = await this.client.get(`policies${buildQuery(data)}`);
         return response.data;
     }

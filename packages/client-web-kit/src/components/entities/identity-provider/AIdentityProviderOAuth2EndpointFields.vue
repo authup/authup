@@ -41,35 +41,35 @@ export default defineComponent({
     emits: ['updated'],
     setup(props) {
         const form = reactive({
-            token_url: '',
-            authorize_url: '',
-            user_info_url: '',
+            tokenUrl: '',
+            authorizeUrl: '',
+            userInfoUrl: '',
         });
 
         // Shared server-side validator, scoped to the endpoint keys via
-        // `pathsToInclude` — `token_url` and `authorize_url` are required
+        // `pathsToInclude` — `tokenUrl` and `authorizeUrl` are required
         // for non-preset OAuth2/OIDC providers (this sub-form is only
-        // rendered when no preset is selected), `user_info_url` optional.
+        // rendered when no preset is selected), `userInfoUrl` optional.
         const v = useValidup(
-            new IdentityProviderOAuth2AttributesValidator({ pathsToInclude: ['token_url', 'authorize_url', 'user_info_url'] }),
+            new IdentityProviderOAuth2AttributesValidator({ pathsToInclude: ['tokenUrl', 'authorizeUrl', 'userInfoUrl'] }),
             form,
             { name: 'endpoint' },
         );
 
-        // `user_info_url` is an optional key on `OAuth2IdentityProvider`, so
+        // `userInfoUrl` is an optional key on `OAuth2IdentityProvider`, so
         // the typed `fields` accessor yields `FieldState | undefined` for it
         // under strict consumers (the apps compile this source through their
         // `@authup/* → src` aliases with `strict: true`). The dynamic `at()`
         // accessor materialises the state and is never undefined.
-        const userInfoUrlField = v.fields.at<string | null>('user_info_url');
+        const userInfoUrlField = v.fields.at<string | null>('userInfoUrl');
 
         function init() {
             // blank via the helper so an unsaved (dirty) edit survives an
             // entity refresh instead of being wiped before the re-assign
             assignFormProperties(form, {
-                token_url: null,
-                authorize_url: null,
-                user_info_url: null,
+                tokenUrl: null,
+                authorizeUrl: null,
+                userInfoUrl: null,
             }, { fields: v.fields });
 
             if (!props.entity) return;
@@ -85,8 +85,8 @@ export default defineComponent({
         const handleDiscoveryLookup = (data: OpenIDProviderMetadata) => {
             // through $model so the discovered values count as user edits
             // (dirty) and survive a concurrent entity refresh
-            v.fields.authorize_url.$model.value = data.authorization_endpoint;
-            v.fields.token_url.$model.value = data.token_endpoint;
+            v.fields.authorizeUrl.$model.value = data.authorization_endpoint;
+            v.fields.tokenUrl.$model.value = data.token_endpoint;
         };
 
         const translations = useTranslations([
@@ -120,7 +120,7 @@ export default defineComponent({
     />
     <IFieldValidation
         v-slot="{ value }"
-        :field="v.fields.token_url"
+        :field="v.fields.tokenUrl"
     >
         <VCFormGroup
             :label="true"
@@ -130,14 +130,14 @@ export default defineComponent({
                 {{ translations.token }}
             </template>
             <VCFormInput
-                v-model="v.fields.token_url.$model.value"
+                v-model="v.fields.tokenUrl.$model.value"
                 placeholder="https://..."
             />
         </VCFormGroup>
     </IFieldValidation>
     <IFieldValidation
         v-slot="{ value }"
-        :field="v.fields.authorize_url"
+        :field="v.fields.authorizeUrl"
     >
         <VCFormGroup
             :label="true"
@@ -147,7 +147,7 @@ export default defineComponent({
                 {{ translations.authorize }}
             </template>
             <VCFormInput
-                v-model="v.fields.authorize_url.$model.value"
+                v-model="v.fields.authorizeUrl.$model.value"
                 placeholder="https://..."
             />
         </VCFormGroup>

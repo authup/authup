@@ -34,14 +34,14 @@ export default defineComponent({
             setup,
             query: () => ({
                 filters: {
-                    permission_id: props.permissionId,
-                    policy_id: props.policyId,
+                    permissionId: props.permissionId,
+                    policyId: props.policyId,
                 },
             }),
             socket: {
                 processEvent(event) {
-                    return event.data.permission_id === props.permissionId &&
-                        event.data.policy_id === props.policyId;
+                    return event.data.permissionId === props.permissionId &&
+                        event.data.policyId === props.policyId;
                 },
             },
         });
@@ -49,8 +49,8 @@ export default defineComponent({
         await manager.resolve({
             query: {
                 filters: {
-                    permission_id: props.permissionId,
-                    policy_id: props.policyId,
+                    permissionId: props.permissionId,
+                    policyId: props.policyId,
                 },
             },
         });
@@ -58,8 +58,8 @@ export default defineComponent({
         const handleChanged = (value: boolean) => {
             if (value) {
                 return manager.create({
-                    permission_id: props.permissionId,
-                    policy_id: props.policyId,
+                    permissionId: props.permissionId,
+                    policyId: props.policyId,
                 });
             }
 

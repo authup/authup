@@ -15,14 +15,14 @@ export class TimePolicyValidator extends Container<TimePolicy> {
     override initialize() {
         super.initialize();
 
-        this.mount('day_of_week', createValidator(
+        this.mount('dayOfWeek', createValidator(
             z.number()
                 .min(0).max(6)
                 .or(z.null())
                 .or(z.undefined())
                 .optional(),
         ));
-        this.mount('day_of_month', createValidator(
+        this.mount('dayOfMonth', createValidator(
             z.number()
                 .min(1)
                 .max(31)
@@ -30,7 +30,7 @@ export class TimePolicyValidator extends Container<TimePolicy> {
                 .or(z.undefined())
                 .optional(),
         ));
-        this.mount('day_of_year', createValidator(
+        this.mount('dayOfYear', createValidator(
             z.number()
                 .min(1)
                 .max(365)

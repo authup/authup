@@ -15,15 +15,15 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
     constructor(instance: DataSource | EntityManager) {
         super(instance, {
             attributeProperties: (input, parent) => {
-                input.role_id = parent.id;
-                input.realm_id = parent.realm_id;
+                input.roleId = parent.id;
+                input.realmId = parent.realmId;
 
                 return input;
             },
             entity: RoleEntity,
             entityPrimaryColumn: 'id',
             attributeEntity: RoleAttributeEntity,
-            attributeForeignColumn: 'role_id',
+            attributeForeignColumn: 'roleId',
             cachePrefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
         });
     }

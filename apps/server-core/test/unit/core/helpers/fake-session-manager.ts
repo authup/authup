@@ -46,7 +46,7 @@ export class FakeSessionManager implements ISessionManager {
 
     async markMfaVerified(session: Session): Promise<Session> {
         this.markMfaVerifiedCalls.push(session);
-        session.mfa_at = new Date().toISOString();
+        session.mfaAt = new Date().toISOString();
         this.sessions.set(session.id, session);
         return session;
     }

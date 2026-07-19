@@ -51,7 +51,7 @@ export const APermissionPolicyBindingButton = defineComponent({
         },
         // The junction this control manages. With an `id` it is an existing binding → EDIT mode
         // (each selection patches immediately). Without an `id` it is a "template" carrying just
-        // the base fields the new junction is born with (owner FK + permission_id) → CREATE mode
+        // the base fields the new junction is born with (owner FK + permissionId) → CREATE mode
         // (selections are staged, then the control performs the create itself). One prop, both
         // modes — the form-initialValue pattern.
         entity: {
@@ -74,10 +74,10 @@ export const APermissionPolicyBindingButton = defineComponent({
         // locally and committed once via the create; in edit mode each selection patches
         // immediately.
         const isCreateMode = () => !props.entity?.id;
-        const currentPolicyId = ref<string | null>(props.entity?.policy_id ?? null);
+        const currentPolicyId = ref<string | null>(props.entity?.policyId ?? null);
         // Preselect the backend default (`own`) in create mode so a sensible reach is staged.
         const currentRealmScope = ref<RealmScopeValue | null>(
-            props.entity?.realm_scope ?? (props.entity?.id ? null : REALM_SCOPE.OWN),
+            props.entity?.realmScope ?? (props.entity?.id ? null : REALM_SCOPE.OWN),
         );
         // The detail view is a nested modal: Escape / outside-click close it
         // back to the list (handled by the inner VCModalContent), and another
@@ -86,8 +86,8 @@ export const APermissionPolicyBindingButton = defineComponent({
 
         const entityRef = toRef(props, 'entity');
         watch(entityRef, (val) => {
-            currentPolicyId.value = val?.policy_id ?? null;
-            currentRealmScope.value = val?.realm_scope ?? (val?.id ? null : REALM_SCOPE.OWN);
+            currentPolicyId.value = val?.policyId ?? null;
+            currentRealmScope.value = val?.realmScope ?? (val?.id ? null : REALM_SCOPE.OWN);
         }, { deep: true });
 
         const handlePolicySelect = async (policyId: string | null) => {
@@ -108,7 +108,7 @@ export const APermissionPolicyBindingButton = defineComponent({
 
             busy.value = true;
             try {
-                const response = await api.update(entityId, { policy_id: policyId });
+                const response = await api.update(entityId, { policyId });
                 currentPolicyId.value = policyId;
                 emit('updated', response);
             } catch (e) {
@@ -138,15 +138,15 @@ export const APermissionPolicyBindingButton = defineComponent({
 
             busy.value = true;
             try {
-                const response = await api.update(entityId, { realm_scope: scope });
+                const response = await api.update(entityId, { realmScope: scope });
                 // Reflect the server-capped value: a restricted actor's chosen scope may be
                 // narrowed server-side, so prefer the persisted scope from the response.
                 currentRealmScope.value = (
                     response &&
                     typeof response === 'object' &&
-                    hasOwnProperty(response, 'realm_scope')
+                    hasOwnProperty(response, 'realmScope')
                 ) ?
-                    response.realm_scope as RealmScopeValue | null :
+                    response.realmScope as RealmScopeValue | null :
                     scope;
                 emit('updated', response);
             } catch (e) {
@@ -158,7 +158,7 @@ export const APermissionPolicyBindingButton = defineComponent({
             }
         };
 
-        // Commit the staged (realm_scope, policy_id) as a NEW junction. Performed here via the
+        // Commit the staged (realmScope, policyId) as a NEW junction. Performed here via the
         // injected client — symmetric with the update path — using the entity template (the FK
         // base fields) as the create payload base. The created entity is emitted so the parent can
         // sync its manager (manager.created); it flows back as `props.entity` (now with an id),
@@ -176,8 +176,8 @@ export const APermissionPolicyBindingButton = defineComponent({
             try {
                 const response = await api.create({
                     ...props.entity,
-                    realm_scope: currentRealmScope.value ?? undefined,
-                    policy_id: currentPolicyId.value ?? undefined,
+                    realmScope: currentRealmScope.value ?? undefined,
+                    policyId: currentPolicyId.value ?? undefined,
                 });
                 emit('created', response);
                 modalOpen.value = false;
@@ -323,7 +323,7 @@ export const APermissionPolicyBindingButton = defineComponent({
                 renderCloseIcon(),
             ]),
             renderRealmScopeSelector(),
-            h(APolicies, { query: { filters: { parent_id: null } } }, {
+            h(APolicies, { query: { filters: { parentId: null } } }, {
                 [SlotName.ITEM]: (slotProps: { data: Policy }) => {
                     const isSelected = currentPolicyId.value === slotProps.data.id;
 

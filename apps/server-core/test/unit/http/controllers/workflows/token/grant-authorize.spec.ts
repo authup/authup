@@ -47,29 +47,29 @@ describe('grant-authorize', () => {
             .client
             .create(createFakeClient({
                 secret: confidentialSecret,
-                secret_hashed: false,
-                secret_encrypted: false,
-                auth_method: 'secret',
-                token_binding_method: 'none',
+                secretHashed: false,
+                secretEncrypted: false,
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
             }));
 
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
-            scope_id: scope.id,
-            client_id: confidentialClient.id,
+            scopeId: scope.id,
+            clientId: confidentialClient.id,
         });
 
         publicClient = await suite.client
             .client
             .create(createFakeClient({
-                auth_method: 'none',
-                token_binding_method: 'none',
+                authMethod: 'none',
+                tokenBindingMethod: 'none',
                 secret: null,
             }));
 
         await suite.client.clientScope.create({
-            scope_id: scope.id,
-            client_id: publicClient.id,
+            scopeId: scope.id,
+            clientId: publicClient.id,
         });
     });
 
@@ -84,7 +84,7 @@ describe('grant-authorize', () => {
     const loginAsRealmUser = async (realm: Realm): Promise<HTTPClient> => {
         const password = generateOAuth2CodeVerifier();
         const user = await suite.client.user.create(createFakeUser({
-            realm_id: realm.id,
+            realmId: realm.id,
             password,
         }));
 
@@ -290,10 +290,10 @@ describe('grant-authorize', () => {
             .client
             .create(createFakeClient({
                 secret: otherSecret,
-                secret_hashed: false,
-                secret_encrypted: false,
-                auth_method: 'secret',
-                token_binding_method: 'none',
+                secretHashed: false,
+                secretEncrypted: false,
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
             }));
 
         await expectClientError(
@@ -357,16 +357,16 @@ describe('grant-authorize', () => {
             .client
             .create(createFakeClient({
                 secret: specialSecret,
-                secret_hashed: false,
-                secret_encrypted: false,
-                auth_method: 'secret',
-                token_binding_method: 'none',
+                secretHashed: false,
+                secretEncrypted: false,
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
             }));
 
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
-            scope_id: scope.id,
-            client_id: specialClient.id,
+            scopeId: scope.id,
+            clientId: specialClient.id,
         });
 
         const state = generateOAuth2CodeVerifier();
@@ -479,17 +479,17 @@ describe('grant-authorize', () => {
         const client = await suite.client
             .client
             .create(createFakeClient({
-                realm_id: realm.id,
+                realmId: realm.id,
                 secret,
-                secret_hashed: false,
-                secret_encrypted: false,
-                auth_method: 'secret',
-                token_binding_method: 'none',
+                secretHashed: false,
+                secretEncrypted: false,
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
             }));
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
-            scope_id: scope.id,
-            client_id: client.id,
+            scopeId: scope.id,
+            clientId: client.id,
         });
 
         const userClient = await loginAsRealmUser(realm);
@@ -553,15 +553,15 @@ describe('grant-authorize', () => {
         const client = await suite.client
             .client
             .create(createFakeClient({
-                realm_id: realm.id,
-                auth_method: 'none',
-                token_binding_method: 'none',
+                realmId: realm.id,
+                authMethod: 'none',
+                tokenBindingMethod: 'none',
                 secret: null,
             }));
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
-            scope_id: scope.id,
-            client_id: client.id,
+            scopeId: scope.id,
+            clientId: client.id,
         });
 
         // login creates a session — its id + creation time back the id_token claims
@@ -617,15 +617,15 @@ describe('grant-authorize', () => {
         const client = await suite.client
             .client
             .create(createFakeClient({
-                realm_id: realm.id,
-                auth_method: 'none',
-                token_binding_method: 'none',
+                realmId: realm.id,
+                authMethod: 'none',
+                tokenBindingMethod: 'none',
                 secret: null,
             }));
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
-            scope_id: scope.id,
-            client_id: client.id,
+            scopeId: scope.id,
+            clientId: client.id,
         });
 
         const codeVerifier = generateOAuth2CodeVerifier();
@@ -658,15 +658,15 @@ describe('grant-authorize', () => {
         const client = await suite.client
             .client
             .create(createFakeClient({
-                realm_id: realm.id,
-                auth_method: 'none',
-                token_binding_method: 'none',
+                realmId: realm.id,
+                authMethod: 'none',
+                tokenBindingMethod: 'none',
                 secret: null,
             }));
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
-            scope_id: scope.id,
-            client_id: client.id,
+            scopeId: scope.id,
+            clientId: client.id,
         });
 
         const codeVerifier = generateOAuth2CodeVerifier();
@@ -720,15 +720,15 @@ describe('grant-authorize', () => {
         const client = await suite.client
             .client
             .create(createFakeClient({
-                realm_id: realm.id,
-                auth_method: 'none',
-                token_binding_method: 'none',
+                realmId: realm.id,
+                authMethod: 'none',
+                tokenBindingMethod: 'none',
                 secret: null,
             }));
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
-            scope_id: scope.id,
-            client_id: client.id,
+            scopeId: scope.id,
+            clientId: client.id,
         });
 
         const codeVerifier = generateOAuth2CodeVerifier();

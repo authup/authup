@@ -79,11 +79,11 @@ describe('core/security/policy — PermissionBindingPolicyEvaluator disjunction 
     };
 
     const grant = (
-        realm_scope: `${RealmScope}`,
+        realmScope: `${RealmScope}`,
         policies?: PermissionPolicyBinding['policies'],
     ): PermissionPolicyBinding => ({
         permission: { name: PERMISSION_NAME },
-        realm_scope,
+        realmScope,
         policies,
     });
 

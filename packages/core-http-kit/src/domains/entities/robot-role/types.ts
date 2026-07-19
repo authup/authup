@@ -10,6 +10,6 @@ import type { IEntityAPISlim } from '../../types-base';
 import type { RobotRole } from '@authup/core-kit';
 
 // Mirrors `RobotRoleValidator` mounts in @authup/core-kit.
-export type RobotRoleCreatePayload = Pick<RobotRole, 'robot_id' | 'role_id'>;
+export type RobotRoleCreatePayload = Pick<RobotRole, 'robotId' | 'roleId'>;
 
 export interface IRobotRoleAPI extends IEntityAPISlim<RobotRole, RobotRoleCreatePayload> {}

@@ -21,7 +21,7 @@ export type RobotRoleServiceContext = {
 };
 
 export class RobotRoleService extends JunctionEntityService implements IRobotRoleService {
-    protected readonly ownerRealmKey = 'robot_realm_id';
+    protected readonly ownerRealmKey = 'robotRealmId';
 
     protected repository: IRobotRoleRepository;
 
@@ -82,19 +82,19 @@ export class RobotRoleService extends JunctionEntityService implements IRobotRol
         await this.repository.validateJoinColumns(validated);
 
         const existing = await this.repository.findOneBy({
-            role_id: validated.role_id,
-            robot_id: validated.robot_id,
+            roleId: validated.roleId,
+            robotId: validated.robotId,
         });
         if (existing) {
             throw new EntityConflictError({ entity: 'robot-role' });
         }
 
         if (validated.role) {
-            validated.role_realm_id = validated.role.realm_id;
+            validated.roleRealmId = validated.role.realmId;
         }
 
         if (validated.robot) {
-            validated.robot_realm_id = validated.robot.realm_id;
+            validated.robotRealmId = validated.robot.realmId;
         }
 
         if (validated.role && actor.identity) {
@@ -105,8 +105,8 @@ export class RobotRoleService extends JunctionEntityService implements IRobotRol
                 },
                 {
                     type: 'role',
-                    id: validated.role_id,
-                    clientId: validated.role.client_id,
+                    id: validated.roleId,
+                    clientId: validated.role.clientId,
                 },
             );
             if (!hasPermissions) {
@@ -114,7 +114,7 @@ export class RobotRoleService extends JunctionEntityService implements IRobotRol
             }
         }
 
-        // Stamp the owner (robot) realm so the realm_scope factor gates cross-realm writes.
+        // Stamp the owner (robot) realm so the realmScope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_ROLE_CREATE,
             data: definePolicyData({
@@ -140,7 +140,7 @@ export class RobotRoleService extends JunctionEntityService implements IRobotRol
             throw new EntityNotFoundError();
         }
 
-        // Stamp the owner (robot) realm so the realm_scope factor gates cross-realm writes.
+        // Stamp the owner (robot) realm so the realmScope factor gates cross-realm writes.
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_ROLE_DELETE,
             data: definePolicyData({

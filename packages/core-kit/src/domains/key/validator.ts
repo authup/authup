@@ -49,7 +49,7 @@ export class KeyValidator extends Container<
         );
 
         this.mount(
-            'signature_algorithm',
+            'signatureAlgorithm',
             {
                 group: ValidatorGroup.CREATE,
                 optional: true,
@@ -70,7 +70,7 @@ export class KeyValidator extends Container<
         );
 
         this.mount(
-            'realm_id',
+            'realmId',
             {
                 group: ValidatorGroup.CREATE,
                 optional: true,
@@ -79,7 +79,7 @@ export class KeyValidator extends Container<
         );
 
         this.mount(
-            'decryption_key',
+            'decryptionKey',
             {
                 group: ValidatorGroup.CREATE,
                 optional: true,
@@ -88,7 +88,7 @@ export class KeyValidator extends Container<
         );
 
         this.mount(
-            'encryption_key',
+            'encryptionKey',
             {
                 group: ValidatorGroup.CREATE,
                 optional: true,

@@ -10,7 +10,7 @@ import { OAuth2ErrorCode, OAuth2TokenGrant, isOAuth2ClientUnauthorizedError } fr
 import { describe, expect, it } from 'vitest';
 import { assertClientGrantAllowed } from '../../../../../src/core/oauth2/client/grant-type.ts';
 
-const buildClient = (grantTypes: string | null) => ({ grant_types: grantTypes });
+const buildClient = (grantTypes: string | null) => ({ grantTypes });
 
 describe('assertClientGrantAllowed', () => {
     it('should allow every grant when grant_types is null', () => {

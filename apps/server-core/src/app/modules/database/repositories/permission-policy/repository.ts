@@ -26,7 +26,7 @@ export class PermissionPolicyRepositoryAdapter implements IPermissionPolicyRepos
 
         const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'permissionPolicy',
-            filters: { allowed: ['permission_id', 'policy_id'] },
+            filters: { allowed: ['permissionId', 'policyId'] },
             relations: {
                 allowed: [
                     'permission',
@@ -39,8 +39,8 @@ export class PermissionPolicyRepositoryAdapter implements IPermissionPolicyRepos
             sort: {
                 allowed: [
                     'id',
-                    'created_at',
-                    'updated_at',
+                    'createdAt',
+                    'updatedAt',
                 ],
             },
             pagination: { maxLimit: 50 },

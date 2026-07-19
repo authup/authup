@@ -74,7 +74,7 @@ describe('core/identity/policy/checker', () => {
         const policy = await policyRepository.save(policyRepository.create({
             type: BuiltInPolicyType.IDENTITY,
             name: BuiltInPolicyType.IDENTITY,
-            built_in: true,
+            builtIn: true,
         }));
 
         await expect(service.check(
@@ -92,7 +92,7 @@ describe('core/identity/policy/checker', () => {
         const policy = await policyRepository.save(policyRepository.create({
             type: BuiltInPolicyType.IDENTITY,
             name: `${BuiltInPolicyType.IDENTITY}-denial`,
-            built_in: true,
+            builtIn: true,
         }));
 
         await expect(service.check(

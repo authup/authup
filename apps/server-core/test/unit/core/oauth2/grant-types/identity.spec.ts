@@ -36,7 +36,7 @@ describe('IdentityGrantType', () => {
         type: OAuth2SubKind.USER,
         data: {
             id: userId,
-            realm_id: realmId,
+            realmId,
             realm: {
                 id: realmId,
                 name: 'master',
@@ -60,10 +60,10 @@ describe('IdentityGrantType', () => {
 
         expect(sessionManager.createCalls).toContainEqual(
             expect.objectContaining({
-                realm_id: realmId,
+                realmId,
                 sub: userId,
-                sub_kind: OAuth2SubKind.USER,
-                auth_method: 'ext',
+                subKind: OAuth2SubKind.USER,
+                authMethod: 'ext',
             }),
         );
 
@@ -92,8 +92,8 @@ describe('IdentityGrantType', () => {
 
         expect(sessionManager.createCalls).toContainEqual(
             expect.objectContaining({
-                user_agent: 'TestAgent',
-                ip_address: '10.0.0.1',
+                userAgent: 'TestAgent',
+                ipAddress: '10.0.0.1',
             }),
         );
     });

@@ -36,14 +36,14 @@ const REALM_ADMIN_EXCLUDED_PERMISSIONS = [
 ];
 
 /**
- * Direct-entity CUD permissions that realm_admin grants at `realm_scope: own`
+ * Direct-entity CUD permissions that realm_admin grants at `realmScope: own`
  * (strictly the actor's own realm — see line 372). Every other realm_admin
  * permission defaults to `ownOrNull` (own realm OR global/null resources) so it
  * can act on global building blocks.
  *
  * Junction CUD (e.g. user_role, role_permission) is intentionally NOT listed here:
  * it stays `ownOrNull` because a junction can legitimately reference a global
- * side (realm_id: null) — a strict `own` would reject those.
+ * side (realmId: null) — a strict `own` would reject those.
  */
 const REALM_ADMIN_BOUND_PERMISSIONS = [
     PermissionName.CLIENT_CREATE,
@@ -168,8 +168,8 @@ export class PermissionService extends AbstractEntityService implements IPermiss
     }> {
         let group: string;
 
-        const realm = typeof data.realm_id === 'string' ?
-            await this.realmRepository.resolve(data.realm_id) :
+        const realm = typeof data.realmId === 'string' ?
+            await this.realmRepository.resolve(data.realmId) :
             undefined;
 
         let entity: Permission | null | undefined;
@@ -182,7 +182,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             }
 
             if (realm) {
-                where.realm_id = realm.id;
+                where.realmId = realm.id;
             }
 
             entity = await this.repository.findOneBy(where);
@@ -207,7 +207,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
         if (entity) {
             if (
-                entity.built_in &&
+                entity.builtIn &&
                 isPropertySet(validated, 'name') &&
                 entity.name !== validated.name
             ) {
@@ -221,7 +221,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
                         ...entity,
                         ...validated,
                     },
-                    [BuiltInPolicyType.REALM_MATCH]: validated.realm_id ?? entity.realm_id ?? null,
+                    [BuiltInPolicyType.REALM_MATCH]: validated.realmId ?? entity.realmId ?? null,
                 }),
             });
 
@@ -237,8 +237,8 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             };
         }
 
-        if (!isPropertySet(validated, 'realm_id') && actor.identity) {
-            validated.realm_id = this.getActorRealmId(actor) || null;
+        if (!isPropertySet(validated, 'realmId') && actor.identity) {
+            validated.realmId = this.getActorRealmId(actor) || null;
         }
 
         await actor.permissionEvaluator.evaluate({
@@ -272,7 +272,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             throw new EntityNotFoundError();
         }
 
-        if (entity.built_in) {
+        if (entity.builtIn) {
             throw new ValidationError('A built-in permission can not be deleted.');
         }
 
@@ -300,18 +300,18 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         }
 
         const existing = await this.permissionPolicyRepository.findOneBy({
-            permission_id: permission.id,
-            policy_id: defaultPolicy.id,
+            permissionId: permission.id,
+            policyId: defaultPolicy.id,
         });
         if (existing) {
             return;
         }
 
         const entry = this.permissionPolicyRepository.create({
-            permission_id: permission.id,
-            permission_realm_id: permission.realm_id,
-            policy_id: defaultPolicy.id,
-            policy_realm_id: defaultPolicy.realm_id,
+            permissionId: permission.id,
+            permissionRealmId: permission.realmId,
+            policyId: defaultPolicy.id,
+            policyRealmId: defaultPolicy.realmId,
         });
         await this.permissionPolicyRepository.save(entry);
     }
@@ -327,20 +327,20 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         }
 
         const existing = await this.rolePermissionRepository.findOneBy({
-            role_id: adminRole.id,
-            permission_id: permission.id,
+            roleId: adminRole.id,
+            permissionId: permission.id,
         });
         if (existing) {
             return;
         }
 
         const entry = this.rolePermissionRepository.create({
-            role_id: adminRole.id,
-            role_realm_id: adminRole.realm_id,
-            permission_id: permission.id,
-            permission_realm_id: permission.realm_id,
+            roleId: adminRole.id,
+            roleRealmId: adminRole.realmId,
+            permissionId: permission.id,
+            permissionRealmId: permission.realmId,
             // Global admin: unrestricted realm reach.
-            realm_scope: RealmScope.ANY,
+            realmScope: RealmScope.ANY,
         });
         await this.rolePermissionRepository.save(entry);
     }
@@ -348,7 +348,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
     /**
      * Assign a newly created permission to all matching realm_admin roles.
      *
-     * Uses differentiated realm_scope on the junction:
+     * Uses differentiated realmScope on the junction:
      * - CUD on global-capable entity types → own (strictly own realm)
      * - Everything else → ownOrNull (own realm + null/global resources)
      *
@@ -358,7 +358,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
      *
      * Excluded:
      * - Realm CRUD permissions (realm_create, realm_update, realm_delete)
-     * - Custom global permissions (non-built-in with realm_id: null)
+     * - Custom global permissions (non-built-in with realmId: null)
      */
     private async assignToRealmAdminRoles(permission: Permission): Promise<void> {
         if (REALM_ADMIN_EXCLUDED_PERMISSIONS.includes(permission.name as PermissionName)) {
@@ -366,7 +366,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         }
 
         const isBuiltIn = (Object.values(PermissionName) as string[]).includes(permission.name);
-        if (!permission.realm_id && !isBuiltIn) {
+        if (!permission.realmId && !isBuiltIn) {
             return;
         }
 
@@ -377,24 +377,24 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         const realmAdminRoles = await this.roleRepository.findManyBy({ name: ROLE_REALM_ADMIN_NAME });
 
         for (const role of realmAdminRoles) {
-            if (permission.realm_id && permission.realm_id !== role.realm_id) {
+            if (permission.realmId && permission.realmId !== role.realmId) {
                 continue;
             }
 
             const existing = await this.rolePermissionRepository.findOneBy({
-                role_id: role.id,
-                permission_id: permission.id,
+                roleId: role.id,
+                permissionId: permission.id,
             });
             if (existing) {
                 continue;
             }
 
             const entry = this.rolePermissionRepository.create({
-                role_id: role.id,
-                role_realm_id: role.realm_id,
-                permission_id: permission.id,
-                permission_realm_id: permission.realm_id,
-                realm_scope: realmScope,
+                roleId: role.id,
+                roleRealmId: role.realmId,
+                permissionId: permission.id,
+                permissionRealmId: permission.realmId,
+                realmScope,
             });
             await this.rolePermissionRepository.save(entry);
         }

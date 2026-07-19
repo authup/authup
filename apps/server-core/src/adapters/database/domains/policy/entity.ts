@@ -23,7 +23,7 @@ import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type { Policy, Realm } from '@authup/core-kit';
 import { RealmEntity } from '../realm/index.ts';
 
-@Unique(['name', 'realm_id'])
+@Unique(['name', 'realmId'])
 @Entity({ name: 'auth_policies' })
 @Tree('closure-table', {
     closureTableName: 'auth_policy_tree',
@@ -35,10 +35,11 @@ export class PolicyEntity implements Policy {
     id: string;
 
     @Column({
-        type: 'boolean',
+        name: 'built_in', 
+        type: 'boolean', 
         default: false, 
     })
-    built_in: boolean;
+    builtIn: boolean;
 
     @Column({
         type: 'varchar',
@@ -53,11 +54,12 @@ export class PolicyEntity implements Policy {
     name: string;
 
     @Column({
-        type: 'varchar',
-        length: 256,
+        name: 'display_name', 
+        type: 'varchar', 
+        length: 256, 
         nullable: true, 
     })
-    display_name: string | null;
+    displayName: string | null;
 
     @Column({
         type: 'text',
@@ -74,16 +76,16 @@ export class PolicyEntity implements Policy {
     @TreeChildren({ cascade: true })
     children: PolicyEntity[];
 
-    @Column({ nullable: true })
-    parent_id: Policy['id'] | null;
+    @Column({ name: 'parent_id', nullable: true })
+    parentId: Policy['id'] | null;
 
     @TreeParent({ onDelete: 'CASCADE' })
     @JoinColumn({ name: 'parent_id' })
     parent: Policy | null;
 
     @Index()
-    @Column({ nullable: true })
-    realm_id: Realm['id'] | null;
+    @Column({ name: 'realm_id', nullable: true })
+    realmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
@@ -92,9 +94,9 @@ export class PolicyEntity implements Policy {
     @JoinColumn({ name: 'realm_id' })
     realm: Realm | null;
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
+    createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
+    updatedAt: string;
 }

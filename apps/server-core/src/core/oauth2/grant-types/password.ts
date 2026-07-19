@@ -29,7 +29,7 @@ export type OAuth2PasswordGrantInput = {
     client?: Client,
     /**
      * Instant the user passed a second-factor challenge alongside the
-     * grant (the `otp` parameter) — stamped onto the session as mfa_at.
+     * grant (the `otp` parameter) — stamped onto the session as mfaAt.
      */
     mfaVerifiedAt?: string,
 };
@@ -57,17 +57,17 @@ export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput>
         const clientId = client?.id;
 
         const session = await this.sessionManager.create({
-            user_agent: options.userAgent,
-            ip_address: options.ipAddress,
-            realm_id: user.realm_id,
-            client_id: clientId,
+            userAgent: options.userAgent,
+            ipAddress: options.ipAddress,
+            realmId: user.realmId,
+            clientId,
             sub: user.id,
-            sub_kind: IdentityType.USER,
-            mfa_at: input.mfaVerifiedAt ?? null,
-            auth_method: SessionAuthMethod.PASSWORD,
+            subKind: IdentityType.USER,
+            mfaAt: input.mfaVerifiedAt ?? null,
+            authMethod: SessionAuthMethod.PASSWORD,
         });
 
-        // amr/acr derive from the session's auth_method + mfa_at — deliberately
+        // amr/acr derive from the session's authMethod + mfaAt — deliberately
         // on every token kind, so a direct password grant's tokens advertise the
         // method the same way the authorization_code exchange does.
         const amrAcr = deriveAmrAcr(session);
@@ -75,12 +75,12 @@ export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput>
         const issuePayload : Partial<OAuth2TokenPayload> = {
             client_id: clientId,
             session_id: session.id,
-            user_agent: session.user_agent,
-            remote_address: session.ip_address,
+            user_agent: session.userAgent,
+            remote_address: session.ipAddress,
             scope: ScopeName.GLOBAL,
             sub: user.id,
             sub_kind: OAuth2SubKind.USER,
-            realm_id: user.realm_id,
+            realm_id: user.realmId,
             realm_name: user.realm?.name,
             ...(options.confirmation ? { cnf: options.confirmation } : {}),
             ...amrAcr,
@@ -98,12 +98,12 @@ export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput>
             actorType: IdentityType.USER,
             actorId: user.id,
             actorName: user.name,
-            realmId: user.realm_id,
+            realmId: user.realmId,
             requestIpAddress: options.ipAddress ?? null,
             requestUserAgent: options.userAgent ?? null,
             data: {
-                grant_type: OAuth2TokenGrant.PASSWORD,
-                session_id: session.id,
+                grantType: OAuth2TokenGrant.PASSWORD,
+                sessionId: session.id,
             },
         });
         this.metrics?.recordLogin('success');

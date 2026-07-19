@@ -41,11 +41,11 @@ describe('RealmController.getOpenIdConfiguration', () => {
     const realm: Realm = {
         id: realmId,
         name: 'master',
-        display_name: null,
+        displayName: null,
         description: null,
-        built_in: true,
-        created_at: '2026-01-01T00:00:00.000Z',
-        updated_at: '2026-01-01T00:00:00.000Z',
+        builtIn: true,
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z',
     };
 
     it('should construct issuer from realm name (matching the JWT iss claim format)', async () => {

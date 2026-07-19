@@ -10,11 +10,11 @@ import type { PermissionPolicyBinding } from '@authup/access';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
+import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IClientRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
-import { applyRealmScopeSelect, translateWhereConditions } from '../helpers.ts';
+import { applyRealmScopeSelect, isEntityUnique, translateWhereConditions } from '../helpers.ts';
 import { loadBoundPermissions } from '../bindings.ts';
 import {
     CachePrefix,
@@ -49,40 +49,40 @@ export class ClientRepositoryAdapter implements IClientRepository {
                 default: [
                     'id',
                     'active',
-                    'built_in',
+                    'builtIn',
                     'name',
-                    'display_name',
+                    'displayName',
                     'description',
-                    'secret_hashed',
-                    'secret_encrypted',
-                    'base_url',
-                    'root_url',
-                    'redirect_uri',
-                    'post_logout_redirect_uri',
-                    'grant_types',
+                    'secretHashed',
+                    'secretEncrypted',
+                    'baseUrl',
+                    'rootUrl',
+                    'redirectUri',
+                    'postLogoutRedirectUri',
+                    'grantTypes',
                     'scope',
-                    'auth_method',
-                    'token_binding_method',
-                    'access_policy_id',
-                    'realm_id',
-                    'updated_at',
-                    'created_at',
+                    'authMethod',
+                    'tokenBindingMethod',
+                    'accessPolicyId',
+                    'realmId',
+                    'updatedAt',
+                    'createdAt',
                 ],
                 allowed: ['secret'],
             },
-            filters: { allowed: ['id', 'name', 'realm_id', 'realm.name'] },
+            filters: { allowed: ['id', 'name', 'realmId', 'realm.name'] },
             pagination: { maxLimit: 50 },
             relations: {
-                // @ts-expect-error nullable relation (access_policy) is not covered by NestedResourceKeys
-                allowed: ['realm', 'access_policy'],
+                // @ts-expect-error nullable relation (accessPolicy) is not covered by NestedResourceKeys
+                allowed: ['realm', 'accessPolicy'],
                 onJoin: (_property: string, key: string, q: any) => {
                     q.addGroupBy(`${key}.id`);
                 },
             },
-            sort: { allowed: ['id', 'created_at', 'updated_at'] },
+            sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
         });
 
-        applyRealmScopeSelect(qb, 'client', ['secret_hashed', 'secret_encrypted']);
+        applyRealmScopeSelect(qb, 'client', ['secretHashed', 'secretEncrypted']);
 
         const [entities, total] = await qb.getManyAndCount();
 
@@ -108,7 +108,7 @@ export class ClientRepositoryAdapter implements IClientRepository {
             if (!realmId) {
                 return null;
             }
-            qb.andWhere('client.realm_id = :realmId', { realmId });
+            qb.andWhere('client.realmId = :realmId', { realmId });
         }
 
         return qb.getOne();
@@ -127,7 +127,7 @@ export class ClientRepositoryAdapter implements IClientRepository {
                 if (!realmId) {
                     return null;
                 }
-                qb.andWhere('client.realm_id = :realmId', { realmId });
+                qb.andWhere('client.realmId = :realmId', { realmId });
             }
         }
 
@@ -137,30 +137,30 @@ export class ClientRepositoryAdapter implements IClientRepository {
                 default: [
                     'id',
                     'active',
-                    'built_in',
+                    'builtIn',
                     'name',
-                    'display_name',
+                    'displayName',
                     'description',
-                    'secret_hashed',
-                    'secret_encrypted',
-                    'base_url',
-                    'root_url',
-                    'redirect_uri',
-                    'post_logout_redirect_uri',
-                    'grant_types',
+                    'secretHashed',
+                    'secretEncrypted',
+                    'baseUrl',
+                    'rootUrl',
+                    'redirectUri',
+                    'postLogoutRedirectUri',
+                    'grantTypes',
                     'scope',
-                    'auth_method',
-                    'token_binding_method',
-                    'access_policy_id',
-                    'realm_id',
-                    'updated_at',
-                    'created_at',
+                    'authMethod',
+                    'tokenBindingMethod',
+                    'accessPolicyId',
+                    'realmId',
+                    'updatedAt',
+                    'createdAt',
                 ],
                 allowed: ['secret'],
             },
             relations: {
-                // @ts-expect-error nullable relation (access_policy) is not covered by NestedResourceKeys
-                allowed: ['realm', 'access_policy'],
+                // @ts-expect-error nullable relation (accessPolicy) is not covered by NestedResourceKeys
+                allowed: ['realm', 'accessPolicy'],
             },
         });
 
@@ -234,7 +234,7 @@ export class ClientRepositoryAdapter implements IClientRepository {
         const entries = await this.repository.manager
             .getRepository(ClientRoleEntity)
             .find({
-                where: { client_id: id },
+                where: { clientId: id },
                 relations: { role: true },
                 cache: {
                     id: buildRedisKeyPath({
@@ -253,7 +253,7 @@ export class ClientRepositoryAdapter implements IClientRepository {
         return loadBoundPermissions({
             manager: this.repository.manager,
             junctionTarget: ClientPermissionEntity,
-            where: { client_id: id },
+            where: { clientId: id },
             cachePrefix: CachePrefix.CLIENT_OWNED_PERMISSIONS,
             cacheKey: id,
         });

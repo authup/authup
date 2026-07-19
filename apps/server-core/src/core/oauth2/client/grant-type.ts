@@ -14,12 +14,12 @@ import { OAuth2ClientUnauthorizedError } from '@authup/specs';
  * enforcement is opt-in per client; unknown values in the list are
  * inert — they can only narrow, never widen.
  */
-export function assertClientGrantAllowed(client: Pick<Client, 'grant_types'>, grantType: string): void {
-    if (!client.grant_types) {
+export function assertClientGrantAllowed(client: Pick<Client, 'grantTypes'>, grantType: string): void {
+    if (!client.grantTypes) {
         return;
     }
 
-    const allowed = client.grant_types.split(/[\s,]+/);
+    const allowed = client.grantTypes.split(/[\s,]+/);
     if (!allowed.includes(grantType)) {
         throw OAuth2ClientUnauthorizedError.grantType(grantType);
     }

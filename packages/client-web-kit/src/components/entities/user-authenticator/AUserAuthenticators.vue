@@ -93,7 +93,7 @@ export default defineComponent({
             busy.value = true;
             error.value = null;
             try {
-                const response = await apiClient.userAuthenticator.getMany(props.userId, { sort: { created_at: 'DESC' } });
+                const response = await apiClient.userAuthenticator.getMany(props.userId, { sort: { createdAt: 'DESC' } });
                 items.value = response.data;
             } catch (e) {
                 error.value = extractErrorContext(e).message ?? null;

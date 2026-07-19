@@ -41,7 +41,7 @@ export default defineComponent({
     setup(_props, { emit }) {
         const store = injectStore();
         const { realmManagementId } = storeToRefs(store);
-        const query: BuildInput<TrustAnchor> = { filter: { realm_id: [realmManagementId.value ?? null, null] } };
+        const query: BuildInput<TrustAnchor> = { filter: { realmId: [realmManagementId.value ?? null, null] } };
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.KEY_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.KEY_DELETE });
@@ -86,7 +86,7 @@ export default defineComponent({
                 cellClass: 'text-center',
             },
             {
-                key: 'created_at',
+                key: 'createdAt',
                 label: translations.createdAt,
                 headerClass: 'text-center',
                 cellClass: 'text-center',
@@ -144,8 +144,8 @@ export default defineComponent({
                         {{ row.enabled ? translations.active : translations.inactive }}
                     </span>
                 </template>
-                <template #cell-created_at="{ row }">
-                    <VCTimeago :datetime="row.created_at" />
+                <template #cell-createdAt="{ row }">
+                    <VCTimeago :datetime="row.createdAt" />
                 </template>
                 <template #cell-options="{ row }">
                     <VCButton

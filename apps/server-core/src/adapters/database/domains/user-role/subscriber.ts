@@ -20,15 +20,15 @@ export class UserRoleSubscriber extends EntitySubscriber<UserRole> {
             type: EntityType.USER_ROLE,
             target: UserRoleEntity,
             destinations: buildEntityDestinations(EntityType.USER_ROLE, (data) => [
-                data.user_realm_id,
-                data.role_realm_id,
+                data.userRealmId,
+                data.roleRealmId,
             ]),
             cache: {
                 onInsert: true,
                 keys: (data) => [
                     buildRedisKeyPath({
                         prefix: CachePrefix.USER_OWNED_ROLES,
-                        key: data.user_id,
+                        key: data.userId,
                     }),
                 ],
             },

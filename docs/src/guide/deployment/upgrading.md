@@ -24,7 +24,7 @@ Otherwise every login fails after the redirect with an opaque OAuth2 error. Entr
 bare hosts (expanded to both `http` and `https`) or full origins; comma-separated.
 
 ::: warning Security
-Each trusted origin is added to a `built_in` (auto-consent) client carrying the `global`
+Each trusted origin is added to a `builtIn` (auto-consent) client carrying the `global`
 scope — an allowlisted origin can obtain full-permission user tokens. Only list origins you
 control.
 :::
@@ -78,9 +78,9 @@ than 10 characters — configurable via `PASSWORD_MIN_LENGTH`. Existing password
 verifying; nobody is forced to reset. File-provisioned users whose configured password is
 shorter than the floor now fail provisioning validation at startup.
 
-### `Client.grant_types` is now enforced
+### `Client.grantTypes` is now enforced
 
-A non-null `grant_types` value (space- or comma-delimited) acts as an allowlist at the
+A non-null `grantTypes` value (space- or comma-delimited) acts as an allowlist at the
 `/token` grants and the `/authorize` code request; violations fail with
 `unauthorized_client`. `null` keeps allow-all semantics, so only clients that *set* the
 column are affected — review clients that stored decorative values (e.g. a client listing

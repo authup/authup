@@ -107,7 +107,7 @@ describe('src/policy/attribute-names', () => {
 
         const outcome = await evaluator.evaluate(
             policy,
-            definePolicyEvaluationContext({ data: new PolicyData({ attributes: { user: { display_name: 'admin' } } }) }),
+            definePolicyEvaluationContext({ data: new PolicyData({ attributes: { user: { displayName: 'admin' } } }) }),
         );
         expect(outcome.success)
             .toBeFalsy();

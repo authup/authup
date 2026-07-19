@@ -25,10 +25,10 @@ import type {
 } from '@authup/core-kit';
 import { RealmEntity } from '../realm/index.ts';
 
-@Unique('UQ_auth_keys_name_realm_id', ['name', 'realm_id'])
+@Unique('UQ_auth_keys_name_realm_id', ['name', 'realmId'])
 @Index([
     'priority',
-    'realm_id',
+    'realmId',
     'type',
 ])
 @Entity({ name: 'auth_keys' })
@@ -79,41 +79,45 @@ export class KeyEntity implements Key {
     certificate: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 64,
-        default: null,
+        name: 'signature_algorithm', 
+        type: 'varchar', 
+        length: 64, 
+        default: null, 
     })
-    signature_algorithm: Key['signature_algorithm'];
+    signatureAlgorithm: Key['signatureAlgorithm'];
 
     @Column({
-        type: 'text',
-        default: null,
-        select: false,
+        name: 'decryption_key', 
+        type: 'text', 
+        default: null, 
+        select: false, 
     })
-    decryption_key: string | null;
+    decryptionKey: string | null;
 
     @Column({
-        type: 'text',
-        default: null,
+        name: 'encryption_key', 
+        type: 'text', 
+        default: null, 
     })
-    encryption_key: string | null;
+    encryptionKey: string | null;
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
+    createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
+    updatedAt: string;
 
     // ------------------------------------------------------------------
 
     @Index()
     @Column({
-        nullable: true,
+        name: 'realm_id', 
+        nullable: true, 
         default: null, 
     })
-    realm_id: Realm['id'];
+    realmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })

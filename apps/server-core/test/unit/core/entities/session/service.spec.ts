@@ -36,7 +36,7 @@ function makeActor(options: { allow: boolean, identity?: boolean } = { allow: tr
             type: IdentityType.USER,
             data: {
                 id: userId,
-                realm_id: realmId,
+                realmId,
             } as User,
         };
     }
@@ -56,17 +56,17 @@ describe('SessionService', () => {
     function seedOwn(): Session {
         return repository.seed({
             sub: userId,
-            sub_kind: IdentityType.USER,
-            user_id: userId,
-            realm_id: realmId,
+            subKind: IdentityType.USER,
+            userId,
+            realmId,
         });
     }
     function seedOther(): Session {
         return repository.seed({
             sub: otherUserId,
-            sub_kind: IdentityType.USER,
-            user_id: otherUserId,
-            realm_id: realmId,
+            subKind: IdentityType.USER,
+            userId: otherUserId,
+            realmId,
         });
     }
 
@@ -98,7 +98,7 @@ describe('SessionService', () => {
             evaluator.deny('evaluate');
             const actor: ActorContext = {
                 permissionEvaluator: evaluator,
-                identity: { type: IdentityType.USER, data: { id: userId, realm_id: realmId } as User },
+                identity: { type: IdentityType.USER, data: { id: userId, realmId } as User },
             };
 
             const { data, meta } = await service.getMany({}, actor);
@@ -214,10 +214,10 @@ describe('SessionService', () => {
 
     describe('deleteMany (admin bulk revoke — target filter)', () => {
         function adminQuery(userIds: string | string[]): Record<string, any> {
-            return { filter: { user_id: Array.isArray(userIds) ? userIds.join(',') : userIds } };
+            return { filter: { userId: Array.isArray(userIds) ? userIds.join(',') : userIds } };
         }
 
-        it('revokes every session matching filter[user_id]', async () => {
+        it('revokes every session matching filter[userId]', async () => {
             const s1 = seedOther();
             const s2 = seedOther();
             seedOwn();
@@ -231,14 +231,14 @@ describe('SessionService', () => {
             expect(removed).toContain(s2.id);
         });
 
-        it('targets multiple subjects via a comma-separated filter[user_id]', async () => {
+        it('targets multiple subjects via a comma-separated filter[userId]', async () => {
             const thirdUserId = randomUUID();
             const a = seedOther();
             const b = repository.seed({
                 sub: thirdUserId,
-                sub_kind: IdentityType.USER,
-                user_id: thirdUserId,
-                realm_id: realmId,
+                subKind: IdentityType.USER,
+                userId: thirdUserId,
+                realmId,
             });
             seedOwn();
 
@@ -257,9 +257,9 @@ describe('SessionService', () => {
             const inReach2 = seedOther();
             const outOfReach = repository.seed({
                 sub: otherUserId,
-                sub_kind: IdentityType.USER,
-                user_id: otherUserId,
-                realm_id: otherRealmId,
+                subKind: IdentityType.USER,
+                userId: otherUserId,
+                realmId: otherRealmId,
             });
 
             // preEvaluate (gate) passes; per-session evaluate denies when the
@@ -278,7 +278,7 @@ describe('SessionService', () => {
             });
             const actor: ActorContext = {
                 permissionEvaluator: evaluator,
-                identity: { type: IdentityType.USER, data: { id: userId, realm_id: realmId } as User },
+                identity: { type: IdentityType.USER, data: { id: userId, realmId } as User },
             };
 
             const { count } = await service.deleteMany(actor, { query: adminQuery(otherUserId) });

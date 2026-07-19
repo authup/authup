@@ -42,7 +42,7 @@ export class PermissionCheckerService implements IPermissionCheckerService {
                 if (!realmId) {
                     throw new EntityNotFoundError();
                 }
-                criteria.realm_id = realmId;
+                criteria.realmId = realmId;
             }
         }
 
@@ -59,8 +59,8 @@ export class PermissionCheckerService implements IPermissionCheckerService {
         // Only when the body carries an ATTRIBUTES realm — so a realm-less check still rides
         // the preEvaluate path below and neutral-passes.
         const attributes = input[BuiltInPolicyType.ATTRIBUTES] as Record<string, any> | undefined;
-        if (attributes && hasOwnProperty(attributes, 'realm_id')) {
-            input[BuiltInPolicyType.REALM_MATCH] = attributes.realm_id ?? null;
+        if (attributes && hasOwnProperty(attributes, 'realmId')) {
+            input[BuiltInPolicyType.REALM_MATCH] = attributes.realmId ?? null;
         }
 
         const evaluationContext: PermissionEvaluationContext = {

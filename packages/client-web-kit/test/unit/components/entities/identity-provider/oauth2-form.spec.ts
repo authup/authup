@@ -25,27 +25,27 @@ function createEntity() : IdentityProvider {
     return {
         id: 'f0b1e948-4e69-4b7e-9f0c-1a2b3c4d5e6f',
         name: 'old-name',
-        display_name: null,
+        displayName: null,
         protocol: IdentityProviderProtocol.OAUTH2,
         preset: null,
         enabled: true,
-        created_at: '2026-01-01T00:00:00.000Z',
-        updated_at: '2026-01-01T00:00:00.000Z',
-        realm_id: 'realm-1',
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        realmId: 'realm-1',
         realm: {
             id: 'realm-1',
             name: 'master',
-            display_name: null,
+            displayName: null,
             description: null,
-            built_in: true,
-            created_at: '2026-01-01T00:00:00.000Z',
-            updated_at: '2026-01-01T00:00:00.000Z',
+            builtIn: true,
+            createdAt: '2026-01-01T00:00:00.000Z',
+            updatedAt: '2026-01-01T00:00:00.000Z',
         },
         // oauth2 extra attributes (EA) as returned by the API
-        client_id: 'client-id',
-        client_secret: 'client-secret',
-        token_url: 'https://idp.example.com/oauth/token',
-        authorize_url: 'https://idp.example.com/oauth/authorize',
+        clientId: 'client-id',
+        clientSecret: 'client-secret',
+        tokenUrl: 'https://idp.example.com/oauth/token',
+        authorizeUrl: 'https://idp.example.com/oauth/authorize',
         scope: 'openid profile',
     } as IdentityProvider;
 }
@@ -57,7 +57,7 @@ function mountComponent(component: any, entity: IdentityProvider) {
             'POST /identity-providers/:id': (request: FakeRequest) => ({
                 ...entity,
                 ...(request.body as Record<string, any>),
-                updated_at: '2026-01-02T00:00:00.000Z',
+                updatedAt: '2026-01-02T00:00:00.000Z',
             }),
         },
     });
@@ -125,8 +125,8 @@ describe('AIdentityProviderOAuth2Form', () => {
         const body = request!.body as Record<string, any>;
         expect(body).not.toHaveProperty('id');
         expect(body).not.toHaveProperty('realm');
-        expect(body).not.toHaveProperty('created_at');
-        expect(body).not.toHaveProperty('updated_at');
+        expect(body).not.toHaveProperty('createdAt');
+        expect(body).not.toHaveProperty('updatedAt');
     });
 
     it('should submit with an empty scope (blank optional emitted as null)', async () => {
@@ -191,12 +191,12 @@ describe('AIdentityProviderBasicFields', () => {
         nameInput.vm.$emit('update:modelValue', 'new-name');
         await flushPromises();
 
-        // external refresh: another session changed display_name
+        // external refresh: another session changed displayName
         await wrapper.setProps({
             entity: {
                 ...entity,
-                display_name: 'Renamed',
-                updated_at: '2026-01-03T00:00:00.000Z',
+                displayName: 'Renamed',
+                updatedAt: '2026-01-03T00:00:00.000Z',
             },
         });
         await flushPromises();
@@ -210,8 +210,8 @@ describe('AIdentityProviderBasicFields', () => {
             entity: {
                 ...entity,
                 name: 'new-name',
-                display_name: 'Renamed',
-                updated_at: '2026-01-04T00:00:00.000Z',
+                displayName: 'Renamed',
+                updatedAt: '2026-01-04T00:00:00.000Z',
             },
         });
         await flushPromises();
@@ -223,8 +223,8 @@ describe('AIdentityProviderBasicFields', () => {
             entity: {
                 ...entity,
                 name: 'third-name',
-                display_name: 'Renamed',
-                updated_at: '2026-01-05T00:00:00.000Z',
+                displayName: 'Renamed',
+                updatedAt: '2026-01-05T00:00:00.000Z',
             },
         });
         await flushPromises();

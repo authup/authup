@@ -8,11 +8,11 @@
 import type { Realm, Scope } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
+import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IRealmRepository, IScopeRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
-import { translateWhereConditions } from '../helpers.ts';
+import { isEntityUnique, translateWhereConditions } from '../helpers.ts';
 import { ScopeEntity } from '../../../../../adapters/database/domains/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
@@ -40,18 +40,18 @@ export class ScopeRepositoryAdapter implements IScopeRepository {
             fields: {
                 allowed: [
                     'id',
-                    'built_in',
+                    'builtIn',
                     'name',
-                    'display_name',
+                    'displayName',
                     'description',
-                    'realm_id',
-                    'created_at',
-                    'updated_at',
+                    'realmId',
+                    'createdAt',
+                    'updatedAt',
                 ],
             },
-            filters: { allowed: ['id', 'built_in', 'name', 'realm_id'] },
+            filters: { allowed: ['id', 'builtIn', 'name', 'realmId'] },
             pagination: { maxLimit: 50 },
-            sort: { allowed: ['id', 'name', 'updated_at', 'created_at'] },
+            sort: { allowed: ['id', 'name', 'updatedAt', 'createdAt'] },
         });
 
         const [entities, total] = await qb.getManyAndCount();
@@ -78,7 +78,7 @@ export class ScopeRepositoryAdapter implements IScopeRepository {
             if (!realmId) {
                 return null;
             }
-            qb.andWhere('scope.realm_id = :realmId', { realmId });
+            qb.andWhere('scope.realmId = :realmId', { realmId });
         }
 
         return qb.getOne();

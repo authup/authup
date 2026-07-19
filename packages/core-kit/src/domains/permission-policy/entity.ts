@@ -14,22 +14,22 @@ export interface PermissionPolicy {
 
     // ------------------------------------------------------------------
 
-    permission_id: Permission['id'];
+    permissionId: Permission['id'];
     permission: Permission;
 
-    permission_realm_id: Realm['id'] | null;
-    permission_realm: Realm | null;
+    permissionRealmId: Realm['id'] | null;
+    permissionRealm: Realm | null;
 
     // ------------------------------------------------------------------
 
-    policy_id: Policy['id'];
+    policyId: Policy['id'];
     policy: Policy;
 
-    policy_realm_id: Realm['id'] | null;
-    policy_realm: Realm | null;
+    policyRealmId: Realm['id'] | null;
+    policyRealm: Realm | null;
 
     // ------------------------------------------------------------------
 
-    created_at: string;
-    updated_at: string;
+    createdAt: string;
+    updatedAt: string;
 }

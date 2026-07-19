@@ -35,7 +35,7 @@ export class ClientAuthenticator extends BaseCredentialsAuthenticator<Client> {
             throw new EntityInactiveError({ entity: 'client' });
         }
 
-        if (identity.data.auth_method === ClientAuthMethod.SECRET) {
+        if (identity.data.authMethod === ClientAuthMethod.SECRET) {
             const verified = await this.credentialsService.verify(secret, identity.data);
             if (!verified) {
                 throw new EntityCredentialsInvalidError({ entity: 'client' });

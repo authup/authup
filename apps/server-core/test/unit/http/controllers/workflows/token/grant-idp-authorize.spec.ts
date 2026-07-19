@@ -98,8 +98,8 @@ describe('identity-provider authorization code grant', () => {
         const provider = await suite.client
             .identityProvider
             .create(createFakeOAuth2IdentityProvider({
-                token_url: `${fakeIdpBaseURL}/token`,
-                authorize_url: `${fakeIdpBaseURL}/authorize`,
+                tokenUrl: `${fakeIdpBaseURL}/token`,
+                authorizeUrl: `${fakeIdpBaseURL}/authorize`,
             }));
 
         providerId = provider.id;
@@ -109,17 +109,17 @@ describe('identity-provider authorization code grant', () => {
             .client
             .create(createFakeClient({
                 secret: clientSecret,
-                secret_hashed: false,
-                secret_encrypted: false,
-                auth_method: 'secret',
-                token_binding_method: 'none',
+                secretHashed: false,
+                secretEncrypted: false,
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
             }));
 
         for (const scopeName of [ScopeName.GLOBAL, ScopeName.OPEN_ID]) {
             const scope = await suite.client.scope.getOne(scopeName);
             await suite.client.clientScope.create({
-                scope_id: scope.id,
-                client_id: client.id,
+                scopeId: scope.id,
+                clientId: client.id,
             });
         }
 
@@ -304,9 +304,9 @@ describe('identity-provider authorization code grant', () => {
             type: BuiltInPolicyType.IDENTITY,
             invert: false,
             types: [IdentityType.ROBOT],
-            realm_id: null,
+            realmId: null,
         });
-        await suite.client.client.update(client.id, { access_policy_id: denyPolicy.id });
+        await suite.client.client.update(client.id, { accessPolicyId: denyPolicy.id });
 
         const authorizeOutResponse = await suite.client
             .get(
@@ -334,7 +334,7 @@ describe('identity-provider authorization code grant', () => {
     });
 
     it('should issue a code again once the access policy is cleared', async () => {
-        await suite.client.client.update(client.id, { access_policy_id: null });
+        await suite.client.client.update(client.id, { accessPolicyId: null });
 
         const authorizeOutResponse = await suite.client
             .get(

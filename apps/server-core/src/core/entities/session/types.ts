@@ -15,7 +15,7 @@ export type SessionDeleteManyResult = {
 export type SessionDeleteManyOptions = {
     /**
      * The parsed request query. When it carries a recognized target filter
-     * (`SESSION_FILTER_KEYS`, e.g. `filter[user_id]`) the call is an admin
+     * (`SESSION_FILTER_KEYS`, e.g. `filter[userId]`) the call is an admin
      * bulk revoke; otherwise it is the self-service path.
      */
     query?: Record<string, any>,
@@ -51,7 +51,7 @@ export interface ISessionService {
      *   the actor except the current one ("log out my other devices"). No
      *   permission required.
      * - **A recognized target filter** (`SESSION_FILTER_KEYS`, e.g.
-     *   `filter[user_id]`, `filter[realm_id]`) → admin "force-logout": revoke
+     *   `filter[userId]`, `filter[realmId]`) → admin "force-logout": revoke
      *   every matching session. Requires `SESSION_DELETE`, and each session is
      *   additionally realm-matched (drop-unauthorized), so a `realm_admin` only
      *   revokes sessions in its reach and filter breadth cannot escalate.

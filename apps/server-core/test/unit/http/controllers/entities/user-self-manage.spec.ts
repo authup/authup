@@ -37,8 +37,8 @@ describe('http/controllers/user (self-manage)', () => {
 
         const permission = await suite.client.permission.getOne(PermissionName.USER_SELF_MANAGE);
         await suite.client.userPermission.create({
-            user_id: entity.id,
-            permission_id: permission.id,
+            userId: entity.id,
+            permissionId: permission.id,
         });
 
         const tokenResponse = await suite.client.token.createWithPassword({
@@ -60,20 +60,20 @@ describe('http/controllers/user (self-manage)', () => {
 
     // ---- User entity column edits (denylist semantics) -----------------
 
-    it('should allow user to update their own display_name (not in denylist)', async () => {
-        const response = await selfClient.user.update(entity.id, { display_name: 'self-renamed' });
+    it('should allow user to update their own displayName (not in denylist)', async () => {
+        const response = await selfClient.user.update(entity.id, { displayName: 'self-renamed' });
 
-        expect(response.display_name).toBe('self-renamed');
+        expect(response.displayName).toBe('self-renamed');
     });
 
-    it('should allow user to update their own first_name and last_name (not in denylist)', async () => {
+    it('should allow user to update their own firstName and lastName (not in denylist)', async () => {
         const response = await selfClient.user.update(entity.id, {
-            first_name: 'Ada',
-            last_name: 'Lovelace',
+            firstName: 'Ada',
+            lastName: 'Lovelace',
         });
 
-        expect(response.first_name).toBe('Ada');
-        expect(response.last_name).toBe('Lovelace');
+        expect(response.firstName).toBe('Ada');
+        expect(response.lastName).toBe('Lovelace');
     });
 
     it('should reject self-update of active flag (denylisted)', async () => {
@@ -82,9 +82,9 @@ describe('http/controllers/user (self-manage)', () => {
         ).rejects.toThrow();
     });
 
-    it('should reject self-update of name_locked flag (denylisted)', async () => {
+    it('should reject self-update of nameLocked flag (denylisted)', async () => {
         await expect(
-            selfClient.user.update(entity.id, { name_locked: true } as Partial<UserEntity>),
+            selfClient.user.update(entity.id, { nameLocked: true } as Partial<UserEntity>),
         ).rejects.toThrow();
     });
 
@@ -98,7 +98,7 @@ describe('http/controllers/user (self-manage)', () => {
         const otherUser = await suite.client.user.create(createFakeUser());
 
         await expect(
-            selfClient.user.update(otherUser.id, { display_name: 'hijacked' }),
+            selfClient.user.update(otherUser.id, { displayName: 'hijacked' }),
         ).rejects.toThrow();
     });
 
@@ -112,7 +112,7 @@ describe('http/controllers/user (self-manage)', () => {
 
         expect(response.name).toBe('theme');
         expect(response.value).toBe('dark');
-        expect(response.user_id).toBe(entity.id);
+        expect(response.userId).toBe(entity.id);
     });
 
     it('should allow user to create a UserAttribute with another arbitrary key', async () => {

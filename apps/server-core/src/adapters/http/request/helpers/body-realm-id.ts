@@ -8,7 +8,7 @@
 import { isUUID } from '@authup/kit';
 
 export function getBodyRealmID(body: Record<string, any> | undefined) : string | undefined {
-    const realmId = body?.realm_id;
+    const realmId = body?.realmId;
     if (typeof realmId !== 'string') {
         return undefined;
     }

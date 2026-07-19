@@ -59,7 +59,7 @@ export class UserValidator extends Container<User> {
         );
 
         this.mount(
-            'name_locked',
+            'nameLocked',
             { optional: true },
             createValidator(z.boolean()),
         );
@@ -67,13 +67,13 @@ export class UserValidator extends Container<User> {
         // ----------------------------------------------
 
         this.mount(
-            'first_name',
+            'firstName',
             { optional: true },
             createValidator(z.string().min(3).max(128).nullable()),
         );
 
         this.mount(
-            'last_name',
+            'lastName',
             { optional: true },
             createValidator(z.string().min(3).max(128).nullable()),
         );
@@ -81,7 +81,7 @@ export class UserValidator extends Container<User> {
         // ----------------------------------------------
 
         this.mount(
-            'display_name',
+            'displayName',
             { optional: true },
             createValidator(z.string().min(3).max(256).nullable()),
         );
@@ -140,13 +140,13 @@ export class UserValidator extends Container<User> {
         );
 
         this.mount(
-            'name_locked',
+            'nameLocked',
             { optional: true },
             createValidator(z.boolean()),
         );
 
         this.mount(
-            'realm_id',
+            'realmId',
             {
                 group: [ValidatorGroup.CREATE, ValidatorGroup.PROVISIONING],
                 optional: true,
@@ -161,7 +161,7 @@ export class UserValidator extends Container<User> {
         );
 
         this.mount(
-            'status_message',
+            'statusMessage',
             { optional: true },
             createValidator(z.string().min(3).max(256).nullable()),
         );

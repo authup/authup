@@ -19,7 +19,7 @@ export class RobotSubscriber extends EntitySubscriber<Robot> {
         super({
             type: EntityType.ROBOT,
             target: RobotEntity,
-            destinations: buildEntityDestinations(EntityType.ROBOT, (data) => [data.realm_id]),
+            destinations: buildEntityDestinations(EntityType.ROBOT, (data) => [data.realmId]),
             cache: {
                 keys: (data) => [
                     buildRedisKeyPath({

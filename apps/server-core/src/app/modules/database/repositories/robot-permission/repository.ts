@@ -26,7 +26,7 @@ export class RobotPermissionRepositoryAdapter implements IRobotPermissionReposit
 
         const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'robotPermission',
-            filters: { allowed: ['robot_id', 'permission_id'] },
+            filters: { allowed: ['robotId', 'permissionId'] },
             relations: {
                 allowed: [
                     'robot',
@@ -39,8 +39,8 @@ export class RobotPermissionRepositoryAdapter implements IRobotPermissionReposit
             sort: {
                 allowed: [
                     'id',
-                    'created_at',
-                    'updated_at',
+                    'createdAt',
+                    'updatedAt',
                 ],
             },
             pagination: { maxLimit: 50 },

@@ -75,11 +75,11 @@ export default defineComponent({
             </div>
         </div>
         <div
-            v-if="entity.display_name"
+            v-if="entity.displayName"
             class="flex flex-row gap-2 mb-2"
         >
             <strong style="min-width: 120px">{{ translations.displayName }}</strong>
-            <div>{{ entity.display_name }}</div>
+            <div>{{ entity.displayName }}</div>
         </div>
         <div
             v-if="entity.description"
@@ -103,7 +103,7 @@ export default defineComponent({
             </div>
         </div>
         <div
-            v-if="entity.built_in"
+            v-if="entity.builtIn"
             class="flex flex-row gap-2 mb-2"
         >
             <strong style="min-width: 120px">{{ translations.builtIn }}</strong>

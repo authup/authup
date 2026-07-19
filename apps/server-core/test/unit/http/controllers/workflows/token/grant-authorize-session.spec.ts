@@ -41,15 +41,15 @@ describe('grant-authorize session reuse', () => {
             .client
             .create(createFakeClient({
                 secret,
-                secret_hashed: false,
-                secret_encrypted: false,
-                auth_method: 'secret',
-                token_binding_method: 'none',
+                secretHashed: false,
+                secretEncrypted: false,
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
             }));
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
-            scope_id: scope.id,
-            client_id: client.id,
+            scopeId: scope.id,
+            clientId: client.id,
         });
 
         // 1) interactive login: password grant creates the (client-less) bearer session
@@ -103,6 +103,6 @@ describe('grant-authorize session reuse', () => {
         expect(own).toHaveLength(1);
         expect(own[0].id).toEqual(loginSessionId);
         // and the reused session now carries the authorizing client
-        expect(own[0].client_id).toEqual(client.id);
+        expect(own[0].clientId).toEqual(client.id);
     });
 });

@@ -249,34 +249,34 @@ describe('core/entities/role/service', () => {
     });
 
     describe('realm defaulting', () => {
-        it('should set realm_id for non-master realm actor on create', async () => {
+        it('should set realmId for non-master realm actor on create', async () => {
             const realmId = randomUUID();
             const actor = createNonMasterRealmActor(realmId);
 
             const result = await service.create({ name: 'realm-role' }, actor);
 
-            expect(result.realm_id).toBe(realmId);
+            expect(result.realmId).toBe(realmId);
         });
 
-        it('should set realm_id to master realm for master realm actor on create', async () => {
+        it('should set realmId to master realm for master realm actor on create', async () => {
             const actor = createMasterRealmActor();
-            const masterRealmId = actor.identity!.data.realm_id;
+            const masterRealmId = actor.identity!.data.realmId;
 
             const result = await service.create({ name: 'global-role' }, actor);
 
-            expect(result.realm_id).toBe(masterRealmId);
+            expect(result.realmId).toBe(masterRealmId);
         });
 
-        it('should not override explicit realm_id', async () => {
+        it('should not override explicit realmId', async () => {
             const explicitRealmId = randomUUID();
             const realm = {
                 id: explicitRealmId,
                 name: 'explicit-realm',
-                display_name: null,
+                displayName: null,
                 description: null,
-                built_in: false,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
+                builtIn: false,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
             };
             realmRepository.seed([realm]);
 
@@ -285,26 +285,26 @@ describe('core/entities/role/service', () => {
             const result = await service.create(
                 {
                     name: 'explicit-realm-role',
-                    realm_id: explicitRealmId, 
+                    realmId: explicitRealmId, 
                 },
                 actor,
             );
 
-            expect(result.realm_id).toBe(explicitRealmId);
+            expect(result.realmId).toBe(explicitRealmId);
         });
 
-        it('should preserve realm_id: null when explicitly provided on create', async () => {
+        it('should preserve realmId: null when explicitly provided on create', async () => {
             const actor = createNonMasterRealmActor();
 
             const result = await service.create(
                 {
                     name: 'global-role',
-                    realm_id: null, 
+                    realmId: null, 
                 },
                 actor,
             );
 
-            expect(result.realm_id).toBeNull();
+            expect(result.realmId).toBeNull();
         });
     });
 

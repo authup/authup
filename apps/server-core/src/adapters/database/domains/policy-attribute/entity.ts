@@ -24,7 +24,7 @@ import {
 import { PolicyEntity } from '../policy/entity.ts';
 import { RealmEntity } from '../realm/index.ts';
 
-@Unique(['name', 'policy_id'])
+@Unique(['name', 'policyId'])
 @Entity({ name: 'auth_policy_attributes' })
 export class PolicyAttributeEntity implements PolicyAttribute {
     @PrimaryGeneratedColumn('uuid')
@@ -52,8 +52,8 @@ export class PolicyAttributeEntity implements PolicyAttribute {
 
     // ------------------------------------------------------------------
 
-    @Column({ nullable: true })
-    realm_id: Realm['id'] | null;
+    @Column({ name: 'realm_id', nullable: true })
+    realmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
@@ -64,8 +64,8 @@ export class PolicyAttributeEntity implements PolicyAttribute {
 
     // ------------------------------------------------------------------
 
-    @Column()
-    policy_id: Policy['id'];
+    @Column({ name: 'policy_id' })
+    policyId: Policy['id'];
 
     @ManyToOne(() => PolicyEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'policy_id' })
@@ -73,9 +73,9 @@ export class PolicyAttributeEntity implements PolicyAttribute {
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
+    createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
+    updatedAt: string;
 }

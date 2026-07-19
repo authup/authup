@@ -58,7 +58,16 @@ export class FileProvisioningSource implements IProvisioningSource {
                 throw new Error(`The provisioning file "${location.path}" must contain an object at its root.`);
             }
 
-            const data = await this.rootValidator.run(entity, { group: ValidatorGroup.PROVISIONING });
+            // Provisioning files use the camelCase management vocabulary
+            // (plan 073). Keys are NOT rewritten here: a blanket snake->camel
+            // pass cannot tell a schema property from a data-identifier map key
+            // (`clientPermissions`/`clientRoles` are keyed by client name, and
+            // client names may contain underscores), so it would silently
+            // corrupt those keys. Unmounted keys are stripped by the validator.
+            const data = await this.rootValidator.run(
+                entity as Record<string, any>,
+                { group: ValidatorGroup.PROVISIONING },
+            );
 
             compositeSource.merge(output, data);
         }

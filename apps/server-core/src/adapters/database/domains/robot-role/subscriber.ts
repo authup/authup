@@ -20,15 +20,15 @@ export class RobotRoleSubscriber extends EntitySubscriber<RobotRole> {
             type: EntityType.ROBOT_ROLE,
             target: RobotRoleEntity,
             destinations: buildEntityDestinations(EntityType.ROBOT_ROLE, (data) => [
-                data.robot_realm_id,
-                data.role_realm_id,
+                data.robotRealmId,
+                data.roleRealmId,
             ]),
             cache: {
                 onInsert: true,
                 keys: (data) => [
                     buildRedisKeyPath({
                         prefix: CachePrefix.ROBOT_OWNED_ROLES,
-                        key: data.robot_id,
+                        key: data.robotId,
                     }),
                 ],
             },

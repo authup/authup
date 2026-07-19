@@ -34,7 +34,7 @@ import {
 
 // Inline attribute-only validator. `@authup/core-kit`'s
 // `IdentityProviderRoleMappingValidator` does cover these three keys
-// but also mounts the foreign-key columns (`provider_id`, `role_id`)
+// but also mounts the foreign-key columns (`providerId`, `roleId`)
 // — those are supplied by the parent component at submit time, not by
 // the form, so routing through the entity validator would require an
 // always-`UPDATE` group cast that obscures intent. A follow-up split
@@ -43,13 +43,13 @@ import {
 class RoleMappingAttributesValidator extends Container<{
     name: string;
     value: string;
-    value_is_regex: boolean;
+    valueIsRegex: boolean;
 }> {
     protected override initialize() {
         super.initialize();
         this.mount('name', { optional: true }, createValidator(z.string().min(3).max(32)));
         this.mount('value', { optional: true }, createValidator(z.string().min(3).max(128)));
-        this.mount('value_is_regex', { optional: true }, createValidator(z.boolean()));
+        this.mount('valueIsRegex', { optional: true }, createValidator(z.boolean()));
     }
 }
 
@@ -87,7 +87,7 @@ export default defineComponent({
         const form = reactive({
             name: '',
             value: '',
-            value_is_regex: false,
+            valueIsRegex: false,
         });
 
         const v = useValidup(new RoleMappingAttributesValidator(), form);
@@ -124,8 +124,8 @@ export default defineComponent({
             setup,
             socket: {
                 processEvent(event) {
-                    return event.data.role_id === props.role.id &&
-                        event.data.provider_id === props.entityId;
+                    return event.data.roleId === props.role.id &&
+                        event.data.providerId === props.entityId;
                 },
             },
         });
@@ -133,8 +133,8 @@ export default defineComponent({
         await manager.resolve({
             query: {
                 filters: {
-                    role_id: props.role.id,
-                    provider_id: props.entityId,
+                    roleId: props.role.id,
+                    providerId: props.entityId,
                 },
             },
         });
@@ -152,8 +152,8 @@ export default defineComponent({
 
             return manager.create({
                 ...form,
-                provider_id: props.entityId,
-                role_id: props.role.id,
+                providerId: props.entityId,
+                roleId: props.role.id,
             });
         };
 
@@ -261,7 +261,7 @@ export default defineComponent({
             </IFieldValidation>
             <IFieldValidation
                 v-slot="{ value }"
-                :field="v.fields.value_is_regex"
+                :field="v.fields.valueIsRegex"
             >
                 <VCFormGroup
                     :label="true"
@@ -271,7 +271,7 @@ export default defineComponent({
                         Regex
                     </template>
                     <VCFormSwitch
-                        v-model="v.fields.value_is_regex.$model.value"
+                        v-model="v.fields.valueIsRegex.$model.value"
                         :label-content="translationsDefault.valueIsRegex"
                     />
                 </VCFormGroup>

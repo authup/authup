@@ -109,7 +109,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
 
             // The actor's grants for this permission form a disjunction: a single policy-free
             // grant is unrestricted, otherwise the permission passes iff ANY grant's policy
-            // passes (AFFIRMATIVE). Each grant's policy already carries its own decision_strategy
+            // passes (AFFIRMATIVE). Each grant's policy already carries its own decisionStrategy
             // (a composite for multi-policy Layer-1 bindings, the raw policy for single).
             const grantPolicies = binding.grants
                 .map((grant) => grant.policy)
@@ -131,7 +131,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
 
             const compositePolicy : CompositePolicy = {
                 type: BuiltInPolicyType.COMPOSITE,
-                decision_strategy: DecisionStrategy.AFFIRMATIVE,
+                decisionStrategy: DecisionStrategy.AFFIRMATIVE,
                 children: grantPolicies,
             };
 

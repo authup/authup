@@ -22,17 +22,18 @@ import type { Client, Realm } from '@authup/core-kit';
 import { RealmEntity } from '../realm/index.ts';
 import { ClientEntity } from '../client/entity.ts';
 
-@Unique(['name', 'client_id', 'realm_id'])
+@Unique(['name', 'clientId', 'realmId'])
 @Entity({ name: 'auth_permissions' })
 export class PermissionEntity {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
     @Column({
-        type: 'boolean',
+        name: 'built_in', 
+        type: 'boolean', 
         default: false, 
     })
-    built_in: boolean;
+    builtIn: boolean;
 
     @Column({
         type: 'varchar',
@@ -41,11 +42,12 @@ export class PermissionEntity {
     name: string;
 
     @Column({
-        type: 'varchar',
-        length: 256,
+        name: 'display_name', 
+        type: 'varchar', 
+        length: 256, 
         nullable: true, 
     })
-    display_name: string | null;
+    displayName: string | null;
 
     @Column({
         type: 'text',
@@ -54,18 +56,19 @@ export class PermissionEntity {
     description: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 50,
-        nullable: true,
+        name: 'decision_strategy', 
+        type: 'varchar', 
+        length: 50, 
+        nullable: true, 
         default: null, 
     })
-    decision_strategy: `${DecisionStrategy}` | null;
+    decisionStrategy: `${DecisionStrategy}` | null;
 
     // ------------------------------------------------------------------
 
     @Index()
-    @Column({ nullable: true })
-    client_id: Client['id'] | null;
+    @Column({ name: 'client_id', nullable: true })
+    clientId: Client['id'] | null;
 
     @ManyToOne(() => ClientEntity, {
         onDelete: 'SET NULL',
@@ -77,8 +80,8 @@ export class PermissionEntity {
     // ------------------------------------------------------------------
 
     @Index()
-    @Column({ nullable: true })
-    realm_id: Realm['id'] | null;
+    @Column({ name: 'realm_id', nullable: true })
+    realmId: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
@@ -89,9 +92,9 @@ export class PermissionEntity {
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
+    createdAt: string;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
+    updatedAt: string;
 }

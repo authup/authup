@@ -8,11 +8,11 @@
 import type { Permission, Realm } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
+import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IPermissionRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
-import { translateWhereConditions } from '../helpers.ts';
+import { isEntityUnique, translateWhereConditions } from '../helpers.ts';
 import { PermissionEntity } from '../../../../../adapters/database/domains/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
@@ -37,10 +37,10 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
 
         const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'permission',
-            filters: { allowed: ['id', 'display_name', 'name', 'built_in'] },
+            filters: { allowed: ['id', 'displayName', 'name', 'builtIn'] },
             pagination: { maxLimit: 50 },
             relations: { allowed: [] },
-            sort: { allowed: ['id', 'name', 'created_at', 'updated_at'] },
+            sort: { allowed: ['id', 'name', 'createdAt', 'updatedAt'] },
         });
 
         const [entities, total] = await qb.getManyAndCount();
@@ -67,7 +67,7 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
             if (!realmId) {
                 return null;
             }
-            qb.andWhere('permission.realm_id = :realmId', { realmId });
+            qb.andWhere('permission.realmId = :realmId', { realmId });
         }
 
         return qb.getOne();

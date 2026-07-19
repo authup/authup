@@ -19,7 +19,7 @@ export class IdentityProviderSubscriber extends EntitySubscriber<IdentityProvide
         super({
             type: EntityType.IDENTITY_PROVIDER,
             target: IdentityProviderEntity,
-            destinations: buildEntityDestinations(EntityType.IDENTITY_PROVIDER, (data) => [data.realm_id]),
+            destinations: buildEntityDestinations(EntityType.IDENTITY_PROVIDER, (data) => [data.realmId]),
             cache: {
                 keys: (data) => [
                     buildRedisKeyPath({

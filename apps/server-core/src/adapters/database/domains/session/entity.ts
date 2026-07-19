@@ -43,74 +43,83 @@ export class SessionEntity implements Session {
 
     @Index()
     @Column({
-        type: 'varchar',
+        name: 'sub_kind', 
+        type: 'varchar', 
         length: 64, 
     })
-    sub_kind: string;
+    subKind: string;
 
     @Index()
     @Column({
-        type: 'varchar',
-        length: 45,
+        name: 'ip_address', 
+        type: 'varchar', 
+        length: 45, 
     })
-    ip_address: string;
+    ipAddress: string;
 
     @Index()
     @Column({
-        type: 'varchar',
+        name: 'user_agent', 
+        type: 'varchar', 
         length: 512, 
     })
-    user_agent: string;
+    userAgent: string;
 
     // ------------------------------------------------------------------
 
     @Column({
-        type: 'varchar',
-        length: 28,
+        name: 'expires_at', 
+        type: 'varchar', 
+        length: 28, 
     })
-    expires_at: string;
+    expiresAt: string;
 
     @Column({
-        type: 'varchar',
-        length: 28,
-        nullable: true,
+        name: 'refreshed_at', 
+        type: 'varchar', 
+        length: 28, 
+        nullable: true, 
     })
-    refreshed_at: string | null;
+    refreshedAt: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 28,
-        nullable: true,
+        name: 'seen_at', 
+        type: 'varchar', 
+        length: 28, 
+        nullable: true, 
     })
-    seen_at: string | null;
+    seenAt: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 28,
-        nullable: true,
+        name: 'mfa_at', 
+        type: 'varchar', 
+        length: 28, 
+        nullable: true, 
     })
-    mfa_at: string | null;
+    mfaAt: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 16,
-        nullable: true,
+        name: 'auth_method', 
+        type: 'varchar', 
+        length: 16, 
+        nullable: true, 
     })
-    auth_method: `${SessionAuthMethod}` | null;
+    authMethod: `${SessionAuthMethod}` | null;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
+    updatedAt: string;
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
+    createdAt: string;
 
     // ------------------------------------------------------------------
 
     @Column({
-        nullable: true,
+        name: 'client_id', 
+        nullable: true, 
         default: null, 
     })
-    client_id: Client['id'] | null;
+    clientId: Client['id'] | null;
 
     @ManyToOne(() => ClientEntity, {
         onDelete: 'CASCADE',
@@ -120,10 +129,11 @@ export class SessionEntity implements Session {
     client: ClientEntity | null;
 
     @Column({
-        nullable: true,
+        name: 'user_id', 
+        nullable: true, 
         default: null, 
     })
-    user_id: User['id'] | null;
+    userId: User['id'] | null;
 
     @ManyToOne(() => UserEntity, {
         onDelete: 'CASCADE',
@@ -133,10 +143,11 @@ export class SessionEntity implements Session {
     user: UserEntity | null;
 
     @Column({
-        nullable: true,
+        name: 'robot_id', 
+        nullable: true, 
         default: null, 
     })
-    robot_id: Robot['id'] | null;
+    robotId: Robot['id'] | null;
 
     @ManyToOne(() => RobotEntity, {
         onDelete: 'CASCADE',
@@ -145,8 +156,8 @@ export class SessionEntity implements Session {
     @JoinColumn({ name: 'robot_id' })
     robot: RobotEntity | null;
 
-    @Column()
-    realm_id: Realm['id'];
+    @Column({ name: 'realm_id' })
+    realmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })

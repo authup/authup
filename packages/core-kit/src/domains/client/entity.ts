@@ -16,17 +16,17 @@ export interface Client {
 
     active: boolean;
 
-    built_in: boolean;
+    builtIn: boolean;
 
-    auth_method: `${ClientAuthMethod}`,
+    authMethod: `${ClientAuthMethod}`,
 
-    token_binding_method: `${ClientTokenBindingMethod}`,
+    tokenBindingMethod: `${ClientTokenBindingMethod}`,
 
     // ------------------------------------------------------------------
 
     name: string,
 
-    display_name: string | null;
+    displayName: string | null;
 
     description: string | null,
 
@@ -34,47 +34,47 @@ export interface Client {
 
     secret: string | null,
 
-    secret_hashed: boolean,
+    secretHashed: boolean,
 
-    secret_encrypted: boolean,
+    secretEncrypted: boolean,
 
     // ------------------------------------------------------------------
 
-    redirect_uri: string | null,
+    redirectUri: string | null,
 
     /**
      * Comma-separated allow-list of post-logout redirect patterns (OIDC
      * RP-Initiated Logout `post_logout_redirect_uri`). Matched with the same
-     * wildcard semantics as `redirect_uri`.
+     * wildcard semantics as `redirectUri`.
      */
-    post_logout_redirect_uri: string | null,
+    postLogoutRedirectUri: string | null,
 
-    grant_types: string | null,
+    grantTypes: string | null,
 
     scope: string | null,
 
     /**
      * Default redirect URL.
      */
-    base_url: string | null,
+    baseUrl: string | null,
     /**
      * URL prepended to relative URLs.
      */
-    root_url: string | null,
+    rootUrl: string | null,
 
     // ------------------------------------------------------------------
 
-    created_at: string,
+    createdAt: string,
 
-    updated_at: string,
+    updatedAt: string,
 
     // ------------------------------------------------------------------
 
-    realm_id: Realm['id'],
+    realmId: Realm['id'],
 
     realm: Realm,
 
-    access_policy_id: Policy['id'] | null,
+    accessPolicyId: Policy['id'] | null,
 
-    access_policy: Policy | null,
+    accessPolicy: Policy | null,
 }

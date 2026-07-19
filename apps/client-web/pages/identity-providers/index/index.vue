@@ -41,7 +41,7 @@ export default defineComponent({
         const store = injectStore();
         const { realmManagementId } = storeToRefs(store);
 
-        const query : BuildInput<IdentityProvider> = { filter: { realm_id: [realmManagementId.value ?? null, null] } };
+        const query : BuildInput<IdentityProvider> = { filter: { realmId: [realmManagementId.value ?? null, null] } };
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.IDENTITY_PROVIDER_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.IDENTITY_PROVIDER_DELETE });
@@ -93,13 +93,13 @@ export default defineComponent({
                 cellClass: 'text-left',
             },
             {
-                key: 'created_at',
+                key: 'createdAt',
                 label: translations.createdAt,
                 headerClass: 'text-center',
                 cellClass: 'text-center',
             },
             {
-                key: 'updated_at',
+                key: 'updatedAt',
                 label: translations.updatedAt,
                 headerClass: 'text-center',
                 cellClass: 'text-center',
@@ -150,11 +150,11 @@ export default defineComponent({
                 :columns="columns"
                 :busy="props.busy"
             >
-                <template #cell-created_at="{ row }">
-                    <VCTimeago :datetime="row.created_at" />
+                <template #cell-createdAt="{ row }">
+                    <VCTimeago :datetime="row.createdAt" />
                 </template>
-                <template #cell-updated_at="{ row }">
-                    <VCTimeago :datetime="row.updated_at" />
+                <template #cell-updatedAt="{ row }">
+                    <VCTimeago :datetime="row.updatedAt" />
                 </template>
                 <template #cell-options="{ row }">
                     <VCButton

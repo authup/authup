@@ -33,37 +33,37 @@ const ENTITY_EVENT_NAME_MAP : Record<string, `${EventName}`> = {
 };
 
 const ENTITY_REALM_KEY_MAP : Record<`${EntityType}`, string> = {
-    [EntityType.CLIENT]: 'realm_id',
-    [EntityType.CLIENT_PERMISSION]: 'client_realm_id',
-    [EntityType.CLIENT_ROLE]: 'client_realm_id',
-    [EntityType.CLIENT_SCOPE]: 'client_realm_id',
-    [EntityType.CONSENT]: 'realm_id',
-    [EntityType.EVENT]: 'realm_id',
-    [EntityType.IDENTITY_PROVIDER]: 'realm_id',
-    [EntityType.IDENTITY_PROVIDER_ACCOUNT]: 'user_realm_id',
-    [EntityType.IDENTITY_PROVIDER_ATTRIBUTE]: 'realm_id',
-    [EntityType.IDENTITY_PROVIDER_ATTRIBUTE_MAPPING]: 'provider_realm_id',
-    [EntityType.IDENTITY_PROVIDER_PERMISSION_MAPPING]: 'provider_realm_id',
-    [EntityType.IDENTITY_PROVIDER_ROLE_MAPPING]: 'provider_realm_id',
-    [EntityType.KEY]: 'realm_id',
-    [EntityType.POLICY]: 'realm_id',
-    [EntityType.POLICY_ATTRIBUTE]: 'realm_id',
-    [EntityType.PERMISSION]: 'realm_id',
-    [EntityType.PERMISSION_POLICY]: 'permission_realm_id',
+    [EntityType.CLIENT]: 'realmId',
+    [EntityType.CLIENT_PERMISSION]: 'clientRealmId',
+    [EntityType.CLIENT_ROLE]: 'clientRealmId',
+    [EntityType.CLIENT_SCOPE]: 'clientRealmId',
+    [EntityType.CONSENT]: 'realmId',
+    [EntityType.EVENT]: 'realmId',
+    [EntityType.IDENTITY_PROVIDER]: 'realmId',
+    [EntityType.IDENTITY_PROVIDER_ACCOUNT]: 'userRealmId',
+    [EntityType.IDENTITY_PROVIDER_ATTRIBUTE]: 'realmId',
+    [EntityType.IDENTITY_PROVIDER_ATTRIBUTE_MAPPING]: 'providerRealmId',
+    [EntityType.IDENTITY_PROVIDER_PERMISSION_MAPPING]: 'providerRealmId',
+    [EntityType.IDENTITY_PROVIDER_ROLE_MAPPING]: 'providerRealmId',
+    [EntityType.KEY]: 'realmId',
+    [EntityType.POLICY]: 'realmId',
+    [EntityType.POLICY_ATTRIBUTE]: 'realmId',
+    [EntityType.PERMISSION]: 'realmId',
+    [EntityType.PERMISSION_POLICY]: 'permissionRealmId',
     [EntityType.REALM]: 'id',
-    [EntityType.ROBOT]: 'realm_id',
-    [EntityType.ROBOT_PERMISSION]: 'robot_realm_id',
-    [EntityType.ROBOT_ROLE]: 'robot_realm_id',
-    [EntityType.ROLE]: 'realm_id',
-    [EntityType.ROLE_ATTRIBUTE]: 'realm_id',
-    [EntityType.ROLE_PERMISSION]: 'role_realm_id',
-    [EntityType.SCOPE]: 'realm_id',
-    [EntityType.SESSION]: 'realm_id',
-    [EntityType.TRUST_ANCHOR]: 'realm_id',
-    [EntityType.USER]: 'realm_id',
-    [EntityType.USER_ATTRIBUTE]: 'realm_id',
-    [EntityType.USER_PERMISSION]: 'user_realm_id',
-    [EntityType.USER_ROLE]: 'user_realm_id',
+    [EntityType.ROBOT]: 'realmId',
+    [EntityType.ROBOT_PERMISSION]: 'robotRealmId',
+    [EntityType.ROBOT_ROLE]: 'robotRealmId',
+    [EntityType.ROLE]: 'realmId',
+    [EntityType.ROLE_ATTRIBUTE]: 'realmId',
+    [EntityType.ROLE_PERMISSION]: 'roleRealmId',
+    [EntityType.SCOPE]: 'realmId',
+    [EntityType.SESSION]: 'realmId',
+    [EntityType.TRUST_ANCHOR]: 'realmId',
+    [EntityType.USER]: 'realmId',
+    [EntityType.USER_ATTRIBUTE]: 'realmId',
+    [EntityType.USER_PERMISSION]: 'userRealmId',
+    [EntityType.USER_ROLE]: 'userRealmId',
 };
 
 /**
@@ -146,7 +146,7 @@ function resolveEntityRealmId(
         return undefined;
     }
 
-    const key = ENTITY_REALM_KEY_MAP[type as `${EntityType}`] ?? 'realm_id';
+    const key = ENTITY_REALM_KEY_MAP[type as `${EntityType}`] ?? 'realmId';
     if (!hasOwnProperty(data, key)) {
         return undefined;
     }

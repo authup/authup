@@ -19,25 +19,25 @@ export class UserPermissionValidator extends Container<
         super.initialize();
 
         this.mount(
-            'user_id',
+            'userId',
             { group: ValidatorGroup.CREATE },
             createValidator(z.uuid()),
         );
 
         this.mount(
-            'permission_id',
+            'permissionId',
             { group: ValidatorGroup.CREATE },
             createValidator(z.uuid()),
         );
 
         this.mount(
-            'policy_id',
+            'policyId',
             { optional: true },
             createValidator(z.uuid().nullable()),
         );
 
         this.mount(
-            'realm_scope',
+            'realmScope',
             { optional: true },
             createValidator(z.enum(REALM_SCOPE)),
         );

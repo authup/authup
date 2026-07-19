@@ -38,7 +38,7 @@ describe('event (realm isolation)', () => {
         const realmB = await suite.client.realm.create(createFakeRealm());
 
         // a LOGIN audit row in the foreign realm (B)
-        const userB = createFakeUser({ realm_id: realmB.id });
+        const userB = createFakeUser({ realmId: realmB.id });
         const createdB = await suite.client.user.create(userB);
         await suite.client.token.createWithPassword({
             username: userB.name,
@@ -54,27 +54,27 @@ describe('event (realm isolation)', () => {
             password: userM.password!,
         });
 
-        const foreignRows = await suite.client.event.getMany({ filter: { name: EventName.LOGIN, actor_id: createdB.id } });
+        const foreignRows = await suite.client.event.getMany({ filter: { name: EventName.LOGIN, actorId: createdB.id } });
         expect(foreignRows.data.length).toBeGreaterThanOrEqual(1);
         foreignRowId = foreignRows.data[0].id;
 
-        const ownRows = await suite.client.event.getMany({ filter: { name: EventName.LOGIN, actor_id: createdM.id } });
+        const ownRows = await suite.client.event.getMany({ filter: { name: EventName.LOGIN, actorId: createdM.id } });
         expect(ownRows.data.length).toBeGreaterThanOrEqual(1);
         ownRowId = ownRows.data[0].id;
 
         // a restricted actor in master holding EVENT_READ at the default `own` scope
         const actorClient = await suite.client.client.create({
             ...createFakeClient(),
-            auth_method: 'secret',
-            token_binding_method: 'none',
+            authMethod: 'secret',
+            tokenBindingMethod: 'none',
             secret: actorSecret,
-            secret_hashed: false,
-            secret_encrypted: false,
+            secretHashed: false,
+            secretEncrypted: false,
         });
         const permission = await suite.client.permission.getOne(PermissionName.EVENT_READ);
         await suite.client.clientPermission.create({
-            client_id: actorClient.id,
-            permission_id: permission.id,
+            clientId: actorClient.id,
+            permissionId: permission.id,
         });
 
         const token = await suite.client.token.createWithClientCredentials({

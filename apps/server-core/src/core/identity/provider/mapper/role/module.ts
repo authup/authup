@@ -27,8 +27,8 @@ export class IdentityProviderRoleMapper extends IdentityProviderAccountBaseMappe
             const [operation] = this.resolve(identity, entity);
 
             items.push({
-                value: entity.role_id,
-                realmId: entity.role_realm_id,
+                value: entity.roleId,
+                realmId: entity.roleRealmId,
                 operation,
             });
         }

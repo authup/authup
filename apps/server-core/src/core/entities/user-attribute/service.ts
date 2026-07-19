@@ -95,7 +95,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<UserAttribute> {
-        const targetUserId: string | undefined = data.user_id ||
+        const targetUserId: string | undefined = data.userId ||
             (data.user && data.user.id);
 
         const isSelfTarget = !!actor.identity &&
@@ -120,15 +120,15 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         }
 
         if (data.user) {
-            data.realm_id = data.user.realm_id;
+            data.realmId = data.user.realmId;
         } else if (
             actor.identity &&
             actor.identity.type === 'user'
         ) {
-            data.user_id = actor.identity.data.id;
-            data.realm_id = actor.identity.data.realm_id;
+            data.userId = actor.identity.data.id;
+            data.realmId = actor.identity.data.realmId;
         } else {
-            throw new ValidationError(buildErrorMessageForAttribute('user_id'));
+            throw new ValidationError(buildErrorMessageForAttribute('userId'));
         }
 
         const entity = this.repository.create(data);
@@ -168,7 +168,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
 
         const isSelfTarget = !!actor.identity &&
             actor.identity.type === 'user' &&
-            actor.identity.data.id === entity.user_id;
+            actor.identity.data.id === entity.userId;
 
         let isSelfFallback = false;
         try {
@@ -181,14 +181,14 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_SELF_MANAGE });
         }
 
-        // An attribute belongs to a fixed user; its owner (and the user-derived realm_id) is
+        // An attribute belongs to a fixed user; its owner (and the user-derived realmId) is
         // IMMUTABLE on update — strip both from the body. This blocks a self-manage or admin
         // caller from reassigning the attribute to another user (isSelfTarget was decided from
-        // the ORIGINAL owner), and blocks a caller-supplied realm_id that would gate USER_UPDATE
+        // the ORIGINAL owner), and blocks a caller-supplied realmId that would gate USER_UPDATE
         // against a realm of their choosing. To move an attribute, delete + recreate.
-        delete data.user_id;
+        delete data.userId;
         delete data.user;
-        delete data.realm_id;
+        delete data.realmId;
 
         entity = this.repository.merge(entity, data);
 
@@ -243,7 +243,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
     ): Promise<boolean> {
         const isMe = actor.identity &&
             actor.identity.type === 'user' &&
-            actor.identity.data.id === entity.user_id;
+            actor.identity.data.id === entity.userId;
 
         if (isMe) {
             return true;

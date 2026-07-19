@@ -25,9 +25,9 @@ export interface ISessionAPI {
      *
      * - No argument → revoke every session of the current identity except the
      *   one this request authenticates with ("log out my other devices").
-     * - A target `filter` (e.g. `{ filter: { user_id } }`, `{ filter: { realm_id } }`)
+     * - A target `filter` (e.g. `{ filter: { userId } }`, `{ filter: { realmId } }`)
      *   → admin force-logout: revoke every matching session (requires
-     *   `SESSION_DELETE` + per-session realm reach). `filter[user_id]` accepts a
+     *   `SESSION_DELETE` + per-session realm reach). `filter[userId]` accepts a
      *   comma list to target multiple subjects at once.
      */
     deleteMany(data?: BuildInput<Session>): Promise<SessionDeleteManyResponse>;

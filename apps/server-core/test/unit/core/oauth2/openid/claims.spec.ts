@@ -59,7 +59,7 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
             const dateStr = '2025-01-15T12:00:00Z';
             const client = {
                 name: 'c',
-                updated_at: dateStr,
+                updatedAt: dateStr,
             } as Client;
             const result = builder.fromClient(client);
             expect(result.updated_at).toBe(Math.floor(new Date(dateStr).getTime() / 1000));
@@ -86,7 +86,7 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
             const dateStr = '2025-06-01T00:00:00Z';
             const robot = {
                 name: 'r',
-                updated_at: dateStr,
+                updatedAt: dateStr,
             } as Robot;
             const result = builder.fromRobot(robot);
             expect(result.updated_at).toBe(Math.floor(new Date(dateStr).getTime() / 1000));
@@ -105,9 +105,9 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
         it('should map all user fields', () => {
             const user = {
                 name: 'jdoe',
-                first_name: 'John',
-                last_name: 'Doe',
-                display_name: 'John Doe',
+                firstName: 'John',
+                lastName: 'Doe',
+                displayName: 'John Doe',
                 email: 'john@example.com',
                 active: true,
             } as User;
@@ -126,7 +126,7 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
             const dateStr = '2025-03-01T10:30:00Z';
             const user = {
                 name: 'u',
-                updated_at: dateStr,
+                updatedAt: dateStr,
             } as User;
             const result = builder.fromUser(user);
             expect(result.updated_at).toBe(Math.floor(new Date(dateStr).getTime() / 1000));
@@ -135,7 +135,7 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
         it('should pass through non-string updated_at', () => {
             const user = {
                 name: 'u',
-                updated_at: 1234567890, 
+                updatedAt: 1234567890, 
             } as unknown as User;
             const result = builder.fromUser(user);
             expect(result.updated_at).toBe(1234567890);

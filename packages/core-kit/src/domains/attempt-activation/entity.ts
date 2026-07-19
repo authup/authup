@@ -8,13 +8,13 @@
 export interface AttemptActivation {
     id: string,
 
-    ip_address: string,
+    ipAddress: string,
 
-    user_agent: string,
+    userAgent: string,
 
     token: string | null,
 
-    created_at: string,
+    createdAt: string,
 
-    updated_at: string,
+    updatedAt: string,
 }

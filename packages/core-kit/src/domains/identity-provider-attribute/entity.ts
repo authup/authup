@@ -17,19 +17,19 @@ export interface IdentityProviderAttribute {
 
     // ------------------------------------------------------------------
 
-    provider_id: IdentityProvider['id'];
+    providerId: IdentityProvider['id'];
 
     provider: IdentityProvider;
 
     // ------------------------------------------------------------------
 
-    realm_id: Realm['id'] | null;
+    realmId: Realm['id'] | null;
 
     realm: Realm | null;
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 }

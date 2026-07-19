@@ -65,7 +65,7 @@ describe('src/http realm key store (zero-config MFA + jwks hygiene)', () => {
 
         // an enc key exists for the user's realm ...
         const encKeys = await suite.dataSource.getRepository(KeyEntity).findBy({
-            realm_id: user.realm_id,
+            realmId: user.realmId,
             use: JWKUse.ENCRYPTION,
         });
         expect(encKeys.length).toBeGreaterThanOrEqual(1);

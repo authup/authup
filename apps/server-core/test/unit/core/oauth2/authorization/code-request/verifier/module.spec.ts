@@ -28,36 +28,36 @@ class FakeClientRepository implements IOAuth2ClientRepository {
         const entity: Client = {
             id: randomUUID(),
             active: true,
-            built_in: false,
-            auth_method: 'none',
-            token_binding_method: 'none',
+            builtIn: false,
+            authMethod: 'none',
+            tokenBindingMethod: 'none',
             name: 'client',
-            display_name: null,
+            displayName: null,
             description: null,
             secret: null,
-            secret_hashed: false,
-            secret_encrypted: false,
+            secretHashed: false,
+            secretEncrypted: false,
             // authorize-capable clients always carry a registered pattern —
             // the verifier rejects pattern-less clients outright (OAuth 2.1)
-            redirect_uri: 'https://app.example.com/**',
-            post_logout_redirect_uri: null,
-            grant_types: null,
+            redirectUri: 'https://app.example.com/**',
+            postLogoutRedirectUri: null,
+            grantTypes: null,
             scope: null,
-            base_url: null,
-            root_url: null,
-            access_policy_id: null,
-            access_policy: null,
-            created_at: now,
-            updated_at: now,
-            realm_id: realmId,
+            baseUrl: null,
+            rootUrl: null,
+            accessPolicyId: null,
+            accessPolicy: null,
+            createdAt: now,
+            updatedAt: now,
+            realmId,
             realm: {
                 id: realmId,
                 name: 'master',
-                display_name: null,
+                displayName: null,
                 description: null,
-                built_in: true,
-                created_at: now,
-                updated_at: now,
+                builtIn: true,
+                createdAt: now,
+                updatedAt: now,
             },
             ...client,
         };
@@ -117,8 +117,8 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
         it('should throw clientInactive when the client is inactive', async () => {
             const client = clientRepository.seed({
                 active: false,
-                auth_method: 'secret',
-                token_binding_method: 'none',
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
             });
             await expect(
                 verifier.verify({
@@ -130,7 +130,7 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
         });
 
         it('should reject public clients without PKCE for the code flow', async () => {
-            const client = clientRepository.seed({ auth_method: 'none', token_binding_method: 'none' });
+            const client = clientRepository.seed({ authMethod: 'none', tokenBindingMethod: 'none' });
             await expect(
                 verifier.verify({
                     client_id: client.id,
@@ -141,7 +141,7 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
         });
 
         it('should reject public clients without state for the code flow', async () => {
-            const client = clientRepository.seed({ auth_method: 'none', token_binding_method: 'none' });
+            const client = clientRepository.seed({ authMethod: 'none', tokenBindingMethod: 'none' });
             await expect(
                 verifier.verify({
                     client_id: client.id,
@@ -152,7 +152,7 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
         });
 
         it('should accept public clients with both PKCE and state for the code flow', async () => {
-            const client = clientRepository.seed({ auth_method: 'none', token_binding_method: 'none' });
+            const client = clientRepository.seed({ authMethod: 'none', tokenBindingMethod: 'none' });
             const result = await verifier.verify({
                 client_id: client.id,
                 response_type: OAuth2AuthorizationResponseType.CODE,
@@ -163,7 +163,7 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
         });
 
         it('should not require state for confidential clients', async () => {
-            const client = clientRepository.seed({ auth_method: 'secret', token_binding_method: 'none' });
+            const client = clientRepository.seed({ authMethod: 'secret', tokenBindingMethod: 'none' });
             const result = await verifier.verify({
                 client_id: client.id,
                 response_type: OAuth2AuthorizationResponseType.CODE,
@@ -172,7 +172,7 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
         });
 
         it('should require PKCE for public clients regardless of response_type (code-only pipeline)', async () => {
-            const client = clientRepository.seed({ auth_method: 'none', token_binding_method: 'none' });
+            const client = clientRepository.seed({ authMethod: 'none', tokenBindingMethod: 'none' });
             await expect(verifier.verify({
                 client_id: client.id,
                 response_type: OAuth2AuthorizationResponseType.TOKEN,
@@ -181,9 +181,9 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
 
         it('should reject a client whose grant_types allowlist omits authorization_code', async () => {
             const client = clientRepository.seed({
-                auth_method: 'secret',
-                token_binding_method: 'none',
-                grant_types: 'client_credentials',
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
+                grantTypes: 'client_credentials',
             });
             await expect(
                 verifier.verify({
@@ -195,9 +195,9 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
 
         it('should accept a client whose grant_types allowlist includes authorization_code', async () => {
             const client = clientRepository.seed({
-                auth_method: 'secret',
-                token_binding_method: 'none',
-                grant_types: 'authorization_code refresh_token',
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
+                grantTypes: 'authorization_code refresh_token',
             });
             const result = await verifier.verify({
                 client_id: client.id,
@@ -208,9 +208,9 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
 
         it('should treat a null grant_types column as allow-all', async () => {
             const client = clientRepository.seed({
-                auth_method: 'secret',
-                token_binding_method: 'none',
-                grant_types: null,
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
+                grantTypes: null,
             });
             const result = await verifier.verify({
                 client_id: client.id,
@@ -224,9 +224,9 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
             // matched — the verifier must throw instead of issuing a code to
             // whatever redirect_uri the request carries.
             const client = clientRepository.seed({
-                auth_method: 'secret',
-                token_binding_method: 'none',
-                redirect_uri: null,
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
+                redirectUri: null,
             });
             await expect(
                 verifier.verify({
@@ -241,9 +241,9 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
             // the reject is unconditional — the GET page render path (no
             // redirect_uri in the request) must not resolve such a client either
             const client = clientRepository.seed({
-                auth_method: 'secret',
-                token_binding_method: 'none',
-                redirect_uri: null,
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
+                redirectUri: null,
             });
             await expect(
                 verifier.verify({
@@ -256,7 +256,7 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
         it('should flag redirectUriVerified=false when the request carries no redirect_uri', async () => {
             // the GET page render legitimately verifies without a redirect_uri —
             // it resolves, but consumers must NOT auto-redirect
-            const client = clientRepository.seed({ auth_method: 'secret', token_binding_method: 'none' });
+            const client = clientRepository.seed({ authMethod: 'secret', tokenBindingMethod: 'none' });
             const result = await verifier.verify({
                 client_id: client.id,
                 response_type: OAuth2AuthorizationResponseType.CODE,
@@ -267,9 +267,9 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
 
         it('should flag redirectUriVerified=true when the redirect matches a registered pattern', async () => {
             const client = clientRepository.seed({
-                auth_method: 'secret',
-                token_binding_method: 'none',
-                redirect_uri: 'https://app.example.com/**',
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
+                redirectUri: 'https://app.example.com/**',
             });
             const result = await verifier.verify({
                 client_id: client.id,

@@ -58,9 +58,9 @@ export default defineComponent({
         const form = reactive({
             name: '',
             invert: false,
-            display_name: '',
+            displayName: '',
             description: '',
-            realm_id: '',
+            realmId: '',
             type: '',
         });
 
@@ -74,7 +74,7 @@ export default defineComponent({
             }
 
             return entity.value ?
-                entity.value.realm_id :
+                entity.value.realmId :
                 null;
         });
 
@@ -187,15 +187,15 @@ export default defineComponent({
             </IFieldValidation>
             <IFieldValidation
                 v-slot="{ value }"
-                :field="v.fields.display_name"
+                :field="v.fields.displayName"
             >
                 <VCFormGroup :validation="value">
                     <template #label>
                         {{ translationsDefault.displayName }}
                     </template>
                     <VCFormInput
-                        :model-value="v.fields.display_name.$model.value ?? ''"
-                        @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
+                        :model-value="v.fields.displayName.$model.value ?? ''"
+                        @update:model-value="(next: string) => { v.fields.displayName.$model.value = next; }"
                         @change="handleUpdated"
                     />
                 </VCFormGroup>
@@ -241,15 +241,15 @@ export default defineComponent({
         >
             <IFieldValidation
                 v-slot="{ value }"
-                :field="v.fields.realm_id"
+                :field="v.fields.realmId"
             >
                 <VCFormGroup :validation="value">
                     <template #label>
                         {{ translationsDefault.realm }}
                     </template>
                     <ARealmPicker
-                        :value="v.fields.realm_id.$model.value"
-                        @change="(value: string[]) => { v.fields.realm_id.$model.value = value.length > 0 ? value[0] ?? '' : ''; }"
+                        :value="v.fields.realmId.$model.value"
+                        @change="(value: string[]) => { v.fields.realmId.$model.value = value.length > 0 ? value[0] ?? '' : ''; }"
                     />
                 </VCFormGroup>
             </IFieldValidation>

@@ -85,7 +85,7 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
         if (input.relations && input.relations.clients) {
             const clients = input.relations.clients.map(
                 (child) => {
-                    child.attributes.realm_id = attributes.id;
+                    child.attributes.realmId = attributes.id;
                     child.attributes.realm = attributes;
                     return child;
                 },
@@ -96,7 +96,7 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
         if (input.relations && input.relations.permissions) {
             const permissions = input.relations.permissions.map((child) => {
-                child.attributes.realm_id = attributes.id;
+                child.attributes.realmId = attributes.id;
                 child.attributes.realm = attributes;
                 return child;
             });
@@ -106,7 +106,7 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
         if (input.relations && input.relations.roles) {
             const roles = input.relations.roles.map((child) => {
-                child.attributes.realm_id = attributes.id;
+                child.attributes.realmId = attributes.id;
                 child.attributes.realm = attributes;
                 return child;
             });
@@ -116,7 +116,7 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
         if (input.relations && input.relations.users) {
             const users = input.relations.users.map((child) => {
-                child.attributes.realm_id = attributes.id;
+                child.attributes.realmId = attributes.id;
                 child.attributes.realm = attributes;
                 return child;
             });
@@ -126,7 +126,7 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
         if (input.relations && input.relations.robots) {
             const robots = input.relations.robots.map((child) => {
-                child.attributes.realm_id = attributes.id;
+                child.attributes.realmId = attributes.id;
                 child.attributes.realm = attributes;
                 return child;
             });
@@ -136,7 +136,7 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
         if (input.relations && input.relations.scopes) {
             const scopes = input.relations.scopes.map((child) => {
-                child.attributes.realm_id = attributes.id;
+                child.attributes.realmId = attributes.id;
                 child.attributes.realm = attributes;
                 return child;
             });

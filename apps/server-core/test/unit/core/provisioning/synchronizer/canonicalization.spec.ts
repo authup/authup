@@ -52,8 +52,8 @@ describe('core/provisioning/synchronizer canonical names', () => {
     it('should match an existing canonical row for a mixed-case provisioned entity', async () => {
         permissionRepository.seed({
             name: 'test_permission', 
-            realm_id: null, 
-            client_id: null, 
+            realmId: null, 
+            clientId: null, 
         });
 
         await synchronizer.synchronize({

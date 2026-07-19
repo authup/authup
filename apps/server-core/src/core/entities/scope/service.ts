@@ -100,8 +100,8 @@ export class ScopeService extends AbstractEntityService implements IScopeService
     }> {
         let group: string;
 
-        const realm = typeof data.realm_id === 'string' ?
-            await this.realmRepository.resolve(data.realm_id) :
+        const realm = typeof data.realmId === 'string' ?
+            await this.realmRepository.resolve(data.realmId) :
             undefined;
 
         let entity: Scope | null | undefined;
@@ -114,7 +114,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
             }
 
             if (realm) {
-                where.realm_id = realm.id;
+                where.realmId = realm.id;
             }
 
             entity = await this.repository.findOneBy(where);
@@ -145,7 +145,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
                         ...entity,
                         ...validated,
                     },
-                    [BuiltInPolicyType.REALM_MATCH]: validated.realm_id ?? entity.realm_id ?? null,
+                    [BuiltInPolicyType.REALM_MATCH]: validated.realmId ?? entity.realmId ?? null,
                 }),
             });
 
@@ -160,8 +160,8 @@ export class ScopeService extends AbstractEntityService implements IScopeService
             };
         }
 
-        if (!isPropertySet(validated, 'realm_id') && actor.identity) {
-            validated.realm_id = this.getActorRealmId(actor) || null;
+        if (!isPropertySet(validated, 'realmId') && actor.identity) {
+            validated.realmId = this.getActorRealmId(actor) || null;
         }
 
         await actor.permissionEvaluator.evaluate({

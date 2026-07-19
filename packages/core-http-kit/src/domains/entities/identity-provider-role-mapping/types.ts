@@ -10,8 +10,8 @@ import type { IEntityAPI } from '../../types-base';
 import type { IdentityProviderRoleMapping } from '@authup/core-kit';
 
 // Mirrors `IdentityProviderRoleMappingValidator` mounts in @authup/core-kit.
-export type IdentityProviderRoleMappingCreatePayload = Pick<IdentityProviderRoleMapping, 'provider_id' | 'role_id'> &
-    Partial<Pick<IdentityProviderRoleMapping, 'name' | 'value' | 'value_is_regex' | 'synchronization_mode'>>;
+export type IdentityProviderRoleMappingCreatePayload = Pick<IdentityProviderRoleMapping, 'providerId' | 'roleId'> &
+    Partial<Pick<IdentityProviderRoleMapping, 'name' | 'value' | 'valueIsRegex' | 'synchronizationMode'>>;
 export type IdentityProviderRoleMappingUpdatePayload = Partial<IdentityProviderRoleMappingCreatePayload>;
 
 export interface IIdentityProviderRoleMappingAPI extends IEntityAPI<

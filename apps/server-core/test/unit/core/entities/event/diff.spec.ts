@@ -38,9 +38,9 @@ describe('buildEntityDiff', () => {
     });
 
     it.each([
-        ['created_at'],
-        ['updated_at'],
-        ['expires_at'],
+        ['createdAt'],
+        ['updatedAt'],
+        ['expiresAt'],
     ])('skips the timestamp key %s', (key) => {
         expect(buildEntityDiff({ [key]: 'b' }, { [key]: 'a' })).toEqual({});
     });
@@ -48,11 +48,11 @@ describe('buildEntityDiff', () => {
     it.each([
         ['password'],
         ['secret'],
-        ['client_secret'],
-        ['secret_hashed'],
+        ['clientSecret'],
+        ['secretHashed'],
         ['hash'],
         ['token'],
-        ['refresh_token_id'],
+        ['refreshTokenId'],
         ['credential'],
         ['Password'],
         ['SECRET_ENCRYPTED'],
@@ -105,7 +105,7 @@ describe('buildEntityDiff', () => {
                 name: 'next-name',
                 description: 'same',
                 secret: 'new-secret',
-                updated_at: '2026-01-02',
+                updatedAt: '2026-01-02',
                 meta: { nested: true },
                 active: false,
             },
@@ -113,7 +113,7 @@ describe('buildEntityDiff', () => {
                 name: 'previous-name',
                 description: 'same',
                 secret: 'old-secret',
-                updated_at: '2026-01-01',
+                updatedAt: '2026-01-01',
                 meta: { nested: false },
                 active: true,
             },

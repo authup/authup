@@ -36,16 +36,16 @@ export class FakeSessionTokenRepository implements ISessionTokenRepository {
 
         const row: SessionToken = {
             id: input.id,
-            session_id: input.session_id,
+            sessionId: input.sessionId,
             kind: input.kind,
-            parent_id: input.parent_id ?? null,
-            refresh_token_id: input.refresh_token_id ?? null,
-            ip_address: input.ip_address,
-            user_agent: input.user_agent,
-            consumed_at: null,
-            revoked_at: null,
-            expires_at: input.expires_at,
-            created_at: new Date().toISOString(),
+            parentId: input.parentId ?? null,
+            refreshTokenId: input.refreshTokenId ?? null,
+            ipAddress: input.ipAddress,
+            userAgent: input.userAgent,
+            consumedAt: null,
+            revokedAt: null,
+            expiresAt: input.expiresAt,
+            createdAt: new Date().toISOString(),
         };
 
         this.rows.set(row.id, row);
@@ -60,7 +60,7 @@ export class FakeSessionTokenRepository implements ISessionTokenRepository {
 
     async findBySessionId(sessionId: string): Promise<SessionToken[]> {
         this.findBySessionIdCalls.push(sessionId);
-        return [...this.rows.values()].filter((row) => row.session_id === sessionId);
+        return [...this.rows.values()].filter((row) => row.sessionId === sessionId);
     }
 
     async markRefreshConsumed(id: string, at: string): Promise<boolean> {
@@ -70,20 +70,20 @@ export class FakeSessionTokenRepository implements ISessionTokenRepository {
         if (
             !row ||
             row.kind !== 'refresh' ||
-            row.consumed_at !== null ||
-            row.revoked_at !== null
+            row.consumedAt !== null ||
+            row.revokedAt !== null
         ) {
             return false;
         }
 
-        row.consumed_at = at;
+        row.consumedAt = at;
         return true;
     }
 
     async hasConsumedChild(parentId: string): Promise<boolean> {
         this.hasConsumedChildCalls.push(parentId);
         for (const row of this.rows.values()) {
-            if (row.parent_id === parentId && row.consumed_at !== null) {
+            if (row.parentId === parentId && row.consumedAt !== null) {
                 return true;
             }
         }
@@ -94,8 +94,8 @@ export class FakeSessionTokenRepository implements ISessionTokenRepository {
         this.revokeByIdCalls.push({ id, at });
 
         const row = this.rows.get(id);
-        if (row && row.revoked_at === null) {
-            row.revoked_at = at;
+        if (row && row.revokedAt === null) {
+            row.revokedAt = at;
         }
     }
 
@@ -104,10 +104,10 @@ export class FakeSessionTokenRepository implements ISessionTokenRepository {
 
         const refs: SessionTokenRef[] = [];
         for (const row of this.rows.values()) {
-            if (row.session_id === sessionId) {
-                refs.push({ id: row.id, expires_at: row.expires_at });
-                if (row.revoked_at === null) {
-                    row.revoked_at = at;
+            if (row.sessionId === sessionId) {
+                refs.push({ id: row.id, expiresAt: row.expiresAt });
+                if (row.revokedAt === null) {
+                    row.revokedAt = at;
                 }
             }
         }
@@ -120,7 +120,7 @@ export class FakeSessionTokenRepository implements ISessionTokenRepository {
 
         let count = 0;
         for (const [id, row] of this.rows.entries()) {
-            if (row.expires_at < before) {
+            if (row.expiresAt < before) {
                 this.rows.delete(id);
                 count++;
             }

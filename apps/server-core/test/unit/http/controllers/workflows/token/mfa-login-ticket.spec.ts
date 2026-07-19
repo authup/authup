@@ -100,13 +100,13 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
         // ticket instead of lingering for the full session lifetime. The user
         // holds two sessions here (the enrollment bearer + the pending one) —
         // the ticket-scoped one is the one expiring soonest.
-        const pending = await suite.client.session.getMany({ filter: { user_id: user.id } });
+        const pending = await suite.client.session.getMany({ filter: { userId: user.id } });
         expect(pending.data.length).toBeGreaterThan(1);
         const [pendingSession] = [...pending.data].sort(
-            (a, b) => new Date(a.expires_at).getTime() - new Date(b.expires_at).getTime(),
+            (a, b) => new Date(a.expiresAt).getTime() - new Date(b.expiresAt).getTime(),
         );
-        expect(pendingSession.mfa_at ?? null).toBeNull();
-        const pendingExpiresIn = (new Date(pendingSession.expires_at).getTime() - Date.now()) / 1_000;
+        expect(pendingSession.mfaAt ?? null).toBeNull();
+        const pendingExpiresIn = (new Date(pendingSession.expiresAt).getTime() - Date.now()) / 1_000;
         expect(pendingExpiresIn).toBeGreaterThan(MFA_TICKET_MAX_AGE - 120);
         expect(pendingExpiresIn).toBeLessThanOrEqual(MFA_TICKET_MAX_AGE + 60);
 
@@ -152,15 +152,15 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
         const clientSecret = generateOAuth2CodeVerifier();
         const oauthClient = await suite.client.client.create(createFakeClient({
             secret: clientSecret,
-            secret_hashed: false,
-            secret_encrypted: false,
-            auth_method: 'secret',
-            token_binding_method: 'none',
+            secretHashed: false,
+            secretEncrypted: false,
+            authMethod: 'secret',
+            tokenBindingMethod: 'none',
         }));
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
-            scope_id: scope.id,
-            client_id: oauthClient.id,
+            scopeId: scope.id,
+            clientId: oauthClient.id,
         });
 
         const authorizeResponse = await loggedIn.authorize.confirm({
@@ -173,8 +173,8 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
         expect(new URL(authorizeResponse.url).searchParams.get('code')).toBeTruthy();
 
         const completed = await suite.client.session.getOne(pendingSession.id);
-        expect(completed.mfa_at).toBeTruthy();
-        const completedExpiresIn = (new Date(completed.expires_at).getTime() - Date.now()) / 1_000;
+        expect(completed.mfaAt).toBeTruthy();
+        const completedExpiresIn = (new Date(completed.expiresAt).getTime() - Date.now()) / 1_000;
         expect(completedExpiresIn).toBeGreaterThan(MFA_TICKET_MAX_AGE + 60);
 
         // 8) the ticket is single use — consumed by the completion (same

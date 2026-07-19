@@ -44,7 +44,7 @@ describe('session', () => {
         const adminId = introspect.sub!;
         const currentId = introspect.session_id!;
 
-        const list = await client.session.getMany({ filter: { user_id: adminId } });
+        const list = await client.session.getMany({ filter: { userId: adminId } });
         expect(list.data.length).toBeGreaterThanOrEqual(2);
         expect(list.data.every((s) => s.sub === adminId)).toBe(true);
 
@@ -53,7 +53,7 @@ describe('session', () => {
         expect(other).toBeDefined();
         await client.session.delete(other!.id);
 
-        const after = await client.session.getMany({ filter: { user_id: adminId } });
+        const after = await client.session.getMany({ filter: { userId: adminId } });
         expect(after.data.some((s) => s.id === other!.id)).toBe(false);
         // the current session is untouched
         expect(after.data.some((s) => s.id === currentId)).toBe(true);
@@ -73,7 +73,7 @@ describe('session', () => {
         await client.session.deleteMany();
 
         // only the current admin session remains
-        const after = await client.session.getMany({ filter: { user_id: adminId } });
+        const after = await client.session.getMany({ filter: { userId: adminId } });
         const own = after.data.filter((s) => s.sub === adminId);
         expect(own).toHaveLength(1);
         expect(own[0].id).toEqual(currentId);
@@ -110,14 +110,14 @@ describe('session', () => {
         await suite.client.token.createWithPassword({ username: fakeUser.name, password });
         await suite.client.token.createWithPassword({ username: fakeUser.name, password });
 
-        const before = await suite.client.session.getMany({ filter: { user_id: user.id } });
+        const before = await suite.client.session.getMany({ filter: { userId: user.id } });
         expect(before.data.length).toBeGreaterThanOrEqual(2);
 
-        const result = await suite.client.session.deleteMany({ filter: { user_id: user.id } });
+        const result = await suite.client.session.deleteMany({ filter: { userId: user.id } });
         expect(result.count).toBeGreaterThanOrEqual(2);
 
         // every session of the target user is gone
-        const after = await suite.client.session.getMany({ filter: { user_id: user.id } });
+        const after = await suite.client.session.getMany({ filter: { userId: user.id } });
         expect(after.data).toHaveLength(0);
     });
 
@@ -131,11 +131,11 @@ describe('session', () => {
         await suite.client.token.createWithPassword({ username: first.name, password });
         await suite.client.token.createWithPassword({ username: second.name, password });
 
-        const result = await suite.client.session.deleteMany({ filter: { user_id: [userA.id, userB.id] } });
+        const result = await suite.client.session.deleteMany({ filter: { userId: [userA.id, userB.id] } });
         expect(result.count).toBeGreaterThanOrEqual(2);
 
-        const afterA = await suite.client.session.getMany({ filter: { user_id: userA.id } });
-        const afterB = await suite.client.session.getMany({ filter: { user_id: userB.id } });
+        const afterA = await suite.client.session.getMany({ filter: { userId: userA.id } });
+        const afterB = await suite.client.session.getMany({ filter: { userId: userB.id } });
         expect(afterA.data).toHaveLength(0);
         expect(afterB.data).toHaveLength(0);
     });
@@ -150,7 +150,7 @@ describe('session', () => {
 
         // a target filter takes the admin path → 403 (lacks SESSION_DELETE)
         await expectClientError(
-            () => client.session.deleteMany({ filter: { user_id: randomUUID() } }),
+            () => client.session.deleteMany({ filter: { userId: randomUUID() } }),
             { status: 403 },
         );
 

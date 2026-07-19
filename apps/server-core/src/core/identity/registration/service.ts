@@ -58,7 +58,7 @@ export class RegistrationService implements IRegistrationService {
 
         const validator = new Container({});
         validator.mount(new UserValidator({
-            pathsToInclude: ['email', 'name', 'password', 'realm_id'],
+            pathsToInclude: ['email', 'name', 'password', 'realmId'],
             passwordMinLength: this.options.passwordMinLength,
         }));
         const validated = await validator.run(data, { group: 'create' });
@@ -67,7 +67,7 @@ export class RegistrationService implements IRegistrationService {
 
         if (this.options.emailVerificationEnabled) {
             validated.active = false;
-            validated.activate_hash = randomBytes(32).toString('hex');
+            validated.activateHash = randomBytes(32).toString('hex');
         } else {
             validated.active = true;
         }
@@ -78,20 +78,20 @@ export class RegistrationService implements IRegistrationService {
         entity.password = entity.password || createNanoID(64);
         entity.password = await credentialsService.protect(entity.password);
 
-        const realm = await this.realmRepository.resolve(entity.realm_id, true);
-        entity.realm_id = realm.id;
+        const realm = await this.realmRepository.resolve(entity.realmId, true);
+        entity.realmId = realm.id;
 
         await this.repository.save(entity);
 
         if (this.options.emailVerificationEnabled) {
             try {
                 const activateUrl = this.options.publicUrl ?
-                    `${this.options.publicUrl.replace(/\/+$/, '')}/activate?token=${entity.activate_hash}` :
+                    `${this.options.publicUrl.replace(/\/+$/, '')}/activate?token=${entity.activateHash}` :
                     undefined;
 
                 const mail = await this.mailTemplateRenderer.render({
                     template: MailTemplateName.REGISTRATION_ACTIVATION,
-                    params: { code: entity.activate_hash!, url: activateUrl },
+                    params: { code: entity.activateHash!, url: activateUrl },
                     locale: context?.locale,
                 });
 
@@ -113,14 +113,14 @@ export class RegistrationService implements IRegistrationService {
             actorType: IdentityType.USER,
             actorId: entity.id,
             actorName: entity.name,
-            realmId: entity.realm_id,
+            realmId: entity.realmId,
         });
 
         return { active: entity.active };
     }
 
     async activate(data: { token: string }): Promise<void> {
-        const entity = await this.repository.findOneBy({ activate_hash: data.token });
+        const entity = await this.repository.findOneBy({ activateHash: data.token });
 
         if (!entity) {
             throw new EntityNotFoundError();
@@ -128,7 +128,7 @@ export class RegistrationService implements IRegistrationService {
 
         const merged = this.repository.merge(entity, {
             active: true,
-            activate_hash: null,
+            activateHash: null,
         });
 
         await this.repository.save(merged);
@@ -141,7 +141,7 @@ export class RegistrationService implements IRegistrationService {
             actorType: IdentityType.USER,
             actorId: merged.id,
             actorName: merged.name,
-            realmId: merged.realm_id,
+            realmId: merged.realmId,
         });
     }
 }

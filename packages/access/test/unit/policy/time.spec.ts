@@ -48,9 +48,9 @@ describe('src/policy/time', () => {
             start: '08:00:00',
             end: '16:00:00',
             interval: 'daily',
-            day_of_week: 0,
-            day_of_month: 1,
-            day_of_year: 1,
+            dayOfWeek: 0,
+            dayOfMonth: 1,
+            dayOfYear: 1,
         } satisfies TimePolicy);
 
         expect(output.start)
@@ -59,11 +59,11 @@ describe('src/policy/time', () => {
             .toEqual('16:00:00');
         expect(output.interval)
             .toEqual('daily');
-        expect(output.day_of_week)
+        expect(output.dayOfWeek)
             .toEqual(0);
-        expect(output.day_of_month)
+        expect(output.dayOfMonth)
             .toEqual(1);
-        expect(output.day_of_year)
+        expect(output.dayOfYear)
             .toEqual(1);
     });
 

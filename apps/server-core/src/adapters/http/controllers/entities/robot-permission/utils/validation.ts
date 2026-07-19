@@ -18,19 +18,19 @@ export class RobotPermissionRequestValidator extends Container<
         super.initialize();
 
         this.mount(
-            'robot_id',
+            'robotId',
             { group: RequestHandlerOperation.CREATE },
             createValidator(z.uuid()),
         );
 
         this.mount(
-            'permission_id',
+            'permissionId',
             { group: RequestHandlerOperation.CREATE },
             createValidator(z.uuid()),
         );
 
         this.mount(
-            'policy_id',
+            'policyId',
             { optional: true },
             createValidator(z.uuid().nullable()),
         );

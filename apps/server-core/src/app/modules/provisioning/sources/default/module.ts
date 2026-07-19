@@ -50,25 +50,25 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                 attributes: {
                     name: SystemPolicyName.DEFAULT,
                     type: BuiltInPolicyType.COMPOSITE,
-                    built_in: true,
-                    realm_id: null,
+                    builtIn: true,
+                    realmId: null,
                 },
-                extraAttributes: { decision_strategy: DecisionStrategy.UNANIMOUS },
+                extraAttributes: { decisionStrategy: DecisionStrategy.UNANIMOUS },
                 children: [
                     {
                         attributes: {
                             name: SystemPolicyName.IDENTITY,
                             type: BuiltInPolicyType.IDENTITY,
-                            built_in: true,
-                            realm_id: null,
+                            builtIn: true,
+                            realmId: null,
                         },
                     },
                     {
                         attributes: {
                             name: SystemPolicyName.PERMISSION_BINDING,
                             type: BuiltInPolicyType.PERMISSION_BINDING,
-                            built_in: true,
-                            realm_id: null,
+                            builtIn: true,
+                            realmId: null,
                         },
                     },
                 ],
@@ -82,24 +82,24 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     name: SystemPolicyName.CLIENT_NAMES_SELF_MANAGE,
                     type: BuiltInPolicyType.ATTRIBUTE_NAMES,
                     invert: true,
-                    built_in: true,
-                    realm_id: null,
+                    builtIn: true,
+                    realmId: null,
                 },
                 extraAttributes: {
                     names: [
                         // FK + lifecycle
                         'active',
-                        'realm_id',
+                        'realmId',
                         // Security-critical: a self-edit must not change the
                         // client's authentication/binding method (changing the
                         // auth method may clear its secret) or downgrade the
                         // secret-storage format
                         // (which would persist the secret in plaintext).
-                        'auth_method',
-                        'token_binding_method',
-                        'secret_hashed',
-                        'secret_encrypted',
-                        'access_policy_id',
+                        'authMethod',
+                        'tokenBindingMethod',
+                        'secretHashed',
+                        'secretEncrypted',
+                        'accessPolicyId',
                     ],
                 },
             },
@@ -108,14 +108,14 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     name: SystemPolicyName.ROBOT_NAMES_SELF_MANAGE,
                     type: BuiltInPolicyType.ATTRIBUTE_NAMES,
                     invert: true,
-                    built_in: true,
-                    realm_id: null,
+                    builtIn: true,
+                    realmId: null,
                 },
                 extraAttributes: {
                     names: [
                         'active',
-                        'realm_id',
-                        'user_id',
+                        'realmId',
+                        'userId',
                     ],
                 },
             },
@@ -124,16 +124,16 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     name: SystemPolicyName.USER_NAMES_SELF_MANAGE,
                     type: BuiltInPolicyType.ATTRIBUTE_NAMES,
                     invert: true,
-                    built_in: true,
-                    realm_id: null,
+                    builtIn: true,
+                    realmId: null,
                 },
                 extraAttributes: {
                     names: [
                         'active',
-                        'name_locked',
+                        'nameLocked',
                         'status',
-                        'status_message',
-                        'realm_id',
+                        'statusMessage',
+                        'realmId',
                     ],
                 },
             },
@@ -152,11 +152,11 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                 const entity: PermissionProvisioningEntity = {
                     strategy: {
                         type: ProvisioningEntityStrategyType.MERGE,
-                        attributes: ['built_in'] as (keyof Permission)[],
+                        attributes: ['builtIn'] as (keyof Permission)[],
                     },
                     attributes: {
                         name,
-                        built_in: true,
+                        builtIn: true,
                     },
                 };
 
@@ -174,11 +174,11 @@ export class DefaultProvisioningSource implements IProvisioningSource {
             .map((name) => ({
                 strategy: {
                     type: ProvisioningEntityStrategyType.MERGE,
-                    attributes: ['built_in'] as (keyof Scope)[],
+                    attributes: ['builtIn'] as (keyof Scope)[],
                 },
                 attributes: {
                     name,
-                    built_in: true,
+                    builtIn: true,
                 },
             }));
     }
@@ -188,11 +188,11 @@ export class DefaultProvisioningSource implements IProvisioningSource {
             {
                 strategy: {
                     type: ProvisioningEntityStrategyType.MERGE,
-                    attributes: ['built_in'] as (keyof Role)[],
+                    attributes: ['builtIn'] as (keyof Role)[],
                 },
                 attributes: {
                     name: ROLE_ADMIN_NAME,
-                    built_in: true,
+                    builtIn: true,
                 },
                 relations: {
                     globalPermissions: ['*'],
@@ -203,11 +203,11 @@ export class DefaultProvisioningSource implements IProvisioningSource {
             {
                 strategy: {
                     type: ProvisioningEntityStrategyType.MERGE,
-                    attributes: ['built_in'] as (keyof Role)[],
+                    attributes: ['builtIn'] as (keyof Role)[],
                 },
                 attributes: {
                     name: ROLE_REALM_ADMIN_NAME,
-                    built_in: true,
+                    builtIn: true,
                 },
                 relations: {
                     globalPermissions: ['*'],
@@ -262,11 +262,11 @@ export class DefaultProvisioningSource implements IProvisioningSource {
         const masterRealm : RealmProvisioningEntity = {
             strategy: {
                 type: ProvisioningEntityStrategyType.MERGE,
-                attributes: ['built_in'],
+                attributes: ['builtIn'],
             },
             attributes: {
                 name: REALM_MASTER_NAME,
-                built_in: true,
+                builtIn: true,
             },
             relations: {},
         };
@@ -301,12 +301,12 @@ export class DefaultProvisioningSource implements IProvisioningSource {
         if (config.clientSystemSecretReset) {
             clientStrategy = {
                 type: ProvisioningEntityStrategyType.MERGE,
-                attributes: ['built_in', 'auth_method', 'token_binding_method', 'secret', 'secret_hashed', 'secret_encrypted'],
+                attributes: ['builtIn', 'authMethod', 'tokenBindingMethod', 'secret', 'secretHashed', 'secretEncrypted'],
             };
         } else {
             clientStrategy = {
                 type: ProvisioningEntityStrategyType.MERGE,
-                attributes: ['built_in', 'auth_method', 'token_binding_method'],
+                attributes: ['builtIn', 'authMethod', 'tokenBindingMethod'],
             };
         }
 
@@ -315,12 +315,12 @@ export class DefaultProvisioningSource implements IProvisioningSource {
             {
                 strategy: clientStrategy,
                 attributes: {
-                    built_in: true,
-                    auth_method: ClientAuthMethod.SECRET,
-                    token_binding_method: ClientTokenBindingMethod.NONE,
+                    builtIn: true,
+                    authMethod: ClientAuthMethod.SECRET,
+                    tokenBindingMethod: ClientTokenBindingMethod.NONE,
                     name: 'system',
-                    secret: await clientCredentialsService.protect(config.clientSystemSecret, { secret_hashed: false }),
-                    secret_hashed: false,
+                    secret: await clientCredentialsService.protect(config.clientSystemSecret, { secretHashed: false }),
+                    secretHashed: false,
                     active: config.clientSystemEnabled,
                 },
                 relations: { globalRoles: [ROLE_ADMIN_NAME] },

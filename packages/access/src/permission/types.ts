@@ -11,9 +11,9 @@ import type { RealmScope } from './realm-scope';
 
 export type BasePermission = {
     name: string;
-    client_id?: string | null,
-    realm_id?: string | null,
-    decision_strategy?: `${DecisionStrategy}` | null
+    clientId?: string | null,
+    realmId?: string | null,
+    decisionStrategy?: `${DecisionStrategy}` | null
 };
 
 /**
@@ -29,17 +29,17 @@ export type PermissionPolicyBinding = {
      * most restrictive `own` (fail-closed). NOT part of the binding identity key
      * (see isPermissionPolicyBindingEqual).
      */
-    realm_scope?: `${RealmScope}`,
+    realmScope?: `${RealmScope}`,
 };
 
 /**
  * One disjunction term of an aggregated binding: a single grant's realm reach paired with its
- * own (single) policy. A disjunction-aware consumer ORs `realmScopeMatches(realm_scope) ∧ policy`
+ * own (single) policy. A disjunction-aware consumer ORs `realmScopeMatches(realmScope) ∧ policy`
  * across the grants of a permission.
  */
 export type PermissionGrant = {
     /** Relative realm reach (none/own/ownOrNull/any), normalized — fail-closed default `own`. */
-    realm_scope: `${RealmScope}`,
+    realmScope: `${RealmScope}`,
     /**
      * The grant's policy: the raw junction policy (its `id` preserved, for propagation) for a
      * single-policy grant, a composite for a multi-policy (Layer-1) binding, or `undefined`
@@ -51,7 +51,7 @@ export type PermissionGrant = {
 /**
  * A permission together with the actor's disjunction of grants for it. Output of
  * `aggregatePermissionPolicyBindings` — the honest, lossless replacement for the collapsed
- * `PermissionPolicyBinding` (no top-level realm_scope/policies; the access decision is the
+ * `PermissionPolicyBinding` (no top-level realmScope/policies; the access decision is the
  * OR over `grants`).
  */
 export type PermissionPolicyBindingAggregated = {

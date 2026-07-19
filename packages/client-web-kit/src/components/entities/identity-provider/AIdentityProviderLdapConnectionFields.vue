@@ -40,8 +40,8 @@ export default defineComponent({
         const form = reactive({
             url: '',
             timeout: 0,
-            start_tls: true,
-            base_dn: '',
+            startTls: true,
+            baseDn: '',
         });
 
         const v = useValidup(new Container<typeof form>(), form, { name: 'connection' });
@@ -133,14 +133,14 @@ export default defineComponent({
 
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.start_tls"
+            :field="v.fields.startTls"
         >
             <VCFormGroup :validation="value">
                 <template #label>
                     {{ translations.startTls }}
                 </template>
                 <VCFormSwitch
-                    v-model="v.fields.start_tls.$model.value"
+                    v-model="v.fields.startTls.$model.value"
                     :label="true"
                     :label-content="translations.enableStartTlsHint"
                 />
@@ -149,14 +149,14 @@ export default defineComponent({
 
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.base_dn"
+            :field="v.fields.baseDn"
         >
             <VCFormGroup :validation="value">
                 <template #label>
                     {{ translations.baseDn }}
                 </template>
                 <VCFormInput
-                    v-model="v.fields.base_dn.$model.value"
+                    v-model="v.fields.baseDn.$model.value"
                     placeholder="e.g. dc=example,dc=com"
                 />
             </VCFormGroup>

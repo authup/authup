@@ -27,7 +27,7 @@ export class OAuth2TokenSigner implements IOAuth2TokenSigner {
         // all-disabled realm fails loud inside the store.
         const key = await this.keyStore.resolveOrCreate(payload.realm_id, JWKUse.SIGNATURE);
 
-        if (!key.decryption_key) {
+        if (!key.decryptionKey) {
             throw JWKError.decryptionKeyMissing();
         }
 
@@ -37,7 +37,7 @@ export class OAuth2TokenSigner implements IOAuth2TokenSigner {
                 payload,
                 {
                     type: JWKType.OCT,
-                    key: key.decryption_key,
+                    key: key.decryptionKey,
                     keyId: key.id,
                 },
             );
@@ -46,8 +46,8 @@ export class OAuth2TokenSigner implements IOAuth2TokenSigner {
                 payload,
                 {
                     type: key.type,
-                    key: key.decryption_key,
-                    algorithm: key.signature_algorithm as TokenECAlgorithm,
+                    key: key.decryptionKey,
+                    algorithm: key.signatureAlgorithm as TokenECAlgorithm,
                     keyId: key.id,
                 },
             );
@@ -56,8 +56,8 @@ export class OAuth2TokenSigner implements IOAuth2TokenSigner {
                 payload,
                 {
                     type: key.type,
-                    key: key.decryption_key,
-                    algorithm: key.signature_algorithm as TokenRSAAlgorithm,
+                    key: key.decryptionKey,
+                    algorithm: key.signatureAlgorithm as TokenRSAAlgorithm,
                     keyId: key.id,
                 },
             );

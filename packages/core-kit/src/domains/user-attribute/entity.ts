@@ -17,17 +17,17 @@ export interface UserAttribute {
 
     // ------------------------------------------------------------------
 
-    user_id: User['id'];
+    userId: User['id'];
 
     user: User;
 
-    realm_id: Realm['id'];
+    realmId: Realm['id'];
 
     realm: Realm;
 
     // ------------------------------------------------------------------
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 }

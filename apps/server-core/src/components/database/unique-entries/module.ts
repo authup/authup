@@ -29,14 +29,14 @@ export class DatabaseUniqueEntriesComponent implements Component {
         const repository = this.dataSource.getRepository(RoleEntity);
         const queryBuilder = repository.createQueryBuilder('role');
 
-        queryBuilder.orderBy('role.created_at', 'ASC');
+        queryBuilder.orderBy('role.createdAt', 'ASC');
 
         const entities = await queryBuilder.getMany();
         const aggregated = entities.reduce((prev, curr) => {
             const key = this.buildKey({
                 name: curr.name,
-                client_id: curr.client_id,
-                realm_id: curr.realm_id,
+                clientId: curr.clientId,
+                realmId: curr.realmId,
             });
 
             if (Array.isArray(prev[key])) {
@@ -63,14 +63,14 @@ export class DatabaseUniqueEntriesComponent implements Component {
         const repository = this.dataSource.getRepository(PermissionEntity);
         const queryBuilder = repository.createQueryBuilder('permission');
 
-        queryBuilder.orderBy('permission.created_at', 'ASC');
+        queryBuilder.orderBy('permission.createdAt', 'ASC');
 
         const entities = await queryBuilder.getMany();
         const aggregated = entities.reduce((prev, curr) => {
             const key = this.buildKey({
                 name: curr.name,
-                client_id: curr.client_id,
-                realm_id: curr.realm_id,
+                clientId: curr.clientId,
+                realmId: curr.realmId,
             });
 
             if (Array.isArray(prev[key])) {

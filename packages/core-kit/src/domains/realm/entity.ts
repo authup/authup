@@ -10,13 +10,13 @@ export interface Realm {
 
     name: string;
 
-    display_name: string | null;
+    displayName: string | null;
 
     description: string | null;
 
-    built_in: boolean;
+    builtIn: boolean;
 
-    created_at: string;
+    createdAt: string;
 
-    updated_at: string;
+    updatedAt: string;
 }

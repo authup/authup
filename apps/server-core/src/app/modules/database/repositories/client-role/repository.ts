@@ -26,7 +26,7 @@ export class ClientRoleRepositoryAdapter implements IClientRoleRepository {
 
         const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'clientRole',
-            filters: { allowed: ['client_id', 'role_id'] },
+            filters: { allowed: ['clientId', 'roleId'] },
             relations: {
                 allowed: ['client', 'role'],
                 onJoin: (_property: string, key: string, q: any) => {
@@ -36,8 +36,8 @@ export class ClientRoleRepositoryAdapter implements IClientRoleRepository {
             sort: {
                 allowed: [
                     'id',
-                    'created_at',
-                    'updated_at',
+                    'createdAt',
+                    'updatedAt',
                 ],
             },
             pagination: { maxLimit: 50 },

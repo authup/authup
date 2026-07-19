@@ -28,7 +28,7 @@ import { RealmEntity } from '../realm/index.ts';
 import { UserEntity } from '../user/index.ts';
 import { CONSENT_SCOPE_MAX_LENGTH } from '../../../../core/entities/consent/types.ts';
 
-@Unique('UQ_auth_consents_subject_scope', ['client_id', 'sub', 'sub_kind', 'scope'])
+@Unique('UQ_auth_consents_subject_scope', ['clientId', 'sub', 'subKind', 'scope'])
 @Entity({ name: 'auth_consents' })
 export class ConsentEntity implements Consent {
     @PrimaryGeneratedColumn('uuid')
@@ -42,10 +42,11 @@ export class ConsentEntity implements Consent {
     sub: string;
 
     @Column({
-        type: 'varchar',
-        length: 64,
+        name: 'sub_kind', 
+        type: 'varchar', 
+        length: 64, 
     })
-    sub_kind: string;
+    subKind: string;
 
     @Column({
         type: 'varchar',
@@ -56,32 +57,33 @@ export class ConsentEntity implements Consent {
     // ------------------------------------------------------------------
 
     @Column({
-        type: 'varchar',
-        length: 28,
-        nullable: true,
-        default: null,
+        name: 'expires_at', 
+        type: 'varchar', 
+        length: 28, 
+        nullable: true, 
+        default: null, 
     })
-    expires_at: string | null;
+    expiresAt: string | null;
 
-    @UpdateDateColumn({ transformer: dateToISOStringTransformer })
-    updated_at: string;
+    @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
+    updatedAt: string;
 
-    @CreateDateColumn({ transformer: dateToISOStringTransformer })
-    created_at: string;
+    @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
+    createdAt: string;
 
     // ------------------------------------------------------------------
 
     @Index()
-    @Column({ type: 'uuid' })
-    client_id: Client['id'];
+    @Column({ name: 'client_id', type: 'uuid' })
+    clientId: Client['id'];
 
     @ManyToOne(() => ClientEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'client_id' })
     client: ClientEntity;
 
     @Index()
-    @Column({ type: 'uuid' })
-    realm_id: Realm['id'];
+    @Column({ name: 'realm_id', type: 'uuid' })
+    realmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
@@ -89,11 +91,12 @@ export class ConsentEntity implements Consent {
 
     @Index()
     @Column({
+        name: 'user_id', 
         type: 'uuid', 
         nullable: true, 
         default: null, 
     })
-    user_id: User['id'] | null;
+    userId: User['id'] | null;
 
     @ManyToOne(() => UserEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'user_id' })

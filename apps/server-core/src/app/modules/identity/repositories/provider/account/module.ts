@@ -22,8 +22,8 @@ export class IdentityProviderAccountRepository implements IIdentityProviderAccou
 
         return repository.findOne({
             where: {
-                provider_user_id: identity.id,
-                provider_id: identity.provider.id,
+                providerUserId: identity.id,
+                providerId: identity.provider.id,
             },
             relations: ['user'],
         });

@@ -70,10 +70,10 @@ export default defineComponent({
         const form = reactive({
             active: true,
             name: '',
-            name_locked: false,
-            display_name: '',
+            nameLocked: false,
+            displayName: '',
             email: '',
-            realm_id: '',
+            realmId: '',
         });
 
         const manager = defineEntityManager({
@@ -98,9 +98,9 @@ export default defineComponent({
         function initForm() {
             if (
                 !!manager.data.value &&
-                typeof manager.data.value.name_locked !== 'undefined'
+                typeof manager.data.value.nameLocked !== 'undefined'
             ) {
-                form.name_locked = manager.data.value.name_locked;
+                form.nameLocked = manager.data.value.nameLocked;
             }
 
             assignFormProperties(form, manager.data.value, { fields: v.fields });
@@ -113,10 +113,10 @@ export default defineComponent({
                 }
             }
 
-            // Locked-realm prop wins over any realm_id pulled from the
+            // Locked-realm prop wins over any realmId pulled from the
             // loaded entity — apply after assign.
             if (props.realmId) {
-                form.realm_id = props.realmId;
+                form.realmId = props.realmId;
             }
         }
 
@@ -217,7 +217,7 @@ export default defineComponent({
                         </template>
                         <ANameInput
                             :model-value="v.fields.name.$model.value"
-                            :disabled="form.name_locked"
+                            :disabled="form.nameLocked"
                             @update:model-value="onNameChange"
                         />
                     </VCFormGroup>
@@ -225,15 +225,15 @@ export default defineComponent({
 
                 <IFieldValidation
                     v-slot="{ value }"
-                    :field="v.fields.display_name"
+                    :field="v.fields.displayName"
                 >
                     <VCFormGroup :validation="value">
                         <template #label>
                             {{ translationsDefault.displayName }}
                         </template>
                         <VCFormInput
-                            :model-value="v.fields.display_name.$model.value ?? ''"
-                            @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
+                            :model-value="v.fields.displayName.$model.value ?? ''"
+                            @update:model-value="(next: string) => { v.fields.displayName.$model.value = next; }"
                         />
                     </VCFormGroup>
                 </IFieldValidation>
@@ -276,15 +276,15 @@ export default defineComponent({
                             class="flex-1 basis-0 px-2"
                         >
                             <VCFormSwitch
-                                v-model="form.name_locked"
+                                v-model="form.nameLocked"
                                 :label="true"
                             >
                                 <template #label="{ id, class: labelClass }">
                                     <label
                                         :for="id"
-                                        :class="[labelClass, form.name_locked ? 'text-success-600' : 'text-warning-600']"
+                                        :class="[labelClass, form.nameLocked ? 'text-success-600' : 'text-warning-600']"
                                     >
-                                        {{ form.name_locked ? translationsDefault.locked : translationsDefault.notLocked }}
+                                        {{ form.nameLocked ? translationsDefault.locked : translationsDefault.notLocked }}
                                     </label>
                                 </template>
                             </VCFormSwitch>
@@ -304,9 +304,9 @@ export default defineComponent({
                 <ARealms>
                     <template #itemActions="pickerProps">
                         <AToggleButton
-                            :value="form.realm_id === pickerProps.data.id"
+                            :value="form.realmId === pickerProps.data.id"
                             :is-busy="pickerProps.busy"
-                            @changed="(value: boolean) => { v.fields.realm_id.$model.value = value ? pickerProps.data.id : ''; }"
+                            @changed="(value: boolean) => { v.fields.realmId.$model.value = value ? pickerProps.data.id : ''; }"
                         />
                     </template>
                 </ARealms>

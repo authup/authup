@@ -58,7 +58,7 @@ it while preserving a caller-supplied certificate header.
 ::: danger Native forwarded mode has no intermediate chain
 
 Traefik's PEM option forwards the leaf certificate, not the complete chain.
-With `CERTIFICATE_SOURCE=forwarded`, an `auth_method: tls` leaf must be signed
+With `CERTIFICATE_SOURCE=forwarded`, an `authMethod: tls` leaf must be signed
 directly by an enabled trust anchor in the client's realm.
 
 If your PKI issues through intermediates, use a gateway that emits RFC 9440

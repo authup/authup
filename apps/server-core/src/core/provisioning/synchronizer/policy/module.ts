@@ -30,7 +30,7 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
         // Prune stale TOP-LEVEL built-in system policies (e.g. a system policy removed
         // from the source). cleanupStaleChildren handles removed CHILDREN of a synced
         // parent; this is its top-level counterpart so the provisioner — not a migration
-        // — owns the policy-graph shape. Realm-scoped (realm_id != null) policies are out
+        // — owns the policy-graph shape. Realm-scoped (realmId != null) policies are out
         // of scope. Safe: the only caller passes the complete global top-level set.
         await this.cleanupStaleTopLevel(input.map((entity) => entity.attributes.name));
         return output;
@@ -41,7 +41,7 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
 
         let entity = await this.repository.findOneBy({
             name: input.attributes.name,
-            realm_id: input.attributes.realm_id || null,
+            realmId: input.attributes.realmId || null,
         });
 
         if (entity) {
@@ -51,8 +51,8 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
             // `null`/`false` on every reprovisioning pass).
             const mergeData: Partial<Policy> = {
                 type: input.attributes.type,
-                built_in: input.attributes.built_in,
-                parent_id: input.attributes.parent_id,
+                builtIn: input.attributes.builtIn,
+                parentId: input.attributes.parentId,
                 parent: input.attributes.parent,
             };
             if (typeof input.attributes.invert !== 'undefined') {
@@ -79,7 +79,7 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
     ): Promise<void> {
         await children.reduce(async (prev, child) => {
             await prev;
-            child.attributes.parent_id = parentId;
+            child.attributes.parentId = parentId;
             child.attributes.parent = { id: parentId } as any;
             await this.synchronize(child);
         }, Promise.resolve());
@@ -95,7 +95,7 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
         parentId: string,
         declaredNames: (string | undefined)[],
     ): Promise<void> {
-        const existingChildren = await this.repository.findManyBy({ parent_id: parentId });
+        const existingChildren = await this.repository.findManyBy({ parentId });
 
         const staleChildren = existingChildren.filter(
             (child) => !declaredNames.includes(child.name),
@@ -117,9 +117,9 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
         }
 
         const existing = await this.repository.findManyBy({
-            parent_id: null,
-            realm_id: null,
-            built_in: true,
+            parentId: null,
+            realmId: null,
+            builtIn: true,
         });
 
         const stale = existing.filter((policy) => !declaredNames.includes(policy.name));
@@ -131,15 +131,15 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
     }
 
     private async cleanupStaleChild(child: Policy): Promise<void> {
-        const referencingJunctions = await this.permissionPolicyRepository.findManyBy({ policy_id: child.id });
+        const referencingJunctions = await this.permissionPolicyRepository.findManyBy({ policyId: child.id });
 
         if (referencingJunctions.length === 0) {
             await this.repository.deleteFromTree(child);
         } else {
             const detached = this.repository.merge(child, {
-                parent_id: null,
+                parentId: null,
                 parent: null,
-                built_in: false,
+                builtIn: false,
             });
             await this.repository.saveWithEA(detached);
         }
