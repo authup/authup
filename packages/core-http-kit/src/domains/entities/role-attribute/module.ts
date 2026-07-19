@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BuildInput } from 'rapiq';
-import { buildQuery } from 'rapiq';
+import type { EntityQueryInput } from '../../../helpers';
+import { buildQueryString } from '../../../helpers';
 import type { RoleAttribute } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
@@ -18,14 +18,14 @@ import type {
 } from './types';
 
 export class RoleAttributeAPI extends BaseAPI implements IRoleAttributeAPI {
-    async getMany(data?: BuildInput<RoleAttribute>): Promise<EntityCollectionResponse<RoleAttribute>> {
-        const response = await this.client.get(`role-attributes${buildQuery(data)}`);
+    async getMany(data?: EntityQueryInput<RoleAttribute>): Promise<EntityCollectionResponse<RoleAttribute>> {
+        const response = await this.client.get(`role-attributes${buildQueryString(data)}`);
 
         return response.data;
     }
 
-    async getOne(roleId: RoleAttribute['id'], record?: BuildInput<RoleAttribute>): Promise<EntityRecordResponse<RoleAttribute>> {
-        const response = await this.client.get(`role-attributes/${roleId}${buildQuery(record)}`);
+    async getOne(roleId: RoleAttribute['id'], record?: EntityQueryInput<RoleAttribute>): Promise<EntityRecordResponse<RoleAttribute>> {
+        const response = await this.client.get(`role-attributes/${roleId}${buildQueryString(record)}`);
 
         return response.data;
     }

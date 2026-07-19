@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BuildInput } from 'rapiq';
+import type { EntityQueryInput } from '../../../helpers';
 import type { Event } from '@authup/core-kit';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
@@ -14,7 +14,7 @@ import type { EntityCollectionResponse, EntityRecordResponse } from '../../types
  * server-side at the emit points and pruned by the retention sweep.
  */
 export interface IEventAPI {
-    getMany(data?: BuildInput<Event>): Promise<EntityCollectionResponse<Event>>;
+    getMany(data?: EntityQueryInput<Event>): Promise<EntityCollectionResponse<Event>>;
 
-    getOne(id: Event['id'], record?: BuildInput<Event>): Promise<EntityRecordResponse<Event>>;
+    getOne(id: Event['id'], record?: EntityQueryInput<Event>): Promise<EntityRecordResponse<Event>>;
 }

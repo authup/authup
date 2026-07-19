@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BuildInput } from 'rapiq';
-import { buildQuery } from 'rapiq';
+import type { EntityQueryInput } from '../../../helpers';
+import { buildQueryString } from '../../../helpers';
 import type { IdentityProviderRoleMapping } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
@@ -18,14 +18,14 @@ import type {
 } from './types';
 
 export class IdentityProviderRoleMappingAPI extends BaseAPI implements IIdentityProviderRoleMappingAPI {
-    async getMany(data: BuildInput<IdentityProviderRoleMapping>): Promise<EntityCollectionResponse<IdentityProviderRoleMapping>> {
-        const response = await this.client.get(`identity-provider-role-mappings${buildQuery(data)}`);
+    async getMany(data: EntityQueryInput<IdentityProviderRoleMapping>): Promise<EntityCollectionResponse<IdentityProviderRoleMapping>> {
+        const response = await this.client.get(`identity-provider-role-mappings${buildQueryString(data)}`);
 
         return response.data;
     }
 
-    async getOne(id: IdentityProviderRoleMapping['id'], record?: BuildInput<IdentityProviderRoleMapping>): Promise<EntityRecordResponse<IdentityProviderRoleMapping>> {
-        const response = await this.client.get(`identity-provider-role-mappings/${id}${buildQuery(record)}`);
+    async getOne(id: IdentityProviderRoleMapping['id'], record?: EntityQueryInput<IdentityProviderRoleMapping>): Promise<EntityRecordResponse<IdentityProviderRoleMapping>> {
+        const response = await this.client.get(`identity-provider-role-mappings/${id}${buildQueryString(record)}`);
 
         return response.data;
     }

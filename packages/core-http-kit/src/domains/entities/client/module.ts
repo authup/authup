@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BuildInput } from 'rapiq';
-import { buildQuery } from 'rapiq';
+import type { EntityQueryInput } from '../../../helpers';
+import { buildQueryString } from '../../../helpers';
 import type { Client } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
@@ -20,20 +20,20 @@ import type {
 
 export class ClientAPI extends BaseAPI implements IClientAPI {
     async getMany(
-        options?: BuildInput<Client>,
+        options?: EntityQueryInput<Client>,
     ): Promise<EntityCollectionResponse<Client>> {
         const response = await this.client
-            .get(`clients${buildQuery(options)}`);
+            .get(`clients${buildQueryString(options)}`);
 
         return response.data;
     }
 
     async getOne(
         id: Client['id'],
-        options?: BuildInput<Client>,
+        options?: EntityQueryInput<Client>,
     ): Promise<EntityRecordResponse<Client>> {
         const response = await this.client
-            .get(`clients/${id}${buildQuery(options)}`);
+            .get(`clients/${id}${buildQueryString(options)}`);
 
         return response.data;
     }

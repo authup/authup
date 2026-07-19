@@ -6,8 +6,8 @@
  */
 
 import type { TrustAnchor } from '@authup/core-kit';
-import type { BuildInput } from 'rapiq';
-import { buildQuery } from 'rapiq';
+import type { EntityQueryInput } from '../../../helpers';
+import { buildQueryString } from '../../../helpers';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
@@ -18,14 +18,14 @@ import type {
 } from './types';
 
 export class TrustAnchorAPI extends BaseAPI implements ITrustAnchorAPI {
-    async getMany(data?: BuildInput<TrustAnchor>): Promise<EntityCollectionResponse<TrustAnchor>> {
-        const response = await this.client.get(`trust-anchors${buildQuery(data)}`);
+    async getMany(data?: EntityQueryInput<TrustAnchor>): Promise<EntityCollectionResponse<TrustAnchor>> {
+        const response = await this.client.get(`trust-anchors${buildQueryString(data)}`);
 
         return response.data;
     }
 
-    async getOne(id: TrustAnchor['id'], record?: BuildInput<TrustAnchor>): Promise<EntityRecordResponse<TrustAnchor>> {
-        const response = await this.client.get(`trust-anchors/${id}${buildQuery(record)}`);
+    async getOne(id: TrustAnchor['id'], record?: EntityQueryInput<TrustAnchor>): Promise<EntityRecordResponse<TrustAnchor>> {
+        const response = await this.client.get(`trust-anchors/${id}${buildQueryString(record)}`);
 
         return response.data;
     }

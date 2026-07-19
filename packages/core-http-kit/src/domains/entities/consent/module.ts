@@ -5,22 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BuildInput } from 'rapiq';
-import { buildQuery } from 'rapiq';
+import type { EntityQueryInput } from '../../../helpers';
+import { buildQueryString } from '../../../helpers';
 import type { Consent } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type { IConsentAPI } from './types';
 
 export class ConsentAPI extends BaseAPI implements IConsentAPI {
-    async getMany(data?: BuildInput<Consent>): Promise<EntityCollectionResponse<Consent>> {
-        const response = await this.client.get(`consents${buildQuery(data)}`);
+    async getMany(data?: EntityQueryInput<Consent>): Promise<EntityCollectionResponse<Consent>> {
+        const response = await this.client.get(`consents${buildQueryString(data)}`);
 
         return response.data;
     }
 
-    async getOne(id: Consent['id'], record?: BuildInput<Consent>): Promise<EntityRecordResponse<Consent>> {
-        const response = await this.client.get(`consents/${id}${buildQuery(record)}`);
+    async getOne(id: Consent['id'], record?: EntityQueryInput<Consent>): Promise<EntityRecordResponse<Consent>> {
+        const response = await this.client.get(`consents/${id}${buildQueryString(record)}`);
 
         return response.data;
     }

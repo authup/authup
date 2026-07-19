@@ -6,7 +6,7 @@
  */
 
 import type { AuthorizationHeader } from 'hapic';
-import type { BuildInput } from 'rapiq';
+import type { EntityQueryInput } from '../../../helpers';
 import type { User, UserAuthenticator, UserAuthenticatorKind } from '@authup/core-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { EntityCollectionResponse, EntityRecordResponse, EntityRecordWrappedResponse } from '../../types-base';
@@ -92,7 +92,7 @@ export type UserAuthenticatorChallengeRequestOptions = {
 export interface IUserAuthenticatorAPI {
     getMany(
         userId: User['id'] | string,
-        data?: BuildInput<UserAuthenticator>
+        data?: EntityQueryInput<UserAuthenticator>
     ): Promise<EntityCollectionResponse<UserAuthenticator>>;
 
     getOne(

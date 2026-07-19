@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BuildInput } from 'rapiq';
+import type { EntityQueryInput } from '../../../helpers';
 import type { Key } from '@authup/core-kit';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
@@ -27,9 +27,9 @@ export type KeyDeleteOptions = {
 };
 
 export interface IKeyAPI {
-    getMany(data?: BuildInput<Key>): Promise<EntityCollectionResponse<Key>>;
+    getMany(data?: EntityQueryInput<Key>): Promise<EntityCollectionResponse<Key>>;
 
-    getOne(id: Key['id'], record?: BuildInput<Key>): Promise<EntityRecordResponse<Key>>;
+    getOne(id: Key['id'], record?: EntityQueryInput<Key>): Promise<EntityRecordResponse<Key>>;
 
     create(data: KeyCreatePayload): Promise<EntityRecordResponse<Key>>;
 
