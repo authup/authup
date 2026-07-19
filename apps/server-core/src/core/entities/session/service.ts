@@ -8,6 +8,9 @@
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { AuthupError, EntityNotFoundError, ErrorCode } from '@authup/errors';
 import { isObject } from '@authup/kit';
+import { createURLCodec } from '@rapiq/codec-url';
+import type { ICondition } from '@rapiq/core';
+import { isFilter, isFilters } from '@rapiq/core';
 import { PermissionName } from '@authup/core-kit';
 import type { Session } from '@authup/core-kit';
 import { AbstractEntityService } from '@authup/server-kit';
@@ -156,18 +159,49 @@ export class SessionService extends AbstractEntityService implements ISessionSer
      * discriminator between the admin bulk-revoke path and self-service. An
      * unrecognized / empty filter falls through to self-service (fail-safe: a
      * typo can never trigger an unconstrained mass delete).
+     *
+     * The wire may carry either dialect (v2 expression or legacy bracket
+     * filters), so the decision decodes to the rapiq IR and inspects the
+     * condition tree instead of poking at the raw payload.
      */
     protected hasTargetFilter(query?: Record<string, any>): boolean {
-        const filter = query?.filter;
-        if (!isObject(filter)) {
+        if (!isObject(query)) {
             return false;
         }
 
-        return SESSION_FILTER_KEYS.some((key) => {
-            const value = filter[key];
-            return typeof value !== 'undefined' && value !== '';
-        });
+        let parsed;
+        try {
+            parsed = SessionService.queryCodec.decode(query);
+        } catch {
+            // unreadable filter — fail-safe to self-service
+            return false;
+        }
+
+        if (!parsed) {
+            return false;
+        }
+
+        return this.hasTargetCondition(parsed.filters);
     }
+
+    protected hasTargetCondition(condition: ICondition): boolean {
+        if (isFilters(condition)) {
+            return condition.value.some((child) => this.hasTargetCondition(child));
+        }
+
+        if (isFilter(condition)) {
+            return (SESSION_FILTER_KEYS as readonly string[]).includes(condition.field) &&
+                condition.value !== '';
+        }
+
+        return false;
+    }
+
+    /**
+     * Schemaless decode — dialect detection only. The allow-list is
+     * enforced downstream by the repository's schema-bound decode.
+     */
+    protected static queryCodec = createURLCodec();
 
     protected async deleteManyForSelf(
         actor: ActorContext,

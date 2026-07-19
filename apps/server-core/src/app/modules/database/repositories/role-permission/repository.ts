@@ -6,8 +6,10 @@
  */
 
 import type { RolePermission } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
+import { validateEntityJoinColumns } from 'typeorm-extension';
+import { applyRequestQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IRolePermissionRepository } from '../../../../../core/index.ts';
 import { RolePermissionEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -24,27 +26,7 @@ export class RolePermissionRepositoryAdapter implements IRolePermissionRepositor
         const qb = this.repository.createQueryBuilder('rolePermission');
         qb.groupBy('rolePermission.id');
 
-        const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'rolePermission',
-            filters: { allowed: ['roleId', 'permissionId'] },
-            relations: {
-                allowed: [
-                    'role',
-                    'permission',
-                ],
-                onJoin: (_property: string, key: string, q: any) => {
-                    q.addGroupBy(`${key}.id`);
-                },
-            },
-            sort: {
-                allowed: [
-                    'id',
-                    'createdAt',
-                    'updatedAt',
-                ],
-            },
-            pagination: { maxLimit: 50 },
-        });
+        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.ROLE_PERMISSION });
 
         const [entities, total] = await qb.getManyAndCount();
 

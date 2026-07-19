@@ -100,7 +100,7 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
         // ticket instead of lingering for the full session lifetime. The user
         // holds two sessions here (the enrollment bearer + the pending one) —
         // the ticket-scoped one is the one expiring soonest.
-        const pending = await suite.client.session.getMany({ filter: { userId: user.id } });
+        const pending = await suite.client.session.getMany({ filters: { userId: user.id } });
         expect(pending.data.length).toBeGreaterThan(1);
         const [pendingSession] = [...pending.data].sort(
             (a, b) => new Date(a.expiresAt).getTime() - new Date(b.expiresAt).getTime(),

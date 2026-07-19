@@ -6,11 +6,19 @@
  */
 
 import type { ObjectLiteral } from '@authup/kit';
-import type { PaginationParseOutput } from 'rapiq';
+
+/**
+ * The pagination actually applied to a list query — mirrors the
+ * pagination block a rapiq adapter reports back (limit/offset).
+ */
+export type EntityRepositoryPaginationMeta = {
+    limit?: number,
+    offset?: number
+};
 
 export type EntityRepositoryFindManyResult<T> = {
     data: T[],
-    meta: PaginationParseOutput & {
+    meta: EntityRepositoryPaginationMeta & {
         total: number
     }
 };

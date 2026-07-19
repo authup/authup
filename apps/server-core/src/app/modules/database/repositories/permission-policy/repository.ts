@@ -6,8 +6,10 @@
  */
 
 import type { PermissionPolicy } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
+import { validateEntityJoinColumns } from 'typeorm-extension';
+import { applyRequestQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IPermissionPolicyRepository } from '../../../../../core/index.ts';
 import { PermissionPolicyEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -24,27 +26,7 @@ export class PermissionPolicyRepositoryAdapter implements IPermissionPolicyRepos
         const qb = this.repository.createQueryBuilder('permissionPolicy');
         qb.groupBy('permissionPolicy.id');
 
-        const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'permissionPolicy',
-            filters: { allowed: ['permissionId', 'policyId'] },
-            relations: {
-                allowed: [
-                    'permission',
-                    'policy',
-                ],
-                onJoin: (_property: string, key: string, q: any) => {
-                    q.addGroupBy(`${key}.id`);
-                },
-            },
-            sort: {
-                allowed: [
-                    'id',
-                    'createdAt',
-                    'updatedAt',
-                ],
-            },
-            pagination: { maxLimit: 50 },
-        });
+        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.PERMISSION_POLICY });
 
         const [entities, total] = await qb.getManyAndCount();
 

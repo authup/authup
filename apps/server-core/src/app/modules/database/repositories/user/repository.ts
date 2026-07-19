@@ -6,11 +6,13 @@
  */
 
 import type { Realm, Role, User } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { PermissionPolicyBinding } from '@authup/access';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
+import { validateEntityJoinColumns } from 'typeorm-extension';
+import { applyRequestQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IRealmRepository, IUserRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
@@ -44,35 +46,7 @@ export class UserRepositoryAdapter implements IUserRepository {
         const qb = this.repository.createQueryBuilder('user');
         qb.groupBy('user.id');
 
-        const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'user',
-            fields: {
-                default: [
-                    'id',
-                    'name',
-                    'nameLocked',
-                    'firstName',
-                    'lastName',
-                    'displayName',
-                    'avatar',
-                    'cover',
-                    'active',
-                    'createdAt',
-                    'updatedAt',
-                    'realmId',
-                ],
-                allowed: ['email'],
-            },
-            filters: { allowed: ['id', 'name', 'realmId'] },
-            pagination: { maxLimit: 50 },
-            relations: {
-                allowed: ['realm'],
-                onJoin: (_property: string, key: string, q: any) => {
-                    q.addGroupBy(`${key}.id`);
-                },
-            },
-            sort: { allowed: ['id', 'name', 'displayName', 'createdAt', 'updatedAt'] },
-        });
+        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.USER });
 
         applyRealmScopeSelect(qb, 'user', ['id']);
 
@@ -139,27 +113,7 @@ export class UserRepositoryAdapter implements IUserRepository {
             }
         }
 
-        applyQuery(qb, query || {}, {
-            defaultAlias: 'user',
-            fields: {
-                default: [
-                    'id',
-                    'name',
-                    'nameLocked',
-                    'firstName',
-                    'lastName',
-                    'displayName',
-                    'avatar',
-                    'cover',
-                    'active',
-                    'createdAt',
-                    'updatedAt',
-                    'realmId',
-                ],
-                allowed: ['email'],
-            },
-            relations: { allowed: ['realm'] },
-        });
+        applyRequestQuery(qb, query || {}, { schema: EntityType.USER, parameters: ['fields', 'relations'] });
 
         const entity = await qb.getOne();
         if (entity) {

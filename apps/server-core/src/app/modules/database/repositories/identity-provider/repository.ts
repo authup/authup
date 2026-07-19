@@ -6,9 +6,11 @@
  */
 
 import type { IdentityProvider, IdentityProviderProtocol, Realm } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
+import { validateEntityJoinColumns } from 'typeorm-extension';
+import { applyRequestQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IIdentityProviderRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
@@ -36,31 +38,7 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
         const qb = this.repository.createQueryBuilder('provider');
         qb.groupBy('provider.id');
 
-        const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'provider',
-            relations: {
-                allowed: ['realm'],
-                onJoin: (_property: string, key: string, q: any) => {
-                    q.addGroupBy(`${key}.id`);
-                },
-            },
-            fields: {
-                default: [
-                    'id',
-                    'name',
-                    'displayName',
-                    'protocol',
-                    'preset',
-                    'enabled',
-                    'realmId',
-                    'createdAt',
-                    'updatedAt',
-                ],
-            },
-            filters: { allowed: ['name', 'protocol', 'enabled', 'realmId', 'realm.name'] },
-            sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
-            pagination: { maxLimit: 50 },
-        });
+        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.IDENTITY_PROVIDER });
 
         const [entities, total] = await qb.getManyAndCount();
 

@@ -89,7 +89,7 @@ export class SessionTokenRepositoryAdapter implements ISessionTokenRepository {
     async revokeBySessionId(sessionId: string, at: string): Promise<SessionTokenRef[]> {
         const rows = await this.repository.find({
             where: { sessionId },
-            select: ['id', 'expiresAt'],
+            select: { id: true, expiresAt: true },
         });
 
         const refs: SessionTokenRef[] = rows.map((row) => ({

@@ -6,11 +6,13 @@
  */
 
 import type { Client, Realm, Role } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { PermissionPolicyBinding } from '@authup/access';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
+import { validateEntityJoinColumns } from 'typeorm-extension';
+import { applyRequestQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IClientRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
@@ -43,44 +45,7 @@ export class ClientRepositoryAdapter implements IClientRepository {
         const qb = this.repository.createQueryBuilder('client');
         qb.groupBy('client.id');
 
-        const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'client',
-            fields: {
-                default: [
-                    'id',
-                    'active',
-                    'builtIn',
-                    'name',
-                    'displayName',
-                    'description',
-                    'secretHashed',
-                    'secretEncrypted',
-                    'baseUrl',
-                    'rootUrl',
-                    'redirectUri',
-                    'postLogoutRedirectUri',
-                    'grantTypes',
-                    'scope',
-                    'authMethod',
-                    'tokenBindingMethod',
-                    'accessPolicyId',
-                    'realmId',
-                    'updatedAt',
-                    'createdAt',
-                ],
-                allowed: ['secret'],
-            },
-            filters: { allowed: ['id', 'name', 'realmId', 'realm.name'] },
-            pagination: { maxLimit: 50 },
-            relations: {
-                // @ts-expect-error nullable relation (accessPolicy) is not covered by NestedResourceKeys
-                allowed: ['realm', 'accessPolicy'],
-                onJoin: (_property: string, key: string, q: any) => {
-                    q.addGroupBy(`${key}.id`);
-                },
-            },
-            sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
-        });
+        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.CLIENT });
 
         applyRealmScopeSelect(qb, 'client', ['secretHashed', 'secretEncrypted']);
 
@@ -131,38 +96,7 @@ export class ClientRepositoryAdapter implements IClientRepository {
             }
         }
 
-        applyQuery(qb, query || {}, {
-            defaultAlias: 'client',
-            fields: {
-                default: [
-                    'id',
-                    'active',
-                    'builtIn',
-                    'name',
-                    'displayName',
-                    'description',
-                    'secretHashed',
-                    'secretEncrypted',
-                    'baseUrl',
-                    'rootUrl',
-                    'redirectUri',
-                    'postLogoutRedirectUri',
-                    'grantTypes',
-                    'scope',
-                    'authMethod',
-                    'tokenBindingMethod',
-                    'accessPolicyId',
-                    'realmId',
-                    'updatedAt',
-                    'createdAt',
-                ],
-                allowed: ['secret'],
-            },
-            relations: {
-                // @ts-expect-error nullable relation (accessPolicy) is not covered by NestedResourceKeys
-                allowed: ['realm', 'accessPolicy'],
-            },
-        });
+        applyRequestQuery(qb, query || {}, { schema: EntityType.CLIENT, parameters: ['fields', 'relations'] });
 
         return qb.getOne();
     }

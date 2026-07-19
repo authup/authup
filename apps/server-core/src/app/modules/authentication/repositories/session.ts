@@ -6,16 +6,16 @@
  */
 
 import type { Session } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { EntityRepositoryFindManyResult, ICache } from '@authup/server-kit';
 import { buildCacheKey } from '@authup/server-kit';
 import type { Repository } from 'typeorm';
-import { applyQuery } from 'typeorm-extension';
+import { applyRequestQuery } from '../../database/repositories/query.ts';
 import type {
     ISessionRepository,
     SessionFindManyOptions,
     SessionOwner,
 } from '../../../../core/index.ts';
-import { SESSION_FILTER_KEYS } from '../../../../core/index.ts';
 import { applyRealmScopeSelect } from '../../database/repositories/helpers.ts';
 import { AuthenticationCachePrefix } from './constants.ts';
 
@@ -61,30 +61,7 @@ export class SessionRepository implements ISessionRepository {
     ): Promise<EntityRepositoryFindManyResult<Session>> {
         const qb = this.repository.createQueryBuilder('session');
 
-        const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'session',
-            fields: {
-                allowed: [
-                    'id',
-                    'sub',
-                    'subKind',
-                    'ipAddress',
-                    'userAgent',
-                    'expiresAt',
-                    'refreshedAt',
-                    'seenAt',
-                    'createdAt',
-                    'updatedAt',
-                    'userId',
-                    'clientId',
-                    'realmId',
-                ],
-            },
-            filters: { allowed: [...SESSION_FILTER_KEYS] },
-            relations: { allowed: ['realm'] },
-            sort: { allowed: ['seenAt', 'expiresAt', 'createdAt', 'updatedAt'] },
-            pagination: { maxLimit: 50 },
-        });
+        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.SESSION });
 
         applyRealmScopeSelect(qb, 'session', ['sub', 'subKind']);
 
@@ -119,14 +96,11 @@ export class SessionRepository implements ISessionRepository {
     async findAllByQuery(query: Record<string, any>): Promise<Session[]> {
         const qb = this.repository.createQueryBuilder('session');
 
-        // NOTE: deliberately no `pagination` — a bulk revoke must reach every
-        // matching row. `applyQuery` with a `pagination.maxLimit` would default
-        // the limit to that cap when the caller sends no page (rapiq
+        // NOTE: `parameters: ['filters']` — a bulk revoke must reach every
+        // matching row. Applying the schema's `pagination.maxLimit` would
+        // default the limit to that cap when the caller sends no page (rapiq
         // `finalizePagination`), silently truncating the delete.
-        applyQuery(qb, query, {
-            defaultAlias: 'session',
-            filters: { allowed: [...SESSION_FILTER_KEYS] },
-        });
+        applyRequestQuery(qb, query, { schema: EntityType.SESSION, parameters: ['filters'] });
 
         applyRealmScopeSelect(qb, 'session', ['sub', 'subKind']);
 

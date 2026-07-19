@@ -43,7 +43,7 @@ describe('src/http/controllers/entities/event', () => {
         });
         expect(response.access_token).toBeDefined();
 
-        const { data } = await suite.client.event.getMany({ filter: { name: EventName.LOGIN, actorId: userId } });
+        const { data } = await suite.client.event.getMany({ filters: { name: EventName.LOGIN, actorId: userId } });
         expect(data.length).toBeGreaterThanOrEqual(1);
 
         const [row] = data;
@@ -74,7 +74,7 @@ describe('src/http/controllers/entities/event', () => {
             { status: 400 },
         );
 
-        const { data } = await suite.client.event.getMany({ filter: { name: EventName.LOGIN_FAILED, actorName: user.name } });
+        const { data } = await suite.client.event.getMany({ filters: { name: EventName.LOGIN_FAILED, actorName: user.name } });
         expect(data.length).toBeGreaterThanOrEqual(1);
 
         const [row] = data;
@@ -90,14 +90,14 @@ describe('src/http/controllers/entities/event', () => {
     });
 
     it('filters the collection by event name', async () => {
-        const { data } = await suite.client.event.getMany({ filter: { name: EventName.LOGIN } });
+        const { data } = await suite.client.event.getMany({ filters: { name: EventName.LOGIN } });
 
         expect(data.length).toBeGreaterThanOrEqual(1);
         expect(data.every((row) => row.name === EventName.LOGIN)).toBe(true);
     });
 
     it('reads a single audit event', async () => {
-        const { data } = await suite.client.event.getMany({ filter: { name: EventName.LOGIN, actorId: userId } });
+        const { data } = await suite.client.event.getMany({ filters: { name: EventName.LOGIN, actorId: userId } });
         expect(data.length).toBeGreaterThanOrEqual(1);
 
         const row = await suite.client.event.getOne(data[0].id);
@@ -117,7 +117,7 @@ describe('src/http/controllers/entities/event', () => {
         });
         expect([404, 405]).toContain(post.status);
 
-        const { data } = await suite.client.event.getMany({ filter: { name: EventName.LOGIN, actorId: userId } });
+        const { data } = await suite.client.event.getMany({ filters: { name: EventName.LOGIN, actorId: userId } });
         expect(data.length).toBeGreaterThanOrEqual(1);
 
         const del = await httpRequest(suite, 'DELETE', `/events/${data[0].id}`, { headers: { Authorization: adminAuthorization } });

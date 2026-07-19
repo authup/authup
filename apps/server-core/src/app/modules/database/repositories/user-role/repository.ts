@@ -6,8 +6,10 @@
  */
 
 import type { UserRole } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
+import { validateEntityJoinColumns } from 'typeorm-extension';
+import { applyRequestQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IUserRoleRepository } from '../../../../../core/index.ts';
 import { UserRoleEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -24,24 +26,7 @@ export class UserRoleRepositoryAdapter implements IUserRoleRepository {
         const qb = this.repository.createQueryBuilder('userRole');
         qb.groupBy('userRole.id');
 
-        const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'userRole',
-            filters: { allowed: ['roleId', 'userId'] },
-            relations: {
-                allowed: ['user', 'role'],
-                onJoin: (_property: string, key: string, q: any) => {
-                    q.addGroupBy(`${key}.id`);
-                },
-            },
-            sort: {
-                allowed: [
-                    'id',
-                    'createdAt',
-                    'updatedAt',
-                ],
-            },
-            pagination: { maxLimit: 50 },
-        });
+        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.USER_ROLE });
 
         const [entities, total] = await qb.getManyAndCount();
 

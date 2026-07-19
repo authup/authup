@@ -7,7 +7,7 @@
 
 import { AuthupError } from '@authup/errors';
 import type { Key } from '@authup/core-kit';
-import { KeyStatus } from '@authup/core-kit';
+import { EntityType, KeyStatus  } from '@authup/core-kit';
 import { arrayBufferToBase64, createNanoID, isUUID } from '@authup/kit';
 import {
     AsymmetricKey,
@@ -20,7 +20,8 @@ import {
 import { JWKType, JWKUse, JWTAlgorithm } from '@authup/specs';
 import type { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { Like } from 'typeorm';
-import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
+import { validateEntityJoinColumns } from 'typeorm-extension';
+import { applyRequestQuery } from '../query.ts';
 import { getRandomValues } from 'uncrypto';
 import {
     DatabaseConflictError,
@@ -271,27 +272,7 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
         const qb = this.repository.createQueryBuilder('keyEntity');
         qb.groupBy('keyEntity.id');
 
-        const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'keyEntity',
-            fields: {
-                default: [
-                    'id',
-                    'name',
-                    'type',
-                    'use',
-                    'priority',
-                    'status',
-                    'signatureAlgorithm',
-                    'realmId',
-                    'createdAt',
-                    'updatedAt',
-                ],
-                allowed: ['encryptionKey', 'certificate'],
-            },
-            filters: { allowed: ['id', 'name', 'type', 'use', 'status', 'realmId'] },
-            pagination: { maxLimit: 50 },
-            sort: { allowed: ['id', 'name', 'priority', 'use', 'status', 'createdAt', 'updatedAt'] },
-        });
+        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.KEY });
 
         applyRealmScopeSelect(qb, 'keyEntity');
 

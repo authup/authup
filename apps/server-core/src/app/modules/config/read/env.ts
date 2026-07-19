@@ -13,9 +13,9 @@ import {
     readInt,
 } from 'envix';
 import { hasEnvDataSourceOptions, readDataSourceOptionsFromEnv } from 'typeorm-extension';
-import type { BetterSqlite3ConnectionOptions } from 'typeorm/driver/better-sqlite3/BetterSqlite3ConnectionOptions.js';
-import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions.js';
-import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions.js';
+import type { BetterSqlite3DataSourceOptions } from 'typeorm/driver/better-sqlite3/BetterSqlite3DataSourceOptions.js';
+import type { MysqlDataSourceOptions } from 'typeorm/driver/mysql/MysqlDataSourceOptions.js';
+import type { PostgresDataSourceOptions } from 'typeorm/driver/postgres/PostgresDataSourceOptions.js';
 
 import { ConfigEnvironmentVariableName } from '../constants.ts';
 import type { ConfigInput } from '../types.ts';
@@ -63,9 +63,9 @@ export function readConfigRawFromEnv() : ConfigInput {
 
     if (hasEnvDataSourceOptions()) {
         // todo: type casting should be avoided
-        options.db = readDataSourceOptionsFromEnv() as MysqlConnectionOptions |
-        PostgresConnectionOptions |
-        BetterSqlite3ConnectionOptions;
+        options.db = readDataSourceOptionsFromEnv() as MysqlDataSourceOptions |
+        PostgresDataSourceOptions |
+        BetterSqlite3DataSourceOptions;
     }
 
     const redis = oneOf([

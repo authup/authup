@@ -146,7 +146,7 @@ describe('src/http/controllers/trust-anchor', () => {
         await suite.client.trustAnchor.update(created.id, { enabled: false });
         await suite.client.trustAnchor.delete(created.id);
 
-        const { data } = await suite.client.event.getMany({ filter: { refType: 'trustAnchor', refId: created.id } });
+        const { data } = await suite.client.event.getMany({ filters: { refType: 'trustAnchor', refId: created.id } });
 
         expect(data).toHaveLength(3);
         expect(new Set(data.map((row) => row.name)))

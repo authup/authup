@@ -6,8 +6,10 @@
  */
 
 import type { IdentityProviderRoleMapping } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
+import { validateEntityJoinColumns } from 'typeorm-extension';
+import { applyRequestQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IIdentityProviderRoleMappingRepository } from '../../../../../core/index.ts';
 import { IdentityProviderRoleMappingEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -24,32 +26,7 @@ export class IdentityProviderRoleMappingRepositoryAdapter implements IIdentityPr
         const qb = this.repository.createQueryBuilder('providerRole');
         qb.groupBy('providerRole.id');
 
-        const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'providerRole',
-            filters: {
-                allowed: [
-                    'roleId',
-                    'providerId',
-                ],
-            },
-            sort: {
-                allowed: [
-                    'id',
-                    'createdAt',
-                    'updatedAt',
-                ],
-            },
-            relations: {
-                allowed: [
-                    'role',
-                    'provider',
-                ],
-                onJoin: (_property: string, key: string, q: any) => {
-                    q.addGroupBy(`${key}.id`);
-                },
-            },
-            pagination: { maxLimit: 50 },
-        });
+        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.IDENTITY_PROVIDER_ROLE_MAPPING });
 
         const [entities, total] = await qb.getManyAndCount();
 

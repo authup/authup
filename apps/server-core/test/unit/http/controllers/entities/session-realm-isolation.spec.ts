@@ -82,11 +82,11 @@ describe('session (realm isolation)', () => {
 
     it('keeps a foreign-realm session hidden even when realm_id is projected away', async () => {
         // control: the own-realm session IS visible to the own-scoped reader
-        const own = await actor.session.getMany({ filter: { id: ownSessionId }, fields: ['id', 'sub'] });
+        const own = await actor.session.getMany({ filters: { id: ownSessionId }, fields: ['id', 'sub'] });
         expect(own.data.some((s) => s.id === ownSessionId)).toBe(true);
 
         // the foreign-realm session must NOT appear despite fields=id,sub omitting realm_id
-        const foreign = await actor.session.getMany({ filter: { id: foreignSessionId }, fields: ['id', 'sub'] });
+        const foreign = await actor.session.getMany({ filters: { id: foreignSessionId }, fields: ['id', 'sub'] });
         expect(foreign.data.some((s) => s.id === foreignSessionId)).toBe(false);
     });
 });

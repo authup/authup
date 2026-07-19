@@ -6,10 +6,12 @@
  */
 
 import type { TrustAnchor } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { DataSource, FindOptionsWhere, Repository } from 'typeorm';
-import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
+import { validateEntityJoinColumns } from 'typeorm-extension';
+import { applyRequestQuery } from '../query.ts';
 import { DatabaseConflictError, RealmEntity, TrustAnchorEntity } from '../../../../../adapters/database/index.ts';
 import type { IRealmRepository, ITrustAnchorRepository } from '../../../../../core/index.ts';
 import { applyRealmScopeSelect, isEntityUnique, translateWhereConditions } from '../helpers.ts';
@@ -33,23 +35,7 @@ export class TrustAnchorRepositoryAdapter implements ITrustAnchorRepository {
         const qb = this.repository.createQueryBuilder('trustAnchor');
         qb.groupBy('trustAnchor.id');
 
-        const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'trustAnchor',
-            fields: {
-                allowed: [
-                    'id',
-                    'name',
-                    'certificate',
-                    'enabled',
-                    'realmId',
-                    'createdAt',
-                    'updatedAt',
-                ],
-            },
-            filters: { allowed: ['id', 'name', 'enabled', 'realmId'] },
-            pagination: { maxLimit: 50 },
-            sort: { allowed: ['id', 'name', 'enabled', 'createdAt', 'updatedAt'] },
-        });
+        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.TRUST_ANCHOR });
 
         applyRealmScopeSelect(qb, 'trustAnchor');
 

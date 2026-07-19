@@ -6,8 +6,10 @@
  */
 
 import type { UserAttribute } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
+import { validateEntityJoinColumns } from 'typeorm-extension';
+import { applyRequestQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IUserAttributeRepository } from '../../../../../core/index.ts';
 import { UserAttributeEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -24,12 +26,7 @@ export class UserAttributeRepositoryAdapter implements IUserAttributeRepository 
         const qb = this.repository.createQueryBuilder('userAttribute');
         qb.groupBy('userAttribute.id');
 
-        const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'userAttribute',
-            filters: { allowed: ['id', 'name', 'userId', 'realmId'] },
-            sort: { allowed: ['id', 'name', 'userId', 'realmId', 'createdAt', 'updatedAt'] },
-            pagination: { maxLimit: 50 },
-        });
+        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.USER_ATTRIBUTE });
 
         applyRealmScopeSelect(qb, 'userAttribute', ['userId']);
 

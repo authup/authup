@@ -6,9 +6,11 @@
  */
 
 import type { Policy, Realm } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
+import { validateEntityJoinColumns } from 'typeorm-extension';
+import { applyRequestQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IPolicyRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
@@ -36,37 +38,7 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
         const qb = this.repository.createQueryBuilder('policy');
         qb.groupBy('policy.id');
 
-        const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'policy',
-            relations: {
-                // @ts-expect-error onJoin is not in the type definition
-                allowed: ['children', 'realm'],
-                onJoin: (_property: string, key: string, q: any) => {
-                    q.addGroupBy(`${key}.id`);
-                },
-            },
-            fields: {
-                default: [
-                    'id',
-                    'builtIn',
-                    'type',
-                    'displayName',
-                    'name',
-                    'description',
-                    'invert',
-                    'parentId',
-                    'realmId',
-                    'createdAt',
-                    'updatedAt',
-                ],
-            },
-            filters: {
-                // @ts-expect-error realm.name filter requires relation join
-                allowed: ['id', 'name', 'type', 'parentId', 'realmId', 'realm.name'],
-            },
-            sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
-            pagination: { maxLimit: 50 },
-        });
+        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.POLICY });
 
         const [entities, total] = await qb.getManyAndCount();
         await this.repository.extendManyWithEA(entities);

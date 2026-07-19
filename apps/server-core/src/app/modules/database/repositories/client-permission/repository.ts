@@ -6,8 +6,10 @@
  */
 
 import type { ClientPermission } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
-import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
+import { validateEntityJoinColumns } from 'typeorm-extension';
+import { applyRequestQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IClientPermissionRepository } from '../../../../../core/entities/client-permission/types.ts';
 import { ClientPermissionEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -24,27 +26,7 @@ export class ClientPermissionRepositoryAdapter implements IClientPermissionRepos
         const qb = this.repository.createQueryBuilder('clientPermission');
         qb.groupBy('clientPermission.id');
 
-        const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'clientPermission',
-            filters: { allowed: ['clientId', 'permissionId'] },
-            relations: {
-                allowed: [
-                    'client',
-                    'permission',
-                ],
-                onJoin: (_property: string, key: string, q: any) => {
-                    q.addGroupBy(`${key}.id`);
-                },
-            },
-            sort: {
-                allowed: [
-                    'id',
-                    'createdAt',
-                    'updatedAt',
-                ],
-            },
-            pagination: { maxLimit: 50 },
-        });
+        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.CLIENT_PERMISSION });
 
         const [entities, total] = await qb.getManyAndCount();
 

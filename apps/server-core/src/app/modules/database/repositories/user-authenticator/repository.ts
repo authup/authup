@@ -7,7 +7,7 @@
 
 import type { UserAuthenticator, UserAuthenticatorKind } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
-import { applyQuery } from 'typeorm-extension';
+import { applyRequestQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
     IUserAuthenticatorRepository,
@@ -84,25 +84,7 @@ export class UserAuthenticatorRepositoryAdapter implements IUserAuthenticatorRep
     ): Promise<EntityRepositoryFindManyResult<UserAuthenticator>> {
         const qb = this.repository.createQueryBuilder('userAuthenticator');
 
-        const { pagination } = applyQuery(qb, query, {
-            defaultAlias: 'userAuthenticator',
-            fields: {
-                allowed: [
-                    'id',
-                    'kind',
-                    'name',
-                    'confirmed',
-                    'lastUsedAt',
-                    'createdAt',
-                    'updatedAt',
-                    'userId',
-                    'realmId',
-                ],
-            },
-            filters: { allowed: ['id', 'kind', 'confirmed', 'userId', 'realmId'] },
-            sort: { allowed: ['createdAt', 'updatedAt', 'lastUsedAt'] },
-            pagination: { maxLimit: 50 },
-        });
+        const { pagination } = applyRequestQuery(qb, query, { schema: 'userAuthenticator' });
 
         applyRealmScopeSelect(qb, 'userAuthenticator', ['userId']);
 
