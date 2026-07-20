@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import type { QueryInput } from '@authup/client-web-kit';
+import { defineQuery } from '@rapiq/core';
 import type { Event as EventEntity } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
@@ -39,7 +39,7 @@ export default defineComponent({
             emit('failed', e);
         };
 
-        const query : QueryInput<EventEntity> = { sort: { createdAt: 'DESC' } };
+        const query = defineQuery<EventEntity>({ sort: { createdAt: 'DESC' } });
 
         const translations = useTranslations([
             {

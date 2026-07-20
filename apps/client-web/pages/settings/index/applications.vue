@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { QueryInput } from '@authup/client-web-kit';
+import { defineQuery } from '@rapiq/core';
 import type { Consent } from '@authup/core-kit';
 import {
     TranslatorTranslationActionKey,
@@ -47,7 +47,7 @@ export default defineComponent({
         // CONSENT_READ would otherwise see every row here); non-admins are
         // self-scoped by the server regardless. The server always joins a
         // client summary (id/name/displayName), so no relation is requested.
-        const query = computed<QueryInput<Consent>>(() => ({
+        const query = computed(() => defineQuery<Consent>({
             filters: { sub: userId.value ?? undefined, subKind: 'user' },
             sort: { createdAt: 'DESC' },
         }));

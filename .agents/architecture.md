@@ -2780,12 +2780,37 @@ integration:
   already calls `context.setup.emit('created' | 'updated' | 'deleted',
   ...)` — don't add a parallel `emit()` on the wrapper side or every
   mutation will fire twice and double-update Pinia stores.
+  **Query composition (rapiq IR, #3278):** the collection/record
+  managers compose queries as the rapiq v2 IR (`IQuery`), never with a
+  generic object merger. Typed authoring stays at the edges — pages and
+  components construct via `defineQuery<T>({...})` (NestedKeys checking
+  at construction); the `query` prop / manager-context accepts
+  `QueryInput<T> | IQuery` (duck-typed `isQuery` guard in `core/query`
+  until rapiq#774 ships the guard family) and is desugared at the
+  boundary. Per load, fields/relations/sorts/pagination merge via
+  `mergeQueries` (left priority: load input ▷ retained interactive
+  state ▷ meta pagination ▷ base query), while **filters are kept out
+  of `mergeQueries`** and the base (props + context) filters are
+  AND-injected via `Filters.and()` — an injected scope
+  (`realmId`/`clientId` filter) can never be displaced by a search or
+  sort load, and compound trees (`or(...)`) never hit
+  `Filters.merge`'s flat-root-AND restriction. The
+  `queryFilters` context hook may return an `ICondition`
+  (`or(contains('name', q), contains('displayName', q))`) or a legacy
+  filters record. Interactive state (search filters, sorts) is retained
+  **inside the manager** across loads: a pagination-only
+  `load({ pagination })` keeps the current search; an assembled
+  `IQuery` load input replaces the interactive state wholesale.
+  Pinned by
+  `test/unit/components/utility/entity-collection.spec.ts`.
 - **Pagination** — `<APagination>`
   (`components/utility/pagination/APagination.ts`) is a thin **adapter**
-  that bridges the entity-collection footer contract (nested rapiq
-  `ListMeta` = `{ total, pagination: { limit, offset }, busy }` + a
-  `load(ListMeta)` callback) onto `<VCPagination>`'s flat
-  `:total` / `:limit` / `:offset` props and `@load({ offset })` event.
+  that bridges the entity-collection footer contract (`ListMeta` =
+  `{ total, pagination: { limit, offset }, busy }` — pagination UI
+  state only, query state no longer round-trips through it — plus a
+  `load(input)` callback) onto `<VCPagination>`'s flat
+  `:total` / `:limit` / `:offset` props and `@load({ offset })` event;
+  page changes send only `{ pagination: { limit, offset } }`.
   It earns its keep: the ~30 footer call sites would otherwise each
   duplicate the `meta`-destructuring and the `@load` re-wrap. Its
   joined-tab rounding + brand hover styling lives in the theme's

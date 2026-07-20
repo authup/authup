@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { QueryInput } from '../../../../../core';
+import type { EntityListQueryInput } from '../../../../../core';
 import type { PropType } from 'vue';
 import type {
     EntityCollectionVEmitOptions,
@@ -31,7 +31,7 @@ export function defineEntityCollectionVEmitOptions<T>() : EntityCollectionVEmitO
 export function defineEntityCollectionVProps<T>() {
     return {
         query: {
-            type: Object as PropType<QueryInput<T extends Record<string, any> ? T : never>>,
+            type: Object as PropType<EntityListQueryInput<T extends Record<string, any> ? T : never>>,
             default() {
                 return {};
             },

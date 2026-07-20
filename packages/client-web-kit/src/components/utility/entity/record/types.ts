@@ -5,11 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { QueryFieldsInput, QueryFiltersInput, QueryInput } from '../../../../core';
+import type { ICondition } from '@rapiq/core';
+import type { EntityListQueryInput, QueryFieldsInput, QueryFiltersInput } from '../../../../core';
 import type {
-    MaybeRef, 
-    Ref, 
-    SetupContext, 
+    MaybeRef,
+    Ref,
+    SetupContext,
     SlotsType,
     VNodeChild,
 } from 'vue';
@@ -28,7 +29,7 @@ export type ResourceManagerRenderFn = () => VNodeChild;
 
 export type ResourceManagerResolveContext<T> = {
     id?: EntityID<T>,
-    query?: T extends Record<string, any> ? QueryInput<T> : never
+    query?: T extends Record<string, any> ? EntityListQueryInput<T> : never
 };
 
 export type EntityManager<T> = {
@@ -53,7 +54,7 @@ export type EntityManager<T> = {
 export type EntityVProps<T> = {
     entity?: T | null,
     entityId?: EntityID<T>,
-    queryFilters?: T extends Record<string, any> ? QueryFiltersInput<T> : never,
+    queryFilters?: T extends Record<string, any> ? QueryFiltersInput<T> | ICondition : never,
     queryFields?: T extends Record<string, any> ? QueryFieldsInput<T> : never
 };
 
@@ -86,7 +87,7 @@ export type EntityManagerCreateContext<
         SlotsType<EntityVSlots<T>>
     >>,
     props?: EntityVProps<T>,
-    query?: () => T extends Record<string, any> ? QueryInput<T> : never,
+    query?: () => T extends Record<string, any> ? EntityListQueryInput<T> : never,
     realmId?: MaybeRef<string> | ((entity: T | undefined) => string | undefined),
     onResolved?(entity?: T) : any,
     onCreated?(entity: T): any,

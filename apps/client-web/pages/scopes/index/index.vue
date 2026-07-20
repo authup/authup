@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { QueryInput } from '@authup/client-web-kit';
+import { defineQuery } from '@rapiq/core';
 import type { Scope } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
@@ -43,7 +43,7 @@ export default defineComponent({
         const store = injectStore();
         const { realmManagementId } = storeToRefs(store);
 
-        const query : QueryInput<Scope> = { filters: { realmId: [realmManagementId.value ?? null, null] } };
+        const query = defineQuery<Scope>({ filters: { realmId: [realmManagementId.value ?? null, null] } });
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.SCOPE_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.SCOPE_DELETE });

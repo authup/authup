@@ -1,5 +1,6 @@
 <script lang="ts">
-import type { QueryFiltersInput, QueryInput } from '../../../../core';
+import type { QueryFiltersInput } from '../../../../core';
+import { defineQuery } from '@rapiq/core';
 import {
     type PropType,
     computed,
@@ -55,7 +56,7 @@ export default defineComponent({
 
         const v = useValidup(new Container<typeof form>(), form, { name: 'type' });
 
-        const query = computed<QueryInput<Policy & { parentId?: string | null }>>(() => {
+        const query = computed(() => {
             const filters: QueryFiltersInput<Policy & { parentId?: string | null }> = {};
             if (props.entity) {
                 // todo: maybe respect manual realmId component prop
@@ -76,10 +77,10 @@ export default defineComponent({
                 filters.parentId = null;
             }
 
-            return {
+            return defineQuery<Policy & { parentId?: string | null }>({
                 filters,
                 sort: { name: 'ASC' },
-            };
+            });
         });
 
         function assign(data: Partial<Policy> = {}) {

@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { QueryInput } from '@authup/client-web-kit';
+import { defineQuery } from '@rapiq/core';
 import type { User } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { TranslatorTranslationAppKey, TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
@@ -38,7 +38,7 @@ export default defineComponent({
         const store = injectStore();
         const { realmManagementId } = storeToRefs(store);
 
-        const query : QueryInput<User> = { filters: { realmId: [realmManagementId.value ?? null, null] } };
+        const query = defineQuery<User>({ filters: { realmId: [realmManagementId.value ?? null, null] } });
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.USER_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.USER_DELETE });

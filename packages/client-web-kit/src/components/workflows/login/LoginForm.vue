@@ -7,6 +7,7 @@ import {
     nextTick,
     reactive,
     ref,
+    shallowRef,
     watch,
 } from 'vue';
 import type { IdentityProvider, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
@@ -30,7 +31,8 @@ import {
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
-import type { QueryInput } from '../../../core';
+import type { IQuery } from '@rapiq/core';
+import { defineQuery } from '@rapiq/core';
 import { VCButton } from '@vuecs/button';
 import { VCAlert } from '@vuecs/elements';
 import { VCFormGroup, VCFormInput, useSubmitButton } from '@vuecs/forms';
@@ -223,15 +225,15 @@ export default defineComponent({
             mfaKinds.value.includes(UserAuthenticatorKind.TOTP) ||
             mfaKinds.value.includes(UserAuthenticatorKind.RECOVERY));
 
-        const identityProviderQuery: Ref<QueryInput<IdentityProvider>> = ref({});
+        const identityProviderQuery: Ref<IQuery> = shallowRef(defineQuery());
         const resetIdentityProviderQuery = () => {
-            identityProviderQuery.value = {
+            identityProviderQuery.value = defineQuery<IdentityProvider>({
                 filters: {
                     realmId: form.realmId || '',
                     protocol: { $ne: IdentityProviderProtocol.LDAP },
                     enabled: true,
                 },
-            };
+            });
         };
 
         resetIdentityProviderQuery();

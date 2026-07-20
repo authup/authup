@@ -15,7 +15,20 @@ import {
     VCListItem,
     VCListLoading,
 } from '@vuecs/list';
-import type { QueryFiltersInput, QueryInput } from '../../../../core';
+import type {
+    FiltersBuildInput,
+    ICondition,
+    IFilters,
+    IQuery,
+    PaginationBuildInput,
+} from '@rapiq/core';
+import {
+    Query,
+    defineFilters,
+    definePagination,
+    mergeQueries,
+} from '@rapiq/core';
+import type { EntityListQueryInput } from '../../../../core';
 import type { Ref, VNodeChild } from 'vue';
 import {
     Fragment,
@@ -26,12 +39,17 @@ import {
     unref,
 } from 'vue';
 import { EntityCollectionSlotName } from './constants';
-import { createMerger, isObject } from 'smob';
+import { isObject } from 'smob';
 import { boolableToObject } from '../../../../utils';
 import { injectHTTPClient } from '../../../../core/http-client';
 import { defineEntitySocketManager } from '../socket';
 import type { EntitySocketManagerCreateContext } from '../socket';
-import { isQuerySortedDescByDate } from '../../../../core/query';
+import {
+    isCondition,
+    isQuery,
+    isQuerySortedDescByDate,
+    normalizeQueryInput,
+} from '../../../../core/query';
 import type {
     EntityCollectionManager,
     EntityCollectionManagerCreateContext,
@@ -50,13 +68,44 @@ import {
 } from './utils';
 import { isError } from '@authup/errors';
 
-const merger = createMerger({
-    array: false,
-    inPlace: false,
-    priority: 'left',
-});
-
 type Entity<A> = A extends Record<string, any> ? A : never;
+
+function stripFilters(input: IQuery) : Query {
+    return new Query({
+        fields: input.fields,
+        relations: input.relations,
+        sorts: input.sorts,
+        pagination: input.pagination,
+    });
+}
+
+function stripPagination(input: IQuery) : Query {
+    return new Query({
+        fields: input.fields,
+        filters: input.filters,
+        relations: input.relations,
+        sorts: input.sorts,
+    });
+}
+
+/**
+ * AND-combine interactive filters with an injected scope. The scope
+ * rides as its own condition subtree, so a later input can never
+ * displace it — the same guarantee the server pipeline has.
+ */
+function combineScopedFilters(
+    input?: IFilters,
+    scope?: IFilters,
+) : IFilters | undefined {
+    const a = input && input.value.length > 0 ? input : undefined;
+    const b = scope && scope.value.length > 0 ? scope : undefined;
+
+    if (a && b) {
+        return a.and(b).flatten();
+    }
+
+    return a || b;
+}
 
 function create<
     TYPE extends keyof EntityTypeMap,
@@ -67,7 +116,7 @@ function create<
     const data : Ref<RECORD[]> = ref([]);
     const busy = ref(false);
     const total = ref(0);
-    const meta = ref<ListMeta<RECORD>>({ pagination: { limit: 10 } }) as Ref<ListMeta<RECORD>>;
+    const meta = ref<ListMeta>({ pagination: { limit: 10 } });
 
     const realmId = computed<string | undefined>(
         () => {
@@ -90,7 +139,45 @@ function create<
         domainAPI = client[context.type] as any;
     }
 
-    let query : QueryInput<Entity<RECORD>> | undefined;
+    // Last composed query (IR) — read by the socket handler's sort check.
+    let query : IQuery | undefined;
+
+    // Interactive query state (search filters, sort changes, ...) retained
+    // across loads, so pagination / loadAll continuations keep the current
+    // search without round-tripping query state through ListMeta.
+    // Pagination is deliberately excluded — it lives in `meta`.
+    let interactive : IQuery | undefined;
+
+    const resolveBaseQuery = () : IQuery => {
+        let contextQuery : IQuery | undefined;
+        if (context.query) {
+            contextQuery = normalizeQueryInput(
+                typeof context.query === 'function' ? context.query() : context.query,
+            );
+        }
+
+        let propsQuery : IQuery | undefined;
+        if (context.props.query) {
+            propsQuery = normalizeQueryInput(context.props.query);
+        }
+
+        if (propsQuery && contextQuery) {
+            const chrome = mergeQueries(
+                stripFilters(propsQuery),
+                stripFilters(contextQuery),
+            );
+
+            return new Query({
+                fields: chrome.fields,
+                relations: chrome.relations,
+                sorts: chrome.sorts,
+                pagination: chrome.pagination,
+                filters: combineScopedFilters(propsQuery.filters, contextQuery.filters),
+            });
+        }
+
+        return propsQuery || contextQuery || new Query();
+    };
 
     const failed = (error: Error) => {
         if (context.setup && typeof context.setup.emit === 'function') {
@@ -103,58 +190,83 @@ function create<
     // refs, pagination footers) and the awaiting ones don't catch. During SSR
     // an unhandled rejection is fatal to the server process, so a failed load
     // emits `failed` and leaves the list empty instead of throwing.
-    async function load(input: ListMeta<RECORD> = {}) {
+    async function load(input: EntityListQueryInput<Entity<RECORD>> = {}) {
         if (!domainAPI || busy.value) return;
 
         busy.value = true;
         meta.value.busy = true;
 
         try {
-            let filters : QueryFiltersInput<Entity<RECORD>> | undefined;
-            if (
-                context.queryFilters &&
-                input.filters &&
-                hasOwnProperty(input.filters, 'name') &&
-                typeof input.filters.name === 'string'
-            ) {
-                // todo: queryFilters should customize full filters object!
-                filters = context.queryFilters(input.filters.name) as QueryFiltersInput<Entity<RECORD>>;
-            }
+            let inputQuery : IQuery;
+            let interactiveNext : Query;
 
-            query = undefined;
-            if (context.query) {
-                if (typeof context.query === 'function') {
-                    query = context.query();
-                } else {
-                    query = context.query;
+            if (isQuery(input)) {
+                // An assembled query is taken literally — it replaces the
+                // whole interactive state (minus pagination).
+                inputQuery = input;
+                interactiveNext = stripPagination(input);
+            } else {
+                inputQuery = normalizeQueryInput(input);
+
+                let filtersOverride : IFilters | undefined;
+                if (
+                    context.queryFilters &&
+                    input.filters &&
+                    !isCondition(input.filters) &&
+                    hasOwnProperty(input.filters, 'name') &&
+                    typeof input.filters.name === 'string'
+                ) {
+                    const transformed = context.queryFilters(input.filters.name);
+                    filtersOverride = defineFilters(
+                        transformed as FiltersBuildInput | ICondition,
+                    );
                 }
+
+                // Per-parameter replace: a parameter present on the input
+                // supersedes the retained interactive value, an absent one
+                // keeps it (a pagination-only load keeps the search).
+                interactiveNext = new Query({
+                    fields: 'fields' in input ? inputQuery.fields : interactive?.fields,
+                    filters: filtersOverride ??
+                        ('filters' in input ? inputQuery.filters : interactive?.filters),
+                    relations: 'relations' in input ? inputQuery.relations : interactive?.relations,
+                    sorts: 'sort' in input ? inputQuery.sorts : interactive?.sorts,
+                });
             }
 
-            if (context.props.query) {
-                if (query) {
-                    query = merger({}, context.props.query, query);
-                } else {
-                    query = context.props.query;
-                }
+            const base = resolveBaseQuery();
+
+            const statePagination : PaginationBuildInput = {};
+            if (typeof meta.value.pagination?.limit === 'number') {
+                statePagination.limit = meta.value.pagination.limit;
+            }
+            if (typeof meta.value.pagination?.offset === 'number') {
+                statePagination.offset = meta.value.pagination.offset;
             }
 
-            const nextQuery : ListMeta<RECORD> = merger(
-                (filters ? { filters } : {}),
-                input || {},
-                {
-                    pagination: {
-                        limit: meta.value.pagination?.limit,
-                        offset: meta.value.pagination?.offset,
-                    },
-                },
-                query || {},
+            const chrome = mergeQueries(
+                new Query({
+                    fields: interactiveNext.fields,
+                    relations: interactiveNext.relations,
+                    sorts: interactiveNext.sorts,
+                    pagination: inputQuery.pagination,
+                }),
+                new Query({ pagination: definePagination(statePagination) }),
+                stripFilters(base),
             );
 
-            const response = await domainAPI.getMany(
-                nextQuery as QueryInput<Entity<RECORD>>,
-            );
+            const nextQuery = new Query({
+                fields: chrome.fields,
+                relations: chrome.relations,
+                sorts: chrome.sorts,
+                pagination: chrome.pagination,
+                filters: combineScopedFilters(interactiveNext.filters, base.filters),
+            });
 
-            meta.value = nextQuery;
+            const response = await domainAPI.getMany(nextQuery);
+
+            interactive = interactiveNext;
+            query = nextQuery;
 
             if (context.loadAll) {
                 data.value.push(...response.data as RECORD[]);
@@ -181,13 +293,7 @@ function create<
             context.loadAll &&
             total.value > data.value.length
         ) {
-            await load({
-                ...meta.value,
-                pagination: {
-                    ...meta.value.pagination,
-                    offset: (meta.value.pagination?.offset ?? 0) + (meta.value.pagination?.limit ?? 0),
-                },
-            });
+            await load({ pagination: { offset: (meta.value.pagination?.offset ?? 0) + (meta.value.pagination?.limit ?? 0) } });
         }
     }
 
@@ -241,7 +347,7 @@ function create<
         // updates total/data and emits the corresponding parent event —
         // adding a parallel `context.setup.emit(...)` here would fire each
         // event twice (silent data-corruption risk on entity mutations).
-        const slotProps = (): ListSlotProps<RECORD, ListMeta<RECORD>> => ({
+        const slotProps = (): ListSlotProps<RECORD> => ({
             data: data.value,
             busy: busy.value,
             total: total.value,
@@ -464,8 +570,7 @@ function create<
 
         socketContext.onCreated = (entity) => {
             const isSorted = query &&
-                query.sort &&
-                isQuerySortedDescByDate(query.sort) &&
+                isQuerySortedDescByDate(query.sorts) &&
                 meta.value?.pagination?.offset === 0;
 
             if (isSorted || total.value < (meta.value?.pagination?.limit ?? 0)) {

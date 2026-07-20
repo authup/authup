@@ -6,6 +6,7 @@
  */
 
 import type { Client } from '@authup/core-kit';
+import { defineQuery } from '@rapiq/core';
 import { createFakeClient } from '@authup/core-http-kit/testing';
 import type { FakeClient, FakeRequest } from '@authup/core-http-kit/testing';
 import { flushPromises, mount } from '@vue/test-utils';
@@ -147,7 +148,7 @@ describe('AClientForm access policy', () => {
         const picker = wrapper.findComponent({ name: 'APolicyPicker' });
         expect(picker.exists()).toBe(true);
         expect(picker.props('value')).toEqual(entity.accessPolicyId);
-        expect(picker.props('query')).toEqual({ filters: { realmId: ['realm-1', null] } });
+        expect(picker.props('query')).toEqual(defineQuery({ filters: { realmId: ['realm-1', null] } }));
     });
 
     it('submits a changed accessPolicyId on update', async () => {

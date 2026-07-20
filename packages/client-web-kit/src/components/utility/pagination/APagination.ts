@@ -45,10 +45,10 @@ export const APagination = defineComponent({
                     // rendering them disabled.
                     hideDisabled: true,
                     // VCPagination emits `load` with `{ page, offset, limit }`
-                    // (NOT `update:page`).
+                    // (NOT `update:page`). Only pagination travels — the
+                    // collection manager retains filter/sort state itself.
                     onLoad: (payload: { offset: number }) => {
                         void props.load?.({
-                            ...props.meta,
                             pagination: {
                                 limit,
                                 offset: payload.offset,

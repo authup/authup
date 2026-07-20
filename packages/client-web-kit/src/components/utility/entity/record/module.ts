@@ -9,7 +9,20 @@ import type { IEntityAPI } from '@authup/core-http-kit';
 import type { EntityTypeMap } from '@authup/core-kit';
 import type { ObjectLiteral } from '@authup/kit';
 import { extendObject, hasOwnProperty } from '@authup/kit';
-import type { QueryInput } from '../../../../core';
+import type {
+    FieldsBuildInput,
+    FiltersBuildInput,
+    ICondition,
+    IQuery,
+    ObjectLiteral as RapiqObjectLiteral,
+} from '@rapiq/core';
+import {
+    Query,
+    defineFields,
+    defineFilters,
+    definePagination,
+} from '@rapiq/core';
+import { normalizeQueryInput } from '../../../../core/query';
 import { isObject } from 'smob';
 import type { Ref, VNodeChild } from 'vue';
 import {
@@ -302,9 +315,9 @@ function create<
             return;
         }
 
-        let query : QueryInput<RECORD> | undefined;
+        let query : IQuery | undefined;
         if (rctx.query) {
-            query = rctx.query as QueryInput<RECORD>;
+            query = normalizeQueryInput(rctx.query);
         }
 
         let { id } = rctx;
@@ -327,13 +340,27 @@ function create<
             }
 
             if (ctx.props.queryFilters) {
-                query = query || {} as QueryInput<RECORD>;
-                (query as any).filters = ctx.props.queryFilters;
+                const current = query || new Query();
+                query = new Query({
+                    fields: current.fields,
+                    relations: current.relations,
+                    sorts: current.sorts,
+                    pagination: current.pagination,
+                    filters: defineFilters(
+                        ctx.props.queryFilters as FiltersBuildInput | ICondition,
+                    ),
+                });
             }
 
             if (ctx.props.queryFields) {
-                query = query || {} as QueryInput<RECORD>;
-                (query as any).fields = ctx.props.queryFields;
+                const current = query || new Query();
+                query = new Query({
+                    filters: current.filters,
+                    relations: current.relations,
+                    sorts: current.sorts,
+                    pagination: current.pagination,
+                    fields: defineFields(ctx.props.queryFields as FieldsBuildInput<RapiqObjectLiteral>),
+                });
             }
 
             if (ctx.props.entityId) {
@@ -349,7 +376,7 @@ function create<
 
         if (id) {
             try {
-                entity.value = await domainAPI.getOne(id, query as any);
+                entity.value = await domainAPI.getOne(id, query);
 
                 if (socket) {
                     socket.mount();
@@ -367,10 +394,13 @@ function create<
 
         if (query) {
             try {
-                const response = await domainAPI.getMany({
-                    ...query,
-                    pagination: { limit: 1 },
-                } as any);
+                const response = await domainAPI.getMany(new Query({
+                    fields: query.fields,
+                    filters: query.filters,
+                    relations: query.relations,
+                    sorts: query.sorts,
+                    pagination: definePagination({ limit: 1 }),
+                }));
 
                 if (response.data.length === 1) {
                     [entity.value] = response.data;
@@ -415,7 +445,7 @@ function create<
                 }
 
                 entity.value = undefined;
-                resolve({ query: queryFn() as any });
+                resolve({ query: queryFn() });
             },
             { immediate: true },
         );
