@@ -6,7 +6,7 @@
  */
 
 import { createURLCodec } from '@rapiq/codec-url';
-import type { IQuery, QueryContext, Schema  } from '@rapiq/core';
+import type { Parameter, Schema } from '@rapiq/core';
 import { Query, SchemaRegistry, isObject } from '@rapiq/core';
 import { TypeormAdapter } from '@rapiq/typeorm';
 import type { SelectQueryBuilder } from 'typeorm';
@@ -82,7 +82,7 @@ for (const schema of schemas) {
  */
 export const queryCodec = createURLCodec(schemaRegistry);
 
-export type ApplyRequestQueryParameter = keyof QueryContext | 'sort';
+export type ApplyRequestQueryParameter = `${Parameter}`;
 
 export type ApplyRequestQueryOptions = {
     /**
@@ -90,35 +90,14 @@ export type ApplyRequestQueryOptions = {
      */
     schema: string,
     /**
-     * Restrict which parsed parameters are applied to the query
-     * builder (default: all). E.g. a bulk-delete selection applies
-     * `['filters']` only, so a schema `pagination.maxLimit` can never
-     * silently truncate the affected row set.
+     * Restrict which parameters are processed (default: all). A
+     * parameter that is not listed is neither parsed nor defaulted.
+     * E.g. a bulk-delete selection processes `['filters']` only, so a
+     * schema `pagination.maxLimit` can never silently truncate the
+     * affected row set.
      */
     parameters?: ApplyRequestQueryParameter[],
 };
-
-function maskQuery(parsed: IQuery, parameters: ApplyRequestQueryParameter[]) : IQuery {
-    const context : QueryContext = {};
-
-    if (parameters.includes('fields')) {
-        context.fields = parsed.fields;
-    }
-    if (parameters.includes('filters')) {
-        context.filters = parsed.filters;
-    }
-    if (parameters.includes('pagination')) {
-        context.pagination = parsed.pagination;
-    }
-    if (parameters.includes('relations')) {
-        context.relations = parsed.relations;
-    }
-    if (parameters.includes('sorts') || parameters.includes('sort')) {
-        context.sorts = parsed.sorts;
-    }
-
-    return new Query(context);
-}
 
 /**
  * Decode a raw request query (routup `useRequestQuery` output or a raw
@@ -137,13 +116,12 @@ export function applyRequestQuery(
 ) : { pagination: EntityRepositoryPaginationMeta } {
     const input = isObject(query) || typeof query === 'string' ? query : {};
 
-    let parsed = queryCodec.decode(input, { schema: options.schema });
+    let parsed = queryCodec.decode(input, {
+        schema: options.schema,
+        parameters: options.parameters,
+    });
     if (!parsed) {
         parsed = new Query({});
-    }
-
-    if (options.parameters) {
-        parsed = maskQuery(parsed, options.parameters);
     }
 
     const adapter = new TypeormAdapter({
