@@ -2786,10 +2786,10 @@ integration:
   components construct via `defineQuery<T>({...})` (NestedKeys checking
   at construction); the `query` prop / manager-context accepts
   `QueryInput<T> | IQuery` (rapiq's native `isQuery` guard; `QueryInput`
-  is `QueryBuildInput<T, 3>` — the depth bound only truly binds once
-  rapiq threads DEPTH into its string-key arms, tada5hi/rapiq#790;
-  before that, self-recursive entities trip vue-tsc's TS2590 in
-  client-web's typecheck) and is desugared at the boundary. Per load, fields/relations/sorts/pagination merge via
+  is `QueryBuildInput<T, 3>` — needs rapiq ≥ 2.0.0-beta.3, where the
+  DEPTH parameter is threaded into the string-key arms; on beta.2 the
+  self-recursive entities tripped vue-tsc's TS2590, tada5hi/rapiq#790)
+  and is desugared at the boundary. Per load, fields/relations/sorts/pagination merge via
   `mergeQueries` (left priority: load input ▷ retained interactive
   state ▷ meta pagination ▷ base query), while **filters are kept out
   of `mergeQueries`** and the base (props + context) filters are
