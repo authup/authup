@@ -169,6 +169,20 @@ usable at the service level and nothing in core depends on TypeORM:
   `app/modules/database/repositories/query.ts` wraps `@rapiq/typeorm`'s
   `TypeormAdapter` (plus the DISTINCT-id `GROUP BY` join hook) and needs no
   schema knowledge. A repository adapter never decodes.
+- **Boot-time drift validation** — `DatabaseModule.setup` runs
+  `validateEntitySchemas(dataSource)`
+  (`app/modules/database/repositories/schema-validation.ts`): every
+  registered schema's allow-listed keys (fields/filters/sort defaults +
+  alloweds, relations) must exist on its entity's TypeORM metadata
+  (plain keys as column property paths, dotted keys headed by a
+  relation), via an explicit schema-name → entity-class map. A renamed
+  column fails the boot instead of dying as a dead filter. This is the
+  distilled outcome of the #3279 phase-2 evaluation: entity-DERIVED
+  schemas were prototyped and rejected — under `EntityType` naming every
+  derivable contribution (name, `schemaMapping`, `relations.allowed`)
+  must be overridden anyway, and a boot-populated registry breaks
+  DataSource-free decode (unit tests) plus `vi.mock` hoisting; metadata
+  VALIDATION of the static schemas is the part worth keeping.
 - **Extension point** — a persistence layer MAY extend the core registry with
   storage-derived schemas (`@rapiq/typeorm`'s
   `defineSchemaRegistryWithDataSource` with the `registry` option;
