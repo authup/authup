@@ -205,7 +205,7 @@ describe('app/modules/provisioning/sources/composite', () => {
             {
                 policies: [{
                     attributes: { name: 'policy' },
-                    extraAttributes: { invert: true },
+                    extraAttributes: { invert: true, names: ['a', 'b'] },
                     children: [{ attributes: { name: 'child-a' } }],
                 }],
             },
@@ -218,6 +218,9 @@ describe('app/modules/provisioning/sources/composite', () => {
             },
         );
 
+        // extra attributes are policy CONFIGURATION: colliding keys replace
+        // (later source wins, so a list can also shrink) — they never union
+        // like relation lists.
         const [policy] = output.policies!;
         expect(policy.extraAttributes).toEqual({ invert: true, names: ['x'] });
         expect(policy.children!.map((child) => child.attributes.name))

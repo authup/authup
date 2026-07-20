@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isObject } from '@authup/kit';
 import type { RootProvisioningEntity } from '../../../../../core/provisioning/entities/root/index.ts';
 import type { IProvisioningSource } from '../../../../../core/provisioning/types.ts';
 import type { IContainer } from 'eldin';
@@ -91,6 +92,12 @@ export class CompositeProvisioningSource implements IProvisioningSource {
      * mounted provisioning file) extending a built-in entry (the default
      * source's master realm) must not silently drop the built-in relations
      * (admin user, system client).
+     *
+     * Policy extraAttributes merge per key with the later source winning —
+     * like attributes, NOT like relations: an EA value (a names denylist,
+     * an ATTRIBUTES query tree) is policy configuration, and unioning would
+     * make shrinking a list impossible and fabricate predicates neither
+     * source authored.
      */
     private mergeEntity(
         target: MergeableProvisioningEntity,
@@ -152,7 +159,7 @@ export class CompositeProvisioningSource implements IProvisioningSource {
             return [...new Set([...target, ...source])];
         }
 
-        if (isRecord(target) && isRecord(source)) {
+        if (isObject(target) && isObject(source)) {
             return this.mergeRecord(target, source);
         }
 
@@ -161,15 +168,7 @@ export class CompositeProvisioningSource implements IProvisioningSource {
 
     private isEntityArray(value: unknown[]): value is MergeableProvisioningEntity[] {
         return value.some(
-            (item) => !!item &&
-                typeof item === 'object' &&
-                'attributes' in item,
+            (item) => isObject(item) && 'attributes' in item,
         );
     }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return !!value &&
-        typeof value === 'object' &&
-        !Array.isArray(value);
 }
