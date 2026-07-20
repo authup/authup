@@ -17,6 +17,8 @@ import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/serv
 import type { IRealmRepository } from '../realm/types.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { IScopeRepository, IScopeService } from './types.ts';
+import { decodeQuery } from '../../query/index.ts';
+import { scopeSchema } from './schema.ts';
 
 export type ScopeServiceContext = {
     repository: IScopeRepository;
@@ -49,7 +51,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
             ],
         });
 
-        return this.repository.findMany(query);
+        return this.repository.findMany(decodeQuery(query, { schema: scopeSchema }));
     }
 
     async getOne(

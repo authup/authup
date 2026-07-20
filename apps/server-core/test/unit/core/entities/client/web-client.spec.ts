@@ -6,6 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import { Query } from '@rapiq/core';
 import { CLIENT_WEB_NAME, ScopeName } from '@authup/core-kit';
 import {
     beforeEach,
@@ -73,7 +74,7 @@ describe('core/entities/client/web-client', () => {
             await provisioner.ensureForRealm({ id: realmId });
             await provisioner.ensureForRealm({ id: realmId });
 
-            const result = await repository.findMany({});
+            const result = await repository.findMany(new Query({}));
             const webClients = result.data.filter(
                 (c) => c.name === CLIENT_WEB_NAME && c.realmId === realmId,
             );

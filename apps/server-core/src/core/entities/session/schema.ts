@@ -8,7 +8,7 @@
 import { defineSchema } from '@rapiq/core';
 import type { Session } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
-import { SESSION_FILTER_KEYS } from '../../../../core/index.ts';
+import { SESSION_FILTER_KEYS } from '../../authentication/session/types.ts';
 
 export const sessionSchema = defineSchema<Session>({
     name: EntityType.SESSION,

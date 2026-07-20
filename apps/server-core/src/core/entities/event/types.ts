@@ -12,6 +12,7 @@ import type {
     IdentityType,
 } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
+import type { IQuery } from '@rapiq/core';
 
 export type EventOwner = {
     actorId: string,
@@ -55,7 +56,7 @@ export interface IEventRepository {
     save(entity: Event): Promise<Event>;
 
     findMany(
-        query: Record<string, any>,
+        query: IQuery,
         options?: EventFindManyOptions,
     ): Promise<EntityRepositoryFindManyResult<Event>>;
 

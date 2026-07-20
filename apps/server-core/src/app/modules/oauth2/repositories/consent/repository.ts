@@ -6,11 +6,12 @@
  */
 
 import type { Consent } from '@authup/core-kit';
-import { EntityType, IdentityType  } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
+import { IdentityType  } from '@authup/core-kit';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, Repository } from 'typeorm';
-import { applyRequestQuery } from '../../../database/repositories/query.ts';
+import { applyQuery } from '../../../database/repositories/query.ts';
 import { CachePrefix, ConsentEntity } from '../../../../../adapters/database/domains/index.ts';
 import { isUniqueConstraintDatabaseError } from '../../../../../adapters/database/errors/index.ts';
 import type {
@@ -28,12 +29,12 @@ export class ConsentRepositoryAdapter implements IConsentRepository {
     }
 
     async findMany(
-        query: Record<string, any>,
+        query: IQuery,
         options: ConsentFindManyOptions = {},
     ): Promise<EntityRepositoryFindManyResult<Consent>> {
         const qb = this.repository.createQueryBuilder('consent');
 
-        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.CONSENT });
+        const { pagination } = applyQuery(qb, query);
 
         applyRealmScopeSelect(qb, 'consent', ['sub', 'subKind']);
 

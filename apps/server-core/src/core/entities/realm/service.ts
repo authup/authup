@@ -19,6 +19,8 @@ import { AbstractEntityService } from '@authup/server-kit';
 import type { IWebClientProvisioner } from '../client/types.ts';
 import type { IKeyProvisioner } from '../../key/types.ts';
 import type { IRealmRepository, IRealmService } from './types.ts';
+import { decodeQuery } from '../../query/index.ts';
+import { realmSchema } from './schema.ts';
 
 export type RealmServiceContext = {
     repository: IRealmRepository;
@@ -50,7 +52,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
     async getMany(
         query: Record<string, any>,
     ): Promise<EntityRepositoryFindManyResult<Realm>> {
-        return this.repository.findMany(query);
+        return this.repository.findMany(decodeQuery(query, { schema: realmSchema }));
     }
 
     async getOne(

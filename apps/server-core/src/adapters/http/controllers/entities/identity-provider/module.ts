@@ -62,6 +62,8 @@ import type {
 import {
     OAuth2AuthorizationCodeRequestValidator,
     createIdentityProviderOAuth2Authenticator,
+    decodeQuery,
+    identityProviderSchema,
     toIdentityPolicyData,
 } from '../../../../../core/index.ts';
 import {
@@ -123,7 +125,9 @@ export class IdentityProviderController {
         const {
             data,
             meta,
-        } = await this.repository.findMany(useRequestQuery(event));
+        } = await this.repository.findMany(
+            decodeQuery(useRequestQuery(event), { schema: identityProviderSchema }),
+        );
 
         try {
             const permissionEvaluator = useRequestPermissionEvaluator(event);

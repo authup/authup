@@ -65,6 +65,17 @@ describe('src/http/controllers/trust-anchor', () => {
             .toEqual(expect.arrayContaining([expect.objectContaining({ realmId: realm.id })]));
     });
 
+    it('should scope the nested realm mount, expression dialect included', async () => {
+        const filter = encodeURIComponent("eq(name,'primary-client-ca')");
+        const response = await suite.client.get(
+            `realms/${realm.id}/trust-anchors?codec=url-expression&filter=${filter}`,
+        );
+
+        expect(response.data.meta.total).toEqual(1);
+        expect(response.data.data[0].name).toEqual('primary-client-ca');
+        expect(response.data.data[0].realmId).toEqual(realm.id);
+    });
+
     it('should update name and enabled but keep certificate immutable', async () => {
         const created = await suite.client.trustAnchor.create({
             name: 'update-client-ca',

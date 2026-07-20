@@ -22,6 +22,8 @@ import type {
     IConsentRepository,
     IConsentService,
 } from './types.ts';
+import { decodeQuery } from '../../query/index.ts';
+import { consentSchema } from './schema.ts';
 
 export type ConsentServiceContext = {
     repository: IConsentRepository,
@@ -58,6 +60,8 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
         actor: ActorContext,
         options: ConsentServiceReadOptions = {},
     ): Promise<EntityRepositoryFindManyResult<Consent>> {
+        const parsed = decodeQuery(query, { schema: consentSchema });
+
         let canReadAll = true;
         try {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CONSENT_READ });
@@ -70,7 +74,7 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
 
         if (!canReadAll) {
             // self-service: only the actor's own consents
-            return this.repository.findMany(query, {
+            return this.repository.findMany(parsed, {
                 owner: {
                     sub: actor.identity!.data.id,
                     subKind: actor.identity!.type,
@@ -79,7 +83,7 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
             });
         }
 
-        const { data: entities, meta } = await this.repository.findMany(query, { ...(options.realmId ? { realmId: options.realmId } : {}) });
+        const { data: entities, meta } = await this.repository.findMany(parsed, { ...(options.realmId ? { realmId: options.realmId } : {}) });
 
         const data: Consent[] = [];
         let { total } = meta;

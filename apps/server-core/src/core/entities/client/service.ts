@@ -20,6 +20,8 @@ import type { IRealmRepository } from '../realm/types.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import { ClientCredentialsService } from '../../authentication/credential/entities/client/module.ts';
 import type { IClientRepository, IClientService } from './types.ts';
+import { decodeQuery } from '../../query/index.ts';
+import { clientSchema } from './schema.ts';
 
 export type ClientServiceContext = {
     repository: IClientRepository;
@@ -55,7 +57,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         const {
             data: entities, 
             meta, 
-        } = await this.repository.findMany(query);
+        } = await this.repository.findMany(decodeQuery(query, { schema: clientSchema }));
         let { total } = meta;
 
         const data: Client[] = [];
@@ -117,7 +119,11 @@ export class ClientService extends AbstractEntityService implements IClientServi
             await actor.permissionEvaluator.preEvaluateOneOf({ name: permissionNames });
         }
 
-        const entity = await this.repository.findOne(idOrName, query, realmId);
+        const entity = await this.repository.findOne(
+            idOrName,
+            decodeQuery(query, { schema: clientSchema, parameters: ['fields', 'relations'] }),
+            realmId,
+        );
         if (!entity) {
             throw new EntityNotFoundError();
         }

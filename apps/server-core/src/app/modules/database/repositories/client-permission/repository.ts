@@ -6,10 +6,10 @@
  */
 
 import type { ClientPermission } from '@authup/core-kit';
-import { EntityType } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyRequestQuery } from '../query.ts';
+import { applyQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IClientPermissionRepository } from '../../../../../core/entities/client-permission/types.ts';
 import { ClientPermissionEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -22,11 +22,11 @@ export class ClientPermissionRepositoryAdapter implements IClientPermissionRepos
         this.repository = repository;
     }
 
-    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<ClientPermission>> {
+    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<ClientPermission>> {
         const qb = this.repository.createQueryBuilder('clientPermission');
         qb.groupBy('clientPermission.id');
 
-        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.CLIENT_PERMISSION });
+        const { pagination } = applyQuery(qb, query);
 
         const [entities, total] = await qb.getManyAndCount();
 

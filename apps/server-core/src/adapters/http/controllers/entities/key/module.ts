@@ -50,16 +50,7 @@ export class KeyController {
     ): Promise<EntityCollectionResponse<Key>> {
         const actor = buildActorContext(event);
 
-        const query = useRequestQuery(event);
-        const realmId = getRequestRealmID(event);
-        if (realmId) {
-            query.filter = {
-                ...(query.filter && typeof query.filter === 'object' ? query.filter : {}),
-                realmId,
-            };
-        }
-
-        const { data, meta } = await this.service.getMany(query, actor);
+        const { data, meta } = await this.service.getMany(useRequestQuery(event), actor, { realmId: getRequestRealmID(event) });
 
         return {
             data,

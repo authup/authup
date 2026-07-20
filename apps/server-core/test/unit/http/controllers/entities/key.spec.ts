@@ -95,6 +95,37 @@ describe('src/http/controllers/key', () => {
         expect(response.data.id).toEqual(created.id);
     });
 
+    it('should scope the nested realm mount, expression dialect included', async () => {
+        // the pre-IR controller spliced the route realm into the raw bracket
+        // `filter` key; on a `codec=url-expression` payload that discarded the
+        // client filter and made the expression parser throw (HTTP 500).
+        await suite.client.key.create({
+            use: JWKUse.SIGNATURE,
+            name: 'nested-exp-target',
+            realmId: realm.id,
+        });
+
+        const filter = encodeURIComponent("eq(name,'nested-exp-target')");
+        const response = await suite.client.get(
+            `realms/${realm.id}/keys?codec=url-expression&filter=${filter}`,
+        );
+
+        expect(response.data.meta.total).toEqual(1);
+        expect(response.data.data[0].name).toEqual('nested-exp-target');
+        expect(response.data.data[0].realmId).toEqual(realm.id);
+    });
+
+    it('should intersect a conflicting client realm filter with the route realm', async () => {
+        const other = await suite.client.realm.create({ name: `key-realm-conflict-${Date.now()}` });
+
+        const response = await suite.client.get(
+            `realms/${realm.id}/keys?filter[realmId]=${other.id}`,
+        );
+
+        expect(response.data.data).toHaveLength(0);
+        expect(response.data.meta.total).toEqual(0);
+    });
+
     it('should update name, priority and status', async () => {
         const created = await suite.client.key.create({
             use: JWKUse.SIGNATURE,

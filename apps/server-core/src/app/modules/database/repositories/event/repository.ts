@@ -6,10 +6,10 @@
  */
 
 import type { Event } from '@authup/core-kit';
-import { EntityType } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
 import { LessThan } from 'typeorm';
-import { applyRequestQuery } from '../query.ts';
+import { applyQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
     EventCountRecentFilter,
@@ -38,12 +38,12 @@ export class EventRepositoryAdapter implements IEventRepository {
     }
 
     async findMany(
-        query: Record<string, any>,
+        query: IQuery,
         options: EventFindManyOptions = {},
     ): Promise<EntityRepositoryFindManyResult<Event>> {
         const qb = this.repository.createQueryBuilder('event');
 
-        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.EVENT });
+        const { pagination } = applyQuery(qb, query);
 
         applyRealmScopeSelect(qb, 'event', ['actorId', 'actorType']);
 

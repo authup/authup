@@ -14,8 +14,21 @@ export interface ITrustAnchorRepository extends IEntityRepository<TrustAnchor> {
     findOneByIdOrName(idOrName: string, realm?: string): Promise<TrustAnchor | null>;
 }
 
+export type TrustAnchorServiceReadOptions = {
+    /**
+     * Route-scoped realm (nested `/realms/:realmId/trust-anchors`
+     * mount) — appended onto the decoded query IR as a
+     * non-displaceable `realmId` condition.
+     */
+    realmId?: string,
+};
+
 export interface ITrustAnchorService {
-    getMany(query: Record<string, any>, actor: ActorContext): Promise<EntityRepositoryFindManyResult<TrustAnchor>>;
+    getMany(
+        query: Record<string, any>,
+        actor: ActorContext,
+        options?: TrustAnchorServiceReadOptions,
+    ): Promise<EntityRepositoryFindManyResult<TrustAnchor>>;
     getOne(idOrName: string, actor: ActorContext, realmId?: string): Promise<TrustAnchor>;
     create(data: Record<string, any>, actor: ActorContext): Promise<TrustAnchor>;
     update(idOrName: string, data: Record<string, any>, actor: ActorContext, realmId?: string): Promise<TrustAnchor>;

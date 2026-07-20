@@ -19,6 +19,8 @@ import { applyJunctionCreateGrant, buildJunctionUpdateData } from '../../identit
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
 import type { IUserPermissionRepository, IUserPermissionService } from './types.ts';
+import { decodeQuery } from '../../query/index.ts';
+import { userPermissionSchema } from './schema.ts';
 
 export type UserPermissionServiceContext = {
     repository: IUserPermissionRepository;
@@ -57,7 +59,7 @@ export class UserPermissionService extends JunctionEntityService implements IUse
             ],
         });
 
-        return this.repository.findMany(query);
+        return this.repository.findMany(decodeQuery(query, { schema: userPermissionSchema }));
     }
 
     async getOne(

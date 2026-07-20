@@ -6,6 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import type { IQuery } from '@rapiq/core';
 import type { UserAuthenticator, UserAuthenticatorKind } from '@authup/core-kit';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
@@ -121,7 +122,7 @@ export class FakeUserAuthenticatorRepository implements IUserAuthenticatorReposi
     }
 
     async findMany(
-        query: Record<string, any>,
+        query: IQuery,
         options: UserAuthenticatorFindManyOptions = {},
     ): Promise<EntityRepositoryFindManyResult<UserAuthenticator>> {
         let data = this.getAll();

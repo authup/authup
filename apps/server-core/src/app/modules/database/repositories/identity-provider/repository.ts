@@ -6,11 +6,11 @@
  */
 
 import type { IdentityProvider, IdentityProviderProtocol, Realm } from '@authup/core-kit';
-import { EntityType } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyRequestQuery } from '../query.ts';
+import { applyQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IIdentityProviderRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
@@ -34,11 +34,11 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
         this.realmRepository = new RealmRepositoryAdapter(ctx.realmRepository);
     }
 
-    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<IdentityProvider>> {
+    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<IdentityProvider>> {
         const qb = this.repository.createQueryBuilder('provider');
         qb.groupBy('provider.id');
 
-        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.IDENTITY_PROVIDER });
+        const { pagination } = applyQuery(qb, query);
 
         const [entities, total] = await qb.getManyAndCount();
 

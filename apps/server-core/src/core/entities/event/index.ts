@@ -11,3 +11,4 @@ export * from './entity-event-handler.ts';
 export * from './sanitize.ts';
 export * from './service.ts';
 export * from './types.ts';
+export * from './schema.ts';

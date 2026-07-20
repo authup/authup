@@ -6,13 +6,13 @@
  */
 
 import type { Realm, Role, User } from '@authup/core-kit';
-import { EntityType } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
 import type { PermissionPolicyBinding } from '@authup/access';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyRequestQuery } from '../query.ts';
+import { applyQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IRealmRepository, IUserRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
@@ -42,11 +42,11 @@ export class UserRepositoryAdapter implements IUserRepository {
         this.realmRepository = new RealmRepositoryAdapter(ctx.realmRepository);
     }
 
-    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<User>> {
+    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<User>> {
         const qb = this.repository.createQueryBuilder('user');
         qb.groupBy('user.id');
 
-        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.USER });
+        const { pagination } = applyQuery(qb, query);
 
         applyRealmScopeSelect(qb, 'user', ['id']);
 
@@ -96,7 +96,7 @@ export class UserRepositoryAdapter implements IUserRepository {
             this.findOneByName(idOrName, realm);
     }
 
-    async findOne(id: string, query?: Record<string, any>, realmKey?: string): Promise<User | null> {
+    async findOne(id: string, query?: IQuery, realmKey?: string): Promise<User | null> {
         const qb = this.repository.createQueryBuilder('user');
 
         if (isUUID(id)) {
@@ -113,7 +113,7 @@ export class UserRepositoryAdapter implements IUserRepository {
             }
         }
 
-        applyRequestQuery(qb, query || {}, { schema: EntityType.USER, parameters: ['fields', 'relations'] });
+        applyQuery(qb, query);
 
         const entity = await qb.getOne();
         if (entity) {

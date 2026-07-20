@@ -18,6 +18,8 @@ import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/serv
 import type { IRealmRepository } from '../realm/types.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { IRoleRepository, IRoleService } from './types.ts';
+import { decodeQuery } from '../../query/index.ts';
+import { roleSchema } from './schema.ts';
 
 export type RoleServiceContext = {
     repository: IRoleRepository;
@@ -50,7 +52,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
             ],
         });
 
-        return this.repository.findMany(query);
+        return this.repository.findMany(decodeQuery(query, { schema: roleSchema }));
     }
 
     async getOne(

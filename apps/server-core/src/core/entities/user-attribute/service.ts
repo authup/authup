@@ -13,6 +13,8 @@ import { buildErrorMessageForAttribute } from 'validup';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { IUserAttributeRepository, IUserAttributeService } from './types.ts';
+import { decodeQuery } from '../../query/index.ts';
+import { userAttributeSchema } from './schema.ts';
 
 export type UserAttributeServiceContext = {
     repository: IUserAttributeRepository;
@@ -44,7 +46,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         const {
             data: entities,
             meta,
-        } = await this.repository.findMany(query);
+        } = await this.repository.findMany(decodeQuery(query, { schema: userAttributeSchema }));
 
         const data: UserAttribute[] = [];
         let { total } = meta;

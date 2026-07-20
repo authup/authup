@@ -6,12 +6,13 @@
  */
 
 import type { Realm } from '@authup/core-kit';
-import { EntityType, REALM_MASTER_NAME  } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
+import { REALM_MASTER_NAME  } from '@authup/core-kit';
 import { InternalError } from '@authup/errors';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyRequestQuery } from '../query.ts';
+import { applyQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { IRealmRepository } from '../../../../../core/index.ts';
@@ -46,11 +47,11 @@ export class RealmRepositoryAdapter implements IRealmRepository {
         return qb.getOne();
     }
 
-    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<Realm>> {
+    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<Realm>> {
         const qb = this.repository.createQueryBuilder('realm');
         qb.groupBy('realm.id');
 
-        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.REALM });
+        const { pagination } = applyQuery(qb, query);
 
         const [entities, total] = await qb.getManyAndCount();
 

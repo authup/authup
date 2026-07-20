@@ -6,6 +6,8 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import type { ICondition, IQuery } from '@rapiq/core';
+import { FilterCompoundOperator, isFilter, isFilters } from '@rapiq/core';
 import type { Session } from '@authup/core-kit';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
@@ -34,7 +36,7 @@ export class FakeSessionRepository implements ISessionRepository {
     }
 
     async findMany(
-        query: Record<string, any>,
+        query: IQuery,
         options: SessionFindManyOptions = {},
     ): Promise<EntityRepositoryFindManyResult<Session>> {
         let data = [...this.sessions.values()];
@@ -56,20 +58,32 @@ export class FakeSessionRepository implements ISessionRepository {
         return [...this.sessions.values()].filter((s) => this.ownedBy(s, owner));
     }
 
-    async findAllByQuery(query: Record<string, any>): Promise<Session[]> {
-        const filter = (query?.filter ?? {}) as Record<string, any>;
+    async findAllByQuery(query: IQuery): Promise<Session[]> {
+        return [...this.sessions.values()]
+            .filter((session) => this.matchesCondition(session, query.filters));
+    }
 
-        return [...this.sessions.values()].filter((session) => Object
-            .keys(filter)
-            .every((key) => {
-                if (!(SESSION_FILTER_KEYS as readonly string[]).includes(key)) {
-                    // unknown key → applyQuery would ignore it (no constraint)
-                    return true;
-                }
-                const raw = filter[key];
-                const values = typeof raw === 'string' ? raw.split(',') : [raw];
-                return values.map(String).includes(String((session as any)[key]));
-            }));
+    private matchesCondition(session: Session, condition: ICondition): boolean {
+        if (isFilters(condition)) {
+            if (condition.value.length === 0) {
+                return true;
+            }
+            if (condition.operator === FilterCompoundOperator.OR) {
+                return condition.value.some((child) => this.matchesCondition(session, child));
+            }
+            return condition.value.every((child) => this.matchesCondition(session, child));
+        }
+
+        if (isFilter(condition)) {
+            if (!(SESSION_FILTER_KEYS as readonly string[]).includes(condition.field)) {
+                // out-of-allowlist key → the schema-bound decode drops it
+                return true;
+            }
+            const values = Array.isArray(condition.value) ? condition.value : [condition.value];
+            return values.map(String).includes(String((session as any)[condition.field]));
+        }
+
+        return true;
     }
 
     async save(input: Partial<Session>): Promise<Session> {

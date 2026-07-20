@@ -6,10 +6,10 @@
  */
 
 import type { UserRole } from '@authup/core-kit';
-import { EntityType } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyRequestQuery } from '../query.ts';
+import { applyQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IUserRoleRepository } from '../../../../../core/index.ts';
 import { UserRoleEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -22,11 +22,11 @@ export class UserRoleRepositoryAdapter implements IUserRoleRepository {
         this.repository = repository;
     }
 
-    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<UserRole>> {
+    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<UserRole>> {
         const qb = this.repository.createQueryBuilder('userRole');
         qb.groupBy('userRole.id');
 
-        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.USER_ROLE });
+        const { pagination } = applyQuery(qb, query);
 
         const [entities, total] = await qb.getManyAndCount();
 

@@ -13,6 +13,8 @@ import type { ClientScope } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
 import type { IClientScopeRepository, IClientScopeService } from './types.ts';
+import { decodeQuery } from '../../query/index.ts';
+import { clientScopeSchema } from './schema.ts';
 
 export type ClientScopeServiceContext = {
     repository: IClientScopeRepository;
@@ -44,7 +46,7 @@ export class ClientScopeService extends JunctionEntityService implements IClient
             ],
         });
 
-        return this.repository.findMany(query);
+        return this.repository.findMany(decodeQuery(query, { schema: clientScopeSchema }));
     }
 
     async getOne(

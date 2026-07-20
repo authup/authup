@@ -91,6 +91,8 @@ import type {
     UserAuthenticatorWebauthnParameters,
 } from './types.ts';
 import type { WebauthnContext } from './webauthn.ts';
+import { decodeQuery } from '../../query/index.ts';
+import { userAuthenticatorSchema } from './schema.ts';
 
 type EmailCodeState = {
     hash: string,
@@ -182,7 +184,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         }
 
         const { data: entities, meta } = await this.repository.findMany(
-            query,
+            decodeQuery(query, { schema: userAuthenticatorSchema }),
             options.userId ? { owner: { userId: options.userId } } : {},
         );
 

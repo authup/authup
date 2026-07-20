@@ -6,6 +6,7 @@
  */
 
 import type { Consent } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
 
 export type ConsentOwner = {
@@ -69,7 +70,7 @@ export type ConsentCoveringInput = {
 };
 
 export interface IConsentRepository {
-    findMany(query: Record<string, any>, options?: ConsentFindManyOptions): Promise<EntityRepositoryFindManyResult<Consent>>;
+    findMany(query: IQuery, options?: ConsentFindManyOptions): Promise<EntityRepositoryFindManyResult<Consent>>;
 
     findOneById(id: string): Promise<Consent | null>;
 

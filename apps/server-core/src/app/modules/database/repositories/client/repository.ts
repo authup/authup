@@ -6,13 +6,13 @@
  */
 
 import type { Client, Realm, Role } from '@authup/core-kit';
-import { EntityType } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
 import type { PermissionPolicyBinding } from '@authup/access';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyRequestQuery } from '../query.ts';
+import { applyQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IClientRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
@@ -41,11 +41,11 @@ export class ClientRepositoryAdapter implements IClientRepository {
         this.realmRepository = new RealmRepositoryAdapter(ctx.realmRepository);
     }
 
-    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<Client>> {
+    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<Client>> {
         const qb = this.repository.createQueryBuilder('client');
         qb.groupBy('client.id');
 
-        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.CLIENT });
+        const { pagination } = applyQuery(qb, query);
 
         applyRealmScopeSelect(qb, 'client', ['secretHashed', 'secretEncrypted']);
 
@@ -79,7 +79,7 @@ export class ClientRepositoryAdapter implements IClientRepository {
         return qb.getOne();
     }
 
-    async findOne(id: string, query?: Record<string, any>, realmKey?: string): Promise<Client | null> {
+    async findOne(id: string, query?: IQuery, realmKey?: string): Promise<Client | null> {
         const qb = this.repository.createQueryBuilder('client');
 
         if (isUUID(id)) {
@@ -96,7 +96,7 @@ export class ClientRepositoryAdapter implements IClientRepository {
             }
         }
 
-        applyRequestQuery(qb, query || {}, { schema: EntityType.CLIENT, parameters: ['fields', 'relations'] });
+        applyQuery(qb, query);
 
         return qb.getOne();
     }
