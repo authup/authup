@@ -656,7 +656,7 @@ The provisioning system declaratively synchronizes entities (permissions, roles,
 - **app/modules/provisioning/sources/**: Data sources that produce `RootProvisioningEntity`
   - `default/`: Built-in defaults (system policies, admin user, system client, all permissions/scopes)
   - `file/`: Loads `.json`, `.yaml`, `.ts`, `.js` files from a directory
-  - `composite/`: Merges multiple sources with dedup by composite key (`name:realmId:clientId`)
+  - `composite/`: Merges multiple sources with dedup by composite key (`name:realmId:clientId`). Colliding entries **deep-merge** (later source wins per attribute/scalar; relation lists union — entity-shaped lists recurse by the same key, scalar lists dedup, record-shaped relations merge per key; policy `children`/`extraAttributes` merge alike; `strategy` replaced only when the later entry carries one). Never wholesale-replace: a mounted file declaring the master realm to add one client must not displace the default source's admin user / `system` client relations (the flame-hub regression).
 - **app/modules/provisioning/module.ts**: `ProvisionerModule` — creates shared repository adapter instances and wires them to synchronizers
 
 ### File-Source Validation (`ValidatorGroup.PROVISIONING`)
@@ -817,7 +817,7 @@ app/modules/provisioning/
   module.ts                         — ProvisionerModule (wiring)
   sources/default/module.ts         — DefaultProvisioningSource
   sources/file/module.ts            — FileProvisioningSource
-  sources/composite/module.ts       — CompositeProvisioningSource (merge + dedup)
+  sources/composite/module.ts       — CompositeProvisioningSource (deep merge + dedup, relations unioned)
 ```
 
 ## Realm Scoping Model

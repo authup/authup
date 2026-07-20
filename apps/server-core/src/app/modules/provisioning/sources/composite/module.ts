@@ -9,6 +9,23 @@ import type { RootProvisioningEntity } from '../../../../../core/provisioning/en
 import type { IProvisioningSource } from '../../../../../core/provisioning/types.ts';
 import type { IContainer } from 'eldin';
 
+/**
+ * Structural view of a provisioning entity used by the composite merge.
+ * Covers every entity shape (realm, client, user, role, permission, scope,
+ * policy): the composite-key attribute bag plus the deep-mergeable groups.
+ */
+type MergeableProvisioningEntity = {
+    attributes: {
+        name?: string,
+        realmId?: string | null,
+        clientId?: string | null,
+    },
+    strategy?: unknown,
+    relations?: Record<string, unknown>,
+    children?: MergeableProvisioningEntity[],
+    extraAttributes?: Record<string, unknown>,
+};
+
 export class CompositeProvisioningSource implements IProvisioningSource {
     protected sources : IProvisioningSource[];
 
@@ -37,25 +54,13 @@ export class CompositeProvisioningSource implements IProvisioningSource {
     }
 
     private buildEntityKey(
-        attributes: {
-            name?: string,
-            realmId?: string | null,
-            clientId?: string | null
-        },
+        attributes: MergeableProvisioningEntity['attributes'],
     ): string | undefined {
         if (!attributes.name) return undefined;
         return `${attributes.name}:${attributes.realmId || ''}:${attributes.clientId || ''}`;
     }
 
-    private mergeEntities<
-        T extends {
-            attributes: {
-                name?: string,
-                realmId?: string | null,
-                clientId?: string | null
-            }
-        },
-    >(
+    private mergeEntities<T extends MergeableProvisioningEntity>(
         target: T[] | undefined,
         source: T[] | undefined,
     ): T[] | undefined {
@@ -72,11 +77,99 @@ export class CompositeProvisioningSource implements IProvisioningSource {
 
             const idx = result.findIndex((r) => this.buildEntityKey(r.attributes) === key);
             if (idx !== -1) {
-                result[idx] = item;
+                result[idx] = this.mergeEntity(result[idx], item) as T;
             } else {
                 result.push(item);
             }
         });
         return result;
     }
+
+    /**
+     * Deep-merge two entries sharing a composite key. The later source wins
+     * per attribute, but relations are UNIONED — a later source (e.g. a
+     * mounted provisioning file) extending a built-in entry (the default
+     * source's master realm) must not silently drop the built-in relations
+     * (admin user, system client).
+     */
+    private mergeEntity(
+        target: MergeableProvisioningEntity,
+        source: MergeableProvisioningEntity,
+    ): MergeableProvisioningEntity {
+        const output = { ...target, ...source };
+
+        output.attributes = { ...target.attributes, ...source.attributes };
+
+        if (target.strategy && !source.strategy) {
+            output.strategy = target.strategy;
+        }
+
+        if (target.relations && source.relations) {
+            output.relations = this.mergeRecord(target.relations, source.relations);
+        } else if (target.relations && !source.relations) {
+            output.relations = target.relations;
+        }
+
+        if (target.extraAttributes && source.extraAttributes) {
+            output.extraAttributes = { ...target.extraAttributes, ...source.extraAttributes };
+        } else if (target.extraAttributes && !source.extraAttributes) {
+            output.extraAttributes = target.extraAttributes;
+        }
+
+        if (target.children && source.children) {
+            output.children = this.mergeEntities(target.children, source.children);
+        } else if (target.children && !source.children) {
+            output.children = target.children;
+        }
+
+        return output;
+    }
+
+    private mergeRecord(
+        target: Record<string, unknown>,
+        source: Record<string, unknown>,
+    ): Record<string, unknown> {
+        const output : Record<string, unknown> = { ...target };
+        for (const key of Object.keys(source)) {
+            output[key] = key in target ?
+                this.mergeValue(target[key], source[key]) :
+                source[key];
+        }
+        return output;
+    }
+
+    private mergeValue(target: unknown, source: unknown): unknown {
+        if (typeof target === 'undefined') return source;
+        if (typeof source === 'undefined') return target;
+
+        if (Array.isArray(target) && Array.isArray(source)) {
+            if (this.isEntityArray(target) || this.isEntityArray(source)) {
+                return this.mergeEntities(
+                    target as MergeableProvisioningEntity[],
+                    source as MergeableProvisioningEntity[],
+                );
+            }
+            return [...new Set([...target, ...source])];
+        }
+
+        if (isRecord(target) && isRecord(source)) {
+            return this.mergeRecord(target, source);
+        }
+
+        return source;
+    }
+
+    private isEntityArray(value: unknown[]): value is MergeableProvisioningEntity[] {
+        return value.some(
+            (item) => !!item &&
+                typeof item === 'object' &&
+                'attributes' in item,
+        );
+    }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return !!value &&
+        typeof value === 'object' &&
+        !Array.isArray(value);
 }
