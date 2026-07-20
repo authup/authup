@@ -5,8 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ICondition } from '@rapiq/core';
-import { isFilter, isFilters } from '@rapiq/core';
 import type { Predicate } from '@rapiq/memory';
 import { compileFilters } from '@rapiq/memory';
 import { MongoFiltersParser } from '@rapiq/parser-mongo';
@@ -16,27 +14,6 @@ import { maybeInvertPolicyOutcome } from '../../helpers';
 import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
 import { BuiltInPolicyType } from '../constants.ts';
 import { AttributesPolicyValidator } from './validator';
-
-/**
- * Collect every leaf filter field of a condition tree. The rapiq memory
- * backend compares string equality case-insensitively by default; pinning
- * all referenced fields keeps policy decisions byte-exact (the semantics
- * the previous @ucast/mongo2js evaluator enforced).
- */
-function collectConditionFields(
-    condition: ICondition,
-    output: Set<string> = new Set(),
-) : string[] {
-    if (isFilters(condition)) {
-        for (const child of condition.value) {
-            collectConditionFields(child, output);
-        }
-    } else if (isFilter(condition)) {
-        output.add(condition.field);
-    }
-
-    return [...output];
-}
 
 export class AttributesPolicyEvaluator<
     T extends Record<string, any> = Record<string, any>,
@@ -92,7 +69,9 @@ export class AttributesPolicyEvaluator<
         try {
             const condition = this.parser.parse(policy.query);
 
-            testIt = compileFilters(condition, { caseSensitive: collectConditionFields(condition) });
+            // string equality stays byte-exact (the semantics the previous
+            // @ucast/mongo2js evaluator enforced)
+            testIt = compileFilters(condition, { caseSensitive: true });
         } catch (e) {
             return {
                 success: false,
