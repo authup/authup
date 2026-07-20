@@ -6,6 +6,7 @@
  */
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
+import { eq } from '@rapiq/core';
 import {
     EntityConflictError,
     EntityNotFoundError,
@@ -34,8 +35,13 @@ import { getRandomValues } from 'uncrypto';
 import { buildEntityDiff } from '../event/index.ts';
 import type { EventRequestContext, IEventService } from '../event/index.ts';
 import { assertCertificateMatchesKey, isWrappedKeyMaterial, parseCertificateChain } from '../../key/index.ts';
-import type { IKeyRepository, IKeyService, KeyDeleteOptions } from './types.ts';
-import { decodeQuery } from '../../query/index.ts';
+import type {
+    IKeyRepository, 
+    IKeyService, 
+    KeyDeleteOptions, 
+    KeyServiceReadOptions,
+} from './types.ts';
+import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
 import { keySchema } from './schema.ts';
 
 export type KeyServiceContext = {
@@ -70,10 +76,16 @@ export class KeyService extends AbstractEntityService implements IKeyService {
     async getMany(
         query: Record<string, any>,
         actor: ActorContext,
+        options: KeyServiceReadOptions = {},
     ): Promise<EntityRepositoryFindManyResult<Key>> {
         await actor.permissionEvaluator.preEvaluateOneOf({ name: PERMISSION_NAMES });
 
-        const { data: entities, meta } = await this.repository.findMany(decodeQuery(query, { schema: keySchema }));
+        let parsed = decodeQuery(query, { schema: keySchema });
+        if (options.realmId) {
+            parsed = appendQueryConditions(parsed, eq('realmId', options.realmId));
+        }
+
+        const { data: entities, meta } = await this.repository.findMany(parsed);
 
         const data: Key[] = [];
         let { total } = meta;

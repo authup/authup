@@ -152,7 +152,19 @@ usable at the service level and nothing in core depends on TypeORM:
   multi-branch services (session/consent/event) decode into a local and pass
   the IR to every branch. Allow-lists, defaults and pagination bounds are all
   applied at decode time, so services can also inspect or compose the IR
-  (`Filters.and()` injection, condition walks) before handing it down.
+  before handing it down.
+- **Server-derived scopes ride `appendQueryConditions(query, ...conds)`**
+  (core/query) — an immutable AND-wrap of the filter tree
+  (`IFilters.and`, the wrap-and-inject primitive; parameter nodes carry
+  over by reference). Non-displaceable like a repository `andWhere`: a
+  conflicting client condition intersects (empty result) instead of
+  replacing the scope, and appended conditions bypass the decode
+  allow-lists (server context). The key/trust-anchor services use it for
+  the nested `/realms/:realmId/*` mounts (`options.realmId` from
+  `getRequestRealmID`); never splice a scope into the RAW wire query —
+  on a `codec=url-expression` payload the bracket `filter` key is an
+  expression STRING, so object-splicing both discards the client filter
+  and 500s at decode (the bug that motivated the helper).
 - **Adapters execute only** — `applyQuery(queryBuilder, query?)` in
   `app/modules/database/repositories/query.ts` wraps `@rapiq/typeorm`'s
   `TypeormAdapter` (plus the DISTINCT-id `GROUP BY` join hook) and needs no

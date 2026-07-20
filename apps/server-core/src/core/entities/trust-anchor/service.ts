@@ -6,6 +6,7 @@
  */
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
+import { eq } from '@rapiq/core';
 import type { TrustAnchor } from '@authup/core-kit';
 import {
     EntityType,
@@ -21,8 +22,12 @@ import { AbstractEntityService } from '@authup/server-kit';
 import { buildEntityDiff } from '../event/index.ts';
 import type { EventRequestContext, IEventService } from '../event/index.ts';
 import { parseCertificateChain } from '../../key/index.ts';
-import type { ITrustAnchorRepository, ITrustAnchorService } from './types.ts';
-import { decodeQuery } from '../../query/index.ts';
+import type {
+    ITrustAnchorRepository, 
+    ITrustAnchorService, 
+    TrustAnchorServiceReadOptions,
+} from './types.ts';
+import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
 import { trustAnchorSchema } from './schema.ts';
 
 export type TrustAnchorServiceContext = {
@@ -57,10 +62,16 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
     async getMany(
         query: Record<string, any>,
         actor: ActorContext,
+        options: TrustAnchorServiceReadOptions = {},
     ): Promise<EntityRepositoryFindManyResult<TrustAnchor>> {
         await actor.permissionEvaluator.preEvaluateOneOf({ name: PERMISSION_NAMES });
 
-        const { data: entities, meta } = await this.repository.findMany(decodeQuery(query, { schema: trustAnchorSchema }));
+        let parsed = decodeQuery(query, { schema: trustAnchorSchema });
+        if (options.realmId) {
+            parsed = appendQueryConditions(parsed, eq('realmId', options.realmId));
+        }
+
+        const { data: entities, meta } = await this.repository.findMany(parsed);
 
         const data: TrustAnchor[] = [];
         let { total } = meta;

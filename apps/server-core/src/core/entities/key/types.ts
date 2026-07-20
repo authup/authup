@@ -27,6 +27,15 @@ export interface IKeyRepository extends IEntityRepository<Key> {
     findHighestPriority(realmId: string, use: string): Promise<number | null>;
 }
 
+export type KeyServiceReadOptions = {
+    /**
+     * Route-scoped realm (nested `/realms/:realmId/keys` mount) —
+     * appended onto the decoded query IR as a non-displaceable
+     * `realmId` condition.
+     */
+    realmId?: string,
+};
+
 export type KeyDeleteOptions = {
     /**
      * Delete an enc key even while cipher blobs still reference it
@@ -36,7 +45,7 @@ export type KeyDeleteOptions = {
 };
 
 export interface IKeyService {
-    getMany(query: Record<string, any>, actor: ActorContext): Promise<EntityRepositoryFindManyResult<Key>>;
+    getMany(query: Record<string, any>, actor: ActorContext, options?: KeyServiceReadOptions): Promise<EntityRepositoryFindManyResult<Key>>;
     getOne(idOrName: string, actor: ActorContext, realmId?: string): Promise<Key>;
     create(data: Record<string, any>, actor: ActorContext): Promise<Key>;
     update(idOrName: string, data: Record<string, any>, actor: ActorContext, realmId?: string): Promise<Key>;
