@@ -12,6 +12,7 @@ import { EntityType } from '@authup/core-kit';
 export const userRoleSchema = defineSchema<UserRole>({
     name: EntityType.USER_ROLE,
     filters: { allowed: ['roleId', 'userId'] },
+    // @ts-expect-error User's EA index signature drops the relation key (tada5hi/rapiq#789)
     relations: { allowed: ['user', 'role'] },
     sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
     pagination: { maxLimit: 50 },

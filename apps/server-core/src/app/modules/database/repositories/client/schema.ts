@@ -37,7 +37,6 @@ export const clientSchema = defineSchema<Client>({
         allowed: ['secret'],
     },
     filters: { allowed: ['id', 'name', 'realmId'] },
-    // @ts-expect-error nullable relation (accessPolicy) is not covered by SimpleResourceKeys
     relations: { allowed: ['realm', 'accessPolicy'] },
     sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
     pagination: { maxLimit: 50 },

@@ -12,6 +12,7 @@ import { EntityType } from '@authup/core-kit';
 export const userPermissionSchema = defineSchema<UserPermission>({
     name: EntityType.USER_PERMISSION,
     filters: { allowed: ['userId', 'permissionId'] },
+    // @ts-expect-error User's EA index signature drops the relation key (tada5hi/rapiq#789)
     relations: { allowed: ['user', 'permission'] },
     sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
     pagination: { maxLimit: 50 },
