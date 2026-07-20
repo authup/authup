@@ -6,10 +6,10 @@
  */
 
 import type { IdentityProviderRoleMapping } from '@authup/core-kit';
-import { EntityType } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyRequestQuery } from '../query.ts';
+import { applyQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IIdentityProviderRoleMappingRepository } from '../../../../../core/index.ts';
 import { IdentityProviderRoleMappingEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -22,11 +22,11 @@ export class IdentityProviderRoleMappingRepositoryAdapter implements IIdentityPr
         this.repository = repository;
     }
 
-    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<IdentityProviderRoleMapping>> {
+    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<IdentityProviderRoleMapping>> {
         const qb = this.repository.createQueryBuilder('providerRole');
         qb.groupBy('providerRole.id');
 
-        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.IDENTITY_PROVIDER_ROLE_MAPPING });
+        const { pagination } = applyQuery(qb, query);
 
         const [entities, total] = await qb.getManyAndCount();
 

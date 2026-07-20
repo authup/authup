@@ -8,6 +8,7 @@
 import { randomUUID } from 'node:crypto';
 import { isUUID } from '@authup/kit';
 import type { ObjectLiteral } from '@authup/kit';
+import type { IQuery } from '@rapiq/core';
 import type {
     EntityRepositoryFindManyResult,
     IEntityRepository,
@@ -19,7 +20,7 @@ export class FakeEntityRepository<T extends ObjectLiteral> implements IEntityRep
     protected joinColumnHandler: ((data: Partial<T>) => void | Promise<void>) | undefined;
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<T>> {
+    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<T>> {
         return {
             data: [...this.store],
             meta: {

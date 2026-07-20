@@ -6,8 +6,9 @@
  */
 
 import { AuthupError } from '@authup/errors';
+import type { IQuery } from '@rapiq/core';
 import type { Key } from '@authup/core-kit';
-import { EntityType, KeyStatus  } from '@authup/core-kit';
+import { KeyStatus  } from '@authup/core-kit';
 import { arrayBufferToBase64, createNanoID, isUUID } from '@authup/kit';
 import {
     AsymmetricKey,
@@ -21,7 +22,7 @@ import { JWKType, JWKUse, JWTAlgorithm } from '@authup/specs';
 import type { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { Like } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyRequestQuery } from '../query.ts';
+import { applyQuery } from '../query.ts';
 import { getRandomValues } from 'uncrypto';
 import {
     DatabaseConflictError,
@@ -268,11 +269,11 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
     // IKeyRepository — entity CRUD surface (key management API)
     // ------------------------------------------------------------------
 
-    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<Key>> {
+    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<Key>> {
         const qb = this.repository.createQueryBuilder('keyEntity');
         qb.groupBy('keyEntity.id');
 
-        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.KEY });
+        const { pagination } = applyQuery(qb, query);
 
         applyRealmScopeSelect(qb, 'keyEntity');
 

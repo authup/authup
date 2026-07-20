@@ -6,10 +6,10 @@
  */
 
 import type { ClientScope } from '@authup/core-kit';
-import { EntityType } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyRequestQuery } from '../query.ts';
+import { applyQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IClientScopeRepository } from '../../../../../core/entities/client-scope/types.ts';
 import { ClientScopeEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -22,11 +22,11 @@ export class ClientScopeRepositoryAdapter implements IClientScopeRepository {
         this.repository = repository;
     }
 
-    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<ClientScope>> {
+    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<ClientScope>> {
         const qb = this.repository.createQueryBuilder('clientScope');
         qb.groupBy('clientScope.id');
 
-        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.CLIENT_SCOPE });
+        const { pagination } = applyQuery(qb, query);
 
         const [entities, total] = await qb.getManyAndCount();
 

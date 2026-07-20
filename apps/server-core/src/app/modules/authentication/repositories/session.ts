@@ -6,11 +6,11 @@
  */
 
 import type { Session } from '@authup/core-kit';
-import { EntityType } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
 import type { EntityRepositoryFindManyResult, ICache } from '@authup/server-kit';
 import { buildCacheKey } from '@authup/server-kit';
 import type { Repository } from 'typeorm';
-import { applyRequestQuery } from '../../database/repositories/query.ts';
+import { applyQuery } from '../../database/repositories/query.ts';
 import type {
     ISessionRepository,
     SessionFindManyOptions,
@@ -56,12 +56,12 @@ export class SessionRepository implements ISessionRepository {
     // -----------------------------------------------------
 
     async findMany(
-        query: Record<string, any>,
+        query: IQuery,
         options: SessionFindManyOptions = {},
     ): Promise<EntityRepositoryFindManyResult<Session>> {
         const qb = this.repository.createQueryBuilder('session');
 
-        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.SESSION });
+        const { pagination } = applyQuery(qb, query);
 
         applyRealmScopeSelect(qb, 'session', ['sub', 'subKind']);
 
@@ -93,14 +93,14 @@ export class SessionRepository implements ISessionRepository {
             .getMany();
     }
 
-    async findAllByQuery(query: Record<string, any>): Promise<Session[]> {
+    async findAllByQuery(query: IQuery): Promise<Session[]> {
         const qb = this.repository.createQueryBuilder('session');
 
         // NOTE: `parameters: ['filters']` — a bulk revoke must reach every
         // matching row. Applying the schema's `pagination.maxLimit` would
         // default the limit to that cap when the caller sends no page (rapiq
         // `finalizePagination`), silently truncating the delete.
-        applyRequestQuery(qb, query, { schema: EntityType.SESSION, parameters: ['filters'] });
+        applyQuery(qb, query);
 
         applyRealmScopeSelect(qb, 'session', ['sub', 'subKind']);
 

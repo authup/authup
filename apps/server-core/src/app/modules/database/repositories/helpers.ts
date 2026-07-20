@@ -19,7 +19,7 @@ import { Brackets, In, IsNull } from 'typeorm';
  * projection omitting `realmId` would otherwise leave the per-row
  * `resourceRealmMatch` with no realm to match — neutralizing the realmScope
  * reach factor and leaking cross-realm rows to an own/ownOrNull-scoped reader.
- * Call it AFTER `applyRequestQuery`. Columns already in the projection must be
+ * Call it AFTER `applyQuery`. Columns already in the projection must be
  * skipped: `addSelect` emits a second identically-aliased column, and under a
  * join + take (the DISTINCT id-subquery) postgres then rejects the wrapper's
  * `ORDER BY "<alias>_id"` as ambiguous (mysql: duplicate column name).

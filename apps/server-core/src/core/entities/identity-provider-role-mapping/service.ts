@@ -14,6 +14,8 @@ import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } 
 import { JunctionEntityService } from '@authup/server-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import type { IIdentityProviderRoleMappingRepository, IIdentityProviderRoleMappingService } from './types.ts';
+import { decodeQuery } from '../../query/index.ts';
+import { identityProviderRoleMappingSchema } from './schema.ts';
 
 export type IdentityProviderRoleMappingServiceContext = {
     repository: IIdentityProviderRoleMappingRepository;
@@ -53,7 +55,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
             ],
         });
 
-        return this.repository.findMany(query);
+        return this.repository.findMany(decodeQuery(query, { schema: identityProviderRoleMappingSchema }));
     }
 
     async getOne(

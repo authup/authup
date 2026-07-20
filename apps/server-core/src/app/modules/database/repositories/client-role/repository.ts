@@ -6,10 +6,10 @@
  */
 
 import type { ClientRole } from '@authup/core-kit';
-import { EntityType } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyRequestQuery } from '../query.ts';
+import { applyQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IClientRoleRepository } from '../../../../../core/entities/client-role/types.ts';
 import { ClientRoleEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -22,11 +22,11 @@ export class ClientRoleRepositoryAdapter implements IClientRoleRepository {
         this.repository = repository;
     }
 
-    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<ClientRole>> {
+    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<ClientRole>> {
         const qb = this.repository.createQueryBuilder('clientRole');
         qb.groupBy('clientRole.id');
 
-        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.CLIENT_ROLE });
+        const { pagination } = applyQuery(qb, query);
 
         const [entities, total] = await qb.getManyAndCount();
 

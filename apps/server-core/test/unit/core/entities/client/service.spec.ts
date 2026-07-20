@@ -6,6 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import { isQuery } from '@rapiq/core';
 import {
     CLIENT_SYSTEM_NAME,
     CLIENT_WEB_NAME,
@@ -152,13 +153,18 @@ describe('core/entities/client/service', () => {
             expect(actor.permissionEvaluator.evaluateOneOfCalls.length).toBeGreaterThan(0);
         });
 
-        it('should forward query and realmId to repository.findOne', async () => {
+        it('should forward the decoded query and realmId to repository.findOne', async () => {
             const entity = repository.seed(createFakeClient({ name: 'queried-client' }));
             const findOneSpy = vi.spyOn(repository, 'findOne');
 
             await service.getOne(entity.id, createAllowAllActor(), { fields: '+secret' });
 
-            expect(findOneSpy).toHaveBeenCalledWith(entity.id, { fields: '+secret' }, undefined);
+            expect(findOneSpy).toHaveBeenCalledTimes(1);
+            const [id, query, realm] = findOneSpy.mock.calls[0];
+            expect(id).toBe(entity.id);
+            expect(realm).toBeUndefined();
+            expect(isQuery(query)).toBe(true);
+            expect(query!.fields.value.map((field) => field.name)).toContain('secret');
         });
 
         it('should bypass the permission gate when actor is the client itself', async () => {

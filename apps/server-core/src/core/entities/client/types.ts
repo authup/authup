@@ -6,6 +6,7 @@
  */
 
 import type { Client, Realm, Role } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
 import type { PermissionPolicyBinding } from '@authup/access';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository  } from '@authup/server-kit';
 
@@ -21,7 +22,7 @@ export interface IWebClientProvisioner {
 export interface IClientRepository extends IEntityRepository<Client> {
     checkUniqueness(data: Partial<Client>, existing?: Client): Promise<void>;
 
-    findOne(id: string, query?: Record<string, any>, realm?: string): Promise<Client | null>;
+    findOne(id: string, query?: IQuery, realm?: string): Promise<Client | null>;
 
     findOneWithSecret(where: Record<string, any>): Promise<Client | null>;
 

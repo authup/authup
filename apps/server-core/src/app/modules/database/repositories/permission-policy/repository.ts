@@ -6,10 +6,10 @@
  */
 
 import type { PermissionPolicy } from '@authup/core-kit';
-import { EntityType } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyRequestQuery } from '../query.ts';
+import { applyQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IPermissionPolicyRepository } from '../../../../../core/index.ts';
 import { PermissionPolicyEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -22,11 +22,11 @@ export class PermissionPolicyRepositoryAdapter implements IPermissionPolicyRepos
         this.repository = repository;
     }
 
-    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<PermissionPolicy>> {
+    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<PermissionPolicy>> {
         const qb = this.repository.createQueryBuilder('permissionPolicy');
         qb.groupBy('permissionPolicy.id');
 
-        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.PERMISSION_POLICY });
+        const { pagination } = applyQuery(qb, query);
 
         const [entities, total] = await qb.getManyAndCount();
 

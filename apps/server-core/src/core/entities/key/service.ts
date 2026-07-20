@@ -35,6 +35,8 @@ import { buildEntityDiff } from '../event/index.ts';
 import type { EventRequestContext, IEventService } from '../event/index.ts';
 import { assertCertificateMatchesKey, isWrappedKeyMaterial, parseCertificateChain } from '../../key/index.ts';
 import type { IKeyRepository, IKeyService, KeyDeleteOptions } from './types.ts';
+import { decodeQuery } from '../../query/index.ts';
+import { keySchema } from './schema.ts';
 
 export type KeyServiceContext = {
     repository: IKeyRepository;
@@ -71,7 +73,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
     ): Promise<EntityRepositoryFindManyResult<Key>> {
         await actor.permissionEvaluator.preEvaluateOneOf({ name: PERMISSION_NAMES });
 
-        const { data: entities, meta } = await this.repository.findMany(query);
+        const { data: entities, meta } = await this.repository.findMany(decodeQuery(query, { schema: keySchema }));
 
         const data: Key[] = [];
         let { total } = meta;

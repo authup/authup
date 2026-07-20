@@ -51,12 +51,12 @@ Layer 1:
 Layer 2:
   access            → kit, errors
   core-kit          → kit, errors, specs
-  server-kit        → access, core-kit, kit, specs, core-realtime-kit, rapiq (rapiq's PaginationParseOutput is re-exposed in server-kit's public .d.ts, so it is a dependency)
+  server-kit        → access, core-kit, kit, specs, core-realtime-kit, @rapiq/core (the IQuery port type in IEntityRepository.findMany is re-exposed in server-kit's public .d.ts, so it is a dependency)
 
 Layer 3:
   core-http-kit     → access, kit, core-kit, specs (errors is devDep-only — test)
   server-adapter-kit → kit, errors, specs, core-kit, core-http-kit, server-kit
-  server-test-kit   → access, core-kit, kit, server-kit (consumed devDep-only; server-kit is a runtime dependency — its types are re-exposed by the fakes' public .d.ts)
+  server-test-kit   → access, core-kit, kit, server-kit, @rapiq/core (consumed devDep-only; server-kit and @rapiq/core are runtime dependencies — their types are re-exposed by the fakes' public .d.ts)
 
 Layer 4:
   server-adapter-node      → server-adapter-kit

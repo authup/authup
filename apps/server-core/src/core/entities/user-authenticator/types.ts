@@ -6,6 +6,7 @@
  */
 
 import type { UserAuthenticator, UserAuthenticatorKind } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
 import type {
     ActorContext,
     EntityRepositoryFindManyResult,
@@ -39,7 +40,7 @@ export type UserAuthenticatorSecretsFilter = {
 
 export interface IUserAuthenticatorRepository {
     findMany(
-        query: Record<string, any>,
+        query: IQuery,
         options?: UserAuthenticatorFindManyOptions
     ): Promise<EntityRepositoryFindManyResult<UserAuthenticator>>;
 

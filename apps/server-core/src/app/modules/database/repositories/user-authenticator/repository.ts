@@ -6,8 +6,9 @@
  */
 
 import type { UserAuthenticator, UserAuthenticatorKind } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
-import { applyRequestQuery } from '../query.ts';
+import { applyQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
     IUserAuthenticatorRepository,
@@ -79,12 +80,12 @@ export class UserAuthenticatorRepositoryAdapter implements IUserAuthenticatorRep
     }
 
     async findMany(
-        query: Record<string, any>,
+        query: IQuery,
         options: UserAuthenticatorFindManyOptions = {},
     ): Promise<EntityRepositoryFindManyResult<UserAuthenticator>> {
         const qb = this.repository.createQueryBuilder('userAuthenticator');
 
-        const { pagination } = applyRequestQuery(qb, query, { schema: 'userAuthenticator' });
+        const { pagination } = applyQuery(qb, query);
 
         applyRealmScopeSelect(qb, 'userAuthenticator', ['userId']);
 

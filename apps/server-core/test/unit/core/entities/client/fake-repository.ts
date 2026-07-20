@@ -6,6 +6,7 @@
  */
 
 import type { Client, Role } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
 import type { PermissionPolicyBinding } from '@authup/access';
 import { FakeEntityRepository } from '@authup/server-test-kit';
 import type { IClientRepository } from '../../../../../src/core/entities/client/types.ts';
@@ -15,7 +16,7 @@ export class FakeClientRepository extends FakeEntityRepository<Client> implement
         // no-op
     }
 
-    async findOne(id: string, _query?: Record<string, any>, realm?: string): Promise<Client | null> {
+    async findOne(id: string, _query?: IQuery, realm?: string): Promise<Client | null> {
         return this.findOneByIdOrName(id, realm);
     }
 

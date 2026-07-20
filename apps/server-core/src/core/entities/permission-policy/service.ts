@@ -13,6 +13,8 @@ import type { PermissionPolicy } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
 import type { IPermissionPolicyRepository, IPermissionPolicyService } from './types.ts';
+import { decodeQuery } from '../../query/index.ts';
+import { permissionPolicySchema } from './schema.ts';
 
 export type PermissionPolicyServiceContext = {
     repository: IPermissionPolicyRepository;
@@ -42,7 +44,7 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
             ],
         });
 
-        return this.repository.findMany(query);
+        return this.repository.findMany(decodeQuery(query, { schema: permissionPolicySchema }));
     }
 
     async getOne(

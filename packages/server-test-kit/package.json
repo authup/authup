@@ -52,7 +52,8 @@
         "@authup/access": "^1.0.0-beta.53",
         "@authup/core-kit": "^1.0.0-beta.53",
         "@authup/kit": "^1.0.0-beta.53",
-        "@authup/server-kit": "^1.0.0-beta.53"
+        "@authup/server-kit": "^1.0.0-beta.53",
+        "@rapiq/core": "^2.0.0-beta.3"
     },
     "devDependencies": {
         "vitest": "^4.0.14"

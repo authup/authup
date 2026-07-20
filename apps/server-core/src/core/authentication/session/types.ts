@@ -6,6 +6,7 @@
  */
 
 import type { Session } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 
 export type SessionOwner = {
@@ -38,7 +39,7 @@ export type SessionFindManyOptions = {
 export interface ISessionRepository {
     findOneById(id: string): Promise<Session | null> | null;
 
-    findMany(query: Record<string, any>, options?: SessionFindManyOptions): Promise<EntityRepositoryFindManyResult<Session>>;
+    findMany(query: IQuery, options?: SessionFindManyOptions): Promise<EntityRepositoryFindManyResult<Session>>;
 
     findAllByOwner(owner: SessionOwner): Promise<Session[]>;
 
@@ -48,7 +49,7 @@ export interface ISessionRepository {
      * the admin "force-logout" path; per-session authorization is enforced by
      * the caller (`SessionService`).
      */
-    findAllByQuery(query: Record<string, any>): Promise<Session[]>;
+    findAllByQuery(query: IQuery): Promise<Session[]>;
 
     save(session: Partial<Session>): Promise<Session>;
 

@@ -8,7 +8,7 @@
 import { defineSchema } from '@rapiq/core';
 import type { Consent } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
-import { CONSENT_FILTER_KEYS } from '../../../../../core/index.ts';
+import { CONSENT_FILTER_KEYS } from './types.ts';
 
 export const consentSchema = defineSchema<Consent>({
     name: EntityType.CONSENT,

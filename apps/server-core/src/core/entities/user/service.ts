@@ -18,6 +18,8 @@ import type { IRealmRepository } from '../realm/types.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import { UserCredentialsService } from '../../authentication/credential/entities/user/module.ts';
 import type { IUserRepository, IUserService } from './types.ts';
+import { decodeQuery } from '../../query/index.ts';
+import { userSchema } from './schema.ts';
 
 export type UserServiceContext = {
     repository: IUserRepository;
@@ -54,7 +56,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         const {
             data: entities, 
             meta, 
-        } = await this.repository.findMany(query);
+        } = await this.repository.findMany(decodeQuery(query, { schema: userSchema }));
 
         const data: User[] = [];
         let { total } = meta;
@@ -117,7 +119,11 @@ export class UserService extends AbstractEntityService implements IUserService {
             await actor.permissionEvaluator.preEvaluateOneOf({ name: permissionNames });
         }
 
-        const entity = await this.repository.findOne(idOrName, query, realmId);
+        const entity = await this.repository.findOne(
+            idOrName,
+            decodeQuery(query, { schema: userSchema, parameters: ['fields', 'relations'] }),
+            realmId,
+        );
         if (!entity) {
             throw new EntityNotFoundError();
         }

@@ -6,11 +6,11 @@
  */
 
 import type { Realm, Scope } from '@authup/core-kit';
-import { EntityType } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyRequestQuery } from '../query.ts';
+import { applyQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IRealmRepository, IScopeRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
@@ -33,11 +33,11 @@ export class ScopeRepositoryAdapter implements IScopeRepository {
         this.realmRepository = new RealmRepositoryAdapter(ctx.realmRepository);
     }
 
-    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<Scope>> {
+    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<Scope>> {
         const qb = this.repository.createQueryBuilder('scope');
         qb.groupBy('scope.id');
 
-        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.SCOPE });
+        const { pagination } = applyQuery(qb, query);
 
         const [entities, total] = await qb.getManyAndCount();
 

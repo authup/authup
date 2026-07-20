@@ -28,6 +28,8 @@ import type { IRoleRepository } from '../role/types.ts';
 import type { IRolePermissionRepository } from '../role-permission/types.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { IPermissionRepository, IPermissionService } from './types.ts';
+import { decodeQuery } from '../../query/index.ts';
+import { permissionSchema } from './schema.ts';
 
 const REALM_ADMIN_EXCLUDED_PERMISSIONS = [
     PermissionName.REALM_CREATE,
@@ -113,7 +115,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             ],
         });
 
-        return this.repository.findMany(query);
+        return this.repository.findMany(decodeQuery(query, { schema: permissionSchema }));
     }
 
     async getOne(

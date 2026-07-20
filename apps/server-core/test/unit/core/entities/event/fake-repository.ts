@@ -6,6 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import type { IQuery } from '@rapiq/core';
 import type { Event } from '@authup/core-kit';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
@@ -71,7 +72,7 @@ export class FakeEventRepository implements IEventRepository {
     }
 
     async findMany(
-        query: Record<string, any>,
+        query: IQuery,
         options: EventFindManyOptions = {},
     ): Promise<EntityRepositoryFindManyResult<Event>> {
         let data = [...this.rows];

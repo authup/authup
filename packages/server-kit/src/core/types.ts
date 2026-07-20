@@ -6,6 +6,7 @@
  */
 
 import type { ObjectLiteral } from '@authup/kit';
+import type { IQuery } from '@rapiq/core';
 
 /**
  * The pagination actually applied to a list query — mirrors the
@@ -26,7 +27,7 @@ export type EntityRepositoryFindManyResult<T> = {
 export interface IEntityRepository<
     T extends ObjectLiteral = ObjectLiteral,
 > {
-    findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<T>>;
+    findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<T>>;
 
     findOneById(id: string) : Promise<T | null>;
 

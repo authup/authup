@@ -6,10 +6,10 @@
  */
 
 import type { RoleAttribute } from '@authup/core-kit';
-import { EntityType } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyRequestQuery } from '../query.ts';
+import { applyQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IRoleAttributeRepository } from '../../../../../core/index.ts';
 import { RoleAttributeEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -22,11 +22,11 @@ export class RoleAttributeRepositoryAdapter implements IRoleAttributeRepository 
         this.repository = repository;
     }
 
-    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<RoleAttribute>> {
+    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<RoleAttribute>> {
         const qb = this.repository.createQueryBuilder('roleAttribute');
         qb.groupBy('roleAttribute.id');
 
-        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.ROLE_ATTRIBUTE });
+        const { pagination } = applyQuery(qb, query);
 
         applyRealmScopeSelect(qb, 'roleAttribute');
 

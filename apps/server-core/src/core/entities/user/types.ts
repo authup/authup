@@ -6,13 +6,14 @@
  */
 
 import type { Role, User } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
 import type { PermissionPolicyBinding } from '@authup/access';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository  } from '@authup/server-kit';
 
 export interface IUserRepository extends IEntityRepository<User> {
     checkUniqueness(data: Partial<User>, existing?: User): Promise<void>;
 
-    findOne(id: string, query?: Record<string, any>, realm?: string): Promise<User | null>;
+    findOne(id: string, query?: IQuery, realm?: string): Promise<User | null>;
 
     findOneByWithEmail(where: Record<string, any>): Promise<User | null>;
 

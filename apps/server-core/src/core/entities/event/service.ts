@@ -22,6 +22,8 @@ import type {
     IEventRepository,
     IEventService,
 } from './types.ts';
+import { decodeQuery } from '../../query/index.ts';
+import { eventSchema } from './schema.ts';
 
 export type EventServiceContext = {
     repository: IEventRepository,
@@ -160,6 +162,8 @@ export class EventService extends AbstractEntityService implements IEventService
         actor: ActorContext,
         options: EventServiceReadOptions = {},
     ): Promise<EntityRepositoryFindManyResult<Event>> {
+        const parsed = decodeQuery(query, { schema: eventSchema });
+
         let canReadAll = true;
         try {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.EVENT_READ });
@@ -172,7 +176,7 @@ export class EventService extends AbstractEntityService implements IEventService
 
         if (!canReadAll) {
             // self-service: only the actor's own rows ("my sign-in history")
-            return this.repository.findMany(query, {
+            return this.repository.findMany(parsed, {
                 owner: {
                     actorId: actor.identity!.data.id,
                     actorType: actor.identity!.type,
@@ -182,7 +186,7 @@ export class EventService extends AbstractEntityService implements IEventService
         }
 
         const visibility = await this.resolveReadVisibility(actor);
-        const { data: entities, meta } = await this.repository.findMany(query, {
+        const { data: entities, meta } = await this.repository.findMany(parsed, {
             ...(options.realmId ? { realmId: options.realmId } : {}),
             ...(visibility ? { visibility } : {}),
         });

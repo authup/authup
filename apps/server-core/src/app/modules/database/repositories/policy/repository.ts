@@ -6,11 +6,11 @@
  */
 
 import type { Policy, Realm } from '@authup/core-kit';
-import { EntityType } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyRequestQuery } from '../query.ts';
+import { applyQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IPolicyRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
@@ -34,11 +34,11 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
         this.realmRepository = new RealmRepositoryAdapter(ctx.realmRepository);
     }
 
-    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<Policy>> {
+    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<Policy>> {
         const qb = this.repository.createQueryBuilder('policy');
         qb.groupBy('policy.id');
 
-        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.POLICY });
+        const { pagination } = applyQuery(qb, query);
 
         const [entities, total] = await qb.getManyAndCount();
         await this.repository.extendManyWithEA(entities);

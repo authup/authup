@@ -12,6 +12,8 @@ import type { RoleAttribute } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { IRoleAttributeRepository, IRoleAttributeService } from './types.ts';
+import { decodeQuery } from '../../query/index.ts';
+import { roleAttributeSchema } from './schema.ts';
 
 export type RoleAttributeServiceContext = {
     repository: IRoleAttributeRepository;
@@ -44,7 +46,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         const {
             data: entities, 
             meta, 
-        } = await this.repository.findMany(query);
+        } = await this.repository.findMany(decodeQuery(query, { schema: roleAttributeSchema }));
 
         const data: RoleAttribute[] = [];
         let { total } = meta;

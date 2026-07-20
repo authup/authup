@@ -24,6 +24,8 @@ import type { IRealmRepository } from '../realm/types.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import { PolicyAttributesValidator } from './attributes-validator.ts';
 import type { IPolicyRepository, IPolicyService } from './types.ts';
+import { decodeQuery } from '../../query/index.ts';
+import { policySchema } from './schema.ts';
 
 export type PolicyServiceContext = {
     repository: IPolicyRepository;
@@ -59,7 +61,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
             ],
         });
 
-        return this.repository.findMany(query);
+        return this.repository.findMany(decodeQuery(query, { schema: policySchema }));
     }
 
     async getOne(

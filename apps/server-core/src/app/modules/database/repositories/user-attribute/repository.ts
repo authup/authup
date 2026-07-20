@@ -6,10 +6,10 @@
  */
 
 import type { UserAttribute } from '@authup/core-kit';
-import { EntityType } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyRequestQuery } from '../query.ts';
+import { applyQuery } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IUserAttributeRepository } from '../../../../../core/index.ts';
 import { UserAttributeEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -22,11 +22,11 @@ export class UserAttributeRepositoryAdapter implements IUserAttributeRepository 
         this.repository = repository;
     }
 
-    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<UserAttribute>> {
+    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<UserAttribute>> {
         const qb = this.repository.createQueryBuilder('userAttribute');
         qb.groupBy('userAttribute.id');
 
-        const { pagination } = applyRequestQuery(qb, query, { schema: EntityType.USER_ATTRIBUTE });
+        const { pagination } = applyQuery(qb, query);
 
         applyRealmScopeSelect(qb, 'userAttribute', ['userId']);
 

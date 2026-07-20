@@ -83,13 +83,15 @@ Modules wire together adapters, ports, and core logic. Configure app startup, re
 Defined in `@authup/server-kit` (re-exported from `@authup/server-kit/core`), these are the contracts that adapters must implement:
 
 ```typescript
+import type { IQuery } from '@rapiq/core';
+
 export type EntityRepositoryFindManyResult<T> = {
     data: T[],
-    meta: PaginationParseOutput & { total: number }
+    meta: EntityRepositoryPaginationMeta & { total: number }
 };
 
 export interface IEntityRepository<T extends ObjectLiteral = ObjectLiteral> {
-    findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<T>>;
+    findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<T>>;
     findOneById(id: string): Promise<T | null>;
     findOneByName(name: string, realm?: string): Promise<T | null>;
     findOneByIdOrName(idOrName: string, realm?: string): Promise<T | null>;
@@ -101,6 +103,10 @@ export interface IEntityRepository<T extends ObjectLiteral = ObjectLiteral> {
     validateJoinColumns(data: Partial<T>): Promise<void>;
 }
 ```
+
+`findMany` (and the per-entity `findOne`/`findAllByQuery` variants that carry a
+query) take the **rapiq IR** (`IQuery`), never a raw wire query — decoding is
+the service layer's job (see *Query IR flow* below).
 
 Per-entity interfaces extend the base:
 
@@ -124,6 +130,39 @@ Port interface names follow `I{Entity}Repository` (no "HTTP" or "Database" prefi
 
 EA = Extra Attributes (key-value pairs stored in a separate table, dynamically loaded onto the entity).
 
+### Query IR flow (schemas in core, decode in services, execute in adapters)
+
+The rapiq query pipeline is split along the hexagonal boundary so the IR is
+usable at the service level and nothing in core depends on TypeORM:
+
+- **Schemas** — one `defineSchema<T>` per entity, colocated at
+  `core/entities/{entity}/schema.ts` (exported via the entity barrel). They are
+  the server-side allow-list layer (fields/filters/relations/sort +
+  `pagination.maxLimit`) — deliberate security policy, never derived from
+  entity metadata.
+- **Registry + codec + decode** — `core/query/` owns the `SchemaRegistry`
+  (all entity schemas), the URL codec bound to it (decodes both the v2
+  expression dialect and legacy v1 bracket payloads), and
+  `decodeQuery(input, { schema, parameters? })` → `Query` (IR). `schema`
+  accepts the colocated schema object or a registered name; `parameters`
+  restricts which parameters are parsed/defaulted (e.g. `['filters']` for the
+  session bulk revoke, `['fields', 'relations']` for single reads).
+- **Services decode once** — `getMany` calls
+  `this.repository.findMany(decodeQuery(query, { schema: roleSchema }))`;
+  multi-branch services (session/consent/event) decode into a local and pass
+  the IR to every branch. Allow-lists, defaults and pagination bounds are all
+  applied at decode time, so services can also inspect or compose the IR
+  (`Filters.and()` injection, condition walks) before handing it down.
+- **Adapters execute only** — `applyQuery(queryBuilder, query?)` in
+  `app/modules/database/repositories/query.ts` wraps `@rapiq/typeorm`'s
+  `TypeormAdapter` (plus the DISTINCT-id `GROUP BY` join hook) and needs no
+  schema knowledge. A repository adapter never decodes.
+- **Extension point** — a persistence layer MAY extend the core registry with
+  storage-derived schemas (`@rapiq/typeorm`'s
+  `defineSchemaRegistryWithDataSource` with the `registry` option;
+  already-registered schemas take precedence). Nothing is wired today — the
+  explicit allow-lists stay the sole query surface.
+
 ### Adapter Implementation
 
 Adapters live in `app/modules/database/repositories/` and are named `{Entity}RepositoryAdapter`:
@@ -138,10 +177,10 @@ export class RoleRepositoryAdapter implements IRoleRepository {
         this.repository = dataSource.getRepository(RoleEntity);
     }
 
-    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<Role>> {
+    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<Role>> {
         const qb = this.repository.createQueryBuilder('role');
         qb.groupBy('role.id');
-        const { pagination } = applyQuery(qb, query, { /* field/filter/sort config */ });
+        const { pagination } = applyQuery(qb, query);
         const [entities, total] = await qb.getManyAndCount();
         return { data: entities, meta: { total, ...pagination } };
     }
@@ -150,7 +189,7 @@ export class RoleRepositoryAdapter implements IRoleRepository {
 ```
 
 Key adapter patterns:
-- `findMany()`: Copy the `applyQuery` config from the old handler
+- `findMany()`: Execute the decoded IR via `applyQuery(qb, query)` — the allow-list schema was already applied at decode time (service layer)
 - `findOneByIdOrName()`: Delegate to `findOneById` / `findOneByName` using `isUUID()`
 - `findOneBy()`: Delegate to `this.repository.findOneBy(where)`
 - `create/merge/save/remove`: Delegate to TypeORM, cast to entity type where needed

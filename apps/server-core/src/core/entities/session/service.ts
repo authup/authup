@@ -18,6 +18,8 @@ import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/serve
 import type { ISessionRepository } from '../../authentication/index.ts';
 import { SESSION_FILTER_KEYS } from '../../authentication/index.ts';
 import type { ISessionService, SessionDeleteManyOptions, SessionDeleteManyResult } from './types.ts';
+import { decodeQuery } from '../../query/index.ts';
+import { sessionSchema } from './schema.ts';
 
 export type SessionServiceContext = {
     repository: ISessionRepository,
@@ -41,6 +43,8 @@ export class SessionService extends AbstractEntityService implements ISessionSer
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<Session>> {
+        const parsed = decodeQuery(query, { schema: sessionSchema });
+
         let canReadAll = true;
         try {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.SESSION_READ });
@@ -53,7 +57,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
 
         if (!canReadAll) {
             // self-service: only the actor's own sessions
-            return this.repository.findMany(query, {
+            return this.repository.findMany(parsed, {
                 owner: {
                     sub: actor.identity!.data.id,
                     subKind: actor.identity!.type,
@@ -61,7 +65,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
             });
         }
 
-        const { data: entities, meta } = await this.repository.findMany(query);
+        const { data: entities, meta } = await this.repository.findMany(parsed);
 
         const data: Session[] = [];
         let { total } = meta;
@@ -231,7 +235,9 @@ export class SessionService extends AbstractEntityService implements ISessionSer
         // Gate: an actor without SESSION_DELETE cannot force-logout anyone → 403.
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.SESSION_DELETE });
 
-        const sessions = await this.repository.findAllByQuery(query);
+        const sessions = await this.repository.findAllByQuery(
+            decodeQuery(query, { schema: sessionSchema, parameters: ['filters'] }),
+        );
 
         let count = 0;
         for (const session of sessions) {
