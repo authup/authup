@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { QueryFiltersInput, QueryInput } from '../../../../core';
+import type { ICondition, PaginationBuildInput } from '@rapiq/core';
+import type { EntityListQueryInput, QueryFiltersInput } from '../../../../core';
 import type {
     MaybeRef,
     Ref,
@@ -17,29 +18,35 @@ import type { EntityCollectionSlotName } from './constants';
 
 type Entity<T> = T extends Record<string, any> ? T : never;
 
-/** Replaces `@vuecs/list-controls` `ListLoadFn` — async loader keyed by query meta. */
-export type ListLoadFn<M = any> = (meta?: M) => Promise<void>;
+/** Replaces `@vuecs/list-controls` `ListLoadFn` — async loader keyed by query input. */
+export type ListLoadFn<INPUT = any> = (input?: INPUT) => Promise<void>;
 
-export type ListMeta<T extends Record<string, any>> = {
+/**
+ * Pagination UI state of a collection. Query state (filters, sorts, ...)
+ * is retained inside the manager as the rapiq IR and re-assembled on
+ * every load — it no longer round-trips through this object.
+ */
+export type ListMeta = {
     total?: number,
-    busy?: boolean
-} & QueryInput<T>;
+    busy?: boolean,
+    pagination?: PaginationBuildInput
+};
 
 /** Minimal slot-prop shape — superset of what the @vuecs/list-controls 2.x types exposed. */
-export type ListSlotProps<T, M = any> = {
+export type ListSlotProps<T> = {
     data: T[];
     busy: boolean;
     total: number;
-    load: ListLoadFn<M>;
-    meta: M;
+    load: ListLoadFn<EntityListQueryInput<Entity<T>>>;
+    meta: ListMeta;
     created(item: T): void;
     updated(item: T): void;
     deleted(item: T): void;
 };
 
-export type ListBodySlotProps<T, M = any> = ListSlotProps<T, M>;
-export type ListHeaderSlotProps<T, M = any> = ListSlotProps<T, M>;
-export type ListFooterSlotProps<T, M = any> = ListSlotProps<T, M>;
+export type ListBodySlotProps<T> = ListSlotProps<T>;
+export type ListHeaderSlotProps<T> = ListSlotProps<T>;
+export type ListFooterSlotProps<T> = ListSlotProps<T>;
 export type ListItemSlotProps<T> = {
     data: T;
     index: number;
@@ -86,30 +93,30 @@ export type EntityCollectionRenderOptions<T> = {
 
 export type EntityCollectionVProps<T> = {
     realmId?: string,
-    query?: QueryInput<Entity<T>>,
+    query?: EntityListQueryInput<Entity<T>>,
     loadOnSetup?: boolean,
 } & EntityCollectionRenderOptions<T>;
 
 export type EntityCollectionManager<T extends Record<string, any>> = {
     render(defaults?: EntityCollectionRenderOptions<T>) : VNodeChild;
-    load: ListLoadFn<ListMeta<T>>,
+    load: ListLoadFn<EntityListQueryInput<Entity<T>>>,
     handleCreated(item: T) : void;
     handleDeleted(item: T) : void;
     handleUpdated(item: T) : void;
     data: Ref<T[]>,
     busy: Ref<boolean>,
-    meta: Ref<ListMeta<T>>,
+    meta: Ref<ListMeta>,
     total: Ref<number>,
 };
 
 export type EntityCollectionVSlots<T extends Record<string, any>> = {
-    [EntityCollectionSlotName.BODY]: ListBodySlotProps<T, ListMeta<T>>,
-    [EntityCollectionSlotName.DEFAULT]: ListSlotProps<T, ListMeta<T>>,
+    [EntityCollectionSlotName.BODY]: ListBodySlotProps<T>,
+    [EntityCollectionSlotName.DEFAULT]: ListSlotProps<T>,
     [EntityCollectionSlotName.ITEM]: ListItemSlotProps<T>,
     [EntityCollectionSlotName.ITEM_ACTIONS]: ListItemSlotProps<T>,
     [EntityCollectionSlotName.ITEM_ACTIONS_EXTRA]: ListItemSlotProps<T>,
-    [EntityCollectionSlotName.HEADER]: ListHeaderSlotProps<T, ListMeta<T>>,
-    [EntityCollectionSlotName.FOOTER]: ListFooterSlotProps<T, ListMeta<T>>,
+    [EntityCollectionSlotName.HEADER]: ListHeaderSlotProps<T>,
+    [EntityCollectionSlotName.FOOTER]: ListFooterSlotProps<T>,
     [EntityCollectionSlotName.NO_MORE]: undefined,
     [EntityCollectionSlotName.LOADING]: undefined
 };
@@ -130,8 +137,8 @@ export type EntityCollectionManagerCreateContext<
     setup: SetupContext<EntityCollectionVEmitOptions<RECORD>>,
     props: EntityCollectionVProps<RECORD>,
     loadAll?: boolean,
-    query?: QueryInput<Entity<RECORD>> | (() => QueryInput<Entity<RECORD>>),
-    queryFilters?: ((q: string) => QueryFiltersInput<Entity<RECORD>>),
-    onCreated?: (entity: RECORD, meta: ListMeta<RECORD>) => void | Promise<void>,
+    query?: EntityListQueryInput<Entity<RECORD>> | (() => EntityListQueryInput<Entity<RECORD>>),
+    queryFilters?: ((q: string) => ICondition | QueryFiltersInput<Entity<RECORD>>),
+    onCreated?: (entity: RECORD, meta: ListMeta) => void | Promise<void>,
     socket?: boolean | Omit<EntitySocketManagerCreateContext<TYPE, RECORD>, 'type'>
 };

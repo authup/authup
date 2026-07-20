@@ -19,7 +19,7 @@ export const ASearch = defineComponent({
         iconClass: { type: String },
         busy: { type: Boolean },
         load: { type: Function as PropType<ListLoadFn> },
-        meta: { type: Object as PropType<ListMeta<any>> },
+        meta: { type: Object as PropType<ListMeta> },
     },
     slots: Object as SlotsType<{
         default: SearchSlotProps

@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import type { QueryInput } from '@authup/client-web-kit';
+import { defineQuery } from '@rapiq/core';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
 import { VCTimeago } from '@vuecs/timeago';
@@ -41,7 +41,7 @@ export default defineComponent({
         const store = injectStore();
         const { realmManagementId } = storeToRefs(store);
 
-        const query : QueryInput<IdentityProvider> = { filters: { realmId: [realmManagementId.value ?? null, null] } };
+        const query = defineQuery<IdentityProvider>({ filters: { realmId: [realmManagementId.value ?? null, null] } });
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.IDENTITY_PROVIDER_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.IDENTITY_PROVIDER_DELETE });

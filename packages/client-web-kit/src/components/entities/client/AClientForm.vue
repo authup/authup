@@ -35,8 +35,10 @@ import {
     ClientTokenBindingMethod,
     ClientValidator,
     EntityType,
+    type Policy,
     buildClientCertificateURI,
 } from '@authup/core-kit';
+import { defineQuery } from '@rapiq/core';
 import type { FormOption } from '@vuecs/forms';
 import {
     ValidatorGroup,
@@ -258,7 +260,7 @@ export default defineComponent({
             return value ? value.split(',') : [];
         });
 
-        const policyQuery = computed(() => ({ filters: { realmId: [...(form.realmId ? [form.realmId] : []), null] } }));
+        const policyQuery = computed(() => defineQuery<Policy>({ filters: { realmId: [...(form.realmId ? [form.realmId] : []), null] } }));
 
         const authMethodOptions = computed<FormOption[]>(() => [
             { value: `${ClientAuthMethod.NONE}`, label: translationsClient.authMethodNone },

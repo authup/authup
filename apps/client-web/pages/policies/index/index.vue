@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import type { QueryInput } from '@authup/client-web-kit';
+import { defineQuery } from '@rapiq/core';
 import { defineComponent, resolveComponent } from 'vue';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
@@ -41,7 +41,7 @@ export default defineComponent({
         const store = injectStore();
         const { realmManagementId } = storeToRefs(store);
 
-        const query : QueryInput<Policy> = { filters: { realmId: [realmManagementId.value ?? null, null] } };
+        const query = defineQuery<Policy>({ filters: { realmId: [realmManagementId.value ?? null, null] } });
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.PERMISSION_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.PERMISSION_DELETE });

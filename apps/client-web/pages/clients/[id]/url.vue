@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { QueryInput } from '@authup/client-web-kit';
+import { defineQuery } from '@rapiq/core';
 import { TranslatorTranslationAppKey, TranslatorTranslationEntityKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { AClientScopes, useTranslations, useTranslationsForNamespace } from '@authup/client-web-kit';
 import type { Client, ClientScope } from '@authup/core-kit';
@@ -72,10 +72,10 @@ export default defineNuxtComponent({
             }
         };
 
-        const query : QueryInput<ClientScope> = {
+        const query = defineQuery<ClientScope>({
             filters: { clientId: props.entity.id },
             relations: ['scope'],
-        };
+        });
 
         return {
             toggleScope,

@@ -6,6 +6,8 @@
 -->
 
 <script lang="ts">
+import type { Role } from '@authup/core-kit';
+import { defineQuery } from '@rapiq/core';
 import { computed, defineComponent } from 'vue';
 import { ARoles } from '../role';
 import AClientRoleAssignment from './AClientRoleAssignment.vue';
@@ -17,7 +19,7 @@ export default defineComponent({
         realmId: String,
     },
     setup(props, { slots }) {
-        const query = computed(() => ({ filters: { realmId: [...(props.realmId ? [props.realmId] : []), null] } }));
+        const query = computed(() => defineQuery<Role>({ filters: { realmId: [...(props.realmId ? [props.realmId] : []), null] } }));
         const forwardedSlots = computed(() => Object.fromEntries(Object.entries(slots).filter(([name]) => name !== 'itemActions')));
 
         return { query, forwardedSlots };

@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { QueryFieldsInput, QueryFiltersInput, QueryInput } from '../../../../core';
+import type { ICondition } from '@rapiq/core';
+import type { EntityListQueryInput, QueryFieldsInput, QueryFiltersInput } from '../../../../core';
 import { unref } from 'vue';
 import type { PropType } from 'vue';
 import type {
@@ -45,8 +46,8 @@ export function defineEntityVProps<T>() {
     return {
         entity: { type: Object as PropType<T> },
         entityId: { type: String },
-        queryFilters: { type: Object as PropType<QueryFiltersInput<T extends Record<string, any> ? T : never>> },
+        queryFilters: { type: Object as PropType<QueryFiltersInput<T extends Record<string, any> ? T : never> | ICondition> },
         queryFields: { type: Object as PropType<QueryFieldsInput<T extends Record<string, any> ? T : never>> },
-        query: { type: Object as PropType<T extends Record<string, any> ? QueryInput<T> : never> },
+        query: { type: Object as PropType<T extends Record<string, any> ? EntityListQueryInput<T> : never> },
     };
 }

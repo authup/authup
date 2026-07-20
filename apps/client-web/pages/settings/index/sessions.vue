@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { QueryInput } from '@authup/client-web-kit';
+import { defineQuery } from '@rapiq/core';
 import type { Session } from '@authup/core-kit';
 import {
     TranslatorTranslationActionKey,
@@ -43,7 +43,7 @@ export default defineComponent({
         // Scope to the current user's own sessions (an admin holding SESSION_READ
         // would otherwise see every session here); non-admins are self-scoped by
         // the server regardless.
-        const query = computed<QueryInput<Session>>(() => ({
+        const query = computed(() => defineQuery<Session>({
             filters: { userId: userId.value ?? undefined },
             sort: { seenAt: 'DESC' },
         }));

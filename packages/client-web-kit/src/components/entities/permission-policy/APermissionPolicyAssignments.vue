@@ -7,6 +7,7 @@
 
 <script lang="ts">
 import type { Policy } from '@authup/core-kit';
+import { defineQuery } from '@rapiq/core';
 import type { PropType } from 'vue';
 import {
     computed,
@@ -64,9 +65,12 @@ export default defineComponent({
 
         const forwardedSlots = computed(() => Object.fromEntries(Object.entries(slots).filter(([name]) => name !== 'item')));
 
+        const policyQuery = defineQuery<Policy>({ filters: { parentId: null } });
+
         return {
             detailPolicy,
             forwardedSlots,
+            policyQuery,
             translationsAction,
         };
     },
@@ -74,7 +78,7 @@ export default defineComponent({
 </script>
 <template>
     <div>
-        <APolicies :query="{ filters: { parentId: null } }">
+        <APolicies :query="policyQuery">
             <template #item="{ data }">
                 <div>{{ data.name }}</div>
                 <APolicyInlineInfo

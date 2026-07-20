@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { QueryInput } from '@authup/client-web-kit';
+import { defineQuery } from '@rapiq/core';
 import type { Session, User } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
@@ -44,7 +44,7 @@ export default defineNuxtComponent({
     setup(props) {
         definePageMeta({ [LayoutKey.REQUIRED_PERMISSIONS]: [PermissionName.SESSION_READ] });
 
-        const query = computed<QueryInput<Session>>(() => ({
+        const query = computed(() => defineQuery<Session>({
             filters: { userId: props.entity.id },
             sort: { seenAt: 'DESC' },
         }));

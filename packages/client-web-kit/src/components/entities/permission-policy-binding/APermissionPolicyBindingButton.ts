@@ -12,6 +12,7 @@ import type {
     RealmScopeValue,  
 } from '@authup/core-kit';
 import { REALM_SCOPE } from '@authup/core-kit';
+import { defineQuery } from '@rapiq/core';
 import type { PropType, Ref } from 'vue';
 import {
     defineComponent,
@@ -323,7 +324,7 @@ export const APermissionPolicyBindingButton = defineComponent({
                 renderCloseIcon(),
             ]),
             renderRealmScopeSelector(),
-            h(APolicies, { query: { filters: { parentId: null } } }, {
+            h(APolicies, { query: defineQuery<Policy>({ filters: { parentId: null } }) }, {
                 [SlotName.ITEM]: (slotProps: { data: Policy }) => {
                     const isSelected = currentPolicyId.value === slotProps.data.id;
 
