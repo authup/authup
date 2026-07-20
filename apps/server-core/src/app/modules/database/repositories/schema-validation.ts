@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ObjectLiteral, Schema } from '@rapiq/core';
+import type { ICondition, ObjectLiteral, Schema } from '@rapiq/core';
+import { isFilter, isFilters } from '@rapiq/core';
 import type { DataSource, EntityMetadata, EntityTarget } from 'typeorm';
 import { EntityType } from '@authup/core-kit';
 import { AuthupError } from '@authup/errors';
@@ -84,28 +85,48 @@ export function assertSchemaMatchesEntity(
     const relations = new Set(metadata.relations.map((relation) => relation.propertyName));
 
     const invalid : string[] = [];
-    const check = (keys: unknown, allowRelation: boolean) => {
+    const checkKey = (key: unknown, allowRelation: boolean) => {
+        if (typeof key !== 'string') {
+            return;
+        }
+        const [head] = key.split('.');
+        const dotted = head !== key;
+        if (dotted ? relations.has(head) : (columns.has(key) || (allowRelation && relations.has(key)))) {
+            return;
+        }
+        invalid.push(key);
+    };
+    const checkKeys = (keys: unknown, allowRelation: boolean) => {
         if (!Array.isArray(keys)) {
             return;
         }
         for (const key of keys.flat()) {
-            if (typeof key !== 'string') {
-                continue;
+            checkKey(key, allowRelation);
+        }
+    };
+    // a filters default is an ICondition tree, not a key list — walk it
+    // and validate every leaf's field like a filters allow-list entry.
+    const checkCondition = (condition: ICondition) => {
+        if (isFilters(condition)) {
+            for (const child of condition.value) {
+                checkCondition(child);
             }
-            const [head] = key.split('.');
-            const dotted = head !== key;
-            if (dotted ? relations.has(head) : (columns.has(key) || (allowRelation && relations.has(key)))) {
-                continue;
-            }
-            invalid.push(key);
+            return;
+        }
+        if (isFilter(condition)) {
+            checkKey(condition.field, false);
         }
     };
 
-    check(schema.fields.default, false);
-    check(schema.fields.allowed, false);
-    check(schema.filters.allowed, false);
-    check(schema.sort.allowed, false);
-    check(schema.relations.allowed, true);
+    checkKeys(schema.fields.default, false);
+    checkKeys(schema.fields.allowed, false);
+    checkKeys(schema.filters.allowed, false);
+    if (schema.filters.default) {
+        checkCondition(schema.filters.default);
+    }
+    checkKeys(schema.sort.allowed, false);
+    checkKeys(schema.sort.defaultKeys, false);
+    checkKeys(schema.relations.allowed, true);
 
     if (invalid.length > 0) {
         throw new AuthupError(

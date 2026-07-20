@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { defineSchema } from '@rapiq/core';
+import { and, defineSchema, eq } from '@rapiq/core';
 import { DataSource } from 'typeorm';
 import {
     afterAll,
@@ -128,6 +128,38 @@ describe('app/modules/database/repositories/schema-validation', () => {
         });
         expect(() => assertSchemaMatchesEntity(invalid, dataSource.getMetadata(RoleEntity)))
             .toThrowError(/unknownRelation.name/);
+    });
+
+    it('should validate the fields of a filters default condition tree', () => {
+        const valid = defineSchema({
+            name: 'filters-default-valid',
+            filters: { default: and(eq('name', 'admin'), eq('realm.name', 'master')) },
+        });
+        expect(() => assertSchemaMatchesEntity(valid, dataSource.getMetadata(RoleEntity)))
+            .not.toThrow();
+
+        const invalid = defineSchema({
+            name: 'filters-default-invalid',
+            filters: { default: and(eq('name', 'admin'), eq('renamedAway', 'x')) },
+        });
+        expect(() => assertSchemaMatchesEntity(invalid, dataSource.getMetadata(RoleEntity)))
+            .toThrowError(/renamedAway/);
+    });
+
+    it('should validate sort default keys', () => {
+        const valid = defineSchema({
+            name: 'sort-default-valid',
+            sort: { default: { updatedAt: 'DESC' } },
+        });
+        expect(() => assertSchemaMatchesEntity(valid, dataSource.getMetadata(RoleEntity)))
+            .not.toThrow();
+
+        const invalid = defineSchema({
+            name: 'sort-default-invalid',
+            sort: { default: { renamedAway: 'DESC' } },
+        });
+        expect(() => assertSchemaMatchesEntity(invalid, dataSource.getMetadata(RoleEntity)))
+            .toThrowError(/renamedAway/);
     });
 
     it('should accept relation names in the relations allow-list only', () => {
