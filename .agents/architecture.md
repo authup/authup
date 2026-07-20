@@ -172,11 +172,13 @@ usable at the service level and nothing in core depends on TypeORM:
 - **Boot-time drift validation** — `DatabaseModule.setup` runs
   `validateEntitySchemas(dataSource)`
   (`app/modules/database/repositories/schema-validation.ts`): every
-  registered schema's allow-listed keys (fields/filters/sort defaults +
-  alloweds, relations) must exist on its entity's TypeORM metadata
-  (plain keys as column property paths, dotted keys headed by a
-  relation), via an explicit schema-name → entity-class map. A renamed
-  column fails the boot instead of dying as a dead filter. This is the
+  registered schema is checked against its entity's TypeORM metadata
+  via `@rapiq/typeorm`'s `assertSchemaMatchesEntity` (≥ 2.0.0-beta.4,
+  tada5hi/rapiq#800 — allow-lists, fields/sort defaults and the filters
+  default condition tree; plain keys as column property paths, dotted
+  keys headed by a relation), iterated over an explicit schema-name →
+  entity-class map. A renamed column fails the boot instead of dying as
+  a dead filter. This is the
   distilled outcome of the #3279 phase-2 evaluation: entity-DERIVED
   schemas were prototyped and rejected — under `EntityType` naming every
   derivable contribution (name, `schemaMapping`, `relations.allowed`)
