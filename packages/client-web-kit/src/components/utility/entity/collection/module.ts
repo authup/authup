@@ -26,6 +26,7 @@ import {
     Query,
     defineFilters,
     definePagination,
+    isQuery,
     mergeQueries,
 } from '@rapiq/core';
 import type { EntityListQueryInput } from '../../../../core';
@@ -46,7 +47,6 @@ import { defineEntitySocketManager } from '../socket';
 import type { EntitySocketManagerCreateContext } from '../socket';
 import {
     isCondition,
-    isQuery,
     isQuerySortedDescByDate,
     normalizeQueryInput,
 } from '../../../../core/query';

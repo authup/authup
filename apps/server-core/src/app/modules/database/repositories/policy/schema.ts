@@ -27,7 +27,6 @@ export const policySchema = defineSchema<Policy>({
         ],
     },
     filters: { allowed: ['id', 'name', 'type', 'parentId', 'realmId'] },
-    // @ts-expect-error nullable relation (realm) is not covered by SimpleResourceKeys
     relations: { allowed: ['children', 'realm'] },
     sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
     pagination: { maxLimit: 50 },

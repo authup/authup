@@ -63,8 +63,8 @@
         "@authup/specs": "^1.0.0-beta.53",
         "@hapic/oauth2": "^4.0.1",
         "@posva/event-emitter": "^1.0.3",
-        "@rapiq/codec-url": "^2.0.0-beta.2",
-        "@rapiq/core": "^2.0.0-beta.2",
+        "@rapiq/codec-url": "^2.0.0-beta.3",
+        "@rapiq/core": "^2.0.0-beta.3",
         "hapic": "^3.0.1"
     },
     "devDependencies": {

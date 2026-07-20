@@ -6,9 +6,8 @@
  */
 
 import { createURLCodec } from '@rapiq/codec-url';
-import { defineQuery } from '@rapiq/core';
+import { defineQuery, isQuery } from '@rapiq/core';
 import type { IQuery, ObjectLiteral, QueryBuildInput } from '@rapiq/core';
-import { isObject } from '@authup/kit';
 
 /**
  * Accepted query input for entity read endpoints: either typed build
@@ -21,11 +20,6 @@ export type EntityQueryInput<
 > = QueryBuildInput<T> | IQuery;
 
 const codec = createURLCodec();
-
-function isQuery(input: unknown) : input is IQuery {
-    return isObject(input) &&
-        typeof (input as IQuery).accept === 'function';
-}
 
 /**
  * Serialize entity query input into a URL query string (`?`-prefixed,

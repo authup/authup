@@ -27,8 +27,7 @@ export const eventSchema = defineSchema<Event>({
             'requestIpAddress',
             'requestUserAgent',
             'realmId',
-            // JSON column — not covered by SimpleKeys<Event>
-            'data' as never,
+            'data',
             'expiring',
             'expiresAt',
             'createdAt',
