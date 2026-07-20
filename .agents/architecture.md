@@ -2785,9 +2785,11 @@ integration:
   generic object merger. Typed authoring stays at the edges — pages and
   components construct via `defineQuery<T>({...})` (NestedKeys checking
   at construction); the `query` prop / manager-context accepts
-  `QueryInput<T> | IQuery` (duck-typed `isQuery` guard in `core/query`
-  until rapiq#774 ships the guard family) and is desugared at the
-  boundary. Per load, fields/relations/sorts/pagination merge via
+  `QueryInput<T> | IQuery` (rapiq's native `isQuery` guard; `QueryInput`
+  is `QueryBuildInput<T, 3>` — the depth bound only truly binds once
+  rapiq threads DEPTH into its string-key arms, tada5hi/rapiq#790;
+  before that, self-recursive entities trip vue-tsc's TS2590 in
+  client-web's typecheck) and is desugared at the boundary. Per load, fields/relations/sorts/pagination merge via
   `mergeQueries` (left priority: load input ▷ retained interactive
   state ▷ meta pagination ▷ base query), while **filters are kept out
   of `mergeQueries`** and the base (props + context) filters are

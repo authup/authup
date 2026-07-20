@@ -9,18 +9,18 @@ import type {
     FieldsBuildInput,
     FiltersBuildInput,
     ICondition,
-    IFields,
-    IPagination,
     IQuery,
-    IRelations,
-    ISorts,
     ObjectLiteral,
-    PaginationBuildInput,
+    QueryBuildInput,
     RelationsBuildInput,
     SortsBuildInput,
 } from '@rapiq/core';
-import { defineQuery } from '@rapiq/core';
-import { isObject } from 'smob';
+import {
+    defineQuery, 
+    isFilter, 
+    isFilters, 
+    isQuery,
+} from '@rapiq/core';
 
 /**
  * Depth-bounded rapiq build inputs for component props. The library
@@ -45,21 +45,15 @@ export type QuerySortInput<
 > = SortsBuildInput<T, 3>;
 
 /**
- * Typed authoring input for component props and manager contexts.
- * Mirrors rapiq's QueryBuildInput (each parameter also accepts an
+ * Typed authoring input for component props and manager contexts:
+ * rapiq's QueryBuildInput (each parameter also accepts an
  * already-built AST fragment, so condition helpers like or()/eq()
  * assign without casts) at the depth bound above. Desugared into the
  * IR via defineQuery at the consuming boundary.
  */
 export type QueryInput<
     T extends ObjectLiteral = ObjectLiteral,
-> = {
-    fields?: QueryFieldsInput<T> | IFields,
-    filters?: QueryFiltersInput<T> | ICondition,
-    pagination?: PaginationBuildInput | IPagination,
-    relations?: QueryRelationsInput<T> | IRelations,
-    sort?: QuerySortInput<T> | ISorts,
-};
+> = QueryBuildInput<T, 3>;
 
 /**
  * Accepted query shape wherever the kit takes a query from the outside:
@@ -70,24 +64,12 @@ export type EntityListQueryInput<
 > = QueryInput<T> | IQuery;
 
 /**
- * Duck-typed IR guard until rapiq ships the node guard family
- * (tada5hi/rapiq#774): every IR node exposes the visitor entry point.
+ * A condition is either a leaf filter or a compound filters node —
+ * rapiq ships guards for both, but none for the union (and isFilters
+ * narrows within ICondition rather than from unknown).
  */
-export function isQuery(input: unknown) : input is IQuery {
-    return isObject(input) &&
-        typeof (input as IQuery).accept === 'function';
-}
-
 export function isCondition(input: unknown) : input is ICondition {
-    return isObject(input) &&
-        typeof (input as ICondition).operator === 'string' &&
-        'value' in input;
-}
-
-export function isSortsNode(input: unknown) : input is ISorts {
-    return isObject(input) &&
-        typeof (input as ISorts).accept === 'function' &&
-        Array.isArray((input as ISorts).value);
+    return isFilter(input) || isFilters(input as ICondition);
 }
 
 /**
