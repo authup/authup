@@ -44,7 +44,7 @@
         "@ilingo/vue": "^6.0.0",
         "@nuxtjs/google-fonts": "^3.2.0",
         "@pinia/nuxt": "^0.11.3",
-        "@rapiq/core": "^2.0.0-beta.3",
+        "@rapiq/core": "^2.0.0-beta.4",
         "@tailwindcss/vite": "^4.3.2",
         "@validup/vue": "^0.3.3",
         "@vuecs/button": "^1.3.0",
