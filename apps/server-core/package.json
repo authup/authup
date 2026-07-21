@@ -137,6 +137,7 @@
         "@ilingo/validup": "^1.0.1",
         "@ilingo/validup-vue": "^1.0.1",
         "@ilingo/vue": "^6.0.0",
+        "@rapiq/memory": "^2.0.0-beta.6",
         "@tailwindcss/vite": "^4.3.2",
         "@trapi/cli": "^2.0.1",
         "@types/ldapjs": "^3.0.6",

@@ -5,6 +5,8 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
+import type { ICondition } from '@rapiq/core';
+import { or } from '@rapiq/core';
 import { ErrorCode } from '@authup/errors';
 import type { Issue } from 'validup';
 import { defineIssueItem } from 'validup';
@@ -22,7 +24,13 @@ import { PermissionError } from '../error';
 import type { IPermissionProvider } from '../provider';
 
 import type { PermissionPolicyBindingAggregated } from '../types.ts';
-import type { IPermissionEvaluator, PermissionEvaluationContext, PermissionEvaluatorOptions } from './types.ts';
+import type {
+    IPermissionEvaluator,
+    PermissionCompileContext,
+    PermissionCompileResult,
+    PermissionEvaluationContext,
+    PermissionEvaluatorOptions,
+} from './types.ts';
 
 export class PermissionEvaluator implements IPermissionEvaluator {
     protected provider : IPermissionProvider;
@@ -224,5 +232,91 @@ export class PermissionEvaluator implements IPermissionEvaluator {
                 decisionStrategy: DecisionStrategy.AFFIRMATIVE,
             },
         });
+    }
+
+    // ----------------------------------------------
+
+    /**
+     * Compile the permission's policy trees against the knowns bag into a
+     * {@link PermissionCompileResult} — the query-build counterpart of
+     * {@link evaluate} (issue #3286 phase 3). Runs the SAME evaluation walk with
+     * `withConditions` enabled: policies that settle with the knowns settle here,
+     * pending subtrees contribute their exact condition form. Multiple names are
+     * a disjunction (any-of), so a single non-expressible name degrades the whole
+     * compilation to `post` — pushing only some disjuncts would wrongly exclude
+     * rows another name would admit.
+     */
+    async compile(ctx: PermissionCompileContext) : Promise<PermissionCompileResult> {
+        const names = Array.isArray(ctx.name) ? ctx.name : [ctx.name];
+
+        const dataBase = ctx.data || new PolicyData();
+
+        const conditions : ICondition[] = [];
+        let post = false;
+
+        for (const name of names) {
+            const binding = await this.findOne(name, {
+                realmId: ctx.realmId,
+                clientId: ctx.clientId,
+            });
+            if (!binding) {
+                // unresolvable permission — a settled-false disjunct, drops out
+                continue;
+            }
+
+            const grantPolicies = binding.grants
+                .map((grant) => grant.policy)
+                .filter((grantPolicy): grantPolicy is BasePolicy => !!grantPolicy);
+
+            if (grantPolicies.length < binding.grants.length) {
+                // some grant is policy-free => unrestricted
+                return { verdict: 'allow' };
+            }
+
+            const data = dataBase.clone();
+            data.set(BuiltInPolicyType.PERMISSION_BINDING, binding);
+
+            const compositePolicy : CompositePolicy = {
+                type: BuiltInPolicyType.COMPOSITE,
+                decisionStrategy: DecisionStrategy.AFFIRMATIVE,
+                children: grantPolicies,
+            };
+
+            const evaluationResult = await this.policyEngine.evaluate(
+                compositePolicy,
+                definePolicyEvaluationContext({
+                    data,
+                    withConditions: true,
+                }),
+            );
+
+            if (evaluationResult.success) {
+                return { verdict: 'allow' };
+            }
+
+            if (evaluationResult.pending) {
+                if (evaluationResult.condition) {
+                    conditions.push(evaluationResult.condition);
+                } else {
+                    post = true;
+                }
+            }
+            // settled false — the disjunct drops out
+        }
+
+        if (post) {
+            return { verdict: 'post' };
+        }
+
+        if (conditions.length === 0) {
+            return { verdict: 'deny' };
+        }
+
+        if (conditions.length === 1) {
+            const [condition] = conditions;
+            return { verdict: 'conditional', condition: condition! };
+        }
+
+        return { verdict: 'conditional', condition: or(...conditions) };
     }
 }
