@@ -32,6 +32,7 @@ import type { Event } from '@authup/core-kit';
 import { EntityEventHandler, EventService } from '../../../core/index.ts';
 import { useRequestEventContext } from '../../../adapters/http/request/index.ts';
 import { EventRepositoryAdapter } from './repositories/index.ts';
+import { validateEntitySchemas } from './repositories/schema-validation.ts';
 import { CacheInjectionKey } from '../cache/index.ts';
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
@@ -95,6 +96,7 @@ export class DatabaseModule implements IModule {
                 await this.migrate(container, dataSource);
             }
 
+            validateEntitySchemas(dataSource);
             this.registerRepositories(container, dataSource);
             // the event service must exist before the publisher wiring — the
             // entity-CRUD bridge handler resolves it from the container.

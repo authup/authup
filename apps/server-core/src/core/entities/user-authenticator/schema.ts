@@ -7,9 +7,10 @@
 
 import { defineSchema } from '@rapiq/core';
 import type { UserAuthenticator } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 
 export const userAuthenticatorSchema = defineSchema<UserAuthenticator>({
-    name: 'userAuthenticator',
+    name: EntityType.USER_AUTHENTICATOR,
     fields: {
         allowed: [
             'id',

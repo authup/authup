@@ -32,6 +32,7 @@ export enum EntityType {
     TRUST_ANCHOR = 'trustAnchor',
     USER = 'user',
     USER_ATTRIBUTE = 'userAttribute',
+    USER_AUTHENTICATOR = 'userAuthenticator',
     USER_PERMISSION = 'userPermission',
     USER_ROLE = 'userRole',
 }

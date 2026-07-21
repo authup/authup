@@ -59,6 +59,7 @@ const ENTITY_REALM_KEY_MAP : Record<`${EntityType}`, string> = {
     [EntityType.TRUST_ANCHOR]: 'realmId',
     [EntityType.USER]: 'realmId',
     [EntityType.USER_ATTRIBUTE]: 'realmId',
+    [EntityType.USER_AUTHENTICATOR]: 'realmId',
     [EntityType.USER_PERMISSION]: 'userRealmId',
     [EntityType.USER_ROLE]: 'userRealmId',
 };
