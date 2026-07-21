@@ -250,9 +250,28 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         entity = this.repository.create(validated);
         entity = await this.repository.save(entity);
 
-        await this.assignDefaultPolicy(entity);
-        await this.assignToAdminRole(entity);
-        await this.assignToRealmAdminRoles(entity);
+        // The permission row is now committed, but its security wiring — the
+        // admin/realm_admin grants and the system.default binding — is written
+        // through separate repositories with no shared transaction. A failure
+        // partway through would strand the permission bound by system.default
+        // yet held by nobody, which the uniform member gate on
+        // POST /role-permissions then makes permanently un-grantable (#3303).
+        // Two safeguards:
+        //   1. Establish the grants BEFORE binding system.default, so even an
+        //      un-compensated interruption (a hard process crash) cannot produce
+        //      the bound-but-ungranted strand — at worst a benign, still-grantable
+        //      permission that lacks its baseline policy.
+        //   2. On any thrown failure, remove the just-created permission — its
+        //      CASCADE foreign keys drop any partial junction/binding rows — and
+        //      rethrow so the caller sees the failure instead of a stale record.
+        try {
+            await this.assignToAdminRole(entity);
+            await this.assignToRealmAdminRoles(entity);
+            await this.assignDefaultPolicy(entity);
+        } catch (e) {
+            await this.repository.remove(entity).catch(() => { /* best-effort rollback */ });
+            throw e;
+        }
 
         return {
             entity,

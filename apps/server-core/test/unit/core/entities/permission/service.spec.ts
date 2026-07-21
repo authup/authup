@@ -180,6 +180,23 @@ describe('core/entities/permission/service', () => {
             await expect(
                 serviceWithoutAdmin.create({ name: 'stranded-perm' }, createAllowAllActor()),
             ).rejects.toThrow(/admin role is not provisioned/);
+
+            // The half-wired permission must be rolled back, not left committed.
+            expect(repository.getAll()).toHaveLength(0);
+        });
+
+        it('should roll back the created permission when post-save wiring fails', async () => {
+            const failure = new Error('binding write failed');
+            permissionPolicyRepository.save = async () => {
+                throw failure;
+            };
+
+            await expect(
+                service.create({ name: 'doomed-perm' }, createAllowAllActor()),
+            ).rejects.toThrow(failure);
+
+            // Compensating cleanup removed the committed permission row.
+            expect(repository.getAll()).toHaveLength(0);
         });
     });
 
