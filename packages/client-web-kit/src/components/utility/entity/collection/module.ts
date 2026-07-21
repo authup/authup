@@ -24,6 +24,7 @@ import type {
 } from '@rapiq/core';
 import {
     Query,
+    contains,
     defineFilters,
     definePagination,
     isQuery,
@@ -210,13 +211,20 @@ function create<
 
                 let filtersOverride : IFilters | undefined;
                 if (
-                    context.queryFilters &&
                     input.filters &&
                     !isCondition(input.filters) &&
                     hasOwnProperty(input.filters, 'name') &&
-                    typeof input.filters.name === 'string'
+                    typeof input.filters.name === 'string' &&
+                    input.filters.name.length > 0
                 ) {
-                    const transformed = context.queryFilters(input.filters.name);
+                    // Search input arrives as a bare `name` string. A raw wire
+                    // marker (`~text`) is NOT interpreted by the rapiq v2 IR
+                    // builder (it becomes eq('name','~text')), so build the
+                    // condition explicitly: the queryFilters hook when provided
+                    // (richer multi-field search), else a default substring match.
+                    const transformed = context.queryFilters ?
+                        context.queryFilters(input.filters.name) :
+                        contains('name', input.filters.name);
                     filtersOverride = defineFilters(
                         transformed as FiltersBuildInput | ICondition,
                     );
