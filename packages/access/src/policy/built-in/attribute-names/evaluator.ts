@@ -11,6 +11,7 @@ import type { PolicyIssue } from '../../issue';
 import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
 import { AttributeNamesPolicyValidator } from './validator';
 import { AttributesPolicyEvaluator } from '../attributes';
+import { BuiltInPolicyType } from '../constants';
 
 export class AttributeNamesPolicyEvaluator implements IPolicyEvaluator {
     protected validator : AttributeNamesPolicyValidator;
@@ -20,6 +21,10 @@ export class AttributeNamesPolicyEvaluator implements IPolicyEvaluator {
     constructor() {
         this.validator = new AttributeNamesPolicyValidator();
         this.attributesEvaluator = new AttributesPolicyEvaluator();
+    }
+
+    requires() : string[] {
+        return [BuiltInPolicyType.ATTRIBUTES];
     }
 
     async evaluate(value: Record<string, any>, ctx: PolicyEvaluationContext): Promise<PolicyEvaluationResult> {

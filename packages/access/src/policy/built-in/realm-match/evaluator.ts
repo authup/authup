@@ -28,6 +28,17 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
         this.attributesEvaluator = new AttributesPolicyEvaluator();
     }
 
+    requires(value: Record<string, any>) : string[] {
+        // SCOPE MODE: the resource realm key (REALM_MATCH) is deliberately NOT
+        // required — an absent key is the documented neutral-pass (gate checks /
+        // realm-less resources), so requiring it would wrongly pend those runs.
+        if (value.scope) {
+            return [BuiltInPolicyType.IDENTITY];
+        }
+
+        return [BuiltInPolicyType.IDENTITY, BuiltInPolicyType.ATTRIBUTES];
+    }
+
     async evaluate(value: Record<string, any>, ctx: PolicyEvaluationContext): Promise<PolicyEvaluationResult> {
         // todo: catch errors + transform to issue(s)
         const policy = await this.validator.run(value);

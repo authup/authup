@@ -25,12 +25,14 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
         const policy = await this.validator.run(value);
 
         let count = 0;
+        let pending = 0;
 
         const decisionStrategy = policy.decisionStrategy ??
             DecisionStrategy.UNANIMOUS;
 
         const engine = new PolicyEngine(ctx.evaluators);
         const issues : PolicyIssue[] = [];
+        const pendingIssues : PolicyIssue[] = [];
 
         for (const childPolicy of policy.children) {
             const path = [
@@ -42,6 +44,23 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
                 ...ctx,
                 path,
             });
+
+            // A pending child is UNKNOWN, not a failure: it neither counts nor
+            // early-returns. Masking it to a settled value breaks under negation
+            // (mask-then-negate ≠ negate-then-mask — issue #3286).
+            if (outcome.pending) {
+                pending++;
+
+                if (outcome.issues && outcome.issues.length > 0) {
+                    pendingIssues.push(defineIssueGroup({
+                        message: `The evaluation of child policy ${childPolicy.type} is pending`,
+                        issues: outcome.issues,
+                        path,
+                    }));
+                }
+
+                continue;
+            }
 
             if (outcome.success) {
                 if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
@@ -82,7 +101,42 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
             }
         }
 
-        if (count > 0) {
+        // Settle the remainder: the composite settles despite pending children only
+        // when no resolution of those children could change the outcome.
+        let settled : boolean | null;
+        switch (decisionStrategy) {
+            case DecisionStrategy.AFFIRMATIVE: {
+                // every settled child failed; any pending child could still succeed
+                settled = pending > 0 ? null : false;
+                break;
+            }
+            case DecisionStrategy.UNANIMOUS: {
+                // every settled child succeeded; any pending child could still fail
+                settled = pending > 0 ? null : count > 0;
+                break;
+            }
+            default: {
+                // CONSENSUS: final outcome is `count > 0`, each pending worth ±1
+                if (count - pending > 0) {
+                    settled = true;
+                } else if (count + pending <= 0) {
+                    settled = false;
+                } else {
+                    settled = null;
+                }
+            }
+        }
+
+        if (settled === null) {
+            // Unknown stays unknown — `invert` is deliberately NOT applied.
+            return {
+                success: false,
+                pending: true,
+                issues: pendingIssues,
+            };
+        }
+
+        if (settled) {
             return { success: maybeInvertPolicyOutcome(true, policy.invert) };
         }
 
@@ -91,7 +145,7 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
             success,
             issues: success ? [] : [
                 defineIssueGroup({
-                    message: `The evaluation of composite policy failed (${DecisionStrategy.CONSENSUS})`,
+                    message: `The evaluation of composite policy failed (${decisionStrategy})`,
                     issues: issues || [],
                     path: ctx.path,
                 }),

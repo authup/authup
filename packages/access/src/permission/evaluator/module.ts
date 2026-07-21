@@ -144,7 +144,15 @@ export class PermissionEvaluator implements IPermissionEvaluator {
                 }),
             );
 
-            if (evaluationResult.success) {
+            // A pending evaluation (missing data keys) is settled by the caller's
+            // phase: the full evaluate denies (fail-closed default), the pre-gate
+            // permits — the enriched-bag evaluate is the backstop.
+            const passed = evaluationResult.success || (
+                options.pendingPolicies === 'permit' &&
+                !!evaluationResult.pending
+            );
+
+            if (passed) {
                 if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
                     return;
                 }
@@ -194,15 +202,16 @@ export class PermissionEvaluator implements IPermissionEvaluator {
     // ----------------------------------------------
 
     async preEvaluate(ctx: PermissionEvaluationContext) : Promise<void> {
+        // The pre-gate is DERIVED from data availability (issue #3286): policies whose
+        // required data keys are absent from the bag stay pending and are permitted —
+        // only a tree that settles false with the current bag denies. This replaces the
+        // former hand-maintained type exclusion list (ATTRIBUTES / ATTRIBUTE_NAMES /
+        // REALM_MATCH), whose mask-to-true encoding broke under `invert`.
         return this.evaluate({
             ...ctx,
             options: {
                 ...(ctx.options || {}),
-                policiesExcluded: [
-                    BuiltInPolicyType.ATTRIBUTES,
-                    BuiltInPolicyType.ATTRIBUTE_NAMES,
-                    BuiltInPolicyType.REALM_MATCH,
-                ],
+                pendingPolicies: 'permit',
             },
         });
     }

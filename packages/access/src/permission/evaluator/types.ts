@@ -30,6 +30,16 @@ export type PermissionEvaluationOptions = {
     decisionStrategy?: `${DecisionStrategy}`,
     policiesIncluded?: string[],
     policiesExcluded?: string[],
+    /**
+     * How a grant whose policy evaluation is PENDING (a required data key is absent —
+     * see `PolicyEvaluationResult.pending`) is treated:
+     *
+     * - `deny` (default): pending counts as failure — full `evaluate()` semantics,
+     *   matching the historical missing-data deny.
+     * - `permit`: pending counts as pass — the data-availability-derived pre-gate
+     *   (`preEvaluate()`): only a tree that settles false with the current bag denies.
+     */
+    pendingPolicies?: 'deny' | 'permit',
 };
 
 export type PermissionEvaluationContext = {

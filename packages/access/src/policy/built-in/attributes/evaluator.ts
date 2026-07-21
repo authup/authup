@@ -27,6 +27,10 @@ export class AttributesPolicyEvaluator<
         this.parser = new MongoFiltersParser();
     }
 
+    requires() : string[] {
+        return [BuiltInPolicyType.ATTRIBUTES];
+    }
+
     async accessData(ctx: PolicyEvaluationContext) : Promise<T | null> {
         if (!ctx.data.has(BuiltInPolicyType.ATTRIBUTES)) {
             return null;
