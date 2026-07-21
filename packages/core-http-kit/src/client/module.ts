@@ -6,6 +6,7 @@
  */
 
 import { Client as BaseClient, HookName, isClientError } from 'hapic';
+import { buildURL } from '@authup/kit';
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
 import {
     ClientAPI,
@@ -114,7 +115,7 @@ export class Client extends BaseClient implements IClient {
             for (const key of keys) {
                 const value = options[key];
                 if (typeof value === 'string') {
-                    (options as Record<string, any>)[key] = new URL(value, baseURL).href;
+                    (options as Record<string, any>)[key] = buildURL(baseURL, value).href;
                 }
             }
         }

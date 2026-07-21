@@ -6,6 +6,7 @@
   -->
 <script lang="ts">
 
+import { buildURL } from '@authup/kit';
 import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { ITranslateT } from '@ilingo/vue';
 import {
@@ -42,7 +43,7 @@ export default defineNuxtComponent({
         });
 
         const api = injectHTTPClient();
-        const docsUrl = computed(() => new URL('docs/', api.getBaseURL()).href);
+        const docsUrl = computed(() => buildURL(api.getBaseURL(), 'docs/').href);
 
         const translate = useTranslator();
         const locale = injectTranslatorLocale();
