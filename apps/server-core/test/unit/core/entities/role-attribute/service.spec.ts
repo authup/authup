@@ -8,11 +8,14 @@
 import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
 import type { RoleAttribute } from '@authup/core-kit';
+import { eq } from '@rapiq/core';
+import { applyQuery } from '@rapiq/memory';
 import {
     beforeEach,
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { BuiltInPolicyType, PermissionError } from '@authup/access';
@@ -68,6 +71,53 @@ describe('core/entities/role-attribute/service', () => {
 
         it('should throw when actor lacks permission', async () => {
             await expect(service.getMany({}, createDenyAllActor())).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+        });
+
+        it('pushes a compiled conditional as WHERE and skips per-row evaluation', async () => {
+            const realmId = randomUUID();
+
+            const [inRealm, outOfRealm] = repository.seed([
+                createFakeRoleAttribute({
+                    name: 'in-realm',
+                    realmId,
+                }),
+                createFakeRoleAttribute({
+                    name: 'out-of-realm',
+                    realmId: randomUUID(),
+                }),
+            ]);
+
+            const actor = createAllowAllActor();
+            actor.permissionEvaluator.setCompileResult({
+                verdict: 'conditional',
+                condition: eq('realmId', realmId),
+            });
+
+            const spy = vi.spyOn(repository, 'findMany');
+            await service.getMany({}, actor);
+
+            // the fake repository does not apply filters — replay the query the
+            // service built over the seeded rows instead
+            const query = spy.mock.calls[0]![0];
+            const applied = applyQuery(query, [inRealm, outOfRealm]);
+            expect(applied.data.map((row) => row.id)).toEqual([inRealm.id]);
+
+            expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
+        });
+
+        it('returns no rows on a compiled deny', async () => {
+            const seeded = repository.seed([createFakeRoleAttribute({ realmId: randomUUID() })]);
+
+            const actor = createAllowAllActor();
+            actor.permissionEvaluator.setCompileResult({ verdict: 'deny' });
+
+            const spy = vi.spyOn(repository, 'findMany');
+            await service.getMany({}, actor);
+
+            const query = spy.mock.calls[0]![0];
+            const applied = applyQuery(query, seeded);
+            expect(applied.data).toHaveLength(0);
+            expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
         });
     });
 

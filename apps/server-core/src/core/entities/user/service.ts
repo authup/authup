@@ -8,6 +8,7 @@
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { ValidatorGroup, isUUID } from '@authup/kit';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
+import { eq, inArray, or } from '@rapiq/core';
 import {
     PermissionName,
     UserValidator,
@@ -18,7 +19,7 @@ import type { IRealmRepository } from '../realm/types.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import { UserCredentialsService } from '../../authentication/credential/entities/user/module.ts';
 import type { IUserRepository, IUserService } from './types.ts';
-import { decodeQuery } from '../../query/index.ts';
+import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
 import { userSchema } from './schema.ts';
 
 export type UserServiceContext = {
@@ -45,18 +46,44 @@ export class UserService extends AbstractEntityService implements IUserService {
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<User>> {
-        await actor.permissionEvaluator.preEvaluateOneOf({
-            name: [
-                PermissionName.USER_READ,
-                PermissionName.USER_UPDATE,
-                PermissionName.USER_DELETE,
-            ],
-        });
+        const permissionNames = [
+            PermissionName.USER_READ,
+            PermissionName.USER_UPDATE,
+            PermissionName.USER_DELETE,
+        ];
+
+        await actor.permissionEvaluator.preEvaluateOneOf({ name: permissionNames });
+
+        const parsed = decodeQuery(query, { schema: userSchema });
+
+        // Compile the read permissions into a row condition (#3286 phase 3). The
+        // own row is always readable, so the self short-circuit composes as an
+        // OR-alternative — the whole gate runs as WHERE and pagination/totals
+        // stay exact. A non-expressible policy falls back to the per-row loop
+        // below.
+        const compiled = await actor.permissionEvaluator.compile({ name: permissionNames });
+        if (compiled.verdict !== 'post') {
+            const self = actor.identity && actor.identity.type === 'user' ?
+                eq('id', actor.identity.data.id) :
+                null;
+
+            let scoped = parsed;
+            if (compiled.verdict === 'deny') {
+                scoped = appendQueryConditions(parsed, self ?? inArray('id', []));
+            } else if (compiled.verdict === 'conditional') {
+                scoped = appendQueryConditions(
+                    parsed,
+                    self ? or(self, compiled.condition) : compiled.condition,
+                );
+            }
+
+            return this.repository.findMany(scoped);
+        }
 
         const {
-            data: entities, 
-            meta, 
-        } = await this.repository.findMany(decodeQuery(query, { schema: userSchema }));
+            data: entities,
+            meta,
+        } = await this.repository.findMany(parsed);
 
         const data: User[] = [];
         let { total } = meta;

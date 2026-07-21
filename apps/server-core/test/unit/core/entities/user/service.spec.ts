@@ -12,11 +12,14 @@ import {
 } from '@authup/core-kit';
 import type { Realm, User } from '@authup/core-kit';
 import { BuiltInPolicyType, PermissionError } from '@authup/access';
+import { eq } from '@rapiq/core';
+import { applyQuery } from '@rapiq/memory';
 import {
     beforeEach,
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { UserService } from '../../../../../src/core/entities/user/service.ts';
@@ -110,6 +113,53 @@ describe('core/entities/user/service', () => {
             const result = await service.getMany({}, actor);
             expect(result.data).toHaveLength(0);
             expect(result.meta.total).toBe(0);
+        });
+
+        it('composes the self short-circuit with a compiled conditional as WHERE and skips per-row evaluation', async () => {
+            const realmId = randomUUID();
+            // the self row lives OUTSIDE the compiled realm condition — only the
+            // ownership OR-term can include it
+            const [selfUser, foreignSameRealm, foreignOtherRealm] = repository.seed([
+                createFakeUser({ name: 'self', realmId: randomUUID() }),
+                createFakeUser({ name: 'same-realm', realmId }),
+                createFakeUser({ name: 'other-realm', realmId: randomUUID() }),
+            ]);
+
+            const actor = createSelfActor(selfUser.id);
+            actor.permissionEvaluator.setCompileResult({
+                verdict: 'conditional',
+                condition: eq('realmId', realmId),
+            });
+
+            const spy = vi.spyOn(repository, 'findMany');
+            await service.getMany({}, actor);
+
+            // the fake repository does not apply filters — replay the query the
+            // service built over the seeded rows instead
+            const query = spy.mock.calls[0]![0];
+            const applied = applyQuery(query, [selfUser, foreignSameRealm, foreignOtherRealm]);
+            expect(applied.data.map((row) => row.id).sort())
+                .toEqual([selfUser.id, foreignSameRealm.id].sort());
+
+            expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
+        });
+
+        it('restricts to the own row on a compiled deny', async () => {
+            const [selfUser, foreign] = repository.seed([
+                createFakeUser({ name: 'self' }),
+                createFakeUser({ name: 'other' }),
+            ]);
+
+            const actor = createSelfActor(selfUser.id);
+            actor.permissionEvaluator.setCompileResult({ verdict: 'deny' });
+
+            const spy = vi.spyOn(repository, 'findMany');
+            await service.getMany({}, actor);
+
+            const query = spy.mock.calls[0]![0];
+            const applied = applyQuery(query, [selfUser, foreign]);
+            expect(applied.data.map((row) => row.id)).toEqual([selfUser.id]);
+            expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
         });
     });
 

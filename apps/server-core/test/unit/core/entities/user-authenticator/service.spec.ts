@@ -15,6 +15,8 @@ import {
     isMfaThrottledError,
 } from '@authup/errors';
 import { JWKType, JWKUse } from '@authup/specs';
+import { eq } from '@rapiq/core';
+import { applyQuery } from '@rapiq/memory';
 import { MemoryCache, buildCacheKey } from '@authup/server-kit';
 import type { ActorContext } from '@authup/server-kit';
 import { Secret, TOTP } from 'otpauth';
@@ -941,6 +943,76 @@ describe('UserAuthenticatorService', () => {
             const deleted = await service.delete(enrolled.data.id, actor, { userId });
             expect(deleted.id).toEqual(enrolled.data.id);
             expect(await repository.findAllByUser(userId)).toHaveLength(0);
+        });
+
+        it('composes ownership with a compiled conditional as WHERE and skips per-row evaluation', async () => {
+            // the own device lives OUTSIDE the compiled realm condition — only
+            // the ownership OR-term can include it
+            const own = repository.seed({
+                kind: UserAuthenticatorKind.TOTP,
+                userId,
+                realmId: randomUUID(),
+                confirmed: true,
+                secret: 'seed-material',
+            });
+            const foreignSameRealm = repository.seed({
+                kind: UserAuthenticatorKind.TOTP,
+                userId: otherUserId,
+                realmId,
+                confirmed: true,
+            });
+            const foreignOtherRealm = repository.seed({
+                kind: UserAuthenticatorKind.TOTP,
+                userId: otherUserId,
+                realmId: randomUUID(),
+                confirmed: true,
+            });
+
+            const actor = makeActor();
+            (actor.permissionEvaluator as FakePermissionEvaluator).setCompileResult({
+                verdict: 'conditional',
+                condition: eq('realmId', realmId),
+            });
+
+            const spy = vi.spyOn(repository, 'findMany');
+            const { data } = await service.getMany({}, actor);
+
+            // the fake repository does not apply filters — replay the query the
+            // service built over the seeded rows instead
+            const query = spy.mock.calls[0]![0];
+            const applied = applyQuery(query, [own, foreignSameRealm, foreignOtherRealm]);
+            expect(applied.data.map((row) => row.id).sort())
+                .toEqual([own.id, foreignSameRealm.id].sort());
+
+            expect((actor.permissionEvaluator as FakePermissionEvaluator).evaluateCalls).toHaveLength(0);
+            // the compiled fast path still sanitizes secret material
+            expect(data.every((row) => row.secret === null && row.codes === null)).toBe(true);
+        });
+
+        it('restricts to own devices on a compiled deny', async () => {
+            const own = repository.seed({
+                kind: UserAuthenticatorKind.TOTP,
+                userId,
+                realmId,
+                confirmed: true,
+            });
+            const foreign = repository.seed({
+                kind: UserAuthenticatorKind.TOTP,
+                userId: otherUserId,
+                realmId,
+                confirmed: true,
+            });
+
+            const actor = makeActor();
+            (actor.permissionEvaluator as FakePermissionEvaluator).setCompileResult({ verdict: 'deny' });
+
+            const spy = vi.spyOn(repository, 'findMany');
+            await service.getMany({}, actor);
+
+            const query = spy.mock.calls[0]![0];
+            const applied = applyQuery(query, [own, foreign]);
+            expect(applied.data.map((row) => row.id)).toEqual([own.id]);
+            expect((actor.permissionEvaluator as FakePermissionEvaluator).evaluateCalls).toHaveLength(0);
         });
 
         it('denies foreign device access without permission', async () => {

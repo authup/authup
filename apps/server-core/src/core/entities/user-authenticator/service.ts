@@ -8,6 +8,7 @@
 import { randomUUID } from 'node:crypto';
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { ValidatorGroup } from '@authup/kit';
+import { eq, inArray, or } from '@rapiq/core';
 import {
     EventName, 
     EventRefType, 
@@ -91,7 +92,7 @@ import type {
     UserAuthenticatorWebauthnParameters,
 } from './types.ts';
 import type { WebauthnContext } from './webauthn.ts';
-import { decodeQuery } from '../../query/index.ts';
+import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
 import { userAuthenticatorSchema } from './schema.ts';
 
 type EmailCodeState = {
@@ -183,9 +184,43 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_AUTHENTICATOR_READ });
         }
 
+        const parsed = decodeQuery(query, { schema: userAuthenticatorSchema });
+        const findManyOptions = options.userId ? { owner: { userId: options.userId } } : {};
+
+        // Own devices are ungated: the nested self read is already owner-scoped,
+        // and on the wider mounts ownership composes as an OR-alternative with
+        // the compiled USER_AUTHENTICATOR_READ condition (#3286 phase 3) — the
+        // whole gate runs as WHERE and pagination/totals stay exact. A
+        // non-expressible policy falls back to the per-row loop below.
+        const compiled = isSelf ?
+            { verdict: 'allow' as const } :
+            await actor.permissionEvaluator.compile({ name: PermissionName.USER_AUTHENTICATOR_READ });
+        if (compiled.verdict !== 'post') {
+            const ownership = actor.identity && actor.identity.type === IdentityType.USER ?
+                eq('userId', actor.identity.data.id) :
+                null;
+
+            let scoped = parsed;
+            if (compiled.verdict === 'deny') {
+                scoped = appendQueryConditions(parsed, ownership ?? inArray('id', []));
+            } else if (compiled.verdict === 'conditional') {
+                scoped = appendQueryConditions(
+                    parsed,
+                    ownership ? or(ownership, compiled.condition) : compiled.condition,
+                );
+            }
+
+            const { data, meta } = await this.repository.findMany(scoped, findManyOptions);
+
+            return {
+                data: data.map((entity) => this.sanitize(entity)),
+                meta,
+            };
+        }
+
         const { data: entities, meta } = await this.repository.findMany(
-            decodeQuery(query, { schema: userAuthenticatorSchema }),
-            options.userId ? { owner: { userId: options.userId } } : {},
+            parsed,
+            findManyOptions,
         );
 
         const data: UserAuthenticator[] = [];
