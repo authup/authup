@@ -66,7 +66,7 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
     ): Promise<EntityRepositoryFindManyResult<TrustAnchor>> {
         await actor.permissionEvaluator.preEvaluateOneOf({ name: PERMISSION_NAMES });
 
-        let parsed = decodeQuery(query, { schema: trustAnchorSchema });
+        let parsed = await decodeQuery(query, { schema: trustAnchorSchema, actor });
         if (options.realmId) {
             parsed = appendQueryConditions(parsed, eq('realmId', options.realmId));
         }

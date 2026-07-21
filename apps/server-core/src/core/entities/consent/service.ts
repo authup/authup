@@ -66,7 +66,7 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
         actor: ActorContext,
         options: ConsentServiceReadOptions = {},
     ): Promise<EntityRepositoryFindManyResult<Consent>> {
-        const parsed = decodeQuery(query, { schema: consentSchema });
+        const parsed = await decodeQuery(query, { schema: consentSchema, actor });
 
         let canReadAll = true;
         try {

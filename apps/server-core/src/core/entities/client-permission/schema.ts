@@ -8,12 +8,29 @@
 import { defineSchema } from '@rapiq/core';
 import type { ClientPermission } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
+import { createRelationsReadGate } from '../../query/relations.ts';
+
+const schemaMapping = { client: EntityType.CLIENT, permission: EntityType.PERMISSION };
 
 export const clientPermissionSchema = defineSchema<ClientPermission>({
     name: EntityType.CLIENT_PERMISSION,
+    // see user-role schema — explicit root projection for include= decodes
+    fields: {
+        default: [
+            'id',
+            'policyId',
+            'realmScope',
+            'permissionId',
+            'permissionRealmId',
+            'clientId',
+            'clientRealmId',
+            'createdAt',
+            'updatedAt',
+        ],
+    },
     filters: { allowed: ['clientId', 'permissionId'] },
-    relations: { allowed: ['client', 'permission'] },
+    relations: { allowed: ['client', 'permission'], validate: createRelationsReadGate(schemaMapping) },
     sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
     pagination: { maxLimit: 50 },
-    schemaMapping: { client: EntityType.CLIENT, permission: EntityType.PERMISSION },
+    schemaMapping,
 });

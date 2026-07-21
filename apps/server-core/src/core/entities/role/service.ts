@@ -52,7 +52,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
             ],
         });
 
-        return this.repository.findMany(decodeQuery(query, { schema: roleSchema }));
+        return this.repository.findMany(await decodeQuery(query, { schema: roleSchema, actor }));
     }
 
     async getOne(

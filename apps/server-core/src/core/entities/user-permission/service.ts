@@ -59,7 +59,7 @@ export class UserPermissionService extends JunctionEntityService implements IUse
             ],
         });
 
-        return this.repository.findMany(decodeQuery(query, { schema: userPermissionSchema }));
+        return this.repository.findMany(await decodeQuery(query, { schema: userPermissionSchema, actor }));
     }
 
     async getOne(

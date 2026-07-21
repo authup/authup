@@ -184,7 +184,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_AUTHENTICATOR_READ });
         }
 
-        const parsed = decodeQuery(query, { schema: userAuthenticatorSchema });
+        const parsed = await decodeQuery(query, { schema: userAuthenticatorSchema, actor });
         const findManyOptions = options.userId ? { owner: { userId: options.userId } } : {};
 
         // Own devices are ungated: the nested self read is already owner-scoped,

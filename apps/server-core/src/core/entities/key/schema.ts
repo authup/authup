@@ -8,6 +8,9 @@
 import { defineSchema } from '@rapiq/core';
 import type { Key } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
+import { createRelationsReadGate } from '../../query/relations.ts';
+
+const schemaMapping = { realm: EntityType.REALM };
 
 export const keySchema = defineSchema<Key>({
     name: EntityType.KEY,
@@ -36,6 +39,7 @@ export const keySchema = defineSchema<Key>({
             'realmId',
         ], 
     },
+    relations: { allowed: ['realm'], validate: createRelationsReadGate(schemaMapping) },
     sort: {
         allowed: [
             'id',
@@ -45,7 +49,8 @@ export const keySchema = defineSchema<Key>({
             'status',
             'createdAt',
             'updatedAt',
-        ], 
+        ],
     },
     pagination: { maxLimit: 50 },
+    schemaMapping,
 });

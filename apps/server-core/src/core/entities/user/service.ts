@@ -54,7 +54,7 @@ export class UserService extends AbstractEntityService implements IUserService {
 
         await actor.permissionEvaluator.preEvaluateOneOf({ name: permissionNames });
 
-        const parsed = decodeQuery(query, { schema: userSchema });
+        const parsed = await decodeQuery(query, { schema: userSchema, actor });
 
         // Compile the read permissions into a row condition (#3286 phase 3). The
         // own row is always readable, so the self short-circuit composes as an
@@ -148,7 +148,11 @@ export class UserService extends AbstractEntityService implements IUserService {
 
         const entity = await this.repository.findOne(
             idOrName,
-            decodeQuery(query, { schema: userSchema, parameters: ['fields', 'relations'] }),
+            await decodeQuery(query, {
+                schema: userSchema, 
+                parameters: ['fields', 'relations'], 
+                actor, 
+            }),
             realmId,
         );
         if (!entity) {

@@ -61,7 +61,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
             ],
         });
 
-        return this.repository.findMany(decodeQuery(query, { schema: policySchema }));
+        return this.repository.findMany(await decodeQuery(query, { schema: policySchema, actor }));
     }
 
     async getOne(

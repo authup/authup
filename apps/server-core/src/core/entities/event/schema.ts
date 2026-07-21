@@ -50,6 +50,7 @@ export const eventSchema = defineSchema<Event>({
             'createdAt',
         ], 
     },
+    relations: { allowed: [] },
     sort: { allowed: ['createdAt'] },
     pagination: { maxLimit: 50 },
 });

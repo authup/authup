@@ -50,7 +50,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<Session>> {
-        const parsed = decodeQuery(query, { schema: sessionSchema });
+        const parsed = await decodeQuery(query, { schema: sessionSchema, actor });
 
         let canReadAll = true;
         try {
@@ -266,7 +266,11 @@ export class SessionService extends AbstractEntityService implements ISessionSer
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.SESSION_DELETE });
 
         const sessions = await this.repository.findAllByQuery(
-            decodeQuery(query, { schema: sessionSchema, parameters: ['filters'] }),
+            await decodeQuery(query, {
+                schema: sessionSchema, 
+                parameters: ['filters'], 
+                actor, 
+            }),
         );
 
         let count = 0;

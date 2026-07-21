@@ -52,7 +52,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
     async getMany(
         query: Record<string, any>,
     ): Promise<EntityRepositoryFindManyResult<Realm>> {
-        return this.repository.findMany(decodeQuery(query, { schema: realmSchema }));
+        return this.repository.findMany(await decodeQuery(query, { schema: realmSchema }));
     }
 
     async getOne(

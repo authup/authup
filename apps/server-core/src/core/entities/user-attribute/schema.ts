@@ -8,10 +8,26 @@
 import { defineSchema } from '@rapiq/core';
 import type { UserAttribute } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
+import { createRelationsReadGate } from '../../query/relations.ts';
+
+const schemaMapping = { user: EntityType.USER, realm: EntityType.REALM };
 
 export const userAttributeSchema = defineSchema<UserAttribute>({
     name: EntityType.USER_ATTRIBUTE,
+    // see user-role schema — explicit root projection for include= decodes
+    fields: {
+        default: [
+            'id',
+            'name',
+            'value',
+            'userId',
+            'realmId',
+            'createdAt',
+            'updatedAt',
+        ],
+    },
     filters: { allowed: ['id', 'name', 'userId', 'realmId'] },
+    relations: { allowed: ['user', 'realm'], validate: createRelationsReadGate(schemaMapping) },
     sort: {
         allowed: [
             'id',
@@ -20,7 +36,8 @@ export const userAttributeSchema = defineSchema<UserAttribute>({
             'realmId',
             'createdAt',
             'updatedAt',
-        ], 
+        ],
     },
     pagination: { maxLimit: 50 },
+    schemaMapping,
 });

@@ -46,7 +46,7 @@ export class ClientScopeService extends JunctionEntityService implements IClient
             ],
         });
 
-        return this.repository.findMany(decodeQuery(query, { schema: clientScopeSchema }));
+        return this.repository.findMany(await decodeQuery(query, { schema: clientScopeSchema, actor }));
     }
 
     async getOne(

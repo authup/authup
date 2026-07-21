@@ -23,6 +23,7 @@ export const realmSchema = defineSchema<Realm>({
         ],
     },
     filters: { allowed: ['id', 'builtIn', 'displayName', 'name'] },
+    relations: { allowed: [] },
     sort: { allowed: ['id', 'name', 'createdAt', 'updatedAt'] },
     pagination: { maxLimit: 50 },
 });

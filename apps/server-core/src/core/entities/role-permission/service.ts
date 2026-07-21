@@ -61,7 +61,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
             ],
         });
 
-        return this.repository.findMany(decodeQuery(query, { schema: rolePermissionSchema }));
+        return this.repository.findMany(await decodeQuery(query, { schema: rolePermissionSchema, actor }));
     }
 
     async getOne(
