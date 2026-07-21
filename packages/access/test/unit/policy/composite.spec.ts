@@ -138,6 +138,39 @@ describe('src/policy/composite (tri-state algebra)', () => {
         });
     });
 
+    describe('childless', () => {
+        it('should fail closed with a non-empty issue list', async () => {
+            const outcome = await engine.evaluate(
+                composite(DecisionStrategy.UNANIMOUS, []),
+                context(),
+            );
+            expect(outcome.success).toBeFalsy();
+            expect(outcome.pending).toBeFalsy();
+            expect(outcome.issues).toBeDefined();
+            expect(outcome.issues!.length).toBeGreaterThan(0);
+        });
+
+        it('should fail closed regardless of decision strategy', async () => {
+            for (const decisionStrategy of Object.values(DecisionStrategy)) {
+                const outcome = await engine.evaluate(
+                    composite(decisionStrategy, []),
+                    context(),
+                );
+                expect(outcome.success).toBeFalsy();
+                expect(outcome.pending).toBeFalsy();
+            }
+        });
+
+        it('should fail closed even when inverted', async () => {
+            const outcome = await engine.evaluate(
+                composite(DecisionStrategy.UNANIMOUS, [], true),
+                context(),
+            );
+            expect(outcome.success).toBeFalsy();
+            expect(outcome.issues!.length).toBeGreaterThan(0);
+        });
+    });
+
     describe('invert', () => {
         it('should never apply invert to a pending composite', async () => {
             const outcome = await engine.evaluate(

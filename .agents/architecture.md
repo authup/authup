@@ -1208,7 +1208,14 @@ never masked to a settled value) and settles despite them only when no resolutio
 change the outcome; `invert` is **never applied to a pending result** — mask-then-negate ≠
 negate-then-mask was the pre-gate inversion bug this replaced. Server-core's
 `PermissionBindingPolicyEvaluator` propagates a pending junction policy as a pending grant
-term (the disjunction settles false only when every term settled).
+term (the disjunction settles false only when every term settled). A **childless**
+composite is rejected rather than settled: `CompositePolicyEvaluator` fails it closed with an
+explicit `PolicyIssueCode.INVALID` issue (regardless of `invert`, like an unregistered type)
+instead of the empty-issue `false` that made a bound permission read as opaquely "stale"
+(#3304); provisioning validation (`PolicyProvisioningValidator`) mirrors this and rejects a
+composite declared with no `children` at config-load time. The entity API create path is
+deliberately NOT gated — the admin UI creates a composite first, then attaches children via
+each child's `parentId`, so an empty composite is a valid intermediate there.
 
 `preEvaluate` passes `pendingPolicies: 'permit'` (a `PermissionEvaluationOptions` flag,
 default `'deny'`): a grant whose policy tree is pending passes the gate; only a tree that

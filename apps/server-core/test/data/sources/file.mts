@@ -15,6 +15,15 @@ const DATA : RootProvisioningEntity = {
                 type: 'composite',
                 builtIn: true,
             },
+            children: [
+                {
+                    attributes: {
+                        name: 'file-policy-child',
+                        type: 'identity',
+                        builtIn: true,
+                    },
+                },
+            ],
         },
     ],
     roles: [
