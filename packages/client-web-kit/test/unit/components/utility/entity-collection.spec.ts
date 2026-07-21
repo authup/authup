@@ -105,14 +105,14 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
         await flushPromises();
 
         await (wrapper.vm as any).load({
-            filters: { name: '~foo' },
+            filters: { name: 'foo' },
             pagination: { offset: 0 },
         });
 
         const requests = listRequests(httpClient.requests);
         expect(requests).toHaveLength(2);
         expect(requests[1].searchParams.get('filter'))
-            .toEqual("and(eq(name,'~foo'),in(realmId,'realm-1',null))");
+            .toEqual("and(contains(name,'foo'),in(realmId,'realm-1',null))");
 
         // even an input targeting the scoped field only narrows further
         await (wrapper.vm as any).load({ filters: { realmId: 'other' } });
@@ -127,7 +127,7 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
         await flushPromises();
 
         await (wrapper.vm as any).load({
-            filters: { name: '~foo' },
+            filters: { name: 'foo' },
             pagination: { offset: 0 },
         });
         await (wrapper.vm as any).load({ pagination: { offset: 10 } });
@@ -135,8 +135,20 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
         const requests = listRequests(httpClient.requests);
         expect(requests).toHaveLength(3);
         expect(requests[2].searchParams.get('filter'))
-            .toEqual("and(eq(name,'~foo'),in(realmId,'realm-1',null))");
+            .toEqual("and(contains(name,'foo'),in(realmId,'realm-1',null))");
         expect(requests[2].searchParams.get('page[offset]')).toEqual('10');
+    });
+
+    it('clearing the search (empty filters) resets to the base scope', async () => {
+        const { wrapper, httpClient } = mountCollection({ query: { filters: { realmId: ['realm-1', null] } } });
+        await flushPromises();
+
+        await (wrapper.vm as any).load({ filters: { name: 'foo' } });
+        await (wrapper.vm as any).load({ filters: {} });
+
+        const requests = listRequests(httpClient.requests);
+        expect(requests[2].searchParams.get('filter'))
+            .toEqual("in(realmId,'realm-1',null)");
     });
 
     it('queryFilters may return a compound condition (OR search)', async () => {
@@ -157,7 +169,7 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
         const { wrapper, httpClient } = mountCollection({ query: { filters: { realmId: ['realm-1', null] } } });
         await flushPromises();
 
-        await (wrapper.vm as any).load({ filters: { name: '~foo' } });
+        await (wrapper.vm as any).load({ filters: { name: 'foo' } });
         await (wrapper.vm as any).load(defineQuery<Role>({ filters: { displayName: 'bar' } }));
 
         const requests = listRequests(httpClient.requests);

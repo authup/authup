@@ -50,7 +50,12 @@ export function buildListSearch(
         }
 
         return ctx.load({
-            filters: { name: text.length > 0 ? `~${text}` : text as any },
+            // Pass the raw search text. The rapiq v2 IR builder does NOT
+            // interpret wire markers (a `~text` value becomes eq('name',
+            // '~text'), not a substring match) — the collection turns this
+            // bare `name` string into a condition via the `contains` helper
+            // (or a per-entity queryFilters hook).
+            filters: text.length > 0 ? { name: text } : {},
             pagination: { offset: 0 },
         });
     });

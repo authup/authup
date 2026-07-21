@@ -2996,7 +2996,16 @@ integration:
   `Filters.merge`'s flat-root-AND restriction. The
   `queryFilters` context hook may return an `ICondition`
   (`or(contains('name', q), contains('displayName', q))`) or a legacy
-  filters record. Interactive state (search filters, sorts) is retained
+  filters record. **`ASearch` passes the raw search text as a bare
+  `filters.name` string** (never a wire marker — the rapiq v2 IR builder
+  does NOT interpret `~foo`/`!foo`/`<5`; a `~foo` value decodes as
+  `eq(name,'~foo')`, a literal exact-match, which silently broke name
+  search). The manager turns that bare `name` string into a condition via
+  the `queryFilters` hook when provided, else a default
+  `contains('name', text)`; an empty search (`filters: {}`) resets to the
+  base scope. Build every filter through the `@rapiq/core` helpers
+  (`eq`/`contains`/`inArray`/`and`/`or`/`not`/…), never a raw wire string.
+  Interactive state (search filters, sorts) is retained
   **inside the manager** across loads: a pagination-only
   `load({ pagination })` keeps the current search; an assembled
   `IQuery` load input replaces the interactive state wholesale.
