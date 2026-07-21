@@ -1,5 +1,6 @@
 <script lang="ts">
 import { defineQuery } from '@rapiq/core';
+import { buildURL } from '@authup/kit';
 import { TranslatorTranslationAppKey, TranslatorTranslationEntityKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { AClientScopes, useTranslations, useTranslationsForNamespace } from '@authup/client-web-kit';
 import type { Client, ClientScope } from '@authup/core-kit';
@@ -48,7 +49,7 @@ export default defineNuxtComponent({
         const config = useRuntimeConfig();
 
         const generatedUrl = computed(() => {
-            const link = new URL('authorize', config.public.apiUrl);
+            const link = buildURL(config.public.apiUrl as string, 'authorize');
             link.searchParams.set('client_id', props.entity.id);
             link.searchParams.set('response_type', 'code');
 
@@ -72,10 +73,10 @@ export default defineNuxtComponent({
             }
         };
 
-        const query = defineQuery<ClientScope>({
+        const query = computed(() => defineQuery<ClientScope>({
             filters: { clientId: props.entity.id },
             relations: ['scope'],
-        });
+        }));
 
         return {
             toggleScope,
