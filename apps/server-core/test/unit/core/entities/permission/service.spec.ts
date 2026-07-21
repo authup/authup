@@ -6,7 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { PermissionName } from '@authup/core-kit';
+import { PermissionName, ROLE_ADMIN_NAME } from '@authup/core-kit';
 import type {
     PermissionPolicy,
     RolePermission,
@@ -17,7 +17,7 @@ import {
     expect, 
     it,
 } from 'vitest';
-import { SystemPolicyName } from '@authup/access';
+import { RealmScope, SystemPolicyName } from '@authup/access';
 import { ErrorCode } from '@authup/errors';
 import { PermissionService } from '../../../../../src/core/entities/permission/service.ts';
 import {
@@ -48,6 +48,12 @@ describe('core/entities/permission/service', () => {
         repository = new FakePermissionRepository();
         realmRepository = new FakeRealmRepository();
         roleRepository = new FakeRoleRepository();
+        roleRepository.seed([{
+            id: randomUUID(),
+            name: ROLE_ADMIN_NAME,
+            builtIn: true,
+            realmId: null,
+        }]);
         rolePermissionRepository = new FakeEntityRepository<RolePermission>();
         policyRepository = new FakePolicyRepository();
         policyRepository.seed([{
@@ -146,6 +152,34 @@ describe('core/entities/permission/service', () => {
             const junctions = permissionPolicyRepository.getAll();
             expect(junctions).toHaveLength(1);
             expect(junctions[0].policyId).toBe(defaultPolicyId);
+        });
+
+        it('should grant the created permission to the admin role', async () => {
+            const permission = await service.create(
+                { name: 'new-perm' },
+                createAllowAllActor(),
+            );
+
+            const grants = rolePermissionRepository.getAll();
+            const adminGrant = grants.find((g) => g.permissionId === permission.id);
+            expect(adminGrant).toBeDefined();
+            expect(adminGrant!.realmScope).toBe(RealmScope.ANY);
+        });
+
+        it('should throw when the admin role is not provisioned', async () => {
+            const emptyRoleRepository = new FakeRoleRepository();
+            const serviceWithoutAdmin = new PermissionService({
+                repository,
+                realmRepository,
+                roleRepository: emptyRoleRepository,
+                rolePermissionRepository,
+                policyRepository,
+                permissionPolicyRepository,
+            });
+
+            await expect(
+                serviceWithoutAdmin.create({ name: 'stranded-perm' }, createAllowAllActor()),
+            ).rejects.toThrow(/admin role is not provisioned/);
         });
     });
 
