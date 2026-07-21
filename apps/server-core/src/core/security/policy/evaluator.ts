@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ICondition } from '@rapiq/core';
+import { and, or } from '@rapiq/core';
 import type { Issue } from 'validup';
 import type {
     IPolicyEvaluator,
@@ -19,9 +21,11 @@ import {
     PolicyEngine,
     PolicyIssueCode,
     RealmMatchPolicyEvaluator,
+    RealmScope,
     aggregatePermissionPolicyBindings,
     definePolicyIssueItem,
     maybeInvertPolicyOutcome,
+    normalizeRealmScope,
 } from '@authup/access';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 
@@ -125,7 +129,9 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
         // grant's passing policy must not ride an `any` grant's wider reach).
         const issues : Issue[] = [];
         const pendingIssues : Issue[] = [];
+        const conditions : ICondition[] = [];
         let pending = false;
+        let lowerable = true;
         for (const grant of aggr.grants) {
             // Realm reach (coarse, actor-relative) — a SEPARATE factor from the grant's
             // policy, ANDed with it. The realm-match evaluator runs in SCOPE MODE: it reads the
@@ -134,17 +140,45 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
             // key-PRESENCE is the discriminator. Invoked DIRECTLY (not via PolicyEngine) so
             // the reach factor can never be skipped by a caller's include/exclude filters or
             // deferred by the engine's data-availability gate.
+            //
+            // Under `withConditions` (query-build) with no resource realm present, the
+            // reach PENDS with its condition form over the row's realm column instead of
+            // neutral-passing — `any` stays unrestricted and `none` reaches nothing, so
+            // neither pollutes the composed WHERE with constant terms.
+            let reachCondition : ICondition | null = null;
             const realmOutcome = await this.realmMatchEvaluator.evaluate(
                 { scope: grant.realmScope },
                 ctx,
             );
-            if (!realmOutcome.success) {
+            if (realmOutcome.pending) {
+                const scope = normalizeRealmScope(grant.realmScope);
+                if (scope === RealmScope.NONE) {
+                    continue;
+                }
+
+                if (scope !== RealmScope.ANY) {
+                    if (!realmOutcome.condition) {
+                        pending = true;
+                        lowerable = false;
+                        continue;
+                    }
+
+                    reachCondition = realmOutcome.condition;
+                }
+            } else if (!realmOutcome.success) {
                 continue;
             }
 
             if (!grant.policy) {
-                // Reach matches and this grant carries no further restriction.
-                return { success: maybeInvertPolicyOutcome(true, policy.invert) };
+                if (!reachCondition) {
+                    // Reach matches and this grant carries no further restriction.
+                    return { success: maybeInvertPolicyOutcome(true, policy.invert) };
+                }
+
+                // Reach is the grant's only restriction — a pure condition term.
+                conditions.push(reachCondition);
+                pending = true;
+                continue;
             }
 
             // Missing evaluators is a misconfiguration: let the engine fail CLOSED with a
@@ -160,7 +194,13 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
             });
 
             if (outcome.success) {
-                return { success: maybeInvertPolicyOutcome(true, policy.invert) };
+                if (!reachCondition) {
+                    return { success: maybeInvertPolicyOutcome(true, policy.invert) };
+                }
+
+                conditions.push(reachCondition);
+                pending = true;
+                continue;
             }
 
             // A PENDING junction policy (required data key absent — e.g. an ATTRIBUTES
@@ -169,6 +209,16 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
             // disjunction to false.
             if (outcome.pending) {
                 pending = true;
+
+                if (ctx.withConditions && outcome.condition) {
+                    conditions.push(
+                        reachCondition ?
+                            and(reachCondition, outcome.condition) :
+                            outcome.condition,
+                    );
+                } else {
+                    lowerable = false;
+                }
 
                 if (outcome.issues) {
                     pendingIssues.push(...outcome.issues);
@@ -183,13 +233,24 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
         }
 
         // No grant term settled true. If some term is still pending, the disjunction is
-        // pending — deliberately uninverted (unknown stays unknown under negation).
+        // pending — deliberately uninverted (unknown stays unknown under negation). The
+        // condition form composes the grant terms as a disjunction, all-or-nothing: a
+        // single non-expressible grant term makes the whole binding non-expressible
+        // (pushing a partial OR would wrongly exclude rows).
         if (pending) {
-            return {
+            const result : PolicyEvaluationResult = {
                 success: false,
                 pending: true,
                 issues: pendingIssues,
             };
+
+            if (ctx.withConditions && lowerable && conditions.length > 0) {
+                result.condition = conditions.length === 1 ?
+                    conditions[0]! :
+                    or(...conditions);
+            }
+
+            return result;
         }
 
         // No grant term satisfied (reach ∧ policies). Apply `invert` ONCE to the aggregated

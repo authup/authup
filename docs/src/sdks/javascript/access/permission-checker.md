@@ -106,3 +106,33 @@ at the gate.
 
 `evaluateOneOf` / `preEvaluateOneOf` are variants that pass when **any** of the given
 permission names passes (affirmative decision strategy).
+
+## Compile
+
+`compile` is the **query-build** counterpart of `evaluate`: instead of deciding a
+single access request, it expresses the permission's restrictions as a condition over
+row attributes (a rapiq `ICondition`), so list endpoints can enforce authorization in
+the database query itself — keeping pagination and totals exact.
+
+```typescript
+const result = await evaluator.compile({ name: 'user_update' });
+
+switch (result.verdict) {
+    case 'allow':        // no restriction — every row passes
+        break;
+    case 'deny':         // no row can pass
+        break;
+    case 'conditional':  // push result.condition into the row query (WHERE)
+        break;
+    case 'post':         // not expressible — load rows and evaluate() per row
+        break;
+}
+```
+
+Multiple names compile as a disjunction (`evaluateOneOf` semantics): any unrestricted
+name yields `allow`, and a single non-expressible name degrades the whole result to
+`post` — pushing only part of a disjunction would wrongly exclude rows.
+
+A `conditional` result is **exact**: a row satisfies the condition if and only if a
+full `evaluate()` with that row's attributes would pass. When it cannot be guaranteed,
+`compile` returns `post` instead — falling back to per-row evaluation is always sound.

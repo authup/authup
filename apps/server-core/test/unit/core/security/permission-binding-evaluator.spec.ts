@@ -13,6 +13,8 @@ import {
     RealmScope,
     definePolicyEvaluationContext,
 } from '@authup/access';
+import type { IFilter, IFilters } from '@rapiq/core';
+import { compileFilters } from '@rapiq/memory';
 import { describe, expect, it } from 'vitest';
 import { PermissionBindingPolicyEvaluator } from '../../../../src/core/security/policy/evaluator.ts';
 import { FakeIdentityPermissionProvider } from '../helpers/index.ts';
@@ -50,12 +52,14 @@ describe('core/security/policy — PermissionBindingPolicyEvaluator disjunction 
         bindings: PermissionPolicyBinding[],
         resourceRealm?: string | null,
         withResourceRealm?: boolean,
+        withConditions?: boolean,
     };
 
     const run = ({
-        bindings, 
-        resourceRealm, 
-        withResourceRealm = true, 
+        bindings,
+        resourceRealm,
+        withResourceRealm = true,
+        withConditions = false,
     }: RunOptions) => {
         const provider = new FakeIdentityPermissionProvider();
         provider.setBindings(bindings);
@@ -74,6 +78,7 @@ describe('core/security/policy — PermissionBindingPolicyEvaluator disjunction 
             definePolicyEvaluationContext({
                 data: new PolicyData(data),
                 evaluators: PolicyDefaultEvaluators,
+                withConditions,
             }),
         );
     };
@@ -169,6 +174,144 @@ describe('core/security/policy — PermissionBindingPolicyEvaluator disjunction 
         it('denies when the actor holds no matching grant', async () => {
             const outcome = await run({ bindings: [], resourceRealm: REALM_A });
             expect(outcome.success).toBe(false);
+        });
+    });
+
+    // Query-build lowering (#3286 phase 3): with `withConditions` and no resource
+    // realm, the grant disjunction composes into a rapiq condition over the row's
+    // realm column instead of neutral-passing. Semantic parity is asserted by
+    // compiling the condition with @rapiq/memory and testing rows.
+    describe('withConditions (compile lowering)', () => {
+        const rows = [
+            { realmId: REALM_A },
+            { realmId: REALM_B },
+            { realmId: null },
+        ];
+
+        const predicateOf = (outcome: Awaited<ReturnType<typeof run>>) => {
+            expect(outcome.pending).toBe(true);
+            expect(outcome.condition).toBeDefined();
+            return compileFilters(outcome.condition as IFilter | IFilters, { caseSensitive: true });
+        };
+
+        it('lowers a policy-free own grant to the realm condition', async () => {
+            const outcome = await run({
+                bindings: [grant(RealmScope.OWN)],
+                withResourceRealm: false,
+                withConditions: true,
+            });
+
+            const predicate = predicateOf(outcome);
+            expect(rows.map(predicate)).toEqual([true, false, false]);
+        });
+
+        it('lowers a policy-free ownOrNull grant including null resources', async () => {
+            const outcome = await run({
+                bindings: [grant(RealmScope.OWN_OR_NULL)],
+                withResourceRealm: false,
+                withConditions: true,
+            });
+
+            const predicate = predicateOf(outcome);
+            expect(rows.map(predicate)).toEqual([true, false, true]);
+        });
+
+        it('settles TRUE for a policy-free any grant (no pointless condition)', async () => {
+            const outcome = await run({
+                bindings: [grant(RealmScope.ANY)],
+                withResourceRealm: false,
+                withConditions: true,
+            });
+
+            expect(outcome.success).toBe(true);
+            expect(outcome.pending).toBeFalsy();
+        });
+
+        it('settles FALSE for a none grant', async () => {
+            const outcome = await run({
+                bindings: [grant(RealmScope.NONE)],
+                withResourceRealm: false,
+                withConditions: true,
+            });
+
+            expect(outcome.success).toBe(false);
+            expect(outcome.pending).toBeFalsy();
+        });
+
+        it('ANDs the reach with a lowerable junction policy', async () => {
+            const attributesPolicy = {
+                type: BuiltInPolicyType.ATTRIBUTES,
+                query: { name: { $eq: 'admin' } },
+            };
+            const outcome = await run({
+                bindings: [grant(RealmScope.OWN, [attributesPolicy])],
+                withResourceRealm: false,
+                withConditions: true,
+            });
+
+            const predicate = predicateOf(outcome);
+            expect(predicate({ realmId: REALM_A, name: 'admin' })).toBe(true);
+            expect(predicate({ realmId: REALM_A, name: 'guest' })).toBe(false);
+            expect(predicate({ realmId: REALM_B, name: 'admin' })).toBe(false);
+        });
+
+        it('ORs grant terms and keeps each policy paired with its own reach', async () => {
+            const attributesPolicy = {
+                type: BuiltInPolicyType.ATTRIBUTES,
+                query: { name: { $eq: 'admin' } },
+            };
+            const outcome = await run({
+                bindings: [
+                    grant(RealmScope.OWN),
+                    grant(RealmScope.ANY, [attributesPolicy]),
+                ],
+                withResourceRealm: false,
+                withConditions: true,
+            });
+
+            const predicate = predicateOf(outcome);
+            // own realm: reachable policy-free
+            expect(predicate({ realmId: REALM_A, name: 'guest' })).toBe(true);
+            // foreign realm: only via the any grant, whose policy must match
+            expect(predicate({ realmId: REALM_B, name: 'admin' })).toBe(true);
+            expect(predicate({ realmId: REALM_B, name: 'guest' })).toBe(false);
+        });
+
+        it('stays pending without a condition for a non-expressible junction policy', async () => {
+            const attributeNamesPolicy = {
+                type: BuiltInPolicyType.ATTRIBUTE_NAMES,
+                names: ['name'],
+            };
+            const outcome = await run({
+                bindings: [grant(RealmScope.OWN, [attributeNamesPolicy])],
+                withResourceRealm: false,
+                withConditions: true,
+            });
+
+            expect(outcome.success).toBe(false);
+            expect(outcome.pending).toBe(true);
+            expect(outcome.condition).toBeUndefined();
+        });
+
+        it('settles TRUE when a settled-true policy rides an any reach', async () => {
+            const outcome = await run({
+                bindings: [grant(RealmScope.ANY, [passingPolicy])],
+                withResourceRealm: false,
+                withConditions: true,
+            });
+
+            expect(outcome.success).toBe(true);
+        });
+
+        it('lowers a settled-true policy on an own reach to the reach condition', async () => {
+            const outcome = await run({
+                bindings: [grant(RealmScope.OWN, [passingPolicy])],
+                withResourceRealm: false,
+                withConditions: true,
+            });
+
+            const predicate = predicateOf(outcome);
+            expect(rows.map(predicate)).toEqual([true, false, false]);
         });
     });
 });

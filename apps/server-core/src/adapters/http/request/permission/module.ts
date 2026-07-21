@@ -8,6 +8,8 @@
 import { ScopeName } from '@authup/core-kit';
 import type {
     IPermissionEvaluator,
+    PermissionCompileContext,
+    PermissionCompileResult,
     PermissionEvaluationContext,
 } from '@authup/access';
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
@@ -46,7 +48,13 @@ export class RequestPermissionEvaluator implements IPermissionEvaluator {
 
     // --------------------------------------------------------------
 
-    protected extendContext(ctx: PermissionEvaluationContext) {
+    async compile(ctx: PermissionCompileContext) : Promise<PermissionCompileResult> {
+        return this.evaluator.compile(this.extendContext(ctx));
+    }
+
+    // --------------------------------------------------------------
+
+    protected extendContext<T extends PermissionEvaluationContext | PermissionCompileContext>(ctx: T) : T {
         const scopes = useRequestScopes(this.event);
         const identity = useRequestIdentity(this.event);
 

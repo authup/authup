@@ -19,11 +19,14 @@ import {
 import { ErrorCode, isAuthupError } from '@authup/errors';
 import { AsymmetricKey, createAsymmetricKeyPair } from '@authup/server-kit';
 import { JWKType, JWKUse, JWTAlgorithm } from '@authup/specs';
+import { eq } from '@rapiq/core';
+import { applyQuery } from '@rapiq/memory';
 import {
     beforeEach,
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import {
     createAllowAllActor,
@@ -99,6 +102,61 @@ describe('core/entities/key/service', () => {
             const result = await service.getMany({}, actor);
             expect(result.data).toHaveLength(1);
             expect(result.meta.total).toEqual(1);
+        });
+
+        it('pushes a compiled conditional into the row query and skips per-row evaluation', async () => {
+            const realmA = randomUUID();
+            const rows = [buildKey({ realmId: realmA }), buildKey()];
+            repository.seed(rows);
+
+            const spy = vi.spyOn(repository, 'findMany');
+            const actor = createAllowAllActor();
+            actor.permissionEvaluator.setCompileResult({
+                verdict: 'conditional',
+                condition: eq('realmId', realmA),
+            });
+
+            await service.getMany({}, actor);
+
+            // the fake repository does not apply filters — assert the QUERY carries
+            // the compiled condition by replaying it over the seeded rows
+            const query = spy.mock.calls[0]![0];
+            const applied = applyQuery(query, rows);
+            expect(applied.data).toHaveLength(1);
+            expect(applied.data[0]!.realmId).toEqual(realmA);
+
+            expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
+        });
+
+        it('keeps rows and totals untouched on a compiled allow', async () => {
+            repository.seed([buildKey(), buildKey()]);
+
+            const actor = createAllowAllActor();
+            actor.permissionEvaluator.setCompileResult({ verdict: 'allow' });
+
+            const result = await service.getMany({}, actor);
+            expect(result.data).toHaveLength(2);
+            expect(result.meta.total).toEqual(2);
+            expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
+            for (const entity of result.data) {
+                expect(entity.decryptionKey).toBeNull();
+            }
+        });
+
+        it('matches no row on a compiled deny', async () => {
+            const rows = [buildKey(), buildKey()];
+            repository.seed(rows);
+
+            const spy = vi.spyOn(repository, 'findMany');
+            const actor = createAllowAllActor();
+            actor.permissionEvaluator.setCompileResult({ verdict: 'deny' });
+
+            await service.getMany({}, actor);
+
+            const query = spy.mock.calls[0]![0];
+            const applied = applyQuery(query, rows);
+            expect(applied.data).toHaveLength(0);
+            expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
         });
     });
 

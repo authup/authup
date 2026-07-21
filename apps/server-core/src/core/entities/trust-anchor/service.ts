@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
-import { eq } from '@rapiq/core';
+import { eq, inArray } from '@rapiq/core';
 import type { TrustAnchor } from '@authup/core-kit';
 import {
     EntityType,
@@ -71,7 +71,23 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
             parsed = appendQueryConditions(parsed, eq('realmId', options.realmId));
         }
 
+        // Compile the read permissions against the knowns (actor identity) into a
+        // row condition (issue #3286 phase 3): the authorization runs as WHERE, so
+        // pagination and totals stay exact. Non-expressible policies fall back to
+        // the per-row post-evaluation below.
+        const compiled = await actor.permissionEvaluator.compile({ name: PERMISSION_NAMES });
+        if (compiled.verdict === 'deny') {
+            // no row can pass — a constant-false condition keeps the meta shape
+            parsed = appendQueryConditions(parsed, inArray('id', []));
+        } else if (compiled.verdict === 'conditional') {
+            parsed = appendQueryConditions(parsed, compiled.condition);
+        }
+
         const { data: entities, meta } = await this.repository.findMany(parsed);
+
+        if (compiled.verdict !== 'post') {
+            return { data: entities, meta };
+        }
 
         const data: TrustAnchor[] = [];
         let { total } = meta;

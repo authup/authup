@@ -1206,10 +1206,30 @@ mode (field = single-string `attributeName`, default `realmId`; under `withCondi
 an absent `realmMatch` resource key PENDS with the condition instead of neutral-passing
 — the resource realm IS the unknown row column for a query builder) and strict
 single-key attribute mode. Anything non-lowerable stays a per-row post-check (fail-safe:
-`toCondition` returning null/throwing just yields a condition-less pending). Phase 3
-(service integration: `compilePermissionPolicy`, replacing manual realm scoping and the
-per-row `evaluate` + `total -= 1` drop loops, include gating via `relations.validate`)
-is still open on #3286.
+`toCondition` returning null/throwing just yields a condition-less pending).
+
+**Permission compile (#3286 phase 3):** `IPermissionEvaluator.compile(ctx)` →
+`allow | deny | { verdict: 'conditional', condition } | post` is the query-build
+counterpart of `evaluate()` — the same walk with `withConditions`, classified. Multiple
+names compile as a disjunction (`evaluateOneOf` semantics): any `allow` short-circuits,
+any non-expressible name degrades the whole result to `post` (partial OR pushdown would
+wrongly exclude rows). The server-core `PermissionBindingPolicyEvaluator` composes the
+grant disjunction under `withConditions`: with no resource realm present the scope-mode
+reach PENDS with its condition over the row's realm column (default field `realmId`)
+instead of neutral-passing — `any` stays unrestricted (policy-free `any` grants settle
+TRUE → compile `allow`, the admin fast path), `none` reaches nothing — and each grant
+term is `and(reachCondition, junctionPolicyCondition)`, OR-composed all-or-nothing.
+`getMany` consumers (`KeyService`, `TrustAnchorService`) run
+`compile({ name: PERMISSION_NAMES })` and: `deny` → append a constant-false condition
+(`inArray('id', [])`, keeps meta shape); `conditional` → `appendQueryConditions` — the
+authorization runs as WHERE, so **pagination and totals stay exact**; `post` → the old
+per-row `evaluate` + `total -= 1` drop loop remains as the sound fallback (and the
+plan-039 force-select discipline still serves exactly that path).
+`FakePermissionEvaluator.compile` defaults to `post` so service tests keep their
+per-row expectations; override via `setCompileResult`. Still open on #3286: migrating
+the remaining drop-loop services (session/event/client/consent/user + attribute
+services — these need the ownership-alternative OR-composition) and include gating via
+`relations.validate`.
 
 ### EA loading on tree roots
 

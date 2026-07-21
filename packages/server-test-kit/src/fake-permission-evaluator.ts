@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IPermissionEvaluator, PermissionEvaluationContext } from '@authup/access';
+import type {
+    IPermissionEvaluator,
+    PermissionCompileContext,
+    PermissionCompileResult,
+    PermissionEvaluationContext,
+} from '@authup/access';
 import { PermissionError } from '@authup/access';
 
 export type EvaluatorMethodName = 'evaluate' | 'evaluateOneOf' | 'preEvaluate' | 'preEvaluateOneOf';
@@ -25,6 +30,10 @@ export class FakePermissionEvaluator implements IPermissionEvaluator {
     public preEvaluateCalls: PermissionEvaluationContext[] = [];
 
     public preEvaluateOneOfCalls: PermissionEvaluationContext[] = [];
+
+    public compileCalls: PermissionCompileContext[] = [];
+
+    private compileResult: PermissionCompileResult = { verdict: 'post' };
 
     private behavior: EvaluatorBehavior;
 
@@ -50,6 +59,20 @@ export class FakePermissionEvaluator implements IPermissionEvaluator {
     async preEvaluateOneOf(ctx: PermissionEvaluationContext): Promise<void> {
         this.preEvaluateOneOfCalls.push(ctx);
         await this.behavior({ method: 'preEvaluateOneOf', ctx });
+    }
+
+    /**
+     * Defaults to `post` — services then take their per-row evaluation path, so
+     * existing service tests keep asserting the `evaluate` calls they set up.
+     * Override per test via {@link setCompileResult}.
+     */
+    async compile(ctx: PermissionCompileContext): Promise<PermissionCompileResult> {
+        this.compileCalls.push(ctx);
+        return this.compileResult;
+    }
+
+    setCompileResult(result: PermissionCompileResult) {
+        this.compileResult = result;
     }
 
     setBehavior(behavior: EvaluatorBehavior) {
