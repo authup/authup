@@ -168,7 +168,7 @@ export class EventService extends AbstractEntityService implements IEventService
         actor: ActorContext,
         options: EventServiceReadOptions = {},
     ): Promise<EntityRepositoryFindManyResult<Event>> {
-        const parsed = decodeQuery(query, { schema: eventSchema });
+        const parsed = await decodeQuery(query, { schema: eventSchema, actor });
 
         let canReadAll = true;
         try {

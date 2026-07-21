@@ -80,7 +80,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
     ): Promise<EntityRepositoryFindManyResult<Key>> {
         await actor.permissionEvaluator.preEvaluateOneOf({ name: PERMISSION_NAMES });
 
-        let parsed = decodeQuery(query, { schema: keySchema });
+        let parsed = await decodeQuery(query, { schema: keySchema, actor });
         if (options.realmId) {
             parsed = appendQueryConditions(parsed, eq('realmId', options.realmId));
         }

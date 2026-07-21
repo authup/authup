@@ -68,6 +68,7 @@ import {
 } from '../../../../../core/index.ts';
 import {
     applyRouteRealmIDToBody,
+    buildActorContext,
     getBodyRealmID,
     getRequestParamID,
     getRequestRealmID,
@@ -126,7 +127,10 @@ export class IdentityProviderController {
             data,
             meta,
         } = await this.repository.findMany(
-            decodeQuery(useRequestQuery(event), { schema: identityProviderSchema }),
+            await decodeQuery(useRequestQuery(event), {
+                schema: identityProviderSchema,
+                actor: buildActorContext(event),
+            }),
         );
 
         try {

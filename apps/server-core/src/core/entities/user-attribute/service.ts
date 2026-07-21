@@ -44,7 +44,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             ],
         });
 
-        const parsed = decodeQuery(query, { schema: userAttributeSchema });
+        const parsed = await decodeQuery(query, { schema: userAttributeSchema, actor });
 
         // Compile the foreign-row gate into a row condition (#3286 phase 3),
         // mirroring canReadUserAttribute: own rows (the actor's userId) are

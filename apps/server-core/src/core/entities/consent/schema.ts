@@ -9,6 +9,9 @@ import { defineSchema } from '@rapiq/core';
 import type { Consent } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import { CONSENT_FILTER_KEYS } from './types.ts';
+import { createRelationsReadGate } from '../../query/relations.ts';
+
+const schemaMapping = { realm: EntityType.REALM };
 
 export const consentSchema = defineSchema<Consent>({
     name: EntityType.CONSENT,
@@ -33,8 +36,8 @@ export const consentSchema = defineSchema<Consent>({
         ],
     },
     filters: { allowed: [...CONSENT_FILTER_KEYS] },
-    relations: { allowed: ['realm'] },
+    relations: { allowed: ['realm'], validate: createRelationsReadGate(schemaMapping) },
     sort: { allowed: ['createdAt', 'updatedAt', 'scope'] },
     pagination: { maxLimit: 50 },
-    schemaMapping: { realm: EntityType.REALM },
+    schemaMapping,
 });

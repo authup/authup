@@ -50,7 +50,7 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
             ],
         });
 
-        return this.repository.findMany(decodeQuery(query, { schema: userRoleSchema }));
+        return this.repository.findMany(await decodeQuery(query, { schema: userRoleSchema, actor }));
     }
 
     async getOne(

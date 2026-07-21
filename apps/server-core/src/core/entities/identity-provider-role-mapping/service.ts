@@ -55,7 +55,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
             ],
         });
 
-        return this.repository.findMany(decodeQuery(query, { schema: identityProviderRoleMappingSchema }));
+        return this.repository.findMany(await decodeQuery(query, { schema: identityProviderRoleMappingSchema, actor }));
     }
 
     async getOne(

@@ -8,6 +8,9 @@
 import { defineSchema } from '@rapiq/core';
 import type { Client } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
+import { createRelationsReadGate } from '../../query/relations.ts';
+
+const schemaMapping = { realm: EntityType.REALM, accessPolicy: EntityType.POLICY };
 
 export const clientSchema = defineSchema<Client>({
     name: EntityType.CLIENT,
@@ -37,8 +40,8 @@ export const clientSchema = defineSchema<Client>({
         allowed: ['secret'],
     },
     filters: { allowed: ['id', 'name', 'realmId'] },
-    relations: { allowed: ['realm', 'accessPolicy'] },
+    relations: { allowed: ['realm', 'accessPolicy'], validate: createRelationsReadGate(schemaMapping) },
     sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
     pagination: { maxLimit: 50 },
-    schemaMapping: { realm: EntityType.REALM, accessPolicy: EntityType.POLICY },
+    schemaMapping,
 });

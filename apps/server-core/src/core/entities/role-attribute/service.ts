@@ -44,7 +44,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         await actor.permissionEvaluator.preEvaluateOneOf({ name: permissionNames });
 
-        let parsed = decodeQuery(query, { schema: roleAttributeSchema });
+        let parsed = await decodeQuery(query, { schema: roleAttributeSchema, actor });
 
         // Compile the read permissions into a row condition (#3286 phase 3): the
         // authorization runs as WHERE, so pagination and totals stay exact. A

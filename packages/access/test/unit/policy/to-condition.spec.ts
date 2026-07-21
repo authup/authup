@@ -176,10 +176,15 @@ describe('src/policy (toCondition / WHERE pushdown)', () => {
     });
 
     describe('realm-match scope mode', () => {
+        // Realistic row shapes only: the lowered `realmId` column holds realm IDs.
+        // A realm NAME in that column ({ realmId: 'master' }) is deliberately NOT a
+        // test row — the condition intentionally does not push a name-equality term
+        // (it binds a non-uuid literal that postgres/mysql reject on a uuid column),
+        // so the settled-evaluation name-match leniency has no row-column counterpart.
+        // The dedicated "name value" test below pins that intended divergence.
         const rows = [
             { realmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023' },
             { realmId: '11111111-2222-4333-8444-555555555555' },
-            { realmId: 'master' },
             { realmId: null },
         ];
 
@@ -209,19 +214,31 @@ describe('src/policy (toCondition / WHERE pushdown)', () => {
         }
 
         it('should lower own reach', async () => {
-            await expectScopeParity('own', [true, false, true, false]);
+            await expectScopeParity('own', [true, false, false]);
         });
 
         it('should lower ownOrNull reach', async () => {
-            await expectScopeParity('ownOrNull', [true, false, true, true]);
+            await expectScopeParity('ownOrNull', [true, false, true]);
         });
 
         it('should lower any reach', async () => {
-            await expectScopeParity('any', [true, true, true, true]);
+            await expectScopeParity('any', [true, true, true]);
         });
 
         it('should lower none reach', async () => {
-            await expectScopeParity('none', [false, false, false, false]);
+            await expectScopeParity('none', [false, false, false]);
+        });
+
+        it('should not push a realm-name term onto the id column (postgres-safe)', async () => {
+            // The actor's realmName is 'master' (see identityData). The lowered own
+            // condition must compare the realmId column against the actor's realm ID
+            // ONLY — never bind the name literal, which would type-error on a uuid
+            // column. A row whose realmId happens to equal the name does not match.
+            const outcome = await engine.evaluate(scopePolicy('own'), context({ data: withIdentity() }));
+            const predicate = test(outcome.condition!);
+
+            expect(predicate({ realmId: 'master' })).toBe(false);
+            expect(predicate({ realmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023' })).toBe(true);
         });
 
         it('should keep the neutral-pass without withConditions', async () => {

@@ -8,12 +8,31 @@
 import { defineSchema } from '@rapiq/core';
 import type { IdentityProviderRoleMapping } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
+import { createRelationsReadGate } from '../../query/relations.ts';
+
+const schemaMapping = { role: EntityType.ROLE, provider: EntityType.IDENTITY_PROVIDER };
 
 export const identityProviderRoleMappingSchema = defineSchema<IdentityProviderRoleMapping>({
     name: EntityType.IDENTITY_PROVIDER_ROLE_MAPPING,
+    // see user-role schema — explicit root projection for include= decodes
+    fields: {
+        default: [
+            'id',
+            'name',
+            'value',
+            'valueIsRegex',
+            'synchronizationMode',
+            'providerId',
+            'providerRealmId',
+            'roleId',
+            'roleRealmId',
+            'createdAt',
+            'updatedAt',
+        ],
+    },
     filters: { allowed: ['roleId', 'providerId'] },
-    relations: { allowed: ['role', 'provider'] },
+    relations: { allowed: ['role', 'provider'], validate: createRelationsReadGate(schemaMapping) },
     sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
     pagination: { maxLimit: 50 },
-    schemaMapping: { role: EntityType.ROLE, provider: EntityType.IDENTITY_PROVIDER },
+    schemaMapping,
 });

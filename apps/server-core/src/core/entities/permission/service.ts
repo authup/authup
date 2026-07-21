@@ -115,7 +115,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             ],
         });
 
-        return this.repository.findMany(decodeQuery(query, { schema: permissionSchema }));
+        return this.repository.findMany(await decodeQuery(query, { schema: permissionSchema, actor }));
     }
 
     async getOne(

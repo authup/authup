@@ -8,6 +8,9 @@
 import { defineSchema } from '@rapiq/core';
 import type { IdentityProvider } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
+import { createRelationsReadGate } from '../../query/relations.ts';
+
+const schemaMapping = { realm: EntityType.REALM };
 
 export const identityProviderSchema = defineSchema<IdentityProvider>({
     name: EntityType.IDENTITY_PROVIDER,
@@ -25,8 +28,8 @@ export const identityProviderSchema = defineSchema<IdentityProvider>({
         ],
     },
     filters: { allowed: ['name', 'protocol', 'enabled', 'realmId'] },
-    relations: { allowed: ['realm'] },
+    relations: { allowed: ['realm'], validate: createRelationsReadGate(schemaMapping) },
     sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
     pagination: { maxLimit: 50 },
-    schemaMapping: { realm: EntityType.REALM },
+    schemaMapping,
 });

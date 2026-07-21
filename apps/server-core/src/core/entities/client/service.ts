@@ -61,7 +61,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         await actor.permissionEvaluator.preEvaluateOneOf({ name: permissionNames });
 
-        const parsed = decodeQuery(query, { schema: clientSchema });
+        const parsed = await decodeQuery(query, { schema: clientSchema, actor });
 
         // The per-row gate below only fires for rows exposing a PLAINTEXT secret,
         // and only when the projection actually selects the (non-default) `secret`
@@ -160,7 +160,11 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         const entity = await this.repository.findOne(
             idOrName,
-            decodeQuery(query, { schema: clientSchema, parameters: ['fields', 'relations'] }),
+            await decodeQuery(query, {
+                schema: clientSchema, 
+                parameters: ['fields', 'relations'], 
+                actor, 
+            }),
             realmId,
         );
         if (!entity) {

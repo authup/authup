@@ -142,17 +142,52 @@ usable at the service level and nothing in core depends on TypeORM:
   entity metadata.
 - **Registry + codec + decode** — `core/query/` owns the `SchemaRegistry`
   (all entity schemas), the URL codec bound to it (decodes both the v2
-  expression dialect and legacy v1 bracket payloads), and
-  `decodeQuery(input, { schema, parameters? })` → `Query` (IR). `schema`
-  accepts the colocated schema object or a registered name; `parameters`
-  restricts which parameters are parsed/defaulted (e.g. `['filters']` for the
-  session bulk revoke, `['fields', 'relations']` for single reads).
+  expression dialect and legacy v1 bracket payloads), and the **async**
+  `decodeQuery(input, { schema, parameters?, actor? })` → `Promise<Query>`
+  (IR; async because the schema validate hooks await the actor's permission
+  pre-gate). `schema` accepts the colocated schema object or a registered
+  name; `parameters` restricts which parameters are parsed/defaulted (e.g.
+  `['filters']` for the session bulk revoke, `['fields', 'relations']` for
+  single reads); `actor` rides the decode context into the schema validate
+  hooks (see *Include authorization* below).
 - **Services decode once** — `getMany` calls
-  `this.repository.findMany(decodeQuery(query, { schema: roleSchema }))`;
+  `this.repository.findMany(await decodeQuery(query, { schema: roleSchema, actor }))`;
   multi-branch services (session/consent/event) decode into a local and pass
   the IR to every branch. Allow-lists, defaults and pagination bounds are all
   applied at decode time, so services can also inspect or compose the IR
   before handing it down.
+- **Include authorization — the relations read gate (#3295)** — every
+  schema's `relations.validate` hook is `createRelationsReadGate(schemaMapping)`
+  (`core/query/relations.ts`; schemas import that FILE directly, never the
+  `core/query` barrel — the barrel reaches `module.ts`, which imports every
+  schema, and the cycle would TDZ-crash). Per include segment the hook maps
+  the relation to its target entity type (the schema's own `schemaMapping`)
+  and runs the derived pre-gate (`preEvaluateOneOf`, #3290) for that type's
+  read-permission disjunction (`RELATION_TARGET_READ_GATES`, mirroring each
+  target service's own `getMany` gate; POLICY sits under the PERMISSION
+  family; REALM and IDENTITY_PROVIDER are deliberately ungated — both lists
+  are anonymous surfaces). Nested paths gate hop by hop. **Deny = silent
+  strip** (fail-soft, matching the allow-lists): the include — and every
+  dotted filter/sort/field key riding the denied relation path — is pruned,
+  the request still succeeds with the un-joined row shape. Caller classes:
+  a SYSTEM decode (no `actor` option) runs unrestricted; every REQUEST
+  decode passes the actor (`buildActorContext` supplies one for anonymous
+  requests too — an anonymous actor holds no grants, so its gated includes
+  strip). Every schema now declares `relations` explicitly (an omitted
+  allow-list falls back to rapiq's syntactic name check — that hole is
+  closed; `event`/`realm` pin `allowed: []`). **Known residual:** a dotted
+  filter/sort/field key whose relation is NOT explicitly included bypasses
+  the hook (the SQL adapters auto-join such paths) — upstream
+  tada5hi/rapiq#815 is the removal trigger.
+- **Junction/attribute schemas pin `fields.default`** — with no root fields
+  declared, an `include=` decodes the relation's default fields ONLY, and
+  the typeorm adapter's `select()` replace then drops every root column
+  (including the id TypeORM's DISTINCT-id pagination wrapper needs — every
+  junction `include=` 500'd before #3295 surfaced it). The explicit
+  `default` list keeps the root projection riding alongside relation
+  fields; it must enumerate EVERY scalar column (boot validation checks
+  key existence, not completeness — a column missing from `default`
+  silently vanishes from the API response).
 - **Server-derived scopes ride `appendQueryConditions(query, ...conds)`**
   (core/query) — an immutable AND-wrap of the filter tree
   (`IFilters.and`, the wrap-and-inject primitive; parameter nodes carry
@@ -1248,8 +1283,9 @@ term); `UserAuthenticatorService` composes `eq('userId', <actor id>)` the same w
 still sanitizes secret/codes on the compiled path; `RoleAttributeService` is a pure
 gate (key/trust-anchor shape, no ownership term).
 `FakePermissionEvaluator.compile` defaults to `post` so service tests keep their
-per-row expectations; override via `setCompileResult`. Still open on #3286:
-include gating via `relations.validate`.
+per-row expectations; override via `setCompileResult`. The final #3286 piece —
+include gating via `relations.validate` — shipped as #3295: see *Query IR flow →
+Include authorization*.
 
 ### EA loading on tree roots
 
@@ -1730,10 +1766,13 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   DELETEs behind an error-tone `useAlertDialog`). The self-service list
   endpoint joins only a **client summary** (id / name / displayName /
   builtIn) — never the full `ClientEntity` (`client` is deliberately absent
-  from the adapter's `relations.allowed`, so a raw `?include=client` cannot
+  from the schema's `relations.allowed`, so a raw `?include=client` cannot
   force the full-column join and leak redirectUri patterns / grantTypes /
   secret-storage flags / `accessPolicyId` to a self-service user without
-  `CLIENT_READ`). Revoking consent stops the next silent/auto issue;
+  `CLIENT_READ`; kept even after the #3295 include gate — the summary DTO
+  is the deliberate self-service shape regardless of the reader's
+  permissions, and the adapter's manual summary join would collide with a
+  rapiq `client` join anyway). Revoking consent stops the next silent/auto issue;
   already-issued tokens are unaffected (revoke those via the sessions API —
   stated limitation).
 - **Subject deletion:** the subject is polymorphic (`sub`/`subKind`), but a
@@ -2074,8 +2113,8 @@ extraColumns?)` (`app/modules/database/repositories/helpers.ts`) is called AFTER
 `applyQuery` in: `session` (`+ sub, subKind` — ownership check), `user`
 (`+ id` — self short-circuit), `client` (`+ secretHashed,
 secretEncrypted` — the plaintext-secret gate precondition), `role-attribute`,
-`user-attribute` (`+ userId` — isMe check; the two attribute adapters configure
-no `fields`, so the call is pinning defense in depth there). `role` / `scope` /
+`user-attribute` (`+ userId` — isMe check; since #3295 the two attribute schemas
+declare `fields.default`, so the call dedupes against that projection). `role` / `scope` /
 `permission` / `policy` list paths carry no per-row realm gate (their
 `resourceRealmMatch` usages are write paths on server-loaded data), so they are
 deliberately not force-selected. The helper **dedupes against the already-applied

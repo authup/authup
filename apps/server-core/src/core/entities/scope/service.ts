@@ -51,7 +51,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
             ],
         });
 
-        return this.repository.findMany(decodeQuery(query, { schema: scopeSchema }));
+        return this.repository.findMany(await decodeQuery(query, { schema: scopeSchema, actor }));
     }
 
     async getOne(

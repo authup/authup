@@ -58,7 +58,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
             ],
         });
 
-        return this.repository.findMany(decodeQuery(query, { schema: clientPermissionSchema }));
+        return this.repository.findMany(await decodeQuery(query, { schema: clientPermissionSchema, actor }));
     }
 
     async getOne(

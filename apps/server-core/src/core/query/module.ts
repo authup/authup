@@ -37,7 +37,7 @@ import { userAttributeSchema } from '../entities/user-attribute/schema.ts';
 import { userAuthenticatorSchema } from '../entities/user-authenticator/schema.ts';
 import { userPermissionSchema } from '../entities/user-permission/schema.ts';
 import { userRoleSchema } from '../entities/user-role/schema.ts';
-import type { DecodeQueryOptions } from './types.ts';
+import type { DecodeQueryOptions, QueryDecodeContext } from './types.ts';
 
 /**
  * Registry of every entity schema — the server-side allow-list layer.
@@ -100,18 +100,27 @@ export const queryCodec = createURLCodec(schemaRegistry);
  * schema's allow-lists, defaults and pagination bounds are applied
  * here — downstream consumers (repository adapters) only execute the
  * returned query.
+ *
+ * Async because the schema validate hooks are: the relations read
+ * gate (`createRelationsReadGate`) awaits the actor's permission
+ * pre-gate per include, and rapiq refuses async validators on the
+ * synchronous decode path. Pass the acting identity via
+ * `options.actor` on every request-driven decode (authenticated or
+ * anonymous — the HTTP adapter always builds one); a decode without
+ * an actor is a system call and runs unrestricted.
  */
-export function decodeQuery<RECORD extends ObjectLiteral = ObjectLiteral>(
+export async function decodeQuery<RECORD extends ObjectLiteral = ObjectLiteral>(
     input: unknown,
     options: DecodeQueryOptions<RECORD>,
-) : Query {
+) : Promise<Query> {
     const normalized = isObject(input) || typeof input === 'string' ? input : {};
 
-    const parsed = queryCodec.decode(normalized, {
+    const parsed = await queryCodec.decodeAsync(normalized, {
         // Schema<RECORD> is invariant; the codec's non-generic options
         // accept Schema<ObjectLiteral>, so collapse the variance here.
         schema: options.schema as Schema<any> | string,
         parameters: options.parameters,
+        context: { actor: options.actor } satisfies QueryDecodeContext,
     });
 
     return parsed ?? new Query({});

@@ -72,7 +72,6 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
         }
 
         const realmId = identity.realmId ?? null;
-        const realmName = identity.realmName ?? null;
 
         if (policy.scope) {
             const scope = normalizeRealmScope(policy.scope);
@@ -84,22 +83,33 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
             if (scope === RealmScope.ANY) {
                 // constant-true: nin([]) matches everything (rapiq ConstantPlan)
                 condition = nin(field, []);
-            } else if (scope === RealmScope.NONE || (realmId === null && realmName === null)) {
-                // no reach / realm-less actor — constant-false: in([]) matches nothing
-                condition = inArray(field, []);
             } else {
+                // The lowered column (default `realmId`) holds realm IDs — the resource
+                // realm is stamped from `entity.realmId`
+                // (AbstractEntityService.resourceRealmMatch), so the WHERE match compares
+                // that ID column against the actor's realm ID. The realm NAME is
+                // deliberately NOT pushed here: it never appears in a realmId column and
+                // would bind a non-uuid literal that postgres/mysql reject against a uuid
+                // column (the sqlite-only test suite masks this, since sqlite is untyped).
+                // Settled evaluation keeps the name-equality leniency for a name-stamped
+                // resource SCALAR — which has no row-column counterpart, so parity holds
+                // for realistic row-shaped data (see the exactness caveat above).
                 const terms : ICondition[] = [];
-                if (realmId !== null) {
+                if (scope !== RealmScope.NONE && realmId !== null) {
                     terms.push(eq(field, realmId));
-                }
-                if (realmName !== null) {
-                    terms.push(eq(field, realmName));
                 }
                 if (scope === RealmScope.OWN_OR_NULL) {
                     terms.push(eq(field, null));
                 }
 
-                condition = terms.length === 1 ? terms[0]! : or(...terms);
+                if (terms.length === 0) {
+                    // no reach / realm-less actor with no null branch — constant-false
+                    condition = inArray(field, []);
+                } else if (terms.length === 1) {
+                    condition = terms[0]!;
+                } else {
+                    condition = or(...terms);
+                }
             }
 
             return policy.invert ? not(condition) : condition;

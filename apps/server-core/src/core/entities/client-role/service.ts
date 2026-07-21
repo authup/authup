@@ -50,7 +50,7 @@ export class ClientRoleService extends JunctionEntityService implements IClientR
             ],
         });
 
-        return this.repository.findMany(decodeQuery(query, { schema: clientRoleSchema }));
+        return this.repository.findMany(await decodeQuery(query, { schema: clientRoleSchema, actor }));
     }
 
     async getOne(

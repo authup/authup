@@ -44,7 +44,7 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
             ],
         });
 
-        return this.repository.findMany(decodeQuery(query, { schema: permissionPolicySchema }));
+        return this.repository.findMany(await decodeQuery(query, { schema: permissionPolicySchema, actor }));
     }
 
     async getOne(
