@@ -8,7 +8,9 @@ import { PermissionEvaluationOptions, PolicyData } from '@authup/access';
 
 export type PermissionEvaluationContext = {
     name: string | string[],
-    input?: PolicyData,
+    realmId?: string | null,
+    clientId?: string | null,
+    data?: PolicyData,
     options?: PermissionEvaluationOptions
 };
 ```
@@ -25,23 +27,38 @@ export type PermissionEvaluationOptions = {
     decisionStrategy?: 'affirmative' | 'unanimous' | 'consensus',
     policiesIncluded?: string[],
     policiesExcluded?: string[],
+    pendingPolicies?: 'deny' | 'permit',
 };
 ```
 
-## `PermissionBinding`
+`pendingPolicies` controls how a grant whose policy evaluation is **pending** (a required
+data key is absent from the bag — see
+[Pending & data availability](./policies.md#pending--data-availability)) is treated:
+
+- `'deny'` (default) — pending counts as failure; the semantics of a full `evaluate()`.
+- `'permit'` — pending counts as pass; this is what `preEvaluate()` passes internally,
+  so the pre-flight gate only denies on policies that settle false with the data
+  available at that point.
+
+## `PermissionPolicyBinding`
 
 **Type**
 ```typescript
-import type { PolicyWithType } from '@authup/access';
+import type { BasePolicy } from '@authup/access';
 
-export type PermissionBinding = {
+export type PermissionPolicyBinding = {
     permission: {
         name: string,
         clientId?: string | null,
         realmId?: string | null,
         decisionStrategy?: string | null,
     },
-    policies?: PolicyWithType[],
+    policies?: BasePolicy[],
+    /**
+     * Relative realm reach of this grant (none/own/ownOrNull/any).
+     * Absent coerces to the most restrictive `own` (fail-closed).
+     */
+    realmScope?: 'none' | 'own' | 'ownOrNull' | 'any',
 };
 ```
 
@@ -71,7 +88,7 @@ Each built-in policy type uses a specific key to look up its data:
 | `time`              | `Date \| string \| number`                            | Time               |
 | `identity`          | [IdentityPolicyData](#identitypolicydata)             | Identity           |
 | `realmMatch`        | `Record<string, any>`                                 | RealmMatch         |
-| `permissionBinding` | [PermissionBinding](#permissionbinding)               | PermissionBinding  |
+| `permissionBinding` | [PermissionPolicyBinding](#permissionpolicybinding)   | PermissionBinding  |
 
 ## `IdentityPolicyData`
 

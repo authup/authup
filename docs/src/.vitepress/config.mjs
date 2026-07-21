@@ -1,5 +1,34 @@
 import { defineConfig } from 'vitepress';
 
+const guideContributingSidebar = [
+    {
+        text: 'Server Core',
+        items: [
+            { text: 'Controllers', link: '/guide/contributing/controllers' },
+            { text: 'Middlewares', link: '/guide/contributing/middlewares' },
+            { text: 'Policy Engine', link: '/guide/contributing/policy-engine' },
+            { text: 'Database: Entities', link: '/guide/contributing/database-entities' },
+            { text: 'Database: Subscribers', link: '/guide/contributing/database-subscribers' },
+            { text: 'Database: OAuth2', link: '/guide/contributing/database-oauth2' },
+        ],
+    },
+    {
+        text: 'Server Kit',
+        items: [
+            { text: 'Core Types', link: '/guide/contributing/shared-core-types' },
+            { text: 'Hash', link: '/guide/contributing/shared-hash' },
+            { text: 'Key Pair', link: '/guide/contributing/shared-key-pair' },
+            { text: 'Sign & Verify', link: '/guide/contributing/shared-sign-verify' },
+        ],
+    },
+    {
+        text: 'Testing',
+        items: [
+            { text: 'Test Kit', link: '/guide/contributing/test-kit' },
+        ],
+    },
+];
+
 export default defineConfig({
     title: 'Authup',
     base: '/',
@@ -264,11 +293,15 @@ export default defineConfig({
                         },
                         {
                             text: 'Submission Guidelines',
-                            link: '/guide/development/submission-guidelines', 
+                            link: '/guide/development/submission-guidelines',
+                        },
+                        {
+                            text: 'Workflow',
+                            link: '/guide/development/workflow',
                         },
                         {
                             text: 'Repository Structure',
-                            link: '/guide/development/repository-structure', 
+                            link: '/guide/development/repository-structure',
                         },
                         {
                             text: 'Quick Start',
@@ -298,23 +331,29 @@ export default defineConfig({
                     items: [
                         {
                             text: 'Introduction',
-                            link: '/guide/development/api-introduction', 
+                            link: '/guide/development/api-introduction',
                         },
                         {
                             text: 'OAuth2',
-                            link: '/guide/development/api-oauth2', 
+                            link: '/guide/development/api-oauth2',
                         },
                         {
                             text: 'Examples',
-                            link: '/guide/development/api-examples', 
+                            link: '/guide/development/api-examples',
                         },
                         {
                             text: 'Error Handling',
-                            link: '/guide/development/api-error-handling', 
+                            link: '/guide/development/api-error-handling',
                         },
                     ],
                 },
+                {
+                    text: 'Internals',
+                    collapsed: true,
+                    items: guideContributingSidebar,
+                },
             ],
+            '/guide/contributing': guideContributingSidebar,
             '/sdks/python': [
                 {
                     text: 'Python',

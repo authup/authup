@@ -133,6 +133,20 @@ When a permission is checked, the following flow applies:
 5. If that grant also carries a **junction policy** (`policyId`), evaluate it as a further restriction
 6. The permission's policies pass **and** the realm reach matches **and** any junction policy passes → **allow**; any required factor fails → **deny**
 
+### Pre-checks and data availability
+
+Many operations check a permission **twice**: a cheap pre-check before doing any work
+(is this actor allowed to attempt the operation at all?) and a full check once the
+concrete data — the loaded record, the validated payload — is available.
+
+Policy evaluation is aware of this: a policy whose input data is not known yet (for
+example an attribute condition before the record is loaded) is treated as **pending**
+rather than failed. Pending policies pass the pre-check and are decided in the full
+check. Only a policy that already fails with the information available — e.g. an
+identity-type restriction — denies at the pre-check. This holds for arbitrarily nested
+and inverted policy trees, so an inverted (`invert: true`) policy never causes a
+spurious early denial.
+
 ## Decision Strategy
 
 When a permission has multiple policies attached, the `decisionStrategy` on the permission controls how results are combined:
@@ -160,20 +174,29 @@ Authup prevents privilege escalation through two mechanisms:
 ### Superset Check
 
 When assigning a role to an identity (user or client), the system verifies that the assigning actor
-owns **all** permissions contained in the target role. This check is policy-aware:
+owns **at least** what the target role confers. The check is grant-by-grant and policy-aware:
+for every grant the target role contains, some grant of the actor must **cover** it —
 
-- If the actor has a restricted binding (junction policy) for a permission, but the target role has an unrestricted
-  binding for the same permission, the assignment is denied.
-- If the actor has multiple bindings for a permission (e.g. through different roles), the least restrictive
-  binding wins (affirmative merge).
+- the actor grant's [realm reach](#realm-reach-realmscope) must be at least as wide
+  (`own` cannot confer `any`), and
+- an unrestricted actor grant covers anything; a policy-restricted actor grant covers a
+  target grant only when both carry the **same** policy configuration. Two *different*
+  restrictions are never assumed to overlap — the check fails closed.
 
-This means an `admin` (unrestricted) can assign any role, but a `realm_admin` (restricted by `system.realm-bound`)
-cannot assign the `admin` role — because the admin role contains unrestricted bindings that the realm_admin does not own.
+This means an `admin` (every permission at `any`, policy-free) can assign any role, while a
+`realm_admin` (confined to `own`/`ownOrNull` reach) cannot assign the `admin` role — the
+admin role confers wider reach than the realm_admin owns.
 
 ### Junction Policy Propagation
 
 When creating any permission binding (role-permission, user-permission, client-permission),
-the system automatically propagates the actor's own junction policy to the new binding.
+the system caps the new grant by the actor's own grant for that permission:
 
-If a `realm_admin` assigns a permission to a role, the new role-permission entry inherits the
-`system.realm-bound` junction policy. This prevents restricted actors from creating unrestricted permission bindings.
+- the new binding's `realmScope` is limited to the reach the actor itself holds
+  (narrowing is allowed, widening is not), and
+- if the actor's own grant is policy-restricted, that **actor's** policy is propagated
+  onto the new binding.
+
+Only an unrestricted actor (reach `any`, no junction policy) may attach an explicit
+`policyId` of its own choosing. This prevents restricted actors from creating permission
+bindings that are broader than their own access.
