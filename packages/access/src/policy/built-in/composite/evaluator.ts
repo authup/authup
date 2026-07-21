@@ -157,15 +157,16 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
                 decisionStrategy !== DecisionStrategy.CONSENSUS
             ) {
                 if (pendingConditions.length === 1) {
-                    [condition] = pendingConditions;
+                    const [first] = pendingConditions;
+                    condition = first ?? null;
                 } else if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
                     condition = or(...pendingConditions);
                 } else {
                     condition = and(...pendingConditions);
                 }
 
-                if (policy.invert) {
-                    condition = not(condition!);
+                if (condition && policy.invert) {
+                    condition = not(condition);
                 }
             }
 
