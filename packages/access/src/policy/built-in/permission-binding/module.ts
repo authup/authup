@@ -7,6 +7,7 @@
 
 import type { IPolicyEvaluator, PolicyEvaluationResult } from '../../evaluation';
 import { maybeInvertPolicyOutcome } from '../../helpers';
+import { BuiltInPolicyType } from '../constants';
 import { PermissionBindingPolicyValidator } from './validator';
 
 export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
@@ -14,6 +15,12 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
 
     constructor() {
         this.validator = new PermissionBindingPolicyValidator();
+    }
+
+    requires() : string[] {
+        // IDENTITY is deliberately NOT declared: a missing identity must stay a
+        // settled deny (fail-closed), never a pending the pre-gate would permit.
+        return [BuiltInPolicyType.PERMISSION_BINDING];
     }
 
     async evaluate(value: Record<string, any>): Promise<PolicyEvaluationResult> {

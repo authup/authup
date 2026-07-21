@@ -8,6 +8,7 @@
 import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
 import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
 import { maybeInvertPolicyOutcome } from '../../helpers';
+import { BuiltInPolicyType } from '../constants';
 import { PolicyIdentityDataValidator } from './data';
 import type { IdentityPolicyData } from './types';
 import { IdentityPolicyValidator } from './validator';
@@ -20,6 +21,10 @@ export class IdentityPolicyEvaluator implements IPolicyEvaluator {
     constructor() {
         this.validator = new IdentityPolicyValidator();
         this.dataValidator = new PolicyIdentityDataValidator();
+    }
+
+    requires() : string[] {
+        return [BuiltInPolicyType.IDENTITY];
     }
 
     async accessData(ctx: PolicyEvaluationContext) : Promise<IdentityPolicyData | null> {

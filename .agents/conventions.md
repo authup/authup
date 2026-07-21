@@ -77,6 +77,29 @@ Do **not** use `peerDependencies` as a blanket "dedup enforcer" on leaves — de
 - Environment variable names use `SCREAMING_SNAKE_CASE` with `_ENABLED` suffix: `REGISTRATION_ENABLED`, `PASSWORD_RECOVERY_ENABLED`, `EMAIL_VERIFICATION_ENABLED`
 - Config file keys (`.conf`) use `camelCase` matching the TypeScript property name
 
+## Upstream (Own) Libraries
+
+Most non-framework dependencies are maintained by the same author (tada5hi) and can be
+changed easily: `rapiq` (`@rapiq/*`), `vuecs` (`@vuecs/*`), `validup` (`@validup/*`),
+`ilingo` (`@ilingo/*`), `routup` (`@routup/*`), `hapic` (`@hapic/*`), `ebec` (`@ebec/*`),
+`typeorm-extension`, `smob`, `locter` — each lives at `github.com/tada5hi/<name>`.
+
+- **When authup work reveals a gap, bug, or awkward API in one of these, open an issue in
+  the upstream repo** (`gh issue create --repo tada5hi/<name>`) describing the authup use
+  case — do NOT silently build an authup-side workaround. Workarounds calcify; upstream
+  changes are cheap here. Precedents: tada5hi/rapiq#790 (TS2590), #800
+  (`assertSchemaMatchesEntity`), #806 (context RFC), #811 (public-IR negation);
+  tada5hi/vuecs#1591 (theme-manager merge), #1601 (generic `VCTable`), #1689 (Reka
+  trigger-label snapshot).
+- **rapiq is experimental** — big breaking changes are still expected and welcome; authup
+  is the driving consumer, so gaps found during authup work should shape rapiq's design
+  now while breakage is cheap.
+- A deliberate authup-side fallback while an upstream issue is open is fine (e.g. keeping
+  `invert: true` policies as post-checks until rapiq#811) — but the issue must exist so
+  the fallback has a removal trigger.
+- When upstream code is consulted, also update the corresponding mapping file under
+  `.agents/references/` (see below).
+
 ## References
 
 External project references live in `.agents/references/` — one Markdown file per external project

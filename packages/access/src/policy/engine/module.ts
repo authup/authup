@@ -14,6 +14,7 @@ import type {
     PolicyEvaluators,
 } from '../evaluation';
 import type { PolicyIssue } from '../issue';
+import { PolicyIssueCode, definePolicyIssueItem } from '../issue';
 import type { IPolicyEngine } from './types.ts';
 import { PolicyError, isPolicyError } from '../error';
 import type { BasePolicy } from '../types.ts';
@@ -116,6 +117,29 @@ export class PolicyEngine implements IPolicyEngine {
         }
 
         try {
+            // Data-availability gate: a policy whose declared data requirements are not
+            // satisfied yet is PENDING — not true, not false. Like the include/exclude
+            // neutral-pass, `invert` is never applied here (the evaluator is not invoked
+            // at all): unknown stays unknown under negation.
+            if (evaluator.requires) {
+                const missing = evaluator.requires(policy)
+                    .filter((key) => !ctx.data || !ctx.data.has(key));
+
+                if (missing.length > 0) {
+                    return {
+                        success: false,
+                        pending: true,
+                        issues: [
+                            definePolicyIssueItem({
+                                code: PolicyIssueCode.DATA_MISSING,
+                                message: `The data propert${missing.length > 1 ? 'ies' : 'y'} ${missing.join(', ')} ${missing.length > 1 ? 'are' : 'is'} missing`,
+                                path: ctx.path,
+                            }),
+                        ],
+                    };
+                }
+            }
+
             return await evaluator.evaluate(policy, {
                 ...ctx,
                 evaluators: {

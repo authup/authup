@@ -41,6 +41,14 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
         this.identityPermissionProvider = identityPermissionProvider;
     }
 
+    requires() : string[] {
+        // IDENTITY is deliberately NOT declared: a missing identity must stay a
+        // settled DATA_MISSING deny (fail-closed) so a scope-restricted or anonymous
+        // bearer still fails the pre-gate through system.default — pending would be
+        // permitted there.
+        return [BuiltInPolicyType.PERMISSION_BINDING];
+    }
+
     async accessData(ctx: PolicyEvaluationContext) : Promise<PermissionPolicyBindingAggregated | null> {
         if (!ctx.data.has(BuiltInPolicyType.PERMISSION_BINDING)) {
             return null;
@@ -116,13 +124,16 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
         // policy-bound `any` grant's wider reach) and the symmetric OVER-grant (an `own`
         // grant's passing policy must not ride an `any` grant's wider reach).
         const issues : Issue[] = [];
+        const pendingIssues : Issue[] = [];
+        let pending = false;
         for (const grant of aggr.grants) {
             // Realm reach (coarse, actor-relative) — a SEPARATE factor from the grant's
             // policy, ANDed with it. The realm-match evaluator runs in SCOPE MODE: it reads the
             // resource realm from ctx.data[REALM_MATCH] (fallback ATTRIBUTES.realmId) and
             // neutral-passes when absent (preEvaluate / gate checks / realm-less resources) —
-            // key-PRESENCE is the discriminator. Invoked DIRECTLY (not via PolicyEngine —
-            // REALM_MATCH is in policiesExcluded, so the engine would skip it).
+            // key-PRESENCE is the discriminator. Invoked DIRECTLY (not via PolicyEngine) so
+            // the reach factor can never be skipped by a caller's include/exclude filters or
+            // deferred by the engine's data-availability gate.
             const realmOutcome = await this.realmMatchEvaluator.evaluate(
                 { scope: grant.realmScope },
                 ctx,
@@ -152,9 +163,33 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
                 return { success: maybeInvertPolicyOutcome(true, policy.invert) };
             }
 
+            // A PENDING junction policy (required data key absent — e.g. an ATTRIBUTES
+            // policy at the pre-gate) leaves this grant term UNKNOWN, not failed: the
+            // grant could still pass once the data arrives, so it must not settle the
+            // disjunction to false.
+            if (outcome.pending) {
+                pending = true;
+
+                if (outcome.issues) {
+                    pendingIssues.push(...outcome.issues);
+                }
+
+                continue;
+            }
+
             if (outcome.issues) {
                 issues.push(...outcome.issues);
             }
+        }
+
+        // No grant term settled true. If some term is still pending, the disjunction is
+        // pending — deliberately uninverted (unknown stays unknown under negation).
+        if (pending) {
+            return {
+                success: false,
+                pending: true,
+                issues: pendingIssues,
+            };
         }
 
         // No grant term satisfied (reach ∧ policies). Apply `invert` ONCE to the aggregated

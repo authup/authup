@@ -876,8 +876,9 @@ factor, ANDed with the junction's `policyId` policies) by invoking the
 `RealmMatchPolicyEvaluator` in **SCOPE MODE**: a grant's `realmScope` is matched
 against the resource realm supplied under the **`realmMatch` PolicyData key** (a single id,
 `null`, or an array of ids — `realmScopeMatches` requires the scope to reach every listed
-realm). The realm-match call is made **directly** (not via the policy engine — `realmMatch`
-is in `policiesExcluded`) and stays **outside** the `policies[]` merge, so the policy-free
+realm). The realm-match call is made **directly** (not via the policy engine — so it can
+never be skipped by a caller's include/exclude filters or deferred by the engine's
+data-availability gate) and stays **outside** the `policies[]` merge, so the policy-free
 fail-open drop can never touch realm reach. A **realm-less / anonymous** actor can never
 satisfy `own`/`ownOrNull` (only `any`), and the factor neutral-passes when no `realmMatch`
 key is present (`preEvaluate` / gate checks / realm-less resources).
@@ -1156,9 +1157,34 @@ Two-layer rejection:
 1. **Validator** silently strips fields it doesn't mount (e.g. `builtIn`, `realmId` on UPDATE) — these never reach the policy.
 2. **ATTRIBUTE_NAMES policy** rejects validated fields not in the allowlist (e.g. `active` on a client) — produces a `value_invalid` issue and the request fails.
 
-### preEvaluate auto-exclusion
+### preEvaluate is derived from data availability (tri-state, issue #3286)
 
-`preEvaluate` (no input data) automatically skips evaluators that require attributes — `ATTRIBUTES`, `ATTRIBUTE_NAMES`, `REALM_MATCH`. This means binding ATTRIBUTE_NAMES policies to a permission does **not** break gate checks in pre-flight scenarios. The full check happens in the second `evaluate()` call where `validated` data is supplied.
+The policy engine is tri-state: a policy whose declared data requirements
+(`IPolicyEvaluator.requires?(value)` — PolicyData keys, checked by the engine before
+invoking the evaluator) are not satisfied by the current bag returns
+`{ success: false, pending: true }` instead of evaluating against missing data. Built-in
+`requires`: identity → `[IDENTITY]`; attributes / attributeNames → `[ATTRIBUTES]`;
+permissionBinding → `[PERMISSION_BINDING]` (IDENTITY deliberately not declared — a missing
+identity must stay a settled deny so a scope-restricted bearer fails the pre-gate through
+`system.default`); realmMatch → `[IDENTITY]` in scope mode (the `realmMatch` resource key
+stays a neutral-pass discriminator), `[IDENTITY, ATTRIBUTES]` in attribute mode; date/time/
+composite → none. The composite algebra treats pending children as UNKNOWN (never counted,
+never masked to a settled value) and settles despite them only when no resolution could
+change the outcome; `invert` is **never applied to a pending result** — mask-then-negate ≠
+negate-then-mask was the pre-gate inversion bug this replaced. Server-core's
+`PermissionBindingPolicyEvaluator` propagates a pending junction policy as a pending grant
+term (the disjunction settles false only when every term settled).
+
+`preEvaluate` passes `pendingPolicies: 'permit'` (a `PermissionEvaluationOptions` flag,
+default `'deny'`): a grant whose policy tree is pending passes the gate; only a tree that
+settles false with the current bag denies. This replaced the hand-maintained
+`policiesExcluded: [ATTRIBUTES, ATTRIBUTE_NAMES, REALM_MATCH]` list — new policy types
+place themselves via `requires` with zero engine edits. Binding ATTRIBUTE_NAMES policies to
+a permission still does **not** break gate checks (pending → permitted); the full check
+happens in the second `evaluate()` call where `validated` data is supplied (pending ⇒
+`success: false` ⇒ deny, preserving the historical missing-data deny).
+`policiesIncluded`/`policiesExcluded` remain functional for explicit callers (e.g. the
+event service's reach derivation).
 
 ### EA loading on tree roots
 
