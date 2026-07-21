@@ -222,6 +222,27 @@ policies:
       attributeNullMatchAll: true
 ```
 
+::: warning Upgrading from a pre-camelCase release
+Policy `extraAttributes` persisted **before** the camelCase release — both the attribute keys and
+the entity-property names referenced inside `names`, `query`, and `attributeName` — are **not**
+migrated automatically; the data migration deliberately leaves `auth_policy_attributes` untouched.
+Built-in `system.*` policies self-heal (the provisioner rewrites them to camelCase on every
+startup), but **user-authored** policies do not.
+
+A stale `snake_case` policy silently changes meaning:
+
+- an `invert: true` `attribute_names` denylist (e.g. `["name_locked", "status_message"]`) or an
+  `invert: true` `attributes` policy (e.g. `{ realm_id: … }`) **fails open** — the camelCase
+  attribute keys no longer match, so the deny never fires;
+- a non-inverted `attributes` / attribute-mode `realm_match` constraint **stops matching** (denying
+  legitimate access, or silently dropping the realm constraint).
+
+**Action:** after upgrading, re-save every custom (non-built-in) `attribute_names`, `attributes`, or
+attribute-mode `realm_match` policy — via `PUT /policies/:id`, the admin UI, or a provisioning
+`replace` — using camelCase field references. Re-saving re-serializes the stored configuration under
+the current contract and restores the intended decision.
+:::
+
 ### Permission
 
 | Field        | Type               | Description                          |
