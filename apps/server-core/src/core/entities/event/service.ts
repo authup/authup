@@ -7,6 +7,12 @@
 
 import { randomUUID } from 'node:crypto';
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
+import {
+    and, 
+    eq, 
+    inArray, 
+    or,
+} from '@rapiq/core';
 import { PermissionName } from '@authup/core-kit';
 import type { Event } from '@authup/core-kit';
 import { EntityNotFoundError } from '@authup/errors';
@@ -22,7 +28,7 @@ import type {
     IEventRepository,
     IEventService,
 } from './types.ts';
-import { decodeQuery } from '../../query/index.ts';
+import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
 import { eventSchema } from './schema.ts';
 
 export type EventServiceContext = {
@@ -183,6 +189,31 @@ export class EventService extends AbstractEntityService implements IEventService
                 },
                 ...(options.realmId ? { realmId: options.realmId } : {}),
             });
+        }
+
+        // Compile EVENT_READ into a row condition (#3286 phase 3). Own rows are
+        // always readable, so ownership composes as an OR-alternative — the whole
+        // gate runs as WHERE (replacing the probe-based visibility derivation, and
+        // additionally covering junction ATTRIBUTES policies the probe excluded)
+        // and pagination/totals stay exact. A non-expressible policy falls back to
+        // the probe + per-row loop below.
+        const compiled = await actor.permissionEvaluator.compile({ name: PermissionName.EVENT_READ });
+        if (compiled.verdict !== 'post') {
+            const ownership = actor.identity ?
+                and(eq('actorId', actor.identity.data.id), eq('actorType', actor.identity.type)) :
+                null;
+
+            let scoped = parsed;
+            if (compiled.verdict === 'deny') {
+                scoped = appendQueryConditions(parsed, ownership ?? inArray('id', []));
+            } else if (compiled.verdict === 'conditional') {
+                scoped = appendQueryConditions(
+                    parsed,
+                    ownership ? or(ownership, compiled.condition) : compiled.condition,
+                );
+            }
+
+            return this.repository.findMany(scoped, { ...(options.realmId ? { realmId: options.realmId } : {}) });
         }
 
         const visibility = await this.resolveReadVisibility(actor);

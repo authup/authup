@@ -6,7 +6,8 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { isQuery } from '@rapiq/core';
+import { eq, isQuery } from '@rapiq/core';
+import { applyQuery } from '@rapiq/memory';
 import {
     CLIENT_SYSTEM_NAME,
     CLIENT_WEB_NAME,
@@ -77,6 +78,78 @@ describe('core/entities/client/service', () => {
             expect(result.data).toHaveLength(1);
             expect(result.data[0].name).toBe('safe');
             expect(result.meta.total).toBe(1);
+        });
+
+        it('does not gate the default projection (secret unselected) even on a compiled deny', async () => {
+            const rows = repository.seed([
+                createFakeClient({ name: 'safe', secret: null }),
+                createFakeClient({
+                    name: 'secret-plain',
+                    secret: 'mysecret',
+                    secretEncrypted: false,
+                    secretHashed: false,
+                }),
+            ]);
+
+            const actor = createAllowAllActor();
+            actor.permissionEvaluator.setCompileResult({ verdict: 'deny' });
+
+            const spy = vi.spyOn(repository, 'findMany');
+            await service.getMany({}, actor);
+
+            // secret is not part of the default projection, so no row exposes a
+            // plaintext secret and nothing is gated — replay the built query
+            const query = spy.mock.calls[0]![0];
+            const applied = applyQuery(query, rows);
+            expect(applied.data).toHaveLength(2);
+            expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
+        });
+
+        it('gates plaintext-secret rows as WHERE when the projection selects secret', async () => {
+            const realmA = randomUUID();
+            const rows = repository.seed([
+                createFakeClient({
+                    name: 'safe', 
+                    secret: null, 
+                    realmId: realmA, 
+                }),
+                createFakeClient({
+                    name: 'plain-covered',
+                    secret: 'mysecret',
+                    secretEncrypted: false,
+                    secretHashed: false,
+                    realmId: realmA,
+                }),
+                createFakeClient({
+                    name: 'plain-foreign',
+                    secret: 'mysecret',
+                    secretEncrypted: false,
+                    secretHashed: false,
+                }),
+                createFakeClient({
+                    name: 'hashed-foreign',
+                    secret: '$2b$10$hash',
+                    secretHashed: true,
+                    secretEncrypted: false,
+                }),
+            ]);
+
+            const actor = createAllowAllActor();
+            actor.permissionEvaluator.setCompileResult({
+                verdict: 'conditional',
+                condition: eq('realmId', realmA),
+            });
+
+            const spy = vi.spyOn(repository, 'findMany');
+            await service.getMany({ fields: '+secret' }, actor);
+
+            // only the uncovered PLAINTEXT row is hidden; hashed / secret-less
+            // rows list regardless of the compiled condition
+            const query = spy.mock.calls[0]![0];
+            const applied = applyQuery(query, rows);
+            expect(applied.data.map((row) => row.name).sort())
+                .toEqual(['hashed-foreign', 'plain-covered', 'safe']);
+            expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
         });
 
         it('should not filter entities with hashed secrets', async () => {
