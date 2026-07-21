@@ -13,6 +13,7 @@ import { PolicyEngine } from '../../engine';
 import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
 import { maybeInvertPolicyOutcome } from '../../helpers';
 import type { PolicyIssue } from '../../issue';
+import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
 import { CompositePolicyValidator } from './validator';
 
 export class CompositePolicyEvaluator implements IPolicyEvaluator {
@@ -25,6 +26,26 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
     async evaluate(value: Record<string, any>, ctx: PolicyEvaluationContext): Promise<PolicyEvaluationResult> {
         // todo: catch errors + transform to issue(s)
         const policy = await this.validator.run(value);
+
+        // A composite policy with no children can never be satisfied — an empty
+        // UNANIMOUS/CONSENSUS settles false and an empty AFFIRMATIVE settles
+        // false — so a permission bound to one is permanently un-grantable.
+        // Fail closed with an explicit diagnostic instead of settling `false`
+        // with an empty issue list, which reads as an opaque "stale" permission
+        // (#3304). Like the engine's unregistered-type handling, this
+        // misconfiguration fails closed regardless of `invert`.
+        if (policy.children.length === 0) {
+            return {
+                success: false,
+                issues: [
+                    definePolicyIssueItem({
+                        code: PolicyIssueCode.INVALID,
+                        message: 'A composite policy must define at least one child policy.',
+                        path: ctx.path,
+                    }),
+                ],
+            };
+        }
 
         let count = 0;
         let pending = 0;

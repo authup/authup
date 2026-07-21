@@ -183,6 +183,25 @@ describe('core/provisioning/entities/root-validator', () => {
         })).rejects.toThrow();
     });
 
+    it('should reject a childless composite policy', async () => {
+        await expect(run({
+            policies: [
+                { attributes: { name: 'empty-composite', type: BuiltInPolicyType.COMPOSITE } },
+            ],
+        })).rejects.toThrow();
+    });
+
+    it('should reject a composite policy with an empty children array', async () => {
+        await expect(run({
+            policies: [
+                {
+                    attributes: { name: 'empty-composite', type: BuiltInPolicyType.COMPOSITE },
+                    children: [],
+                },
+            ],
+        })).rejects.toThrow();
+    });
+
     it('should reject an invalid strategy', async () => {
         await expect(run({
             roles: [
