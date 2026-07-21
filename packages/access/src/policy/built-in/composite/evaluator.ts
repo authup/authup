@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ICondition } from '@rapiq/core';
+import { and, not, or } from '@rapiq/core';
 import { defineIssueGroup } from 'validup';
 import { DecisionStrategy } from '@authup/kit';
 import { PolicyEngine } from '../../engine';
@@ -33,6 +35,8 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
         const engine = new PolicyEngine(ctx.evaluators);
         const issues : PolicyIssue[] = [];
         const pendingIssues : PolicyIssue[] = [];
+        const pendingConditions : ICondition[] = [];
+        let pendingWithoutCondition = 0;
 
         for (const childPolicy of policy.children) {
             const path = [
@@ -50,6 +54,12 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
             // (mask-then-negate ≠ negate-then-mask — issue #3286).
             if (outcome.pending) {
                 pending++;
+
+                if (outcome.condition) {
+                    pendingConditions.push(outcome.condition);
+                } else {
+                    pendingWithoutCondition++;
+                }
 
                 if (outcome.issues && outcome.issues.length > 0) {
                     pendingIssues.push(defineIssueGroup({
@@ -128,10 +138,41 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
         }
 
         if (settled === null) {
-            // Unknown stays unknown — `invert` is deliberately NOT applied.
+            // Unknown stays unknown — `invert` is deliberately NOT applied to the
+            // pending SUCCESS. The condition form is composed structurally instead:
+            // settled children are identity elements and drop out of the residual,
+            // so AND residual = and(pending), OR residual = or(pending). Exact-only,
+            // all-or-nothing per node: one pending child without a condition makes
+            // the whole node non-expressible (an OR pushing a single disjunct would
+            // wrongly EXCLUDE rows; a partial AND is a compiler-level optimization,
+            // deliberately not done here). CONSENSUS thresholds over row-dependent
+            // outcomes never lower. `invert` wraps the residual SYMBOLICALLY via
+            // rapiq's null-inclusive-complement not() — negation applies to the
+            // condition even though the pending success stays uninverted.
+            let condition : ICondition | null = null;
+            if (
+                ctx.withConditions &&
+                pendingWithoutCondition === 0 &&
+                pendingConditions.length > 0 &&
+                decisionStrategy !== DecisionStrategy.CONSENSUS
+            ) {
+                if (pendingConditions.length === 1) {
+                    [condition] = pendingConditions;
+                } else if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
+                    condition = or(...pendingConditions);
+                } else {
+                    condition = and(...pendingConditions);
+                }
+
+                if (policy.invert) {
+                    condition = not(condition!);
+                }
+            }
+
             return {
                 success: false,
                 pending: true,
+                ...(condition ? { condition } : {}),
                 issues: pendingIssues,
             };
         }

@@ -1186,6 +1186,31 @@ happens in the second `evaluate()` call where `validated` data is supplied (pend
 `policiesIncluded`/`policiesExcluded` remain functional for explicit callers (e.g. the
 event service's reach derivation).
 
+**Condition lowering / WHERE pushdown (#3286 phase 2):** `IPolicyEvaluator` additionally
+carries optional `toCondition?(value, ctx)` — express the policy as a rapiq `ICondition`
+over row attributes, partial-evaluated against the knowns bag (actor realm baked into a
+realm-match condition; `invert` via rapiq ≥ 2.0.0-beta.6's `not()`, whose null-inclusive
+complement matches predicate inversion exactly). The lowering rides the SAME evaluation
+walk, opt-in via `PolicyEvaluationContext.withConditions` (default false — evaluate/
+preEvaluate hot paths never pay it): the engine attaches `result.condition` when a leaf
+pends at the requires-gate, and the composite composes structurally — settled children
+drop out as identity elements, `AND(pending) → and(...)`, `OR(pending) → or(...)`
+**all-or-nothing per node** (one non-lowerable pending child ⇒ no condition; pushing a
+single OR disjunct would wrongly exclude rows; partial-AND is a deliberate non-feature at
+tree level), CONSENSUS never lowers, `invert` wraps the residual symbolically. The
+attached condition is EXACT: row satisfies condition ⟺ pending subtree settles true on
+that row (over row-shaped data where referenced fields exist — the object-bag
+missing-key neutral-pass has no SQL counterpart). Lowerable today: `attributes` (its
+`query` is already `MongoFiltersParserInput` → parsed `ICondition`), `realmMatch` scope
+mode (field = single-string `attributeName`, default `realmId`; under `withConditions`
+an absent `realmMatch` resource key PENDS with the condition instead of neutral-passing
+— the resource realm IS the unknown row column for a query builder) and strict
+single-key attribute mode. Anything non-lowerable stays a per-row post-check (fail-safe:
+`toCondition` returning null/throwing just yields a condition-less pending). Phase 3
+(service integration: `compilePermissionPolicy`, replacing manual realm scoping and the
+per-row `evaluate` + `total -= 1` drop loops, include gating via `relations.validate`)
+is still open on #3286.
+
 ### EA loading on tree roots
 
 `AttributeNamesPolicyValidator` reads the policy's `names` field from extra-attributes (`policy_attributes`). For top-level policies bound directly to permissions, the policy is loaded as the root of a closure-table descendants tree. `EATreeRepository.findDescendantsTree()` calls `extendOneWithEA(entity)` after building the children — without that, the root entity's EA fields stay unloaded and the validator fails with "value_invalid". Both Layer 1 (`PermissionDatabaseProvider`) and Layer 2 (`bindings.ts`) depend on this fix.

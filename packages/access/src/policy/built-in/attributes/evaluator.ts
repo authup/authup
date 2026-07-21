@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ICondition } from '@rapiq/core';
+import { not } from '@rapiq/core';
 import type { Predicate } from '@rapiq/memory';
 import { compileFilters } from '@rapiq/memory';
 import { MongoFiltersParser } from '@rapiq/parser-mongo';
@@ -13,6 +15,7 @@ import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult 
 import { maybeInvertPolicyOutcome } from '../../helpers';
 import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
 import { BuiltInPolicyType } from '../constants.ts';
+import type { AttributesPolicy } from './types';
 import { AttributesPolicyValidator } from './validator';
 
 export class AttributesPolicyEvaluator<
@@ -29,6 +32,23 @@ export class AttributesPolicyEvaluator<
 
     requires() : string[] {
         return [BuiltInPolicyType.ATTRIBUTES];
+    }
+
+    async toCondition(value: Record<string, any>) : Promise<ICondition | null> {
+        let policy : AttributesPolicy<T>;
+        let condition : ICondition;
+
+        try {
+            policy = await this.validator.run(value);
+            this.fixQuery(policy.query);
+            condition = this.parser.parse(policy.query);
+        } catch {
+            return null;
+        }
+
+        // rapiq's not() is the exact null-inclusive complement (tada5hi/rapiq#812) —
+        // identical to inverting the compiled predicate's verdict per row.
+        return policy.invert ? not(condition) : condition;
     }
 
     async accessData(ctx: PolicyEvaluationContext) : Promise<T | null> {

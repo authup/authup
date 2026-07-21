@@ -125,7 +125,7 @@ export class PolicyEngine implements IPolicyEngine {
                 .filter((key) => !ctx.data || !ctx.data.has(key));
 
             if (missing.length > 0) {
-                return {
+                const result : PolicyEvaluationResult = {
                     success: false,
                     pending: true,
                     issues: [
@@ -136,6 +136,22 @@ export class PolicyEngine implements IPolicyEngine {
                         }),
                     ],
                 };
+
+                // Condition form of the pending leaf (WHERE pushdown), on request only.
+                // A throwing / null toCondition simply leaves the result condition-less —
+                // the consumer falls back to a per-row post-check (fail-safe).
+                if (ctx.withConditions && evaluator.toCondition) {
+                    try {
+                        const condition = await evaluator.toCondition(policy, ctx);
+                        if (condition) {
+                            result.condition = condition;
+                        }
+                    } catch {
+                        // not expressible — stays a post-check
+                    }
+                }
+
+                return result;
             }
         }
 
