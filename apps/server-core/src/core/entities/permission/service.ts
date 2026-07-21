@@ -318,11 +318,16 @@ export class PermissionService extends AbstractEntityService implements IPermiss
     /**
      * Assign a newly created permission to the global admin role.
      * The admin role receives every permission without policy restrictions.
+     *
+     * Throws when the admin role is not provisioned: without an admin grant the
+     * permission is bound by `system.default` yet held by nobody, and the uniform
+     * member gate on junction creation makes it permanently un-grantable (even by
+     * admin). Fail loud so the stranded state is surfaced instead of swallowed.
      */
     private async assignToAdminRole(permission: Permission): Promise<void> {
         const adminRole = await this.roleRepository.findOneByName(ROLE_ADMIN_NAME);
         if (!adminRole) {
-            return;
+            throw new AuthupError(`The ${ROLE_ADMIN_NAME} role is not provisioned. Cannot grant the created permission to the administrator role.`);
         }
 
         const existing = await this.rolePermissionRepository.findOneBy({
