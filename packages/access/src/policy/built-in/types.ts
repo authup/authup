@@ -12,6 +12,7 @@ import type { DatePolicy } from './date';
 import type { CompositePolicy } from './composite';
 import type { IdentityPolicy } from './identity';
 import type { PermissionBindingPolicy } from './permission-binding';
+import type { RealmMatchPolicy } from './realm-match';
 import type { TimePolicy } from './time';
 
 type BuiltInPolicyTypeMapRaw<T extends Record<string, any> = Record<string, any>> = {
@@ -21,7 +22,8 @@ type BuiltInPolicyTypeMapRaw<T extends Record<string, any> = Record<string, any>
     [BuiltInPolicyType.COMPOSITE]: CompositePolicy,
     [BuiltInPolicyType.TIME]: TimePolicy,
     [BuiltInPolicyType.IDENTITY]: IdentityPolicy,
-    [BuiltInPolicyType.PERMISSION_BINDING]: PermissionBindingPolicy
+    [BuiltInPolicyType.PERMISSION_BINDING]: PermissionBindingPolicy,
+    [BuiltInPolicyType.REALM_MATCH]: RealmMatchPolicy
 };
 
 export type BuiltInPolicyTypeMap<T extends Record<string, any> = Record<string, any>> = {

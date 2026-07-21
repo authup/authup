@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ICondition } from '@rapiq/core';
 import type { Issue } from 'validup';
 import type { PolicyEvaluationContext } from './context';
 
@@ -21,6 +22,16 @@ export type PolicyEvaluationResult = {
      * Unknown stays unknown: `invert` is never applied to a pending result.
      */
     pending?: boolean,
+    /**
+     * EXACT condition form of the pending subtree (see
+     * {@link IPolicyEvaluator.toCondition}): a row satisfies the condition iff the
+     * pending subtree settles true on that row's attributes, given the current bag.
+     * Attached only on pending results, only when the evaluation context requested it
+     * (`withConditions`), and only when the ENTIRE pending subtree is expressible —
+     * a partially expressible tree carries no condition (fail-safe: the consumer
+     * falls back to a per-row post-check).
+     */
+    condition?: ICondition,
     issues?: Issue[]
 };
 
@@ -35,6 +46,19 @@ export interface IPolicyEvaluator {
      * (or return an empty array) for policies evaluable with ambient data only.
      */
     requires?(value: Record<string, any>): string[];
+
+    /**
+     * Express the policy as a condition over row attributes (rapiq `ICondition`)
+     * instead of waiting for the row — the WHERE-pushdown capability. The result is
+     * a partial evaluation against the knowns in `context.data` (e.g. the actor's
+     * realm is baked into a realm-match condition), and must be EXACT: for every
+     * row, `condition(row)` === "this policy settles true with attributes = row".
+     *
+     * Return `null` when this configuration is not expressible (the policy then
+     * stays a per-row post-check — always sound). Omit the method for policies that
+     * never lower (identity, date/time, attributeNames).
+     */
+    toCondition?(value: Record<string, any>, context: PolicyEvaluationContext): Promise<ICondition | null>;
 
     /**
      * Execute the policy with specific data and a given context.

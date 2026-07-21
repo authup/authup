@@ -45,29 +45,64 @@ The `evaluate` method accepts an object of type [PermissionEvaluationContext](./
 import { PermissionEvaluator, PermissionMemoryProvider, PolicyData } from '@authup/access';
 
 const evaluator = new PermissionEvaluator({
-    provider: new PermissionMemoryProvider([])
+    provider,
 });
 
-evaluator.evaluate({
+await evaluator.evaluate({
     name: 'user_create',
 });
 // success (always) - no restrictions/policies
 
-const input = new PolicyData();
-input.set('attributes', { name: 'admin' });
+const data = new PolicyData();
+data.set('attributes', { name: 'admin' });
 
-evaluator.evaluate({
+await evaluator.evaluate({
     name: 'user_update',
-    input,
+    data,
 });
 // success
 
-const input2 = new PolicyData();
-input2.set('attributes', { name: 'admin', foo: 'bar' });
+const data2 = new PolicyData();
+data2.set('attributes', { name: 'admin', foo: 'bar' });
 
-evaluator.evaluate({
+await evaluator.evaluate({
     name: 'user_update',
-    input: input2,
+    data: data2,
 });
 // fails - foo is not allowed as attribute name
 ```
+
+Each method throws a `PermissionError` on denial and resolves on success.
+
+## Pre-Evaluate
+
+`preEvaluate` is the **pre-flight gate**: it runs before the data a policy needs is
+fully known (e.g. before the target row is loaded or the request payload is validated).
+It is derived from **data availability**: a policy whose required data keys are absent
+from the bag stays *pending* and passes the gate — only a policy that settles **false**
+with the data available at that point denies. The later `evaluate()` call with the
+complete data remains the authority (there, pending counts as a denial).
+
+```typescript
+await evaluator.preEvaluate({
+    name: 'user_update',
+});
+// success — the attributeNames policy needs `attributes`,
+// which is not available yet: it stays pending and passes the gate
+
+const data = new PolicyData();
+data.set('attributes', { name: 'admin', foo: 'bar' });
+
+await evaluator.evaluate({
+    name: 'user_update',
+    data,
+});
+// fails — with the data present, the policy settles false
+```
+
+This also holds under `invert` and inside composite trees: an unknown child is never
+masked to a settled value, so an inverted policy tree cannot produce a spurious denial
+at the gate.
+
+`evaluateOneOf` / `preEvaluateOneOf` are variants that pass when **any** of the given
+permission names passes (affirmative decision strategy).

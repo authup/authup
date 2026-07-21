@@ -17,5 +17,6 @@ export function definePolicyEvaluationContext(
         data: input.data || new PolicyData(),
         include: input.include || [],
         exclude: input.exclude || [],
+        withConditions: input.withConditions ?? false,
     };
 }

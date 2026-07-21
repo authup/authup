@@ -5,8 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ICondition } from '@rapiq/core';
+import {
+    eq, 
+    inArray, 
+    nin, 
+    not, 
+    or,
+} from '@rapiq/core';
 import { DecisionStrategy, hasOwnProperty  } from '@authup/kit';
-import { realmScopeMatches } from '../../../permission/realm-scope';
+import { RealmScope, normalizeRealmScope, realmScopeMatches } from '../../../permission/realm-scope';
 import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
 import { maybeInvertPolicyOutcome } from '../../helpers';
 import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
@@ -39,6 +47,94 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
         return [BuiltInPolicyType.IDENTITY, BuiltInPolicyType.ATTRIBUTES];
     }
 
+    /**
+     * Condition form over the row's realm column, with the actor realm baked in
+     * (mirrors `realmScopeMatches` / the attribute-mode match). Exactness holds for
+     * row-shaped data where the referenced field exists (DB rows) — the object-bag
+     * "key absent → neutral-pass" case has no SQL counterpart. Lowerable configs:
+     * scope mode (field = single-string `attributeName`, default `realmId` — scope-mode
+     * EVALUATION ignores `attributeName`, lowering reuses it as the column override),
+     * and strict attribute mode with a single explicit `attributeName`. Everything
+     * else (multi-key / default-key CONSENSUS, non-strict key expansion) is
+     * row-shape-dependent and stays a post-check.
+     */
+    async toCondition(value: Record<string, any>, ctx: PolicyEvaluationContext) : Promise<ICondition | null> {
+        let policy;
+        try {
+            policy = await this.validator.run(value);
+        } catch {
+            return null;
+        }
+
+        const identity = await this.identityEvaluator.accessData(ctx);
+        if (!identity) {
+            return null;
+        }
+
+        const realmId = identity.realmId ?? null;
+        const realmName = identity.realmName ?? null;
+
+        if (policy.scope) {
+            const scope = normalizeRealmScope(policy.scope);
+            const field = typeof policy.attributeName === 'string' ?
+                policy.attributeName :
+                'realmId';
+
+            let condition : ICondition;
+            if (scope === RealmScope.ANY) {
+                // constant-true: nin([]) matches everything (rapiq ConstantPlan)
+                condition = nin(field, []);
+            } else if (scope === RealmScope.NONE || (realmId === null && realmName === null)) {
+                // no reach / realm-less actor — constant-false: in([]) matches nothing
+                condition = inArray(field, []);
+            } else {
+                const terms : ICondition[] = [];
+                if (realmId !== null) {
+                    terms.push(eq(field, realmId));
+                }
+                if (realmName !== null) {
+                    terms.push(eq(field, realmName));
+                }
+                if (scope === RealmScope.OWN_OR_NULL) {
+                    terms.push(eq(field, null));
+                }
+
+                condition = terms.length === 1 ? terms[0]! : or(...terms);
+            }
+
+            return policy.invert ? not(condition) : condition;
+        }
+
+        if (
+            typeof policy.attributeName !== 'string' ||
+            (policy.attributeNameStrict ?? true) === false
+        ) {
+            return null;
+        }
+
+        // Mirrors the match loop's strict equality: `attributeValue === identity.realmId`
+        // — an identity carrying an explicit `realmId: null` matches null-valued rows
+        // (only an UNDEFINED identity value never matches a DB value, so it drops out).
+        const key = policy.attributeName;
+        const terms : ICondition[] = [];
+        if (policy.attributeNullMatchAll) {
+            terms.push(eq(key, null));
+        }
+        if (identity.realmId !== undefined) {
+            terms.push(eq(key, identity.realmId));
+        }
+        if (identity.realmName !== undefined) {
+            terms.push(eq(key, identity.realmName));
+        }
+
+        if (terms.length === 0) {
+            return policy.invert ? nin(key, []) : inArray(key, []);
+        }
+
+        const condition = terms.length === 1 ? terms[0]! : or(...terms);
+        return policy.invert ? not(condition) : condition;
+    }
+
     async evaluate(value: Record<string, any>, ctx: PolicyEvaluationContext): Promise<PolicyEvaluationResult> {
         // todo: catch errors + transform to issue(s)
         const policy = await this.validator.run(value);
@@ -66,7 +162,19 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
         if (policy.scope) {
             if (!ctx.data || !ctx.data.has(BuiltInPolicyType.REALM_MATCH)) {
                 // Non-evaluation (no resource realm) — neutral pass, no `invert`,
-                // mirroring the attribute-mode non-evaluation pass below.
+                // mirroring the attribute-mode non-evaluation pass below. For a
+                // query-build caller (`withConditions`) the resource realm IS the
+                // unknown row column, so the reach pends with its condition form
+                // instead of neutral-passing.
+                if (ctx.withConditions) {
+                    const condition = await this.toCondition(value, ctx);
+                    return {
+                        success: false,
+                        pending: true,
+                        ...(condition ? { condition } : {}),
+                    };
+                }
+
                 return { success: true };
             }
 

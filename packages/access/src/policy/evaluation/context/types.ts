@@ -12,7 +12,14 @@ export type PolicyEvaluationContext = {
     readonly path: (string | number)[],
     readonly exclude: string[],
     readonly include: string[],
-    readonly data: PolicyData
+    readonly data: PolicyData,
+    /**
+     * Attach the condition form (`PolicyEvaluationResult.condition`) to pending
+     * subtrees via `IPolicyEvaluator.toCondition`. Off by default — evaluation-only
+     * callers (evaluate / preEvaluate hot paths) must not pay the lowering cost;
+     * query-build callers opt in.
+     */
+    readonly withConditions: boolean
 };
 
 export type PolicyEvaluationContextInput = Partial<PolicyEvaluationContext>;

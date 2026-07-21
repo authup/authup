@@ -19,5 +19,23 @@ Once you're ready, you can proceed to the [Quick Start](./quick-start.md) sectio
 development environment and begin working with Authup,
 either by integrating it into your systems or contributing to the project.
 
+## Diving into the codebase
+
+Once your environment runs, two resources explain how the system is built:
+
+- The **Internals** section of this guide (see the sidebar) walks through the
+  server-side building blocks — [controllers](../contributing/controllers.md),
+  [middlewares](../contributing/middlewares.md), the
+  [policy engine](../contributing/policy-engine.md), the
+  [database layer](../contributing/database-entities.md) and the shared
+  [server-kit primitives](../contributing/shared-core-types.md) — plus the
+  [test kit](../contributing/test-kit.md) used across the server-side test suites.
+- The repository's agent documentation
+  ([`AGENTS.md`](https://github.com/authup/authup/blob/master/AGENTS.md) and
+  [`.agents/*.md`](https://github.com/authup/authup/tree/master/.agents)) is the
+  always-current, in-depth reference for the architecture, conventions and testing
+  setup. It is maintained alongside every change — when this guide and `.agents/`
+  disagree, `.agents/` wins.
+
 
 

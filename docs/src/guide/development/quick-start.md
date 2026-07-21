@@ -31,13 +31,13 @@ npm i
 Start the backend in development mode using the CLI.
 
 ```shell
-$ npm run cli-dev --workspace=packages/server-core -- start
+$ npm run cli-dev --workspace=apps/server-core -- start
 ```
 
 Start the frontend in development mode using the CLI.
 
 ```shell
-$ npm run dev --workspace=packages/client-web
+$ npm run dev --workspace=apps/client-web
 ```
 
 Now you should have both the backend and frontend running locally.

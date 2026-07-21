@@ -116,6 +116,45 @@ export class PolicyEngine implements IPolicyEngine {
             };
         }
 
+        // Data-availability gate: a policy whose declared data requirements are not
+        // satisfied yet is PENDING — not true, not false. Like the include/exclude
+        // neutral-pass, `invert` is never applied here (the evaluator is not invoked
+        // at all): unknown stays unknown under negation.
+        if (evaluator.requires) {
+            const missing = evaluator.requires(policy)
+                .filter((key) => !ctx.data || !ctx.data.has(key));
+
+            if (missing.length > 0) {
+                const result : PolicyEvaluationResult = {
+                    success: false,
+                    pending: true,
+                    issues: [
+                        definePolicyIssueItem({
+                            code: PolicyIssueCode.DATA_MISSING,
+                            message: `The data propert${missing.length > 1 ? 'ies' : 'y'} ${missing.join(', ')} ${missing.length > 1 ? 'are' : 'is'} missing`,
+                            path: ctx.path,
+                        }),
+                    ],
+                };
+
+                // Condition form of the pending leaf (WHERE pushdown), on request only.
+                // A throwing / null toCondition simply leaves the result condition-less —
+                // the consumer falls back to a per-row post-check (fail-safe).
+                if (ctx.withConditions && evaluator.toCondition) {
+                    try {
+                        const condition = await evaluator.toCondition(policy, ctx);
+                        if (condition) {
+                            result.condition = condition;
+                        }
+                    } catch {
+                        // not expressible — stays a post-check
+                    }
+                }
+
+                return result;
+            }
+        }
+
         try {
             // Data-availability gate: a policy whose declared data requirements are not
             // satisfied yet is PENDING — not true, not false. Like the include/exclude
