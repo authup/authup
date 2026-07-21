@@ -115,6 +115,31 @@ describe('src/policy', () => {
             expect(outcome.pending).toBeFalsy();
         });
 
+        // Infrastructure fail-closed contract: a registered evaluator whose
+        // `requires()` throws must degrade to a structured settled deny —
+        // never an escaped rejection, never a pending result.
+        it('should fail closed when an evaluator requires() throws', async () => {
+            const engine = new PolicyEngine({
+                broken: {
+                    requires() : string[] {
+                        throw new Error('bad requires');
+                    },
+                    async evaluate() {
+                        return { success: true };
+                    },
+                },
+            });
+
+            const outcome = await engine.evaluate(
+                definePolicyWithType('broken', {}),
+                definePolicyEvaluationContext(),
+            );
+            expect(outcome.success).toBeFalsy();
+            expect(outcome.pending).toBeFalsy();
+            expect(outcome.issues).toHaveLength(1);
+            expect(outcome.issues![0].message).toMatch(/bad requires/);
+        });
+
         // The issue #3286 regression: NOT(attributes AND identity) with a satisfying
         // identity and no attributes yet. Masking attributes to true would evaluate
         // NOT(identity) and produce a spurious settled deny — the tree must stay pending.
