@@ -7,13 +7,14 @@
 
 import { BuiltInPolicyType, PermissionError, definePolicyData } from '@authup/access';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
+import { eq, inArray, or } from '@rapiq/core';
 import { PermissionName } from '@authup/core-kit';
 import type { UserAttribute } from '@authup/core-kit';
 import { buildErrorMessageForAttribute } from 'validup';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { IUserAttributeRepository, IUserAttributeService } from './types.ts';
-import { decodeQuery } from '../../query/index.ts';
+import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
 import { userAttributeSchema } from './schema.ts';
 
 export type UserAttributeServiceContext = {
@@ -43,10 +44,37 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             ],
         });
 
+        const parsed = decodeQuery(query, { schema: userAttributeSchema });
+
+        // Compile the foreign-row gate into a row condition (#3286 phase 3),
+        // mirroring canReadUserAttribute: own rows (the actor's userId) are
+        // always readable, foreign rows require USER_UPDATE. USER_SELF_MANAGE
+        // is deliberately not compiled — its ATTRIBUTE_NAMES denylist policy is
+        // non-lowerable, and the self leg is the ownership term anyway. A
+        // non-expressible USER_UPDATE policy falls back to the per-row loop.
+        const compiled = await actor.permissionEvaluator.compile({ name: PermissionName.USER_UPDATE });
+        if (compiled.verdict !== 'post') {
+            const self = actor.identity && actor.identity.type === 'user' ?
+                eq('userId', actor.identity.data.id) :
+                null;
+
+            let scoped = parsed;
+            if (compiled.verdict === 'deny') {
+                scoped = appendQueryConditions(parsed, self ?? inArray('id', []));
+            } else if (compiled.verdict === 'conditional') {
+                scoped = appendQueryConditions(
+                    parsed,
+                    self ? or(self, compiled.condition) : compiled.condition,
+                );
+            }
+
+            return this.repository.findMany(scoped);
+        }
+
         const {
             data: entities,
             meta,
-        } = await this.repository.findMany(decodeQuery(query, { schema: userAttributeSchema }));
+        } = await this.repository.findMany(parsed);
 
         const data: UserAttribute[] = [];
         let { total } = meta;

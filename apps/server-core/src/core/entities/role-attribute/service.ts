@@ -7,12 +7,13 @@
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
+import { inArray } from '@rapiq/core';
 import { PermissionName } from '@authup/core-kit';
 import type { RoleAttribute } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { IRoleAttributeRepository, IRoleAttributeService } from './types.ts';
-import { decodeQuery } from '../../query/index.ts';
+import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
 import { roleAttributeSchema } from './schema.ts';
 
 export type RoleAttributeServiceContext = {
@@ -35,18 +36,35 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<RoleAttribute>> {
-        await actor.permissionEvaluator.preEvaluateOneOf({
-            name: [
-                PermissionName.ROLE_READ,
-                PermissionName.ROLE_UPDATE,
-                PermissionName.ROLE_DELETE,
-            ],
-        });
+        const permissionNames = [
+            PermissionName.ROLE_READ,
+            PermissionName.ROLE_UPDATE,
+            PermissionName.ROLE_DELETE,
+        ];
+
+        await actor.permissionEvaluator.preEvaluateOneOf({ name: permissionNames });
+
+        let parsed = decodeQuery(query, { schema: roleAttributeSchema });
+
+        // Compile the read permissions into a row condition (#3286 phase 3): the
+        // authorization runs as WHERE, so pagination and totals stay exact. A
+        // non-expressible policy falls back to the per-row loop below.
+        const compiled = await actor.permissionEvaluator.compile({ name: permissionNames });
+        if (compiled.verdict === 'deny') {
+            // no row can pass — a constant-false condition keeps the meta shape
+            parsed = appendQueryConditions(parsed, inArray('id', []));
+        } else if (compiled.verdict === 'conditional') {
+            parsed = appendQueryConditions(parsed, compiled.condition);
+        }
+
+        if (compiled.verdict !== 'post') {
+            return this.repository.findMany(parsed);
+        }
 
         const {
-            data: entities, 
-            meta, 
-        } = await this.repository.findMany(decodeQuery(query, { schema: roleAttributeSchema }));
+            data: entities,
+            meta,
+        } = await this.repository.findMany(parsed);
 
         const data: RoleAttribute[] = [];
         let { total } = meta;

@@ -11,11 +11,14 @@ import {
     PermissionName,
 } from '@authup/core-kit';
 import type { Realm, User, UserAttribute } from '@authup/core-kit';
+import { eq } from '@rapiq/core';
+import { applyQuery } from '@rapiq/memory';
 import {
     beforeEach,
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { BuiltInPolicyType, PermissionError } from '@authup/access';
@@ -95,6 +98,79 @@ describe('core/entities/user-attribute/service', () => {
 
         it('should throw when actor lacks permission', async () => {
             await expect(service.getMany({}, createDenyAllActor())).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+        });
+
+        it('composes ownership with a compiled USER_UPDATE conditional as WHERE and skips per-row evaluation', async () => {
+            const userId = randomUUID();
+            const realmId = randomUUID();
+
+            // the own row lives OUTSIDE the compiled realm condition — only the
+            // ownership OR-term can include it
+            const [own, foreignSameRealm, foreignOtherRealm] = repository.seed([
+                createFakeUserAttribute({
+                    name: 'mine',
+                    userId,
+                    realmId: randomUUID(),
+                }),
+                createFakeUserAttribute({
+                    name: 'same-realm',
+                    userId: randomUUID(),
+                    realmId,
+                }),
+                createFakeUserAttribute({
+                    name: 'other-realm',
+                    userId: randomUUID(),
+                    realmId: randomUUID(),
+                }),
+            ]);
+
+            const actor = createUserActor(userId);
+            actor.permissionEvaluator.setCompileResult({
+                verdict: 'conditional',
+                condition: eq('realmId', realmId),
+            });
+
+            const spy = vi.spyOn(repository, 'findMany');
+            await service.getMany({}, actor);
+
+            // the foreign leg compiles USER_UPDATE only — USER_SELF_MANAGE's
+            // denylist policy is non-lowerable and the self leg is the ownership term
+            expect(actor.permissionEvaluator.compileCalls).toEqual([{ name: PermissionName.USER_UPDATE }]);
+
+            // the fake repository does not apply filters — replay the query the
+            // service built over the seeded rows instead
+            const query = spy.mock.calls[0]![0];
+            const applied = applyQuery(query, [own, foreignSameRealm, foreignOtherRealm]);
+            expect(applied.data.map((row) => row.id).sort())
+                .toEqual([own.id, foreignSameRealm.id].sort());
+
+            expect(actor.permissionEvaluator.evaluateCalls).toHaveLength(0);
+        });
+
+        it('restricts to own rows on a compiled deny', async () => {
+            const userId = randomUUID();
+
+            const [own, foreign] = repository.seed([
+                createFakeUserAttribute({
+                    name: 'mine',
+                    userId,
+                }),
+                createFakeUserAttribute({
+                    name: 'other',
+                    userId: randomUUID(),
+                }),
+            ]);
+
+            const actor = createUserActor(userId);
+            actor.permissionEvaluator.setCompileResult({ verdict: 'deny' });
+
+            const spy = vi.spyOn(repository, 'findMany');
+            await service.getMany({}, actor);
+
+            const query = spy.mock.calls[0]![0];
+            const applied = applyQuery(query, [own, foreign]);
+            expect(applied.data.map((row) => row.id)).toEqual([own.id]);
+            expect(actor.permissionEvaluator.evaluateCalls).toHaveLength(0);
         });
     });
 

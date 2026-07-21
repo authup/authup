@@ -1237,10 +1237,19 @@ plaintext-secret rows are hidden from unauthorized readers, and only when the
 `or(not(and(ne('secret', null), eq('secretHashed', false), eq('secretEncrypted',
 false))), compiled.condition)`, applied only when the decoded projection includes
 `secret` — the default projection is never gated (exactly today's loop semantics).
+The self-short-circuit / parent-permission gates (#3294) follow the same shape:
+`UserService` composes `or(eq('id', <actor user id>), compiled.condition)` (self term
+only for a user identity; `deny` → self term alone); `UserAttributeService` mirrors
+`canReadUserAttribute` — ownership `eq('userId', <actor id>)` OR the compiled
+**USER_UPDATE-only** condition (USER_SELF_MANAGE is deliberately not compiled: its
+ATTRIBUTE_NAMES denylist policy is non-lowerable and the self leg IS the ownership
+term); `UserAuthenticatorService` composes `eq('userId', <actor id>)` the same way
+(the owner-scoped nested self read skips compile outright — every row is own) and
+still sanitizes secret/codes on the compiled path; `RoleAttributeService` is a pure
+gate (key/trust-anchor shape, no ownership term).
 `FakePermissionEvaluator.compile` defaults to `post` so service tests keep their
-per-row expectations; override via `setCompileResult`. Still open on #3286: the
-user + attribute services (self short-circuit / parent-permission-per-record gates)
-and include gating via `relations.validate`.
+per-row expectations; override via `setCompileResult`. Still open on #3286:
+include gating via `relations.validate`.
 
 ### EA loading on tree roots
 
