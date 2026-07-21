@@ -64,7 +64,7 @@ const SCHEMA_ENTITY_TARGETS : Record<string, EntityTarget<ObjectLiteral>> = {
     [EntityType.TRUST_ANCHOR]: TrustAnchorEntity,
     [EntityType.USER]: UserEntity,
     [EntityType.USER_ATTRIBUTE]: UserAttributeEntity,
-    userAuthenticator: UserAuthenticatorEntity,
+    [EntityType.USER_AUTHENTICATOR]: UserAuthenticatorEntity,
     [EntityType.USER_PERMISSION]: UserPermissionEntity,
     [EntityType.USER_ROLE]: UserRoleEntity,
 };
