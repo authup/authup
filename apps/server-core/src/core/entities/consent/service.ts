@@ -6,6 +6,12 @@
  */
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
+import {
+    and, 
+    eq, 
+    inArray, 
+    or,
+} from '@rapiq/core';
 import { EntityNotFoundError } from '@authup/errors';
 import { PermissionName } from '@authup/core-kit';
 import type { Consent } from '@authup/core-kit';
@@ -22,7 +28,7 @@ import type {
     IConsentRepository,
     IConsentService,
 } from './types.ts';
-import { decodeQuery } from '../../query/index.ts';
+import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
 import { consentSchema } from './schema.ts';
 
 export type ConsentServiceContext = {
@@ -81,6 +87,29 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
                 },
                 ...(options.realmId ? { realmId: options.realmId } : {}),
             });
+        }
+
+        // Compile CONSENT_READ into a row condition (#3286 phase 3). Own rows are
+        // always readable, so ownership composes as an OR-alternative — the whole
+        // gate runs as WHERE and pagination/totals stay exact. A non-expressible
+        // policy falls back to the per-row loop below.
+        const compiled = await actor.permissionEvaluator.compile({ name: PermissionName.CONSENT_READ });
+        if (compiled.verdict !== 'post') {
+            const ownership = actor.identity ?
+                and(eq('sub', actor.identity.data.id), eq('subKind', actor.identity.type)) :
+                null;
+
+            let scoped = parsed;
+            if (compiled.verdict === 'deny') {
+                scoped = appendQueryConditions(parsed, ownership ?? inArray('id', []));
+            } else if (compiled.verdict === 'conditional') {
+                scoped = appendQueryConditions(
+                    parsed,
+                    ownership ? or(ownership, compiled.condition) : compiled.condition,
+                );
+            }
+
+            return this.repository.findMany(scoped, { ...(options.realmId ? { realmId: options.realmId } : {}) });
         }
 
         const { data: entities, meta } = await this.repository.findMany(parsed, { ...(options.realmId ? { realmId: options.realmId } : {}) });

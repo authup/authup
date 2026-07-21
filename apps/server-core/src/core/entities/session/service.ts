@@ -10,7 +10,14 @@ import { AuthupError, EntityNotFoundError, ErrorCode } from '@authup/errors';
 import { isObject } from '@authup/kit';
 import { createURLCodec } from '@rapiq/codec-url';
 import type { ICondition } from '@rapiq/core';
-import { isFilter, isFilters } from '@rapiq/core';
+import {
+    and, 
+    eq, 
+    inArray, 
+    isFilter, 
+    isFilters, 
+    or,
+} from '@rapiq/core';
 import { PermissionName } from '@authup/core-kit';
 import type { Session } from '@authup/core-kit';
 import { AbstractEntityService } from '@authup/server-kit';
@@ -18,7 +25,7 @@ import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/serve
 import type { ISessionRepository } from '../../authentication/index.ts';
 import { SESSION_FILTER_KEYS } from '../../authentication/index.ts';
 import type { ISessionService, SessionDeleteManyOptions, SessionDeleteManyResult } from './types.ts';
-import { decodeQuery } from '../../query/index.ts';
+import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
 import { sessionSchema } from './schema.ts';
 
 export type SessionServiceContext = {
@@ -63,6 +70,29 @@ export class SessionService extends AbstractEntityService implements ISessionSer
                     subKind: actor.identity!.type,
                 },
             });
+        }
+
+        // Compile SESSION_READ into a row condition (#3286 phase 3). Own sessions
+        // are always readable, so ownership composes as an OR-alternative — the
+        // whole gate runs as WHERE and pagination/totals stay exact. Only a
+        // non-expressible policy falls back to the per-row loop below.
+        const compiled = await actor.permissionEvaluator.compile({ name: PermissionName.SESSION_READ });
+        if (compiled.verdict !== 'post') {
+            const ownership = actor.identity ?
+                and(eq('sub', actor.identity.data.id), eq('subKind', actor.identity.type)) :
+                null;
+
+            let scoped = parsed;
+            if (compiled.verdict === 'deny') {
+                scoped = appendQueryConditions(parsed, ownership ?? inArray('id', []));
+            } else if (compiled.verdict === 'conditional') {
+                scoped = appendQueryConditions(
+                    parsed,
+                    ownership ? or(ownership, compiled.condition) : compiled.condition,
+                );
+            }
+
+            return this.repository.findMany(scoped);
         }
 
         const { data: entities, meta } = await this.repository.findMany(parsed);

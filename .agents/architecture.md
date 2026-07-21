@@ -1219,17 +1219,28 @@ reach PENDS with its condition over the row's realm column (default field `realm
 instead of neutral-passing — `any` stays unrestricted (policy-free `any` grants settle
 TRUE → compile `allow`, the admin fast path), `none` reaches nothing — and each grant
 term is `and(reachCondition, junctionPolicyCondition)`, OR-composed all-or-nothing.
-`getMany` consumers (`KeyService`, `TrustAnchorService`) run
-`compile({ name: PERMISSION_NAMES })` and: `deny` → append a constant-false condition
-(`inArray('id', [])`, keeps meta shape); `conditional` → `appendQueryConditions` — the
-authorization runs as WHERE, so **pagination and totals stay exact**; `post` → the old
-per-row `evaluate` + `total -= 1` drop loop remains as the sound fallback (and the
-plan-039 force-select discipline still serves exactly that path).
+`getMany` consumers run `compile({ name: ... })` and: `deny` → append a constant-false
+condition (`inArray('id', [])`, keeps meta shape); `conditional` →
+`appendQueryConditions` — the authorization runs as WHERE, so **pagination and totals
+stay exact**; `post` → the old per-row `evaluate` + `total -= 1` drop loop remains as
+the sound fallback (and the plan-039 force-select discipline still serves exactly that
+path). Converted: `KeyService`/`TrustAnchorService` (pure realm gate);
+`SessionService`/`EventService`/`ConsentService` compose their **ownership
+alternative** service-side — `or(and(eq(sub), eq(subKind)), compiled.condition)`
+(events: `actorId`/`actorType`); on `deny` the ownership condition alone applies.
+`EventService`'s probe-based `resolveReadVisibility` (random-foreign-realm
+`canReadRealm` probing) survives only as the `post` fallback — the compiled WHERE also
+covers junction ATTRIBUTES policies the probe's `policiesIncluded` deliberately
+excluded. `ClientService`'s gate is **projection-dependent secret visibility** (only
+plaintext-secret rows are hidden from unauthorized readers, and only when the
+(non-default) `secret` field is actually selected): it lowers to
+`or(not(and(ne('secret', null), eq('secretHashed', false), eq('secretEncrypted',
+false))), compiled.condition)`, applied only when the decoded projection includes
+`secret` — the default projection is never gated (exactly today's loop semantics).
 `FakePermissionEvaluator.compile` defaults to `post` so service tests keep their
-per-row expectations; override via `setCompileResult`. Still open on #3286: migrating
-the remaining drop-loop services (session/event/client/consent/user + attribute
-services — these need the ownership-alternative OR-composition) and include gating via
-`relations.validate`.
+per-row expectations; override via `setCompileResult`. Still open on #3286: the
+user + attribute services (self short-circuit / parent-permission-per-record gates)
+and include gating via `relations.validate`.
 
 ### EA loading on tree roots
 
