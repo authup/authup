@@ -7,7 +7,7 @@
 
 import { getURLBasePath } from '@authup/kit';
 import { useRequestCookie } from '@routup/basic/cookie';
-import { load } from 'locter';
+import { read } from 'locter';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { IAppEvent } from 'routup';
@@ -65,7 +65,7 @@ export async function renderUIPage(event: IAppEvent, ctx: UIRenderContext): Prom
             path.join(UI_DIST_PATH, 'client', '.vite', 'ssr-manifest.json'),
             'utf-8',
         )));
-        render = (cachedRender ??= (await load(
+        render = (cachedRender ??= (await read(
             path.join(UI_DIST_PATH, 'server', 'server.js'),
         )).render);
     }

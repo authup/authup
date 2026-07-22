@@ -6,7 +6,7 @@
  */
 
 import { ValidatorGroup, isObject } from '@authup/kit';
-import { load, locateMany } from 'locter';
+import { locateMany, read } from 'locter';
 import path from 'node:path';
 import type { RootProvisioningEntity } from '../../../../../core/provisioning/entities/index.ts';
 import { RootProvisioningValidator } from '../../../../../core/provisioning/entities/index.ts';
@@ -35,13 +35,13 @@ export class FileProvisioningSource implements IProvisioningSource {
             this.options.cwd :
             path.join(process.cwd(), this.options.cwd);
 
-        const locations = await locateMany('*.{json,yaml,yml,ts,mts,mjs,js}', { path: cwd });
+        const locations = await locateMany('*.{json,yaml,yml,ts,mts,mjs,js}', { cwd });
 
         const compositeSource = new CompositeProvisioningSource([]);
 
         const output : RootProvisioningEntity = {};
         for (const location of locations) {
-            const raw = await load(location);
+            const raw = await read(location);
             // Unwrap the default export only for module files; a data file
             // (json/yaml) whose root legitimately carries a `default` key must
             // keep all of its keys.

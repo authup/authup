@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { load } from 'locter';
+import { read } from 'locter';
 import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
 import { createHandler } from '@routup/assets';
 import path from 'node:path';
@@ -38,7 +38,7 @@ export async function registerAssetsMiddleware(router: App) {
         return;
     }
 
-    const vite = await load('vite') as typeof Vite;
+    const vite = await read('vite') as typeof Vite;
 
     const server: ViteDevServer = await vite.createServer({
         root: UI_SOURCE_PATH,

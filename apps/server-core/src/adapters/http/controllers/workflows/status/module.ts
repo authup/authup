@@ -10,7 +10,7 @@ import {
     DController,
     DGet,
 } from '@routup/decorators';
-import { load } from 'locter';
+import { read } from 'locter';
 import path from 'node:path';
 import { PACKAGE_PATH } from '../../../../../path.ts';
 
@@ -36,8 +36,8 @@ export class StatusController {
 
     protected resolveVersion(): Promise<string> {
         if (!this.versionPromise) {
-            this.versionPromise = load(path.join(PACKAGE_PATH, 'package.json'))
-                .then((pkgJson) => pkgJson.version);
+            this.versionPromise = read(path.join(PACKAGE_PATH, 'package.json'))
+                .then((pkgJson: { version: string }) => pkgJson.version);
         }
 
         return this.versionPromise;
