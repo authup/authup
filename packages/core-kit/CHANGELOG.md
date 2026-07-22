@@ -1,5 +1,32 @@
 # Change Log
 
+## [1.0.0-beta.54](https://github.com/authup/authup/compare/v1.0.0-beta.53...v1.0.0-beta.54) (2026-07-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* robot accounts and the robot_credentials grant are removed; recreate machine identities as OAuth2 clients (client_credentials grant). Existing robot rows and their role/permission bindings are dropped without data migration.
+* camelCase entity properties, domain types & management API ([#3273](https://github.com/authup/authup/issues/3273))
+
+### Features
+
+* **server-core:** validate entity schemas against typeorm metadata at boot ([#3285](https://github.com/authup/authup/issues/3285)) ([25577f9](https://github.com/authup/authup/commit/25577f95a6dfe0818ed2b6cb735adb1b12e43830))
+
+
+### Code Refactoring
+
+* camelCase entity properties, domain types & management API ([#3273](https://github.com/authup/authup/issues/3273)) ([c31b20e](https://github.com/authup/authup/commit/c31b20ee9fd037e96bbcaee2eae1d6386174f52b))
+* remove robot entity in favor of clients ([#3275](https://github.com/authup/authup/issues/3275)) ([800684d](https://github.com/authup/authup/commit/800684dc9a620652b210baf16c50fb34e54bb224))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.53 to ^1.0.0-beta.54
+    * @authup/errors bumped from ^1.0.0-beta.53 to ^1.0.0-beta.54
+    * @authup/specs bumped from ^1.0.0-beta.53 to ^1.0.0-beta.54
+
 ## [1.0.0-beta.53](https://github.com/authup/authup/compare/v1.0.0-beta.52...v1.0.0-beta.53) (2026-07-17)
 
 

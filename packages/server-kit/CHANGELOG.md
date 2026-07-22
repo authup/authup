@@ -1,5 +1,42 @@
 # Change Log
 
+## [1.0.0-beta.54](https://github.com/authup/authup/compare/v1.0.0-beta.53...v1.0.0-beta.54) (2026-07-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* move the rapiq schema registry out of the database module ([#3283](https://github.com/authup/authup/issues/3283))
+* consumers now build queries with rapiq v2 canonical parameter keys (filters/relations) and typed operator objects.
+* camelCase entity properties, domain types & management API ([#3273](https://github.com/authup/authup/issues/3273))
+
+### Features
+
+* **access:** lower pending policies to rapiq conditions (toCondition / WHERE pushdown) ([#3291](https://github.com/authup/authup/issues/3291)) ([92b0827](https://github.com/authup/authup/commit/92b08270208fbb18a2b84f1ae86e808314330abf))
+* **server-core:** validate entity schemas against typeorm metadata at boot ([#3285](https://github.com/authup/authup/issues/3285)) ([25577f9](https://github.com/authup/authup/commit/25577f95a6dfe0818ed2b6cb735adb1b12e43830))
+
+
+### Bug Fixes
+
+* **server-core:** authorize relation paths reached via filter/sort/field keys ([#3310](https://github.com/authup/authup/issues/3310)) ([b98e6c1](https://github.com/authup/authup/commit/b98e6c1ca8542b6961cb89e65873ccb9abd92e5f))
+
+
+### Code Refactoring
+
+* camelCase entity properties, domain types & management API ([#3273](https://github.com/authup/authup/issues/3273)) ([c31b20e](https://github.com/authup/authup/commit/c31b20ee9fd037e96bbcaee2eae1d6386174f52b))
+* migrate to rapiq v2, typeorm 1.1.0 and typeorm-extension v4 ([#3276](https://github.com/authup/authup/issues/3276)) ([ee8c9f7](https://github.com/authup/authup/commit/ee8c9f708a195cc5dd385965d16189b6640e38dc))
+* move the rapiq schema registry out of the database module ([#3283](https://github.com/authup/authup/issues/3283)) ([135d7e1](https://github.com/authup/authup/commit/135d7e14d477212d0d719bb12074c3653cd09ad4))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.53 to ^1.0.0-beta.54
+    * @authup/core-kit bumped from ^1.0.0-beta.53 to ^1.0.0-beta.54
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.53 to ^1.0.0-beta.54
+    * @authup/kit bumped from ^1.0.0-beta.53 to ^1.0.0-beta.54
+    * @authup/specs bumped from ^1.0.0-beta.53 to ^1.0.0-beta.54
+
 ## [1.0.0-beta.53](https://github.com/authup/authup/compare/v1.0.0-beta.52...v1.0.0-beta.53) (2026-07-17)
 
 
