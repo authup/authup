@@ -1939,6 +1939,21 @@ certificate-path signature edge use the WebCrypto API. The validator accepts
 an optional `Crypto` provider for future browser/server reuse; when omitted,
 Peculiar uses the runtime's global WebCrypto provider.
 
+`@peculiar/x509` v2 pulls in `tsyringe`, which throws at **import time** unless
+a Reflect polyfill (`reflect-metadata`) is already loaded. The entry points
+(`src/index.ts`, `src/cli/index.ts`) import it first, but the bundler (rolldown
+in tsdown unbundle mode) groups relative imports ahead of bare package imports,
+so the entry's own `reflect-metadata` import is emitted **after** the relative
+modules that transitively load x509 — the built CLI/server would crash on
+startup. Both runtime x509 import sites (`core/client-certificate/module.ts`
+and `adapters/http/request/client-certificate.ts`) therefore import the local
+relative shim `core/client-certificate/reflect.ts` (`import 'reflect-metadata'`)
+**before** the bare `@peculiar/x509` import: rolldown keeps relatives ahead of
+bares in the same emitted file, so the polyfill always evaluates first. Do NOT
+remove the shim, and keep it ordered first (side-effect imports are safe from
+`import/order` reordering). Tests load the polyfill via
+`setupFiles: ['reflect-metadata']` instead (see testing.md).
+
 For `authMethod = 'tls'`, the leaf must be current, non-CA, usable for client
 authentication (clientAuth EKU when present and digitalSignature key usage
 when present), chain through supplied intermediates to an enabled realm trust
