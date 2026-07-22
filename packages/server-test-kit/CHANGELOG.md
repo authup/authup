@@ -1,5 +1,40 @@
 # Changelog
 
+## [1.0.0-beta.54](https://github.com/authup/authup/compare/v1.0.0-beta.53...v1.0.0-beta.54) (2026-07-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* move the rapiq schema registry out of the database module ([#3283](https://github.com/authup/authup/issues/3283))
+* camelCase entity properties, domain types & management API ([#3273](https://github.com/authup/authup/issues/3273))
+
+### Features
+
+* **access:** lower pending policies to rapiq conditions (toCondition / WHERE pushdown) ([#3291](https://github.com/authup/authup/issues/3291)) ([92b0827](https://github.com/authup/authup/commit/92b08270208fbb18a2b84f1ae86e808314330abf))
+* compile permissions to row conditions for getMany authorization ([#3292](https://github.com/authup/authup/issues/3292)) ([dfcf6b8](https://github.com/authup/authup/commit/dfcf6b81bcf1f157ee9278fc5b663b7f562a8f94))
+* **server-core:** validate entity schemas against typeorm metadata at boot ([#3285](https://github.com/authup/authup/issues/3285)) ([25577f9](https://github.com/authup/authup/commit/25577f95a6dfe0818ed2b6cb735adb1b12e43830))
+
+
+### Bug Fixes
+
+* **server-core:** authorize relation paths reached via filter/sort/field keys ([#3310](https://github.com/authup/authup/issues/3310)) ([b98e6c1](https://github.com/authup/authup/commit/b98e6c1ca8542b6961cb89e65873ccb9abd92e5f))
+
+
+### Code Refactoring
+
+* camelCase entity properties, domain types & management API ([#3273](https://github.com/authup/authup/issues/3273)) ([c31b20e](https://github.com/authup/authup/commit/c31b20ee9fd037e96bbcaee2eae1d6386174f52b))
+* move the rapiq schema registry out of the database module ([#3283](https://github.com/authup/authup/issues/3283)) ([135d7e1](https://github.com/authup/authup/commit/135d7e14d477212d0d719bb12074c3653cd09ad4))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.53 to ^1.0.0-beta.54
+    * @authup/core-kit bumped from ^1.0.0-beta.53 to ^1.0.0-beta.54
+    * @authup/kit bumped from ^1.0.0-beta.53 to ^1.0.0-beta.54
+    * @authup/server-kit bumped from ^1.0.0-beta.53 to ^1.0.0-beta.54
+
 ## [1.0.0-beta.53](https://github.com/authup/authup/compare/v1.0.0-beta.52...v1.0.0-beta.53) (2026-07-17)
 
 

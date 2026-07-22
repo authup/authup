@@ -1,5 +1,45 @@
 # Change Log
 
+## [1.0.0-beta.54](https://github.com/authup/authup/compare/v1.0.0-beta.53...v1.0.0-beta.54) (2026-07-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* consumers now build queries with rapiq v2 canonical parameter keys (filters/relations) and typed operator objects.
+* robot accounts and the robot_credentials grant are removed; recreate machine identities as OAuth2 clients (client_credentials grant). Existing robot rows and their role/permission bindings are dropped without data migration.
+* camelCase entity properties, domain types & management API ([#3273](https://github.com/authup/authup/issues/3273))
+
+### Features
+
+* **access:** lower pending policies to rapiq conditions (toCondition / WHERE pushdown) ([#3291](https://github.com/authup/authup/issues/3291)) ([92b0827](https://github.com/authup/authup/commit/92b08270208fbb18a2b84f1ae86e808314330abf))
+* **server-core:** validate entity schemas against typeorm metadata at boot ([#3285](https://github.com/authup/authup/issues/3285)) ([25577f9](https://github.com/authup/authup/commit/25577f95a6dfe0818ed2b6cb735adb1b12e43830))
+
+
+### Bug Fixes
+
+* **deps:** bump [@rapiq](https://github.com/rapiq) packages to v2.0.0-beta.2 ([#3281](https://github.com/authup/authup/issues/3281)) ([cc48cbb](https://github.com/authup/authup/commit/cc48cbb162b74fb36bb3265bea6b7a985f9d6918))
+* preserve API sub-path when building authorize & OAuth2 URLs ([#3301](https://github.com/authup/authup/issues/3301)) ([71d9c88](https://github.com/authup/authup/commit/71d9c881bcb43f34ddb33b575a22ff296af493c3))
+* **server-core:** authorize relation paths reached via filter/sort/field keys ([#3310](https://github.com/authup/authup/issues/3310)) ([b98e6c1](https://github.com/authup/authup/commit/b98e6c1ca8542b6961cb89e65873ccb9abd92e5f))
+
+
+### Code Refactoring
+
+* camelCase entity properties, domain types & management API ([#3273](https://github.com/authup/authup/issues/3273)) ([c31b20e](https://github.com/authup/authup/commit/c31b20ee9fd037e96bbcaee2eae1d6386174f52b))
+* migrate to rapiq v2, typeorm 1.1.0 and typeorm-extension v4 ([#3276](https://github.com/authup/authup/issues/3276)) ([ee8c9f7](https://github.com/authup/authup/commit/ee8c9f708a195cc5dd385965d16189b6640e38dc))
+* remove robot entity in favor of clients ([#3275](https://github.com/authup/authup/issues/3275)) ([800684d](https://github.com/authup/authup/commit/800684dc9a620652b210baf16c50fb34e54bb224))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.53 to ^1.0.0-beta.54
+    * @authup/core-kit bumped from ^1.0.0-beta.53 to ^1.0.0-beta.54
+    * @authup/kit bumped from ^1.0.0-beta.53 to ^1.0.0-beta.54
+    * @authup/specs bumped from ^1.0.0-beta.53 to ^1.0.0-beta.54
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.53 to ^1.0.0-beta.54
+
 ## [1.0.0-beta.53](https://github.com/authup/authup/compare/v1.0.0-beta.52...v1.0.0-beta.53) (2026-07-17)
 
 

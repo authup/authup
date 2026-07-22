@@ -3,6 +3,53 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.54](https://github.com/authup/authup/compare/v1.0.0-beta.53...v1.0.0-beta.54) (2026-07-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* move the rapiq schema registry out of the database module ([#3283](https://github.com/authup/authup/issues/3283))
+* **client-web-kit:** compose queries in the rapiq IR instead of forwarding build input ([#3280](https://github.com/authup/authup/issues/3280))
+* consumers now build queries with rapiq v2 canonical parameter keys (filters/relations) and typed operator objects.
+* robot accounts and the robot_credentials grant are removed; recreate machine identities as OAuth2 clients (client_credentials grant). Existing robot rows and their role/permission bindings are dropped without data migration.
+* camelCase entity properties, domain types & management API ([#3273](https://github.com/authup/authup/issues/3273))
+
+### Features
+
+* **access:** derive preEvaluate from data availability (tri-state policy engine) ([#3290](https://github.com/authup/authup/issues/3290)) ([fe9dd53](https://github.com/authup/authup/commit/fe9dd538ffe9d4fffe7e584f7ed00d9d0bef64af))
+* **access:** lower pending policies to rapiq conditions (toCondition / WHERE pushdown) ([#3291](https://github.com/authup/authup/issues/3291)) ([92b0827](https://github.com/authup/authup/commit/92b08270208fbb18a2b84f1ae86e808314330abf))
+* compile permissions to row conditions for getMany authorization ([#3292](https://github.com/authup/authup/issues/3292)) ([dfcf6b8](https://github.com/authup/authup/commit/dfcf6b81bcf1f157ee9278fc5b663b7f562a8f94))
+* **server-core:** compile ownership-composed getMany gates to row conditions ([#3293](https://github.com/authup/authup/issues/3293)) ([ae72a4e](https://github.com/authup/authup/commit/ae72a4e386f8d2144290c10069b040e3f784227b))
+* **server-core:** compile self-short-circuit getMany gates to row conditions ([#3296](https://github.com/authup/authup/issues/3296)) ([da0b3d7](https://github.com/authup/authup/commit/da0b3d7c7fe4195a777381d4088ca636559de1a7))
+* **server-core:** validate entity schemas against typeorm metadata at boot ([#3285](https://github.com/authup/authup/issues/3285)) ([25577f9](https://github.com/authup/authup/commit/25577f95a6dfe0818ed2b6cb735adb1b12e43830))
+
+
+### Bug Fixes
+
+* **access:** fail-closed data-availability gate + pre-camelCase policy upgrade note ([#3299](https://github.com/authup/authup/issues/3299)) ([7d7b326](https://github.com/authup/authup/commit/7d7b326ff20d9adca871bc555af2777b3a7add06))
+* **client-web-kit:** build ASearch name filter via contains() helper ([#3300](https://github.com/authup/authup/issues/3300)) ([cff8af0](https://github.com/authup/authup/commit/cff8af08ce6cac1992fa2bd584eb8aff6e48292c))
+* **deps:** bump [@rapiq](https://github.com/rapiq) packages to v2.0.0-beta.2 ([#3281](https://github.com/authup/authup/issues/3281)) ([cc48cbb](https://github.com/authup/authup/commit/cc48cbb162b74fb36bb3265bea6b7a985f9d6918))
+* **deps:** bump locter to v4, typeorm-extension, confinity and @trapi/cli ([a85926f](https://github.com/authup/authup/commit/a85926f3c1dbb5314361521d7a28241ad382ba49))
+* **deps:** bump the majorprod group across 1 directory with 4 updates ([c694679](https://github.com/authup/authup/commit/c694679a0fe8901a5fc7c22595a780d57adc2f1d))
+* ensure consistent version for release ([d0f3dd2](https://github.com/authup/authup/commit/d0f3dd2ef93054ac7b677cf0fb26bbe8e64771bd))
+* preserve API sub-path when building authorize & OAuth2 URLs ([#3301](https://github.com/authup/authup/issues/3301)) ([71d9c88](https://github.com/authup/authup/commit/71d9c881bcb43f34ddb33b575a22ff296af493c3))
+* reject childless composite policy instead of a silent un-satisfiable deny ([#3305](https://github.com/authup/authup/issues/3305)) ([be701f7](https://github.com/authup/authup/commit/be701f7a49480a1e3685b869df484a7b24478e95)), closes [#3304](https://github.com/authup/authup/issues/3304)
+* **server-core:** allow realmId filter on the permission collection ([b62569e](https://github.com/authup/authup/commit/b62569ed38ac577a6199f70a51da4c63621b6999))
+* **server-core:** authorize relation paths reached via filter/sort/field keys ([#3310](https://github.com/authup/authup/issues/3310)) ([b98e6c1](https://github.com/authup/authup/commit/b98e6c1ca8542b6961cb89e65873ccb9abd92e5f))
+* **server-core:** deep-merge colliding provisioning entities across sources ([#3284](https://github.com/authup/authup/issues/3284)) ([52278a5](https://github.com/authup/authup/commit/52278a5f2a8b6e4f56b5cf034840f9e9032f14c3))
+* **server-core:** fail loud when admin role is unresolved on permission create ([#3306](https://github.com/authup/authup/issues/3306)) ([46f1bc2](https://github.com/authup/authup/commit/46f1bc2b2d8acbd6827e66cdbe88baa86591d315)), closes [#3302](https://github.com/authup/authup/issues/3302)
+* **server-core:** load reflect-metadata before @peculiar/x509 in bundle ([0f644b6](https://github.com/authup/authup/commit/0f644b6060d6dcd310031d9a0f34116afadf2a4f))
+* **server-core:** roll back permission create when post-save wiring fails ([#3307](https://github.com/authup/authup/issues/3307)) ([561c17a](https://github.com/authup/authup/commit/561c17a48893c8b42708d96ab86abc726ac4cf70)), closes [#3303](https://github.com/authup/authup/issues/3303)
+
+
+### Code Refactoring
+
+* camelCase entity properties, domain types & management API ([#3273](https://github.com/authup/authup/issues/3273)) ([c31b20e](https://github.com/authup/authup/commit/c31b20ee9fd037e96bbcaee2eae1d6386174f52b))
+* **client-web-kit:** compose queries in the rapiq IR instead of forwarding build input ([#3280](https://github.com/authup/authup/issues/3280)) ([3b83e60](https://github.com/authup/authup/commit/3b83e608d1e4a6f3a9dcce034beb161884b4aa31)), closes [#3278](https://github.com/authup/authup/issues/3278)
+* migrate to rapiq v2, typeorm 1.1.0 and typeorm-extension v4 ([#3276](https://github.com/authup/authup/issues/3276)) ([ee8c9f7](https://github.com/authup/authup/commit/ee8c9f708a195cc5dd385965d16189b6640e38dc))
+* move the rapiq schema registry out of the database module ([#3283](https://github.com/authup/authup/issues/3283)) ([135d7e1](https://github.com/authup/authup/commit/135d7e14d477212d0d719bb12074c3653cd09ad4))
+* remove robot entity in favor of clients ([#3275](https://github.com/authup/authup/issues/3275)) ([800684d](https://github.com/authup/authup/commit/800684dc9a620652b210baf16c50fb34e54bb224))
+
 ## [1.0.0-beta.53](https://github.com/authup/authup/compare/v1.0.0-beta.52...v1.0.0-beta.53) (2026-07-17)
 
 

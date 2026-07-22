@@ -1,5 +1,23 @@
 # Change Log
 
+## [1.0.0-beta.54](https://github.com/authup/authup/compare/v1.0.0-beta.53...v1.0.0-beta.54) (2026-07-22)
+
+
+### Bug Fixes
+
+* **deps:** bump locter to v4, typeorm-extension, confinity and @trapi/cli ([a85926f](https://github.com/authup/authup/commit/a85926f3c1dbb5314361521d7a28241ad382ba49))
+* ensure consistent version for release ([d0f3dd2](https://github.com/authup/authup/commit/d0f3dd2ef93054ac7b677cf0fb26bbe8e64771bd))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web bumped from ^1.0.0-beta.53 to ^1.0.0-beta.54
+    * @authup/kit bumped from ^1.0.0-beta.53 to ^1.0.0-beta.54
+    * @authup/core-kit bumped from ^1.0.0-beta.53 to ^1.0.0-beta.54
+    * @authup/server-core bumped from ^1.0.0-beta.53 to ^1.0.0-beta.54
+
 ## [1.0.0-beta.53](https://github.com/authup/authup/compare/v1.0.0-beta.52...v1.0.0-beta.53) (2026-07-17)
 
 

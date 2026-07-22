@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.0.0-beta.54](https://github.com/authup/authup/compare/v1.0.0-beta.53...v1.0.0-beta.54) (2026-07-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* robot accounts and the robot_credentials grant are removed; recreate machine identities as OAuth2 clients (client_credentials grant). Existing robot rows and their role/permission bindings are dropped without data migration.
+
+### Bug Fixes
+
+* **deps:** bump the majorprod group across 1 directory with 4 updates ([c694679](https://github.com/authup/authup/commit/c694679a0fe8901a5fc7c22595a780d57adc2f1d))
+* preserve API sub-path when building authorize & OAuth2 URLs ([#3301](https://github.com/authup/authup/issues/3301)) ([71d9c88](https://github.com/authup/authup/commit/71d9c881bcb43f34ddb33b575a22ff296af493c3))
+
+
+### Code Refactoring
+
+* remove robot entity in favor of clients ([#3275](https://github.com/authup/authup/issues/3275)) ([800684d](https://github.com/authup/authup/commit/800684dc9a620652b210baf16c50fb34e54bb224))
+
 ## [1.0.0-beta.53](https://github.com/authup/authup/compare/v1.0.0-beta.52...v1.0.0-beta.53) (2026-07-17)
 
 
