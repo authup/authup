@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import '../../../core/client-certificate/reflect.ts';
 import { X509Certificate } from '@peculiar/x509';
 import { BadRequestError } from '@authup/errors';
 import { base64ToArrayBuffer } from '@authup/kit';
