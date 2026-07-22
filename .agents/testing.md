@@ -6,6 +6,13 @@
 - **Test location**: `test/unit/**/*.spec.ts` within each package/app
 - **Config**: `test/vitest.config.ts` per package/app
 - **Prerequisite**: `npm run build` before running tests
+- **Reflect polyfill (server-core)**: `test/vitest.config.ts` sets
+  `setupFiles: ['reflect-metadata']`. `@peculiar/x509` v2 pulls in
+  `tsyringe`, which throws at import time unless a Reflect polyfill is
+  already loaded, and the `globalSetup` file runs in an isolated context
+  so its own `import 'reflect-metadata'` does not reach test-file
+  contexts. Any spec importing `src/core` transitively loads x509 (via the
+  client-certificate module), so this must stay — do not remove it.
 
 ## Running Tests
 
