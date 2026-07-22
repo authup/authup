@@ -167,18 +167,22 @@ usable at the service level and nothing in core depends on TypeORM:
   target service's own `getMany` gate; POLICY sits under the PERMISSION
   family; REALM and IDENTITY_PROVIDER are deliberately ungated — both lists
   are anonymous surfaces). Nested paths gate hop by hop. **Deny = silent
-  strip** (fail-soft, matching the allow-lists): the include — and every
-  dotted filter/sort/field key riding the denied relation path — is pruned,
-  the request still succeeds with the un-joined row shape. Caller classes:
+  strip** (fail-soft, matching the allow-lists): the explicit include —
+  and (since rapiq **beta.7**, tada5hi/rapiq#815) every dotted
+  filter/sort/field key that traverses the denied relation, whether or not
+  it was explicitly included — is pruned, the request still succeeds with
+  the un-joined / un-filtered row shape. rapiq records one authorization
+  obligation per distinct relation reached by ANY parameter, evaluates the
+  hook once for it, and prunes the dependent keys, so a bare
+  `filter[user.name]=…` (which resolves through `schemaMapping` to the
+  user schema's `name` allow-list and would otherwise auto-join `user`) is
+  gated exactly like `include=user`. Caller classes:
   a SYSTEM decode (no `actor` option) runs unrestricted; every REQUEST
   decode passes the actor (`buildActorContext` supplies one for anonymous
   requests too — an anonymous actor holds no grants, so its gated includes
   strip). Every schema now declares `relations` explicitly (an omitted
   allow-list falls back to rapiq's syntactic name check — that hole is
-  closed; `event`/`realm` pin `allowed: []`). **Known residual:** a dotted
-  filter/sort/field key whose relation is NOT explicitly included bypasses
-  the hook (the SQL adapters auto-join such paths) — upstream
-  tada5hi/rapiq#815 is the removal trigger.
+  closed; `event`/`realm` pin `allowed: []`).
 - **Junction/attribute schemas pin `fields.default`** — with no root fields
   declared, an `include=` decodes the relation's default fields ONLY, and
   the typeorm adapter's `select()` replace then drops every root column

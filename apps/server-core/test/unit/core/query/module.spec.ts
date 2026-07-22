@@ -165,6 +165,45 @@ describe('core/query', () => {
             expect(collectFieldConditions(parsed.filters)).toEqual([]);
         });
 
+        it('should gate a relation reached only via a dotted filter key (rapiq#815)', async () => {
+            const evaluator = new FakePermissionEvaluator();
+            evaluator.deny('preEvaluateOneOf');
+
+            // `user.name` resolves through schemaMapping to the user schema's
+            // `name` allow-list and would auto-join `user` — with NO explicit
+            // include. Pre-beta.7 this bypassed the read gate; now the traversed
+            // relation records an authorization obligation and the key is pruned.
+            const parsed = await decodeQuery(
+                { filter: { 'user.name': 'admin' } },
+                { schema: userRoleSchema, actor: buildActor(evaluator) },
+            );
+
+            expect(collectFieldConditions(parsed.filters)).toEqual([]);
+            expect(parsed.relations.value).toEqual([]);
+            // the gate was consulted for the USER target, not the allow-list
+            expect(evaluator.preEvaluateOneOfCalls.map((call) => call.name)).toEqual([
+                [
+                    PermissionName.USER_READ,
+                    PermissionName.USER_UPDATE,
+                    PermissionName.USER_DELETE,
+                ],
+            ]);
+        });
+
+        it('should keep a dotted filter key when its relation gate passes', async () => {
+            const evaluator = new FakePermissionEvaluator();
+
+            const parsed = await decodeQuery(
+                { filter: { 'user.name': 'admin' } },
+                { schema: userRoleSchema, actor: buildActor(evaluator) },
+            );
+
+            const conditions = collectFieldConditions(parsed.filters);
+            expect(conditions).toHaveLength(1);
+            expect(conditions[0][1]).toEqual('admin');
+            expect(evaluator.preEvaluateOneOfCalls).toHaveLength(1);
+        });
+
         it('should not gate an ungated target', async () => {
             const evaluator = new FakePermissionEvaluator();
             evaluator.denyAll();
