@@ -12,9 +12,10 @@ import type { QueryDecodeContext } from './types.ts';
 /**
  * Read gate per include target: the permission disjunction an actor
  * must hold (data-availability-derived pre-gate, issue #3290) for the
- * target entity type to be joinable via `include=`. Mirrors each
- * target service's own `getMany` read pre-gate, so "may list the
- * entity type" and "may join it onto another list" stay one predicate.
+ * target entity type to be joinable via `include=` OR reachable via a
+ * dotted `filter`/`sort`/`field` key. Mirrors each target service's own
+ * `getMany` read pre-gate, so "may list the entity type" and "may join
+ * it onto another list" stay one predicate.
  * Policies are deliberately gated under the PERMISSION family — they
  * are managed under the permission domain.
  *
@@ -62,10 +63,15 @@ const RELATION_TARGET_READ_GATES : Partial<Record<`${EntityType}`, PermissionNam
  * pass the derived pre-gate (`preEvaluateOneOf`, #3290) for the
  * relation's mapped entity type — row data is unknown at decode time,
  * so only a settled-false (the actor can never read that entity type)
- * denies. A denial STRIPS the include silently (and rapiq prunes
- * dotted filter/sort/field keys riding the denied relation path) —
- * the same fail-soft flavor as the allow-lists, so a scoped reader
- * degrades to the un-joined row shape instead of a 403.
+ * denies. A denial STRIPS the relation silently — the explicit
+ * `include=`, and (since rapiq beta.7, tada5hi/rapiq#815) every dotted
+ * `filter`/`sort`/`field` key that traverses the denied relation,
+ * whether or not it was explicitly included. rapiq records one
+ * authorization obligation per distinct relation reached by any
+ * parameter, evaluates this hook once for it, and prunes the dependent
+ * keys — the same fail-soft flavor as the allow-lists, so a scoped
+ * reader degrades to the un-joined / un-filtered row shape instead of
+ * a 403.
  *
  * `mapping` is the schema's own relation → entity-type `schemaMapping`;
  * rapiq invokes the hook per include segment against the schema
@@ -80,11 +86,6 @@ const RELATION_TARGET_READ_GATES : Partial<Record<`${EntityType}`, PermissionNam
  * boundary: an authenticated actor is gated by its grants, an
  * anonymous actor holds none and every gated include strips. A gate
  * evaluation failure fails closed (strip).
- *
- * Residual (upstream): a dotted filter/sort/field key whose relation
- * is NOT explicitly included bypasses this hook — the SQL adapters
- * auto-join such paths without a relations.validate pass
- * (tada5hi/rapiq#815).
  *
  * NOTE: schemas import this file DIRECTLY (never the `core/query`
  * barrel) — the barrel reaches `module.ts`, which imports every
