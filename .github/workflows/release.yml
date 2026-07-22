@@ -45,13 +45,27 @@ jobs:
                         VERSION="${{ inputs.version }}"
                     else
                         echo "should_publish=${{ steps.release.outputs.releases_created }}" >> "$GITHUB_OUTPUT"
-                        VERSION="${{ steps.release.outputs['major'] }}.${{ steps.release.outputs['minor'] }}.${{ steps.release.outputs['patch'] }}"
+                        VERSION="${{ steps.release.outputs.tag_name }}"
                     fi
-                    IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-                    echo "major=$MAJOR" >> "$GITHUB_OUTPUT"
-                    echo "minor=$MINOR" >> "$GITHUB_OUTPUT"
-                    echo "patch=$PATCH" >> "$GITHUB_OUTPUT"
+                    VERSION="${VERSION#v}"
                     echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+                    # latest deliberately follows prereleases while no stable line exists (docs reference authup/authup:latest)
+                    TAGS="latest"
+                    if [[ "$VERSION" == *-* ]]; then
+                        PRERELEASE="${VERSION#*-}"
+                        TAGS+=$'\n'"${PRERELEASE%%.*}"
+                    else
+                        IFS='.' read -r MAJOR MINOR _ <<< "$VERSION"
+                        TAGS+=$'\n'"$MAJOR"$'\n'"$MAJOR.$MINOR"
+                    fi
+                    TAGS+=$'\n'"$VERSION"
+
+                    {
+                        echo "docker_tags<<EOF"
+                        echo "$TAGS"
+                        echo "EOF"
+                    } >> "$GITHUB_OUTPUT"
 
             -   name: Checkout
                 if: steps.flags.outputs.should_publish == 'true'
@@ -80,11 +94,7 @@ jobs:
                 with:
                     cleanup: false
                     registryRepository: authup/authup
-                    registryTag: |
-                        latest
-                        ${{ steps.flags.outputs.major }}
-                        ${{ steps.flags.outputs.major }}.${{ steps.flags.outputs.minor }}
-                        ${{ steps.flags.outputs.major }}.${{ steps.flags.outputs.minor }}.${{ steps.flags.outputs.patch }}
+                    registryTag: ${{ steps.flags.outputs.docker_tags }}
 
             -   uses: tada5hi/action-docker-image-publish@v3
                 if: steps.flags.outputs.should_publish == 'true'
@@ -92,9 +102,5 @@ jobs:
                     registryHost: docker.io
                     registryRepository: authup/authup
                     registryUser: authup
-                    registryTag: |
-                        latest
-                        ${{ steps.flags.outputs.major }}
-                        ${{ steps.flags.outputs.major }}.${{ steps.flags.outputs.minor }}
-                        ${{ steps.flags.outputs.major }}.${{ steps.flags.outputs.minor }}.${{ steps.flags.outputs.patch }}
+                    registryTag: ${{ steps.flags.outputs.docker_tags }}
                     registryPassword: ${{ secrets.DOCKER_HUB_TOKEN }}
