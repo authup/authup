@@ -11,7 +11,7 @@ import { EntityType } from '@authup/core-kit';
 
 export const permissionSchema = defineSchema<Permission>({
     name: EntityType.PERMISSION,
-    filters: { allowed: ['id', 'displayName', 'name', 'builtIn'] },
+    filters: { allowed: ['id', 'displayName', 'name', 'builtIn', 'realmId'] },
     relations: { allowed: [] },
     sort: { allowed: ['id', 'name', 'createdAt', 'updatedAt'] },
     pagination: { maxLimit: 50 },

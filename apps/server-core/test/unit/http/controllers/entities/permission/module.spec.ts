@@ -61,6 +61,20 @@ describe('src/http/controllers/permission', () => {
         expect(response.data.length).toBeGreaterThan(0);
     });
 
+    it('should read collection filtered by realmId (realm-switcher pattern)', async () => {
+        // Mirrors apps/client-web/pages/permissions/index/index.vue, whose realm
+        // switcher scopes the collection with filter[realmId]=[<realm>, null].
+        // The permission schema previously omitted realmId from filters.allowed,
+        // so rapiq rejected the key with "The key realmId is not permitted".
+        const response = await suite.client
+            .permission
+            .getMany({ filters: { realmId: [null] } });
+
+        expect(response).toBeDefined();
+        expect(response.data).toBeDefined();
+        expect(response.data.length).toBeGreaterThan(0);
+    });
+
     it('should read resource', async () => {
         const response = await suite.client
             .permission
