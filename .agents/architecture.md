@@ -192,6 +192,18 @@ usable at the service level and nothing in core depends on TypeORM:
   fields; it must enumerate EVERY scalar column (boot validation checks
   key existence, not completeness — a column missing from `default`
   silently vanishes from the API response).
+- **EVERY include-target schema needs a `fields` block too** — the
+  mirror of the rule above for the relation *child*, not the junction
+  root. A schema with no `fields` selects all columns as a query root
+  but **nothing** as an include child, so the joined relation is never
+  hydrated and comes back `undefined` (the request still 200s — the
+  strip is silent). `permissionSchema` was the last offender (#3313:
+  `include=permission` dropped on client-/user-/role-permission even
+  for an actor holding `PERMISSION_READ` — a projection bug, not the
+  relations read gate). Every registered schema now declares `fields`;
+  plain include targets use `fields.allowed` (realm/role/scope/
+  permission), enumerating every scalar column so the root projection
+  is unchanged.
 - **Server-derived scopes ride `appendQueryConditions(query, ...conds)`**
   (core/query) — an immutable AND-wrap of the filter tree
   (`IFilters.and`, the wrap-and-inject primitive; parameter nodes carry
