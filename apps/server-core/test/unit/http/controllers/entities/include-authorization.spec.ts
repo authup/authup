@@ -15,7 +15,12 @@ import {
     it,
 } from 'vitest';
 import { createTestApplication } from '../../../../app';
-import { createFakeClient } from '../../../../utils';
+import {
+    createFakeClient,
+    createFakePermission,
+    createFakeRole,
+    createFakeUser,
+} from '../../../../utils';
 
 describe('http/controllers (include authorization)', () => {
     const suite = createTestApplication();
@@ -101,5 +106,65 @@ describe('http/controllers (include authorization)', () => {
             expect(row.user).toBeUndefined();
             expect(row.role).toBeDefined();
         }
+    });
+
+    // regression: #3313 — permissionSchema had no fields projection, so
+    // include=permission was silently stripped on the permission-binding
+    // collections even for an actor holding PERMISSION_READ.
+    it('should join include=permission on client-permission for a permitted actor', async () => {
+        const permission = await suite.client.permission.create(createFakePermission());
+        const client = await suite.client.client.create(createFakeClient());
+        await suite.client.clientPermission.create({
+            clientId: client.id,
+            permissionId: permission.id,
+        });
+
+        const response = await suite.client.clientPermission.getMany({
+            relations: ['permission'],
+            filters: { clientId: client.id },
+        });
+
+        const row = response.data.find((r) => r.clientId === client.id);
+        expect(row).toBeDefined();
+        expect(row!.permission).toBeDefined();
+        expect(row!.permission!.name).toEqual(permission.name);
+    });
+
+    it('should join include=permission on user-permission for a permitted actor', async () => {
+        const permission = await suite.client.permission.create(createFakePermission());
+        const user = await suite.client.user.create(createFakeUser());
+        await suite.client.userPermission.create({
+            userId: user.id,
+            permissionId: permission.id,
+        });
+
+        const response = await suite.client.userPermission.getMany({
+            relations: ['permission'],
+            filters: { userId: user.id },
+        });
+
+        const row = response.data.find((r) => r.userId === user.id);
+        expect(row).toBeDefined();
+        expect(row!.permission).toBeDefined();
+        expect(row!.permission!.name).toEqual(permission.name);
+    });
+
+    it('should join include=permission on role-permission for a permitted actor', async () => {
+        const permission = await suite.client.permission.create(createFakePermission());
+        const role = await suite.client.role.create(createFakeRole());
+        await suite.client.rolePermission.create({
+            roleId: role.id,
+            permissionId: permission.id,
+        });
+
+        const response = await suite.client.rolePermission.getMany({
+            relations: ['permission'],
+            filters: { roleId: role.id },
+        });
+
+        const row = response.data.find((r) => r.roleId === role.id);
+        expect(row).toBeDefined();
+        expect(row!.permission).toBeDefined();
+        expect(row!.permission!.name).toEqual(permission.name);
     });
 });
