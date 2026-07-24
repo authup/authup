@@ -1,5 +1,34 @@
 # Change Log
 
+## [1.0.0-beta.55](https://github.com/authup/authup/compare/v1.0.0-beta.54...v1.0.0-beta.55) (2026-07-24)
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 24 updates ([#3317](https://github.com/authup/authup/issues/3317)) ([e7a2b6b](https://github.com/authup/authup/commit/e7a2b6be6d1be3043a8e5b8578e80b1cef08d52e))
+* repair build pipeline and bump rapiq to 2.0.0-beta.8 ([7a8f8f7](https://github.com/authup/authup/commit/7a8f8f7d4a3e84a9782823622e010242c34c0982))
+* **server-core:** add fields projection to permissionSchema so include=permission hydrates ([#3314](https://github.com/authup/authup/issues/3314)) ([df791b2](https://github.com/authup/authup/commit/df791b24dfc37a42e70621d5989a0557d08d34de)), closes [#3313](https://github.com/authup/authup/issues/3313)
+* **server-core:** add fields projection to permissionSchema so include=permission hydrates ([#3316](https://github.com/authup/authup/issues/3316)) ([7b5309a](https://github.com/authup/authup/commit/7b5309a60ba95694f51b0ecef100d6c5f7db399c)), closes [#3313](https://github.com/authup/authup/issues/3313)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+    * @authup/core-http-kit bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+    * @authup/core-kit bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+    * @authup/errors bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+    * @authup/i18n bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+    * @authup/kit bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+    * @authup/server-kit bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+    * @authup/specs bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+    * @authup/client-web-theme bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+    * @authup/server-test-kit bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+
 ## [1.0.0-beta.54](https://github.com/authup/authup/compare/v1.0.0-beta.53...v1.0.0-beta.54) (2026-07-22)
 
 

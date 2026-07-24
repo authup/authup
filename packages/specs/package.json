@@ -1,7 +1,7 @@
 {
     "name": "@authup/specs",
     "type": "module",
-    "version": "1.0.0-beta.54",
+    "version": "1.0.0-beta.55",
     "description": "A package containing constants, interfaces, utils, ... for different specifications.",
     "license": "Apache-2.0",
     "exports": {
@@ -53,8 +53,8 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/errors": "^1.0.0-beta.54",
-        "@authup/kit": "^1.0.0-beta.54",
+        "@authup/errors": "^1.0.0-beta.55",
+        "@authup/kit": "^1.0.0-beta.55",
         "pathtrace": "^2.2.0",
         "smob": "^1.6.1"
     },

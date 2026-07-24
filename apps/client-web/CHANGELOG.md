@@ -1,5 +1,27 @@
 # Change Log
 
+## [1.0.0-beta.55](https://github.com/authup/authup/compare/v1.0.0-beta.54...v1.0.0-beta.55) (2026-07-24)
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 24 updates ([#3317](https://github.com/authup/authup/issues/3317)) ([e7a2b6b](https://github.com/authup/authup/commit/e7a2b6be6d1be3043a8e5b8578e80b1cef08d52e))
+* repair build pipeline and bump rapiq to 2.0.0-beta.8 ([7a8f8f7](https://github.com/authup/authup/commit/7a8f8f7d4a3e84a9782823622e010242c34c0982))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+    * @authup/client-web-nuxt bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+    * @authup/client-web-theme bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+    * @authup/core-http-kit bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+    * @authup/core-kit bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+    * @authup/i18n bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+    * @authup/kit bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+
 ## [1.0.0-beta.54](https://github.com/authup/authup/compare/v1.0.0-beta.53...v1.0.0-beta.54) (2026-07-22)
 
 
