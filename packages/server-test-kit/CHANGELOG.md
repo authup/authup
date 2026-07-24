@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.0.0-beta.55](https://github.com/authup/authup/compare/v1.0.0-beta.54...v1.0.0-beta.55) (2026-07-24)
+
+
+### Bug Fixes
+
+* repair build pipeline and bump rapiq to 2.0.0-beta.8 ([7a8f8f7](https://github.com/authup/authup/commit/7a8f8f7d4a3e84a9782823622e010242c34c0982))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+    * @authup/core-kit bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+    * @authup/kit bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+    * @authup/server-kit bumped from ^1.0.0-beta.54 to ^1.0.0-beta.55
+
 ## [1.0.0-beta.54](https://github.com/authup/authup/compare/v1.0.0-beta.53...v1.0.0-beta.54) (2026-07-22)
 
 
