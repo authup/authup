@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.0-beta.56](https://github.com/authup/authup/compare/v1.0.0-beta.55...v1.0.0-beta.56) (2026-07-24)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([5dd90cd](https://github.com/authup/authup/commit/5dd90cdadacc0c1068ad46fb2dc3df4eb897e356))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/server-adapter-kit bumped from ^1.0.0-beta.55 to ^1.0.0-beta.56
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.55 to ^1.0.0-beta.56
+
 ## [1.0.0-beta.55](https://github.com/authup/authup/compare/v1.0.0-beta.54...v1.0.0-beta.55) (2026-07-24)
 
 
