@@ -1,5 +1,26 @@
 # Change Log
 
+## [1.0.0-beta.56](https://github.com/authup/authup/compare/v1.0.0-beta.55...v1.0.0-beta.56) (2026-07-24)
+
+
+### Bug Fixes
+
+* **deps:** bump @rapiq/* to 2.0.0-beta.9 ([6475f2b](https://github.com/authup/authup/commit/6475f2b0ec1ad69b4412540a3385d03eca5c3746))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.55 to ^1.0.0-beta.56
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.55 to ^1.0.0-beta.56
+    * @authup/client-web-nuxt bumped from ^1.0.0-beta.55 to ^1.0.0-beta.56
+    * @authup/client-web-theme bumped from ^1.0.0-beta.55 to ^1.0.0-beta.56
+    * @authup/core-http-kit bumped from ^1.0.0-beta.55 to ^1.0.0-beta.56
+    * @authup/core-kit bumped from ^1.0.0-beta.55 to ^1.0.0-beta.56
+    * @authup/i18n bumped from ^1.0.0-beta.55 to ^1.0.0-beta.56
+    * @authup/kit bumped from ^1.0.0-beta.55 to ^1.0.0-beta.56
+
 ## [1.0.0-beta.55](https://github.com/authup/authup/compare/v1.0.0-beta.54...v1.0.0-beta.55) (2026-07-24)
 
 
