@@ -115,7 +115,7 @@ export type Options = {
     isServer?: boolean
 };
 
-declare module '@vue/runtime-core' {
+declare module 'vue' {
     export interface GlobalComponents {
         AClient: typeof AClient;
         AClients: typeof AClients;
