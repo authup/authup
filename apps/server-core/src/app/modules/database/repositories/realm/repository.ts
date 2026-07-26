@@ -12,7 +12,7 @@ import { InternalError } from '@authup/errors';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyQuery } from '../query.ts';
+import { applyQuery, redactFieldConditions } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { IRealmRepository } from '../../../../../core/index.ts';
@@ -56,7 +56,7 @@ export class RealmRepositoryAdapter implements IRealmRepository {
         const [entities, total] = await qb.getManyAndCount();
 
         return {
-            data: entities,
+            data: redactFieldConditions(query, entities),
             meta: {
                 total,
                 ...pagination,

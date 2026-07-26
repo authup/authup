@@ -9,7 +9,7 @@ import type { RolePermission } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyQuery } from '../query.ts';
+import { applyQuery, redactFieldConditions } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IRolePermissionRepository } from '../../../../../core/index.ts';
 import { RolePermissionEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -31,7 +31,7 @@ export class RolePermissionRepositoryAdapter implements IRolePermissionRepositor
         const [entities, total] = await qb.getManyAndCount();
 
         return {
-            data: entities,
+            data: redactFieldConditions(query, entities),
             meta: {
                 total,
                 ...pagination,

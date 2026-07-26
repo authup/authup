@@ -6,13 +6,6 @@
  */
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
-import {
-    and, 
-    eq, 
-    ne, 
-    not, 
-    or,
-} from '@rapiq/core';
 import { ValidatorGroup, isUUID } from '@authup/kit';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import {
@@ -27,7 +20,7 @@ import type { IRealmRepository } from '../realm/types.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import { ClientCredentialsService } from '../../authentication/credential/entities/client/module.ts';
 import type { IClientRepository, IClientService } from './types.ts';
-import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
+import { decodeQuery } from '../../query/index.ts';
 import { clientSchema } from './schema.ts';
 
 export type ClientServiceContext = {
@@ -53,86 +46,21 @@ export class ClientService extends AbstractEntityService implements IClientServi
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<Client>> {
-        const permissionNames = [
-            PermissionName.CLIENT_READ,
-            PermissionName.CLIENT_UPDATE,
-            PermissionName.CLIENT_DELETE,
-        ];
+        await actor.permissionEvaluator.preEvaluateOneOf({
+            name: [
+                PermissionName.CLIENT_READ,
+                PermissionName.CLIENT_UPDATE,
+                PermissionName.CLIENT_DELETE,
+            ],
+        });
 
-        await actor.permissionEvaluator.preEvaluateOneOf({ name: permissionNames });
-
-        const parsed = await decodeQuery(query, { schema: clientSchema, actor });
-
-        // The per-row gate below only fires for rows exposing a PLAINTEXT secret,
-        // and only when the projection actually selects the (non-default) `secret`
-        // field — everything else lists freely. Compile the gate into WHERE
-        // (#3286 phase 3): a plaintext-secret row is visible iff the compiled
-        // permission condition covers it; rows without a plaintext secret always
-        // are. A non-expressible policy falls back to the per-row loop below.
-        const secretSelected = parsed.fields.value.some(
-            (field) => field.name === 'secret' && field.operator !== '-',
+        // The per-row `secret` visibility gate lives on the client SCHEMA
+        // (`fields.validateMany`, issue #3322), so it also covers the
+        // `include=client` paths served by other services; the repository
+        // layer redacts unauthorized values without dropping rows.
+        return this.repository.findMany(
+            await decodeQuery(query, { schema: clientSchema, actor }),
         );
-        const compiled = await actor.permissionEvaluator.compile({ name: permissionNames });
-        if (compiled.verdict !== 'post') {
-            let scoped = parsed;
-            if (secretSelected && compiled.verdict !== 'allow') {
-                const plaintextSecret = and(
-                    ne('secret', null),
-                    eq('secretHashed', false),
-                    eq('secretEncrypted', false),
-                );
-
-                scoped = appendQueryConditions(
-                    parsed,
-                    compiled.verdict === 'conditional' ?
-                        or(not(plaintextSecret), compiled.condition) :
-                        not(plaintextSecret),
-                );
-            }
-
-            return this.repository.findMany(scoped);
-        }
-
-        const {
-            data: entities,
-            meta,
-        } = await this.repository.findMany(parsed);
-        let { total } = meta;
-
-        const data: Client[] = [];
-        for (const entity of entities) {
-            if (
-                entity.secret &&
-                !entity.secretEncrypted &&
-                !entity.secretHashed
-            ) {
-                try {
-                    await actor.permissionEvaluator.evaluateOneOf({
-                        name: [
-                            PermissionName.CLIENT_READ,
-                            PermissionName.CLIENT_UPDATE,
-                            PermissionName.CLIENT_DELETE,
-                        ],
-                        data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
-                    });
-                    data.push(entity);
-                } catch {
-                    total -= 1;
-                }
-
-                continue;
-            }
-
-            data.push(entity);
-        }
-
-        return {
-            data,
-            meta: {
-                ...meta,
-                total, 
-            }, 
-        };
     }
 
     async getOne(

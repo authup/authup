@@ -22,7 +22,7 @@ import { JWKType, JWKUse, JWTAlgorithm } from '@authup/specs';
 import type { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { Like } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyQuery } from '../query.ts';
+import { applyQuery, redactFieldConditions } from '../query.ts';
 import { getRandomValues } from 'uncrypto';
 import {
     DatabaseConflictError,
@@ -280,7 +280,7 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
         const [entities, total] = await qb.getManyAndCount();
 
         return {
-            data: entities,
+            data: redactFieldConditions(query, entities),
             meta: {
                 total,
                 ...pagination,
