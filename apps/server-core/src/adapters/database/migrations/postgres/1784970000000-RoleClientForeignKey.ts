@@ -18,9 +18,12 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  * column names, not the referenced table.
  *
  * Any surviving non-null client_id is a realm id (that is what the old
- * FK enforced) and cannot be interpreted as a client, so such rows are
- * dropped rather than silently re-pointed. down() restores the previous
- * auth_realms target, dropping rows the old constraint would reject.
+ * FK enforced) and cannot be interpreted as a client, so the reference is
+ * nulled — never the role row itself: the role, its permission junctions
+ * and its user assignments are legitimate, only the column value is
+ * noise (and role.clientId does not scope evaluation-time permission
+ * loading, so nulling widens nothing). down() restores the previous
+ * auth_realms target, nulling values the old constraint would reject.
  */
 export class RoleClientForeignKey1784970000000 implements MigrationInterface {
     name = 'RoleClientForeignKey1784970000000';
@@ -30,7 +33,8 @@ export class RoleClientForeignKey1784970000000 implements MigrationInterface {
             ALTER TABLE "auth_roles" DROP CONSTRAINT "FK_8f460e65af897b9b049f582ad0e"
         `);
         await queryRunner.query(`
-            DELETE FROM "auth_roles"
+            UPDATE "auth_roles"
+            SET "client_id" = NULL
             WHERE "client_id" IS NOT NULL
                 AND "client_id" NOT IN (SELECT "id" FROM "auth_clients")
         `);
@@ -46,7 +50,8 @@ export class RoleClientForeignKey1784970000000 implements MigrationInterface {
             ALTER TABLE "auth_roles" DROP CONSTRAINT "FK_8f460e65af897b9b049f582ad0e"
         `);
         await queryRunner.query(`
-            DELETE FROM "auth_roles"
+            UPDATE "auth_roles"
+            SET "client_id" = NULL
             WHERE "client_id" IS NOT NULL
                 AND "client_id" NOT IN (SELECT "id" FROM "auth_realms")
         `);
