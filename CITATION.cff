@@ -33,7 +33,7 @@ identifiers:
 license:
   - AGPL-3.0-only
   - Apache-2.0
-version: 1.0.0-beta.55 # x-release-please-version
+version: 1.0.0-beta.56 # x-release-please-version
 # date-released: 2026-01-01  # set/automate to the release date of `version`
 keywords:
   - authentication
