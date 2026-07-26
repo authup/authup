@@ -7,7 +7,7 @@
 
 import type { ObjectLiteral } from '@rapiq/core';
 import { assertSchemaMatchesEntity } from '@rapiq/typeorm';
-import type { DataSource, EntityTarget } from 'typeorm';
+import type { DataSource, EntityMetadata, EntityTarget } from 'typeorm';
 import { EntityType } from '@authup/core-kit';
 import { schemaRegistry } from '../../../../core/index.ts';
 import {
@@ -70,18 +70,63 @@ const SCHEMA_ENTITY_TARGETS : Record<string, EntityTarget<ObjectLiteral>> = {
 };
 
 /**
+ * Selectable columns deliberately kept out of a schema's field
+ * allow-list. `select: false` columns are skipped automatically (the
+ * entity already declares them hidden); everything listed here is a
+ * column that IS selectable but must never ride the API projection.
+ */
+const SCHEMA_FIELD_EXCLUSIONS : Record<string, string[]> = {
+    // device-internal credential blob (TOTP config, WebAuthn public key +
+    // signature counter) — surfaced only through the challenge endpoint's
+    // trimmed view.
+    [EntityType.USER_AUTHENTICATOR]: ['parameters'],
+};
+
+/**
+ * Every selectable column must appear in the schema's field allow-list:
+ * rapiq derives the root projection from `fields` (`default` when
+ * present, else `allowed`), so a column missing from BOTH silently
+ * vanishes from every collection response — no error, just an absent
+ * property (`role.builtIn` went missing this way).
+ */
+export function assertSchemaFieldsCoverEntity(
+    name: string,
+    schema: { fields?: { default?: string[], allowed?: string[] } },
+    metadata: EntityMetadata,
+) : void {
+    const declared = new Set([
+        ...(schema.fields?.default || []),
+        ...(schema.fields?.allowed || []),
+    ]);
+
+    const excluded = new Set(SCHEMA_FIELD_EXCLUSIONS[name] || []);
+    const missing = metadata.columns
+        .filter((column) => column.isSelect)
+        .map((column) => column.propertyName)
+        .filter((propertyName) => !declared.has(propertyName) && !excluded.has(propertyName));
+
+    if (missing.length > 0) {
+        throw new Error(
+            `The schema "${name}" does not declare the field(s): ${missing.join(', ')}.`,
+        );
+    }
+}
+
+/**
  * Validate every registered entity schema against its TypeORM
  * metadata (`@rapiq/typeorm`'s `assertSchemaMatchesEntity`: allow-lists,
  * fields/sort defaults and the filters default condition tree must
- * reference existing columns/relations). Called by
+ * reference existing columns/relations) and assert its field allow-list
+ * covers every selectable column. Called by
  * `DatabaseModule.setup` once the DataSource is initialized —
  * schema/entity drift fails the boot, fail-fast.
  */
 export function validateEntitySchemas(dataSource: DataSource) : void {
     for (const [name, target] of Object.entries(SCHEMA_ENTITY_TARGETS)) {
-        assertSchemaMatchesEntity(
-            schemaRegistry.getOrFail(name),
-            dataSource.getMetadata(target),
-        );
+        const schema = schemaRegistry.getOrFail(name);
+        const metadata = dataSource.getMetadata(target);
+
+        assertSchemaMatchesEntity(schema, metadata);
+        assertSchemaFieldsCoverEntity(name, schema, metadata);
     }
 }

@@ -189,9 +189,9 @@ usable at the service level and nothing in core depends on TypeORM:
   (including the id TypeORM's DISTINCT-id pagination wrapper needs — every
   junction `include=` 500'd before #3295 surfaced it). The explicit
   `default` list keeps the root projection riding alongside relation
-  fields; it must enumerate EVERY scalar column (boot validation checks
-  key existence, not completeness — a column missing from `default`
-  silently vanishes from the API response).
+  fields; it must enumerate EVERY scalar column — a column missing from
+  the allow-list silently vanishes from the API response, which is why
+  boot validation asserts completeness (see below).
 - **EVERY include-target schema needs a `fields` block too** — the
   mirror of the rule above for the relation *child*, not the junction
   root. A schema with no `fields` selects all columns as a query root
@@ -229,7 +229,21 @@ usable at the service level and nothing in core depends on TypeORM:
   default condition tree; plain keys as column property paths, dotted
   keys headed by a relation), iterated over an explicit schema-name →
   entity-class map. A renamed column fails the boot instead of dying as
-  a dead filter. This is the
+  a dead filter. The same pass runs
+  `assertSchemaFieldsCoverEntity`: every **selectable** column
+  (`isSelect`, so `select: false` secrets — `user.password`,
+  `key.decryptionKey`, `userAuthenticator.secret`/`codes` — are exempt
+  automatically) must appear in the schema's `fields.default` ∪
+  `fields.allowed`, because rapiq derives the root projection from that
+  allow-list: an undeclared column is silently absent from every
+  collection response (`role.builtIn`/`clientId`, `user.status`/
+  `statusMessage`, `session.authMethod`/`mfaAt` and
+  `clientScope.createdAt`/`updatedAt` all drifted away this way). A
+  selectable column that must stay off the wire is opted out explicitly
+  in `SCHEMA_FIELD_EXCLUSIONS` (today only
+  `userAuthenticator.parameters`, the device credential blob), so
+  hiding a field is a deliberate, reviewable entry rather than an
+  omission. This is the
   distilled outcome of the #3279 phase-2 evaluation: entity-DERIVED
   schemas were prototyped and rejected — under `EntityType` naming every
   derivable contribution (name, `schemaMapping`, `relations.allowed`)

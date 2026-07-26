@@ -25,4 +25,10 @@ export interface ClientScope {
 
     scopeRealmId: Realm['id'] | null;
     scopeRealm: Realm | null;
+
+    // ------------------------------------------------------------------
+
+    createdAt: string;
+
+    updatedAt: string;
 }

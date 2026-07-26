@@ -47,7 +47,7 @@ import {
     UserRoleEntity,
 } from '../../../../../src/adapters/database/domains/index.ts';
 import { assertSchemaMatchesEntity } from '@rapiq/typeorm';
-import { validateEntitySchemas } from '../../../../../src/app/modules/database/repositories/schema-validation.ts';
+import { assertSchemaFieldsCoverEntity, validateEntitySchemas } from '../../../../../src/app/modules/database/repositories/schema-validation.ts';
 
 describe('app/modules/database/repositories/schema-validation', () => {
     let dataSource : DataSource;
@@ -174,5 +174,49 @@ describe('app/modules/database/repositories/schema-validation', () => {
         });
         expect(() => assertSchemaMatchesEntity(field, dataSource.getMetadata(RoleEntity)))
             .toThrowError(/realm/);
+    });
+
+    it('should reject a schema whose fields omit a selectable column', () => {
+        const schema = defineSchema({
+            name: 'fields-incomplete',
+            fields: {
+                allowed: [
+                    'id',
+                    'name',
+                    'displayName',
+                    'target',
+                    'description',
+                    'clientId',
+                    'createdAt',
+                    'updatedAt',
+                ],
+            },
+        });
+
+        expect(() => assertSchemaFieldsCoverEntity('fields-incomplete', schema, dataSource.getMetadata(RoleEntity)))
+            .toThrowError(/builtIn, realmId/);
+    });
+
+    it('should not require select:false columns to be declared', () => {
+        const schema = defineSchema({
+            name: 'fields-hidden-columns',
+            fields: {
+                default: [
+                    'id',
+                    'kind',
+                    'name',
+                    'parameters',
+                    'confirmed',
+                    'lastUsedAt',
+                    'userId',
+                    'realmId',
+                    'createdAt',
+                    'updatedAt',
+                ],
+            },
+        });
+
+        expect(() => assertSchemaFieldsCoverEntity('fields-hidden-columns', schema, dataSource.getMetadata(UserAuthenticatorEntity)))
+            .not.toThrow();
     });
 });

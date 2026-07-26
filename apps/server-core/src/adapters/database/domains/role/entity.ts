@@ -18,6 +18,7 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import { dateToISOStringTransformer } from '../../helpers/index.ts';
+import { ClientEntity } from '../client/entity.ts';
 import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_roles' })
@@ -66,9 +67,9 @@ export class RoleEntity implements Role {
     @Column({ name: 'client_id', nullable: true })
     clientId: Client['id'] | null;
 
-    @ManyToOne(() => RealmEntity, {
+    @ManyToOne(() => ClientEntity, {
         onDelete: 'SET NULL',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'client_id' })
     client: Client | null;
