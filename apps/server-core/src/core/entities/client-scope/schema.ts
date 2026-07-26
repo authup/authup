@@ -23,6 +23,8 @@ export const clientScopeSchema = defineSchema<ClientScope>({
             'clientRealmId',
             'scopeId',
             'scopeRealmId',
+            'createdAt',
+            'updatedAt',
         ],
     },
     filters: { allowed: ['clientId', 'scopeId', 'default'] },

@@ -25,6 +25,8 @@ export const userSchema = defineSchema<User>({
             'avatar',
             'cover',
             'active',
+            'status',
+            'statusMessage',
             'createdAt',
             'updatedAt',
             'realmId',

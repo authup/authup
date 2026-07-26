@@ -22,6 +22,8 @@ export const sessionSchema = defineSchema<Session>({
             'subKind',
             'ipAddress',
             'userAgent',
+            'authMethod',
+            'mfaAt',
             'expiresAt',
             'refreshedAt',
             'seenAt',
