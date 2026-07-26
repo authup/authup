@@ -87,8 +87,8 @@ complete data remains the authority (there, pending counts as a denial).
 await evaluator.preEvaluate({
     name: 'user_update',
 });
-// success — the attributeNames policy needs `attributes`,
-// which is not available yet: it stays pending and passes the gate
+// success — the attributeNames policy needs `attributes` (or `attributeNames`),
+// neither of which is available yet: it stays pending and passes the gate
 
 const data = new PolicyData();
 data.set('attributes', { name: 'admin', foo: 'bar' });
