@@ -118,12 +118,23 @@ The list of supported operators:
 
 ## AttributeNames
 
-The Attribute Names Policy restricts the set of allowed keys in the `attributes` key of the policy data.
+The Attribute Names Policy restricts a set of attribute names. It evaluates whichever
+policy-data source is available:
+
+- the `attributeNames` data key — a plain list of attribute names (a projection / fieldset)
+- the `attributes` data key — the keys of an attribute record
+
+When both keys are present, both are enforced; when neither is present, the policy stays
+pending.
 
 **`Config`**
 ```typescript
 export interface AttributeNamesPolicy {
     names: string[],
+    /**
+     * default: false — treat `names` as a denylist instead of an allowlist.
+     */
+    invert?: boolean | null,
 }
 ```
 
@@ -138,6 +149,26 @@ data.set('attributes', {
     name: 'Peter',
     age: 15,
 });
+
+evaluator.evaluate(
+    {
+        names: ['name', 'age']
+    },
+    definePolicyEvaluationContext({ data }),
+)
+```
+
+With the `attributeNames` data key the same policy evaluates a list of attribute names
+instead of an attribute record — useful to answer *"may this actor project these field
+names?"* before any row data exists (e.g. validating a requested fieldset):
+
+```typescript
+import { AttributeNamesPolicyEvaluator, PolicyData, definePolicyEvaluationContext } from '@authup/access';
+
+const evaluator = new AttributeNamesPolicyEvaluator();
+
+const data = new PolicyData();
+data.set('attributeNames', ['name', 'age']);
 
 evaluator.evaluate(
     {

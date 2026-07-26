@@ -1228,7 +1228,18 @@ The policy engine is tri-state: a policy whose declared data requirements
 (`IPolicyEvaluator.requires?(value)` — PolicyData keys, checked by the engine before
 invoking the evaluator) are not satisfied by the current bag returns
 `{ success: false, pending: true }` instead of evaluating against missing data. Built-in
-`requires`: identity → `[IDENTITY]`; attributes / attributeNames → `[ATTRIBUTES]`;
+`requires`: identity → `[IDENTITY]`; attributes → `[ATTRIBUTES]`; attributeNames →
+**none — it reports pending itself** (issue #3321: the policy settles against EITHER
+data key — a `string[]` projection/fieldset under its own `ATTRIBUTE_NAMES` key ("may
+this actor project these field names", the rapiq `fields.validateMany` consumer) and/or
+the `ATTRIBUTES` record, enforced conjunctively when both are present and deduplicated
+per key; the engine's requires-gate is AND-semantics over the declared keys, so an
+either-or requirement is inexpressible there and the evaluator returns
+`{ success: false, pending: true }` itself when neither key is present — precedented by
+the composite algebra / permission-binding pending propagation, and every consumer reads
+the result flag, not the mechanism. Per-key `invert`, issue paths and the empty-input
+pass are identical for both sources; the shared ATTRIBUTES bag — which realm-match /
+ABAC settle against — is never fed fabricated row data);
 permissionBinding → `[PERMISSION_BINDING]` (IDENTITY deliberately not declared — a missing
 identity must stay a settled deny so a scope-restricted bearer fails the pre-gate through
 `system.default`); realmMatch → `[IDENTITY]` in scope mode (the `realmMatch` resource key
