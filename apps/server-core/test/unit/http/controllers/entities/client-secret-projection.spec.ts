@@ -32,12 +32,11 @@ import {
  * by other services and never ran `ClientService`'s read gate. Rows
  * are never dropped; an unauthorized plaintext value is redacted.
  *
- * Both `fields[client]` positions exercise the gate identically: the
- * bare dotted form auto-joins the relation with a per-column selection,
- * and since rapiq 2.0.0-beta.11 (tada5hi/rapiq#847) an explicit
- * `include=client` narrows its join to the same per-relation fieldset —
- * the historical fully-selected-join divergence (rapiq#831) is gone,
- * so the gate governs the secret uniformly in both shapes.
+ * Both request shapes exercise the gate: `fields[client]=id,secret`
+ * WITHOUT an explicit include (the dotted field auto-joins the
+ * relation with a per-column selection) and, since rapiq beta.11
+ * (#847), WITH one — an explicitly included relation is now narrowed
+ * to its per-relation fieldset instead of joining fully-selected.
  */
 describe('http/controllers (client secret projection)', () => {
     const suite = createTestApplication();
@@ -243,12 +242,13 @@ describe('http/controllers (client secret projection)', () => {
         expect(byClientId.get(foreignClientId)!.client!.secret).toBeUndefined();
     });
 
-    it('gates the secret under an explicit include=client like the bare projection', async () => {
-        // since rapiq#847 (2.0.0-beta.11) an explicit include narrows its
-        // join to the requested per-relation fieldset, so the select:false
-        // secret is genuinely selected here and the schema gate governs it —
-        // the same self-visible / foreign-redacted contract as the
-        // auto-joined fields[client] projection above.
+    it('gates the explicit include=client + fields[client] projection', async () => {
+        // since rapiq beta.11 (#847) an explicitly included relation is
+        // narrowed to its per-relation fieldset, so this form behaves
+        // exactly like the auto-join fields[client] paths above: the
+        // secret is selected per-column and the schema gate redacts it
+        // per row (pre-beta.11 the fully-selected join dropped the
+        // per-column selects and the select:false secret never shipped)
         const response = await restrictedActor.clientPermission.getMany({
             relations: ['client'],
             fields: { client: ['id', 'secret'] },

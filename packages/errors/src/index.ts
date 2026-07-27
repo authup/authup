@@ -10,6 +10,8 @@ export {
     INSTANCEOF_PROPERTY,
     hasInstanceof,
     markInstanceof,
+    matchesInstanceof,
+    serializeInstanceofChain,
 } from '@ebec/core';
 export * from './built-in';
 export * from './check';
