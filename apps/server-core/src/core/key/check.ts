@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { hasInstanceof } from '@authup/errors';
+import { matchesInstanceof } from '@authup/errors';
 import { REALM_CIPHER_BLOB_ERROR_INSTANCE, type RealmCipherBlobError } from './error.ts';
 
 export function isRealmCipherBlobError(input: unknown): input is RealmCipherBlobError {
-    return hasInstanceof(input, REALM_CIPHER_BLOB_ERROR_INSTANCE);
+    return matchesInstanceof(input, REALM_CIPHER_BLOB_ERROR_INSTANCE);
 }

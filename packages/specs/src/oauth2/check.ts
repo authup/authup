@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode, hasInstanceof, isAuthupError } from '@authup/errors';
+import { ErrorCode, isAuthupError, matchesInstanceof } from '@authup/errors';
 import { isObject } from '@authup/kit';
 import {
     OAUTH2_ACCESS_DENIED_ERROR_INSTANCE,
@@ -33,7 +33,7 @@ import {
 } from './error/index.ts';
 
 export function isOAuth2Error(input: unknown): input is OAuth2Error {
-    if (hasInstanceof(input, OAUTH2_ERROR_INSTANCE)) {
+    if (matchesInstanceof(input, OAUTH2_ERROR_INSTANCE)) {
         return true;
     }
 
@@ -46,7 +46,7 @@ export function isOAuth2Error(input: unknown): input is OAuth2Error {
 }
 
 export function isOAuth2RequestError(input: unknown): input is OAuth2RequestError {
-    if (hasInstanceof(input, OAUTH2_REQUEST_ERROR_INSTANCE)) {
+    if (matchesInstanceof(input, OAUTH2_REQUEST_ERROR_INSTANCE)) {
         return true;
     }
 
@@ -58,7 +58,7 @@ export function isOAuth2RequestError(input: unknown): input is OAuth2RequestErro
 }
 
 export function isOAuth2ClientError(input: unknown): input is OAuth2ClientError {
-    if (hasInstanceof(input, OAUTH2_CLIENT_ERROR_INSTANCE)) {
+    if (matchesInstanceof(input, OAUTH2_CLIENT_ERROR_INSTANCE)) {
         return true;
     }
 
@@ -70,7 +70,7 @@ export function isOAuth2ClientError(input: unknown): input is OAuth2ClientError 
 }
 
 export function isOAuth2ClientUnauthorizedError(input: unknown): input is OAuth2ClientUnauthorizedError {
-    if (hasInstanceof(input, OAUTH2_CLIENT_UNAUTHORIZED_ERROR_INSTANCE)) {
+    if (matchesInstanceof(input, OAUTH2_CLIENT_UNAUTHORIZED_ERROR_INSTANCE)) {
         return true;
     }
 
@@ -82,7 +82,7 @@ export function isOAuth2ClientUnauthorizedError(input: unknown): input is OAuth2
 }
 
 export function isOAuth2MfaRequiredError(input: unknown): input is OAuth2MfaRequiredError {
-    if (hasInstanceof(input, OAUTH2_MFA_REQUIRED_ERROR_INSTANCE)) {
+    if (matchesInstanceof(input, OAUTH2_MFA_REQUIRED_ERROR_INSTANCE)) {
         return true;
     }
 
@@ -94,7 +94,7 @@ export function isOAuth2MfaRequiredError(input: unknown): input is OAuth2MfaRequ
 }
 
 export function isOAuth2AccessDeniedError(input: unknown): input is OAuth2AccessDeniedError {
-    if (hasInstanceof(input, OAUTH2_ACCESS_DENIED_ERROR_INSTANCE)) {
+    if (matchesInstanceof(input, OAUTH2_ACCESS_DENIED_ERROR_INSTANCE)) {
         return true;
     }
 
@@ -106,7 +106,7 @@ export function isOAuth2AccessDeniedError(input: unknown): input is OAuth2Access
 }
 
 export function isOAuth2GrantError(input: unknown): input is OAuth2GrantError {
-    if (hasInstanceof(input, OAUTH2_GRANT_ERROR_INSTANCE)) {
+    if (matchesInstanceof(input, OAUTH2_GRANT_ERROR_INSTANCE)) {
         return true;
     }
 
@@ -119,7 +119,7 @@ export function isOAuth2GrantError(input: unknown): input is OAuth2GrantError {
 }
 
 export function isOAuth2ScopeError(input: unknown): input is OAuth2ScopeError {
-    if (hasInstanceof(input, OAUTH2_SCOPE_ERROR_INSTANCE)) {
+    if (matchesInstanceof(input, OAUTH2_SCOPE_ERROR_INSTANCE)) {
         return true;
     }
 
@@ -132,7 +132,7 @@ export function isOAuth2ScopeError(input: unknown): input is OAuth2ScopeError {
 }
 
 export function isOAuth2GrantTypeError(input: unknown): input is OAuth2GrantTypeError {
-    if (hasInstanceof(input, OAUTH2_GRANT_TYPE_ERROR_INSTANCE)) {
+    if (matchesInstanceof(input, OAUTH2_GRANT_TYPE_ERROR_INSTANCE)) {
         return true;
     }
 
@@ -144,7 +144,7 @@ export function isOAuth2GrantTypeError(input: unknown): input is OAuth2GrantType
 }
 
 export function isOAuth2ResponseTypeError(input: unknown): input is OAuth2ResponseTypeError {
-    if (hasInstanceof(input, OAUTH2_RESPONSE_TYPE_ERROR_INSTANCE)) {
+    if (matchesInstanceof(input, OAUTH2_RESPONSE_TYPE_ERROR_INSTANCE)) {
         return true;
     }
 
@@ -156,7 +156,7 @@ export function isOAuth2ResponseTypeError(input: unknown): input is OAuth2Respon
 }
 
 export function isOAuth2ServerError(input: unknown): input is OAuth2ServerError {
-    if (hasInstanceof(input, OAUTH2_SERVER_ERROR_INSTANCE)) {
+    if (matchesInstanceof(input, OAUTH2_SERVER_ERROR_INSTANCE)) {
         return true;
     }
 

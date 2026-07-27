@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode, hasInstanceof, isAuthupError } from '@authup/errors';
+import { ErrorCode, isAuthupError, matchesInstanceof } from '@authup/errors';
 import { REGISTRATION_DISABLED_ERROR_INSTANCE, type RegistrationDisabledError } from './error.ts';
 
 export function isRegistrationDisabledError(input: unknown): input is RegistrationDisabledError {
-    if (hasInstanceof(input, REGISTRATION_DISABLED_ERROR_INSTANCE)) return true;
+    if (matchesInstanceof(input, REGISTRATION_DISABLED_ERROR_INSTANCE)) return true;
     if (!isAuthupError(input)) return false;
     return input.code === ErrorCode.REGISTRATION_DISABLED;
 }

@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode, hasInstanceof, isAuthupError } from '@authup/errors';
+import { ErrorCode, isAuthupError, matchesInstanceof } from '@authup/errors';
 import { PERMISSION_ERROR_INSTANCE, type PermissionError } from './module';
 
 export function isPermissionError(input: unknown): input is PermissionError {
-    if (hasInstanceof(input, PERMISSION_ERROR_INSTANCE)) {
+    if (matchesInstanceof(input, PERMISSION_ERROR_INSTANCE)) {
         return true;
     }
 
