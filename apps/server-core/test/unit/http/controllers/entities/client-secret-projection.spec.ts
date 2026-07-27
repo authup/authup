@@ -32,12 +32,11 @@ import {
  * by other services and never ran `ClientService`'s read gate. Rows
  * are never dropped; an unauthorized plaintext value is redacted.
  *
- * The gate-exercising shape is `fields[client]=id,secret` WITHOUT an
- * explicit include (the dotted field auto-joins the relation with a
- * per-column selection). Under an explicit `include=client` the
- * relation is joined fully-selected and rapiq's #831 dedup drops the
- * per-column selects, so the `select: false` secret never ships there
- * at all — asserted as such below.
+ * Both request shapes exercise the gate: `fields[client]=id,secret`
+ * WITHOUT an explicit include (the dotted field auto-joins the
+ * relation with a per-column selection) and, since rapiq beta.11
+ * (#847), WITH one — an explicitly included relation is now narrowed
+ * to its per-relation fieldset instead of joining fully-selected.
  */
 describe('http/controllers (client secret projection)', () => {
     const suite = createTestApplication();
@@ -243,13 +242,13 @@ describe('http/controllers (client secret projection)', () => {
         expect(byClientId.get(foreignClientId)!.client!.secret).toBeUndefined();
     });
 
-    it('never ships a secret through an explicit include=client', async () => {
-        // under an explicit include the relation joins fully-selected and
-        // the per-column fields[client] selects are dropped (rapiq#831 —
-        // divergence tracked as rapiq#847), so the select:false secret
-        // cannot ship — for anyone. Should the adapter ever reduce
-        // explicit-include joins to per-column selections, the schema gate
-        // above takes over seamlessly.
+    it('gates the explicit include=client + fields[client] projection', async () => {
+        // since rapiq beta.11 (#847) an explicitly included relation is
+        // narrowed to its per-relation fieldset, so this form behaves
+        // exactly like the auto-join fields[client] paths above: the
+        // secret is selected per-column and the schema gate redacts it
+        // per row (pre-beta.11 the fully-selected join dropped the
+        // per-column selects and the select:false secret never shipped)
         const response = await restrictedActor.clientPermission.getMany({
             relations: ['client'],
             fields: { client: ['id', 'secret'] },
@@ -257,10 +256,15 @@ describe('http/controllers (client secret projection)', () => {
         });
 
         expect(response.data).toHaveLength(2);
-        for (const row of response.data) {
-            expect(row.client).toBeDefined();
-            expect(row.client!.secret).toBeUndefined();
-        }
+        const byClientId = new Map(response.data.map((row) => [row.clientId, row]));
+
+        const ownRow = byClientId.get(ownClientId)!;
+        expect(ownRow.client).toBeDefined();
+        expect(ownRow.client!.secret).toEqual(ownClientSecret);
+
+        const foreignRow = byClientId.get(foreignClientId)!;
+        expect(foreignRow.client).toBeDefined();
+        expect(foreignRow.client!.secret).toBeUndefined();
     });
 
     it('denies a foreign single-read secret projection even under a bare replace-projection', async () => {
