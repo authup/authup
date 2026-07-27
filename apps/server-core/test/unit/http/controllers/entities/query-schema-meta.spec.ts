@@ -80,7 +80,8 @@ describe('src/http/controllers/entities (query schema meta)', () => {
     it('should distinguish an explicitly empty relation allow-list from an undeclared one', async () => {
         const { meta } = await suite.client.realm.getMany();
 
-        // realmSchema pins relations `allowed: []` — nothing includable
-        expect(meta.schema!.relations).toEqual({ allowed: [] });
+        // realmSchema pins relations `allowed: []` — nothing includable,
+        // distinct from an undeclared (null) allow-list in the normalized shape
+        expect(meta.schema!.relations).toEqual({ allowed: [], schemas: {} });
     });
 });

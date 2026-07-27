@@ -124,9 +124,10 @@ const { meta } = await client.role.getMany();
 console.log(meta.schema);
 // {
 //     name: 'role',
-//     fields: { allowed: ['id', 'name', /* ... */] },
+//     strict: false,
+//     fields: { default: null, allowed: ['id', 'name', /* ... */] },
 //     filters: { allowed: ['id', 'name', /* ... */] },
-//     sort: { allowed: ['id', 'name', /* ... */] },
+//     sort: { allowed: ['id', 'name', /* ... */], default: null },
 //     pagination: { maxLimit: 50 },
 //     relations: { allowed: ['realm'], schemas: { realm: 'realm' } },
 // }
@@ -134,8 +135,9 @@ console.log(meta.schema);
 
 Reading rules:
 
-- an **absent** constraint was never declared (no explicit allow-list);
-  an **empty array** is an explicit "nothing allowed".
+- the shape is **normalized** — every described parameter carries every
+  constraint key: a **`null`** constraint was never declared (no explicit
+  allow-list); an **empty array** is an explicit "nothing allowed".
 - relation vocabulary is **referenced, not expanded**: `relations.schemas`
   names the schema governing each relation — dotted keys like
   `filter[client.id]` follow the `client` entity's own description, found
