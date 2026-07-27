@@ -5,11 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { 
-    EntityTypeMap, 
-    PermissionRelation, 
-    Policy, 
-    RealmScopeValue,  
+import { pickEntityAPI } from '@authup/core-http-kit';
+import type {
+    EntityTypeMap,
+    PermissionRelation,
+    Policy,
+    RealmScopeValue,
 } from '@authup/core-kit';
 import { REALM_SCOPE } from '@authup/core-kit';
 import { defineQuery } from '@rapiq/core';
@@ -101,11 +102,9 @@ export const APermissionPolicyBindingButton = defineComponent({
             }
 
             const entityId = props.entity?.id;
-            const api = hasOwnProperty(client, props.entityType) ?
-                client[props.entityType] as any :
-                undefined;
+            const api = pickEntityAPI(client, props.entityType);
 
-            if (!api || !api.update || !entityId) return;
+            if (!api?.update || !entityId) return;
 
             busy.value = true;
             try {
@@ -131,11 +130,9 @@ export const APermissionPolicyBindingButton = defineComponent({
             }
 
             const entityId = props.entity?.id;
-            const api = hasOwnProperty(client, props.entityType) ?
-                client[props.entityType] as any :
-                undefined;
+            const api = pickEntityAPI(client, props.entityType);
 
-            if (!api || !api.update || !entityId) return;
+            if (!api?.update || !entityId) return;
 
             busy.value = true;
             try {
@@ -167,11 +164,9 @@ export const APermissionPolicyBindingButton = defineComponent({
         const handleCreate = async () => {
             if (busy.value || !isCreateMode() || !props.entity) return;
 
-            const api = hasOwnProperty(client, props.entityType) ?
-                client[props.entityType] as any :
-                undefined;
+            const api = pickEntityAPI(client, props.entityType);
 
-            if (!api || !api.create) return;
+            if (!api?.create) return;
 
             busy.value = true;
             try {

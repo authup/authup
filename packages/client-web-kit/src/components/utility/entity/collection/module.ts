@@ -6,7 +6,7 @@
  */
 
 import { hasOwnProperty } from '@authup/kit';
-import type { IEntityAPI } from '@authup/core-http-kit';
+import { pickEntityAPI } from '@authup/core-http-kit';
 import type { EntityTypeMap } from '@authup/core-kit';
 import {
     VCList,
@@ -135,10 +135,12 @@ function create<
 
     const client = injectHTTPClient();
 
-    let domainAPI : IEntityAPI<Entity<RECORD>> | undefined;
-    if (hasOwnProperty(client, context.type)) {
-        domainAPI = client[context.type] as any;
-    }
+    const domainAPI = pickEntityAPI<TYPE, Entity<RECORD>>(client, context.type);
+    // Captured bound, so the load fn's guard survives the query
+    // composition between guard and call (property narrowing does not).
+    const getMany = domainAPI?.getMany ?
+        domainAPI.getMany.bind(domainAPI) :
+        undefined;
 
     // Last composed query (IR) — read by the socket handler's sort check.
     let query : IQuery | undefined;
@@ -192,7 +194,7 @@ function create<
     // an unhandled rejection is fatal to the server process, so a failed load
     // emits `failed` and leaves the list empty instead of throwing.
     async function load(input: EntityListQueryInput<Entity<RECORD>> = {}) {
-        if (!domainAPI || busy.value) return;
+        if (!getMany || busy.value) return;
 
         busy.value = true;
         meta.value.busy = true;
@@ -271,7 +273,7 @@ function create<
                 filters: combineScopedFilters(interactiveNext.filters, base.filters),
             });
 
-            const response = await domainAPI.getMany(nextQuery);
+            const response = await getMany(nextQuery);
 
             interactive = interactiveNext;
             query = nextQuery;
@@ -460,7 +462,7 @@ function create<
                             updated: (next: RECORD) => handlers.updated(next),
                             deleted: (next: RECORD) => handlers.deleted(next),
                         };
-                        return h(VCListItem, { key: (item as any).id ?? index }, () => {
+                        return h(VCListItem, { key: item.id ?? index }, () => {
                             const itemSlot = slots[EntityCollectionSlotName.ITEM];
                             const itemActionsSlot = slots[EntityCollectionSlotName.ITEM_ACTIONS];
                             const itemActionsExtraSlot = slots[EntityCollectionSlotName.ITEM_ACTIONS_EXTRA];
@@ -473,7 +475,7 @@ function create<
                                     itemOpt.content(item, itemSlotProps) :
                                     itemOpt.content;
                             } else {
-                                body = h('span', String((item as any).name ?? (item as any).id ?? ''));
+                                body = h('span', String((hasOwnProperty(item, 'name') ? item.name : undefined) ?? item.id ?? ''));
                             }
 
                             if (!itemActionsSlot && !itemActionsExtraSlot) {

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IEntityAPI } from '@authup/core-http-kit';
+import { pickEntityAPI } from '@authup/core-http-kit';
 import type { EntityTypeMap } from '@authup/core-kit';
 import type { ObjectLiteral } from '@authup/kit';
 import { extendObject, hasOwnProperty } from '@authup/kit';
@@ -52,15 +52,12 @@ function create<
     ctx: EntityManagerCreateContext<TYPE, RECORD>,
 ) : EntityManager<RECORD> {
     const client = injectHTTPClient();
-    let domainAPI : IEntityAPI<RECORD> | undefined;
-    if (hasOwnProperty(client, ctx.type)) {
-        domainAPI = client[ctx.type] as any;
-    }
+    const domainAPI = pickEntityAPI<TYPE, RECORD>(client, ctx.type);
 
     const entity : Ref<RECORD | undefined> = ref(undefined);
     const entityId = computed<EntityID<RECORD> | undefined>(
         () => (
-            entity.value ? (entity.value as any).id : undefined),
+            entity.value ? entity.value.id as EntityID<RECORD> : undefined),
     );
 
     const realmId = computed<string | undefined>(
@@ -158,7 +155,7 @@ function create<
     const busy = ref(false);
 
     const update = async (data: Partial<RECORD>) => {
-        if (!domainAPI || busy.value || !entityId.value) {
+        if (!domainAPI?.update || busy.value || !entityId.value) {
             return;
         }
 
@@ -185,7 +182,7 @@ function create<
     };
 
     const remove = async () : Promise<void> => {
-        if (!domainAPI || busy.value || !entityId.value) {
+        if (!domainAPI?.delete || busy.value || !entityId.value) {
             return;
         }
 
@@ -211,7 +208,7 @@ function create<
     };
 
     const create = async (data: Partial<RECORD>) : Promise<void> => {
-        if (!domainAPI || busy.value) {
+        if (!domainAPI?.create || busy.value) {
             return;
         }
 
@@ -374,7 +371,7 @@ function create<
             return;
         }
 
-        if (id) {
+        if (id && domainAPI.getOne) {
             try {
                 entity.value = await domainAPI.getOne(id, query);
 
@@ -392,7 +389,7 @@ function create<
             }
         }
 
-        if (query) {
+        if (query && domainAPI.getMany) {
             try {
                 const response = await domainAPI.getMany(new Query({
                     fields: query.fields,

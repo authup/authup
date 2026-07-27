@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isObject } from '@authup/kit';
 import type {
     Component,
     PropType,
@@ -23,8 +22,8 @@ import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
 import { useAlertDialog } from '@vuecs/overlays';
-import type { EntityType } from '@authup/core-kit';
-import type { IEntityAPISlim } from '@authup/core-http-kit';
+import type { EntityType, EntityTypeMap } from '@authup/core-kit';
+import { pickEntityAPI } from '@authup/core-http-kit';
 import {
     TranslatorTranslationActionKey,
     TranslatorTranslationAppKey,
@@ -96,15 +95,12 @@ const AEntityDelete = defineComponent({
         const busy = ref(false);
 
         const submit = wrapFnWithBusyState(busy, async () => {
-            const domainAPI = (
-                apiClient as Record<string, any>
-            )[props.entityType] as IEntityAPISlim<any> | undefined;
+            const domainAPI = pickEntityAPI(
+                apiClient,
+                props.entityType as keyof EntityTypeMap,
+            );
 
-            if (!isObject(domainAPI)) {
-                return;
-            }
-
-            if (typeof domainAPI.delete !== 'function') {
+            if (!domainAPI?.delete) {
                 return;
             }
 

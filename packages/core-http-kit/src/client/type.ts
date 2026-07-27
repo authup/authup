@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { EntityTypeMap } from '@authup/core-kit';
+import type { ObjectLiteral } from '@authup/kit';
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
 import type { ClientOptionsInput, IClient as IBaseClient } from 'hapic';
 import type {
@@ -13,6 +15,7 @@ import type {
     IClientRoleAPI,
     IClientScopeAPI,
     IConsentAPI,
+    IEntityAPI,
     IEventAPI,
     IIdentityProviderAPI,
     IIdentityProviderRoleMappingAPI,
@@ -108,3 +111,22 @@ export interface IClient extends IBaseClient {
 
     getWellKnownOpenIDConfiguration() : Promise<OpenIDProviderMetadata>;
 }
+
+/**
+ * Client properties exposing an entity API, keyed by entity type.
+ * Derived — a sub-API whose property name matches an `EntityTypeMap`
+ * key is part of the registry automatically.
+ */
+export type ClientEntityAPIKey = keyof IClient & keyof EntityTypeMap;
+
+/**
+ * The surface an entity API resolved by entity-type string offers:
+ * per-verb optional, since not every entity API supports every CRUD
+ * verb (sessions/events are read(+delete)-only, junctions carry no
+ * update, ...). Callers guard per method.
+ */
+export type EntityAPIDispatch<T extends ObjectLiteral> = Partial<IEntityAPI<T, any, any>>;
+
+export type ClientEntityAPIRegistry = {
+    [K in ClientEntityAPIKey]: EntityAPIDispatch<EntityTypeMap[K]>
+};
