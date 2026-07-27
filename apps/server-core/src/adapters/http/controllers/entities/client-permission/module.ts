@@ -25,6 +25,11 @@ import type {
 } from '@authup/core-http-kit';
 import type { ClientPermission } from '@authup/core-kit';
 import type { IClientPermissionService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    clientPermissionSchema,
+    describeQuerySchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
@@ -53,7 +58,10 @@ export class ClientPermissionController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(clientPermissionSchema),
+            },
         };
     }
 
@@ -93,7 +101,7 @@ export class ClientPermissionController {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
-        return { data: entity, meta: {} };
+        return { data: entity, meta: { schema: describeQuerySchema(clientPermissionSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])

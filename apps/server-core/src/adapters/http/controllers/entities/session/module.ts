@@ -19,6 +19,11 @@ import { useRequestQuery } from '@routup/basic/query';
 import type { EntityCollectionResponse, EntityRecordWrappedResponse, SessionDeleteManyResponse } from '@authup/core-http-kit';
 import { isSelfToken } from '../../../../../utils/index.ts';
 import type { ISessionService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    describeQuerySchema,
+    sessionSchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext, useRequestSessionId } from '../../../request/index.ts';
 
@@ -47,7 +52,10 @@ export class SessionController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(sessionSchema),
+            },
         };
     }
 
@@ -63,7 +71,7 @@ export class SessionController {
 
         const entity = await this.service.getOne(resolvedId, actor);
 
-        return { data: entity, meta: {} };
+        return { data: entity, meta: { schema: describeQuerySchema(sessionSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DDelete('', [ForceLoggedInMiddleware])

@@ -30,7 +30,12 @@ import type {
     EntityRecordWrappedResponse,
 } from '@authup/core-http-kit';
 import type { IClientRepository, IClientService } from '../../../../../core/index.ts';
-import { OAuth2ScopeAttributesResolver } from '../../../../../core/index.ts';
+import {
+    OAuth2ScopeAttributesResolver,
+    RECORD_QUERY_PARAMETERS,
+    clientSchema, 
+    describeQuerySchema, 
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     applyRouteRealmIDToBody,
@@ -69,7 +74,10 @@ export class ClientController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(clientSchema),
+            },
         };
     }
 
@@ -111,7 +119,7 @@ export class ClientController {
                 }
             }
 
-            return { data: entity, meta: {} };
+            return { data: entity, meta: { schema: describeQuerySchema(clientSchema, RECORD_QUERY_PARAMETERS) } };
         }
 
         const actor = buildActorContext(event);
@@ -122,7 +130,7 @@ export class ClientController {
             getRequestRealmID(event),
         );
 
-        return { data: entity, meta: {} };
+        return { data: entity, meta: { schema: describeQuerySchema(clientSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DPost('', [ForceLoggedInMiddleware])

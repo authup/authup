@@ -6,15 +6,27 @@
  */
 
 import type { ObjectLiteral } from '@authup/kit';
+import type { SchemaDescription } from '@rapiq/core';
 import type { RequestBaseOptions, Response } from 'hapic';
 import type { EntityQueryInput } from '../helpers';
+
+/**
+ * Response-scoped extras of an entity-record response. `schema` is the
+ * endpoint's queryable vocabulary (issue #1649) — the static allow-list
+ * upper bound; relation capabilities are referenced by target schema
+ * name (`relations.schemas`) instead of being expanded inline, so
+ * nested vocabulary is looked up on that entity's own endpoints.
+ */
+export type EntityRecordMeta = Record<string, any> & {
+    schema?: SchemaDescription,
+};
 
 /**
  * The wire shape of every entity-record response: the record under
  * `data`, response-scoped extras under `meta` (mirroring
  * `EntityCollectionResponse`).
  */
-export type EntityRecordWrappedResponse<R, M extends Record<string, any> = Record<string, any>> = {
+export type EntityRecordWrappedResponse<R, M extends Record<string, any> = EntityRecordMeta> = {
     data: R,
     meta: M,
 };
@@ -30,7 +42,8 @@ export type EntityCollectionResponse<R> = {
     meta: {
         limit?: number,
         offset?: number,
-        total: number
+        total: number,
+        schema?: SchemaDescription,
     }
 };
 

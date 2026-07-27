@@ -32,6 +32,11 @@ import type {
     IPermissionCheckerService,
     IPermissionService,
 } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    describeQuerySchema,
+    permissionSchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     applyRouteRealmIDToBody,
@@ -68,7 +73,10 @@ export class PermissionController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(permissionSchema),
+            },
         };
     }
 
@@ -123,7 +131,7 @@ export class PermissionController {
             getRequestRealmID(event),
         );
 
-        return { data: entity, meta: {} };
+        return { data: entity, meta: { schema: describeQuerySchema(permissionSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])

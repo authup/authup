@@ -30,6 +30,11 @@ import type {
 } from '@authup/core-http-kit';
 import type { Realm } from '@authup/core-kit';
 import type { IRealmService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    describeQuerySchema,
+    realmSchema,
+} from '../../../../../core/index.ts';
 import type { KeyEntity } from '../../../../database/domains/index.ts';
 import { getJwkRouteHandler, getJwksRouteHandler } from '../../workflows/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -74,7 +79,10 @@ export class RealmController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(realmSchema),
+            },
         };
     }
 
@@ -95,7 +103,7 @@ export class RealmController {
     async get(@DPath('id') id: string): Promise<EntityRecordWrappedResponse<Realm>> {
         const entity = await this.service.getOne(id);
 
-        return { data: entity, meta: {} };
+        return { data: entity, meta: { schema: describeQuerySchema(realmSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DGet('/:id/.well-known/openid-configuration', [])

@@ -27,6 +27,11 @@ import type {
 } from '@authup/core-http-kit';
 import type { Scope } from '@authup/core-kit';
 import type { IScopeService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    describeQuerySchema,
+    scopeSchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
@@ -55,7 +60,10 @@ export class ScopeController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(scopeSchema),
+            },
         };
     }
 
@@ -83,7 +91,7 @@ export class ScopeController {
             actor,
         );
 
-        return { data: entity, meta: {} };
+        return { data: entity, meta: { schema: describeQuerySchema(scopeSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])

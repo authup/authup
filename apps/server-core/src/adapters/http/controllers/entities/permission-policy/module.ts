@@ -24,6 +24,11 @@ import type {
 } from '@authup/core-http-kit';
 import type { PermissionPolicy } from '@authup/core-kit';
 import type { IPermissionPolicyService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    describeQuerySchema,
+    permissionPolicySchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
@@ -52,7 +57,10 @@ export class PermissionPolicyController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(permissionPolicySchema),
+            },
         };
     }
 
@@ -78,7 +86,7 @@ export class PermissionPolicyController {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
-        return { data: entity, meta: {} };
+        return { data: entity, meta: { schema: describeQuerySchema(permissionPolicySchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])

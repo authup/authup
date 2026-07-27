@@ -62,8 +62,10 @@ import type {
 } from '../../../../../core/index.ts';
 import {
     OAuth2AuthorizationCodeRequestValidator,
+    RECORD_QUERY_PARAMETERS,
     createIdentityProviderOAuth2Authenticator,
     decodeQuery,
+    describeQuerySchema,
     identityProviderSchema,
     toIdentityPolicyData,
 } from '../../../../../core/index.ts';
@@ -154,7 +156,10 @@ export class IdentityProviderController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(identityProviderSchema),
+            },
         };
     }
 
@@ -184,7 +189,7 @@ export class IdentityProviderController {
             // do nothing
         }
 
-        return { data: entity, meta: {} };
+        return { data: entity, meta: { schema: describeQuerySchema(identityProviderSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])

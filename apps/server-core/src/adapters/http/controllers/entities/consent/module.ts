@@ -21,6 +21,11 @@ import type {
     EntityRecordWrappedResponse,
 } from '@authup/core-http-kit';
 import type { IConsentService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    consentSchema,
+    describeQuerySchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext, getRequestRealmID } from '../../../request/index.ts';
 
@@ -49,7 +54,10 @@ export class ConsentController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(consentSchema),
+            },
         };
     }
 
@@ -62,7 +70,7 @@ export class ConsentController {
 
         const entity = await this.service.getOne(id, actor, { realmId: getRequestRealmID(event) });
 
-        return { data: entity, meta: {} };
+        return { data: entity, meta: { schema: describeQuerySchema(consentSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])

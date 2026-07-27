@@ -25,6 +25,11 @@ import {
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
 import type { ITrustAnchorService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    describeQuerySchema,
+    trustAnchorSchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     applyRouteRealmIDToBody,
@@ -55,7 +60,10 @@ export class TrustAnchorController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(trustAnchorSchema),
+            },
         };
     }
 
@@ -68,7 +76,7 @@ export class TrustAnchorController {
 
         const entity = await this.service.getOne(id, actor, getRequestRealmID(event));
 
-        return { data: entity, meta: {} };
+        return { data: entity, meta: { schema: describeQuerySchema(trustAnchorSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DPost('', [ForceLoggedInMiddleware])

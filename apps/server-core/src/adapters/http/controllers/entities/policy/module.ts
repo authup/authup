@@ -32,6 +32,11 @@ import type {
     IPolicyCheckerService,
     IPolicyService,
 } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    describeQuerySchema,
+    policySchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     applyRouteRealmIDToBody,
@@ -68,7 +73,10 @@ export class PolicyController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(policySchema),
+            },
         };
     }
 
@@ -94,7 +102,7 @@ export class PolicyController {
             getRequestRealmID(event),
         );
 
-        return { data: entity, meta: {} };
+        return { data: entity, meta: { schema: describeQuerySchema(policySchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DPost('/:id/check', [ForceLoggedInMiddleware])

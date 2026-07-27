@@ -27,6 +27,11 @@ import type {
 } from '@authup/core-http-kit';
 import type { User } from '@authup/core-kit';
 import type { IUserService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    describeQuerySchema,
+    userSchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     applyRouteRealmIDToBody,
@@ -60,7 +65,10 @@ export class UserController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(userSchema),
+            },
         };
     }
 
@@ -87,7 +95,7 @@ export class UserController {
             getRequestRealmID(event),
         );
 
-        return { data: entity, meta: {} };
+        return { data: entity, meta: { schema: describeQuerySchema(userSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DPost('', [ForceLoggedInMiddleware])

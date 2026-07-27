@@ -29,6 +29,11 @@ import type {
 } from '@authup/core-http-kit';
 import { isSelfToken } from '../../../../../utils/index.ts';
 import type { IUserAuthenticatorService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    describeQuerySchema,
+    userAuthenticatorSchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext, useRequestIdentity } from '../../../request/index.ts';
 
@@ -76,7 +81,10 @@ export class UserAuthenticatorController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(userAuthenticatorSchema),
+            },
         };
     }
 
@@ -107,7 +115,7 @@ export class UserAuthenticatorController {
 
         const entity = await this.service.getOne(deviceId, actor, { userId });
 
-        return { data: entity, meta: {} };
+        return { data: entity, meta: { schema: describeQuerySchema(userAuthenticatorSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DPost('/:deviceId/confirm', [ForceLoggedInMiddleware])

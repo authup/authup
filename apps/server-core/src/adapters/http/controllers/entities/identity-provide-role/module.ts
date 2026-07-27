@@ -27,6 +27,11 @@ import type { IdentityProviderRoleMapping } from '@authup/core-kit';
 import type {
     IIdentityProviderRoleMappingService,
 } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    describeQuerySchema,
+    identityProviderRoleMappingSchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
@@ -57,7 +62,10 @@ export class IdentityProviderRoleMappingController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(identityProviderRoleMappingSchema),
+            },
         };
     }
 
@@ -69,7 +77,7 @@ export class IdentityProviderRoleMappingController {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
-        return { data: entity, meta: {} };
+        return { data: entity, meta: { schema: describeQuerySchema(identityProviderRoleMappingSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DPost('', [ForceLoggedInMiddleware])

@@ -25,6 +25,11 @@ import type {
 } from '@authup/core-http-kit';
 import type { UserAttribute } from '@authup/core-kit';
 import type { IUserAttributeService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    describeQuerySchema,
+    userAttributeSchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
@@ -53,7 +58,10 @@ export class UserAttributeController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(userAttributeSchema),
+            },
         };
     }
 
@@ -78,7 +86,7 @@ export class UserAttributeController {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
-        return { data: entity, meta: {} };
+        return { data: entity, meta: { schema: describeQuerySchema(userAttributeSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])

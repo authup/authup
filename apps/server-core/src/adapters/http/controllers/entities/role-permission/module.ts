@@ -25,6 +25,11 @@ import type {
 } from '@authup/core-http-kit';
 import type { RolePermission } from '@authup/core-kit';
 import type { IRolePermissionService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    describeQuerySchema,
+    rolePermissionSchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
@@ -53,7 +58,10 @@ export class RolePermissionController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(rolePermissionSchema),
+            },
         };
     }
 
@@ -93,7 +101,7 @@ export class RolePermissionController {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
-        return { data: entity, meta: {} };
+        return { data: entity, meta: { schema: describeQuerySchema(rolePermissionSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])

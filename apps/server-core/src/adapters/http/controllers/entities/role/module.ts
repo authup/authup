@@ -27,6 +27,11 @@ import type {
 } from '@authup/core-http-kit';
 import type { Role } from '@authup/core-kit';
 import type { IRoleService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    describeQuerySchema,
+    roleSchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
@@ -47,7 +52,7 @@ export class RoleController {
     async getMany(@DContext() event: IAppEvent): Promise<EntityCollectionResponse<Role>> {
         const actor = buildActorContext(event);
         const { data, meta } = await this.service.getMany(useRequestQuery(event), actor);
-        return { data, meta };
+        return { data, meta: { ...meta, schema: describeQuerySchema(roleSchema) } };
     }
 
     @DPost('', [ForceLoggedInMiddleware])
@@ -63,7 +68,7 @@ export class RoleController {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
-        return { data: entity, meta: {} };
+        return { data: entity, meta: { schema: describeQuerySchema(roleSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])

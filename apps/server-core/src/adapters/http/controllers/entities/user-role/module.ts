@@ -24,6 +24,11 @@ import type {
 } from '@authup/core-http-kit';
 import type { UserRole } from '@authup/core-kit';
 import type { IUserRoleService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    describeQuerySchema,
+    userRoleSchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
@@ -54,7 +59,10 @@ export class UserRoleController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(userRoleSchema),
+            },
         };
     }
 
@@ -79,7 +87,7 @@ export class UserRoleController {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
-        return { data: entity, meta: {} };
+        return { data: entity, meta: { schema: describeQuerySchema(userRoleSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
