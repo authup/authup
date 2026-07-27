@@ -116,4 +116,4 @@ const rehydrated = JSON.parse(JSON.stringify(AuthHeaderError.unsupportedType('X'
 isUnauthorizedError(rehydrated); // true — the serialized chain carries the ancestor marker
 ```
 
-Error payloads therefore include an `@instanceof` string list alongside `code` / `message` / `issues`. When writing a new guard, use `matchesInstanceof` from `@authup/errors` as the fast path — plain `hasInstanceof` only matches the symbol form and silently loses the inheritance match for rehydrated errors.
+Error payloads therefore include an `@instanceof` string list alongside `code` / `message` / `issues`. The mechanism lives in `@ebec/core` (≥ 1.2.0) and is re-exported by `@authup/errors`. When writing a new guard, use `matchesInstanceof` as the fast path — plain `hasInstanceof` only matches the symbol form and silently loses the inheritance match for rehydrated errors.

@@ -7,7 +7,7 @@
 
 import { isAuthupError } from '../check.ts';
 import { ErrorCode } from '../constants.ts';
-import { matchesInstanceof } from '../instanceof.ts';
+import { matchesInstanceof } from '@ebec/core';
 import { AUTH_HEADER_ERROR_INSTANCE, type AuthHeaderError } from './auth-header.ts';
 import { BAD_REQUEST_ERROR_INSTANCE, type BadRequestError } from './bad-request.ts';
 import { VALIDATION_ERROR_INSTANCE, type ValidationError } from './validation.ts';

@@ -9,8 +9,8 @@ import {
     isBaseError,
     isObject,
     isError as isRawError,
+    matchesInstanceof,
 } from '@ebec/core';
-import { matchesInstanceof } from './instanceof.ts';
 import type { AuthupError } from './module.ts';
 import { AUTHUP_ERROR_INSTANCE } from './module.ts';
 

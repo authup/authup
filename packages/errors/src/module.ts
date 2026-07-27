@@ -6,9 +6,13 @@
  */
 
 import type { AuthupErrorInput } from './types.ts';
-import { BaseError, INSTANCEOF_PROPERTY, markInstanceof } from '@ebec/core';
+import {
+    BaseError,
+    INSTANCEOF_PROPERTY,
+    markInstanceof,
+    serializeInstanceofChain,
+} from '@ebec/core';
 import type { Issue } from 'validup';
-import { serializeInstanceofChain } from './instanceof.ts';
 
 export const AUTHUP_ERROR_INSTANCE = Symbol.for('@authup/errors/AuthupError');
 
@@ -29,10 +33,9 @@ export class AuthupError extends BaseError {
     }
 
     /**
-     * The class-marker chain rides along as a string list so the ancestor
-     * information survives a JSON round-trip (symbols don't serialize) —
-     * duck-type guards match rehydrated subclass errors through it.
-     * Emitted last so a `data` key cannot displace the genuine chain.
+     * `super.toJSON()` already emits the serialized marker chain, but the
+     * `data` spread runs after it — re-stamped last so a `data` key cannot
+     * displace the genuine chain.
      */
     override toJSON() {
         return {
