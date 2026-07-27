@@ -7,7 +7,7 @@
 
 import type { EntityQueryInput } from '../../../helpers';
 import type { Key } from '@authup/core-kit';
-import type { EntityCollectionResponse, EntityRecordWrappedResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
 // Mirrors `KeyValidator` mounts in @authup/core-kit. Without material
 // (decryptionKey) the server GENERATES a key; with it, the material is
@@ -29,11 +29,11 @@ export type KeyDeleteOptions = {
 export interface IKeyAPI {
     getMany(data?: EntityQueryInput<Key>): Promise<EntityCollectionResponse<Key>>;
 
-    getOne(id: Key['id'], record?: EntityQueryInput<Key>): Promise<EntityRecordWrappedResponse<Key>>;
+    getOne(id: Key['id'], record?: EntityQueryInput<Key>): Promise<EntityRecordResponse<Key>>;
 
-    create(data: KeyCreatePayload): Promise<EntityRecordWrappedResponse<Key>>;
+    create(data: KeyCreatePayload): Promise<EntityRecordResponse<Key>>;
 
-    update(id: Key['id'], data: KeyUpdatePayload): Promise<EntityRecordWrappedResponse<Key>>;
+    update(id: Key['id'], data: KeyUpdatePayload): Promise<EntityRecordResponse<Key>>;
 
-    delete(id: Key['id'], options?: KeyDeleteOptions): Promise<EntityRecordWrappedResponse<Key>>;
+    delete(id: Key['id'], options?: KeyDeleteOptions): Promise<EntityRecordResponse<Key>>;
 }

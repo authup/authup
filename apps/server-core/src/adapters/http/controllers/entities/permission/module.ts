@@ -7,7 +7,7 @@
 
 import type {
     EntityCollectionResponse,
-    EntityRecordWrappedResponse,
+    EntityRecordResponse,
     PermissionAPICheckResponse,
     PermissionCreatePayload,
     PermissionSavePayload,
@@ -84,7 +84,7 @@ export class PermissionController {
     async add(
         @DBody() data: PermissionCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Permission>> {
+    ): Promise<EntityRecordResponse<Permission>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
@@ -123,7 +123,7 @@ export class PermissionController {
     async get(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Permission>> {
+    ): Promise<EntityRecordResponse<Permission>> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(
             id,
@@ -139,7 +139,7 @@ export class PermissionController {
         @DPath('id') id: string,
         @DBody() data: PermissionUpdatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Permission>> {
+    ): Promise<EntityRecordResponse<Permission>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.update(
@@ -158,7 +158,7 @@ export class PermissionController {
         @DPath('id') id: string,
         @DBody() data: PermissionSavePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Permission>> {
+    ): Promise<EntityRecordResponse<Permission>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const {
@@ -178,7 +178,7 @@ export class PermissionController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Permission>> {
+    ): Promise<EntityRecordResponse<Permission>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

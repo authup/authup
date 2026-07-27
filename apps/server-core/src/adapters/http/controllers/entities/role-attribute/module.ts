@@ -19,7 +19,7 @@ import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
-    EntityRecordWrappedResponse,
+    EntityRecordResponse,
     RoleAttributeCreatePayload,
     RoleAttributeUpdatePayload,
 } from '@authup/core-http-kit';
@@ -69,7 +69,7 @@ export class RoleAttributeController {
     async add(
         @DBody() data: RoleAttributeCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<RoleAttribute>> {
+    ): Promise<EntityRecordResponse<RoleAttribute>> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
@@ -82,7 +82,7 @@ export class RoleAttributeController {
     async get(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<RoleAttribute>> {
+    ): Promise<EntityRecordResponse<RoleAttribute>> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
@@ -94,7 +94,7 @@ export class RoleAttributeController {
         @DPath('id') id: string,
         @DBody() data: RoleAttributeUpdatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<RoleAttribute>> {
+    ): Promise<EntityRecordResponse<RoleAttribute>> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
 
@@ -107,7 +107,7 @@ export class RoleAttributeController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<RoleAttribute>> {
+    ): Promise<EntityRecordResponse<RoleAttribute>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

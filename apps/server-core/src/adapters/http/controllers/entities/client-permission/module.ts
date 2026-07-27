@@ -21,7 +21,7 @@ import type {
     ClientPermissionCreatePayload,
     ClientPermissionUpdatePayload,
     EntityCollectionResponse,
-    EntityRecordWrappedResponse,
+    EntityRecordResponse,
 } from '@authup/core-http-kit';
 import type { ClientPermission } from '@authup/core-kit';
 import type { IClientPermissionService } from '../../../../../core/index.ts';
@@ -69,7 +69,7 @@ export class ClientPermissionController {
     async add(
         @DBody() data: ClientPermissionCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<ClientPermission>> {
+    ): Promise<EntityRecordResponse<ClientPermission>> {
         const actor = buildActorContext(event);
 
         const entity = await this.service.create(data, actor);
@@ -84,7 +84,7 @@ export class ClientPermissionController {
         @DPath('id') id: string,
         @DBody() data: ClientPermissionUpdatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<ClientPermission>> {
+    ): Promise<EntityRecordResponse<ClientPermission>> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
 
@@ -97,7 +97,7 @@ export class ClientPermissionController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<ClientPermission>> {
+    ): Promise<EntityRecordResponse<ClientPermission>> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
@@ -108,7 +108,7 @@ export class ClientPermissionController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<ClientPermission>> {
+    ): Promise<EntityRecordResponse<ClientPermission>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(
             id,

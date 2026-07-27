@@ -9,7 +9,7 @@ import type { EntityQueryInput } from '../../../helpers';
 import { buildQueryString } from '../../../helpers';
 import type { PermissionPolicy } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
-import type { EntityCollectionResponse, EntityRecordWrappedResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     IPermissionPolicyAPI,
     PermissionPolicyCreatePayload,
@@ -21,19 +21,19 @@ export class PermissionPolicyAPI extends BaseAPI implements IPermissionPolicyAPI
         return response.data;
     }
 
-    async getOne(id: PermissionPolicy['id'], record?: EntityQueryInput<PermissionPolicy>) : Promise<EntityRecordWrappedResponse<PermissionPolicy>> {
+    async getOne(id: PermissionPolicy['id'], record?: EntityQueryInput<PermissionPolicy>) : Promise<EntityRecordResponse<PermissionPolicy>> {
         const response = await this.client.get(`permission-policies/${id}${buildQueryString(record)}`);
 
         return response.data;
     }
 
-    async delete(id: PermissionPolicy['id']) : Promise<EntityRecordWrappedResponse<PermissionPolicy>> {
+    async delete(id: PermissionPolicy['id']) : Promise<EntityRecordResponse<PermissionPolicy>> {
         const response = await this.client.delete(`permission-policies/${id}`);
 
         return response.data;
     }
 
-    async create(data: PermissionPolicyCreatePayload) : Promise<EntityRecordWrappedResponse<PermissionPolicy>> {
+    async create(data: PermissionPolicyCreatePayload) : Promise<EntityRecordResponse<PermissionPolicy>> {
         const response = await this.client.post('permission-policies', data);
 
         return response.data;

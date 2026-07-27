@@ -19,7 +19,7 @@ import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
-    EntityRecordWrappedResponse,
+    EntityRecordResponse,
     PermissionPolicyCreatePayload,
 } from '@authup/core-http-kit';
 import type { PermissionPolicy } from '@authup/core-kit';
@@ -68,7 +68,7 @@ export class PermissionPolicyController {
     async add(
         @DBody() data: PermissionPolicyCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<PermissionPolicy>> {
+    ): Promise<EntityRecordResponse<PermissionPolicy>> {
         const actor = buildActorContext(event);
 
         const entity = await this.service.create(data, actor);
@@ -82,7 +82,7 @@ export class PermissionPolicyController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<PermissionPolicy>> {
+    ): Promise<EntityRecordResponse<PermissionPolicy>> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
@@ -93,7 +93,7 @@ export class PermissionPolicyController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<PermissionPolicy>> {
+    ): Promise<EntityRecordResponse<PermissionPolicy>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

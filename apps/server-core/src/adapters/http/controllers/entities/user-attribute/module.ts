@@ -19,7 +19,7 @@ import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
-    EntityRecordWrappedResponse,
+    EntityRecordResponse,
     UserAttributeCreatePayload,
     UserAttributeUpdatePayload,
 } from '@authup/core-http-kit';
@@ -69,7 +69,7 @@ export class UserAttributeController {
     async add(
         @DBody() data: UserAttributeCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<UserAttribute>> {
+    ): Promise<EntityRecordResponse<UserAttribute>> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
@@ -82,7 +82,7 @@ export class UserAttributeController {
     async get(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<UserAttribute>> {
+    ): Promise<EntityRecordResponse<UserAttribute>> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
@@ -94,7 +94,7 @@ export class UserAttributeController {
         @DPath('id') id: string,
         @DBody() data: UserAttributeUpdatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<UserAttribute>> {
+    ): Promise<EntityRecordResponse<UserAttribute>> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
 
@@ -107,7 +107,7 @@ export class UserAttributeController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<UserAttribute>> {
+    ): Promise<EntityRecordResponse<UserAttribute>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

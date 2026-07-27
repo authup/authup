@@ -20,7 +20,7 @@ import { useRequestQuery } from '@routup/basic/query';
 import type {
     ClientScopeCreatePayload,
     EntityCollectionResponse,
-    EntityRecordWrappedResponse,
+    EntityRecordResponse,
 } from '@authup/core-http-kit';
 import type { ClientScope } from '@authup/core-kit';
 import type { IClientScopeService } from '../../../../../core/index.ts';
@@ -68,7 +68,7 @@ export class ClientScopeController {
     async add(
         @DBody() data: ClientScopeCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<ClientScope>> {
+    ): Promise<EntityRecordResponse<ClientScope>> {
         const actor = buildActorContext(event);
 
         const entity = await this.service.create(data, actor);
@@ -82,7 +82,7 @@ export class ClientScopeController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<ClientScope>> {
+    ): Promise<EntityRecordResponse<ClientScope>> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
@@ -93,7 +93,7 @@ export class ClientScopeController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<ClientScope>> {
+    ): Promise<EntityRecordResponse<ClientScope>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

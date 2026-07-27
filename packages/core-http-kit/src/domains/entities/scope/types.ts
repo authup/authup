@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EntityRecordWrappedResponse, IEntityAPI } from '../../types-base';
+import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
 
 import type { Scope } from '@authup/core-kit';
 
@@ -16,5 +16,5 @@ export type ScopeUpdatePayload = Partial<ScopeCreatePayload>;
 export type ScopeSavePayload = ScopeCreatePayload;
 
 export interface IScopeAPI extends IEntityAPI<Scope, ScopeCreatePayload, ScopeUpdatePayload> {
-    createOrUpdate(idOrName: string, data: ScopeSavePayload) : Promise<EntityRecordWrappedResponse<Scope>>;
+    createOrUpdate(idOrName: string, data: ScopeSavePayload) : Promise<EntityRecordResponse<Scope>>;
 }

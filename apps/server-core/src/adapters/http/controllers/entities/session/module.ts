@@ -16,7 +16,7 @@ import {
 import type { Session } from '@authup/core-kit';
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import type { EntityCollectionResponse, EntityRecordWrappedResponse, SessionDeleteManyResponse } from '@authup/core-http-kit';
+import type { EntityCollectionResponse, EntityRecordResponse, SessionDeleteManyResponse } from '@authup/core-http-kit';
 import { isSelfToken } from '../../../../../utils/index.ts';
 import type { ISessionService } from '../../../../../core/index.ts';
 import {
@@ -63,7 +63,7 @@ export class SessionController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Session>> {
+    ): Promise<EntityRecordResponse<Session>> {
         const actor = buildActorContext(event);
 
         // `@me` / `@self` resolve to the caller's current session.
@@ -96,7 +96,7 @@ export class SessionController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Session>> {
+    ): Promise<EntityRecordResponse<Session>> {
         const actor = buildActorContext(event);
 
         const resolvedId = isSelfToken(id) ? (useRequestSessionId(event) ?? id) : id;

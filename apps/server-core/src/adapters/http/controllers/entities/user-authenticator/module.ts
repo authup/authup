@@ -22,7 +22,7 @@ import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
-    EntityRecordWrappedResponse,
+    EntityRecordResponse,
     UserAuthenticatorConfirmPayload,
     UserAuthenticatorCreatePayload,
     UserAuthenticatorEnrollResponse,
@@ -109,7 +109,7 @@ export class UserAuthenticatorController {
         @DPath('id') id: string,
         @DPath('deviceId') deviceId: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<UserAuthenticator>> {
+    ): Promise<EntityRecordResponse<UserAuthenticator>> {
         const actor = buildActorContext(event);
         const userId = this.resolveUserId(id, event);
 
@@ -124,7 +124,7 @@ export class UserAuthenticatorController {
         @DPath('deviceId') deviceId: string,
         @DBody() data: UserAuthenticatorConfirmPayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<UserAuthenticator>> {
+    ): Promise<EntityRecordResponse<UserAuthenticator>> {
         const actor = buildActorContext(event);
         const userId = this.resolveUserId(id, event);
 
@@ -142,7 +142,7 @@ export class UserAuthenticatorController {
         @DPath('id') id: string,
         @DPath('deviceId') deviceId: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<UserAuthenticator>> {
+    ): Promise<EntityRecordResponse<UserAuthenticator>> {
         const actor = buildActorContext(event);
         const userId = this.resolveUserId(id, event);
 

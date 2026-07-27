@@ -17,7 +17,7 @@ import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
-    EntityRecordWrappedResponse,
+    EntityRecordResponse,
 } from '@authup/core-http-kit';
 import type { IEventService } from '../../../../../core/index.ts';
 import {
@@ -70,7 +70,7 @@ export class EventController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Event>> {
+    ): Promise<EntityRecordResponse<Event>> {
         const actor = buildActorContext(event);
 
         const entity = await this.service.getOne(id, actor, { realmId: getRequestRealmID(event) });

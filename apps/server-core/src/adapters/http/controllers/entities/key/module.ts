@@ -19,7 +19,7 @@ import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
-    EntityRecordWrappedResponse,
+    EntityRecordResponse,
     KeyCreatePayload,
     KeyUpdatePayload,
 } from '@authup/core-http-kit';
@@ -71,7 +71,7 @@ export class KeyController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Key>> {
+    ): Promise<EntityRecordResponse<Key>> {
         const actor = buildActorContext(event);
 
         const entity = await this.service.getOne(id, actor, getRequestRealmID(event));
@@ -83,7 +83,7 @@ export class KeyController {
     async add(
         @DBody() data: KeyCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Key>> {
+    ): Promise<EntityRecordResponse<Key>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
@@ -98,7 +98,7 @@ export class KeyController {
         @DPath('id') id: string,
         @DBody() data: KeyUpdatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Key>> {
+    ): Promise<EntityRecordResponse<Key>> {
         const actor = buildActorContext(event);
 
         const entity = await this.service.update(id, data, actor, getRequestRealmID(event));
@@ -110,7 +110,7 @@ export class KeyController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Key>> {
+    ): Promise<EntityRecordResponse<Key>> {
         const actor = buildActorContext(event);
 
         const query = useRequestQuery(event);

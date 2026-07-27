@@ -43,7 +43,7 @@ import { readRequestBody } from '@routup/basic/body';
 import { OAuth2ErrorCode, OAuth2RequestError } from '@authup/specs';
 import type {
     EntityCollectionResponse,
-    EntityRecordWrappedResponse,
+    EntityRecordResponse,
     IdentityProviderCreatePayload,
     IdentityProviderSavePayload,
     IdentityProviderUpdatePayload,
@@ -167,7 +167,7 @@ export class IdentityProviderController {
     async getProvider(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<IdentityProvider>> {
+    ): Promise<EntityRecordResponse<IdentityProvider>> {
         const paramId = useRequestParamID(event, { isUUID: false });
 
         const entity = await this.repository.findOneByIdOrName(
@@ -197,7 +197,7 @@ export class IdentityProviderController {
         @DPath('id') id: string,
         @DBody() user: IdentityProviderUpdatePayload,
         @DContext() event: IAppEvent,
-    ) : Promise<EntityRecordWrappedResponse<IdentityProvider>> {
+    ) : Promise<EntityRecordResponse<IdentityProvider>> {
         return this.write(event, { updateOnly: true });
     }
 
@@ -206,7 +206,7 @@ export class IdentityProviderController {
         @DPath('id') id: string,
         @DBody() user: IdentityProviderSavePayload,
         @DContext() event: IAppEvent,
-    ) : Promise<EntityRecordWrappedResponse<IdentityProvider>> {
+    ) : Promise<EntityRecordResponse<IdentityProvider>> {
         return this.write(event);
     }
 
@@ -214,7 +214,7 @@ export class IdentityProviderController {
     async dropProvider(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ) : Promise<EntityRecordWrappedResponse<IdentityProvider>> {
+    ) : Promise<EntityRecordResponse<IdentityProvider>> {
         const paramId = useRequestParamID(event);
 
         const permissionEvaluator = useRequestPermissionEvaluator(event);
@@ -246,7 +246,7 @@ export class IdentityProviderController {
     async addProvider(
         @DBody() user: IdentityProviderCreatePayload,
         @DContext() event: IAppEvent,
-    ) : Promise<EntityRecordWrappedResponse<IdentityProvider>> {
+    ) : Promise<EntityRecordResponse<IdentityProvider>> {
         return this.write(event);
     }
 
@@ -412,7 +412,7 @@ export class IdentityProviderController {
 
     private async write(event: IAppEvent, options: {
         updateOnly?: boolean
-    } = {}): Promise<EntityRecordWrappedResponse<IdentityProvider>> {
+    } = {}): Promise<EntityRecordResponse<IdentityProvider>> {
         let group: string;
         const id = getRequestParamID(event, { isUUID: false });
         const body = await readRequestBody(event);

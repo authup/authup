@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EntityRecordWrappedResponse, IEntityAPI } from '../../types-base';
+import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
 
 import type { Role } from '@authup/core-kit';
 
@@ -16,5 +16,5 @@ export type RoleUpdatePayload = Partial<RoleCreatePayload>;
 export type RoleSavePayload = RoleCreatePayload;
 
 export interface IRoleAPI extends IEntityAPI<Role, RoleCreatePayload, RoleUpdatePayload> {
-    createOrUpdate(idOrName: string, data: RoleSavePayload) : Promise<EntityRecordWrappedResponse<Role>>;
+    createOrUpdate(idOrName: string, data: RoleSavePayload) : Promise<EntityRecordResponse<Role>>;
 }

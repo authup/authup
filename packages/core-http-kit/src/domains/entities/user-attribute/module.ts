@@ -10,7 +10,7 @@ import { buildQueryString } from '../../../helpers';
 import type { UserAttribute } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { EntityCollectionResponse, EntityRecordWrappedResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     IUserAttributeAPI,
     UserAttributeCreatePayload,
@@ -24,25 +24,25 @@ export class UserAttributeAPI extends BaseAPI implements IUserAttributeAPI {
         return response.data;
     }
 
-    async getOne(roleId: UserAttribute['id'], record?: EntityQueryInput<UserAttribute>): Promise<EntityRecordWrappedResponse<UserAttribute>> {
+    async getOne(roleId: UserAttribute['id'], record?: EntityQueryInput<UserAttribute>): Promise<EntityRecordResponse<UserAttribute>> {
         const response = await this.client.get(`user-attributes/${roleId}${buildQueryString(record)}`);
 
         return response.data;
     }
 
-    async delete(roleId: UserAttribute['id']): Promise<EntityRecordWrappedResponse<UserAttribute>> {
+    async delete(roleId: UserAttribute['id']): Promise<EntityRecordResponse<UserAttribute>> {
         const response = await this.client.delete(`user-attributes/${roleId}`);
 
         return response.data;
     }
 
-    async create(data: UserAttributeCreatePayload): Promise<EntityRecordWrappedResponse<UserAttribute>> {
+    async create(data: UserAttributeCreatePayload): Promise<EntityRecordResponse<UserAttribute>> {
         const response = await this.client.post('user-attributes', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(id: UserAttribute['id'], data: UserAttributeUpdatePayload): Promise<EntityRecordWrappedResponse<UserAttribute>> {
+    async update(id: UserAttribute['id'], data: UserAttributeUpdatePayload): Promise<EntityRecordResponse<UserAttribute>> {
         const response = await this.client.post(`user-attributes/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;

@@ -10,7 +10,7 @@ import { buildQueryString } from '../../../helpers';
 import type { User } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { EntityCollectionResponse, EntityRecordWrappedResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     ActivateResponse,
     IUserAPI,
@@ -38,7 +38,7 @@ export class UserAPI extends BaseAPI implements IUserAPI {
     async getOne(
         id: User['id'],
         options?: EntityQueryInput<User>,
-    ): Promise<EntityRecordWrappedResponse<User>> {
+    ): Promise<EntityRecordResponse<User>> {
         const response = await this.client
             .get(`users/${id}${buildQueryString(options)}`);
 
@@ -47,7 +47,7 @@ export class UserAPI extends BaseAPI implements IUserAPI {
 
     async delete(
         id: User['id'],
-    ): Promise<EntityRecordWrappedResponse<User>> {
+    ): Promise<EntityRecordResponse<User>> {
         const response = await this.client
             .delete(`users/${id}`);
 
@@ -56,7 +56,7 @@ export class UserAPI extends BaseAPI implements IUserAPI {
 
     async create(
         data: UserCreatePayload,
-    ): Promise<EntityRecordWrappedResponse<User>> {
+    ): Promise<EntityRecordResponse<User>> {
         const response = await this.client
             .post('users', nullifyEmptyObjectProperties(data));
 
@@ -66,7 +66,7 @@ export class UserAPI extends BaseAPI implements IUserAPI {
     async update(
         id: User['id'],
         data: UserUpdatePayload,
-    ): Promise<EntityRecordWrappedResponse<User>> {
+    ): Promise<EntityRecordResponse<User>> {
         const response = await this.client.post(`users/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -75,7 +75,7 @@ export class UserAPI extends BaseAPI implements IUserAPI {
     async createOrUpdate(
         idOrName: string,
         data: UserSavePayload,
-    ): Promise<EntityRecordWrappedResponse<User>> {
+    ): Promise<EntityRecordResponse<User>> {
         const response = await this.client.put(`users/${idOrName}`, nullifyEmptyObjectProperties(data));
 
         return response.data;

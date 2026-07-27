@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EntityRecordWrappedResponse, IEntityAPI } from '../../types-base';
+import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
 
 import type { Client } from '@authup/core-kit';
 
@@ -31,5 +31,5 @@ export type ClientUpdatePayload = Partial<ClientCreatePayload>;
 export type ClientSavePayload = ClientCreatePayload;
 
 export interface IClientAPI extends IEntityAPI<Client, ClientCreatePayload, ClientUpdatePayload> {
-    createOrUpdate(idOrName: string, data: ClientSavePayload) : Promise<EntityRecordWrappedResponse<Client>>;
+    createOrUpdate(idOrName: string, data: ClientSavePayload) : Promise<EntityRecordResponse<Client>>;
 }

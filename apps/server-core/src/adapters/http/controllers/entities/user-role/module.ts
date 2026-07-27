@@ -19,7 +19,7 @@ import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
-    EntityRecordWrappedResponse,
+    EntityRecordResponse,
     UserRoleCreatePayload,
 } from '@authup/core-http-kit';
 import type { UserRole } from '@authup/core-kit';
@@ -70,7 +70,7 @@ export class UserRoleController {
     async add(
         @DBody() data: UserRoleCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<UserRole>> {
+    ): Promise<EntityRecordResponse<UserRole>> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
@@ -83,7 +83,7 @@ export class UserRoleController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<UserRole>> {
+    ): Promise<EntityRecordResponse<UserRole>> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
@@ -94,7 +94,7 @@ export class UserRoleController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<UserRole>> {
+    ): Promise<EntityRecordResponse<UserRole>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

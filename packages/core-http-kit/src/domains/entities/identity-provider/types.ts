@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EntityRecordWrappedResponse, IEntityAPI } from '../../types-base';
+import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
 
 import type { IdentityProvider } from '@authup/core-kit';
 
@@ -25,5 +25,5 @@ export type IdentityProviderSavePayload = IdentityProviderCreatePayload;
 
 export interface IIdentityProviderAPI extends IEntityAPI<IdentityProvider, IdentityProviderCreatePayload, IdentityProviderUpdatePayload> {
     getAuthorizeUri(id: IdentityProvider['id']) : string;
-    createOrUpdate(idOrName: string, data: IdentityProviderSavePayload) : Promise<EntityRecordWrappedResponse<IdentityProvider>>;
+    createOrUpdate(idOrName: string, data: IdentityProviderSavePayload) : Promise<EntityRecordResponse<IdentityProvider>>;
 }

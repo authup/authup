@@ -20,7 +20,7 @@ import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
-    EntityRecordWrappedResponse,
+    EntityRecordResponse,
     ScopeCreatePayload,
     ScopeSavePayload,
     ScopeUpdatePayload,
@@ -71,7 +71,7 @@ export class ScopeController {
     async add(
         @DBody() data: ScopeCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Scope>> {
+    ): Promise<EntityRecordResponse<Scope>> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
@@ -84,7 +84,7 @@ export class ScopeController {
     async get(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Scope>> {
+    ): Promise<EntityRecordResponse<Scope>> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(
             id,
@@ -99,7 +99,7 @@ export class ScopeController {
         @DPath('id') id: string,
         @DBody() data: ScopeUpdatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Scope>> {
+    ): Promise<EntityRecordResponse<Scope>> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(
             id,
@@ -117,7 +117,7 @@ export class ScopeController {
         @DPath('id') id: string,
         @DBody() data: ScopeSavePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Scope>> {
+    ): Promise<EntityRecordResponse<Scope>> {
         const actor = buildActorContext(event);
         const {
             entity,
@@ -136,7 +136,7 @@ export class ScopeController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Scope>> {
+    ): Promise<EntityRecordResponse<Scope>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

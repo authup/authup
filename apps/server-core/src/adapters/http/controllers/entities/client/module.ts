@@ -27,7 +27,7 @@ import type {
     ClientSavePayload,
     ClientUpdatePayload,
     EntityCollectionResponse,
-    EntityRecordWrappedResponse,
+    EntityRecordResponse,
 } from '@authup/core-http-kit';
 import type { IClientRepository, IClientService } from '../../../../../core/index.ts';
 import {
@@ -85,7 +85,7 @@ export class ClientController {
     async get(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Client>> {
+    ): Promise<EntityRecordResponse<Client>> {
         const identity = useRequestIdentity(event);
 
         let isMe = false;
@@ -137,7 +137,7 @@ export class ClientController {
     async add(
         @DBody() data: ClientCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Client>> {
+    ): Promise<EntityRecordResponse<Client>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
@@ -152,7 +152,7 @@ export class ClientController {
         @DPath('id') id: string,
         @DBody() data: ClientUpdatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Client>> {
+    ): Promise<EntityRecordResponse<Client>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
@@ -167,7 +167,7 @@ export class ClientController {
         @DPath('id') id: string,
         @DBody() data: ClientSavePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Client>> {
+    ): Promise<EntityRecordResponse<Client>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const {
@@ -187,7 +187,7 @@ export class ClientController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Client>> {
+    ): Promise<EntityRecordResponse<Client>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

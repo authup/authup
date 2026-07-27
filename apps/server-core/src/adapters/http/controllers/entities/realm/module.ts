@@ -23,7 +23,7 @@ import { useRequestQuery } from '@routup/basic/query';
 import type { Repository } from 'typeorm';
 import type {
     EntityCollectionResponse,
-    EntityRecordWrappedResponse,
+    EntityRecordResponse,
     RealmCreatePayload,
     RealmSavePayload,
     RealmUpdatePayload,
@@ -90,7 +90,7 @@ export class RealmController {
     async add(
         @DBody() data: RealmCreatePayload,
         @DContext() event: IAppEvent,
-    ) : Promise<EntityRecordWrappedResponse<Realm>> {
+    ) : Promise<EntityRecordResponse<Realm>> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
@@ -100,7 +100,7 @@ export class RealmController {
     }
 
     @DGet('/:id', [])
-    async get(@DPath('id') id: string): Promise<EntityRecordWrappedResponse<Realm>> {
+    async get(@DPath('id') id: string): Promise<EntityRecordResponse<Realm>> {
         const entity = await this.service.getOne(id);
 
         return { data: entity, meta: { schema: describeQuerySchema(realmSchema, RECORD_QUERY_PARAMETERS) } };
@@ -218,7 +218,7 @@ export class RealmController {
         @DPath('id') id: string,
         @DBody() data: RealmUpdatePayload,
         @DContext() event: IAppEvent,
-    ) : Promise<EntityRecordWrappedResponse<Realm>> {
+    ) : Promise<EntityRecordResponse<Realm>> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(
             id,
@@ -236,7 +236,7 @@ export class RealmController {
         @DPath('id') id: string,
         @DBody() data: RealmSavePayload,
         @DContext() event: IAppEvent,
-    ) : Promise<EntityRecordWrappedResponse<Realm>> {
+    ) : Promise<EntityRecordResponse<Realm>> {
         const actor = buildActorContext(event);
         const {
             entity,
@@ -255,7 +255,7 @@ export class RealmController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ) : Promise<EntityRecordWrappedResponse<Realm>> {
+    ) : Promise<EntityRecordResponse<Realm>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

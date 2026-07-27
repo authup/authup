@@ -10,7 +10,7 @@ import { buildQueryString } from '../../../helpers';
 import type { Policy } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { EntityCollectionResponse, EntityRecordWrappedResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     BuiltInPolicyCreatePayload,
     BuiltInPolicyResponse,
@@ -32,7 +32,7 @@ export class PolicyAPI extends BaseAPI implements IPolicyAPI {
 
     async delete<
         OUTPUT extends PolicyResponse = PolicyResponse,
-    >(id: Policy['id']): Promise<EntityRecordWrappedResponse<OUTPUT>> {
+    >(id: Policy['id']): Promise<EntityRecordResponse<OUTPUT>> {
         const response = await this.client.delete(`policies/${id}`);
 
         return response.data;
@@ -40,7 +40,7 @@ export class PolicyAPI extends BaseAPI implements IPolicyAPI {
 
     async getOne<
         OUTPUT extends PolicyResponse = PolicyResponse,
-    >(id: Policy['id'], record?: EntityQueryInput<Policy>) : Promise<EntityRecordWrappedResponse<OUTPUT>> {
+    >(id: Policy['id'], record?: EntityQueryInput<Policy>) : Promise<EntityRecordResponse<OUTPUT>> {
         const response = await this.client.get(`policies/${id}${buildQueryString(record)}`);
 
         return response.data;
@@ -48,7 +48,7 @@ export class PolicyAPI extends BaseAPI implements IPolicyAPI {
 
     async getOneExpanded<
         OUTPUT extends PolicyResponse = PolicyResponse,
-    >(id: Policy['id'], record?: EntityQueryInput<Policy>) : Promise<EntityRecordWrappedResponse<OUTPUT>> {
+    >(id: Policy['id'], record?: EntityQueryInput<Policy>) : Promise<EntityRecordResponse<OUTPUT>> {
         const response = await this.client.get(`policies/${id}/expanded${buildQueryString(record)}`);
 
         return response.data;
@@ -57,7 +57,7 @@ export class PolicyAPI extends BaseAPI implements IPolicyAPI {
     async create<
         INPUT extends PolicyCreatePayload = PolicyCreatePayload,
         OUTPUT extends PolicyResponse = PolicyResponse,
-    >(data: INPUT): Promise<EntityRecordWrappedResponse<OUTPUT>> {
+    >(data: INPUT): Promise<EntityRecordResponse<OUTPUT>> {
         const response = await this.client.post('policies', nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -65,14 +65,14 @@ export class PolicyAPI extends BaseAPI implements IPolicyAPI {
 
     async createBuiltIn(
         data: BuiltInPolicyCreatePayload,
-    ): Promise<EntityRecordWrappedResponse<BuiltInPolicyResponse>> {
+    ): Promise<EntityRecordResponse<BuiltInPolicyResponse>> {
         return this.create(data);
     }
 
     async update<
         INPUT extends PolicyUpdatePayload = PolicyUpdatePayload,
         OUTPUT extends PolicyResponse = PolicyResponse,
-    >(id: Policy['id'], data: INPUT): Promise<EntityRecordWrappedResponse<OUTPUT>> {
+    >(id: Policy['id'], data: INPUT): Promise<EntityRecordResponse<OUTPUT>> {
         const response = await this.client.post(`policies/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -81,7 +81,7 @@ export class PolicyAPI extends BaseAPI implements IPolicyAPI {
     async updateBuiltIn(
         id: Policy['id'],
         data: BuiltInPolicyUpdatePayload,
-    ): Promise<EntityRecordWrappedResponse<BuiltInPolicyResponse>> {
+    ): Promise<EntityRecordResponse<BuiltInPolicyResponse>> {
         return this.update(id, data);
     }
 
@@ -91,7 +91,7 @@ export class PolicyAPI extends BaseAPI implements IPolicyAPI {
     >(
         idOrName: string,
         data: INPUT,
-    ): Promise<EntityRecordWrappedResponse<OUTPUT>> {
+    ): Promise<EntityRecordResponse<OUTPUT>> {
         const response = await this.client.put(`policies/${idOrName}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -100,7 +100,7 @@ export class PolicyAPI extends BaseAPI implements IPolicyAPI {
     async createOrUpdateBuiltin(
         idOrName: string,
         data: BuiltInPolicyCreatePayload,
-    ): Promise<EntityRecordWrappedResponse<BuiltInPolicyResponse>> {
+    ): Promise<EntityRecordResponse<BuiltInPolicyResponse>> {
         return this.createOrUpdate(idOrName, data);
     }
 

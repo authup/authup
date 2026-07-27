@@ -26,16 +26,10 @@ export type EntityRecordMeta = Record<string, any> & {
  * `data`, response-scoped extras under `meta` (mirroring
  * `EntityCollectionResponse`).
  */
-export type EntityRecordWrappedResponse<R, M extends Record<string, any> = EntityRecordMeta> = {
+export type EntityRecordResponse<R, M extends Record<string, any> = EntityRecordMeta> = {
     data: R,
     meta: M,
 };
-
-/**
- * @deprecated Record responses carry the `{ data, meta }` envelope —
- * use {@link EntityRecordWrappedResponse} directly.
- */
-export type EntityRecordResponse<R> = EntityRecordWrappedResponse<R>;
 
 export type EntityCollectionResponse<R> = {
     data: R[],
@@ -60,9 +54,9 @@ export interface IEntityAPISlim<
     TCreate = Partial<T>,
 > {
     getMany(record?: EntityQueryInput<T>) : Promise<EntityCollectionResponse<T>>;
-    getOne(id: DomainEntityID<T>, record?: EntityQueryInput<T>) : Promise<EntityRecordWrappedResponse<T>>;
-    delete(id: DomainEntityID<T>) : Promise<EntityRecordWrappedResponse<T>>;
-    create(data: TCreate) : Promise<EntityRecordWrappedResponse<T>>;
+    getOne(id: DomainEntityID<T>, record?: EntityQueryInput<T>) : Promise<EntityRecordResponse<T>>;
+    delete(id: DomainEntityID<T>) : Promise<EntityRecordResponse<T>>;
+    create(data: TCreate) : Promise<EntityRecordResponse<T>>;
 }
 
 export interface IEntityAPI<
@@ -70,7 +64,7 @@ export interface IEntityAPI<
     TCreate = Partial<T>,
     TUpdate = Partial<T>,
 > extends IEntityAPISlim<T, TCreate> {
-    update(id: DomainEntityID<T>, data: TUpdate) : Promise<EntityRecordWrappedResponse<T>>;
+    update(id: DomainEntityID<T>, data: TUpdate) : Promise<EntityRecordResponse<T>>;
 }
 
 /**

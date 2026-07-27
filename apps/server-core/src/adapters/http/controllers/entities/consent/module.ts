@@ -18,7 +18,7 @@ import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
-    EntityRecordWrappedResponse,
+    EntityRecordResponse,
 } from '@authup/core-http-kit';
 import type { IConsentService } from '../../../../../core/index.ts';
 import {
@@ -65,7 +65,7 @@ export class ConsentController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Consent>> {
+    ): Promise<EntityRecordResponse<Consent>> {
         const actor = buildActorContext(event);
 
         const entity = await this.service.getOne(id, actor, { realmId: getRequestRealmID(event) });
@@ -77,7 +77,7 @@ export class ConsentController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<Consent>> {
+    ): Promise<EntityRecordResponse<Consent>> {
         const actor = buildActorContext(event);
 
         const entity = await this.service.delete(id, actor, { realmId: getRequestRealmID(event) });

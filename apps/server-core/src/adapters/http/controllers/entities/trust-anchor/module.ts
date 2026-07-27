@@ -7,7 +7,7 @@
 
 import type {
     EntityCollectionResponse,
-    EntityRecordWrappedResponse,
+    EntityRecordResponse,
     TrustAnchorCreatePayload,
     TrustAnchorUpdatePayload,
 } from '@authup/core-http-kit';
@@ -71,7 +71,7 @@ export class TrustAnchorController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<TrustAnchor>> {
+    ): Promise<EntityRecordResponse<TrustAnchor>> {
         const actor = buildActorContext(event);
 
         const entity = await this.service.getOne(id, actor, getRequestRealmID(event));
@@ -83,7 +83,7 @@ export class TrustAnchorController {
     async add(
         @DBody() data: TrustAnchorCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<TrustAnchor>> {
+    ): Promise<EntityRecordResponse<TrustAnchor>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
@@ -98,7 +98,7 @@ export class TrustAnchorController {
         @DPath('id') id: string,
         @DBody() data: TrustAnchorUpdatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<TrustAnchor>> {
+    ): Promise<EntityRecordResponse<TrustAnchor>> {
         const actor = buildActorContext(event);
 
         const entity = await this.service.update(id, data, actor, getRequestRealmID(event));
@@ -110,7 +110,7 @@ export class TrustAnchorController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<TrustAnchor>> {
+    ): Promise<EntityRecordResponse<TrustAnchor>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

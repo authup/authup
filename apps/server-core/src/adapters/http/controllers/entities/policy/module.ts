@@ -7,7 +7,7 @@
 
 import type {
     EntityCollectionResponse,
-    EntityRecordWrappedResponse,
+    EntityRecordResponse,
     PolicyAPICheckResponse,
     PolicyCreatePayload,
     PolicyResponse,
@@ -84,7 +84,7 @@ export class PolicyController {
     async getOneExpanded(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<PolicyResponse>> {
+    ): Promise<EntityRecordResponse<PolicyResponse>> {
         return this.getOne(id, event, { expanded: true });
     }
 
@@ -94,7 +94,7 @@ export class PolicyController {
         @DContext() event: IAppEvent,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         options: { expanded?: boolean } = {},
-    ): Promise<EntityRecordWrappedResponse<PolicyResponse>> {
+    ): Promise<EntityRecordResponse<PolicyResponse>> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(
             id,
@@ -135,7 +135,7 @@ export class PolicyController {
         @DPath('id') id: string,
         @DBody() data: PolicyUpdatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<PolicyResponse>> {
+    ): Promise<EntityRecordResponse<PolicyResponse>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.update(
@@ -154,7 +154,7 @@ export class PolicyController {
         @DPath('id') id: string,
         @DBody() data: PolicySavePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<PolicyResponse>> {
+    ): Promise<EntityRecordResponse<PolicyResponse>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
 
@@ -175,7 +175,7 @@ export class PolicyController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<PolicyResponse>> {
+    ): Promise<EntityRecordResponse<PolicyResponse>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
@@ -188,7 +188,7 @@ export class PolicyController {
     async create(
         @DBody() data: PolicyCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<EntityRecordWrappedResponse<PolicyResponse>> {
+    ): Promise<EntityRecordResponse<PolicyResponse>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);

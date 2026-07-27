@@ -10,7 +10,7 @@ import { buildQueryString } from '../../../helpers';
 import type { Realm } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { EntityCollectionResponse, EntityRecordWrappedResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     IRealmAPI,
     RealmCreatePayload,
@@ -25,25 +25,25 @@ export class RealmAPI extends BaseAPI implements IRealmAPI {
         return response.data;
     }
 
-    async getOne(id: Realm['id'], record?: EntityQueryInput<Realm>): Promise<EntityRecordWrappedResponse<Realm>> {
+    async getOne(id: Realm['id'], record?: EntityQueryInput<Realm>): Promise<EntityRecordResponse<Realm>> {
         const response = await this.client.get(`realms/${id}${buildQueryString(record)}`);
 
         return response.data;
     }
 
-    async delete(id: Realm['id']): Promise<EntityRecordWrappedResponse<Realm>> {
+    async delete(id: Realm['id']): Promise<EntityRecordResponse<Realm>> {
         const response = await this.client.delete(`realms/${id}`);
 
         return response.data;
     }
 
-    async create(data: RealmCreatePayload): Promise<EntityRecordWrappedResponse<Realm>> {
+    async create(data: RealmCreatePayload): Promise<EntityRecordResponse<Realm>> {
         const response = await this.client.post('realms', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(realmId: Realm['id'], data: RealmUpdatePayload): Promise<EntityRecordWrappedResponse<Realm>> {
+    async update(realmId: Realm['id'], data: RealmUpdatePayload): Promise<EntityRecordResponse<Realm>> {
         const response = await this.client.post(`realms/${realmId}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -52,7 +52,7 @@ export class RealmAPI extends BaseAPI implements IRealmAPI {
     async createOrUpdate(
         idOrName: string,
         data: RealmSavePayload,
-    ): Promise<EntityRecordWrappedResponse<Realm>> {
+    ): Promise<EntityRecordResponse<Realm>> {
         const response = await this.client.put(`realms/${idOrName}`, nullifyEmptyObjectProperties(data));
 
         return response.data;

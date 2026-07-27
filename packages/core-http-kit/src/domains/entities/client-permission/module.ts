@@ -9,7 +9,7 @@ import type { EntityQueryInput } from '../../../helpers';
 import { buildQueryString } from '../../../helpers';
 import type { ClientPermission } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
-import type { EntityCollectionResponse, EntityRecordWrappedResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     ClientPermissionCreatePayload,
     ClientPermissionUpdatePayload,
@@ -22,25 +22,25 @@ export class ClientPermissionAPI extends BaseAPI implements IClientPermissionAPI
         return response.data;
     }
 
-    async getOne(id: ClientPermission['id'], data?: EntityQueryInput<ClientPermission>) : Promise<EntityRecordWrappedResponse<ClientPermission>> {
+    async getOne(id: ClientPermission['id'], data?: EntityQueryInput<ClientPermission>) : Promise<EntityRecordResponse<ClientPermission>> {
         const response = await this.client.get(`client-permissions/${id}${buildQueryString(data)}`);
 
         return response.data;
     }
 
-    async delete(id: ClientPermission['id']) : Promise<EntityRecordWrappedResponse<ClientPermission>> {
+    async delete(id: ClientPermission['id']) : Promise<EntityRecordResponse<ClientPermission>> {
         const response = await this.client.delete(`client-permissions/${id}`);
 
         return response.data;
     }
 
-    async create(data: ClientPermissionCreatePayload) : Promise<EntityRecordWrappedResponse<ClientPermission>> {
+    async create(data: ClientPermissionCreatePayload) : Promise<EntityRecordResponse<ClientPermission>> {
         const response = await this.client.post('client-permissions', data);
 
         return response.data;
     }
 
-    async update(id: ClientPermission['id'], data: ClientPermissionUpdatePayload) : Promise<EntityRecordWrappedResponse<ClientPermission>> {
+    async update(id: ClientPermission['id'], data: ClientPermissionUpdatePayload) : Promise<EntityRecordResponse<ClientPermission>> {
         const response = await this.client.post(`client-permissions/${id}`, data);
 
         return response.data;
