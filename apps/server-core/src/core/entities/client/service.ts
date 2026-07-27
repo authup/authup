@@ -20,6 +20,7 @@ import type { IRealmRepository } from '../realm/types.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import { ClientCredentialsService } from '../../authentication/credential/entities/client/module.ts';
 import type { IClientRepository, IClientService } from './types.ts';
+import { CLIENT_READ_PERMISSIONS } from './constants.ts';
 import { decodeQuery } from '../../query/index.ts';
 import { clientSchema } from './schema.ts';
 
@@ -46,13 +47,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<Client>> {
-        await actor.permissionEvaluator.preEvaluateOneOf({
-            name: [
-                PermissionName.CLIENT_READ,
-                PermissionName.CLIENT_UPDATE,
-                PermissionName.CLIENT_DELETE,
-            ],
-        });
+        await actor.permissionEvaluator.preEvaluateOneOf({ name: CLIENT_READ_PERMISSIONS });
 
         // The per-row `secret` visibility gate lives on the client SCHEMA
         // (`fields.validateMany`, issue #3322), so it also covers the
@@ -69,12 +64,6 @@ export class ClientService extends AbstractEntityService implements IClientServi
         query?: Record<string, any>,
         realmId?: string,
     ): Promise<Client> {
-        const permissionNames = [
-            PermissionName.CLIENT_READ,
-            PermissionName.CLIENT_UPDATE,
-            PermissionName.CLIENT_DELETE,
-        ];
-
         let isMe = !!actor.identity &&
             actor.identity.type === 'client' &&
             (
@@ -83,7 +72,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
             );
 
         if (!isMe) {
-            await actor.permissionEvaluator.preEvaluateOneOf({ name: permissionNames });
+            await actor.permissionEvaluator.preEvaluateOneOf({ name: CLIENT_READ_PERMISSIONS });
         }
 
         const entity = await this.repository.findOne(
@@ -101,7 +90,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         if (isMe && actor.identity!.data.id !== entity.id) {
             isMe = false;
-            await actor.permissionEvaluator.preEvaluateOneOf({ name: permissionNames });
+            await actor.permissionEvaluator.preEvaluateOneOf({ name: CLIENT_READ_PERMISSIONS });
         }
 
         if (
@@ -111,7 +100,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
             !entity.secretHashed
         ) {
             await actor.permissionEvaluator.evaluateOneOf({
-                name: permissionNames,
+                name: CLIENT_READ_PERMISSIONS,
                 data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, ...this.resourceRealmMatch(entity) }),
             });
         }

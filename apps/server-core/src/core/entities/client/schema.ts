@@ -14,10 +14,11 @@ import {
     or,
 } from '@rapiq/core';
 import type { Client } from '@authup/core-kit';
-import { EntityType, IdentityType, PermissionName } from '@authup/core-kit';
+import { EntityType, IdentityType } from '@authup/core-kit';
 import type { ActorContext } from '@authup/server-kit';
 import { createFieldsReadGate } from '../../query/fields.ts';
 import { createRelationsReadGate } from '../../query/relations.ts';
+import { CLIENT_READ_PERMISSIONS } from './constants.ts';
 
 const schemaMapping = { realm: EntityType.REALM, accessPolicy: EntityType.POLICY };
 
@@ -45,13 +46,7 @@ const schemaMapping = { realm: EntityType.REALM, accessPolicy: EntityType.POLICY
  * reads (rapiq#830's operand projection), so this is defense in depth.
  */
 async function secretReadGate(actor: ActorContext) : Promise<KeyValidationVerdict> {
-    const compiled = await actor.permissionEvaluator.compile({
-        name: [
-            PermissionName.CLIENT_READ,
-            PermissionName.CLIENT_UPDATE,
-            PermissionName.CLIENT_DELETE,
-        ],
-    });
+    const compiled = await actor.permissionEvaluator.compile({ name: CLIENT_READ_PERMISSIONS });
     if (compiled.verdict === 'allow') {
         return true;
     }
