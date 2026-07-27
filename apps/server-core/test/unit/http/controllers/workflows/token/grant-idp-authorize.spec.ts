@@ -95,7 +95,7 @@ describe('identity-provider authorization code grant', () => {
         await suite.setup();
         fakeIdpBaseURL = await fakeIdp.start();
 
-        const provider = await suite.client
+        const { data: provider } = await suite.client
             .identityProvider
             .create(createFakeOAuth2IdentityProvider({
                 tokenUrl: `${fakeIdpBaseURL}/token`,
@@ -105,7 +105,7 @@ describe('identity-provider authorization code grant', () => {
         providerId = provider.id;
 
         clientSecret = 'idp-test-secret';
-        client = await suite.client
+        client = (await suite.client
             .client
             .create(createFakeClient({
                 secret: clientSecret,
@@ -113,10 +113,10 @@ describe('identity-provider authorization code grant', () => {
                 secretEncrypted: false,
                 authMethod: 'secret',
                 tokenBindingMethod: 'none',
-            }));
+            }))).data;
 
         for (const scopeName of [ScopeName.GLOBAL, ScopeName.OPEN_ID]) {
-            const scope = await suite.client.scope.getOne(scopeName);
+            const { data: scope } = await suite.client.scope.getOne(scopeName);
             await suite.client.clientScope.create({
                 scopeId: scope.id,
                 clientId: client.id,
@@ -299,7 +299,7 @@ describe('identity-provider authorization code grant', () => {
     // authorize page with error=access_denied, and NO code is issued.
     it('should bounce a policy-denied federated login back to the hosted authorize page', async () => {
         // an identity policy restricted to clients denies the federated user
-        const denyPolicy = await suite.client.policy.createBuiltIn({
+        const { data: denyPolicy } = await suite.client.policy.createBuiltIn({
             name: 'idp-access-deny',
             type: BuiltInPolicyType.IDENTITY,
             invert: false,

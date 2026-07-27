@@ -19,11 +19,17 @@ import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
+    EntityRecordResponse,
     RoleAttributeCreatePayload,
     RoleAttributeUpdatePayload,
 } from '@authup/core-http-kit';
 import type { RoleAttribute } from '@authup/core-kit';
 import type { IRoleAttributeService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    describeQuerySchema,
+    roleAttributeSchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
@@ -52,7 +58,10 @@ export class RoleAttributeController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(roleAttributeSchema),
+            },
         };
     }
 
@@ -60,24 +69,24 @@ export class RoleAttributeController {
     async add(
         @DBody() data: RoleAttributeCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<RoleAttribute> {
+    ): Promise<EntityRecordResponse<RoleAttribute>> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
         event.response.status = 201;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
     async get(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<RoleAttribute> {
+    ): Promise<EntityRecordResponse<RoleAttribute>> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
-        return entity;
+        return { data: entity, meta: { schema: describeQuerySchema(roleAttributeSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
@@ -85,25 +94,25 @@ export class RoleAttributeController {
         @DPath('id') id: string,
         @DBody() data: RoleAttributeUpdatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<RoleAttribute> {
+    ): Promise<EntityRecordResponse<RoleAttribute>> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<RoleAttribute> {
+    ): Promise<EntityRecordResponse<RoleAttribute>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 }

@@ -35,7 +35,7 @@ export default defineComponent({
         const route = useRoute();
         const entity = ref<TrustAnchor>(null!);
         try {
-            entity.value = await injectHTTPClient().trustAnchor.getOne(route.params.id as string);
+            entity.value = (await injectHTTPClient().trustAnchor.getOne(route.params.id as string)).data;
         } catch {
             await navigateTo({ path: '/trust-anchors' });
             throw createError({});

@@ -27,9 +27,15 @@ import type {
     ClientSavePayload,
     ClientUpdatePayload,
     EntityCollectionResponse,
+    EntityRecordResponse,
 } from '@authup/core-http-kit';
 import type { IClientRepository, IClientService } from '../../../../../core/index.ts';
-import { OAuth2ScopeAttributesResolver } from '../../../../../core/index.ts';
+import {
+    OAuth2ScopeAttributesResolver,
+    RECORD_QUERY_PARAMETERS,
+    clientSchema,
+    describeQuerySchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     applyRouteRealmIDToBody,
@@ -68,7 +74,10 @@ export class ClientController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(clientSchema),
+            },
         };
     }
 
@@ -76,7 +85,7 @@ export class ClientController {
     async get(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<Client> {
+    ): Promise<EntityRecordResponse<Client>> {
         const identity = useRequestIdentity(event);
 
         let isMe = false;
@@ -110,7 +119,7 @@ export class ClientController {
                 }
             }
 
-            return entity;
+            return { data: entity, meta: { schema: describeQuerySchema(clientSchema, RECORD_QUERY_PARAMETERS) } };
         }
 
         const actor = buildActorContext(event);
@@ -121,21 +130,21 @@ export class ClientController {
             getRequestRealmID(event),
         );
 
-        return entity;
+        return { data: entity, meta: { schema: describeQuerySchema(clientSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: ClientCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<Client> {
+    ): Promise<EntityRecordResponse<Client>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
         event.response.status = 201;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
@@ -143,14 +152,14 @@ export class ClientController {
         @DPath('id') id: string,
         @DBody() data: ClientUpdatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<Client> {
+    ): Promise<EntityRecordResponse<Client>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
@@ -158,7 +167,7 @@ export class ClientController {
         @DPath('id') id: string,
         @DBody() data: ClientSavePayload,
         @DContext() event: IAppEvent,
-    ): Promise<Client> {
+    ): Promise<EntityRecordResponse<Client>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const {
@@ -171,19 +180,19 @@ export class ClientController {
         );
 
         event.response.status = created ? 201 : 202;
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<Client> {
+    ): Promise<EntityRecordResponse<Client>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 }

@@ -33,7 +33,7 @@ describe('session (realm isolation)', () => {
     beforeAll(async () => {
         await suite.setup();
 
-        const realmB = await suite.client.realm.create(createFakeRealm());
+        const { data: realmB } = await suite.client.realm.create(createFakeRealm());
 
         // a session in the foreign realm (B)
         const passwordB = 'session-iso-foreign-pw';
@@ -57,7 +57,7 @@ describe('session (realm isolation)', () => {
         ownSessionId = (await suite.client.token.introspect({ token: loginM.access_token })).session_id!;
 
         // a restricted actor in master holding SESSION_READ at the default `own` scope
-        const cA = await suite.client.client.create({
+        const { data: cA } = await suite.client.client.create({
             ...createFakeClient(),
             authMethod: 'secret',
             tokenBindingMethod: 'none',
@@ -65,7 +65,7 @@ describe('session (realm isolation)', () => {
             secretHashed: false,
             secretEncrypted: false,
         });
-        const permission = await suite.client.permission.getOne(PermissionName.SESSION_READ);
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.SESSION_READ);
         await suite.client.clientPermission.create({ clientId: cA.id, permissionId: permission.id });
 
         const token = await suite.client.token.createWithClientCredentials({

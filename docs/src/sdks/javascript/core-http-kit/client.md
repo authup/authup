@@ -92,7 +92,8 @@ console.log(response);
 // }
 ```
 
-The response of a single resource request always returns the resource object **without** meta information.
+The response of a single resource request mirrors that shape: the resource object under `data`,
+response-scoped extras under `meta`.
 
 ```typescript
 import { Client } from '@authup/core-http-kit';
@@ -105,6 +106,44 @@ const response = await client.role.getOne('xxxx-xxxx-xxxx-xxxx');
 
 console.log(response);
 // {
-//     id: 'xxx', name: 'admin', description: null
+//     data: {id: 'xxx', name: 'admin', description: null},
+//     meta: { schema: { /* ... */ } },
 // }
 ```
+
+## Query Capability Discovery
+
+Every query-capable `GET` describes its own queryable vocabulary under
+`meta.schema` — which `filter`, `fields`, `sort` and `include` keys the
+endpoint accepts, plus the pagination cap — so a consumer never has to
+inspect server source to build a query:
+
+```typescript
+const { meta } = await client.role.getMany();
+
+console.log(meta.schema);
+// {
+//     name: 'role',
+//     strict: false,
+//     fields: { default: null, allowed: ['id', 'name', /* ... */] },
+//     filters: { allowed: ['id', 'name', /* ... */] },
+//     sort: { allowed: ['id', 'name', /* ... */], default: null },
+//     pagination: { maxLimit: 50 },
+//     relations: { allowed: ['realm'], schemas: { realm: 'realm' } },
+// }
+```
+
+Reading rules:
+
+- the shape is **normalized** — every described parameter carries every
+  constraint key: a **`null`** constraint was never declared (no explicit
+  allow-list); an **empty array** is an explicit "nothing allowed".
+- relation vocabulary is **referenced, not expanded**: `relations.schemas`
+  names the schema governing each relation — dotted keys like
+  `filter[client.id]` follow the `client` entity's own description, found
+  on its own endpoints.
+- single-record `GET`s carry the subset a record read processes
+  (`fields` + `relations` only).
+- the description is the **static upper bound** — actor-dependent
+  authorization gates may still strip individual keys per request.
+

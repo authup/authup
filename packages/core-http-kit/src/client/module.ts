@@ -105,7 +105,7 @@ export class Client extends BaseClient implements IClient {
             authorizationEndpoint: 'authorize',
             introspectionEndpoint: 'token/introspect',
             tokenEndpoint: 'token',
-            userinfoEndpoint: 'users/@me',
+            userinfoEndpoint: 'userinfo',
         };
 
         const baseURL = this.getBaseURL();

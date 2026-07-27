@@ -16,8 +16,16 @@ import {
 import type { Consent } from '@authup/core-kit';
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import type { EntityCollectionResponse } from '@authup/core-http-kit';
+import type {
+    EntityCollectionResponse,
+    EntityRecordResponse,
+} from '@authup/core-http-kit';
 import type { IConsentService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    consentSchema,
+    describeQuerySchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext, getRequestRealmID } from '../../../request/index.ts';
 
@@ -46,7 +54,10 @@ export class ConsentController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(consentSchema),
+            },
         };
     }
 
@@ -54,22 +65,24 @@ export class ConsentController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<Consent> {
+    ): Promise<EntityRecordResponse<Consent>> {
         const actor = buildActorContext(event);
 
-        return this.service.getOne(id, actor, { realmId: getRequestRealmID(event) });
+        const entity = await this.service.getOne(id, actor, { realmId: getRequestRealmID(event) });
+
+        return { data: entity, meta: { schema: describeQuerySchema(consentSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<Consent> {
+    ): Promise<EntityRecordResponse<Consent>> {
         const actor = buildActorContext(event);
 
         const entity = await this.service.delete(id, actor, { realmId: getRequestRealmID(event) });
 
         event.response.status = 202;
-        return entity;
+        return { data: entity, meta: {} };
     }
 }

@@ -38,7 +38,7 @@ describe('src/http/controllers/user-authenticator (email otp)', () => {
 
     it('enrolls an email factor, mails a code, and verifies it', async () => {
         const password = 'email-otp-user';
-        const user = await suite.client.user.create(createFakeUser({ password }));
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
 
         const login = await suite.client.token.createWithPassword({
             username: user.name,

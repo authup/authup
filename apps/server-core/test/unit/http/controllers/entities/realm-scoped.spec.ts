@@ -30,8 +30,8 @@ describe('src/http/controllers/realm-scoped', () => {
 
     beforeAll(async () => {
         await suite.setup();
-        masterRealm = await suite.client.realm.getOne('master');
-        scopedRealm = await suite.client.realm.create(createFakeRealm());
+        masterRealm = (await suite.client.realm.getOne('master')).data;
+        scopedRealm = (await suite.client.realm.create(createFakeRealm())).data;
     });
 
     afterAll(async () => {
@@ -68,7 +68,7 @@ describe('src/http/controllers/realm-scoped', () => {
         });
 
         it('should fail closed on name lookups under an unknown realm UUID', async () => {
-            const user = await suite.client.user.create(createFakeUser());
+            const { data: user } = await suite.client.user.create(createFakeUser());
 
             // unknown realm UUID passes the middleware unverified; the
             // repository predicate must fail closed instead of matching the
@@ -99,8 +99,8 @@ describe('src/http/controllers/realm-scoped', () => {
 
             expect(response.status).toEqual(201);
             const body = await response.json();
-            expect(body.realmId).toEqual(masterRealm.id);
-            expect(body.realmId).not.toEqual(scopedRealm.id);
+            expect(body.data.realmId).toEqual(masterRealm.id);
+            expect(body.data.realmId).not.toEqual(scopedRealm.id);
         });
     });
 

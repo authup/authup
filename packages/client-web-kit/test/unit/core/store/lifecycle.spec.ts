@@ -43,7 +43,7 @@ function buildStore(handlers: Record<string, FakeHandler> = {}) {
         handlers: {
             'POST /token': () => ({ ...GRANT_RESPONSE }),
             'POST /token/introspect': () => ({ ...INTROSPECTION_RESPONSE }),
-            'GET /users/@me': () => ({ ...USER_RESPONSE }),
+            'GET /userinfo': () => ({ ...USER_RESPONSE }),
             'POST /token/revoke': () => ({}),
             ...handlers,
         },
@@ -407,7 +407,7 @@ describe('core/store/lifecycle', () => {
         await Promise.all([store.resolve(), store.resolve()]);
 
         expect(requestsTo(httpClient, 'POST', '/token/introspect')).toHaveLength(1);
-        expect(requestsTo(httpClient, 'GET', '/users/@me')).toHaveLength(1);
+        expect(requestsTo(httpClient, 'GET', '/userinfo')).toHaveLength(1);
     });
 
     it('stages the login: no token or user is observable before the commit', async () => {
@@ -418,7 +418,7 @@ describe('core/store/lifecycle', () => {
 
                 return { ...INTROSPECTION_RESPONSE };
             },
-            'GET /users/@me': () => {
+            'GET /userinfo': () => {
                 observed.push(store.accessToken.value, store.user.value);
 
                 return { ...USER_RESPONSE };

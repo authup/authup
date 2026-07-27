@@ -16,9 +16,14 @@ import {
 import type { Session } from '@authup/core-kit';
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import type { EntityCollectionResponse, SessionDeleteManyResponse } from '@authup/core-http-kit';
+import type { EntityCollectionResponse, EntityRecordResponse, SessionDeleteManyResponse } from '@authup/core-http-kit';
 import { isSelfToken } from '../../../../../utils/index.ts';
 import type { ISessionService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    describeQuerySchema,
+    sessionSchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext, useRequestSessionId } from '../../../request/index.ts';
 
@@ -47,7 +52,10 @@ export class SessionController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(sessionSchema),
+            },
         };
     }
 
@@ -55,13 +63,15 @@ export class SessionController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<Session> {
+    ): Promise<EntityRecordResponse<Session>> {
         const actor = buildActorContext(event);
 
         // `@me` / `@self` resolve to the caller's current session.
         const resolvedId = isSelfToken(id) ? (useRequestSessionId(event) ?? id) : id;
 
-        return this.service.getOne(resolvedId, actor);
+        const entity = await this.service.getOne(resolvedId, actor);
+
+        return { data: entity, meta: { schema: describeQuerySchema(sessionSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DDelete('', [ForceLoggedInMiddleware])
@@ -86,13 +96,13 @@ export class SessionController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<Session> {
+    ): Promise<EntityRecordResponse<Session>> {
         const actor = buildActorContext(event);
 
         const resolvedId = isSelfToken(id) ? (useRequestSessionId(event) ?? id) : id;
         const entity = await this.service.delete(resolvedId, actor);
 
         event.response.status = 202;
-        return entity;
+        return { data: entity, meta: {} };
     }
 }

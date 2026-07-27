@@ -56,21 +56,21 @@ describe('realm isolation (field projection)', () => {
     beforeAll(async () => {
         await suite.setup();
 
-        const realmB = await suite.client.realm.create(createFakeRealm());
+        const { data: realmB } = await suite.client.realm.create(createFakeRealm());
 
-        const ownUser = await suite.client.user.create(createFakeUser());
+        const { data: ownUser } = await suite.client.user.create(createFakeUser());
         ownUserId = ownUser.id;
-        const foreignUser = await suite.client.user.create(createFakeUser({ realmId: realmB.id }));
+        const { data: foreignUser } = await suite.client.user.create(createFakeUser({ realmId: realmB.id }));
         foreignUserId = foreignUser.id;
 
-        const ownClient = await suite.client.client.create({
+        const { data: ownClient } = await suite.client.client.create({
             ...createFakeClient(),
             secret: ownClientSecret,
             secretHashed: false,
             secretEncrypted: false,
         });
         ownClientId = ownClient.id;
-        const foreignClient = await suite.client.client.create({
+        const { data: foreignClient } = await suite.client.client.create({
             ...createFakeClient(),
             realmId: realmB.id,
             secret: foreignClientSecret,
@@ -79,30 +79,30 @@ describe('realm isolation (field projection)', () => {
         });
         foreignClientId = foreignClient.id;
 
-        const ownRole = await suite.client.role.create({ name: 'realm-iso-own-role' });
-        const ownRoleAttribute = await suite.client.roleAttribute.create({
+        const { data: ownRole } = await suite.client.role.create({ name: 'realm-iso-own-role' });
+        const { data: ownRoleAttribute } = await suite.client.roleAttribute.create({
             ...createFakeRoleAttribute(),
             roleId: ownRole.id,
         });
         ownRoleAttributeId = ownRoleAttribute.id;
-        const foreignRole = await suite.client.role.create({ name: 'realm-iso-foreign-role', realmId: realmB.id });
-        const foreignRoleAttribute = await suite.client.roleAttribute.create({
+        const { data: foreignRole } = await suite.client.role.create({ name: 'realm-iso-foreign-role', realmId: realmB.id });
+        const { data: foreignRoleAttribute } = await suite.client.roleAttribute.create({
             ...createFakeRoleAttribute(),
             roleId: foreignRole.id,
         });
         foreignRoleAttributeId = foreignRoleAttribute.id;
 
-        const ownUserAttribute = await suite.client.userAttribute.create(
+        const { data: ownUserAttribute } = await suite.client.userAttribute.create(
             createFakeUserAttribute({ userId: ownUser.id }),
         );
         ownUserAttributeId = ownUserAttribute.id;
-        const foreignUserAttribute = await suite.client.userAttribute.create(
+        const { data: foreignUserAttribute } = await suite.client.userAttribute.create(
             createFakeUserAttribute({ userId: foreignUser.id }),
         );
         foreignUserAttributeId = foreignUserAttribute.id;
 
         // a restricted actor in master holding the READ permissions at the default `own` scope
-        const actorClient = await suite.client.client.create({
+        const { data: actorClient } = await suite.client.client.create({
             ...createFakeClient(),
             authMethod: 'secret',
             tokenBindingMethod: 'none',
@@ -117,7 +117,7 @@ describe('realm isolation (field projection)', () => {
             PermissionName.ROLE_READ,
         ];
         for (const name of permissionNames) {
-            const permission = await suite.client.permission.getOne(name);
+            const { data: permission } = await suite.client.permission.getOne(name);
             await suite.client.clientPermission.create({
                 clientId: actorClient.id,
                 permissionId: permission.id,
@@ -133,7 +133,7 @@ describe('realm isolation (field projection)', () => {
 
         // a reader at `ownOrNull` scope (realm_admin read reach) — the scope for
         // which a stripped realmId reads as a null/global resource and leaks
-        const readerClient = await suite.client.client.create({
+        const { data: readerClient } = await suite.client.client.create({
             ...createFakeClient(),
             authMethod: 'secret',
             tokenBindingMethod: 'none',
@@ -141,7 +141,7 @@ describe('realm isolation (field projection)', () => {
             secretHashed: false,
             secretEncrypted: false,
         });
-        const userRead = await suite.client.permission.getOne(PermissionName.USER_READ);
+        const { data: userRead } = await suite.client.permission.getOne(PermissionName.USER_READ);
         await suite.client.clientPermission.create({
             clientId: readerClient.id,
             permissionId: userRead.id,

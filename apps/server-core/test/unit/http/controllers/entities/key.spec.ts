@@ -45,7 +45,7 @@ describe('src/http/controllers/key', () => {
 
         // a fresh realm keeps assertions deterministic on the suite-shared
         // database AND exercises the realm-create key provisioning hook.
-        realm = await suite.client.realm.create({ name: `key-realm-${Date.now()}` });
+        realm = (await suite.client.realm.create({ name: `key-realm-${Date.now()}` })).data;
     });
 
     afterAll(async () => {
@@ -67,7 +67,7 @@ describe('src/http/controllers/key', () => {
     });
 
     it('should generate a signature key (metadata + public part only)', async () => {
-        const entity = await suite.client.key.create({
+        const { data: entity } = await suite.client.key.create({
             use: JWKUse.SIGNATURE,
             name: 'generated-sig',
             realmId: realm.id,
@@ -82,17 +82,17 @@ describe('src/http/controllers/key', () => {
     });
 
     it('should read one resource by id and name', async () => {
-        const created = await suite.client.key.create({
+        const { data: created } = await suite.client.key.create({
             use: JWKUse.ENCRYPTION,
             name: 'read-target',
             realmId: realm.id,
         });
 
-        const byId = await suite.client.key.getOne(created.id);
+        const { data: byId } = await suite.client.key.getOne(created.id);
         expect(byId.id).toEqual(created.id);
 
         const response = await suite.client.get(`realms/${realm.id}/keys/read-target`);
-        expect(response.data.id).toEqual(created.id);
+        expect(response.data.data.id).toEqual(created.id);
     });
 
     it('should scope the nested realm mount, expression dialect included', async () => {
@@ -116,7 +116,7 @@ describe('src/http/controllers/key', () => {
     });
 
     it('should intersect a conflicting client realm filter with the route realm', async () => {
-        const other = await suite.client.realm.create({ name: `key-realm-conflict-${Date.now()}` });
+        const { data: other } = await suite.client.realm.create({ name: `key-realm-conflict-${Date.now()}` });
 
         const response = await suite.client.get(
             `realms/${realm.id}/keys?filter[realmId]=${other.id}`,
@@ -127,13 +127,13 @@ describe('src/http/controllers/key', () => {
     });
 
     it('should update name, priority and status', async () => {
-        const created = await suite.client.key.create({
+        const { data: created } = await suite.client.key.create({
             use: JWKUse.SIGNATURE,
             name: 'update-target',
             realmId: realm.id,
         });
 
-        const updated = await suite.client.key.update(created.id, {
+        const { data: updated } = await suite.client.key.update(created.id, {
             name: 'update-renamed',
             priority: 42,
             status: KeyStatus.PASSIVE,
@@ -146,7 +146,7 @@ describe('src/http/controllers/key', () => {
     });
 
     it('should hide disabled keys from the realm JWKS', async () => {
-        const created = await suite.client.key.create({
+        const { data: created } = await suite.client.key.create({
             use: JWKUse.SIGNATURE,
             name: 'jwks-lifecycle',
             realmId: realm.id,
@@ -164,7 +164,7 @@ describe('src/http/controllers/key', () => {
     });
 
     it('should publish imported certificate metadata on every JWKS surface', async () => {
-        const imported = await suite.client.key.create({
+        const { data: imported } = await suite.client.key.create({
             use: JWKUse.SIGNATURE,
             name: 'jwks-certificate',
             decryptionKey: PRIVATE_KEY,
@@ -204,7 +204,7 @@ describe('src/http/controllers/key', () => {
     });
 
     it('should omit certificate metadata when absent or when a stored chain is malformed', async () => {
-        const withoutCertificate = await suite.client.key.create({
+        const { data: withoutCertificate } = await suite.client.key.create({
             use: JWKUse.SIGNATURE,
             name: 'jwks-no-certificate',
             realmId: realm.id,
@@ -244,13 +244,13 @@ describe('src/http/controllers/key', () => {
     });
 
     it('should delete an unreferenced enc key without force', async () => {
-        const created = await suite.client.key.create({
+        const { data: created } = await suite.client.key.create({
             use: JWKUse.ENCRYPTION,
             name: 'delete-target',
             realmId: realm.id,
         });
 
-        const deleted = await suite.client.key.delete(created.id);
+        const { data: deleted } = await suite.client.key.delete(created.id);
         expect(deleted.id).toEqual(created.id);
 
         await expectClientError(
@@ -265,11 +265,11 @@ describe('src/http/controllers/key', () => {
             name: 'nested-create',
         });
 
-        expect(response.data.realmId).toEqual(realm.id);
+        expect(response.data.data.realmId).toEqual(realm.id);
     });
 
     it('should record attributed, metadata-only lifecycle audit events', async () => {
-        const created = await suite.client.key.create({
+        const { data: created } = await suite.client.key.create({
             use: JWKUse.SIGNATURE,
             name: 'audited-key',
             realmId: realm.id,

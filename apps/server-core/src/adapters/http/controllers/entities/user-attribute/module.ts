@@ -19,11 +19,17 @@ import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
+    EntityRecordResponse,
     UserAttributeCreatePayload,
     UserAttributeUpdatePayload,
 } from '@authup/core-http-kit';
 import type { UserAttribute } from '@authup/core-kit';
 import type { IUserAttributeService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    describeQuerySchema,
+    userAttributeSchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
@@ -52,7 +58,10 @@ export class UserAttributeController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(userAttributeSchema),
+            },
         };
     }
 
@@ -60,24 +69,24 @@ export class UserAttributeController {
     async add(
         @DBody() data: UserAttributeCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<UserAttribute> {
+    ): Promise<EntityRecordResponse<UserAttribute>> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
         event.response.status = 201;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
     async get(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<UserAttribute> {
+    ): Promise<EntityRecordResponse<UserAttribute>> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
-        return entity;
+        return { data: entity, meta: { schema: describeQuerySchema(userAttributeSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
@@ -85,25 +94,25 @@ export class UserAttributeController {
         @DPath('id') id: string,
         @DBody() data: UserAttributeUpdatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<UserAttribute> {
+    ): Promise<EntityRecordResponse<UserAttribute>> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<UserAttribute> {
+    ): Promise<EntityRecordResponse<UserAttribute>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 }

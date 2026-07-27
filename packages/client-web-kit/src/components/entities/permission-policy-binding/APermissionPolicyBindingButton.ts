@@ -110,7 +110,7 @@ export const APermissionPolicyBindingButton = defineComponent({
             try {
                 const response = await api.update(entityId, { policyId });
                 currentPolicyId.value = policyId;
-                emit('updated', response);
+                emit('updated', response.data);
             } catch (e) {
                 if (e instanceof Error) {
                     emit('failed', e);
@@ -140,13 +140,13 @@ export const APermissionPolicyBindingButton = defineComponent({
                 // Reflect the server-capped value: a restricted actor's chosen scope may be
                 // narrowed server-side, so prefer the persisted scope from the response.
                 currentRealmScope.value = (
-                    response &&
-                    typeof response === 'object' &&
-                    hasOwnProperty(response, 'realmScope')
+                    response.data &&
+                    typeof response.data === 'object' &&
+                    hasOwnProperty(response.data, 'realmScope')
                 ) ?
-                    response.realmScope as RealmScopeValue | null :
+                    response.data.realmScope as RealmScopeValue | null :
                     scope;
-                emit('updated', response);
+                emit('updated', response.data);
             } catch (e) {
                 if (e instanceof Error) {
                     emit('failed', e);
@@ -175,7 +175,7 @@ export const APermissionPolicyBindingButton = defineComponent({
                     realmScope: currentRealmScope.value ?? undefined,
                     policyId: currentPolicyId.value ?? undefined,
                 });
-                emit('created', response);
+                emit('created', response.data);
                 modalOpen.value = false;
             } catch (e) {
                 if (e instanceof Error) {

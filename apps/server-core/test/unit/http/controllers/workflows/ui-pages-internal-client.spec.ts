@@ -28,8 +28,8 @@ import type { TestHTTPApplication } from '../../../../app';
  * resolved client, not the emitted HTML).
  */
 async function renderAuthorizePage(suite: TestHTTPApplication) : Promise<string> {
-    const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
-    const client = await suite.client.client.create(createFakeClient());
+    const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+    const { data: client } = await suite.client.client.create(createFakeClient());
     await suite.client.clientScope.create({
         scopeId: scope.id,
         clientId: client.id,
@@ -61,7 +61,7 @@ describe('src/http/controllers/workflows (SSR pages, internal client)', () => {
     });
 
     it('should dispatch against the listen address while keeping the public baseURL', async () => {
-        const provider = await suite.client.identityProvider.create(createFakeOAuth2IdentityProvider());
+        const { data: provider } = await suite.client.identityProvider.create(createFakeOAuth2IdentityProvider());
 
         const config = suite.container.resolve(ConfigInjectionKey);
         const uiHttpClient = suite.container.resolve(HTTPInjectionKey.UIHttpClient);
@@ -101,7 +101,7 @@ describe('src/http/controllers/workflows (SSR pages, internal client, sub-path p
     });
 
     it('should rewrite prefixed public urls onto the listen address', async () => {
-        const provider = await suite.client.identityProvider.create(createFakeOAuth2IdentityProvider());
+        const { data: provider } = await suite.client.identityProvider.create(createFakeOAuth2IdentityProvider());
 
         const uiHttpClient = suite.container.resolve(HTTPInjectionKey.UIHttpClient);
         expect(uiHttpClient.getBaseURL()).toContain('https://hub.local/auth');

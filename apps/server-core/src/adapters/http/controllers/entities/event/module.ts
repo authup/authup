@@ -15,8 +15,16 @@ import {
 import type { Event } from '@authup/core-kit';
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import type { EntityCollectionResponse } from '@authup/core-http-kit';
+import type {
+    EntityCollectionResponse,
+    EntityRecordResponse,
+} from '@authup/core-http-kit';
 import type { IEventService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    describeQuerySchema,
+    eventSchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext, getRequestRealmID } from '../../../request/index.ts';
 
@@ -51,7 +59,10 @@ export class EventController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(eventSchema),
+            },
         };
     }
 
@@ -59,9 +70,11 @@ export class EventController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<Event> {
+    ): Promise<EntityRecordResponse<Event>> {
         const actor = buildActorContext(event);
 
-        return this.service.getOne(id, actor, { realmId: getRequestRealmID(event) });
+        const entity = await this.service.getOne(id, actor, { realmId: getRequestRealmID(event) });
+
+        return { data: entity, meta: { schema: describeQuerySchema(eventSchema, RECORD_QUERY_PARAMETERS) } };
     }
 }

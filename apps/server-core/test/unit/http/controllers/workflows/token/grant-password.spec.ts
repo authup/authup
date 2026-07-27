@@ -57,7 +57,7 @@ describe('src/http/controllers/token', () => {
 
     it('should grant token with password and confidential client authentication', async () => {
         const secret = 'password-grant-test-secret';
-        const client = await suite.client
+        const { data: client } = await suite.client
             .client
             .create(createFakeClient({
                 secret,
@@ -82,7 +82,7 @@ describe('src/http/controllers/token', () => {
 
     it('should reject password grant when confidential client provides wrong secret', async () => {
         const secret = 'password-grant-wrong-secret-test';
-        const client = await suite.client
+        const { data: client } = await suite.client
             .client
             .create(createFakeClient({
                 secret,
@@ -104,7 +104,7 @@ describe('src/http/controllers/token', () => {
     });
 
     it('should not grant token with password grant (inactive)', async () => {
-        const entity = await suite.client.user.create(createFakeUser({
+        const { data: entity } = await suite.client.user.create(createFakeUser({
             password: 'foo-bar-baz',
             active: false,
         }));
@@ -138,7 +138,7 @@ describe('src/http/controllers/token', () => {
     });
 
     it('should default realm-less password grant to the master realm', async () => {
-        const realm = await suite.client.realm.create(createFakeRealm());
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
 
         const { name } = createFakeUser();
         await suite.client.user.create(createFakeUser({
@@ -170,8 +170,8 @@ describe('src/http/controllers/token', () => {
     });
 
     it('should grant token with password for a realm selected via realm hint', async () => {
-        const realm = await suite.client.realm.create(createFakeRealm());
-        const user = await suite.client.user.create(createFakeUser({
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+        const { data: user } = await suite.client.user.create(createFakeUser({
             realmId: realm.id,
             password: 'realm-user-secret',
         }));
@@ -237,9 +237,9 @@ describe('src/http/controllers/token', () => {
     });
 
     it('should scope name-identified confidential client authentication to the resolved realm', async () => {
-        const realm = await suite.client.realm.create(createFakeRealm());
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
         const secret = 'client-realm-scope-secret';
-        const client = await suite.client
+        const { data: client } = await suite.client
             .client
             .create(createFakeClient({
                 realmId: realm.id,
@@ -249,7 +249,7 @@ describe('src/http/controllers/token', () => {
                 authMethod: 'secret',
                 tokenBindingMethod: 'none',
             }));
-        const user = await suite.client.user.create(createFakeUser({
+        const { data: user } = await suite.client.user.create(createFakeUser({
             realmId: realm.id,
             password: 'realm-user-secret',
         }));
@@ -290,7 +290,7 @@ describe('src/http/controllers/token', () => {
     });
 
     it('should match a mixed-case username against the canonical stored name', async () => {
-        const user = await suite.client.user.create(createFakeUser({ password: 'case-user-secret' }));
+        const { data: user } = await suite.client.user.create(createFakeUser({ password: 'case-user-secret' }));
 
         const response = await suite.client
             .token
@@ -315,8 +315,8 @@ describe('src/http/controllers/token', () => {
     });
 
     it('should resolve a UUID username globally regardless of realm hint', async () => {
-        const realm = await suite.client.realm.create(createFakeRealm());
-        const user = await suite.client.user.create(createFakeUser({
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+        const { data: user } = await suite.client.user.create(createFakeUser({
             realmId: realm.id,
             password: 'uuid-user-secret',
         }));

@@ -11,7 +11,6 @@ import {
     expect,
     it,
 } from 'vitest';
-import type { Client } from '@authup/core-kit';
 import { REALM_MASTER_NAME, ScopeName } from '@authup/core-kit';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
@@ -108,7 +107,7 @@ describe('OIDC conformance smoke', () => {
         // (a password login mints a master-realm access token) — otherwise the
         // key set is empty and the assertions below would be vacuous.
         const password = generateOAuth2CodeVerifier();
-        const signer = await suite.client.user.create(createFakeUser({ password }));
+        const { data: signer } = await suite.client.user.create(createFakeUser({ password }));
         await suite.client.token.createWithPassword({ username: signer.name, password });
 
         // discovery endpoints are built from publicUrl (not the random test
@@ -126,19 +125,19 @@ describe('OIDC conformance smoke', () => {
 
     it('issues an id_token with the required claims, consistent with discovery', async () => {
         // full auth-code flow: password login → authorize → exchange
-        const client: Client = await suite.client.client.create(createFakeClient({
+        const { data: client } = await suite.client.client.create(createFakeClient({
             authMethod: 'none',
             tokenBindingMethod: 'none',
             secret: null,
             redirectUri: 'https://app.example.com/**',
         }));
         for (const scopeName of [ScopeName.GLOBAL, ScopeName.OPEN_ID]) {
-            const scope = await suite.client.scope.getOne(scopeName);
+            const { data: scope } = await suite.client.scope.getOne(scopeName);
             await suite.client.clientScope.create({ scopeId: scope.id, clientId: client.id });
         }
 
         const password = generateOAuth2CodeVerifier();
-        const user = await suite.client.user.create(createFakeUser({ password }));
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
 
         const login = await suite.client.token.createWithPassword({ username: user.name, password });
         const userClient = new HTTPClient({ baseURL: suite.baseURL });

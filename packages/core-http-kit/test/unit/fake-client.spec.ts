@@ -79,14 +79,17 @@ describe('src/testing/module', () => {
         const client = createFakeClient({
             handlers: {
                 'GET /clients/:id': ({ params }) => ({
-                    id: params.id,
-                    name: 'test-client',
+                    data: {
+                        id: params.id,
+                        name: 'test-client',
+                    },
+                    meta: {},
                 }),
             },
         });
 
-        const entity = await client.client.getOne('abc-123');
-        expect(entity).toEqual({ id: 'abc-123', name: 'test-client' });
+        const response = await client.client.getOne('abc-123');
+        expect(response.data).toEqual({ id: 'abc-123', name: 'test-client' });
     });
 
     it('should serve the default fallback for unmatched routes', async () => {
@@ -106,10 +109,10 @@ describe('src/testing/module', () => {
     });
 
     it('should pass the request body to handlers', async () => {
-        const client = createFakeClient({ handlers: { 'POST /clients': ({ body }) => body } });
+        const client = createFakeClient({ handlers: { 'POST /clients': ({ body }) => ({ data: body, meta: {} }) } });
 
-        const entity = await client.client.create({ name: 'foo' });
-        expect(entity).toMatchObject({ name: 'foo' });
+        const response = await client.client.create({ name: 'foo' });
+        expect(response.data).toMatchObject({ name: 'foo' });
     });
 
     it('should record dispatched requests', async () => {

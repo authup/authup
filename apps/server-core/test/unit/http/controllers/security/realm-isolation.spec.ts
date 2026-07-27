@@ -46,10 +46,10 @@ describe('http/controllers/security (junction realm-isolation — all junctions)
     beforeAll(async () => {
         await suite.setup();
 
-        const realmB = await suite.client.realm.create(createFakeRealm());
+        const { data: realmB } = await suite.client.realm.create(createFakeRealm());
 
         // --- restricted actor C_A in the master realm (realm A), every grant `own` ---
-        const cA = await suite.client.client.create({
+        const { data: cA } = await suite.client.client.create({
             ...createFakeClient(),
             authMethod: 'secret',
             tokenBindingMethod: 'none',
@@ -60,23 +60,23 @@ describe('http/controllers/security (junction realm-isolation — all junctions)
         const masterRealmId = cA.realmId;
 
         // --- owner entities, one per realm (A = the actor's own realm, B = foreign) ---
-        ctx.roleA = await suite.client.role.create(createFakeRole({ realmId: masterRealmId }));
-        ctx.roleB = await suite.client.role.create(createFakeRole({ realmId: realmB.id }));
-        ctx.userA = await suite.client.user.create(createFakeUser({ realmId: masterRealmId }));
-        ctx.userB = await suite.client.user.create(createFakeUser({ realmId: realmB.id }));
-        ctx.clientA = await suite.client.client.create({ ...createFakeClient(), realmId: masterRealmId });
-        ctx.clientB = await suite.client.client.create({ ...createFakeClient(), realmId: realmB.id });
-        ctx.providerA = await suite.client.identityProvider.create({ ...createFakeOAuth2IdentityProvider(), realmId: masterRealmId });
-        ctx.providerB = await suite.client.identityProvider.create({ ...createFakeOAuth2IdentityProvider(), realmId: realmB.id });
-        ctx.permissionA = await suite.client.permission.create({ ...createFakePermission(), realmId: masterRealmId });
-        ctx.permissionB = await suite.client.permission.create({ ...createFakePermission(), realmId: realmB.id });
+        ctx.roleA = (await suite.client.role.create(createFakeRole({ realmId: masterRealmId }))).data;
+        ctx.roleB = (await suite.client.role.create(createFakeRole({ realmId: realmB.id }))).data;
+        ctx.userA = (await suite.client.user.create(createFakeUser({ realmId: masterRealmId }))).data;
+        ctx.userB = (await suite.client.user.create(createFakeUser({ realmId: realmB.id }))).data;
+        ctx.clientA = (await suite.client.client.create({ ...createFakeClient(), realmId: masterRealmId })).data;
+        ctx.clientB = (await suite.client.client.create({ ...createFakeClient(), realmId: realmB.id })).data;
+        ctx.providerA = (await suite.client.identityProvider.create({ ...createFakeOAuth2IdentityProvider(), realmId: masterRealmId })).data;
+        ctx.providerB = (await suite.client.identityProvider.create({ ...createFakeOAuth2IdentityProvider(), realmId: realmB.id })).data;
+        ctx.permissionA = (await suite.client.permission.create({ ...createFakePermission(), realmId: masterRealmId })).data;
+        ctx.permissionB = (await suite.client.permission.create({ ...createFakePermission(), realmId: realmB.id })).data;
 
         // --- members the actor can legitimately reference (own/global) ---
-        const roleReadPermission = await suite.client.permission.getOne(PermissionName.ROLE_READ);
+        const { data: roleReadPermission } = await suite.client.permission.getOne(PermissionName.ROLE_READ);
         ctx.roleReadPermissionId = roleReadPermission.id;
-        ctx.emptyRoleId = (await suite.client.role.create(createFakeRole({ realmId: null }))).id; // no perms => supersettable
-        ctx.globalScopeId = (await suite.client.scope.create(createFakeScope({ realmId: null }))).id;
-        ctx.globalPolicyId = (await suite.client.policy.create(createFakeTimePolicy())).id;
+        ctx.emptyRoleId = (await suite.client.role.create(createFakeRole({ realmId: null }))).data.id; // no perms => supersettable
+        ctx.globalScopeId = (await suite.client.scope.create(createFakeScope({ realmId: null }))).data.id;
+        ctx.globalPolicyId = (await suite.client.policy.create(createFakeTimePolicy())).data.id;
 
         // --- grant the actor every operation permission (default realmScope: own) ---
         const grants = [
@@ -92,7 +92,7 @@ describe('http/controllers/security (junction realm-isolation — all junctions)
             PermissionName.ROLE_CREATE, // for the entity CONTROL below
         ];
         for (const name of grants) {
-            const permission = await suite.client.permission.getOne(name);
+            const { data: permission } = await suite.client.permission.getOne(name);
             await suite.client.clientPermission.create({ clientId: cA.id, permissionId: permission.id });
         }
 
@@ -187,7 +187,7 @@ describe('http/controllers/security (junction realm-isolation — all junctions)
     }) => {
         it('allows the restricted actor on an OWN-realm owner (setup is valid)', async () => {
             const result = await (actor as any)[api].create(body(ctx[ownerA].id, ctx));
-            expect(result.id).toBeDefined();
+            expect(result.data.id).toBeDefined();
         });
 
         it('rejects the restricted actor on a realm-B owner (owner-realm is gated)', async () => {

@@ -9,7 +9,7 @@ import type { AuthorizationHeader } from 'hapic';
 import type { EntityQueryInput } from '../../../helpers';
 import type { User, UserAuthenticator, UserAuthenticatorKind } from '@authup/core-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
-import type { EntityCollectionResponse, EntityRecordResponse, EntityRecordWrappedResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
 export type UserAuthenticatorCreatePayload = {
     kind: `${UserAuthenticatorKind}`,
@@ -45,7 +45,7 @@ export type UserAuthenticatorEnrollResponseMeta = {
     webauthn?: Record<string, unknown>,
 };
 
-export type UserAuthenticatorEnrollResponse = EntityRecordWrappedResponse<
+export type UserAuthenticatorEnrollResponse = EntityRecordResponse<
     UserAuthenticator,
     UserAuthenticatorEnrollResponseMeta
 >;

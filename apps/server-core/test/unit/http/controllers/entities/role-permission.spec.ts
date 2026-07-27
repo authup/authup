@@ -34,15 +34,15 @@ describe('src/http/controllers/role-permission', () => {
     let entity : RolePermission | undefined;
 
     it('should create resource', async () => {
-        const role = await suite.client.role.create(createFakeRole());
-        const permission = await suite.client.permission.create(createFakePermission());
+        const { data: role } = await suite.client.role.create(createFakeRole());
+        const { data: permission } = await suite.client.permission.create(createFakePermission());
 
-        entity = await suite.client
+        entity = (await suite.client
             .rolePermission
             .create({
                 roleId: role.id,
                 permissionId: permission.id,
-            });
+            })).data;
 
         expect(entity.roleId).toEqual(role.id);
         expect(entity.permissionId).toEqual(permission.id);
@@ -58,7 +58,7 @@ describe('src/http/controllers/role-permission', () => {
     });
 
     it('should read resource', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .rolePermission
             .getOne(entity!.id);
 
@@ -67,7 +67,7 @@ describe('src/http/controllers/role-permission', () => {
     });
 
     it('should delete resource', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .rolePermission
             .delete(entity!.id);
 

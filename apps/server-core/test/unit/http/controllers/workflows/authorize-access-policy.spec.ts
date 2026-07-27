@@ -33,28 +33,28 @@ describe('http/controllers/workflows/authorize (access policy, plan 052)', () =>
     beforeAll(async () => {
         await suite.setup();
 
-        realm = await suite.client.realm.create(createFakeRealm());
-        scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        realm = (await suite.client.realm.create(createFakeRealm())).data;
+        scope = (await suite.client.scope.getOne(ScopeName.GLOBAL)).data;
 
         // an identity policy restricted to clients denies every user; without
         // a type restriction it permits every identity
-        denyPolicy = await suite.client.policy.createBuiltIn({
+        denyPolicy = (await suite.client.policy.createBuiltIn({
             name: 'authorize-access-deny',
             type: BuiltInPolicyType.IDENTITY,
             invert: false,
             types: [IdentityType.CLIENT],
             realmId: null,
-        });
-        allowPolicy = await suite.client.policy.createBuiltIn({
+        })).data;
+        allowPolicy = (await suite.client.policy.createBuiltIn({
             name: 'authorize-access-allow',
             type: BuiltInPolicyType.IDENTITY,
             invert: false,
             realmId: null,
-        });
+        })).data;
 
         // non-admin bearer: a plain user in the client's realm
         const password = generateOAuth2CodeVerifier();
-        const user = await suite.client.user.create(createFakeUser({
+        const { data: user } = await suite.client.user.create(createFakeUser({
             realmId: realm.id,
             password,
         }));
@@ -73,7 +73,7 @@ describe('http/controllers/workflows/authorize (access policy, plan 052)', () =>
     });
 
     const createGatedClient = async (accessPolicyId: string | null) => {
-        const client = await suite.client.client.create(createFakeClient({
+        const { data: client } = await suite.client.client.create(createFakeClient({
             realmId: realm.id,
             authMethod: 'secret',
             tokenBindingMethod: 'none',

@@ -41,7 +41,7 @@ describe('token grantTypes enforcement', () => {
         await suite.teardown();
     });
 
-    const createConfidentialClient = (grantTypes: string | null) : Promise<Client> => {
+    const createConfidentialClient = async (grantTypes: string | null) : Promise<Client> => {
         const input = createFakeClient();
         input.active = true;
         input.authMethod = 'secret';
@@ -50,7 +50,9 @@ describe('token grantTypes enforcement', () => {
         input.secretEncrypted = false;
         input.grantTypes = grantTypes;
 
-        return suite.client.client.create(input);
+        const { data } = await suite.client.client.create(input);
+
+        return data;
     };
 
     it('should grant client-credentials when the grant is listed', async () => {

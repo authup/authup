@@ -111,6 +111,7 @@ import {
     RegisterController,
     StatusController,
     TokenController,
+    UserInfoController,
 } from '../../../../adapters/http/controllers/index.ts';
 import type { IContainer } from 'eldin';
 import {
@@ -201,6 +202,7 @@ export class HTTPControllerModule {
                 this.createRegisterController(container),
                 this.createLogoutController(container),
                 this.createAuthenticatorChallengeController(container),
+                this.createUserInfoController(container),
 
                 this.createStatusController(container),
 
@@ -855,7 +857,7 @@ export class HTTPControllerModule {
         return new EventController({ service });
     }
 
-    createUserController(container: IContainer) {
+    createUserService(container: IContainer) {
         const config = container.resolve(ConfigInjectionKey);
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
@@ -864,12 +866,19 @@ export class HTTPControllerModule {
             realmRepository,
         });
         const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository);
-        const service = new UserService({
+        return new UserService({
             repository,
             realmRepository: realmRepositoryAdapter,
             passwordMinLength: config.passwordMinLength,
         });
-        return new UserController({ service });
+    }
+
+    createUserController(container: IContainer) {
+        return new UserController({ service: this.createUserService(container) });
+    }
+
+    createUserInfoController(container: IContainer) {
+        return new UserInfoController({ service: this.createUserService(container) });
     }
 
     createUserAttributeController(container: IContainer) {

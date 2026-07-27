@@ -56,7 +56,7 @@ describe('src/http/controllers/identity-provider', () => {
             userNameAttribute: 'cn',
         });
 
-        const response = await suite.client
+        const { data: response } = await suite.client
             .identityProvider
             .create(data);
 

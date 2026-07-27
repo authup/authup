@@ -20,12 +20,18 @@ import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
+    EntityRecordResponse,
     RoleCreatePayload,
     RoleSavePayload,
     RoleUpdatePayload,
 } from '@authup/core-http-kit';
 import type { Role } from '@authup/core-kit';
 import type { IRoleService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    describeQuerySchema,
+    roleSchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
@@ -46,21 +52,23 @@ export class RoleController {
     async getMany(@DContext() event: IAppEvent): Promise<EntityCollectionResponse<Role>> {
         const actor = buildActorContext(event);
         const { data, meta } = await this.service.getMany(useRequestQuery(event), actor);
-        return { data, meta };
+        return { data, meta: { ...meta, schema: describeQuerySchema(roleSchema) } };
     }
 
     @DPost('', [ForceLoggedInMiddleware])
-    async add(@DBody() data: RoleCreatePayload, @DContext() event: IAppEvent): Promise<Role> {
+    async add(@DBody() data: RoleCreatePayload, @DContext() event: IAppEvent): Promise<EntityRecordResponse<Role>> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
         event.response.status = 201;
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
-    async get(@DPath('id') id: string, @DContext() event: IAppEvent): Promise<Role> {
+    async get(@DPath('id') id: string, @DContext() event: IAppEvent): Promise<EntityRecordResponse<Role>> {
         const actor = buildActorContext(event);
-        return this.service.getOne(id, actor);
+        const entity = await this.service.getOne(id, actor);
+
+        return { data: entity, meta: { schema: describeQuerySchema(roleSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
@@ -68,11 +76,11 @@ export class RoleController {
         @DPath('id') id: string,
         @DBody() data: RoleUpdatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<Role> {
+    ): Promise<EntityRecordResponse<Role>> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
         event.response.status = 202;
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
@@ -80,19 +88,19 @@ export class RoleController {
         @DPath('id') id: string,
         @DBody() data: RoleSavePayload,
         @DContext() event: IAppEvent,
-    ): Promise<Role> {
+    ): Promise<EntityRecordResponse<Role>> {
         const actor = buildActorContext(event);
         const { entity, created } = await this.service.save(id || undefined, data, actor);
 
         event.response.status = created ? 201 : 202;
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
-    async drop(@DPath('id') id: string, @DContext() event: IAppEvent): Promise<Role> {
+    async drop(@DPath('id') id: string, @DContext() event: IAppEvent): Promise<EntityRecordResponse<Role>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
         event.response.status = 202;
-        return entity;
+        return { data: entity, meta: {} };
     }
 }

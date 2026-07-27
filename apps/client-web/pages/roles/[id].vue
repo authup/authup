@@ -77,9 +77,9 @@ export default defineComponent({
         const translate = useTranslator();
 
         try {
-            entity.value = await injectHTTPClient()
+            entity.value = (await injectHTTPClient()
                 .role
-                .getOne(route.params.id as string);
+                .getOne(route.params.id as string)).data;
         } catch {
             await navigateTo({ path: '/roles' });
             throw createError({});

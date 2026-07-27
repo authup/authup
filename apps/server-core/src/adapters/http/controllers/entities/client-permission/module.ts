@@ -21,9 +21,15 @@ import type {
     ClientPermissionCreatePayload,
     ClientPermissionUpdatePayload,
     EntityCollectionResponse,
+    EntityRecordResponse,
 } from '@authup/core-http-kit';
 import type { ClientPermission } from '@authup/core-kit';
 import type { IClientPermissionService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    clientPermissionSchema,
+    describeQuerySchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
@@ -52,7 +58,10 @@ export class ClientPermissionController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(clientPermissionSchema),
+            },
         };
     }
 
@@ -60,14 +69,14 @@ export class ClientPermissionController {
     async add(
         @DBody() data: ClientPermissionCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<ClientPermission> {
+    ): Promise<EntityRecordResponse<ClientPermission>> {
         const actor = buildActorContext(event);
 
         const entity = await this.service.create(data, actor);
 
         event.response.status = 201;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
@@ -75,31 +84,31 @@ export class ClientPermissionController {
         @DPath('id') id: string,
         @DBody() data: ClientPermissionUpdatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<ClientPermission> {
+    ): Promise<EntityRecordResponse<ClientPermission>> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<ClientPermission> {
+    ): Promise<EntityRecordResponse<ClientPermission>> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
-        return entity;
+        return { data: entity, meta: { schema: describeQuerySchema(clientPermissionSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<ClientPermission> {
+    ): Promise<EntityRecordResponse<ClientPermission>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(
             id,
@@ -108,6 +117,6 @@ export class ClientPermissionController {
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 }

@@ -34,15 +34,15 @@ describe('src/http/controllers/user-permission', () => {
     let details : UserPermission | undefined;
 
     it('should create resource', async () => {
-        const user = await suite.client.user.create(createFakeUser());
-        const permission = await suite.client.permission.create(createFakePermission());
+        const { data: user } = await suite.client.user.create(createFakeUser());
+        const { data: permission } = await suite.client.permission.create(createFakePermission());
 
-        details = await suite.client
+        details = (await suite.client
             .userPermission
             .create({
                 userId: user.id,
                 permissionId: permission.id,
-            });
+            })).data;
 
         expect(details.userId).toEqual(user.id);
         expect(details.permissionId).toEqual(permission.id);
@@ -58,7 +58,7 @@ describe('src/http/controllers/user-permission', () => {
     });
 
     it('should read resource', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .userPermission
             .getOne(details!.id);
 
@@ -67,7 +67,7 @@ describe('src/http/controllers/user-permission', () => {
     });
 
     it('should delete resource', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .userPermission
             .delete(details!.id);
 

@@ -22,12 +22,18 @@ import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
+    EntityRecordResponse,
     UserAuthenticatorConfirmPayload,
     UserAuthenticatorCreatePayload,
     UserAuthenticatorEnrollResponse,
 } from '@authup/core-http-kit';
 import { isSelfToken } from '../../../../../utils/index.ts';
 import type { IUserAuthenticatorService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    describeQuerySchema,
+    userAuthenticatorSchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext, useRequestIdentity } from '../../../request/index.ts';
 
@@ -75,7 +81,10 @@ export class UserAuthenticatorController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(userAuthenticatorSchema),
+            },
         };
     }
 
@@ -100,11 +109,13 @@ export class UserAuthenticatorController {
         @DPath('id') id: string,
         @DPath('deviceId') deviceId: string,
         @DContext() event: IAppEvent,
-    ): Promise<UserAuthenticator> {
+    ): Promise<EntityRecordResponse<UserAuthenticator>> {
         const actor = buildActorContext(event);
         const userId = this.resolveUserId(id, event);
 
-        return this.service.getOne(deviceId, actor, { userId });
+        const entity = await this.service.getOne(deviceId, actor, { userId });
+
+        return { data: entity, meta: { schema: describeQuerySchema(userAuthenticatorSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DPost('/:deviceId/confirm', [ForceLoggedInMiddleware])
@@ -113,7 +124,7 @@ export class UserAuthenticatorController {
         @DPath('deviceId') deviceId: string,
         @DBody() data: UserAuthenticatorConfirmPayload,
         @DContext() event: IAppEvent,
-    ): Promise<UserAuthenticator> {
+    ): Promise<EntityRecordResponse<UserAuthenticator>> {
         const actor = buildActorContext(event);
         const userId = this.resolveUserId(id, event);
 
@@ -121,7 +132,9 @@ export class UserAuthenticatorController {
             throw new BadRequestError('A code must be provided.');
         }
 
-        return this.service.confirm(deviceId, data.code, actor, { userId });
+        const entity = await this.service.confirm(deviceId, data.code, actor, { userId });
+
+        return { data: entity, meta: {} };
     }
 
     @DDelete('/:deviceId', [ForceLoggedInMiddleware])
@@ -129,13 +142,13 @@ export class UserAuthenticatorController {
         @DPath('id') id: string,
         @DPath('deviceId') deviceId: string,
         @DContext() event: IAppEvent,
-    ): Promise<UserAuthenticator> {
+    ): Promise<EntityRecordResponse<UserAuthenticator>> {
         const actor = buildActorContext(event);
         const userId = this.resolveUserId(id, event);
 
         const entity = await this.service.delete(deviceId, actor, { userId });
 
         event.response.status = 202;
-        return entity;
+        return { data: entity, meta: {} };
     }
 }

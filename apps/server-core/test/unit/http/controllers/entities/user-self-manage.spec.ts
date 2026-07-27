@@ -28,14 +28,14 @@ describe('http/controllers/user (self-manage)', () => {
     beforeAll(async () => {
         await suite.setup();
 
-        const created = await suite.client.user.create({
+        const { data: created } = await suite.client.user.create({
             ...createFakeUser(),
             password: knownPassword,
             active: true,
         });
         entity = created;
 
-        const permission = await suite.client.permission.getOne(PermissionName.USER_SELF_MANAGE);
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_SELF_MANAGE);
         await suite.client.userPermission.create({
             userId: entity.id,
             permissionId: permission.id,
@@ -61,13 +61,13 @@ describe('http/controllers/user (self-manage)', () => {
     // ---- User entity column edits (denylist semantics) -----------------
 
     it('should allow user to update their own displayName (not in denylist)', async () => {
-        const response = await selfClient.user.update(entity.id, { displayName: 'self-renamed' });
+        const { data: response } = await selfClient.user.update(entity.id, { displayName: 'self-renamed' });
 
         expect(response.displayName).toBe('self-renamed');
     });
 
     it('should allow user to update their own firstName and lastName (not in denylist)', async () => {
-        const response = await selfClient.user.update(entity.id, {
+        const { data: response } = await selfClient.user.update(entity.id, {
             firstName: 'Ada',
             lastName: 'Lovelace',
         });
@@ -95,7 +95,7 @@ describe('http/controllers/user (self-manage)', () => {
     });
 
     it('should reject self-update of another user (not self)', async () => {
-        const otherUser = await suite.client.user.create(createFakeUser());
+        const { data: otherUser } = await suite.client.user.create(createFakeUser());
 
         await expect(
             selfClient.user.update(otherUser.id, { displayName: 'hijacked' }),
@@ -105,7 +105,7 @@ describe('http/controllers/user (self-manage)', () => {
     // ---- UserAttribute writes (open key namespace) ---------------------
 
     it('should allow user to create a UserAttribute with an arbitrary key', async () => {
-        const response = await selfClient.userAttribute.create({
+        const { data: response } = await selfClient.userAttribute.create({
             name: 'theme',
             value: 'dark',
         });
@@ -116,7 +116,7 @@ describe('http/controllers/user (self-manage)', () => {
     });
 
     it('should allow user to create a UserAttribute with another arbitrary key', async () => {
-        const response = await selfClient.userAttribute.create({
+        const { data: response } = await selfClient.userAttribute.create({
             name: 'preferred_language',
             value: 'de-DE',
         });

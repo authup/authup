@@ -19,7 +19,7 @@ function buildStore(sessionId?: string) {
                 realm_name: 'master',
                 permissions: [],
             }),
-            'GET /users/@me': () => ({ id: 'user-1', name: 'admin' }),
+            'GET /userinfo': () => ({ id: 'user-1', name: 'admin' }),
             'POST /token/revoke': () => ({}),
         },
     });

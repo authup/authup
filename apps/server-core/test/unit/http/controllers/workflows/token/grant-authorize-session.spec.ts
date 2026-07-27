@@ -34,10 +34,10 @@ describe('grant-authorize session reuse', () => {
 
     it('reuses the bearer session across the interactive login → authorize → token exchange', async () => {
         const password = 'authorize-session-reuse-pw';
-        const user = await suite.client.user.create(createFakeUser({ password }));
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
 
         const secret = generateOAuth2CodeVerifier();
-        const client = await suite.client
+        const { data: client } = await suite.client
             .client
             .create(createFakeClient({
                 secret,
@@ -46,7 +46,7 @@ describe('grant-authorize session reuse', () => {
                 authMethod: 'secret',
                 tokenBindingMethod: 'none',
             }));
-        const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: client.id,

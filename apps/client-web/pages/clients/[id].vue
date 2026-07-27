@@ -87,9 +87,9 @@ export default defineComponent({
         const translate = useTranslator();
 
         try {
-            entity.value = await injectHTTPClient()
+            entity.value = (await injectHTTPClient()
                 .client
-                .getOne(route.params.id as string, { fields: ['+secret'] });
+                .getOne(route.params.id as string, { fields: ['+secret'] })).data;
         } catch {
             await navigateTo({ path: '/clients' });
             throw createError({});

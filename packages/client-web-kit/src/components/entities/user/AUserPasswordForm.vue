@@ -153,7 +153,7 @@ export default defineComponent({
                     passwordRepeat: form.passwordRepeat,
                 });
 
-                ctx.emit('updated', user);
+                ctx.emit('updated', user.data);
             } catch (e) {
                 if (e instanceof Error) {
                     ctx.emit('failed', e);

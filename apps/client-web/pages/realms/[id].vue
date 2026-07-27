@@ -61,9 +61,9 @@ export default defineComponent({
         const translate = useTranslator();
 
         try {
-            entity.value = await injectHTTPClient()
+            entity.value = (await injectHTTPClient()
                 .realm
-                .getOne(route.params.id as string);
+                .getOne(route.params.id as string)).data;
         } catch {
             await navigateTo({ path: '/realms' });
             throw createError({});

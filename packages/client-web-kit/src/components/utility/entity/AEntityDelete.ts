@@ -106,8 +106,7 @@ const AEntityDelete = defineComponent({
 
             try {
                 const response = await domainAPI.delete(props.entityId);
-                response.id = props.entityId;
-                ctx.emit('deleted', response);
+                ctx.emit('deleted', { ...response.data, id: props.entityId });
             } catch (e) {
                 ctx.emit('failed', e);
             }

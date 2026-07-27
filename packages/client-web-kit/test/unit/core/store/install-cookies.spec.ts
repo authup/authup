@@ -46,7 +46,7 @@ function buildApp(seed: Record<string, unknown> = {}) {
         handlers: {
             'POST /token': () => ({ ...GRANT_RESPONSE }),
             'POST /token/introspect': () => ({ ...INTROSPECTION_RESPONSE }),
-            'GET /users/@me': () => ({ ...USER_RESPONSE }),
+            'GET /userinfo': () => ({ ...USER_RESPONSE }),
             'POST /token/revoke': () => ({}),
         },
     });

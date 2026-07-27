@@ -32,7 +32,7 @@ describe('src/http/controllers/user-authenticator', () => {
     });
 
     async function createUserBearer(password: string): Promise<{ id: string, client: HTTPClient }> {
-        const user = await suite.client.user.create(createFakeUser({ password }));
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
         const login = await suite.client.token.createWithPassword({
             username: user.name,
             password,
@@ -57,7 +57,7 @@ describe('src/http/controllers/user-authenticator', () => {
         expect(list.data[0].codes ?? null).toBeNull();
 
         // ... and reset it by deleting (the sanctioned admin management path)
-        const deleted = await suite.client.userAuthenticator.delete(userId, enrolled.data.id);
+        const { data: deleted } = await suite.client.userAuthenticator.delete(userId, enrolled.data.id);
         expect(deleted.id).toEqual(enrolled.data.id);
 
         const after = await suite.client.userAuthenticator.getMany(userId);

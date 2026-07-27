@@ -30,15 +30,15 @@ describe('src/http/controllers/client-role', () => {
     let entity : ClientRole | undefined;
 
     it('should create resource', async () => {
-        const client = await suite.client.client.create(createFakeClient());
-        const role = await suite.client.role.create(createFakeRole());
+        const { data: client } = await suite.client.client.create(createFakeClient());
+        const { data: role } = await suite.client.role.create(createFakeRole());
 
-        entity = await suite.client
+        entity = (await suite.client
             .clientRole
             .create({
                 clientId: client.id,
                 roleId: role.id,
-            });
+            })).data;
 
         expect(entity).toBeDefined();
         expect(entity.clientId).toEqual(client.id);
@@ -55,7 +55,7 @@ describe('src/http/controllers/client-role', () => {
     });
 
     it('should read resource', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .clientRole
             .getOne(entity!.id);
 
@@ -65,7 +65,7 @@ describe('src/http/controllers/client-role', () => {
     });
 
     it('should delete resource', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .clientRole
             .delete(entity!.id);
 

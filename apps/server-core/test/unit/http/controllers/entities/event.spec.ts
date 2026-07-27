@@ -28,7 +28,7 @@ describe('src/http/controllers/entities/event', () => {
     beforeAll(async () => {
         await suite.setup();
 
-        const created = await suite.client.user.create(user);
+        const { data: created } = await suite.client.user.create(user);
         userId = created.id;
     });
 
@@ -100,7 +100,7 @@ describe('src/http/controllers/entities/event', () => {
         const { data } = await suite.client.event.getMany({ filters: { name: EventName.LOGIN, actorId: userId } });
         expect(data.length).toBeGreaterThanOrEqual(1);
 
-        const row = await suite.client.event.getOne(data[0].id);
+        const { data: row } = await suite.client.event.getOne(data[0].id);
         expect(row.id).toEqual(data[0].id);
         expect(row.name).toEqual(EventName.LOGIN);
     });
@@ -124,7 +124,7 @@ describe('src/http/controllers/entities/event', () => {
         expect([404, 405]).toContain(del.status);
 
         // the row survives the delete attempt
-        const row = await suite.client.event.getOne(data[0].id);
+        const { data: row } = await suite.client.event.getOne(data[0].id);
         expect(row.id).toEqual(data[0].id);
     }, 30_000);
 

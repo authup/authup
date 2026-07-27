@@ -20,9 +20,15 @@ import { useRequestQuery } from '@routup/basic/query';
 import type {
     ClientScopeCreatePayload,
     EntityCollectionResponse,
+    EntityRecordResponse,
 } from '@authup/core-http-kit';
 import type { ClientScope } from '@authup/core-kit';
 import type { IClientScopeService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    clientScopeSchema,
+    describeQuerySchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
@@ -51,7 +57,10 @@ export class ClientScopeController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(clientScopeSchema),
+            },
         };
     }
 
@@ -59,37 +68,37 @@ export class ClientScopeController {
     async add(
         @DBody() data: ClientScopeCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<ClientScope> {
+    ): Promise<EntityRecordResponse<ClientScope>> {
         const actor = buildActorContext(event);
 
         const entity = await this.service.create(data, actor);
 
         event.response.status = 201;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DGet('/:id', [])
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<ClientScope> {
+    ): Promise<EntityRecordResponse<ClientScope>> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
-        return entity;
+        return { data: entity, meta: { schema: describeQuerySchema(clientScopeSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<ClientScope> {
+    ): Promise<EntityRecordResponse<ClientScope>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 }

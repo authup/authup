@@ -32,19 +32,19 @@ describe('grant-authorize (access policy backstop)', () => {
     beforeAll(async () => {
         await suite.setup();
 
-        denyPolicy = await suite.client.policy.createBuiltIn({
+        denyPolicy = (await suite.client.policy.createBuiltIn({
             name: 'token-access-deny',
             type: BuiltInPolicyType.IDENTITY,
             invert: false,
             types: [IdentityType.CLIENT],
             realmId: null,
-        });
-        allowPolicy = await suite.client.policy.createBuiltIn({
+        })).data;
+        allowPolicy = (await suite.client.policy.createBuiltIn({
             name: 'token-access-allow',
             type: BuiltInPolicyType.IDENTITY,
             invert: false,
             realmId: null,
-        });
+        })).data;
     });
 
     afterAll(async () => {
@@ -52,14 +52,14 @@ describe('grant-authorize (access policy backstop)', () => {
     });
 
     const createClientWithScope = async (secret: string): Promise<Client> => {
-        const client = await suite.client.client.create(createFakeClient({
+        const { data: client } = await suite.client.client.create(createFakeClient({
             secret,
             secretHashed: false,
             secretEncrypted: false,
             authMethod: 'secret',
             tokenBindingMethod: 'none',
         }));
-        const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: client.id,

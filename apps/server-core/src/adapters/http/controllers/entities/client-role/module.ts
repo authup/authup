@@ -20,9 +20,15 @@ import { useRequestQuery } from '@routup/basic/query';
 import type {
     ClientRoleCreatePayload,
     EntityCollectionResponse,
+    EntityRecordResponse,
 } from '@authup/core-http-kit';
 import type { ClientRole } from '@authup/core-kit';
 import type { IClientRoleService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    clientRoleSchema,
+    describeQuerySchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
@@ -53,7 +59,10 @@ export class ClientRoleController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(clientRoleSchema),
+            },
         };
     }
 
@@ -61,36 +70,36 @@ export class ClientRoleController {
     async add(
         @DBody() data: ClientRoleCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<ClientRole> {
+    ): Promise<EntityRecordResponse<ClientRole>> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
         event.response.status = 201;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<ClientRole> {
+    ): Promise<EntityRecordResponse<ClientRole>> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
-        return entity;
+        return { data: entity, meta: { schema: describeQuerySchema(clientRoleSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<ClientRole> {
+    ): Promise<EntityRecordResponse<ClientRole>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 }

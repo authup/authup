@@ -39,15 +39,15 @@ describe('src/http/controllers/token (id_token amr/acr claims)', () => {
     beforeAll(async () => {
         await suite.setup();
 
-        oauthClient = await suite.client.client.create(createFakeClient({
+        oauthClient = (await suite.client.client.create(createFakeClient({
             secret: clientSecret,
             secretHashed: false,
             secretEncrypted: false,
             authMethod: 'secret',
             tokenBindingMethod: 'none',
-        }));
+        }))).data;
         for (const name of [ScopeName.GLOBAL, ScopeName.OPEN_ID]) {
-            const scope = await suite.client.scope.getOne(name);
+            const { data: scope } = await suite.client.scope.getOne(name);
             await suite.client.clientScope.create({
                 scopeId: scope.id,
                 clientId: oauthClient.id,
@@ -60,7 +60,9 @@ describe('src/http/controllers/token (id_token amr/acr claims)', () => {
     });
 
     async function createUser(password: string): Promise<User> {
-        return suite.client.user.create(createFakeUser({ password }));
+        const { data } = await suite.client.user.create(createFakeUser({ password }));
+
+        return data;
     }
 
     async function bearerFor(token: string): Promise<HTTPClient> {

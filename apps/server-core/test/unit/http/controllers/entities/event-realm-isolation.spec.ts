@@ -35,11 +35,11 @@ describe('event (realm isolation)', () => {
     beforeAll(async () => {
         await suite.setup();
 
-        const realmB = await suite.client.realm.create(createFakeRealm());
+        const { data: realmB } = await suite.client.realm.create(createFakeRealm());
 
         // a LOGIN audit row in the foreign realm (B)
         const userB = createFakeUser({ realmId: realmB.id });
-        const createdB = await suite.client.user.create(userB);
+        const { data: createdB } = await suite.client.user.create(userB);
         await suite.client.token.createWithPassword({
             username: userB.name,
             password: userB.password!,
@@ -48,7 +48,7 @@ describe('event (realm isolation)', () => {
 
         // a LOGIN audit row in the actor's own realm (master)
         const userM = createFakeUser();
-        const createdM = await suite.client.user.create(userM);
+        const { data: createdM } = await suite.client.user.create(userM);
         await suite.client.token.createWithPassword({
             username: userM.name,
             password: userM.password!,
@@ -63,7 +63,7 @@ describe('event (realm isolation)', () => {
         ownRowId = ownRows.data[0].id;
 
         // a restricted actor in master holding EVENT_READ at the default `own` scope
-        const actorClient = await suite.client.client.create({
+        const { data: actorClient } = await suite.client.client.create({
             ...createFakeClient(),
             authMethod: 'secret',
             tokenBindingMethod: 'none',
@@ -71,7 +71,7 @@ describe('event (realm isolation)', () => {
             secretHashed: false,
             secretEncrypted: false,
         });
-        const permission = await suite.client.permission.getOne(PermissionName.EVENT_READ);
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.EVENT_READ);
         await suite.client.clientPermission.create({
             clientId: actorClient.id,
             permissionId: permission.id,

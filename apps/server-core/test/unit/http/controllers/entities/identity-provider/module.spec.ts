@@ -38,7 +38,7 @@ describe('src/http/controllers/identity-provider', () => {
     const ldapIdentityProvider = createFakeLdapIdentityProvider();
 
     it('should create resource (oauth2)', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .identityProvider
             .create(oAuth2IdentityProvider);
 
@@ -50,7 +50,7 @@ describe('src/http/controllers/identity-provider', () => {
     });
 
     it('should create resource (ldap)', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .identityProvider
             .create(ldapIdentityProvider);
 
@@ -71,7 +71,7 @@ describe('src/http/controllers/identity-provider', () => {
     });
 
     it('should read resource (oauth2)', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .identityProvider
             .getOne(oAuth2IdentityProvider.id!);
 
@@ -81,7 +81,7 @@ describe('src/http/controllers/identity-provider', () => {
     });
 
     it('should read resource (ldap)', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .identityProvider
             .getOne(ldapIdentityProvider.id!);
 
@@ -91,7 +91,7 @@ describe('src/http/controllers/identity-provider', () => {
     });
 
     it('should read resource by name', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .identityProvider
             .getOne(oAuth2IdentityProvider.name);
 
@@ -105,7 +105,7 @@ describe('src/http/controllers/identity-provider', () => {
         oAuth2IdentityProvider.clientSecret = 'start1234';
         oAuth2IdentityProvider.scope = 'openid profile';
 
-        const response = await suite.client
+        const { data: response } = await suite.client
             .identityProvider
             .update(oAuth2IdentityProvider.id!, oAuth2IdentityProvider);
 
@@ -140,7 +140,7 @@ describe('src/http/controllers/identity-provider', () => {
     });
 
     it('should delete resource (oauth2)', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .identityProvider
             .delete(oAuth2IdentityProvider.id!);
 
@@ -148,7 +148,7 @@ describe('src/http/controllers/identity-provider', () => {
     });
 
     it('should delete resource (ldap)', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .identityProvider
             .delete(ldapIdentityProvider.id!);
 
@@ -157,9 +157,8 @@ describe('src/http/controllers/identity-provider', () => {
 
     it('should create and update resource with put', async () => {
         const entity = createFakeOAuth2IdentityProvider();
-        let response = await suite.client
-            .identityProvider
-            .createOrUpdate(entity.name, entity);
+        let { data: response } = await suite.client
+            .identityProvider.createOrUpdate(entity.name, entity);
 
         expect(response.name).toEqual(entity.name);
 
@@ -167,12 +166,12 @@ describe('src/http/controllers/identity-provider', () => {
 
         const { name } = createFakeOAuth2IdentityProvider();
 
-        response = await suite.client
+        response = (await suite.client
             .identityProvider
             .createOrUpdate(entity.name, {
                 ...entity,
                 name,
-            });
+            })).data;
 
         expect(response).toBeDefined();
         expect(response.name).toEqual(name);

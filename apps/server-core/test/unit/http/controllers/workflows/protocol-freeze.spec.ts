@@ -105,7 +105,7 @@ describe('protocol-surface freeze (plan 073)', () => {
     });
 
     it('serves the management realm read with camelCase keys', async () => {
-        const realm = await suite.client.realm.getOne(REALM_MASTER_NAME);
+        const { data: realm } = await suite.client.realm.getOne(REALM_MASTER_NAME);
 
         expect(realm.builtIn).toBe(true);
         expect(typeof realm.createdAt).toEqual('string');
@@ -115,7 +115,7 @@ describe('protocol-surface freeze (plan 073)', () => {
     });
 
     it('serves the management user create with camelCase keys', async () => {
-        const user = await suite.client.user.create(createFakeUser());
+        const { data: user } = await suite.client.user.create(createFakeUser());
 
         expect(typeof user.createdAt).toEqual('string');
         expect(typeof user.realmId).toEqual('string');

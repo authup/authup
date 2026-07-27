@@ -365,7 +365,7 @@ export default defineComponent({
 
             if (props.clientId) {
                 try {
-                    client.value = await httpClient.client.getOne(props.clientId);
+                    client.value = (await httpClient.client.getOne(props.clientId)).data;
                 } catch (e) {
                     if (e instanceof Error) {
                         error.value = e;

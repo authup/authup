@@ -31,15 +31,15 @@ describe('src/http/controllers/client-permission', () => {
     let entity : ClientPermission | undefined;
 
     it('should create resource', async () => {
-        const client = await suite.client.client.create(createFakeClient());
-        const permission = await suite.client.permission.create(createFakePermission());
+        const { data: client } = await suite.client.client.create(createFakeClient());
+        const { data: permission } = await suite.client.permission.create(createFakePermission());
 
-        entity = await suite.client
+        entity = (await suite.client
             .clientPermission
             .create({
                 clientId: client.id,
                 permissionId: permission.id,
-            });
+            })).data;
 
         expect(entity.clientId).toEqual(client.id);
         expect(entity.permissionId).toEqual(permission.id);
@@ -55,7 +55,7 @@ describe('src/http/controllers/client-permission', () => {
     });
 
     it('should read resource', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .clientPermission
             .getOne(entity!.id);
 
@@ -65,7 +65,7 @@ describe('src/http/controllers/client-permission', () => {
     });
 
     it('should delete resource', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .clientPermission
             .delete(entity!.id);
 

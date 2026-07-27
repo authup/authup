@@ -37,13 +37,13 @@ describe('consent', () => {
     beforeAll(async () => {
         await suite.setup();
 
-        realm = await suite.client.realm.create(createFakeRealm());
+        realm = (await suite.client.realm.create(createFakeRealm())).data;
 
         const password = generateOAuth2CodeVerifier();
-        user = await suite.client.user.create(createFakeUser({
+        user = (await suite.client.user.create(createFakeUser({
             realmId: realm.id,
             password,
-        }));
+        }))).data;
 
         const login = await suite.client.token.createWithPassword({
             username: user.name,
@@ -61,14 +61,14 @@ describe('consent', () => {
     });
 
     async function createScopedClient(scopeNames: string[] = [ScopeName.GLOBAL]): Promise<Client> {
-        const client = await suite.client.client.create(createFakeClient({
+        const { data: client } = await suite.client.client.create(createFakeClient({
             realmId: realm.id,
             authMethod: 'secret',
             tokenBindingMethod: 'none',
         }));
 
         for (const name of scopeNames) {
-            const scope = await suite.client.scope.getOne(name);
+            const { data: scope } = await suite.client.scope.getOne(name);
             await suite.client.clientScope.create({
                 scopeId: scope.id,
                 clientId: client.id,
@@ -105,7 +105,7 @@ describe('consent', () => {
 
     it('cascade-drops a user\'s consent rows when the user is deleted', async () => {
         const password = generateOAuth2CodeVerifier();
-        const victim = await suite.client.user.create(createFakeUser({
+        const { data: victim } = await suite.client.user.create(createFakeUser({
             realmId: realm.id,
             password,
         }));
@@ -229,7 +229,7 @@ describe('consent', () => {
 
         // a second non-admin user in the same realm sees none of the first user's rows
         const password = generateOAuth2CodeVerifier();
-        const otherUser = await suite.client.user.create(createFakeUser({
+        const { data: otherUser } = await suite.client.user.create(createFakeUser({
             realmId: realm.id,
             password,
         }));
@@ -259,14 +259,14 @@ describe('consent', () => {
         expect(data).toHaveLength(1);
         const [row] = data;
 
-        const single = await userClient.consent.getOne(row.id);
+        const { data: single } = await userClient.consent.getOne(row.id);
         expect(single.id).toEqual(row.id);
 
         // typed client hides the status code — assert 202 via raw fetch
         const response = await httpRequest(suite, 'DELETE', `/consents/${row.id}`, { headers: { Authorization: `Bearer ${userToken}` } });
         expect(response.status).toEqual(202);
         const body = await response.json();
-        expect(body.id).toEqual(row.id);
+        expect(body.data.id).toEqual(row.id);
 
         const after = await userClient.consent.getMany({ filters: { clientId: client.id } });
         expect(after.data).toHaveLength(0);
@@ -280,7 +280,7 @@ describe('consent', () => {
         const [row] = data;
 
         const password = generateOAuth2CodeVerifier();
-        const intruder = await suite.client.user.create(createFakeUser({
+        const { data: intruder } = await suite.client.user.create(createFakeUser({
             realmId: realm.id,
             password,
         }));
@@ -316,7 +316,7 @@ describe('consent', () => {
         expect(data).toHaveLength(1);
         expect(data[0].sub).toEqual(user.id);
 
-        const removed = await suite.client.consent.delete(data[0].id);
+        const { data: removed } = await suite.client.consent.delete(data[0].id);
         expect(removed.id).toEqual(data[0].id);
 
         const after = await suite.client.consent.getMany({ filters: { clientId: client.id } });

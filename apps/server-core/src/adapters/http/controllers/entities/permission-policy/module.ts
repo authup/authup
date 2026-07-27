@@ -19,10 +19,16 @@ import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
+    EntityRecordResponse,
     PermissionPolicyCreatePayload,
 } from '@authup/core-http-kit';
 import type { PermissionPolicy } from '@authup/core-kit';
 import type { IPermissionPolicyService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    describeQuerySchema,
+    permissionPolicySchema,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
 
@@ -51,7 +57,10 @@ export class PermissionPolicyController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(permissionPolicySchema),
+            },
         };
     }
 
@@ -59,37 +68,37 @@ export class PermissionPolicyController {
     async add(
         @DBody() data: PermissionPolicyCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<PermissionPolicy> {
+    ): Promise<EntityRecordResponse<PermissionPolicy>> {
         const actor = buildActorContext(event);
 
         const entity = await this.service.create(data, actor);
 
         event.response.status = 201;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<PermissionPolicy> {
+    ): Promise<EntityRecordResponse<PermissionPolicy>> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
-        return entity;
+        return { data: entity, meta: { schema: describeQuerySchema(permissionPolicySchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<PermissionPolicy> {
+    ): Promise<EntityRecordResponse<PermissionPolicy>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 }

@@ -7,7 +7,7 @@
 
 import { X509Certificate, createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import type { Client, Realm } from '@authup/core-kit';
+import type { Realm } from '@authup/core-kit';
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
 import {
     afterAll,
@@ -63,7 +63,7 @@ describe('OAuth2 TLS client authentication and certificate-bound tokens', () => 
 
     beforeAll(async () => {
         await suite.setup();
-        realm = await suite.client.realm.getOne('master');
+        realm = (await suite.client.realm.getOne('master')).data;
 
         await suite.client.trustAnchor.create({
             name: 'oauth-client-root',
@@ -147,7 +147,7 @@ describe('OAuth2 TLS client authentication and certificate-bound tokens', () => 
     });
 
     it('accepts an untrusted self-signed certificate for binding and requires it again on refresh', async () => {
-        const client: Client = await suite.client.client.create(createFakeClient({
+        const { data: client } = await suite.client.client.create(createFakeClient({
             authMethod: 'none',
             tokenBindingMethod: 'tls',
             secret: null,

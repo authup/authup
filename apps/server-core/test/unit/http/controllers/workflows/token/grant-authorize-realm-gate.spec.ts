@@ -44,19 +44,19 @@ describe('grant-authorize realm gate (layer 2)', () => {
     beforeAll(async () => {
         await suite.setup();
 
-        realmA = await suite.client.realm.create(createFakeRealm());
-        realmB = await suite.client.realm.create(createFakeRealm());
+        realmA = (await suite.client.realm.create(createFakeRealm())).data;
+        realmB = (await suite.client.realm.create(createFakeRealm())).data;
 
         // a public (PKCE) client living in realm B
-        clientB = await suite.client.client.create(createFakeClient({
+        clientB = (await suite.client.client.create(createFakeClient({
             realmId: realmB.id,
             authMethod: 'none',
             tokenBindingMethod: 'none',
             secret: null,
             redirectUri: `${REDIRECT_URI.replace('/cb', '')}/**`,
-        }));
+        }))).data;
 
-        const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({ scopeId: scope.id, clientId: clientB.id });
 
         codeIssuer = suite.container.resolve(OAuth2InjectionToken.AuthorizationCodeIssuer);
@@ -68,7 +68,7 @@ describe('grant-authorize realm gate (layer 2)', () => {
 
     it('rejects a code bound to another realm at /token with invalid_grant', async () => {
         // a real realm-A user gives the code a genuine sub/realm
-        const user = await suite.client.user.create(createFakeUser({ realmId: realmA.id }));
+        const { data: user } = await suite.client.user.create(createFakeUser({ realmId: realmA.id }));
 
         const codeVerifier = generateOAuth2CodeVerifier();
         const codeChallenge = await buildOAuth2CodeChallenge(codeVerifier);
@@ -110,7 +110,7 @@ describe('grant-authorize realm gate (layer 2)', () => {
 
     it('accepts a realm-consistent code at /token', async () => {
         // control: the same shape, but the identity's realm matches the client's
-        const user = await suite.client.user.create(createFakeUser({ realmId: realmB.id }));
+        const { data: user } = await suite.client.user.create(createFakeUser({ realmId: realmB.id }));
 
         const codeVerifier = generateOAuth2CodeVerifier();
         const codeChallenge = await buildOAuth2CodeChallenge(codeVerifier);

@@ -104,9 +104,9 @@ export default defineComponent({
         );
 
         try {
-            entity.value = await injectHTTPClient()
+            entity.value = (await injectHTTPClient()
                 .event
-                .getOne(route.params.id as string);
+                .getOne(route.params.id as string)).data;
         } catch {
             await navigateTo({ path: '/events' });
             throw createError({});

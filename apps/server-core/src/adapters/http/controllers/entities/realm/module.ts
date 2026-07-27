@@ -23,12 +23,18 @@ import { useRequestQuery } from '@routup/basic/query';
 import type { Repository } from 'typeorm';
 import type {
     EntityCollectionResponse,
+    EntityRecordResponse,
     RealmCreatePayload,
     RealmSavePayload,
     RealmUpdatePayload,
 } from '@authup/core-http-kit';
 import type { Realm } from '@authup/core-kit';
 import type { IRealmService } from '../../../../../core/index.ts';
+import {
+    RECORD_QUERY_PARAMETERS,
+    describeQuerySchema,
+    realmSchema,
+} from '../../../../../core/index.ts';
 import type { KeyEntity } from '../../../../database/domains/index.ts';
 import { getJwkRouteHandler, getJwksRouteHandler } from '../../workflows/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -73,7 +79,10 @@ export class RealmController {
 
         return {
             data,
-            meta,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(realmSchema),
+            },
         };
     }
 
@@ -81,18 +90,20 @@ export class RealmController {
     async add(
         @DBody() data: RealmCreatePayload,
         @DContext() event: IAppEvent,
-    ) : Promise<Realm> {
+    ) : Promise<EntityRecordResponse<Realm>> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
         event.response.status = 201;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DGet('/:id', [])
-    async get(@DPath('id') id: string): Promise<Realm> {
-        return this.service.getOne(id);
+    async get(@DPath('id') id: string): Promise<EntityRecordResponse<Realm>> {
+        const entity = await this.service.getOne(id);
+
+        return { data: entity, meta: { schema: describeQuerySchema(realmSchema, RECORD_QUERY_PARAMETERS) } };
     }
 
     @DGet('/:id/.well-known/openid-configuration', [])
@@ -171,7 +182,7 @@ export class RealmController {
                     token_endpoint: resolveURL(mtlsBaseURL, 'token'),
                     introspection_endpoint: resolveURL(mtlsBaseURL, 'token/introspect'),
                     revocation_endpoint: resolveURL(mtlsBaseURL, 'token/revoke'),
-                    userinfo_endpoint: resolveURL(mtlsBaseURL, 'users/@me'),
+                    userinfo_endpoint: resolveURL(mtlsBaseURL, 'userinfo'),
                 },
             } : {}),
 
@@ -183,7 +194,7 @@ export class RealmController {
 
             service_documentation: 'https://authup.org/',
 
-            userinfo_endpoint: resolveURL(baseURL, 'users/@me'),
+            userinfo_endpoint: resolveURL(baseURL, 'userinfo'),
         };
     }
 
@@ -207,7 +218,7 @@ export class RealmController {
         @DPath('id') id: string,
         @DBody() data: RealmUpdatePayload,
         @DContext() event: IAppEvent,
-    ) : Promise<Realm> {
+    ) : Promise<EntityRecordResponse<Realm>> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(
             id,
@@ -217,7 +228,7 @@ export class RealmController {
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
@@ -225,7 +236,7 @@ export class RealmController {
         @DPath('id') id: string,
         @DBody() data: RealmSavePayload,
         @DContext() event: IAppEvent,
-    ) : Promise<Realm> {
+    ) : Promise<EntityRecordResponse<Realm>> {
         const actor = buildActorContext(event);
         const {
             entity,
@@ -237,19 +248,19 @@ export class RealmController {
         );
 
         event.response.status = created ? 201 : 202;
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ) : Promise<Realm> {
+    ) : Promise<EntityRecordResponse<Realm>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 }
