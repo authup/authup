@@ -16,7 +16,7 @@ import {
 import type { Session } from '@authup/core-kit';
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import type { EntityCollectionResponse, SessionDeleteManyResponse } from '@authup/core-http-kit';
+import type { EntityCollectionResponse, EntityRecordWrappedResponse, SessionDeleteManyResponse } from '@authup/core-http-kit';
 import { isSelfToken } from '../../../../../utils/index.ts';
 import type { ISessionService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -55,13 +55,15 @@ export class SessionController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<Session> {
+    ): Promise<EntityRecordWrappedResponse<Session>> {
         const actor = buildActorContext(event);
 
         // `@me` / `@self` resolve to the caller's current session.
         const resolvedId = isSelfToken(id) ? (useRequestSessionId(event) ?? id) : id;
 
-        return this.service.getOne(resolvedId, actor);
+        const entity = await this.service.getOne(resolvedId, actor);
+
+        return { data: entity, meta: {} };
     }
 
     @DDelete('', [ForceLoggedInMiddleware])
@@ -86,13 +88,13 @@ export class SessionController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<Session> {
+    ): Promise<EntityRecordWrappedResponse<Session>> {
         const actor = buildActorContext(event);
 
         const resolvedId = isSelfToken(id) ? (useRequestSessionId(event) ?? id) : id;
         const entity = await this.service.delete(resolvedId, actor);
 
         event.response.status = 202;
-        return entity;
+        return { data: entity, meta: {} };
     }
 }

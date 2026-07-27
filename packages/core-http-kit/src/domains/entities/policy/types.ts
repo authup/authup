@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordWrappedResponse } from '../../types-base';
 import type { EntityQueryInput } from '../../../helpers';
 
 import type { BuiltInPolicies } from '@authup/access';
@@ -41,22 +41,22 @@ export interface IPolicyAPI {
     getMany<OUTPUT extends PolicyResponse = PolicyResponse>(
         data?: EntityQueryInput<Policy & { parentId?: string | null }>,
     ) : Promise<EntityCollectionResponse<OUTPUT>>;
-    delete<OUTPUT extends PolicyResponse = PolicyResponse>(id: Policy['id']) : Promise<EntityRecordResponse<OUTPUT>>;
-    getOne<OUTPUT extends PolicyResponse = PolicyResponse>(id: Policy['id'], record?: EntityQueryInput<Policy>) : Promise<EntityRecordResponse<OUTPUT>>;
-    getOneExpanded<OUTPUT extends PolicyResponse = PolicyResponse>(id: Policy['id'], record?: EntityQueryInput<Policy>) : Promise<EntityRecordResponse<OUTPUT>>;
+    delete<OUTPUT extends PolicyResponse = PolicyResponse>(id: Policy['id']) : Promise<EntityRecordWrappedResponse<OUTPUT>>;
+    getOne<OUTPUT extends PolicyResponse = PolicyResponse>(id: Policy['id'], record?: EntityQueryInput<Policy>) : Promise<EntityRecordWrappedResponse<OUTPUT>>;
+    getOneExpanded<OUTPUT extends PolicyResponse = PolicyResponse>(id: Policy['id'], record?: EntityQueryInput<Policy>) : Promise<EntityRecordWrappedResponse<OUTPUT>>;
     create<INPUT extends PolicyCreatePayload = PolicyCreatePayload, OUTPUT extends PolicyResponse = PolicyResponse>(
         data: INPUT,
-    ) : Promise<EntityRecordResponse<OUTPUT>>;
-    createBuiltIn(data: BuiltInPolicyCreatePayload) : Promise<EntityRecordResponse<BuiltInPolicyResponse>>;
+    ) : Promise<EntityRecordWrappedResponse<OUTPUT>>;
+    createBuiltIn(data: BuiltInPolicyCreatePayload) : Promise<EntityRecordWrappedResponse<BuiltInPolicyResponse>>;
     update<INPUT extends PolicyUpdatePayload = PolicyUpdatePayload, OUTPUT extends PolicyResponse = PolicyResponse>(
         id: Policy['id'],
         data: INPUT,
-    ) : Promise<EntityRecordResponse<OUTPUT>>;
-    updateBuiltIn(id: Policy['id'], data: BuiltInPolicyUpdatePayload) : Promise<EntityRecordResponse<BuiltInPolicyResponse>>;
+    ) : Promise<EntityRecordWrappedResponse<OUTPUT>>;
+    updateBuiltIn(id: Policy['id'], data: BuiltInPolicyUpdatePayload) : Promise<EntityRecordWrappedResponse<BuiltInPolicyResponse>>;
     createOrUpdate<INPUT extends PolicyCreatePayload = PolicyCreatePayload, OUTPUT extends PolicyResponse = PolicyResponse>(
         idOrName: string,
         data: INPUT,
-    ) : Promise<EntityRecordResponse<OUTPUT>>;
-    createOrUpdateBuiltin(idOrName: string, data: BuiltInPolicyCreatePayload) : Promise<EntityRecordResponse<BuiltInPolicyResponse>>;
+    ) : Promise<EntityRecordWrappedResponse<OUTPUT>>;
+    createOrUpdateBuiltin(idOrName: string, data: BuiltInPolicyCreatePayload) : Promise<EntityRecordWrappedResponse<BuiltInPolicyResponse>>;
     check(idOrName: string, data?: Record<string, any>) : Promise<PolicyAPICheckResponse>;
 }

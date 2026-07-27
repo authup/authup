@@ -22,6 +22,7 @@ import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
+    EntityRecordWrappedResponse,
     UserAuthenticatorConfirmPayload,
     UserAuthenticatorCreatePayload,
     UserAuthenticatorEnrollResponse,
@@ -100,11 +101,13 @@ export class UserAuthenticatorController {
         @DPath('id') id: string,
         @DPath('deviceId') deviceId: string,
         @DContext() event: IAppEvent,
-    ): Promise<UserAuthenticator> {
+    ): Promise<EntityRecordWrappedResponse<UserAuthenticator>> {
         const actor = buildActorContext(event);
         const userId = this.resolveUserId(id, event);
 
-        return this.service.getOne(deviceId, actor, { userId });
+        const entity = await this.service.getOne(deviceId, actor, { userId });
+
+        return { data: entity, meta: {} };
     }
 
     @DPost('/:deviceId/confirm', [ForceLoggedInMiddleware])
@@ -113,7 +116,7 @@ export class UserAuthenticatorController {
         @DPath('deviceId') deviceId: string,
         @DBody() data: UserAuthenticatorConfirmPayload,
         @DContext() event: IAppEvent,
-    ): Promise<UserAuthenticator> {
+    ): Promise<EntityRecordWrappedResponse<UserAuthenticator>> {
         const actor = buildActorContext(event);
         const userId = this.resolveUserId(id, event);
 
@@ -121,7 +124,9 @@ export class UserAuthenticatorController {
             throw new BadRequestError('A code must be provided.');
         }
 
-        return this.service.confirm(deviceId, data.code, actor, { userId });
+        const entity = await this.service.confirm(deviceId, data.code, actor, { userId });
+
+        return { data: entity, meta: {} };
     }
 
     @DDelete('/:deviceId', [ForceLoggedInMiddleware])
@@ -129,13 +134,13 @@ export class UserAuthenticatorController {
         @DPath('id') id: string,
         @DPath('deviceId') deviceId: string,
         @DContext() event: IAppEvent,
-    ): Promise<UserAuthenticator> {
+    ): Promise<EntityRecordWrappedResponse<UserAuthenticator>> {
         const actor = buildActorContext(event);
         const userId = this.resolveUserId(id, event);
 
         const entity = await this.service.delete(deviceId, actor, { userId });
 
         event.response.status = 202;
-        return entity;
+        return { data: entity, meta: {} };
     }
 }

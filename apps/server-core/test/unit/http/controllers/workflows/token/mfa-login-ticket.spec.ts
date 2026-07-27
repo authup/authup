@@ -64,7 +64,7 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
     // completes a FRESH interactive login through the MFA-pending ticket.
     it('completes a fresh email-only login via the mfa ticket', async () => {
         const password = 'ticket-email-password';
-        const user = await suite.client.user.create(createFakeUser({ password }));
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
 
         // enroll the email factor (pre-enrollment login still passes)
         const preLogin = await suite.client.token.createWithPassword({
@@ -150,14 +150,14 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
         // 7) the completed session satisfies the /authorize backstop and got
         // extended to the regular session lifetime
         const clientSecret = generateOAuth2CodeVerifier();
-        const oauthClient = await suite.client.client.create(createFakeClient({
+        const { data: oauthClient } = await suite.client.client.create(createFakeClient({
             secret: clientSecret,
             secretHashed: false,
             secretEncrypted: false,
             authMethod: 'secret',
             tokenBindingMethod: 'none',
         }));
-        const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: oauthClient.id,
@@ -172,7 +172,7 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
         });
         expect(new URL(authorizeResponse.url).searchParams.get('code')).toBeTruthy();
 
-        const completed = await suite.client.session.getOne(pendingSession.id);
+        const { data: completed } = await suite.client.session.getOne(pendingSession.id);
         expect(completed.mfaAt).toBeTruthy();
         const completedExpiresIn = (new Date(completed.expiresAt).getTime() - Date.now()) / 1_000;
         expect(completedExpiresIn).toBeGreaterThan(MFA_TICKET_MAX_AGE + 60);
@@ -189,7 +189,7 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
     // session per plain code entry would be pure churn, so no ticket.
     it('does not issue a ticket for totp/recovery-only users', async () => {
         const password = 'ticket-totp-password';
-        const user = await suite.client.user.create(createFakeUser({ password }));
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
 
         const preLogin = await suite.client.token.createWithPassword({
             username: user.name,
@@ -219,7 +219,7 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
     // challenge covers every kind, incl. a totp code entered against it.
     it('completes a totp verify against the ticket for a mixed-kind user', async () => {
         const password = 'ticket-mixed-password';
-        const user = await suite.client.user.create(createFakeUser({ password }));
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
 
         const preLogin = await suite.client.token.createWithPassword({
             username: user.name,
@@ -259,7 +259,7 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
     // An invalid factor against the ticket must not leak a grant.
     it('rejects an invalid challenge response against the ticket', async () => {
         const password = 'ticket-invalid-password';
-        const user = await suite.client.user.create(createFakeUser({ password }));
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
 
         const preLogin = await suite.client.token.createWithPassword({
             username: user.name,

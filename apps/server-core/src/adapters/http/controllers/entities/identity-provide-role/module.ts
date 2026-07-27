@@ -19,6 +19,7 @@ import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
+    EntityRecordWrappedResponse,
     IdentityProviderRoleMappingCreatePayload,
     IdentityProviderRoleMappingUpdatePayload,
 } from '@authup/core-http-kit';
@@ -64,24 +65,24 @@ export class IdentityProviderRoleMappingController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<IdentityProviderRoleMapping> {
+    ): Promise<EntityRecordWrappedResponse<IdentityProviderRoleMapping>> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: IdentityProviderRoleMappingCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<IdentityProviderRoleMapping> {
+    ): Promise<EntityRecordWrappedResponse<IdentityProviderRoleMapping>> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
         event.response.status = 201;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
@@ -89,25 +90,25 @@ export class IdentityProviderRoleMappingController {
         @DPath('id') id: string,
         @DBody() data: IdentityProviderRoleMappingUpdatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<IdentityProviderRoleMapping> {
+    ): Promise<EntityRecordWrappedResponse<IdentityProviderRoleMapping>> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<IdentityProviderRoleMapping> {
+    ): Promise<EntityRecordWrappedResponse<IdentityProviderRoleMapping>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 }

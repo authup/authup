@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
+import type { EntityRecordWrappedResponse, IEntityAPI } from '../../types-base';
 
 import type { Permission } from '@authup/core-kit';
 
@@ -21,6 +21,6 @@ export type PermissionUpdatePayload = Partial<PermissionCreatePayload>;
 export type PermissionSavePayload = PermissionCreatePayload;
 
 export interface IPermissionAPI extends IEntityAPI<Permission, PermissionCreatePayload, PermissionUpdatePayload> {
-    createOrUpdate(idOrName: string, data: PermissionSavePayload) : Promise<EntityRecordResponse<Permission>>;
+    createOrUpdate(idOrName: string, data: PermissionSavePayload) : Promise<EntityRecordWrappedResponse<Permission>>;
     check(idOrName: string, data?: Record<string, any>) : Promise<PermissionAPICheckResponse>;
 }

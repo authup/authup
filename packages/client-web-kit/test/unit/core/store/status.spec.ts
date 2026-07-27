@@ -74,7 +74,7 @@ function buildStore(handlers: Record<string, FakeHandler> = {}) {
         handlers: {
             'POST /token': () => ({ ...GRANT_RESPONSE }),
             'POST /token/introspect': () => ({ ...INTROSPECTION_RESPONSE }),
-            'GET /users/@me': () => ({ ...USER_RESPONSE }),
+            'GET /userinfo': () => ({ ...USER_RESPONSE }),
             'POST /token/revoke': () => ({}),
             ...handlers,
         },
@@ -107,7 +107,7 @@ describe('core/store/status', () => {
                 observed.push(store.status.value);
                 return { ...INTROSPECTION_RESPONSE };
             },
-            'GET /users/@me': () => {
+            'GET /userinfo': () => {
                 observed.push(store.status.value);
                 return { ...USER_RESPONSE };
             },

@@ -32,7 +32,7 @@ describe('src/client OAuth2 endpoint resolution', () => {
         expect(requested).toEqual([
             'https://example.com/api/token',
             'https://example.com/api/token/introspect',
-            'https://example.com/api/users/@me',
+            'https://example.com/api/userinfo',
         ]);
     });
 
@@ -49,7 +49,7 @@ describe('src/client OAuth2 endpoint resolution', () => {
         expect(requested).toEqual([
             'https://example.com/token',
             'https://example.com/token/introspect',
-            'https://example.com/users/@me',
+            'https://example.com/userinfo',
         ]);
     });
 });

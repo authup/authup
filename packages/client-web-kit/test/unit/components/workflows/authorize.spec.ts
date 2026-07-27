@@ -132,7 +132,7 @@ function mountAuthorize(overrides: MountOverrides = {}) {
         handlers: {
             // a user-less session's re-resolve attempt must settle by failing —
             // the default fallback would otherwise fake a truthy "user".
-            'GET /users/@me': () => { throw new Error('userinfo unavailable'); },
+            'GET /userinfo': () => { throw new Error('userinfo unavailable'); },
             // covering probe: no override → the fallback's empty collection
             // (no persisted consent → covered=false, today's behavior).
             ...(consentHandler ?

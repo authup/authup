@@ -37,7 +37,7 @@ describe('adapters/database/timestamp', () => {
     };
 
     it('should hydrate realm timestamps as ISO strings', async () => {
-        const created = await suite.client.realm.create(createFakeRealm());
+        const { data: created } = await suite.client.realm.create(createFakeRealm());
 
         const entity = await suite.dataSource
             .getRepository(RealmEntity)
@@ -48,7 +48,7 @@ describe('adapters/database/timestamp', () => {
     });
 
     it('should hydrate user timestamps as ISO strings', async () => {
-        const created = await suite.client.user.create(createFakeUser());
+        const { data: created } = await suite.client.user.create(createFakeUser());
 
         const entity = await suite.dataSource
             .getRepository(UserEntity)

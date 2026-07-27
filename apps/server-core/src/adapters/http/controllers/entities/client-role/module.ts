@@ -20,6 +20,7 @@ import { useRequestQuery } from '@routup/basic/query';
 import type {
     ClientRoleCreatePayload,
     EntityCollectionResponse,
+    EntityRecordWrappedResponse,
 } from '@authup/core-http-kit';
 import type { ClientRole } from '@authup/core-kit';
 import type { IClientRoleService } from '../../../../../core/index.ts';
@@ -61,36 +62,36 @@ export class ClientRoleController {
     async add(
         @DBody() data: ClientRoleCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<ClientRole> {
+    ): Promise<EntityRecordWrappedResponse<ClientRole>> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
         event.response.status = 201;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<ClientRole> {
+    ): Promise<EntityRecordWrappedResponse<ClientRole>> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<ClientRole> {
+    ): Promise<EntityRecordWrappedResponse<ClientRole>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 }

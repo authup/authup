@@ -28,7 +28,7 @@ describe('src/http/controllers/user-attribute', () => {
 
     it('should create, read, update, delete resource', async () => {
         const attribute = createFakeUserAttribute();
-        const response = await suite.client.userAttribute.create(attribute);
+        const { data: response } = await suite.client.userAttribute.create(attribute);
 
         expect(response.name).toEqual(attribute.name);
         expect(response.value).toEqual(attribute.value);

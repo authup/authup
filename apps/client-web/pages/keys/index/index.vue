@@ -169,8 +169,7 @@ export default defineComponent({
 
             try {
                 const deleted = await httpClient.key.delete(row.id, { force: true });
-                deleted.id = row.id;
-                deletedCb(deleted as Key);
+                deletedCb({ ...deleted.data, id: row.id });
             } catch (err) {
                 emit('failed', err);
             }

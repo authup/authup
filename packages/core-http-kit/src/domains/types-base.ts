@@ -9,18 +9,21 @@ import type { ObjectLiteral } from '@authup/kit';
 import type { RequestBaseOptions, Response } from 'hapic';
 import type { EntityQueryInput } from '../helpers';
 
-export type EntityRecordResponse<R> = R;
-
 /**
- * The target wire shape for entity-record responses: the record under
+ * The wire shape of every entity-record response: the record under
  * `data`, response-scoped extras under `meta` (mirroring
- * `EntityCollectionResponse`). Adopted per endpoint — bare-record
- * responses (`EntityRecordResponse`) converge on this shape over time.
+ * `EntityCollectionResponse`).
  */
 export type EntityRecordWrappedResponse<R, M extends Record<string, any> = Record<string, any>> = {
     data: R,
     meta: M,
 };
+
+/**
+ * @deprecated Record responses carry the `{ data, meta }` envelope —
+ * use {@link EntityRecordWrappedResponse} directly.
+ */
+export type EntityRecordResponse<R> = EntityRecordWrappedResponse<R>;
 
 export type EntityCollectionResponse<R> = {
     data: R[],
@@ -44,9 +47,9 @@ export interface IEntityAPISlim<
     TCreate = Partial<T>,
 > {
     getMany(record?: EntityQueryInput<T>) : Promise<EntityCollectionResponse<T>>;
-    getOne(id: DomainEntityID<T>, record?: EntityQueryInput<T>) : Promise<EntityRecordResponse<T>>;
-    delete(id: DomainEntityID<T>) : Promise<EntityRecordResponse<T>>;
-    create(data: TCreate) : Promise<EntityRecordResponse<T>>;
+    getOne(id: DomainEntityID<T>, record?: EntityQueryInput<T>) : Promise<EntityRecordWrappedResponse<T>>;
+    delete(id: DomainEntityID<T>) : Promise<EntityRecordWrappedResponse<T>>;
+    create(data: TCreate) : Promise<EntityRecordWrappedResponse<T>>;
 }
 
 export interface IEntityAPI<
@@ -54,7 +57,7 @@ export interface IEntityAPI<
     TCreate = Partial<T>,
     TUpdate = Partial<T>,
 > extends IEntityAPISlim<T, TCreate> {
-    update(id: DomainEntityID<T>, data: TUpdate) : Promise<EntityRecordResponse<T>>;
+    update(id: DomainEntityID<T>, data: TUpdate) : Promise<EntityRecordWrappedResponse<T>>;
 }
 
 /**

@@ -9,7 +9,7 @@ import type { EntityQueryInput } from '../../../helpers';
 import { buildQueryString } from '../../../helpers';
 import type { Event } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordWrappedResponse } from '../../types-base';
 import type { IEventAPI } from './types';
 
 export class EventAPI extends BaseAPI implements IEventAPI {
@@ -19,7 +19,7 @@ export class EventAPI extends BaseAPI implements IEventAPI {
         return response.data;
     }
 
-    async getOne(id: Event['id'], record?: EntityQueryInput<Event>): Promise<EntityRecordResponse<Event>> {
+    async getOne(id: Event['id'], record?: EntityQueryInput<Event>): Promise<EntityRecordWrappedResponse<Event>> {
         const response = await this.client.get(`events/${id}${buildQueryString(record)}`);
 
         return response.data;

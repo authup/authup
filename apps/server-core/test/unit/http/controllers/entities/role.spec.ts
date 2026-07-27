@@ -29,7 +29,7 @@ describe('src/http/controllers/role', () => {
     const details = createFakeRole();
 
     it('should create resource', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .role
             .create(details);
 
@@ -55,7 +55,7 @@ describe('src/http/controllers/role', () => {
     });
 
     it('should read resource', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .role
             .getOne(details.id!);
 
@@ -65,7 +65,7 @@ describe('src/http/controllers/role', () => {
     });
 
     it('should read resource by name', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .role
             .getOne(details.id!);
 
@@ -75,7 +75,7 @@ describe('src/http/controllers/role', () => {
     });
 
     it('should update resource', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .role
             .update(details.id!, {
                 ...details,
@@ -90,7 +90,7 @@ describe('src/http/controllers/role', () => {
     });
 
     it('should update resource by name', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .role
             .update(details.name, {
                 ...details,
@@ -105,7 +105,7 @@ describe('src/http/controllers/role', () => {
     });
 
     it('should delete resource', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .role
             .delete(details.id!);
 
@@ -115,9 +115,8 @@ describe('src/http/controllers/role', () => {
     it('should create and update resource with put', async () => {
         const { name } = createFakeRole();
 
-        let response = await suite.client
-            .role
-            .createOrUpdate(name, { name });
+        let { data: response } = await suite.client
+            .role.createOrUpdate(name, { name });
 
         expect(response).toBeDefined();
         expect(response.name).toEqual(name);
@@ -126,9 +125,9 @@ describe('src/http/controllers/role', () => {
 
         const { name: nextName } = createFakeRole();
 
-        response = await suite.client
+        response = (await suite.client
             .role
-            .createOrUpdate(name, { name: nextName });
+            .createOrUpdate(name, { name: nextName })).data;
 
         expect(response).toBeDefined();
         expect(response.name).toEqual(nextName);

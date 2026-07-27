@@ -12,7 +12,7 @@ import { buildQueryString } from '../../../helpers';
 import type { User, UserAuthenticator } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordWrappedResponse } from '../../types-base';
 import type {
     IUserAuthenticatorAPI,
     UserAuthenticatorChallengeRequestOptions,
@@ -37,7 +37,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
     async getOne(
         userId: User['id'] | string,
         id: UserAuthenticator['id'],
-    ): Promise<EntityRecordResponse<UserAuthenticator>> {
+    ): Promise<EntityRecordWrappedResponse<UserAuthenticator>> {
         const response = await this.client.get(`users/${userId}/authenticators/${id}`);
         return response.data;
     }
@@ -54,7 +54,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
         userId: User['id'] | string,
         id: UserAuthenticator['id'],
         data: UserAuthenticatorConfirmPayload,
-    ): Promise<EntityRecordResponse<UserAuthenticator>> {
+    ): Promise<EntityRecordWrappedResponse<UserAuthenticator>> {
         const response = await this.client.post(`users/${userId}/authenticators/${id}/confirm`, data);
         return response.data;
     }
@@ -62,7 +62,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
     async delete(
         userId: User['id'] | string,
         id: UserAuthenticator['id'],
-    ): Promise<EntityRecordResponse<UserAuthenticator>> {
+    ): Promise<EntityRecordWrappedResponse<UserAuthenticator>> {
         const response = await this.client.delete(`users/${userId}/authenticators/${id}`);
         return response.data;
     }

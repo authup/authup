@@ -10,7 +10,7 @@ import { buildQueryString } from '../../../helpers';
 import type { Permission } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordWrappedResponse } from '../../types-base';
 import type {
     IPermissionAPI,
     PermissionAPICheckResponse,
@@ -25,25 +25,25 @@ export class PermissionAPI extends BaseAPI implements IPermissionAPI {
         return response.data;
     }
 
-    async delete(id: Permission['id']): Promise<EntityRecordResponse<Permission>> {
+    async delete(id: Permission['id']): Promise<EntityRecordWrappedResponse<Permission>> {
         const response = await this.client.delete(`permissions/${id}`);
 
         return response.data;
     }
 
-    async getOne(id: Permission['id'], record?: EntityQueryInput<Permission>): Promise<EntityRecordResponse<Permission>> {
+    async getOne(id: Permission['id'], record?: EntityQueryInput<Permission>): Promise<EntityRecordWrappedResponse<Permission>> {
         const response = await this.client.get(`permissions/${id}${buildQueryString(record)}`);
 
         return response.data;
     }
 
-    async create(data: PermissionCreatePayload): Promise<EntityRecordResponse<Permission>> {
+    async create(data: PermissionCreatePayload): Promise<EntityRecordWrappedResponse<Permission>> {
         const response = await this.client.post('permissions', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(id: Permission['id'], data: PermissionUpdatePayload): Promise<EntityRecordResponse<Permission>> {
+    async update(id: Permission['id'], data: PermissionUpdatePayload): Promise<EntityRecordWrappedResponse<Permission>> {
         const response = await this.client.post(`permissions/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -52,7 +52,7 @@ export class PermissionAPI extends BaseAPI implements IPermissionAPI {
     async createOrUpdate(
         idOrName: string,
         data: PermissionSavePayload,
-    ): Promise<EntityRecordResponse<Permission>> {
+    ): Promise<EntityRecordWrappedResponse<Permission>> {
         const response = await this.client.put(`permissions/${idOrName}`, nullifyEmptyObjectProperties(data));
 
         return response.data;

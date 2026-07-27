@@ -9,7 +9,7 @@ import type { AuthorizationHeader } from 'hapic';
 import type { EntityQueryInput } from '../../../helpers';
 import type { User, UserAuthenticator, UserAuthenticatorKind } from '@authup/core-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
-import type { EntityCollectionResponse, EntityRecordResponse, EntityRecordWrappedResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordWrappedResponse } from '../../types-base';
 
 export type UserAuthenticatorCreatePayload = {
     kind: `${UserAuthenticatorKind}`,
@@ -98,7 +98,7 @@ export interface IUserAuthenticatorAPI {
     getOne(
         userId: User['id'] | string,
         id: UserAuthenticator['id']
-    ): Promise<EntityRecordResponse<UserAuthenticator>>;
+    ): Promise<EntityRecordWrappedResponse<UserAuthenticator>>;
 
     enroll(
         userId: User['id'] | string,
@@ -109,12 +109,12 @@ export interface IUserAuthenticatorAPI {
         userId: User['id'] | string,
         id: UserAuthenticator['id'],
         data: UserAuthenticatorConfirmPayload
-    ): Promise<EntityRecordResponse<UserAuthenticator>>;
+    ): Promise<EntityRecordWrappedResponse<UserAuthenticator>>;
 
     delete(
         userId: User['id'] | string,
         id: UserAuthenticator['id']
-    ): Promise<EntityRecordResponse<UserAuthenticator>>;
+    ): Promise<EntityRecordWrappedResponse<UserAuthenticator>>;
 
     challenge(
         options?: UserAuthenticatorChallengeRequestOptions

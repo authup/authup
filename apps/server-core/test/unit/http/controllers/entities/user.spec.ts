@@ -31,7 +31,7 @@ describe('src/http/controllers/user', () => {
     const details: UserCreatePayload & { id?: User['id'] } = createFakeUser();
 
     it('should create resource', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .user
             .create(details);
 
@@ -73,7 +73,7 @@ describe('src/http/controllers/user', () => {
     });
 
     it('should read resource', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .user
             .getOne(details.id!, { fields: ['+email'] });
 
@@ -83,7 +83,7 @@ describe('src/http/controllers/user', () => {
     });
 
     it('should read resource by name', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .user
             .getOne(details.name, { fields: ['+email'] });
 
@@ -97,7 +97,7 @@ describe('src/http/controllers/user', () => {
         details.firstName = 'bar';
         details.lastName = 'baz';
 
-        const response = await suite.client
+        const { data: response } = await suite.client
             .user
             .update(details.id!, details);
 
@@ -106,7 +106,7 @@ describe('src/http/controllers/user', () => {
     });
 
     it('should delete resource', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .user
             .delete(details.id!);
 
@@ -115,9 +115,8 @@ describe('src/http/controllers/user', () => {
 
     it('should create and update resource with put', async () => {
         const entity = createFakeUser();
-        let response = await suite.client
-            .user
-            .createOrUpdate(entity.name, entity);
+        let { data: response } = await suite.client
+            .user.createOrUpdate(entity.name, entity);
 
         expect(response).toBeDefined();
         expect(response.name).toEqual(entity.name);
@@ -126,12 +125,12 @@ describe('src/http/controllers/user', () => {
 
         const { name } = createFakeUser();
 
-        response = await suite.client
+        response = (await suite.client
             .user
             .createOrUpdate(entity.name, {
                 ...entity,
                 name,
-            });
+            })).data;
 
         expect(response.name).toEqual(name);
         expect(response.id).toEqual(id);

@@ -33,7 +33,7 @@ describe('src/http/controllers/trust-anchor', () => {
 
     beforeAll(async () => {
         await suite.setup();
-        realm = await suite.client.realm.create({ name: `trust-anchor-realm-${Date.now()}` });
+        realm = (await suite.client.realm.create({ name: `trust-anchor-realm-${Date.now()}` })).data;
     });
 
     afterAll(async () => {
@@ -41,7 +41,7 @@ describe('src/http/controllers/trust-anchor', () => {
     });
 
     it('should create and read a CA trust anchor by id and nested name', async () => {
-        const created = await suite.client.trustAnchor.create({
+        const { data: created } = await suite.client.trustAnchor.create({
             name: 'primary-client-ca',
             certificate: CA_CERTIFICATE,
             realmId: realm.id,
@@ -51,11 +51,11 @@ describe('src/http/controllers/trust-anchor', () => {
         expect(created.certificate).toEqual(CA_CERTIFICATE);
         expect(created.realmId).toEqual(realm.id);
 
-        const byId = await suite.client.trustAnchor.getOne(created.id);
+        const { data: byId } = await suite.client.trustAnchor.getOne(created.id);
         expect(byId.id).toEqual(created.id);
 
         const byName = await suite.client.get(`realms/${realm.id}/trust-anchors/primary-client-ca`);
-        expect(byName.data.id).toEqual(created.id);
+        expect(byName.data.data.id).toEqual(created.id);
     });
 
     it('should list anchors through the nested realm mount', async () => {
@@ -77,7 +77,7 @@ describe('src/http/controllers/trust-anchor', () => {
     });
 
     it('should update name and enabled but keep certificate immutable', async () => {
-        const created = await suite.client.trustAnchor.create({
+        const { data: created } = await suite.client.trustAnchor.create({
             name: 'update-client-ca',
             certificate: CA_CERTIFICATE,
             realmId: realm.id,
@@ -88,7 +88,7 @@ describe('src/http/controllers/trust-anchor', () => {
             enabled: false,
             certificate: NON_CA_CERTIFICATE,
         });
-        const updated = response.data;
+        const updated = response.data.data;
 
         expect(updated.name).toEqual('updated-client-ca');
         expect(updated.enabled).toBe(false);
@@ -129,17 +129,17 @@ describe('src/http/controllers/trust-anchor', () => {
             certificate: CA_CERTIFICATE,
         });
 
-        expect(response.data.realmId).toEqual(realm.id);
+        expect(response.data.data.realmId).toEqual(realm.id);
     });
 
     it('should delete a trust anchor', async () => {
-        const created = await suite.client.trustAnchor.create({
+        const { data: created } = await suite.client.trustAnchor.create({
             name: 'delete-client-ca',
             certificate: CA_CERTIFICATE,
             realmId: realm.id,
         });
 
-        const deleted = await suite.client.trustAnchor.delete(created.id);
+        const { data: deleted } = await suite.client.trustAnchor.delete(created.id);
         expect(deleted.id).toEqual(created.id);
 
         await expectClientError(
@@ -149,7 +149,7 @@ describe('src/http/controllers/trust-anchor', () => {
     });
 
     it('should record attributed, metadata-only lifecycle audit events', async () => {
-        const created = await suite.client.trustAnchor.create({
+        const { data: created } = await suite.client.trustAnchor.create({
             name: 'audited-client-ca',
             certificate: CA_CERTIFICATE,
             realmId: realm.id,

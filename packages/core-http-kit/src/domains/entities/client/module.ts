@@ -10,7 +10,7 @@ import { buildQueryString } from '../../../helpers';
 import type { Client } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordWrappedResponse } from '../../types-base';
 import type {
     ClientCreatePayload,
     ClientSavePayload,
@@ -31,7 +31,7 @@ export class ClientAPI extends BaseAPI implements IClientAPI {
     async getOne(
         id: Client['id'],
         options?: EntityQueryInput<Client>,
-    ): Promise<EntityRecordResponse<Client>> {
+    ): Promise<EntityRecordWrappedResponse<Client>> {
         const response = await this.client
             .get(`clients/${id}${buildQueryString(options)}`);
 
@@ -40,7 +40,7 @@ export class ClientAPI extends BaseAPI implements IClientAPI {
 
     async delete(
         id: Client['id'],
-    ): Promise<EntityRecordResponse<Client>> {
+    ): Promise<EntityRecordWrappedResponse<Client>> {
         const response = await this.client
             .delete(`clients/${id}`);
 
@@ -49,7 +49,7 @@ export class ClientAPI extends BaseAPI implements IClientAPI {
 
     async create(
         data: ClientCreatePayload,
-    ): Promise<EntityRecordResponse<Client>> {
+    ): Promise<EntityRecordWrappedResponse<Client>> {
         const response = await this.client
             .post('clients', nullifyEmptyObjectProperties(data));
 
@@ -59,7 +59,7 @@ export class ClientAPI extends BaseAPI implements IClientAPI {
     async update(
         id: Client['id'],
         data: ClientUpdatePayload,
-    ): Promise<EntityRecordResponse<Client>> {
+    ): Promise<EntityRecordWrappedResponse<Client>> {
         const response = await this.client.post(`clients/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -68,7 +68,7 @@ export class ClientAPI extends BaseAPI implements IClientAPI {
     async createOrUpdate(
         idOrName: string,
         data: ClientSavePayload,
-    ): Promise<EntityRecordResponse<Client>> {
+    ): Promise<EntityRecordWrappedResponse<Client>> {
         const response = await this.client.put(`clients/${idOrName}`, nullifyEmptyObjectProperties(data));
 
         return response.data;

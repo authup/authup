@@ -42,7 +42,7 @@ describe('src/http realm key store (zero-config MFA + jwks hygiene)', () => {
 
     it('mints the realm enc key on first enrollment — zero key configuration', async () => {
         const password = 'key-store-user-pw';
-        const user = await suite.client.user.create(createFakeUser({ password }));
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
         const login = await suite.client.token.createWithPassword({
             username: user.name,
             password,
@@ -61,7 +61,7 @@ describe('src/http realm key store (zero-config MFA + jwks hygiene)', () => {
             secret: Secret.fromBase32(enrolled.meta.secret!),
         });
         const confirmed = await bearer.userAuthenticator.confirm('@me', enrolled.data.id, { code: totp.generate() });
-        expect(confirmed.confirmed).toBeTruthy();
+        expect(confirmed.data.confirmed).toBeTruthy();
 
         // an enc key exists for the user's realm ...
         const encKeys = await suite.dataSource.getRepository(KeyEntity).findBy({

@@ -31,7 +31,7 @@ describe('refresh-token', () => {
         input.secretHashed = false;
         input.secretEncrypted = false;
 
-        entity = await suite.client.client.create(input);
+        entity = (await suite.client.client.create(input)).data;
     });
 
     afterAll(async () => {

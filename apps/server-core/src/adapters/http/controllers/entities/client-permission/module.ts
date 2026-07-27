@@ -21,6 +21,7 @@ import type {
     ClientPermissionCreatePayload,
     ClientPermissionUpdatePayload,
     EntityCollectionResponse,
+    EntityRecordWrappedResponse,
 } from '@authup/core-http-kit';
 import type { ClientPermission } from '@authup/core-kit';
 import type { IClientPermissionService } from '../../../../../core/index.ts';
@@ -60,14 +61,14 @@ export class ClientPermissionController {
     async add(
         @DBody() data: ClientPermissionCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<ClientPermission> {
+    ): Promise<EntityRecordWrappedResponse<ClientPermission>> {
         const actor = buildActorContext(event);
 
         const entity = await this.service.create(data, actor);
 
         event.response.status = 201;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
@@ -75,31 +76,31 @@ export class ClientPermissionController {
         @DPath('id') id: string,
         @DBody() data: ClientPermissionUpdatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<ClientPermission> {
+    ): Promise<EntityRecordWrappedResponse<ClientPermission>> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<ClientPermission> {
+    ): Promise<EntityRecordWrappedResponse<ClientPermission>> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<ClientPermission> {
+    ): Promise<EntityRecordWrappedResponse<ClientPermission>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(
             id,
@@ -108,6 +109,6 @@ export class ClientPermissionController {
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 }

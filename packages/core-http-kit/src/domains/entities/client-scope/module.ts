@@ -9,7 +9,7 @@ import type { EntityQueryInput } from '../../../helpers';
 import { buildQueryString } from '../../../helpers';
 import type { ClientScope } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordWrappedResponse } from '../../types-base';
 import type {
     ClientScopeCreatePayload,
     IClientScopeAPI,
@@ -21,19 +21,19 @@ export class ClientScopeAPI extends BaseAPI implements IClientScopeAPI {
         return response.data;
     }
 
-    async getOne(id: ClientScope['id'], record?: EntityQueryInput<ClientScope>) : Promise<EntityRecordResponse<ClientScope>> {
+    async getOne(id: ClientScope['id'], record?: EntityQueryInput<ClientScope>) : Promise<EntityRecordWrappedResponse<ClientScope>> {
         const response = await this.client.get(`client-scopes/${id}${buildQueryString(record)}`);
 
         return response.data;
     }
 
-    async delete(id: ClientScope['id']) : Promise<EntityRecordResponse<ClientScope>> {
+    async delete(id: ClientScope['id']) : Promise<EntityRecordWrappedResponse<ClientScope>> {
         const response = await this.client.delete(`client-scopes/${id}`);
 
         return response.data;
     }
 
-    async create(data: ClientScopeCreatePayload) : Promise<EntityRecordResponse<ClientScope>> {
+    async create(data: ClientScopeCreatePayload) : Promise<EntityRecordWrappedResponse<ClientScope>> {
         const response = await this.client.post('client-scopes', data);
 
         return response.data;

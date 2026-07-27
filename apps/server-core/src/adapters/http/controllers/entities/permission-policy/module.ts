@@ -19,6 +19,7 @@ import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
+    EntityRecordWrappedResponse,
     PermissionPolicyCreatePayload,
 } from '@authup/core-http-kit';
 import type { PermissionPolicy } from '@authup/core-kit';
@@ -59,37 +60,37 @@ export class PermissionPolicyController {
     async add(
         @DBody() data: PermissionPolicyCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<PermissionPolicy> {
+    ): Promise<EntityRecordWrappedResponse<PermissionPolicy>> {
         const actor = buildActorContext(event);
 
         const entity = await this.service.create(data, actor);
 
         event.response.status = 201;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<PermissionPolicy> {
+    ): Promise<EntityRecordWrappedResponse<PermissionPolicy>> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<PermissionPolicy> {
+    ): Promise<EntityRecordWrappedResponse<PermissionPolicy>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 }

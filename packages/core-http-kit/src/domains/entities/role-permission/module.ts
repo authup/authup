@@ -9,7 +9,7 @@ import type { EntityQueryInput } from '../../../helpers';
 import { buildQueryString } from '../../../helpers';
 import type { RolePermission } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordWrappedResponse } from '../../types-base';
 import type {
     IRolePermissionAPI,
     RolePermissionCreatePayload,
@@ -22,25 +22,25 @@ export class RolePermissionAPI extends BaseAPI implements IRolePermissionAPI {
         return response.data;
     }
 
-    async getOne(id: RolePermission['id'], record?: EntityQueryInput<RolePermission>) : Promise<EntityRecordResponse<RolePermission>> {
+    async getOne(id: RolePermission['id'], record?: EntityQueryInput<RolePermission>) : Promise<EntityRecordWrappedResponse<RolePermission>> {
         const response = await this.client.get(`role-permissions/${id}${buildQueryString(record)}`);
 
         return response.data;
     }
 
-    async delete(id: RolePermission['id']) : Promise<EntityRecordResponse<RolePermission>> {
+    async delete(id: RolePermission['id']) : Promise<EntityRecordWrappedResponse<RolePermission>> {
         const response = await this.client.delete(`role-permissions/${id}`);
 
         return response.data;
     }
 
-    async create(data: RolePermissionCreatePayload) : Promise<EntityRecordResponse<RolePermission>> {
+    async create(data: RolePermissionCreatePayload) : Promise<EntityRecordWrappedResponse<RolePermission>> {
         const response = await this.client.post('role-permissions', data);
 
         return response.data;
     }
 
-    async update(id: RolePermission['id'], data: RolePermissionUpdatePayload) : Promise<EntityRecordResponse<RolePermission>> {
+    async update(id: RolePermission['id'], data: RolePermissionUpdatePayload) : Promise<EntityRecordWrappedResponse<RolePermission>> {
         const response = await this.client.post(`role-permissions/${id}`, data);
 
         return response.data;

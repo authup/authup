@@ -57,7 +57,7 @@ describe('event (entity-CRUD bridge)', () => {
     });
 
     it('records an attributed, expiring created row for an entity create', async () => {
-        const role = await suite.client.role.create(createFakeRole());
+        const { data: role } = await suite.client.role.create(createFakeRole());
 
         const { data } = await suite.client.event.getMany({
             filters: {
@@ -83,7 +83,7 @@ describe('event (entity-CRUD bridge)', () => {
     });
 
     it('records an updated row with a next/previous scalar diff', async () => {
-        const role = await suite.client.role.create(createFakeRole({ description: 'before' }));
+        const { data: role } = await suite.client.role.create(createFakeRole({ description: 'before' }));
         await suite.client.role.update(role.id, { description: 'after' });
 
         const { data } = await suite.client.event.getMany({
@@ -108,7 +108,7 @@ describe('event (entity-CRUD bridge)', () => {
         const secret = 'bridge-initial-secret-value';
         const nextSecret = 'bridge-rotated-secret-value';
 
-        const client = await suite.client.client.create({
+        const { data: client } = await suite.client.client.create({
             ...createFakeClient(),
             authMethod: 'secret',
             tokenBindingMethod: 'none',
@@ -138,7 +138,7 @@ describe('event (entity-CRUD bridge)', () => {
     });
 
     it('records a deleted row for an entity delete', async () => {
-        const role = await suite.client.role.create(createFakeRole());
+        const { data: role } = await suite.client.role.create(createFakeRole());
         await suite.client.role.delete(role.id);
 
         const { data } = await suite.client.event.getMany({
@@ -156,17 +156,17 @@ describe('event (entity-CRUD bridge)', () => {
 
     it('keeps a foreign-realm entity row hidden from an own-scoped reader', async () => {
         // an entity row in the reader's own realm (master) — the control
-        const ownRole = await suite.client.role.create(createFakeRole());
+        const { data: ownRole } = await suite.client.role.create(createFakeRole());
 
         // an entity row in a foreign realm (B)
-        const realmB = await suite.client.realm.create(createFakeRealm());
-        const foreignRole = await suite.client.role.create(
+        const { data: realmB } = await suite.client.realm.create(createFakeRealm());
+        const { data: foreignRole } = await suite.client.role.create(
             createFakeRole({ realmId: realmB.id }),
         );
 
         // a restricted actor in master holding EVENT_READ at the default `own` scope
         const actorSecret = 'bridge-realm-iso-actor-secret';
-        const actorClient = await suite.client.client.create({
+        const { data: actorClient } = await suite.client.client.create({
             ...createFakeClient(),
             authMethod: 'secret',
             tokenBindingMethod: 'none',
@@ -174,7 +174,7 @@ describe('event (entity-CRUD bridge)', () => {
             secretHashed: false,
             secretEncrypted: false,
         });
-        const permission = await suite.client.permission.getOne(PermissionName.EVENT_READ);
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.EVENT_READ);
         await suite.client.clientPermission.create({
             clientId: actorClient.id,
             permissionId: permission.id,
@@ -209,12 +209,12 @@ describe('event (entity-CRUD bridge)', () => {
     });
 
     it('attributes a junction event to its owner realm and hides it from an ownOrNull reader', async () => {
-        const realmB = await suite.client.realm.create(createFakeRealm());
-        const foreignRole = await suite.client.role.create(
+        const { data: realmB } = await suite.client.realm.create(createFakeRealm());
+        const { data: foreignRole } = await suite.client.role.create(
             createFakeRole({ realmId: realmB.id }),
         );
-        const userRead = await suite.client.permission.getOne(PermissionName.USER_READ);
-        const binding = await suite.client.rolePermission.create({
+        const { data: userRead } = await suite.client.permission.getOne(PermissionName.USER_READ);
+        const { data: binding } = await suite.client.rolePermission.create({
             roleId: foreignRole.id,
             permissionId: userRead.id,
         });
@@ -260,7 +260,7 @@ describe('event (entity-CRUD bridge)', () => {
         expect(wrongRouteRecord.status).toEqual(404);
 
         const actorSecret = 'bridge-own-or-null-actor-secret';
-        const actorClient = await suite.client.client.create({
+        const { data: actorClient } = await suite.client.client.create({
             ...createFakeClient(),
             authMethod: 'secret',
             tokenBindingMethod: 'none',
@@ -268,7 +268,7 @@ describe('event (entity-CRUD bridge)', () => {
             secretHashed: false,
             secretEncrypted: false,
         });
-        const eventRead = await suite.client.permission.getOne(PermissionName.EVENT_READ);
+        const { data: eventRead } = await suite.client.permission.getOne(PermissionName.EVENT_READ);
         await suite.client.clientPermission.create({
             clientId: actorClient.id,
             permissionId: eventRead.id,

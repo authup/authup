@@ -239,12 +239,12 @@ export default defineComponent({
                     // (Record<string, unknown>); assert the browser lib's shape here.
                     const optionsJSON = response.meta.webauthn as unknown as PublicKeyCredentialCreationOptionsJSON;
                     const attestation = await startRegistration({ optionsJSON });
-                    const entity = await apiClient.userAuthenticator.confirm(
+                    const confirmed = await apiClient.userAuthenticator.confirm(
                         props.userId,
                         response.data.id,
                         { code: JSON.stringify(attestation) },
                     );
-                    await finishEnrollment(entity, kind);
+                    await finishEnrollment(confirmed.data, kind);
                     return;
                 }
 
@@ -283,7 +283,7 @@ export default defineComponent({
                     enrollment.value.data.id,
                     { code: confirmCode.value.trim() },
                 );
-                emit('done', entity);
+                emit('done', entity.data);
                 reset();
             } catch (e) {
                 error.value = extractErrorContext(e).message ?? null;

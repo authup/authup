@@ -15,7 +15,10 @@ import {
 import type { Event } from '@authup/core-kit';
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import type { EntityCollectionResponse } from '@authup/core-http-kit';
+import type {
+    EntityCollectionResponse,
+    EntityRecordWrappedResponse,
+} from '@authup/core-http-kit';
 import type { IEventService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext, getRequestRealmID } from '../../../request/index.ts';
@@ -59,9 +62,11 @@ export class EventController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<Event> {
+    ): Promise<EntityRecordWrappedResponse<Event>> {
         const actor = buildActorContext(event);
 
-        return this.service.getOne(id, actor, { realmId: getRequestRealmID(event) });
+        const entity = await this.service.getOne(id, actor, { realmId: getRequestRealmID(event) });
+
+        return { data: entity, meta: {} };
     }
 }

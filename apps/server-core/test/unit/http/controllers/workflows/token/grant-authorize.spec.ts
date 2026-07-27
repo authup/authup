@@ -43,7 +43,7 @@ describe('grant-authorize', () => {
         await suite.setup();
 
         confidentialSecret = generateOAuth2CodeVerifier();
-        confidentialClient = await suite.client
+        confidentialClient = (await suite.client
             .client
             .create(createFakeClient({
                 secret: confidentialSecret,
@@ -51,21 +51,21 @@ describe('grant-authorize', () => {
                 secretEncrypted: false,
                 authMethod: 'secret',
                 tokenBindingMethod: 'none',
-            }));
+            }))).data;
 
-        const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: confidentialClient.id,
         });
 
-        publicClient = await suite.client
+        publicClient = (await suite.client
             .client
             .create(createFakeClient({
                 authMethod: 'none',
                 tokenBindingMethod: 'none',
                 secret: null,
-            }));
+            }))).data;
 
         await suite.client.clientScope.create({
             scopeId: scope.id,
@@ -83,7 +83,7 @@ describe('grant-authorize', () => {
     // an HTTP client bound to that user's bearer token.
     const loginAsRealmUser = async (realm: Realm): Promise<HTTPClient> => {
         const password = generateOAuth2CodeVerifier();
-        const user = await suite.client.user.create(createFakeUser({
+        const { data: user } = await suite.client.user.create(createFakeUser({
             realmId: realm.id,
             password,
         }));
@@ -286,7 +286,7 @@ describe('grant-authorize', () => {
         const code = url.searchParams.get('code')!;
 
         const otherSecret = generateOAuth2CodeVerifier();
-        const otherClient = await suite.client
+        const { data: otherClient } = await suite.client
             .client
             .create(createFakeClient({
                 secret: otherSecret,
@@ -353,7 +353,7 @@ describe('grant-authorize', () => {
 
     it('should accept Basic auth credentials with URL-encoded special characters', async () => {
         const specialSecret = 'secret with spaces & + : %';
-        const specialClient = await suite.client
+        const { data: specialClient } = await suite.client
             .client
             .create(createFakeClient({
                 secret: specialSecret,
@@ -363,7 +363,7 @@ describe('grant-authorize', () => {
                 tokenBindingMethod: 'none',
             }));
 
-        const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: specialClient.id,
@@ -474,9 +474,9 @@ describe('grant-authorize', () => {
     });
 
     it('should scope a name-identified client on token exchange to the realm hint', async () => {
-        const realm = await suite.client.realm.create(createFakeRealm());
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
         const secret = generateOAuth2CodeVerifier();
-        const client = await suite.client
+        const { data: client } = await suite.client
             .client
             .create(createFakeClient({
                 realmId: realm.id,
@@ -486,7 +486,7 @@ describe('grant-authorize', () => {
                 authMethod: 'secret',
                 tokenBindingMethod: 'none',
             }));
-        const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: client.id,
@@ -549,8 +549,8 @@ describe('grant-authorize', () => {
     });
 
     it('should include sid and a session-based auth_time in the id_token', async () => {
-        const realm = await suite.client.realm.create(createFakeRealm());
-        const client = await suite.client
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+        const { data: client } = await suite.client
             .client
             .create(createFakeClient({
                 realmId: realm.id,
@@ -558,7 +558,7 @@ describe('grant-authorize', () => {
                 tokenBindingMethod: 'none',
                 secret: null,
             }));
-        const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: client.id,
@@ -613,8 +613,8 @@ describe('grant-authorize', () => {
         // admin) authorizing against a client in realm B must be rejected with
         // login_required — otherwise a lingering session silently mints a
         // cross-realm code/token (confused deputy).
-        const realm = await suite.client.realm.create(createFakeRealm());
-        const client = await suite.client
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+        const { data: client } = await suite.client
             .client
             .create(createFakeClient({
                 realmId: realm.id,
@@ -622,7 +622,7 @@ describe('grant-authorize', () => {
                 tokenBindingMethod: 'none',
                 secret: null,
             }));
-        const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: client.id,
@@ -654,8 +654,8 @@ describe('grant-authorize', () => {
         // otherwise the 400 becomes a realm-enumeration oracle for an
         // (authenticated-adjacent) caller probing which realm a session belongs
         // to. Pins the "no identity data in the body" verifier condition.
-        const realm = await suite.client.realm.create(createFakeRealm());
-        const client = await suite.client
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+        const { data: client } = await suite.client
             .client
             .create(createFakeClient({
                 realmId: realm.id,
@@ -663,7 +663,7 @@ describe('grant-authorize', () => {
                 tokenBindingMethod: 'none',
                 secret: null,
             }));
-        const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: client.id,
@@ -716,8 +716,8 @@ describe('grant-authorize', () => {
     });
 
     it('should exchange a code for a name-identified public client scoped to its realm', async () => {
-        const realm = await suite.client.realm.create(createFakeRealm());
-        const client = await suite.client
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+        const { data: client } = await suite.client
             .client
             .create(createFakeClient({
                 realmId: realm.id,
@@ -725,7 +725,7 @@ describe('grant-authorize', () => {
                 tokenBindingMethod: 'none',
                 secret: null,
             }));
-        const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: client.id,

@@ -12,14 +12,14 @@ import { createFakeClient } from '@authup/core-http-kit/testing';
 
 const client = createFakeClient({
     handlers: {
-        'GET /clients/:id': ({ params }) => ({ id: params.id, name: 'demo' }),
+        'GET /clients/:id': ({ params }) => ({ data: { id: params.id, name: 'demo' }, meta: {} }),
         'GET /realms': () => ({ data: [{ name: 'master' }], meta: { total: 1 } }),
         '*': () => ({ data: [], meta: { total: 0 } }),
     },
 });
 
 // the full resource API surface works against the handlers:
-const entity = await client.client.getOne('abc'); // { id: 'abc', name: 'demo' }
+const response = await client.client.getOne('abc'); // { data: { id: 'abc', name: 'demo' }, meta: {} }
 ```
 
 ### Handler map
@@ -39,9 +39,10 @@ call-shape assertions.
 
 ### Caveats
 
-- The default fallback returns a **collection** shape. Endpoints that return a
-  single entity or token payload (e.g. session resolution) need explicit
-  handlers, or the consuming code will see a misshapen value.
+- The default fallback returns a **collection** shape. Endpoints with another
+  wire shape — the `{ data, meta }` record envelope, token payloads (e.g.
+  session resolution) — need explicit handlers, or the consuming code will
+  see a misshapen value.
 - A throwing handler rejects the in-flight request. For code paths that fire
   requests without awaiting them (fire-and-forget), this surfaces as an
   unhandled rejection — only throw in handlers exercised by awaited flows.

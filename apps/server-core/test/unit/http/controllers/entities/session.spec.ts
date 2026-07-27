@@ -104,7 +104,7 @@ describe('session', () => {
     it('lets an admin force-logout a target user everywhere', async () => {
         const password = 'session-target-user-pw';
         const fakeUser = createFakeUser({ password });
-        const user = await suite.client.user.create(fakeUser);
+        const { data: user } = await suite.client.user.create(fakeUser);
 
         // two sessions for the target user
         await suite.client.token.createWithPassword({ username: fakeUser.name, password });
@@ -125,8 +125,8 @@ describe('session', () => {
         const password = 'session-multi-user-pw';
         const first = createFakeUser({ password });
         const second = createFakeUser({ password });
-        const userA = await suite.client.user.create(first);
-        const userB = await suite.client.user.create(second);
+        const { data: userA } = await suite.client.user.create(first);
+        const { data: userB } = await suite.client.user.create(second);
 
         await suite.client.token.createWithPassword({ username: first.name, password });
         await suite.client.token.createWithPassword({ username: second.name, password });

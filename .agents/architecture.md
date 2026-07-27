@@ -646,12 +646,13 @@ not by client-web:
 
 ### Thin Controller Pattern (HTTP Adapter)
 
-Controllers are thin HTTP adapters. They extract input from the routup `IAppEvent`, build an `ActorContext`, delegate to the service, and format the HTTP response. Request body payload types come from `@authup/core-http-kit` (shared between the typed Client, the controller, and `@trapi/swagger` schema generation); response types are the domain entity from `@authup/core-kit` directly:
+Controllers are thin HTTP adapters. They extract input from the routup `IAppEvent`, build an `ActorContext`, delegate to the service, and format the HTTP response. Request body payload types come from `@authup/core-http-kit` (shared between the typed Client, the controller, and `@trapi/swagger` schema generation); every entity **record** response is the `{ data, meta }` envelope (`EntityRecordWrappedResponse<T>` — the shape the MFA enroll response pioneered, uniform since issue #1649), with the domain entity from `@authup/core-kit` under `data`:
 
 ```typescript
 import type { Role } from '@authup/core-kit';
 import type {
     EntityCollectionResponse,
+    EntityRecordWrappedResponse,
     RoleCreatePayload,
 } from '@authup/core-http-kit';
 
@@ -675,25 +676,25 @@ export class RoleController {
     }
 
     @DPost('')
-    async add(@DBody() data: RoleCreatePayload, @DContext() event: IAppEvent): Promise<Role> {
+    async add(@DBody() data: RoleCreatePayload, @DContext() event: IAppEvent): Promise<EntityRecordWrappedResponse<Role>> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
         event.response.status = 201;
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DDelete('/:id')
-    async drop(@DPath('id') id: string, @DContext() event: IAppEvent): Promise<Role> {
+    async drop(@DPath('id') id: string, @DContext() event: IAppEvent): Promise<EntityRecordWrappedResponse<Role>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
         event.response.status = 202;
-        return entity;
+        return { data: entity, meta: {} };
     }
 }
 ```
 
 Controller conventions:
-- Return type is the domain entity directly (`Promise<Role>`, `Promise<EntityCollectionResponse<Role>>`). This lets `@trapi/swagger` extract the response schema from the method signature.
+- Return type is a literal annotation (`Promise<EntityRecordWrappedResponse<Role>>`, `Promise<EntityCollectionResponse<Role>>`). This lets `@trapi/swagger` extract the response schema from the method signature. Services still return bare domain entities — the controller owns the envelope. Excluded from the envelope (protocol/bespoke shapes, stay flat): the OAuth2/OIDC surface (`/token*`, `/authorize`, jwks + openid-configuration, `/userinfo`, `/logout`), the register/activate/password workflows, `/`, the authenticator-challenge surface, permission/policy `check`, and session `deleteMany` (`{ count }`).
 - Body parameter type is the concrete payload type (`@DBody() data: RoleCreatePayload`) — sourced from `@authup/core-http-kit`. Naming convention: `<Entity>CreatePayload` for POST, `<Entity>UpdatePayload` for POST `/:id`, `<Entity>SavePayload` for PUT `/:id`. Response shapes that genuinely diverge from the domain entity (e.g. `PolicyResponse`, `RegisterResponse`, `PasswordForgotResponse`) keep a named alias; trivial passthrough aliases are not introduced.
 - **No business logic** — no permission checks, no validation, no entity manipulation
 - Read the routup event via `@DContext() event: IAppEvent`
@@ -707,6 +708,8 @@ Controller conventions:
 
 Exceptions where controllers retain some logic:
 - **Self-access resolution** (client, user): Resolve `@me`/`@self` tokens to actual IDs before delegating
+
+The OIDC userinfo endpoint is a dedicated flat route `GET /userinfo` (`adapters/http/controllers/workflows/userinfo/`, advertised via discovery, `userinfoEndpoint` in the core-http-kit `Client` config) — it serves the authenticated user's record as a FLAT claims document and must never adopt the record envelope, which is why it is not an alias of `GET /users/@me` (that route carries the envelope like every other record read).
 
 No controller (or service) reaches for global singletons — cross-cutting services (logger, domain-event publisher) are constructor-injected from the DI container by the factories in `app/modules/http/modules/controller.ts`.
 

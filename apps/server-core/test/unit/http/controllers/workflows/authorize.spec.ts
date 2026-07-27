@@ -25,8 +25,8 @@ describe('src/http/controllers/token', () => {
     beforeAll(async () => {
         await suite.setup();
 
-        const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
-        const client = await suite.client.client.create(createFakeClient());
+        const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        const { data: client } = await suite.client.client.create(createFakeClient());
 
         await suite.client.clientScope.create({
             scopeId: scope.id,

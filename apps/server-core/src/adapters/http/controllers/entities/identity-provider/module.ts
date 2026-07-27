@@ -43,6 +43,7 @@ import { readRequestBody } from '@routup/basic/body';
 import { OAuth2ErrorCode, OAuth2RequestError } from '@authup/specs';
 import type {
     EntityCollectionResponse,
+    EntityRecordWrappedResponse,
     IdentityProviderCreatePayload,
     IdentityProviderSavePayload,
     IdentityProviderUpdatePayload,
@@ -161,7 +162,7 @@ export class IdentityProviderController {
     async getProvider(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<IdentityProvider> {
+    ): Promise<EntityRecordWrappedResponse<IdentityProvider>> {
         const paramId = useRequestParamID(event, { isUUID: false });
 
         const entity = await this.repository.findOneByIdOrName(
@@ -183,7 +184,7 @@ export class IdentityProviderController {
             // do nothing
         }
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
@@ -191,7 +192,7 @@ export class IdentityProviderController {
         @DPath('id') id: string,
         @DBody() user: IdentityProviderUpdatePayload,
         @DContext() event: IAppEvent,
-    ) : Promise<IdentityProvider> {
+    ) : Promise<EntityRecordWrappedResponse<IdentityProvider>> {
         return this.write(event, { updateOnly: true });
     }
 
@@ -200,7 +201,7 @@ export class IdentityProviderController {
         @DPath('id') id: string,
         @DBody() user: IdentityProviderSavePayload,
         @DContext() event: IAppEvent,
-    ) : Promise<IdentityProvider> {
+    ) : Promise<EntityRecordWrappedResponse<IdentityProvider>> {
         return this.write(event);
     }
 
@@ -208,7 +209,7 @@ export class IdentityProviderController {
     async dropProvider(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ) : Promise<IdentityProvider> {
+    ) : Promise<EntityRecordWrappedResponse<IdentityProvider>> {
         const paramId = useRequestParamID(event);
 
         const permissionEvaluator = useRequestPermissionEvaluator(event);
@@ -233,14 +234,14 @@ export class IdentityProviderController {
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async addProvider(
         @DBody() user: IdentityProviderCreatePayload,
         @DContext() event: IAppEvent,
-    ) : Promise<IdentityProvider> {
+    ) : Promise<EntityRecordWrappedResponse<IdentityProvider>> {
         return this.write(event);
     }
 
@@ -406,7 +407,7 @@ export class IdentityProviderController {
 
     private async write(event: IAppEvent, options: {
         updateOnly?: boolean
-    } = {}): Promise<IdentityProvider> {
+    } = {}): Promise<EntityRecordWrappedResponse<IdentityProvider>> {
         let group: string;
         const id = getRequestParamID(event, { isUUID: false });
         const body = await readRequestBody(event);
@@ -484,7 +485,7 @@ export class IdentityProviderController {
 
             event.response.status = 202;
 
-            return entity;
+            return { data: entity, meta: {} };
         }
 
         entity = this.repository.create(data);
@@ -492,7 +493,7 @@ export class IdentityProviderController {
 
         event.response.status = 201;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     // ---------------------------------------------------------

@@ -7,6 +7,7 @@
 
 import type {
     EntityCollectionResponse,
+    EntityRecordWrappedResponse,
     PermissionAPICheckResponse,
     PermissionCreatePayload,
     PermissionSavePayload,
@@ -75,14 +76,14 @@ export class PermissionController {
     async add(
         @DBody() data: PermissionCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<Permission> {
+    ): Promise<EntityRecordWrappedResponse<Permission>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
         event.response.status = 201;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DPost('/:id/check', [ForceLoggedInMiddleware])
@@ -114,7 +115,7 @@ export class PermissionController {
     async get(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<Permission> {
+    ): Promise<EntityRecordWrappedResponse<Permission>> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(
             id,
@@ -122,7 +123,7 @@ export class PermissionController {
             getRequestRealmID(event),
         );
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
@@ -130,7 +131,7 @@ export class PermissionController {
         @DPath('id') id: string,
         @DBody() data: PermissionUpdatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<Permission> {
+    ): Promise<EntityRecordWrappedResponse<Permission>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.update(
@@ -141,7 +142,7 @@ export class PermissionController {
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
@@ -149,7 +150,7 @@ export class PermissionController {
         @DPath('id') id: string,
         @DBody() data: PermissionSavePayload,
         @DContext() event: IAppEvent,
-    ): Promise<Permission> {
+    ): Promise<EntityRecordWrappedResponse<Permission>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const {
@@ -162,19 +163,19 @@ export class PermissionController {
         );
 
         event.response.status = created ? 201 : 202;
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<Permission> {
+    ): Promise<EntityRecordWrappedResponse<Permission>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 }

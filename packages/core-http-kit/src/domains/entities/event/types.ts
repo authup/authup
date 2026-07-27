@@ -7,7 +7,7 @@
 
 import type { EntityQueryInput } from '../../../helpers';
 import type { Event } from '@authup/core-kit';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordWrappedResponse } from '../../types-base';
 
 /**
  * Read-only client — the audit log is append-only: rows are written
@@ -16,5 +16,5 @@ import type { EntityCollectionResponse, EntityRecordResponse } from '../../types
 export interface IEventAPI {
     getMany(data?: EntityQueryInput<Event>): Promise<EntityCollectionResponse<Event>>;
 
-    getOne(id: Event['id'], record?: EntityQueryInput<Event>): Promise<EntityRecordResponse<Event>>;
+    getOne(id: Event['id'], record?: EntityQueryInput<Event>): Promise<EntityRecordWrappedResponse<Event>>;
 }

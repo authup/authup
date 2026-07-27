@@ -56,9 +56,9 @@ describe('http/controllers (client secret projection)', () => {
     beforeAll(async () => {
         await suite.setup();
 
-        const realmB = await suite.client.realm.create(createFakeRealm());
+        const { data: realmB } = await suite.client.realm.create(createFakeRealm());
 
-        const ownClient = await suite.client.client.create({
+        const { data: ownClient } = await suite.client.client.create({
             ...createFakeClient(),
             secret: ownClientSecret,
             secretHashed: false,
@@ -66,7 +66,7 @@ describe('http/controllers (client secret projection)', () => {
         });
         ownClientId = ownClient.id;
 
-        const foreignClient = await suite.client.client.create({
+        const { data: foreignClient } = await suite.client.client.create({
             ...createFakeClient(),
             realmId: realmB.id,
             secret: foreignClientSecret,
@@ -75,7 +75,7 @@ describe('http/controllers (client secret projection)', () => {
         });
         foreignClientId = foreignClient.id;
 
-        const foreignHashedClient = await suite.client.client.create({
+        const { data: foreignHashedClient } = await suite.client.client.create({
             ...createFakeClient(),
             realmId: realmB.id,
             secret: foreignHashedSecret,
@@ -85,15 +85,15 @@ describe('http/controllers (client secret projection)', () => {
         foreignHashedClientId = foreignHashedClient.id;
 
         // global relation targets, bindable to clients of any realm
-        const permission = await suite.client.permission.create({
+        const { data: permission } = await suite.client.permission.create({
             ...createFakePermission(),
             realmId: null,
         });
-        const role = await suite.client.role.create({
+        const { data: role } = await suite.client.role.create({
             ...createFakeRole(),
             realmId: null,
         });
-        const scope = await suite.client.scope.create({
+        const { data: scope } = await suite.client.scope.create({
             ...createFakeScope(),
             realmId: null,
         });
@@ -107,7 +107,7 @@ describe('http/controllers (client secret projection)', () => {
         // a restricted actor in master holding the read grants at the
         // default `own` realm scope — its compiled secret gate is
         // conditional on the master realm
-        const restrictedClient = await suite.client.client.create({
+        const { data: restrictedClient } = await suite.client.client.create({
             ...createFakeClient(),
             authMethod: 'secret',
             tokenBindingMethod: 'none',
@@ -121,7 +121,7 @@ describe('http/controllers (client secret projection)', () => {
             PermissionName.CLIENT_ROLE_READ,
         ];
         for (const name of grantNames) {
-            const grant = await suite.client.permission.getOne(name);
+            const { data: grant } = await suite.client.permission.getOne(name);
             await suite.client.clientPermission.create({
                 clientId: restrictedClient.id,
                 permissionId: grant.id,

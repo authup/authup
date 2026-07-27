@@ -92,7 +92,8 @@ console.log(response);
 // }
 ```
 
-The response of a single resource request always returns the resource object **without** meta information.
+The response of a single resource request mirrors that shape: the resource object under `data`,
+response-scoped extras under `meta`.
 
 ```typescript
 import { Client } from '@authup/core-http-kit';
@@ -105,6 +106,7 @@ const response = await client.role.getOne('xxxx-xxxx-xxxx-xxxx');
 
 console.log(response);
 // {
-//     id: 'xxx', name: 'admin', description: null
+//     data: {id: 'xxx', name: 'admin', description: null},
+//     meta: {},
 // }
 ```

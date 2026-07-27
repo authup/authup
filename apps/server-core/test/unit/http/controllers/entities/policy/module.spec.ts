@@ -30,7 +30,7 @@ describe('src/http/controllers/policy', () => {
     const ids : string[] = [];
 
     it('should create time policy', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .policy
             .create(createFakeTimePolicy());
 
@@ -40,7 +40,7 @@ describe('src/http/controllers/policy', () => {
     });
 
     it('should create custom policy', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .policy
             .create({
                 name: 'foo',
@@ -54,9 +54,8 @@ describe('src/http/controllers/policy', () => {
     });
 
     it('should create group policy', async () => {
-        const response = await suite.client
-            .policy
-            .createBuiltIn({
+        const { data: response } = await suite.client
+            .policy.createBuiltIn({
                 name: 'group',
                 type: BuiltInPolicyType.COMPOSITE,
                 invert: false,
@@ -100,7 +99,7 @@ describe('src/http/controllers/policy', () => {
     });
 
     it('should read time policy', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .policy
             .getOne(ids[0]);
 
@@ -108,9 +107,8 @@ describe('src/http/controllers/policy', () => {
     });
 
     it('should update resource', async () => {
-        const response = await suite.client
-            .policy
-            .updateBuiltIn(ids[0], {
+        const { data: response } = await suite.client
+            .policy.updateBuiltIn(ids[0], {
                 name: 'time',
                 type: BuiltInPolicyType.TIME,
                 start: Date.now(),
@@ -123,7 +121,7 @@ describe('src/http/controllers/policy', () => {
 
     it('should delete resource', async () => {
         for (let i = ids.length - 1; i >= 0; i--) {
-            const response = await suite.client
+            const { data: response } = await suite.client
                 .policy
                 .delete(ids[i]);
 
@@ -135,9 +133,8 @@ describe('src/http/controllers/policy', () => {
     it('should create and update resource with put', async () => {
         const entity = createFakeTimePolicy();
 
-        let response = await suite.client
-            .policy
-            .createOrUpdate(entity.name, entity);
+        let { data: response } = await suite.client
+            .policy.createOrUpdate(entity.name, entity);
 
         expect(response).toBeDefined();
         expect(response.name).toEqual(entity.name);
@@ -146,12 +143,12 @@ describe('src/http/controllers/policy', () => {
 
         const { name } = createFakeTimePolicy();
 
-        response = await suite.client
+        response = (await suite.client
             .policy
             .createOrUpdate(entity.name, {
                 ...entity,
                 name,
-            });
+            })).data;
 
         expect(response).toBeDefined();
         expect(response.name).toEqual(name);

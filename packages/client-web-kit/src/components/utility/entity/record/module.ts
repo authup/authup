@@ -168,9 +168,9 @@ function create<
                 data,
             );
 
-            entity.value = response;
+            entity.value = response.data;
 
-            updated(response);
+            updated(response.data);
         } catch (e) {
             if (e instanceof Error) {
                 failed(e);
@@ -196,7 +196,7 @@ function create<
 
             entity.value = undefined;
 
-            deleted(response);
+            deleted(response.data);
         } catch (e) {
             if (e instanceof Error) {
                 failed(e);
@@ -219,9 +219,9 @@ function create<
         try {
             const response = await domainAPI.create(data);
 
-            entity.value = response;
+            entity.value = response.data;
 
-            created(response);
+            created(response.data);
         } catch (e) {
             if (e instanceof Error) {
                 failed(e);
@@ -373,7 +373,8 @@ function create<
 
         if (id && domainAPI.getOne) {
             try {
-                entity.value = await domainAPI.getOne(id, query);
+                const response = await domainAPI.getOne(id, query);
+                entity.value = response.data;
 
                 if (socket) {
                     socket.mount();

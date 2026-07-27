@@ -7,6 +7,7 @@
 
 import type {
     EntityCollectionResponse,
+    EntityRecordWrappedResponse,
     TrustAnchorCreatePayload,
     TrustAnchorUpdatePayload,
 } from '@authup/core-http-kit';
@@ -62,24 +63,26 @@ export class TrustAnchorController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<TrustAnchor> {
+    ): Promise<EntityRecordWrappedResponse<TrustAnchor>> {
         const actor = buildActorContext(event);
 
-        return this.service.getOne(id, actor, getRequestRealmID(event));
+        const entity = await this.service.getOne(id, actor, getRequestRealmID(event));
+
+        return { data: entity, meta: {} };
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: TrustAnchorCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<TrustAnchor> {
+    ): Promise<EntityRecordWrappedResponse<TrustAnchor>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
         event.response.status = 201;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
@@ -87,22 +90,24 @@ export class TrustAnchorController {
         @DPath('id') id: string,
         @DBody() data: TrustAnchorUpdatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<TrustAnchor> {
+    ): Promise<EntityRecordWrappedResponse<TrustAnchor>> {
         const actor = buildActorContext(event);
 
-        return this.service.update(id, data, actor, getRequestRealmID(event));
+        const entity = await this.service.update(id, data, actor, getRequestRealmID(event));
+
+        return { data: entity, meta: {} };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<TrustAnchor> {
+    ): Promise<EntityRecordWrappedResponse<TrustAnchor>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 }

@@ -7,6 +7,7 @@
 
 import type {
     EntityCollectionResponse,
+    EntityRecordWrappedResponse,
     PolicyAPICheckResponse,
     PolicyCreatePayload,
     PolicyResponse,
@@ -75,7 +76,7 @@ export class PolicyController {
     async getOneExpanded(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<PolicyResponse> {
+    ): Promise<EntityRecordWrappedResponse<PolicyResponse>> {
         return this.getOne(id, event, { expanded: true });
     }
 
@@ -85,7 +86,7 @@ export class PolicyController {
         @DContext() event: IAppEvent,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         options: { expanded?: boolean } = {},
-    ): Promise<PolicyResponse> {
+    ): Promise<EntityRecordWrappedResponse<PolicyResponse>> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(
             id,
@@ -93,7 +94,7 @@ export class PolicyController {
             getRequestRealmID(event),
         );
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DPost('/:id/check', [ForceLoggedInMiddleware])
@@ -126,7 +127,7 @@ export class PolicyController {
         @DPath('id') id: string,
         @DBody() data: PolicyUpdatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<PolicyResponse> {
+    ): Promise<EntityRecordWrappedResponse<PolicyResponse>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.update(
@@ -137,7 +138,7 @@ export class PolicyController {
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
@@ -145,7 +146,7 @@ export class PolicyController {
         @DPath('id') id: string,
         @DBody() data: PolicySavePayload,
         @DContext() event: IAppEvent,
-    ): Promise<PolicyResponse> {
+    ): Promise<EntityRecordWrappedResponse<PolicyResponse>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
 
@@ -159,33 +160,33 @@ export class PolicyController {
         );
 
         event.response.status = created ? 201 : 202;
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<PolicyResponse> {
+    ): Promise<EntityRecordWrappedResponse<PolicyResponse>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async create(
         @DBody() data: PolicyCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<PolicyResponse> {
+    ): Promise<EntityRecordWrappedResponse<PolicyResponse>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
         event.response.status = 201;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 }

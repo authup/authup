@@ -91,9 +91,9 @@ export default defineComponent({
         const hasAuthenticatorReadPermission = usePermissionCheck({ name: PermissionName.USER_AUTHENTICATOR_READ });
 
         try {
-            entity.value = await injectHTTPClient()
+            entity.value = (await injectHTTPClient()
                 .user
-                .getOne(route.params.id as string, { fields: ['+email'] });
+                .getOne(route.params.id as string, { fields: ['+email'] })).data;
         } catch {
             await navigateTo({ path: '/users' });
             throw createError({});

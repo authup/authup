@@ -29,7 +29,7 @@ describe('http/controllers/client (self-manage)', () => {
     beforeAll(async () => {
         await suite.setup();
 
-        const created = await suite.client.client.create({
+        const { data: created } = await suite.client.client.create({
             ...createFakeClient(),
             authMethod: 'secret',
             tokenBindingMethod: 'none',
@@ -39,7 +39,7 @@ describe('http/controllers/client (self-manage)', () => {
         });
         entity = created;
 
-        const permission = await suite.client.permission.getOne(PermissionName.CLIENT_SELF_MANAGE);
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.CLIENT_SELF_MANAGE);
         await suite.client.clientPermission.create({
             clientId: entity.id,
             permissionId: permission.id,
@@ -62,13 +62,13 @@ describe('http/controllers/client (self-manage)', () => {
     });
 
     it('should allow client to update its own description (allowed field)', async () => {
-        const response = await selfClient.client.update(entity.id, { description: 'self-updated' });
+        const { data: response } = await selfClient.client.update(entity.id, { description: 'self-updated' });
 
         expect(response.description).toBe('self-updated');
     });
 
     it('should allow client to update its own redirect_uri and scope (allowed fields)', async () => {
-        const response = await selfClient.client.update(entity.id, {
+        const { data: response } = await selfClient.client.update(entity.id, {
             redirectUri: 'https://example.test/cb',
             scope: 'openid profile',
         });
@@ -79,7 +79,7 @@ describe('http/controllers/client (self-manage)', () => {
 
     it('should silently strip self-update of realm_id (validator drops on UPDATE)', async () => {
         const originalRealmId = entity.realmId;
-        const response = await selfClient.client.update(entity.id, { realmId: '00000000-0000-0000-0000-000000000000' } as Partial<ClientEntity>);
+        const { data: response } = await selfClient.client.update(entity.id, { realmId: '00000000-0000-0000-0000-000000000000' } as Partial<ClientEntity>);
 
         expect(response.realmId).toBe(originalRealmId);
     });
@@ -93,7 +93,7 @@ describe('http/controllers/client (self-manage)', () => {
     it('should reject self-update of access_policy_id (rejected by ATTRIBUTE_NAMES policy)', async () => {
         // a real policy id — the rejection must come from the self-manage
         // denylist, not from a dangling-FK validation error
-        const policy = await suite.client.policy.create(createFakeTimePolicy());
+        const { data: policy } = await suite.client.policy.create(createFakeTimePolicy());
 
         await expect(
             selfClient.client.update(entity.id, { accessPolicyId: policy.id }),
@@ -101,19 +101,19 @@ describe('http/controllers/client (self-manage)', () => {
     });
 
     it('should silently strip self-update of built_in flag (not in validator schema)', async () => {
-        const response = await selfClient.client.update(entity.id, { builtIn: true } as Partial<ClientEntity>);
+        const { data: response } = await selfClient.client.update(entity.id, { builtIn: true } as Partial<ClientEntity>);
 
         expect(response.builtIn).toBe(false);
     });
 
     it('should allow client to rotate its own secret', async () => {
-        const response = await selfClient.client.update(entity.id, { secret: 'rotated-secret-456' });
+        const { data: response } = await selfClient.client.update(entity.id, { secret: 'rotated-secret-456' });
 
         expect(response.secret).toBeDefined();
     });
 
     it('should reject self-update of another client (not self)', async () => {
-        const otherClient = await suite.client.client.create(createFakeClient());
+        const { data: otherClient } = await suite.client.client.create(createFakeClient());
 
         await expect(
             selfClient.client.update(otherClient.id, { description: 'hijacked' }),

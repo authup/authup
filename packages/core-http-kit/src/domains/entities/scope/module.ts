@@ -10,7 +10,7 @@ import { buildQueryString } from '../../../helpers';
 import type { Scope } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordWrappedResponse } from '../../types-base';
 import type {
     IScopeAPI,
     ScopeCreatePayload,
@@ -25,25 +25,25 @@ export class ScopeAPI extends BaseAPI implements IScopeAPI {
         return response.data;
     }
 
-    async getOne(id: Scope['id'], record?: EntityQueryInput<Scope>): Promise<EntityRecordResponse<Scope>> {
+    async getOne(id: Scope['id'], record?: EntityQueryInput<Scope>): Promise<EntityRecordWrappedResponse<Scope>> {
         const response = await this.client.get(`scopes/${id}${buildQueryString(record)}`);
 
         return response.data;
     }
 
-    async delete(id: Scope['id']): Promise<EntityRecordResponse<Scope>> {
+    async delete(id: Scope['id']): Promise<EntityRecordWrappedResponse<Scope>> {
         const response = await this.client.delete(`scopes/${id}`);
 
         return response.data;
     }
 
-    async create(data: ScopeCreatePayload): Promise<EntityRecordResponse<Scope>> {
+    async create(data: ScopeCreatePayload): Promise<EntityRecordWrappedResponse<Scope>> {
         const response = await this.client.post('scopes', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(id: Scope['id'], data: ScopeUpdatePayload): Promise<EntityRecordResponse<Scope>> {
+    async update(id: Scope['id'], data: ScopeUpdatePayload): Promise<EntityRecordWrappedResponse<Scope>> {
         const response = await this.client.post(`scopes/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -52,7 +52,7 @@ export class ScopeAPI extends BaseAPI implements IScopeAPI {
     async createOrUpdate(
         idOrName: string,
         data: ScopeSavePayload,
-    ): Promise<EntityRecordResponse<Scope>> {
+    ): Promise<EntityRecordWrappedResponse<Scope>> {
         const response = await this.client.put(`scopes/${idOrName}`, nullifyEmptyObjectProperties(data));
 
         return response.data;

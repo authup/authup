@@ -33,15 +33,15 @@ describe('src/http/controllers/user-role', () => {
     let details : UserRole | undefined;
 
     it('should create resource', async () => {
-        const user = await suite.client.user.create(createFakeUser());
-        const role = await suite.client.role.create(createFakeRole());
+        const { data: user } = await suite.client.user.create(createFakeUser());
+        const { data: role } = await suite.client.role.create(createFakeRole());
 
-        details = await suite.client
+        details = (await suite.client
             .userRole
             .create({
                 userId: user.id,
                 roleId: role.id,
-            });
+            })).data;
 
         expect(details.userId).toEqual(user.id);
         expect(details.roleId).toEqual(role.id);
@@ -57,7 +57,7 @@ describe('src/http/controllers/user-role', () => {
     });
 
     it('should read resource', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .userRole
             .getOne(details!.id);
 
@@ -66,7 +66,7 @@ describe('src/http/controllers/user-role', () => {
     });
 
     it('should delete resource', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .userRole
             .delete(details!.id);
 

@@ -7,7 +7,7 @@
 
 import type { EntityQueryInput } from '../../../helpers';
 import type { Session } from '@authup/core-kit';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordWrappedResponse } from '../../types-base';
 
 export type SessionDeleteManyResponse = {
     count: number,
@@ -16,9 +16,9 @@ export type SessionDeleteManyResponse = {
 export interface ISessionAPI {
     getMany(data?: EntityQueryInput<Session>): Promise<EntityCollectionResponse<Session>>;
 
-    getOne(id: Session['id'], record?: EntityQueryInput<Session>): Promise<EntityRecordResponse<Session>>;
+    getOne(id: Session['id'], record?: EntityQueryInput<Session>): Promise<EntityRecordWrappedResponse<Session>>;
 
-    delete(id: Session['id']): Promise<EntityRecordResponse<Session>>;
+    delete(id: Session['id']): Promise<EntityRecordWrappedResponse<Session>>;
 
     /**
      * Revoke sessions in bulk (mirrors `getMany`'s query shape).

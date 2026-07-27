@@ -34,7 +34,7 @@ describe('http/controllers/client', () => {
 
     it('should create resource', async () => {
         const input = createFakeClient();
-        const response = await suite.client
+        const { data: response } = await suite.client
             .client
             .create(input);
 
@@ -62,7 +62,7 @@ describe('http/controllers/client', () => {
             secretEncrypted: false,
         };
 
-        const response = await suite.client
+        const { data: response } = await suite.client
             .client
             .create(input);
 
@@ -90,7 +90,7 @@ describe('http/controllers/client', () => {
             secretEncrypted: false,
         };
 
-        const response = await suite.client
+        const { data: response } = await suite.client
             .client
             .create(input);
 
@@ -114,7 +114,7 @@ describe('http/controllers/client', () => {
     });
 
     it('should read resource', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .client
             .getOne(entity.id);
 
@@ -123,7 +123,7 @@ describe('http/controllers/client', () => {
     });
 
     it('should read resource by name', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .client
             .getOne(entity.name);
 
@@ -136,7 +136,7 @@ describe('http/controllers/client', () => {
         entity.name = 'baz';
         entity.description = 'bar';
 
-        const response = await suite.client
+        const { data: response } = await suite.client
             .client
             .update(entity.id, entity);
 
@@ -148,7 +148,7 @@ describe('http/controllers/client', () => {
     });
 
     it('should delete resource', async () => {
-        const response = await suite.client
+        const { data: response } = await suite.client
             .client
             .delete(entity.id);
 
@@ -158,9 +158,8 @@ describe('http/controllers/client', () => {
     it('should create and update resource with put', async () => {
         const { name } = createFakeClient();
 
-        let response = await suite.client
-            .client
-            .create({
+        let { data: response } = await suite.client
+            .client.create({
                 name,
                 secret: 'start123',
             });
@@ -172,9 +171,9 @@ describe('http/controllers/client', () => {
 
         const { name: nextName } = createFakeClient();
 
-        response = await suite.client
+        response = (await suite.client
             .client
-            .createOrUpdate(name, { name: nextName });
+            .createOrUpdate(name, { name: nextName })).data;
 
         expect(response).toBeDefined();
         expect(response.name).toEqual(nextName);
@@ -182,30 +181,29 @@ describe('http/controllers/client', () => {
     });
 
     it('should round-trip accessPolicyId through create, update and read', async () => {
-        const policy = await suite.client.policy.create(createFakeTimePolicy());
-        const nextPolicy = await suite.client.policy.create(createFakeTimePolicy());
+        const { data: policy } = await suite.client.policy.create(createFakeTimePolicy());
+        const { data: nextPolicy } = await suite.client.policy.create(createFakeTimePolicy());
 
-        const created = await suite.client
+        const { data: created } = await suite.client
             .client
             .create(createFakeClient({ accessPolicyId: policy.id }));
 
         expect(created.accessPolicyId).toEqual(policy.id);
 
-        let read = await suite.client.client.getOne(created.id);
+        let { data: read } = await suite.client.client.getOne(created.id);
         expect(read.accessPolicyId).toEqual(policy.id);
 
-        let updated = await suite.client
-            .client
-            .update(created.id, { accessPolicyId: nextPolicy.id });
+        let { data: updated } = await suite.client
+            .client.update(created.id, { accessPolicyId: nextPolicy.id });
         expect(updated.accessPolicyId).toEqual(nextPolicy.id);
 
         // clearing detaches the policy (null = default allow)
-        updated = await suite.client
+        updated = (await suite.client
             .client
-            .update(created.id, { accessPolicyId: null });
+            .update(created.id, { accessPolicyId: null })).data;
         expect(updated.accessPolicyId).toBeNull();
 
-        read = await suite.client.client.getOne(created.id);
+        read = (await suite.client.client.getOne(created.id)).data;
         expect(read.accessPolicyId).toBeNull();
     });
 });

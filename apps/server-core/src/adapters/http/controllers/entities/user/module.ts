@@ -20,6 +20,7 @@ import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
+    EntityRecordWrappedResponse,
     UserCreatePayload,
     UserSavePayload,
     UserUpdatePayload,
@@ -67,7 +68,7 @@ export class UserController {
     async get(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<User> {
+    ): Promise<EntityRecordWrappedResponse<User>> {
         const actor = buildActorContext(event);
         let paramId = id;
 
@@ -86,21 +87,21 @@ export class UserController {
             getRequestRealmID(event),
         );
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: UserCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<User> {
+    ): Promise<EntityRecordWrappedResponse<User>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
         event.response.status = 201;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
@@ -108,7 +109,7 @@ export class UserController {
         @DPath('id') id: string,
         @DBody() data: UserUpdatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<User> {
+    ): Promise<EntityRecordWrappedResponse<User>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.update(
@@ -119,7 +120,7 @@ export class UserController {
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
@@ -127,7 +128,7 @@ export class UserController {
         @DPath('id') id: string,
         @DBody() data: UserSavePayload,
         @DContext() event: IAppEvent,
-    ): Promise<User> {
+    ): Promise<EntityRecordWrappedResponse<User>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const {
@@ -140,19 +141,19 @@ export class UserController {
         );
 
         event.response.status = created ? 201 : 202;
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<User> {
+    ): Promise<EntityRecordWrappedResponse<User>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 }

@@ -123,7 +123,7 @@ Present the same certificate when using a bound access or refresh token:
 ```bash
 curl --cert client.crt --key client.key \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
-  https://mtls.auth.example.com/users/@me
+  https://mtls.auth.example.com/userinfo
 
 curl --cert client.crt --key client.key \
   --data-urlencode grant_type=refresh_token \

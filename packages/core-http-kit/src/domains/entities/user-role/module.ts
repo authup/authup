@@ -9,7 +9,7 @@ import type { EntityQueryInput } from '../../../helpers';
 import { buildQueryString } from '../../../helpers';
 import type { UserRole } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordWrappedResponse } from '../../types-base';
 import type {
     IUserRoleAPI,
     UserRoleCreatePayload,
@@ -22,19 +22,19 @@ export class UserRoleAPI extends BaseAPI implements IUserRoleAPI {
         return response.data;
     }
 
-    async getOne(id: UserRole['id'], record?: EntityQueryInput<UserRole>): Promise<EntityRecordResponse<UserRole>> {
+    async getOne(id: UserRole['id'], record?: EntityQueryInput<UserRole>): Promise<EntityRecordWrappedResponse<UserRole>> {
         const response = await this.client.get(`user-roles/${id}${buildQueryString(record)}`);
 
         return response.data;
     }
 
-    async delete(id: UserRole['id']): Promise<EntityRecordResponse<UserRole>> {
+    async delete(id: UserRole['id']): Promise<EntityRecordWrappedResponse<UserRole>> {
         const response = await this.client.delete(`user-roles/${id}`);
 
         return response.data;
     }
 
-    async create(data: UserRoleCreatePayload): Promise<EntityRecordResponse<UserRole>> {
+    async create(data: UserRoleCreatePayload): Promise<EntityRecordWrappedResponse<UserRole>> {
         const response = await this.client.post('user-roles', data);
 
         return response.data;

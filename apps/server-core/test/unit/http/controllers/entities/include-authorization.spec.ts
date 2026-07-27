@@ -30,7 +30,7 @@ describe('http/controllers (include authorization)', () => {
     const knownSecret = 'include-gate-secret';
 
     const createIdentity = async (permissionNames: PermissionName[]) => {
-        const created = await suite.client.client.create({
+        const { data: created } = await suite.client.client.create({
             ...createFakeClient(),
             authMethod: 'secret',
             tokenBindingMethod: 'none',
@@ -40,7 +40,7 @@ describe('http/controllers (include authorization)', () => {
         });
 
         for (const permissionName of permissionNames) {
-            const permission = await suite.client.permission.getOne(permissionName);
+            const { data: permission } = await suite.client.permission.getOne(permissionName);
             await suite.client.clientPermission.create({
                 clientId: created.id,
                 permissionId: permission.id,
@@ -112,8 +112,8 @@ describe('http/controllers (include authorization)', () => {
     // include=permission was silently stripped on the permission-binding
     // collections even for an actor holding PERMISSION_READ.
     it('should join include=permission on client-permission for a permitted actor', async () => {
-        const permission = await suite.client.permission.create(createFakePermission());
-        const client = await suite.client.client.create(createFakeClient());
+        const { data: permission } = await suite.client.permission.create(createFakePermission());
+        const { data: client } = await suite.client.client.create(createFakeClient());
         await suite.client.clientPermission.create({
             clientId: client.id,
             permissionId: permission.id,
@@ -131,8 +131,8 @@ describe('http/controllers (include authorization)', () => {
     });
 
     it('should join include=permission on user-permission for a permitted actor', async () => {
-        const permission = await suite.client.permission.create(createFakePermission());
-        const user = await suite.client.user.create(createFakeUser());
+        const { data: permission } = await suite.client.permission.create(createFakePermission());
+        const { data: user } = await suite.client.user.create(createFakeUser());
         await suite.client.userPermission.create({
             userId: user.id,
             permissionId: permission.id,
@@ -150,8 +150,8 @@ describe('http/controllers (include authorization)', () => {
     });
 
     it('should join include=permission on role-permission for a permitted actor', async () => {
-        const permission = await suite.client.permission.create(createFakePermission());
-        const role = await suite.client.role.create(createFakeRole());
+        const { data: permission } = await suite.client.permission.create(createFakePermission());
+        const { data: role } = await suite.client.role.create(createFakeRole());
         await suite.client.rolePermission.create({
             roleId: role.id,
             permissionId: permission.id,

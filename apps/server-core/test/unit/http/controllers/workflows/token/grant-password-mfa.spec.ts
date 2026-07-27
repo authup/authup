@@ -46,7 +46,7 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
 
     it('gates the password grant and /authorize on a second factor', async () => {
         const password = 'mfa-user-password';
-        const user = await suite.client.user.create(createFakeUser({ password }));
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
 
         // 1) pre-enrollment: the grant passes without an otp (a user could
         // never enroll otherwise)
@@ -75,7 +75,7 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
         });
 
         const confirmed = await bearer.userAuthenticator.confirm('@me', enrolled.data.id, { code: totp.generate() });
-        expect(confirmed.confirmed).toBeTruthy();
+        expect(confirmed.data.confirmed).toBeTruthy();
 
         // the read surface never carries secret material
         const list = await bearer.userAuthenticator.getMany('@me');
@@ -113,14 +113,14 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
         // 5) /authorize backstop: the PRE-enrollment bearer session carries
         // no mfa proof — the code request fails closed
         const clientSecret = generateOAuth2CodeVerifier();
-        const oauthClient = await suite.client.client.create(createFakeClient({
+        const { data: oauthClient } = await suite.client.client.create(createFakeClient({
             secret: clientSecret,
             secretHashed: false,
             secretEncrypted: false,
             authMethod: 'secret',
             tokenBindingMethod: 'none',
         }));
-        const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: oauthClient.id,
@@ -167,7 +167,7 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
 
     it('accepts a recovery code on the otp parameter', async () => {
         const password = 'mfa-recovery-password';
-        const user = await suite.client.user.create(createFakeUser({ password }));
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
 
         const login = await suite.client.token.createWithPassword({
             username: user.name,

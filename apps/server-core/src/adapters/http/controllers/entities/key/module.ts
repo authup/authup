@@ -19,6 +19,7 @@ import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
+    EntityRecordWrappedResponse,
     KeyCreatePayload,
     KeyUpdatePayload,
 } from '@authup/core-http-kit';
@@ -62,24 +63,26 @@ export class KeyController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<Key> {
+    ): Promise<EntityRecordWrappedResponse<Key>> {
         const actor = buildActorContext(event);
 
-        return this.service.getOne(id, actor, getRequestRealmID(event));
+        const entity = await this.service.getOne(id, actor, getRequestRealmID(event));
+
+        return { data: entity, meta: {} };
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: KeyCreatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<Key> {
+    ): Promise<EntityRecordWrappedResponse<Key>> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
         event.response.status = 201;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
@@ -87,17 +90,19 @@ export class KeyController {
         @DPath('id') id: string,
         @DBody() data: KeyUpdatePayload,
         @DContext() event: IAppEvent,
-    ): Promise<Key> {
+    ): Promise<EntityRecordWrappedResponse<Key>> {
         const actor = buildActorContext(event);
 
-        return this.service.update(id, data, actor, getRequestRealmID(event));
+        const entity = await this.service.update(id, data, actor, getRequestRealmID(event));
+
+        return { data: entity, meta: {} };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
-    ): Promise<Key> {
+    ): Promise<EntityRecordWrappedResponse<Key>> {
         const actor = buildActorContext(event);
 
         const query = useRequestQuery(event);
@@ -107,6 +112,6 @@ export class KeyController {
 
         event.response.status = 202;
 
-        return entity;
+        return { data: entity, meta: {} };
     }
 }

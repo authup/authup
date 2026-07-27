@@ -32,7 +32,7 @@ describe('refresh-token', () => {
         await suite.setup();
 
         confidentialSecret = 'refresh-token-test-secret';
-        confidentialClient = await suite.client
+        confidentialClient = (await suite.client
             .client
             .create(createFakeClient({
                 secret: confidentialSecret,
@@ -40,7 +40,7 @@ describe('refresh-token', () => {
                 secretEncrypted: false,
                 authMethod: 'secret',
                 tokenBindingMethod: 'none',
-            }));
+            }))).data;
     });
 
     afterAll(async () => {
@@ -125,7 +125,7 @@ describe('refresh-token', () => {
         // does not require it to — the server extracts the bound client_id from
         // the signed token. This is what lets the public client-web `web`
         // client auto-refresh with just { refresh_token }.
-        const publicClient = await suite.client
+        const { data: publicClient } = await suite.client
             .client
             .create(createFakeClient({
                 authMethod: 'none',
@@ -161,7 +161,7 @@ describe('refresh-token', () => {
 
     it('should reject refresh when authenticated client_id does not match token client_id', async () => {
         const otherSecret = 'other-refresh-secret';
-        const otherClient = await suite.client
+        const { data: otherClient } = await suite.client
             .client
             .create(createFakeClient({
                 secret: otherSecret,
@@ -214,7 +214,7 @@ describe('refresh-token', () => {
         // same-named confidential clients in master and another realm — the
         // realm-less name lookup must resolve master on BOTH legs instead of
         // matching an arbitrary realm's client on refresh
-        const realm = await suite.client.realm.create(createFakeRealm());
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
         const { name } = createFakeClient();
         const masterSecret = 'master-leg-secret';
         await suite.client.client.create(createFakeClient({
@@ -256,9 +256,9 @@ describe('refresh-token', () => {
     });
 
     it('should scope a name-identified client on refresh to the realm hint', async () => {
-        const realm = await suite.client.realm.create(createFakeRealm());
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
         const secret = 'realm-refresh-secret';
-        const client = await suite.client.client.create(createFakeClient({
+        const { data: client } = await suite.client.client.create(createFakeClient({
             realmId: realm.id,
             secret,
             secretHashed: false,
@@ -266,7 +266,7 @@ describe('refresh-token', () => {
             authMethod: 'secret',
             tokenBindingMethod: 'none',
         }));
-        const user = await suite.client.user.create(createFakeUser({
+        const { data: user } = await suite.client.user.create(createFakeUser({
             realmId: realm.id,
             password: 'realm-user-secret',
         }));
@@ -346,8 +346,8 @@ describe('refresh-token', () => {
         // from another realm must be rejected — a public client may only refresh
         // tokens of its own realm. Kills legacy cross-realm public-client refresh
         // tokens minted before the authorize-side realm gate existed.
-        const realm = await suite.client.realm.create(createFakeRealm());
-        const publicClient = await suite.client.client.create(createFakeClient({
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+        const { data: publicClient } = await suite.client.client.create(createFakeClient({
             realmId: realm.id,
             authMethod: 'none',
             tokenBindingMethod: 'none',
@@ -370,14 +370,14 @@ describe('refresh-token', () => {
     it('should allow refresh by a public client of the token\'s own realm', async () => {
         // control for the parity guard above: same-realm public client refreshes
         // a same-realm token normally.
-        const realm = await suite.client.realm.create(createFakeRealm());
-        const publicClient = await suite.client.client.create(createFakeClient({
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+        const { data: publicClient } = await suite.client.client.create(createFakeClient({
             realmId: realm.id,
             authMethod: 'none',
             tokenBindingMethod: 'none',
             secret: null,
         }));
-        const user = await suite.client.user.create(createFakeUser({
+        const { data: user } = await suite.client.user.create(createFakeUser({
             realmId: realm.id,
             password: 'realm-public-refresh',
         }));
@@ -408,8 +408,8 @@ describe('refresh-token', () => {
         // grant (a UUID-identified realm user authenticated via a master-realm
         // authenticated client). Dropping the public-client check from the guard
         // would break this leg; this is its control.
-        const realm = await suite.client.realm.create(createFakeRealm());
-        const user = await suite.client.user.create(createFakeUser({
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+        const { data: user } = await suite.client.user.create(createFakeUser({
             realmId: realm.id,
             password: 'confidential-cross-realm',
         }));
