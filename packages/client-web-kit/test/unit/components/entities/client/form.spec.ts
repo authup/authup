@@ -63,9 +63,12 @@ function mountForm(entity: Client) {
     const httpClient = createFakeClient({
         handlers: {
             'POST /clients/:id': (request: FakeRequest) => ({
-                ...entity,
-                ...(request.body as Record<string, any>),
-                updatedAt: '2026-01-02T00:00:00.000Z',
+                data: {
+                    ...entity,
+                    ...(request.body as Record<string, any>),
+                    updatedAt: '2026-01-02T00:00:00.000Z',
+                },
+                meta: {},
             }),
         },
     });

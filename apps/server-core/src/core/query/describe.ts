@@ -9,10 +9,14 @@ import { Parameter } from '@rapiq/core';
 import type { Schema, SchemaDescription } from '@rapiq/core';
 
 /**
- * The parameters a single-record read processes — mirrors the
- * `parameters` restriction the services pass to `decodeQuery` for
- * `getOne`, so a record response never advertises filter/sort/
- * pagination vocabulary the endpoint ignores.
+ * The parameter subset advertised on single-record reads: a record
+ * response never advertises filter/sort/pagination vocabulary (no
+ * single read processes those). NOTE: today only the user/client
+ * single reads actually decode `fields`/`relations`
+ * (`decodeQuery(..., { parameters: ['fields', 'relations'] })`); the
+ * other record endpoints ignore the query entirely, so for them this
+ * advertisement is the TARGET vocabulary, not current behavior —
+ * converging them is tracked in plan 076.
  */
 export const RECORD_QUERY_PARAMETERS: `${Parameter}`[] = [
     Parameter.FIELDS,
@@ -20,6 +24,18 @@ export const RECORD_QUERY_PARAMETERS: `${Parameter}`[] = [
 ];
 
 const cache = new WeakMap<Schema<any>, Map<string, SchemaDescription>>();
+
+function deepFreeze<T>(input: T) : T {
+    if (input !== null && typeof input === 'object') {
+        for (const value of Object.values(input)) {
+            deepFreeze(value);
+        }
+
+        Object.freeze(input);
+    }
+
+    return input;
+}
 
 /**
  * Serialize an entity schema's declared query constraints for the
@@ -45,7 +61,7 @@ export function describeQuerySchema(
 
     let output = bySignature.get(signature);
     if (!output) {
-        output = schema.describe(parameters ? { parameters } : {});
+        output = deepFreeze(schema.describe(parameters ? { parameters } : {}));
         bySignature.set(signature, output);
     }
 

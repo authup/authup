@@ -33,8 +33,8 @@ import type { IClientRepository, IClientService } from '../../../../../core/inde
 import {
     OAuth2ScopeAttributesResolver,
     RECORD_QUERY_PARAMETERS,
-    clientSchema, 
-    describeQuerySchema, 
+    clientSchema,
+    describeQuerySchema,
 } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
