@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode, hasInstanceof, isAuthupError } from '@authup/errors';
+import { ErrorCode, isAuthupError, matchesInstanceof } from '@authup/errors';
 import { POLICY_ERROR_INSTANCE, type PolicyError } from './module';
 
 export function isPolicyError(input: unknown): input is PolicyError {
-    if (hasInstanceof(input, POLICY_ERROR_INSTANCE)) {
+    if (matchesInstanceof(input, POLICY_ERROR_INSTANCE)) {
         return true;
     }
 

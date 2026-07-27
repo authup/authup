@@ -103,3 +103,17 @@ if (isAuthupError(error)) {
     // error has .code, .issues, ...
 }
 ```
+
+### `matchesInstanceof`
+
+The fast path shared by every duck-type guard. Checks whether the input's `@instanceof` class-marker chain carries a marker — as the native `Symbol.for(...)` symbol (an in-process instance) or as the symbol's description string. The string form exists because `AuthupError.toJSON()` serializes the chain into the JSON payload (symbols don't survive `JSON.stringify`), so guards keep the full inheritance match for errors rehydrated from a JSON response body:
+
+```ts
+import { isUnauthorizedError } from '@authup/errors';
+
+const rehydrated = JSON.parse(JSON.stringify(AuthHeaderError.unsupportedType('X')));
+
+isUnauthorizedError(rehydrated); // true — the serialized chain carries the ancestor marker
+```
+
+Error payloads therefore include an `@instanceof` string list alongside `code` / `message` / `issues`. When writing a new guard, use `matchesInstanceof` from `@authup/errors` as the fast path — plain `hasInstanceof` only matches the symbol form and silently loses the inheritance match for rehydrated errors.

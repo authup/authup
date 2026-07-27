@@ -6,11 +6,11 @@
  */
 
 import {
-    hasInstanceof,
     isBaseError,
     isObject,
     isError as isRawError,
 } from '@ebec/core';
+import { matchesInstanceof } from './instanceof.ts';
 import type { AuthupError } from './module.ts';
 import { AUTHUP_ERROR_INSTANCE } from './module.ts';
 
@@ -30,16 +30,17 @@ export function isError(input: unknown): input is Error {
 /**
  * Duck-type guard for AuthupError.
  *
- * Fast path: input has the AuthupError marker in its `@instanceof` chain.
- * Subclass instances also accumulate this marker, so this guard matches any
- * AuthupError subclass (`OAuth2Error`, `JWTError`, etc.).
+ * Fast path: input has the AuthupError marker in its `@instanceof` chain —
+ * as the native symbol (in-process) or its serialized string form
+ * (JSON-rehydrated). Subclass instances also accumulate this marker, so this
+ * guard matches any AuthupError subclass (`OAuth2Error`, `JWTError`, etc.).
  *
  * Slow path: input is shape-compatible with AuthupError (BaseError + has
  * `issues: Issue[]`). Catches cases where the marker is missing — plain
- * objects rehydrated from JSON, older builds without the marker.
+ * objects rehydrated from JSON emitted by older builds without the chain.
  */
 export function isAuthupError(input: unknown): input is AuthupError {
-    if (hasInstanceof(input, AUTHUP_ERROR_INSTANCE)) {
+    if (matchesInstanceof(input, AUTHUP_ERROR_INSTANCE)) {
         return true;
     }
 
