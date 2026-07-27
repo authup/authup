@@ -107,6 +107,41 @@ const response = await client.role.getOne('xxxx-xxxx-xxxx-xxxx');
 console.log(response);
 // {
 //     data: {id: 'xxx', name: 'admin', description: null},
-//     meta: {},
+//     meta: { schema: { /* ... */ } },
 // }
 ```
+
+## Query Capability Discovery
+
+Every query-capable `GET` describes its own queryable vocabulary under
+`meta.schema` — which `filter`, `fields`, `sort` and `include` keys the
+endpoint accepts, plus the pagination cap — so a consumer never has to
+inspect server source to build a query:
+
+```typescript
+const { meta } = await client.role.getMany();
+
+console.log(meta.schema);
+// {
+//     name: 'role',
+//     fields: { allowed: ['id', 'name', /* ... */] },
+//     filters: { allowed: ['id', 'name', /* ... */] },
+//     sort: { allowed: ['id', 'name', /* ... */] },
+//     pagination: { maxLimit: 50 },
+//     relations: { allowed: ['realm'], schemas: { realm: 'realm' } },
+// }
+```
+
+Reading rules:
+
+- an **absent** constraint was never declared (no explicit allow-list);
+  an **empty array** is an explicit "nothing allowed".
+- relation vocabulary is **referenced, not expanded**: `relations.schemas`
+  names the schema governing each relation — dotted keys like
+  `filter[client.id]` follow the `client` entity's own description, found
+  on its own endpoints.
+- single-record `GET`s carry the subset a record read processes
+  (`fields` + `relations` only).
+- the description is the **static upper bound** — actor-dependent
+  authorization gates may still strip individual keys per request.
+
