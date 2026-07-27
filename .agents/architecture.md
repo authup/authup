@@ -226,12 +226,14 @@ usable at the service level and nothing in core depends on TypeORM:
   healed by the operand projection: a bare `fields=id,secret`
   replace-projection used to strip `realmId`/flags so the check's
   `resourceRealmMatch` neutral-passed and shipped a foreign plaintext
-  secret. Note: under an explicit `include=client` the relation joins
-  fully-selected and rapiq #831 drops the per-column dotted selects,
-  so a `select:false` column cannot ship through that form at all
-  today (`fields[relation]` silently ignored there — divergence filed
-  as tada5hi/rapiq#847); the gate covers it seamlessly if the adapter
-  ever reduces explicit-include joins. Specs:
+  secret. Since rapiq beta.11 (tada5hi/rapiq#847) an explicitly
+  included relation is NARROWED to its per-relation fieldset (bare
+  `include=` → the target schema's `fields.default`/allowed
+  projection), so the explicit-include and auto-join forms behave
+  identically and the gate covers both; the #3324
+  complete-schema-field-projections pass is what keeps that narrowing
+  response-shape-neutral (every selectable column is declared, only
+  `select:false` columns — the gated `secret` — differ). Specs:
   `core/query/module.spec.ts` (verdict matrix),
   `client-secret-projection.spec.ts` (HTTP acceptance).
 - **Junction/attribute schemas pin `fields.default`** — with no root fields
