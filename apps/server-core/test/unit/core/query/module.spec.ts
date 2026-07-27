@@ -12,10 +12,14 @@ import {
     isFilter,
     isFilters,
 } from '@rapiq/core';
-import { PermissionName } from '@authup/core-kit';
+import { IdentityType, PermissionName } from '@authup/core-kit';
+import type { Client } from '@authup/core-kit';
 import type { ActorContext } from '@authup/server-kit';
 import { FakePermissionEvaluator } from '@authup/server-test-kit';
+import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
+import { clientSchema } from '../../../../src/core/entities/client/schema.ts';
+import { clientPermissionSchema } from '../../../../src/core/entities/client-permission/schema.ts';
 import { roleSchema } from '../../../../src/core/entities/role/schema.ts';
 import { userRoleSchema } from '../../../../src/core/entities/user-role/schema.ts';
 import { appendQueryConditions, decodeQuery } from '../../../../src/core/query/index.ts';
@@ -224,6 +228,169 @@ describe('core/query', () => {
             );
 
             expect(parsed.relations.value.map((relation) => relation.name)).toEqual(['user', 'role']);
+        });
+    });
+
+    describe('fields read gate (client secret, #3322)', () => {
+        const CLIENT_PERMISSIONS = [
+            PermissionName.CLIENT_READ,
+            PermissionName.CLIENT_UPDATE,
+            PermissionName.CLIENT_DELETE,
+        ];
+
+        const findField = (parsed: Awaited<ReturnType<typeof decodeQuery>>, name: string) => parsed.fields.value
+            .find((field) => field.name === name);
+
+        it('should keep the secret unconditioned for an allow verdict', async () => {
+            const evaluator = new FakePermissionEvaluator();
+            evaluator.setCompileResult({ verdict: 'allow' });
+
+            const parsed = await decodeQuery(
+                { fields: '+secret' },
+                { schema: clientSchema, actor: buildActor(evaluator) },
+            );
+
+            const field = findField(parsed, 'secret');
+            expect(field).toBeDefined();
+            expect(field!.condition).toBeUndefined();
+            expect(evaluator.compileCalls.map((call) => call.name)).toEqual([CLIENT_PERMISSIONS]);
+        });
+
+        it('should attach a fail-closed condition for a conditional verdict', async () => {
+            const evaluator = new FakePermissionEvaluator();
+            evaluator.setCompileResult({
+                verdict: 'conditional',
+                condition: eq('realmId', 'realm-a'),
+            });
+
+            const parsed = await decodeQuery(
+                { fields: '+secret' },
+                { schema: clientSchema, actor: buildActor(evaluator) },
+            );
+
+            const field = findField(parsed, 'secret');
+            expect(field!.condition).toBeDefined();
+            // realm presence guard, non-plaintext legs, then the compiled leg
+            expect(collectFieldConditions(field!.condition!)).toEqual([
+                ['realmId', null],
+                ['secret', null],
+                ['secretHashed', true],
+                ['secretEncrypted', true],
+                ['realmId', 'realm-a'],
+            ]);
+        });
+
+        it('should gate plaintext values without a permission leg on a non-lowerable (post) verdict', async () => {
+            const evaluator = new FakePermissionEvaluator();
+
+            const parsed = await decodeQuery(
+                { fields: '+secret' },
+                { schema: clientSchema, actor: buildActor(evaluator) },
+            );
+
+            const field = findField(parsed, 'secret');
+            expect(collectFieldConditions(field!.condition!)).toEqual([
+                ['realmId', null],
+                ['secret', null],
+                ['secretHashed', true],
+                ['secretEncrypted', true],
+            ]);
+        });
+
+        it('should keep a client identity\'s own row visible via a self leg', async () => {
+            const evaluator = new FakePermissionEvaluator();
+            evaluator.setCompileResult({ verdict: 'deny' });
+            const selfId = randomUUID();
+
+            const actor: ActorContext = {
+                permissionEvaluator: evaluator,
+                identity: {
+                    type: IdentityType.CLIENT,
+                    data: { id: selfId } as Client,
+                },
+            };
+
+            const parsed = await decodeQuery(
+                { fields: '+secret' },
+                { schema: clientSchema, actor },
+            );
+
+            const field = findField(parsed, 'secret');
+            expect(collectFieldConditions(field!.condition!)).toEqual([
+                ['realmId', null],
+                ['secret', null],
+                ['secretHashed', true],
+                ['secretEncrypted', true],
+                ['id', selfId],
+            ]);
+        });
+
+        it('should gate the secret at the include position of another schema', async () => {
+            const evaluator = new FakePermissionEvaluator();
+            evaluator.setCompileResult({
+                verdict: 'conditional',
+                condition: eq('realmId', 'realm-a'),
+            });
+
+            const parsed = await decodeQuery(
+                { include: 'client', fields: { client: 'secret' } },
+                { schema: clientPermissionSchema, actor: buildActor(evaluator) },
+            );
+
+            const field = findField(parsed, 'client.secret');
+            expect(field).toBeDefined();
+            expect(field!.condition).toBeDefined();
+            expect(collectFieldConditions(field!.condition!)).toContainEqual(['realmId', 'realm-a']);
+            expect(evaluator.compileCalls.map((call) => call.name)).toEqual([CLIENT_PERMISSIONS]);
+        });
+
+        it('should not fire for a projection without gated fields', async () => {
+            const evaluator = new FakePermissionEvaluator();
+
+            const parsed = await decodeQuery(
+                { fields: 'id,name' },
+                { schema: clientSchema, actor: buildActor(evaluator) },
+            );
+
+            expect(findField(parsed, 'name')).toBeDefined();
+            expect(evaluator.compileCalls).toHaveLength(0);
+        });
+
+        it('should not fire for the default projection', async () => {
+            const evaluator = new FakePermissionEvaluator();
+
+            const parsed = await decodeQuery(
+                {},
+                { schema: clientSchema, actor: buildActor(evaluator) },
+            );
+
+            expect(findField(parsed, 'secret')).toBeUndefined();
+            expect(evaluator.compileCalls).toHaveLength(0);
+        });
+
+        it('should run an actor-less (system) decode unrestricted', async () => {
+            const parsed = await decodeQuery(
+                { fields: '+secret' },
+                { schema: clientSchema },
+            );
+
+            const field = findField(parsed, 'secret');
+            expect(field).toBeDefined();
+            expect(field!.condition).toBeUndefined();
+        });
+
+        it('should strip the field when the gate itself fails', async () => {
+            const evaluator = new FakePermissionEvaluator();
+            evaluator.compile = async () => {
+                throw new Error('compile failed');
+            };
+
+            const parsed = await decodeQuery(
+                { fields: '+secret' },
+                { schema: clientSchema, actor: buildActor(evaluator) },
+            );
+
+            expect(findField(parsed, 'secret')).toBeUndefined();
         });
     });
 });

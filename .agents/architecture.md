@@ -183,6 +183,57 @@ usable at the service level and nothing in core depends on TypeORM:
   strip). Every schema now declares `relations` explicitly (an omitted
   allow-list falls back to rapiq's syntactic name check — that hole is
   closed; `event`/`realm` pin `allowed: []`).
+- **Field authorization — gated columns (#3322)** — a schema may gate
+  individual columns via `fields.validateMany`
+  (`createFieldsReadGate(gates)` in `core/query/fields.ts`; schemas
+  import that FILE directly, same barrel-cycle rule as the relations
+  gate). rapiq invokes the batched hook once per (governing schema,
+  relation path) with the client-requested names — never schema
+  defaults — so a gate compiles the actor's permission disjunction
+  ONCE per query and an unqualified list costs nothing. A gate answers
+  `true`, `false` (strip), or an `ICondition` (rapiq #830/#837): the
+  column stays projected but is VISIBLE only on rows satisfying the
+  condition, uniformly at the query root and under any
+  `fields[relation]` position — which is what closes the
+  `GET /client-permissions?fields[client]=secret` bypass of
+  `ClientService`'s read path (the dotted field auto-joins `client`
+  with a per-column selection; the relations read gate still gates the
+  traversal itself). Enforcement is two-part: the rapiq SQL adapter
+  force-selects every column a condition reads (operand projection —
+  the condition cannot go into the statement, a TypeORM selection must
+  stay a bare column for hydration), and EVERY `findMany` adapter runs
+  its fetched rows through `redactFieldConditions(query, entities)`
+  (`app/modules/database/repositories/query.ts`, wrapping
+  `@rapiq/memory`'s `applyFieldConditions`) — failing values are
+  REDACTED, rows never drop, totals stay exact. The sweep is universal
+  because enforcement is fail-open by construction: a `findMany` that
+  skips the call ships the value. Author conditions FAIL-CLOSED over
+  missing columns (positive legs + a presence guard like
+  `ne('realmId', null)`): `@rapiq/memory` unifies a missing column
+  with `null`, so a negated leg — or an `ownOrNull` reach's
+  null-inclusive realm leg — would match an unfetched column.
+  Today's only gated column is `client.secret`: `allow` verdict →
+  ungated; otherwise visible iff NOT plaintext (`secret` null /
+  hashed / encrypted) OR covered by the compiled
+  `CLIENT_READ/UPDATE/DELETE` condition OR the actor's own client row
+  (self leg — preserves the service-level isMe contract in list
+  shape). SYSTEM decodes (no actor) pass ungated; a gate failure
+  strips the field. `ClientService.getMany`'s former WHERE-narrowing +
+  per-row loop are gone — rows are no longer dropped when `secret` is
+  selected, and a `post` verdict now strips plaintext values instead
+  of per-row evaluation (fail-closed). `getOne` keeps its isMe bypass
+  and post-fetch per-row check as the authoritative single-read path —
+  healed by the operand projection: a bare `fields=id,secret`
+  replace-projection used to strip `realmId`/flags so the check's
+  `resourceRealmMatch` neutral-passed and shipped a foreign plaintext
+  secret. Note: under an explicit `include=client` the relation joins
+  fully-selected and rapiq #831 drops the per-column dotted selects,
+  so a `select:false` column cannot ship through that form at all
+  today (`fields[relation]` silently ignored there — divergence filed
+  as tada5hi/rapiq#847); the gate covers it seamlessly if the adapter
+  ever reduces explicit-include joins. Specs:
+  `core/query/module.spec.ts` (verdict matrix),
+  `client-secret-projection.spec.ts` (HTTP acceptance).
 - **Junction/attribute schemas pin `fields.default`** — with no root fields
   declared, an `include=` decodes the relation's default fields ONLY, and
   the typeorm adapter's `select()` replace then drops every root column
@@ -1314,12 +1365,11 @@ alternative** service-side — `or(and(eq(sub), eq(subKind)), compiled.condition
 `EventService`'s probe-based `resolveReadVisibility` (random-foreign-realm
 `canReadRealm` probing) survives only as the `post` fallback — the compiled WHERE also
 covers junction ATTRIBUTES policies the probe's `policiesIncluded` deliberately
-excluded. `ClientService`'s gate is **projection-dependent secret visibility** (only
-plaintext-secret rows are hidden from unauthorized readers, and only when the
-(non-default) `secret` field is actually selected): it lowers to
-`or(not(and(ne('secret', null), eq('secretHashed', false), eq('secretEncrypted',
-false))), compiled.condition)`, applied only when the decoded projection includes
-`secret` — the default projection is never gated (exactly today's loop semantics).
+excluded. `ClientService`'s former projection-dependent secret gate moved OFF the
+service onto the client SCHEMA (#3322, see *Query IR flow → Field authorization*):
+`getMany` no longer composes a secret WHERE or per-row loop — the schema's
+`fields.validateMany` hook compiles the same permission disjunction into a per-row
+visibility condition on the `secret` field, and the repository layer redacts.
 The self-short-circuit / parent-permission gates (#3294) follow the same shape:
 `UserService` composes `or(eq('id', <actor user id>), compiled.condition)` (self term
 only for a user identity; `deny` → self term alone); `UserAttributeService` mirrors
@@ -2174,13 +2224,15 @@ reader could strip `realmId` and neutralize the realmScope reach factor
 null/global resource). The shared helper `applyRealmScopeSelect(qb, alias,
 extraColumns?)` (`app/modules/database/repositories/helpers.ts`) is called AFTER
 `applyQuery` in: `session` (`+ sub, subKind` — ownership check), `user`
-(`+ id` — self short-circuit), `client` (`+ secretHashed,
-secretEncrypted` — the plaintext-secret gate precondition), `role-attribute`,
+(`+ id` — self short-circuit), `role-attribute`,
 `user-attribute` (`+ userId` — isMe check; since #3295 the two attribute schemas
 declare `fields.default`, so the call dedupes against that projection). `role` / `scope` /
 `permission` / `policy` list paths carry no per-row realm gate (their
 `resourceRealmMatch` usages are write paths on server-loaded data), so they are
-deliberately not force-selected. The helper **dedupes against the already-applied
+deliberately not force-selected. `client` dropped out of the list with #3322 —
+its per-row secret gate moved onto the schema, whose visibility CONDITION gets its
+operand columns force-selected by the rapiq SQL adapter itself (see *Query IR flow
+→ Field authorization*). The helper **dedupes against the already-applied
 projection** (`qb.expressionMap.selects`) — TypeORM's `addSelect` is NOT a no-op
 for an already-selected column: it emits a second identically-aliased select, and
 under a join + take (TypeORM's DISTINCT id-subquery wrapper) postgres rejects the

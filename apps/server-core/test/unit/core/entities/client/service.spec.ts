@@ -57,11 +57,11 @@ describe('core/entities/client/service', () => {
             expect(result.data).toHaveLength(1);
         });
 
-        it('should filter out entities with plaintext secrets on per-record permission failure', async () => {
+        it('should list plaintext-secret rows without per-record evaluation (secret gate lives on the schema)', async () => {
             repository.seed([
                 createFakeClient({
                     name: 'safe',
-                    secret: null, 
+                    secret: null,
                 }),
                 createFakeClient({
                     name: 'secret-plain',
@@ -75,12 +75,12 @@ describe('core/entities/client/service', () => {
             actor.permissionEvaluator.deny('evaluateOneOf');
 
             const result = await service.getMany({}, actor);
-            expect(result.data).toHaveLength(1);
-            expect(result.data[0].name).toBe('safe');
-            expect(result.meta.total).toBe(1);
+            expect(result.data).toHaveLength(2);
+            expect(result.meta.total).toBe(2);
+            expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
         });
 
-        it('does not gate the default projection (secret unselected) even on a compiled deny', async () => {
+        it('does not evaluate the secret gate for the default projection (secret unselected)', async () => {
             const rows = repository.seed([
                 createFakeClient({ name: 'safe', secret: null }),
                 createFakeClient({
@@ -92,26 +92,27 @@ describe('core/entities/client/service', () => {
             ]);
 
             const actor = createAllowAllActor();
-            actor.permissionEvaluator.setCompileResult({ verdict: 'deny' });
 
             const spy = vi.spyOn(repository, 'findMany');
             await service.getMany({}, actor);
 
-            // secret is not part of the default projection, so no row exposes a
-            // plaintext secret and nothing is gated — replay the built query
+            // secret is not part of the default projection, so the schema gate
+            // never fires — no compile, no condition, both rows list
             const query = spy.mock.calls[0]![0];
             const applied = applyQuery(query, rows);
             expect(applied.data).toHaveLength(2);
+            expect(actor.permissionEvaluator.compileCalls).toHaveLength(0);
             expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
         });
 
-        it('gates plaintext-secret rows as WHERE when the projection selects secret', async () => {
+        it('redacts uncovered plaintext secrets instead of dropping rows when the projection selects secret', async () => {
             const realmA = randomUUID();
+            const realmB = randomUUID();
             const rows = repository.seed([
                 createFakeClient({
-                    name: 'safe', 
-                    secret: null, 
-                    realmId: realmA, 
+                    name: 'safe',
+                    secret: null,
+                    realmId: realmA,
                 }),
                 createFakeClient({
                     name: 'plain-covered',
@@ -125,12 +126,14 @@ describe('core/entities/client/service', () => {
                     secret: 'mysecret',
                     secretEncrypted: false,
                     secretHashed: false,
+                    realmId: realmB,
                 }),
                 createFakeClient({
                     name: 'hashed-foreign',
                     secret: '$2b$10$hash',
                     secretHashed: true,
                     secretEncrypted: false,
+                    realmId: realmB,
                 }),
             ]);
 
@@ -143,12 +146,20 @@ describe('core/entities/client/service', () => {
             const spy = vi.spyOn(repository, 'findMany');
             await service.getMany({ fields: '+secret' }, actor);
 
-            // only the uncovered PLAINTEXT row is hidden; hashed / secret-less
-            // rows list regardless of the compiled condition
+            // the schema gate rides the decoded query as a field visibility
+            // condition — replaying it drops the uncovered PLAINTEXT value
+            // while every row keeps listing; hashed / secret-less rows keep
+            // their value regardless of the compiled condition
             const query = spy.mock.calls[0]![0];
             const applied = applyQuery(query, rows);
             expect(applied.data.map((row) => row.name).sort())
-                .toEqual(['hashed-foreign', 'plain-covered', 'safe']);
+                .toEqual(['hashed-foreign', 'plain-covered', 'plain-foreign', 'safe']);
+
+            const byName = new Map(applied.data.map((row) => [row.name, row]));
+            expect(byName.get('safe')).toHaveProperty('secret', null);
+            expect(byName.get('plain-covered')).toHaveProperty('secret', 'mysecret');
+            expect(byName.get('plain-foreign')).not.toHaveProperty('secret');
+            expect(byName.get('hashed-foreign')).toHaveProperty('secret', '$2b$10$hash');
             expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
         });
 
@@ -301,6 +312,35 @@ describe('core/entities/client/service', () => {
             actor.permissionEvaluator.deny('preEvaluateOneOf');
 
             await expect(service.getOne(target.id, actor)).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+        });
+
+        it('should keep the secret field decodable for a permissionless self client (self leg)', async () => {
+            const entity = repository.seed(createFakeClient({
+                name: 'self-secret-projection',
+                secret: 'plain',
+                secretEncrypted: false,
+                secretHashed: false,
+            }));
+            const actor: FakeActorContext = {
+                permissionEvaluator: new FakePermissionEvaluator(),
+                identity: {
+                    type: IdentityType.CLIENT,
+                    data: { id: entity.id, name: 'self-secret-projection' } as any,
+                },
+            };
+            actor.permissionEvaluator.denyAll();
+            actor.permissionEvaluator.setCompileResult({ verdict: 'deny' });
+
+            const findOneSpy = vi.spyOn(repository, 'findOne');
+            await service.getOne(entity.id, actor, { fields: '+secret' });
+
+            // the schema gate answers with a self-scoped CONDITION, never a
+            // bare reject — the field survives the decode, and getOne's own
+            // isMe bypass stays the authoritative single-read path
+            const [, query] = findOneSpy.mock.calls[0]!;
+            const secretField = query!.fields.value.find((field) => field.name === 'secret');
+            expect(secretField).toBeDefined();
+            expect(secretField!.condition).toBeDefined();
         });
 
         it('should skip post-load secret evaluation on self-access', async () => {

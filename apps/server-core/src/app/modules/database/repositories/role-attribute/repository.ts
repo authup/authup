@@ -9,7 +9,7 @@ import type { RoleAttribute } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyQuery } from '../query.ts';
+import { applyQuery, redactFieldConditions } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IRoleAttributeRepository } from '../../../../../core/index.ts';
 import { RoleAttributeEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -33,7 +33,7 @@ export class RoleAttributeRepositoryAdapter implements IRoleAttributeRepository 
         const [entities, total] = await qb.getManyAndCount();
 
         return {
-            data: entities,
+            data: redactFieldConditions(query, entities),
             meta: {
                 total,
                 ...pagination,

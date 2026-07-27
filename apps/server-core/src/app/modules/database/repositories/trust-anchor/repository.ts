@@ -11,7 +11,7 @@ import { isUUID } from '@authup/kit';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyQuery } from '../query.ts';
+import { applyQuery, redactFieldConditions } from '../query.ts';
 import { DatabaseConflictError, RealmEntity, TrustAnchorEntity } from '../../../../../adapters/database/index.ts';
 import type { IRealmRepository, ITrustAnchorRepository } from '../../../../../core/index.ts';
 import { applyRealmScopeSelect, isEntityUnique, translateWhereConditions } from '../helpers.ts';
@@ -42,7 +42,7 @@ export class TrustAnchorRepositoryAdapter implements ITrustAnchorRepository {
         const [entities, total] = await qb.getManyAndCount();
 
         return {
-            data: entities,
+            data: redactFieldConditions(query, entities),
             meta: {
                 total,
                 ...pagination,

@@ -9,7 +9,7 @@ import type { Event } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
 import { LessThan } from 'typeorm';
-import { applyQuery } from '../query.ts';
+import { applyQuery, redactFieldConditions } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
     EventCountRecentFilter,
@@ -84,7 +84,7 @@ export class EventRepositoryAdapter implements IEventRepository {
         const [entities, total] = await qb.getManyAndCount();
 
         return {
-            data: entities,
+            data: redactFieldConditions(query, entities),
             meta: {
                 total,
                 ...pagination,

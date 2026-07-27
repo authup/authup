@@ -9,7 +9,7 @@ import type { UserAttribute } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyQuery } from '../query.ts';
+import { applyQuery, redactFieldConditions } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IUserAttributeRepository } from '../../../../../core/index.ts';
 import { UserAttributeEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -33,7 +33,7 @@ export class UserAttributeRepositoryAdapter implements IUserAttributeRepository 
         const [entities, total] = await qb.getManyAndCount();
 
         return {
-            data: entities,
+            data: redactFieldConditions(query, entities),
             meta: {
                 total,
                 ...pagination,

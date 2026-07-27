@@ -10,7 +10,7 @@ import type { IQuery } from '@rapiq/core';
 import type { EntityRepositoryFindManyResult, ICache } from '@authup/server-kit';
 import { buildCacheKey } from '@authup/server-kit';
 import type { Repository } from 'typeorm';
-import { applyQuery } from '../../database/repositories/query.ts';
+import { applyQuery, redactFieldConditions } from '../../database/repositories/query.ts';
 import type {
     ISessionRepository,
     SessionFindManyOptions,
@@ -76,7 +76,7 @@ export class SessionRepository implements ISessionRepository {
         const [entities, total] = await qb.getManyAndCount();
 
         return {
-            data: entities,
+            data: redactFieldConditions(query, entities),
             meta: {
                 total,
                 ...pagination,

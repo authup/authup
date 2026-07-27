@@ -10,7 +10,7 @@ import type { IQuery } from '@rapiq/core';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
-import { applyQuery } from '../query.ts';
+import { applyQuery, redactFieldConditions } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IPermissionRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
@@ -42,7 +42,7 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
         const [entities, total] = await qb.getManyAndCount();
 
         return {
-            data: entities,
+            data: redactFieldConditions(query, entities),
             meta: {
                 total,
                 ...pagination,
