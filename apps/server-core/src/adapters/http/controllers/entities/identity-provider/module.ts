@@ -540,7 +540,7 @@ export class IdentityProviderController {
     ) : Promise<string> {
         return this.stateManager.save({
             codeRequest,
-            ip: getRequestIP(event, { trustProxy: true }) ?? '',
+            ip: getRequestIP(event) ?? '',
             userAgent: getRequestHeader(event, 'user-agent') ?? undefined,
         });
     }
@@ -552,7 +552,7 @@ export class IdentityProviderController {
         }
 
         return this.stateManager.verify(query.state, {
-            ip: getRequestIP(event, { trustProxy: true }) ?? '',
+            ip: getRequestIP(event) ?? '',
             userAgent: getRequestHeader(event, 'user-agent') ?? undefined,
         });
     }

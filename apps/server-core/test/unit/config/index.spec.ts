@@ -19,7 +19,7 @@ import { readConfig } from '../../../src/app/modules/config/module';
 import { normalizeConfig } from '../../../src/app/modules/config/normalize';
 import { expandToOrigins, getAppOrigins } from '../../../src/app/modules/config/origins';
 import { parseConfig } from '../../../src/app/modules/config/parse';
-import { readConfigRawFromFS } from '../../../src/app/modules/config/read';
+import { readConfigRawFromEnv, readConfigRawFromFS } from '../../../src/app/modules/config/read';
 
 describe('src/config/*.ts', () => {
     describe('getAppOrigins', () => {
@@ -161,6 +161,72 @@ describe('src/config/*.ts', () => {
 
             expect(config.certificateSource).toEqual('disabled');
             expect(config.mtlsPublicUrl).toBeNull();
+        });
+
+        it('should default trustProxy to true and accept every non-function trust form', async () => {
+            const config = await normalizeConfig();
+            expect(config.trustProxy).toEqual(true);
+
+            expect((await normalizeConfig({ trustProxy: false })).trustProxy).toEqual(false);
+            expect((await normalizeConfig({ trustProxy: 1 })).trustProxy).toEqual(1);
+            expect((await normalizeConfig({ trustProxy: 'loopback' })).trustProxy).toEqual('loopback');
+            expect((await normalizeConfig({ trustProxy: ['10.0.0.1', '10.0.0.0/8'] })).trustProxy)
+                .toEqual(['10.0.0.1', '10.0.0.0/8']);
+
+            await expect(parseConfig({ trustProxy: -1 })).rejects.toThrow();
+            await expect(parseConfig({ trustProxy: 1.5 })).rejects.toThrow();
+        });
+
+        it('should canonicalize string trust forms on EVERY config surface (integer wins over boolean words)', async () => {
+            // proxy-addr accepts single-integer "long value" IPv4 notation, so
+            // an un-canonicalized "1" (a stringifying configmap, TRUST_PROXY
+            // env, quoted .conf value) would silently compile to an allowlist
+            // of 0.0.0.1 instead of one trusted hop.
+            expect((await normalizeConfig({ trustProxy: '1' })).trustProxy).toEqual(1);
+            expect((await normalizeConfig({ trustProxy: '0' })).trustProxy).toEqual(0);
+            expect((await normalizeConfig({ trustProxy: 'true' })).trustProxy).toEqual(true);
+            expect((await normalizeConfig({ trustProxy: 'FALSE' })).trustProxy).toEqual(false);
+            // proxy-addr matches presets case-sensitively — lowercase them
+            expect((await normalizeConfig({ trustProxy: 'Loopback' })).trustProxy).toEqual('loopback');
+            expect((await normalizeConfig({ trustProxy: '10.0.0.1, 10.0.0.0/8' })).trustProxy)
+                .toEqual('10.0.0.1, 10.0.0.0/8');
+        });
+
+        it('should reject mis-typed scalar forms inside the explicit allowlist array', async () => {
+            await expect(parseConfig({ trustProxy: ['1'] })).rejects.toThrow();
+            await expect(parseConfig({ trustProxy: ['true'] })).rejects.toThrow();
+            await expect(parseConfig({ trustProxy: [''] })).rejects.toThrow();
+        });
+
+        it('should canonicalize allowlist entries like the scalar form', async () => {
+            // the validator compares the canonicalized entry, so an untrimmed /
+            // uppercased entry passes it — proxy-addr would then reject the raw
+            // value inside `new App` (presets are matched case-sensitively).
+            expect((await normalizeConfig({ trustProxy: [' 10.0.0.0/8 ', 'LOOPBACK'] })).trustProxy)
+                .toEqual(['10.0.0.0/8', 'loopback']);
+        });
+
+        it('should reject an out-of-range hop count on every surface', async () => {
+            // the number surface is safe-integer bounded by the validator;
+            // canonicalization runs after it, so the string surface must not
+            // smuggle a saturated parseInt result past that bound.
+            await expect(parseConfig({ trustProxy: 2 ** 53 })).rejects.toThrow();
+            await expect(normalizeConfig({ trustProxy: '99999999999999999999' }))
+                .rejects.toThrow(/safe integer range/);
+        });
+
+        it('should read TRUST_PROXY from the environment as the raw string form', () => {
+            const previous = process.env.TRUST_PROXY;
+            process.env.TRUST_PROXY = '1';
+            try {
+                expect(readConfigRawFromEnv().trustProxy).toEqual('1');
+            } finally {
+                if (typeof previous === 'undefined') {
+                    delete process.env.TRUST_PROXY;
+                } else {
+                    process.env.TRUST_PROXY = previous;
+                }
+            }
         });
 
         it('should validate the explicit certificate source and mTLS alias contract', async () => {

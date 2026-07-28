@@ -103,6 +103,27 @@ export default {
     certificateSource: 'forwarded',
 
     /**
+     * Which upstream proxies to trust when deriving the client IP from
+     * X-Forwarded-For: true trusts every hop, false trusts none (the
+     * socket peer address is used), a number trusts that many hops, and
+     * a string / list is an allowlist of proxy IPs, CIDRs, or the
+     * presets loopback, linklocal, uniquelocal.
+     *
+     * Security: with `true` (the default), a DIRECT client can spoof
+     * its IP via X-Forwarded-For — login-throttle keys, audit events,
+     * the access log, and the session inventory then record the forged
+     * value. Pin the actual proxy (e.g. 1, or loopback for a same-host
+     * proxy) when the listener is reachable without a proxy or exact
+     * attribution matters. String forms are canonicalized: "1" means
+     * one trusted hop (never trust-all), "true"/"false" parse as
+     * booleans, anything else is a comma-separated allowlist. Allowlist
+     * entries are trimmed and lowercased, so " LOOPBACK " is accepted;
+     * a hop count outside the safe integer range is rejected at boot.
+     * default: true
+     */
+    trustProxy: 1,
+
+    /**
      * Additional trusted origins. Entries are http(s) origins
      * (e.g. https://app.example.com; other protocols are rejected) or
      * bare hosts (e.g. hub.local, hub.local:8080); a bare host expands
@@ -250,9 +271,9 @@ export default {
     /**
      * Throttle failed logins per (identifier, ip) pair by counting recent
      * loginFailed events. Requires eventLogEnabled.
-     * The client IP honors X-Forwarded-For — deploy behind a trusted
-     * reverse proxy that overwrites the header, otherwise a direct client
-     * can spoof the IP half of the throttle key.
+     * The IP half of the key follows `trustProxy` — pin it to the actual
+     * proxy (hops or allowlist) so a direct client cannot spoof the IP
+     * via X-Forwarded-For.
      * env: LOGIN_ATTEMPT_THROTTLE_ENABLED
      * default: false
      */
@@ -423,6 +444,7 @@ host=0.0.0.0
 publicUrl=http://localhost:3001
 mtlsPublicUrl=https://mtls.example.com
 certificateSource=forwarded
+trustProxy=1
 trustedOrigins=https://app.example.com
 tokenRefreshMaxAge=259200
 tokenAccessMaxAge=900
@@ -465,6 +487,7 @@ HOST=0.0.0.0
 PUBLIC_URL=http://localhost:3001
 MTLS_PUBLIC_URL=https://mtls.example.com
 CERTIFICATE_SOURCE=forwarded
+TRUST_PROXY=1
 TRUSTED_ORIGINS=https://app.example.com
 TOKEN_REFRESH_MAX_AGE=259200
 TOKEN_ACCESS_MAX_AGE=900

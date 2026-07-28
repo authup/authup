@@ -176,7 +176,7 @@ export class AuthenticatorChallengeController {
                 response: data.response,
             },
             {
-                ipAddress: getRequestIP(event, { trustProxy: true }) ?? null,
+                ipAddress: getRequestIP(event) ?? null,
                 userAgent: getRequestHeader(event, 'user-agent') ?? null,
                 clientId: identity.clientId,
                 ...(session ? {
