@@ -1394,6 +1394,61 @@ Include authorization*.
 
 `AttributeNamesPolicyValidator` reads the policy's `names` field from extra-attributes (`policy_attributes`). For top-level policies bound directly to permissions, the policy is loaded as the root of a closure-table descendants tree. `EATreeRepository.findDescendantsTree()` calls `extendOneWithEA(entity)` after building the children — without that, the root entity's EA fields stay unloaded and the validator fails with "value_invalid". Both Layer 1 (`PermissionDatabaseProvider`) and Layer 2 (`bindings.ts`) depend on this fix.
 
+## Deployment Topology & UI Boundary (plan 078)
+
+Two runtime services. **server-core is the IdP origin** — the OAuth2/OIDC
+protocol surface plus the embedded SSR auth pages (`/authorize`, `/register`,
+`/activate`, `/password-forgot`, `/password-reset`, `/logout`). Those pages
+are **architectural, not incidental**, and must stay in server-core:
+
+- **WebAuthn origin binding** — the rpId/origin derives from `publicUrl`;
+  hosted login means every RP's second factor runs on the one IdP origin with
+  no per-RP plumbing.
+- **The `prompt=none` / `select_account` ladder rides first-party kit-store
+  cookies on the `/authorize` origin** — server auth is header-only (no
+  cookie-authenticated endpoint exists), so silent-auth / account-choice
+  decisions can only be taken client-side where the session cookie lives: on
+  the IdP origin itself.
+- **Same-path GET-HTML / POST-JSON workflow routes** — each workflow path
+  serves SSR HTML on GET while POST on the same path is the JSON API; the
+  pages are the render half of the API surface.
+- **Mail deep links** (`/activate?token=…`, `/password-reset?token=…`) land on
+  these pages.
+- **Headless deployments** (server-core without client-web) still need every
+  auth workflow to be usable.
+
+This split is cohort-universal: Keycloak, Authentik, Zitadel, Casdoor and Dex
+all serve login/consent from the IdP origin.
+
+**client-web is an ordinary OAuth2 RP** — an admin console authenticating via
+auth-code + PKCE against the per-realm public `web` client, with no privileged
+channel into server-core. It is deliberately NOT merged into server-core
+today. The recorded long-term endpoint — deferred until after the planned
+server+worker split — is folding the admin UI into server-core as a **static
+SPA**; any future consolidation discussion starts from
+`.agents/plans/078-runtime-topology-and-config.md`.
+
+**Process topology:** containers with one service each (docker /
+docker-compose) are the production topology. The `authup` CLI is the
+bare-metal / quickstart **supervisor**: it spawns server-core and client-web
+as child processes with full environment passthrough plus per-child
+`PORT`/`HOST` and `NUXT_PUBLIC_API_URL` overrides derived from the
+multi-section config file, forwards SIGINT/SIGTERM to the children, and exits
+with the first-failing child's exit code; `migration` / `healthcheck` forward
+to server-core only.
+
+**Configuration is layered:** server-core honors the confinity file family
+(`authup.conf` with a `server.core` section, or the per-component
+`authup.server.core.conf`, plus shared top-level `db` / `redis` / `smtp`
+fallbacks) on every CLI command; lookup defaults to the process cwd,
+overridable via `--configDirectory` / `--configFile`, and environment
+variables always beat file values.
+
+**Unsupported:** sharing one `COOKIE_DOMAIN` between client-web and the
+hosted auth pages — both surfaces embed the kit store under identical cookie
+names, so a widened cookie domain has the two apps clobbering each other's
+session cookies.
+
 ## Authorize Realm Binding (plan 041)
 
 The authenticated identity's realm MUST equal the client's realm — an identity
