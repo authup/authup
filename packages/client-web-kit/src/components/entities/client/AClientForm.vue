@@ -39,7 +39,9 @@ import {
     buildClientCertificateURI,
 } from '@authup/core-kit';
 import { defineQuery } from '@rapiq/core';
+import { OAuth2TokenGrant } from '@authup/specs';
 import type { FormOption } from '@vuecs/forms';
+import { VCFormCheckbox, VCFormCheckboxGroup } from '@vuecs/forms';
 import {
     ValidatorGroup,
     generateName,
@@ -68,6 +70,8 @@ export default defineComponent({
         ASecretInput,
         ARealmPicker,
         AFormInputList,
+        VCFormCheckbox,
+        VCFormCheckboxGroup,
         VCIcon,
 
         IFieldValidation,
@@ -102,6 +106,7 @@ export default defineComponent({
             tokenBindingMethod: `${ClientTokenBindingMethod.NONE}` as `${ClientTokenBindingMethod}`,
             secret: '',
             secretHashed: false,
+            grantTypes: null as string | null,
             accessPolicyId: null as string | null,
         });
 
@@ -217,6 +222,7 @@ export default defineComponent({
                 { key: TranslatorTranslationClientKey.CLIENT_CERTIFICATE_URI_HINT },
                 { key: TranslatorTranslationClientKey.IS_ACTIVE },
                 { key: TranslatorTranslationClientKey.HASH_SECRET },
+                { key: TranslatorTranslationClientKey.GRANT_TYPES_HINT },
                 { key: TranslatorTranslationClientKey.CLIENT_ACCESS_POLICY_HINT },
             ],
         );
@@ -250,6 +256,10 @@ export default defineComponent({
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.GRANT_TYPES,
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD,
                     key: TranslatorTranslationFieldKey.ACCESS_POLICY,
                 },
             ],
@@ -259,6 +269,28 @@ export default defineComponent({
             const value = v.fields.redirectUri.$model.value as string | undefined;
             return value ? value.split(',') : [];
         });
+
+        // `grantTypes` is a space/comma-delimited allowlist column; `null` (no
+        // selection) means allow-all, so an emptied selection must clear the
+        // column rather than persist an empty string.
+        const grantTypeSelection = computed<string[]>(() => {
+            const value = v.fields.grantTypes.$model.value as string | null | undefined;
+            return value ? value.split(/[\s,]+/).filter(Boolean) : [];
+        });
+
+        // Unknown tokens (a grant authup does not implement yet) stay rendered
+        // as checked options, so opening the form never silently strips them.
+        const grantTypeOptions = computed<string[]>(() => [
+            ...new Set<string>([
+                ...Object.values(OAuth2TokenGrant),
+                ...grantTypeSelection.value,
+            ]),
+        ]);
+
+        const setGrantTypes = (input: unknown[]) => {
+            const values = (input as string[]).filter(Boolean);
+            v.fields.grantTypes.$model.value = values.length > 0 ? values.join(' ') : null;
+        };
 
         const policyQuery = computed(() => defineQuery<Policy>({ filters: { realmId: [...(form.realmId ? [form.realmId] : []), null] } }));
 
@@ -290,6 +322,9 @@ export default defineComponent({
             tokenBindingMethodOptions,
             clientCertificateURI,
             redirectUris,
+            grantTypeSelection,
+            grantTypeOptions,
+            setGrantTypes,
             policyQuery,
             submit,
         };
@@ -478,6 +513,31 @@ export default defineComponent({
                     {{ translationsClient.redirectURIHint }}
                 </template>
             </AFormInputList>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.grantTypes"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        {{ translationsDefault.grantTypes }}
+                    </template>
+                    <VCFormCheckboxGroup
+                        :model-value="grantTypeSelection"
+                        @update:model-value="setGrantTypes"
+                    >
+                        <VCFormCheckbox
+                            v-for="grantType in grantTypeOptions"
+                            :key="grantType"
+                            :value="grantType"
+                            :label="true"
+                            :label-content="grantType"
+                        />
+                    </VCFormCheckboxGroup>
+                    <template #hint>
+                        {{ translationsClient.grantTypesHint }}
+                    </template>
+                </VCFormGroup>
+            </IFieldValidation>
             <IFieldValidation
                 v-slot="{ value }"
                 :field="v.fields.description"

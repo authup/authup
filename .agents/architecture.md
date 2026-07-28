@@ -1999,6 +1999,17 @@ detection, so no family revocation; restoring the grant type restores service.
 The provisioned per-realm `web` client lists `authorization_code refresh_token`
 (refreshed by `WebClientProvisioner`'s MERGE on startup).
 
+**Admin UI:** `AClientForm` renders the column as a `<VCFormCheckboxGroup>` over
+the closed `OAuth2TokenGrant` vocabulary (the only strings
+`assertClientGrantAllowed` compares against — a free-text list would let a typo
+silently produce a client that can do nothing). The **empty selection ⇒ `null`
+⇒ allow-all** inversion is load-bearing: an emptied selection must clear the
+column, never persist `''` (the validator's `.min(3)` would reject it, and a
+blank string is not what "unrestricted" means to a reader). Because unknown
+values are inert rather than invalid, a token already in the column that is not
+in the enum (a grant authup has not implemented yet) is rendered as an extra
+checked option, so opening the form never silently strips it.
+
 ### Token endpoint realm resolution
 
 The three realm-resolving grants (`password`, `authorization_code`,

@@ -12,6 +12,7 @@ export const TranslatorTranslationClientSpanish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.NAME_HINT]: 'Algo que los usuarios reconocerán y en lo que confiarán',
     [TranslatorTranslationClientKey.DESCRIPTION_HINT]: 'Se muestra a todos los usuarios de esta aplicación',
     [TranslatorTranslationClientKey.REDIRECT_URI_HINT]: 'Patrón de URI al que un navegador puede redirigir tras un inicio de sesión exitoso',
+    [TranslatorTranslationClientKey.GRANT_TYPES_HINT]: 'Restringe qué concesiones OAuth2 puede usar este cliente. Sin selección, se permiten todas.',
     [TranslatorTranslationClientKey.AUTH_METHOD]: 'Método de autenticación',
     [TranslatorTranslationClientKey.AUTH_METHOD_NONE]: 'Ninguno',
     [TranslatorTranslationClientKey.AUTH_METHOD_SECRET]: 'Secreto compartido',
