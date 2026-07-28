@@ -223,3 +223,34 @@ jobs:
             -   name: Re-apply all migrations (idempotency)
                 working-directory: apps/server-core
                 run: node dist/cli/index.mjs migration run
+
+    tests-launcher:
+        name: Test Launcher (smoke)
+        needs: [build]
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v6
+
+            -   name: Install
+                uses: ./.github/actions/install
+                with:
+                    node-version: ${{ env.NODE_VERSION }}
+                    node-registry: ${{ env.NODE_REGISTRY }}
+
+            -   name: Build
+                uses: ./.github/actions/build
+
+            -   name: Build client-web server output
+                run: |
+                    if [ ! -f apps/client-web/.output/server/index.mjs ]; then
+                        npm run build --workspace=apps/client-web
+                    fi
+
+            -   name: Run launcher smoke test (workspace dist)
+                run: |
+                    npm run test:smoke --workspace=apps/authup
+
+            -   name: Run launcher smoke test (pack and install)
+                run: |
+                    npm run test:smoke:packed --workspace=apps/authup
