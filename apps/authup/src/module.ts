@@ -6,15 +6,29 @@
  */
 
 import { defineCommand } from 'citty';
-import type { ChildProcess } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { PackageID, executePackageCommand, normalizePackageID } from './packages';
+import {
+    buildClientWebEnv,
+    buildServerCoreEnv,
+    readLauncherConfig,
+} from './config';
+import { PACKAGE_DIRECTORY } from './constants';
+import {
+    PACKAGE_BIN_NAME_MAP,
+    PACKAGE_NAME_MAP,
+    PackageID,
+    buildPackageProcessArgv,
+    resolveLaunchPlan,
+    resolvePackageEntrypoint,
+} from './packages';
+import { superviseProcesses } from './supervisor';
+import type { SupervisedChildSpec } from './supervisor';
 
 export async function createCLIEntryPointCommand() {
     const pkgRaw = await fs.promises.readFile(
-        path.join(process.cwd(), 'package.json'),
+        path.join(PACKAGE_DIRECTORY, 'package.json'),
         { encoding: 'utf8' },
     );
     const pkg = JSON.parse(pkgRaw);
@@ -28,12 +42,12 @@ export async function createCLIEntryPointCommand() {
         args: {
             command: {
                 type: 'positional',
-                description: 'The command which should be forwarded to the package.',
+                description: 'The command to run (start, migration, healthcheck).',
                 required: true,
             },
             package: {
                 type: 'positional',
-                description: 'The package, which should be targeted.',
+                description: 'The package(s) to target (client.web, server.core) or arguments forwarded to the command.',
                 required: false,
             },
             configDirectory: {
@@ -48,34 +62,51 @@ export async function createCLIEntryPointCommand() {
             },
         },
         async run(ctx) {
-            let packages = ctx.args.package ?
-                ctx.args.package.split(',') :
-                [];
+            const rest = ctx.args._.slice(1);
+            const plan = resolveLaunchPlan(ctx.args.command, rest);
 
-            if (packages.length > 0) {
-                packages = packages
-                    .map((pkg) => normalizePackageID(pkg))
-                    .filter((pkg) => Boolean(pkg))
-                    .map((pkg) => `${pkg}`);
+            const config = await readLauncherConfig({
+                directory: ctx.args.configDirectory,
+                file: ctx.args.configFile,
+            });
+
+            const configArgs : string[] = [];
+            if (ctx.args.configFile) {
+                configArgs.push(`--configFile=${ctx.args.configFile}`);
             }
 
-            if (packages.length === 0) {
-                packages = Object.values(PackageID);
+            if (ctx.args.configDirectory) {
+                configArgs.push(`--configDirectory=${ctx.args.configDirectory}`);
             }
 
-            const promises : Promise<ChildProcess>[] = [];
-            for (const package_ of packages) {
-                promises.push(executePackageCommand(
-                    package_,
-                    ctx.args.command,
-                    {
-                        configFile: ctx.args.configFile,
-                        configDirectory: ctx.args.configDirectory,
-                    },
-                ));
+            const lookupDirectories = [PACKAGE_DIRECTORY, process.cwd()];
+
+            const children : SupervisedChildSpec[] = [];
+            for (const packageId of plan.packages) {
+                const entrypoint = await resolvePackageEntrypoint(
+                    PACKAGE_NAME_MAP[packageId],
+                    PACKAGE_BIN_NAME_MAP[packageId],
+                    lookupDirectories,
+                );
+
+                if (packageId === PackageID.SERVER_CORE) {
+                    children.push({
+                        id: packageId,
+                        ...buildPackageProcessArgv(entrypoint, [...plan.commandArgs, ...configArgs]),
+                        env: buildServerCoreEnv(config),
+                    });
+                } else {
+                    children.push({
+                        id: packageId,
+                        ...buildPackageProcessArgv(entrypoint, []),
+                        env: buildClientWebEnv(config),
+                    });
+                }
             }
 
-            await Promise.all(promises);
+            const exitCode = await superviseProcesses(children);
+
+            process.exit(exitCode);
         },
     });
 }

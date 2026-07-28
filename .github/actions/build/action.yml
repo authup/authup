@@ -10,6 +10,7 @@ runs:
                 path: |
                     **/dist
                     dist
+                    apps/client-web/.output
                     .nx
                 key: ${{ runner.os }}-build-${{ github.sha }}
 

@@ -1,17 +1,26 @@
 /*
- * Copyright (c) 2024-2024.
+ * Copyright (c) 2024-2026.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ChildProcess } from 'node:child_process';
+import type { PackageID } from './constants';
 
-export interface Package {
-    execute(command: string, options: PackageExecuteOptions) : Promise<ChildProcess>;
-}
+export type PackageEntrypoint = {
+    type: 'node',
+    path: string,
+} | {
+    type: 'npx',
+    packageName: string,
+};
 
-export type PackageExecuteOptions = {
-    configFile?: string,
-    configDirectory?: string,
+export type PackageProcessArgv = {
+    exec: string,
+    args: string[],
+};
+
+export type LaunchPlan = {
+    packages: `${PackageID}`[],
+    commandArgs: string[],
 };
