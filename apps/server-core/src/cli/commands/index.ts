@@ -7,5 +7,4 @@
 
 export * from './healthcheck.ts';
 export * from './migration.ts';
-export * from './reset.ts';
 export * from './start.ts';

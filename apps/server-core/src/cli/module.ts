@@ -14,7 +14,6 @@ import { readConfigRaw } from '../app/modules/config/read/index.ts';
 import {
     defineCLIHealthCheckCommand,
     defineCLIMigrationCommand,
-    defineCLIResetCommand,
     defineCLIStartCommand,
 } from './commands/index.ts';
 
@@ -34,7 +33,6 @@ export async function createCLIEntryPointCommand() {
         subCommands: {
             healthcheck: defineCLIHealthCheckCommand(),
             migration: defineCLIMigrationCommand(),
-            reset: defineCLIResetCommand(),
             start: defineCLIStartCommand(),
         },
         args: {
