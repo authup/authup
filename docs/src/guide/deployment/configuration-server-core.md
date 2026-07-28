@@ -10,7 +10,11 @@ Most options can also be provided as environment variables (shown in the `.env` 
 A few options are file-only and have no environment variable — they are marked as such.
 
 ::: danger Security
-Always change the default admin password (`start123`) before deploying to production.
+The admin password and the `system` client secret both default to `start123`.
+Set your own values (`userAdminPassword` / `clientSystemSecret`, or the
+`USER_ADMIN_PASSWORD` / `CLIENT_SYSTEM_SECRET` environment variables) before
+deploying to production — the examples below carry placeholders, never copy a
+credential out of documentation.
 :::
 
 For MFA enforcement behavior and its federated-login, password-grant, feature-toggle,
@@ -375,7 +379,7 @@ export default {
      * env: CLIENT_SYSTEM_SECRET
      * default: 'start123'
      */
-    clientSystemSecret: 'start123',
+    clientSystemSecret: '<unique-secret>',
 
     /**
      * Reset the `system` client secret on application startup.
@@ -406,7 +410,7 @@ export default {
      * env: USER_ADMIN_PASSWORD
      * default: 'start123'
      */
-    userAdminPassword: 'start123',
+    userAdminPassword: '<strong-password>',
     
     /**
      * Reset admin password on application startup.
@@ -469,11 +473,11 @@ mfaFreshnessMaxAge=60
 mfaTicketMaxAge=600
 clientAuthBasic=false
 clientSystemEnabled=false
-clientSystemSecret=start123
+clientSystemSecret=<unique-secret>
 clientSystemSecretReset=false
 userAuthBasic=false
 userAdminEnabled=true
-userAdminPassword=start123
+userAdminPassword=<strong-password>
 userAdminPasswordReset=false
 permissionsDefaultPolicyAssignment=true
 
@@ -512,11 +516,11 @@ MFA_FRESHNESS_MAX_AGE=60
 MFA_TICKET_MAX_AGE=600
 CLIENT_AUTH_BASIC=false
 CLIENT_SYSTEM_ENABLED=false
-CLIENT_SYSTEM_SECRET=start123
+CLIENT_SYSTEM_SECRET=<unique-secret>
 CLIENT_SYSTEM_SECRET_RESET=false
 USER_AUTH_BASIC=false
 USER_ADMIN_ENABLED=true
-USER_ADMIN_PASSWORD=start123
+USER_ADMIN_PASSWORD=<strong-password>
 USER_ADMIN_PASSWORD_RESET=false
 PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT=true
 

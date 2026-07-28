@@ -99,6 +99,7 @@ export async function createCLIEntryPointCommand() {
                     PACKAGE_NAME_MAP[packageId],
                     PACKAGE_BIN_NAME_MAP[packageId],
                     lookupDirectories,
+                    pkg.version,
                 );
 
                 if (packageId === PackageID.SERVER_CORE) {

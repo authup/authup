@@ -102,14 +102,20 @@ This will launch the following applications with default settings:
 `authup start` runs both services as **child processes** and supervises them:
 
 - **Environment passthrough** — the supervisor's environment reaches both
-  children in full, so any [server](./configuration-server-core) or
-  [UI](./configuration-client-web) environment variable can be set on the
-  `authup` process itself.
-- **Per-child overrides from the config file** — the `server.core` and
-  `client.web` sections of the configuration file are translated into each
-  child's own environment (e.g. per-service `PORT`/`HOST`, and the UI's
-  `NUXT_PUBLIC_API_URL`, derived from the server section's `publicUrl` when
-  not set explicitly).
+  children in full, so [server](./configuration-server-core) or
+  [UI](./configuration-client-web) environment variables can be set on the
+  `authup` process itself. The exception is the per-child overrides below,
+  which the supervisor always sets and which therefore win over an inherited
+  value.
+- **Per-child overrides** — `PORT` and `HOST` are always set per child, from
+  the `server.core` / `client.web` sections of the configuration file or, when
+  a section names none, from the per-service defaults (`3001` for the server,
+  `3000` for the UI). A single `PORT` in the supervisor's own environment can
+  therefore not reach both children and make the second one fail to bind — set
+  per-service ports in the config file instead. The UI additionally receives
+  `NUXT_PUBLIC_API_URL` (from `client.web.apiUrl`, else derived from
+  `server.core.publicUrl`) and `NUXT_PUBLIC_COOKIE_DOMAIN`, each only when the
+  configuration names one.
 - **Signal forwarding** — `SIGINT`/`SIGTERM` are forwarded to the children,
   so `Ctrl+C` and service managers (systemd, PM2, ...) shut both services
   down cleanly.

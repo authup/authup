@@ -25,5 +25,10 @@ export type LauncherConfig = {
 
 export type LauncherConfigReadOptions = {
     directory?: string,
-    file?: string | string[],
+    /**
+     * Single file only — the value is forwarded verbatim to the server child
+     * as `--configFile`, and citty resolves a repeated flag to its last value
+     * on both sides, so a list could never survive the hand-off.
+     */
+    file?: string,
 };

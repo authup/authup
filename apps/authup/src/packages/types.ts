@@ -13,6 +13,12 @@ export type PackageEntrypoint = {
 } | {
     type: 'npx',
     packageName: string,
+    /**
+     * Version to pin the fetched package to. Releases are lockstep, so this is
+     * the launcher's own version — without it npx would fetch the current
+     * latest and pair a released launcher with a newer application.
+     */
+    version?: string,
 };
 
 export type PackageProcessArgv = {

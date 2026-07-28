@@ -29,10 +29,15 @@ export async function resolvePackageEntrypoint(
     packageName: string,
     binName: string,
     lookupDirectories: string[],
+    version?: string,
 ) : Promise<PackageEntrypoint> {
     const manifestPath = findPackageManifestPath(packageName, lookupDirectories);
     if (!manifestPath) {
-        return { type: 'npx', packageName };
+        return {
+            type: 'npx', 
+            packageName, 
+            version, 
+        };
     }
 
     const manifestRaw = await fs.promises.readFile(manifestPath, { encoding: 'utf8' });
@@ -69,9 +74,14 @@ export function buildPackageProcessArgv(
     }
 
     // --yes: npx prompts before installing a missing package, which would hang
-    // a supervisor that has no tty.
+    // a supervisor that has no tty. The version pin keeps the fetched package
+    // in lockstep with the launcher instead of resolving to the latest release.
+    const spec = entrypoint.version ?
+        `${entrypoint.packageName}@${entrypoint.version}` :
+        entrypoint.packageName;
+
     return {
         exec: 'npx',
-        args: ['--yes', entrypoint.packageName, ...args],
+        args: ['--yes', spec, ...args],
     };
 }

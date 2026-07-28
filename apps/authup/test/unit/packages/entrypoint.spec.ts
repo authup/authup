@@ -132,6 +132,17 @@ describe('src/packages/entrypoint', () => {
         expect(entrypoint).toEqual({
             type: 'npx',
             packageName: PACKAGE_NAME,
+            version: undefined,
+        });
+    });
+
+    it('should carry the launcher version into the npx fallback', async () => {
+        const entrypoint = await resolvePackageEntrypoint(PACKAGE_NAME, BIN_NAME, [treeEmpty], '1.2.3');
+
+        expect(entrypoint).toEqual({
+            type: 'npx',
+            packageName: PACKAGE_NAME,
+            version: '1.2.3',
         });
     });
 
@@ -156,6 +167,22 @@ describe('src/packages/entrypoint', () => {
         expect(argv).toEqual({
             exec: 'npx',
             args: ['--yes', PACKAGE_NAME, 'start'],
+        });
+    });
+
+    it('should pin the npx fallback to the launcher version', () => {
+        const argv = buildPackageProcessArgv(
+            {
+                type: 'npx', 
+                packageName: PACKAGE_NAME, 
+                version: '1.2.3', 
+            },
+            ['start'],
+        );
+
+        expect(argv).toEqual({
+            exec: 'npx',
+            args: ['--yes', `${PACKAGE_NAME}@1.2.3`, 'start'],
         });
     });
 });
