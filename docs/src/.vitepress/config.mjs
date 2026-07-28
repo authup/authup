@@ -216,11 +216,7 @@ export default defineConfig({
                                 },
                                 {
                                     text: 'SMTP',
-                                    link: '/guide/deployment/configuration-server-core-smtp', 
-                                },
-                                {
-                                    text: 'Vault',
-                                    link: '/guide/deployment/configuration-server-core-vault', 
+                                    link: '/guide/deployment/configuration-server-core-smtp',
                                 },
                             ],
                         },
