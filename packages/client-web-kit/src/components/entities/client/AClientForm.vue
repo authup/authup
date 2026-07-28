@@ -496,7 +496,14 @@ export default defineComponent({
             </template>
         </div>
         <div class="flex-1 basis-0 px-2">
+            <!--
+                `AFormInputList`'s root carries no bottom margin (it is also
+                nested INSIDE a VCFormGroup elsewhere, where a margin would
+                double up), so a standalone use followed by a sibling has to
+                match the `mb-3` the theme puts on stacked form groups.
+            -->
             <AFormInputList
+                class="mb-3"
                 :names="redirectUris"
                 @changed="(value) => {
                     if (value.length === 0) {
