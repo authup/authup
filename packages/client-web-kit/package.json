@@ -75,7 +75,7 @@
     "devDependencies": {
         "@ilingo/validup-vue": "^1.0.1",
         "@ilingo/vue": "^6.0.0",
-        "@types/node": "^26.1.1",
+        "@types/node": "^26.1.2",
         "@validup/vue": "^0.3.3",
         "@vitejs/plugin-vue": "^6.0.8",
         "@vue/test-utils": "^2.4.6",
