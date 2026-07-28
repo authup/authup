@@ -84,6 +84,14 @@ async function transformAttributeValues(
  *    property names.
  * 4. REALM_MATCH `attributeName` values — a property-name string (or array).
  *
+ * Value transforms are restricted to the ENUMERATED plan-073 property-rename
+ * vocabulary (see the helper): a reference to a user/role ATTRIBUTE key that
+ * happens to be snake_case is a LIVE reference (role-attribute keys were
+ * never renamed; snake user-attribute keys are legal post-073) and must not
+ * be touched. Release note: policies referencing entity properties outside
+ * that vocabulary — there are none today — or custom attribute keys keep
+ * their stored spelling.
+ *
  * `down()` is the mirrored snake transform: lossy for a natively-camel key
  * authored after the fact, like 1784289540000's down — revert works, it is
  * not information-preserving.

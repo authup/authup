@@ -5,8 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { camelCase, snakeCase } from 'change-case';
-
 /**
  * Shared logic for the PolicyAttributeCamelCase migration pair (both
  * dialects import this module; it lives OUTSIDE the per-dialect folders so
@@ -37,28 +35,120 @@ export const POLICY_ATTRIBUTE_KEY_RENAMES: [string, string][] = [
     ['day_of_year', 'dayOfYear'],
 ];
 
-// Only true snake_case / camelCase identifiers are transformed — anything
-// else (single words, operator payload values, customer-authored oddities)
-// passes through untouched, which also makes both directions idempotent.
-const SNAKE_SEGMENT = /^[a-z0-9]+(?:_[a-z0-9]+)+$/;
-const CAMEL_SEGMENT = /^[a-z0-9]+(?:[A-Z][a-z0-9]*)+$/;
+/**
+ * The exact entity-property renames plan 073 performed — every property whose
+ * physical column name (the pre-073 API form) differs from today's camelCase
+ * property, extracted from the TypeORM entity metadata
+ * (`@Column({ name: 'snake_col' })` pairs across every entity), plus
+ * `realm_name` (a legal pre-073 identity-bag key read by REALM_MATCH — not a
+ * column). VALUE transforms are restricted to this vocabulary — a generic
+ * snake→camel transform would ALSO camelize references to live snake_case
+ * user/role ATTRIBUTE keys (role-attribute keys were never renamed by 073,
+ * and post-073-authored snake user-attribute keys are legal), silently
+ * breaking a working `invert` denylist — the very fail-open this migration
+ * exists to fix. A stale reference OUTSIDE this vocabulary stays stale
+ * (the pre-existing state, called out in the release notes), which is the
+ * safe direction.
+ */
+export const PROPERTY_RENAMES: [string, string][] = [
+    ['access_policy_id', 'accessPolicyId'],
+    ['access_token', 'accessToken'],
+    ['activate_hash', 'activateHash'],
+    ['actor_id', 'actorId'],
+    ['actor_name', 'actorName'],
+    ['actor_type', 'actorType'],
+    ['auth_method', 'authMethod'],
+    ['base_url', 'baseUrl'],
+    ['built_in', 'builtIn'],
+    ['client_id', 'clientId'],
+    ['client_realm_id', 'clientRealmId'],
+    ['consumed_at', 'consumedAt'],
+    ['created_at', 'createdAt'],
+    ['decision_strategy', 'decisionStrategy'],
+    ['decryption_key', 'decryptionKey'],
+    ['display_name', 'displayName'],
+    ['encryption_key', 'encryptionKey'],
+    ['expires_at', 'expiresAt'],
+    ['expires_in', 'expiresIn'],
+    ['first_name', 'firstName'],
+    ['grant_types', 'grantTypes'],
+    ['ip_address', 'ipAddress'],
+    ['last_name', 'lastName'],
+    ['last_used_at', 'lastUsedAt'],
+    ['mfa_at', 'mfaAt'],
+    ['name_locked', 'nameLocked'],
+    ['parent_id', 'parentId'],
+    ['permission_id', 'permissionId'],
+    ['permission_realm_id', 'permissionRealmId'],
+    ['policy_id', 'policyId'],
+    ['policy_realm_id', 'policyRealmId'],
+    ['post_logout_redirect_uri', 'postLogoutRedirectUri'],
+    ['provider_id', 'providerId'],
+    ['provider_realm_id', 'providerRealmId'],
+    ['provider_user_email', 'providerUserEmail'],
+    ['provider_user_id', 'providerUserId'],
+    ['provider_user_name', 'providerUserName'],
+    ['realm_id', 'realmId'],
+    ['realm_name', 'realmName'],
+    ['realm_scope', 'realmScope'],
+    ['redirect_uri', 'redirectUri'],
+    ['ref_id', 'refId'],
+    ['ref_type', 'refType'],
+    ['refresh_token', 'refreshToken'],
+    ['refresh_token_id', 'refreshTokenId'],
+    ['refreshed_at', 'refreshedAt'],
+    ['request_ip_address', 'requestIpAddress'],
+    ['request_method', 'requestMethod'],
+    ['request_path', 'requestPath'],
+    ['request_user_agent', 'requestUserAgent'],
+    ['reset_at', 'resetAt'],
+    ['reset_expires', 'resetExpires'],
+    ['reset_hash', 'resetHash'],
+    ['revoked_at', 'revokedAt'],
+    ['role_id', 'roleId'],
+    ['role_realm_id', 'roleRealmId'],
+    ['root_url', 'rootUrl'],
+    ['scope_id', 'scopeId'],
+    ['scope_realm_id', 'scopeRealmId'],
+    ['secret_encrypted', 'secretEncrypted'],
+    ['secret_hashed', 'secretHashed'],
+    ['seen_at', 'seenAt'],
+    ['session_id', 'sessionId'],
+    ['signature_algorithm', 'signatureAlgorithm'],
+    ['status_message', 'statusMessage'],
+    ['sub_kind', 'subKind'],
+    ['synchronization_mode', 'synchronizationMode'],
+    ['target_name', 'targetName'],
+    ['target_value', 'targetValue'],
+    ['token_binding_method', 'tokenBindingMethod'],
+    ['updated_at', 'updatedAt'],
+    ['user_agent', 'userAgent'],
+    ['user_id', 'userId'],
+    ['user_realm_id', 'userRealmId'],
+    ['value_is_regex', 'valueIsRegex'],
+];
+
+const SNAKE_TO_CAMEL = new Map(PROPERTY_RENAMES);
+const CAMEL_TO_SNAKE = new Map(PROPERTY_RENAMES.map(([from, to]) => [to, from] as [string, string]));
 
 /**
  * Property paths are transformed PER DOT SEGMENT — rapiq treats dotted keys
- * as nested relation paths, and `camelCase('user.realm_id')` would collapse
- * the path into `userRealmId`.
+ * as nested relation paths, and a whole-path transform would collapse
+ * `user.realm_id` into `userRealmId`. Segments outside the enumerated
+ * vocabulary pass through untouched, which also makes both directions
+ * idempotent.
  */
 export function camelizePropertyPath(value: string): string {
     return value
         .split('.')
-        .map((segment) => (SNAKE_SEGMENT.test(segment) ? camelCase(segment) : segment))
+        .map((segment) => SNAKE_TO_CAMEL.get(segment) ?? segment)
         .join('.');
 }
 
 export function snakizePropertyPath(value: string): string {
     return value
         .split('.')
-        .map((segment) => (CAMEL_SEGMENT.test(segment) ? snakeCase(segment) : segment))
+        .map((segment) => CAMEL_TO_SNAKE.get(segment) ?? segment)
         .join('.');
 }
 
@@ -80,7 +170,9 @@ function rewriteQueryKeys(node: unknown, transform: (key: string) => string): un
         return node;
     }
 
-    const output: Record<string, unknown> = {};
+    // null prototype: a JSON.parse'd own `__proto__` key would otherwise hit
+    // the prototype setter on assignment and silently vanish from the output.
+    const output: Record<string, unknown> = Object.create(null);
     for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
         const nextKey = key.startsWith('$') ? key : transform(key);
         output[nextKey] = rewriteQueryKeys(value, transform);

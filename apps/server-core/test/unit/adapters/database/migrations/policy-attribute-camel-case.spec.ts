@@ -5,9 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { camelCase } from 'change-case';
 import { describe, expect, it } from 'vitest';
 import {
     POLICY_ATTRIBUTE_KEY_RENAMES,
+    PROPERTY_RENAMES,
     camelizePropertyPath,
     snakizePropertyPath,
     transformAttributeNameValue,
@@ -17,32 +19,52 @@ import {
 
 describe('src/adapters/database/migrations/helpers/policy-attribute-camel-case', () => {
     describe('property paths', () => {
-        it('camelizes snake segments per dot segment (no path collapse)', () => {
+        it('camelizes vocabulary segments per dot segment (no path collapse)', () => {
             expect(camelizePropertyPath('realm_id')).toEqual('realmId');
             expect(camelizePropertyPath('user.realm_id')).toEqual('user.realmId');
             expect(camelizePropertyPath('client_id.realm_id')).toEqual('clientId.realmId');
         });
 
-        it('leaves non-snake segments untouched (idempotent)', () => {
+        it('leaves non-vocabulary segments untouched (idempotent)', () => {
             expect(camelizePropertyPath('name')).toEqual('name');
             expect(camelizePropertyPath('realmId')).toEqual('realmId');
             expect(camelizePropertyPath('REALM')).toEqual('REALM');
             expect(camelizePropertyPath(camelizePropertyPath('realm_id'))).toEqual('realmId');
         });
 
-        it('snakizes camel segments per dot segment', () => {
+        it('never touches live snake-case ATTRIBUTE-key references (outside the vocabulary)', () => {
+            // role-attribute keys were never renamed by plan 073, and snake
+            // user-attribute keys are legal post-073 — a policy referencing
+            // them is a WORKING reference the migration must not break.
+            expect(camelizePropertyPath('cost_center')).toEqual('cost_center');
+            expect(camelizePropertyPath('my_custom_flag')).toEqual('my_custom_flag');
+            expect(snakizePropertyPath('costCenter')).toEqual('costCenter');
+        });
+
+        it('snakizes vocabulary segments per dot segment', () => {
             expect(snakizePropertyPath('realmId')).toEqual('realm_id');
             expect(snakizePropertyPath('user.realmId')).toEqual('user.realm_id');
             expect(snakizePropertyPath('name')).toEqual('name');
         });
     });
 
-    describe('POLICY_ATTRIBUTE_KEY_RENAMES', () => {
-        it('maps each snake key onto its camel validator mount', () => {
+    describe('vocabularies', () => {
+        it('maps each policy EA key onto its camel validator mount', () => {
             for (const [from, to] of POLICY_ATTRIBUTE_KEY_RENAMES) {
-                expect(camelizePropertyPath(from)).toEqual(to);
-                expect(snakizePropertyPath(to)).toEqual(from);
+                expect(to).toEqual(camelCase(from));
             }
+        });
+
+        it('keeps the property-rename vocabulary bijective and camel-consistent', () => {
+            const snakes = new Set<string>();
+            const camels = new Set<string>();
+            for (const [from, to] of PROPERTY_RENAMES) {
+                expect(to).toEqual(camelCase(from));
+                snakes.add(from);
+                camels.add(to);
+            }
+            expect(snakes.size).toEqual(PROPERTY_RENAMES.length);
+            expect(camels.size).toEqual(PROPERTY_RENAMES.length);
         });
     });
 
@@ -90,11 +112,11 @@ describe('src/adapters/database/migrations/helpers/policy-attribute-camel-case',
     });
 
     describe('transformNamesValue', () => {
-        it('rewrites array entries (they ARE property names)', () => {
-            const input = JSON.stringify(['name_locked', 'status_message', 'realmId']);
+        it('rewrites array entries (they ARE property names), keeping non-vocabulary keys', () => {
+            const input = JSON.stringify(['name_locked', 'status_message', 'realmId', 'cost_center']);
 
             expect(JSON.parse(transformNamesValue(input, camelizePropertyPath)!))
-                .toEqual(['nameLocked', 'statusMessage', 'realmId']);
+                .toEqual(['nameLocked', 'statusMessage', 'realmId', 'cost_center']);
         });
 
         it('returns null for unchanged or non-array values', () => {
