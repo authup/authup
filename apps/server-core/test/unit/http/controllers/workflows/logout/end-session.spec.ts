@@ -149,6 +149,75 @@ describe('end-session (/logout)', () => {
         expect(await refreshSucceeds(tokens.refresh_token!)).toBe(false);
     });
 
+    it('should still revoke with a valid hint when a cosmetic param is malformed', async () => {
+        // a malformed post_logout_redirect_uri (relative → fails the URL check)
+        // must NOT discard the valid id_token_hint and skip the revoke — the
+        // security-critical revoke is decoupled from cosmetic-param validity.
+        const tokens = await mintTokens();
+
+        const response = await httpRequest(
+            suite,
+            'GET',
+            `/logout?id_token_hint=${tokens.id_token}&post_logout_redirect_uri=${encodeURIComponent('/not-an-absolute-url')}`,
+            { redirect: 'manual' },
+        );
+
+        // the bad redirect is dropped (no 302), but the session IS revoked
+        expect(response.status).toEqual(200);
+        expect(await refreshSucceeds(tokens.refresh_token!)).toBe(false);
+    });
+
+    it('should still revoke with a valid hint when the realm hint is oversized (hint-only retry)', async () => {
+        // a malformed realm hint is cosmetic too — the revoke's subject and
+        // session come from the verified hint's claims, so the retry keeps
+        // ONLY the hint and the oversized realm_name is discarded.
+        const tokens = await mintTokens();
+
+        const response = await httpRequest(
+            suite,
+            'GET',
+            `/logout?id_token_hint=${tokens.id_token}&realm_name=${'x'.repeat(400)}`,
+            { redirect: 'manual' },
+        );
+
+        expect(response.status).toEqual(200);
+        expect(await refreshSucceeds(tokens.refresh_token!)).toBe(false);
+    });
+
+    it('should still revoke with a valid hint when state is oversized (cosmetic-param decoupling)', async () => {
+        // the pre-fix behavior: an oversized state failed validation and the
+        // WHOLE request degraded to parameter-less — the valid hint was
+        // discarded and the revoke silently skipped.
+        const tokens = await mintTokens();
+
+        const response = await httpRequest(
+            suite,
+            'GET',
+            `/logout?id_token_hint=${tokens.id_token}&state=${'x'.repeat(3000)}`,
+            { redirect: 'manual' },
+        );
+
+        expect(response.status).toEqual(200);
+        expect(await refreshSucceeds(tokens.refresh_token!)).toBe(false);
+    });
+
+    it('should auto-revoke with a name-identified client_id (resolved via the verified hint realm, plan 047.B)', async () => {
+        // a name-form client_id is resolved to its client UUID — scoped by the
+        // VERIFIED hint's own realm claim when the request carries no realm
+        // hint — and the resolved UUID satisfies the aud cross-check.
+        const tokens = await mintTokens();
+
+        const response = await httpRequest(
+            suite,
+            'GET',
+            `/logout?id_token_hint=${tokens.id_token}&client_id=${client.name}`,
+            { redirect: 'manual' },
+        );
+
+        expect(response.status).toEqual(200);
+        expect(await refreshSucceeds(tokens.refresh_token!)).toBe(false);
+    });
+
     it('should NOT redirect a hint-less request — it renders the confirm page instead (no silent no-op logout)', async () => {
         // The defect this pins: a hint-less request with a validated
         // post_logout_redirect_uri used to 302 straight back to the RP without
@@ -230,16 +299,17 @@ describe('end-session (/logout)', () => {
         expect(payload.data.redirect).toEqual(POST_LOGOUT_URI);
     });
 
-    it('should drop ALL params on malformed input (no revoke, confirm page renders)', async () => {
+    it('should drop everything when the id_token_hint ITSELF is malformed (no revoke, confirm page renders)', async () => {
         const tokens = await mintTokens();
 
-        // an oversized state fails validation → the whole request is treated as
-        // parameter-less: the (valid) hint is dropped, nothing is revoked, and
-        // the neutral confirm page still renders for the human.
+        // an oversized id_token_hint (the revoke-critical field) fails BOTH
+        // validation stages → parameter-less confirm page, nothing revoked.
+        // (A malformed *cosmetic* param, by contrast, keeps the revoke — see
+        // the "should still revoke … when a cosmetic param is malformed" test.)
         const response = await httpRequest(
             suite,
             'GET',
-            `/logout?id_token_hint=${tokens.id_token}&state=${'x'.repeat(3000)}`,
+            `/logout?id_token_hint=${tokens.id_token}${'x'.repeat(5000)}`,
             { redirect: 'manual' },
         );
 

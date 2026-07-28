@@ -49,14 +49,27 @@ export class LogoutController {
         const merged = await readFromLocations(event, ['body', 'query']);
 
         // Malformed input (oversized / duplicated params) must never dead-end
-        // the human behind the browser on a JSON error: fall back to a
-        // parameter-less confirm page — every attacker-controlled value is
-        // dropped, the click-gated sign-out keeps working.
+        // the human behind the browser on a JSON error, nor discard a valid
+        // id_token_hint: a bad *cosmetic* param (post_logout_redirect_uri /
+        // state / client_id / realm hint) must NOT cancel the
+        // security-critical revoke the hint authorizes. So on a full-request
+        // validation failure, retry with the hint ALONE — the revoke needs
+        // nothing else: its subject/session come from the verified hint's
+        // claims, and client resolution degrades gracefully (the service
+        // falls back to the hint's sole `aud`, scoped by the hint's own realm
+        // claim — the dropped request params only affected the confirm page's
+        // client name and the redirect, which is dropped anyway). Only a
+        // malformed hint itself falls through to the parameter-less confirm
+        // page.
         let data: OAuth2EndSessionRequest;
         try {
             data = await this.validator.run(merged);
         } catch {
-            data = {};
+            try {
+                data = await this.validator.run({ id_token_hint: merged.id_token_hint });
+            } catch {
+                data = {};
+            }
         }
 
         const result = await this.endSessionService.verify(data);
