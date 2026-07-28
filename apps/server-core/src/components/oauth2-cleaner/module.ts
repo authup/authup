@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ScheduledTask } from 'node-cron';
 import cron from 'node-cron';
 import type { Logger } from '@authup/server-kit';
 import type { DataSource } from 'typeorm';
@@ -16,6 +17,9 @@ export function createOAuth2CleanerComponent(
     dataSource: DataSource,
     logger?: Logger,
 ) : Component {
+    let task : ScheduledTask | undefined;
+    let stopped = false;
+
     return {
         async start() {
             const sessionRepository = dataSource.getRepository(SessionEntity);
@@ -44,9 +48,21 @@ export function createOAuth2CleanerComponent(
 
             await execute();
 
-            cron.schedule('* * * * *', async () => {
+            if (stopped) {
+                return;
+            }
+
+            task = cron.schedule('* * * * *', async () => {
                 await execute();
             });
+        },
+        async stop() {
+            stopped = true;
+
+            if (task) {
+                await task.stop();
+                task = undefined;
+            }
         },
     };
 }
