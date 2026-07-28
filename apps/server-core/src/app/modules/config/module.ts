@@ -14,6 +14,20 @@ import type { ConfigRawReadOptions } from './read/index.ts';
 import { readConfigRaw } from './read/index.ts';
 import type { Config, ConfigFactory } from './types.ts';
 
+/**
+ * Read config from env (and optionally fs) and normalize it.
+ *
+ * @param options
+ */
+export async function readConfig(options: ConfigRawReadOptions = {}) : Promise<Config> {
+    const raw = await readConfigRaw({
+        env: true,
+        ...options,
+    });
+
+    return normalizeConfig(raw);
+}
+
 export class ConfigModule implements IModule {
     readonly name: string;
 
@@ -49,11 +63,6 @@ export class ConfigModule implements IModule {
      * @param options
      */
     async read(options: ConfigRawReadOptions = {}) : Promise<Config> {
-        const raw = await readConfigRaw({
-            env: true,
-            ...options,
-        });
-
-        return normalizeConfig(raw);
+        return readConfig(options);
     }
 }

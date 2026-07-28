@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ScheduledTask } from 'node-cron';
 import cron from 'node-cron';
 import type { Event } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
@@ -17,6 +18,9 @@ export function createEventCleanerComponent(
     dataSource: DataSource,
     logger?: Logger,
 ) : Component {
+    let task : ScheduledTask | undefined;
+    let stopped = false;
+
     return {
         async start() {
             const repository = new EventRepositoryAdapter(
@@ -39,9 +43,21 @@ export function createEventCleanerComponent(
 
             await execute();
 
-            cron.schedule('* * * * *', async () => {
+            if (stopped) {
+                return;
+            }
+
+            task = cron.schedule('* * * * *', async () => {
                 await execute();
             });
+        },
+        async stop() {
+            stopped = true;
+
+            if (task) {
+                await task.stop();
+                task = undefined;
+            }
         },
     };
 }

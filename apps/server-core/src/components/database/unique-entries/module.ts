@@ -25,6 +25,13 @@ export class DatabaseUniqueEntriesComponent implements Component {
         await this.enforceUniquePermissions();
     }
 
+    /**
+     * One-shot component — nothing recurring to stop.
+     */
+    async stop() {
+        // no-op
+    }
+
     async enforceUniqueRoles() {
         const repository = this.dataSource.getRepository(RoleEntity);
         const queryBuilder = repository.createQueryBuilder('role');

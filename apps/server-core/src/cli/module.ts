@@ -9,12 +9,11 @@ import { defineCommand } from 'citty';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { normalizeConfig } from '../app/modules/config/normalize.ts';
-import { readConfigRaw } from '../app/modules/config/read/index.ts';
+import type { ConfigReadFsOptions } from '../app/index.ts';
+import { CLI_CONFIG_ARGS, applyCLIConfigArgs } from './config.ts';
 import {
     defineCLIHealthCheckCommand,
     defineCLIMigrationCommand,
-    defineCLIResetCommand,
     defineCLIStartCommand,
 } from './commands/index.ts';
 
@@ -25,6 +24,8 @@ export async function createCLIEntryPointCommand() {
     );
     const pkg = JSON.parse(pkgRaw);
 
+    const configFs : ConfigReadFsOptions = {};
+
     return defineCommand({
         meta: {
             name: pkg.name,
@@ -32,33 +33,13 @@ export async function createCLIEntryPointCommand() {
             description: pkg.description,
         },
         subCommands: {
-            healthcheck: defineCLIHealthCheckCommand(),
-            migration: defineCLIMigrationCommand(),
-            reset: defineCLIResetCommand(),
-            start: defineCLIStartCommand(),
+            healthcheck: defineCLIHealthCheckCommand(configFs),
+            migration: defineCLIMigrationCommand(configFs),
+            start: defineCLIStartCommand(configFs),
         },
-        args: {
-            configDirectory: {
-                type: 'string',
-                description: 'Config directory path',
-                alias: 'cD',
-            },
-            configFile: {
-                type: 'string',
-                description: 'Name of one or more configuration files.',
-                alias: 'cF',
-            },
-        },
-        async setup(context) {
-            const raw = await readConfigRaw({
-                env: true,
-                fs: {
-                    cwd: context.args.configDirectory,
-                    file: context.args.configFile,
-                },
-            });
-
-            await normalizeConfig(raw);
+        args: CLI_CONFIG_ARGS,
+        setup(context) {
+            applyCLIConfigArgs(configFs, context.args);
         },
     });
 }
