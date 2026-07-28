@@ -93,9 +93,20 @@ export class EventRepositoryAdapter implements IEventRepository {
     }
 
     async countRecent(filter: EventCountRecentFilter): Promise<number> {
+        // created_at is stamped by the DATABASE server's clock (assumed UTC —
+        // the shipped compose files and deployment posture; a non-UTC DB
+        // server shifts the window regardless of what we bind), while a bound
+        // Date object is serialized by the pg/mysql drivers in the HOST's
+        // local timezone — on a non-UTC host that shifts the window by the
+        // UTC offset (postgres: `timestamp without time zone` discards the
+        // offset marker entirely). Bind a UTC wall-clock literal instead:
+        // pg/mysql cast it as a wall-clock timestamp, sqlite compares it
+        // lexicographically against the same format `datetime('now')` stores.
+        const since = new Date(filter.since).toISOString().replace('T', ' ').replace('Z', '');
+
         const qb = this.repository.createQueryBuilder('event')
             .where('event.name = :name', { name: filter.name })
-            .andWhere('event.createdAt > :since', { since: new Date(filter.since) });
+            .andWhere('event.createdAt > :since', { since });
 
         if (filter.actorName) {
             qb.andWhere('event.actorName = :actorName', { actorName: filter.actorName });
