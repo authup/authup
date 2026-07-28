@@ -11,7 +11,10 @@ import type { serve } from 'routup/node';
 
 export type HTTPServer = ReturnType<typeof serve>;
 
-export const HTTPInjectionKey = {
+export const HTTPInjectionKey : {
+    Server: TypedToken<HTTPServer>,
+    UIHttpClient: TypedToken<IClient>,
+} = {
     Server: new TypedToken<HTTPServer>('Server'),
     /**
      * HTTP client for the SSR'd UI pages. `HTTPModule.setup` registers a
