@@ -10,10 +10,11 @@ import {
     DefaultProvisioningSource,
     ProvisionerModule,
 } from './modules/index.ts';
+import type { CreateApplicationContext } from './types.ts';
 
-export function createApplication() {
+export function createApplication(context: CreateApplicationContext = {}) {
     return new ApplicationBuilder()
-        .withConfig()
+        .withConfig(context.config)
         .withLogger()
         .withCache()
         .withMail()

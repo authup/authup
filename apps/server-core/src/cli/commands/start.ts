@@ -7,15 +7,17 @@
 
 import { defineCommand } from 'citty';
 import process from 'node:process';
+import type { ConfigReadFsOptions } from '../../app/index.ts';
 import { createApplication } from '../../app/index.ts';
+import { createCLIConfigModule } from '../config.ts';
 
 const FORCE_EXIT_TIMEOUT_MS = 10_000;
 
-export function defineCLIStartCommand() {
+export function defineCLIStartCommand(configFs: ConfigReadFsOptions = {}) {
     return defineCommand({
         meta: { name: 'start' },
         async setup() {
-            const app = createApplication();
+            const app = createApplication({ config: createCLIConfigModule(configFs) });
 
             await app.setup();
 
