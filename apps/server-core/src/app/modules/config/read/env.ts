@@ -46,31 +46,6 @@ function readBoolStrict(name: ConfigEnvironmentVariableName) : boolean | undefin
     throw new Error(`The environment variable ${name} must be a boolean value (received "${raw}").`);
 }
 
-/**
- * TRUST_PROXY accepts a boolean, a hop count, or a proxy-addr allowlist
- * (comma-separated IPs / CIDRs / presets). The integer form must win over
- * the boolean word sets — `TRUST_PROXY=1` means ONE trusted hop, not
- * "trust every hop". Anything non-boolean/non-integer passes through as
- * the allowlist form; proxy-addr validates it at router construction
- * (fail loud on boot, not per request).
- */
-function parseTrustProxy(raw: string) : boolean | number | string {
-    const normalized = raw.trim();
-    if (/^\d+$/.test(normalized)) {
-        return Number.parseInt(normalized, 10);
-    }
-
-    const lowered = normalized.toLowerCase();
-    if (BOOLEAN_TRUE_VALUES.has(lowered)) {
-        return true;
-    }
-    if (BOOLEAN_FALSE_VALUES.has(lowered)) {
-        return false;
-    }
-
-    return normalized;
-}
-
 export function readConfigRawFromEnv() : ConfigInput {
     const options : ConfigInput = {};
 
@@ -136,9 +111,11 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.certificateSource = certificateSource as ConfigInput['certificateSource'];
     }
 
+    // canonicalized again in normalizeConfig for every config surface; the
+    // env read keeps the raw string, the shared canonicalizer decides.
     const trustProxy = read(ConfigEnvironmentVariableName.TRUST_PROXY);
     if (typeof trustProxy === 'string' && trustProxy.trim().length > 0) {
-        options.trustProxy = parseTrustProxy(trustProxy);
+        options.trustProxy = trustProxy;
     }
 
     const trustedOrigins = readArray(ConfigEnvironmentVariableName.TRUSTED_ORIGINS);

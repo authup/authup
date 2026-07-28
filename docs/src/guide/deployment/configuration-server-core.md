@@ -74,10 +74,12 @@ export default {
      *
      * Security: with `true` (the default), a DIRECT client can spoof
      * its IP via X-Forwarded-For — login-throttle keys, audit events,
-     * and the session inventory then record the forged value. Pin the
-     * actual proxy (e.g. 1, or loopback for a same-host proxy) when the
-     * listener is reachable without a proxy or exact attribution
-     * matters.
+     * the access log, and the session inventory then record the forged
+     * value. Pin the actual proxy (e.g. 1, or loopback for a same-host
+     * proxy) when the listener is reachable without a proxy or exact
+     * attribution matters. String forms are canonicalized: "1" means
+     * one trusted hop (never trust-all), "true"/"false" parse as
+     * booleans, anything else is a comma-separated allowlist.
      * default: true
      */
     trustProxy: 1,

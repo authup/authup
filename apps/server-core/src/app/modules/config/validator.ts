@@ -15,6 +15,7 @@ import type { ValidatorDescriptor } from 'validup';
 import { Container } from 'validup';
 import { z } from 'zod';
 import { expandToOrigins } from './origins.ts';
+import { isValidTrustProxyListEntry } from './trust-proxy.ts';
 import type { Config } from './types.ts';
 import { CERTIFICATE_SOURCES } from '../../../adapters/http/request/index.ts';
 
@@ -60,8 +61,16 @@ export class ConfigValidator extends Container<Config> {
             trustProxy: createValidator(z.union([
                 z.boolean(),
                 z.number().int().nonnegative(),
+                // scalar strings are canonicalized in normalizeConfig
+                // (integer/boolean words → their semantic type)
                 z.string(),
-                z.array(z.string()),
+                // the explicit allowlist form: an integer-string or boolean
+                // word entry is a mis-typed scalar and must fail loud —
+                // proxy-addr would silently compile '1' to 0.0.0.1
+                z.array(z.string().refine(
+                    isValidTrustProxyListEntry,
+                    'must be an IP, CIDR, or proxy-addr preset',
+                )),
             ])),
             trustedOrigins: createValidator(
                 z.array(z.string().refine((value) => {

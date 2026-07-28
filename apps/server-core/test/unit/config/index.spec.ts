@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { normalizeConfig } from '../../../src/app/modules/config/normalize';
 import { expandToOrigins, getAppOrigins } from '../../../src/app/modules/config/origins';
 import { parseConfig } from '../../../src/app/modules/config/parse';
-import { readConfigRawFromFS } from '../../../src/app/modules/config/read';
+import { readConfigRawFromEnv, readConfigRawFromFS } from '../../../src/app/modules/config/read';
 
 describe('src/config/*.ts', () => {
     describe('getAppOrigins', () => {
@@ -167,24 +167,34 @@ describe('src/config/*.ts', () => {
             await expect(parseConfig({ trustProxy: 1.5 })).rejects.toThrow();
         });
 
-        it('should parse the TRUST_PROXY env forms (integer wins over boolean words)', async () => {
-            const probe = async (value: string) => {
-                process.env.TRUST_PROXY = value;
-                try {
-                    return (await import('../../../src/app/modules/config/read/env'))
-                        .readConfigRawFromEnv().trustProxy;
-                } finally {
-                    delete process.env.TRUST_PROXY;
-                }
-            };
+        it('should canonicalize string trust forms on EVERY config surface (integer wins over boolean words)', async () => {
+            // proxy-addr accepts single-integer "long value" IPv4 notation, so
+            // an un-canonicalized "1" (a stringifying configmap, TRUST_PROXY
+            // env, quoted .conf value) would silently compile to an allowlist
+            // of 0.0.0.1 instead of one trusted hop.
+            expect((await normalizeConfig({ trustProxy: '1' })).trustProxy).toEqual(1);
+            expect((await normalizeConfig({ trustProxy: '0' })).trustProxy).toEqual(0);
+            expect((await normalizeConfig({ trustProxy: 'true' })).trustProxy).toEqual(true);
+            expect((await normalizeConfig({ trustProxy: 'FALSE' })).trustProxy).toEqual(false);
+            // proxy-addr matches presets case-sensitively — lowercase them
+            expect((await normalizeConfig({ trustProxy: 'Loopback' })).trustProxy).toEqual('loopback');
+            expect((await normalizeConfig({ trustProxy: '10.0.0.1, 10.0.0.0/8' })).trustProxy)
+                .toEqual('10.0.0.1, 10.0.0.0/8');
+        });
 
-            expect(await probe('true')).toEqual(true);
-            expect(await probe('false')).toEqual(false);
-            // '1' must mean ONE trusted hop, not "trust all"
-            expect(await probe('1')).toEqual(1);
-            expect(await probe('0')).toEqual(0);
-            expect(await probe('loopback')).toEqual('loopback');
-            expect(await probe('10.0.0.1, 10.0.0.0/8')).toEqual('10.0.0.1, 10.0.0.0/8');
+        it('should reject mis-typed scalar forms inside the explicit allowlist array', async () => {
+            await expect(parseConfig({ trustProxy: ['1'] })).rejects.toThrow();
+            await expect(parseConfig({ trustProxy: ['true'] })).rejects.toThrow();
+            await expect(parseConfig({ trustProxy: [''] })).rejects.toThrow();
+        });
+
+        it('should read TRUST_PROXY from the environment as the raw string form', () => {
+            process.env.TRUST_PROXY = '1';
+            try {
+                expect(readConfigRawFromEnv().trustProxy).toEqual('1');
+            } finally {
+                delete process.env.TRUST_PROXY;
+            }
         });
 
         it('should validate the explicit certificate source and mTLS alias contract', async () => {

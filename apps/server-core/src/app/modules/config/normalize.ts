@@ -15,6 +15,7 @@ import { EVENT_LOG_RETENTION_DAYS_DEFAULT } from '../../../core/index.ts';
 import { toPublicHost } from '../../../utils/host.ts';
 import { expandToOrigins } from './origins.ts';
 import { parseConfig } from './parse.ts';
+import { canonicalizeTrustProxy } from './trust-proxy.ts';
 import type { Config, ConfigInput } from './types.ts';
 
 export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> {
@@ -135,6 +136,14 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         // the raw parsed list (parsed.trustedOrigins is merged in above).
         trustedOrigins,
     };
+
+    // Canonicalize the string form on EVERY config surface (env, .conf,
+    // file, programmatic) — proxy-addr accepts single-integer "long value"
+    // IPv4 notation, so an un-canonicalized `trustProxy: "1"` would silently
+    // compile to an allowlist of `0.0.0.1` instead of one trusted hop.
+    if (typeof config.trustProxy === 'string') {
+        config.trustProxy = canonicalizeTrustProxy(config.trustProxy);
+    }
 
     // fail loud at boot: the throttle counts loginFailed rows in
     // auth_events — with the audit log disabled it would silently no-op.
