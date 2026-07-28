@@ -105,11 +105,6 @@ describe('src/http/controllers/entities/event', () => {
         expect(row.name).toEqual(EventName.LOGIN);
     });
 
-    // Generous timeout: an AUTHENTICATED request to an unmatched route is slow
-    // (~4s) in this app — the dispatcher's not-found walk re-enters the
-    // authorization middleware many times, re-verifying the Basic credentials
-    // each time. Pre-existing behavior (reproducible with any Basic-auth'd
-    // request to e.g. /unknown-path), unrelated to the audit surface.
     it('rejects write attempts (append-only surface)', async () => {
         const post = await httpRequest(suite, 'POST', '/events', {
             headers: { Authorization: adminAuthorization },
@@ -126,7 +121,7 @@ describe('src/http/controllers/entities/event', () => {
         // the row survives the delete attempt
         const { data: row } = await suite.client.event.getOne(data[0].id);
         expect(row.id).toEqual(data[0].id);
-    }, 30_000);
+    });
 
     it('never throttles repeated failures with the default config (throttle off)', async () => {
         const victim = createFakeUser();

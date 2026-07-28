@@ -52,6 +52,8 @@ import {
 } from '../../../request/index.ts';
 import type { HTTPAuthorizationMiddlewareContext, HTTPAuthorizationMiddlewareOptions } from './types.ts';
 
+const runSymbol = Symbol('RAuthorizationMiddlewareRun');
+
 export class AuthorizationMiddleware {
     protected options: HTTPAuthorizationMiddlewareOptions;
 
@@ -96,7 +98,26 @@ export class AuthorizationMiddleware {
 
     // --------------------------------------
 
-    async run(event: IAppEvent) {
+    async run(event: IAppEvent): Promise<void> {
+        // routup's dispatch walk re-enters earlier middlewares once per
+        // remaining match when no handler produces a response — exponentially
+        // (routup/routup#946), so an unmatched authenticated request re-ran
+        // this middleware ~100+ times, re-verifying Basic credentials (bcrypt)
+        // on every re-entry (~4s per 404). Authorization is a pure function of
+        // the request: the first run's settlement — including a rejection —
+        // is authoritative, so memoize the promise on the request store (the
+        // store is shared by every re-entry of the same request).
+        const pending = event.store[runSymbol] as Promise<void> | undefined;
+        if (pending) {
+            return pending;
+        }
+
+        const promise = this.runInner(event);
+        event.store[runSymbol] = promise;
+        return promise;
+    }
+
+    protected async runInner(event: IAppEvent): Promise<void> {
         const requestAccessContext = new RequestPermissionEvaluator(
             event,
             this.permissionEvaluator,

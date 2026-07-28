@@ -1,0 +1,14 @@
+# routup — reference mapping
+
+Upstream: `github.com/routup/routup` (tada5hi). HTTP framework under every
+`apps/server-core` route: `App` + `LinearRouter`, `@routup/decorators`
+controller mounting, `@routup/{basic,cors,rate-limit,prometheus,assets,swagger}`
+middlewares.
+
+| routup (source) | authup (consumer) | Notes |
+|---|---|---|
+| `App.runMatches` (`src/app/module.ts`) — the middleware/route dispatch walk | `app/modules/http/module.ts` (`new App()`), `app/modules/http/modules/middleware.ts` (`mountBefore` order) | routup 6.0.0 re-walked consumed match suffixes exponentially on response-less requests (2^k dispatches per match index — routup/routup#946); fixed in routup 6.1.0 (routup/routup#947, bumped 2026-07-28), which also made error flow FORWARD-ONLY: an ERROR handler registered before a later thrower is no longer accidentally revisited — authup mounts its error middleware last (`mountAfter`), so keep it there. `AuthorizationMiddleware.run` retains a per-request memo on `event.store` (`adapters/http/middleware/built-in/authorization/module.ts`) as defense in depth: credentials verify once even if a future mount/upstream change reintroduces re-entry. |
+| `@routup/decorators` plugin `flatten()` | `app/modules/http/modules/controller.ts` (single `router.use(decorators({...}))`) | Controller child-apps are FLATTENED into the root router at install time — one `App.dispatch`/`router.lookup` per request, no nested dispatch. Route templates readable from the root route table (used by `createRouteTemplateNormalizePath`, issue #3253). |
+| `Handler.dispatch` / `resolveHandlerResult` (`src/handler/module.ts`) | any `defineCoreHandler` in `adapters/http` | Contract: non-undefined return → response; `undefined` + `next()` called → downstream result; `undefined` + no `next()` → WAITS (until async `next()`, abort, or timeout → 408). There is no silent fall-through for undefined-return CORE handlers — fall-through happens only via method/type skip in the walk. |
+| `DispatcherEvent` store (`src/dispatcher/module.ts`) | `adapters/http/request/helpers/*` (`setRequestIdentity`, `setRequestRealmID`, …) | `event.store` is created once per request and shared by every handler facade (incl. dispatch re-entries) — the substrate for all symbol-keyed request state and the authorization memo. |
+| `getRequestIP` / `buildTrustProxyFn` (`src/utils`) + `AppOptions.trustProxy` | issue #3230 (XFF trust) | routup already supports express-style `trustProxy` (`boolean \| hops \| CIDR/'loopback' string \| string[] \| fn`, via `proxy-addr`) resolved from `new App({ trustProxy })` at every helper call site; per-call `{ trustProxy: true }` overrides the app option. `@routup/rate-limit`'s default `keyGenerator` hardcodes `{ trustProxy: true }` — needs an explicit `keyGenerator` to follow the app option. |
