@@ -7,4 +7,5 @@
 
 export type Component = {
     start: () => Promise<void>;
+    stop: () => Promise<void>;
 };

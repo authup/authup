@@ -7,7 +7,6 @@
 
 import type { Component } from '../../../components/index.ts';
 import {
-    createDatabaseUniqueEntriesComponent,
     createEventCleanerComponent,
     createOAuth2CleanerComponent,
 } from '../../../components/index.ts';
@@ -23,9 +22,12 @@ export class ComponentsModule implements IModule {
 
     readonly dependencies: string[];
 
+    protected components: Component[];
+
     constructor() {
         this.name = ModuleName.COMPONENTS;
         this.dependencies = [ModuleName.CONFIG, ModuleName.LOGGER, ModuleName.DATABASE];
+        this.components = [];
     }
 
     async setup(container: IContainer): Promise<void> {
@@ -35,7 +37,6 @@ export class ComponentsModule implements IModule {
 
         const components: Component[] = [
             createOAuth2CleanerComponent(dataSource, logger),
-            createDatabaseUniqueEntriesComponent(dataSource),
         ];
 
         // The sweep only exists when rows are written AND at least one row
@@ -48,6 +49,8 @@ export class ComponentsModule implements IModule {
             components.push(createEventCleanerComponent(dataSource, logger));
         }
 
+        this.components = components;
+
         // start() is deliberately fire-and-forget, so a rejection must be
         // caught here — an unhandled rejection is fatal on modern node.
         components.forEach((component) => {
@@ -56,6 +59,24 @@ export class ComponentsModule implements IModule {
                 logger.error(e);
             });
         });
+    }
+
+    async teardown(container: IContainer): Promise<void> {
+        const logger = container.tryResolve(LoggerInjectionKey);
+
+        const { components } = this;
+        this.components = [];
+
+        for (const component of components) {
+            try {
+                await component.stop();
+            } catch (e) {
+                if (logger.success) {
+                    logger.data.warn('Stopping a background component failed.');
+                    logger.data.warn(e);
+                }
+            }
+        }
     }
 
     // ----------------------------------------------------

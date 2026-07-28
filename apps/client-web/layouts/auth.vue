@@ -5,16 +5,11 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { AAuthGadgets } from '@authup/client-web-kit';
-import { VCToastProvider, VCToaster } from '@vuecs/overlays';
+import { AAuthApp } from '@authup/client-web-kit';
 import { defineNuxtComponent, useColorMode } from '#imports';
 
 export default defineNuxtComponent({
-    components: {
-        AAuthGadgets,
-        VCToastProvider,
-        VCToaster,
-    },
+    components: { AAuthApp },
     setup() {
         const { isDark } = useColorMode();
 
@@ -28,27 +23,13 @@ export default defineNuxtComponent({
         a logged-out visitor has no use for the sidebar/header, and the
         full-bleed canvas lets page backdrops reach the viewport edges
         (the default layout's .page-content padding would frame them).
-        The two controls a logged-out user still needs — color mode and
-        language — live in the shared <AAuthGadgets> cluster (mirrored by
-        the embedded SSR app).
-        VCToastProvider wraps the layout root for the same reason as in
-        the default layout: the toaster and any descendant toast usage
-        share one Reka ToastProviderContext.
+        <AAuthApp> is the shared logged-out shell (mirrored by the embedded
+        SSR app): the <VCToastProvider> root, the <AAuthGadgets> cluster
+        (color mode + language) and the <VCToaster> viewport. Color-mode
+        storage stays app-specific (Nuxt's useColorMode), hence the
+        v-model:dark.
     -->
-    <VCToastProvider>
-        <div class="auth-layout">
-            <AAuthGadgets v-model:dark="isDark" />
-
-            <NuxtPage />
-
-            <VCToaster position="top-center" />
-        </div>
-    </VCToastProvider>
+    <AAuthApp v-model:dark="isDark">
+        <NuxtPage />
+    </AAuthApp>
 </template>
-<style>
-.auth-layout {
-    position: relative;
-    min-height: 100vh;
-    width: 100%;
-}
-</style>

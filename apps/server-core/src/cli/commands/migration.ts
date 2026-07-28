@@ -17,14 +17,16 @@ import {
 } from 'typeorm-extension';
 import { DataSource, type DataSourceOptions } from 'typeorm';
 import { DataSourceOptionsBuilder } from '../../adapters/database/index.ts';
+import type { ConfigReadFsOptions } from '../../app/index.ts';
 import {
-    ApplicationBuilder, 
-    ConfigInjectionKey, 
-    LoggerInjectionKey, 
+    ApplicationBuilder,
+    ConfigInjectionKey,
+    LoggerInjectionKey,
     ModuleName,
 } from '../../app/index.ts';
 import type { IContainer } from 'eldin';
 import { CODE_PATH } from '../../path.ts';
+import { createCLIConfigModule } from '../config.ts';
 
 enum MigrationOperation {
     GENERATE = 'generate',
@@ -165,7 +167,7 @@ async function generateMigrations(): Promise<void> {
     }
 }
 
-export function defineCLIMigrationCommand() {
+export function defineCLIMigrationCommand(configFs: ConfigReadFsOptions = {}) {
     return defineCommand({
         meta: { name: 'migration' },
         args: {
@@ -182,7 +184,7 @@ export function defineCLIMigrationCommand() {
                     await generateMigrations();
                 } else {
                     const app = new ApplicationBuilder()
-                        .withConfig()
+                        .withConfig(createCLIConfigModule(configFs))
                         .withLogger()
                         .build();
 

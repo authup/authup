@@ -5,19 +5,17 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { AAuthShell, ARegisterForm, useTranslations } from '@authup/client-web-kit';
+import { AAuthShell, ARegisterForm, AWorkflowDisabledNotice } from '@authup/client-web-kit';
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
-import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { VCAlert } from '@vuecs/elements';
 import { defineComponent } from 'vue';
 import { useBasePath } from '../base-path';
 import { injectPayload } from '../di';
 
 export default defineComponent({
     components: {
-        AAuthShell, 
-        ARegisterForm, 
-        VCAlert, 
+        AAuthShell,
+        ARegisterForm,
+        AWorkflowDisabledNotice,
     },
     setup() {
         const payload = injectPayload<{
@@ -26,18 +24,10 @@ export default defineComponent({
             redirect?: string,
         }>();
 
-        const translations = useTranslations([
-            {
-                namespace: TranslatorTranslationNamespace.CLIENT,
-                key: TranslatorTranslationClientKey.WORKFLOW_DISABLED,
-            },
-        ]);
-
         const withBasePath = useBasePath();
 
         return {
             data: payload.data,
-            translations,
             withBasePath,
         };
     },
@@ -50,13 +40,6 @@ export default defineComponent({
             :realm-id="data.realmId"
             :back-link="data.redirect ? { href: withBasePath(data.redirect) } : undefined"
         />
-        <VCAlert
-            v-else
-            color="warning"
-            variant="soft"
-            class="mb-3"
-        >
-            {{ translations.workflowDisabled }}
-        </VCAlert>
+        <AWorkflowDisabledNotice v-else />
     </AAuthShell>
 </template>

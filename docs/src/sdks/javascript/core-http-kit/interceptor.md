@@ -22,7 +22,7 @@ const hook = new ClientAuthenticationHook({
         name: 'admin',
         password: 'start123',
     }, {
-        client: { baseURL: 'http://localhost:3010' },
+        client: { baseURL: 'http://localhost:3001' },
     }),
     timer: true, // auto-refresh before expiry (default: true)
 });

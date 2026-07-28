@@ -1,16 +1,29 @@
 # Configuration
 
-The API configuration can be provided in different file formats, 
-such as `authup.server.core.{conf,js,ts,...}`.
+The API configuration can be provided in different file formats,
+such as `authup.server.core.{conf,js,ts,...}` — or as a `server.core` section of a
+shared `authup.{conf,js,ts,...}` file (see the [configuration introduction](./configuration)
+for file lookup, the `--configDirectory`/`--configFile` CLI flags and the section layout).
 
-The environment variables in the .env file variant can also be provided via runtime environment.
+Most options can also be provided as environment variables (shown in the `.env` tab below).
+**An environment variable always overrides the file value** for the same option.
+A few options are file-only and have no environment variable — they are marked as such.
 
 ::: danger Security
-Always change the default admin password (`start123`) before deploying to production.
+The admin password and the `system` client secret both default to `start123`.
+Set your own values (`userAdminPassword` / `clientSystemSecret`, or the
+`USER_ADMIN_PASSWORD` / `CLIENT_SYSTEM_SECRET` environment variables) before
+deploying to production — the examples below carry placeholders, never copy a
+credential out of documentation.
 :::
 
 For MFA enforcement behavior and its federated-login, password-grant, feature-toggle,
 and cache-availability boundaries, see [Multi-factor authentication](./configuration-server-core-mfa.md).
+
+The infrastructure connections are documented on their own pages:
+[Database](./configuration-server-core-database) (`db`),
+[Redis](./configuration-server-core-redis) (`redis`) and
+[SMTP](./configuration-server-core-smtp) (`smtp`).
 
 ::: code-group
 
@@ -19,21 +32,45 @@ and cache-availability boundaries, see [Multi-factor authentication](./configura
 export default {
     /**
      * Application environment (e.g., 'production').
+     * env: NODE_ENV
      * default: development
      */
     env: 'production',
-    
+
+    /**
+     * Base path for resolving relative paths (e.g. a relative
+     * writableDirectoryPath). File-only (no environment variable).
+     * default: process working directory
+     */
+    rootPath: '/usr/src/app',
+
+    /**
+     * Directory for runtime-generated files (SQLite database, generated
+     * artifacts, ...). Relative paths are resolved against rootPath.
+     * env: WRITABLE_DIRECTORY_PATH
+     * default: writable
+     */
+    writableDirectoryPath: 'writable',
+
+    /**
+     * Enable logging. File-only (no environment variable).
+     * default: true
+     */
+    logger: true,
+
     /**
      * Application port number.
+     * env: PORT
      * default: 3001
      */
     port: 3001,
 
     /**
-     * Application host.
-     * default: localhost
+     * Address the HTTP server binds to.
+     * env: HOST
+     * default: 0.0.0.0 (all interfaces)
      */
-    host: 'localhost',
+    host: '0.0.0.0',
     
     /**
      * API base URL.
@@ -41,7 +78,9 @@ export default {
      * server runs behind a reverse proxy that strips the prefix — asset
      * URLs and links of the built-in auth pages are rebased onto it
      * automatically.
-     * default: http://localhost:3001
+     * env: PUBLIC_URL
+     * default: derived from host & port — http://localhost:3001
+     * (a wildcard bind address renders as localhost)
      */
     publicUrl: 'http://localhost:3001',
 
@@ -49,6 +88,7 @@ export default {
      * Optional public base URL whose proxy requests TLS client certificates.
      * Published in OpenID discovery as RFC 8705 mtls_endpoint_aliases.
      * Requires certificateSource to be enabled.
+     * env: MTLS_PUBLIC_URL
      * default: null
      */
     mtlsPublicUrl: 'https://mtls.example.com',
@@ -61,6 +101,7 @@ export default {
      *
      * Enabling this requires a private backend listener and a proxy that
      * removes/overwrites public certificate headers on every request.
+     * env: CERTIFICATE_SOURCE
      * default: disabled
      */
     certificateSource: 'forwarded',
@@ -100,6 +141,7 @@ export default {
      * allowlisted origin can complete a login and obtain a full-permission
      * token — only add origins you control. In non-production, the
      * client-web dev origin (http://localhost:3000) is seeded automatically.
+     * env: TRUSTED_ORIGINS (comma-separated)
      * default: []
      */
     trustedOrigins: ['https://app.example.com'],
@@ -107,13 +149,32 @@ export default {
     // ----------------------------------------------------
 
     /**
+     * Built-in HTTP middlewares. Each accepts a boolean or an options
+     * object (options objects require the js/ts file variant).
+     * File-only (no environment variables).
+     * default: true (each)
+     */
+    middlewareBody: true,       // request body parsing
+    middlewareCookie: true,     // cookie parsing
+    middlewareCors: true,       // CORS (reflects any origin by default;
+                                // pass options for an explicit allowlist)
+    middlewarePrometheus: true, // /metrics endpoint
+    middlewareQuery: true,      // query-string parsing
+    middlewareRateLimit: true,  // rate limiting
+    middlewareSwagger: true,    // /docs endpoint
+
+    // ----------------------------------------------------
+
+    /**
      * Refresh token validity in seconds (default: 259,200s / 3 days).
+     * env: TOKEN_REFRESH_MAX_AGE
      * default: 259_200
      */
     tokenRefreshMaxAge: 259_200,
 
     /**
      * Access token validity in seconds (default: 900s / 15 minutes).
+     * env: TOKEN_ACCESS_MAX_AGE
      * default: 900
      */
     tokenAccessMaxAge: 900,
@@ -122,6 +183,7 @@ export default {
      * Grace period (seconds) during which a just-rotated refresh token is
      * still accepted, minting new chain-linked tokens instead of triggering
      * replay detection. Absorbs multi-tab / mobile refresh races.
+     * env: TOKEN_REFRESH_GRACE_PERIOD
      * default: 0 (strict — first-use-wins)
      */
     tokenRefreshGracePeriod: 0,
@@ -130,6 +192,7 @@ export default {
      * Max age (seconds) of the authentication that a `prompt=login` / `max_age`
      * authorize request accepts before forcing re-authentication. Judged against
      * the session's creation time — a stateless approximation.
+     * env: PROMPT_LOGIN_MAX_AGE
      * default: 60
      */
     promptLoginMaxAge: 60,
@@ -140,6 +203,7 @@ export default {
      * server-side session revoke. Bounds how long a leaked id_token stays a
      * replayable remote logout; beyond the window the click-gated confirm
      * page still works.
+     * env: END_SESSION_HINT_GRACE_PERIOD
      * default: 0 (unbounded — spec/Keycloak parity)
      */
     endSessionHintGracePeriod: 0,
@@ -148,18 +212,21 @@ export default {
     
     /**
      * Enable user registration?
+     * env: REGISTRATION_ENABLED
      * default: false
      */
     registrationEnabled: false,
 
     /**
      * Require email verification for registration or login?
+     * env: EMAIL_VERIFICATION_ENABLED
      * default: false
      */
     emailVerificationEnabled: false,
 
     /**
      * Allow password reset via email?
+     * env: PASSWORD_RECOVERY_ENABLED
      * default: false
      */
     passwordRecoveryEnabled: false,
@@ -167,6 +234,7 @@ export default {
     /**
      * Minimum length for user-chosen passwords (user create/update,
      * registration, password reset). The maximum is fixed at 512.
+     * env: PASSWORD_MIN_LENGTH
      * default: 10
      */
     passwordMinLength: 10,
@@ -174,6 +242,7 @@ export default {
     /**
      * Persist security events (login, loginFailed, authorize,
      * logout, refresh replay, ...) to the auth_events table.
+     * env: EVENT_LOG_ENABLED
      * default: true
      */
     eventLogEnabled: true,
@@ -181,6 +250,7 @@ export default {
     /**
      * Retention for persisted security events in days. Raise it for
      * longer compliance windows; 0 = keep forever.
+     * env: EVENT_LOG_RETENTION_DAYS
      * default: 90
      */
     eventLogRetentionDays: 90,
@@ -189,6 +259,7 @@ export default {
      * Additionally mirror every entity create/update/delete into the
      * auth_events table (scope: entity). Only effective while
      * eventLogEnabled is true.
+     * env: EVENT_LOG_ENTITY_ENABLED
      * default: true
      */
     eventLogEntityEnabled: true,
@@ -196,6 +267,7 @@ export default {
     /**
      * Retention for entity create/update/delete events in days —
      * deliberately short so entity churn self-prunes. 0 = keep forever.
+     * env: EVENT_LOG_ENTITY_RETENTION_DAYS
      * default: 7
      */
     eventLogEntityRetentionDays: 7,
@@ -206,6 +278,7 @@ export default {
      * The IP half of the key follows `trustProxy` — pin it to the actual
      * proxy (hops or allowlist) so a direct client cannot spoof the IP
      * via X-Forwarded-For.
+     * env: LOGIN_ATTEMPT_THROTTLE_ENABLED
      * default: false
      */
     loginAttemptThrottleEnabled: false,
@@ -213,12 +286,14 @@ export default {
     /**
      * Failed attempts per (identifier, ip) pair within the window before
      * the pair is throttled (HTTP 429).
+     * env: LOGIN_ATTEMPT_THRESHOLD
      * default: 5
      */
     loginAttemptThreshold: 5,
 
     /**
      * Sliding throttle window in seconds.
+     * env: LOGIN_ATTEMPT_WINDOW
      * default: 900
      */
     loginAttemptWindow: 900,
@@ -237,6 +312,7 @@ export default {
      * Keycloak/authentik posture). Setting it later wraps existing
      * rows lazily on read; removing it while wrapped rows exist fails
      * loud at first use, so treat it as a long-lived secret.
+     * env: SECRETS_ENCRYPTION_KEY
      * default: '' (unset)
      */
     secretsEncryptionKey: '',
@@ -248,6 +324,7 @@ export default {
      * and on the password grant (otp parameter). Seed-encryption keys
      * are generated per realm automatically — no further configuration
      * is required.
+     * env: MFA_ENABLED
      * default: false
      */
     mfaEnabled: false,
@@ -256,6 +333,7 @@ export default {
      * Enforce MFA for every user: a user without a confirmed device is
      * routed to inline enrollment at next interactive login.
      * Requires mfaEnabled.
+     * env: MFA_REQUIRED
      * default: false
      */
     mfaRequired: false,
@@ -264,6 +342,7 @@ export default {
      * Max age (seconds) of the session's second-factor proof an
      * acr_values=urn:authup:mfa step-up request accepts before forcing
      * a fresh challenge.
+     * env: MFA_FRESHNESS_MAX_AGE
      * default: 60
      */
     mfaFreshnessMaxAge: 60,
@@ -273,6 +352,7 @@ export default {
      * interactive login receives when its second factor needs an
      * interactive challenge (email / WebAuthn) — and of the pending
      * session backing it.
+     * env: MFA_TICKET_MAX_AGE
      * default: 600
      */
     mfaTicketMaxAge: 600,
@@ -280,19 +360,61 @@ export default {
     // ----------------------------------------------------
 
     /**
+     * Permit HTTP Basic authentication with client credentials
+     * against the management API.
+     * env: CLIENT_AUTH_BASIC
+     * default: false
+     */
+    clientAuthBasic: false,
+
+    /**
+     * Activate the built-in `system` client of the master realm.
+     * env: CLIENT_SYSTEM_ENABLED
+     * default: false
+     */
+    clientSystemEnabled: false,
+
+    /**
+     * The secret of the built-in `system` client.
+     * env: CLIENT_SYSTEM_SECRET
+     * default: 'start123'
+     */
+    clientSystemSecret: '<unique-secret>',
+
+    /**
+     * Reset the `system` client secret on application startup.
+     * env: CLIENT_SYSTEM_SECRET_RESET
+     * default: false
+     */
+    clientSystemSecretReset: false,
+
+    // ----------------------------------------------------
+
+    /**
+     * Permit HTTP Basic authentication with user credentials
+     * against the management API.
+     * env: USER_AUTH_BASIC
+     * default: false
+     */
+    userAuthBasic: false,
+
+    /**
      * Enable default admin user.
+     * env: USER_ADMIN_ENABLED
      * default: true
      */
     userAdminEnabled: true,
     
     /**
      * The password of the default admin user.
+     * env: USER_ADMIN_PASSWORD
      * default: 'start123'
      */
-    userAdminPassword: 'start123',
+    userAdminPassword: '<strong-password>',
     
     /**
      * Reset admin password on application startup.
+     * env: USER_ADMIN_PASSWORD_RESET
      * default: false
      */
     userAdminPasswordReset: false,
@@ -300,10 +422,18 @@ export default {
     // ----------------------------------------------------
 
     /**
+     * Additional (non-built-in) permission names to provision on startup.
+     * env: PERMISSIONS (comma-separated)
+     * default: []
+     */
+    permissions: [],
+
+    /**
      * Auto-assign the system.default policy to new permissions
      * created without an explicit policyId.
      * Transitional option — will be removed in the next major release.
      * Set to false to opt into the allow-by-default model.
+     * env: PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT
      * default: true
      */
     permissionsDefaultPolicyAssignment: true,
@@ -311,12 +441,20 @@ export default {
 ```
 
 ```dotenv [authup.server.core.conf]
+env=production
+writableDirectoryPath=writable
 port=3001
+host=0.0.0.0
 publicUrl=http://localhost:3001
 mtlsPublicUrl=https://mtls.example.com
 certificateSource=forwarded
 trustProxy=1
 trustedOrigins=https://app.example.com
+tokenRefreshMaxAge=259200
+tokenAccessMaxAge=900
+tokenRefreshGracePeriod=0
+promptLoginMaxAge=60
+endSessionHintGracePeriod=0
 registrationEnabled=false
 emailVerificationEnabled=false
 passwordRecoveryEnabled=false
@@ -333,19 +471,33 @@ mfaEnabled=false
 mfaRequired=false
 mfaFreshnessMaxAge=60
 mfaTicketMaxAge=600
-userAdminPassword=start123
+clientAuthBasic=false
+clientSystemEnabled=false
+clientSystemSecret=<unique-secret>
+clientSystemSecretReset=false
+userAuthBasic=false
+userAdminEnabled=true
+userAdminPassword=<strong-password>
 userAdminPasswordReset=false
 permissionsDefaultPolicyAssignment=true
 
 ```
 
 ```dotenv [.env]
+NODE_ENV=production
+WRITABLE_DIRECTORY_PATH=writable
 PORT=3001
+HOST=0.0.0.0
 PUBLIC_URL=http://localhost:3001
 MTLS_PUBLIC_URL=https://mtls.example.com
 CERTIFICATE_SOURCE=forwarded
 TRUST_PROXY=1
 TRUSTED_ORIGINS=https://app.example.com
+TOKEN_REFRESH_MAX_AGE=259200
+TOKEN_ACCESS_MAX_AGE=900
+TOKEN_REFRESH_GRACE_PERIOD=0
+PROMPT_LOGIN_MAX_AGE=60
+END_SESSION_HINT_GRACE_PERIOD=0
 REGISTRATION_ENABLED=false
 EMAIL_VERIFICATION_ENABLED=false
 PASSWORD_RECOVERY_ENABLED=false
@@ -362,9 +514,22 @@ MFA_ENABLED=false
 MFA_REQUIRED=false
 MFA_FRESHNESS_MAX_AGE=60
 MFA_TICKET_MAX_AGE=600
-USER_ADMIN_PASSWORD=start123
+CLIENT_AUTH_BASIC=false
+CLIENT_SYSTEM_ENABLED=false
+CLIENT_SYSTEM_SECRET=<unique-secret>
+CLIENT_SYSTEM_SECRET_RESET=false
+USER_AUTH_BASIC=false
+USER_ADMIN_ENABLED=true
+USER_ADMIN_PASSWORD=<strong-password>
 USER_ADMIN_PASSWORD_RESET=false
 PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT=true
 
 ```
+:::
+
+::: tip File-only options
+`rootPath`, `logger` and the `middleware*` options have no environment
+variable — set them in a configuration file. Middleware *options objects*
+(e.g. an explicit CORS allowlist) additionally require the `js`/`ts` file
+variant, since they cannot be expressed as flat strings.
 :::

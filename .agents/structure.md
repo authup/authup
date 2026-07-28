@@ -71,7 +71,9 @@ Apps:
   server-core       → access, i18n, kit, core-kit, core-http-kit, errors, server-kit, specs (+ ilingo runtime dep)
                       (embedded consent UI under ui/ uses client-web-kit, kit, core-kit, core-http-kit — build-time only)
   client-web        → client-web-kit, kit, core-kit, core-http-kit, client-web-nuxt
-  authup (CLI)      → client-web, kit, core-kit, server-core
+  authup (CLI)      → client-web, errors, kit, server-core
+                      (a process supervisor: it spawns each app's own bin, so client-web/server-core
+                       are resolved as packages to launch, not imported)
 ```
 
 ## Separation of Concerns
@@ -94,6 +96,36 @@ Apps:
 | **Other** | `@vuecs/{button, elements, countdown, timeago, navigation}` | Each used via its globally-registered `<VC*>` components after `app.use(installX)`. |
 
 **Explicit component imports (preferred):** new/changed kit or app code should `import { VC* } from '@vuecs/*'` + register in a local `components: {}` (or import for `h()`), rather than relying on the consumer's global `app.use(installX)` registration. This makes the dependency visible, type-checks props locally, and catches latent prop-type bugs that global / `resolveComponent('VC*')` lookups hide. `VCButton` and `VCIcon` were swept to explicit imports across kit + app (the global `app.use(vuecs, …)` registration stays as a fallback); the other `<VC*>` (VCTimeago, VCTable, VCFormGroup, VCList, VCModal, …) are still mostly global — migrate them opportunistically when a file is touched.
+
+**Shared auth chrome + bootstrap fragments (plan 078).** The two UI apps —
+`apps/client-web` (Nuxt) and the embedded SSR app in `apps/server-core/ui` —
+used to hand-mirror each other's auth-page shell and vuecs bootstrap, guarded
+only by "mirrors client-web" comments. The common parts now live in the kit and
+both sides are thin callers:
+
+- `AAuthApp` (`components/utility/`) — the logged-out page shell
+  (`VCToastProvider` > `AAuthGadgets` > slot > `VCToaster`), consumed by
+  `apps/server-core/ui/src/App.vue` and `apps/client-web/layouts/auth.vue`.
+- `AWorkflowDisabledNotice` (`components/workflows/`) — the "workflow disabled"
+  alert + back-link block the four server-core SSR workflow pages
+  (register / activate / password-forgot / password-reset) each copy-pasted.
+- `core/vuecs/` — `registerIconCollections()` (Iconify FA6 solid + brands) and
+  `buildVuecsInstallOptions()` (the FA icon preset + translator-wired
+  submit-button defaults) supply the shared VALUES of the
+  `app.use(vuecs, …)` call. **Themes stay a caller argument** — the kit must
+  not depend on the theme packages (the kit theme peers the kit) — and each
+  consumer keeps its own sequencing: Nuxt's ordered plugins on one side, the
+  manual choreography in `ui/src/app.ts` on the other. The install ORDER is
+  load-bearing (see the plugin-order trap below); only the values are shared.
+
+The default backend URL is one exported constant, `API_URL_DEFAULT`
+(`@authup/core-http-kit`, `http://localhost:3001`) — it belongs to the HTTP
+client whose `baseURL` it fills, not to `@authup/kit` (which stays free of
+service context). Consumed by client-web's `nuxt.config.ts` and the
+`client-web-nuxt` fallback (which had drifted to a nonexistent `:3010`). The
+`authup` launcher deliberately does NOT carry a fallback: it sets
+`NUXT_PUBLIC_API_URL` only when the config file names one, leaving the
+application's own default in charge.
 
 ### Page placement — top-level pages vs detail tabs (client-web)
 

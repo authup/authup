@@ -6,6 +6,7 @@
  */
 
 import type { ModuleOptions } from '@authup/client-web-nuxt';
+import { API_URL_DEFAULT } from '@authup/core-http-kit';
 import path from 'node:path';
 import { defineNuxtConfig } from 'nuxt/config';
 import tailwindcss from '@tailwindcss/vite';
@@ -56,7 +57,7 @@ export default defineNuxtConfig({
     runtimeConfig: {
         apiUrl: process.env.API_URL_SERVER,
         public: {
-            apiUrl: process.env.API_URL || 'http://localhost:3001',
+            apiUrl: process.env.API_URL || API_URL_DEFAULT,
             publicUrl: process.env.PUBLIC_URL || 'http://localhost:3000',
             cookieDomain: process.env.COOKIE_DOMAIN,
         },

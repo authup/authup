@@ -21,7 +21,7 @@ const creator: TokenCreator = createUserTokenCreator({
     // realmId: 'xxx',
     // realmName: 'xxx',
 }, {
-    client: { baseURL: 'http://localhost:3010' },
+    client: { baseURL: 'http://localhost:3001' },
 });
 
 const tokenPayload = await creator();
@@ -41,7 +41,7 @@ const creator: TokenCreator = createClientTokenCreator({
     id: 'xxx',
     secret: 'xxx',
 }, {
-    client: { baseURL: 'http://localhost:3010' },
+    client: { baseURL: 'http://localhost:3001' },
 });
 
 const tokenPayload = await creator();

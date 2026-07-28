@@ -5,7 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { describe, expect, it } from 'vitest';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {
+    afterEach, 
+    beforeEach, 
+    describe, 
+    expect, 
+    it,
+} from 'vitest';
+import { readConfig } from '../../../src/app/modules/config/helpers';
 import { normalizeConfig } from '../../../src/app/modules/config/normalize';
 import { expandToOrigins, getAppOrigins } from '../../../src/app/modules/config/origins';
 import { parseConfig } from '../../../src/app/modules/config/parse';
@@ -305,5 +315,66 @@ describe('src/config/*.ts', () => {
         expect(config.db).toBeDefined();
         expect(config.db!.type).toEqual('mysql');
         expect(config.db!.database).toEqual('core');
+    });
+
+    describe('readConfig', () => {
+        let directory : string;
+
+        let portBackup : string | undefined;
+
+        beforeEach(async () => {
+            directory = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'authup-config-'));
+
+            portBackup = process.env.PORT;
+            delete process.env.PORT;
+        });
+
+        afterEach(async () => {
+            await fs.promises.rm(directory, { recursive: true, force: true });
+
+            if (typeof portBackup === 'undefined') {
+                delete process.env.PORT;
+            } else {
+                process.env.PORT = portBackup;
+            }
+        });
+
+        it('should resolve a file value through the fs read path', async () => {
+            await fs.promises.writeFile(
+                path.join(directory, 'authup.server.core.conf'),
+                'port=4010\n',
+            );
+
+            const config = await readConfig({ env: true, fs: { cwd: directory } });
+
+            expect(config.port).toEqual(4010);
+        });
+
+        it('should let an env value win over the same key from file', async () => {
+            await fs.promises.writeFile(
+                path.join(directory, 'authup.server.core.conf'),
+                'port=4010\n',
+            );
+
+            process.env.PORT = '5055';
+
+            const config = await readConfig({ env: true, fs: { cwd: directory } });
+
+            expect(config.port).toEqual(5055);
+        });
+
+        it('should resolve an explicitly selected config file', async () => {
+            await fs.promises.writeFile(
+                path.join(directory, 'authup.conf'),
+                'server.core.port=4020\n',
+            );
+
+            const config = await readConfig({
+                env: true,
+                fs: { cwd: directory, file: 'authup.conf' },
+            });
+
+            expect(config.port).toEqual(4020);
+        });
     });
 });

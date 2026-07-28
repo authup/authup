@@ -9,9 +9,8 @@ import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import { ConfigInjectionKey } from './constants.ts';
 import type { IContainer } from 'eldin';
-import { normalizeConfig } from './normalize.ts';
+import { readConfig } from './helpers.ts';
 import type { ConfigRawReadOptions } from './read/index.ts';
-import { readConfigRaw } from './read/index.ts';
 import type { Config, ConfigFactory } from './types.ts';
 
 export class ConfigModule implements IModule {
@@ -49,11 +48,6 @@ export class ConfigModule implements IModule {
      * @param options
      */
     async read(options: ConfigRawReadOptions = {}) : Promise<Config> {
-        const raw = await readConfigRaw({
-            env: true,
-            ...options,
-        });
-
-        return normalizeConfig(raw);
+        return readConfig(options);
     }
 }

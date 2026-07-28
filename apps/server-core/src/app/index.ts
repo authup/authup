@@ -8,3 +8,4 @@
 export * from './builder.ts';
 export * from './factory.ts';
 export * from './modules/index.ts';
+export * from './types.ts';

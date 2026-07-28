@@ -10,7 +10,7 @@ To configure the API Client, the `baseURL` parameter for the driver config of th
 import { Client } from '@authup/core-http-kit';
 
 const client = new Client({
-    baseURL: 'http://127.0.0.1:3010/'
+    baseURL: 'http://127.0.0.1:3001/'
 });
 ```
 
