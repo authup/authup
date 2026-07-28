@@ -5,18 +5,13 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { AAuthGadgets } from '@authup/client-web-kit';
+import { AAuthApp } from '@authup/client-web-kit';
 import { defineComponent } from 'vue';
-import { VCToastProvider, VCToaster } from '@vuecs/overlays';
 import { createColorMode } from './color-mode';
 import { injectPayload } from './di';
 
 export default defineComponent({
-    components: {
-        AAuthGadgets,
-        VCToastProvider,
-        VCToaster,
-    },
+    components: { AAuthApp },
     setup() {
         const payload = injectPayload();
 
@@ -28,20 +23,14 @@ export default defineComponent({
 </script>
 <template>
     <!--
-        Wrap the app root in <VCToastProvider> so any descendant <VCToaster>
-        (or component that renders Reka toast primitives) has the required
-        ToastProviderContext injection — matching client-web's auth layout.
-        The <VCToaster> viewport renders the queue fed by useToast() (e.g.
-        the authorize page surfacing login failures).
-
-        The gadget cluster mirrors client-web's auth layout: the two controls
-        a visitor on any auth page still needs — color mode and language.
+        <AAuthApp> is the shared logged-out shell (mirrored by client-web's
+        auth layout): the <VCToastProvider> root every descendant
+        <VCToaster>/toast primitive needs, the gadget cluster (color mode +
+        language) and the toaster viewport fed by useToast() (e.g. the
+        authorize page surfacing login failures). Color-mode storage stays
+        app-specific (payload-seeded cookie ref), hence the v-model:dark.
     -->
-    <VCToastProvider>
-        <AAuthGadgets v-model:dark="isDark" />
-
+    <AAuthApp v-model:dark="isDark">
         <RouterView />
-
-        <VCToaster position="top-center" />
-    </VCToastProvider>
+    </AAuthApp>
 </template>
