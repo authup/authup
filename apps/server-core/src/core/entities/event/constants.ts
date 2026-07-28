@@ -11,3 +11,11 @@
  * EVENT_LOG_RETENTION_DAYS, 0 = keep forever).
  */
 export const EVENT_LOG_RETENTION_DAYS_DEFAULT = 90;
+
+/**
+ * Column bound for the denormalized actor name. Shared by the write boundary
+ * (EventService.record truncates to it) and every reader that matches stored
+ * rows by actor name (the login throttle) so the two cannot drift — an
+ * untruncated lookup key never matches its own truncated rows.
+ */
+export const EVENT_ACTOR_NAME_MAX_LENGTH = 128;

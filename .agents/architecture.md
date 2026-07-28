@@ -2994,7 +2994,12 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   identifier alone: account-lockout-DoS mitigation; no derivable IP → fail
   open) — and throws `LoginThrottledError` (HTTP **429**,
   `login_attempt_throttled`, `data.retryAfter`) before `authenticate` in the
-  HTTP password grant. Config `loginAttemptThrottleEnabled/Threshold/Window`;
+  HTTP password grant. The identifier half of the key is truncated to
+  `EVENT_ACTOR_NAME_MAX_LENGTH` — the same bound `EventService.record` applies
+  to the persisted `actorName`. A reader that matches stored rows by actor name
+  must normalize exactly like the writer, or an over-long identifier never
+  matches its own rows and the throttle silently fails open for it. Config
+  `loginAttemptThrottleEnabled/Threshold/Window`;
   enabling it with `eventLogEnabled=false` **fails loud at config time**. Basic
   auth is deliberately NOT throttled (recording/widening is a later call).
 - **Metrics (plan 058 Part 2):** `IAuthFlowMetrics` port (`core/metrics/`,

@@ -7,6 +7,9 @@
 
 import { EventName } from '@authup/core-kit';
 import { LoginThrottledError } from '@authup/errors';
+// direct file import — the entities barrel reaches every entity service, and a
+// value import of it from here would pull that graph in at module init.
+import { EVENT_ACTOR_NAME_MAX_LENGTH } from '../../entities/event/constants.ts';
 import type { IEventRepository } from '../../entities/index.ts';
 import type { ILoginThrottleService, LoginThrottleServiceContext, LoginThrottleServiceOptions } from './types.ts';
 
@@ -47,7 +50,10 @@ export class LoginThrottleService implements ILoginThrottleService {
 
         const count = await this.repository.countRecent({
             name: EventName.LOGIN_FAILED,
-            actorName: ctx.identifier,
+            // the loginFailed rows are persisted with the actor name truncated
+            // to the column bound — an untruncated key would never match its
+            // own rows, silently failing open for over-long identifiers.
+            actorName: ctx.identifier.slice(0, EVENT_ACTOR_NAME_MAX_LENGTH),
             requestIpAddress: ctx.ipAddress,
             realmId: ctx.realmId,
             since: new Date(Date.now() - (windowSeconds * 1_000)).toISOString(),

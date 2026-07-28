@@ -18,7 +18,7 @@ import type { Event } from '@authup/core-kit';
 import { EntityNotFoundError } from '@authup/errors';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { ActorContext, EntityRepositoryFindManyResult, Logger } from '@authup/server-kit';
-import { EVENT_LOG_RETENTION_DAYS_DEFAULT } from './constants.ts';
+import { EVENT_ACTOR_NAME_MAX_LENGTH, EVENT_LOG_RETENTION_DAYS_DEFAULT } from './constants.ts';
 import { sanitizeEventData } from './sanitize.ts';
 import type {
     EventReadVisibility,
@@ -143,7 +143,7 @@ export class EventService extends AbstractEntityService implements IEventService
                 clientId: input.clientId ?? null,
                 actorType: input.actorType ?? null,
                 actorId: input.actorId ?? null,
-                actorName: truncate(input.actorName, 128),
+                actorName: truncate(input.actorName, EVENT_ACTOR_NAME_MAX_LENGTH),
                 requestPath: truncate(input.requestPath, 256),
                 requestMethod: truncate(input.requestMethod, 10),
                 requestIpAddress: truncate(input.requestIpAddress, 45),
