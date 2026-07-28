@@ -188,12 +188,34 @@ describe('src/config/*.ts', () => {
             await expect(parseConfig({ trustProxy: [''] })).rejects.toThrow();
         });
 
+        it('should canonicalize allowlist entries like the scalar form', async () => {
+            // the validator compares the canonicalized entry, so an untrimmed /
+            // uppercased entry passes it — proxy-addr would then reject the raw
+            // value inside `new App` (presets are matched case-sensitively).
+            expect((await normalizeConfig({ trustProxy: [' 10.0.0.0/8 ', 'LOOPBACK'] })).trustProxy)
+                .toEqual(['10.0.0.0/8', 'loopback']);
+        });
+
+        it('should reject an out-of-range hop count on every surface', async () => {
+            // the number surface is safe-integer bounded by the validator;
+            // canonicalization runs after it, so the string surface must not
+            // smuggle a saturated parseInt result past that bound.
+            await expect(parseConfig({ trustProxy: 2 ** 53 })).rejects.toThrow();
+            await expect(normalizeConfig({ trustProxy: '99999999999999999999' }))
+                .rejects.toThrow(/safe integer range/);
+        });
+
         it('should read TRUST_PROXY from the environment as the raw string form', () => {
+            const previous = process.env.TRUST_PROXY;
             process.env.TRUST_PROXY = '1';
             try {
                 expect(readConfigRawFromEnv().trustProxy).toEqual('1');
             } finally {
-                delete process.env.TRUST_PROXY;
+                if (typeof previous === 'undefined') {
+                    delete process.env.TRUST_PROXY;
+                } else {
+                    process.env.TRUST_PROXY = previous;
+                }
             }
         });
 

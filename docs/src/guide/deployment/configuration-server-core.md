@@ -79,7 +79,9 @@ export default {
      * proxy) when the listener is reachable without a proxy or exact
      * attribution matters. String forms are canonicalized: "1" means
      * one trusted hop (never trust-all), "true"/"false" parse as
-     * booleans, anything else is a comma-separated allowlist.
+     * booleans, anything else is a comma-separated allowlist. Allowlist
+     * entries are trimmed and lowercased, so " LOOPBACK " is accepted;
+     * a hop count outside the safe integer range is rejected at boot.
      * default: true
      */
     trustProxy: 1,

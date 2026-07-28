@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { AuthupError } from '@authup/errors';
+
 const BOOLEAN_TRUE_WORDS = new Set(['true', 't', 'yes', 'y', 'on']);
 const BOOLEAN_FALSE_WORDS = new Set(['false', 'f', 'no', 'n', 'off']);
 
@@ -24,7 +26,17 @@ const INTEGER = /^\d+$/;
 export function canonicalizeTrustProxy(raw: string): boolean | number | string {
     const normalized = raw.trim();
     if (INTEGER.test(normalized)) {
-        return Number.parseInt(normalized, 10);
+        const hops = Number.parseInt(normalized, 10);
+        // The typed surface rejects an out-of-range hop count (zod's int() is
+        // safe-integer bounded), so the string surface must not smuggle one
+        // past it — canonicalization runs AFTER validation, and parseInt
+        // saturates a huge digit string into an unsafe integer / Infinity,
+        // which routup reads as "trust every hop".
+        if (!Number.isSafeInteger(hops)) {
+            throw new AuthupError(`The trustProxy hop count "${normalized}" exceeds the safe integer range.`);
+        }
+
+        return hops;
     }
 
     const lowered = normalized.toLowerCase();
@@ -45,9 +57,20 @@ export function canonicalizeTrustProxy(raw: string): boolean | number | string {
  * allowlist entry.
  */
 export function isValidTrustProxyListEntry(value: string): boolean {
-    const normalized = value.trim().toLowerCase();
+    const normalized = canonicalizeTrustProxyListEntry(value);
     return normalized.length > 0 &&
         !INTEGER.test(normalized) &&
         !BOOLEAN_TRUE_WORDS.has(normalized) &&
         !BOOLEAN_FALSE_WORDS.has(normalized);
+}
+
+/**
+ * The allowlist form needs the same trim + lowercase the scalar form gets:
+ * proxy-addr trims a comma-separated scalar string itself and matches its
+ * presets case-sensitively, so without this an array entry that PASSES
+ * validation (which compares the canonicalized value) — ` 10.0.0.0/8 ` or
+ * `LOOPBACK` — would still throw `invalid IP address` inside `new App`.
+ */
+export function canonicalizeTrustProxyListEntry(value: string): string {
+    return value.trim().toLowerCase();
 }
