@@ -95,6 +95,25 @@ export type Config = {
     certificateSource: CertificateSource,
 
     /**
+     * Which upstream proxies to trust when deriving the client IP from
+     * `X-Forwarded-For` (routup's `TrustProxyInput` minus the function
+     * form): `true` trusts every hop, `false` trusts none (the socket
+     * peer address is used), a number trusts that many hops, and a
+     * string / string[] is a proxy-addr allowlist (IPs, CIDRs, or the
+     * presets `loopback`, `linklocal`, `uniquelocal`; a comma-separated
+     * string splits into a list).
+     *
+     * SECURITY: with `true`, any DIRECT client can spoof its IP via the
+     * `X-Forwarded-For` header — login-throttle keys, audit-event rows,
+     * and the session inventory all record the forged value. Pin the
+     * actual proxy (`1`, `loopback`, or its address/CIDR) when the
+     * listener is reachable without a proxy or exact attribution
+     * matters.
+     * default: true
+     */
+    trustProxy: boolean | number | string | string[],
+
+    /**
      * Trusted first-party app origins (besides publicUrl) — used as
      * redirect targets for the per-realm public `web` client. Does NOT
      * drive CORS (the API reflects any origin by default; an explicit

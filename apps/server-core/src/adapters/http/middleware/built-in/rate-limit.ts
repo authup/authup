@@ -8,11 +8,16 @@
 import type { OptionsInput } from '@routup/rate-limit';
 import { rateLimit } from '@routup/rate-limit';
 import type { App } from 'routup';
+import { getRequestIP } from 'routup';
 import { merge } from 'smob';
 import { useRequestIdentity } from '../../request/index.ts';
 
 export function registerRateLimitMiddleware(router: App, input?: OptionsInput) {
     let options : OptionsInput = {
+        // @routup/rate-limit's default keyGenerator hardcodes
+        // `{ trustProxy: true }`; deriving the key here instead lets it
+        // follow the app-level trust contract (config `trustProxy`).
+        keyGenerator: (event) => getRequestIP(event) || '127.0.0.1',
         max(event) {
             const identity = useRequestIdentity(event);
             if (!identity) {

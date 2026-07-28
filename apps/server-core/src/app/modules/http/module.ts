@@ -6,6 +6,7 @@
  */
 
 import { Client } from '@authup/core-http-kit';
+import { AuthupError } from '@authup/errors';
 import { App } from 'routup';
 import { serve } from 'routup/node';
 import { ConfigInjectionKey } from '../config/index.ts';
@@ -49,7 +50,20 @@ export class HTTPModule implements IModule {
 
         logger.debug('Starting http server...');
 
-        const router = new App();
+        // Every request helper deriving proxy-dependent request facts
+        // (getRequestIP, hostname, protocol) resolves the trust contract from
+        // the app options — call sites must NOT pass their own `trustProxy`.
+        let router : App;
+        try {
+            router = new App({ options: { trustProxy: config.trustProxy } });
+        } catch (e) {
+            // proxy-addr compiles the allowlist form inside the App
+            // constructor; its error ("invalid IP address: …") does not name
+            // the offending config key — attribute it.
+            throw new AuthupError(
+                `Invalid trustProxy (TRUST_PROXY) configuration: ${e instanceof Error ? e.message : String(e)}`,
+            );
+        }
 
         this.registerUIHttpClient(container);
         this.registerMetrics(container);

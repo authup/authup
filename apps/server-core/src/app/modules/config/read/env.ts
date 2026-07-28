@@ -111,6 +111,13 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.certificateSource = certificateSource as ConfigInput['certificateSource'];
     }
 
+    // canonicalized again in normalizeConfig for every config surface; the
+    // env read keeps the raw string, the shared canonicalizer decides.
+    const trustProxy = read(ConfigEnvironmentVariableName.TRUST_PROXY);
+    if (typeof trustProxy === 'string' && trustProxy.trim().length > 0) {
+        options.trustProxy = trustProxy;
+    }
+
     const trustedOrigins = readArray(ConfigEnvironmentVariableName.TRUSTED_ORIGINS);
     if (trustedOrigins && trustedOrigins.length > 0) {
         options.trustedOrigins = trustedOrigins;

@@ -57,7 +57,7 @@ export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implement
 
         return this.runWith(client, {
             confirmation,
-            ipAddress: getRequestIP(event, { trustProxy: true }) ?? undefined,
+            ipAddress: getRequestIP(event) ?? undefined,
             userAgent: getRequestHeader(event, 'user-agent') ?? undefined,
         });
     }
