@@ -52,7 +52,7 @@ smtp.replyTo=contact@example.com
 smtp.replyToDisplayName=Authup
 ```
 
-```.dotenv [.env]
+```dotenv [.env]
 SMTP=smtp(s)://username:password@smtp.example.com
 ```
 :::
