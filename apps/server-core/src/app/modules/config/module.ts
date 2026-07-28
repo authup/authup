@@ -9,24 +9,9 @@ import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import { ConfigInjectionKey } from './constants.ts';
 import type { IContainer } from 'eldin';
-import { normalizeConfig } from './normalize.ts';
+import { readConfig } from './helpers.ts';
 import type { ConfigRawReadOptions } from './read/index.ts';
-import { readConfigRaw } from './read/index.ts';
 import type { Config, ConfigFactory } from './types.ts';
-
-/**
- * Read config from env (and optionally fs) and normalize it.
- *
- * @param options
- */
-export async function readConfig(options: ConfigRawReadOptions = {}) : Promise<Config> {
-    const raw = await readConfigRaw({
-        env: true,
-        ...options,
-    });
-
-    return normalizeConfig(raw);
-}
 
 export class ConfigModule implements IModule {
     readonly name: string;

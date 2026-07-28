@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { API_URL_DEFAULT, isObject } from '@authup/kit';
+import { isObject } from '@authup/kit';
 import { Container } from 'confinity';
 import {
     CLIENT_WEB_PORT_DEFAULT,
@@ -111,9 +111,12 @@ export function buildClientWebEnv(config: LauncherConfig) : Record<string, strin
         HOST: config.clientWeb.host ?? LISTEN_HOST_DEFAULT,
     };
 
-    env.NUXT_PUBLIC_API_URL = config.clientWeb.apiUrl ??
-        config.serverCore.publicUrl ??
-        API_URL_DEFAULT;
+    // Only override what the config actually names — with neither key set the
+    // web application applies its own default.
+    const apiUrl = config.clientWeb.apiUrl ?? config.serverCore.publicUrl;
+    if (apiUrl) {
+        env.NUXT_PUBLIC_API_URL = apiUrl;
+    }
 
     if (config.clientWeb.cookieDomain) {
         env.NUXT_PUBLIC_COOKIE_DOMAIN = config.clientWeb.cookieDomain;

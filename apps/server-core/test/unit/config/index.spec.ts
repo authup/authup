@@ -15,7 +15,7 @@ import {
     expect, 
     it,
 } from 'vitest';
-import { readConfig } from '../../../src/app/modules/config/module';
+import { readConfig } from '../../../src/app/modules/config/helpers';
 import { normalizeConfig } from '../../../src/app/modules/config/normalize';
 import { expandToOrigins, getAppOrigins } from '../../../src/app/modules/config/origins';
 import { parseConfig } from '../../../src/app/modules/config/parse';

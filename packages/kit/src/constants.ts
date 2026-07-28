@@ -26,12 +26,6 @@ export enum EnvironmentName {
     DEVELOPMENT = 'development',
 }
 
-/**
- * Default public base URL of the authup server
- * (server-core listens on port 3001 by default).
- */
-export const API_URL_DEFAULT = 'http://localhost:3001';
-
 export enum ValidatorGroup {
     CREATE = 'create',
     UPDATE = 'update',

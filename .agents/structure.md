@@ -71,9 +71,9 @@ Apps:
   server-core       → access, i18n, kit, core-kit, core-http-kit, errors, server-kit, specs (+ ilingo runtime dep)
                       (embedded consent UI under ui/ uses client-web-kit, kit, core-kit, core-http-kit — build-time only)
   client-web        → client-web-kit, kit, core-kit, core-http-kit, client-web-nuxt
-  authup (CLI)      → client-web, kit, server-core
+  authup (CLI)      → client-web, errors, kit, server-core
                       (a process supervisor: it spawns each app's own bin, so client-web/server-core
-                       are resolved as packages to launch, not imported; kit supplies API_URL_DEFAULT)
+                       are resolved as packages to launch, not imported)
 ```
 
 ## Separation of Concerns
@@ -119,10 +119,13 @@ both sides are thin callers:
   load-bearing (see the plugin-order trap below); only the values are shared.
 
 The default backend URL is one exported constant, `API_URL_DEFAULT`
-(`@authup/kit`, `http://localhost:3001`) — consumed by client-web's
-`nuxt.config.ts`, the `client-web-nuxt` fallback (which had drifted to a
-nonexistent `:3010`) and the `authup` launcher's `NUXT_PUBLIC_API_URL`
-derivation.
+(`@authup/core-http-kit`, `http://localhost:3001`) — it belongs to the HTTP
+client whose `baseURL` it fills, not to `@authup/kit` (which stays free of
+service context). Consumed by client-web's `nuxt.config.ts` and the
+`client-web-nuxt` fallback (which had drifted to a nonexistent `:3010`). The
+`authup` launcher deliberately does NOT carry a fallback: it sets
+`NUXT_PUBLIC_API_URL` only when the config file names one, leaving the
+application's own default in charge.
 
 ### Page placement — top-level pages vs detail tabs (client-web)
 

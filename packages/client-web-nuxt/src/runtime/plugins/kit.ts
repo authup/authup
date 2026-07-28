@@ -6,7 +6,7 @@
  */
 
 import { type CookieOptions, install } from '@authup/client-web-kit';
-import { API_URL_DEFAULT } from '@authup/kit';
+import { API_URL_DEFAULT } from '@authup/core-http-kit';
 import type { RuntimeConfig } from 'nuxt/schema';
 import { getPathValue } from 'pathtrace';
 import type { Pinia } from 'pinia';

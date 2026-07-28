@@ -7,7 +7,6 @@
 
 import type { Component } from '../../../components/index.ts';
 import {
-    createDatabaseUniqueEntriesComponent,
     createEventCleanerComponent,
     createOAuth2CleanerComponent,
 } from '../../../components/index.ts';
@@ -38,7 +37,6 @@ export class ComponentsModule implements IModule {
 
         const components: Component[] = [
             createOAuth2CleanerComponent(dataSource, logger),
-            createDatabaseUniqueEntriesComponent(dataSource),
         ];
 
         // The sweep only exists when rows are written AND at least one row

@@ -15,7 +15,6 @@ import {
     expect, 
     it,
 } from 'vitest';
-import { API_URL_DEFAULT } from '@authup/kit';
 import {
     CLIENT_WEB_PORT_DEFAULT,
     LISTEN_HOST_DEFAULT,
@@ -145,10 +144,10 @@ describe('src/config', () => {
         expect(env.NUXT_PUBLIC_API_URL).toEqual('https://api.example.com');
     });
 
-    it('should fall back to the default api url', () => {
+    it('should leave the api url to the application when no section names one', () => {
         const env = buildClientWebEnv(buildLauncherConfig());
 
-        expect(env.NUXT_PUBLIC_API_URL).toEqual(API_URL_DEFAULT);
+        expect(env.NUXT_PUBLIC_API_URL).toBeUndefined();
         expect(env.NUXT_PUBLIC_COOKIE_DOMAIN).toBeUndefined();
     });
 });
