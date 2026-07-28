@@ -15,6 +15,7 @@ import {
     it,
 } from 'vitest';
 import { LoginThrottleService } from '../../../../../src/core/authentication/login-throttle/service.ts';
+import { EVENT_ACTOR_NAME_MAX_LENGTH } from '../../../../../src/core/entities/event/constants.ts';
 import type { LoginThrottleServiceOptions } from '../../../../../src/core/index.ts';
 import { FakeEventRepository } from '../../entities/event/fake-repository.ts';
 
@@ -131,6 +132,17 @@ describe('LoginThrottleService', () => {
             identifier: IDENTIFIER,
             ipAddress: IP,
             realmId: otherRealmId,
+        })).rejects.toSatisfy((e) => isLoginThrottledError(e));
+    });
+
+    it('matches rows of an over-long identifier truncated at the write boundary', async () => {
+        const identifier = 'a'.repeat(EVENT_ACTOR_NAME_MAX_LENGTH + 32);
+        seedFailures(THRESHOLD, { identifier: identifier.slice(0, EVENT_ACTOR_NAME_MAX_LENGTH) });
+
+        await expect(buildService().assertNotThrottled({
+            identifier,
+            ipAddress: IP,
+            realmId,
         })).rejects.toSatisfy((e) => isLoginThrottledError(e));
     });
 
