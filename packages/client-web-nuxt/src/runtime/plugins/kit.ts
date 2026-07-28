@@ -6,6 +6,7 @@
  */
 
 import { type CookieOptions, install } from '@authup/client-web-kit';
+import { API_URL_DEFAULT } from '@authup/kit';
 import type { RuntimeConfig } from 'nuxt/schema';
 import { getPathValue } from 'pathtrace';
 import type { Pinia } from 'pinia';
@@ -75,7 +76,7 @@ function buildApiUrl(runtimeConfig: RuntimeConfig) : string {
         }
     }
 
-    return url || 'http://localhost:3010';
+    return url || API_URL_DEFAULT;
 }
 
 export default defineNuxtPlugin({
