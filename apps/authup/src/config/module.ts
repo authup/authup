@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { API_URL_DEFAULT } from '@authup/kit';
+import { API_URL_DEFAULT, isObject } from '@authup/kit';
 import { Container } from 'confinity';
 import {
     CLIENT_WEB_PORT_DEFAULT,
@@ -20,12 +20,8 @@ import type {
 } from './types';
 
 function toRecord(input: unknown) : Record<string, unknown> {
-    if (
-        typeof input === 'object' &&
-        input !== null &&
-        !Array.isArray(input)
-    ) {
-        return input as Record<string, unknown>;
+    if (isObject(input)) {
+        return input;
     }
 
     return {};
