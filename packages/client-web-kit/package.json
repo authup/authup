@@ -63,16 +63,20 @@
         "@authup/i18n": "^1.0.0-beta.56",
         "@authup/kit": "^1.0.0-beta.56",
         "@authup/specs": "^1.0.0-beta.56",
+        "@iconify-json/fa6-brands": "^1.2.0",
+        "@iconify-json/fa6-solid": "^1.2.0",
         "@ilingo/validup": "^1.0.1",
         "@posva/event-emitter": "^1.0.3",
         "@rapiq/core": "^2.0.0-beta.13",
         "@simplewebauthn/browser": "^13.3.0",
         "@validup/zod": "^0.3.3",
+        "@vuecs/icons-font-awesome": "^1.2.1",
         "@vueuse/integrations": "^14.3.0",
         "smob": "^1.6.1",
         "universal-cookie": "^8.1.2"
     },
     "devDependencies": {
+        "@iconify/vue": "^5.0.0",
         "@ilingo/validup-vue": "^1.0.1",
         "@ilingo/vue": "^6.0.0",
         "@types/node": "^26.1.2",
@@ -100,6 +104,7 @@
         "vue-tsc": "^3.3.8"
     },
     "peerDependencies": {
+        "@iconify/vue": "^5.0.0",
         "@ilingo/validup-vue": "^1.0.1",
         "@ilingo/vue": "^6.0.0",
         "@validup/vue": "^0.3.3",

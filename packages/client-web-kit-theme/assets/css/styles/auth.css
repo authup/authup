@@ -8,6 +8,9 @@
 /*
  * Shared logged-out auth chrome from @authup/client-web-kit:
  *
+ *   - <AAuthApp>      — app-root shell (toast provider + gadgets +
+ *                       toaster) around a full-bleed canvas so page
+ *                       backdrops reach the viewport edges.
  *   - <AAuthShell>    — full-viewport aurora backdrop + centered card
  *                       used by every auth workflow page (login,
  *                       register, activate, password-forgot/-reset,
@@ -23,6 +26,12 @@
  * property with a plain Tailwind utility on the element.
  */
 @layer components {
+    .a-auth-app {
+        position: relative;
+        min-height: 100vh;
+        width: 100%;
+    }
+
     .a-auth-shell {
         position: relative;
         min-height: 100vh;

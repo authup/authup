@@ -6,9 +6,10 @@
  */
 
 import {
-    buildSubmitButtonDefaults,
+    buildVuecsInstallOptions,
     injectStore,
     install,
+    registerIconCollections,
     syncTranslatorLocaleFromManager,
 } from '@authup/client-web-kit';
 import type { IClient } from '@authup/core-http-kit';
@@ -23,14 +24,10 @@ import vuecs from '@vuecs/core';
 import { installLocale } from '@vuecs/locale';
 import clientWebKitTheme from '@authup/client-web-kit-theme';
 import clientWebTheme from '@authup/client-web-theme';
-import fontAwesome from '@vuecs/icons-font-awesome';
 import installForms from '@vuecs/forms';
 import installIcon from '@vuecs/icon';
 import installOverlays from '@vuecs/overlays';
 import installPagination from '@vuecs/pagination';
-import { addCollection } from '@iconify/vue';
-import faBrands from '@iconify-json/fa6-brands/icons.json';
-import faSolid from '@iconify-json/fa6-solid/icons.json';
 
 import './tailwind.css';
 
@@ -46,8 +43,7 @@ import { createCookieRef } from './cookie';
 import { providePayload } from './di';
 import type { HydrationPayload } from './types';
 
-addCollection(faSolid);
-addCollection(faBrands);
+registerIconCollections();
 
 export type CreateAppOptions = {
     httpClient?: IClient
@@ -163,30 +159,23 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
     // which updates the cookie-backed source above, so no reverse bridge.
     syncTranslatorLocaleFromManager(app);
 
-    // `buildSubmitButtonDefaults()` calls `useTranslation` → `injectIlingo`,
-    // which reads the ilingo instance via `inject()`. Outside a component
-    // setup there is no active injection context, so it must run inside
-    // `app.runWithContext()` to see the app-level provide that
-    // `installTranslator` (via `install` above) registered. apps/client-web
-    // gets this for free because Nuxt runs plugin `setup()` within an
-    // injection context.
-    const submitButton = app.runWithContext(() => buildSubmitButtonDefaults());
-
-    // Install vuecs BEFORE the per-package plugins (forms/icon/pagination)
-    // so the theme manager carries authup's themes before they run.
-    app.use(vuecs, {
+    // `buildVuecsInstallOptions()` (shared with apps/client-web's vuecs
+    // plugin: icon preset + translator-wired submit-button defaults) calls
+    // `useTranslation` → `injectIlingo`, which reads the ilingo instance
+    // via `inject()`. Outside a component setup there is no active
+    // injection context, so it must run inside `app.runWithContext()` to
+    // see the app-level provide that `installTranslator` (via `install`
+    // above) registered. apps/client-web gets this for free because Nuxt
+    // runs plugin `setup()` within an injection context.
+    const vuecsOptions = app.runWithContext(() => buildVuecsInstallOptions({
         // Register both themes side-by-side (mirrors the Nuxt plugin).
         // Kit theme first, app theme layers on top.
         themes: [clientWebKitTheme(), clientWebTheme()],
-        icons: [fontAwesome()],
-        defaults: {
-            // Wire authup's translator + icon choices into vuecs's
-            // DefaultsManager so `useSubmitButton()` resolves to
-            // locale-reactive labels with no per-call work.
-            // Mirrors the Nuxt plugin in apps/client-web/plugins/vuecs.ts.
-            submitButton,
-        },
-    });
+    }));
+
+    // Install vuecs BEFORE the per-package plugins (forms/icon/pagination)
+    // so the theme manager carries authup's themes before they run.
+    app.use(vuecs, vuecsOptions);
     app.use(installForms);
     app.use(installIcon);
     // Provides the app-level ToastManager + AlertDialogManager that

@@ -14,6 +14,7 @@ export * from './toggle-button';
 export * from './ALanguageSwitcherDropdown';
 
 export { AFormSubmit } from './AFormSubmit';
+export { default as AAuthApp } from './AAuthApp.vue';
 export { default as AAuthShell } from './AAuthShell.vue';
 export { default as AAuthBackLink } from './AAuthBackLink.vue';
 export { default as AAuthGadgets } from './AAuthGadgets.vue';

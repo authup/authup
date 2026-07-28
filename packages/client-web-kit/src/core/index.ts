@@ -20,3 +20,4 @@ export * from './store';
 export * from './slot';
 export * from './translator';
 export * from './validup';
+export * from './vuecs';
