@@ -16,6 +16,7 @@ export const TranslatorTranslationFieldSpanish : NamespaceTranslations<`${Transl
     [TranslatorTranslationFieldKey.DESCRIPTION]: 'Descripción',
     [TranslatorTranslationFieldKey.SECRET]: 'Secreto',
     [TranslatorTranslationFieldKey.REDIRECT_URIS]: 'URI(s) de redirección',
+    [TranslatorTranslationFieldKey.GRANT_TYPES]: 'Tipos de concesión',
     [TranslatorTranslationFieldKey.PASSWORD]: 'Contraseña',
     [TranslatorTranslationFieldKey.DECISION_STRATEGY]: 'Estrategia de decisión',
     [TranslatorTranslationFieldKey.HASHED]: 'Con hash',

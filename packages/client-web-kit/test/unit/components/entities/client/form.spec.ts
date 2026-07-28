@@ -123,6 +123,16 @@ function mountForm(entity: Client) {
                     props: ['modelValue', 'options'],
                     template: '<select />',
                 },
+                VCFormCheckboxGroup: {
+                    name: 'VCFormCheckboxGroup',
+                    props: ['modelValue'],
+                    template: '<div class="checkbox-group-stub"><slot /></div>',
+                },
+                VCFormCheckbox: {
+                    name: 'VCFormCheckbox',
+                    props: ['value', 'label', 'labelContent'],
+                    template: '<input type="checkbox" />',
+                },
             },
             plugins: [
                 pinia,
@@ -186,5 +196,91 @@ describe('AClientForm access policy', () => {
         const request = findUpdateRequest(httpClient);
         expect(request).toBeDefined();
         expect(request!.body).toHaveProperty('accessPolicyId', null);
+    });
+});
+
+describe('AClientForm grant types', () => {
+    const findGroup = (wrapper: ReturnType<typeof mountForm>['wrapper']) => wrapper
+        .findComponent({ name: 'VCFormCheckboxGroup' });
+
+    it('offers every supported grant type as an option', async () => {
+        const { wrapper } = mountForm(createEntity());
+        await flushPromises();
+
+        const values = wrapper
+            .findAllComponents({ name: 'VCFormCheckbox' })
+            .map((checkbox) => checkbox.props('value'));
+
+        expect(values).toEqual([
+            'authorization_code',
+            'client_credentials',
+            'password',
+            'refresh_token',
+        ]);
+    });
+
+    it('hydrates the selection from the delimited column', async () => {
+        const entity = createEntity();
+        entity.grantTypes = 'authorization_code refresh_token';
+
+        const { wrapper } = mountForm(entity);
+        await flushPromises();
+
+        expect(findGroup(wrapper).props('modelValue')).toEqual([
+            'authorization_code',
+            'refresh_token',
+        ]);
+    });
+
+    it('keeps an unknown grant type as a checked option instead of stripping it', async () => {
+        const entity = createEntity();
+        entity.grantTypes = 'authorization_code,urn:ietf:params:oauth:grant-type:device_code';
+
+        const { wrapper } = mountForm(entity);
+        await flushPromises();
+
+        expect(findGroup(wrapper).props('modelValue')).toContain(
+            'urn:ietf:params:oauth:grant-type:device_code',
+        );
+        expect(
+            wrapper
+                .findAllComponents({ name: 'VCFormCheckbox' })
+                .map((checkbox) => checkbox.props('value')),
+        ).toContain('urn:ietf:params:oauth:grant-type:device_code');
+    });
+
+    it('submits the selection as a space-delimited allowlist', async () => {
+        const { wrapper, httpClient } = mountForm(createEntity());
+        await flushPromises();
+
+        findGroup(wrapper).vm.$emit('update:modelValue', ['authorization_code', 'refresh_token']);
+        await flushPromises();
+
+        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await flushPromises();
+
+        const request = findUpdateRequest(httpClient);
+        expect(request).toBeDefined();
+        expect(request!.body).toMatchObject({ grantTypes: 'authorization_code refresh_token' });
+    });
+
+    // An empty column means allow-all server-side, so clearing the selection
+    // must send null — an empty string would also fail the validator's min(3).
+    it('submits null when the selection is cleared', async () => {
+        const entity = createEntity();
+        entity.grantTypes = 'authorization_code';
+
+        const { wrapper, httpClient } = mountForm(entity);
+        await flushPromises();
+
+        findGroup(wrapper).vm.$emit('update:modelValue', []);
+        await flushPromises();
+
+        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await flushPromises();
+
+        const request = findUpdateRequest(httpClient);
+        expect(request).toBeDefined();
+        expect(request!.body).toHaveProperty('grantTypes', null);
     });
 });

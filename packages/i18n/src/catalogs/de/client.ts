@@ -12,6 +12,7 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.NAME_HINT]: 'Etwas, das Benutzer erkennen und dem sie vertrauen',
     [TranslatorTranslationClientKey.DESCRIPTION_HINT]: 'Wird allen Benutzern dieser Anwendung angezeigt',
     [TranslatorTranslationClientKey.REDIRECT_URI_HINT]: 'URI-Muster, zu dem ein Browser nach einem erfolgreichen Login weiterleiten kann',
+    [TranslatorTranslationClientKey.GRANT_TYPES_HINT]: 'Schränkt ein, welche OAuth2-Grants dieser Client verwenden darf. Ohne Auswahl sind alle Grants erlaubt.',
     [TranslatorTranslationClientKey.AUTH_METHOD]: 'Authentifizierungsmethode',
     [TranslatorTranslationClientKey.AUTH_METHOD_NONE]: 'Keine',
     [TranslatorTranslationClientKey.AUTH_METHOD_SECRET]: 'Gemeinsames Geheimnis',
