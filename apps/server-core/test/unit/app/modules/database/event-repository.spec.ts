@@ -19,6 +19,14 @@ import { EventEntity } from '../../../../../src/adapters/database/domains/index.
 import { EventRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/index.ts';
 import { createTestDatabaseApplication } from '../../../../app';
 
+// Force a non-UTC host timezone for THIS worker: the defect this spec pins
+// (a bound Date serialized in host-local time against the DB-clock-stamped
+// created_at) is invisible on a UTC host — and CI runs UTC. Etc/GMT-2 is
+// UTC+2 (POSIX inverted sign), reproducing the positive-offset failure mode
+// (window start lands in the future → count 0 → throttle never trips).
+// Set before the suite connects so the mysql2/pg drivers serialize under it.
+process.env.TZ = 'Etc/GMT-2';
+
 const IP = '203.0.113.7';
 
 describe('app/modules/database/repositories/event', () => {
