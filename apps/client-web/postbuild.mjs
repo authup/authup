@@ -31,6 +31,13 @@ if (!content.startsWith('#!')) {
 // drops symlinks, so the published tarball would miss those packages and
 // bare imports would resolve against whatever (wrong) version the
 // consumer's tree provides. Replace every symlink with a real copy.
+//
+// Node realpath-resolves symlinks, so a materialized package is no longer
+// the SAME module instance as its store entry. That is safe for what the
+// store actually holds today (hookable, perfect-debounce, @vue/devtools-*
+// — none of them singleton-sensitive); vue and pinia are resolved from the
+// top level and never enter the store. Re-check this if the store ever
+// grows a package whose identity matters.
 // ------------------------------------------------------------------
 
 const serverModulesPath = path.join(__dirname, '.output', 'server', 'node_modules');
@@ -69,4 +76,8 @@ if (fs.existsSync(serverModulesPath)) {
     if (remaining.length > 0) {
         throw new Error(`Failed to materialize symlinks in ${serverModulesPath}: ${remaining.join(', ')}`);
     }
+
+    // Every store entry has been copied to its resolvable name by now, so the
+    // store itself is dead weight in the tarball.
+    fs.rmSync(path.join(serverModulesPath, '.nitro'), { recursive: true, force: true });
 }

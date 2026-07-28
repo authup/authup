@@ -61,6 +61,22 @@ export async function superviseProcesses(specs: SupervisedChildSpec[]) : Promise
         scheduleForceKill();
     };
 
+    const onSignal = (signal: NodeJS.Signals) => {
+        shutdownSignal = signal;
+
+        for (const child of aliveChildren()) {
+            child.handle.kill(signal);
+        }
+
+        scheduleForceKill();
+    };
+
+    // Registered before the first spawn: a signal landing mid-loop would
+    // otherwise hit node's default handler and orphan the children already
+    // started.
+    process.on('SIGINT', onSignal);
+    process.on('SIGTERM', onSignal);
+
     const exitPromises : Promise<void>[] = [];
 
     for (const spec of specs) {
@@ -123,19 +139,6 @@ export async function superviseProcesses(specs: SupervisedChildSpec[]) : Promise
         }));
     }
 
-    const onSignal = (signal: NodeJS.Signals) => {
-        shutdownSignal = signal;
-
-        for (const child of aliveChildren()) {
-            child.handle.kill(signal);
-        }
-
-        scheduleForceKill();
-    };
-
-    process.on('SIGINT', onSignal);
-    process.on('SIGTERM', onSignal);
-
     try {
         await Promise.all(exitPromises);
     } finally {
@@ -147,7 +150,10 @@ export async function superviseProcesses(specs: SupervisedChildSpec[]) : Promise
         }
     }
 
-    if (shutdownSignal) {
+    // An operator-initiated shutdown (SIGINT/SIGTERM) is a success, even though
+    // the children were killed — EXCEPT when a child had already failed on its
+    // own before the signal arrived, which must stay visible.
+    if (shutdownSignal && !terminating) {
         return 0;
     }
 

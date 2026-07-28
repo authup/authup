@@ -6,6 +6,7 @@
  */
 
 import { defineCommand } from 'citty';
+import consola from 'consola';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -23,6 +24,7 @@ import {
     resolveLaunchPlan,
     resolvePackageEntrypoint,
 } from './packages';
+import type { LaunchPlan } from './packages';
 import { superviseProcesses } from './supervisor';
 import type { SupervisedChildSpec } from './supervisor';
 
@@ -31,7 +33,11 @@ export async function createCLIEntryPointCommand() {
         path.join(PACKAGE_DIRECTORY, 'package.json'),
         { encoding: 'utf8' },
     );
-    const pkg = JSON.parse(pkgRaw);
+    const pkg = JSON.parse(pkgRaw) as {
+        name?: string,
+        version?: string,
+        description?: string,
+    };
 
     return defineCommand({
         meta: {
@@ -63,7 +69,16 @@ export async function createCLIEntryPointCommand() {
         },
         async run(ctx) {
             const rest = ctx.args._.slice(1);
-            const plan = resolveLaunchPlan(ctx.args.command, rest);
+
+            // An unsupported command / package selector is user error: report
+            // the message and stop, instead of letting citty print a stack.
+            let plan : LaunchPlan;
+            try {
+                plan = resolveLaunchPlan(ctx.args.command, rest);
+            } catch (error) {
+                consola.error(error instanceof Error ? error.message : error);
+                process.exit(1);
+            }
 
             const config = await readLauncherConfig({
                 directory: ctx.args.configDirectory,

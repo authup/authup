@@ -155,7 +155,7 @@ describe('src/packages/entrypoint', () => {
 
         expect(argv).toEqual({
             exec: 'npx',
-            args: [PACKAGE_NAME, 'start'],
+            args: ['--yes', PACKAGE_NAME, 'start'],
         });
     });
 });

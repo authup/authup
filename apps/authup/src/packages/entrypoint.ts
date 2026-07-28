@@ -68,8 +68,10 @@ export function buildPackageProcessArgv(
         };
     }
 
+    // --yes: npx prompts before installing a missing package, which would hang
+    // a supervisor that has no tty.
     return {
         exec: 'npx',
-        args: [entrypoint.packageName, ...args],
+        args: ['--yes', entrypoint.packageName, ...args],
     };
 }

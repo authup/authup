@@ -17,6 +17,9 @@ import {
 } from 'vitest';
 import { API_URL_DEFAULT } from '@authup/kit';
 import {
+    CLIENT_WEB_PORT_DEFAULT,
+    LISTEN_HOST_DEFAULT,
+    SERVER_CORE_PORT_DEFAULT,
     buildClientWebEnv,
     buildServerCoreEnv,
     readLauncherConfig,
@@ -89,10 +92,24 @@ describe('src/config', () => {
         });
     });
 
-    it('should keep PORT/HOST untouched when the server-core section is empty', () => {
+    it('should pin the server-core listen defaults when the section is empty', () => {
         const env = buildServerCoreEnv(buildLauncherConfig());
 
-        expect(env).toEqual({});
+        expect(env).toEqual({
+            PORT: `${SERVER_CORE_PORT_DEFAULT}`,
+            HOST: LISTEN_HOST_DEFAULT,
+        });
+    });
+
+    it('should pin distinct listen defaults per child so an ambient PORT cannot collide', () => {
+        const config = buildLauncherConfig();
+
+        const serverCore = buildServerCoreEnv(config);
+        const clientWeb = buildClientWebEnv(config);
+
+        expect(serverCore.PORT).not.toEqual(clientWeb.PORT);
+        expect(clientWeb.PORT).toEqual(`${CLIENT_WEB_PORT_DEFAULT}`);
+        expect(clientWeb.HOST).toEqual(LISTEN_HOST_DEFAULT);
     });
 
     it('should map the client-web section onto PORT/HOST and nuxt runtime overrides', () => {

@@ -30,11 +30,15 @@ import { fileURLToPath } from 'node:url';
 
 const SERVER_PORT = 4310;
 const WEB_PORT = 4311;
+// Deliberately neither of the two above: seeded into the children's inherited
+// environment to prove the supervisor overrides PORT per child.
+const AMBIENT_PORT = 4312;
 const SERVER_URL = `http://127.0.0.1:${SERVER_PORT}/`;
 const WEB_URL = `http://127.0.0.1:${WEB_PORT}/`;
 
 const READY_TIMEOUT_MS = 180_000;
 const EXIT_TIMEOUT_MS = 30_000;
+const RUN_TIMEOUT_MS = 600_000;
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const packageDirectory = path.resolve(scriptDirectory, '..', '..');
@@ -80,6 +84,14 @@ function buildChildEnv(writableDirectory) {
     env.WRITABLE_DIRECTORY_PATH = writableDirectory;
     env.DB_TYPE = 'better-sqlite3';
     env.DB_DATABASE = path.join(writableDirectory, 'authup.sql');
+
+    // Children inherit this environment, so an ambient PORT/HOST must not be
+    // able to reach both of them (a PaaS injects one; the project Dockerfile
+    // sets PORT=3000). The supervisor is expected to override it per child —
+    // verified: reverting that override makes client-web bind AMBIENT_PORT and
+    // this scenario fails on the readiness probe.
+    env.PORT = `${AMBIENT_PORT}`;
+    env.HOST = '0.0.0.0';
 
     return env;
 }
@@ -155,8 +167,21 @@ function run(command, args, options = {}) {
             stdout += chunk;
         });
 
-        child.on('error', reject);
+        // The packed variant shells out to `npm pack` / `npm install`, which
+        // reach the registry — without a deadline a stalled request would hang
+        // the CI job until the workflow-level timeout.
+        const timeout = setTimeout(() => {
+            child.kill('SIGKILL');
+            reject(fail(`${command} ${args.join(' ')} did not finish within ${RUN_TIMEOUT_MS}ms.`));
+        }, RUN_TIMEOUT_MS);
+
+        child.on('error', (error) => {
+            clearTimeout(timeout);
+            reject(error);
+        });
         child.on('exit', (code) => {
+            clearTimeout(timeout);
+
             if (code === 0) {
                 resolve(stdout);
             } else {

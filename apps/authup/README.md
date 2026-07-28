@@ -36,8 +36,12 @@ This will launch the following applications with default settings:
 - Frontend Application: `http://localhost:3000/`
 - Backend Application: `http://localhost:3001/`
 
-The CLI forwards `SIGINT`/`SIGTERM` to both applications and exits with the
-first application's exit code when one of them stops.
+Each application always receives its own `PORT`/`HOST` (see [Configuration](#configuration)),
+so an ambient `PORT` in the environment cannot reach both of them.
+
+The CLI forwards `SIGINT`/`SIGTERM` to both applications and exits `0` once they
+stop. When an application stops on its own, the CLI terminates the other one and
+exits with that first application's exit code.
 
 ## Commands
 
@@ -69,6 +73,12 @@ The `server.core` section is passed through to the server process
 section is mapped onto the web application's environment
 (`PORT`, `HOST`, `NUXT_PUBLIC_API_URL`, `NUXT_PUBLIC_COOKIE_DOMAIN`).
 When `client.web.apiUrl` is not set, it is derived from `server.core.publicUrl`.
+
+Both applications otherwise inherit the CLI's environment, with one deliberate
+exception: `PORT` and `HOST` are **always** set per application — from the
+sections above, or from the defaults shown there. Without that, a single
+ambient `PORT` (a PaaS injects one) would reach both applications and the
+second one would fail to bind.
 
 ## License
 

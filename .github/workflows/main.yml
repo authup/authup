@@ -82,6 +82,10 @@ jobs:
                 run: |
                     npm run check:types --workspace=apps/server-core
 
+            -   name: Type-check tests (authup)
+                run: |
+                    npm run check:types --workspace=apps/authup
+
     tests:
         name: Test Packages
         needs: [build]

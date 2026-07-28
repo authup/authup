@@ -7,6 +7,11 @@
 
 import { API_URL_DEFAULT } from '@authup/kit';
 import { Container } from 'confinity';
+import {
+    CLIENT_WEB_PORT_DEFAULT,
+    LISTEN_HOST_DEFAULT,
+    SERVER_CORE_PORT_DEFAULT,
+} from './constants';
 import type {
     ClientWebSectionConfig,
     LauncherConfig,
@@ -98,29 +103,17 @@ export async function readLauncherConfig(
 }
 
 export function buildServerCoreEnv(config: LauncherConfig) : Record<string, string> {
-    const env : Record<string, string> = {};
-
-    if (typeof config.serverCore.port !== 'undefined') {
-        env.PORT = `${config.serverCore.port}`;
-    }
-
-    if (config.serverCore.host) {
-        env.HOST = config.serverCore.host;
-    }
-
-    return env;
+    return {
+        PORT: `${config.serverCore.port ?? SERVER_CORE_PORT_DEFAULT}`,
+        HOST: config.serverCore.host ?? LISTEN_HOST_DEFAULT,
+    };
 }
 
 export function buildClientWebEnv(config: LauncherConfig) : Record<string, string> {
-    const env : Record<string, string> = {};
-
-    if (typeof config.clientWeb.port !== 'undefined') {
-        env.PORT = `${config.clientWeb.port}`;
-    }
-
-    if (config.clientWeb.host) {
-        env.HOST = config.clientWeb.host;
-    }
+    const env : Record<string, string> = {
+        PORT: `${config.clientWeb.port ?? CLIENT_WEB_PORT_DEFAULT}`,
+        HOST: config.clientWeb.host ?? LISTEN_HOST_DEFAULT,
+    };
 
     env.NUXT_PUBLIC_API_URL = config.clientWeb.apiUrl ??
         config.serverCore.publicUrl ??
