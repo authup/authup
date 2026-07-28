@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { API_URL_DEFAULT } from '@authup/kit';
 import { Container } from 'confinity';
 import type {
     ClientWebSectionConfig,
@@ -12,8 +13,6 @@ import type {
     LauncherConfigReadOptions,
     ServerCoreSectionConfig,
 } from './types';
-
-export const CLIENT_WEB_API_URL_FALLBACK = 'http://localhost:3001';
 
 function toRecord(input: unknown) : Record<string, unknown> {
     if (
@@ -125,7 +124,7 @@ export function buildClientWebEnv(config: LauncherConfig) : Record<string, strin
 
     env.NUXT_PUBLIC_API_URL = config.clientWeb.apiUrl ??
         config.serverCore.publicUrl ??
-        CLIENT_WEB_API_URL_FALLBACK;
+        API_URL_DEFAULT;
 
     if (config.clientWeb.cookieDomain) {
         env.NUXT_PUBLIC_COOKIE_DOMAIN = config.clientWeb.cookieDomain;

@@ -15,8 +15,8 @@ import {
     expect, 
     it,
 } from 'vitest';
+import { API_URL_DEFAULT } from '@authup/kit';
 import {
-    CLIENT_WEB_API_URL_FALLBACK,
     buildClientWebEnv,
     buildServerCoreEnv,
     readLauncherConfig,
@@ -131,7 +131,7 @@ describe('src/config', () => {
     it('should fall back to the default api url', () => {
         const env = buildClientWebEnv(buildLauncherConfig());
 
-        expect(env.NUXT_PUBLIC_API_URL).toEqual(CLIENT_WEB_API_URL_FALLBACK);
+        expect(env.NUXT_PUBLIC_API_URL).toEqual(API_URL_DEFAULT);
         expect(env.NUXT_PUBLIC_COOKIE_DOMAIN).toBeUndefined();
     });
 });

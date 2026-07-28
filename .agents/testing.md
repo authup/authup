@@ -196,6 +196,26 @@ via `setProps`; empty realm omitted from the grant body) and
 `ctx.realmId` even though the store's own realm ref is null pre-login — the
 original one-line bug).
 
+## Launcher Tests (apps/authup)
+
+The `authup` CLI is a process supervisor, so its suite is split in two:
+
+- **Unit** (`npm run test -w apps/authup`, config at `test/vitest.config.ts` like
+  every other workspace): entrypoint resolution against fixture `node_modules`
+  trees (bin-field reading, the resolution-preference regression, npx fallback),
+  the config-section → child-env mapping, and command routing (`migration` /
+  `healthcheck` must not boot client-web).
+- **Smoke** (`npm run test:smoke`): boots the built CLI's `start` against sqlite
+  on non-default ports, polls both children's endpoints, sends SIGTERM, asserts
+  both children exit and the CLI exits 0. `npm run test:smoke:packed` runs the
+  same assertions against `npm pack`ed tarballs installed into a temp project.
+  **The packed variant is the one that matters:** every launcher breakage found
+  in plan 078 (the ESM `__dirname` crash, the stale spawn path, and nitro's
+  symlinked module store being dropped by `npm pack`) reproduced ONLY from a
+  packed artifact — a workspace-dist run passes straight through all three.
+  Both variants run in CI (`tests-launcher` job); the packed one needs
+  `npm install --force` like every install in this repo.
+
 ## Code Coverage
 
 ### Generate coverage report
