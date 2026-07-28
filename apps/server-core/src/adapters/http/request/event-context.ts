@@ -48,7 +48,7 @@ export function createRequestEventContextMiddleware() : Handler {
             actorName: identity ? identity.data.name ?? null : null,
             requestPath: event.path,
             requestMethod: event.method,
-            requestIpAddress: getRequestIP(event, { trustProxy: true }) ?? null,
+            requestIpAddress: getRequestIP(event) ?? null,
             requestUserAgent: getRequestHeader(event, 'user-agent') ?? null,
         };
 

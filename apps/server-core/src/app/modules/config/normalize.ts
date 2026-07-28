@@ -83,6 +83,7 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         publicUrl,
         mtlsPublicUrl: null,
         certificateSource: 'disabled',
+        trustProxy: true,
 
         middlewareBody: true,
         middlewareCookie: true,

@@ -57,6 +57,12 @@ export class ConfigValidator extends Container<Config> {
             publicUrl: createValidator(z.url()),
             mtlsPublicUrl: createValidator(z.url().nullable()),
             certificateSource: createValidator(z.enum(CERTIFICATE_SOURCES)),
+            trustProxy: createValidator(z.union([
+                z.boolean(),
+                z.number().int().nonnegative(),
+                z.string(),
+                z.array(z.string()),
+            ])),
             trustedOrigins: createValidator(
                 z.array(z.string().refine((value) => {
                     try {

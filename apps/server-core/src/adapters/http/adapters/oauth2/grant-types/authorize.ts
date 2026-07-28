@@ -105,7 +105,7 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
 
         return this.runWith(entity, {
             confirmation,
-            ipAddress: getRequestIP(event, { trustProxy: true }) ?? undefined,
+            ipAddress: getRequestIP(event) ?? undefined,
             userAgent: getRequestHeader(event, 'user-agent') ?? undefined,
         });
     }

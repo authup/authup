@@ -97,7 +97,7 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
             assertClientGrantAllowed(client, OAuth2TokenGrant.PASSWORD);
         }
 
-        const ipAddress = getRequestIP(event, { trustProxy: true }) ?? undefined;
+        const ipAddress = getRequestIP(event) ?? undefined;
         const userAgent = getRequestHeader(event, 'user-agent') ?? undefined;
 
         // canonical identifier form (layer 3) — the throttle key and the

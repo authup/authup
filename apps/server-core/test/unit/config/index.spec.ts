@@ -153,6 +153,40 @@ describe('src/config/*.ts', () => {
             expect(config.mtlsPublicUrl).toBeNull();
         });
 
+        it('should default trustProxy to true and accept every non-function trust form', async () => {
+            const config = await normalizeConfig();
+            expect(config.trustProxy).toEqual(true);
+
+            expect((await normalizeConfig({ trustProxy: false })).trustProxy).toEqual(false);
+            expect((await normalizeConfig({ trustProxy: 1 })).trustProxy).toEqual(1);
+            expect((await normalizeConfig({ trustProxy: 'loopback' })).trustProxy).toEqual('loopback');
+            expect((await normalizeConfig({ trustProxy: ['10.0.0.1', '10.0.0.0/8'] })).trustProxy)
+                .toEqual(['10.0.0.1', '10.0.0.0/8']);
+
+            await expect(parseConfig({ trustProxy: -1 })).rejects.toThrow();
+            await expect(parseConfig({ trustProxy: 1.5 })).rejects.toThrow();
+        });
+
+        it('should parse the TRUST_PROXY env forms (integer wins over boolean words)', async () => {
+            const probe = async (value: string) => {
+                process.env.TRUST_PROXY = value;
+                try {
+                    return (await import('../../../src/app/modules/config/read/env'))
+                        .readConfigRawFromEnv().trustProxy;
+                } finally {
+                    delete process.env.TRUST_PROXY;
+                }
+            };
+
+            expect(await probe('true')).toEqual(true);
+            expect(await probe('false')).toEqual(false);
+            // '1' must mean ONE trusted hop, not "trust all"
+            expect(await probe('1')).toEqual(1);
+            expect(await probe('0')).toEqual(0);
+            expect(await probe('loopback')).toEqual('loopback');
+            expect(await probe('10.0.0.1, 10.0.0.0/8')).toEqual('10.0.0.1, 10.0.0.0/8');
+        });
+
         it('should validate the explicit certificate source and mTLS alias contract', async () => {
             const config = await normalizeConfig({
                 certificateSource: 'standard',

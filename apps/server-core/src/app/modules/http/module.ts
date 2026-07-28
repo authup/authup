@@ -49,7 +49,10 @@ export class HTTPModule implements IModule {
 
         logger.debug('Starting http server...');
 
-        const router = new App();
+        // Every request helper deriving proxy-dependent request facts
+        // (getRequestIP, hostname, protocol) resolves the trust contract from
+        // the app options — call sites must NOT pass their own `trustProxy`.
+        const router = new App({ options: { trustProxy: config.trustProxy } });
 
         this.registerUIHttpClient(container);
         this.registerMetrics(container);

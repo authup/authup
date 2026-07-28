@@ -140,7 +140,7 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
 
         return this.runWith(payload, {
             confirmation,
-            ipAddress: getRequestIP(event, { trustProxy: true }) ?? undefined,
+            ipAddress: getRequestIP(event) ?? undefined,
             userAgent: getRequestHeader(event, 'user-agent') ?? undefined,
         });
     }
