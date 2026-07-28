@@ -9,7 +9,7 @@ import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
 import type { RoleAttribute } from '@authup/core-kit';
 import { eq } from '@rapiq/core';
-import { applyQuery } from '@rapiq/memory';
+import { applyQuery } from '@rapiq/adapter-memory';
 import {
     beforeEach,
     describe,

@@ -22,7 +22,7 @@ import type { QueryDecodeContext } from './types.ts';
  * `redactFieldConditions`).
  *
  * A returned condition must be authored FAIL-CLOSED over incomplete
- * rows: `@rapiq/memory` unifies a missing column with `null`, so a
+ * rows: `@rapiq/adapter-memory` unifies a missing column with `null`, so a
  * negative predicate (`not(...)`, `ne(...)`) over an unselected column
  * evaluates true and ships the value. The SQL adapter force-selects
  * every column a condition references (rapiq#830's operand

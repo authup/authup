@@ -13,7 +13,7 @@ import {
 import type { Realm, User } from '@authup/core-kit';
 import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import { eq } from '@rapiq/core';
-import { applyQuery } from '@rapiq/memory';
+import { applyQuery } from '@rapiq/adapter-memory';
 import {
     beforeEach,
     describe,

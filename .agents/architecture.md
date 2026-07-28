@@ -204,12 +204,12 @@ usable at the service level and nothing in core depends on TypeORM:
   stay a bare column for hydration), and EVERY `findMany` adapter runs
   its fetched rows through `redactFieldConditions(query, entities)`
   (`app/modules/database/repositories/query.ts`, wrapping
-  `@rapiq/memory`'s `applyFieldConditions`) — failing values are
+  `@rapiq/adapter-memory`'s `applyFieldConditions`) — failing values are
   REDACTED, rows never drop, totals stay exact. The sweep is universal
   because enforcement is fail-open by construction: a `findMany` that
   skips the call ships the value. Author conditions FAIL-CLOSED over
   missing columns (positive legs + a presence guard like
-  `ne('realmId', null)`): `@rapiq/memory` unifies a missing column
+  `ne('realmId', null)`): `@rapiq/adapter-memory` unifies a missing column
   with `null`, so a negated leg — or an `ownOrNull` reach's
   null-inclusive realm leg — would match an unfetched column.
   Today's only gated column is `client.secret`: `allow` verdict →
@@ -270,14 +270,14 @@ usable at the service level and nothing in core depends on TypeORM:
   expression STRING, so object-splicing both discards the client filter
   and 500s at decode (the bug that motivated the helper).
 - **Adapters execute only** — `applyQuery(queryBuilder, query?)` in
-  `app/modules/database/repositories/query.ts` wraps `@rapiq/typeorm`'s
+  `app/modules/database/repositories/query.ts` wraps `@rapiq/adapter-typeorm`'s
   `TypeormAdapter` (plus the DISTINCT-id `GROUP BY` join hook) and needs no
   schema knowledge. A repository adapter never decodes.
 - **Boot-time drift validation** — `DatabaseModule.setup` runs
   `validateEntitySchemas(dataSource)`
   (`app/modules/database/repositories/schema-validation.ts`): every
   registered schema is checked against its entity's TypeORM metadata
-  via `@rapiq/typeorm`'s `assertSchemaMatchesEntity` (≥ 2.0.0-beta.4,
+  via `@rapiq/adapter-typeorm`'s `assertSchemaMatchesEntity` (≥ 2.0.0-beta.4,
   tada5hi/rapiq#800 — allow-lists, fields/sort defaults and the filters
   default condition tree; plain keys as column property paths, dotted
   keys headed by a relation), iterated over an explicit schema-name →
@@ -304,7 +304,7 @@ usable at the service level and nothing in core depends on TypeORM:
   DataSource-free decode (unit tests) plus `vi.mock` hoisting; metadata
   VALIDATION of the static schemas is the part worth keeping.
 - **Extension point** — a persistence layer MAY extend the core registry with
-  storage-derived schemas (`@rapiq/typeorm`'s
+  storage-derived schemas (`@rapiq/adapter-typeorm`'s
   `defineSchemaRegistryWithDataSource` with the `registry` option;
   already-registered schemas take precedence). Nothing is wired today — the
   explicit allow-lists stay the sole query surface.

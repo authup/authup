@@ -6,7 +6,7 @@
  */
 
 import type { ObjectLiteral } from '@rapiq/core';
-import { assertSchemaMatchesEntity } from '@rapiq/typeorm';
+import { assertSchemaMatchesEntity } from '@rapiq/adapter-typeorm';
 import type { DataSource, EntityMetadata, EntityTarget } from 'typeorm';
 import { EntityType } from '@authup/core-kit';
 import { schemaRegistry } from '../../../../core/index.ts';
@@ -114,7 +114,7 @@ export function assertSchemaFieldsCoverEntity(
 
 /**
  * Validate every registered entity schema against its TypeORM
- * metadata (`@rapiq/typeorm`'s `assertSchemaMatchesEntity`: allow-lists,
+ * metadata (`@rapiq/adapter-typeorm`'s `assertSchemaMatchesEntity`: allow-lists,
  * fields/sort defaults and the filters default condition tree must
  * reference existing columns/relations) and assert its field allow-list
  * covers every selectable column. Called by

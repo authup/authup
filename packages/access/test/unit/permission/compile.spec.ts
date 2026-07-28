@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from 'vitest';
 import type { ICondition, IFilter, IFilters } from '@rapiq/core';
-import { compileFilters } from '@rapiq/memory';
+import { compileFilters } from '@rapiq/adapter-memory';
 import type { PermissionPolicyBinding } from '../../../src';
 import {
     BuiltInPolicyType,

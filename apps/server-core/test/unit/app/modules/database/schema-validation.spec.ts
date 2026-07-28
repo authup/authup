@@ -46,7 +46,7 @@ import {
     UserPermissionEntity,
     UserRoleEntity,
 } from '../../../../../src/adapters/database/domains/index.ts';
-import { assertSchemaMatchesEntity } from '@rapiq/typeorm';
+import { assertSchemaMatchesEntity } from '@rapiq/adapter-typeorm';
 import { assertSchemaFieldsCoverEntity, validateEntitySchemas } from '../../../../../src/app/modules/database/repositories/schema-validation.ts';
 
 describe('app/modules/database/repositories/schema-validation', () => {

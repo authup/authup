@@ -55,9 +55,9 @@
     "dependencies": {
         "@authup/errors": "^1.0.0-beta.56",
         "@authup/kit": "^1.0.0-beta.56",
-        "@rapiq/core": "^2.0.0-beta.11",
-        "@rapiq/memory": "^2.0.0-beta.11",
-        "@rapiq/parser-mongo": "^2.0.0-beta.11",
+        "@rapiq/adapter-memory": "^2.0.0-beta.13",
+        "@rapiq/core": "^2.0.0-beta.13",
+        "@rapiq/parser-mongo": "^2.0.0-beta.13",
         "@validup/zod": "^0.3.3",
         "smob": "^1.6.1",
         "validup": "^0.5.1",

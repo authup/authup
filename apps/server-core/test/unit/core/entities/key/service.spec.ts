@@ -20,7 +20,7 @@ import { ErrorCode, isAuthupError } from '@authup/errors';
 import { AsymmetricKey, createAsymmetricKeyPair } from '@authup/server-kit';
 import { JWKType, JWKUse, JWTAlgorithm } from '@authup/specs';
 import { eq } from '@rapiq/core';
-import { applyQuery } from '@rapiq/memory';
+import { applyQuery } from '@rapiq/adapter-memory';
 import {
     beforeEach,
     describe,

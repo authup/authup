@@ -49,7 +49,7 @@ import type { DecodeQueryOptions, QueryDecodeContext } from './types.ts';
  * schemas are security policy over the domain types, and services
  * consume them to decode wire queries into the rapiq IR. A repository
  * layer MAY extend the registry with additional, storage-derived
- * schemas (e.g. `@rapiq/typeorm`'s `defineSchemaRegistryWithDataSource`
+ * schemas (e.g. `@rapiq/adapter-typeorm`'s `defineSchemaRegistryWithDataSource`
  * with the `registry` option — already-registered schemas take
  * precedence), but the allow-lists themselves stay explicit and are
  * never auto-derived from entity metadata.

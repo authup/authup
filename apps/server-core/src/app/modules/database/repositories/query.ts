@@ -7,8 +7,8 @@
 
 import type { IQuery } from '@rapiq/core';
 import { Query, hasFieldConditions } from '@rapiq/core';
-import { applyFieldConditions } from '@rapiq/memory';
-import { TypeormAdapter } from '@rapiq/typeorm';
+import { applyFieldConditions } from '@rapiq/adapter-memory';
+import { TypeormAdapter } from '@rapiq/adapter-typeorm';
 import type { SelectQueryBuilder } from 'typeorm';
 import type { EntityRepositoryPaginationMeta } from '@authup/server-kit';
 

@@ -16,7 +16,7 @@ import {
 } from '@authup/errors';
 import { JWKType, JWKUse } from '@authup/specs';
 import { eq } from '@rapiq/core';
-import { applyQuery } from '@rapiq/memory';
+import { applyQuery } from '@rapiq/adapter-memory';
 import { MemoryCache, buildCacheKey } from '@authup/server-kit';
 import type { ActorContext } from '@authup/server-kit';
 import { Secret, TOTP } from 'otpauth';

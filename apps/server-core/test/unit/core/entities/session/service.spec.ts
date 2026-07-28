@@ -8,7 +8,7 @@
 import { randomUUID } from 'node:crypto';
 import { BuiltInPolicyType } from '@authup/access';
 import { eq } from '@rapiq/core';
-import { applyQuery } from '@rapiq/memory';
+import { applyQuery } from '@rapiq/adapter-memory';
 import type { Session, User } from '@authup/core-kit';
 import { IdentityType } from '@authup/core-kit';
 import type { ActorContext } from '@authup/server-kit';

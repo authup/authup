@@ -14,7 +14,7 @@ import {
     definePolicyEvaluationContext,
 } from '@authup/access';
 import type { IFilter, IFilters } from '@rapiq/core';
-import { compileFilters } from '@rapiq/memory';
+import { compileFilters } from '@rapiq/adapter-memory';
 import { describe, expect, it } from 'vitest';
 import { PermissionBindingPolicyEvaluator } from '../../../../src/core/security/policy/evaluator.ts';
 import { FakeIdentityPermissionProvider } from '../helpers/index.ts';
@@ -180,7 +180,7 @@ describe('core/security/policy — PermissionBindingPolicyEvaluator disjunction 
     // Query-build lowering (#3286 phase 3): with `withConditions` and no resource
     // realm, the grant disjunction composes into a rapiq condition over the row's
     // realm column instead of neutral-passing. Semantic parity is asserted by
-    // compiling the condition with @rapiq/memory and testing rows.
+    // compiling the condition with @rapiq/adapter-memory and testing rows.
     describe('withConditions (compile lowering)', () => {
         const rows = [
             { realmId: REALM_A },

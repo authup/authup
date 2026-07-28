@@ -79,7 +79,7 @@ rows).
    policy form components for the UI.
 5. Tests live in `packages/access/test/unit/policy/` — pin settled/pending/inverted
    behavior, and when `toCondition` exists, pin **semantic parity**: compile the
-   condition with `@rapiq/memory` and assert the predicate equals full evaluation row by
+   condition with `@rapiq/adapter-memory` and assert the predicate equals full evaluation row by
    row (see `to-condition.spec.ts`).
 
 ## Where things live

@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from 'vitest';
 import type { ICondition, IFilter, IFilters } from '@rapiq/core';
-import { compileFilters } from '@rapiq/memory';
+import { compileFilters } from '@rapiq/adapter-memory';
 import { DecisionStrategy } from '@authup/kit';
 import type { PolicyEvaluationContextInput, PolicyEvaluationResult, RealmScope } from '../../../src';
 import {

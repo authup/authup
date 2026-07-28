@@ -7,8 +7,8 @@
 
 import type { ICondition } from '@rapiq/core';
 import { not } from '@rapiq/core';
-import type { Predicate } from '@rapiq/memory';
-import { compileFilters } from '@rapiq/memory';
+import type { Predicate } from '@rapiq/adapter-memory';
+import { compileFilters } from '@rapiq/adapter-memory';
 import { MongoFiltersParser } from '@rapiq/parser-mongo';
 import { isObject } from '@authup/kit';
 import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';

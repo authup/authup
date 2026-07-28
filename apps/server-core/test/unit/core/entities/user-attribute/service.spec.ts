@@ -12,7 +12,7 @@ import {
 } from '@authup/core-kit';
 import type { Realm, User, UserAttribute } from '@authup/core-kit';
 import { eq } from '@rapiq/core';
-import { applyQuery } from '@rapiq/memory';
+import { applyQuery } from '@rapiq/adapter-memory';
 import {
     beforeEach,
     describe,

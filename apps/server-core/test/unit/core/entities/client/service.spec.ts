@@ -7,7 +7,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { eq, isQuery } from '@rapiq/core';
-import { applyQuery } from '@rapiq/memory';
+import { applyQuery } from '@rapiq/adapter-memory';
 import {
     CLIENT_SYSTEM_NAME,
     CLIENT_WEB_NAME,
