@@ -167,6 +167,23 @@ describe('end-session (/logout)', () => {
         expect(await refreshSucceeds(tokens.refresh_token!)).toBe(false);
     });
 
+    it('should still revoke with a valid hint when the realm hint is oversized (hint-only retry)', async () => {
+        // a malformed realm hint is cosmetic too — the revoke's subject and
+        // session come from the verified hint's claims, so the retry keeps
+        // ONLY the hint and the oversized realm_name is discarded.
+        const tokens = await mintTokens();
+
+        const response = await httpRequest(
+            suite,
+            'GET',
+            `/logout?id_token_hint=${tokens.id_token}&realm_name=${'x'.repeat(400)}`,
+            { redirect: 'manual' },
+        );
+
+        expect(response.status).toEqual(200);
+        expect(await refreshSucceeds(tokens.refresh_token!)).toBe(false);
+    });
+
     it('should still revoke with a valid hint when state is oversized (cosmetic-param decoupling)', async () => {
         // the pre-fix behavior: an oversized state failed validation and the
         // WHOLE request degraded to parameter-less — the valid hint was

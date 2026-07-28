@@ -51,21 +51,19 @@ export class LogoutController {
         // Malformed input (oversized / duplicated params) must never dead-end
         // the human behind the browser on a JSON error, nor discard a valid
         // id_token_hint: a bad *cosmetic* param (post_logout_redirect_uri /
-        // state / client_id) must NOT cancel the security-critical revoke the
-        // hint authorizes. So on a full-request validation failure, retry with
-        // only the revoke-critical fields (the hint + realm), dropping the
-        // cosmetic ones; only a malformed hint itself falls through to the
-        // parameter-less confirm page.
+        // state / client_id / realm hint) must NOT cancel the
+        // security-critical revoke the hint authorizes. So on a full-request
+        // validation failure, retry with the hint ALONE — the revoke needs
+        // nothing else (its subject/session come from the verified hint's
+        // claims; the realm hint only scopes client-name resolution, which the
+        // dropped client_id rules out anyway). Only a malformed hint itself
+        // falls through to the parameter-less confirm page.
         let data: OAuth2EndSessionRequest;
         try {
             data = await this.validator.run(merged);
         } catch {
             try {
-                data = await this.validator.run({
-                    id_token_hint: merged.id_token_hint,
-                    realm_id: merged.realm_id,
-                    realm_name: merged.realm_name,
-                });
+                data = await this.validator.run({ id_token_hint: merged.id_token_hint });
             } catch {
                 data = {};
             }

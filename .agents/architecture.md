@@ -1613,10 +1613,12 @@ app (kit or non-kit) ends a lingering authup session on its own logout, so
   contract as the token endpoint's `readRealmHint`). A validation failure never
   surfaces as a JSON error — the human behind the browser can still sign out —
   and a malformed *cosmetic* param (`post_logout_redirect_uri` / `state` /
-  `client_id`) must not cancel the revoke a valid hint authorizes: on a
-  full-request validation failure the controller retries with only the
-  revoke-critical fields (`id_token_hint` + realm hint), dropping the cosmetic
-  ones (no redirect, no client resolution); only a malformed hint itself falls
+  `client_id` / `realm_id` / `realm_name`) must not cancel the revoke a valid
+  hint authorizes: on a full-request validation failure the controller retries
+  with the `id_token_hint` ALONE (the revoke needs nothing else — subject and
+  session come from the verified hint's claims; the realm hint only scopes
+  client-name resolution, ruled out by the dropped `client_id`), so no
+  redirect and no client resolution; only a malformed hint itself falls
   through to the **parameter-less** confirm page (every attacker-controlled
   value dropped, no revoke).
 - **id_token_hint** is verified by `OAuth2TokenVerifier` with a new
