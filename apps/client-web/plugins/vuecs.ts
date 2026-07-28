@@ -5,16 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildSubmitButtonDefaults } from '@authup/client-web-kit';
+import { buildVuecsInstallOptions, registerIconCollections } from '@authup/client-web-kit';
 import { de } from 'date-fns/locale/de';
 
 import vuecs from '@vuecs/core';
 import clientWebKitTheme from '@authup/client-web-kit-theme';
 import clientWebTheme from '@authup/client-web-theme';
-import fontAwesome from '@vuecs/icons-font-awesome';
-import { addCollection } from '@iconify/vue';
-import faBrands from '@iconify-json/fa6-brands/icons.json';
-import faSolid from '@iconify-json/fa6-solid/icons.json';
 
 import installCountdown from '@vuecs/countdown';
 import installTimeago from '@vuecs/timeago';
@@ -30,8 +26,7 @@ import installNavigation from '@vuecs/navigation';
 
 import { defineNuxtPlugin } from '#imports';
 
-addCollection(faSolid);
-addCollection(faBrands);
+registerIconCollections();
 
 export default defineNuxtPlugin({
     // Name this plugin so other plugins can express ordering against it.
@@ -54,24 +49,20 @@ export default defineNuxtPlugin({
         // writes vuecs (`useLocaleControl`); ilingo follows one-way via
         // `syncTranslatorLocaleFromManager` in the post plugin. So no
         // `config.locale` feed here.
-        ctx.vueApp.use(vuecs, {
+        //
+        // `buildVuecsInstallOptions()` (shared with the embedded SSR app in
+        // apps/server-core/ui) supplies the icon preset + the
+        // translator-wired submit-button defaults; it runs after the kit's
+        // translator install (`dependsOn: ['authup']`), so `useTranslation`
+        // inside the helper sees the live ilingo locale provider.
+        ctx.vueApp.use(vuecs, buildVuecsInstallOptions({
             // Register both themes side-by-side. The kit theme owns
             // overrides the kit's own components need (e.g. formGroup
             // margin); the app theme layers app-specific concerns
             // (heading scale, Bootstrap-compat shims) on top. Order
             // matters: kit first, app overrides win on conflicts.
             themes: [clientWebKitTheme(), clientWebTheme()],
-            icons: [fontAwesome()],
-            defaults: {
-                // Wire authup's translator + icon choices into vuecs's
-                // DefaultsManager so `useSubmitButton()` resolves to
-                // locale-reactive labels with no per-call work.
-                // Runs after the kit's translator install (`dependsOn:
-                // ['authup']`), so `useTranslation` inside the helper sees
-                // the live ilingo locale provider.
-                submitButton: buildSubmitButtonDefaults(),
-            },
-        });
+        }));
 
         // vuecs's `installThemeManager` is first-install-wins (see
         // `@vuecs/core/dist/index.mjs`); installing per-package plugins
