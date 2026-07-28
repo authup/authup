@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { normalizeError } from '@authup/errors';
 import { defineCommand } from 'citty';
 import consola from 'consola';
-import fs from 'node:fs';
+import { read } from 'locter';
 import path from 'node:path';
 import process from 'node:process';
 import {
@@ -29,15 +30,11 @@ import { superviseProcesses } from './supervisor';
 import type { SupervisedChildSpec } from './supervisor';
 
 export async function createCLIEntryPointCommand() {
-    const pkgRaw = await fs.promises.readFile(
-        path.join(PACKAGE_DIRECTORY, 'package.json'),
-        { encoding: 'utf8' },
-    );
-    const pkg = JSON.parse(pkgRaw) as {
+    const pkg : {
         name?: string,
         version?: string,
         description?: string,
-    };
+    } = await read(path.join(PACKAGE_DIRECTORY, 'package.json'));
 
     return defineCommand({
         meta: {
@@ -76,7 +73,7 @@ export async function createCLIEntryPointCommand() {
             try {
                 plan = resolveLaunchPlan(ctx.args.command, rest);
             } catch (error) {
-                consola.error(error instanceof Error ? error.message : error);
+                consola.error(normalizeError(error).message);
                 process.exit(1);
             }
 
