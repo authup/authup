@@ -21,7 +21,11 @@
         "cli-dev": "npm run build && npm run cli",
         "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
         "build:js": "tsdown",
-        "build": "rimraf ./dist && npm run build:js && npm run build:types"
+        "build": "rimraf ./dist && npm run build:js && npm run build:types",
+        "check:types": "tsc -p tsconfig.test.json",
+        "test": "cross-env NODE_ENV=test vitest run --config test/vitest.config.ts",
+        "test:smoke": "node test/smoke/run.mjs",
+        "test:smoke:packed": "node test/smoke/run.mjs --packed"
     },
     "engines": {
         "node": "^22.13.0 || ^23.5.0 || >=24.0.0"
@@ -55,20 +59,17 @@
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
         "@authup/client-web": "^1.0.0-beta.56",
-        "@authup/kit": "^1.0.0-beta.56",
-        "@authup/core-kit": "^1.0.0-beta.56",
         "@authup/server-core": "^1.0.0-beta.56",
         "citty": "^0.2.2",
-        "chalk": "^5.6.2",
         "confinity": "^1.0.0",
         "consola": "^3.4.0",
-        "dycraft": "^1.1.0",
-        "envix": "^1.5.0",
-        "resolve-package-path": "^4.0.3",
-        "smob": "^1.6.1",
-        "zod": "^4.4.3"
+        "resolve-package-path": "^4.0.3"
     },
     "publishConfig": {
         "access": "public"
+    },
+    "devDependencies": {
+        "cross-env": "^10.1.0",
+        "vitest": "^4.0.18"
     }
 }
