@@ -11,3 +11,5 @@ export * from './login';
 export * from './mfa';
 export * from './password';
 export * from './register';
+
+export { default as AWorkflowDisabledNotice } from './AWorkflowDisabledNotice.vue';
