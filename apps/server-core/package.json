@@ -119,7 +119,7 @@
         "smob": "^1.6.1",
         "tsyringe": "^4.10.0",
         "typeorm": "1.1.0",
-        "typeorm-extension": "^4.0.0-beta.1",
+        "typeorm-extension": "^4.0.0-beta.3",
         "uncrypto": "^0.1.3",
         "validup": "^0.5.1",
         "zod": "^4.4.3"
