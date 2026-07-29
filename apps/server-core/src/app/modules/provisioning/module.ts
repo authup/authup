@@ -8,6 +8,7 @@ import type {
     Client,
     ClientPermission,
     ClientRole,
+    ClientScope,
     PermissionPolicy,
     Realm,
     Role,
@@ -21,6 +22,7 @@ import {
     ClientEntity,
     ClientPermissionEntity,
     ClientRoleEntity,
+    ClientScopeEntity,
     PermissionEntity,
     RealmEntity,
     RoleEntity,
@@ -51,6 +53,7 @@ import {
     ClientPermissionRepositoryAdapter,
     ClientRepositoryAdapter,
     ClientRoleRepositoryAdapter,
+    ClientScopeRepositoryAdapter,
     KeyRepositoryAdapter,
     PermissionPolicyRepositoryAdapter,
     PermissionRepositoryAdapter,
@@ -137,6 +140,13 @@ export class ProvisionerModule implements IModule {
             repository: container.resolve<Repository<Client>>(ClientEntity),
             realmRepository,
         });
+        const scopeRepository = new ScopeRepositoryAdapter({
+            repository: container.resolve<Repository<Scope>>(ScopeEntity),
+            realmRepository,
+        });
+        const clientScopeRepository = new ClientScopeRepositoryAdapter(
+            container.resolve<Repository<ClientScope>>(ClientScopeEntity),
+        );
 
         const permissionSynchronizer = new PermissionProvisioningSynchronizer({
             repository: permissionRepository,
@@ -160,9 +170,11 @@ export class ProvisionerModule implements IModule {
             clientPermissionRepository: new ClientPermissionRepositoryAdapter(
                 container.resolve<Repository<ClientPermission>>(ClientPermissionEntity),
             ),
+            clientScopeRepository,
 
             roleRepository,
             permissionRepository,
+            scopeRepository,
 
             roleSynchronizer,
             permissionSynchronizer,
@@ -183,11 +195,6 @@ export class ProvisionerModule implements IModule {
             clientRepository,
             roleRepository,
             permissionRepository,
-        });
-
-        const scopeRepository = new ScopeRepositoryAdapter({
-            repository: container.resolve<Repository<Scope>>(ScopeEntity),
-            realmRepository,
         });
 
         const scopeSynchronizer = new ScopeProvisioningSynchronizer({ repository: scopeRepository });
@@ -219,6 +226,8 @@ export class ProvisionerModule implements IModule {
         // ---------------------------------------------------------------
         const webClientProvisioner = new WebClientProvisioner({
             clientRepository,
+            scopeRepository,
+            clientScopeRepository,
             appOrigins: getAppOrigins(config),
             logger: container.resolve(LoggerInjectionKey),
         });

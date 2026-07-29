@@ -9,8 +9,10 @@ import type {
     IClientPermissionRepository,
     IClientRepository,
     IClientRoleRepository,
+    IClientScopeRepository,
     IPermissionRepository,
     IRoleRepository,
+    IScopeRepository,
 } from '../../../entities/index.ts';
 import type { PermissionProvisioningEntity } from '../../entities/permission';
 import type { RoleProvisioningEntity } from '../../entities/role';
@@ -20,9 +22,11 @@ export type ClientProvisioningSynchronizerContext = {
     clientRepository: IClientRepository,
     clientRoleRepository: IClientRoleRepository,
     clientPermissionRepository: IClientPermissionRepository,
+    clientScopeRepository: IClientScopeRepository,
 
     roleRepository: IRoleRepository,
     permissionRepository: IPermissionRepository,
+    scopeRepository: IScopeRepository,
 
     roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningEntity>,
     permissionSynchronizer: IProvisioningSynchronizer<PermissionProvisioningEntity>,

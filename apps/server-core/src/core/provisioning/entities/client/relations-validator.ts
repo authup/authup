@@ -47,5 +47,13 @@ export class ClientProvisioningRelationsValidator extends Container<ClientProvis
         this.mount('globalRoles', { optional: true }, createValidator(
             z.array(z.string()),
         ));
+
+        this.mount('realmScopes', { optional: true }, createValidator(
+            z.array(z.string()),
+        ));
+
+        this.mount('globalScopes', { optional: true }, createValidator(
+            z.array(z.string()),
+        ));
     }
 }

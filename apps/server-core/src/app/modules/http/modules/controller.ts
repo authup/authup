@@ -974,6 +974,13 @@ export class HTTPControllerModule {
         const logger = container.resolve(LoggerInjectionKey);
         const webClientProvisioner = new WebClientProvisioner({
             clientRepository,
+            scopeRepository: new ScopeRepositoryAdapter({
+                repository: container.resolve<Repository<Scope>>(ScopeEntity),
+                realmRepository,
+            }),
+            clientScopeRepository: new ClientScopeRepositoryAdapter(
+                container.resolve<Repository<ClientScope>>(ClientScopeEntity),
+            ),
             appOrigins: getAppOrigins(config),
             logger,
         });

@@ -9,12 +9,15 @@ import { BuiltInPolicyType, SystemPolicyName } from '@authup/access';
 import type { CompositePolicy } from '@authup/access';
 import { DecisionStrategy } from '@authup/kit';
 import type {
- 
-    Permission, 
-    PermissionPolicy, 
-    Realm, 
-    Role, 
+
+    Client,
+    ClientScope,
+    Permission,
+    PermissionPolicy,
+    Realm,
+    Role,
 } from '@authup/core-kit';
+import { CLIENT_WEB_NAME, REALM_MASTER_NAME } from '@authup/core-kit';
 import type { DataSource, Repository } from 'typeorm';
 import { IsNull } from 'typeorm';
 import {
@@ -26,6 +29,8 @@ import {
 } from 'vitest';
 import {
     CacheModule, 
+    ClientEntity,
+    ClientScopeEntity,
     ConfigModule,
     DefaultProvisioningSource,
     FileProvisioningSource,
@@ -38,7 +43,7 @@ import {
 } from '../../../src/index.ts';
 import { Container } from 'eldin';
 import type { IContainer } from 'eldin';
-import { PolicyProvisioningSynchronizer } from '../../../src/core/index.ts';
+import { PolicyProvisioningSynchronizer, WEB_CLIENT_SCOPE_NAMES } from '../../../src/core/index.ts';
 import type { PolicyProvisioningEntity } from '../../../src/core/provisioning/entities/policy/index.ts';
 import { PolicyRepository } from '../../../src/adapters/database/domains/index.ts';
 import {
@@ -157,6 +162,60 @@ describe('app/modules/provisioning', () => {
             policyId: filePolicy!.id,
         });
         expect(junction).toBeDefined();
+    });
+
+    // The junction is the only source /authorize resolves client scopes from,
+    // so a declared scope that never reaches it is not granted at all (#3347).
+    it('should bind declared client scopes through the junction', async () => {
+        const provisioning = new ProvisionerModule([
+            new FileProvisioningSource({ cwd: 'test/data/sources' }),
+        ]);
+        await provisioning.setup(di);
+
+        const realmRepository = di.resolve<Repository<Realm>>(RealmEntity);
+        const clientRepository = di.resolve<Repository<Client>>(ClientEntity);
+        const clientScopeRepository = di.resolve<Repository<ClientScope>>(ClientScopeEntity);
+
+        const realm = await realmRepository.findOneBy({ name: 'foo' });
+        const client = await clientRepository.findOneBy({
+            name: 'foo',
+            realmId: realm!.id,
+        });
+
+        const rows = await clientScopeRepository.find({
+            where: { clientId: client!.id },
+            relations: { scope: true },
+        });
+
+        expect(rows.map((row) => row.scope.name).sort()).toEqual(['foo', 'realm-scope']);
+    });
+
+    // Every realm carries a public `web` client, and its provisioned scopes
+    // must reach the junction as well (#3347).
+    it('should bind the web client scopes through the junction', async () => {
+        const provisioning = new ProvisionerModule([
+            new DefaultProvisioningSource(),
+        ]);
+        await provisioning.setup(di);
+
+        const realmRepository = di.resolve<Repository<Realm>>(RealmEntity);
+        const clientRepository = di.resolve<Repository<Client>>(ClientEntity);
+        const clientScopeRepository = di.resolve<Repository<ClientScope>>(ClientScopeEntity);
+
+        const realm = await realmRepository.findOneBy({ name: REALM_MASTER_NAME });
+        const client = await clientRepository.findOneBy({
+            name: CLIENT_WEB_NAME,
+            realmId: realm!.id,
+        });
+
+        const rows = await clientScopeRepository.find({
+            where: { clientId: client!.id },
+            relations: { scope: true },
+        });
+
+        expect(rows.map((row) => row.scope.name).sort()).toEqual(
+            [...WEB_CLIENT_SCOPE_NAMES].sort(),
+        );
     });
 
     // ---------------------------------------------------------------
