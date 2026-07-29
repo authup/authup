@@ -9,7 +9,7 @@
  *
  * The migration chain and the entity classes are two independent
  * descriptions of the same schema, and only the former is exercised
- * against mysql/postgres — the test suites build their schema with
+ * against mysql/postgres - the test suites build their schema with
  * synchronize(). Every divergence between them has therefore been found
  * by hand, twice as a foreign key pointing at the wrong table
  * (auth_permissions.client_id, auth_roles.client_id) and once as an
@@ -22,43 +22,26 @@
  */
 
 import process from 'node:process';
-import { DataSource } from 'typeorm';
+import { getSchemaDrift } from 'typeorm-extension';
 import { DataSourceOptionsBuilder } from '../dist/adapters/database/index.mjs';
 
 const options = new DataSourceOptionsBuilder().buildWithEnv();
 
-if (options.type !== 'mysql' && options.type !== 'postgres') {
-    console.log(`[schema-drift] ${options.type} does not run migrations, nothing to compare`);
-    process.exit(0);
-}
+// sqlite carries no migrations and synchronizes from the entities, so
+// there are never two descriptions to compare
+const drift = await getSchemaDrift(options, { skipWithoutMigrations: true });
 
-const dataSource = new DataSource({ ...options, logging: false });
-await dataSource.initialize();
-
-const executed = await dataSource.query(
-    `SELECT COUNT(*) AS c FROM ${options.type === 'postgres' ? '"migrations"' : '`migrations`'}`,
-).catch(() => [{ c: 0 }]);
-
-if (Number(executed[0].c) === 0) {
-    console.error('[schema-drift] no migration has been executed against this database');
-    await dataSource.destroy();
-    process.exit(1);
-}
-
-const { upQueries } = await dataSource.driver.createSchemaBuilder().log();
-await dataSource.destroy();
-
-if (upQueries.length === 0) {
+if (!drift.exists) {
     console.log(`[schema-drift] ${options.type}: schema matches the entity metadata`);
     process.exit(0);
 }
 
-console.error(`[schema-drift] ${options.type}: ${upQueries.length} statement(s) would be needed to reconcile`);
+console.error(`[schema-drift] ${options.type}: ${drift.up.length} statement(s) would be needed to reconcile`);
 console.error('the migrated schema with the entity metadata. Either the entities changed');
 console.error('without a migration, or a migration wrote something the entities do not describe.\n');
 
-for (const upQuery of upQueries) {
-    console.error(`  ${upQuery.query}`);
+for (const statement of drift.up) {
+    console.error(`  ${statement.query}`);
 }
 
 process.exit(1);
