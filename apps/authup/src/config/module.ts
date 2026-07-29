@@ -6,7 +6,7 @@
  */
 
 import { isObject } from '@authup/kit';
-import { Container } from 'confinity';
+import { FSStore } from 'confinity';
 import {
     CLIENT_WEB_PORT_DEFAULT,
     LISTEN_HOST_DEFAULT,
@@ -81,20 +81,24 @@ export function normalizeClientWebSection(input: unknown) : ClientWebSectionConf
 export async function readLauncherConfig(
     options: LauncherConfigReadOptions = {},
 ) : Promise<LauncherConfig> {
-    const container = new Container({
+    const store = new FSStore({
         prefix: 'authup',
         cwd: options.directory,
     });
 
     if (options.file) {
-        await container.loadFile(options.file);
+        await store.loadFile(options.file);
     } else {
-        await container.load();
+        await store.load();
     }
 
+    // `getSync` after the explicit load, not `get`. In confinity v2 `get` is
+    // asynchronous, and both normalizers take `unknown` — so a missing `await`
+    // would compile cleanly, hand them a Promise, and silently start every
+    // service on its defaults.
     return {
-        serverCore: normalizeServerCoreSection(container.get('server.core')),
-        clientWeb: normalizeClientWebSection(container.get('client.web')),
+        serverCore: normalizeServerCoreSection(store.getSync('server.core')),
+        clientWeb: normalizeClientWebSection(store.getSync('client.web')),
     };
 }
 

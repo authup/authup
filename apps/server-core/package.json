@@ -97,7 +97,7 @@
         "better-sqlite3": "^13.0.1",
         "change-case": "^5.4.4",
         "citty": "^0.2.2",
-        "confinity": "^1.0.0",
+        "confinity": "^2.0.0",
         "dotenv": "^17.4.1",
         "dycraft": "^1.1.0",
         "eldin": "^1.2.0",
