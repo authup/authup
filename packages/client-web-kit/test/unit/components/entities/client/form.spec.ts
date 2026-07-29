@@ -11,11 +11,13 @@ import { createFakeClient } from '@authup/core-http-kit/testing';
 import type { FakeClient, FakeRequest } from '@authup/core-http-kit/testing';
 import { flushPromises, mount } from '@vue/test-utils';
 import vuecs from '@vuecs/core';
+import { install as installForms } from '@vuecs/forms';
 import { createPinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
 import AClientForm from '../../../../../src/components/entities/client/AClientForm.vue';
 import { AFormSubmit } from '../../../../../src/components/utility';
 import { install } from '../../../../../src/module';
+import { registerIconCollections } from '../../../../../src/core';
 import type { Options } from '../../../../../src/types';
 
 const noop = () => undefined;
@@ -329,6 +331,64 @@ describe('AClientForm post-logout redirect uris', () => {
         const request = findUpdateRequest(httpClient);
         expect(request).toBeDefined();
         expect(request!.body).toHaveProperty('postLogoutRedirectUri', null);
+    });
+});
+
+// theme-tailwind's `formCheckbox.indicator` carries layout classes only, and
+// the glyph lives in `@vuecs/forms`' base stylesheet which the tailwind stack
+// does not load, so a checked box would render as a solid square with no
+// checkmark (tada5hi/vuecs#1694). We supply the glyph through the `#indicator`
+// slot; assert it is actually there, and only when checked.
+describe('AClientForm checkbox indicator', () => {
+    it('renders a check glyph in the checked box and nothing in the unchecked ones', async () => {
+        registerIconCollections();
+
+        const entity = createEntity();
+        entity.grantTypes = 'authorization_code';
+
+        const pinia = createPinia();
+        const options : Options = {
+            baseURL: 'http://fake.test',
+            httpClient: createFakeClient({ handlers: {} }),
+            pinia,
+            isServer: true,
+            cookieGet: noop,
+            cookieSet: noop,
+            cookieUnset: noop,
+        };
+
+        const wrapper = mount(AClientForm, {
+            props: { entity },
+            global: {
+                stubs: {
+                    APolicyPicker: { template: '<div />' },
+                    ARealmPicker: { template: '<div />' },
+                },
+                plugins: [
+                    pinia,
+                    [vuecs, {}],
+                    { install: installForms },
+                    [{ install }, options],
+                ],
+            },
+        });
+
+        await flushPromises();
+
+        const boxes = wrapper.findAll('[role="checkbox"]');
+        const checked = boxes.filter((box) => box.attributes('data-state') === 'checked');
+        const unchecked = boxes.filter((box) => box.attributes('data-state') === 'unchecked');
+
+        expect(checked).toHaveLength(1);
+        expect(unchecked.length).toBeGreaterThan(0);
+
+        // a resolved iconify path, not just an empty <svg> shell
+        expect(checked[0]!.element.innerHTML).toContain('<path');
+        expect(checked[0]!.element.innerHTML).toContain('currentColor');
+
+        for (const box of unchecked) {
+            expect(box.element.innerHTML).not.toContain('<svg');
+        }
     });
 });
 

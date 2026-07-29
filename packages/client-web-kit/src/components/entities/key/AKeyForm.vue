@@ -40,6 +40,7 @@ import {
     VCFormSelect,
     VCFormTextarea,
 } from '@vuecs/forms';
+import { VCIcon } from '@vuecs/icon';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     AFormSubmit,
@@ -60,6 +61,7 @@ export default defineComponent({
         VCFormInput,
         VCFormSelect,
         VCFormTextarea,
+        VCIcon,
 
         IFieldValidation,
     },
@@ -350,7 +352,21 @@ export default defineComponent({
                     v-model="importEnabled"
                     label
                     :label-content="translationsClient.keyImportMaterial"
-                />
+                >
+                    <!--
+                        theme-tailwind's `formCheckbox.indicator` carries no
+                        glyph and the tailwind stack does not load
+                        `@vuecs/forms`' base stylesheet, so a checked box is a
+                        solid square. Drop this once upstream ships a glyph
+                        (tada5hi/vuecs#1694).
+                    -->
+                    <template #indicator>
+                        <VCIcon
+                            name="fa6-solid:check"
+                            class="text-[0.625rem]"
+                        />
+                    </template>
+                </VCFormCheckbox>
             </VCFormGroup>
 
             <template v-if="importEnabled">
