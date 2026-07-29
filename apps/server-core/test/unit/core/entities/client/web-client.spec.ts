@@ -232,6 +232,7 @@ describe('core/entities/client/web-client', () => {
                     builtIn: false,
                     authMethod: 'secret',
                     tokenBindingMethod: 'none',
+                    secret: 'legacy-secret',
                     redirectUri: 'http://user-owned.example.com/**',
                 },
             ]);
@@ -248,6 +249,9 @@ describe('core/entities/client/web-client', () => {
             expect(existing!.redirectUri).toBe(
                 'http://localhost:3000/**,https://app.example.com/**',
             );
+            // the client is public now, so its secret can never authenticate
+            // it again and must not stay at rest
+            expect(existing!.secret).toBeNull();
             expect(await readScopeNames(existing!.id)).toEqual(
                 [...WEB_CLIENT_SCOPE_NAMES].sort(),
             );

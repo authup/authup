@@ -129,13 +129,34 @@ export class WebClientProvisioner implements IWebClientProvisioner {
                 return existing;
             }
 
-            if (!existing.builtIn && this.logger) {
-                this.logger.warn(
-                    `Taking over the non-built-in client named '${CLIENT_WEB_NAME}' in realm ${realm.id}: the name is reserved for the built-in web client.`,
-                );
+            let target = existing;
+
+            if (!existing.builtIn) {
+                if (this.logger) {
+                    this.logger.warn(
+                        `Taking over the non-built-in client named '${CLIENT_WEB_NAME}' in realm ${realm.id}: the name is reserved for the built-in web client.`,
+                    );
+                }
+
+                // The takeover makes the client public, so a secret it carried
+                // as a confidential client can never authenticate it again.
+                // Drop it instead of leaving the material at rest.
+                //
+                // The row has to be re-read WITH the secret for that: `secret`
+                // is a `select: false` column, so the loaded entity carries no
+                // value for it and typeorm's changed-column diff would not
+                // emit the null. Re-reading is confined to this branch, and
+                // the secret stays out of `buildWebClientAttributes` for the
+                // same reason (an undefined-vs-null compare would read as
+                // dirty on every boot).
+                target = await this.clientRepository.findOneWithSecret({ id: existing.id }) || existing;
+                target.secret = null;
+                target.secretHashed = false;
+                target.secretEncrypted = false;
             }
 
-            const merged = this.clientRepository.merge(existing, attributes);
+            const merged = this.clientRepository.merge(target, attributes);
+
             return this.clientRepository.save(merged);
         }
 
