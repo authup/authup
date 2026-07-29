@@ -16,17 +16,78 @@ import {
     useTranslationsForField as _useTranslationsForField,
 } from '@ilingo/validup-vue';
 import type { FieldTranslations } from '@ilingo/validup-vue';
-import type { GetContextReactive } from '@ilingo/vue';
+import type { DataMaybeRef, GetContextReactive } from '@ilingo/vue';
 import type { GetContext } from 'ilingo';
 import type { ObjectLiteral } from 'validup';
 import type { Ref } from 'vue';
+import { computed, ref, unref } from 'vue';
+import { injectHydrationStore, useHydratedValue } from '../hydration';
 
 export function injectTranslatorLocale(): Ref<string> {
     return injectLocale();
 }
 
+function unwrapTranslationData(input: DataMaybeRef) : Record<string, string | number> {
+    const output : Record<string, string | number> = {};
+    const entries = Object.entries(input);
+    for (const [key, value] of entries) {
+        output[key] = unref(value);
+    }
+
+    return output;
+}
+
+function buildTranslationHydrationKey(ctx: GetContext) : string {
+    return `authup:translation:${ctx.locale}:${ctx.namespace}:${ctx.key}:${ctx.count ?? ''}:${ctx.data ? JSON.stringify(ctx.data) : ''}`;
+}
+
+/**
+ * Reactive translation lookup.
+ *
+ * `@ilingo/vue` resolves through ilingo's async `get()` (a store may be
+ * file-backed or remote), so a fresh ref carries the `<namespace>.<key>`
+ * placeholder until a microtask later. During a server render that settles
+ * before the markup is written, but in the browser the FIRST render is the
+ * placeholder, which is a hydration mismatch for every translated string
+ * inside a server-rendered subtree. The render therefore records what it
+ * resolved and the hydrating client shows that until its own lookup settles.
+ */
 export function useTranslation(input: GetContextReactive): Ref<string> {
-    return _useTranslation(input);
+    const source = _useTranslation(input);
+
+    const store = injectHydrationStore();
+    if (!store) {
+        return source;
+    }
+
+    const ilingo = injectIlingo();
+    const locale = injectLocale();
+    const placeholder = `${input.namespace}.${input.key}`;
+    const recorded = ref<string>();
+
+    const context = () : GetContext => ({
+        locale: input.locale ? input.locale : locale.value,
+        namespace: input.namespace,
+        key: input.key,
+        count: unref(input.count),
+        data: input.data ? unwrapTranslationData(input.data) : undefined,
+    });
+
+    useHydratedValue<string>({
+        key: buildTranslationHydrationKey(context()),
+        resolve: () => ilingo.get(context()),
+        apply: (value) => {
+            recorded.value = value;
+        },
+    });
+
+    return computed(() => {
+        if (source.value === placeholder && recorded.value) {
+            return recorded.value;
+        }
+
+        return source.value;
+    });
 }
 
 /**

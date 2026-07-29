@@ -15,6 +15,7 @@ import {
     installSocketManager,
     installStore,
     installTranslator,
+    provideHydrationStore,
 } from './core';
 import type { Options } from './types';
 
@@ -45,6 +46,10 @@ export function installComponents(app: App, input?: boolean | string[]) {
 }
 
 export function install(app: App, options: Options): void {
+    if (options.hydrationStore) {
+        provideHydrationStore(options.hydrationStore, app);
+    }
+
     if (options.realtime) {
         installSocketManager(app, {
             pinia: options.pinia,

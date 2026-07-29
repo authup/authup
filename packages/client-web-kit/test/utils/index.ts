@@ -21,6 +21,7 @@ export function mountKitComponent(
     component: Component,
     props: Record<string, any> = {},
     handlers: FakeHandlerMap = {},
+    overrides: Partial<Options> = {},
 ) {
     const pinia = createPinia();
     const httpClient = createFakeClient({
@@ -43,6 +44,7 @@ export function mountKitComponent(
         cookieGet: noop,
         cookieSet: noop,
         cookieUnset: noop,
+        ...overrides,
     };
 
     const wrapper = mount(component, {

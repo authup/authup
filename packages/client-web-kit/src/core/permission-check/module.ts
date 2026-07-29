@@ -14,6 +14,7 @@ import {
     ref,
     watch,
 } from 'vue';
+import { useHydratedValue } from '../hydration';
 import type { Store } from '../store';
 import { injectStore, storeToRefs } from '../store';
 import type {
@@ -21,6 +22,37 @@ import type {
     PermissionCheckerReactiveFnContext,
     PermissionCheckerReactiveFnCreateContext,
 } from './types';
+
+/**
+ * Identity of a permission question, or undefined when it cannot be keyed.
+ *
+ * The actor is part of the key. A verdict is only ever a seed for the first
+ * render, and keying it to the identity that produced it keeps an account
+ * switch from adopting the previous actor's answer. A `PolicyData` bag is
+ * per-call resource state rather than a stable identity, so those checks opt
+ * out and keep evaluating from their fail-closed default.
+ */
+function buildPermissionHydrationKey(
+    ctx: PermissionEvaluationContext,
+    identity: { userId?: string | null, realmId?: string | null },
+) : string | undefined {
+    if (ctx.data) {
+        return undefined;
+    }
+
+    const name = Array.isArray(ctx.name) ?
+        [...ctx.name].sort().join(',') :
+        ctx.name;
+
+    return [
+        'authup:permission',
+        identity.userId || '',
+        identity.realmId || '',
+        name,
+        ctx.realmId || '',
+        ctx.clientId || '',
+    ].join(':');
+}
 
 export function createPermissionCheckerReactiveFn(
     ctx: PermissionCheckerReactiveFnCreateContext = {},
@@ -94,16 +126,37 @@ export function createPermissionCheckerReactiveFn(
             // context/login change.
             data.value = false;
 
-            Promise.resolve()
+            return Promise.resolve()
                 .then(() => compute())
                 .then((outcome) => {
                     if (current === sequence) {
                         data.value = outcome;
                     }
+
+                    return outcome;
                 });
         };
 
-        recompute();
+        const pending = recompute();
+
+        // The evaluation is async, so a server-rendered subtree shows the
+        // verdict while the hydrating client is still at its fail-closed
+        // default: a mismatch on everything gated by a permission. Seed the
+        // first client render with what the render decided; `recompute` above
+        // is already in flight and stays authoritative.
+        const hydrationKey = buildPermissionHydrationKey(resolveContext(), {
+            userId: storeRefs.userId.value,
+            realmId: storeRefs.realmId.value,
+        });
+        if (hydrationKey) {
+            useHydratedValue<boolean>({
+                key: hydrationKey,
+                resolve: () => pending,
+                apply: (value) => {
+                    data.value = value;
+                },
+            });
+        }
 
         let removeListener: undefined | CallableFunction;
         onMounted(() => {
