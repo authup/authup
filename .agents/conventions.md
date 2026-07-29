@@ -118,6 +118,23 @@ Current references:
   behind the competitive-parity roadmap (`.agents/plans/048-authentik-parity-overview.md`),
   release-verified through Authentik 2026.5.
 
+## Writing Style
+
+Applies to everything written in this repo: code comments, doc-comments, the
+`.agents/**` docs, commit messages, issue and pull-request text, and above all
+user-facing copy such as the `@authup/i18n` catalogs.
+
+- **Avoid the em dash (`—`).** Use a full stop, a colon, a semicolon, or
+  parentheses instead. Two short sentences almost always beat one sentence
+  spliced with a dash. `An RP-initiated logout may redirect back to this URI.
+  Leave empty to end on the confirmation page.` reads better than the same text
+  joined by a dash.
+- Prefer plain ASCII punctuation in general. Non-ASCII characters are fine when
+  they carry meaning (accented words in the de / fr / es catalogs, arrows in
+  tables), not as decoration.
+- Keep i18n copy short and declarative. A hint should say what the field does
+  and what an empty value means, in as few clauses as possible.
+
 ## Best Practices
 
 - Use **ESM** and modern TypeScript/JavaScript.

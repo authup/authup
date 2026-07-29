@@ -12,6 +12,7 @@ export const TranslatorTranslationClientFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.NAME_HINT]: 'Quelque chose que les utilisateurs reconnaîtront et auquel ils feront confiance',
     [TranslatorTranslationClientKey.DESCRIPTION_HINT]: 'Affiché à tous les utilisateurs de cette application',
     [TranslatorTranslationClientKey.REDIRECT_URI_HINT]: 'Modèle d\'URI vers lequel un navigateur peut rediriger après une connexion réussie',
+    [TranslatorTranslationClientKey.POST_LOGOUT_REDIRECT_URI_HINT]: 'Modèle d’URI vers lequel une déconnexion initiée par le RP peut rediriger. Distinct des URI de redirection de connexion. Sans entrée, la déconnexion se termine toujours sur la page de confirmation.',
     [TranslatorTranslationClientKey.GRANT_TYPES_HINT]: 'Restreint les types d’autorisation OAuth2 que ce client peut utiliser. Sans sélection, tous sont autorisés.',
     [TranslatorTranslationClientKey.AUTH_METHOD]: 'Méthode d’authentification',
     [TranslatorTranslationClientKey.AUTH_METHOD_NONE]: 'Aucune',
@@ -72,7 +73,7 @@ export const TranslatorTranslationClientFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.JUNCTION_POLICY]: 'Politique de liaison',
     [TranslatorTranslationClientKey.JUNCTION_REALM_SCOPE]: 'Portée du domaine',
     [TranslatorTranslationClientKey.REALM_SCOPE_NONE]: 'Aucune',
-    [TranslatorTranslationClientKey.REALM_SCOPE_NONE_HINT]: 'Aucune portée — ne correspond à aucun domaine ; une attribution désactivée.',
+    [TranslatorTranslationClientKey.REALM_SCOPE_NONE_HINT]: 'Aucune portée. Ne correspond à aucun domaine ; une attribution désactivée.',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN]: 'Domaine propre',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN_HINT]: 'N\'agit que sur le domaine propre du titulaire.',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN_OR_NULL]: 'Propre + global',
@@ -95,7 +96,7 @@ export const TranslatorTranslationClientFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.SIGNED_IN_AS]: 'Connecté en tant que {{name}}',
     [TranslatorTranslationClientKey.NOT_YOU]: 'Pas vous ?',
 
-    [TranslatorTranslationClientKey.AUTHORIZE_ABORTED]: 'La demande d\'autorisation a été refusée. Un retour automatique vers l\'application n\'est pas possible — vous pouvez fermer cette fenêtre.',
+    [TranslatorTranslationClientKey.AUTHORIZE_ABORTED]: 'La demande d\'autorisation a été refusée. Un retour automatique vers l\'application n\'est pas possible. Vous pouvez fermer cette fenêtre.',
 
     [TranslatorTranslationClientKey.ACCESS_DENIED_TITLE]: 'Accès refusé',
     [TranslatorTranslationClientKey.ACCESS_DENIED_TEXT]: 'Vous n\'êtes pas autorisé à accéder à cette application.',

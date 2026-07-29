@@ -12,6 +12,7 @@ export const TranslatorTranslationClientSpanish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.NAME_HINT]: 'Algo que los usuarios reconocerán y en lo que confiarán',
     [TranslatorTranslationClientKey.DESCRIPTION_HINT]: 'Se muestra a todos los usuarios de esta aplicación',
     [TranslatorTranslationClientKey.REDIRECT_URI_HINT]: 'Patrón de URI al que un navegador puede redirigir tras un inicio de sesión exitoso',
+    [TranslatorTranslationClientKey.POST_LOGOUT_REDIRECT_URI_HINT]: 'Patrón de URI al que puede redirigir un cierre de sesión iniciado por el RP. Independiente de las URI de redirección de inicio de sesión. Sin entradas, el cierre de sesión termina siempre en la página de confirmación.',
     [TranslatorTranslationClientKey.GRANT_TYPES_HINT]: 'Restringe qué concesiones OAuth2 puede usar este cliente. Sin selección, se permiten todas.',
     [TranslatorTranslationClientKey.AUTH_METHOD]: 'Método de autenticación',
     [TranslatorTranslationClientKey.AUTH_METHOD_NONE]: 'Ninguno',
@@ -72,7 +73,7 @@ export const TranslatorTranslationClientSpanish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.JUNCTION_POLICY]: 'Política de unión',
     [TranslatorTranslationClientKey.JUNCTION_REALM_SCOPE]: 'Ámbito del dominio',
     [TranslatorTranslationClientKey.REALM_SCOPE_NONE]: 'Ninguno',
-    [TranslatorTranslationClientKey.REALM_SCOPE_NONE_HINT]: 'Sin alcance — no coincide con ningún dominio; una concesión deshabilitada.',
+    [TranslatorTranslationClientKey.REALM_SCOPE_NONE_HINT]: 'Sin alcance. No coincide con ningún dominio; una concesión deshabilitada.',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN]: 'Dominio propio',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN_HINT]: 'Actúa solo en el dominio propio del titular.',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN_OR_NULL]: 'Propio + global',
@@ -95,7 +96,7 @@ export const TranslatorTranslationClientSpanish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.SIGNED_IN_AS]: 'Sesión iniciada como {{name}}',
     [TranslatorTranslationClientKey.NOT_YOU]: '¿No eres tú?',
 
-    [TranslatorTranslationClientKey.AUTHORIZE_ABORTED]: 'La solicitud de autorización fue denegada. No es posible volver automáticamente a la aplicación — puedes cerrar esta ventana.',
+    [TranslatorTranslationClientKey.AUTHORIZE_ABORTED]: 'La solicitud de autorización fue denegada. No es posible volver automáticamente a la aplicación. Puedes cerrar esta ventana.',
 
     [TranslatorTranslationClientKey.ACCESS_DENIED_TITLE]: 'Acceso denegado',
     [TranslatorTranslationClientKey.ACCESS_DENIED_TEXT]: 'No tienes permiso para acceder a esta aplicación.',

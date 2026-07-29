@@ -12,6 +12,7 @@ export const TranslatorTranslationClientEnglish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.NAME_HINT]: 'Something users will recognize and trust',
     [TranslatorTranslationClientKey.DESCRIPTION_HINT]: 'Displayed to all users of this application',
     [TranslatorTranslationClientKey.REDIRECT_URI_HINT]: 'URI pattern a browser can redirect to after a successful login',
+    [TranslatorTranslationClientKey.POST_LOGOUT_REDIRECT_URI_HINT]: 'URI pattern an RP-initiated logout may redirect back to. Kept separate from the login redirect URIs. Leave empty to always end on the sign-out confirmation page.',
     [TranslatorTranslationClientKey.GRANT_TYPES_HINT]: 'Restrict which OAuth2 grants this client may use. Select none to allow every grant.',
     [TranslatorTranslationClientKey.AUTH_METHOD]: 'Authentication method',
     [TranslatorTranslationClientKey.AUTH_METHOD_NONE]: 'None',
@@ -60,7 +61,7 @@ export const TranslatorTranslationClientEnglish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.JUNCTION_POLICY]: 'Junction Policy',
     [TranslatorTranslationClientKey.JUNCTION_REALM_SCOPE]: 'Realm Scope',
     [TranslatorTranslationClientKey.REALM_SCOPE_NONE]: 'None',
-    [TranslatorTranslationClientKey.REALM_SCOPE_NONE_HINT]: 'No reach — matches no realm; a disabled grant.',
+    [TranslatorTranslationClientKey.REALM_SCOPE_NONE_HINT]: 'No reach. Matches no realm; a disabled grant.',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN]: 'Own realm',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN_HINT]: 'Acts only on the holder\'s own realm.',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN_OR_NULL]: 'Own + global',
@@ -95,7 +96,7 @@ export const TranslatorTranslationClientEnglish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.SIGNED_IN_AS]: 'Signed in as {{name}}',
     [TranslatorTranslationClientKey.NOT_YOU]: 'Not you?',
 
-    [TranslatorTranslationClientKey.AUTHORIZE_ABORTED]: 'The authorization request was denied. Returning to the application automatically is not possible — you can close this window.',
+    [TranslatorTranslationClientKey.AUTHORIZE_ABORTED]: 'The authorization request was denied. Returning to the application automatically is not possible. You can close this window.',
 
     [TranslatorTranslationClientKey.ACCESS_DENIED_TITLE]: 'Access denied',
     [TranslatorTranslationClientKey.ACCESS_DENIED_TEXT]: 'You are not permitted to access this application.',
