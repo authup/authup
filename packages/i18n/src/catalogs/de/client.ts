@@ -12,7 +12,7 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.NAME_HINT]: 'Etwas, das Benutzer erkennen und dem sie vertrauen',
     [TranslatorTranslationClientKey.DESCRIPTION_HINT]: 'Wird allen Benutzern dieser Anwendung angezeigt',
     [TranslatorTranslationClientKey.REDIRECT_URI_HINT]: 'URI-Muster, zu dem ein Browser nach einem erfolgreichen Login weiterleiten kann',
-    [TranslatorTranslationClientKey.POST_LOGOUT_REDIRECT_URI_HINT]: 'URI-Muster, zu dem ein RP-initiierter Logout zurückleiten darf. Getrennt von den Login-Weiterleitungs-URIs — ohne Eintrag endet der Logout immer auf der Bestätigungsseite.',
+    [TranslatorTranslationClientKey.POST_LOGOUT_REDIRECT_URI_HINT]: 'URI-Muster, zu dem ein RP-initiierter Logout zurückleiten darf. Getrennt von den Login-Weiterleitungs-URIs. Ohne Eintrag endet der Logout immer auf der Bestätigungsseite.',
     [TranslatorTranslationClientKey.GRANT_TYPES_HINT]: 'Schränkt ein, welche OAuth2-Grants dieser Client verwenden darf. Ohne Auswahl sind alle Grants erlaubt.',
     [TranslatorTranslationClientKey.AUTH_METHOD]: 'Authentifizierungsmethode',
     [TranslatorTranslationClientKey.AUTH_METHOD_NONE]: 'Keine',
@@ -73,7 +73,7 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.JUNCTION_POLICY]: 'Verknüpfungsrichtlinie',
     [TranslatorTranslationClientKey.JUNCTION_REALM_SCOPE]: 'Realm-Geltungsbereich',
     [TranslatorTranslationClientKey.REALM_SCOPE_NONE]: 'Keiner',
-    [TranslatorTranslationClientKey.REALM_SCOPE_NONE_HINT]: 'Keine Reichweite — trifft auf keinen Realm zu; eine deaktivierte Berechtigung.',
+    [TranslatorTranslationClientKey.REALM_SCOPE_NONE_HINT]: 'Keine Reichweite. Trifft auf keinen Realm zu; eine deaktivierte Berechtigung.',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN]: 'Eigener Realm',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN_HINT]: 'Wirkt nur im eigenen Realm des Inhabers.',
     [TranslatorTranslationClientKey.REALM_SCOPE_OWN_OR_NULL]: 'Eigener + global',
@@ -96,7 +96,7 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.SIGNED_IN_AS]: 'Angemeldet als {{name}}',
     [TranslatorTranslationClientKey.NOT_YOU]: 'Nicht Sie?',
 
-    [TranslatorTranslationClientKey.AUTHORIZE_ABORTED]: 'Die Autorisierungsanfrage wurde abgelehnt. Eine automatische Rückkehr zur Anwendung ist nicht möglich — Sie können dieses Fenster schließen.',
+    [TranslatorTranslationClientKey.AUTHORIZE_ABORTED]: 'Die Autorisierungsanfrage wurde abgelehnt. Eine automatische Rückkehr zur Anwendung ist nicht möglich. Sie können dieses Fenster schließen.',
 
     [TranslatorTranslationClientKey.ACCESS_DENIED_TITLE]: 'Zugriff verweigert',
     [TranslatorTranslationClientKey.ACCESS_DENIED_TEXT]: 'Sie sind nicht berechtigt, auf diese Anwendung zuzugreifen.',

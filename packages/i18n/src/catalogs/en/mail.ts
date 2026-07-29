@@ -20,7 +20,7 @@ export const TranslatorTranslationMailEnglish : NamespaceTranslations<`${Transla
     [TranslatorTranslationMailKey.PASSWORD_RESET_INTRO]: 'Use the code below to reset your account password.',
     [TranslatorTranslationMailKey.PASSWORD_RESET_ACTION]: 'Reset password',
     [TranslatorTranslationMailKey.PASSWORD_RESET_EXPIRY]: 'The code expires in {{minutes}} minutes.',
-    [TranslatorTranslationMailKey.PASSWORD_RESET_HINT]: 'If you did not request a password reset, you can safely ignore this email — your password stays unchanged.',
+    [TranslatorTranslationMailKey.PASSWORD_RESET_HINT]: 'If you did not request a password reset, you can safely ignore this email. Your password stays unchanged.',
 
     [TranslatorTranslationMailKey.MFA_EMAIL_OTP_SUBJECT]: 'Your verification code',
     [TranslatorTranslationMailKey.MFA_EMAIL_OTP_INTRO]: 'Use the code below to complete your sign-in.',

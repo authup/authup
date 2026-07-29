@@ -80,8 +80,8 @@ export * from './es';
 /**
  * The complete set of namespaces a single authored locale must provide.
  * Every field is required and typed to its key union, so adding a locale
- * (or a namespace) without authoring all of them is a compile error —
- * the compile-time complement to the runtime locale-parity test.
+ * (or a namespace) without authoring all of them is a compile error.
+ * This is the compile-time complement to the runtime locale-parity test.
  */
 type LocaleNamespaces = {
     entity: NamespaceTranslations<`${TranslatorTranslationEntityKey}`>,
@@ -117,7 +117,7 @@ function defineAuthupLocale(code: string, namespaces: LocaleNamespaces) {
 }
 
 /**
- * Authored catalogs as an ilingo `CatalogNode` — the canonical ingestion
+ * Authored catalogs as an ilingo `CatalogNode`, the canonical ingestion
  * format consumed directly by `MemoryStore({ data })`. Built via ilingo's
  * own `define*` helpers so the descriptor shape (and namespace names) are
  * validated by ilingo's types rather than reconstructed by each consumer.

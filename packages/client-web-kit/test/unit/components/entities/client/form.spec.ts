@@ -199,6 +199,80 @@ describe('AClientForm access policy', () => {
     });
 });
 
+// Both url lists are initialised to `''` like every other optional string on
+// this form, and `submit()` posts the raw form state. What makes that safe is
+// the transport: `ClientAPI.create/update/put` run the payload through
+// `nullifyEmptyObjectProperties`, so `''` reaches the server as `null`. That
+// matters because the server validator applies `z.url()` per comma-separated
+// segment and rejects `''` outright (`''.split(',')` -> `['']`). Pinned here
+// because the `''` initialiser reads unsafe without knowing about the nullify
+// step, and dropping that step would 400 every client created without a
+// redirect uri.
+describe('AClientForm untouched url lists', () => {
+    it('submits null for both url lists when neither is touched', async () => {
+        const pinia = createPinia();
+        const httpClient = createFakeClient({
+            handlers: {
+                'POST /clients': (request: FakeRequest) => ({
+                    data: { ...(request.body as Record<string, any>), id: 'new-id' },
+                    meta: {},
+                }),
+            },
+        });
+
+        const options : Options = {
+            baseURL: 'http://fake.test',
+            httpClient,
+            pinia,
+            isServer: true,
+            cookieGet: noop,
+            cookieSet: noop,
+            cookieUnset: noop,
+        };
+
+        const wrapper = mount(AClientForm, {
+            global: {
+                components: { VCIcon: { render: () => null } },
+                stubs: {
+                    APolicyPicker: { template: '<div />' },
+                    ARealmPicker: { template: '<div />' },
+                    ANameInput: { props: ['modelValue', 'disabled'], template: '<input />' },
+                    ASecretInput: { props: ['modelValue', 'disabled'], template: '<input />' },
+                    VCFormGroup: { template: '<div><slot /></div>' },
+                    VCFormInput: { props: ['modelValue', 'disabled'], template: '<input />' },
+                    VCFormTextarea: { props: ['modelValue'], template: '<textarea />' },
+                    VCFormSwitch: { props: ['modelValue', 'label', 'labelContent'], template: '<input type="checkbox" />' },
+                    VCFormSelect: { props: ['modelValue', 'options'], template: '<select />' },
+                    VCFormCheckboxGroup: {
+                        name: 'VCFormCheckboxGroup', 
+                        props: ['modelValue'], 
+                        template: '<div><slot /></div>', 
+                    },
+                    VCFormCheckbox: {
+                        name: 'VCFormCheckbox', 
+                        props: ['value', 'label', 'labelContent'], 
+                        template: '<input type="checkbox" />', 
+                    },
+                },
+                plugins: [pinia, [vuecs, {}], [{ install }, options]],
+            },
+        });
+
+        await flushPromises();
+
+        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await flushPromises();
+
+        const request = httpClient.requests.find(
+            (candidate) => candidate.method === 'POST' &&
+                new URL(candidate.url, 'http://localhost').pathname === '/clients',
+        );
+        expect(request).toBeDefined();
+        expect(request!.body).toHaveProperty('redirectUri', null);
+        expect(request!.body).toHaveProperty('postLogoutRedirectUri', null);
+    });
+});
+
 describe('AClientForm post-logout redirect uris', () => {
     // The list is keyed by label, so target it by index: redirect URIs first,
     // post-logout second.
