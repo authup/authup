@@ -1,7 +1,7 @@
 {
     "name": "@authup/client-web-nuxt",
     "type": "module",
-    "version": "1.0.0-beta.56",
+    "version": "1.0.0-beta.57",
     "description": "Nuxt module for the authup ecosystem",
     "license": "Apache-2.0",
     "repository": {
@@ -30,10 +30,10 @@
         "node": "^22.13.0 || ^23.5.0 || >=24.0.0"
     },
     "dependencies": {
-        "@authup/access": "^1.0.0-beta.56",
-        "@authup/client-web-kit": "^1.0.0-beta.56",
-        "@authup/core-http-kit": "^1.0.0-beta.56",
-        "@authup/kit": "^1.0.0-beta.56",
+        "@authup/access": "^1.0.0-beta.57",
+        "@authup/client-web-kit": "^1.0.0-beta.57",
+        "@authup/core-http-kit": "^1.0.0-beta.57",
+        "@authup/kit": "^1.0.0-beta.57",
         "@nuxt/kit": "^4.0.0",
         "pathtrace": "^2.2.0",
         "smob": "^1.6.1"

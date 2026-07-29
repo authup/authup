@@ -1,5 +1,55 @@
 # Change Log
 
+## [1.0.0-beta.57](https://github.com/authup/authup/compare/v1.0.0-beta.56...v1.0.0-beta.57) (2026-07-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* API consumers reading bare record bodies must unwrap data; old clients against a new server break (lockstep beta release).
+
+### Features
+
+* add a post-logout redirect-uri list to the client form ([#3350](https://github.com/authup/authup/issues/3350)) ([bdf23d1](https://github.com/authup/authup/commit/bdf23d12322171322e554fdafd0bdb190ad72e4f))
+* configurable trust-proxy contract for client-IP derivation ([#3339](https://github.com/authup/authup/issues/3339)) ([10f3a76](https://github.com/authup/authup/commit/10f3a7663fddc21245a062ab63878f6233e18e7c))
+* query-capability discovery via meta.schema + entity record response envelope ([#3332](https://github.com/authup/authup/issues/3332)) ([00f2f4c](https://github.com/authup/authup/commit/00f2f4c3aec069fef4b8eecc2da4d39ba19f0483))
+* restore file config, harden the launcher and dedupe the UI bootstrap ([#3344](https://github.com/authup/authup/issues/3344)) ([13b611d](https://github.com/authup/authup/commit/13b611da9ee980d97887a2a542b84beae5f730ff))
+
+
+### Bug Fixes
+
+* annotate HTTPInjectionKey to keep declaration emit portable ([bb519ca](https://github.com/authup/authup/commit/bb519ca0663e55a6009d88361099694465107955))
+* bind the login-throttle window start as a UTC literal ([#3336](https://github.com/authup/authup/issues/3336)) ([f210c0b](https://github.com/authup/authup/commit/f210c0bdf3844f4095edbd42d5d859d820745a7d))
+* complete schema field projections and re-target role client FK ([#3324](https://github.com/authup/authup/issues/3324)) ([9eec343](https://github.com/authup/authup/commit/9eec343965bf98990560b0092d26bd0c82a2561f))
+* decouple the /logout session revoke from cosmetic-param validity ([#3335](https://github.com/authup/authup/issues/3335)) ([1bd46c4](https://github.com/authup/authup/commit/1bd46c4ccda3a347a1af25f94852541b91d80be7))
+* **deps:** bump @rapiq/* to 2.0.0-beta.11 ([#3333](https://github.com/authup/authup/issues/3333)) ([728dbb1](https://github.com/authup/authup/commit/728dbb1f16deb14c5901f0406a34ae50c791dbd6))
+* **deps:** bump routup to v6.1.0 ([#3342](https://github.com/authup/authup/issues/3342)) ([fd8e18f](https://github.com/authup/authup/commit/fd8e18ff03d72fa2ccf98c6037514b75081715b6))
+* **deps:** bump the minorandpatch group across 1 directory with 6 updates ([#3334](https://github.com/authup/authup/issues/3334)) ([4545dee](https://github.com/authup/authup/commit/4545deed8011b32a914dad979d5ce2e13d702650))
+* **deps:** replace @rapiq/{typeorm,sql,memory} with @rapiq/adapter-* ([9219e75](https://github.com/authup/authup/commit/9219e75c10bf1ba9164804f8676b049b44dc549c)), closes [#3341](https://github.com/authup/authup/issues/3341)
+* **errors:** keep guard inheritance match for JSON-rehydrated errors ([#3331](https://github.com/authup/authup/issues/3331)) ([352fccc](https://github.com/authup/authup/commit/352fccc591be502f20b4928767f7457bea278e1c))
+* gate client secret projection at the schema level ([#3327](https://github.com/authup/authup/issues/3327)) ([a9a9c8b](https://github.com/authup/authup/commit/a9a9c8b0e7500c69bf2710d41945288df1b46333))
+* provision client scopes into the client_scope junction ([#3354](https://github.com/authup/authup/issues/3354)) ([7866d76](https://github.com/authup/authup/commit/7866d76072457468da8b3932d4866d9e51184b50))
+* truncate the login-throttle key to the persisted actorName bound ([#3346](https://github.com/authup/authup/issues/3346)) ([6650d9b](https://github.com/authup/authup/commit/6650d9b154855a1b3c88a310c781c636322414fa))
+* verify request credentials once across dispatch re-entries ([#3338](https://github.com/authup/authup/issues/3338)) ([773b9f4](https://github.com/authup/authup/commit/773b9f42233c2787b0b3a3a7a38a20346e336a89))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+    * @authup/core-http-kit bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+    * @authup/core-kit bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+    * @authup/errors bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+    * @authup/i18n bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+    * @authup/kit bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+    * @authup/server-kit bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+    * @authup/specs bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+    * @authup/client-web-theme bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+    * @authup/server-test-kit bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+
 ## [1.0.0-beta.56](https://github.com/authup/authup/compare/v1.0.0-beta.55...v1.0.0-beta.56) (2026-07-24)
 
 
