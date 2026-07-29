@@ -274,8 +274,33 @@ A separate `tests-migrations` CI job runs the migration CLI end-to-end against a
 1. `migration run` — applies all migrations forward
 2. `migration revert` × N — undoes every migration in reverse order (verifies every `down()` works)
 3. `migration run` — re-applies the full chain (verifies idempotency)
+4. `npm run test:schema-drift` — asserts the migrated schema matches the entity metadata (see below)
 
-This catches SQL syntax errors, cross-DB type mismatches, and `down()` regressions across every migration. It does **not** catch data-correctness bugs in `UPDATE`/`INSERT` migrations against pre-existing rows — those still require manual smoke-testing against a populated database.
+This catches SQL syntax errors, cross-DB type mismatches, and `down()` regressions across every migration. It does **not** catch data-correctness bugs in `UPDATE`/`INSERT` migrations against pre-existing rows — the schema is empty throughout, so anything that only fails with rows present (a foreign key re-validating existing data, a column rewrite losing values, a narrowing type change truncating) passes here. Use the populated round-trip below for those.
+
+### Schema-drift gate (`npm run test:schema-drift`)
+
+`apps/server-core/scripts/assert-schema-drift.mjs` runs `createSchemaBuilder().log()` against a migrated database and fails when it returns any statement — i.e. when the migration chain and the entity classes, two independent descriptions of the same schema, disagree. Every divergence so far was found by hand: two foreign keys pointing at the wrong table (`auth_permissions.client_id` in `1766830857009`, `auth_roles.client_id` in `1784970000000`) and an entire naming + column-type split introduced by the hand-authored `1783325495597` / `1783769340000` and closed by `1785264000000-AlignSchemaWithEntityMetadata`.
+
+The rule that keeps the gate green is in [conventions.md](conventions.md#database-migrations): **DDL is generated with `migration generate`, never hand-written.** A green gate is the normal state — with the chain applied, `migration generate` writes no file at all.
+
+The two traps below are why. Both are invisible while hand-writing DDL and cannot occur when generating it:
+
+- **Constraint names are derived, not chosen.** typeorm names indexes and foreign keys from a table+column hash (`IDX_<hash>` / `FK_<hash>`). A readable `IDX_auth_events_actor_name` reads better and diverges permanently from the model.
+- **uuid columns are `varchar(255)` on MySQL.** MySQL has no uuid type, and `MysqlDriver.getColumnLength` only shortens to 36 for columns typeorm generates itself (`@PrimaryGeneratedColumn('uuid')`); a plain `@Column({ type: 'uuid' })` falls through to the generic varchar default. Writing `varchar(36)` holds a uuid perfectly well but drifts — and the next generated migration then emits `DROP COLUMN`, data loss that reads as routine in review. Pinning `length: 36` on the entity is **not** an escape: `uuid` is not in Postgres's `withLengthColumnTypes`, so `EntityMetadataValidator` throws `Column X of Entity Y does not support length property.` at `DataSource.initialize()` — the app would not boot on Postgres at all.
+
+When the gate does fail, its output is the list of statements needed to reconcile the two — read it as "the entities changed without a migration" or "a migration wrote something the entities do not describe", and fix whichever is wrong before regenerating.
+
+### Populated round-trip (`npm run test:migration-latest`)
+
+`apps/server-core/scripts/verify-latest-migration.mjs` closes the empty-schema gap for the newest migration. It drops and recreates `DB_DATABASE`, boots the real application (so provisioning and a password grant write realms / clients / users / sessions / session tokens / events), seeds the remaining tables, then reverts and re-applies the newest migration and asserts: row counts unchanged in both directions, zero schema drift afterwards, foreign keys still rejecting orphans and still cascading, and the application still booting and issuing a token against the migrated schema.
+
+```bash
+DB_TYPE=postgres DB_HOST=127.0.0.1 DB_PORT=5432 DB_USERNAME=postgres DB_PASSWORD=start123 \
+    DB_DATABASE=scratch npm run test:migration-latest --workspace=apps/server-core
+```
+
+It needs a built `dist` and a scratch database (it drops the target). Not wired into CI — it is the manual gate for a migration that touches columns, constraints or rows, which the empty round-trip cannot certify.
 
 The job pre-flights with a sanity check that the compiled migrations exist under `apps/server-core/dist/adapters/database/migrations/{mysql,postgres}/` — without this guard, running the CLI from the wrong working directory results in typeorm silently reporting "No migrations are pending" with exit code 0, masking the failure.
 

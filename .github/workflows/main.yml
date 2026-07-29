@@ -228,6 +228,10 @@ jobs:
                 working-directory: apps/server-core
                 run: node dist/cli/index.mjs migration run
 
+            -   name: Assert the migrated schema matches the entity metadata
+                working-directory: apps/server-core
+                run: npm run test:schema-drift
+
     tests-launcher:
         name: Test Launcher (smoke)
         needs: [build]

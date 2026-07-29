@@ -43,7 +43,20 @@ Migrations live in `apps/server-core/src/adapters/database/migrations/{mysql,pos
 
 - **One named migration per feature; released migrations are immutable.** Each feature/PR adds its own migration with a descriptive class/file name (e.g. `1784289540000-CamelCaseAttributes.ts`, `1784460916000-RemoveRobots.ts`; both dialects, doc-comment header explaining the change). A migration may still be amended while it lives only on its own unmerged branch; once it ships in a **release** it is immutable — before touching an existing migration, verify against the release tags / last release-PR merge that it has not shipped (folding into an already-released file is the failure mode this rule exists to prevent).
 - Consolidation happens at release time, not at merge time: the window's migrations MAY be squashed into one file per dialect as a deliberate last step before the release PR merges (keeping the earliest timestamp so ordering against the released chain holds) — but this is optional; shipping several named migrations in one release is fine. Anyone who executed the pre-squash files must drop their dev DB (the CLI re-creates it) or fix its `migrations` table by hand.
-- After adding or amending a migration, verify with the migration round-trip (`migration run` → `revert` × N → `run`, see [testing.md](testing.md#migration-tests)).
+- After adding or amending a migration, verify with the migration round-trip (`migration run` → `revert` × N → `run`, see [testing.md](testing.md#migration-tests)). A migration that touches columns, constraints or rows additionally needs the populated round-trip (`npm run test:migration-latest`) — the CI round-trip runs on an empty schema and cannot surface anything that only fails with rows present.
+- **Never hand-write DDL. Generate it with the CLI.** Schema changes (tables, columns, indexes, constraints, types) are produced by `migration generate` and committed as emitted — never typed by hand, and never edited afterwards in any way that changes the resulting schema:
+
+  ```bash
+  docker compose up -d mysql postgres            # the generator connects to both
+  npm run build --workspace=apps/server-core     # it diffs the compiled entities
+  npm run cli --workspace=apps/server-core -- migration generate
+  ```
+
+  The command drops and recreates a local `migrations` database per dialect, replays the existing chain, diffs it against the entity metadata and writes **both** dialect files under one shared timestamp. Rename the emitted `<timestamp>-Default.ts` file **and** its class to the descriptive name the rule above asks for, add the doc-comment header, and leave the DDL untouched.
+
+  Hand-authored statements are confined to what the generator cannot express — data migrations (`UPDATE` / `INSERT` / backfills), guarded or idempotent wrappers, and comments. They may sit alongside generated DDL in the same file; they may not replace it. If a change seems to need hand-written DDL, the entity is the thing to fix, then regenerate.
+
+  This is not a style preference. Every schema defect found so far came from hand-authored DDL diverging from the entity model: two foreign keys pointing at the wrong table (`auth_permissions.client_id` in `1766830857009`, `auth_roles.client_id` in `1784970000000`), and the naming + column-type split that `1783325495597` / `1783769340000` introduced and `1785264000000-AlignSchemaWithEntityMetadata` had to repair across 28 constraints and 15 columns. Two traps in particular are invisible while hand-writing and unmissable when generating: constraint names are typeorm's table+column hash (`IDX_<hash>` / `FK_<hash>`, never a readable `IDX_auth_events_actor_name`), and a plain `@Column({ type: 'uuid' })` is `varchar(255)` on MySQL, not `varchar(36)` — pinning `length: 36` is no escape, Postgres rejects a length on `uuid` at `DataSource.initialize()`. The `test:schema-drift` gate in the `tests-migrations` job fails the build on any divergence; see [testing.md](testing.md#schema-drift-gate-npm-run-testschema-drift).
 - Planned for `v1.0.0` final: squash the entire beta chain into a single baseline migration with a stepping-stone upgrade path (upgrade to the last beta first).
 
 ## File Organization
@@ -117,6 +130,15 @@ Current references:
 - [authentik.md](references/authentik.md) — Authentik (goauthentik.io): the concept→authup mapping
   behind the competitive-parity roadmap (`.agents/plans/048-authentik-parity-overview.md`),
   release-verified through Authentik 2026.5.
+- [keycloak.md](references/keycloak.md) — Keycloak: posture comparisons (key storage at rest,
+  hosted login/consent, RP-initiated logout).
+- [privateaim-hub.md](references/privateaim-hub.md) — PrivateAIM/hub: the sibling codebase authup
+  borrows server-kit layout, the domain-event publisher and the telemetry `Event` shape from.
+- [routup.md](references/routup.md) — routup: dispatch walk, decorator flattening, `event.store`
+  contract, `trustProxy` resolution.
+- [typeorm.md](references/typeorm.md) — typeorm + typeorm-extension: uuid column widths per dialect,
+  the postgres `createFullType` length quirk, `synchronizeDatabaseSchema` boot behaviour, and the
+  `migration generate` / schema-drift tooling.
 
 ## Best Practices
 
