@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.0.0-beta.57](https://github.com/authup/authup/compare/v1.0.0-beta.56...v1.0.0-beta.57) (2026-07-29)
+
+
+### Features
+
+* add a grant-types form control to the client form ([#3348](https://github.com/authup/authup/issues/3348)) ([0f4b675](https://github.com/authup/authup/commit/0f4b67513cf1bee06fc769668f636831f9de9c93))
+* add a post-logout redirect-uri list to the client form ([#3350](https://github.com/authup/authup/issues/3350)) ([bdf23d1](https://github.com/authup/authup/commit/bdf23d12322171322e554fdafd0bdb190ad72e4f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+
 ## [1.0.0-beta.56](https://github.com/authup/authup/compare/v1.0.0-beta.55...v1.0.0-beta.56) (2026-07-24)
 
 

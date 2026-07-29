@@ -1,7 +1,7 @@
 {
   "name": "@authup/client-web-kit-theme",
   "type": "module",
-  "version": "1.0.0-beta.56",
+  "version": "1.0.0-beta.57",
   "description": "Kit-level vuecs theme for authup — composes @vuecs/theme-tailwind with the overrides @authup/client-web-kit's components need.",
   "license": "Apache-2.0",
   "exports": {
@@ -56,7 +56,7 @@
     "tailwindcss": "^4.3.2"
   },
   "peerDependencies": {
-    "@authup/client-web-kit": "^1.0.0-beta.56",
+    "@authup/client-web-kit": "^1.0.0-beta.57",
     "@vuecs/core": "^3.5.0",
     "@vuecs/design": "^1.1.0",
     "@vuecs/theme-tailwind": "^6.4.0",

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-beta.57](https://github.com/authup/authup/compare/v1.0.0-beta.56...v1.0.0-beta.57) (2026-07-29)
+
+
+### Bug Fixes
+
+* **errors:** keep guard inheritance match for JSON-rehydrated errors ([#3331](https://github.com/authup/authup/issues/3331)) ([352fccc](https://github.com/authup/authup/commit/352fccc591be502f20b4928767f7457bea278e1c))
+
 ## [1.0.0-beta.56](https://github.com/authup/authup/compare/v1.0.0-beta.55...v1.0.0-beta.56) (2026-07-24)
 
 
