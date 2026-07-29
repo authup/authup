@@ -14,9 +14,15 @@ import {
     useTranslationsForNamespace,
 } from '@authup/client-web-kit';
 import { VCIcon } from '@vuecs/icon';
-import { computed, defineComponent, ref } from 'vue';
+import type { Ref } from 'vue';
+import { computed, defineComponent } from 'vue';
 import { definePageMeta } from '#imports';
-import { createError, navigateTo, useRoute } from '#app';
+import { 
+    createError, 
+    navigateTo, 
+    useAsyncData, 
+    useRoute, 
+} from '#app';
 import { LayoutKey } from '../../../config/layout';
 
 export default defineComponent({
@@ -30,8 +36,6 @@ export default defineComponent({
         });
 
         const route = useRoute();
-
-        const entity = ref<EventEntity>(null!);
 
         const translations = useTranslations([
             {
@@ -103,14 +107,25 @@ export default defineComponent({
             ],
         );
 
-        try {
-            entity.value = (await injectHTTPClient()
+        const httpClient = injectHTTPClient();
+
+        const { data, error } = await useAsyncData(
+            `event:${route.params.id}`,
+            () => httpClient
                 .event
-                .getOne(route.params.id as string)).data;
-        } catch {
+                .getOne(route.params.id as string)
+                .then((response) => response.data),
+            // deep, so the in-place `extendObject` update below stays reactive
+            // (useAsyncData hands back a shallowRef by default)
+            { deep: true },
+        );
+
+        if (error.value || !data.value) {
             await navigateTo({ path: '/events' });
             throw createError({});
         }
+
+        const entity = data as Ref<EventEntity>;
 
         const items = computed(() => [
             {
