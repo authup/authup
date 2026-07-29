@@ -7,7 +7,6 @@
 
 import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
-import type { Scope } from '@authup/core-kit';
 import {
     beforeEach, 
     describe, 
@@ -16,9 +15,7 @@ import {
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { ScopeService } from '../../../../../src/core/entities/scope/service.ts';
-import type { IScopeRepository } from '../../../../../src/core/entities/scope/types.ts';
 import { 
-    FakeEntityRepository, 
     createAllowAllActor, 
     createDenyAllActor, 
     createMasterRealmActor, 
@@ -26,12 +23,7 @@ import {
 } from '@authup/server-test-kit';
 import { FakeRealmRepository } from '../realm/fake-repository.ts';
 import { createFakeScope } from '../../../../utils/domains/index.ts';
-
-class FakeScopeRepository extends FakeEntityRepository<Scope> implements IScopeRepository {
-    async checkUniqueness(): Promise<void> {
-        // no-op
-    }
-}
+import { FakeScopeRepository } from './fake-repository.ts';
 
 describe('core/entities/scope/service', () => {
     let repository: FakeScopeRepository;

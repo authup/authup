@@ -336,6 +336,12 @@ Clients (OAuth2 applications) must be nested inside a realm.
 | `realmPermissions`  | `string[]`                    | Assign realm permissions. `'*'` = all.                  |
 | `globalRoles`       | `string[]`                    | Assign global roles. `'*'` = all.                       |
 | `realmRoles`        | `string[]`                    | Assign realm roles. `'*'` = all.                        |
+| `globalScopes`      | `string[]`                    | Assign global scopes. `'*'` = all.                      |
+| `realmScopes`       | `string[]`                    | Assign realm scopes. `'*'` = all.                       |
+
+Assigned scopes are what the authorization endpoint grants the client. A client
+with none of them can only be authorized for requests that include the `global`
+scope.
 
 ## Strategies
 

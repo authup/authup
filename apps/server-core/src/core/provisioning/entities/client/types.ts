@@ -42,6 +42,18 @@ export type ClientProvisioningRelations = {
      */
     globalRoles?: string[],
 
+    // ------------------------------------------
+
+    /**
+     * Assign client to scopes of same realm.
+     */
+    realmScopes?: string[],
+
+    /**
+     * Assign client to global scopes.
+     */
+    globalScopes?: string[],
+
 };
 
 export type ClientProvisioningEntity = BaseProvisioningEntity<Client> & {

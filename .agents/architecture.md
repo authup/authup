@@ -784,11 +784,11 @@ The provisioning system declaratively synchronizes entities (permissions, roles,
 
 ### Layers
 
-- **core/provisioning/entities/**: Provisioning entity types and validators (what can be provisioned)
+- **core/provisioning/entities/**: Provisioning entity types and validators (what can be provisioned). A client declares `permissions` / `roles` (define new client-scoped ones) plus `globalPermissions` / `realmPermissions` / `globalRoles` / `realmRoles` / `globalScopes` / `realmScopes` (assign existing). Every assign list lands in the matching junction table
 - **core/provisioning/strategy/**: Strategy types (`createOnly`, `merge`, `replace`, `absent`) and normalization
 - **core/provisioning/synchronizer/**: Business logic that applies strategies and manages relations
-  - `entity-resolver.ts`: `ProvisioningEntityResolver<T>` — resolves Permission/Role entities by name with wildcard support and scope filtering (global, realm, client)
-  - `junction-synchronizer.ts`: `ProvisioningJunctionSynchronizer<T>` — ensures junction entries (e.g. RolePermission, UserRole) exist between owner and target entities
+  - `entity-resolver.ts`: `ProvisioningEntityResolver<T>` — resolves Permission/Role/Scope entities by name with wildcard support and scope filtering (global, realm, client). The client dimension is always pinned so a client-ownable entity never resolves another owner's rows; entities without one (scope) opt out via `{ clientScoped: false }`, since the predicate would not compile against their table
+  - `junction-synchronizer.ts`: `ProvisioningJunctionSynchronizer<T>` — ensures junction entries (e.g. RolePermission, UserRole, ClientScope) exist between owner and target entities
   - `{entity}/module.ts`: Per-entity synchronizer composing resolver + junction helpers
 - **app/modules/provisioning/sources/**: Data sources that produce `RootProvisioningEntity`
   - `default/`: Built-in defaults (system policies, admin user, system client, all permissions/scopes)
@@ -827,7 +827,9 @@ dropped from the validator output) are validated via
 `ProvisionerModule` runs (1) `GraphProvisioningSynchronizer`, (2) backfill via `assignDefaultPolicy` (config-gated, deprecated).
 
 `GraphProvisioningSynchronizer` processes in order: policies → permissions → roles → scopes → realms.
-`RealmProvisioningSynchronizer` processes per realm: clients → permissions → roles → users → scopes.
+`RealmProvisioningSynchronizer` processes per realm: scopes → clients → permissions → roles → users.
+Scopes run first because they are leaf entities carrying no relations of their
+own, and a client in the same realm block may bind them via `realmScopes`.
 
 ### Per-Realm Public `web` Client
 
@@ -842,8 +844,17 @@ endpoint — the `/authorize` verifier already resolves clients via
   `authMethod: 'none'`, `tokenBindingMethod: 'none'`, `builtIn: true`, `active: true`,
   `grantTypes: 'authorization_code refresh_token'` (an enforced allowlist —
   see *Per-client grant allowlist* under the token-endpoint section),
-  `scope: 'global openid'`, `redirectUri` = one `<origin>/**` wildcard per
-  trusted app origin (matched by `isSimpleMatch`).
+  `redirectUri` = one `<origin>/**` wildcard per trusted app origin (matched
+  by `isSimpleMatch`).
+- **Scopes** (`WEB_CLIENT_SCOPE_NAMES` = `global` + `openid`) are bound as
+  `auth_client_scopes` rows. That junction is the only source `/authorize`
+  reads scopes from (`OAuth2ScopeRepository.findByClientId`). The `Client.scope` column carries
+  the same list but is descriptive only: nothing on any production path reads
+  it. Writing the column alone left the client with an empty granted set, so a
+  standard OIDC `scope=openid` request failed with `insufficient_scope` while
+  only requests carrying `global` passed via the verifier's bypass (#3347).
+  The junction rows are additive: a scope an admin bound by hand survives the
+  next boot.
 - **App origins** come from `getAppOrigins(config)` = publicUrl's origin +
   `config.trustedOrigins` merged verbatim. A `trustedOrigins` entry may carry
   an http(s) scheme (contributes exactly that origin; other protocols are
@@ -872,8 +883,13 @@ endpoint — the `/authorize` verifier already resolves clients via
   2. **Runtime** — `RealmService.save()` calls `ensureForRealm` when it *creates*
      a new realm, via the injected `webClientProvisioner` (system-level, ungated —
      a realm creator may lack `CLIENT_CREATE`). Not called on update.
-  Idempotent; guarded on `builtIn` — a non-built-in client named `web` is never
-  overwritten (skip + warn).
+  Idempotent. The attribute MERGE is dirty-checked to keep a steady-state boot
+  free of redundant UPDATEs, but the scope binding runs unconditionally. An
+  instance provisioned before the junction rows existed carries a current
+  client with no scopes at all. `web` is a reserved name, so the row belongs
+  to the system whatever state it is in: a non-built-in client named `web`
+  predates the reservation and is taken over (overwrite + warn) rather than
+  left to shadow the realm's login client.
 - **Guardrails:** `web` and `system` are reserved client names — `ClientService.save()`
   rejects API attempts to create/rename a client onto them (`CLIENT_RESERVED_NAMES`).
   The client validator strips `builtIn` on create/update, so no API caller can

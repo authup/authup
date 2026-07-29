@@ -53,7 +53,16 @@ const DATA : RootProvisioningEntity = {
                     { attributes: { name: 'foo' } },
                 ],
                 clients: [
-                    { attributes: { name: 'foo' } },
+                    {
+                        attributes: { name: 'foo' },
+                        relations: {
+                            globalScopes: ['foo'],
+                            realmScopes: ['realm-scope'],
+                        },
+                    },
+                ],
+                scopes: [
+                    { attributes: { name: 'realm-scope' } },
                 ],
                 roles: [
                     {

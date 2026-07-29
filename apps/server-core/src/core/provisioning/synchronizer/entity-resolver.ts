@@ -7,77 +7,58 @@
 
 import type { ObjectLiteral } from '@authup/kit';
 import type { IEntityRepository } from '@authup/server-kit';
+import type { ProvisioningEntityResolverOptions } from './types.ts';
 
 export class ProvisioningEntityResolver<T extends ObjectLiteral = ObjectLiteral> {
     protected repository: IEntityRepository<T>;
 
-    constructor(repository: IEntityRepository<T>) {
+    protected clientScoped: boolean;
+
+    constructor(repository: IEntityRepository<T>, options: ProvisioningEntityResolverOptions = {}) {
         this.repository = repository;
+        this.clientScoped = options.clientScoped ?? true;
     }
 
     async resolveGlobal(names?: string[]): Promise<T[]> {
-        if (!names || names.length === 0) {
-            return [];
-        }
-
-        names = names.map((name) => name.trim().toLowerCase());
-
-        const hasWildcard = names.includes('*');
-        if (hasWildcard) {
-            return this.repository.findManyBy({
-                realmId: null,
-                clientId: null,
-            });
-        }
-
-        return this.repository.findManyBy({
-            name: names,
-            realmId: null,
-            clientId: null,
-        });
+        return this.resolve(names, { realmId: null });
     }
 
     async resolveRealm(names: string[] | undefined, realmId: string): Promise<T[]> {
-        if (!names || names.length === 0) {
-            return [];
-        }
-
-        names = names.map((name) => name.trim().toLowerCase());
-
-        const hasWildcard = names.includes('*');
-        if (hasWildcard) {
-            return this.repository.findManyBy({
-                realmId,
-                clientId: null,
-            });
-        }
-
-        return this.repository.findManyBy({
-            name: names,
-            realmId,
-            clientId: null,
-        });
+        return this.resolve(names, { realmId });
     }
 
     async resolveClient(names: string[] | undefined, realmId: string, clientId: string): Promise<T[]> {
+        return this.resolve(names, { realmId }, clientId);
+    }
+
+    protected async resolve(
+        names: string[] | undefined,
+        where: Record<string, any>,
+        clientId: string | null = null,
+    ): Promise<T[]> {
         if (!names || names.length === 0) {
             return [];
         }
 
         names = names.map((name) => name.trim().toLowerCase());
 
-        const hasWildcard = names.includes('*');
-        if (hasWildcard) {
-            return this.repository.findManyBy({
-                realmId,
+        // A client-ownable entity must never resolve another owner's rows, so
+        // the client dimension is always pinned. Entities without one (scope)
+        // opt out, because the predicate would not compile against the table.
+        const conditions = this.clientScoped ?
+            {
+                ...where,
                 clientId,
-            });
+            } :
+            where;
+
+        if (names.includes('*')) {
+            return this.repository.findManyBy(conditions);
         }
 
         return this.repository.findManyBy({
+            ...conditions,
             name: names,
-            realmId,
-            clientId,
         });
     }
 }

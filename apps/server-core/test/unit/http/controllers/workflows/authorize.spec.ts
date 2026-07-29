@@ -12,8 +12,9 @@ import {
     it,
 } from 'vitest';
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
-import { ScopeName } from '@authup/core-kit';
+import { CLIENT_WEB_NAME, REALM_MASTER_NAME, ScopeName } from '@authup/core-kit';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
+import { generateOAuth2CodeVerifier } from '../../../../../src/core';
 import { createFakeClient, expectClientError } from '../../../../utils';
 import { createTestApplication } from '../../../../app';
 
@@ -94,6 +95,36 @@ describe('src/http/controllers/token', () => {
                 (issue) => issue.path.includes('response_type'),
             )).toBe(true);
         }
+    });
+
+    // Regression (#3347): the per-realm built-in `web` client declared its
+    // scopes in the `scope` column only and held no auth_client_scopes rows,
+    // so the verifier saw an empty granted set. A plain OIDC scope=openid
+    // request failed with insufficient_scope; only requests carrying `global`
+    // slipped through, via the verifier's bypass.
+    it('should authorize the built-in web client with scope=openid alone', async () => {
+        const { data: realm } = await suite.client.realm.getOne(REALM_MASTER_NAME);
+        const { data: webClients } = await suite.client.client.getMany({
+            filters: {
+                name: CLIENT_WEB_NAME,
+                realmId: realm.id,
+            },
+        });
+
+        expect(webClients).toHaveLength(1);
+
+        // the web client is public: PKCE + state are mandatory, and its
+        // redirect patterns cover the trusted dev origin
+        const response = await suite.client.authorize.confirm({
+            response_type: OAuth2AuthorizationResponseType.CODE,
+            client_id: webClients[0].id,
+            redirect_uri: 'http://localhost:3000/login/callback',
+            scope: ScopeName.OPEN_ID,
+            state: generateOAuth2CodeVerifier(),
+            code_challenge: generateOAuth2CodeVerifier(),
+        });
+
+        expect(new URL(response.url).searchParams.get('code')).toBeTruthy();
     });
 
     it('should NOT advertise implicit/hybrid response types in discovery', async () => {

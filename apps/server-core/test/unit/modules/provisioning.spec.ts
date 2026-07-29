@@ -9,11 +9,19 @@ import { BuiltInPolicyType, SystemPolicyName } from '@authup/access';
 import type { CompositePolicy } from '@authup/access';
 import { DecisionStrategy } from '@authup/kit';
 import type {
- 
-    Permission, 
-    PermissionPolicy, 
-    Realm, 
-    Role, 
+
+    Client,
+    ClientScope,
+    Permission,
+    PermissionPolicy,
+    Realm,
+    Role,
+} from '@authup/core-kit';
+import {
+    CLIENT_WEB_NAME,
+    ClientAuthMethod,
+    ClientTokenBindingMethod,
+    REALM_MASTER_NAME,
 } from '@authup/core-kit';
 import type { DataSource, Repository } from 'typeorm';
 import { IsNull } from 'typeorm';
@@ -26,6 +34,8 @@ import {
 } from 'vitest';
 import {
     CacheModule, 
+    ClientEntity,
+    ClientScopeEntity,
     ConfigModule,
     DefaultProvisioningSource,
     FileProvisioningSource,
@@ -38,7 +48,7 @@ import {
 } from '../../../src/index.ts';
 import { Container } from 'eldin';
 import type { IContainer } from 'eldin';
-import { PolicyProvisioningSynchronizer } from '../../../src/core/index.ts';
+import { PolicyProvisioningSynchronizer, WEB_CLIENT_SCOPE_NAMES } from '../../../src/core/index.ts';
 import type { PolicyProvisioningEntity } from '../../../src/core/provisioning/entities/policy/index.ts';
 import { PolicyRepository } from '../../../src/adapters/database/domains/index.ts';
 import {
@@ -157,6 +167,93 @@ describe('app/modules/provisioning', () => {
             policyId: filePolicy!.id,
         });
         expect(junction).toBeDefined();
+
+        // The junction is the only source /authorize resolves client scopes
+        // from, so a declared scope that never reaches it is not granted at
+        // all (#3347). The fixture client declares one global and one realm
+        // scope, and realm scopes must synchronize before the realm's clients
+        // for the latter to resolve.
+        const clientRepository = di.resolve<Repository<Client>>(ClientEntity);
+        const clientScopeRepository = di.resolve<Repository<ClientScope>>(ClientScopeEntity);
+
+        const client = await clientRepository.findOneBy({
+            name: 'foo',
+            realmId: realm!.id,
+        });
+
+        const clientScopes = await clientScopeRepository.find({
+            where: { clientId: client!.id },
+            relations: { scope: true },
+        });
+
+        expect(clientScopes.map((row) => row.scope.name).sort()).toEqual(['foo', 'realm-scope']);
+    });
+
+    // Every realm carries a public `web` client whose provisioned scopes must
+    // reach the junction (#3347). `web` is also a reserved client name, so a
+    // non-built-in row predates the reservation and must not shadow the
+    // realm's login client.
+    it('should provision the web client of every realm with its scopes', async () => {
+        const realmRepository = di.resolve<Repository<Realm>>(RealmEntity);
+        const clientRepository = di.resolve<Repository<Client>>(ClientEntity);
+        const clientScopeRepository = di.resolve<Repository<ClientScope>>(ClientScopeEntity);
+
+        // A legacy realm holding a confidential client on the reserved name.
+        const legacyRealm = await realmRepository.save(realmRepository.create({ name: 'takeover' }));
+        await clientRepository.save(clientRepository.create({
+            name: CLIENT_WEB_NAME,
+            realmId: legacyRealm.id,
+            builtIn: false,
+            authMethod: ClientAuthMethod.SECRET,
+            tokenBindingMethod: ClientTokenBindingMethod.NONE,
+            secret: 'legacy-secret',
+            secretHashed: false,
+            redirectUri: 'http://user-owned.example.com/**',
+        }));
+
+        const provisioning = new ProvisionerModule([
+            new DefaultProvisioningSource(),
+        ]);
+        await provisioning.setup(di);
+
+        const readScopeNames = async (clientId: string) => {
+            const rows = await clientScopeRepository.find({
+                where: { clientId },
+                relations: { scope: true },
+            });
+
+            return rows.map((row) => row.scope.name).sort();
+        };
+
+        const masterRealm = await realmRepository.findOneBy({ name: REALM_MASTER_NAME });
+        const masterWebClient = await clientRepository.findOneBy({
+            name: CLIENT_WEB_NAME,
+            realmId: masterRealm!.id,
+        });
+
+        expect(await readScopeNames(masterWebClient!.id)).toEqual(
+            [...WEB_CLIENT_SCOPE_NAMES].sort(),
+        );
+
+        // `secret` is a select:false column, so read it back explicitly.
+        const legacyClient = await clientRepository
+            .createQueryBuilder('client')
+            .addSelect('client.secret')
+            .where('client.name = :name', { name: CLIENT_WEB_NAME })
+            .andWhere('client.realmId = :realmId', { realmId: legacyRealm.id })
+            .getOne();
+
+        expect(legacyClient!.builtIn).toBe(true);
+        expect(legacyClient!.authMethod).toBe(ClientAuthMethod.NONE);
+        expect(legacyClient!.redirectUri).not.toBe('http://user-owned.example.com/**');
+
+        // The client is public now, so the secret can never authenticate it
+        // again and must not stay at rest.
+        expect(legacyClient!.secret).toBeNull();
+
+        expect(await readScopeNames(legacyClient!.id)).toEqual(
+            [...WEB_CLIENT_SCOPE_NAMES].sort(),
+        );
     });
 
     // ---------------------------------------------------------------
