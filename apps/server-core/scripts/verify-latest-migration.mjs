@@ -40,10 +40,27 @@ const port = Number(process.env.VERIFY_PORT || 34419);
 const adminPassword = 'start123';
 
 const results = [];
+
+const describeDifference = (actual, expected) => {
+    if (
+        actual === null || expected === null ||
+        typeof actual !== 'object' || typeof expected !== 'object'
+    ) {
+        return `got ${JSON.stringify(actual)} want ${JSON.stringify(expected)}`;
+    }
+
+    const keys = [...new Set([...Object.keys(actual), ...Object.keys(expected)])];
+    const differing = keys.filter((key) => JSON.stringify(actual[key]) !== JSON.stringify(expected[key]));
+
+    return differing
+        .map((key) => `${key}: ${JSON.stringify(actual[key])} (was ${JSON.stringify(expected[key])})`)
+        .join(', ');
+};
+
 const check = (label, actual, expected) => {
     const ok = JSON.stringify(actual) === JSON.stringify(expected);
     results.push({ ok, label });
-    console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${ok ? '' : `  got ${JSON.stringify(actual)} want ${JSON.stringify(expected)}`}`);
+    console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${ok ? '' : `  ${describeDifference(actual, expected)}`}`);
 };
 
 const sleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
@@ -202,16 +219,52 @@ const snapshot = async () => {
 
 const drift = async () => (await dataSource.driver.createSchemaBuilder().log()).upQueries.length;
 
+/**
+ * Per column, how many rows hold a value.
+ *
+ * Row counts alone would not notice a column that lost its contents:
+ * a type change implemented as DROP COLUMN plus ADD COLUMN keeps every
+ * row and empties one column, which is exactly the failure mode a
+ * migration touching column types has to be held against.
+ */
+const values = async () => {
+    const out = {};
+
+    for (const table of TABLES) {
+        const columns = await dataSource.query(
+            dialect === 'postgres' ?
+                'SELECT column_name AS name FROM information_schema.columns WHERE table_name = $1 AND table_schema = current_schema() ORDER BY column_name' :
+                'SELECT COLUMN_NAME AS name FROM information_schema.COLUMNS WHERE TABLE_NAME = ? AND TABLE_SCHEMA = DATABASE() ORDER BY COLUMN_NAME',
+            [table],
+        );
+
+        const projection = columns
+            .map((column) => `COUNT(${quote(column.name)}) AS ${quote(`c_${column.name}`)}`)
+            .join(', ');
+
+        const [row] = await dataSource.query(`SELECT ${projection} FROM ${quote(table)}`);
+
+        for (const column of columns) {
+            out[`${table}.${column.name}`] = Number(row[`c_${column.name}`]);
+        }
+    }
+
+    return out;
+};
+
 const before = await snapshot();
+const valuesBefore = await values();
 console.log(`[${dialect}] populated: ${JSON.stringify(before)}`);
 check('every asserted table holds rows', TABLES.every((table) => before[table] > 0), true);
 check('no drift after the full chain', await drift(), 0);
 
 await dataSource.undoLastMigration({ transaction: options.migrationsTransactionMode });
 check('row counts unchanged after revert', await snapshot(), before);
+check('column values unchanged after revert', await values(), valuesBefore);
 
 await dataSource.runMigrations({ transaction: options.migrationsTransactionMode });
 check('row counts unchanged after re-run', await snapshot(), before);
+check('column values unchanged after re-run', await values(), valuesBefore);
 check('no drift after re-run', await drift(), 0);
 
 let rejected = false;

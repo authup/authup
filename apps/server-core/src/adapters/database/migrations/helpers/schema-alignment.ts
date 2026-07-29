@@ -5,11 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuthupError } from '@authup/errors';
-import type { QueryRunner } from 'typeorm';
 import type {
     SchemaChangeColumnTypeInput,
-    SchemaColumnType,
     SchemaRenameForeignKeyInput,
     SchemaRenameIndexInput,
 } from 'typeorm-extension';
@@ -406,73 +403,4 @@ export function invertColumnTypeChanges(
             nullable: change.to.nullable,
         },
     }));
-}
-
-const IDENTIFIER_PATTERN = /^[A-Za-z0-9_]+$/;
-
-function assertIdentifier(value: string) : void {
-    if (!IDENTIFIER_PATTERN.test(value)) {
-        throw new AuthupError(`The identifier ${value} is not a plain identifier.`);
-    }
-}
-
-function buildColumnType(type: SchemaColumnType) : string {
-    return typeof type.length === 'undefined' ?
-        `${type.type}` :
-        `${type.type}(${type.length})`;
-}
-
-/**
- * Widens (or narrows) a mysql column in place.
- *
- * typeorm-extension's changeColumnType delegates to typeorm's
- * changeColumn, which on mysql DROPs and re-ADDs a column whose length
- * differs (MysqlQueryRunner.changeColumn) - it destroys the column's
- * values on a populated table, and fails outright on a column a foreign
- * key depends on. MODIFY COLUMN preserves the data, so this stays local
- * until the upstream helper can express it (tada5hi/typeorm-extension#1424).
- *
- * Guarded like the upstream helpers: a no-op when the column is absent
- * or already matches `to`, and skipped with a warning when it matches
- * neither description, so the migration stays resumable.
- */
-export async function changeMysqlColumnTypes(
-    queryRunner: QueryRunner,
-    changes: SchemaChangeColumnTypeInput[],
-) : Promise<void> {
-    for (const change of changes) {
-        assertIdentifier(change.table);
-        assertIdentifier(change.column);
-
-        const rows = await queryRunner.query(
-            'SELECT COLUMN_TYPE AS type FROM information_schema.COLUMNS ' +
-            'WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1',
-            [change.table, change.column],
-        );
-
-        if (rows.length === 0) {
-            continue;
-        }
-
-        const current = rows[0].type;
-        const target = buildColumnType(change.to);
-
-        if (current === target) {
-            continue;
-        }
-
-        if (current !== buildColumnType(change.from)) {
-            queryRunner.connection.logger.log(
-                'warn',
-                `[schema-alignment] column ${change.table}.${change.column} is ${current}, skipping type change`,
-                queryRunner,
-            );
-            continue;
-        }
-
-        await queryRunner.query(
-            `ALTER TABLE \`${change.table}\` MODIFY COLUMN \`${change.column}\` ` +
-            `${target} ${change.to.nullable ? 'NULL' : 'NOT NULL'}`,
-        );
-    }
 }

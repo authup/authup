@@ -7,6 +7,7 @@
 
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 import {
+    changeColumnType,
     renameForeignKey,
     renameIndex,
     withForeignKeyChecksDisabled,
@@ -15,7 +16,6 @@ import {
     FOREIGN_KEY_RENAMES,
     INDEX_RENAMES,
     MYSQL_COLUMN_TYPE_CHANGES,
-    changeMysqlColumnTypes,
     invertColumnTypeChanges,
     invertRenames,
 } from '../helpers/schema-alignment.ts';
@@ -46,7 +46,8 @@ import {
  * the migration passes over a schema that already matches and resumes
  * after an interrupted attempt, which matters because MySQL commits
  * each DDL statement regardless of the surrounding transaction. The
- * foreign key checks stay disabled throughout: every constraint is
+ * column change is an in-place MODIFY COLUMN, so the values survive.
+ * The foreign key checks stay disabled throughout: every constraint is
  * recreated exactly as it already existed, so re-validating it would
  * only add a table scan and a failure mode for rows that a past import
  * inserted with the checks off.
@@ -64,16 +65,17 @@ export class AlignSchemaWithEntityMetadata1785264000000 implements MigrationInte
                 await renameForeignKey(queryRunner, rename);
             }
 
-            await changeMysqlColumnTypes(queryRunner, MYSQL_COLUMN_TYPE_CHANGES);
+            for (const change of MYSQL_COLUMN_TYPE_CHANGES) {
+                await changeColumnType(queryRunner, change);
+            }
         });
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
         await withForeignKeyChecksDisabled(queryRunner, async () => {
-            await changeMysqlColumnTypes(
-                queryRunner,
-                invertColumnTypeChanges(MYSQL_COLUMN_TYPE_CHANGES),
-            );
+            for (const change of invertColumnTypeChanges(MYSQL_COLUMN_TYPE_CHANGES)) {
+                await changeColumnType(queryRunner, change);
+            }
 
             for (const rename of invertRenames(FOREIGN_KEY_RENAMES)) {
                 await renameForeignKey(queryRunner, rename);
