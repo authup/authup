@@ -568,23 +568,7 @@ export default defineComponent({
                             :value="grantType"
                             :label="true"
                             :label-content="grantType"
-                        >
-                            <!--
-                                theme-tailwind's `formCheckbox.indicator` is
-                                layout only, and the glyph lives in
-                                `@vuecs/forms`' base stylesheet which the
-                                tailwind stack does not load, so a checked box
-                                renders as a solid square. Supply the check
-                                ourselves until upstream ships one
-                                (tada5hi/vuecs#1694).
-                            -->
-                            <template #indicator>
-                                <VCIcon
-                                    name="fa6-solid:check"
-                                    class="text-[0.625rem]"
-                                />
-                            </template>
-                        </VCFormCheckbox>
+                        />
                     </VCFormCheckboxGroup>
                     <template #hint>
                         {{ translationsClient.grantTypesHint }}

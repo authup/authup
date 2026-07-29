@@ -17,7 +17,6 @@ import { describe, expect, it } from 'vitest';
 import AClientForm from '../../../../../src/components/entities/client/AClientForm.vue';
 import { AFormSubmit } from '../../../../../src/components/utility';
 import { install } from '../../../../../src/module';
-import { registerIconCollections } from '../../../../../src/core';
 import type { Options } from '../../../../../src/types';
 
 const noop = () => undefined;
@@ -334,15 +333,13 @@ describe('AClientForm post-logout redirect uris', () => {
     });
 });
 
-// theme-tailwind's `formCheckbox.indicator` carries layout classes only, and
-// the glyph lives in `@vuecs/forms`' base stylesheet which the tailwind stack
-// does not load, so a checked box would render as a solid square with no
-// checkmark (tada5hi/vuecs#1694). We supply the glyph through the `#indicator`
-// slot; assert it is actually there, and only when checked.
+// A checked box has to actually show a checkmark. It once did not: the glyph
+// lived only in `@vuecs/forms`' base stylesheet, which the tailwind theme stack
+// does not load, so a checked box rendered as a solid square (tada5hi/vuecs#1694,
+// fixed in @vuecs/forms 5.4.0 by moving the glyph into the component). The glyph
+// now comes from the component itself, and this guards that it stays visible.
 describe('AClientForm checkbox indicator', () => {
-    it('renders a check glyph in the checked box and nothing in the unchecked ones', async () => {
-        registerIconCollections();
-
+    it('renders a glyph in the checked box and nothing in the unchecked ones', async () => {
         const entity = createEntity();
         entity.grantTypes = 'authorization_code';
 
@@ -382,9 +379,9 @@ describe('AClientForm checkbox indicator', () => {
         expect(checked).toHaveLength(1);
         expect(unchecked.length).toBeGreaterThan(0);
 
-        // a resolved iconify path, not just an empty <svg> shell
+        // a real drawn glyph, not just an empty indicator element
+        expect(checked[0]!.element.innerHTML).toContain('<svg');
         expect(checked[0]!.element.innerHTML).toContain('<path');
-        expect(checked[0]!.element.innerHTML).toContain('currentColor');
 
         for (const box of unchecked) {
             expect(box.element.innerHTML).not.toContain('<svg');
