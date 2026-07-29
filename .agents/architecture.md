@@ -1733,7 +1733,12 @@ app (kit or non-kit) ends a lingering authup session on its own logout, so
   still-unreleased `1783325495597-Default.ts` (both dialects, up/down verified
   by the `tests-migrations` round-trip). `buildWebClientAttributes` sets it to
   the same `<origin>/**`-per-app-origin patterns as `redirectUri`, so
-  `WebClientProvisioner`'s MERGE widens it on the next startup.
+  `WebClientProvisioner`'s MERGE widens it on the next startup. `AClientForm`
+  renders it as its own `AFormInputList`, deliberately a **second** list rather
+  than a shared one — the whole point of the split is that a login redirect
+  does not imply a logout redirect, so the two allow-lists must be editable
+  independently. Clearing every pattern submits `null` (no bounce: logout ends
+  on the confirm page), never `''`.
 - **The server-side bounce fires ONLY when the logout was actually performed**
   (`serverRevoked` — a verified hint revoked the session). A hint-less or
   forged request with an otherwise-valid `post_logout_redirect_uri` must **not**

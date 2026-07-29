@@ -12,6 +12,7 @@ export const TranslatorTranslationClientEnglish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.NAME_HINT]: 'Something users will recognize and trust',
     [TranslatorTranslationClientKey.DESCRIPTION_HINT]: 'Displayed to all users of this application',
     [TranslatorTranslationClientKey.REDIRECT_URI_HINT]: 'URI pattern a browser can redirect to after a successful login',
+    [TranslatorTranslationClientKey.POST_LOGOUT_REDIRECT_URI_HINT]: 'URI pattern an RP-initiated logout may redirect back to. Separate from the login redirect URIs — leave empty to always end on the sign-out confirmation page.',
     [TranslatorTranslationClientKey.GRANT_TYPES_HINT]: 'Restrict which OAuth2 grants this client may use. Select none to allow every grant.',
     [TranslatorTranslationClientKey.AUTH_METHOD]: 'Authentication method',
     [TranslatorTranslationClientKey.AUTH_METHOD_NONE]: 'None',

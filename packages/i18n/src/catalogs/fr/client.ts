@@ -12,6 +12,7 @@ export const TranslatorTranslationClientFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.NAME_HINT]: 'Quelque chose que les utilisateurs reconnaîtront et auquel ils feront confiance',
     [TranslatorTranslationClientKey.DESCRIPTION_HINT]: 'Affiché à tous les utilisateurs de cette application',
     [TranslatorTranslationClientKey.REDIRECT_URI_HINT]: 'Modèle d\'URI vers lequel un navigateur peut rediriger après une connexion réussie',
+    [TranslatorTranslationClientKey.POST_LOGOUT_REDIRECT_URI_HINT]: 'Modèle d’URI vers lequel une déconnexion initiée par le RP peut rediriger. Distinct des URI de redirection de connexion — sans entrée, la déconnexion se termine toujours sur la page de confirmation.',
     [TranslatorTranslationClientKey.GRANT_TYPES_HINT]: 'Restreint les types d’autorisation OAuth2 que ce client peut utiliser. Sans sélection, tous sont autorisés.',
     [TranslatorTranslationClientKey.AUTH_METHOD]: 'Méthode d’authentification',
     [TranslatorTranslationClientKey.AUTH_METHOD_NONE]: 'Aucune',

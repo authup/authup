@@ -12,6 +12,7 @@ export const TranslatorTranslationClientSpanish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.NAME_HINT]: 'Algo que los usuarios reconocerán y en lo que confiarán',
     [TranslatorTranslationClientKey.DESCRIPTION_HINT]: 'Se muestra a todos los usuarios de esta aplicación',
     [TranslatorTranslationClientKey.REDIRECT_URI_HINT]: 'Patrón de URI al que un navegador puede redirigir tras un inicio de sesión exitoso',
+    [TranslatorTranslationClientKey.POST_LOGOUT_REDIRECT_URI_HINT]: 'Patrón de URI al que puede redirigir un cierre de sesión iniciado por el RP. Independiente de las URI de redirección de inicio de sesión — sin entradas, el cierre de sesión termina siempre en la página de confirmación.',
     [TranslatorTranslationClientKey.GRANT_TYPES_HINT]: 'Restringe qué concesiones OAuth2 puede usar este cliente. Sin selección, se permiten todas.',
     [TranslatorTranslationClientKey.AUTH_METHOD]: 'Método de autenticación',
     [TranslatorTranslationClientKey.AUTH_METHOD_NONE]: 'Ninguno',

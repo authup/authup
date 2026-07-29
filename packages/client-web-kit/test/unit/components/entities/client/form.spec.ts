@@ -199,6 +199,65 @@ describe('AClientForm access policy', () => {
     });
 });
 
+describe('AClientForm post-logout redirect uris', () => {
+    // The list is keyed by label, so target it by index: redirect URIs first,
+    // post-logout second.
+    const findList = (wrapper: ReturnType<typeof mountForm>['wrapper']) => wrapper
+        .findAllComponents({ name: 'AFormInputList' })[1]!;
+
+    it('hydrates from the comma-separated column, independently of redirectUri', async () => {
+        const entity = createEntity();
+        entity.postLogoutRedirectUri = 'https://app.example.com/bye,https://alt.example.com/**';
+
+        const { wrapper } = mountForm(entity);
+        await flushPromises();
+
+        expect(findList(wrapper).props('names')).toEqual([
+            'https://app.example.com/bye',
+            'https://alt.example.com/**',
+        ]);
+        // the login redirect list must not pick the post-logout value up
+        expect(wrapper.findAllComponents({ name: 'AFormInputList' })[0]!.props('names'))
+            .toEqual(['https://app.example.com/cb']);
+    });
+
+    it('submits the patterns comma-joined', async () => {
+        const { wrapper, httpClient } = mountForm(createEntity());
+        await flushPromises();
+
+        findList(wrapper).vm.$emit('changed', [
+            'https://app.example.com/bye',
+            'https://alt.example.com/**',
+        ]);
+        await flushPromises();
+
+        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await flushPromises();
+
+        const request = findUpdateRequest(httpClient);
+        expect(request).toBeDefined();
+        expect(request!.body).toMatchObject({ postLogoutRedirectUri: 'https://app.example.com/bye,https://alt.example.com/**' });
+    });
+
+    it('submits null when every pattern is removed', async () => {
+        const entity = createEntity();
+        entity.postLogoutRedirectUri = 'https://app.example.com/bye';
+
+        const { wrapper, httpClient } = mountForm(entity);
+        await flushPromises();
+
+        findList(wrapper).vm.$emit('changed', []);
+        await flushPromises();
+
+        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await flushPromises();
+
+        const request = findUpdateRequest(httpClient);
+        expect(request).toBeDefined();
+        expect(request!.body).toHaveProperty('postLogoutRedirectUri', null);
+    });
+});
+
 describe('AClientForm grant types', () => {
     const findGroup = (wrapper: ReturnType<typeof mountForm>['wrapper']) => wrapper
         .findComponent({ name: 'VCFormCheckboxGroup' });
