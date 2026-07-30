@@ -145,6 +145,13 @@ export class UserValidator extends Container<User> {
             createValidator(z.boolean()),
         );
 
+        // A user keeps the realm it was created in. UPDATE deliberately has no
+        // mount, so a submitted realmId is stripped instead of moving the row:
+        // the junction tables (user_role.user_realm_id,
+        // user_permission.user_realm_id, identity_provider_account.user_realm_id)
+        // and every per-user child table (sessions, consents, attributes,
+        // authenticators) denormalize the realm, and a move would strand all of
+        // them in the old realm.
         this.mount(
             'realmId',
             {

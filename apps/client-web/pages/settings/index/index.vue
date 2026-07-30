@@ -26,7 +26,7 @@ export default defineComponent({
 
         const {
             user,
-            userId,
+            realmId,
         } = storeToRefs(store);
 
         const translationsDefault = useTranslations([
@@ -53,7 +53,7 @@ export default defineComponent({
 
         return {
             user,
-            userId,
+            realmId,
             handleUpdated,
             handleFailed,
             translationsDefault,
@@ -68,7 +68,7 @@ export default defineComponent({
         </h6>
         <UserForm
             :can-manage="false"
-            :realm-id="userId"
+            :realm-id="realmId"
             :entity="user"
             @updated="handleUpdated"
             @failed="handleFailed"

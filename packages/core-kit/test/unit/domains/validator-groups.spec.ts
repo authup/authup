@@ -66,6 +66,32 @@ describe('domains/validator-groups', () => {
         expect(provisioned.builtIn).toBe(true);
     });
 
+    it('should strip realmId at UPDATE for realm bound entities', async () => {
+        const realmId = '9f0b7e2c-4d3a-4a1e-9f6c-5b0d2a7e1c34';
+
+        const validators = [new UserValidator(), new ClientValidator()];
+        for (const validator of validators) {
+            const created = await validator.run(
+                {
+                    name: 'foo',
+                    email: 'foo@example.com',
+                    realmId,
+                },
+                { group: ValidatorGroup.CREATE },
+            );
+            expect(created.realmId).toEqual(realmId);
+
+            const updated = await validator.run(
+                {
+                    displayName: 'Foo',
+                    realmId,
+                },
+                { group: ValidatorGroup.UPDATE },
+            );
+            expect(updated).not.toHaveProperty('realmId');
+        }
+    });
+
     it('should require email at CREATE but not at PROVISIONING', async () => {
         const validator = new UserValidator();
 

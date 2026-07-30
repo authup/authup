@@ -995,6 +995,57 @@ if (!validated.realmId && actor.identity) {
 
 To create a global entity (`realmId: null`), the caller must explicitly pass `realmId: null`. The policy engine controls whether the actor is authorized to do so.
 
+### Realm immutability (an entity never moves between realms)
+
+An entity's realm is fixed at creation. Every entity validator mounts `realmId`
+for `CREATE` / `PROVISIONING` only, so a `realmId` submitted on `POST /<entity>/:id`
+is silently stripped by the validator and `merge()` never sees it. There is no
+"move to another realm" operation and none is planned.
+
+The reason is denormalization. A user's realm is copied into
+`auth_user_roles.user_realm_id`, `auth_user_permissions.user_realm_id` and
+`auth_identity_provider_accounts.user_realm_id`, and every per-user child row
+carries its own `realm_id` (`auth_user_attributes`, `auth_user_authenticators`,
+`auth_sessions`, `auth_consents`). A client's realm is copied the same way into
+`auth_client_roles` / `auth_client_permissions` / `auth_client_scopes`. Those
+copies are what the `realmScope` reach factor evaluates against
+(`JunctionEntityService.junctionResourceRealm`), so moving the parent row alone
+would leave every grant and child row stranded in the old realm: still
+readable/writable by the old realm's admins, invisible to the new one. A real
+move would have to rewrite all of them plus re-verify that the target realm
+actually holds the referenced roles, permissions and scopes.
+
+Consequences to keep in mind when touching these paths:
+
+- The realm-scoped lookup in `save()` (`where.realmId = <resolved body/route realm>`)
+  means an update carrying a **foreign** realm key finds nothing:
+  `POST /users/:id` answers `404` rather than moving the row. That is also the
+  correct answer for the nested `/realms/:realmId/users/:id` mount (the row is
+  not in that realm), and it deliberately reveals nothing about the row's real
+  realm.
+- The `PUT /<entity>/:key` upsert takes the same scoped lookup, so a foreign
+  realm key makes it miss. **Only a NAME key may then create** ("ensure an
+  entity with this name exists in this realm"); a UUID key addresses one
+  specific row, so a miss is `EntityNotFoundError` instead. Without that rule
+  the upsert answered a realm change by writing a **second** row (a fresh id,
+  same name) into the target realm, which reads like a move in the
+  realm-scoped UI. The guard is one condition
+  (`if (!entity && (options.updateOnly || where.id))`) in every `save()` that
+  upserts: role, user, scope, permission, client, policy, realm, plus
+  `IdentityProviderController.write()`.
+- Realm pickers in the kit's entity forms are **create-time controls**
+  (`AUserForm`, `AClientForm`, `APolicyBasicForm`, ... all gate them on
+  `!isEditing`). Rendering one on an existing record promises a move the API
+  will not perform.
+- The `*_SELF_MANAGE` denylists (`system.user-names-self-manage`,
+  `system.client-names-self-manage`) list `realmId` as well, so the strip is
+  backed by an explicit policy rejection on the self-edit path.
+
+Pinned by *should strip realmId at UPDATE for realm bound entities*
+(`packages/core-kit/test/unit/domains/validator-groups.spec.ts`) and *should not
+move the user to another realm*
+(`apps/server-core/test/unit/core/entities/user/service.spec.ts`).
+
 ### Realm reach is a coarse `realmScope` enum on the grant (NOT a policy)
 
 There is no special "master realm" bypass, and realm reach is **not** a policy. Each
