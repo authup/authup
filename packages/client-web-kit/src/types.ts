@@ -7,6 +7,7 @@
 
 import type { IClient } from '@authup/core-http-kit';
 import type { Pinia } from 'pinia';
+import type { HydrationStore } from './core/hydration';
 import type {
     AAttributeNamesPolicyForm,
     AClient,
@@ -112,7 +113,14 @@ export type Options = {
     cookieGet?: CookieGetFn,
 
     pinia?: Pinia,
-    isServer?: boolean
+    isServer?: boolean,
+
+    /**
+     * Bucket for the SSR to client handoff, backed by the host's hydration
+     * payload. Without it components never load during the server render,
+     * because the result could not be transported to the browser.
+     */
+    hydrationStore?: HydrationStore
 };
 
 declare module 'vue' {

@@ -32,6 +32,17 @@ export type ListMeta = {
     pagination?: PaginationBuildInput
 };
 
+/**
+ * Result of the initial load, recorded during the server render and replayed
+ * by the hydrating client instead of repeating the request. Plain data only,
+ * because the host serializes it into its hydration payload.
+ */
+export type EntityCollectionHydrationSnapshot<T> = {
+    data: T[],
+    total: number,
+    pagination?: PaginationBuildInput
+};
+
 /** Minimal slot-prop shape — superset of what the @vuecs/list-controls 2.x types exposed. */
 export type ListSlotProps<T> = {
     data: T[];

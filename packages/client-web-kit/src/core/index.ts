@@ -11,6 +11,7 @@ export * from './http-client';
 export * from './inject';
 export * from './provide';
 export * from './form';
+export * from './hydration';
 export * from './query';
 export * from './busy';
 export * from './oauth2';

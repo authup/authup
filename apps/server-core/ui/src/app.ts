@@ -14,7 +14,7 @@ import {
 } from '@authup/client-web-kit';
 import type { IClient } from '@authup/core-http-kit';
 import { matchLocale } from '@authup/i18n';
-import { getURLBasePath, omitRecord } from '@authup/kit';
+import { getURLBasePath, isObject, omitRecord } from '@authup/kit';
 import { createPinia } from 'pinia';
 import type { App } from 'vue';
 import { createSSRApp, ref } from 'vue';
@@ -140,6 +140,13 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
         navigatorLanguage: ref(typeof navigator !== 'undefined' ? navigator.language : undefined),
     });
 
+    // Bucket for the SSR to client handoff: filled while rendering and
+    // serialized with the rest of the payload afterwards (see server.ts),
+    // so the client adopts what the render already fetched.
+    const hydration = isObject(payload) ?
+        (payload.hydration || (payload.hydration = {})) :
+        {};
+
     // Install the kit FIRST so `installTranslator()` provides the ilingo
     // locale before `buildSubmitButtonDefaults()` (below) reads it via
     // `useTranslation`. Mirrors apps/client-web where the `authup:kit`
@@ -152,6 +159,16 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
         httpClient: options.httpClient,
         pinia,
         translatorLocale: matchLocale(localeHandles.resolved.value),
+        isServer: !isClient,
+        hydrationStore: {
+            get: <T>(key: string) => hydration[key] as T | undefined,
+            set: (key: string, value: unknown) => {
+                hydration[key] = value;
+            },
+            delete: (key: string) => {
+                delete hydration[key];
+            },
+        },
     });
 
     // One-way: ilingo (authup catalogs) follows vuecs's resolved locale — the

@@ -121,6 +121,19 @@ export default defineNuxtPlugin({
                 return null;
             },
             isServer: import.meta.server,
+            // Same bucket `useAsyncData` transports its results in, so a
+            // collection loaded during the server render is handed to the
+            // browser through the regular Nuxt payload instead of being
+            // fetched a second time on hydration.
+            hydrationStore: {
+                get: <T>(key: string) => ctx.payload.data[key] as T | undefined,
+                set: (key: string, value: unknown) => {
+                    ctx.payload.data[key] = value;
+                },
+                delete: (key: string) => {
+                    delete ctx.payload.data[key];
+                },
+            },
         });
     },
 });

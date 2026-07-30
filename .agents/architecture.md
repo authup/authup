@@ -3231,6 +3231,8 @@ integration:
   `IQuery` load input replaces the interactive state wholesale.
   Pinned by
   `test/unit/components/utility/entity-collection.spec.ts`.
+  **Initial load & the SSR handoff (issue #2773):** see
+  *SSR data handoff* below.
 - **Pagination** — `<APagination>`
   (`components/utility/pagination/APagination.ts`) is a thin **adapter**
   that bridges the entity-collection footer contract (`ListMeta` =
@@ -3244,6 +3246,74 @@ integration:
   joined-tab rounding + brand hover styling lives in the theme's
   `.vc-pagination` rule (`client-web-theme/assets/css/index.css`) and
   applies to the underlying `<VCPagination>` regardless of the wrapper.
+
+### SSR data handoff (issue #2773)
+
+Everything a server render fetches or resolves is handed to the browser
+through the host's hydration payload, so the client never repeats it. The kit
+owns one seam and stays framework-agnostic; each host supplies the bucket:
+
+- **The seam.** `HydrationStore` (`core/hydration/`, a `get`/`set`/`delete`
+  map) passed to `install({ hydrationStore })` and read via
+  `injectHydrationStore()`. **Without a store the kit performs no server-side
+  loads at all**, because the response could not reach the client and firing it would
+  only waste a round trip (the pre-#2773 behaviour: every collection fired a
+  request during SSR whose result was discarded when the render flushed).
+- **Hosts.** `apps/client-web` wires it in the `authup:kit` Nuxt plugin over
+  `nuxtApp.payload.data` (the same bucket `useAsyncData` transports through);
+  `apps/server-core/ui` wires it over `HydrationPayload.hydration`, which
+  works because `createWindowPayloadHTML(ctx.payload)` runs *after*
+  `renderToString` (`ui/src/server.ts`), so writes during the render still
+  reach the markup.
+- **Collections.** `defineEntityCollectionManager`'s initial load runs inside
+  `onServerPrefetch` (so the renderer awaits the rows and they are in the
+  HTML) and records `{ data, total, pagination }` under
+  `authup:collection:<type><serialized query>`. The key is the identity of the
+  request the load would send (`buildQueryString` over the composed query), so
+  both sides derive it identically; a miss just loads normally. Collection
+  snapshots are **consumed on read**, so a later client-side visit fetches fresh
+  rows instead of replaying the first render's.
+- **`useTranslation` / `usePermissionCheck`.** Both resolve asynchronously
+  (ilingo's `get()` is a Promise even over an in-memory store; the permission
+  evaluator awaits the policy engine), so a server-rendered subtree would
+  hydrate against placeholders: `authupField.name` where the markup says
+  `Name`, and a fail-closed `false` where the markup shows an enabled control.
+  Both record their resolved value through `useHydratedValue()` and seed the
+  first client render from it. These entries are **not** consumed on read (the
+  same key is shared by every component asking the same question), and a
+  permission key carries the actor (`userId`/`realmId`) so an account switch
+  cannot adopt the previous actor's verdict; checks carrying a `PolicyData`
+  bag are not keyed at all and keep evaluating from their fail-closed default.
+  The translation half is a workaround for a missing sync read path in ilingo
+  (tada5hi/ilingo#988). Once that lands, `useTranslation` can seed from a
+  synchronous lookup and the payload entries become unnecessary.
+- **Per-request isolation is the security property.** A collection key is
+  entity type plus query, with no actor in it, so two users requesting the same
+  list derive the SAME key. Nothing may therefore outlive one request: both
+  hosts build a fresh payload per request (Nuxt's `payload.data`; every
+  `renderUIPage` caller passes a new payload literal, and the process-level
+  caches in `render.ts` hold only the immutable template / manifest / bundle),
+  and the store is provided on the per-request Vue app, so it is unreachable
+  once the render ends. Same reasoning as the `lifetime: 'transient'`
+  registration of the SSR UI HTTP client. Backing the store with anything
+  shared between requests would serve one client's rows to another. As a second
+  layer the kit's server path is **write-only**: `useHydratedValue` returns
+  before its read, and the collection manager's server branch never adopts (it
+  is the producer), so a mis-wired host store can waste a write but cannot leak
+  across users. Pinned by *never adopts an existing entry while rendering on
+  the server* in `entity-collection-hydration.spec.ts`. The payload is exactly
+  as sensitive as the HTML it travels in, so an authenticated page must never
+  be served from a shared cache (no `swr` / `isr` route rules, which is why
+  client-web sets none).
+- **Detail pages.** `apps/client-web/pages/<entity>/[id].vue` fetch through
+  `useAsyncData(\`<entity>:${id}\`, ...)` rather than a bare `await` in
+  `setup()`, which is what made every record fetch run twice (once server-side,
+  once again on hydration). The `data` ref is cast to `Ref<Entity>` after the
+  not-found redirect, so the rest of each page is unchanged.
+
+Verified end to end in a browser (CDP): `/users` renders its rows server-side,
+the client issues **no** collection request on hydration, and Vue reports no
+hydration mismatch.
 
 ### Table usage
 

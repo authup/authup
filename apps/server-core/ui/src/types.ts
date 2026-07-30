@@ -10,5 +10,11 @@ export type HydrationPayload<T extends Record<string, any> = Record<string, any>
         baseURL?: string,
         [key: string]: any
     },
-    data: T
+    data: T,
+    /**
+     * Results the kit produced during the server render, keyed by request
+     * identity. Filled while rendering (the payload is serialized afterwards)
+     * and consumed once by the hydrating client.
+     */
+    hydration?: Record<string, any>
 };

@@ -21,7 +21,9 @@ import {
     defineEntityCollectionVEmitOptions,
     defineEntityCollectionVProps,
 } from '../../../../src/components/utility';
+import type { Options } from '../../../../src/types';
 import { mountKitComponent } from '../../../utils';
+import { createFakeHydrationStore } from '../../../utils/hydration';
 
 type ManagerContextOverrides = Partial<Omit<
     EntityCollectionManagerCreateContext<'role', Role>,
@@ -49,6 +51,7 @@ function createCollectionComponent(context: ManagerContextOverrides = {}) {
 function mountCollection(
     props: Record<string, any> = {},
     context: ManagerContextOverrides = {},
+    overrides: Partial<Options> = {},
 ) {
     return mountKitComponent(createCollectionComponent(context), props, {
         'GET /roles': (req: FakeRequest) => {
@@ -59,13 +62,13 @@ function mountCollection(
             return {
                 data: [],
                 meta: {
-                    total: 0, 
-                    limit, 
-                    offset, 
-                }, 
+                    total: 0,
+                    limit,
+                    offset,
+                },
             };
         },
-    });
+    }, overrides);
 }
 
 function listRequests(requests: FakeRequest[]) : URL[] {
@@ -187,5 +190,77 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
         const [request] = listRequests(httpClient.requests);
         expect(request.searchParams.get('filter'))
             .toEqual("and(in(realmId,'realm-1',null),eq(clientId,'c-1'))");
+    });
+});
+
+describe('defineEntityCollectionManager (hydration handoff)', () => {
+    // must match what the server render writes (see
+    // entity-collection-hydration.spec.ts)
+    const key = 'authup:collection:role?codec=url-expression&page%5Blimit%5D=10';
+
+    const snapshot = {
+        data: [{ id: 'role-1', name: 'admin' }],
+        total: 1,
+        pagination: {
+            limit: 10,
+            offset: 0,
+        },
+    };
+
+    it('adopts a server-rendered snapshot instead of fetching', async () => {
+        const hydration = createFakeHydrationStore({ [key]: snapshot });
+
+        const { wrapper, httpClient } = mountKitComponent(
+            createCollectionComponent(),
+            {},
+            {},
+            { hydrationStore: hydration.store },
+        );
+        await flushPromises();
+
+        expect(listRequests(httpClient.requests)).toHaveLength(0);
+        expect((wrapper.vm as any).data).toEqual(snapshot.data);
+    });
+
+    it('consumes the snapshot once, so a later visit loads fresh data', async () => {
+        const hydration = createFakeHydrationStore({ [key]: snapshot });
+
+        mountKitComponent(createCollectionComponent(), {}, {}, { hydrationStore: hydration.store });
+        await flushPromises();
+
+        expect(hydration.entries).toEqual({});
+
+        const { httpClient } = mountKitComponent(
+            createCollectionComponent(),
+            {},
+            {
+                'GET /roles': () => ({
+                    data: [],
+                    meta: {
+                        total: 0,
+                        limit: 10,
+                        offset: 0,
+                    },
+                }),
+            },
+            { hydrationStore: hydration.store },
+        );
+        await flushPromises();
+
+        expect(listRequests(httpClient.requests)).toHaveLength(1);
+    });
+
+    it('fetches when the snapshot belongs to a different query', async () => {
+        const hydration = createFakeHydrationStore({ [key]: snapshot });
+
+        const { httpClient } = mountCollection(
+            { query: { filters: { realmId: 'realm-1' } } },
+            {},
+            { hydrationStore: hydration.store },
+        );
+        await flushPromises();
+
+        expect(listRequests(httpClient.requests)).toHaveLength(1);
+        expect(hydration.entries[key]).toBeDefined();
     });
 });

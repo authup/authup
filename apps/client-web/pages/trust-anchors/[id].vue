@@ -11,10 +11,12 @@ import { PermissionName } from '@authup/core-kit';
 import { TranslatorTranslationAppKey, TranslatorTranslationEntityKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { extendObject } from '@authup/kit';
 import { VCIcon } from '@vuecs/icon';
-import { computed, defineComponent, ref } from 'vue';
+import type { Ref } from 'vue';
+import { computed, defineComponent } from 'vue';
 import {
     createError,
     navigateTo,
+    useAsyncData,
     useRoute,
 } from '#app';
 import {
@@ -33,13 +35,25 @@ export default defineComponent({
         });
 
         const route = useRoute();
-        const entity = ref<TrustAnchor>(null!);
-        try {
-            entity.value = (await injectHTTPClient().trustAnchor.getOne(route.params.id as string)).data;
-        } catch {
+        const httpClient = injectHTTPClient();
+
+        const { data, error } = await useAsyncData(
+            `trust-anchor:${route.params.id}`,
+            () => httpClient
+                .trustAnchor
+                .getOne(route.params.id as string)
+                .then((response) => response.data),
+            // deep, so the in-place `extendObject` update below stays reactive
+            // (useAsyncData hands back a shallowRef by default)
+            { deep: true },
+        );
+
+        if (error.value || !data.value) {
             await navigateTo({ path: '/trust-anchors' });
             throw createError({});
         }
+
+        const entity = data as Ref<TrustAnchor>;
 
         const toast = useToast();
         const errorToast = useErrorToast();

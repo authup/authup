@@ -6,7 +6,7 @@
  */
 
 import { hasOwnProperty } from '@authup/kit';
-import { pickEntityAPI } from '@authup/core-http-kit';
+import { buildQueryString, pickEntityAPI } from '@authup/core-http-kit';
 import type { EntityTypeMap } from '@authup/core-kit';
 import {
     VCList,
@@ -37,6 +37,7 @@ import {
     computed,
     h,
     isRef,
+    onServerPrefetch,
     ref,
     unref,
 } from 'vue';
@@ -44,6 +45,7 @@ import { EntityCollectionSlotName } from './constants';
 import { isObject } from 'smob';
 import { boolableToObject } from '../../../../utils';
 import { injectHTTPClient } from '../../../../core/http-client';
+import { injectHydrationStore } from '../../../../core/hydration';
 import { defineEntitySocketManager } from '../socket';
 import type { EntitySocketManagerCreateContext } from '../socket';
 import {
@@ -52,6 +54,7 @@ import {
     normalizeQueryInput,
 } from '../../../../core/query';
 import type {
+    EntityCollectionHydrationSnapshot,
     EntityCollectionManager,
     EntityCollectionManagerCreateContext,
     EntityCollectionRenderOptions,
@@ -70,6 +73,11 @@ import {
 import { isError } from '@authup/errors';
 
 type Entity<A> = A extends Record<string, any> ? A : never;
+
+type ComposedQuery = {
+    query: Query,
+    interactive: Query
+};
 
 function stripFilters(input: IQuery) : Query {
     return new Query({
@@ -134,6 +142,7 @@ function create<
     );
 
     const client = injectHTTPClient();
+    const hydration = injectHydrationStore();
 
     const domainAPI = pickEntityAPI<TYPE, Entity<RECORD>>(client, context.type);
     // Captured bound, so the load fn's guard survives the query
@@ -144,6 +153,10 @@ function create<
 
     // Last composed query (IR) — read by the socket handler's sort check.
     let query : IQuery | undefined;
+
+    // Whether the last `load` ran to completion. A load that failed leaves the
+    // list empty, which must NOT be handed to the client as a result.
+    let loadCompleted = false;
 
     // Interactive query state (search filters, sort changes, ...) retained
     // across loads, so pagination / loadAll continuations keep the current
@@ -188,6 +201,88 @@ function create<
         }
     };
 
+    // Compose the query a load will send: input parameters over retained
+    // interactive state over pagination state over the injected base scope.
+    // Pure: the caller decides what to do with the result, so the initial
+    // load's query can also be derived up front for the hydration key.
+    function composeQuery(input: EntityListQueryInput<Entity<RECORD>>) : ComposedQuery {
+        let inputQuery : IQuery;
+        let interactiveNext : Query;
+
+        if (isQuery(input)) {
+            // An assembled query is taken literally — it replaces the
+            // whole interactive state (minus pagination).
+            inputQuery = input;
+            interactiveNext = stripPagination(input);
+        } else {
+            inputQuery = normalizeQueryInput(input);
+
+            let filtersOverride : IFilters | undefined;
+            if (
+                input.filters &&
+                !isCondition(input.filters) &&
+                hasOwnProperty(input.filters, 'name') &&
+                typeof input.filters.name === 'string' &&
+                input.filters.name.length > 0
+            ) {
+                // Search input arrives as a bare `name` string. A raw wire
+                // marker (`~text`) is NOT interpreted by the rapiq v2 IR
+                // builder (it becomes eq('name','~text')), so build the
+                // condition explicitly: the queryFilters hook when provided
+                // (richer multi-field search), else a default substring match.
+                const transformed = context.queryFilters ?
+                    context.queryFilters(input.filters.name) :
+                    contains('name', input.filters.name);
+                filtersOverride = defineFilters(
+                    transformed as FiltersBuildInput | ICondition,
+                );
+            }
+
+            // Per-parameter replace: a parameter present on the input
+            // supersedes the retained interactive value, an absent one
+            // keeps it (a pagination-only load keeps the search).
+            interactiveNext = new Query({
+                fields: 'fields' in input ? inputQuery.fields : interactive?.fields,
+                filters: filtersOverride ??
+                    ('filters' in input ? inputQuery.filters : interactive?.filters),
+                relations: 'relations' in input ? inputQuery.relations : interactive?.relations,
+                sorts: 'sort' in input ? inputQuery.sorts : interactive?.sorts,
+            });
+        }
+
+        const base = resolveBaseQuery();
+
+        const statePagination : PaginationBuildInput = {};
+        if (typeof meta.value.pagination?.limit === 'number') {
+            statePagination.limit = meta.value.pagination.limit;
+        }
+        if (typeof meta.value.pagination?.offset === 'number') {
+            statePagination.offset = meta.value.pagination.offset;
+        }
+
+        const chrome = mergeQueries(
+            new Query({
+                fields: interactiveNext.fields,
+                relations: interactiveNext.relations,
+                sorts: interactiveNext.sorts,
+                pagination: inputQuery.pagination,
+            }),
+            new Query({ pagination: definePagination(statePagination) }),
+            stripFilters(base),
+        );
+
+        return {
+            query: new Query({
+                fields: chrome.fields,
+                relations: chrome.relations,
+                sorts: chrome.sorts,
+                pagination: chrome.pagination,
+                filters: combineScopedFilters(interactiveNext.filters, base.filters),
+            }),
+            interactive: interactiveNext,
+        };
+    }
+
     // Never rejects: callers don't reliably handle rejections — most call
     // sites are fire-and-forget (the setup-time initial load below, template
     // refs, pagination footers) and the awaiting ones don't catch. During SSR
@@ -200,83 +295,14 @@ function create<
         meta.value.busy = true;
 
         try {
-            let inputQuery : IQuery;
-            let interactiveNext : Query;
+            loadCompleted = false;
 
-            if (isQuery(input)) {
-                // An assembled query is taken literally — it replaces the
-                // whole interactive state (minus pagination).
-                inputQuery = input;
-                interactiveNext = stripPagination(input);
-            } else {
-                inputQuery = normalizeQueryInput(input);
+            const composed = composeQuery(input);
 
-                let filtersOverride : IFilters | undefined;
-                if (
-                    input.filters &&
-                    !isCondition(input.filters) &&
-                    hasOwnProperty(input.filters, 'name') &&
-                    typeof input.filters.name === 'string' &&
-                    input.filters.name.length > 0
-                ) {
-                    // Search input arrives as a bare `name` string. A raw wire
-                    // marker (`~text`) is NOT interpreted by the rapiq v2 IR
-                    // builder (it becomes eq('name','~text')), so build the
-                    // condition explicitly: the queryFilters hook when provided
-                    // (richer multi-field search), else a default substring match.
-                    const transformed = context.queryFilters ?
-                        context.queryFilters(input.filters.name) :
-                        contains('name', input.filters.name);
-                    filtersOverride = defineFilters(
-                        transformed as FiltersBuildInput | ICondition,
-                    );
-                }
+            const response = await getMany(composed.query);
 
-                // Per-parameter replace: a parameter present on the input
-                // supersedes the retained interactive value, an absent one
-                // keeps it (a pagination-only load keeps the search).
-                interactiveNext = new Query({
-                    fields: 'fields' in input ? inputQuery.fields : interactive?.fields,
-                    filters: filtersOverride ??
-                        ('filters' in input ? inputQuery.filters : interactive?.filters),
-                    relations: 'relations' in input ? inputQuery.relations : interactive?.relations,
-                    sorts: 'sort' in input ? inputQuery.sorts : interactive?.sorts,
-                });
-            }
-
-            const base = resolveBaseQuery();
-
-            const statePagination : PaginationBuildInput = {};
-            if (typeof meta.value.pagination?.limit === 'number') {
-                statePagination.limit = meta.value.pagination.limit;
-            }
-            if (typeof meta.value.pagination?.offset === 'number') {
-                statePagination.offset = meta.value.pagination.offset;
-            }
-
-            const chrome = mergeQueries(
-                new Query({
-                    fields: interactiveNext.fields,
-                    relations: interactiveNext.relations,
-                    sorts: interactiveNext.sorts,
-                    pagination: inputQuery.pagination,
-                }),
-                new Query({ pagination: definePagination(statePagination) }),
-                stripFilters(base),
-            );
-
-            const nextQuery = new Query({
-                fields: chrome.fields,
-                relations: chrome.relations,
-                sorts: chrome.sorts,
-                pagination: chrome.pagination,
-                filters: combineScopedFilters(interactiveNext.filters, base.filters),
-            });
-
-            const response = await getMany(nextQuery);
-
-            interactive = interactiveNext;
-            query = nextQuery;
+            interactive = composed.interactive;
+            query = composed.query;
 
             if (context.loadAll) {
                 data.value.push(...response.data as RECORD[]);
@@ -291,6 +317,8 @@ function create<
                 limit: response.meta.limit,
                 offset: response.meta.offset,
             };
+
+            loadCompleted = true;
         } catch (e) {
             failed(isError(e) ? e : new Error('The entities could not be loaded.'));
             return;
@@ -305,6 +333,94 @@ function create<
         ) {
             await load({ pagination: { offset: (meta.value.pagination?.offset ?? 0) + (meta.value.pagination?.limit ?? 0) } });
         }
+    }
+
+    // Identity of the request the initial load will make (entity type plus
+    // serialized query), derived the same way on both sides so the server
+    // render and the hydrating client agree on it. A key that cannot be
+    // derived simply means no handoff, and the client loads as it always did.
+    function resolveHandoff() : { key: string, initial: ComposedQuery } | undefined {
+        if (!hydration) {
+            return undefined;
+        }
+
+        try {
+            const initial = composeQuery({});
+
+            return {
+                key: `authup:collection:${context.type}${buildQueryString(initial.query)}`,
+                initial,
+            };
+        } catch {
+            return undefined;
+        }
+    }
+
+    // Three paths for the initial load: adopt a server-rendered snapshot,
+    // load inside `onServerPrefetch` so the renderer awaits the data and can
+    // hand it over, or fetch on the next microtask in the browser. Without a
+    // hydration store the server render loads nothing at all, because the
+    // response would be discarded when the render flushes.
+    function setupInitialLoad() {
+        const store = hydration;
+        const handoff = resolveHandoff();
+
+        // A server render only ever WRITES. It is the producer, so there is
+        // nothing of its own to adopt, and reading here would mean rendering
+        // whatever the store happens to hold — which is another request's rows
+        // if a host ever backs the store with something outliving one request.
+        // Keeping the server path write-only makes that leak impossible from
+        // here, independently of how a host wires the store.
+        if (typeof window === 'undefined') {
+            if (!store || !handoff) {
+                return;
+            }
+
+            onServerPrefetch(async () => {
+                await load();
+
+                // A failed render load leaves an empty list behind. Handing
+                // that over would strand the client on it (an adopted
+                // snapshot suppresses the load), so say nothing and let the
+                // browser fetch for itself.
+                if (!loadCompleted) {
+                    return;
+                }
+
+                store.set(handoff.key, {
+                    data: data.value,
+                    total: total.value,
+                    pagination: meta.value.pagination,
+                });
+            });
+
+            return;
+        }
+
+        if (store && handoff) {
+            const snapshot = store.get<EntityCollectionHydrationSnapshot<RECORD>>(handoff.key);
+            if (snapshot) {
+                // One-shot: navigating back to this list later must fetch
+                // again instead of replaying the first render's rows.
+                store.delete(handoff.key);
+
+                data.value = snapshot.data;
+                total.value = snapshot.total;
+
+                meta.value.total = snapshot.total;
+                if (snapshot.pagination) {
+                    meta.value.pagination = snapshot.pagination;
+                }
+
+                interactive = handoff.initial.interactive;
+                query = handoff.initial.query;
+
+                return;
+            }
+        }
+
+        Promise.resolve()
+            .then(() => load());
     }
 
     const handlers = new ListHandlers<RECORD>(data, {
@@ -564,8 +680,7 @@ function create<
     }
 
     if (loadOnSetup) {
-        Promise.resolve()
-            .then(() => load());
+        setupInitialLoad();
     }
 
     if (

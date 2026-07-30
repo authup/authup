@@ -196,6 +196,22 @@ via `setProps`; empty realm omitted from the grant body) and
 `ctx.realmId` even though the store's own realm ref is null pre-login — the
 original one-line bug).
 
+**Server-render specs.** The SSR data handoff (architecture.md → *SSR data
+handoff*) branches on `typeof window`, so its server half cannot be exercised
+in the default `happy-dom` environment. Those specs opt into node with a
+`// @vitest-environment node` docblock and render through
+`renderKitComponent()` (`test/utils/ssr.ts`: `createSSRApp` + the same install
+options + `renderToString`), asserting on the returned HTML plus the entries a
+`createFakeHydrationStore()` (`test/utils/hydration.ts`) collected. The client
+half stays in `happy-dom` and seeds the same store before mounting. The
+recorded key is asserted verbatim on both sides
+(`test/unit/core/hydration{,-ssr}.spec.ts`,
+`test/unit/components/utility/entity-collection-hydration.spec.ts`), so a
+change to the key format fails both rather than silently degrading to a
+cache miss. Assertions about the seeded first render must NOT
+`await flushPromises()`: the point is the render the markup is hydrated
+against, before the async lookup settles.
+
 ## Launcher Tests (apps/authup)
 
 The `authup` CLI is a process supervisor, so its suite is split in two:

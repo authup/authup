@@ -16,11 +16,13 @@ import type { IdentityProvider } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
 import { VCIcon } from '@vuecs/icon';
-import { computed, defineComponent, ref } from 'vue';
+import type { Ref } from 'vue';
+import { computed, defineComponent } from 'vue';
 import { 
     createError, 
     definePageMeta, 
     navigateTo, 
+    useAsyncData, 
     useErrorToast, 
     useRoute, 
     useToast, 
@@ -41,8 +43,6 @@ export default defineComponent({
         const errorToast = useErrorToast();
         const handleFailed = (e: Error) => errorToast.show(e);
         const route = useRoute();
-
-        const entity = ref<IdentityProvider>(null!);
 
         const translationsDefault = useTranslations(
             [
@@ -72,14 +72,25 @@ export default defineComponent({
 
         const translate = useTranslator();
 
-        try {
-            entity.value = (await injectHTTPClient()
+        const httpClient = injectHTTPClient();
+
+        const { data, error } = await useAsyncData(
+            `identity-provider:${route.params.id}`,
+            () => httpClient
                 .identityProvider
-                .getOne(route.params.id as string)).data;
-        } catch {
+                .getOne(route.params.id as string)
+                .then((response) => response.data),
+            // deep, so the in-place `extendObject` update below stays reactive
+            // (useAsyncData hands back a shallowRef by default)
+            { deep: true },
+        );
+
+        if (error.value || !data.value) {
             await navigateTo({ path: '/identity-providers' });
             throw createError({});
         }
+
+        const entity = data as Ref<IdentityProvider>;
 
         const items = computed(() => [
             {
