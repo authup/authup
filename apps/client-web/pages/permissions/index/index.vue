@@ -2,6 +2,7 @@
 import { defineQuery } from '@rapiq/core';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
+import { VCLink } from '@vuecs/link';
 import { VCTimeago } from '@vuecs/timeago';
 import {
     AEntityDelete,
@@ -18,7 +19,7 @@ import { PermissionName } from '@authup/core-kit';
 import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { storeToRefs } from 'pinia';
 import type { TableColumn } from '@vuecs/table';
-import { defineComponent, resolveComponent } from 'vue';
+import { defineComponent } from 'vue';
 
 export default defineComponent({
     components: {
@@ -90,8 +91,6 @@ export default defineComponent({
             },
         ];
 
-        const NuxtLink = resolveComponent('NuxtLink');
-
         return {
             columns,
             hasEditPermission,
@@ -99,7 +98,7 @@ export default defineComponent({
             handleDeleted,
             query,
             translations,
-            NuxtLink,
+            VCLink,
         };
     },
 });
@@ -149,8 +148,8 @@ export default defineComponent({
                 </template>
                 <template #cell-options="{ row }">
                     <VCButton
-                        :as="NuxtLink"
-                        :to="'/permissions/'+ row.id"
+                        :as="VCLink"
+                        :to="hasEditPermission ? `/permissions/${row.id}` : undefined"
                         :aria-label="translations.details"
                         :title="translations.details"
                         size="sm"

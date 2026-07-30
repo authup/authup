@@ -3357,7 +3357,7 @@ owns one seam and stays framework-agnostic; each host supplies the bucket:
   be served from a shared cache (no `swr` / `isr` route rules, which is why
   client-web sets none).
 - **Detail pages.** `apps/client-web/pages/<entity>/[id].vue` fetch through
-  `useAsyncData(\`<entity>:${id}\`, ...)` rather than a bare `await` in
+  ``useAsyncData(`<entity>:${id}`, ...)`` rather than a bare `await` in
   `setup()`, which is what made every record fetch run twice (once server-side,
   once again on hydration). The `data` ref is cast to `Ref<Entity>` after the
   not-found redirect, so the rest of each page is unchanged.

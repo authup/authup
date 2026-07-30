@@ -29,13 +29,20 @@ export default function clientWebKitTheme() {
     return defineTheme({
         extends: [tailwindTheme()],
         elements: {
-            // Enabled `<VCButton>`s render with the native default cursor —
-            // theme-tailwind's button root only sets
-            // `disabled:cursor-not-allowed`, not a base `cursor-pointer`
-            // (tada5hi/vuecs#1656). Add the pointer for the enabled state; the
-            // `disabled:` variant still wins for disabled buttons. Drop this
-            // once the upstream theme ships the pointer.
-            button: { classes: { root: extend('cursor-pointer') } },
+            // Two gaps in theme-tailwind's button root, both dropped once
+            // upstream ships them:
+            //
+            //  - Enabled `<VCButton>`s render with the native default cursor:
+            //    the root only sets `disabled:cursor-not-allowed`, not a base
+            //    `cursor-pointer` (tada5hi/vuecs#1656). The `disabled:`
+            //    variant still wins for disabled buttons.
+            //  - The disabled cue rides the `disabled:` variant, which only
+            //    matches the `:disabled` pseudo-class, i.e. form elements. A
+            //    `<VCButton :as="VCLink">` renders an `<a>` and gets
+            //    `aria-disabled="true"` instead (tada5hi/vuecs#1699), so it
+            //    looked fully enabled while disabled. Mirror the cue onto the
+            //    aria attribute.
+            button: { classes: { root: extend('cursor-pointer aria-disabled:cursor-not-allowed aria-disabled:opacity-60') } },
             // Bottom margin between stacked form groups. theme-tailwind's
             // default formGroup root is `flex flex-col gap-1` (gap inside
             // the group); without `mb-3` the entity forms stack flush.

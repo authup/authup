@@ -158,6 +158,12 @@ const AEntityDelete = defineComponent({
         const onClick = async ($event: any) => {
             $event.preventDefault();
 
+            // The anchor / dropdown-item render path has no native disabled
+            // semantics, so the click has to be dropped here.
+            if (busy.value || props.disabled) {
+                return undefined;
+            }
+
             if (props.withPrompt && confirmDialog) {
                 const confirmed = await confirmDialog({
                     title: promptTitle.value,

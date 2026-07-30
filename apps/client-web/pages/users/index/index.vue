@@ -16,8 +16,9 @@ import {
 import { storeToRefs } from 'pinia';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
+import { VCLink } from '@vuecs/link';
 import type { TableColumn } from '@vuecs/table';
-import { computed, defineComponent, resolveComponent } from 'vue';
+import { computed, defineComponent } from 'vue';
 
 export default defineComponent({
     components: {
@@ -88,8 +89,6 @@ export default defineComponent({
             },
         ]);
 
-        const NuxtLink = resolveComponent('NuxtLink');
-
         return {
             columns,
             hasEditPermission,
@@ -97,7 +96,7 @@ export default defineComponent({
             handleDeleted,
             query,
             translations,
-            NuxtLink,
+            VCLink,
         };
     },
 });
@@ -137,8 +136,8 @@ export default defineComponent({
                 </template>
                 <template #cell-options="{ row }">
                     <VCButton
-                        :as="NuxtLink"
-                        :to="'/users/'+ row.id"
+                        :as="VCLink"
+                        :to="hasEditPermission ? `/users/${row.id}` : undefined"
                         :aria-label="translations.details"
                         :title="translations.details"
                         size="sm"

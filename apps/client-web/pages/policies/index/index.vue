@@ -1,9 +1,10 @@
 <script lang="ts">
 
 import { defineQuery } from '@rapiq/core';
-import { defineComponent, resolveComponent } from 'vue';
+import { defineComponent } from 'vue';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
+import { VCLink } from '@vuecs/link';
 import { VCTimeago } from '@vuecs/timeago';
 import {
     AEntityDelete,
@@ -85,8 +86,6 @@ export default defineComponent({
             },
         ];
 
-        const NuxtLink = resolveComponent('NuxtLink');
-
         return {
             columns,
             hasEditPermission,
@@ -94,7 +93,7 @@ export default defineComponent({
             handleDeleted,
             query,
             translations,
-            NuxtLink,
+            VCLink,
         };
     },
 });
@@ -132,8 +131,8 @@ export default defineComponent({
                 </template>
                 <template #cell-options="{ row }">
                     <VCButton
-                        :as="NuxtLink"
-                        :to="'/policies/'+ row.id"
+                        :as="VCLink"
+                        :to="hasEditPermission ? `/policies/${row.id}` : undefined"
                         :aria-label="translations.details"
                         :title="translations.details"
                         size="sm"
