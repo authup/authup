@@ -433,7 +433,9 @@ export class IdentityProviderController {
             }
 
             entity = await this.repository.findOneBy(where);
-            if (!entity && options.updateOnly) {
+            // Only a NAME key may upsert-create. A UUID addresses one specific
+            // row, so a miss is a 404 (creating would write a different id).
+            if (!entity && (options.updateOnly || where.id)) {
                 throw new EntityNotFoundError();
             }
         } else if (options.updateOnly) {
