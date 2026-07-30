@@ -11,7 +11,7 @@ import { TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@
 import { PermissionName } from '@authup/core-kit';
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h } from 'vue';
-import { usePermissionCheck, useTranslation } from '../../../src';
+import { useHydratedValue, usePermissionCheck, useTranslation } from '../../../src';
 import { createFakeHydrationStore } from '../../utils/hydration';
 import { renderKitComponent } from '../../utils/ssr';
 
@@ -58,6 +58,34 @@ describe('hydration handoff (server render)', () => {
         await renderKitComponent(gated, {}, {}, { hydrationStore: hydration.store });
 
         expect(hydration.entries).toEqual({ 'authup:permission:::user_update::': false });
+    });
+
+    it('survives a resolve that rejects', async () => {
+        const hydration = createFakeHydrationStore();
+
+        const failing = defineComponent({
+            setup() {
+                useHydratedValue<string>({
+                    key: 'authup:test:rejecting',
+                    resolve: () => Promise.reject(new Error('boom')),
+                    apply: () => undefined,
+                });
+
+                return () => h('span', 'rendered');
+            },
+        });
+
+        // the handoff is an optimization: a failed lookup must degrade to the
+        // non-hydrated path, never take the render down with it
+        const { html } = await renderKitComponent(
+            failing,
+            {},
+            {},
+            { hydrationStore: hydration.store },
+        );
+
+        expect(html).toContain('rendered');
+        expect(hydration.entries).toEqual({});
     });
 
     it('leaves the placeholder in the markup without a hydration store', async () => {

@@ -14,7 +14,7 @@ import {
 } from '@authup/client-web-kit';
 import type { IClient } from '@authup/core-http-kit';
 import { matchLocale } from '@authup/i18n';
-import { getURLBasePath, omitRecord } from '@authup/kit';
+import { getURLBasePath, isObject, omitRecord } from '@authup/kit';
 import { createPinia } from 'pinia';
 import type { App } from 'vue';
 import { createSSRApp, ref } from 'vue';
@@ -143,7 +143,7 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
     // Bucket for the SSR to client handoff: filled while rendering and
     // serialized with the rest of the payload afterwards (see server.ts),
     // so the client adopts what the render already fetched.
-    const hydration = payload && typeof payload === 'object' ?
+    const hydration = isObject(payload) ?
         (payload.hydration || (payload.hydration = {})) :
         {};
 

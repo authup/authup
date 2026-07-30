@@ -41,13 +41,21 @@ export function useHydratedValue<T>(ctx: HydratedValueContext<T>) : void {
         }
 
         onServerPrefetch(async () => {
-            const value = await ctx.resolve();
-            if (typeof value === 'undefined') {
-                return;
-            }
+            // The handoff is an optimization, so a failed lookup degrades to
+            // the non-hydrated path (the client resolves for itself) instead
+            // of rejecting. An unhandled rejection here would reach the
+            // renderer, and Node terminates the process over it.
+            try {
+                const value = await ctx.resolve();
+                if (typeof value === 'undefined') {
+                    return;
+                }
 
-            ctx.apply(value);
-            store.set(ctx.key, value);
+                ctx.apply(value);
+                store.set(ctx.key, value);
+            } catch {
+                // nothing to hand over
+            }
         });
 
         return;
