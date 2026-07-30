@@ -365,28 +365,12 @@ function create<
         const store = hydration;
         const handoff = resolveHandoff();
 
-        if (store && handoff) {
-            const snapshot = store.get<EntityCollectionHydrationSnapshot<RECORD>>(handoff.key);
-            if (snapshot) {
-                // One-shot: navigating back to this list later must fetch
-                // again instead of replaying the first render's rows.
-                store.delete(handoff.key);
-
-                data.value = snapshot.data;
-                total.value = snapshot.total;
-
-                meta.value.total = snapshot.total;
-                if (snapshot.pagination) {
-                    meta.value.pagination = snapshot.pagination;
-                }
-
-                interactive = handoff.initial.interactive;
-                query = handoff.initial.query;
-
-                return;
-            }
-        }
-
+        // A server render only ever WRITES. It is the producer, so there is
+        // nothing of its own to adopt, and reading here would mean rendering
+        // whatever the store happens to hold — which is another request's rows
+        // if a host ever backs the store with something outliving one request.
+        // Keeping the server path write-only makes that leak impossible from
+        // here, independently of how a host wires the store.
         if (typeof window === 'undefined') {
             if (!store || !handoff) {
                 return;
@@ -411,6 +395,28 @@ function create<
             });
 
             return;
+        }
+
+        if (store && handoff) {
+            const snapshot = store.get<EntityCollectionHydrationSnapshot<RECORD>>(handoff.key);
+            if (snapshot) {
+                // One-shot: navigating back to this list later must fetch
+                // again instead of replaying the first render's rows.
+                store.delete(handoff.key);
+
+                data.value = snapshot.data;
+                total.value = snapshot.total;
+
+                meta.value.total = snapshot.total;
+                if (snapshot.pagination) {
+                    meta.value.pagination = snapshot.pagination;
+                }
+
+                interactive = handoff.initial.interactive;
+                query = handoff.initial.query;
+
+                return;
+            }
         }
 
         Promise.resolve()

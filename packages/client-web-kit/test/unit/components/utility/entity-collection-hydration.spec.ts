@@ -132,6 +132,30 @@ describe('entity collection hydration (server render)', () => {
         expect(hydration.entries).toEqual({});
     });
 
+    it('never adopts an existing entry while rendering on the server', async () => {
+        // A server render is the producer. Were it to adopt, a host backing the
+        // store with anything outliving one request would serve one client's
+        // rows to another.
+        const hydration = createFakeHydrationStore({
+            [HYDRATION_KEY]: {
+                data: [{ id: 'role-9', name: 'someone-elses-row' }],
+                total: 1,
+                pagination: { limit: 10, offset: 0 },
+            },
+        });
+
+        const { html, httpClient } = await renderKitComponent(
+            collection,
+            {},
+            handlers,
+            { hydrationStore: hydration.store },
+        );
+
+        expect(html).not.toContain('someone-elses-row');
+        expect(html).toContain('admin');
+        expect(listRequests(httpClient.requests)).toHaveLength(1);
+    });
+
     it('honours loadOnSetup=false', async () => {
         const hydration = createFakeHydrationStore();
 

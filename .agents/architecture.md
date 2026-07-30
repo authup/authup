@@ -3287,6 +3287,24 @@ owns one seam and stays framework-agnostic; each host supplies the bucket:
   The translation half is a workaround for a missing sync read path in ilingo
   (tada5hi/ilingo#988). Once that lands, `useTranslation` can seed from a
   synchronous lookup and the payload entries become unnecessary.
+- **Per-request isolation is the security property.** A collection key is
+  entity type plus query, with no actor in it, so two users requesting the same
+  list derive the SAME key. Nothing may therefore outlive one request: both
+  hosts build a fresh payload per request (Nuxt's `payload.data`; every
+  `renderUIPage` caller passes a new payload literal, and the process-level
+  caches in `render.ts` hold only the immutable template / manifest / bundle),
+  and the store is provided on the per-request Vue app, so it is unreachable
+  once the render ends. Same reasoning as the `lifetime: 'transient'`
+  registration of the SSR UI HTTP client. Backing the store with anything
+  shared between requests would serve one client's rows to another. As a second
+  layer the kit's server path is **write-only**: `useHydratedValue` returns
+  before its read, and the collection manager's server branch never adopts (it
+  is the producer), so a mis-wired host store can waste a write but cannot leak
+  across users. Pinned by *never adopts an existing entry while rendering on
+  the server* in `entity-collection-hydration.spec.ts`. The payload is exactly
+  as sensitive as the HTML it travels in, so an authenticated page must never
+  be served from a shared cache (no `swr` / `isr` route rules, which is why
+  client-web sets none).
 - **Detail pages.** `apps/client-web/pages/<entity>/[id].vue` fetch through
   `useAsyncData(\`<entity>:${id}\`, ...)` rather than a bare `await` in
   `setup()`, which is what made every record fetch run twice (once server-side,
