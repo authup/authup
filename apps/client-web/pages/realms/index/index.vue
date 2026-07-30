@@ -2,6 +2,7 @@
 import { VCTimeago } from '@vuecs/timeago';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
+import { VCLink } from '@vuecs/link';
 import type { Realm } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
@@ -17,7 +18,7 @@ import {
 import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { storeToRefs } from 'pinia';
 import type { TableColumn } from '@vuecs/table';
-import { defineComponent, resolveComponent } from 'vue';
+import { defineComponent } from 'vue';
 
 export default defineComponent({
     components: {
@@ -79,8 +80,6 @@ export default defineComponent({
             },
         ];
 
-        const NuxtLink = resolveComponent('NuxtLink');
-
         return {
             columns,
             hasEditPermission,
@@ -89,7 +88,7 @@ export default defineComponent({
             realmManagementId,
             setRealmManagement: store.setRealmManagement,
             translations,
-            NuxtLink,
+            VCLink,
         };
     },
 });
@@ -139,8 +138,8 @@ export default defineComponent({
                         </template>
                     </VCButton>
                     <VCButton
-                        :as="NuxtLink"
-                        :to="'/realms/'+ row.id"
+                        :as="VCLink"
+                        :to="hasEditPermission ? `/realms/${row.id}` : undefined"
                         :aria-label="translations.details"
                         :title="translations.details"
                         size="sm"

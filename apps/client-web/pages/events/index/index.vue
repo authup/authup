@@ -17,8 +17,9 @@ import {
 } from '@authup/client-web-kit';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
+import { VCLink } from '@vuecs/link';
 import type { TableColumn } from '@vuecs/table';
-import { computed, defineComponent, resolveComponent } from 'vue';
+import { computed, defineComponent } from 'vue';
 import { definePageMeta } from '#imports';
 import { LayoutKey } from '~/config/layout';
 
@@ -108,15 +109,13 @@ export default defineComponent({
 
         const shortenId = (id: string) => (id.length > 8 ? `${id.slice(0, 8)}…` : id);
 
-        const NuxtLink = resolveComponent('NuxtLink');
-
         return {
             columns,
             handleFailed,
             query,
             shortenId,
             translations,
-            NuxtLink,
+            VCLink,
         };
     },
 });
@@ -194,7 +193,7 @@ export default defineComponent({
                 </template>
                 <template #cell-options="{ row }">
                     <VCButton
-                        :as="NuxtLink"
+                        :as="VCLink"
                         :to="'/events/'+ row.id"
                         :aria-label="translations.details"
                         :title="translations.details"

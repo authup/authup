@@ -24,10 +24,11 @@ import {
 import { storeToRefs } from 'pinia';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
+import { VCLink } from '@vuecs/link';
 import { useAlertDialog } from '@vuecs/overlays';
 import type { TableColumn } from '@vuecs/table';
 import { VCTimeago } from '@vuecs/timeago';
-import { computed, defineComponent, resolveComponent } from 'vue';
+import { computed, defineComponent } from 'vue';
 
 // VCTable deliberately stays globally registered — its generic component
 // signature is not assignable to the Options-API `components: {}` slot
@@ -175,8 +176,6 @@ export default defineComponent({
             }
         };
 
-        const NuxtLink = resolveComponent('NuxtLink');
-
         return {
             columns,
             hasEditPermission,
@@ -185,7 +184,7 @@ export default defineComponent({
             handleDeleteFailed,
             query,
             translations,
-            NuxtLink,
+            VCLink,
         };
     },
 });
@@ -220,8 +219,8 @@ export default defineComponent({
                 </template>
                 <template #cell-options="{ row }">
                     <VCButton
-                        :as="NuxtLink"
-                        :to="'/keys/'+ row.id"
+                        :as="VCLink"
+                        :to="hasEditPermission ? `/keys/${row.id}` : undefined"
                         :aria-label="translations.details"
                         :title="translations.details"
                         size="sm"

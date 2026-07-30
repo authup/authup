@@ -23,8 +23,9 @@ import {
 } from '@authup/client-web-kit';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
+import { VCLink } from '@vuecs/link';
 import type { TableColumn } from '@vuecs/table';
-import { computed, defineComponent, resolveComponent } from 'vue';
+import { computed, defineComponent } from 'vue';
 
 export default defineComponent({
     components: {
@@ -137,8 +138,6 @@ export default defineComponent({
             },
         ]);
 
-        const NuxtLink = resolveComponent('NuxtLink');
-
         const authMethodLabel = (method: `${ClientAuthMethod}`) => {
             switch (method) {
                 case ClientAuthMethod.SECRET:
@@ -158,7 +157,7 @@ export default defineComponent({
             query,
             translations,
             authMethodLabel,
-            NuxtLink,
+            VCLink,
         };
     },
 });
@@ -211,8 +210,8 @@ export default defineComponent({
                 </template>
                 <template #cell-options="{ row }">
                     <VCButton
-                        :as="NuxtLink"
-                        :to="'/clients/'+ row.id"
+                        :as="VCLink"
+                        :to="hasEditPermission ? `/clients/${row.id}` : undefined"
                         :aria-label="translations.details"
                         :title="translations.details"
                         size="sm"
