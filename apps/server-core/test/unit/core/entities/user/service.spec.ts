@@ -338,6 +338,40 @@ describe('core/entities/user/service', () => {
             const result = await service.update(entity.id, { password: 'new-pass-123' }, createAllowAllActor());
             expect(result.password).toMatch(/^\$2[aby]\$/);
         });
+
+        // The realm is immutable after creation. The junction rows and every
+        // per-user child table denormalize it, so a move would strand them.
+        it('should ignore a submitted realmId that matches the own realm', async () => {
+            const realm = realmRepository.getMasterRealm();
+            const entity = repository.seed(createFakeUser({ realmId: realm.id }));
+
+            const result = await service.update(
+                entity.id,
+                {
+                    displayName: 'New Display',
+                    realmId: realm.id,
+                },
+                createAllowAllActor(),
+            );
+
+            expect(result.displayName).toBe('New Display');
+            expect(result.realmId).toBe(realm.id);
+        });
+
+        it('should not move the user to another realm', async () => {
+            const realm = realmRepository.getMasterRealm();
+            const [target] = realmRepository.seed([{
+                id: randomUUID(),
+                name: 'target',
+            }]);
+            const entity = repository.seed(createFakeUser({ realmId: realm.id }));
+
+            await expect(
+                service.update(entity.id, { realmId: target.id }, createAllowAllActor()),
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
+
+            expect((await repository.findOneById(entity.id))!.realmId).toBe(realm.id);
+        });
     });
 
     describe('self-edit fallback', () => {

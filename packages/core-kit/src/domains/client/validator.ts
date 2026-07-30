@@ -193,6 +193,12 @@ export class ClientValidator extends Container<Client> {
 
         // ----------------------------------------------
 
+        // A client keeps the realm it was created in. UPDATE deliberately has
+        // no mount, so a submitted realmId is stripped instead of moving the
+        // row: the junction tables (client_role.client_realm_id,
+        // client_permission.client_realm_id, client_scope.client_realm_id)
+        // denormalize the realm, and a move would strand all of them in the
+        // old realm.
         this.mount(
             'realmId',
             {

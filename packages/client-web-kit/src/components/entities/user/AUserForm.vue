@@ -93,7 +93,16 @@ export default defineComponent({
         const updatedAt = useUpdatedAt(() => props.entity);
 
         const isRealmLocked = computed(() => !!props.realmId);
-        const showRealmPicker = computed(() => props.canManage && !isRealmLocked.value);
+
+        // A user keeps the realm it was created in, so the picker is a
+        // create-time control only (see the realm-immutability rule in
+        // .agents/architecture.md). The API mounts realmId for CREATE alone,
+        // and the junction rows plus every per-user child table denormalize
+        // it, so offering the picker on an existing record would promise a
+        // move the server can not perform.
+        const showRealmPicker = computed(() => props.canManage &&
+            !isRealmLocked.value &&
+            !isEditing.value);
 
         function initForm() {
             if (
