@@ -219,6 +219,45 @@ describe('core/entities/client/web-client', () => {
             );
         });
 
+        // The MERGE writes only the keys buildWebClientAttributes carries, so
+        // everything else survives a boot. That is the documented way to
+        // extend the client (provisioning file or API), and accessPolicyId is
+        // deliberately kept out of the builder for exactly this reason.
+        it('should keep attributes it does not own', async () => {
+            const realmId = randomUUID();
+            const accessPolicyId = randomUUID();
+            repository.seed([
+                {
+                    id: randomUUID(),
+                    name: CLIENT_WEB_NAME,
+                    realmId,
+                    builtIn: true,
+                    authMethod: 'none',
+                    tokenBindingMethod: 'none',
+                    redirectUri: 'http://stale.example.com/**',
+                    displayName: 'Example Login',
+                    description: 'the realm login client',
+                    baseUrl: 'https://app.example.com',
+                    accessPolicyId,
+                },
+            ]);
+
+            await provisioner.ensureForRealm({ id: realmId });
+
+            const updated = await repository.findOneBy({
+                name: CLIENT_WEB_NAME,
+                realmId,
+            });
+
+            expect(updated!.redirectUri).toBe(
+                'http://localhost:3000/**,https://app.example.com/**',
+            );
+            expect(updated!.displayName).toBe('Example Login');
+            expect(updated!.description).toBe('the realm login client');
+            expect(updated!.baseUrl).toBe('https://app.example.com');
+            expect(updated!.accessPolicyId).toBe(accessPolicyId);
+        });
+
         // `web` is a reserved client name, so the row belongs to the system: a
         // non-built-in one predates the reservation and must not shadow the
         // realm's login client.

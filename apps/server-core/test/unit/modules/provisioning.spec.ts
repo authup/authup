@@ -93,6 +93,18 @@ describe('app/modules/provisioning', () => {
     // File provisioning source
     // ---------------------------------------------------------------
 
+    // The raw ValidupError message is the generic "Property <path> is invalid"
+    // and names neither the file nor the reason, so a bad entry in one of
+    // several mounted files aborted the boot with nothing to act on.
+    it('should name the file and the issues when a provisioning file is invalid', async () => {
+        const source = new FileProvisioningSource({ cwd: 'test/data/sources-invalid' });
+
+        await expect(source.load()).rejects.toThrow(/client-name\.yaml/);
+        await expect(source.load()).rejects.toThrow(
+            /realms\[0]\.relations\.clients\[0]\.attributes\.name/,
+        );
+    });
+
     it('should load provisioning data', async () => {
         const source = new FileProvisioningSource({ cwd: 'test/data/sources' });
         const output = await source.load();

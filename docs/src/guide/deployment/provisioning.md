@@ -28,11 +28,44 @@ Its attributes are fixed:
 | `builtIn`         | `true`                                                            |
 | `grantTypes`      | `authorization_code refresh_token`                                |
 | `scope`           | `global openid`                                                  |
+| `active`          | `true`                                                            |
 | `redirectUri`     | `<origin>/**` for every trusted app origin (see below)            |
+| `postLogoutRedirectUri` | the same `<origin>/**` patterns                             |
 
 Because the `web` client is built-in and `builtIn` is stripped from any
 client you create yourself, the name `web` (and `system`) is reserved —
 attempting to create or rename a client to it returns a `400 Bad Request`.
+
+### Extending the `web` client
+
+The attributes above are derived from configuration and are reasserted on
+every start. Writing a different value to any of them, from a provisioning
+file or through the API, is reverted at the next boot and no error is
+raised. Redirect patterns in particular are configured through
+`trustedOrigins` (below), not per client.
+
+Every other attribute is left untouched and survives a restart. A
+provisioning file may therefore declare a `web` client to set `displayName`,
+`description`, `baseUrl`, `rootUrl` or `accessPolicyId`, and to assign
+additional roles, permissions and scopes:
+
+```yaml
+realms:
+    - attributes:
+          name: master
+      relations:
+          clients:
+              - attributes:
+                    name: web
+                    builtIn: true
+                    displayName: Example Login
+```
+
+Scope assignments are additive. The built-in `global` and `openid` bindings
+are re-created when missing, and nothing is ever removed. Declaring
+`builtIn: true` is optional but keeps the first boot free of a takeover
+warning, which is logged when a client named `web` is found without the
+flag.
 
 ### Trusted app origins
 
