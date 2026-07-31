@@ -41,18 +41,18 @@
     "devDependencies": {
         "@nuxt/module-builder": "^1.0.3",
         "@nuxt/schema": "^4.0.0",
-        "@pinia/nuxt": "^0.11.3",
+        "@pinia/nuxt": "^1.0.1",
         "fix-dts-default-cjs-exports": "^1.0.1",
         "mkdist": "^2.3.0",
         "nuxt": "^4.5.1",
-        "pinia": "^3.0.0",
+        "pinia": "^4.0.2",
         "rollup-plugin-dts": "^6.3.0",
         "strip-literal": "^3.1.0",
         "vue-router": "^5.0.7"
     },
     "peerDependencies": {
         "@pinia/nuxt": "*",
-        "pinia": "^3.0.0"
+        "pinia": "^4.0.2"
     },
     "keywords": [
         "auth",
