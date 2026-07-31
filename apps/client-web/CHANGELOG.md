@@ -1,5 +1,38 @@
 # Change Log
 
+## [1.0.0-beta.58](https://github.com/authup/authup/compare/v1.0.0-beta.57...v1.0.0-beta.58) (2026-07-31)
+
+
+### Features
+
+* hand server-rendered data to the client instead of fetching it twice ([#3358](https://github.com/authup/authup/issues/3358)) ([0748d85](https://github.com/authup/authup/commit/0748d85a0475b1dbddbad80c10b9ce5f4a099ab2))
+
+
+### Bug Fixes
+
+* a user (or client) never moves between realms ([#3362](https://github.com/authup/authup/issues/3362)) ([d45cc67](https://github.com/authup/authup/commit/d45cc677a79330b43bb6b319b70d438fbba24576))
+* **deps:** bump ilingo, validup and trapi to their latest versions ([6d69f90](https://github.com/authup/authup/commit/6d69f90665f23022de5bf3ef8c6916a50c449494))
+* enforce the permission guard on entity index detail links ([#3363](https://github.com/authup/authup/issues/3363)) ([28c9c18](https://github.com/authup/authup/commit/28c9c18aee3a7c56561746f05febef8fa59ddecc))
+
+
+### Performance Improvements
+
+* **ui:** bundle only the icons the apps render ([#3365](https://github.com/authup/authup/issues/3365)) ([7b1e041](https://github.com/authup/authup/commit/7b1e041ef006e3ac240fa8b5d49f0841f97e49f4)), closes [#3345](https://github.com/authup/authup/issues/3345)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/client-web-nuxt bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/client-web-theme bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/core-http-kit bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/core-kit bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/i18n bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/kit bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+
 ## [1.0.0-beta.57](https://github.com/authup/authup/compare/v1.0.0-beta.56...v1.0.0-beta.57) (2026-07-29)
 
 

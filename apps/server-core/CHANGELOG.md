@@ -1,5 +1,44 @@
 # Change Log
 
+## [1.0.0-beta.58](https://github.com/authup/authup/compare/v1.0.0-beta.57...v1.0.0-beta.58) (2026-07-31)
+
+
+### Features
+
+* hand server-rendered data to the client instead of fetching it twice ([#3358](https://github.com/authup/authup/issues/3358)) ([0748d85](https://github.com/authup/authup/commit/0748d85a0475b1dbddbad80c10b9ce5f4a099ab2))
+
+
+### Bug Fixes
+
+* a user (or client) never moves between realms ([#3362](https://github.com/authup/authup/issues/3362)) ([d45cc67](https://github.com/authup/authup/commit/d45cc677a79330b43bb6b319b70d438fbba24576))
+* **deps:** bump ilingo, validup and trapi to their latest versions ([6d69f90](https://github.com/authup/authup/commit/6d69f90665f23022de5bf3ef8c6916a50c449494))
+* **deps:** bump the minorandpatch group with 4 updates ([#3359](https://github.com/authup/authup/issues/3359)) ([e1dbd50](https://github.com/authup/authup/commit/e1dbd509e2c0dd4931b8f1bb73c0e69a296bdadf))
+* name the file and issues when a provisioning file is invalid ([#3364](https://github.com/authup/authup/issues/3364)) ([6263c75](https://github.com/authup/authup/commit/6263c7579419963d42cc19c24779acb663fadc9f)), closes [#3357](https://github.com/authup/authup/issues/3357)
+
+
+### Performance Improvements
+
+* **ui:** bundle only the icons the apps render ([#3365](https://github.com/authup/authup/issues/3365)) ([7b1e041](https://github.com/authup/authup/commit/7b1e041ef006e3ac240fa8b5d49f0841f97e49f4)), closes [#3345](https://github.com/authup/authup/issues/3345)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/core-http-kit bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/core-kit bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/errors bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/i18n bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/kit bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/server-kit bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/specs bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/client-web-theme bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/server-test-kit bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+
 ## [1.0.0-beta.57](https://github.com/authup/authup/compare/v1.0.0-beta.56...v1.0.0-beta.57) (2026-07-29)
 
 

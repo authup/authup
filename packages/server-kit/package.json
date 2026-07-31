@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-kit",
     "type": "module",
-    "version": "1.0.0-beta.57",
+    "version": "1.0.0-beta.58",
     "description": "A toolkit for server-side services.",
     "license": "Apache-2.0",
     "exports": {
@@ -56,11 +56,11 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/access": "^1.0.0-beta.57",
-        "@authup/core-kit": "^1.0.0-beta.57",
-        "@authup/core-realtime-kit": "^1.0.0-beta.57",
-        "@authup/kit": "^1.0.0-beta.57",
-        "@authup/specs": "^1.0.0-beta.57",
+        "@authup/access": "^1.0.0-beta.58",
+        "@authup/core-kit": "^1.0.0-beta.58",
+        "@authup/core-realtime-kit": "^1.0.0-beta.58",
+        "@authup/kit": "^1.0.0-beta.58",
+        "@authup/specs": "^1.0.0-beta.58",
         "@isaacs/ttlcache": "^2.1.4",
         "@rapiq/core": "^2.0.0-beta.13",
         "@node-rs/bcrypt": "^1.10.7",
