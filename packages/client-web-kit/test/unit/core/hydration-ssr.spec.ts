@@ -88,11 +88,12 @@ describe('hydration handoff (server render)', () => {
         expect(hydration.entries).toEqual({});
     });
 
-    it('leaves the placeholder in the markup without a hydration store', async () => {
-        // nothing awaits ilingo's async lookup, so the render flushes first.
-        // The handoff is what makes a server-rendered translation resolve
+    it('resolves the translation in the markup without a hydration store', async () => {
+        // ilingo 6.1.0 seeds the render from a synchronous store read
+        // (tada5hi/ilingo#988), so an in-memory catalog reaches the markup
+        // even though nothing awaits the asynchronous lookup
         const { html } = await renderKitComponent(translated);
 
-        expect(html).toContain('authupField.name');
+        expect(html).toContain('Name');
     });
 });

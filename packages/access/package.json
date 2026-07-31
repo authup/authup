@@ -58,9 +58,9 @@
         "@rapiq/adapter-memory": "^2.0.0-beta.13",
         "@rapiq/core": "^2.0.0-beta.13",
         "@rapiq/parser-mongo": "^2.0.0-beta.13",
-        "@validup/zod": "^0.3.3",
+        "@validup/zod": "^1.0.0",
         "smob": "^1.6.1",
-        "validup": "^0.5.1",
+        "validup": "^1.0.0",
         "zod": "^4.4.3"
     },
     "devDependencies": {
