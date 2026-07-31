@@ -13,6 +13,7 @@ import { describe, expect, it } from 'vitest';
 import { defineComponent, h } from 'vue';
 import { useHydratedValue, usePermissionCheck, useTranslation } from '../../../src';
 import { createFakeHydrationStore } from '../../utils/hydration';
+import { ASYNC_ONLY_TRANSLATION, withAsyncOnlyTranslator } from '../../utils/ilingo';
 import { renderKitComponent } from '../../utils/ssr';
 
 const translated = defineComponent({
@@ -20,6 +21,17 @@ const translated = defineComponent({
         const label = useTranslation({
             namespace: TranslatorTranslationNamespace.FIELD,
             key: TranslatorTranslationFieldKey.NAME,
+        });
+
+        return () => h('span', label.value);
+    },
+});
+
+const untranslated = defineComponent({
+    setup() {
+        const label = useTranslation({
+            namespace: TranslatorTranslationNamespace.FIELD,
+            key: 'thereIsNoSuchKey',
         });
 
         return () => h('span', label.value);
@@ -35,7 +47,10 @@ const gated = defineComponent({
 });
 
 describe('hydration handoff (server render)', () => {
-    it('records what a translation resolved to', async () => {
+    it('resolves a translation into the markup without handing anything over', async () => {
+        // ilingo 6.1.0 seeds the render from a synchronous store read
+        // (tada5hi/ilingo#988), so an in-memory catalog reaches the markup
+        // even though nothing awaits the asynchronous lookup
         const hydration = createFakeHydrationStore();
 
         const { html } = await renderKitComponent(
@@ -49,7 +64,38 @@ describe('hydration handoff (server render)', () => {
         expect(html).toContain('Name');
         expect(html).not.toContain('authupField.name');
 
-        expect(hydration.entries).toEqual({ 'authup:translation:en:authupField:name::': 'Name' });
+        expect(hydration.entries).toEqual({});
+    });
+
+    // a store answering `undefined` says the key is missing, which the async
+    // pass would report too, so there is nothing to hand over. Only a store
+    // REFUSING to answer synchronously earns an entry.
+    it('hands nothing over for a key the catalog does not have', async () => {
+        const hydration = createFakeHydrationStore();
+
+        const { html } = await renderKitComponent(
+            untranslated,
+            {},
+            {},
+            { hydrationStore: hydration.store },
+        );
+
+        expect(html).toContain('authupField.thereIsNoSuchKey');
+        expect(hydration.entries).toEqual({});
+    });
+
+    it('records what an async-only store resolved', async () => {
+        const hydration = createFakeHydrationStore();
+
+        const { html } = await renderKitComponent(
+            withAsyncOnlyTranslator(translated),
+            {},
+            {},
+            { hydrationStore: hydration.store },
+        );
+
+        expect(html).toContain(ASYNC_ONLY_TRANSLATION);
+        expect(hydration.entries).toEqual({ 'authup:translation:en:authupField:name::': ASYNC_ONLY_TRANSLATION });
     });
 
     it('records a permission verdict', async () => {
@@ -86,14 +132,5 @@ describe('hydration handoff (server render)', () => {
 
         expect(html).toContain('rendered');
         expect(hydration.entries).toEqual({});
-    });
-
-    it('resolves the translation in the markup without a hydration store', async () => {
-        // ilingo 6.1.0 seeds the render from a synchronous store read
-        // (tada5hi/ilingo#988), so an in-memory catalog reaches the markup
-        // even though nothing awaits the asynchronous lookup
-        const { html } = await renderKitComponent(translated);
-
-        expect(html).toContain('Name');
     });
 });

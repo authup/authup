@@ -17,7 +17,7 @@ import {
 } from '@ilingo/validup-vue';
 import type { FieldTranslations } from '@ilingo/validup-vue';
 import type { DataMaybeRef, GetContextReactive } from '@ilingo/vue';
-import type { GetContext } from 'ilingo';
+import type { GetContext, IIlingo } from 'ilingo';
 import type { ObjectLiteral } from 'validup';
 import type { Ref } from 'vue';
 import { computed, ref, unref } from 'vue';
@@ -42,15 +42,42 @@ function buildTranslationHydrationKey(ctx: GetContext) : string {
 }
 
 /**
+ * Whether the instance refused this lookup instead of answering it.
+ *
+ * ilingo signals a store that cannot read without I/O by throwing
+ * `SyncUnavailableError` out of `getSync`, deliberately not by returning
+ * `undefined` (which means the key is genuinely missing). Only the refusal is
+ * worth a handoff: a missing key misses in the async pass too, so there would
+ * be nothing to record. Any other fault counts as refused, so the async pass
+ * still gets its chance at a value.
+ */
+function isSyncUnavailable(instance: IIlingo, ctx: GetContext) : boolean {
+    try {
+        instance.getSync(ctx);
+
+        return false;
+    } catch {
+        return true;
+    }
+}
+
+/**
  * Reactive translation lookup.
  *
- * `@ilingo/vue` resolves through ilingo's async `get()` (a store may be
- * file-backed or remote), so a fresh ref carries the `<namespace>.<key>`
- * placeholder until a microtask later. During a server render that settles
- * before the markup is written, but in the browser the FIRST render is the
- * placeholder, which is a hydration mismatch for every translated string
- * inside a server-rendered subtree. The render therefore records what it
- * resolved and the hydrating client shows that until its own lookup settles.
+ * `@ilingo/vue` resolves through ilingo's async `get()`, seeding the ref
+ * with what the synchronous `getSync()` can answer (tada5hi/ilingo#988).
+ * Authup's catalogs are a `MemoryStore`, so that seed IS the translation and
+ * both the server-rendered markup and the render the client hydrates it
+ * against hold the real string.
+ *
+ * A store that needs I/O (a cold `FSStore`/`LoaderStore`, a remote adapter a
+ * consumer registers ahead of the kit's own) declines the synchronous read,
+ * and the seed stays the `<namespace>.<key>` placeholder until the async
+ * lookup settles a microtask later. That is a mismatch for every translated
+ * string in a server-rendered subtree, so for those the server records what
+ * it resolved and the hydrating client shows it until its own lookup
+ * settles. Nothing is recorded when the seed already answered, which is
+ * every authup key.
  */
 export function useTranslation(input: GetContextReactive): Ref<string> {
     const source = _useTranslation(input);
@@ -60,10 +87,15 @@ export function useTranslation(input: GetContextReactive): Ref<string> {
         return source;
     }
 
+    // `@ilingo/vue` falls back to this for a refused read AND for a missing
+    // key, so it only rules the seed out, it does not say which happened
+    const placeholder = `${input.namespace}.${input.key}`;
+    if (source.value !== placeholder) {
+        return source;
+    }
+
     const ilingo = injectIlingo();
     const locale = injectLocale();
-    const placeholder = `${input.namespace}.${input.key}`;
-    const recorded = ref<string>();
 
     const context = () : GetContext => ({
         locale: input.locale ? input.locale : locale.value,
@@ -72,6 +104,12 @@ export function useTranslation(input: GetContextReactive): Ref<string> {
         count: unref(input.count),
         data: input.data ? unwrapTranslationData(input.data) : undefined,
     });
+
+    if (!isSyncUnavailable(ilingo, context())) {
+        return source;
+    }
+
+    const recorded = ref<string>();
 
     useHydratedValue<string>({
         key: buildTranslationHydrationKey(context()),
