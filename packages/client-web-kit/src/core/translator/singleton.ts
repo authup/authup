@@ -17,7 +17,7 @@ import {
 } from '@ilingo/validup-vue';
 import type { FieldTranslations } from '@ilingo/validup-vue';
 import type { DataMaybeRef, GetContextReactive } from '@ilingo/vue';
-import type { GetContext } from 'ilingo';
+import type { GetContext, IIlingo } from 'ilingo';
 import type { ObjectLiteral } from 'validup';
 import type { Ref } from 'vue';
 import { computed, ref, unref } from 'vue';
@@ -39,6 +39,26 @@ function unwrapTranslationData(input: DataMaybeRef) : Record<string, string | nu
 
 function buildTranslationHydrationKey(ctx: GetContext) : string {
     return `authup:translation:${ctx.locale}:${ctx.namespace}:${ctx.key}:${ctx.count ?? ''}:${ctx.data ? JSON.stringify(ctx.data) : ''}`;
+}
+
+/**
+ * Whether the instance refused this lookup instead of answering it.
+ *
+ * ilingo signals a store that cannot read without I/O by throwing
+ * `SyncUnavailableError` out of `getSync`, deliberately not by returning
+ * `undefined` (which means the key is genuinely missing). Only the refusal is
+ * worth a handoff: a missing key misses in the async pass too, so there would
+ * be nothing to record. Any other fault counts as refused, so the async pass
+ * still gets its chance at a value.
+ */
+function isSyncUnavailable(instance: IIlingo, ctx: GetContext) : boolean {
+    try {
+        instance.getSync(ctx);
+
+        return false;
+    } catch {
+        return true;
+    }
 }
 
 /**
@@ -67,7 +87,8 @@ export function useTranslation(input: GetContextReactive): Ref<string> {
         return source;
     }
 
-    // `@ilingo/vue` falls back to this for both the seed and a missing key
+    // `@ilingo/vue` falls back to this for a refused read AND for a missing
+    // key, so it only rules the seed out, it does not say which happened
     const placeholder = `${input.namespace}.${input.key}`;
     if (source.value !== placeholder) {
         return source;
@@ -75,7 +96,6 @@ export function useTranslation(input: GetContextReactive): Ref<string> {
 
     const ilingo = injectIlingo();
     const locale = injectLocale();
-    const recorded = ref<string>();
 
     const context = () : GetContext => ({
         locale: input.locale ? input.locale : locale.value,
@@ -84,6 +104,12 @@ export function useTranslation(input: GetContextReactive): Ref<string> {
         count: unref(input.count),
         data: input.data ? unwrapTranslationData(input.data) : undefined,
     });
+
+    if (!isSyncUnavailable(ilingo, context())) {
+        return source;
+    }
+
+    const recorded = ref<string>();
 
     useHydratedValue<string>({
         key: buildTranslationHydrationKey(context()),

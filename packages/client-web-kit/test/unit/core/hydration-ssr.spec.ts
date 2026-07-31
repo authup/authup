@@ -27,6 +27,17 @@ const translated = defineComponent({
     },
 });
 
+const untranslated = defineComponent({
+    setup() {
+        const label = useTranslation({
+            namespace: TranslatorTranslationNamespace.FIELD,
+            key: 'thereIsNoSuchKey',
+        });
+
+        return () => h('span', label.value);
+    },
+});
+
 const gated = defineComponent({
     setup() {
         const allowed = usePermissionCheck({ name: PermissionName.USER_UPDATE });
@@ -53,6 +64,23 @@ describe('hydration handoff (server render)', () => {
         expect(html).toContain('Name');
         expect(html).not.toContain('authupField.name');
 
+        expect(hydration.entries).toEqual({});
+    });
+
+    // a store answering `undefined` says the key is missing, which the async
+    // pass would report too, so there is nothing to hand over. Only a store
+    // REFUSING to answer synchronously earns an entry.
+    it('hands nothing over for a key the catalog does not have', async () => {
+        const hydration = createFakeHydrationStore();
+
+        const { html } = await renderKitComponent(
+            untranslated,
+            {},
+            {},
+            { hydrationStore: hydration.store },
+        );
+
+        expect(html).toContain('authupField.thereIsNoSuchKey');
         expect(hydration.entries).toEqual({});
     });
 

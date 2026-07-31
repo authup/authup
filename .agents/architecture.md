@@ -3372,9 +3372,13 @@ owns one seam and stays framework-agnostic; each host supplies the bucket:
   store that needs I/O (a cold `FSStore`/`LoaderStore`, a remote adapter a
   consumer registers ahead of the kit's own) throws `SyncUnavailableError` out
   of the sync read, leaving the placeholder in the first render of a
-  server-rendered subtree. The kit detects exactly that — the seed came back
-  equal to the `<namespace>.<key>` placeholder `@ilingo/vue` falls back to —
-  and only then hands the resolved string over.
+  server-rendered subtree. Detecting that takes both halves of ilingo's
+  contract, because `@ilingo/vue` falls back to the same
+  `<namespace>.<key>` placeholder for a **refused** read and for a **missing**
+  key. A seed equal to the placeholder therefore only rules the seed out; the
+  kit then asks `getSync()` itself, and hands the resolved string over only
+  when the call throws. A key the store answers `undefined` for is missing in
+  the async pass too, so there would be nothing to record.
 - **Per-request isolation is the security property.** A collection key is
   entity type plus query, with no actor in it, so two users requesting the same
   list derive the SAME key. Nothing may therefore outlive one request: both
