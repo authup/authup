@@ -3363,9 +3363,16 @@ owns one seam and stays framework-agnostic; each host supplies the bucket:
   permission key carries the actor (`userId`/`realmId`) so an account switch
   cannot adopt the previous actor's verdict; checks carrying a `PolicyData`
   bag are not keyed at all and keep evaluating from their fail-closed default.
-  The translation half is a workaround for a missing sync read path in ilingo
-  (tada5hi/ilingo#988). Once that lands, `useTranslation` can seed from a
-  synchronous lookup and the payload entries become unnecessary.
+  The translation half was a workaround for a missing sync read path in
+  ilingo, which landed in **ilingo 6.1.0** (tada5hi/ilingo#988): `@ilingo/vue`
+  now seeds the first render from `IIlingo.getSync()` whenever the store can
+  answer without I/O. Authup's catalogs are a `MemoryStore`, so translations
+  resolve on the very first render (server and client) and the recorded entry
+  is no longer what avoids the placeholder. The recording is retained because
+  it still carries stores that report `SyncUnavailableError` (a cold
+  `FSStore`/`LoaderStore`, or a remote adapter a downstream consumer installs).
+  Dropping it for in-memory catalogs would trim payload weight and is the
+  obvious follow-up.
 - **Per-request isolation is the security property.** A collection key is
   entity type plus query, with no actor in it, so two users requesting the same
   list derive the SAME key. Nothing may therefore outlive one request: both
