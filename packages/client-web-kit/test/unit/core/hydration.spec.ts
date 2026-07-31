@@ -47,10 +47,14 @@ describe('hydration handoff (client)', () => {
         expect(wrapper.text()).toEqual('Name');
     });
 
-    it('shows the placeholder without a record, as before', () => {
+    // ilingo 6.1.0 seeds the first render from a synchronous store read
+    // (tada5hi/ilingo#988), so an in-memory catalog no longer needs the
+    // recorded value to avoid the placeholder. The handoff stays for stores
+    // that need I/O and report the read as unavailable.
+    it('resolves an in-memory catalog without a record', () => {
         const { wrapper } = mountKitComponent(translated);
 
-        expect(wrapper.text()).toEqual('authupField.name');
+        expect(wrapper.text()).toEqual('Name');
     });
 
     it('lets the async lookup take over once it settles', async () => {

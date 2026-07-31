@@ -37,6 +37,13 @@ import {
 import { ARealms } from '../realm';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
+// `User` carries an extra-attributes index signature, and @validup/vue's
+// FieldsAccessor collapses to that signature instead of keeping the declared
+// keys, so every `v.fields.<key>` degrades to `FieldState<any> | undefined`
+// (tada5hi/validup#455). Pinning the composable to an index-signature-free
+// projection restores typed field access.
+type UserFormState = Pick<User, 'active' | 'name' | 'nameLocked' | 'displayName' | 'email' | 'realmId'>;
+
 export default defineComponent({
     components: {
         ARealms,
@@ -67,7 +74,7 @@ export default defineComponent({
     setup(props, ctx) {
         const busy = ref(false);
         const nameSeed = useId();
-        const form = reactive({
+        const form = reactive<UserFormState>({
             active: true,
             name: '',
             nameLocked: false,
@@ -84,7 +91,7 @@ export default defineComponent({
 
         const isEditing = useIsEditing(manager.data);
 
-        const v = useValidup(
+        const v = useValidup<UserFormState>(
             new UserValidator(),
             form,
             { group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)) },

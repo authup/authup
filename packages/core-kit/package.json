@@ -56,9 +56,9 @@
         "@authup/kit": "^1.0.0-beta.57",
         "@authup/errors": "^1.0.0-beta.57",
         "@authup/specs": "^1.0.0-beta.57",
-        "validup": "^0.5.1",
+        "validup": "^1.0.0",
         "zod": "^4.4.3",
-        "@validup/zod": "^0.3.3"
+        "@validup/zod": "^1.0.0"
     },
     "devDependencies": {
         "vitest": "^4.0.14"
