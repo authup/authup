@@ -8,6 +8,7 @@
 import { ValidatorGroup, isObject } from '@authup/kit';
 import { locateMany, read } from 'locter';
 import path from 'node:path';
+import { isValidupError, stringifyPath } from 'validup';
 import type { RootProvisioningEntity } from '../../../../../core/provisioning/entities/index.ts';
 import { RootProvisioningValidator } from '../../../../../core/provisioning/entities/index.ts';
 import type { IProvisioningSource } from '../../../../../core/provisioning/types.ts';
@@ -64,10 +65,31 @@ export class FileProvisioningSource implements IProvisioningSource {
             // (`clientPermissions`/`clientRoles` are keyed by client name, and
             // client names may contain underscores), so it would silently
             // corrupt those keys. Unmounted keys are stripped by the validator.
-            const data = await this.rootValidator.run(
-                entity as Record<string, any>,
-                { group: ValidatorGroup.PROVISIONING },
-            );
+            let data : RootProvisioningEntity;
+            try {
+                data = await this.rootValidator.run(
+                    entity as Record<string, any>,
+                    { group: ValidatorGroup.PROVISIONING },
+                );
+            } catch (e) {
+                // The raw ValidupError message is a generic
+                // "Property <path> is invalid" and names neither the file nor
+                // the reason, so a bad entry in one of several mounted files
+                // aborted the boot with nothing to act on. Re-throw with the
+                // file path and every issue message attached.
+                if (!isValidupError(e)) {
+                    throw e;
+                }
+
+                const issues = e.issues
+                    .map((issue) => `  ${stringifyPath(issue.path)}: ${issue.message}`)
+                    .join('\n');
+
+                throw new Error(
+                    `The provisioning file "${location.path}" is invalid.\n${issues}`,
+                    { cause: e },
+                );
+            }
 
             compositeSource.merge(output, data);
         }

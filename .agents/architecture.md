@@ -822,6 +822,19 @@ dropped from the validator output) are validated via
 `PolicyProvisioningValidator` (attributes + `extraAttributes` + recursive
 `children`) and provisioned.
 
+A validation failure is re-thrown by `FileProvisioningSource` with the
+offending **file path** plus every issue rendered as
+`<path>: <message>`. The raw `ValidupError` message is the generic
+"Property `<path>` is invalid" and names neither the file nor the reason, so
+with several mounted files a bad entry aborted the boot with nothing to act
+on.
+
+`CLIENT_RESERVED_NAMES` (`system`, `web`) is **not** enforced here. It stays
+a `ClientService.save()` (API-path) guard, because provisioning bypasses the
+service. Declaring either name is allowed and partially effective. See
+*Per-Realm Public `web` Client* below for which attributes a declaration can
+and cannot set.
+
 ### Synchronization Order
 
 `ProvisionerModule` runs (1) `GraphProvisioningSynchronizer`, (2) backfill via `assignDefaultPolicy` (config-gated, deprecated).
@@ -890,8 +903,23 @@ endpoint — the `/authorize` verifier already resolves clients via
   to the system whatever state it is in: a non-built-in client named `web`
   predates the reservation and is taken over (overwrite + warn) rather than
   left to shadow the realm's login client.
+- **The ten attributes in `buildWebClientAttributes` are owned by the
+  provisioner and reassert on every boot.** Whatever writes a different value
+  to `name`, `realmId`, `authMethod`, `tokenBindingMethod`, `builtIn`,
+  `active`, `grantTypes`, `scope`, `redirectUri` or `postLogoutRedirectUri`,
+  a provisioning file or the API, the MERGE reverts it at the next start with
+  no error (the takeover `warn` above fires only for a non-`builtIn` row).
+  Redirect patterns are configured through `trustedOrigins`, not per client.
+  Everything outside that set survives a boot and is the supported way to
+  extend the client: `displayName`, `description`, `baseUrl`, `rootUrl`,
+  `accessPolicyId` (deliberately omitted from the builder so an admin-set
+  policy is not wiped), and every junction row, since `ensureScopes` only
+  inserts what is missing and never deletes.
 - **Guardrails:** `web` and `system` are reserved client names — `ClientService.save()`
   rejects API attempts to create/rename a client onto them (`CLIENT_RESERVED_NAMES`).
+  An existing `builtIn` row keeping its own name is exempt, so an admin holding
+  `CLIENT_UPDATE` can edit the provisioned `web` client through the API; only
+  the owned attributes above snap back on the next boot.
   The client validator strips `builtIn` on create/update, so no API caller can
   self-assign it — only provisioned clients are `builtIn`. The SSR `AuthorizeForm`
   auto-submits consent for `builtIn` clients (skips the Allow/Deny step); user-
