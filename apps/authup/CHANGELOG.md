@@ -1,5 +1,22 @@
 # Change Log
 
+## [1.0.0-beta.58](https://github.com/authup/authup/compare/v1.0.0-beta.57...v1.0.0-beta.58) (2026-07-31)
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group with 4 updates ([#3359](https://github.com/authup/authup/issues/3359)) ([e1dbd50](https://github.com/authup/authup/commit/e1dbd509e2c0dd4931b8f1bb73c0e69a296bdadf))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/errors bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/kit bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/server-core bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+
 ## [1.0.0-beta.57](https://github.com/authup/authup/compare/v1.0.0-beta.56...v1.0.0-beta.57) (2026-07-29)
 
 

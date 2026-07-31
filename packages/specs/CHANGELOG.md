@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.0.0-beta.58](https://github.com/authup/authup/compare/v1.0.0-beta.57...v1.0.0-beta.58) (2026-07-31)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([d3d06f6](https://github.com/authup/authup/commit/d3d06f6a81a8fc548825bec9af551d0113eb2c89))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/kit bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+
 ## [1.0.0-beta.57](https://github.com/authup/authup/compare/v1.0.0-beta.56...v1.0.0-beta.57) (2026-07-29)
 
 
