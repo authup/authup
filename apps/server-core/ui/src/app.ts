@@ -9,7 +9,6 @@ import {
     buildVuecsInstallOptions,
     injectStore,
     install,
-    registerIconCollections,
     syncTranslatorLocaleFromManager,
 } from '@authup/client-web-kit';
 import type { IClient } from '@authup/core-http-kit';
@@ -31,6 +30,12 @@ import installPagination from '@vuecs/pagination';
 
 import './tailwind.css';
 
+// Registers the build-time icon subset (see `NuxtIconBundle` in
+// ui/vite.config.ts) on `@iconify/vue`, which is what `<VCIcon>` reads.
+// Replaces the kit's `registerIconCollections()`, which pulled both full
+// Font Awesome collections into the bundle.
+import 'virtual:nuxt-icon-bundle/register';
+
 import type { Router } from 'vue-router';
 import Activate from './pages/activate.vue';
 import Authorize from './pages/authorize.vue';
@@ -42,8 +47,6 @@ import VApp from './App.vue';
 import { createCookieRef } from './cookie';
 import { providePayload } from './di';
 import type { HydrationPayload } from './types';
-
-registerIconCollections();
 
 export type CreateAppOptions = {
     httpClient?: IClient

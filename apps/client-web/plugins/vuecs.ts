@@ -5,8 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildVuecsInstallOptions, registerIconCollections } from '@authup/client-web-kit';
+import { buildVuecsInstallOptions } from '@authup/client-web-kit';
 import { de } from 'date-fns/locale/de';
+
+// Registers the build-time icon subset (see `NuxtIconBundle` in
+// nuxt.config.ts) on `@iconify/vue`, which is what `<VCIcon>` reads.
+// Replaces the kit's `registerIconCollections()`, which pulled both full
+// Font Awesome collections into the bundle.
+import 'virtual:nuxt-icon-bundle/register';
 
 import vuecs from '@vuecs/core';
 import clientWebKitTheme from '@authup/client-web-kit-theme';
@@ -25,8 +31,6 @@ import installIcon from '@vuecs/icon';
 import installNavigation from '@vuecs/navigation';
 
 import { defineNuxtPlugin } from '#imports';
-
-registerIconCollections();
 
 export default defineNuxtPlugin({
     // Name this plugin so other plugins can express ordering against it.
