@@ -13,6 +13,7 @@ import { defineComponent, h } from 'vue';
 import { usePermissionCheck, useTranslation } from '../../../src';
 import { mountKitComponent } from '../../utils';
 import { createFakeHydrationStore } from '../../utils/hydration';
+import { ASYNC_ONLY_TRANSLATION, withAsyncOnlyTranslator } from '../../utils/ilingo';
 
 // must match what the server render writes (see hydration-ssr.spec.ts)
 const TRANSLATION_KEY = 'authup:translation:en:authupField:name::';
@@ -38,32 +39,45 @@ const gated = defineComponent({
 });
 
 describe('hydration handoff (client)', () => {
-    it('renders a recorded translation on the very first render', () => {
-        const hydration = createFakeHydrationStore({ [TRANSLATION_KEY]: 'Name' });
-
-        const { wrapper } = mountKitComponent(translated, {}, {}, { hydrationStore: hydration.store });
+    // ilingo 6.1.0 seeds the first render from a synchronous store read
+    // (tada5hi/ilingo#988), so an in-memory catalog reaches the render the
+    // markup is hydrated against without anything being handed over.
+    it('renders a translation on the very first render', () => {
+        const { wrapper } = mountKitComponent(translated);
 
         // no flushPromises: this is the render the markup is hydrated against
         expect(wrapper.text()).toEqual('Name');
     });
 
-    // ilingo 6.1.0 seeds the first render from a synchronous store read
-    // (tada5hi/ilingo#988), so an in-memory catalog no longer needs the
-    // recorded value to avoid the placeholder. The handoff stays for stores
-    // that need I/O and report the read as unavailable.
-    it('resolves an in-memory catalog without a record', () => {
+    it('keeps the async lookup authoritative once it settles', async () => {
         const { wrapper } = mountKitComponent(translated);
+        await flushPromises();
 
         expect(wrapper.text()).toEqual('Name');
     });
 
-    it('lets the async lookup take over once it settles', async () => {
-        const hydration = createFakeHydrationStore({ [TRANSLATION_KEY]: 'stale' });
+    // a store that needs I/O declines the synchronous read, so the seed stays
+    // the placeholder and the handoff is what avoids the mismatch
+    it('renders a recorded translation when the store cannot answer synchronously', () => {
+        const hydration = createFakeHydrationStore({ [TRANSLATION_KEY]: ASYNC_ONLY_TRANSLATION });
 
-        const { wrapper } = mountKitComponent(translated, {}, {}, { hydrationStore: hydration.store });
+        const { wrapper } = mountKitComponent(
+            withAsyncOnlyTranslator(translated),
+            {},
+            {},
+            { hydrationStore: hydration.store },
+        );
+
+        expect(wrapper.text()).toEqual(ASYNC_ONLY_TRANSLATION);
+    });
+
+    it('shows the placeholder for an async-only store nothing was recorded for', async () => {
+        const { wrapper } = mountKitComponent(withAsyncOnlyTranslator(translated));
+
+        expect(wrapper.text()).toEqual('authupField.name');
+
         await flushPromises();
-
-        expect(wrapper.text()).toEqual('Name');
+        expect(wrapper.text()).toEqual(ASYNC_ONLY_TRANSLATION);
     });
 
     it('seeds a permission verdict on the first render', () => {

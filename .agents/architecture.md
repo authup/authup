@@ -3352,27 +3352,29 @@ owns one seam and stays framework-agnostic; each host supplies the bucket:
   both sides derive it identically; a miss just loads normally. Collection
   snapshots are **consumed on read**, so a later client-side visit fetches fresh
   rows instead of replaying the first render's.
-- **`useTranslation` / `usePermissionCheck`.** Both resolve asynchronously
-  (ilingo's `get()` is a Promise even over an in-memory store; the permission
-  evaluator awaits the policy engine), so a server-rendered subtree would
-  hydrate against placeholders: `authupField.name` where the markup says
-  `Name`, and a fail-closed `false` where the markup shows an enabled control.
-  Both record their resolved value through `useHydratedValue()` and seed the
-  first client render from it. These entries are **not** consumed on read (the
-  same key is shared by every component asking the same question), and a
-  permission key carries the actor (`userId`/`realmId`) so an account switch
-  cannot adopt the previous actor's verdict; checks carrying a `PolicyData`
-  bag are not keyed at all and keep evaluating from their fail-closed default.
-  The translation half was a workaround for a missing sync read path in
-  ilingo, which landed in **ilingo 6.1.0** (tada5hi/ilingo#988): `@ilingo/vue`
-  now seeds the first render from `IIlingo.getSync()` whenever the store can
-  answer without I/O. Authup's catalogs are a `MemoryStore`, so translations
-  resolve on the very first render (server and client) and the recorded entry
-  is no longer what avoids the placeholder. The recording is retained because
-  it still carries stores that report `SyncUnavailableError` (a cold
-  `FSStore`/`LoaderStore`, or a remote adapter a downstream consumer installs).
-  Dropping it for in-memory catalogs would trim payload weight and is the
-  obvious follow-up.
+- **`usePermissionCheck`.** The permission evaluator awaits the policy engine,
+  so a server-rendered subtree would hydrate against a fail-closed `false`
+  where the markup shows an enabled control. It records its verdict through
+  `useHydratedValue()` and seeds the first client render from it. These
+  entries are **not** consumed on read (the same key is shared by every
+  component asking the same question), and a permission key carries the actor
+  (`userId`/`realmId`) so an account switch cannot adopt the previous actor's
+  verdict; checks carrying a `PolicyData` bag are not keyed at all and keep
+  evaluating from their fail-closed default.
+- **`useTranslation` records only what the sync read could not answer.** It
+  used to record every string, because ilingo had no synchronous read path and
+  a fresh ref carried the `authupField.name` placeholder where the markup said
+  `Name`. That path landed in **ilingo 6.1.0** (tada5hi/ilingo#988):
+  `@ilingo/vue` **seeds** the ref from `IIlingo.getSync()`, then resolves the
+  async `get()` as before. Authup's catalogs are a `MemoryStore`, so the seed
+  is the translation and nothing rides the payload for any authup key. The
+  recording survives as the fallback for the case the seed cannot cover: a
+  store that needs I/O (a cold `FSStore`/`LoaderStore`, a remote adapter a
+  consumer registers ahead of the kit's own) throws `SyncUnavailableError` out
+  of the sync read, leaving the placeholder in the first render of a
+  server-rendered subtree. The kit detects exactly that — the seed came back
+  equal to the `<namespace>.<key>` placeholder `@ilingo/vue` falls back to —
+  and only then hands the resolved string over.
 - **Per-request isolation is the security property.** A collection key is
   entity type plus query, with no actor in it, so two users requesting the same
   list derive the SAME key. Nothing may therefore outlive one request: both
