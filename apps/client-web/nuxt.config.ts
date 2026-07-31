@@ -10,11 +10,43 @@ import { API_URL_DEFAULT } from '@authup/core-http-kit';
 import path from 'node:path';
 import { defineNuxtConfig } from 'nuxt/config';
 import tailwindcss from '@tailwindcss/vite';
+import { NuxtIconBundle } from '@nuxt/icon/vite';
+
+const repositoryRoot = path.resolve(__dirname, '..', '..');
 
 export default defineNuxtConfig({
     vite: {
         plugins: [
             tailwindcss(),
+            // Bundle ONLY the icons this app renders, instead of registering
+            // the whole Font Awesome 6 solid + brands collections at runtime
+            // (1,902 icons, ~429 KB gzip, for a few dozen used ones). The
+            // plugin scans source for `<collection>:<name>` literals and emits
+            // them into `virtual:nuxt-icon-bundle/register`, which registers
+            // through `addIcon` from `@iconify/vue` — the same global store
+            // `<VCIcon>` resolves against, so no component changes are needed.
+            //
+            // This is @nuxt/icon's STANDALONE vite plugin, not the Nuxt module:
+            // apps/server-core/ui (plain Vite, no Nuxt) uses the exact same
+            // plugin and glob list, so the two apps cannot drift.
+            //
+            // Keep the globs in sync with apps/server-core/ui/vite.config.ts.
+            // Every path that can carry an icon name must be listed: this app,
+            // `@authup/client-web-kit` (components + identity-provider preset
+            // tables), and `@vuecs/icons-font-awesome`, whose preset supplies
+            // the behavioral defaults (pagination arrows, submit-button icons,
+            // alert icons, collapse chevrons) whose names exist ONLY there.
+            NuxtIconBundle({
+                cwd: repositoryRoot,
+                scan: {
+                    globInclude: [
+                        'apps/client-web/{pages,components,layouts,composables,config,plugins}/**/*.{vue,ts}',
+                        'packages/client-web-kit/src/**/*.{vue,ts}',
+                        'node_modules/@vuecs/icons-font-awesome/dist/*.mjs',
+                    ],
+                    globExclude: [],
+                },
+            }),
         ],
     },
 

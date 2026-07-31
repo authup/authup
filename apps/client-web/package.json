@@ -42,6 +42,7 @@
         "@ilingo/validup": "^1.0.1",
         "@ilingo/validup-vue": "^1.0.1",
         "@ilingo/vue": "^6.0.0",
+        "@nuxt/icon": "^2.4.1",
         "@nuxtjs/google-fonts": "^3.2.0",
         "@pinia/nuxt": "^0.11.3",
         "@rapiq/core": "^2.0.0-beta.13",

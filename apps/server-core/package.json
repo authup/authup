@@ -138,6 +138,7 @@
         "@ilingo/validup": "^1.0.1",
         "@ilingo/validup-vue": "^1.0.1",
         "@ilingo/vue": "^6.0.0",
+        "@nuxt/icon": "^2.4.1",
         "@tailwindcss/vite": "^4.3.3",
         "@trapi/cli": "^2.0.3",
         "@types/ldapjs": "^3.0.6",
