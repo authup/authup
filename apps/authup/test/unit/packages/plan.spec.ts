@@ -53,7 +53,7 @@ describe('src/packages/plan', () => {
     });
 
     it('should reject migration targeting client-admin-console', () => {
-        expect(() => resolveLaunchPlan('migration', ['client.admin-console'])).toThrow(/client\.console/);
+        expect(() => resolveLaunchPlan('migration', ['client.admin-console'])).toThrow(/client\.admin-console/);
     });
 
     it('should route healthcheck to server-core only', () => {
@@ -64,7 +64,7 @@ describe('src/packages/plan', () => {
     });
 
     it('should reject healthcheck targeting client-admin-console', () => {
-        expect(() => resolveLaunchPlan('healthcheck', ['client.admin-console'])).toThrow(/client\.console/);
+        expect(() => resolveLaunchPlan('healthcheck', ['client.admin-console'])).toThrow(/client\.admin-console/);
     });
 
     it('should fail for an unknown command', () => {

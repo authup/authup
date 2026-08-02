@@ -739,7 +739,7 @@ threads instances through constructor/context args:
   type from `@authup/server-kit`) explicitly: middlewares take it via options
   (`createLoggerMiddleware({ env, logger })`, `registerErrorMiddleware(router,
   { logger })`), core services via their context (`RealmService` /
-  `WebClientProvisioner` accept optional `logger`). A service without a logger
+  `SystemClientProvisioner` accept optional `logger`). A service without a logger
   simply stays silent (`this.logger?.warn(...)` guard style).
 - **Domain events** — `DomainEventPublisher` (from `@authup/server-kit`,
   optional `logger` ctx) aggregates `IDomainEventHandler`s
@@ -832,7 +832,7 @@ on.
 `CLIENT_RESERVED_NAMES` (`system`, `web`) is **not** enforced here. It stays
 a `ClientService.save()` (API-path) guard, because provisioning bypasses the
 service. Declaring either name is allowed and partially effective. See
-*Per-Realm Public `web` Client* below for which attributes a declaration can
+*Per-Realm System Clients* below for which attributes a declaration can
 and cannot set.
 
 ### Synchronization Order
@@ -844,22 +844,42 @@ and cannot set.
 Scopes run first because they are leaf entities carrying no relations of their
 own, and a client in the same realm block may bind them via `realmScopes`.
 
-### Per-Realm Public `web` Client
+### Per-Realm System Clients (`web`, `admin-console`, `account-console`)
 
-Every realm auto-provisions a public OAuth2 client named **`web`** (constant
-`CLIENT_WEB_NAME` in `@authup/core-kit`) used by authup's own client-admin-console and any
-downstream UI embedding `client-web-kit`. It powers the realm-selection login
-flow (auth-code + PKCE), so there is no per-realm FK, no migration, and no new
-endpoint — the `/authorize` verifier already resolves clients via
-`findOneByIdOrName('web', realmId)`.
+Every realm auto-provisions three public OAuth2 clients (plan 079;
+`SYSTEM_CLIENT_DEFINITIONS` in `core/entities/client/system-clients.ts`,
+name constants in `@authup/core-kit`):
 
-- **Attributes** (`buildWebClientAttributes`, `core/entities/client/web-client.ts`):
+- **`web`** (`CLIENT_WEB_NAME`) — downstream UIs embedding `client-web-kit`.
+- **`admin-console`** (`CLIENT_ADMIN_CONSOLE_NAME`) — authup's own admin
+  console (`apps/client-admin-console`; its login sends `client_id=admin-console`,
+  runtime-overridable via `NUXT_PUBLIC_CLIENT_ID`).
+- **`account-console`** (`CLIENT_ACCOUNT_CONSOLE_NAME`) — the account
+  self-service surface (plan 080). Provisioned ahead of the surface: `web`'s
+  `<origin>/**` patterns already cover every path it can redirect to, so the
+  inert row adds no redirect surface.
+
+The split exists for admission control (`accessPolicyId` per app — restrict
+the admin console without touching downstream logins; keep it OPEN until the
+account surface ships, since users still need the console's settings pages),
+per-app session/audit attribution by `clientId`, and per-app
+grant/redirect/logout allowlists. Each client powers the realm-selection
+login flow (auth-code + PKCE), so there is no per-realm FK, no migration, and
+no new endpoint — the `/authorize` verifier already resolves clients via
+`findOneByIdOrName(name, realmId)`.
+
+- **Attributes** (`buildSystemClientAttributes(definition, realm, appOrigins)`):
   `authMethod: 'none'`, `tokenBindingMethod: 'none'`, `builtIn: true`, `active: true`,
   `grantTypes: 'authorization_code refresh_token'` (an enforced allowlist —
   see *Per-client grant allowlist* under the token-endpoint section),
   `redirectUri` = one `<origin>/**` wildcard per trusted app origin (matched
-  by `isSimpleMatch`).
-- **Scopes** (`WEB_CLIENT_SCOPE_NAMES` = `global` + `openid`) are bound as
+  by `isSimpleMatch`) — deliberately the SHARED app-origin set for every
+  definition, since `redirectUri` is MERGE-owned: a separately-hosted surface
+  (plan 078 "relocatable by choice") registers its origin via
+  `TRUSTED_ORIGINS`, never by editing the client row. `displayName` is seeded
+  at CREATE only (never re-asserted), so admins can relabel.
+- **Scopes** (`SYSTEM_CLIENT_SCOPE_NAMES` = `global` + `openid`, per
+  definition) are bound as
   `auth_client_scopes` rows. That junction is the only source `/authorize`
   reads scopes from (`OAuth2ScopeRepository.findByClientId`). The `Client.scope` column carries
   the same list but is descriptive only: nothing on any production path reads
@@ -881,29 +901,30 @@ endpoint — the `/authorize` verifier already resolves clients via
   map is the compile-time exhaustiveness guard — an unmounted Config key fails
   the build instead of being silently stripped), making
   `parseConfig`/`normalizeConfig` async. `TRUSTED_ORIGINS` (env, comma-separated) is
-  **security-sensitive**: the `web` client is `builtIn` (auto-consent) + `global`
+  **security-sensitive**: every system client is `builtIn` (auto-consent) + `global`
   scope, so any allowlisted origin can obtain a full-permission user token.
   The origin list does NOT drive CORS — CORS reflects any origin by default
   (auth is header-based only, and OAuth2 clients are registered at runtime on
   domains unknown at startup; an explicit allowlist can be set via the
   `middlewareCors` config options). In non-production,
   `http://localhost:3000` is dev-seeded so client-admin-console works on first run.
-- **Provisioning (`WebClientProvisioner.ensureForRealm`)** is the single upsert
-  mechanism, run two ways and sharing the same factory so they can't drift:
+- **Provisioning (`SystemClientProvisioner.ensureForRealm`)** is the single
+  upsert mechanism — it loops `SYSTEM_CLIENT_DEFINITIONS` — run two ways and
+  sharing the same factory so they can't drift:
   1. **Startup** — `ProvisionerModule` lists every realm (incl. pre-existing)
-     after the graph sync and upserts each realm's `web` client (MERGE — refreshes
-     `redirectUri` when config changes).
+     after the graph sync and upserts each realm's system clients (MERGE —
+     refreshes `redirectUri` when config changes).
   2. **Runtime** — `RealmService.save()` calls `ensureForRealm` when it *creates*
-     a new realm, via the injected `webClientProvisioner` (system-level, ungated —
+     a new realm, via the injected `systemClientProvisioner` (system-level, ungated —
      a realm creator may lack `CLIENT_CREATE`). Not called on update.
   Idempotent. The attribute MERGE is dirty-checked to keep a steady-state boot
   free of redundant UPDATEs, but the scope binding runs unconditionally. An
   instance provisioned before the junction rows existed carries a current
-  client with no scopes at all. `web` is a reserved name, so the row belongs
-  to the system whatever state it is in: a non-built-in client named `web`
-  predates the reservation and is taken over (overwrite + warn) rather than
-  left to shadow the realm's login client.
-- **The ten attributes in `buildWebClientAttributes` are owned by the
+  client with no scopes at all. Every system client name is reserved, so the
+  row belongs to the system whatever state it is in: a non-built-in client
+  squatting one predates the reservation and is taken over (overwrite + warn)
+  rather than left to shadow the realm's system client.
+- **The ten attributes in `buildSystemClientAttributes` are owned by the
   provisioner and reassert on every boot.** Whatever writes a different value
   to `name`, `realmId`, `authMethod`, `tokenBindingMethod`, `builtIn`,
   `active`, `grantTypes`, `scope`, `redirectUri` or `postLogoutRedirectUri`,
@@ -911,14 +932,16 @@ endpoint — the `/authorize` verifier already resolves clients via
   no error (the takeover `warn` above fires only for a non-`builtIn` row).
   Redirect patterns are configured through `trustedOrigins`, not per client.
   Everything outside that set survives a boot and is the supported way to
-  extend the client: `displayName`, `description`, `baseUrl`, `rootUrl`,
+  extend the client: `displayName` (seeded from the definition at create,
+  then admin-owned), `description`, `baseUrl`, `rootUrl`,
   `accessPolicyId` (deliberately omitted from the builder so an admin-set
   policy is not wiped), and every junction row, since `ensureScopes` only
   inserts what is missing and never deletes.
-- **Guardrails:** `web` and `system` are reserved client names — `ClientService.save()`
+- **Guardrails:** `system`, `web`, `admin-console` and `account-console` are
+  reserved client names — `ClientService.save()`
   rejects API attempts to create/rename a client onto them (`CLIENT_RESERVED_NAMES`).
   An existing `builtIn` row keeping its own name is exempt, so an admin holding
-  `CLIENT_UPDATE` can edit the provisioned `web` client through the API; only
+  `CLIENT_UPDATE` can edit a provisioned system client through the API; only
   the owned attributes above snap back on the next boot.
   The client validator strips `builtIn` on create/update, so no API caller can
   self-assign it — only provisioned clients are `builtIn`. The SSR `AuthorizeForm`
@@ -1516,7 +1539,8 @@ This split is cohort-universal: Keycloak, Authentik, Zitadel, Casdoor and Dex
 all serve login/consent from the IdP origin.
 
 **client-admin-console is an ordinary OAuth2 RP** — an admin console authenticating via
-auth-code + PKCE against the per-realm public `web` client, with no privileged
+auth-code + PKCE against the per-realm public `admin-console` client (plan 079;
+downstream kit apps keep riding `web`), with no privileged
 channel into server-core. It is deliberately NOT merged into server-core
 today. The recorded long-term endpoint — deferred until after the planned
 server+worker split — is folding the admin UI into server-core as a **static
@@ -1826,9 +1850,9 @@ app (kit or non-kit) ends a lingering authup session on its own logout, so
   `ClientSummary` DTO, **added** to the client repository `fields.default`
   allow-list so reads return it). The migration is folded into the
   still-unreleased `1783325495597-Default.ts` (both dialects, up/down verified
-  by the `tests-migrations` round-trip). `buildWebClientAttributes` sets it to
+  by the `tests-migrations` round-trip). `buildSystemClientAttributes` sets it to
   the same `<origin>/**`-per-app-origin patterns as `redirectUri`, so
-  `WebClientProvisioner`'s MERGE widens it on the next startup. `AClientForm`
+  `SystemClientProvisioner`'s MERGE widens it on the next startup. `AClientForm`
   renders it as its own `AFormInputList`, deliberately a **second** list rather
   than a shared one — the whole point of the split is that a login redirect
   does not imply a logout redirect, so the two allow-lists must be editable
@@ -1937,9 +1961,10 @@ neutral message: no identity/policy detail, no enumeration oracle).
   ATTRIBUTE_NAMES denylist (a self-managing client cannot change its own
   gate), stays **out** of the anonymous `GET /authorize` `ClientSummary` DTO,
   and is mounted `{ optional: true, nullable }` in every validator group so
-  admins can set/clear it. `buildWebClientAttributes` deliberately omits the
-  key — the provisioner MERGE would otherwise wipe an admin-set policy on the
-  per-realm `web` client every boot. The admin form binds it via
+  admins can set/clear it. `buildSystemClientAttributes` deliberately omits the
+  key — the provisioner MERGE would otherwise wipe an admin-set policy on
+  each per-realm system client (`web`, `admin-console`, `account-console`)
+  every boot. The admin form binds it via
   `APolicyPicker` in `AClientForm`. Client caches mean a policy
   (re)assignment lags ≤60s at `/token` (`CachePrefix.CLIENT` query cache).
 - **Observability (leg-scoped):** a denial at the **interactive
@@ -2096,8 +2121,9 @@ at both chokepoints:
 Unknown values in the column are inert (they can only narrow, never widen). A
 refresh rejected this way is a plain `unauthorized_client` — **not** replay
 detection, so no family revocation; restoring the grant type restores service.
-The provisioned per-realm `web` client lists `authorization_code refresh_token`
-(refreshed by `WebClientProvisioner`'s MERGE on startup).
+Each provisioned per-realm system client (`web`, `admin-console`,
+`account-console`) lists `authorization_code refresh_token`
+(refreshed by `SystemClientProvisioner`'s MERGE on startup).
 
 **Admin UI:** `AClientForm` renders the column as a `<VCFormCheckboxGroup>` over
 the closed `OAuth2TokenGrant` vocabulary (the only strings

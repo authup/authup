@@ -23,6 +23,10 @@ NUXT_PUBLIC_API_URL=http://localhost:3001
 NUXT_PUBLIC_PUBLIC_URL=http://localhost:3000
 # Optional: widen the session cookie domain (e.g. .example.com).
 NUXT_PUBLIC_COOKIE_DOMAIN=
+# The OAuth2 client the console authenticates against. Defaults to the
+# per-realm built-in admin-console client; override only for a fork that
+# registers its own client.
+NUXT_PUBLIC_CLIENT_ID=admin-console
 ````
 :::
 

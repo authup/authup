@@ -7,7 +7,12 @@
 
 import { randomUUID } from 'node:crypto';
 import { Query } from '@rapiq/core';
-import { CLIENT_WEB_NAME, ScopeName } from '@authup/core-kit';
+import {
+    CLIENT_ACCOUNT_CONSOLE_NAME,
+    CLIENT_ADMIN_CONSOLE_NAME,
+    CLIENT_WEB_NAME,
+    ScopeName,
+} from '@authup/core-kit';
 import type { ClientScope } from '@authup/core-kit';
 import { FakeEntityRepository } from '@authup/server-test-kit';
 import {
@@ -17,20 +22,32 @@ import {
     it,
 } from 'vitest';
 import {
-    WEB_CLIENT_SCOPE_NAMES,
-    WebClientProvisioner,
-    buildWebClientAttributes,
-} from '../../../../../src/core/entities/client/web-client.ts';
+    SYSTEM_CLIENT_DEFINITIONS,
+    SYSTEM_CLIENT_SCOPE_NAMES,
+    SystemClientProvisioner,
+    buildSystemClientAttributes,
+} from '../../../../../src/core/entities/client/system-clients.ts';
 import { FakeScopeRepository } from '../scope/fake-repository.ts';
 import { FakeClientRepository } from './fake-repository.ts';
 
-describe('core/entities/client/web-client', () => {
+const webDefinition = SYSTEM_CLIENT_DEFINITIONS
+    .find((definition) => definition.name === CLIENT_WEB_NAME)!;
+
+describe('core/entities/client/system-clients', () => {
     const appOrigins = ['http://localhost:3000', 'https://app.example.com'];
 
-    describe('buildWebClientAttributes', () => {
+    it('should declare the web, admin-console and account-console clients', () => {
+        expect(SYSTEM_CLIENT_DEFINITIONS.map((definition) => definition.name)).toEqual([
+            CLIENT_WEB_NAME,
+            CLIENT_ADMIN_CONSOLE_NAME,
+            CLIENT_ACCOUNT_CONSOLE_NAME,
+        ]);
+    });
+
+    describe('buildSystemClientAttributes', () => {
         it('should build a public built-in client with wildcard redirect uris', () => {
             const realmId = randomUUID();
-            const attributes = buildWebClientAttributes({ id: realmId }, appOrigins);
+            const attributes = buildSystemClientAttributes(webDefinition, { id: realmId }, appOrigins);
 
             expect(attributes.name).toBe(CLIENT_WEB_NAME);
             expect(attributes.realmId).toBe(realmId);
@@ -43,13 +60,36 @@ describe('core/entities/client/web-client', () => {
                 'http://localhost:3000/**,https://app.example.com/**',
             );
         });
+
+        // Every definition shares the app-origin redirect set on purpose:
+        // redirectUri is re-asserted each boot, so a separately-hosted
+        // surface registers its origin via TRUSTED_ORIGINS (plan 078
+        // "relocatable by choice") instead of editing the client row.
+        it('should apply the definition name onto the shared attribute shape', () => {
+            const realmId = randomUUID();
+
+            for (const definition of SYSTEM_CLIENT_DEFINITIONS) {
+                const attributes = buildSystemClientAttributes(definition, { id: realmId }, appOrigins);
+
+                expect(attributes.name).toBe(definition.name);
+                expect(attributes.builtIn).toBe(true);
+                expect(attributes.authMethod).toBe('none');
+                expect(attributes.grantTypes).toBe('authorization_code refresh_token');
+                expect(attributes.redirectUri).toBe(
+                    'http://localhost:3000/**,https://app.example.com/**',
+                );
+                // seeded at CREATE only, never part of the MERGE-owned set
+                expect(attributes.displayName).toBeUndefined();
+                expect(attributes.accessPolicyId).toBeUndefined();
+            }
+        });
     });
 
-    describe('WebClientProvisioner.ensureForRealm', () => {
+    describe('SystemClientProvisioner.ensureForRealm', () => {
         let repository: FakeClientRepository;
         let scopeRepository: FakeScopeRepository;
         let clientScopeRepository: FakeEntityRepository<ClientScope>;
-        let provisioner: WebClientProvisioner;
+        let provisioner: SystemClientProvisioner;
 
         const readScopeNames = async (clientId: string) => {
             const rows = await clientScopeRepository.findManyBy({ clientId });
@@ -66,13 +106,13 @@ describe('core/entities/client/web-client', () => {
             clientScopeRepository = new FakeEntityRepository<ClientScope>();
 
             // The built-in scopes are provisioned globally (realmId: null).
-            scopeRepository.seed(WEB_CLIENT_SCOPE_NAMES.map((name) => ({
+            scopeRepository.seed(SYSTEM_CLIENT_SCOPE_NAMES.map((name) => ({
                 name,
                 realmId: null,
                 builtIn: true,
             })));
 
-            provisioner = new WebClientProvisioner({
+            provisioner = new SystemClientProvisioner({
                 clientRepository: repository,
                 scopeRepository,
                 clientScopeRepository,
@@ -80,40 +120,45 @@ describe('core/entities/client/web-client', () => {
             });
         });
 
-        it('should create the web client when none exists', async () => {
+        it('should create every system client when none exists', async () => {
             const realmId = randomUUID();
             await provisioner.ensureForRealm({ id: realmId });
 
-            const created = await repository.findOneBy({
-                name: CLIENT_WEB_NAME,
-                realmId,
-            });
+            for (const definition of SYSTEM_CLIENT_DEFINITIONS) {
+                const created = await repository.findOneBy({
+                    name: definition.name,
+                    realmId,
+                });
 
-            expect(created).not.toBeNull();
-            expect(created!.builtIn).toBe(true);
-            expect(created!.authMethod).toBe('none');
-            expect(created!.tokenBindingMethod).toBe('none');
+                expect(created, definition.name).not.toBeNull();
+                expect(created!.builtIn).toBe(true);
+                expect(created!.authMethod).toBe('none');
+                expect(created!.tokenBindingMethod).toBe('none');
+                expect(created!.displayName).toBe(definition.displayName);
+            }
         });
 
         // Regression (#3347): the declared `global openid` used to land in the
         // dead `scope` column only, leaving the client with no junction rows.
         // That junction is the sole source /authorize resolves scopes from.
-        it('should bind the built-in scopes through the junction', async () => {
+        it('should bind the built-in scopes through the junction for every client', async () => {
             const realmId = randomUUID();
             await provisioner.ensureForRealm({ id: realmId });
 
-            const client = await repository.findOneBy({
-                name: CLIENT_WEB_NAME,
-                realmId,
-            });
+            for (const definition of SYSTEM_CLIENT_DEFINITIONS) {
+                const client = await repository.findOneBy({
+                    name: definition.name,
+                    realmId,
+                });
 
-            expect(await readScopeNames(client!.id)).toEqual(
-                [...WEB_CLIENT_SCOPE_NAMES].sort(),
-            );
+                expect(await readScopeNames(client!.id)).toEqual(
+                    [...definition.scopeNames].sort(),
+                );
 
-            const rows = await clientScopeRepository.findManyBy({ clientId: client!.id });
-            expect(rows.every((row) => row.clientRealmId === realmId)).toBe(true);
-            expect(rows.every((row) => row.scopeRealmId === null)).toBe(true);
+                const rows = await clientScopeRepository.findManyBy({ clientId: client!.id });
+                expect(rows.every((row) => row.clientRealmId === realmId)).toBe(true);
+                expect(rows.every((row) => row.scopeRealmId === null)).toBe(true);
+            }
         });
 
         it('should backfill missing scope rows for an already-provisioned client', async () => {
@@ -133,7 +178,7 @@ describe('core/entities/client/web-client', () => {
             await provisioner.ensureForRealm({ id: realmId });
 
             expect(await readScopeNames(client!.id)).toEqual(
-                [...WEB_CLIENT_SCOPE_NAMES].sort(),
+                [...SYSTEM_CLIENT_SCOPE_NAMES].sort(),
             );
         });
 
@@ -144,12 +189,17 @@ describe('core/entities/client/web-client', () => {
             await provisioner.ensureForRealm({ id: realmId });
 
             const result = await repository.findMany(new Query({}));
-            const webClients = result.data.filter(
-                (c) => c.name === CLIENT_WEB_NAME && c.realmId === realmId,
-            );
+            for (const definition of SYSTEM_CLIENT_DEFINITIONS) {
+                const clients = result.data.filter(
+                    (c) => c.name === definition.name && c.realmId === realmId,
+                );
 
-            expect(webClients).toHaveLength(1);
-            expect(clientScopeRepository.getAll()).toHaveLength(WEB_CLIENT_SCOPE_NAMES.length);
+                expect(clients, definition.name).toHaveLength(1);
+            }
+
+            expect(clientScopeRepository.getAll()).toHaveLength(
+                SYSTEM_CLIENT_DEFINITIONS.length * SYSTEM_CLIENT_SCOPE_NAMES.length,
+            );
         });
 
         it('should keep a scope bound by hand', async () => {
@@ -174,7 +224,7 @@ describe('core/entities/client/web-client', () => {
             await provisioner.ensureForRealm({ id: realmId });
 
             expect(await readScopeNames(client!.id)).toEqual(
-                [...WEB_CLIENT_SCOPE_NAMES, 'custom'].sort(),
+                [...SYSTEM_CLIENT_SCOPE_NAMES, 'custom'].sort(),
             );
         });
 
@@ -193,7 +243,7 @@ describe('core/entities/client/web-client', () => {
             expect(clientScopeRepository.getAll()).toHaveLength(0);
         });
 
-        it('should refresh redirectUri on an existing built-in web client', async () => {
+        it('should refresh redirectUri on an existing built-in client', async () => {
             const realmId = randomUUID();
             repository.seed([
                 {
@@ -219,24 +269,25 @@ describe('core/entities/client/web-client', () => {
             );
         });
 
-        // The MERGE writes only the keys buildWebClientAttributes carries, so
-        // everything else survives a boot. That is the documented way to
-        // extend the client (provisioning file or API), and accessPolicyId is
-        // deliberately kept out of the builder for exactly this reason.
+        // The MERGE writes only the keys buildSystemClientAttributes carries,
+        // so everything else survives a boot. That is the documented way to
+        // extend a system client (provisioning file or API); accessPolicyId
+        // and displayName are deliberately kept out of the builder for
+        // exactly this reason.
         it('should keep attributes it does not own', async () => {
             const realmId = randomUUID();
             const accessPolicyId = randomUUID();
             repository.seed([
                 {
                     id: randomUUID(),
-                    name: CLIENT_WEB_NAME,
+                    name: CLIENT_ADMIN_CONSOLE_NAME,
                     realmId,
                     builtIn: true,
                     authMethod: 'none',
                     tokenBindingMethod: 'none',
                     redirectUri: 'http://stale.example.com/**',
-                    displayName: 'Example Login',
-                    description: 'the realm login client',
+                    displayName: 'Operators Only',
+                    description: 'the realm operator console',
                     baseUrl: 'https://app.example.com',
                     accessPolicyId,
                 },
@@ -245,28 +296,28 @@ describe('core/entities/client/web-client', () => {
             await provisioner.ensureForRealm({ id: realmId });
 
             const updated = await repository.findOneBy({
-                name: CLIENT_WEB_NAME,
+                name: CLIENT_ADMIN_CONSOLE_NAME,
                 realmId,
             });
 
             expect(updated!.redirectUri).toBe(
                 'http://localhost:3000/**,https://app.example.com/**',
             );
-            expect(updated!.displayName).toBe('Example Login');
-            expect(updated!.description).toBe('the realm login client');
+            expect(updated!.displayName).toBe('Operators Only');
+            expect(updated!.description).toBe('the realm operator console');
             expect(updated!.baseUrl).toBe('https://app.example.com');
             expect(updated!.accessPolicyId).toBe(accessPolicyId);
         });
 
-        // `web` is a reserved client name, so the row belongs to the system: a
-        // non-built-in one predates the reservation and must not shadow the
-        // realm's login client.
-        it('should take over a non-built-in client named web', async () => {
+        // Every system client name is reserved, so the row belongs to the
+        // system: a non-built-in one predates the reservation and must not
+        // shadow the realm's system client.
+        it('should take over a non-built-in client squatting a reserved name', async () => {
             const realmId = randomUUID();
             repository.seed([
                 {
                     id: randomUUID(),
-                    name: CLIENT_WEB_NAME,
+                    name: CLIENT_ADMIN_CONSOLE_NAME,
                     realmId,
                     builtIn: false,
                     authMethod: 'secret',
@@ -279,7 +330,7 @@ describe('core/entities/client/web-client', () => {
             await provisioner.ensureForRealm({ id: realmId });
 
             const existing = await repository.findOneBy({
-                name: CLIENT_WEB_NAME,
+                name: CLIENT_ADMIN_CONSOLE_NAME,
                 realmId,
             });
 
@@ -292,7 +343,7 @@ describe('core/entities/client/web-client', () => {
             // it again and must not stay at rest
             expect(existing!.secret).toBeNull();
             expect(await readScopeNames(existing!.id)).toEqual(
-                [...WEB_CLIENT_SCOPE_NAMES].sort(),
+                [...SYSTEM_CLIENT_SCOPE_NAMES].sort(),
             );
         });
     });

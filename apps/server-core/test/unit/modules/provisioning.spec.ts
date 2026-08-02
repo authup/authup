@@ -18,6 +18,8 @@ import type {
     Role,
 } from '@authup/core-kit';
 import {
+    CLIENT_ACCOUNT_CONSOLE_NAME,
+    CLIENT_ADMIN_CONSOLE_NAME,
     CLIENT_WEB_NAME,
     ClientAuthMethod,
     ClientTokenBindingMethod,
@@ -48,7 +50,7 @@ import {
 } from '../../../src/index.ts';
 import { Container } from 'eldin';
 import type { IContainer } from 'eldin';
-import { PolicyProvisioningSynchronizer, WEB_CLIENT_SCOPE_NAMES } from '../../../src/core/index.ts';
+import { PolicyProvisioningSynchronizer, SYSTEM_CLIENT_SCOPE_NAMES } from '../../../src/core/index.ts';
 import type { PolicyProvisioningEntity } from '../../../src/core/provisioning/entities/policy/index.ts';
 import { PolicyRepository } from '../../../src/adapters/database/domains/index.ts';
 import {
@@ -244,7 +246,7 @@ describe('app/modules/provisioning', () => {
         });
 
         expect(await readScopeNames(masterWebClient!.id)).toEqual(
-            [...WEB_CLIENT_SCOPE_NAMES].sort(),
+            [...SYSTEM_CLIENT_SCOPE_NAMES].sort(),
         );
 
         // `secret` is a select:false column, so read it back explicitly.
@@ -264,8 +266,28 @@ describe('app/modules/provisioning', () => {
         expect(legacyClient!.secret).toBeNull();
 
         expect(await readScopeNames(legacyClient!.id)).toEqual(
-            [...WEB_CLIENT_SCOPE_NAMES].sort(),
+            [...SYSTEM_CLIENT_SCOPE_NAMES].sort(),
         );
+
+        // Plan 079: every realm additionally carries the admin-console and
+        // account-console system clients, scopes bound and displayName
+        // seeded at create.
+        for (const name of [CLIENT_ADMIN_CONSOLE_NAME, CLIENT_ACCOUNT_CONSOLE_NAME]) {
+            for (const realm of [masterRealm!, legacyRealm]) {
+                const client = await clientRepository.findOneBy({
+                    name,
+                    realmId: realm.id,
+                });
+
+                expect(client, `${name} in ${realm.name}`).not.toBeNull();
+                expect(client!.builtIn).toBe(true);
+                expect(client!.authMethod).toBe(ClientAuthMethod.NONE);
+                expect(client!.displayName).not.toBeNull();
+                expect(await readScopeNames(client!.id)).toEqual(
+                    [...SYSTEM_CLIENT_SCOPE_NAMES].sort(),
+                );
+            }
+        }
     });
 
     // ---------------------------------------------------------------

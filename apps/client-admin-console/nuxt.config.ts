@@ -7,6 +7,7 @@
 
 import type { ModuleOptions } from '@authup/client-web-nuxt';
 import { API_URL_DEFAULT } from '@authup/core-http-kit';
+import { CLIENT_ADMIN_CONSOLE_NAME } from '@authup/core-kit';
 import path from 'node:path';
 import { defineNuxtConfig } from 'nuxt/config';
 import tailwindcss from '@tailwindcss/vite';
@@ -92,6 +93,11 @@ export default defineNuxtConfig({
             apiUrl: process.env.API_URL || API_URL_DEFAULT,
             publicUrl: process.env.PUBLIC_URL || 'http://localhost:3000',
             cookieDomain: process.env.COOKIE_DOMAIN,
+            // The OAuth2 client the console authenticates against — the
+            // per-realm built-in `admin-console` client (plan 079).
+            // Runtime-overridable via NUXT_PUBLIC_CLIENT_ID for forks that
+            // register their own client.
+            clientId: process.env.CLIENT_ID || CLIENT_ADMIN_CONSOLE_NAME,
         },
     },
 
