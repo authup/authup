@@ -70,6 +70,7 @@ export const TranslatorTranslationAppEnglish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.CONSENT_EMPTY]: 'You have not granted any application access yet.',
     [TranslatorTranslationAppKey.CONSENT_REVOKE]: 'Revoke',
     [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL]: 'Revoke access',
+    [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_SUCCESS]: 'Application access was revoked.',
     [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_TITLE]: 'Revoke application access',
     [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_DESCRIPTION]: 'The application will ask for your consent again on the next sign-in.',
     [TranslatorTranslationAppKey.CONSENT_SCOPES]: 'Granted permissions',

@@ -73,6 +73,17 @@ describe('src/http/controllers/workflows/account (SPA shell)', () => {
         const body = await (await httpRequest(suite, 'GET', '/account/sessions')).text();
 
         expect(body).not.toContain('window.__AUTHUP__ =');
+
+        // ... and the injected config itself carries EXACTLY the documented
+        // operator-level fields — an actor-scoped addition fails here.
+        const config = extractAccountConfig(body);
+        expect(Object.keys(config).sort()).toEqual(['apiUrl', 'basePath', 'features']);
+        expect(Object.keys(config.features).sort()).toEqual([
+            'accountConsole', 
+            'emailVerification', 
+            'passwordRecovery', 
+            'registration',
+        ]);
     });
 });
 
@@ -91,7 +102,10 @@ describe('src/http/controllers/workflows/account (disabled)', () => {
         await suite.teardown();
     });
 
-    it('should inject the disabled flag (the SPA renders the notice)', async () => {
+    // The client half (the shell rendering the disabled notice off this
+    // flag) is a thin v-if over the resolved config — pinned by the account
+    // app's own config.spec.ts, not exercisable from a server-core test.
+    it('should inject the disabled flag', async () => {
         const response = await httpRequest(suite, 'GET', '/account');
         expect(response.status).toEqual(200);
 

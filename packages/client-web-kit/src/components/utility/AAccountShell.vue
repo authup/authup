@@ -124,6 +124,7 @@ export default defineComponent({
                 v-bind="item.link"
                 class="a-account-shell-nav-link"
                 :class="{ 'a-account-shell-nav-link--active': item.active }"
+                :aria-current="item.active ? 'page' : undefined"
             >
                 <VCIcon
                     v-if="item.icon"

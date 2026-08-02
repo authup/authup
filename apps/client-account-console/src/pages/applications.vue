@@ -64,6 +64,7 @@ export default defineComponent({
             { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.CONSENT_REVOKE_ALL },
             { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_TITLE },
             { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_DESCRIPTION },
+            { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_SUCCESS },
             { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.CONSENT_SCOPES },
             { namespace: TranslatorTranslationNamespace.ACTION, key: TranslatorTranslationActionKey.ABORT },
         ]);
@@ -145,21 +146,31 @@ export default defineComponent({
                 // Revoke every consent for this client, not only the rows on
                 // the current page — with per-scope rows a client can span
                 // pages, and a "revoke all" that stopped at the visible page
-                // would leave some scopes granted.
-                const { data: rows } = await httpClient.consent.getMany({
-                    filters: {
-                        clientId: group.clientId,
-                        sub: userId.value ?? undefined,
-                        subKind: 'user',
-                    },
-                    pagination: { limit: 1000 },
-                });
+                // would leave some scopes granted. The server caps the page
+                // size (the consent schema's pagination.maxLimit), so loop
+                // fetch-and-delete until no rows remain; each pass deletes
+                // everything it fetched, so the loop converges. The iteration
+                // bound is a defensive backstop only.
+                for (let i = 0; i < 100; i++) {
+                    const { data: rows } = await httpClient.consent.getMany({
+                        filters: {
+                            clientId: group.clientId,
+                            sub: userId.value ?? undefined,
+                            subKind: 'user',
+                        },
+                        pagination: { limit: 50 },
+                    });
 
-                await Promise.all(rows.map(
-                    (row) => httpClient.consent.delete(row.id),
-                ));
+                    if (rows.length === 0) {
+                        break;
+                    }
 
-                toasts.success(translations.consentRevokeAllDescription);
+                    await Promise.all(rows.map(
+                        (row) => httpClient.consent.delete(row.id),
+                    ));
+                }
+
+                toasts.success(translations.consentRevokeAllSuccess);
 
                 await reload();
             } catch (e) {
@@ -248,6 +259,8 @@ export default defineComponent({
                                         type="button"
                                         class="bg-transparent border-0 p-0 cursor-pointer text-inherit"
                                         :title="translations.consentRevoke"
+                                        :aria-label="translations.consentRevoke"
+                                        :disabled="revoking"
                                         @click.prevent="revokeOne(row, props.deleted)"
                                     >
                                         <VCIcon name="fa6-solid:xmark" />

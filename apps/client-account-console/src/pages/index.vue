@@ -33,6 +33,7 @@ import {
 } from '@authup/i18n';
 import { OAuth2ErrorCode } from '@authup/specs';
 import { VCButton } from '@vuecs/button';
+import { VCAlert } from '@vuecs/elements';
 import { VCIcon } from '@vuecs/icon';
 import { storeToRefs } from 'pinia';
 import {
@@ -51,6 +52,7 @@ export default defineComponent({
         AAuthShell,
         ARealmGrid,
         AWorkflowDisabledNotice,
+        VCAlert,
         VCButton,
         VCIcon,
     },
@@ -73,6 +75,9 @@ export default defineComponent({
         // the login on the hosted authorize page establishes the shared
         // cookie session even when consent is then denied.
         const denied = computed(() => errorCode.value === OAuth2ErrorCode.ACCESS_DENIED);
+        // Any other error marker (a failed/replayed code exchange) renders
+        // the sign-in state with a localized notice.
+        const failed = computed(() => !!errorCode.value && !denied.value);
 
         const authenticated = computed(() => status.value === StoreAuthStatus.AUTHENTICATED);
         const unauthenticated = computed(() => status.value === StoreAuthStatus.UNAUTHENTICATED);
@@ -88,6 +93,7 @@ export default defineComponent({
             },
             { namespace: TranslatorTranslationNamespace.FIELD, key: TranslatorTranslationFieldKey.PASSWORD },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.ACCOUNT_SIGN_IN_INTRO },
+            { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.LOGIN_FAILED },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.ACCESS_DENIED_TITLE },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.ACCESS_DENIED_TEXT },
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.USE_ANOTHER_ACCOUNT },
@@ -212,13 +218,25 @@ export default defineComponent({
             await router.replace({ path: route.path });
         };
 
+        // Re-run the code flow instead of merely clearing the error marker:
+        // the hosted login establishes the shared cookie session even when
+        // consent is denied, so a bare marker-clear would render the shell
+        // and sidestep the client's access policy. The session realm drives
+        // the kick; without one (unauthenticated store) the sign-in state
+        // renders and the realm chooser takes over.
         const retry = async () => {
             await router.replace({ path: route.path });
+
+            const { realmId } = store;
+            if (realmId) {
+                await kick(realmId);
+            }
         };
 
         return {
             enabled: config.enabled,
             denied,
+            failed,
             authenticated,
             unauthenticated,
             items,
@@ -270,6 +288,13 @@ export default defineComponent({
                 </div>
             </template>
             <template v-else-if="unauthenticated">
+                <VCAlert
+                    v-if="failed"
+                    color="warning"
+                    variant="soft"
+                >
+                    {{ translations.loginFailed }}
+                </VCAlert>
                 <div class="text-center">
                     {{ translations.accountSignInIntro }}
                 </div>

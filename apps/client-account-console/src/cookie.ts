@@ -18,7 +18,17 @@ export function readCookie(name: string) : string | undefined {
     }
 
     const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${escapeRegExp(name)}=([^;]+)`));
-    return match ? decodeURIComponent(match[1]) : undefined;
+    if (!match) {
+        return undefined;
+    }
+
+    // A malformed percent escape must degrade to the fallback value, not
+    // throw a URIError out of the app bootstrap.
+    try {
+        return decodeURIComponent(match[1]);
+    } catch {
+        return undefined;
+    }
 }
 
 /**

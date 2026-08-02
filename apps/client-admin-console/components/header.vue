@@ -52,9 +52,11 @@ export default defineNuxtComponent({
 
         // The account self-service surface is served by server-core on the
         // IdP origin (plan 080) — the stable "Manage account" link target.
+        // A missing apiUrl degrades to a same-origin relative link instead
+        // of throwing out of the header (which renders on every page).
         const runtimeConfig = useRuntimeConfig();
         const accountUrl = computed(() => {
-            const apiUrl = runtimeConfig.public.apiUrl as string;
+            const apiUrl = (runtimeConfig.public.apiUrl as string | undefined) ?? '';
 
             return `${apiUrl.replace(/\/+$/, '')}/account`;
         });
