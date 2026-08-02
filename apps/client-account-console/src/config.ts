@@ -47,8 +47,10 @@ declare global {
  * The serving side injects `window.__AUTHUP_ACCOUNT__` by replacing the
  * `<!--account-config-->` marker in index.html (server-core does this per
  * request; a standalone host can inject its own script or rely on the
- * defaults). Everything degrades to same-origin derivation: with a base
- * path of `<prefix>/account`, the API URL defaults to `<origin><prefix>`.
+ * defaults). `VITE_API_URL` bakes an API URL in at build/dev time (the
+ * dev-server affordance — see README.md). Everything degrades to
+ * same-origin derivation: with a base path of `<prefix>/account`, the API
+ * URL defaults to `<origin><prefix>`.
  */
 export function resolveAccountConsoleConfig(
     input?: AccountConsoleConfigInput,
@@ -61,6 +63,9 @@ export function resolveAccountConsoleConfig(
     const basePath = normalizeBasePath(injected.basePath ?? '/account');
 
     let { apiUrl } = injected;
+    if (!apiUrl && typeof import.meta.env !== 'undefined') {
+        apiUrl = import.meta.env.VITE_API_URL;
+    }
     if (!apiUrl) {
         const origin = location?.origin ??
             (typeof window !== 'undefined' ? window.location.origin : '');
