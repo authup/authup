@@ -110,13 +110,19 @@ used to hand-mirror each other's auth-page shell and vuecs bootstrap, guarded
 only by "mirrors client-admin-console" comments. The common parts now live in the kit and
 both sides are thin callers:
 
-- `AAuthApp` (`components/utility/`) — the logged-out page shell
+- `AAuthApp` (`components/utility/`) — the shared page shell
   (`VCToastProvider` > `AAuthGadgets` > slot > `VCToaster`), consumed by
-  `apps/server-core/ui/src/App.vue` and `apps/client-admin-console/layouts/auth.vue`.
-- `AAccountShell` (`components/utility/`) — the logged-in account-console
-  chrome (brand + user chip from the store + `signOut` emit, nav tabs from an
-  `AAccountShellNavItem[]` prop, content card slot), consumed by
-  `apps/client-account-console`'s shell page (plan 080).
+  `apps/server-core/ui/src/App.vue`, `apps/client-admin-console/layouts/auth.vue`
+  and `apps/client-account-console/src/App.vue`. A `gadgets` slot (passed
+  through into `AAuthGadgets` after color-mode + language) lets a host
+  append its own controls to the ONE fixed top-right cluster — the account
+  console adds its user chip (`.a-auth-gadget--static`) + icon-only
+  sign-out there, so the page never grows a second top bar.
+- `AAccountShell` (`components/utility/`) — the account-console content
+  chrome (brand + nav tabs from an `AAccountShellNavItem[]` prop + content
+  card slot; identity/session controls deliberately live in the gadget
+  cluster above, and from md-width up the brand row aligns onto the gadget
+  line), consumed by `apps/client-account-console`'s shell page (plan 080).
 - `AWorkflowDisabledNotice` (`components/workflows/`) — the "workflow disabled"
   alert + back-link block the four server-core SSR workflow pages
   (register / activate / password-forgot / password-reset) each copy-pasted.

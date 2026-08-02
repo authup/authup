@@ -119,6 +119,14 @@
         border-color: var(--authup-auth-accent);
     }
 
+    /* non-interactive gadget (e.g. the account console's user chip) */
+    .a-auth-gadget--static,
+    .a-auth-gadget--static:hover {
+        cursor: default;
+        color: var(--authup-auth-surface-color-muted);
+        border-color: var(--authup-auth-surface-border-color);
+    }
+
     .a-auth-back-link {
         display: inline-flex;
         align-items: center;

@@ -1021,10 +1021,14 @@ choice"):
   (`components/utility/`) styled by `client-web-kit-theme`'s
   `styles/account.css` behind `--authup-account-*` tokens; the pages are
   thin wrappers over `AUserForm` / `AUserPasswordForm` /
-  `AUserAuthenticators user-id="@me"` / `ASessions` / `AConsents`.
-- **Sign-out** mirrors the admin console's `pages/logout.vue`: capture
-  `idToken`/`realmId`, local `store.logout()`, round-trip through `/logout`
-  with `id_token_hint`, `post_logout_redirect_uri` back to the base path.
+  `AUserAuthenticators user-id="@me"` / `ASessions` / `AConsents`. The
+  user chip + sign-out are NOT part of the shell — App.vue appends them to
+  `AAuthApp`'s single fixed gadget cluster via the `gadgets` slot (one top
+  bar; the shell's brand row aligns onto the gadget line from md up).
+- **Sign-out** (the gadget-cluster button in App.vue) mirrors the admin
+  console's `pages/logout.vue`: capture `idToken`/`realmId`, local
+  `store.logout()`, round-trip through `/logout` with `id_token_hint`,
+  `post_logout_redirect_uri` back to the base path.
 - **No per-user state in the response**: the shell is static + operator
   config only (no hydration payload at all — pinned in
   `account-pages.spec.ts`).

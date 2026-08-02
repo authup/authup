@@ -5,21 +5,22 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { TranslatorTranslationAppKey, TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { VCButton } from '@vuecs/button';
+import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
-import { storeToRefs } from 'pinia';
 import type { PropType } from 'vue';
-import { computed, defineComponent } from 'vue';
-import { injectStore, useTranslations } from '../../core';
+import { defineComponent } from 'vue';
+import { useTranslations } from '../../core';
 import type { AAccountShellNavItem } from './types';
 
+// The account console's content chrome: brand + nav tabs + content card.
+// Identity/session controls (user chip, sign-out) deliberately do NOT live
+// here — they join the host's single top-right gadget cluster (AAuthApp's
+// `gadgets` slot), so the page carries ONE top bar.
 export default defineComponent({
     components: {
-        VCButton, 
-        VCIcon, 
-        VCLink, 
+        VCIcon,
+        VCLink,
     },
     props: {
         // Nav tab entries; labels arrive pre-translated so the shell stays
@@ -29,34 +30,15 @@ export default defineComponent({
             default: () => [],
         },
     },
-    emits: ['signOut'],
     setup() {
-        const store = injectStore();
-        const { user } = storeToRefs(store);
-
-        const userName = computed(() => {
-            if (!user.value) {
-                return '';
-            }
-
-            return user.value.displayName || user.value.name;
-        });
-
         const translations = useTranslations([
             {
                 namespace: TranslatorTranslationNamespace.APP,
                 key: TranslatorTranslationAppKey.ACCOUNT,
             },
-            {
-                namespace: TranslatorTranslationNamespace.CLIENT,
-                key: TranslatorTranslationClientKey.SIGN_OUT,
-            },
         ]);
 
-        return {
-            translations,
-            userName,
-        };
+        return { translations };
     },
 });
 </script>
@@ -92,26 +74,6 @@ export default defineComponent({
                 <span class="a-account-shell-title">
                     {{ translations.account }}
                 </span>
-            </div>
-            <div class="a-account-shell-user">
-                <span
-                    v-if="userName"
-                    class="a-account-shell-user-chip"
-                >
-                    <VCIcon name="fa6-solid:circle-user" />
-                    {{ userName }}
-                </span>
-                <VCButton
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    @click.prevent="$emit('signOut')"
-                >
-                    <template #leading>
-                        <VCIcon name="fa6-solid:right-from-bracket" />
-                    </template>
-                    {{ translations.signOut }}
-                </VCButton>
             </div>
         </div>
         <nav

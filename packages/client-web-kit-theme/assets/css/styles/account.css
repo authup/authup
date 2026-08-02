@@ -23,12 +23,24 @@
         width: 100%;
         max-width: var(--authup-account-max-width);
         margin: 0 auto;
-        /* top clearance for the fixed .a-auth-gadgets cluster */
+        /* narrow screens: stack below the fixed .a-auth-gadgets cluster */
         padding: 4.25rem 1.25rem 2.5rem;
         display: flex;
         flex-direction: column;
         gap: 1rem;
         color: var(--authup-account-surface-color);
+    }
+
+    /*
+     * One top bar: from md up the brand row rises onto the same line as
+     * the fixed gadget cluster (top: 1rem, 2.25rem tall) — identity and
+     * session controls live THERE (AAuthApp's `gadgets` slot), not in
+     * the shell.
+     */
+    @media (min-width: 48rem) {
+        .a-account-shell {
+            padding-top: 1rem;
+        }
     }
 
     .a-account-shell-header {
@@ -37,6 +49,7 @@
         justify-content: space-between;
         flex-wrap: wrap;
         gap: 1rem;
+        min-height: 2.25rem;
     }
 
     .a-account-shell-brand {
@@ -48,19 +61,6 @@
     .a-account-shell-title {
         font-size: 1.25rem;
         font-weight: 600;
-    }
-
-    .a-account-shell-user {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .a-account-shell-user-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.45rem;
-        color: var(--authup-account-surface-color-muted);
     }
 
     .a-account-shell-nav {

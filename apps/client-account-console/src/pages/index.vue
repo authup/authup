@@ -13,7 +13,6 @@ import {
     AWorkflowDisabledNotice,
     StoreAuthStatus,
     buildAuthorizeURL,
-    buildEndSessionURL,
     createPKCE,
     createState,
     injectStore,
@@ -194,22 +193,8 @@ export default defineComponent({
             }
         });
 
-        // Local wipe + round-trip through the RP-initiated logout endpoint
-        // with the retained id_token_hint (the admin-console pages/logout.vue
-        // pattern), landing back here — which then shows the sign-in state.
-        const signOut = async () => {
-            const idTokenHint = store.idToken ?? undefined;
-            const { realmId } = store;
-
-            await store.logout();
-
-            window.location.href = buildEndSessionURL({
-                baseURL: config.apiUrl,
-                idTokenHint,
-                realmId,
-                postLogoutRedirectUri: `${window.location.origin}${config.basePath}`,
-            });
-        };
+        // Sign-out lives in App.vue's gadget-slot content (the single
+        // top-right cluster), not here.
 
         // Escape hatch on the denial card: drop the session established by
         // the hosted login, clear the error param, land on the realm chooser.
@@ -242,7 +227,6 @@ export default defineComponent({
             items,
             translations,
             handleRealmSelect,
-            signOut,
             useAnotherAccount,
             retry,
         };
@@ -254,7 +238,6 @@ export default defineComponent({
         <AAccountShell
             v-if="authenticated && !denied"
             :items="items"
-            @sign-out="signOut"
         >
             <RouterView />
         </AAccountShell>

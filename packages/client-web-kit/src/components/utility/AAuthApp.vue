@@ -43,7 +43,11 @@ export default defineComponent({
             <AAuthGadgets
                 :dark="dark"
                 @update:dark="$emit('update:dark', $event)"
-            />
+            >
+                <!-- host-specific gadgets (e.g. the account console's user
+                     chip + sign-out) join the one top-right cluster -->
+                <slot name="gadgets" />
+            </AAuthGadgets>
 
             <slot />
 

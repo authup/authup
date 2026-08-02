@@ -5,13 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { User } from '@authup/core-kit';
 import { describe, expect, it } from 'vitest';
-import type { App } from 'vue';
-import { nextTick } from 'vue';
 import AAccountShell from '../../../../src/components/utility/AAccountShell.vue';
+import AAuthApp from '../../../../src/components/utility/AAuthApp.vue';
 import type { AAccountShellNavItem } from '../../../../src/components/utility/types';
-import { injectStore } from '../../../../src/core';
 import { mountKitComponent } from '../../../utils';
 
 const items : AAccountShellNavItem[] = [
@@ -36,30 +33,22 @@ describe('AAccountShell', () => {
         expect(links).toHaveLength(2);
         expect(links[0].text()).toContain('Overview');
         expect(links[0].classes()).toContain('a-account-shell-nav-link--active');
+        expect(links[0].attributes('aria-current')).toEqual('page');
         expect(links[1].classes()).not.toContain('a-account-shell-nav-link--active');
+        expect(links[1].attributes('aria-current')).toBeUndefined();
     });
 
-    it('should emit signOut', async () => {
-        const { wrapper } = mountKitComponent(AAccountShell, { items });
+    it('should render the content slot inside the body card', () => {
+        const { wrapper } = mountKitComponent(AAccountShell, { items }, {}, {}, { slots: { default: '<span data-test="content">content</span>' } });
 
-        await wrapper.find('.a-account-shell-user button').trigger('click');
-
-        expect(wrapper.emitted('signOut')).toHaveLength(1);
+        expect(wrapper.find('.a-account-shell-body [data-test="content"]').exists()).toBeTruthy();
     });
+});
 
-    it('should render the user chip from the store', async () => {
-        const { wrapper, pinia } = mountKitComponent(AAccountShell, { items });
+describe('AAuthApp', () => {
+    it('should render host gadgets inside the gadget cluster', () => {
+        const { wrapper } = mountKitComponent(AAuthApp, {}, {}, {}, { slots: { gadgets: '<button data-test="sign-out" type="button" class="a-auth-gadget" />' } });
 
-        expect(wrapper.find('.a-account-shell-user-chip').exists()).toBeFalsy();
-
-        const store = injectStore(pinia, wrapper.vm.$.appContext.app as App);
-        store.setUser({
-            id: 'c0a1f9d1-53a4-44a8-b3f9-4e9d9a1c2b3d',
-            name: 'peter',
-            displayName: 'Peter',
-        } as User);
-        await nextTick();
-
-        expect(wrapper.find('.a-account-shell-user-chip').text()).toContain('Peter');
+        expect(wrapper.find('.a-auth-gadgets [data-test="sign-out"]').exists()).toBeTruthy();
     });
 });
