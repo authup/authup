@@ -6,6 +6,7 @@
         ".": {"component": "root", "extra-files": ["CITATION.cff"]},
 
         "apps/authup": {"component": "authup"},
+        "apps/client-account-console": {"component": "client-account-console"},
         "apps/client-admin-console": {"component": "client-admin-console"},
         "apps/server-core": {"component": "server-core"},
 
@@ -41,6 +42,7 @@
                 "root",
 
                 "authup",
+                "client-account-console",
                 "client-admin-console",
                 "server-core",
 

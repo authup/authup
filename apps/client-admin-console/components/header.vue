@@ -20,6 +20,7 @@ import {
     defineNuxtComponent,
     ref,
     useColorMode,
+    useRuntimeConfig,
 } from '#imports';
 import { LayoutTopNavigation } from '../config/layout';
 import LogoSVG from './svg/LogoSVG';
@@ -45,8 +46,20 @@ export default defineNuxtComponent({
             [
                 { key: TranslatorTranslationAppKey.GENERAL },
                 { key: TranslatorTranslationAppKey.TOGGLE_NAVIGATION },
+                { key: TranslatorTranslationAppKey.MANAGE_ACCOUNT },
             ],
         );
+
+        // The account self-service surface is served by server-core on the
+        // IdP origin (plan 080) — the stable "Manage account" link target.
+        // A missing apiUrl degrades to a same-origin relative link instead
+        // of throwing out of the header (which renders on every page).
+        const runtimeConfig = useRuntimeConfig();
+        const accountUrl = computed(() => {
+            const apiUrl = (runtimeConfig.public.apiUrl as string | undefined) ?? '';
+
+            return `${apiUrl.replace(/\/+$/, '')}/account`;
+        });
 
         // Top nav is a single un-gated entry — pass it as a static
         // array straight to `<VCNavItems :data>` (no permission filter,
@@ -72,6 +85,7 @@ export default defineNuxtComponent({
         return {
             authenticated,
             user,
+            accountUrl,
             topItems,
             toggleNav,
             displayNav,
@@ -141,8 +155,9 @@ export default defineNuxtComponent({
                         <template v-if="authenticated && user">
                             <li class="vc-nav-item">
                                 <a
-                                    href="javascript:void(0)"
+                                    :href="accountUrl"
                                     class="vc-nav-link"
+                                    :title="translationsApp.manageAccount"
                                 >
                                     <span>{{ user.displayName ? user.displayName : user.name }}</span>
                                 </a>

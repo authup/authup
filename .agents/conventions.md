@@ -63,14 +63,14 @@ implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
 - **`core-*` names the core service's domain surface** (domain types, HTTP and
   realtime clients for `server-core`'s API). Consumed on both sides, hence unprefixed.
 - **Apps are role-named** after the prefix: `server-core` (the IdP),
-  `client-admin-console` (the admin console), and the planned `server-core-worker`
-  (optional background processor). The `authup` CLI supervisor is the eponymous
-  exception. The admin app carries the full `admin-console` role (not bare
-  `console`) because the UI surfaces are peers: admin console, account
-  console (server-core-embedded; reserved standalone name
-  `client-account-console`) and the auth pages (inseparable from
-  server-core). App names match their per-realm OAuth2 client rows
-  (`admin-console`, `account-console`).
+  `client-admin-console` (the admin console), `client-account-console` (the
+  account console — a static SPA whose dist server-core serves at
+  `/account`), and the planned `server-core-worker` (optional background
+  processor). The `authup` CLI supervisor is the eponymous exception. The
+  admin app carries the full `admin-console` role (not bare `console`)
+  because the UI surfaces are peers: admin console, account console and the
+  auth pages (inseparable from server-core). App names match their
+  per-realm OAuth2 client rows (`admin-console`, `account-console`).
 - **Packages are surface- or platform-named** after the prefix: `client-web-kit` /
   `client-web-nuxt` / `client-web-theme` serve ANY web client (RP) embedding authup,
   not just the console; `server-kit` / `server-adapter-*` serve any server-side

@@ -5,6 +5,12 @@ second factors. Enable the feature with `mfaEnabled` (`MFA_ENABLED`) and require
 interactive enrollment for every local user with `mfaRequired`
 (`MFA_REQUIRED`). `mfaRequired` can only be enabled together with `mfaEnabled`.
 
+Users enroll and remove their authenticators themselves on the
+[account console](./account-console.md) (`<publicUrl>/account/authenticators`),
+which is served by `server-core` and therefore also available in headless
+deployments. Inline enrollment during login rides the hosted `/authorize` page
+(below).
+
 ## Enforcement model
 
 With MFA enabled, a local user who has any confirmed authenticator must complete

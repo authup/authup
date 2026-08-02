@@ -1,6 +1,7 @@
 {
     ".": "1.0.0-beta.58",
     "apps/authup": "1.0.0-beta.58",
+    "apps/client-account-console": "1.0.0-beta.58",
     "apps/client-admin-console": "1.0.0-beta.58",
     "apps/server-core": "1.0.0-beta.58",
     "packages/access": "1.0.0-beta.58",

@@ -15,7 +15,7 @@ Every realm automatically gets three built-in, public OAuth2 clients:
 |-------------------|------------------------------------------------------------------|
 | `web`             | Your own applications embedding `@authup/client-web-kit`         |
 | `admin-console`   | Authup's admin console: selecting a realm on its login screen redirects the browser to `/authorize?client_id=admin-console&realm_id=<id>` |
-| `account-console` | Authup's account self-service surface (upcoming; the client is provisioned ahead of it) |
+| `account-console` | Authup's [account console](./account-console.md), the self-service surface served at `<publicUrl>/account`: its sign-in redirects the browser to `/authorize?client_id=account-console&realm_id=<id>` |
 
 All three authenticate end users via the authorization-code flow with PKCE.
 Splitting them keeps concerns separate per application: sessions and audit
@@ -57,12 +57,13 @@ already-issued refresh tokens keep working until they expire. To evict an
 identity that was admitted before the policy changed, revoke its sessions
 (`DELETE /sessions?filter[clientId]=...` or the sessions UI).
 
-Two more caveats: the gate evaluates identity data only (realm, identity
+One more caveat: the gate evaluates identity data only (realm, identity
 type, time windows, compositions thereof); role-membership conditions are
-not expressible there yet. And regular users currently use the admin
-console's settings pages for password, MFA and session self-service, so a
-restrictive policy locks them out of those until the dedicated account
-surface ships.
+not expressible there yet. Regular users do not need the admin console —
+password, MFA, session and application self-service live on the
+[account console](./account-console.md) (`<publicUrl>/account`), so
+restricting the admin console to your administrators is a reasonable
+default posture.
 :::
 
 ### Extending a system client

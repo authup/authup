@@ -1,0 +1,316 @@
+<!--
+  - Copyright (c) 2026.
+  - Author Peter Placzek (tada5hi)
+  - For the full copyright and license information,
+  - view the LICENSE file that was distributed with this source code.
+  -->
+<script lang="ts">
+/* global window */
+import {
+    AAccountShell,
+    AAuthShell,
+    ARealmGrid,
+    AWorkflowDisabledNotice,
+    StoreAuthStatus,
+    buildAuthorizeURL,
+    buildEndSessionURL,
+    createPKCE,
+    createState,
+    injectStore,
+    saveAuthorizationRequest,
+    useTranslations,
+} from '@authup/client-web-kit';
+import type { AAccountShellNavItem } from '@authup/client-web-kit';
+import type { Realm } from '@authup/core-kit';
+import { CLIENT_ACCOUNT_CONSOLE_NAME } from '@authup/core-kit';
+import {
+    TranslatorTranslationActionKey,
+    TranslatorTranslationAppKey,
+    TranslatorTranslationClientKey,
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
+import { OAuth2ErrorCode } from '@authup/specs';
+import { VCButton } from '@vuecs/button';
+import { VCAlert } from '@vuecs/elements';
+import { VCIcon } from '@vuecs/icon';
+import { storeToRefs } from 'pinia';
+import {
+    computed,
+    defineComponent,
+    ref,
+    watchEffect,
+} from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { injectAccountConsoleConfig } from '../di';
+import { useAccountToasts } from './utils';
+
+export default defineComponent({
+    components: {
+        AAccountShell,
+        AAuthShell,
+        ARealmGrid,
+        AWorkflowDisabledNotice,
+        VCAlert,
+        VCButton,
+        VCIcon,
+    },
+    setup() {
+        const config = injectAccountConsoleConfig();
+
+        const route = useRoute();
+        const router = useRouter();
+        const toasts = useAccountToasts();
+
+        const store = injectStore();
+        const { status } = storeToRefs(store);
+
+        const errorCode = computed(() => (
+            typeof route.query.error === 'string' ? route.query.error : undefined
+        ));
+        // An accessPolicyId bound to the account-console client denies the
+        // code flow with `access_denied` — surfaced as a readable page state
+        // instead of a dead redirect. It wins over an authenticated store:
+        // the login on the hosted authorize page establishes the shared
+        // cookie session even when consent is then denied.
+        const denied = computed(() => errorCode.value === OAuth2ErrorCode.ACCESS_DENIED);
+        // Any other error marker (a failed/replayed code exchange) renders
+        // the sign-in state with a localized notice.
+        const failed = computed(() => !!errorCode.value && !denied.value);
+
+        const authenticated = computed(() => status.value === StoreAuthStatus.AUTHENTICATED);
+        const unauthenticated = computed(() => status.value === StoreAuthStatus.UNAUTHENTICATED);
+
+        const translations = useTranslations([
+            { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.ACCOUNT },
+            { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.AUTHENTICATOR },
+            { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.APPLICATIONS },
+            {
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.SESSION,
+                count: 2,
+            },
+            { namespace: TranslatorTranslationNamespace.FIELD, key: TranslatorTranslationFieldKey.PASSWORD },
+            { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.ACCOUNT_SIGN_IN_INTRO },
+            { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.LOGIN_FAILED },
+            { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.ACCESS_DENIED_TITLE },
+            { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.ACCESS_DENIED_TEXT },
+            { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.USE_ANOTHER_ACCOUNT },
+            { namespace: TranslatorTranslationNamespace.ACTION, key: TranslatorTranslationActionKey.LOGIN },
+        ]);
+
+        const items = computed<AAccountShellNavItem[]>(() => [
+            {
+                key: 'overview',
+                label: translations.account,
+                icon: 'fa6-solid:bars',
+                link: { to: '/' },
+                active: route.path === '/',
+            },
+            {
+                key: 'password',
+                label: translations.password,
+                icon: 'fa6-solid:key',
+                link: { to: '/password' },
+                active: route.path === '/password',
+            },
+            {
+                key: 'authenticators',
+                label: translations.authenticator,
+                icon: 'fa6-solid:shield-halved',
+                link: { to: '/authenticators' },
+                active: route.path === '/authenticators',
+            },
+            {
+                key: 'sessions',
+                label: translations.session,
+                icon: 'fa6-solid:desktop',
+                link: { to: '/sessions' },
+                active: route.path === '/sessions',
+            },
+            {
+                key: 'applications',
+                label: translations.applications,
+                icon: 'fa6-solid:grip',
+                link: { to: '/applications' },
+                active: route.path === '/applications',
+            },
+        ]);
+
+        // Full auth-code + PKCE flow against the per-realm `account-console`
+        // client (plan 080): per-app session attribution + access-policy
+        // enforcement. The code lands back on this path; the router guard
+        // exchanges it with the saved PKCE parameters.
+        const kick = async (realmKey: string) => {
+            try {
+                const pkce = await createPKCE();
+                const state = createState();
+
+                const redirectUri = `${window.location.origin}${window.location.pathname}`;
+
+                saveAuthorizationRequest({
+                    state,
+                    code_verifier: pkce.code_verifier,
+                    redirect_uri: redirectUri,
+                    client_id: CLIENT_ACCOUNT_CONSOLE_NAME,
+                    realm_id: realmKey,
+                });
+
+                window.location.href = buildAuthorizeURL({
+                    baseURL: config.apiUrl,
+                    clientId: CLIENT_ACCOUNT_CONSOLE_NAME,
+                    realmId: realmKey,
+                    redirectUri,
+                    scope: 'global openid',
+                    state,
+                    codeChallenge: pkce.code_challenge,
+                    codeChallengeMethod: pkce.code_challenge_method,
+                });
+            } catch (e) {
+                await toasts.error(e);
+            }
+        };
+
+        const handleRealmSelect = (realm: Realm) => kick(realm.id);
+
+        // A `?realmId=` hint (deep link from a realm-specific app) skips the
+        // realm chooser. Suppressed while an error param is present so a
+        // denial cannot loop back into the flow without a user action.
+        const kicked = ref(false);
+        watchEffect(() => {
+            if (kicked.value ||
+                errorCode.value ||
+                status.value !== StoreAuthStatus.UNAUTHENTICATED) {
+                return;
+            }
+
+            const hint = typeof route.query.realmId === 'string' ?
+                route.query.realmId :
+                undefined;
+            if (hint) {
+                kicked.value = true;
+                Promise.resolve().then(() => kick(hint));
+            }
+        });
+
+        // Local wipe + round-trip through the RP-initiated logout endpoint
+        // with the retained id_token_hint (the admin-console pages/logout.vue
+        // pattern), landing back here — which then shows the sign-in state.
+        const signOut = async () => {
+            const idTokenHint = store.idToken ?? undefined;
+            const { realmId } = store;
+
+            await store.logout();
+
+            window.location.href = buildEndSessionURL({
+                baseURL: config.apiUrl,
+                idTokenHint,
+                realmId,
+                postLogoutRedirectUri: `${window.location.origin}${config.basePath}`,
+            });
+        };
+
+        // Escape hatch on the denial card: drop the session established by
+        // the hosted login, clear the error param, land on the realm chooser.
+        const useAnotherAccount = async () => {
+            await store.logout();
+            await router.replace({ path: route.path });
+        };
+
+        // Re-run the code flow instead of merely clearing the error marker:
+        // the hosted login establishes the shared cookie session even when
+        // consent is denied, so a bare marker-clear would render the shell
+        // and sidestep the client's access policy. The session realm drives
+        // the kick; without one (unauthenticated store) the sign-in state
+        // renders and the realm chooser takes over.
+        const retry = async () => {
+            await router.replace({ path: route.path });
+
+            const { realmId } = store;
+            if (realmId) {
+                await kick(realmId);
+            }
+        };
+
+        return {
+            enabled: config.enabled,
+            denied,
+            failed,
+            authenticated,
+            unauthenticated,
+            items,
+            translations,
+            handleRealmSelect,
+            signOut,
+            useAnotherAccount,
+            retry,
+        };
+    },
+});
+</script>
+<template>
+    <template v-if="enabled">
+        <AAccountShell
+            v-if="authenticated && !denied"
+            :items="items"
+            @sign-out="signOut"
+        >
+            <RouterView />
+        </AAccountShell>
+        <AAuthShell v-else>
+            <template v-if="denied">
+                <div class="text-center flex flex-col gap-2">
+                    <h1 class="font-bold">
+                        {{ translations.accessDeniedTitle }}
+                    </h1>
+                    <p>
+                        {{ translations.accessDeniedText }}
+                    </p>
+                    <div class="mt-2 flex flex-col gap-2">
+                        <VCButton
+                            type="button"
+                            color="primary"
+                            class="w-full"
+                            @click.prevent="useAnotherAccount"
+                        >
+                            {{ translations.useAnotherAccount }}
+                        </VCButton>
+                        <VCButton
+                            type="button"
+                            variant="outline"
+                            class="w-full"
+                            @click.prevent="retry"
+                        >
+                            {{ translations.login }}
+                        </VCButton>
+                    </div>
+                </div>
+            </template>
+            <template v-else-if="unauthenticated">
+                <VCAlert
+                    v-if="failed"
+                    color="warning"
+                    variant="soft"
+                >
+                    {{ translations.loginFailed }}
+                </VCAlert>
+                <div class="text-center">
+                    {{ translations.accountSignInIntro }}
+                </div>
+                <ARealmGrid @select="handleRealmSelect" />
+            </template>
+            <template v-else>
+                <div class="text-center p-3">
+                    <VCIcon
+                        name="fa6-solid:spinner"
+                        class="animate-spin text-2xl"
+                    />
+                </div>
+            </template>
+        </AAuthShell>
+    </template>
+    <AAuthShell v-else>
+        <AWorkflowDisabledNotice />
+    </AAuthShell>
+</template>

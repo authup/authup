@@ -100,6 +100,7 @@ import {
     useRequestEventContext,
 } from '../../../../adapters/http/index.ts';
 import {
+    AccountController,
     ActivateController,
     AuthenticatorChallengeController,
     AuthorizeController,
@@ -203,6 +204,7 @@ export class HTTPControllerModule {
                 this.createLogoutController(container),
                 this.createAuthenticatorChallengeController(container),
                 this.createUserInfoController(container),
+                this.createAccountController(container),
 
                 this.createStatusController(container),
 
@@ -462,11 +464,23 @@ export class HTTPControllerModule {
         return new StatusController({ options: { features: this.buildUIFeatures(config) } });
     }
 
+    createAccountController(container: IContainer) {
+        const config = container.resolve(ConfigInjectionKey);
+
+        return new AccountController({
+            options: {
+                baseURL: config.publicUrl,
+                features: this.buildUIFeatures(config),
+            },
+        });
+    }
+
     buildUIFeatures(config: Config) : StatusResponseFeatures {
         return {
             registration: config.registrationEnabled,
             passwordRecovery: config.passwordRecoveryEnabled,
             emailVerification: config.emailVerificationEnabled,
+            accountConsole: config.accountConsoleEnabled,
         };
     }
 

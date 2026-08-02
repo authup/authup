@@ -248,7 +248,16 @@ export default defineConfig({
                     items: [
                         {
                             text: 'Overview',
-                            link: '/guide/deployment/provisioning', 
+                            link: '/guide/deployment/provisioning',
+                        },
+                    ],
+                },
+                {
+                    text: 'Account Console',
+                    items: [
+                        {
+                            text: 'Overview',
+                            link: '/guide/deployment/account-console',
                         },
                     ],
                 },

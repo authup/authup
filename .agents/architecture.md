@@ -855,13 +855,13 @@ name constants in `@authup/core-kit`):
   console (`apps/client-admin-console`; its login sends `client_id=admin-console`,
   runtime-overridable via `NUXT_PUBLIC_CLIENT_ID`).
 - **`account-console`** (`CLIENT_ACCOUNT_CONSOLE_NAME`) — the account
-  self-service surface (plan 080). Provisioned ahead of the surface: `web`'s
-  `<origin>/**` patterns already cover every path it can redirect to, so the
-  inert row adds no redirect surface.
+  self-service surface served by server-core at `<publicUrl>/account`
+  (plan 080; see *Account Console* below).
 
 The split exists for admission control (`accessPolicyId` per app — restrict
-the admin console without touching downstream logins; keep it OPEN until the
-account surface ships, since users still need the console's settings pages),
+the admin console without touching downstream logins; with the account
+surface shipped, regular users no longer need the console's settings pages,
+so restricting `admin-console` to administrators is the documented posture),
 per-app session/audit attribution by `clientId`, and per-app
 grant/redirect/logout allowlists. Each client powers the realm-selection
 login flow (auth-code + PKCE), so there is no per-realm FK, no migration, and
@@ -947,6 +947,92 @@ no new endpoint — the `/authorize` verifier already resolves clients via
   self-assign it — only provisioned clients are `builtIn`. The SSR `AuthorizeForm`
   auto-submits consent for `builtIn` clients (skips the Allow/Deny step); user-
   created clients are never `builtIn` and still show consent.
+
+### Account Console (`/account`, plan 080)
+
+End-user self-service, shipped as its own app workspace
+`apps/client-account-console` (`@authup/client-account-console`): a
+client-only Vite/Vue SPA — deliberately NO SSR, since auth-gated content
+cannot server-render (header-only auth) and the SSR ui app's pages render
+a spinner until mounted anyway. server-core depends on the package at
+RUNTIME and serves its built `dist/` ("embedded by default, relocatable by
+choice"):
+
+- **Serving seam** (`adapters/http/ui/account.ts`, the plan-081 static-SPA
+  pilot): `AccountController` (`@DController('/account')`, `''` +
+  `'/:page'` — client-side routing owns sub-paths, every route returns the
+  same shell) calls `serveAccountConsolePage(event, { baseURL, features })`,
+  which resolves the package via locter's
+  `locateUpSync('node_modules/@authup/client-account-console/package.json',
+  { cwd: PACKAGE_PATH })` — the node_modules ancestor walk from
+  server-core's package root (works for the workspace symlink AND a
+  published install; only positive resolution is cached), injects the
+  runtime config by replacing the
+  `<!--account-config-->` marker in the built index.html
+  (`window.__AUTHUP_ACCOUNT__ = { apiUrl, basePath, features }`, escaped
+  like every inline script payload), stamps lang/color-mode html attrs from
+  the shared cookies (no FOUC), rebases the fixed `/account/` vite-base
+  asset hrefs when publicUrl carries a sub-path, and sets the same security
+  headers as `renderUIPage`. Static assets ride the assets middleware
+  (`/account/assets` → `<pkg>/dist/assets`, registered in dev mode too — the
+  bundle is prebuilt, not vite-transformed). A missing bundle 500s with an
+  actionable message (build `apps/client-account-console` first).
+- **Runtime config contract** (`src/config.ts`): a standalone host serves
+  the same dist under `/account` on its own origin and injects
+  `window.__AUTHUP_ACCOUNT__` (or replaces the marker) with `apiUrl` (+
+  optional `basePath`); with nothing injected the app derives the API URL
+  same-origin from its base path. Standalone hosting additionally needs the
+  origin registered in `TRUSTED_ORIGINS` (drives the `account-console`
+  client's redirect/post-logout allowlists). The launcher never spawns it —
+  no binary, no process.
+- **App bootstrap** (`src/main.ts`): vue-router base = config `basePath`
+  (routes are base-relative: `/`, `/password`, `/authenticators`,
+  `/sessions`, `/applications`, catch-all → `/`), the same kit + vuecs
+  install choreography as the SSR ui app minus SSR/hydration (no
+  `hydrationStore` — nothing to hand off), `vc-locale`/`vc-color-mode`
+  cookie continuity with the auth pages, own `NuxtIconBundle` scan
+  (app src + kit src + vuecs icon preset).
+- **Feature flag `accountConsoleEnabled`** (env `ACCOUNT_CONSOLE_ENABLED`,
+  default `true`): rides `StatusResponseFeatures.accountConsole`
+  (`buildUIFeatures` → status endpoint + the injected config); disabled →
+  the shell renders `AWorkflowDisabledNotice` client-side (no 404).
+- **Login = full auth-code + PKCE against the per-realm `account-console`
+  client** (Keycloak model — per-app attribution + access-policy
+  enforceability), NOT bare reuse of the lingering kit-store session. The
+  shell page's kick saves the kit `AuthorizationRequest` (sessionStorage)
+  and redirects to `/authorize`; the app's router guard consumes it on
+  return — state check, PKCE params on `exchangeAuthorizationCode`, strip
+  `code`/`state`, on failure append `error=invalid_grant` (which also
+  suppresses the auto-re-kick — no unattended redirect loop); a code with
+  no saved request is dropped from the URL (it cannot be redeemed — the
+  client mandates PKCE). A session-less visit renders `ARealmGrid`
+  (name-identified clients need a realm hint at `/authorize`); a
+  `?realmId=` deep link skips the picker. The #3191 session-continuity
+  machinery makes the exchange REUSE the session row created by the hosted
+  login and re-stamp its `clientId` to `account-console` (pinned by
+  `account-console-session.spec.ts` — one row, clientId re-stamped; holds
+  cross-origin too, since the session id rides the code blob server-side).
+  An EXISTING authenticated session renders the shell directly (admission
+  control gates fresh logins only). `access_denied` from an
+  `accessPolicyId` on the client renders a readable denial card (wins over
+  the authenticated state, since the hosted login establishes the cookie
+  session even when consent is denied) with a logout-and-retry escape
+  hatch. The logged-in chrome is the kit's `AAccountShell`
+  (`components/utility/`) styled by `client-web-kit-theme`'s
+  `styles/account.css` behind `--authup-account-*` tokens; the pages are
+  thin wrappers over `AUserForm` / `AUserPasswordForm` /
+  `AUserAuthenticators user-id="@me"` / `ASessions` / `AConsents`.
+- **Sign-out** mirrors the admin console's `pages/logout.vue`: capture
+  `idToken`/`realmId`, local `store.logout()`, round-trip through `/logout`
+  with `id_token_hint`, `post_logout_redirect_uri` back to the base path.
+- **No per-user state in the response**: the shell is static + operator
+  config only (no hydration payload at all — pinned in
+  `account-pages.spec.ts`).
+- **Packaging:** the package ships `dist/` only (`prepublishOnly` builds);
+  it is packed in the launcher's `test:smoke:packed` workspace list so the
+  packed server-core install resolves it from the tarball.
+- **Link surface:** `<publicUrl>/account` is the stable "Manage account"
+  target; the admin console header links the user name to it.
 
 ### File Structure
 

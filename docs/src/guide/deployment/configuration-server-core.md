@@ -240,6 +240,15 @@ export default {
     passwordMinLength: 10,
 
     /**
+     * Serve the account self-service surface at `<publicUrl>/account`
+     * (profile, password, authenticators, sessions, applications).
+     * Disable it when you run your own self-service portal.
+     * env: ACCOUNT_CONSOLE_ENABLED
+     * default: true
+     */
+    accountConsoleEnabled: true,
+
+    /**
      * Persist security events (login, loginFailed, authorize,
      * logout, refresh replay, ...) to the auth_events table.
      * env: EVENT_LOG_ENABLED
@@ -459,6 +468,7 @@ registrationEnabled=false
 emailVerificationEnabled=false
 passwordRecoveryEnabled=false
 passwordMinLength=10
+accountConsoleEnabled=true
 eventLogEnabled=true
 eventLogRetentionDays=90
 eventLogEntityEnabled=true
@@ -502,6 +512,7 @@ REGISTRATION_ENABLED=false
 EMAIL_VERIFICATION_ENABLED=false
 PASSWORD_RECOVERY_ENABLED=false
 PASSWORD_MIN_LENGTH=10
+ACCOUNT_CONSOLE_ENABLED=true
 EVENT_LOG_ENABLED=true
 EVENT_LOG_RETENTION_DAYS=90
 EVENT_LOG_ENTITY_ENABLED=true

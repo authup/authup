@@ -61,6 +61,19 @@
         --authup-auth-card-box-shadow:          0 18px 45px -18px rgb(0 0 0 / 35%);
         --authup-auth-aurora-opacity:           0.5;
 
+        /* account console (.a-account-shell) --------------------------- */
+        --authup-account-max-width:             68rem;
+        --authup-account-surface-background:    var(--vc-color-bg-elevated);
+        --authup-account-surface-border-color:  var(--vc-color-border);
+        --authup-account-surface-color:         var(--vc-color-fg);
+        --authup-account-surface-color-muted:   var(--vc-color-fg-muted);
+        --authup-account-nav-hover-background:  var(--vc-color-bg-muted);
+        --authup-account-nav-active-color:      var(--vc-color-on-primary);
+        --authup-account-nav-active-background: var(--vc-color-primary-600);
+        --authup-account-card-padding:          1.5rem;
+        --authup-account-card-border-radius:    1rem;
+        --authup-account-card-box-shadow:       0 18px 45px -18px rgb(0 0 0 / 25%);
+
         /* realm chooser (.a-realm-grid / .a-realm-grid-item) ----------- */
         --authup-realm-grid-item-min-width:     150px;
         --authup-realm-grid-item-min-height:    6.25rem;

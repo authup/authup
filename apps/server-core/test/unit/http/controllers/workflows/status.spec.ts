@@ -30,11 +30,13 @@ describe('src/http/controllers/workflows/status/*.ts', () => {
         expect(typeof response.version).toEqual('string');
         expect(typeof response.date).toEqual('string');
 
-        // the test application factory enables all three workflows
+        // the test application factory enables all three workflows;
+        // the account console is on by default
         expect(response.features).toEqual({
             registration: true,
             passwordRecovery: true,
             emailVerification: true,
+            accountConsole: true,
         });
     });
 });

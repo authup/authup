@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './account.ts';
 export * from './base-path.ts';
 export * from './internal-http-client.ts';
 export * from './render.ts';

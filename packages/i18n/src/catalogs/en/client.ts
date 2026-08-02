@@ -109,6 +109,8 @@ export const TranslatorTranslationClientEnglish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.LOGOUT_DONE]: 'You have been signed out.',
     [TranslatorTranslationClientKey.SIGN_OUT]: 'Sign out',
 
+    [TranslatorTranslationClientKey.ACCOUNT_SIGN_IN_INTRO]: 'Sign in to manage your account.',
+
     [TranslatorTranslationClientKey.MFA_TITLE]: 'Two-factor authentication',
     [TranslatorTranslationClientKey.MFA_CHALLENGE_INTRO]: 'Enter the code from your authenticator app to continue.',
     [TranslatorTranslationClientKey.MFA_CODE]: 'Verification code',
