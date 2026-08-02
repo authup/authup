@@ -141,6 +141,8 @@ export enum TranslatorTranslationClientKey {
     LOGOUT_DONE = 'logoutDone',
     SIGN_OUT = 'signOut',
 
+    ACCOUNT_SIGN_IN_INTRO = 'accountSignInIntro',
+
     MFA_TITLE = 'mfaTitle',
     MFA_CHALLENGE_INTRO = 'mfaChallengeIntro',
     MFA_CODE = 'mfaCode',
@@ -187,12 +189,13 @@ export enum TranslatorTranslationClientKey {
 }
 
 /**
- * App-only chrome: navigation labels, page-title decoration
+ * Application chrome: navigation labels, page-title decoration
  * (management/details), the sidebar session countdown, header
  * accessibility labels, and the parameterized success toasts. These live
  * apart from the shared entity/field/action/common namespaces because
- * they are consumed exclusively by `apps/client-admin-console`, never by the
- * reusable `@authup/client-web-kit` components.
+ * they belong to authup's own application surfaces (the admin console and
+ * the server-core-embedded account console), not to the reusable form /
+ * collection components a downstream consumer embeds.
  */
 export enum TranslatorTranslationAppKey {
     HOME = 'home',
@@ -202,6 +205,7 @@ export enum TranslatorTranslationAppKey {
     SETTINGS = 'settings',
     LOGOUT = 'logout',
     ACCOUNT = 'account',
+    MANAGE_ACCOUNT = 'manageAccount',
     SECURITY = 'security',
 
     MANAGEMENT = 'management',

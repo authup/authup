@@ -1,0 +1,100 @@
+/*
+ * Copyright (c) 2026.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+/*
+ * Account console shell from @authup/client-web-kit:
+ *
+ *   - <AAccountShell> — the authenticated self-service surface served by
+ *     server-core at /account: header (brand + user chip + sign-out),
+ *     horizontal nav tabs, and the content card the pages render into.
+ *
+ * Colors come from the --authup-account-* tokens (see ./tokens.css).
+ *
+ * Rules live in `@layer components` (before `utilities` in the layer
+ * order, see ../index.css) so a consumer can override any single
+ * property with a plain Tailwind utility on the element.
+ */
+@layer components {
+    .a-account-shell {
+        width: 100%;
+        max-width: var(--authup-account-max-width);
+        margin: 0 auto;
+        /* top clearance for the fixed .a-auth-gadgets cluster */
+        padding: 4.25rem 1.25rem 2.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        color: var(--authup-account-surface-color);
+    }
+
+    .a-account-shell-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .a-account-shell-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .a-account-shell-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    .a-account-shell-user {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .a-account-shell-user-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        color: var(--authup-account-surface-color-muted);
+    }
+
+    .a-account-shell-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+
+    .a-account-shell-nav-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.45rem 0.9rem;
+        border-radius: 0.6rem;
+        color: var(--authup-account-surface-color-muted);
+        transition: color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .a-account-shell-nav-link:hover {
+        color: var(--authup-account-surface-color);
+        background: var(--authup-account-nav-hover-background);
+    }
+
+    .a-account-shell-nav-link--active,
+    .a-account-shell-nav-link--active:hover {
+        color: var(--authup-account-nav-active-color);
+        background: var(--authup-account-nav-active-background);
+    }
+
+    .a-account-shell-body {
+        border: 1px solid var(--authup-account-surface-border-color);
+        border-radius: var(--authup-account-card-border-radius);
+        background: var(--authup-account-surface-background);
+        padding: var(--authup-account-card-padding);
+        box-shadow: var(--authup-account-card-box-shadow);
+    }
+}

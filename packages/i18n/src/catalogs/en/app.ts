@@ -16,6 +16,7 @@ export const TranslatorTranslationAppEnglish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.SETTINGS]: 'Settings',
     [TranslatorTranslationAppKey.LOGOUT]: 'Logout',
     [TranslatorTranslationAppKey.ACCOUNT]: 'Account',
+    [TranslatorTranslationAppKey.MANAGE_ACCOUNT]: 'Manage account',
     [TranslatorTranslationAppKey.SECURITY]: 'Security',
 
     [TranslatorTranslationAppKey.MANAGEMENT]: 'Management',

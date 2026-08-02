@@ -102,6 +102,7 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         emailVerificationEnabled: false,
         passwordRecoveryEnabled: false,
         passwordMinLength: USER_PASSWORD_MIN_LENGTH,
+        accountConsoleEnabled: true,
 
         eventLogEnabled: true,
         eventLogRetentionDays: EVENT_LOG_RETENTION_DAYS_DEFAULT,

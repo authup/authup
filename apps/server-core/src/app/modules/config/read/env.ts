@@ -168,6 +168,11 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.passwordMinLength = passwordMinLength;
     }
 
+    const accountConsoleEnabled = readBool(ConfigEnvironmentVariableName.ACCOUNT_CONSOLE_ENABLED);
+    if (typeof accountConsoleEnabled !== 'undefined') {
+        options.accountConsoleEnabled = accountConsoleEnabled;
+    }
+
     // ---------------------------------------------------------------
 
     const eventLogEnabled = readBoolStrict(ConfigEnvironmentVariableName.EVENT_LOG_ENABLED);

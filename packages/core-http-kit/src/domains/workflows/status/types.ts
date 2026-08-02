@@ -9,6 +9,7 @@ export type StatusResponseFeatures = {
     registration: boolean,
     passwordRecovery: boolean,
     emailVerification: boolean,
+    accountConsole: boolean,
 };
 
 export type StatusResponse = {

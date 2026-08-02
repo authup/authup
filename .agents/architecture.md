@@ -855,13 +855,13 @@ name constants in `@authup/core-kit`):
   console (`apps/client-admin-console`; its login sends `client_id=admin-console`,
   runtime-overridable via `NUXT_PUBLIC_CLIENT_ID`).
 - **`account-console`** (`CLIENT_ACCOUNT_CONSOLE_NAME`) — the account
-  self-service surface (plan 080). Provisioned ahead of the surface: `web`'s
-  `<origin>/**` patterns already cover every path it can redirect to, so the
-  inert row adds no redirect surface.
+  self-service surface served by server-core at `<publicUrl>/account`
+  (plan 080; see *Account Console* below).
 
 The split exists for admission control (`accessPolicyId` per app — restrict
-the admin console without touching downstream logins; keep it OPEN until the
-account surface ships, since users still need the console's settings pages),
+the admin console without touching downstream logins; with the account
+surface shipped, regular users no longer need the console's settings pages,
+so restricting `admin-console` to administrators is the documented posture),
 per-app session/audit attribution by `clientId`, and per-app
 grant/redirect/logout allowlists. Each client powers the realm-selection
 login flow (auth-code + PKCE), so there is no per-realm FK, no migration, and
@@ -947,6 +947,56 @@ no new endpoint — the `/authorize` verifier already resolves clients via
   self-assign it — only provisioned clients are `builtIn`. The SSR `AuthorizeForm`
   auto-submits consent for `builtIn` clients (skips the Allow/Deny step); user-
   created clients are never `builtIn` and still show consent.
+
+### Account Console (`/account`, plan 080)
+
+End-user self-service on the IdP origin, served by the embedded SSR app:
+`GET /account` (+ `/account/:page`) renders the ui app via
+`serveWorkflowPage` (`AccountController`,
+`adapters/http/controllers/workflows/account/`; unknown sub-paths fall back
+to the root, a `?realmId=` hint rides the payload via `realmAware`). Pages
+live under `apps/server-core/ui/src/pages/account/` — a parent shell page
+(auth gate + login kick + denial/disabled states) with vue-router children
+(overview `AUserForm`, password `AUserPasswordForm`, authenticators
+`AUserAuthenticators user-id="@me"`, sessions `ASessions` + revoke-others,
+applications `AConsents` — thin ports of the admin console's `settings/*`
+pages). The logged-in chrome is the kit's `AAccountShell`
+(`components/utility/`; nav items pre-translated by the caller, `signOut`
+emit, user chip from the store) styled by `client-web-kit-theme`'s
+`styles/account.css` behind `--authup-account-*` tokens.
+
+- **Feature flag `accountConsoleEnabled`** (env `ACCOUNT_CONSOLE_ENABLED`,
+  default `true`): disabled → the routes serve the `AWorkflowDisabledNotice`
+  shape (no 404), and the flag rides `StatusResponseFeatures.accountConsole`
+  (status endpoint + hydration payloads via `buildUIFeatures`).
+- **Login = full auth-code + PKCE against the per-realm `account-console`
+  client** (Keycloak model — per-app attribution + access-policy
+  enforceability), NOT bare reuse of the lingering kit-store session. The
+  parent page's kick saves the kit `AuthorizationRequest` (sessionStorage)
+  and redirects to `/authorize`; the ui app's router guard consumes it on
+  return — state check, PKCE params on `exchangeAuthorizationCode`, strip
+  `code`/`state`, and on failure append `error=invalid_grant` (which also
+  suppresses the page's auto-re-kick — no unattended redirect loop). A
+  session-less visit renders `ARealmGrid` (name-identified clients need a
+  realm hint at `/authorize`); a `?realmId=` deep link skips the picker.
+  The #3191 session-continuity machinery makes the exchange REUSE the
+  cookie session row and re-stamp its `clientId` to `account-console`
+  (pinned by `account-console-session.spec.ts` — one row, clientId
+  re-stamped). An EXISTING authenticated session renders the shell directly
+  (admission control gates fresh logins only — same model as the admin
+  console). `access_denied` from an `accessPolicyId` on the client renders a
+  readable denial card (wins over the authenticated state, since the hosted
+  login establishes the shared cookie session even when consent is denied)
+  with a logout-and-retry escape hatch.
+- **Sign-out** mirrors the admin console's `pages/logout.vue`: capture
+  `idToken`/`realmId`, local `store.logout()`, round-trip through `/logout`
+  with `id_token_hint`, `post_logout_redirect_uri` back to `/account`.
+- **Auth-gated content cannot SSR** (header-only auth): the parent page
+  renders a neutral loading state until `onMounted`, so collections never
+  fire during SSR and the actor-less hydration bucket records no
+  actor-scoped snapshots (pinned in `account-pages.spec.ts`).
+- **Link surface:** `<publicUrl>/account` is the stable "Manage account"
+  target; the admin console header links the user name to it.
 
 ### File Structure
 

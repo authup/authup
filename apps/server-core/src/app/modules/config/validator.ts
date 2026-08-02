@@ -102,6 +102,7 @@ export class ConfigValidator extends Container<Config> {
             passwordMinLength: createValidator(
                 z.number().int().positive().max(USER_PASSWORD_MAX_LENGTH),
             ),
+            accountConsoleEnabled: booleanValidator,
 
             eventLogEnabled: booleanValidator,
             eventLogRetentionDays: nonNegativeNumberValidator,

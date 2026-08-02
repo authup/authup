@@ -109,6 +109,8 @@ export const TranslatorTranslationClientFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.LOGOUT_DONE]: 'Vous avez été déconnecté.',
     [TranslatorTranslationClientKey.SIGN_OUT]: 'Se déconnecter',
 
+    [TranslatorTranslationClientKey.ACCOUNT_SIGN_IN_INTRO]: 'Connectez-vous pour gérer votre compte.',
+
     [TranslatorTranslationClientKey.MFA_TITLE]: 'Authentification à deux facteurs',
     [TranslatorTranslationClientKey.MFA_CHALLENGE_INTRO]: 'Saisissez le code de votre application d\'authentification pour continuer.',
     [TranslatorTranslationClientKey.MFA_CODE]: 'Code de vérification',

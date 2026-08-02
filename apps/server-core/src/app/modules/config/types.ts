@@ -247,6 +247,14 @@ export type Config = {
      */
     passwordMinLength: number,
 
+    /**
+     * Serve the account self-service surface (`/account`: profile, password,
+     * authenticators, sessions, applications). Operators with their own
+     * self-service portal can disable authup's.
+     * default: true
+     */
+    accountConsoleEnabled: boolean,
+
     // ----------------------------------------------------
 
     /**

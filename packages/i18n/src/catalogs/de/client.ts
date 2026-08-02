@@ -109,6 +109,8 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.LOGOUT_DONE]: 'Sie wurden abgemeldet.',
     [TranslatorTranslationClientKey.SIGN_OUT]: 'Abmelden',
 
+    [TranslatorTranslationClientKey.ACCOUNT_SIGN_IN_INTRO]: 'Melden Sie sich an, um Ihr Konto zu verwalten.',
+
     [TranslatorTranslationClientKey.MFA_TITLE]: 'Zwei-Faktor-Authentifizierung',
     [TranslatorTranslationClientKey.MFA_CHALLENGE_INTRO]: 'Gib den Code aus deiner Authenticator-App ein, um fortzufahren.',
     [TranslatorTranslationClientKey.MFA_CODE]: 'Bestätigungscode',

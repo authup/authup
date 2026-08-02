@@ -13,7 +13,10 @@ export * from './search';
 export * from './toggle-button';
 export * from './ALanguageSwitcherDropdown';
 
+export * from './types';
+
 export { AFormSubmit } from './AFormSubmit';
+export { default as AAccountShell } from './AAccountShell.vue';
 export { default as AAuthApp } from './AAuthApp.vue';
 export { default as AAuthShell } from './AAuthShell.vue';
 export { default as AAuthBackLink } from './AAuthBackLink.vue';

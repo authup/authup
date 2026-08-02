@@ -109,6 +109,8 @@ export const TranslatorTranslationClientSpanish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.LOGOUT_DONE]: 'Has cerrado sesión.',
     [TranslatorTranslationClientKey.SIGN_OUT]: 'Cerrar sesión',
 
+    [TranslatorTranslationClientKey.ACCOUNT_SIGN_IN_INTRO]: 'Inicia sesión para administrar tu cuenta.',
+
     [TranslatorTranslationClientKey.MFA_TITLE]: 'Autenticación de dos factores',
     [TranslatorTranslationClientKey.MFA_CHALLENGE_INTRO]: 'Introduce el código de tu aplicación de autenticación para continuar.',
     [TranslatorTranslationClientKey.MFA_CODE]: 'Código de verificación',

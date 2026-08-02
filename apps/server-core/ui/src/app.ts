@@ -7,10 +7,13 @@
 
 import {
     buildVuecsInstallOptions,
+    clearAuthorizationRequest,
     injectStore,
     install,
+    loadAuthorizationRequest,
     syncTranslatorLocaleFromManager,
 } from '@authup/client-web-kit';
+import { OAuth2ErrorCode } from '@authup/specs';
 import type { IClient } from '@authup/core-http-kit';
 import { matchLocale } from '@authup/i18n';
 import { getURLBasePath, isObject, omitRecord } from '@authup/kit';
@@ -37,6 +40,12 @@ import './tailwind.css';
 import 'virtual:nuxt-icon-bundle/register';
 
 import type { Router } from 'vue-router';
+import Account from './pages/account/index.vue';
+import AccountApplications from './pages/account/applications.vue';
+import AccountAuthenticators from './pages/account/authenticators.vue';
+import AccountOverview from './pages/account/overview.vue';
+import AccountPassword from './pages/account/password.vue';
+import AccountSessions from './pages/account/sessions.vue';
 import Activate from './pages/activate.vue';
 import Authorize from './pages/authorize.vue';
 import Logout from './pages/logout.vue';
@@ -97,6 +106,36 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
                 component: Logout,
                 path: '/logout',
             },
+            {
+                component: Account,
+                path: '/account',
+                children: [
+                    {
+                        component: AccountOverview,
+                        path: '',
+                    },
+                    {
+                        component: AccountPassword,
+                        path: 'password',
+                    },
+                    {
+                        component: AccountAuthenticators,
+                        path: 'authenticators',
+                    },
+                    {
+                        component: AccountSessions,
+                        path: 'sessions',
+                    },
+                    {
+                        component: AccountApplications,
+                        path: 'applications',
+                    },
+                    {
+                        path: ':pathMatch(.*)',
+                        redirect: '/account',
+                    },
+                ],
+            },
         ],
     });
 
@@ -105,6 +144,47 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
 
         const code = typeof to.query.code === 'string' ? to.query.code : undefined;
         if (code) {
+            // An authorization request saved by the account surface's login
+            // kick carries the PKCE verifier + client/realm binding — the
+            // exchange must present them. Single-use either way: consumed on
+            // success, dropped on failure (a reload must not replay the code).
+            const request = loadAuthorizationRequest();
+            if (request) {
+                const state = typeof to.query.state === 'string' ? to.query.state : undefined;
+
+                let failed = false;
+                try {
+                    if (request.state !== state) {
+                        throw new Error('The authorization request state does not match.');
+                    }
+
+                    await store.exchangeAuthorizationCode(code, {
+                        code_verifier: request.code_verifier,
+                        redirect_uri: request.redirect_uri,
+                        client_id: request.client_id,
+                        realm_id: request.realm_id,
+                    });
+                } catch {
+                    failed = true;
+                }
+
+                clearAuthorizationRequest();
+
+                const query = omitRecord(to.query, ['code', 'state']);
+                if (failed) {
+                    // Surfaced by the target page as a readable error state;
+                    // its presence also suppresses any automatic re-kick into
+                    // the code flow (no unattended redirect loop).
+                    query.error = OAuth2ErrorCode.INVALID_GRANT;
+                }
+
+                return {
+                    path: to.path, 
+                    query, 
+                    hash: to.hash, 
+                };
+            }
+
             try {
                 await store.exchangeAuthorizationCode(code);
 
