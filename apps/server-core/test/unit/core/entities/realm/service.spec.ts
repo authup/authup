@@ -24,9 +24,9 @@ import {
 } from '@authup/server-test-kit';
 import { createFakeRealm } from '../../../../utils/domains/index.ts';
 import type { Realm } from '@authup/core-kit';
-import type { IWebClientProvisioner } from '../../../../../src/core/entities/client/types.ts';
+import type { ISystemClientProvisioner } from '../../../../../src/core/entities/client/types.ts';
 
-class RecordingWebClientProvisioner implements IWebClientProvisioner {
+class RecordingSystemClientProvisioner implements ISystemClientProvisioner {
     public calls: string[] = [];
 
     async ensureForRealm(realm: Realm | { id: string }): Promise<void> {
@@ -110,10 +110,10 @@ describe('core/entities/realm/service', () => {
         });
 
         it('should ensure a web client for the new realm when a provisioner is wired', async () => {
-            const webClientProvisioner = new RecordingWebClientProvisioner();
+            const systemClientProvisioner = new RecordingSystemClientProvisioner();
             service = new RealmService({
                 repository,
-                webClientProvisioner,
+                systemClientProvisioner,
             });
 
             const result = await service.create(
@@ -121,14 +121,14 @@ describe('core/entities/realm/service', () => {
                 createAllowAllActor(),
             );
 
-            expect(webClientProvisioner.calls).toEqual([result.id]);
+            expect(systemClientProvisioner.calls).toEqual([result.id]);
         });
 
         it('should not ensure a web client when updating an existing realm', async () => {
-            const webClientProvisioner = new RecordingWebClientProvisioner();
+            const systemClientProvisioner = new RecordingSystemClientProvisioner();
             service = new RealmService({
                 repository,
-                webClientProvisioner,
+                systemClientProvisioner,
             });
 
             const entity = repository.seed(createFakeRealm({
@@ -138,7 +138,7 @@ describe('core/entities/realm/service', () => {
 
             await service.update(entity.id, { description: 'updated description' }, createAllowAllActor());
 
-            expect(webClientProvisioner.calls).toEqual([]);
+            expect(systemClientProvisioner.calls).toEqual([]);
         });
 
         it('should still persist the realm when web-client provisioning fails', async () => {
@@ -146,7 +146,7 @@ describe('core/entities/realm/service', () => {
             // a provisioner failure is logged + swallowed, not propagated.
             service = new RealmService({
                 repository,
-                webClientProvisioner: {
+                systemClientProvisioner: {
                     async ensureForRealm() {
                         throw new Error('provisioning boom');
                     },

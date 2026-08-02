@@ -1,7 +1,6 @@
 <script lang="ts">
 /* global window */
 import type { Realm } from '@authup/core-kit';
-import { CLIENT_WEB_NAME } from '@authup/core-kit';
 import {
     ARealmGrid,
     buildAuthorizeURL,
@@ -83,18 +82,20 @@ export default defineNuxtComponent({
                     target = `${url.pathname}${url.search}${url.hash}`;
                 }
 
+                const clientId = runtimeConfig.public.clientId as string;
+
                 saveAuthorizationRequest({
                     state,
                     code_verifier: pkce.code_verifier,
                     redirect_uri: redirectUri,
-                    client_id: CLIENT_WEB_NAME,
+                    client_id: clientId,
                     realm_id: realm.id,
                     target,
                 });
 
                 window.location.href = buildAuthorizeURL({
                     baseURL: runtimeConfig.public.apiUrl as string,
-                    clientId: CLIENT_WEB_NAME,
+                    clientId,
                     realmId: realm.id,
                     redirectUri,
                     scope: 'global openid',

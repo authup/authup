@@ -9,7 +9,7 @@ import { randomUUID } from 'node:crypto';
 import { eq, isQuery } from '@rapiq/core';
 import { applyQuery } from '@rapiq/adapter-memory';
 import {
-    CLIENT_SYSTEM_NAME,
+    CLIENT_RESERVED_NAMES,
     CLIENT_WEB_NAME,
     IdentityType,
     PermissionName,
@@ -626,19 +626,12 @@ describe('core/entities/client/service', () => {
     });
 
     describe('guardrails', () => {
-        it('should reject creating a client with the reserved name "web"', async () => {
+        // Covers every reserved system-client name — incl. the plan-079
+        // additions admin-console / account-console.
+        it.each(CLIENT_RESERVED_NAMES)('should reject creating a client with the reserved name "%s"', async (name) => {
             await expect(
                 service.create(
-                    createFakeClient({ name: CLIENT_WEB_NAME }),
-                    createAllowAllActor(),
-                ),
-            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
-        });
-
-        it('should reject creating a client with the reserved name "system"', async () => {
-            await expect(
-                service.create(
-                    createFakeClient({ name: CLIENT_SYSTEM_NAME }),
+                    createFakeClient({ name }),
                     createAllowAllActor(),
                 ),
             ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });

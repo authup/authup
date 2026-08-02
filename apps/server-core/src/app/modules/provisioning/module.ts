@@ -74,7 +74,7 @@ import path from 'node:path';
 import { ConfigInjectionKey, getAppOrigins } from '../config/index.ts';
 import { SymmetricCipher } from '@authup/server-kit';
 import { LoggerInjectionKey } from '../logger/index.ts';
-import { WebClientProvisioner } from '../../../core/entities/client/index.ts';
+import { SystemClientProvisioner } from '../../../core/entities/client/index.ts';
 import { KeyProvisioner } from '../../../core/key/index.ts';
 import { CompositeProvisioningSource, FileProvisioningSource } from './sources/index.ts';
 
@@ -220,11 +220,12 @@ export class ProvisionerModule implements IModule {
         await rootSynchronizer.synchronize(data);
 
         // ---------------------------------------------------------------
-        // Per-realm public `web` client. Single provisioning mechanism:
-        // list every realm (incl. pre-existing) and upsert its web client.
+        // Per-realm system clients (web, admin-console, account-console).
+        // Single provisioning mechanism: list every realm (incl.
+        // pre-existing) and upsert its clients.
         // Idempotent; guarded on builtIn inside the provisioner.
         // ---------------------------------------------------------------
-        const webClientProvisioner = new WebClientProvisioner({
+        const systemClientProvisioner = new SystemClientProvisioner({
             clientRepository,
             scopeRepository,
             clientScopeRepository,
@@ -249,7 +250,7 @@ export class ProvisionerModule implements IModule {
 
         const realms = await realmRepository.find();
         for (const realm of realms) {
-            await webClientProvisioner.ensureForRealm(realm);
+            await systemClientProvisioner.ensureForRealm(realm);
             await keyProvisioner.ensureForRealm(realm);
         }
 

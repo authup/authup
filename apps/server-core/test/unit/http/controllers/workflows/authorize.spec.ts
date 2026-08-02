@@ -12,10 +12,16 @@ import {
     it,
 } from 'vitest';
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
-import { CLIENT_WEB_NAME, REALM_MASTER_NAME, ScopeName } from '@authup/core-kit';
+import {
+    CLIENT_ACCOUNT_CONSOLE_NAME,
+    CLIENT_ADMIN_CONSOLE_NAME,
+    CLIENT_WEB_NAME,
+    REALM_MASTER_NAME,
+    ScopeName,
+} from '@authup/core-kit';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
 import { generateOAuth2CodeVerifier } from '../../../../../src/core';
-import { createFakeClient, expectClientError } from '../../../../utils';
+import { createFakeClient, createFakeRealm, expectClientError } from '../../../../utils';
 import { createTestApplication } from '../../../../app';
 
 describe('src/http/controllers/token', () => {
@@ -125,6 +131,39 @@ describe('src/http/controllers/token', () => {
         });
 
         expect(new URL(response.url).searchParams.get('code')).toBeTruthy();
+    });
+
+    // Plan 079: the console authenticates against the per-realm built-in
+    // `admin-console` client, addressed exactly like the console does it —
+    // name form plus realm hint (a bare name is ambiguous, every realm has
+    // one).
+    it('should authorize the built-in admin-console client by name and realm hint', async () => {
+        const { data: realm } = await suite.client.realm.getOne(REALM_MASTER_NAME);
+
+        const response = await suite.client.authorize.confirm({
+            response_type: OAuth2AuthorizationResponseType.CODE,
+            client_id: CLIENT_ADMIN_CONSOLE_NAME,
+            realm_id: realm.id,
+            redirect_uri: 'http://localhost:3000/login/callback',
+            scope: `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}`,
+            state: generateOAuth2CodeVerifier(),
+            code_challenge: generateOAuth2CodeVerifier(),
+        });
+
+        expect(new URL(response.url).searchParams.get('code')).toBeTruthy();
+    });
+
+    // Plan 079: creating a realm through the API eagerly provisions its
+    // system clients (the startup backfill only covers pre-existing realms).
+    it('should provision the system clients for a realm created via the API', async () => {
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+
+        for (const name of [CLIENT_WEB_NAME, CLIENT_ADMIN_CONSOLE_NAME, CLIENT_ACCOUNT_CONSOLE_NAME]) {
+            const { data: clients } = await suite.client.client.getMany({ filters: { name, realmId: realm.id } });
+
+            expect(clients, name).toHaveLength(1);
+            expect(clients[0].builtIn).toBe(true);
+        }
     });
 
     it('should NOT advertise implicit/hybrid response types in discovery', async () => {

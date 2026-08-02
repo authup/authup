@@ -7,22 +7,31 @@ On every server startup, the provisioning system synchronizes the declared state
 Built-in defaults (admin user, admin role, system permissions) are always applied first.
 Your custom provisioning files are merged on top.
 
-## Per-Realm Public `web` Client
+## Per-Realm System Clients
 
-Every realm automatically gets a built-in, public OAuth2 client named `web`.
-This is the client the web UI (`client-admin-console`) uses to log users in via the
-authorization-code flow with PKCE — selecting a realm on the login screen
-redirects the browser to `/authorize?client_id=web&realm_id=<id>`.
+Every realm automatically gets three built-in, public OAuth2 clients:
 
-The client is provisioned for every existing realm on startup and for any
+| Name              | Used by                                                          |
+|-------------------|------------------------------------------------------------------|
+| `web`             | Your own applications embedding `@authup/client-web-kit`         |
+| `admin-console`   | Authup's admin console: selecting a realm on its login screen redirects the browser to `/authorize?client_id=admin-console&realm_id=<id>` |
+| `account-console` | Authup's account self-service surface (upcoming; the client is provisioned ahead of it) |
+
+All three authenticate end users via the authorization-code flow with PKCE.
+Splitting them keeps concerns separate per application: sessions and audit
+events carry the client they were issued for, and an access policy bound to
+`admin-console` restricts who may obtain tokens for the admin console without
+affecting logins of your own applications riding `web`.
+
+The clients are provisioned for every existing realm on startup and for any
 realm created at runtime. Provisioning is idempotent: re-runs refresh the
-client's `redirectUri` allowlist but never duplicate it.
+`redirectUri` allowlists but never duplicate anything.
 
-Its attributes are fixed:
+Their attributes are fixed (identical for all three, except `name`):
 
 | Attribute         | Value                                                              |
 |-------------------|--------------------------------------------------------------------|
-| `name`            | `web`                                                              |
+| `name`            | `web` / `admin-console` / `account-console`                        |
 | `authMethod`      | `none` (public — no secret, PKCE required)                        |
 | `tokenBindingMethod` | `none`                                                         |
 | `builtIn`         | `true`                                                            |
@@ -32,11 +41,23 @@ Its attributes are fixed:
 | `redirectUri`     | `<origin>/**` for every trusted app origin (see below)            |
 | `postLogoutRedirectUri` | the same `<origin>/**` patterns                             |
 
-Because the `web` client is built-in and `builtIn` is stripped from any
-client you create yourself, the name `web` (and `system`) is reserved —
-attempting to create or rename a client to it returns a `400 Bad Request`.
+Because the system clients are built-in and `builtIn` is stripped from any
+client you create yourself, their names (and `system`) are reserved —
+attempting to create or rename a client to one of them returns a
+`400 Bad Request`.
 
-### Extending the `web` client
+::: tip Restricting the admin console
+Binding an access policy to the `admin-console` client (its `accessPolicyId`)
+denies token issuance for the admin console to identities that fail the
+policy. Note the gate evaluates identity data only (realm, identity type,
+time windows, compositions thereof); role-membership conditions are not
+expressible there yet. Also keep in mind that regular users currently use
+the admin console's settings pages for password, MFA and session
+self-service, so a restrictive policy locks them out of those until the
+dedicated account surface ships.
+:::
+
+### Extending a system client
 
 The attributes above are derived from configuration and are reasserted on
 every start. Writing a different value to any of them, from a provisioning
@@ -44,10 +65,12 @@ file or through the API, is reverted at the next boot and no error is
 raised. Redirect patterns in particular are configured through
 `trustedOrigins` (below), not per client.
 
-Every other attribute is left untouched and survives a restart. A
-provisioning file may therefore declare a `web` client to set `displayName`,
-`description`, `baseUrl`, `rootUrl` or `accessPolicyId`, and to assign
-additional roles, permissions and scopes:
+Every other attribute is left untouched and survives a restart —
+`displayName` is seeded once at creation (`Web`, `Admin Console`,
+`Account Console`) and then belongs to you. A provisioning file may
+therefore declare a system client to set `displayName`, `description`,
+`baseUrl`, `rootUrl` or `accessPolicyId`, and to assign additional roles,
+permissions and scopes:
 
 ```yaml
 realms:
@@ -64,8 +87,8 @@ realms:
 Scope assignments are additive. The built-in `global` and `openid` bindings
 are re-created when missing, and nothing is ever removed. Declaring
 `builtIn: true` is optional but keeps the first boot free of a takeover
-warning, which is logged when a client named `web` is found without the
-flag.
+warning, which is logged when a client on a reserved name is found without
+the flag.
 
 ### Trusted app origins
 
@@ -81,7 +104,7 @@ startup; an explicit allowlist can be configured via the `middlewareCors`
 options.)
 
 ::: danger Security
-The `web` client is built-in with the `global` scope, so **any** allowlisted
+The system clients are built-in with the `global` scope, so **any** allowlisted
 origin can complete a login and obtain a full-permission token. Only add
 origins you fully control to `trustedOrigins`. In non-production, the
 client-admin-console dev origin (`http://localhost:3000`) is seeded automatically so

@@ -144,6 +144,7 @@ import {
     RoleService,
     ScopeService,
     SessionService,
+    SystemClientProvisioner,
     TrustAnchorService,
     UserAttributeService,
     UserAuthenticator,
@@ -151,7 +152,6 @@ import {
     UserPermissionService,
     UserRoleService,
     UserService,
-    WebClientProvisioner,
 } from '../../../../core/index.ts';
 import { AuthenticationInjectionKey } from '../../authentication/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
@@ -972,7 +972,7 @@ export class HTTPControllerModule {
             realmRepository,
         });
         const logger = container.resolve(LoggerInjectionKey);
-        const webClientProvisioner = new WebClientProvisioner({
+        const systemClientProvisioner = new SystemClientProvisioner({
             clientRepository,
             scopeRepository: new ScopeRepositoryAdapter({
                 repository: container.resolve<Repository<Scope>>(ScopeEntity),
@@ -991,7 +991,7 @@ export class HTTPControllerModule {
 
         const service = new RealmService({
             repository,
-            webClientProvisioner,
+            systemClientProvisioner,
             keyProvisioner,
             logger,
         });

@@ -31,7 +31,7 @@ export default defineNuxtComponent({
             //
             // Deliberately NO client_id: omitting it lets the server resolve
             // the client from the hint's sole aud (the client UUID). A
-            // name-identified client_id (`web`) would work too since plan 047.B
+            // name-identified client_id (`admin-console`) would work too since plan 047.B
             // (resolved to its UUID before the aud cross-check), but omission
             // stays the simplest correct call.
             window.location.href = buildEndSessionURL({
