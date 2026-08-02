@@ -20,7 +20,7 @@
  *
  * Per-toast `position` is intentionally dropped — the new vuecs toast
  * model puts position on the `<VCToaster>` viewport (see
- * `apps/client-web/components/footer.vue`).
+ * `apps/client-admin-console/components/footer.vue`).
  */
 import { isObject } from '@authup/kit';
 import { useToast as useVuecsToast } from '@vuecs/overlays';

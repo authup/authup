@@ -23,7 +23,7 @@ if [[ -z "${COMMAND}" || -z "${SERVICE}" ]]; then
     printf '  <service> <command>\n    Run a specific service cli/script command.\n'
     printf 'Examples:\n'
     printf '  server/core start\n    Start the server core service.\n'
-    printf '  client/web start\n    Reset a specific service\n'
+    printf '  client/admin-console start\n    Start the admin console service.\n'
     exit 0
 fi
 
@@ -33,10 +33,10 @@ case "${SERVICE}" in
         export PORT=3000
         exec npm run cli --workspace=apps/server-core -- "${COMMAND}" "$@"
         ;;
-    client/web)
+    client/admin-console)
         export NUXT_HOST=0.0.0.0
         export NUXT_PORT=3000
-        exec npm run "${COMMAND}" --workspace=apps/client-web
+        exec npm run "${COMMAND}" --workspace=apps/client-admin-console
         ;;
     *) echo "Unknown service: ${SERVICE}";;
 esac

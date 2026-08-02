@@ -104,6 +104,6 @@ export function install(app: App, options: Options): void {
     // in `@vuecs/core`). Installing them inside the kit before the app's
     // own `app.use(vuecs, { themes: [...] })` runs would freeze the theme
     // manager with no themes, silently dropping every theme override.
-    // The consumer plugin (see apps/client-web/plugins/vuecs.ts) installs
+    // The consumer plugin (see apps/client-admin-console/plugins/vuecs.ts) installs
     // `vuecs` first, then the per-package plugins on top.
 }

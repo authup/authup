@@ -11,10 +11,10 @@ export function normalizePackageID(input: string) : `${PackageID}` | null {
     const value = input.trim().toLowerCase();
 
     switch (value) {
-        case 'client.web':
-        case 'client/web':
-        case 'client-web': {
-            return PackageID.CLIENT_WEB;
+        case 'client.admin-console':
+        case 'client/admin-console':
+        case 'client-admin-console': {
+            return PackageID.CLIENT_ADMIN_CONSOLE;
         }
         case 'server.core':
         case 'server/core':

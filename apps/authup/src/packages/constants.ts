@@ -6,12 +6,12 @@
  */
 
 export enum PackageName {
-    CLIENT_WEB = '@authup/client-web',
+    CLIENT_ADMIN_CONSOLE = '@authup/client-admin-console',
     SERVER_CORE = '@authup/server-core',
 }
 
 export enum PackageID {
-    CLIENT_WEB = 'client.web',
+    CLIENT_ADMIN_CONSOLE = 'client.admin-console',
     SERVER_CORE = 'server.core',
 }
 
@@ -22,11 +22,11 @@ export enum LauncherCommand {
 }
 
 export const PACKAGE_NAME_MAP : Record<`${PackageID}`, `${PackageName}`> = {
-    [PackageID.CLIENT_WEB]: PackageName.CLIENT_WEB,
+    [PackageID.CLIENT_ADMIN_CONSOLE]: PackageName.CLIENT_ADMIN_CONSOLE,
     [PackageID.SERVER_CORE]: PackageName.SERVER_CORE,
 };
 
 export const PACKAGE_BIN_NAME_MAP : Record<`${PackageID}`, string> = {
-    [PackageID.CLIENT_WEB]: 'authup-ui',
+    [PackageID.CLIENT_ADMIN_CONSOLE]: 'authup-admin-console',
     [PackageID.SERVER_CORE]: 'authup-server',
 };

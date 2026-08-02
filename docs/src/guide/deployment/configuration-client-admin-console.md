@@ -41,18 +41,18 @@ applications only.
 
 When the UI is launched through the [`authup` quickstart CLI](./bare-metal) instead
 of directly, it can also be configured through the shared multi-section
-configuration file — the CLI reads the `client.web` section and passes the values
+configuration file — the CLI reads the `client.admin-console` section and passes the values
 to the UI process as the appropriate runtime environment variables:
 
 ::: code-group
 ````dotenv [authup.conf]
-client.web.port=3000
-client.web.host=0.0.0.0
-client.web.apiUrl=http://localhost:3001
-client.web.publicUrl=http://localhost:3000
+client.admin-console.port=3000
+client.admin-console.host=0.0.0.0
+client.admin-console.apiUrl=http://localhost:3001
+client.admin-console.publicUrl=http://localhost:3000
 ````
 
-````dotenv [authup.client.web.conf]
+````dotenv [authup.client.admin-console.conf]
 port=3000
 host=0.0.0.0
 apiUrl=http://localhost:3001

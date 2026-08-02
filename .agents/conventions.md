@@ -7,7 +7,7 @@
 | NX               | Monorepo task runner (dependency-ordered builds)   |
 | tsdown           | Package JS bundling (rolldown-based)               |
 | Vite             | server-core embedded UI builds (`apps/server-core/ui/`) |
-| Nuxt             | client-web builds                                 |
+| Nuxt             | client-admin-console builds                                 |
 | Vitest + SWC     | Test runner with fast compilation                  |
 | ESLint           | Linting (`@tada5hi/eslint-config-vue-typescript`) |
 | Husky            | Pre-commit hooks via lint-staged                   |
@@ -50,6 +50,42 @@ Migrations live in `apps/server-core/src/adapters/database/migrations/{mysql,pos
 
 - Exported **types** (interfaces, type aliases) must live in a `types.ts` file in the same directory, not inline in the implementation module. Implementation files import from `types.ts`.
 - Barrel `index.ts` files re-export from `types.ts` and implementation modules.
+
+## Workspace Naming (apps & packages)
+
+The workspace name grammar, shared with PrivateAIM/hub (whose tree is the reference
+implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
+`client-vue`, `server-kit`, `core-kit`):
+
+- **The prefix marks the side.** `server-` means server-side only, `client-` means
+  client-side only. An unprefixed workspace is isomorphic and safe on both sides:
+  `kit`, `errors`, `specs`, `access`, `i18n`, `core-*`.
+- **`core-*` names the core service's domain surface** (domain types, HTTP and
+  realtime clients for `server-core`'s API). Consumed on both sides, hence unprefixed.
+- **Apps are role-named** after the prefix: `server-core` (the IdP),
+  `client-admin-console` (the admin console), and the planned `server-core-worker`
+  (optional background processor). The `authup` CLI supervisor is the eponymous
+  exception. The admin app carries the full `admin-console` role (not bare
+  `console`) because the UI surfaces are peers: admin console, account
+  console (server-core-embedded; reserved standalone name
+  `client-account-console`) and the auth pages (inseparable from
+  server-core). App names match their per-realm OAuth2 client rows
+  (`admin-console`, `account-console`).
+- **Packages are surface- or platform-named** after the prefix: `client-web-kit` /
+  `client-web-nuxt` / `client-web-theme` serve ANY web client (RP) embedding authup,
+  not just the console; `server-kit` / `server-adapter-*` serve any server-side
+  consumer. App and package names deliberately do NOT mirror each other (hub
+  precedent: app `client-ui`, library `client-vue`), so renaming an app never
+  implies renaming a published package family.
+- **Operator-facing vocabulary is a separate, shorter layer**: binaries
+  (`authup-server`, `authup-admin-console`), the CLI package selectors and config sections
+  (`server.core`, `client.admin-console`; slash form `server/core` in the docker
+  entrypoint), and helm values keys. The grammar above governs workspace directory
+  and npm package identity only.
+
+History: `apps/client-web` (`@authup/client-web`, binary `authup-ui`) was renamed to
+`apps/client-admin-console` (`@authup/client-admin-console`, binary `authup-admin-console`) pre-1.0,
+with no aliases kept. The `client-web-*` packages keep their names on purpose.
 
 ## Dependency Classification (published packages)
 

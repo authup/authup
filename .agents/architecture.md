@@ -571,9 +571,9 @@ into the URL (the reset form asks for email/name).
 
 #### Auth Workflow UI (backend-served SSR pages) + Status Endpoint
 
-Authup can run headless (server-core without client-web), so every auth
+Authup can run headless (server-core without client-admin-console), so every auth
 workflow page is served by the embedded SSR app (`apps/server-core/ui`),
-not by client-web:
+not by client-admin-console:
 
 - **Routes**: `/authorize`, `/register`, `/activate`, `/password-forgot`,
   `/password-reset` — each `GET` serves SSR HTML while `POST` on the same
@@ -847,7 +847,7 @@ own, and a client in the same realm block may bind them via `realmScopes`.
 ### Per-Realm Public `web` Client
 
 Every realm auto-provisions a public OAuth2 client named **`web`** (constant
-`CLIENT_WEB_NAME` in `@authup/core-kit`) used by authup's own client-web and any
+`CLIENT_WEB_NAME` in `@authup/core-kit`) used by authup's own client-admin-console and any
 downstream UI embedding `client-web-kit`. It powers the realm-selection login
 flow (auth-code + PKCE), so there is no per-realm FK, no migration, and no new
 endpoint — the `/authorize` verifier already resolves clients via
@@ -887,7 +887,7 @@ endpoint — the `/authorize` verifier already resolves clients via
   (auth is header-based only, and OAuth2 clients are registered at runtime on
   domains unknown at startup; an explicit allowlist can be set via the
   `middlewareCors` config options). In non-production,
-  `http://localhost:3000` is dev-seeded so client-web works on first run.
+  `http://localhost:3000` is dev-seeded so client-admin-console works on first run.
 - **Provisioning (`WebClientProvisioner.ensureForRealm`)** is the single upsert
   mechanism, run two ways and sharing the same factory so they can't drift:
   1. **Startup** — `ProvisionerModule` lists every realm (incl. pre-existing)
@@ -1509,13 +1509,13 @@ are **architectural, not incidental**, and must stay in server-core:
   pages are the render half of the API surface.
 - **Mail deep links** (`/activate?token=…`, `/password-reset?token=…`) land on
   these pages.
-- **Headless deployments** (server-core without client-web) still need every
+- **Headless deployments** (server-core without client-admin-console) still need every
   auth workflow to be usable.
 
 This split is cohort-universal: Keycloak, Authentik, Zitadel, Casdoor and Dex
 all serve login/consent from the IdP origin.
 
-**client-web is an ordinary OAuth2 RP** — an admin console authenticating via
+**client-admin-console is an ordinary OAuth2 RP** — an admin console authenticating via
 auth-code + PKCE against the per-realm public `web` client, with no privileged
 channel into server-core. It is deliberately NOT merged into server-core
 today. The recorded long-term endpoint — deferred until after the planned
@@ -1525,7 +1525,7 @@ SPA**; any future consolidation discussion starts from
 
 **Process topology:** containers with one service each (docker /
 docker-compose) are the production topology. The `authup` CLI is the
-bare-metal / quickstart **supervisor**: it spawns server-core and client-web
+bare-metal / quickstart **supervisor**: it spawns server-core and client-admin-console
 as child processes with full environment passthrough plus per-child
 `PORT`/`HOST` and `NUXT_PUBLIC_API_URL` overrides derived from the
 multi-section config file, forwards SIGINT/SIGTERM to the children, and exits
@@ -1539,7 +1539,7 @@ fallbacks) on every CLI command; lookup defaults to the process cwd,
 overridable via `--configDirectory` / `--configFile`, and environment
 variables always beat file values.
 
-**Unsupported:** sharing one `COOKIE_DOMAIN` between client-web and the
+**Unsupported:** sharing one `COOKIE_DOMAIN` between client-admin-console and the
 hosted auth pages — both surfaces embed the kit store under identical cookie
 names, so a widened cookie domain has the two apps clobbering each other's
 session cookies.
@@ -1859,7 +1859,7 @@ forwards `hintSub` + `hintSubKind` (only for a verified hint) and the validated
 id_token can force-logout its own session (annoyance, not privilege escalation)
 — mitigated by the sub-match + short id_token TTL.
 
-**Kit store retains the id_token; client-web round-trips through `/logout`
+**Kit store retains the id_token; client-admin-console round-trips through `/logout`
 (plan 042 items 8a + 8).** The `@authup/client-web-kit` store now keeps the
 grant response's `id_token` as an `idToken` ref (setter emits
 `StoreDispatcherEventName.ID_TOKEN_UPDATED`, cookie-persisted via
@@ -1870,7 +1870,7 @@ returns no id_token) rather than clearing it; to keep that retain safe,
 mirroring `exchangeAuthorizationCode` — so a stale id_token can never survive
 onto a newly-authenticated user (plan 047.3). This gives every kit RP an
 `id_token_hint` to pass to the `end_session_endpoint` — without it they all
-degrade to the click-gated confirm page. `apps/client-web/pages/logout.vue`
+degrade to the click-gated confirm page. `apps/client-admin-console/pages/logout.vue`
 uses it: the page deliberately does **not** set `REQUIRED_LOGGED_OUT` (that meta
 makes the routing interceptor run `store.logout()` before the page's setup,
 discarding the id_token), captures `idToken`/`realmId` on mount, runs the
@@ -2026,7 +2026,7 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   settled probe found no covering consent — persisted consent is what makes
   `prompt=none` meaningful for non-`builtIn` clients.
 - **UI:** 4th settings tab "Applications"
-  (`apps/client-web/pages/settings/index/applications.vue`) over the kit
+  (`apps/client-admin-console/pages/settings/index/applications.vue`) over the kit
   `<AConsents>` collection — rows grouped per client, granted scopes rendered
   as per-scope revoke chips plus a per-app "Revoke access" (looped per-row
   DELETEs behind an error-tone `useAlertDialog`). The self-service list
@@ -2452,7 +2452,7 @@ logout).
 
 ### Session continuity: one session per interactive login
 
-An interactive client-web login used to create **two** `auth_sessions` rows: the
+An interactive client-admin-console login used to create **two** `auth_sessions` rows: the
 SSR `/authorize` page password-grants a (client-less) bearer session purely to
 authenticate `POST /authorize`, then `/login/callback` exchanges the auth code —
 whose `authorization_code` grant `create()`d a *second* session. The bearer
@@ -2898,7 +2898,7 @@ must be visible in `auth_events`). The table was folded into migration
   CASCADE, so deleting a realm drops its enc keys and every seed encrypted
   under them becomes unrecoverable noise.
 
-**UI:** top-level `/keys` pages in client-web (list + add + detail edit,
+**UI:** top-level `/keys` pages in client-admin-console (list + add + detail edit,
 realm-switch scoped like users/roles, nav entry gated on `KEY_*`), backed by
 kit `AKeys` / `AKey` / `AKeyForm` (`components/entities/key/`; the form
 covers generate/import on create and name/priority/status on edit); the list
@@ -3085,7 +3085,7 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   auto-provisions via `Object.values(PermissionName)`:
   `admin` = `any`, `realm_admin` = `ownOrNull` (deliberately NOT in the OWN
   override list). Typed client: `client.event.getMany/getOne`.
-- **Admin UI:** `apps/client-web/pages/events/` — a read-only list page
+- **Admin UI:** `apps/client-admin-console/pages/events/` — a read-only list page
   (`index.vue` + `index/index.vue`; kit collection `<AEvents>`
   (`EntityType.EVENT`, no server-side subscriber — the socket subscription is
   inert, same as sessions) rendering a `<VCTable>` with name/scope, ref,
@@ -3184,7 +3184,7 @@ When adding a `name`-style column on a new entity (or extending an existing one)
 2. **Repository** — use `=` for name lookups, never `LIKE :name`.
 3. **Migration** — ship a data migration canonicalizing existing rows with an up-front collision pre-check, following the pattern of `apps/server-core/src/adapters/database/migrations/{mysql,postgres}/1779267068441-Default.ts`.
 
-## UI Layer (`apps/client-web`, `apps/server-core/ui`, `packages/client-web-kit`)
+## UI Layer (`apps/client-admin-console`, `apps/server-core/ui`, `packages/client-web-kit`)
 
 The UI sits on the `@vuecs/*` 1.x line — see
 [`.agents/structure.md` → UI Stack](structure.md#ui-stack-appsclient-web-appsserver-coreui-packagesclient-web-kit)
@@ -3338,7 +3338,7 @@ owns one seam and stays framework-agnostic; each host supplies the bucket:
   loads at all**, because the response could not reach the client and firing it would
   only waste a round trip (the pre-#2773 behaviour: every collection fired a
   request during SSR whose result was discarded when the render flushed).
-- **Hosts.** `apps/client-web` wires it in the `authup:kit` Nuxt plugin over
+- **Hosts.** `apps/client-admin-console` wires it in the `authup:kit` Nuxt plugin over
   `nuxtApp.payload.data` (the same bucket `useAsyncData` transports through);
   `apps/server-core/ui` wires it over `HydrationPayload.hydration`, which
   works because `createWindowPayloadHTML(ctx.payload)` runs *after*
@@ -3396,8 +3396,8 @@ owns one seam and stays framework-agnostic; each host supplies the bucket:
   the server* in `entity-collection-hydration.spec.ts`. The payload is exactly
   as sensitive as the HTML it travels in, so an authenticated page must never
   be served from a shared cache (no `swr` / `isr` route rules, which is why
-  client-web sets none).
-- **Detail pages.** `apps/client-web/pages/<entity>/[id].vue` fetch through
+  client-admin-console sets none).
+- **Detail pages.** `apps/client-admin-console/pages/<entity>/[id].vue` fetch through
   ``useAsyncData(`<entity>:${id}`, ...)`` rather than a bare `await` in
   `setup()`, which is what made every record fetch run twice (once server-side,
   once again on hydration). The `data` ref is cast to `Ref<Entity>` after the
@@ -3409,7 +3409,7 @@ hydration mismatch.
 
 ### Table usage
 
-All 9 entity index pages (`apps/client-web/pages/<entity>/index/index.vue`)
+All 9 entity index pages (`apps/client-admin-console/pages/<entity>/index/index.vue`)
 use `<VCTable>` directly with `:data="props.data"` + `:columns="columns"`.
 Per-cell rendering flows through the `#cell-<key>` template slots that
 `<VCTable>`'s auto-render path dispatches onto each `<VCTableCell>`
@@ -3459,14 +3459,14 @@ equivalents:
   typing for `cell-<key>` / `header-<key>`)
 - `useToast()` from bvnext → `useToast()` from `@vuecs/overlays`,
   via the thin wrapper in
-  `apps/client-web/composables/toast.ts` that preserves the
+  `apps/client-admin-console/composables/toast.ts` that preserves the
   `toast.show('msg')` / `toast.show({ variant, body })` calling shape
 - `BOrchestrator` → `<VCToaster position="top-center" />`
-  mounted in `apps/client-web/components/footer.vue`
+  mounted in `apps/client-admin-console/components/footer.vue`
 - `BDropdownItem` (opportunistic fallback in `<AEntityDelete>`) →
   `<VCDropdownMenuItem>` resolved via `app.component(...)` lookup
 - `createBootstrap` → not needed; `app.use(vuecs, ...)` configures
-  vuecs in `apps/client-web/plugins/vuecs.ts` (the old
+  vuecs in `apps/client-admin-console/plugins/vuecs.ts` (the old
   `plugins/bootstrap.ts` was deleted)
 
 ### Tailwind v4 migration
@@ -3483,7 +3483,7 @@ new `@authup/client-web-theme` package.
   `@vuecs/theme-tailwind` (Tailwind ↔ vc-color rebind). Consumers register
   one theme: `app.use(vuecs, { themes: [authupTheme()] })`.
 - **Tailwind v4** — wired via `@tailwindcss/vite` in both
-  `apps/client-web/nuxt.config.ts` (`vite.plugins`) and
+  `apps/client-admin-console/nuxt.config.ts` (`vite.plugins`) and
   `apps/server-core/ui/vite.config.ts`. v3 is not supported because
   theme-tailwind uses `@theme` and `--color-*` rebinds.
 - **Bootstrap-compat layer — fully retired.** The `@layer components`
@@ -3505,7 +3505,7 @@ new `@authup/client-web-theme` package.
   pass. Spacing utilities (`ms-*`, `me-*`, `mt-*`, `mb-*`, `p*`,
   `gap-*`) carry over unchanged — Tailwind v4 uses the same naming.
 - **Tailwind `@source` scanning** — the theme's CSS adds `@source`
-  directives for `apps/client-web/**`, `apps/server-core/ui/**`,
+  directives for `apps/client-admin-console/**`, `apps/server-core/ui/**`,
   and `packages/client-web-kit/src/**` so the JIT picks up
   utility-class strings that live outside any single consumer app's
   source tree (notably, classes inside the kit's components and
@@ -3577,7 +3577,7 @@ new `@authup/client-web-theme` package.
   - Browser minimums: Chrome 111+, Safari 16.4+, Firefox 128+. v4
     drops the older fallbacks v3 carried.
 - **Plugin install order** — the theme manager is still
-  first-install-wins; `apps/client-web/plugins/vuecs.ts` keeps its
+  first-install-wins; `apps/client-admin-console/plugins/vuecs.ts` keeps its
   `name: 'vuecs'` declaration, and `vuecs-navigation.ts` still
   `dependsOn: ['vuecs']`. Per-package plugins (`installForms`,
   `installPagination`, ...) still install AFTER

@@ -73,7 +73,7 @@ To run the frontend application with default settings on http://localhost:3000/,
 ```shell
 $ docker run \
   -p 3000:3000 \
-  authup/authup:latest client/web start
+  authup/authup:latest client/admin-console start
 ```
 
 #### Bare Metal
@@ -112,7 +112,7 @@ $ npm run cli-dev --workspace=apps/server-core -- start
 
 **Frontend**
 ```shell
-$ npm run dev --workspace=apps/client-web
+$ npm run dev --workspace=apps/client-admin-console
 ```
 
 ## Applications
@@ -121,7 +121,7 @@ The repository contains the following runnable applications:
 | Name                              | Type        | Description                                                                                           |
 |-----------------------------------|-------------|-------------------------------------------------------------------------------------------------------|
 | [authup](apps/authup)             | CLI         | A command line interface for interacting with various applications and services within the ecosystem. |
-| [client-web](apps/client-web)     | Application | A Nuxt-based web application interface for end users.                                                 |
+| [client-admin-console](apps/client-admin-console)     | Application | A Nuxt-based admin console web application.                |
 | [server-core](apps/server-core)   | Service     | A service that forms the backbone of the server-side ecosystem.                                       |
 
 ## Packages
@@ -197,7 +197,7 @@ Made with 💚
 
 Authup is dual-licensed:
 
-- The **applications** ([server-core](apps/server-core), [client-web](apps/client-web), [authup CLI](apps/authup))
+- The **applications** ([server-core](apps/server-core), [client-admin-console](apps/client-admin-console), [authup CLI](apps/authup))
   are published under the [AGPL-3.0](./LICENSE) — free for research, education, non-profits, and
   open-source projects. A commercial license is available for organizations that cannot meet the
   AGPL's conditions.

@@ -220,7 +220,7 @@ The `authup` CLI is a process supervisor, so its suite is split in two:
   every other workspace): entrypoint resolution against fixture `node_modules`
   trees (bin-field reading, the resolution-preference regression, npx fallback),
   the config-section → child-env mapping, and command routing (`migration` /
-  `healthcheck` must not boot client-web).
+  `healthcheck` must not boot client-admin-console).
 - **Smoke** (`npm run test:smoke`): boots the built CLI's `start` against sqlite
   on non-default ports, polls both children's endpoints, sends SIGTERM, asserts
   both children exit and the CLI exits 0. `npm run test:smoke:packed` runs the

@@ -1,5 +1,5 @@
 /*
- * Tailwind v4 entry for apps/client-web.
+ * Tailwind v4 entry for apps/client-admin-console.
  *
  * Pulls in the authup theme (tailwindcss + @vuecs/design + theme-tailwind
  * + compat layer), then declares this app's local `@source` scopes so
@@ -20,7 +20,7 @@
  * Per-app nested vuecs deps. npm workspaces hoist most `@vuecs/*` to
  * the repo root (covered by the theme), but a few (`forms`, `list`,
  * `pagination`, `navigation`, `timeago`, `countdown`, `icons-font-awesome`)
- * land under `apps/client-web/node_modules/@vuecs/` due to peer
+ * land under `apps/client-admin-console/node_modules/@vuecs/` due to peer
  * deduplication. Without scanning here, their element class strings
  * aren't in the JIT corpus.
  */

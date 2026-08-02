@@ -40,7 +40,7 @@ export default defineNuxtConfig({
                 cwd: repositoryRoot,
                 scan: {
                     globInclude: [
-                        'apps/client-web/{pages,components,layouts,composables,config,plugins}/**/*.{vue,ts}',
+                        'apps/client-admin-console/{pages,components,layouts,composables,config,plugins}/**/*.{vue,ts}',
                         'packages/client-web-kit/src/**/*.{vue,ts}',
                         'node_modules/@vuecs/icons-font-awesome/dist/*.mjs',
                     ],

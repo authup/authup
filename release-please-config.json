@@ -6,7 +6,7 @@
         ".": {"component": "root", "extra-files": ["CITATION.cff"]},
 
         "apps/authup": {"component": "authup"},
-        "apps/client-web": {"component": "client-web"},
+        "apps/client-admin-console": {"component": "client-admin-console"},
         "apps/server-core": {"component": "server-core"},
 
         "packages/access": {"component": "access"},
@@ -41,7 +41,7 @@
                 "root",
 
                 "authup",
-                "client-web",
+                "client-admin-console",
                 "server-core",
 
                 "access",

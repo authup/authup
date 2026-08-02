@@ -191,7 +191,7 @@ export enum TranslatorTranslationClientKey {
  * (management/details), the sidebar session countdown, header
  * accessibility labels, and the parameterized success toasts. These live
  * apart from the shared entity/field/action/common namespaces because
- * they are consumed exclusively by `apps/client-web`, never by the
+ * they are consumed exclusively by `apps/client-admin-console`, never by the
  * reusable `@authup/client-web-kit` components.
  */
 export enum TranslatorTranslationAppKey {

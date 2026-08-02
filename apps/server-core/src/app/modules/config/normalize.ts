@@ -58,7 +58,7 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         }
     }
 
-    // In non-production (development & test) client-web runs on :3000 while
+    // In non-production (development & test) client-admin-console runs on :3000 while
     // the API (publicUrl) runs on :3001. Seed :3000 into the trusted origins
     // so the redirect allowlist (<origin>/**) and CORS accept logins from the
     // dev UI out of the box; otherwise the realm-selection login is dead on

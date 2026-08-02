@@ -12,7 +12,7 @@ describe('src/packages/plan', () => {
     it('should target all packages for start without selectors', () => {
         const plan = resolveLaunchPlan('start');
 
-        expect(plan.packages).toEqual([PackageID.SERVER_CORE, PackageID.CLIENT_WEB]);
+        expect(plan.packages).toEqual([PackageID.SERVER_CORE, PackageID.CLIENT_ADMIN_CONSOLE]);
         expect(plan.commandArgs).toEqual(['start']);
     });
 
@@ -23,9 +23,9 @@ describe('src/packages/plan', () => {
     });
 
     it('should support comma separated and aliased selectors', () => {
-        const plan = resolveLaunchPlan('start', ['server-core,client/web']);
+        const plan = resolveLaunchPlan('start', ['server-core,client/admin-console']);
 
-        expect(plan.packages).toEqual([PackageID.SERVER_CORE, PackageID.CLIENT_WEB]);
+        expect(plan.packages).toEqual([PackageID.SERVER_CORE, PackageID.CLIENT_ADMIN_CONSOLE]);
     });
 
     it('should deduplicate selectors', () => {
@@ -52,8 +52,8 @@ describe('src/packages/plan', () => {
         expect(plan.commandArgs).toEqual(['migration', 'revert']);
     });
 
-    it('should reject migration targeting client-web', () => {
-        expect(() => resolveLaunchPlan('migration', ['client.web'])).toThrow(/client\.web/);
+    it('should reject migration targeting client-admin-console', () => {
+        expect(() => resolveLaunchPlan('migration', ['client.admin-console'])).toThrow(/client\.console/);
     });
 
     it('should route healthcheck to server-core only', () => {
@@ -63,8 +63,8 @@ describe('src/packages/plan', () => {
         expect(plan.commandArgs).toEqual(['healthcheck']);
     });
 
-    it('should reject healthcheck targeting client-web', () => {
-        expect(() => resolveLaunchPlan('healthcheck', ['client.web'])).toThrow(/client\.web/);
+    it('should reject healthcheck targeting client-admin-console', () => {
+        expect(() => resolveLaunchPlan('healthcheck', ['client.admin-console'])).toThrow(/client\.console/);
     });
 
     it('should fail for an unknown command', () => {

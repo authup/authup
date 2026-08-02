@@ -140,7 +140,7 @@ export default {
      * Security: the `web` client is built-in with global scope, so any
      * allowlisted origin can complete a login and obtain a full-permission
      * token — only add origins you control. In non-production, the
-     * client-web dev origin (http://localhost:3000) is seeded automatically.
+     * client-admin-console dev origin (http://localhost:3000) is seeded automatically.
      * env: TRUSTED_ORIGINS (comma-separated)
      * default: []
      */
