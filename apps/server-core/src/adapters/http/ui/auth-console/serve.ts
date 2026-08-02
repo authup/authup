@@ -8,7 +8,7 @@
 import { useRequestQuery } from '@routup/basic/query';
 import type { IAppEvent } from 'routup';
 import { sanitizeRelativeRedirect } from '../../request/index.ts';
-import { renderUIPage } from './module.ts';
+import { renderAuthConsolePage } from './module.ts';
 import type { ServeWorkflowPageOptions } from './types.ts';
 
 /**
@@ -36,7 +36,7 @@ export function serveWorkflowPage(
         data.token = typeof query.token === 'string' ? query.token : undefined;
     }
 
-    return renderUIPage(event, {
+    return renderAuthConsolePage(event, {
         url: options.url,
         payload: {
             config: { baseURL: options.baseURL },

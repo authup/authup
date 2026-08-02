@@ -579,7 +579,7 @@ not by client-admin-console:
 - **Routes**: `/authorize`, `/register`, `/activate`, `/password-forgot`,
   `/password-reset` — each `GET` serves SSR HTML while `POST` on the same
   path remains the JSON API. The render plumbing is shared:
-  `renderUIPage(event, { url, payload })` in
+  `renderAuthConsolePage(event, { url, payload })` in
   `adapters/http/ui/auth-console/module.ts` (JIT vs dist, template,
   manifest, preload links, headers), composing the cross-console helpers
   in `adapters/http/ui/shared/` (cookie-derived html attrs, security
@@ -644,7 +644,7 @@ not by client-admin-console:
   reverse proxy (e.g. `https://example.com/auth/* → authup /*`) with no
   extra config — the prefix is derived from `publicUrl`'s pathname
   (`getURLBasePath` in `@authup/kit`). The vite build keeps its fixed
-  `base: '/public/'`; `renderUIPage` rebases emitted asset URLs onto the
+  `base: '/public/'`; `renderAuthConsolePage` rebases emitted asset URLs onto the
   prefix per request (`rebaseAssetURLs` in
   `adapters/http/ui/shared/html.ts`, so the prebuilt dist stays
   deployment-agnostic). Inside the UI app the same prefix feeds the
@@ -999,7 +999,7 @@ choice"):
   like every inline script payload), stamps lang/color-mode html attrs from
   the shared cookies (no FOUC), rebases the fixed `/account/` vite-base
   asset hrefs when publicUrl carries a sub-path, and sets the same security
-  headers as `renderUIPage`. Static assets ride the assets middleware
+  headers as `renderAuthConsolePage`. Static assets ride the assets middleware
   (`/account/assets` → `<pkg>/dist/assets`, registered in dev mode too — the
   bundle is prebuilt, not vite-transformed). A missing bundle 500s with an
   actionable message (build `apps/client-account-console` first).
@@ -1113,7 +1113,7 @@ adapters/http/ui/                   — one folder per served console + shared s
   shared/html.ts                    — readUIClientPreferences (locale/color-mode cookies), stampHtmlAttributes,
                                       applyUIPageHeaders (content-type + CSP frame-ancestors + XFO + referrer),
                                       rebaseAssetURLs(html, basePath, viteBase), serializeInlineScriptJSON
-  auth-console/module.ts            — renderUIPage(event, {url, payload}) SSR render plumbing (JIT vs package dist)
+  auth-console/module.ts            — renderAuthConsolePage(event, {url, payload}) SSR render plumbing (JIT vs package dist)
   auth-console/resolve.ts           — resolveAuthConsolePackagePath/-DistPath (locter locateUp resolution of @authup/client-auth-console)
   auth-console/serve.ts             — serveWorkflowPage (workflow GET payload assembly + open-redirect guard)
   auth-console/http-client.ts       — createInternalUIHttpClient (SSR self-call loopback transport)
@@ -3536,7 +3536,7 @@ owns one seam and stays framework-agnostic; each host supplies the bucket:
   entity type plus query, with no actor in it, so two users requesting the same
   list derive the SAME key. Nothing may therefore outlive one request: both
   hosts build a fresh payload per request (Nuxt's `payload.data`; every
-  `renderUIPage` caller passes a new payload literal, and the process-level
+  `renderAuthConsolePage` caller passes a new payload literal, and the process-level
   caches in `render.ts` hold only the immutable template / manifest / bundle),
   and the store is provided on the per-request Vue app, so it is unreachable
   once the render ends. Same reasoning as the `lifetime: 'transient'`

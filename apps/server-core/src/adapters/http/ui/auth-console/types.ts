@@ -8,7 +8,7 @@
 import type { HydrationPayload } from '@authup/client-auth-console';
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
 
-export type UIRenderContext = {
+export type AuthConsoleRenderContext = {
     url: string,
     payload: HydrationPayload,
 };

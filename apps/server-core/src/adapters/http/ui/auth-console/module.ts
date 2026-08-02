@@ -23,7 +23,7 @@ import {
     stampHtmlAttributes,
 } from '../shared/index.ts';
 import { resolveAuthConsoleDistPath, resolveAuthConsolePackagePath } from './resolve.ts';
-import type { UIRenderContext } from './types.ts';
+import type { AuthConsoleRenderContext } from './types.ts';
 
 // Process-lifetime caches for the immutable production SSR assets. The dist
 // template, manifest and server bundle don't change after boot, so read them
@@ -33,7 +33,7 @@ let cachedHtml: string | undefined;
 let cachedManifest: Record<string, any> | undefined;
 let cachedRender: RenderFunction | undefined;
 
-export async function renderUIPage(event: IAppEvent, ctx: UIRenderContext): Promise<string> {
+export async function renderAuthConsolePage(event: IAppEvent, ctx: AuthConsoleRenderContext): Promise<string> {
     const isJIT = isCodeTransformation(CodeTransformation.JUST_IN_TIME);
 
     // The client app hydrates locale + color-mode from the payload, so it
