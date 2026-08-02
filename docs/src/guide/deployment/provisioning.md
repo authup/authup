@@ -20,8 +20,10 @@ Every realm automatically gets three built-in, public OAuth2 clients:
 All three authenticate end users via the authorization-code flow with PKCE.
 Splitting them keeps concerns separate per application: sessions and audit
 events carry the client they were issued for, and an access policy bound to
-`admin-console` restricts who may obtain tokens for the admin console without
-affecting logins of your own applications riding `web`.
+`admin-console` restricts who may newly log in to the admin console without
+affecting logins of your own applications riding `web`. The policy gates
+admission (the authorization-code flow and code redemption), not tokens that
+were already issued.
 
 The clients are provisioned for every existing realm on startup and for any
 realm created at runtime. Provisioning is idempotent: re-runs refresh the
@@ -48,13 +50,19 @@ attempting to create or rename a client to one of them returns a
 
 ::: tip Restricting the admin console
 Binding an access policy to the `admin-console` client (its `accessPolicyId`)
-denies token issuance for the admin console to identities that fail the
-policy. Note the gate evaluates identity data only (realm, identity type,
-time windows, compositions thereof); role-membership conditions are not
-expressible there yet. Also keep in mind that regular users currently use
-the admin console's settings pages for password, MFA and session
-self-service, so a restrictive policy locks them out of those until the
-dedicated account surface ships.
+denies new authorization-code admission (and code redemption) for the admin
+console to identities that fail the policy. It is admission control, not
+continuous enforcement: the `refresh_token` grant is not re-evaluated, so
+already-issued refresh tokens keep working until they expire. To evict an
+identity that was admitted before the policy changed, revoke its sessions
+(`DELETE /sessions?filter[clientId]=...` or the sessions UI).
+
+Two more caveats: the gate evaluates identity data only (realm, identity
+type, time windows, compositions thereof); role-membership conditions are
+not expressible there yet. And regular users currently use the admin
+console's settings pages for password, MFA and session self-service, so a
+restrictive policy locks them out of those until the dedicated account
+surface ships.
 :::
 
 ### Extending a system client

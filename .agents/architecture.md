@@ -1962,8 +1962,9 @@ neutral message: no identity/policy detail, no enumeration oracle).
   gate), stays **out** of the anonymous `GET /authorize` `ClientSummary` DTO,
   and is mounted `{ optional: true, nullable }` in every validator group so
   admins can set/clear it. `buildSystemClientAttributes` deliberately omits the
-  key — the provisioner MERGE would otherwise wipe an admin-set policy on the
-  per-realm `web` client every boot. The admin form binds it via
+  key — the provisioner MERGE would otherwise wipe an admin-set policy on
+  each per-realm system client (`web`, `admin-console`, `account-console`)
+  every boot. The admin form binds it via
   `APolicyPicker` in `AClientForm`. Client caches mean a policy
   (re)assignment lags ≤60s at `/token` (`CachePrefix.CLIENT` query cache).
 - **Observability (leg-scoped):** a denial at the **interactive
@@ -2120,7 +2121,8 @@ at both chokepoints:
 Unknown values in the column are inert (they can only narrow, never widen). A
 refresh rejected this way is a plain `unauthorized_client` — **not** replay
 detection, so no family revocation; restoring the grant type restores service.
-The provisioned per-realm `web` client lists `authorization_code refresh_token`
+Each provisioned per-realm system client (`web`, `admin-console`,
+`account-console`) lists `authorization_code refresh_token`
 (refreshed by `SystemClientProvisioner`'s MERGE on startup).
 
 **Admin UI:** `AClientForm` renders the column as a `<VCFormCheckboxGroup>` over
