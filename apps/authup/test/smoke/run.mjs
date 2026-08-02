@@ -266,6 +266,10 @@ function collectPackWorkspaces() {
     const workspaces = [
         'apps/authup',
         'apps/server-core',
+        // server-core resolves the account console SPA bundle from this
+        // package at runtime — without its tarball the packed install would
+        // try (and fail) to fetch it from the registry.
+        'apps/client-account-console',
         'apps/client-admin-console',
     ];
 

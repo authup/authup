@@ -10,10 +10,9 @@ import {
     DContext,
     DController,
     DGet,
-    DPath,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
-import { serveWorkflowPage } from '../../../ui/index.ts';
+import { serveAccountConsolePage } from '../../../ui/index.ts';
 
 export type AccountControllerOptions = {
     baseURL: string,
@@ -24,8 +23,12 @@ export type AccountControllerContext = {
     options: AccountControllerOptions,
 };
 
-const PAGE_PATTERN = /^[a-z0-9-]+$/;
-
+/**
+ * Serves the account console SPA (`@authup/client-account-console`) shell —
+ * client-side routing owns the sub-paths, so every route returns the same
+ * shell with the runtime config (apiUrl, base path, feature flags) injected.
+ * The bundle's static assets ride the assets middleware (/account/assets).
+ */
 @DController('/account')
 export class AccountController {
     protected options: AccountControllerOptions;
@@ -36,25 +39,18 @@ export class AccountController {
 
     @DGet('', [])
     async serve(@DContext() event: IAppEvent): Promise<string> {
-        return this.render(event, '/account');
+        return this.render(event);
     }
 
     @DGet('/:page', [])
-    async servePage(
-        @DPath('page') page: string,
-        @DContext() event: IAppEvent,
-    ): Promise<string> {
-        const url = PAGE_PATTERN.test(page) ? `/account/${page}` : '/account';
-
-        return this.render(event, url);
+    async servePage(@DContext() event: IAppEvent): Promise<string> {
+        return this.render(event);
     }
 
-    protected render(event: IAppEvent, url: string): Promise<string> {
-        return serveWorkflowPage(event, {
-            url,
+    protected render(event: IAppEvent): Promise<string> {
+        return serveAccountConsolePage(event, {
             baseURL: this.options.baseURL,
             features: this.options.features,
-            realmAware: true,
         });
     }
 }

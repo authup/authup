@@ -950,51 +950,85 @@ no new endpoint — the `/authorize` verifier already resolves clients via
 
 ### Account Console (`/account`, plan 080)
 
-End-user self-service on the IdP origin, served by the embedded SSR app:
-`GET /account` (+ `/account/:page`) renders the ui app via
-`serveWorkflowPage` (`AccountController`,
-`adapters/http/controllers/workflows/account/`; unknown sub-paths fall back
-to the root, a `?realmId=` hint rides the payload via `realmAware`). Pages
-live under `apps/server-core/ui/src/pages/account/` — a parent shell page
-(auth gate + login kick + denial/disabled states) with vue-router children
-(overview `AUserForm`, password `AUserPasswordForm`, authenticators
-`AUserAuthenticators user-id="@me"`, sessions `ASessions` + revoke-others,
-applications `AConsents` — thin ports of the admin console's `settings/*`
-pages). The logged-in chrome is the kit's `AAccountShell`
-(`components/utility/`; nav items pre-translated by the caller, `signOut`
-emit, user chip from the store) styled by `client-web-kit-theme`'s
-`styles/account.css` behind `--authup-account-*` tokens.
+End-user self-service, shipped as its own app workspace
+`apps/client-account-console` (`@authup/client-account-console`): a
+client-only Vite/Vue SPA — deliberately NO SSR, since auth-gated content
+cannot server-render (header-only auth) and the SSR ui app's pages render
+a spinner until mounted anyway. server-core depends on the package at
+RUNTIME and serves its built `dist/` ("embedded by default, relocatable by
+choice"):
 
+- **Serving seam** (`adapters/http/ui/account.ts`, the plan-081 static-SPA
+  pilot): `AccountController` (`@DController('/account')`, `''` +
+  `'/:page'` — client-side routing owns sub-paths, every route returns the
+  same shell) calls `serveAccountConsolePage(event, { baseURL, features })`,
+  which resolves the package via
+  `createRequire(...).resolve('@authup/client-account-console/package.json')`
+  (works for the workspace symlink AND a published install; only positive
+  resolution is cached), injects the runtime config by replacing the
+  `<!--account-config-->` marker in the built index.html
+  (`window.__AUTHUP_ACCOUNT__ = { apiUrl, basePath, features }`, escaped
+  like every inline script payload), stamps lang/color-mode html attrs from
+  the shared cookies (no FOUC), rebases the fixed `/account/` vite-base
+  asset hrefs when publicUrl carries a sub-path, and sets the same security
+  headers as `renderUIPage`. Static assets ride the assets middleware
+  (`/account/assets` → `<pkg>/dist/assets`, registered in dev mode too — the
+  bundle is prebuilt, not vite-transformed). A missing bundle 500s with an
+  actionable message (build `apps/client-account-console` first).
+- **Runtime config contract** (`src/config.ts`): a standalone host serves
+  the same dist under `/account` on its own origin and injects
+  `window.__AUTHUP_ACCOUNT__` (or replaces the marker) with `apiUrl` (+
+  optional `basePath`); with nothing injected the app derives the API URL
+  same-origin from its base path. Standalone hosting additionally needs the
+  origin registered in `TRUSTED_ORIGINS` (drives the `account-console`
+  client's redirect/post-logout allowlists). The launcher never spawns it —
+  no binary, no process.
+- **App bootstrap** (`src/main.ts`): vue-router base = config `basePath`
+  (routes are base-relative: `/`, `/password`, `/authenticators`,
+  `/sessions`, `/applications`, catch-all → `/`), the same kit + vuecs
+  install choreography as the SSR ui app minus SSR/hydration (no
+  `hydrationStore` — nothing to hand off), `vc-locale`/`vc-color-mode`
+  cookie continuity with the auth pages, own `NuxtIconBundle` scan
+  (app src + kit src + vuecs icon preset).
 - **Feature flag `accountConsoleEnabled`** (env `ACCOUNT_CONSOLE_ENABLED`,
-  default `true`): disabled → the routes serve the `AWorkflowDisabledNotice`
-  shape (no 404), and the flag rides `StatusResponseFeatures.accountConsole`
-  (status endpoint + hydration payloads via `buildUIFeatures`).
+  default `true`): rides `StatusResponseFeatures.accountConsole`
+  (`buildUIFeatures` → status endpoint + the injected config); disabled →
+  the shell renders `AWorkflowDisabledNotice` client-side (no 404).
 - **Login = full auth-code + PKCE against the per-realm `account-console`
   client** (Keycloak model — per-app attribution + access-policy
   enforceability), NOT bare reuse of the lingering kit-store session. The
-  parent page's kick saves the kit `AuthorizationRequest` (sessionStorage)
-  and redirects to `/authorize`; the ui app's router guard consumes it on
+  shell page's kick saves the kit `AuthorizationRequest` (sessionStorage)
+  and redirects to `/authorize`; the app's router guard consumes it on
   return — state check, PKCE params on `exchangeAuthorizationCode`, strip
-  `code`/`state`, and on failure append `error=invalid_grant` (which also
-  suppresses the page's auto-re-kick — no unattended redirect loop). A
-  session-less visit renders `ARealmGrid` (name-identified clients need a
-  realm hint at `/authorize`); a `?realmId=` deep link skips the picker.
-  The #3191 session-continuity machinery makes the exchange REUSE the
-  cookie session row and re-stamp its `clientId` to `account-console`
-  (pinned by `account-console-session.spec.ts` — one row, clientId
-  re-stamped). An EXISTING authenticated session renders the shell directly
-  (admission control gates fresh logins only — same model as the admin
-  console). `access_denied` from an `accessPolicyId` on the client renders a
-  readable denial card (wins over the authenticated state, since the hosted
-  login establishes the shared cookie session even when consent is denied)
-  with a logout-and-retry escape hatch.
+  `code`/`state`, on failure append `error=invalid_grant` (which also
+  suppresses the auto-re-kick — no unattended redirect loop); a code with
+  no saved request is dropped from the URL (it cannot be redeemed — the
+  client mandates PKCE). A session-less visit renders `ARealmGrid`
+  (name-identified clients need a realm hint at `/authorize`); a
+  `?realmId=` deep link skips the picker. The #3191 session-continuity
+  machinery makes the exchange REUSE the session row created by the hosted
+  login and re-stamp its `clientId` to `account-console` (pinned by
+  `account-console-session.spec.ts` — one row, clientId re-stamped; holds
+  cross-origin too, since the session id rides the code blob server-side).
+  An EXISTING authenticated session renders the shell directly (admission
+  control gates fresh logins only). `access_denied` from an
+  `accessPolicyId` on the client renders a readable denial card (wins over
+  the authenticated state, since the hosted login establishes the cookie
+  session even when consent is denied) with a logout-and-retry escape
+  hatch. The logged-in chrome is the kit's `AAccountShell`
+  (`components/utility/`) styled by `client-web-kit-theme`'s
+  `styles/account.css` behind `--authup-account-*` tokens; the pages are
+  thin wrappers over `AUserForm` / `AUserPasswordForm` /
+  `AUserAuthenticators user-id="@me"` / `ASessions` / `AConsents`.
 - **Sign-out** mirrors the admin console's `pages/logout.vue`: capture
   `idToken`/`realmId`, local `store.logout()`, round-trip through `/logout`
-  with `id_token_hint`, `post_logout_redirect_uri` back to `/account`.
-- **Auth-gated content cannot SSR** (header-only auth): the parent page
-  renders a neutral loading state until `onMounted`, so collections never
-  fire during SSR and the actor-less hydration bucket records no
-  actor-scoped snapshots (pinned in `account-pages.spec.ts`).
+  with `id_token_hint`, `post_logout_redirect_uri` back to the base path.
+- **No per-user state in the response**: the shell is static + operator
+  config only (no hydration payload at all — pinned in
+  `account-pages.spec.ts`).
+- **Packaging:** the package ships `dist/` only (`prepublishOnly` builds);
+  it is packed in the launcher's `test:smoke:packed` workspace list so the
+  packed server-core install resolves it from the tarball.
 - **Link surface:** `<publicUrl>/account` is the stable "Manage account"
   target; the admin console header links the user name to it.
 

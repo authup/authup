@@ -69,6 +69,7 @@
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
         "@authup/access": "^1.0.0-beta.58",
+        "@authup/client-account-console": "^1.0.0-beta.58",
         "@authup/core-http-kit": "^1.0.0-beta.58",
         "@authup/core-kit": "^1.0.0-beta.58",
         "@authup/errors": "^1.0.0-beta.58",

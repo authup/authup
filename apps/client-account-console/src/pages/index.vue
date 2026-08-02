@@ -23,7 +23,6 @@ import {
 import type { AAccountShellNavItem } from '@authup/client-web-kit';
 import type { Realm } from '@authup/core-kit';
 import { CLIENT_ACCOUNT_CONSOLE_NAME } from '@authup/core-kit';
-import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import {
     TranslatorTranslationActionKey,
     TranslatorTranslationAppKey,
@@ -39,13 +38,11 @@ import { storeToRefs } from 'pinia';
 import {
     computed,
     defineComponent,
-    onMounted,
     ref,
     watchEffect,
 } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useBasePath } from '../../base-path';
-import { injectPayload } from '../../di';
+import { injectAccountConsoleConfig } from '../di';
 import { useAccountToasts } from './utils';
 
 export default defineComponent({
@@ -58,27 +55,14 @@ export default defineComponent({
         VCIcon,
     },
     setup() {
-        const app = injectPayload<{
-            features?: StatusResponseFeatures,
-            realmId?: string,
-        }>();
+        const config = injectAccountConsoleConfig();
 
-        const withBasePath = useBasePath();
         const route = useRoute();
         const router = useRouter();
         const toasts = useAccountToasts();
 
         const store = injectStore();
         const { status } = storeToRefs(store);
-
-        // Auth-gated content cannot SSR (auth is header-only; the session
-        // lives in first-party cookies the render never sees), so the server
-        // and the first client render show a neutral loading state — the
-        // status-driven UI appears once mounted.
-        const mounted = ref(false);
-        onMounted(() => {
-            mounted.value = true;
-        });
 
         const errorCode = computed(() => (
             typeof route.query.error === 'string' ? route.query.error : undefined
@@ -115,36 +99,36 @@ export default defineComponent({
                 key: 'overview',
                 label: translations.account,
                 icon: 'fa6-solid:bars',
-                link: { to: '/account' },
-                active: route.path === '/account',
+                link: { to: '/' },
+                active: route.path === '/',
             },
             {
                 key: 'password',
                 label: translations.password,
                 icon: 'fa6-solid:key',
-                link: { to: '/account/password' },
-                active: route.path === '/account/password',
+                link: { to: '/password' },
+                active: route.path === '/password',
             },
             {
                 key: 'authenticators',
                 label: translations.authenticator,
                 icon: 'fa6-solid:shield-halved',
-                link: { to: '/account/authenticators' },
-                active: route.path === '/account/authenticators',
+                link: { to: '/authenticators' },
+                active: route.path === '/authenticators',
             },
             {
                 key: 'sessions',
                 label: translations.session,
                 icon: 'fa6-solid:desktop',
-                link: { to: '/account/sessions' },
-                active: route.path === '/account/sessions',
+                link: { to: '/sessions' },
+                active: route.path === '/sessions',
             },
             {
                 key: 'applications',
                 label: translations.applications,
                 icon: 'fa6-solid:grip',
-                link: { to: '/account/applications' },
-                active: route.path === '/account/applications',
+                link: { to: '/applications' },
+                active: route.path === '/applications',
             },
         ]);
 
@@ -168,7 +152,7 @@ export default defineComponent({
                 });
 
                 window.location.href = buildAuthorizeURL({
-                    baseURL: (app.config.baseURL as string) || window.location.origin,
+                    baseURL: config.apiUrl,
                     clientId: CLIENT_ACCOUNT_CONSOLE_NAME,
                     realmId: realmKey,
                     redirectUri,
@@ -189,14 +173,15 @@ export default defineComponent({
         // denial cannot loop back into the flow without a user action.
         const kicked = ref(false);
         watchEffect(() => {
-            if (!mounted.value ||
-                kicked.value ||
+            if (kicked.value ||
                 errorCode.value ||
                 status.value !== StoreAuthStatus.UNAUTHENTICATED) {
                 return;
             }
 
-            const hint = app.data.realmId;
+            const hint = typeof route.query.realmId === 'string' ?
+                route.query.realmId :
+                undefined;
             if (hint) {
                 kicked.value = true;
                 Promise.resolve().then(() => kick(hint));
@@ -213,10 +198,10 @@ export default defineComponent({
             await store.logout();
 
             window.location.href = buildEndSessionURL({
-                baseURL: (app.config.baseURL as string) || window.location.origin,
+                baseURL: config.apiUrl,
                 idTokenHint,
                 realmId,
-                postLogoutRedirectUri: `${window.location.origin}${withBasePath('/account')}`,
+                postLogoutRedirectUri: `${window.location.origin}${config.basePath}`,
             });
         };
 
@@ -232,8 +217,7 @@ export default defineComponent({
         };
 
         return {
-            data: app.data,
-            mounted,
+            enabled: config.enabled,
             denied,
             authenticated,
             unauthenticated,
@@ -248,16 +232,16 @@ export default defineComponent({
 });
 </script>
 <template>
-    <template v-if="data.features && data.features.accountConsole">
+    <template v-if="enabled">
         <AAccountShell
-            v-if="mounted && authenticated && !denied"
+            v-if="authenticated && !denied"
             :items="items"
             @sign-out="signOut"
         >
             <RouterView />
         </AAccountShell>
         <AAuthShell v-else>
-            <template v-if="mounted && denied">
+            <template v-if="denied">
                 <div class="text-center flex flex-col gap-2">
                     <h1 class="font-bold">
                         {{ translations.accessDeniedTitle }}
@@ -285,7 +269,7 @@ export default defineComponent({
                     </div>
                 </div>
             </template>
-            <template v-else-if="mounted && unauthenticated">
+            <template v-else-if="unauthenticated">
                 <div class="text-center">
                     {{ translations.accountSignInIntro }}
                 </div>

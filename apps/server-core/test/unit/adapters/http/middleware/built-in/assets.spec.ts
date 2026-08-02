@@ -28,6 +28,10 @@ function createRouterStub(): RouterStub {
     return { use: vi.fn() };
 }
 
+function servedPaths() : string[] {
+    return vi.mocked(createHandler).mock.calls.map((call) => call[0] as string);
+}
+
 describe('registerAssetsMiddleware', () => {
     beforeEach(() => {
         vi.mocked(createHandler).mockClear();
@@ -39,10 +43,7 @@ describe('registerAssetsMiddleware', () => {
         await registerAssetsMiddleware(router as any);
 
         expect(router.use).toHaveBeenCalled();
-        expect(vi.mocked(createHandler)).toHaveBeenCalled();
-
-        const firstCall = vi.mocked(createHandler).mock.calls[0];
-        expect(firstCall[0]).toBe(path.posix.join(PACKAGE_PATH, 'public'));
+        expect(servedPaths()).toContain(path.posix.join(PACKAGE_PATH, 'public'));
     });
 
     it('registers a static handler that serves the bundled UI client assets (dist/ui/client)', async () => {
@@ -50,10 +51,10 @@ describe('registerAssetsMiddleware', () => {
 
         await registerAssetsMiddleware(router as any);
 
-        const secondCall = vi.mocked(createHandler).mock.calls[1];
-        const servedPath = secondCall[0] as string;
-
-        expect(servedPath).toBe(path.posix.join(UI_DIST_PATH, 'client'));
+        const servedPath = servedPaths().find(
+            (entry) => entry === path.posix.join(UI_DIST_PATH, 'client'),
+        );
+        expect(servedPath).toBeDefined();
 
         // Regression guard: the UI served here must come from server-core's own
         // dist/ui subtree (emitted by Vite during the build), not from any
@@ -64,14 +65,27 @@ describe('registerAssetsMiddleware', () => {
         expect(servedPath).not.toMatch(/client-web-slim/);
     });
 
-    it('mounts both static handlers on the "public" route prefix', async () => {
+    it('mounts both public static handlers on the "public" route prefix', async () => {
         const router = createRouterStub();
 
         await registerAssetsMiddleware(router as any);
 
-        const useCalls = router.use.mock.calls;
-        expect(useCalls.length).toBeGreaterThanOrEqual(2);
-        expect(useCalls[0][0]).toBe('public');
-        expect(useCalls[1][0]).toBe('public');
+        const publicMounts = router.use.mock.calls.filter((call) => call[0] === 'public');
+        expect(publicMounts.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('mounts the account console bundle assets under "account/assets"', async () => {
+        const router = createRouterStub();
+
+        await registerAssetsMiddleware(router as any);
+
+        // The workspace resolves @authup/client-account-console, so the
+        // bundle mount must be present (it is skipped only when the package
+        // is missing entirely).
+        const accountMounts = router.use.mock.calls.filter((call) => call[0] === 'account/assets');
+        expect(accountMounts).toHaveLength(1);
+
+        const servedPath = servedPaths().find((entry) => /client-account-console[\\/]+dist[\\/]+assets$/.test(entry));
+        expect(servedPath).toBeDefined();
     });
 });

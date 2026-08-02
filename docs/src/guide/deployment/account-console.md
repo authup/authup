@@ -1,9 +1,11 @@
 # Account Console
 
-The account console is the end-user self-service surface, served by
-`server-core` on the IdP origin at `<publicUrl>/account`. It works in every
-deployment, including headless ones without the admin console, and gives
-each of your applications a stable "Manage account" link target.
+The account console is the end-user self-service surface. It is a
+client-side single-page application (the `@authup/client-account-console`
+package) that `server-core` serves on the IdP origin at
+`<publicUrl>/account` by default. It works in every deployment, including
+headless ones without the admin console, and gives each of your
+applications a stable "Manage account" link target.
 
 It covers:
 
@@ -47,3 +49,36 @@ ACCOUNT_CONSOLE_ENABLED=false
 a localized "not enabled" notice instead of the surface, so stale links do
 not dead-end. The flag is also reported in the `features` block of the
 public status endpoint (`GET /`).
+
+## Standalone hosting
+
+The console is an ordinary OAuth2 relying party, so the same built bundle
+can be hosted on any static host or another origin instead of (or in
+addition to) the embedded serving:
+
+1. Take the `dist/` directory of the `@authup/client-account-console`
+   package and serve it under the `/account` path of your host.
+2. Inject the runtime configuration by replacing the
+   `<!--account-config-->` marker in `index.html` (or by any script that
+   runs before the app bundle):
+
+   ```html
+   <script>
+   window.__AUTHUP_ACCOUNT__ = {
+       "apiUrl": "https://auth.example.com",
+       "basePath": "/account"
+   };
+   </script>
+   ```
+
+   `apiUrl` is the authup server's public URL. Without injected
+   configuration the app assumes it is served by (or proxied to) the authup
+   origin itself and derives the API URL from its own location.
+3. Register the host's origin in the authup server's `TRUSTED_ORIGINS`.
+   The per-realm `account-console` client's redirect and post-logout
+   allowlists derive from that origin set, so sign-in and sign-out
+   round-trips are permitted on the next start.
+
+Session continuity is preserved on a foreign origin: the login happens on
+the hosted authorize page either way, and the code exchange reuses the
+session created there.

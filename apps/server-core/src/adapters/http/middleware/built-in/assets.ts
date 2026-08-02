@@ -15,10 +15,26 @@ import { fromNodeMiddleware } from 'routup/node';
 import type * as Vite from 'vite';
 import type { ViteDevServer } from 'vite';
 import { PACKAGE_PATH, UI_DIST_PATH, UI_SOURCE_PATH } from '../../../../path.ts';
+import { resolveAccountConsoleDistPath } from '../../ui/account.ts';
 
 export const VITE_SERVER_STORE_KEY = Symbol('ViteServer');
 
 export async function registerAssetsMiddleware(router: App) {
+    // Static assets of the account console SPA (its fixed vite base is
+    // /account/). Served in dev mode too — the bundle is prebuilt, not
+    // vite-transformed. A missing bundle only disables the mount; the page
+    // route reports the actionable error.
+    const accountDistPath = resolveAccountConsoleDistPath();
+    if (accountDistPath) {
+        router.use('account/assets', createHandler(
+            path.posix.join(accountDistPath, 'assets'),
+            {
+                fallthrough: false,
+                scan: false,
+            },
+        ));
+    }
+
     if (!isCodeTransformation(CodeTransformation.JUST_IN_TIME)) {
         router.use('public', createHandler(
             path.posix.join(PACKAGE_PATH, 'public'),

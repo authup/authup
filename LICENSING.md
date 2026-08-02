@@ -10,6 +10,7 @@ code in that directory.
 |---|---|
 | [apps/server-core](apps/server-core) (`@authup/server-core`) | AGPL-3.0-only **or** commercial |
 | [apps/client-admin-console](apps/client-admin-console) (`@authup/client-admin-console`) | AGPL-3.0-only **or** commercial |
+| [apps/client-account-console](apps/client-account-console) (`@authup/client-account-console`) | AGPL-3.0-only **or** commercial |
 | [apps/authup](apps/authup) (`authup` CLI) | AGPL-3.0-only **or** commercial |
 | All packages under [packages/](packages) (`@authup/kit`, `@authup/core-kit`, `@authup/core-http-kit`, `@authup/access`, `@authup/errors`, `@authup/specs`, `@authup/i18n`, `@authup/server-kit`, `@authup/server-adapter-*`, `@authup/client-web-kit*`, `@authup/client-web-theme`, `@authup/client-web-nuxt`, ...) | Apache-2.0 |
 

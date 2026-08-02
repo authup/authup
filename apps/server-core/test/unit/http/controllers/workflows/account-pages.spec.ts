@@ -12,27 +12,19 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createFakeClient as createFakeHTTPClient } from '@authup/core-http-kit/testing';
-import { HTTPInjectionKey } from '../../../../../src/app';
 import { httpRequest } from '../../../../utils';
 import { createTestApplication } from '../../../../app';
 
-function extractHydrationPayload(body: string) : Record<string, any> {
-    const match = body.match(/window\.__AUTHUP__ = (.+);/);
+function extractAccountConfig(body: string) : Record<string, any> {
+    const match = body.match(/window\.__AUTHUP_ACCOUNT__ = (.+);<\/script>/);
     expect(match).toBeTruthy();
     return JSON.parse(match![1]);
 }
 
-describe('src/http/controllers/workflows/account (SSR page)', () => {
+describe('src/http/controllers/workflows/account (SPA shell)', () => {
     const suite = createTestApplication();
 
     beforeAll(async () => {
-        suite.container.register(
-            HTTPInjectionKey.UIHttpClient,
-            { useFactory: () => createFakeHTTPClient() },
-            { lifetime: 'transient' },
-        );
-
         await suite.setup();
     });
 
@@ -40,45 +32,47 @@ describe('src/http/controllers/workflows/account (SSR page)', () => {
         await suite.teardown();
     });
 
-    it('should serve the account page', async () => {
+    it('should serve the account console shell with injected config', async () => {
         const response = await httpRequest(suite, 'GET', '/account');
         expect(response.status).toEqual(200);
         expect(response.headers.get('content-type')).toContain('text/html');
+        expect(response.headers.get('content-security-policy')).toContain("frame-ancestors 'none'");
+        expect(response.headers.get('x-frame-options')).toEqual('DENY');
 
-        const payload = extractHydrationPayload(await response.text());
-        expect(payload.data.features).toBeDefined();
-        expect(payload.data.features.accountConsole).toEqual(true);
+        const body = await response.text();
+        const config = extractAccountConfig(body);
+
+        expect(typeof config.apiUrl).toEqual('string');
+        expect(config.basePath).toEqual('/account');
+        expect(config.features.accountConsole).toEqual(true);
     });
 
-    it('should serve account sub-pages', async () => {
-        const response = await httpRequest(suite, 'GET', '/account/sessions');
+    it('should serve the same shell for sub-paths', async () => {
+        for (const path of ['/account/sessions', '/account/UNKNOWN']) {
+            const response = await httpRequest(suite, 'GET', path);
+            expect(response.status).toEqual(200);
+            expect(response.headers.get('content-type')).toContain('text/html');
+        }
+    });
+
+    it('should serve the bundle assets', async () => {
+        const shell = await (await httpRequest(suite, 'GET', '/account')).text();
+
+        const match = shell.match(/src="(\/account\/assets\/[^"]+\.js)"/);
+        expect(match).toBeTruthy();
+
+        const response = await httpRequest(suite, 'GET', match![1]);
         expect(response.status).toEqual(200);
-        expect(response.headers.get('content-type')).toContain('text/html');
+        expect(response.headers.get('content-type')).toContain('javascript');
     });
 
-    it('should fall back to the account root for an unknown sub-path', async () => {
-        const response = await httpRequest(suite, 'GET', '/account/UNKNOWN');
-        expect(response.status).toEqual(200);
-        expect(response.headers.get('content-type')).toContain('text/html');
-    });
+    it('should carry no server-rendered per-user state', async () => {
+        // The shell is a static SPA: no SSR, no hydration payload — only the
+        // operator-level runtime config is injected. Nothing actor-scoped
+        // can leak into a (potentially cached) response body.
+        const body = await (await httpRequest(suite, 'GET', '/account/sessions')).text();
 
-    it('should pass a realm hint through the hydration payload', async () => {
-        const response = await httpRequest(suite, 'GET', '/account?realmId=master');
-        const payload = extractHydrationPayload(await response.text());
-
-        expect(payload.data.realmId).toEqual('master');
-    });
-
-    it('should not record actor-scoped collections during the server render', async () => {
-        // Auth-gated content renders client-side only (the page's mounted
-        // gate) — the shared hydration bucket must stay free of collection
-        // snapshots, whose keys carry no actor and would otherwise be
-        // computable cross-user.
-        const response = await httpRequest(suite, 'GET', '/account/sessions');
-        const payload = extractHydrationPayload(await response.text());
-
-        const keys = Object.keys(payload.hydration || {});
-        expect(keys.filter((key) => key.startsWith('authup:collection:'))).toHaveLength(0);
+        expect(body).not.toContain('window.__AUTHUP__ =');
     });
 });
 
@@ -90,12 +84,6 @@ describe('src/http/controllers/workflows/account (disabled)', () => {
     });
 
     beforeAll(async () => {
-        suite.container.register(
-            HTTPInjectionKey.UIHttpClient,
-            { useFactory: () => createFakeHTTPClient() },
-            { lifetime: 'transient' },
-        );
-
         await suite.setup();
     });
 
@@ -103,16 +91,12 @@ describe('src/http/controllers/workflows/account (disabled)', () => {
         await suite.teardown();
     });
 
-    it('should serve the disabled notice instead of the surface', async () => {
+    it('should inject the disabled flag (the SPA renders the notice)', async () => {
         const response = await httpRequest(suite, 'GET', '/account');
         expect(response.status).toEqual(200);
 
-        const body = await response.text();
-        const payload = extractHydrationPayload(body);
-
-        expect(payload.data.features.accountConsole).toEqual(false);
-        // the localized notice renders server-side (no auth gate on it)
-        expect(body).toContain('This feature is not enabled.');
+        const config = extractAccountConfig(await response.text());
+        expect(config.features.accountConsole).toEqual(false);
     });
 
     it('should report the flag on the status endpoint', async () => {

@@ -19,3 +19,15 @@ export function rebasePublicAssetURLs(html: string, basePath: string) : string {
 
     return html.replace(/(src|href)="\/public\//g, `$1="${basePath}/public/`);
 }
+
+/**
+ * Same rewrite for the account console bundle, whose fixed vite base is
+ * /account/ (see apps/client-account-console/vite.config.ts).
+ */
+export function rebaseAccountAssetURLs(html: string, basePath: string) : string {
+    if (!basePath) {
+        return html;
+    }
+
+    return html.replace(/(src|href)="\/account\//g, `$1="${basePath}/account/`);
+}

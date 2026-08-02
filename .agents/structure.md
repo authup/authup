@@ -8,8 +8,9 @@ It follows hexagonal architecture principles, separating core business logic, ad
 | Name                                      | Type        | Description                                                                                           |
 |-------------------------------------------|-------------|-------------------------------------------------------------------------------------------------------|
 | [authup](../apps/authup)                  | CLI         | A command line interface for interacting with various applications and services within the ecosystem. |
+| [client-account-console](../apps/client-account-console) | Application | The account console: a client-only Vite/Vue SPA (no SSR — auth-gated content cannot server-render) for end-user self-service (profile, password, authenticators, sessions, applications). server-core depends on the package and serves its built `dist/` at `/account` with per-request runtime-config injection; the same dist is hostable standalone on any static host (see architecture.md → *Account Console*). No binary, no process — a static bundle. |
 | [client-admin-console](../apps/client-admin-console)          | Application | The Nuxt-based admin console web application. Auth entry pages (`/login`, `/login/callback`) opt into a dedicated chrome-less `layouts/auth.vue` (no header/sidebar/footer; own `VCToastProvider` + toaster, color-mode + language gadgets top-right) so the full-bleed login backdrop reaches the viewport edges. |
-| [server-core](../apps/server-core)        | Service     | A service that forms the backbone of the server-side ecosystem. Embeds a Vite-built Vue 3 UI under `ui/` (emitted to `dist/ui/` at build time) serving the OAuth2 `/authorize` consent page, the auth workflow pages, and the `/account` account console (end-user self-service: profile, password, authenticators, sessions, applications — see architecture.md → *Account Console*). |
+| [server-core](../apps/server-core)        | Service     | A service that forms the backbone of the server-side ecosystem. Embeds a Vite-built Vue 3 UI under `ui/` (emitted to `dist/ui/` at build time) serving the OAuth2 `/authorize` consent page and the auth workflow pages, and serves the `@authup/client-account-console` SPA bundle at `/account`. |
 
 ## Packages & Libraries
 
@@ -68,12 +69,17 @@ Application libraries:
   client-web-nuxt   → access, kit, client-web-kit
 
 Apps:
+  client-account-console → client-web-kit, kit, core-kit, core-http-kit, i18n, specs (all build-time only —
+                      the published artifact is the static dist/)
   server-core       → access, i18n, kit, core-kit, core-http-kit, errors, server-kit, specs (+ ilingo runtime dep)
-                      (embedded consent UI under ui/ uses client-web-kit, kit, core-kit, core-http-kit — build-time only)
+                      (embedded consent UI under ui/ uses client-web-kit, kit, core-kit, core-http-kit — build-time only;
+                       client-account-console is a RUNTIME dependency, resolved as a package whose built dist/
+                       server-core serves at /account — never imported)
   client-admin-console    → client-web-kit, kit, core-kit, core-http-kit, client-web-nuxt
   authup (CLI)      → client-admin-console, errors, kit, server-core
                       (a process supervisor: it spawns each app's own bin, so client-admin-console/server-core
-                       are resolved as packages to launch, not imported)
+                       are resolved as packages to launch, not imported; the account console rides server-core,
+                       so the launcher never spawns it)
 ```
 
 ## Separation of Concerns
@@ -109,8 +115,8 @@ both sides are thin callers:
   `apps/server-core/ui/src/App.vue` and `apps/client-admin-console/layouts/auth.vue`.
 - `AAccountShell` (`components/utility/`) — the logged-in account-console
   chrome (brand + user chip from the store + `signOut` emit, nav tabs from an
-  `AAccountShellNavItem[]` prop, content card slot), consumed by the
-  server-core ui app's `/account` parent page (plan 080).
+  `AAccountShellNavItem[]` prop, content card slot), consumed by
+  `apps/client-account-console`'s shell page (plan 080).
 - `AWorkflowDisabledNotice` (`components/workflows/`) — the "workflow disabled"
   alert + back-link block the four server-core SSR workflow pages
   (register / activate / password-forgot / password-reset) each copy-pasted.
