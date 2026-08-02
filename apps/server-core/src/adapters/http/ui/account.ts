@@ -9,11 +9,12 @@ import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import { InternalError } from '@authup/errors';
 import { getURLBasePath } from '@authup/kit';
 import { useRequestCookie } from '@routup/basic/cookie';
+import { locateUpSync } from 'locter';
 import fs from 'node:fs';
-import { createRequire } from 'node:module';
 import path from 'node:path';
 import type { IAppEvent } from 'routup';
 import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
+import { PACKAGE_PATH } from '../../../path.ts';
 import { LOCALE_COOKIE } from '../request/helpers/locale.ts';
 import { rebaseAccountAssetURLs } from './base-path.ts';
 
@@ -26,26 +27,27 @@ let cachedHtml: string | undefined;
 /**
  * Locate the built account console bundle. The SPA ships as the
  * `@authup/client-account-console` package (a server-core dependency), so
- * the same resolution works for the workspace (symlink onto
- * apps/client-account-console) and for a published install. Only a positive
- * result is cached — a dev building the app after boot is picked up on the
- * next request.
+ * the node_modules ancestor walk from server-core's own package root
+ * (locter's `locateUp`) finds it for the workspace (symlink onto
+ * apps/client-account-console) and for a published install alike. Only a
+ * positive result is cached — a dev building the app after boot is picked
+ * up on the next request.
  */
 export function resolveAccountConsoleDistPath() : string | undefined {
     if (cachedDistPath) {
         return cachedDistPath;
     }
 
-    try {
-        const require = createRequire(import.meta.url);
-        const packagePath = path.dirname(require.resolve('@authup/client-account-console/package.json'));
-        const distPath = path.join(packagePath, 'dist');
+    const manifest = locateUpSync(
+        'node_modules/@authup/client-account-console/package.json',
+        { cwd: PACKAGE_PATH },
+    );
+    if (manifest) {
+        const distPath = path.join(manifest.directory, 'dist');
 
         if (fs.existsSync(path.join(distPath, 'index.html'))) {
             cachedDistPath = distPath;
         }
-    } catch {
-        // package not installed — handled by the caller
     }
 
     return cachedDistPath;

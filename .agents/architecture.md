@@ -962,10 +962,12 @@ choice"):
   pilot): `AccountController` (`@DController('/account')`, `''` +
   `'/:page'` — client-side routing owns sub-paths, every route returns the
   same shell) calls `serveAccountConsolePage(event, { baseURL, features })`,
-  which resolves the package via
-  `createRequire(...).resolve('@authup/client-account-console/package.json')`
-  (works for the workspace symlink AND a published install; only positive
-  resolution is cached), injects the runtime config by replacing the
+  which resolves the package via locter's
+  `locateUpSync('node_modules/@authup/client-account-console/package.json',
+  { cwd: PACKAGE_PATH })` — the node_modules ancestor walk from
+  server-core's package root (works for the workspace symlink AND a
+  published install; only positive resolution is cached), injects the
+  runtime config by replacing the
   `<!--account-config-->` marker in the built index.html
   (`window.__AUTHUP_ACCOUNT__ = { apiUrl, basePath, features }`, escaped
   like every inline script payload), stamps lang/color-mode html attrs from
