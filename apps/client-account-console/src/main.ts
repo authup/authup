@@ -20,6 +20,10 @@ import { createPinia } from 'pinia';
 import { createApp, ref } from 'vue';
 import { createRouter, createWebHistory } from 'vue-router';
 
+import { de } from 'date-fns/locale/de';
+import { es } from 'date-fns/locale/es';
+import { fr } from 'date-fns/locale/fr';
+
 import vuecs from '@vuecs/core';
 import { installLocale } from '@vuecs/locale';
 import clientWebKitTheme from '@authup/client-web-kit-theme';
@@ -28,6 +32,7 @@ import installForms from '@vuecs/forms';
 import installIcon from '@vuecs/icon';
 import installOverlays from '@vuecs/overlays';
 import installPagination from '@vuecs/pagination';
+import installTimeago from '@vuecs/timeago';
 
 import './tailwind.css';
 
@@ -192,6 +197,15 @@ app.use(installIcon);
 // `useToast()` / `useAlertDialog()` inject.
 app.use(installOverlays);
 app.use(installPagination);
+// <VCTimeago> is imported explicitly where used; the install carries the
+// date-fns locales so relative times follow the active UI locale.
+app.use(installTimeago, {
+    locales: {
+        de, 
+        es, 
+        fr, 
+    }, 
+});
 
 router.isReady().then(() => {
     app.mount('#app');

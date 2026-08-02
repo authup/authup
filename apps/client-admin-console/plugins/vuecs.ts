@@ -7,6 +7,8 @@
 
 import { buildVuecsInstallOptions } from '@authup/client-web-kit';
 import { de } from 'date-fns/locale/de';
+import { es } from 'date-fns/locale/es';
+import { fr } from 'date-fns/locale/fr';
 
 // Registers the build-time icon subset (see `NuxtIconBundle` in
 // nuxt.config.ts) on `@iconify/vue`, which is what `<VCIcon>` reads.
@@ -88,6 +90,14 @@ export default defineNuxtPlugin({
         ctx.vueApp.use(installNavigation);
 
         ctx.vueApp.use(installCountdown);
-        ctx.vueApp.use(installTimeago, { locales: { de } });
+        // Every authored UI locale (en is the built-in default) — relative
+        // times follow the language switcher like the rest of the copy.
+        ctx.vueApp.use(installTimeago, {
+            locales: {
+                de, 
+                es, 
+                fr, 
+            }, 
+        });
     },
 });
