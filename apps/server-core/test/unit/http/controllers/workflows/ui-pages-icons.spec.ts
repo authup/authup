@@ -7,22 +7,23 @@
 
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { 
-    beforeAll, 
-    describe, 
-    expect, 
-    it, 
+import {
+    beforeAll,
+    describe,
+    expect,
+    it,
 } from 'vitest';
+import { resolveAuthConsoleDistPath } from '../../../../../src/adapters/http/ui/auth-console/resolve.ts';
 
 /**
  * The SSR UI bundles only the icons it renders (`NuxtIconBundle` in
- * ui/vite.config.ts) instead of registering both full Font Awesome
- * collections (1,902 icons for ~54 used ones).
+ * apps/client-auth-console/vite.config.ts) instead of registering both full
+ * Font Awesome collections (1,902 icons for ~54 used ones).
  *
  * The plugin discovers icon names by SCANNING source, so its glob list is
  * load-bearing and fails silently: a path that stops matching yields an empty
- * icon slot in the browser, not a build error. `ui/src` itself carries no icon
- * names at all, so BOTH sources that matter reach outside this app:
+ * icon slot in the browser, not a build error. The app's own src carries no
+ * icon names at all, so BOTH sources that matter reach outside it:
  *
  *  - `packages/client-web-kit/src`, whose components and identity-provider
  *    preset tables hold the icons these pages render,
@@ -41,15 +42,19 @@ describe('http/controllers/workflows/ui-pages-icons', () => {
     let bundle: string;
 
     beforeAll(async () => {
-        // Resolve the entry through index.html rather than globbing the assets
-        // directory: `build:ui` does not clean its output (only the full
-        // `build` rimrafs), so a previous build's asset can linger there and
-        // would otherwise be asserted against.
-        const root = path.join(process.cwd(), 'dist', 'ui', 'client');
+        // The bundle ships as @authup/client-auth-console (built before
+        // server-core via the nx dependency); resolve it like the serving
+        // seam does. The entry is resolved through index.html rather than by
+        // globbing the assets directory, so a lingering asset from an older
+        // build can never be asserted against.
+        const distPath = resolveAuthConsoleDistPath();
+        expect(distPath, 'auth console bundle not built (npm run build -w apps/client-auth-console)').toBeDefined();
+
+        const root = path.join(distPath!, 'client');
         const html = await readFile(path.join(root, 'index.html'), 'utf-8');
         const entry = /(?:src|href)="[^"]*?(assets\/[^"]+\.js)"/.exec(html);
 
-        expect(entry, 'no entry script found in dist/ui/client/index.html').not.toBeNull();
+        expect(entry, 'no entry script found in dist/client/index.html').not.toBeNull();
 
         bundle = await readFile(path.join(root, entry![1]), 'utf-8');
     });

@@ -79,7 +79,7 @@
  *
  * Lives in the kit theme rather than `@authup/client-web-theme` so
  * any consumer of the kit theme — including the embedded
- * `apps/server-core/ui/` consent app — inherits the same dark-
+ * `apps/client-auth-console/` consent app — inherits the same dark-
  * variant semantics without re-declaring this in each entry.
  */
 @custom-variant dark (&:where(.dark, .dark *));

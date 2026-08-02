@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import {
     createInternalUIHttpClient,
     createPublicToInternalURLRewriter,
-} from '../../../../../src/adapters/http/ui/internal-http-client.ts';
+} from '../../../../../src/adapters/http/ui/auth-console/http-client.ts';
 
 describe('createPublicToInternalURLRewriter', () => {
     it('rewrites urls under a prefixed public url onto the internal address', () => {

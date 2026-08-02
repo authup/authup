@@ -5,12 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { HydrationPayload } from '@authup/client-auth-console';
+import type { StatusResponseFeatures } from '@authup/core-http-kit';
+
 export type UIRenderContext = {
     url: string,
-    payload: {
-        config: Record<string, any>,
-        data: Record<string, any>,
-    },
+    payload: HydrationPayload,
+};
+
+export type ServeWorkflowPageOptions = {
+    url: string,
+    baseURL: string,
+    features: StatusResponseFeatures,
+    // Whether the page consumes the `realmId` (legacy `realm_id`) / `token`
+    // query params (e.g. prefill from an email deep link). Off by default so
+    // a page never reflects a param it doesn't use.
+    realmAware?: boolean,
+    tokenAware?: boolean,
 };
 
 export type InternalUIHttpClientContext = {

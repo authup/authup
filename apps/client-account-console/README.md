@@ -11,7 +11,7 @@ It is a client-only single-page application. The authup server
 (`@authup/server-core`) depends on this package and serves the built
 bundle at `<publicUrl>/account`; the same bundle can be hosted standalone
 on any static host. See the deployment guide for details, including the
-runtime configuration contract (`window.__AUTHUP_ACCOUNT__` via the
+runtime configuration contract (`window.__AUTHUP__` via the
 `<!--account-config-->` marker in `index.html`).
 
 ## Development

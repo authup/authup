@@ -16,7 +16,7 @@ import {
 
 import { createHandler } from '@routup/assets';
 import { registerAssetsMiddleware } from '../../../../../../src/adapters/http/middleware/built-in/assets.ts';
-import { PACKAGE_PATH, UI_DIST_PATH } from '../../../../../../src/path.ts';
+import { PACKAGE_PATH } from '../../../../../../src/path.ts';
 
 vi.mock('@routup/assets', () => ({ createHandler: vi.fn(() => ({ __handler: true })) }));
 
@@ -46,23 +46,22 @@ describe('registerAssetsMiddleware', () => {
         expect(servedPaths()).toContain(path.posix.join(PACKAGE_PATH, 'public'));
     });
 
-    it('registers a static handler that serves the bundled UI client assets (dist/ui/client)', async () => {
+    it('registers a static handler that serves the auth console client assets (dist/client)', async () => {
         const router = createRouterStub();
 
         await registerAssetsMiddleware(router as any);
 
+        // The workspace resolves @authup/client-auth-console (built before
+        // server-core via the nx dependency), so the bundle mount must be
+        // present — it is skipped only when the dist is missing entirely.
         const servedPath = servedPaths().find(
-            (entry) => entry === path.posix.join(UI_DIST_PATH, 'client'),
+            (entry) => /client-auth-console[\\/]+dist[\\/]+client$/.test(entry),
         );
         expect(servedPath).toBeDefined();
 
-        // Regression guard: the UI served here must come from server-core's own
-        // dist/ui subtree (emitted by Vite during the build), not from any
-        // sibling-directory lookup. The pre-merge bug was path.join(DIST_PATH, 'client')
-        // which collapsed to apps/server-core/dist/client and didn't exist.
-        expect(servedPath).toMatch(/server-core[\\/]+dist[\\/]+ui[\\/]+client$/);
-        expect(servedPath).not.toMatch(/server-core[\\/]+dist[\\/]+client$/);
-        expect(servedPath).not.toMatch(/client-web-slim/);
+        // Regression guard: the UI must come from the resolved package, never
+        // from a server-core dist subtree (the pre-083 embedded layout).
+        expect(servedPath).not.toMatch(/server-core[\\/]+dist/);
     });
 
     it('mounts both public static handlers on the "public" route prefix', async () => {

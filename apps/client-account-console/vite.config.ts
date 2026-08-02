@@ -27,7 +27,7 @@ export default defineConfig({
         vuePlugin(),
         tailwindcss(),
         // Bundle ONLY the icons this app renders — same setup as
-        // apps/server-core/ui/vite.config.ts (see the rationale there).
+        // apps/client-auth-console/vite.config.ts (see the rationale there).
         // Every path that can carry an icon name must be listed; a path that
         // stops matching yields an empty icon slot, not a build error.
         NuxtIconBundle({

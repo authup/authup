@@ -6,7 +6,7 @@
 |------------------|---------------------------------------------------|
 | NX               | Monorepo task runner (dependency-ordered builds)   |
 | tsdown           | Package JS bundling (rolldown-based)               |
-| Vite             | server-core embedded UI builds (`apps/server-core/ui/`) |
+| Vite             | auth console SSR builds (`apps/client-auth-console/`) and account console SPA builds (`apps/client-account-console/`) |
 | Nuxt             | client-admin-console builds                                 |
 | Vitest + SWC     | Test runner with fast compilation                  |
 | ESLint           | Linting (`@tada5hi/eslint-config-vue-typescript`) |
@@ -65,12 +65,18 @@ implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
 - **Apps are role-named** after the prefix: `server-core` (the IdP),
   `client-admin-console` (the admin console), `client-account-console` (the
   account console — a static SPA whose dist server-core serves at
-  `/account`), and the planned `server-core-worker` (optional background
-  processor). The `authup` CLI supervisor is the eponymous exception. The
-  admin app carries the full `admin-console` role (not bare `console`)
-  because the UI surfaces are peers: admin console, account console and the
-  auth pages (inseparable from server-core). App names match their
-  per-realm OAuth2 client rows (`admin-console`, `account-console`).
+  `/account`), `client-auth-console` (the auth console — the SSR auth
+  workflow UI whose dist server-core renders on the IdP origin, plan 083),
+  and the planned `server-core-worker` (optional background processor). The
+  `authup` CLI supervisor is the eponymous exception. The admin app carries
+  the full `admin-console` role (not bare `console`) because the UI
+  surfaces are peers: admin console, account console and auth console.
+  Console apps normally match their per-realm OAuth2 client rows
+  (`admin-console`, `account-console`); **`client-auth-console` is the
+  deliberate exception** — the auth pages ARE the IdP surface (they issue
+  tokens rather than obtain them), so no client row exists for them. The
+  name keeps the console-family symmetry anyway (settled 2026-08-02 with
+  the maintainer, plan 083).
 - **Packages are surface- or platform-named** after the prefix: `client-web-kit` /
   `client-web-nuxt` / `client-web-theme` serve ANY web client (RP) embedding authup,
   not just the console; `server-kit` / `server-adapter-*` serve any server-side

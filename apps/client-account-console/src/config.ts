@@ -37,14 +37,14 @@ export type AccountConsoleConfig = {
 
 declare global {
     interface Window {
-        __AUTHUP_ACCOUNT__?: AccountConsoleConfigInput;
+        __AUTHUP__?: AccountConsoleConfigInput;
     }
 }
 
 /**
  * Resolve the runtime configuration.
  *
- * The serving side injects `window.__AUTHUP_ACCOUNT__` by replacing the
+ * The serving side injects `window.__AUTHUP__` by replacing the
  * `<!--account-config-->` marker in index.html (server-core does this per
  * request; a standalone host can inject its own script or rely on the
  * defaults). `VITE_API_URL` bakes an API URL in at build/dev time (the
@@ -57,7 +57,7 @@ export function resolveAccountConsoleConfig(
     location?: { origin: string },
 ) : AccountConsoleConfig {
     const injected = input ??
-        (typeof window !== 'undefined' ? window.__AUTHUP_ACCOUNT__ : undefined) ??
+        (typeof window !== 'undefined' ? window.__AUTHUP__ : undefined) ??
         {};
 
     const basePath = normalizeBasePath(injected.basePath ?? '/account');

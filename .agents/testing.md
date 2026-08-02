@@ -142,7 +142,7 @@ selfClient.setAuthorizationHeader({ type: 'Bearer', token: token.access_token })
 
 ### Testing the SSR'd UI pages (fake HTTP client)
 
-The five SSR auth pages (`GET /authorize`, `/register`, `/activate`, `/password-forgot`, `/password-reset`) render the bundled Vue app under `apps/server-core/ui/`, which fires HTTP calls during render (session hydration via `store.resolve()`, identity-provider and scope fetches). Tests stub those by injecting a fake HTTP client into the SSR — don't let the rendered app depend on real network behavior unless the test targets exactly that (see `ui-pages-internal-client.spec.ts`):
+The five SSR auth pages (`GET /authorize`, `/register`, `/activate`, `/password-forgot`, `/password-reset`) render the bundled Vue app under `apps/client-auth-console/`, which fires HTTP calls during render (session hydration via `store.resolve()`, identity-provider and scope fetches). Tests stub those by injecting a fake HTTP client into the SSR — don't let the rendered app depend on real network behavior unless the test targets exactly that (see `ui-pages-internal-client.spec.ts`):
 
 ```typescript
 import { createFakeClient as createFakeHTTPClient } from '@authup/core-http-kit/testing';
@@ -163,7 +163,7 @@ Wiring: `HTTPModule.setup` registers a DEFAULT client under `HTTPInjectionKey.UI
 
 Caveats:
 - Register the fake **before** `suite.setup()` — the middleware mount is decided at boot.
-- The SSR renders from the **dist** bundle (`dist/ui/server/server.js`) — rebuild `apps/server-core` after changing the UI app or `client-web-kit`, or the tests exercise a stale bundle.
+- The SSR renders from the **built** `@authup/client-auth-console` bundle (`apps/client-auth-console/dist/server/server.js`, resolved through node_modules) — rebuild `apps/client-auth-console` after changing that app or `client-web-kit`, or the tests exercise a stale bundle. server-core itself no longer embeds any UI build.
 - The default unmatched-route fallback returns a collection shape (`{ data: [], meta: { total: 0 } }`); session endpoints need explicit handlers for logged-in renders. Entity-collection loads catch their own errors (they emit `failed` instead of rejecting — SSR crash hardening), but handlers on OTHER fire-and-forget fetch paths must not throw (an unawaited rejection fails vitest).
 - Alias the import (`createFakeHTTPClient`) — `test/utils` already exports a `createFakeClient` entity factory.
 

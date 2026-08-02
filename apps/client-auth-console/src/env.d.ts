@@ -6,5 +6,5 @@
  */
 
 // Declares the `virtual:nuxt-icon-bundle*` modules emitted by the
-// `NuxtIconBundle` vite plugin (see ui/vite.config.ts).
+// `NuxtIconBundle` vite plugin (see vite.config.ts).
 /// <reference types="@nuxt/icon/client" />

@@ -31,7 +31,7 @@ import installPagination from '@vuecs/pagination';
 import './tailwind.css';
 
 // Registers the build-time icon subset (see `NuxtIconBundle` in
-// ui/vite.config.ts) on `@iconify/vue`, which is what `<VCIcon>` reads.
+// vite.config.ts) on `@iconify/vue`, which is what `<VCIcon>` reads.
 // Replaces the kit's `registerIconCollections()`, which pulled both full
 // Font Awesome collections into the bundle.
 import 'virtual:nuxt-icon-bundle/register';
@@ -46,7 +46,7 @@ import Register from './pages/register.vue';
 import VApp from './App.vue';
 import { createCookieRef } from './cookie';
 import { providePayload } from './di';
-import type { HydrationPayload } from './types';
+import type { HydrationPayload } from './contract';
 
 export type CreateAppOptions = {
     httpClient?: IClient

@@ -5,20 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import { InternalError } from '@authup/errors';
 import { getURLBasePath } from '@authup/kit';
-import { useRequestCookie } from '@routup/basic/cookie';
 import { locateUpSync } from 'locter';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { IAppEvent } from 'routup';
 import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
-import { PACKAGE_PATH } from '../../../path.ts';
-import { LOCALE_COOKIE } from '../request/helpers/locale.ts';
-import { rebaseAccountAssetURLs } from './base-path.ts';
+import { PACKAGE_PATH } from '../../../../path.ts';
+import {
+    applyUIPageHeaders,
+    readUIClientPreferences,
+    rebaseAssetURLs,
+    serializeInlineScriptJSON,
+    stampHtmlAttributes,
+} from '../shared/index.ts';
+import type { AccountConsoleServeOptions } from './types.ts';
 
-const COLOR_MODE_COOKIE = 'vc-color-mode';
 const CONFIG_MARKER = '<!--account-config-->';
 
 let cachedDistPath: string | undefined;
@@ -53,22 +56,6 @@ export function resolveAccountConsoleDistPath() : string | undefined {
     return cachedDistPath;
 }
 
-// The injected config is not request-reflected (publicUrl + feature flags,
-// both operator config), but escape like every inline <script> payload —
-// never rely on the VALUES staying benign.
-function serializeConfig(config: unknown) : string {
-    return JSON.stringify(config)
-        .replace(/</g, '\\u003c')
-        .replace(/>/g, '\\u003e')
-        .replace(/\u2028/g, '\\u2028')
-        .replace(/\u2029/g, '\\u2029');
-}
-
-export type AccountConsoleServeOptions = {
-    baseURL: string,
-    features: StatusResponseFeatures,
-};
-
 /**
  * Serve the account console SPA shell: the package's built index.html with
  * the runtime configuration injected (replacing the `<!--account-config-->`
@@ -101,6 +88,9 @@ export async function serveAccountConsolePage(
 
     const basePath = getURLBasePath(options.baseURL);
 
+    // The injected config is not request-reflected (publicUrl + feature
+    // flags, both operator config), but escape like every inline <script>
+    // payload.
     const config = {
         apiUrl: options.baseURL,
         basePath: `${basePath}/account`,
@@ -109,35 +99,13 @@ export async function serveAccountConsolePage(
 
     let body = html.replace(
         CONFIG_MARKER,
-        `<script>window.__AUTHUP_ACCOUNT__ = ${serializeConfig(config)};</script>`,
+        `<script>window.__AUTHUP__ = ${serializeInlineScriptJSON(config)};</script>`,
     );
 
-    // Mirror renderUIPage: resolve the shared cookies server-side so the
-    // HTML shell already carries the `.dark`/`.light` class and lang
-    // attribute (no flash) before the client app takes over.
-    const locale = useRequestCookie(event, LOCALE_COOKIE);
-    const colorMode = useRequestCookie(event, COLOR_MODE_COOKIE);
+    body = stampHtmlAttributes(body, readUIClientPreferences(event));
+    body = rebaseAssetURLs(body, basePath, '/account/');
 
-    let htmlAttrs = 'lang="en"';
-    if (locale && /^[a-zA-Z]{2,3}(-[a-zA-Z0-9]+)*$/.test(locale)) {
-        htmlAttrs = `lang="${locale}"`;
-    }
-    if (colorMode === 'dark' || colorMode === 'light') {
-        htmlAttrs += ` class="${colorMode}"`;
-    }
-    body = body.replace(/<html\b[^>]*>/i, `<html ${htmlAttrs}>`);
-
-    body = rebaseAccountAssetURLs(body, basePath);
-
-    event.response.headers.set('content-type', 'text/html; charset=utf-8');
-
-    // Same posture as the SSR auth pages (see renderUIPage): the surface
-    // mutates state behind explicit clicks and reads first-party session
-    // cookies — deny framing entirely, and never leak query params
-    // (code, state, error) via Referer.
-    event.response.headers.set('content-security-policy', "frame-ancestors 'none'");
-    event.response.headers.set('x-frame-options', 'DENY');
-    event.response.headers.set('referrer-policy', 'no-referrer');
+    applyUIPageHeaders(event);
 
     return body;
 }
