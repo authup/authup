@@ -51,7 +51,7 @@ packages/server-adapter-node — Node `IncomingMessage` middleware adapter
 packages/server-adapter-socket-io — Socket.io adapter
 packages/server-adapter-web — Web Request adapter primitive (transport-neutral)
 apps/server-core         — Main server application (with embedded Vite UI at ui/)
-apps/client-web          — Nuxt web app
+apps/client-admin-console      — Nuxt admin console
 apps/authup              — CLI
 ```
 

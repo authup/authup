@@ -47,7 +47,7 @@ configuration file or via environment variables.
 A configuration file is looked up in the directory the CLI is started from —
 place it in the project root, or point the CLI elsewhere with
 `--configDirectory <path>` / `--configFile <path>`. With a single
-multi-section `authup.conf` (sections `server.core` and `client.web`) one file
+multi-section `authup.conf` (sections `server.core` and `client.admin-console`) one file
 configures both services; environment variables always override file values.
 
 ## Step. 4: Boot up
@@ -94,7 +94,7 @@ i Server: Started http server.
 Now all should be set up, and you are ready to go :tada:
 
 This will launch the following applications with default settings:
-- Frontend (client/web): `http://127.0.0.1:3000/`
+- Frontend (client/admin-console): `http://127.0.0.1:3000/`
 - Backend (server/core): `http://127.0.0.1:3001/`
 
 ## Supervisor behavior
@@ -103,17 +103,17 @@ This will launch the following applications with default settings:
 
 - **Environment passthrough** — the supervisor's environment reaches both
   children in full, so [server](./configuration-server-core) or
-  [UI](./configuration-client-web) environment variables can be set on the
+  [UI](./configuration-client-admin-console) environment variables can be set on the
   `authup` process itself. The exception is the per-child overrides below,
   which the supervisor always sets and which therefore win over an inherited
   value.
 - **Per-child overrides** — `PORT` and `HOST` are always set per child, from
-  the `server.core` / `client.web` sections of the configuration file or, when
+  the `server.core` / `client.admin-console` sections of the configuration file or, when
   a section names none, from the per-service defaults (`3001` for the server,
   `3000` for the UI). A single `PORT` in the supervisor's own environment can
   therefore not reach both children and make the second one fail to bind — set
   per-service ports in the config file instead. The UI additionally receives
-  `NUXT_PUBLIC_API_URL` (from `client.web.apiUrl`, else derived from
+  `NUXT_PUBLIC_API_URL` (from `client.admin-console.apiUrl`, else derived from
   `server.core.publicUrl`) and `NUXT_PUBLIC_COOKIE_DOMAIN`, each only when the
   configuration names one.
 - **Signal forwarding** — `SIGINT`/`SIGTERM` are forwarded to the children,
@@ -127,7 +127,7 @@ A single service can also be targeted directly:
 
 ```shell
 $ authup start server/core
-$ authup start client/web
+$ authup start client/admin-console
 ```
 
 ## Other commands

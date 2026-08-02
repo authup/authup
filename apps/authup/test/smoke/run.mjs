@@ -11,7 +11,7 @@
  *
  * Default (workspace) variant: runs the built dist entry of apps/authup against
  * the built workspace artifacts of apps/server-core (dist/cli/index.mjs) and
- * apps/client-web (.output/server/index.mjs), boots both on unusual ports with
+ * apps/client-admin-console (.output/server/index.mjs), boots both on unusual ports with
  * a sqlite database, waits until both answer HTTP 200, then terminates the CLI
  * with SIGTERM and asserts a clean exit.
  *
@@ -88,7 +88,7 @@ function buildChildEnv(writableDirectory) {
     // Children inherit this environment, so an ambient PORT/HOST must not be
     // able to reach both of them (a PaaS injects one; the project Dockerfile
     // sets PORT=3000). The supervisor is expected to override it per child —
-    // verified: reverting that override makes client-web bind AMBIENT_PORT and
+    // verified: reverting that override makes client-admin-console bind AMBIENT_PORT and
     // this scenario fails on the readiness probe.
     env.PORT = `${AMBIENT_PORT}`;
     env.HOST = '0.0.0.0';
@@ -101,8 +101,8 @@ function writeLauncherConfig(directory) {
         `server.core.port=${SERVER_PORT}`,
         'server.core.host=127.0.0.1',
         `server.core.publicUrl=http://127.0.0.1:${SERVER_PORT}`,
-        `client.web.port=${WEB_PORT}`,
-        'client.web.host=127.0.0.1',
+        `client.admin-console.port=${WEB_PORT}`,
+        'client.admin-console.host=127.0.0.1',
     ].join('\n'));
 }
 
@@ -207,7 +207,7 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
 
     try {
         await waitUntilReady(`${name}/server-core`, SERVER_URL, child);
-        await waitUntilReady(`${name}/client-web`, WEB_URL, child);
+        await waitUntilReady(`${name}/client-admin-console`, WEB_URL, child);
 
         log(`${name}: sending SIGTERM.`);
         child.kill('SIGTERM');
@@ -247,8 +247,8 @@ async function executeWorkspaceScenario() {
         'run: npm run build -w apps/server-core',
     );
     assertFileExists(
-        path.join(repositoryDirectory, 'apps', 'client-web', '.output', 'server', 'index.mjs'),
-        'run: npm run build -w apps/client-web',
+        path.join(repositoryDirectory, 'apps', 'client-admin-console', '.output', 'server', 'index.mjs'),
+        'run: npm run build -w apps/client-admin-console',
     );
 
     // cwd apps/server-core: typeorm resolves nested workspace driver installs
@@ -266,7 +266,7 @@ function collectPackWorkspaces() {
     const workspaces = [
         'apps/authup',
         'apps/server-core',
-        'apps/client-web',
+        'apps/client-admin-console',
     ];
 
     const packagesDirectory = path.join(repositoryDirectory, 'packages');

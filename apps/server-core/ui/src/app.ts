@@ -132,7 +132,7 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
     providePayload(payload, app);
 
     // Locale persistence via @vuecs/locale: the `vc-locale` cookie (same
-    // name as @vuecs/nuxt's plugin, so client-web shares it on a common
+    // name as @vuecs/nuxt's plugin, so client-admin-console shares it on a common
     // origin) backs the locale source. Server-side `renderUIPage` reads
     // the cookie into `payload.config.locale`; `installLocale` resolves
     // `auto` against the browser language and bridges the resolved value
@@ -152,7 +152,7 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
 
     // Install the kit FIRST so `installTranslator()` provides the ilingo
     // locale before `buildSubmitButtonDefaults()` (below) reads it via
-    // `useTranslation`. Mirrors apps/client-web where the `authup:kit`
+    // `useTranslation`. Mirrors apps/client-admin-console where the `authup:kit`
     // plugin runs before the `vuecs` plugin (`dependsOn: ['authup']`).
     // The kit's `install()` only registers components (no render) and
     // deliberately does NOT install a theme manager, so installing vuecs
@@ -179,13 +179,13 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
     // which updates the cookie-backed source above, so no reverse bridge.
     syncTranslatorLocaleFromManager(app);
 
-    // `buildVuecsInstallOptions()` (shared with apps/client-web's vuecs
+    // `buildVuecsInstallOptions()` (shared with apps/client-admin-console's vuecs
     // plugin: icon preset + translator-wired submit-button defaults) calls
     // `useTranslation` → `injectIlingo`, which reads the ilingo instance
     // via `inject()`. Outside a component setup there is no active
     // injection context, so it must run inside `app.runWithContext()` to
     // see the app-level provide that `installTranslator` (via `install`
-    // above) registered. apps/client-web gets this for free because Nuxt
+    // above) registered. apps/client-admin-console gets this for free because Nuxt
     // runs plugin `setup()` within an injection context.
     const vuecsOptions = app.runWithContext(() => buildVuecsInstallOptions({
         // Register both themes side-by-side (mirrors the Nuxt plugin).

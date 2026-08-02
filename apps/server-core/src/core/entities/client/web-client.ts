@@ -39,7 +39,7 @@ export const WEB_CLIENT_SCOPE_NAMES: string[] = [
 /**
  * Build the attribute set for a realm's public `web` client.
  *
- * Public (PKCE) client used by authup's own client-web and any downstream
+ * Public (PKCE) client used by authup's own client-admin-console and any downstream
  * UI embedding client-web-kit. `builtIn` makes it auto-consent in the
  * /authorize flow and protects it from the API reserved-name guard.
  *

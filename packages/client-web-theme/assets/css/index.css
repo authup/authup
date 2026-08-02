@@ -215,7 +215,7 @@
      * rewritten to do that (and Bootstrap's preflight used to size
      * headings automatically). Restore the heading size scale here
      * once, project-wide. Font-family + font-weight come from
-     * apps/client-web/assets/css/root.css.
+     * apps/client-admin-console/assets/css/root.css.
      */
     h1 { @apply text-4xl; }
     h2 { @apply text-3xl; }

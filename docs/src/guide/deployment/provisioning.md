@@ -10,7 +10,7 @@ Your custom provisioning files are merged on top.
 ## Per-Realm Public `web` Client
 
 Every realm automatically gets a built-in, public OAuth2 client named `web`.
-This is the client the web UI (`client-web`) uses to log users in via the
+This is the client the web UI (`client-admin-console`) uses to log users in via the
 authorization-code flow with PKCE — selecting a realm on the login screen
 redirects the browser to `/authorize?client_id=web&realm_id=<id>`.
 
@@ -84,7 +84,7 @@ options.)
 The `web` client is built-in with the `global` scope, so **any** allowlisted
 origin can complete a login and obtain a full-permission token. Only add
 origins you fully control to `trustedOrigins`. In non-production, the
-client-web dev origin (`http://localhost:3000`) is seeded automatically so
+client-admin-console dev origin (`http://localhost:3000`) is seeded automatically so
 the realm-selection login works out of the box; in production nothing is
 seeded — set `trustedOrigins` explicitly for any UI origin other than
 `publicUrl`.

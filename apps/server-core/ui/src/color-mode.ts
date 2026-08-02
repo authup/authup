@@ -12,7 +12,7 @@ const COOKIE_NAME = 'vc-color-mode';
 
 /**
  * Non-Nuxt counterpart of `@vuecs/nuxt`'s `useColorMode()`: the same
- * `vc-color-mode` cookie (shared with client-web on a common origin)
+ * `vc-color-mode` cookie (shared with client-admin-console on a common origin)
  * feeding `bindColorMode` from `@vuecs/design`. Server-side the cookie
  * is read by `renderUIPage`, which injects the `.dark`/`.light` class
  * into the HTML shell and seeds `payload.config.colorMode` so this ref

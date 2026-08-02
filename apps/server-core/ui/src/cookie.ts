@@ -23,7 +23,7 @@ export function readCookie(name: string) : string | undefined {
 
 /**
  * Cookie-backed ref for the non-Nuxt SSR app — the counterpart of
- * `useCookie()` in client-web. Server-side the cookie is read by
+ * `useCookie()` in client-admin-console. Server-side the cookie is read by
  * `renderUIPage` and seeded through the hydration payload (`initial`);
  * client-side writes persist back to the cookie.
  */

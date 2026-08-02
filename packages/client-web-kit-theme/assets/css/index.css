@@ -98,7 +98,7 @@
  *
  * Consumer apps add their own `@source` directives for their template
  * trees + any locally-nested vuecs deps in a per-app CSS entry
- * (e.g. `apps/client-web/assets/css/tailwind.css`).
+ * (e.g. `apps/client-admin-console/assets/css/tailwind.css`).
  *
  * Every path below must resolve relative to where this stylesheet
  * lives in BOTH consumption contexts (Tailwind v4 resolves `@source`

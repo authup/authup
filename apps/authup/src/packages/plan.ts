@@ -33,7 +33,7 @@ export function resolveLaunchPlan(command: string, rest: string[] = []) : Launch
             }
 
             if (packages.length === 0) {
-                packages.push(PackageID.SERVER_CORE, PackageID.CLIENT_WEB);
+                packages.push(PackageID.SERVER_CORE, PackageID.CLIENT_ADMIN_CONSOLE);
             }
 
             return {
@@ -46,9 +46,9 @@ export function resolveLaunchPlan(command: string, rest: string[] = []) : Launch
             const commandArgs : string[] = [command];
             for (const token of tokens) {
                 const packageId = normalizePackageID(token);
-                if (packageId === PackageID.CLIENT_WEB) {
+                if (packageId === PackageID.CLIENT_ADMIN_CONSOLE) {
                     throw new Error(
-                        `The command "${command}" is not supported by the ${PackageID.CLIENT_WEB} package.`,
+                        `The command "${command}" is not supported by the ${PackageID.CLIENT_ADMIN_CONSOLE} package.`,
                     );
                 }
 

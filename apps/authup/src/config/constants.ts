@@ -16,6 +16,6 @@
  */
 export const SERVER_CORE_PORT_DEFAULT = 3001;
 
-export const CLIENT_WEB_PORT_DEFAULT = 3000;
+export const CLIENT_ADMIN_CONSOLE_PORT_DEFAULT = 3000;
 
 export const LISTEN_HOST_DEFAULT = '0.0.0.0';

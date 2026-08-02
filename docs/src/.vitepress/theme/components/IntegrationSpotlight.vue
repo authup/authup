@@ -63,14 +63,14 @@ export default defineComponent({
     command: server/core start
     depends_on: [postgres, redis]
 
-  client-web:
+  client-admin-console:
     image: authup/authup:latest
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       - NUXT_PUBLIC_API_URL=http://localhost:3001
-    command: client/web start
+    command: client/admin-console start
     depends_on: [server-core]
 
   postgres:

@@ -42,7 +42,7 @@ graph TD
 
     subgraph Apps
         server-core
-        client-web
+        client-admin-console
         authup
     end
 
@@ -119,15 +119,15 @@ graph TD
     server-core --> server-kit
     server-core --> server-test-kit
     server-core --> specs
-    client-web --> client-web-kit
-    client-web --> client-web-kit-theme
-    client-web --> client-web-nuxt
-    client-web --> client-web-theme
-    client-web --> core-http-kit
-    client-web --> core-kit
-    client-web --> i18n
-    client-web --> kit
-    authup --> client-web
+    client-admin-console --> client-web-kit
+    client-admin-console --> client-web-kit-theme
+    client-admin-console --> client-web-nuxt
+    client-admin-console --> client-web-theme
+    client-admin-console --> core-http-kit
+    client-admin-console --> core-kit
+    client-admin-console --> i18n
+    client-admin-console --> kit
+    authup --> client-admin-console
     authup --> core-kit
     authup --> kit
     authup --> server-core

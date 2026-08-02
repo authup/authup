@@ -10,7 +10,7 @@
  * Self-hosted webfonts (no runtime Google Fonts call — the embedded UI
  * must work in headless/offline deployments). The theme's root.css sets
  * `body { font-family: Nunito }` and `h1-h6 { font-family: Asap }`;
- * client-web loads the same families via nuxt-google-fonts.
+ * client-admin-console loads the same families via nuxt-google-fonts.
  */
 @import "@fontsource/nunito/300.css";
 @import "@fontsource/nunito/400.css";
@@ -26,7 +26,7 @@
 
 /*
  * Per-app nested vuecs deps — see the matching note in
- * `apps/client-web/assets/css/tailwind.css`. server-core hoists
- * differently from client-web, so paths land here.
+ * `apps/client-admin-console/assets/css/tailwind.css`. server-core hoists
+ * differently from client-admin-console, so paths land here.
  */
 @source "../../node_modules/@vuecs";

@@ -8,7 +8,7 @@ It follows hexagonal architecture principles, separating core business logic, ad
 | Name                                      | Type        | Description                                                                                           |
 |-------------------------------------------|-------------|-------------------------------------------------------------------------------------------------------|
 | [authup](../apps/authup)                  | CLI         | A command line interface for interacting with various applications and services within the ecosystem. |
-| [client-web](../apps/client-web)          | Application | A Nuxt-based web application interface for end users. Auth entry pages (`/login`, `/login/callback`) opt into a dedicated chrome-less `layouts/auth.vue` (no header/sidebar/footer; own `VCToastProvider` + toaster, color-mode + language gadgets top-right) so the full-bleed login backdrop reaches the viewport edges. |
+| [client-admin-console](../apps/client-admin-console)          | Application | The Nuxt-based admin console web application. Auth entry pages (`/login`, `/login/callback`) opt into a dedicated chrome-less `layouts/auth.vue` (no header/sidebar/footer; own `VCToastProvider` + toaster, color-mode + language gadgets top-right) so the full-bleed login backdrop reaches the viewport edges. |
 | [server-core](../apps/server-core)        | Service     | A service that forms the backbone of the server-side ecosystem. Embeds a Vite-built Vue 3 consent UI for the OAuth2 `/authorize` endpoint under `ui/`, emitted to `dist/ui/` at build time. |
 
 ## Packages & Libraries
@@ -70,9 +70,9 @@ Application libraries:
 Apps:
   server-core       → access, i18n, kit, core-kit, core-http-kit, errors, server-kit, specs (+ ilingo runtime dep)
                       (embedded consent UI under ui/ uses client-web-kit, kit, core-kit, core-http-kit — build-time only)
-  client-web        → client-web-kit, kit, core-kit, core-http-kit, client-web-nuxt
-  authup (CLI)      → client-web, errors, kit, server-core
-                      (a process supervisor: it spawns each app's own bin, so client-web/server-core
+  client-admin-console    → client-web-kit, kit, core-kit, core-http-kit, client-web-nuxt
+  authup (CLI)      → client-admin-console, errors, kit, server-core
+                      (a process supervisor: it spawns each app's own bin, so client-admin-console/server-core
                        are resolved as packages to launch, not imported)
 ```
 
@@ -82,31 +82,31 @@ Apps:
 - **API clients** → core-http-kit
 - **UI components** → client-web-kit
 
-## UI Stack (`apps/client-web`, `apps/server-core/ui`, `packages/client-web-kit`)
+## UI Stack (`apps/client-admin-console`, `apps/server-core/ui`, `packages/client-web-kit`)
 
 | Layer | Package(s) | Notes |
 |---|---|---|
 | **Theming** | `@vuecs/core` (3.x) + `@vuecs/theme-tailwind` (6.x) via `@authup/client-web-theme` | Theme manager + Tailwind v4 class strings. `@authup/client-web-theme` composes `tailwindTheme()` and ships a single CSS entry (`@authup/client-web-theme/index.css`) that pulls in `tailwindcss`, `@vuecs/design` (OKLCH semantic tokens), `@vuecs/theme-tailwind` (Tailwind ↔ vc-color rebind). The Bootstrap-compat `@layer components` block (`.btn`, `.row`/`.col`, `.alert`, `.badge`, `.nav`/`.navbar`, `.dropdown*`, `.modal-*`, `.fade`) has been **fully retired** — every call site now renders a `<VC*>` component (`.dropdown*` → `<VCDropdownMenu>`, `.modal-*` → `<VCModal>`); only a thin `.vc-pagination` override of theme-tailwind's button rounding remains. |
-| **Icons** | `@vuecs/icon` + `@vuecs/icons-font-awesome` | Iconify-backed `<VCIcon>` + the FA Solid name preset. **Icon DATA is bundled at build time, per app** (issue #3345): both apps run `@nuxt/icon`'s standalone vite plugin (`NuxtIconBundle` from `@nuxt/icon/vite`, a devDependency; used in `apps/server-core/ui/vite.config.ts` and under `vite.plugins` in `apps/client-web/nuxt.config.ts`) and import `virtual:nuxt-icon-bundle/register` in their bootstrap. The plugin scans source for `<collection>:<name>` literals and registers the found subset through `addIcon` from `@iconify/vue`, the same global store `<VCIcon>` resolves against, so no component changes were needed. This replaced the kit's `registerIconCollections()` (now `@deprecated`, kept for consumers that cannot run a build-time scan), which registered both full FA6 collections: 1,902 icons for the 54 / 74 actually rendered. Measured: server-core's SSR auth UI 804 → 385 KB gzip, client-web 911 → 497 KB gzip. **The glob list is load-bearing and fails silently** (a path that stops matching yields an empty icon slot, not a build error), so it must keep covering `packages/client-web-kit/src` (kit components + the identity-provider preset tables) and `node_modules/@vuecs/icons-font-awesome/dist/*.mjs` (the vuecs behavioral defaults: pagination arrows, submit-button, alert, collapse chevrons, whose names appear in no authup source file), plus `.ts` on top of the plugin's default `.vue`/`.jsx`/`.tsx`. Pinned by `test/unit/http/controllers/workflows/ui-pages-icons.spec.ts`, which asserts against the built client entry (resolved via `index.html`, because `build:ui` does not clean its output). Note `@iconify/vue` resolves icons client-side, so SSR'd pages carry empty `<svg>` shells either way; a rendered page cannot verify bundling. Old `fa-solid fa-X` CSS class strings on plain `<i>` are still in use for legacy templates — both paths coexist. **Do not use `<VCButton>`'s `icon-left` / `iconLeft` prop** — render an explicit `<VCIcon>` in the button's `#leading` slot (template) or `{ leading: () => h(VCIcon, { name }) }` (render fn). VCButton renders `iconLeft` through `<VCIcon>` internally anyway, so output is identical; the one exception is `useSubmitButton()`'s composable-derived `iconLeft` (`AFormSubmit` / `LoginForm`), which stays. |
+| **Icons** | `@vuecs/icon` + `@vuecs/icons-font-awesome` | Iconify-backed `<VCIcon>` + the FA Solid name preset. **Icon DATA is bundled at build time, per app** (issue #3345): both apps run `@nuxt/icon`'s standalone vite plugin (`NuxtIconBundle` from `@nuxt/icon/vite`, a devDependency; used in `apps/server-core/ui/vite.config.ts` and under `vite.plugins` in `apps/client-admin-console/nuxt.config.ts`) and import `virtual:nuxt-icon-bundle/register` in their bootstrap. The plugin scans source for `<collection>:<name>` literals and registers the found subset through `addIcon` from `@iconify/vue`, the same global store `<VCIcon>` resolves against, so no component changes were needed. This replaced the kit's `registerIconCollections()` (now `@deprecated`, kept for consumers that cannot run a build-time scan), which registered both full FA6 collections: 1,902 icons for the 54 / 74 actually rendered. Measured: server-core's SSR auth UI 804 → 385 KB gzip, client-admin-console 911 → 497 KB gzip. **The glob list is load-bearing and fails silently** (a path that stops matching yields an empty icon slot, not a build error), so it must keep covering `packages/client-web-kit/src` (kit components + the identity-provider preset tables) and `node_modules/@vuecs/icons-font-awesome/dist/*.mjs` (the vuecs behavioral defaults: pagination arrows, submit-button, alert, collapse chevrons, whose names appear in no authup source file), plus `.ts` on top of the plugin's default `.vue`/`.jsx`/`.tsx`. Pinned by `test/unit/http/controllers/workflows/ui-pages-icons.spec.ts`, which asserts against the built client entry (resolved via `index.html`, because `build:ui` does not clean its output). Note `@iconify/vue` resolves icons client-side, so SSR'd pages carry empty `<svg>` shells either way; a rendered page cannot verify bundling. Old `fa-solid fa-X` CSS class strings on plain `<i>` are still in use for legacy templates — both paths coexist. **Do not use `<VCButton>`'s `icon-left` / `iconLeft` prop** — render an explicit `<VCIcon>` in the button's `#leading` slot (template) or `{ leading: () => h(VCIcon, { name }) }` (render fn). VCButton renders `iconLeft` through `<VCIcon>` internally anyway, so output is identical; the one exception is `useSubmitButton()`'s composable-derived `iconLeft` (`AFormSubmit` / `LoginForm`), which stays. |
 | **Links** | `@vuecs/link` (2.x) | `<VCLink>` picks `NuxtLink` / `RouterLink` / a plain `<a>` at render time, so kit and app code share one link element. Prefer it over `resolveComponent('NuxtLink')`, which only resolves under Nuxt. A button-styled link is `<VCButton :as="VCLink" :to="...">`. **A bare `:disabled` does not guard such a link:** `VCButton` declares `disabled` as its own prop, so it never reaches `VCLink`, and a non-native `as` target receives only `aria-disabled="true"` (no click guard, and Tailwind's `disabled:` variant never matches an `<a>`, so no visual cue either; tada5hi/vuecs#1699). Permission-guarded row actions therefore **withhold the target**: ``:to="hasEditPermission ? `/users/${row.id}` : undefined"`` makes `VCLink` fall back to an href-less `<a>` whose click is `preventDefault`ed and which cannot be tab-focused. The visual cue comes from the `aria-disabled:*` utilities `clientWebKitTheme()` appends to the button root. Used by all 11 entity index pages (issue #3071). |
 | **Form controls** | `@vuecs/forms` (4.x) | `<VCFormGroup>` / `<VCFormInput>` / `<VCFormTextarea>` / `<VCFormCheckbox>` / `<VCFormSelect>`. Authup's entity form SFCs (`components/entities/**/A*Form.vue`) render these components directly, binding each field through `@validup/vue`'s `useValidup` and `@ilingo/validup-vue`'s `<IFieldValidation>` (see `ARoleForm.vue`); the former `buildForm*` render-function shims (`core/form/builders.ts`) were retired in #3139. Entity **name** fields use `<ANameInput>` (`packages/client-web-kit/src/components/utility/ANameInput.vue`) instead of a bare `<VCFormInput>`: it wraps `VCFormInput` with a "regenerate" button rendered in the `#groupAppend` input-group slot that emits a slug-safe `generateName()` (from `@authup/kit`) through the normal `update:modelValue` channel. Drop-in for `v-model` / `:model-value` + `@update:model-value`; pass `:disabled` for built-in / name-locked / master entities (the append button is then omitted). Entity **secret** fields (client) use the sibling `<ASecretInput>` (`packages/client-web-kit/src/components/utility/ASecretInput.vue`), same `#groupAppend` regenerate layout but emitting a crypto-strong `generateSecret()` (from `@authup/kit`). **SSR-safety contract for generated defaults:** `generateName(seed?)` accepts an optional seed — entity forms pass Vue's hydration-stable `useId()` so the prefilled name matches across the SSR and client render passes (no hydration mismatch). `generateSecret()` deliberately takes **no** seed (a secret must not be derived from a predictable value); forms therefore generate the initial secret client-side only, inside `onMounted`, leaving the field empty during SSR. Both are captured once in `setup` (`const nameSeed = useId()`), never inside a function re-invoked later. |
 | **List rendering** | `@vuecs/list` (1.x) | Compound `<VCList>` / `<VCListBody>` / `<VCListItem>` / `<VCListLoading>` / `<VCListEmpty>`. `defineEntityCollectionManager`'s renderer in `client-web-kit/src/components/utility/entity/collection/module.ts` composes these directly. Since #3278 the collection/record managers compose queries in the **rapiq v2 IR** (`defineQuery`/`mergeQueries`; base-query filters are `Filters.and()`-injected so an injected realm/owner scope cannot be displaced by search or pagination input; `queryFilters` context hooks may return an `ICondition` for compound OR searches; `ListMeta` carries pagination UI state only) — see architecture.md → vuecs 1.x SFC integration → Collections. Pages construct query props via `defineQuery<T>({...})` from `@rapiq/core`. |
 | **Tables** | `@vuecs/table` (≥ 1.3.0) | `<VCTable>` directly. `:data` + `:columns` (`TableColumn<Entity>[]`) drives auto-render; consumer-side `#cell-<key>` / `#header-<key>` slot templates are dispatched onto each cell by `composeTableInner` (tada5hi/vuecs#1592). Since 1.3.0 (tada5hi/vuecs#1601) `<VCTable>` is **generic over Row** — type the columns `TableColumn<Entity>[]` and write cell slots as `#cell-<key>="{ row }"` (no annotation) so `row` infers as the entity (the old `{ row: any }` widening is retired). Keep `VCTable` **globally registered** — the generic component can't be registered in the Options-API `components: {}` (see architecture.md → Table usage). Centered headers use plain `headerClass: 'text-center'` — `clientWebTheme()` overrides `tableHeadCell.classes.root` to drop theme-tailwind's baked `text-left`, so consumer alignment classes win without Tailwind v4's `!important` suffix. Cells follow the same shape via `cellClass`. |
 | **Pagination** | `@vuecs/pagination` (2.x) via `<APagination>` adapter | `client-web-kit/src/components/utility/pagination/APagination.ts` bridges the collection footer contract (`meta` = `{ total, pagination: { limit, offset }, busy }`) onto `<VCPagination>`; page changes call `load({ pagination: { limit, offset } })` only — search/sort state is retained inside the collection manager, not round-tripped through `meta`. |
-| **Overlays** | `@vuecs/overlays` (1.x) | `<VCToaster>` mounted in `apps/client-web/components/footer.vue` and in the SSR auth UI's `apps/server-core/ui/src/App.vue` (inside its `<VCToastProvider>`; the `/authorize` page surfaces `AAuthorize`'s forwarded login-form `failed` emit as an error toast via `useToast().add(...)`); `useToast()` shimmed in `apps/client-web/composables/toast.ts` to preserve the bvnext-style `toast.show(string \| { variant, body })` call surface. `<VCDropdownMenuItem>` resolved opportunistically in `<AEntityDelete>` (replaces the bvnext `BDropdownItem` fallback). **Confirmation prompts** ride the `@vuecs/overlays` ≥1.2.0 **AlertDialog** compound + `useAlertDialog()` (imperative `(options?) => Promise<boolean>`; `true`=confirm / `false`=cancel-or-Escape, SSR resolves `false`). A single `<VCAlertDialogProvider>` host is mounted at the `apps/client-web/layouts/default.vue` root — the app-level `AlertDialogManager` is auto-provided by `app.use(installOverlays)` (in `plugins/vuecs.ts`), so one host drains confirmations from every page (no per-page provider, not Reka-context-scoped like `<VCToastProvider>`). `<AEntityDelete>` routes its destructive delete through `useAlertDialog({ tone: 'error', … })`, gated by a `withPrompt` prop (**default on**; opt out per call site with `:with-prompt="false"`); the localized title/description come from the `authupApp` `DELETE_CONFIRM_TITLE` / `DELETE_CONFIRM_DESCRIPTION` keys (entity noun interpolated from the `authupEntity` namespace, `count: 1`), reusing the existing `authupAction` `DELETE` (confirm) / `ABORT` (cancel) labels. AlertDialog styling comes from `@vuecs/theme-tailwind`'s `alertDialog` element (both authup themes `extend(tailwindTheme())`), so no authup theme override is needed. |
+| **Overlays** | `@vuecs/overlays` (1.x) | `<VCToaster>` mounted in `apps/client-admin-console/components/footer.vue` and in the SSR auth UI's `apps/server-core/ui/src/App.vue` (inside its `<VCToastProvider>`; the `/authorize` page surfaces `AAuthorize`'s forwarded login-form `failed` emit as an error toast via `useToast().add(...)`); `useToast()` shimmed in `apps/client-admin-console/composables/toast.ts` to preserve the bvnext-style `toast.show(string \| { variant, body })` call surface. `<VCDropdownMenuItem>` resolved opportunistically in `<AEntityDelete>` (replaces the bvnext `BDropdownItem` fallback). **Confirmation prompts** ride the `@vuecs/overlays` ≥1.2.0 **AlertDialog** compound + `useAlertDialog()` (imperative `(options?) => Promise<boolean>`; `true`=confirm / `false`=cancel-or-Escape, SSR resolves `false`). A single `<VCAlertDialogProvider>` host is mounted at the `apps/client-admin-console/layouts/default.vue` root — the app-level `AlertDialogManager` is auto-provided by `app.use(installOverlays)` (in `plugins/vuecs.ts`), so one host drains confirmations from every page (no per-page provider, not Reka-context-scoped like `<VCToastProvider>`). `<AEntityDelete>` routes its destructive delete through `useAlertDialog({ tone: 'error', … })`, gated by a `withPrompt` prop (**default on**; opt out per call site with `:with-prompt="false"`); the localized title/description come from the `authupApp` `DELETE_CONFIRM_TITLE` / `DELETE_CONFIRM_DESCRIPTION` keys (entity noun interpolated from the `authupEntity` namespace, `count: 1`), reusing the existing `authupAction` `DELETE` (confirm) / `ABORT` (cancel) labels. AlertDialog styling comes from `@vuecs/theme-tailwind`'s `alertDialog` element (both authup themes `extend(tailwindTheme())`), so no authup theme override is needed. |
 | **Other** | `@vuecs/{button, elements, countdown, timeago, navigation}` | Each used via its globally-registered `<VC*>` components after `app.use(installX)`. |
 
 **Explicit component imports (preferred):** new/changed kit or app code should `import { VC* } from '@vuecs/*'` + register in a local `components: {}` (or import for `h()`), rather than relying on the consumer's global `app.use(installX)` registration. This makes the dependency visible, type-checks props locally, and catches latent prop-type bugs that global / `resolveComponent('VC*')` lookups hide. `VCButton` and `VCIcon` were swept to explicit imports across kit + app (the global `app.use(vuecs, …)` registration stays as a fallback); the other `<VC*>` (VCTimeago, VCTable, VCFormGroup, VCList, VCModal, …) are still mostly global — migrate them opportunistically when a file is touched.
 
 **Shared auth chrome + bootstrap fragments (plan 078).** The two UI apps —
-`apps/client-web` (Nuxt) and the embedded SSR app in `apps/server-core/ui` —
+`apps/client-admin-console` (Nuxt) and the embedded SSR app in `apps/server-core/ui` —
 used to hand-mirror each other's auth-page shell and vuecs bootstrap, guarded
-only by "mirrors client-web" comments. The common parts now live in the kit and
+only by "mirrors client-admin-console" comments. The common parts now live in the kit and
 both sides are thin callers:
 
 - `AAuthApp` (`components/utility/`) — the logged-out page shell
   (`VCToastProvider` > `AAuthGadgets` > slot > `VCToaster`), consumed by
-  `apps/server-core/ui/src/App.vue` and `apps/client-web/layouts/auth.vue`.
+  `apps/server-core/ui/src/App.vue` and `apps/client-admin-console/layouts/auth.vue`.
 - `AWorkflowDisabledNotice` (`components/workflows/`) — the "workflow disabled"
   alert + back-link block the four server-core SSR workflow pages
   (register / activate / password-forgot / password-reset) each copy-pasted.
@@ -122,13 +122,13 @@ both sides are thin callers:
 The default backend URL is one exported constant, `API_URL_DEFAULT`
 (`@authup/core-http-kit`, `http://localhost:3001`) — it belongs to the HTTP
 client whose `baseURL` it fills, not to `@authup/kit` (which stays free of
-service context). Consumed by client-web's `nuxt.config.ts` and the
+service context). Consumed by client-admin-console's `nuxt.config.ts` and the
 `client-web-nuxt` fallback (which had drifted to a nonexistent `:3010`). The
 `authup` launcher deliberately does NOT carry a fallback: it sets
 `NUXT_PUBLIC_API_URL` only when the config file names one, leaving the
 application's own default in charge.
 
-### Page placement — top-level pages vs detail tabs (client-web)
+### Page placement — top-level pages vs detail tabs (client-admin-console)
 
 **Entity-type collections always get a top-level page** (`/users`, `/roles`,
 `/keys`, `/events`, …), scoped to the active realm by the header realm
@@ -159,7 +159,7 @@ no longer render unstyled just because the install order shifted.
 Even so, **keep the explicit ordering**:
 
 - Consumer app's `vuecs` plugin retains `name: 'vuecs'` in
-  `apps/client-web/plugins/vuecs.ts` so other Nuxt plugins that touch
+  `apps/client-admin-console/plugins/vuecs.ts` so other Nuxt plugins that touch
   vuecs APIs directly (e.g. `vuecs-navigation.ts` calling
   `@vuecs/navigation`'s `install()`) can `dependsOn: ['vuecs']`.
 - `packages/client-web-kit/src/module.ts` still deliberately does NOT
@@ -172,16 +172,16 @@ Even so, **keep the explicit ordering**:
   the boot chain is still required for the app to actually pick up
   authup's theme overrides.
 
-The `vuecs` plugin in `apps/client-web/plugins/vuecs.ts` declares
+The `vuecs` plugin in `apps/client-admin-console/plugins/vuecs.ts` declares
 `name: 'vuecs'` precisely so other plugins can depend on it. Don't
 remove that name.
 
 `packages/client-web-kit/src/module.ts` deliberately does NOT install
 `@vuecs/forms` or `@vuecs/pagination` — both are installed by the
-consumer app's plugin file (`apps/client-web/plugins/vuecs.ts` and
+consumer app's plugin file (`apps/client-admin-console/plugins/vuecs.ts` and
 `apps/server-core/ui/src/app.ts`), AFTER `app.use(vuecs, ...)`.
 
-The client-web Nuxt plugin declares `dependsOn: ['authup:kit']` so it
+The client-admin-console Nuxt plugin declares `dependsOn: ['authup:kit']` so it
 runs AFTER `@authup/client-web-nuxt`'s kit plugin. The kit plugin's
 `install()` calls `installTranslator()` which provides the ilingo
 locale via `app.provide(LocaleSymbol, ...)`. Using `enforce: 'pre'` here
@@ -200,7 +200,7 @@ first page render.
 cookie-backed (`vc-locale`), `auto`/browser-resolved, `<html lang>`
 synced, and it drives `Config['locale']` (so `@vuecs/timeago` etc.
 follow). This mirrors color-mode (`@vuecs/design`'s `bindColorMode` +
-the `vc-color-mode` cookie). client-web gets it from `@vuecs/nuxt`'s
+the `vc-color-mode` cookie). client-admin-console gets it from `@vuecs/nuxt`'s
 locale plugin (enabled by default; `name: 'vuecs-locale'`,
 `enforce: 'post'`); `apps/server-core/ui` calls `installLocale` with a
 `vc-locale`-cookie-backed source.
@@ -211,7 +211,7 @@ locale plugin (enabled by default; `name: 'vuecs-locale'`,
   the ilingo locale ref** when vuecs-locale isn't installed (so the kit
   component still works for downstream consumers without it).
 - **ilingo follows vuecs one-way** via `syncTranslatorLocaleFromManager(app)`:
-  client-web runs it in a post plugin (`plugins/vuecs-locale.ts`,
+  client-admin-console runs it in a post plugin (`plugins/vuecs-locale.ts`,
   `dependsOn: ['vuecs-locale']`); server-core/ui calls it after
   `installLocale`. There is no reverse bridge — the switcher writing
   vuecs already persists + resolves. Do **not** re-add a

@@ -47,7 +47,7 @@ export default defineComponent({
             <VCToaster> renders Reka's <ToastViewport>, which requires a
             <VCToastProvider> ancestor for the ToastProviderContext
             injection — provided once at the layout root in
-            apps/client-web/layouts/default.vue, so every layout that
+            apps/client-admin-console/layouts/default.vue, so every layout that
             renders the toaster has the context regardless of whether
             this footer is mounted.
         -->

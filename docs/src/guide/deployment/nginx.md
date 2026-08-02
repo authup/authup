@@ -5,7 +5,7 @@ we need to create a new file (e.g. `app`) in the directory `/etc/nginx/sites-ena
 ::: warning Info
 Don't forget to replace the placeholders with the actual values:
 - `[DOMAIN]` Domain name (e.g. app.example.com)
-- `[CLIENT_WEB_PORT]`: Port of the client web application.
+- `[CLIENT_ADMIN_CONSOLE_PORT]`: Port of the admin console application.
 - `[SERVER_CORE_PORT]`: Port of the server core application.
 :::
 
@@ -37,7 +37,7 @@ server {
         proxy_set_header X-Forwarded-Proto  $scheme;
         proxy_read_timeout          1m;
         proxy_connect_timeout       1m;
-        proxy_pass                          http://127.0.0.1:[CLIENT_WEB_PORT];
+        proxy_pass                          http://127.0.0.1:[CLIENT_ADMIN_CONSOLE_PORT];
     }
     
     location /api/ {

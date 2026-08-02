@@ -23,7 +23,7 @@ export default defineComponent({
 </script>
 <template>
     <!--
-        <AAuthApp> is the shared logged-out shell (mirrored by client-web's
+        <AAuthApp> is the shared logged-out shell (mirrored by client-admin-console's
         auth layout): the <VCToastProvider> root every descendant
         <VCToaster>/toast primitive needs, the gadget cluster (color mode +
         language) and the toaster viewport fed by useToast() (e.g. the

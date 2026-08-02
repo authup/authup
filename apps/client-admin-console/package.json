@@ -1,8 +1,8 @@
 {
-    "name": "@authup/client-web",
+    "name": "@authup/client-admin-console",
     "version": "1.0.0-beta.58",
     "license": "AGPL-3.0-only",
-    "description": "This is a standalone web application.",
+    "description": "This is the standalone admin console application.",
     "main": ".output/server/index.mjs",
     "files": [
         ".output"
@@ -10,7 +10,7 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",
-        "directory": "apps/client-web"
+        "directory": "apps/client-admin-console"
     },
     "scripts": {
         "build": "nuxt prepare && nuxi typecheck && nuxt build && node postbuild.mjs",
@@ -25,7 +25,7 @@
         "node": "^22.13.0 || ^23.5.0 || >=24.0.0"
     },
     "bin": {
-        "authup-ui": ".output/server/index.mjs"
+        "authup-admin-console": ".output/server/index.mjs"
     },
     "devDependencies": {
         "@authup/client-web-kit": "^1.0.0-beta.58",

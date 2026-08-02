@@ -62,7 +62,7 @@ describe('src/http/controllers/permission', () => {
     });
 
     it('should read collection filtered by realmId (realm-switcher pattern)', async () => {
-        // Mirrors apps/client-web/pages/permissions/index/index.vue, whose realm
+        // Mirrors apps/client-admin-console/pages/permissions/index/index.vue, whose realm
         // switcher scopes the collection with filter[realmId]=[<realm>, null].
         // The permission schema previously omitted realmId from filters.allowed,
         // so rapiq rejected the key with "The key realmId is not permitted".
