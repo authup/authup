@@ -51,6 +51,17 @@ export class UserInfoController {
             id = actor.identity.data.id;
         }
 
-        return this.service.getOne(id, actor, useRequestQuery(event));
+        // `email` is a standard OIDC claim, but the column is `select: false`
+        // (opt-in projection), so the default field set leaves it out and the
+        // claims document arrives without it. This endpoint only ever serves
+        // the CALLER'S OWN record, so the claim rides on top of the defaults.
+        // A caller stating its own `fields` keeps full control: the opt-in
+        // stays opt-in wherever the projection is explicit.
+        const query = useRequestQuery(event);
+
+        return this.service.getOne(id, actor, {
+            ...query,
+            fields: query.fields || '+email',
+        });
     }
 }

@@ -57,5 +57,19 @@ export type StoreInstallOptions = {
     cookieSet?: CookieSetFn,
     cookieUnset?: CookieUnsetFn,
     cookieGet?: CookieGetFn,
+    /**
+     * Path the store cookies are written (and cleared) with, defaulting to
+     * the root. It is the app's own mount point, not the API's: the cookies
+     * are read back in JavaScript to rehydrate the store and are never sent
+     * to the API as credentials, and a cookie can only be written for the
+     * writing document's origin regardless.
+     *
+     * Every authup surface on one origin must pass the SAME value. They share
+     * cookie names, so two paths mean two shadowing sets that expire
+     * independently and can pair a `user` from one login with a token from
+     * another. Note the path is hygiene, not isolation: same-origin code
+     * reads any path through an iframe.
+     */
+    cookiePath?: string,
     pinia?: Pinia
 };

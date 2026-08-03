@@ -11,7 +11,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { REALM_MASTER_NAME } from '@authup/core-kit';
+import { REALM_MASTER_NAME, buildUserFakeEmail } from '@authup/core-kit';
 import { httpRequest } from '../../../../utils';
 import { createTestApplication } from '../../../../app';
 
@@ -35,6 +35,26 @@ describe('src/http/controllers/workflows/userinfo', () => {
         expect(response.id).toBeDefined();
         expect(response.data).toBeUndefined();
         expect(response.meta).toBeUndefined();
+    });
+
+    // `email` is a standard OIDC claim, but the column is select:false, so it
+    // is absent from the default field set. Without it the account console
+    // renders an empty email box and submits a null over the user's address.
+    it('should carry the email claim', async () => {
+        const response = await suite.client.userInfo.get<Record<string, any>>();
+
+        // the seeded address, not merely a present key: `toBeDefined()` also
+        // passes for the null the form used to submit back over it
+        expect(response.email).toEqual(buildUserFakeEmail('admin'));
+    });
+
+    it('should leave an explicit projection untouched', async () => {
+        const response = await httpRequest(suite, 'GET', '/userinfo?fields=name', { headers: { Authorization: `Basic ${Buffer.from('admin:start123').toString('base64')}` } });
+        const body = await response.json();
+
+        expect(response.status).toEqual(200);
+        expect(body.name).toEqual('admin');
+        expect(body.email).toBeUndefined();
     });
 
     it('should reject an unauthenticated request', async () => {

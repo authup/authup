@@ -10,7 +10,7 @@ import {
     PermissionMemoryProvider,
     PolicyEngine,
 } from '@authup/access';
-import { OAuth2Error } from '@authup/specs';
+import { OAuth2Error, OAuth2SubKind } from '@authup/specs';
 import type { IClient } from '@authup/core-http-kit';
 import { computed, ref } from 'vue';
 import type {
@@ -343,6 +343,22 @@ export function createStore(context: StoreCreateContext) {
 
     const fetchUserInfo = async (token: string) : Promise<User> => client.userInfo.get<User>(`Bearer ${token}`);
 
+    /**
+     * Whether the currently held user IS the subject of the introspected
+     * token. A user that came from anywhere but this token (cookie
+     * hydration, a raw seed) is only as trustworthy as the pairing, and the
+     * two can drift apart (a sibling login on the same origin, an id from a
+     * previous provisioning run). Revalidation re-fetches on a mismatch
+     * instead of carrying the stale identity for the app's lifetime: it is
+     * what the UI renders and what its forms write against.
+     */
+    const isTokenSubject = (
+        value: User | null,
+        introspection: OAuth2TokenIntrospectionResponse,
+    ) : boolean => !!value &&
+        introspection.sub_kind === OAuth2SubKind.USER &&
+        introspection.sub === value.id;
+
     type SessionCommitContext = {
         // tokenGeneration captured when staging started
         generation: number,
@@ -536,7 +552,9 @@ export function createStore(context: StoreCreateContext) {
         }
 
         const introspection = await fetchTokenIntrospection(token);
-        const userInfo = user.value ? undefined : await fetchUserInfo(token);
+        const userInfo = isTokenSubject(user.value, introspection) ?
+            undefined :
+            await fetchUserInfo(token);
 
         commitSession({
             generation,

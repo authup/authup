@@ -8,6 +8,12 @@
 export const STORE_ID = 'authup';
 
 /**
+ * Path store cookies default to: the only one every surface on an origin is
+ * guaranteed to read back. Narrow it per host via `cookiePath`.
+ */
+export const COOKIE_PATH = '/';
+
+/**
  * The store's auth phase, derived from state PRESENCE
  * (access/refresh token / realm / user) plus an in-flight interaction
  * marker.
