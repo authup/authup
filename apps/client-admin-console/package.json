@@ -13,7 +13,9 @@
         "directory": "apps/client-admin-console"
     },
     "scripts": {
-        "build": "nuxt prepare && nuxi typecheck && nuxt build && node postbuild.mjs",
+        "build:types": "nuxt prepare && nuxi typecheck",
+        "build:js": "nuxt build && node postbuild.mjs",
+        "build": "npm run build:types && npm run build:js",
         "dev": "nuxi dev",
         "generate": "nuxi generate",
         "preview": "nuxi preview",
