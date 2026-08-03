@@ -1221,12 +1221,19 @@ adapters/http/ui/                   — one folder per served console + shared s
   shared/html.ts                    — readUIClientPreferences (locale/color-mode cookies), stampHtmlAttributes,
                                       applyUIPageHeaders (content-type + CSP frame-ancestors + XFO + referrer),
                                       rebaseAssetURLs(html, basePath, viteBase), serializeInlineScriptJSON,
-                                      replaceTemplateMarker (the ONLY way to splice a value into a page template)
+                                      replaceTemplateMarker (the ONLY way to splice a value into a page template),
+                                      injectHeadContent (splice before </head>), stampDocumentTitle
+  contract.ts                       — bindConsolePackages: binds authConsolePath/accountConsolePath and asserts
+                                      the render contract of a SUBSTITUTED package at boot (see Console Theming)
   auth-console/module.ts            — renderAuthConsolePage(event, {url, payload}) SSR render plumbing (JIT vs package dist)
   auth-console/resolve.ts           — resolveAuthConsolePackagePath/-DistPath (locter locateUp resolution of @authup/client-auth-console)
   auth-console/serve.ts             — serveWorkflowPage (workflow GET payload assembly + open-redirect guard)
   auth-console/http-client.ts       — createInternalUIHttpClient (SSR self-call loopback transport)
   account-console/module.ts         — resolveAccountConsoleDistPath + serveAccountConsolePage (config marker injection)
+  theme/module.ts                   — ThemeProvider: manifest load/validate, realpathed assets root, memoized head
+  theme/manifest.ts                 — zod theme.json schema (token GRAMMAR, asset-path allowlist, .strict())
+  theme/head.ts                     — buildThemeHead (token block + favicon/stylesheet links + fragment), applyTheme
+  theme/assets.ts                   — createThemeAssetsHandler (/theme; hand-written, realpath-contained)
 
 adapters/http/request/helpers/
   actor.ts                          — buildActorContext(req) bridge function
@@ -1254,6 +1261,114 @@ app/modules/provisioning/
   sources/file/module.ts            — FileProvisioningSource
   sources/composite/module.ts       — CompositeProvisioningSource (deep merge + dedup, relations unioned)
 ```
+
+## Console Theming (`themeDirectoryPath`)
+
+Operator rebranding of BOTH served consoles from one mounted directory
+(`adapters/http/ui/theme/`), with no image build and no rebuild. Config
+`themeDirectoryPath` (`THEME_DIRECTORY_PATH`, default `''` = off, resolved
+against `rootPath`); a missing directory creates no provider, registers no
+middleware, and leaves both pages byte-identical.
+
+- **Layout.** `theme.json` (manifest) + `assets/` + `fragments/`. The HTTP
+  mount root is `<root>/assets`, never the theme root, so the manifest and
+  fragments are unreachable over HTTP **by construction** rather than by an
+  extension filter a later edit could loosen.
+- **Precedence.** Tokens are emitted as
+  `<style>@layer authup-theme{:root{…}.dark{…}}</style>` injected before
+  `</head>`. A layer name absent from the bundle's `@layer` statement is
+  appended LAST, so it beats `@layer authup` (kit tokens) and `@layer base`
+  (app theme + its `.dark` flips) with no `!important`, while `.dark` still
+  wins by source order. **Never an inline `style` attribute on `<html>`:**
+  that also wins but permanently, and `AAuthGadgets` flips the `.dark`
+  class client-side with no reload, so the brand would freeze at the
+  render-time cookie value. Operator `theme.css` is unlayered and therefore
+  beats the token block (documented asymmetry: it also beats the bundle's
+  `@layer base .dark` rules, so a colour set only under `:root` there leaks
+  into dark mode).
+- **Injection point is `</head>`, not a template marker** — so theming
+  applies to console packages built BEFORE the feature existed. Splices go
+  through `injectHeadContent` / `stampDocumentTitle` (function-replacement
+  form, same `$'`-expansion trap as `replaceTemplateMarker`).
+- **Token GRAMMAR, never a token allowlist.** Names match
+  `^--[a-z][a-z0-9-]*$`; values are ≤256 chars and may not contain
+  `} < > ; @ \ /* url( expression(`. A closed list would have to live in
+  server-core, which cannot depend on `client-web-kit-theme`, so nothing
+  could bind the two and it would rot in both directions. Same validator a
+  future untrusted (per-realm) token source would reuse unchanged.
+- **`logo` is a manifest FIELD, not a token** — its value needs `url()`,
+  which the grammar forbids. server-core derives
+  `--authup-{auth,account}-logo-image` + `-logo-mark-visibility` from the
+  validated asset path; the kit theme paints the image onto the built-in
+  mark's own `<svg>` box and hides only the mark's CHILDREN (`visibility`
+  on the svg itself would take the background with it), so the swap needs
+  no size token and no component change. Both tokens default inert. This is
+  the ONE part that does not apply to already-published console packages:
+  the kit theme CSS ships raw and is inlined by each console's Tailwind
+  build.
+- **`/theme` is hand-written, NOT `@routup/assets`** (`theme/assets.ts`).
+  That plugin's `lookupPath` walks path SUFFIXES (`/theme/x/logo.svg` would
+  serve `/logo.svg`), probes `.html`/`index.html`, and does no realpath
+  containment check. Symlinks MUST be followed (a Kubernetes ConfigMap
+  volume is a symlink farm, `key -> ..data/key`), so containment is
+  realpath-per-request against the mount root. Content types are pinned
+  from a map the extension allowlist is DERIVED from; SVG is served with
+  `sandbox; default-src 'none'` (it is active content).
+- **Failure posture is deliberately asymmetric, inverting the
+  FileProvisioningSource precedent for the request path:** an invalid
+  manifest fails the BOOT (file path + every issue, `.strict()` so a typo'd
+  key is reported rather than ignored); a manifest that becomes invalid
+  AFTER boot keeps the last good value and logs. Provisioning seeds
+  authorization data; a theme is decoration, and a broken logo must never
+  take down an IdP's login page. Boot always logs an inventory (resolved
+  path, token counts, every servable file) because the dominant failure
+  mode is silence.
+- **Trust boundary (write it down before anyone proposes per-realm CSS).**
+  Filesystem = operator trust, equal to the process. Arbitrary CSS on
+  `/authorize` can overlay or relabel the consent buttons; `frame-ancestors
+  'none'` stops framing, not same-document overlay. So Layers 1-3 are
+  filesystem-only **forever**, and any future per-realm rung may carry
+  **data only** (a theme name, or a token map through the same validator),
+  never a stylesheet and never markup. The default is deliberately NOT
+  under `writableDirectoryPath`: pairing a process-writable directory with
+  login-page content injection would turn any write primitive landing there
+  into persistent branding control on the IdP origin.
+- **`themeFragmentsEnabled`** (`THEME_FRAGMENTS_ENABLED`, default false)
+  opts into `fragments/head.html`, spliced last (so it overrides the
+  manifest) and passed through VERBATIM. No sanitizer: a partial one
+  invites treating fragments as untrusted-safe. Head-only, no in-`<body>`
+  slot — markup next to the consent buttons is a strictly better
+  consent-forgery primitive.
+- **Live reload.** `theme.json` / `head.html` are mtime-revalidated with a
+  1s debounce (one `statSync` per render, negligible next to an SSR pass);
+  assets revalidate per request with a weak size+mtime ETag. No restart to
+  change a colour. Kubernetes needs a WHOLE-volume mount — a `subPath`
+  projection is frozen until the pod restarts.
+- **Per-request isolation.** The provider rides `event.store` via
+  `THEME_STORE_KEY` (`registerThemeMiddleware`, mirroring
+  `UI_HTTP_CLIENT_FACTORY_STORE_KEY`), not module-scope state, so two
+  applications in one process never share a theme.
+
+### Console substitution (`authConsolePath` / `accountConsolePath`)
+
+Theming cannot change markup. `authConsolePath` (`AUTH_CONSOLE_PATH`) and
+`accountConsolePath` (`ACCOUNT_CONSOLE_PATH`) point at package directories
+consulted BEFORE the locter `node_modules` walk, so replacing a console no
+longer means mounting over a workspace symlink.
+
+`bindConsolePackages` (`adapters/http/ui/contract.ts`, called from
+`HTTPModule.setup` before any route mounts) asserts the contract — but
+**only for a package actually substituted**: with the default resolution
+the consoles ship from this repo with linked versions, so the assert would
+compare a constant against itself, and loading the SSR bundle at boot would
+turn a missing build into a failed start instead of an actionable page
+error. `@authup/client-auth-console` exports `CONTRACT_VERSION` as a
+runtime value alongside `render()` (missing = version 1); the account
+console's contract is the `<!--account-config-->` marker, whose absence
+silently degrades the SPA to same-origin API derivation. **Fail-closed**,
+unlike the theme: a replacement owns the prompt ladder, PKCE/`state`
+handling, MFA ordering and `redirectUriVerified` gating, so drift must stop
+the container rather than render subtly wrong auth pages.
 
 ## Realm Scoping Model
 
