@@ -41,7 +41,20 @@
   resolve against the inherited root `baseUrl`, so `../../packages/...`
   silently resolves outside the repo, never matches, and the check degrades to
   the last-built dist declarations (where vue-tsc-emitted component prop
-  unions can differ from source).
+  unions can differ from source). The corollary is that each Vite console
+  app's `resolve.alias` map must list **every** `@authup/*` package it pulls
+  in, transitive ones included: an unaliased package is bundled from its
+  built dist while `vue-tsc` checks the source, so the two silently disagree
+  until a rebuild.
+- The auth console emits both halves of its SSR output from one
+  `vite build`, declared as `environments: { client, ssr }` plus
+  `builder: {}` rather than two invocations with CLI flags. The output
+  paths are load-bearing (server-core reads `dist/client/index.html`,
+  `dist/client/.vite/ssr-manifest.json` and `dist/server/server.js`), so
+  the SSR `entryFileNames` is pinned instead of derived from the entry
+  name. Keep `sharedPlugins` off: `NuxtIconBundle` accumulates scanned
+  icons in a closure, so one shared instance would leak the client scan
+  into the ssr build.
 
 ## Testing
 
