@@ -11,7 +11,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { REALM_MASTER_NAME } from '@authup/core-kit';
+import { REALM_MASTER_NAME, buildUserFakeEmail } from '@authup/core-kit';
 import { httpRequest } from '../../../../utils';
 import { createTestApplication } from '../../../../app';
 
@@ -43,7 +43,9 @@ describe('src/http/controllers/workflows/userinfo', () => {
     it('should carry the email claim', async () => {
         const response = await suite.client.userInfo.get<Record<string, any>>();
 
-        expect(response.email).toBeDefined();
+        // the seeded address, not merely a present key: `toBeDefined()` also
+        // passes for the null the form used to submit back over it
+        expect(response.email).toEqual(buildUserFakeEmail('admin'));
     });
 
     it('should leave an explicit projection untouched', async () => {
