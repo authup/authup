@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { rebaseAssetURLs } from '../../../../../../src/adapters/http/ui/shared/html.ts';
+import { rebaseAssetURLs, replaceTemplateMarker } from '../../../../../../src/adapters/http/ui/shared/html.ts';
 
 const HTML = `<!doctype html>
 <html lang="en">
@@ -21,6 +21,26 @@ const HTML = `<!doctype html>
     <script>window.__PAYLOAD__ = {"config":{"baseURL":"https://example.com/auth"},"data":{"redirect":"/authorize?response_type=code"}}</script>
 </body>
 </html>`;
+
+describe('replaceTemplateMarker', () => {
+    const TEMPLATE = '<body><div id="app"><!--app-html--></div><script src="/public/x.js"></script></body>';
+
+    it.each(['$\'', '$`', '$&', '$$'])('does not expand the %s replacement pattern', (pattern) => {
+        const value = `<p>${pattern}</p>`;
+
+        expect(replaceTemplateMarker(TEMPLATE, '<!--app-html-->', value))
+            .toBe(`<body><div id="app">${value}</div><script src="/public/x.js"></script></body>`);
+    });
+
+    it('replaces only the first occurrence', () => {
+        expect(replaceTemplateMarker('<a><!--m--></a><b><!--m--></b>', '<!--m-->', 'x'))
+            .toBe('<a>x</a><b><!--m--></b>');
+    });
+
+    it('leaves the template untouched when the marker is absent', () => {
+        expect(replaceTemplateMarker(TEMPLATE, '<!--missing-->', 'x')).toBe(TEMPLATE);
+    });
+});
 
 describe('rebaseAssetURLs', () => {
     it('prefixes script, stylesheet and preload references with the base path', () => {
@@ -49,6 +69,14 @@ describe('rebaseAssetURLs', () => {
 
         expect(rebaseAssetURLs(input, '/auth', '/account/'))
             .toBe('<script type="module" crossorigin src="/auth/account/assets/index-jkl.js"></script>');
+    });
+
+    it('does not expand replacement patterns carried by the base path', () => {
+        // basePath is publicUrl's pathname, which may legally contain a `$`.
+        const input = '<script src="/public/assets/a.js"></script>';
+
+        expect(rebaseAssetURLs(input, '/a$&b', '/public/'))
+            .toBe('<script src="/a$&b/public/assets/a.js"></script>');
     });
 
     it('treats regex metacharacters in the vite base literally', () => {

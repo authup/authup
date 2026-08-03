@@ -8,6 +8,7 @@
 import type { App } from 'routup';
 import path from 'node:path';
 import type { IContainer } from 'eldin';
+import type { ViteDevServer } from 'vite';
 import type { Repository } from 'typeorm';
 import type { Realm } from '@authup/core-kit';
 import {
@@ -39,6 +40,8 @@ import {
 } from '../../database/index.ts';
 
 export class HTTPMiddlewareModule {
+    protected viteServer : ViteDevServer | undefined;
+
     async mountBefore(router: App, container: IContainer): Promise<void> {
         // @routup/prometheus must be installed before any other plugin or
         // route so that its onion middleware can observe the full request
@@ -86,7 +89,21 @@ export class HTTPMiddlewareModule {
     }
 
     async mountAssets(router: App): Promise<void> {
-        await registerAssetsMiddleware(router);
+        this.viteServer = await registerAssetsMiddleware(router);
+    }
+
+    /**
+     * Release what the mounted middlewares own beyond the http listener. Only
+     * the JIT vite dev server qualifies: it keeps a file watcher and an HMR
+     * websocket alive, which would survive every setup/teardown cycle.
+     */
+    async teardown(): Promise<void> {
+        if (!this.viteServer) {
+            return;
+        }
+
+        await this.viteServer.close();
+        this.viteServer = undefined;
     }
 
     async mountUIHttpClient(router: App, container: IContainer): Promise<void> {

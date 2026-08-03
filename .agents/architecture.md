@@ -596,6 +596,22 @@ not by client-admin-console:
   console shares (Nuxt's `__NUXT__` model; each console is its own
   document, so the shapes never coexist — the account console injects its
   runtime config under the same name).
+- **Template splicing goes through `replaceTemplateMarker`** (never a bare
+  `String.prototype.replace` with a string replacement). A string
+  replacement expands `$&`, `` $` ``, `$'` and `$$` **in the replacement
+  value**, and the value spliced into `<!--app-html-->` carries the SSR
+  hydration payload, which reflects raw query parameters. `?token=$'`
+  therefore used to splice the template's own tail into the payload,
+  leaving an inline script that was no longer valid JavaScript, so
+  `window.__AUTHUP__` was never assigned and the page died with "No
+  hydration data set." (not XSS: the injected span is template-derived).
+  No escaping helper can defend against this, because the expansion
+  happens after the value has been built: the auth console payload is
+  serialized inside the bundle (`serializePayload` in
+  `apps/client-auth-console/src/window.ts`), the account console config by
+  `serializeInlineScriptJSON`, and both produce a string that
+  `String.prototype.replace` then re-interprets. The same rule covers the
+  account console's `<!--account-config-->` splice.
 - **Serving seam (plan 083)**: the Vue app ships as
   `@authup/client-auth-console` (a server-core runtime dependency),
   resolved via `resolveAuthConsolePackagePath`/`-DistPath`
@@ -613,6 +629,23 @@ not by client-admin-console:
   to replace the hosted auth UI (the Keycloak login-theme analog). A
   missing bundle 500s with an actionable message (build
   `apps/client-auth-console` first).
+- **JIT dev mode caveats.** `ssr.noExternal: true` is scoped to
+  `command === 'build'` in the auth console's `vite.config.ts`: it is what
+  makes the published `dist/server/server.js` self-contained, but applying
+  it in dev inlines `vue/server-renderer`, which resolves to its CJS build
+  under the node condition and cannot be evaluated by the SSR module
+  runner (`exports is not defined` through `ssrLoadModule` and the ssr
+  environment runner alike). The key is omitted rather than set to
+  `false`, which rolldown rejects. The app's `resolve.alias` list must
+  also cover every `@authup/*` package it pulls in transitively, so dev
+  resolution reaches package source instead of a possibly unbuilt dist
+  (and so the bundle agrees with the root tsconfig paths `vue-tsc`
+  checks). Note the gate itself, `isCodeTransformation(JUST_IN_TIME)`, is
+  only true under ts-node/tsx, and no server-core script runs that way.
+  The branch is therefore unreachable in practice, which is why its
+  breakage went unnoticed. The vite dev server is created once in
+  `registerAssetsMiddleware` and closed by `HTTPMiddlewareModule.teardown`
+  (it owns a file watcher plus an HMR websocket).
 - **Feature flags** ride the hydration payload (`data.features`,
   `StatusResponseFeatures` shape) — pages render the form when the
   workflow is enabled, otherwise a localized "disabled" notice (no 404:
@@ -1187,7 +1220,8 @@ adapters/http/controllers/workflows/
 adapters/http/ui/                   — one folder per served console + shared serving helpers
   shared/html.ts                    — readUIClientPreferences (locale/color-mode cookies), stampHtmlAttributes,
                                       applyUIPageHeaders (content-type + CSP frame-ancestors + XFO + referrer),
-                                      rebaseAssetURLs(html, basePath, viteBase), serializeInlineScriptJSON
+                                      rebaseAssetURLs(html, basePath, viteBase), serializeInlineScriptJSON,
+                                      replaceTemplateMarker (the ONLY way to splice a value into a page template)
   auth-console/module.ts            — renderAuthConsolePage(event, {url, payload}) SSR render plumbing (JIT vs package dist)
   auth-console/resolve.ts           — resolveAuthConsolePackagePath/-DistPath (locter locateUp resolution of @authup/client-auth-console)
   auth-console/serve.ts             — serveWorkflowPage (workflow GET payload assembly + open-redirect guard)

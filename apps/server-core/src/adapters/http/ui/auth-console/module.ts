@@ -20,6 +20,7 @@ import {
     applyUIPageHeaders,
     readUIClientPreferences,
     rebaseAssetURLs,
+    replaceTemplateMarker,
     stampHtmlAttributes,
 } from '../shared/index.ts';
 import { resolveAuthConsoleDistPath, resolveAuthConsolePackagePath } from './resolve.ts';
@@ -45,6 +46,7 @@ export async function renderAuthConsolePage(event: IAppEvent, ctx: AuthConsoleRe
     let html : string;
     let manifest : Record<string, any>;
     let render : RenderFunction;
+    let vite : ViteDevServer | undefined;
 
     if (isJIT) {
         const packagePath = resolveAuthConsolePackagePath();
@@ -54,13 +56,16 @@ export async function renderAuthConsolePage(event: IAppEvent, ctx: AuthConsoleRe
             );
         }
 
-        const vite = event.store[VITE_SERVER_STORE_KEY] as ViteDevServer;
+        vite = event.store[VITE_SERVER_STORE_KEY] as ViteDevServer;
 
         html = await fs.promises.readFile(
             path.join(packagePath, 'index.html'),
             'utf-8',
         );
-        html = await vite.transformIndexHtml('/', html);
+        // The URL reaches every transformIndexHtml hook as its context.
+        // Pass the rendered route rather than a fixed '/', as vite's own SSR
+        // guide does.
+        html = await vite.transformIndexHtml(ctx.url, html);
         manifest = {};
         render = (await vite.ssrLoadModule('/src/server.ts')).render as RenderFunction;
     } else {
@@ -86,16 +91,29 @@ export async function renderAuthConsolePage(event: IAppEvent, ctx: AuthConsoleRe
 
     const httpClientFactory = event.store[UI_HTTP_CLIENT_FACTORY_STORE_KEY] as (() => IClient) | undefined;
 
-    const [appHtml, preloadLinks] = await render({
-        url: ctx.url,
-        manifest,
-        payload: ctx.payload,
-        httpClient: httpClientFactory ? httpClientFactory() : undefined,
-    });
+    let appHtml : string;
+    let preloadLinks : string;
 
-    let body = html
-        .replace('<!--preload-links-->', preloadLinks)
-        .replace('<!--app-html-->', appHtml);
+    try {
+        [appHtml, preloadLinks] = await render({
+            url: ctx.url,
+            manifest,
+            payload: ctx.payload,
+            httpClient: httpClientFactory ? httpClientFactory() : undefined,
+        });
+    } catch (e) {
+        // Map the bundled frames back onto the source files before the error
+        // reaches the logger. Only the dev server can do this, so a production
+        // render rethrows untouched.
+        if (vite && e instanceof Error) {
+            vite.ssrFixStacktrace(e);
+        }
+
+        throw e;
+    }
+
+    let body = replaceTemplateMarker(html, '<!--preload-links-->', preloadLinks);
+    body = replaceTemplateMarker(body, '<!--app-html-->', appHtml);
 
     body = stampHtmlAttributes(body, preferences);
 

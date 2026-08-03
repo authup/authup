@@ -165,6 +165,8 @@ export class HTTPModule implements IModule {
 
         container.unregister(MetricsInjectionKey);
 
+        await this.middleware.teardown();
+
         if (!this.instance) return;
 
         container.unregister(HTTPInjectionKey.Server);
