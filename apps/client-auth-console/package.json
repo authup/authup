@@ -16,9 +16,7 @@
     },
     "scripts": {
         "build:types": "vue-tsc --noEmit -p tsconfig.json",
-        "build:client": "vite build --ssrManifest .vite/ssr-manifest.json --outDir dist/client",
-        "build:server": "vite build --ssr src/server.ts --outDir dist/server",
-        "build:js": "npm run build:server && npm run build:client",
+        "build:js": "vite build",
         "build": "npm run build:types && npm run build:js",
         "prepublishOnly": "npm run build"
     },

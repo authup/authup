@@ -44,8 +44,12 @@ export default defineConfig({
     ],
     resolve: {
         alias: {
+            '@authup/access': path.join(packagesRoot, 'access', 'src'),
             '@authup/core-kit': path.join(packagesRoot, 'core-kit', 'src'),
             '@authup/core-http-kit': path.join(packagesRoot, 'core-http-kit', 'src'),
+            '@authup/core-realtime-kit': path.join(packagesRoot, 'core-realtime-kit', 'src'),
+            '@authup/errors': path.join(packagesRoot, 'errors', 'src'),
+            '@authup/i18n': path.join(packagesRoot, 'i18n', 'src'),
             '@authup/kit': path.join(packagesRoot, 'kit', 'src'),
             '@authup/client-web-kit': path.join(packagesRoot, 'client-web-kit', 'src'),
             '@authup/client-web-kit-theme': path.join(packagesRoot, 'client-web-kit-theme', 'src'),

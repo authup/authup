@@ -77,4 +77,34 @@ export default defineConfig(({ command }) => ({
     // build under the node condition, which the SSR module runner cannot
     // evaluate ("exports is not defined").
     ...(command === 'build' ? { ssr: { noExternal: true } } : {}),
+    // Both halves of the build are declared here rather than passed as CLI
+    // flags, so one `vite build` emits them via builder.buildApp(). The
+    // three paths server-core reads are pinned by these values:
+    // dist/client/index.html, dist/client/.vite/ssr-manifest.json and
+    // dist/server/server.js.
+    environments: {
+        client: {
+            build: {
+                outDir: 'dist/client',
+                ssrManifest: '.vite/ssr-manifest.json',
+            },
+        },
+        ssr: {
+            input: 'src/server.ts',
+            build: {
+                outDir: 'dist/server',
+                rollupOptions: {
+                    // The CLI form derived this from the entry name. Pin it,
+                    // because server-core reads that exact filename.
+                    output: { entryFileNames: 'server.js' },
+                },
+            },
+        },
+    },
+    // Opt into builder.buildApp(). Plugin instances stay per-environment
+    // (sharedPlugins defaults to false): plugins hold configResolved-scoped
+    // state, and the two environments resolve differently enough (consumer,
+    // build.ssr, outDir) that sharing one instance is not what this plugin
+    // set is written for.
+    builder: {},
 }));
