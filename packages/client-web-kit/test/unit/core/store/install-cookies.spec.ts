@@ -235,18 +235,38 @@ describe('core/store/install-cookies path', () => {
     // default-path and WIN the read, so hydration would persist their
     // contents onto the pinned path: a stale refresh token replacing a live
     // one, replayed into family revocation on the next refresh.
-    it('clears the pre-pinning copies on the document default-path', () => {
+    it('clears the pre-pinning copies that can reach the document', () => {
         setPathname('/account/password');
 
         const { unsetCalls } = buildApp();
 
-        const dropped = unsetCalls.filter((call) => call.options.path === '/account');
-        expect(dropped.map((call) => call.key).sort())
-            .toEqual(Object.values(CookieName).sort());
+        const paths = new Set(unsetCalls.map((call) => call.options.path));
+        expect(paths).toEqual(new Set(['/account', '/account/password']));
+
+        for (const path of paths) {
+            expect(unsetCalls
+                .filter((call) => call.options.path === path)
+                .map((call) => call.key)
+                .sort())
+                .toEqual(Object.values(CookieName).sort());
+        }
     });
 
-    it('clears nothing extra when the document sits on the cookie path', () => {
+    // `/account` serves the console as well, and a copy written from
+    // `/account/password` sits on exactly `/account` — which path-matches it.
+    // Clearing only the document's default-path (`/` here) would leave it to
+    // win hydration.
+    it('clears the mount path itself on a trailing-slash-less route', () => {
         setPathname('/account');
+
+        const { unsetCalls } = buildApp();
+
+        const paths = new Set(unsetCalls.map((call) => call.options.path));
+        expect(paths).toEqual(new Set(['/account']));
+    });
+
+    it('clears nothing when the document sits on the cookie path', () => {
+        setPathname('/');
 
         const { unsetCalls } = buildApp();
 

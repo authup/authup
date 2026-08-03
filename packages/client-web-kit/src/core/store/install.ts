@@ -86,8 +86,15 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
      * next refresh replays into family revocation. So they are cleared once,
      * before reading, and the browser falls back to the pinned session (or to
      * signed out, if that one already lapsed).
+     *
+     * Cleared is every path a cookie could sit on and still reach this
+     * document, which by the RFC 6265 5.2.4 path-match is each `/`-boundary
+     * prefix of the current path PLUS that path itself. The last part is not
+     * redundant: `/account` serves the console too, and a copy written from
+     * `/account/password` sits on exactly `/account`, matching it. Only the
+     * store's own names are touched, and never on the pinned path.
      */
-    const dropDefaultPathCookies = () => {
+    const dropShadowingCookies = () => {
         const pathname = typeof window === 'undefined' ?
             undefined :
             window.location?.pathname;
@@ -96,14 +103,20 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
             return;
         }
 
-        const index = pathname.lastIndexOf('/');
-        const defaultPath = index <= 0 ? '/' : pathname.slice(0, index);
-        if (defaultPath === cookiePath) {
-            return;
-        }
+        let path = '';
+        for (const segment of pathname.split('/')) {
+            if (!segment) {
+                continue;
+            }
 
-        for (const key of Object.values(CookieName)) {
-            cookieUnset(key, { path: defaultPath });
+            path += `/${segment}`;
+            if (path === cookiePath) {
+                continue;
+            }
+
+            for (const key of Object.values(CookieName)) {
+                cookieUnset(key, { path });
+            }
         }
     };
 
@@ -268,7 +281,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         },
     );
 
-    dropDefaultPathCookies();
+    dropShadowingCookies();
     readCookies();
 
     provideStoreFactory(storeFactory, app);
