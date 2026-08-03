@@ -597,9 +597,13 @@ not by client-admin-console:
   leaving an inline script that was no longer valid JavaScript, so
   `window.__AUTHUP__` was never assigned and the page died with "No
   hydration data set." (not XSS: the injected span is template-derived).
-  `serializeInlineScriptJSON` cannot defend against this, because the
-  expansion happens after the value has been built. The same rule covers
-  the account console's `<!--account-config-->` splice.
+  No escaping helper can defend against this, because the expansion
+  happens after the value has been built: the auth console payload is
+  serialized inside the bundle (`serializePayload` in
+  `apps/client-auth-console/src/window.ts`), the account console config by
+  `serializeInlineScriptJSON`, and both produce a string that
+  `String.prototype.replace` then re-interprets. The same rule covers the
+  account console's `<!--account-config-->` splice.
 - **Serving seam (plan 083)**: the Vue app ships as
   `@authup/client-auth-console` (a server-core runtime dependency),
   resolved via `resolveAuthConsolePackagePath`/`-DistPath`
@@ -629,9 +633,9 @@ not by client-admin-console:
   resolution reaches package source instead of a possibly unbuilt dist
   (and so the bundle agrees with the root tsconfig paths `vue-tsc`
   checks). Note the gate itself, `isCodeTransformation(JUST_IN_TIME)`, is
-  only true under ts-node/tsx, and no server-core script runs that way —
-  so the branch is currently unreachable in practice and its breakage
-  went unnoticed for a long time. The vite dev server is created once in
+  only true under ts-node/tsx, and no server-core script runs that way.
+  The branch is therefore unreachable in practice, which is why its
+  breakage went unnoticed. The vite dev server is created once in
   `registerAssetsMiddleware` and closed by `HTTPMiddlewareModule.teardown`
   (it owns a file watcher plus an HMR websocket).
 - **Feature flags** ride the hydration payload (`data.features`,

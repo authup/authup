@@ -62,9 +62,9 @@ export async function renderAuthConsolePage(event: IAppEvent, ctx: AuthConsoleRe
             path.join(packagePath, 'index.html'),
             'utf-8',
         );
-        // Pass the rendered route, not a fixed '/': the URL reaches every
-        // transformIndexHtml hook as its context and decides the filename a
-        // plugin resolves inline-module sourcemaps against.
+        // The URL reaches every transformIndexHtml hook as its context.
+        // Pass the rendered route rather than a fixed '/', as vite's own SSR
+        // guide does.
         html = await vite.transformIndexHtml(ctx.url, html);
         manifest = {};
         render = (await vite.ssrLoadModule('/src/server.ts')).render as RenderFunction;

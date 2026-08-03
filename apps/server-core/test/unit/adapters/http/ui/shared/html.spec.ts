@@ -71,6 +71,14 @@ describe('rebaseAssetURLs', () => {
             .toBe('<script type="module" crossorigin src="/auth/account/assets/index-jkl.js"></script>');
     });
 
+    it('does not expand replacement patterns carried by the base path', () => {
+        // basePath is publicUrl's pathname, which may legally contain a `$`.
+        const input = '<script src="/public/assets/a.js"></script>';
+
+        expect(rebaseAssetURLs(input, '/a$&b', '/public/'))
+            .toBe('<script src="/a$&b/public/assets/a.js"></script>');
+    });
+
     it('treats regex metacharacters in the vite base literally', () => {
         const input = '<script src="/public.v2/assets/a.js"></script><script src="/publicXv2/assets/b.js"></script>';
 
