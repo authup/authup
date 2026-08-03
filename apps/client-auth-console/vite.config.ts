@@ -16,7 +16,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const packagesRoot = path.resolve(__dirname, '..', '..', 'packages');
 const repositoryRoot = path.resolve(__dirname, '..', '..');
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
     base: '/public/',
     plugins: [
         vuePlugin(),
@@ -58,7 +58,11 @@ export default defineConfig({
     ],
     resolve: {
         alias: {
+            '@authup/access': path.join(packagesRoot, 'access', 'src'),
             '@authup/core-kit': path.join(packagesRoot, 'core-kit', 'src'),
+            '@authup/core-realtime-kit': path.join(packagesRoot, 'core-realtime-kit', 'src'),
+            '@authup/errors': path.join(packagesRoot, 'errors', 'src'),
+            '@authup/i18n': path.join(packagesRoot, 'i18n', 'src'),
             '@authup/core-http-kit': path.join(packagesRoot, 'core-http-kit', 'src'),
             '@authup/kit': path.join(packagesRoot, 'kit', 'src'),
             '@authup/client-web-kit': path.join(packagesRoot, 'client-web-kit', 'src'),
@@ -67,5 +71,10 @@ export default defineConfig({
             '@authup/specs': path.join(packagesRoot, 'specs', 'src'),
         },
     },
-    ssr: { noExternal: true },
-});
+    // Bundle every dependency into the SSR build so the published
+    // dist/server/server.js is self-contained for server-core to read.
+    // Dev must NOT inline them: vue/server-renderer resolves to its CJS
+    // build under the node condition, which the SSR module runner cannot
+    // evaluate ("exports is not defined").
+    ...(command === 'build' ? { ssr: { noExternal: true } } : {}),
+}));
