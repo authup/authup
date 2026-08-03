@@ -17,7 +17,6 @@
         "build:js": "vite build",
         "build": "npm run build:types && npm run build:js",
         "dev": "vite",
-        "dev:build": "vite build --watch",
         "test": "cross-env NODE_ENV=test vitest run --config test/vitest.config.ts",
         "prepublishOnly": "npm run build"
     },

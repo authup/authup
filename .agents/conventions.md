@@ -52,9 +52,11 @@
   paths are load-bearing (server-core reads `dist/client/index.html`,
   `dist/client/.vite/ssr-manifest.json` and `dist/server/server.js`), so
   the SSR `entryFileNames` is pinned instead of derived from the entry
-  name. Keep `sharedPlugins` off: `NuxtIconBundle` accumulates scanned
-  icons in a closure, so one shared instance would leak the client scan
-  into the ssr build.
+  name. Leave `builder.sharedPlugins` at its default (off): plugin
+  instances hold `configResolved`-scoped state, and the environments
+  resolve differently enough (`consumer`, `build.ssr`, outDir) that
+  sharing one instance across both is not something the plugin set is
+  written for.
 
 ## Testing
 

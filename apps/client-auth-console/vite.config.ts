@@ -102,8 +102,9 @@ export default defineConfig(({ command }) => ({
         },
     },
     // Opt into builder.buildApp(). Plugin instances stay per-environment
-    // (sharedPlugins defaults to false): NuxtIconBundle accumulates scanned
-    // icons in a closure, so one shared instance would leak the client
-    // scan into the ssr build.
+    // (sharedPlugins defaults to false): plugins hold configResolved-scoped
+    // state, and the two environments resolve differently enough (consumer,
+    // build.ssr, outDir) that sharing one instance is not what this plugin
+    // set is written for.
     builder: {},
 }));
