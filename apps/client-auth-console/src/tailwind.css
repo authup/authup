@@ -1,5 +1,5 @@
 /*
- * Tailwind v4 entry for apps/server-core/ui (embedded OAuth consent SSR).
+ * Tailwind v4 entry for apps/client-auth-console (the SSR auth workflow UI).
  *
  * Pulls in the authup theme (tailwindcss + @vuecs/design + theme-tailwind
  * + compat layer), then declares the SSR app's local `@source` scopes
@@ -26,7 +26,7 @@
 
 /*
  * Per-app nested vuecs deps — see the matching note in
- * `apps/client-admin-console/assets/css/tailwind.css`. server-core hoists
- * differently from client-admin-console, so paths land here.
+ * `apps/client-admin-console/assets/css/tailwind.css`. npm may nest @vuecs
+ * copies under this app's own node_modules, so scan them too.
  */
-@source "../../node_modules/@vuecs";
+@source "../node_modules/@vuecs";

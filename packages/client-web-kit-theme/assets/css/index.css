@@ -78,9 +78,9 @@
  * leaking into dark mode.
  *
  * Lives in the kit theme rather than `@authup/client-web-theme` so
- * any consumer of the kit theme — including the embedded
- * `apps/server-core/ui/` consent app — inherits the same dark-
- * variant semantics without re-declaring this in each entry.
+ * any consumer of the kit theme (including the `apps/client-auth-console/`
+ * SSR auth app) inherits the same dark-variant semantics without
+ * re-declaring this in each entry.
  */
 @custom-variant dark (&:where(.dark, .dark *));
 

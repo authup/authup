@@ -16,7 +16,7 @@ import { httpRequest } from '../../../../utils';
 import { createTestApplication } from '../../../../app';
 
 function extractAccountConfig(body: string) : Record<string, any> {
-    const match = body.match(/window\.__AUTHUP_ACCOUNT__ = (.+);<\/script>/);
+    const match = body.match(/window\.__AUTHUP__ = (.+);<\/script>/);
     expect(match).toBeTruthy();
     return JSON.parse(match![1]);
 }
@@ -68,11 +68,14 @@ describe('src/http/controllers/workflows/account (SPA shell)', () => {
 
     it('should carry no server-rendered per-user state', async () => {
         // The shell is a static SPA: no SSR, no hydration payload — only the
-        // operator-level runtime config is injected. Nothing actor-scoped
-        // can leak into a (potentially cached) response body.
+        // operator-level runtime config is injected under the shared
+        // `window.__AUTHUP__` global (one occurrence, config-shaped: an SSR
+        // hydration payload would carry config/data keys and fail the
+        // exact-keys assertion below). Nothing actor-scoped can leak into a
+        // (potentially cached) response body.
         const body = await (await httpRequest(suite, 'GET', '/account/sessions')).text();
 
-        expect(body).not.toContain('window.__AUTHUP__ =');
+        expect(body.match(/window\.__AUTHUP__ =/g)).toHaveLength(1);
 
         // ... and the injected config itself carries EXACTLY the documented
         // operator-level fields — an actor-scoped addition fails here.

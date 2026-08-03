@@ -28,10 +28,10 @@ export default defineNuxtConfig({
             // `<VCIcon>` resolves against, so no component changes are needed.
             //
             // This is @nuxt/icon's STANDALONE vite plugin, not the Nuxt module:
-            // apps/server-core/ui (plain Vite, no Nuxt) uses the exact same
+            // apps/client-auth-console (plain Vite, no Nuxt) uses the exact same
             // plugin and glob list, so the two apps cannot drift.
             //
-            // Keep the globs in sync with apps/server-core/ui/vite.config.ts.
+            // Keep the globs in sync with apps/client-auth-console/vite.config.ts.
             // Every path that can carry an icon name must be listed: this app,
             // `@authup/client-web-kit` (components + identity-provider preset
             // tables), and `@vuecs/icons-font-awesome`, whose preset supplies

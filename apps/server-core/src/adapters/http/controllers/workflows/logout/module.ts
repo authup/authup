@@ -17,7 +17,7 @@ import { sendRedirect } from 'routup';
 import type { IOAuth2EndSessionService, OAuth2EndSessionRequest } from '../../../../../core/index.ts';
 import { OAuth2EndSessionRequestValidator } from '../../../../../core/index.ts';
 import { readFromLocations } from '../../../request/index.ts';
-import { renderUIPage } from '../../../ui/index.ts';
+import { renderAuthConsolePage } from '../../../ui/index.ts';
 import type { LogoutControllerContext, LogoutControllerOptions } from './types.ts';
 
 @DController('/logout')
@@ -112,7 +112,7 @@ export class LogoutController {
 
         const requestURL = new URL(event.request.url);
 
-        return renderUIPage(event, {
+        return renderAuthConsolePage(event, {
             url: '/logout',
             payload: {
                 config: { baseURL: this.options.baseURL },

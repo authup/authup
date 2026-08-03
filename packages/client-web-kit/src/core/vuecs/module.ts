@@ -63,7 +63,7 @@ export function registerIconCollections() : void {
 /**
  * Build the `app.use(vuecs, ...)` install options shared by authup's UI
  * consumers (apps/client-admin-console's vuecs plugin + the embedded SSR app in
- * apps/server-core/ui): the Font Awesome icon preset and the
+ * apps/client-auth-console): the Font Awesome icon preset and the
  * translator-wired submit-button defaults. Themes stay a caller concern —
  * the kit must not depend on the theme packages (the kit theme peers the
  * kit) — and are passed through in the given order (kit theme first, app

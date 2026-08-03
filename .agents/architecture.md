@@ -572,14 +572,39 @@ into the URL (the reset form asks for email/name).
 #### Auth Workflow UI (backend-served SSR pages) + Status Endpoint
 
 Authup can run headless (server-core without client-admin-console), so every auth
-workflow page is served by the embedded SSR app (`apps/server-core/ui`),
+workflow page is served by the SSR auth app (`apps/client-auth-console`,
+resolved and rendered by server-core — plan 083),
 not by client-admin-console:
 
 - **Routes**: `/authorize`, `/register`, `/activate`, `/password-forgot`,
   `/password-reset` — each `GET` serves SSR HTML while `POST` on the same
   path remains the JSON API. The render plumbing is shared:
-  `renderUIPage(event, { url, payload })` in `adapters/http/ui/render.ts`
-  (JIT vs dist, template, manifest, preload links, content-type).
+  `renderAuthConsolePage(event, { url, payload })` in
+  `adapters/http/ui/auth-console/module.ts` (JIT vs dist, template,
+  manifest, preload links, headers), composing the cross-console helpers
+  in `adapters/http/ui/shared/` (cookie-derived html attrs, security
+  headers, asset rebasing). The payload reaches the client as
+  `window.__AUTHUP__` — the ONE reserved window global every served
+  console shares (Nuxt's `__NUXT__` model; each console is its own
+  document, so the shapes never coexist — the account console injects its
+  runtime config under the same name).
+- **Serving seam (plan 083)**: the Vue app ships as
+  `@authup/client-auth-console` (a server-core runtime dependency),
+  resolved via `resolveAuthConsolePackagePath`/`-DistPath`
+  (`adapters/http/ui/auth-console/resolve.ts`, the same locter `locateUpSync`
+  walk as the account console). Production reads the built dist
+  (`dist/client/index.html` + `.vite/ssr-manifest.json`,
+  `dist/server/server.js` for `render()`; client assets mounted at
+  `/public`); JIT dev mode roots the embedded vite dev server at the
+  package SOURCE dir (the workspace symlink — vite auto-loads the
+  package's own `vite.config.ts`; a published install has no JIT). The
+  boundary is typed by the package's `src/contract.ts`
+  (`HydrationPayload`, `RenderContext`, `RenderFunction`) — server-core
+  imports those TYPES only, the runtime stays a dist-file `read()`.
+  Substituting a package that fulfills the contract is the supported way
+  to replace the hosted auth UI (the Keycloak login-theme analog). A
+  missing bundle 500s with an actionable message (build
+  `apps/client-auth-console` first).
 - **Feature flags** ride the hydration payload (`data.features`,
   `StatusResponseFeatures` shape) — pages render the form when the
   workflow is enabled, otherwise a localized "disabled" notice (no 404:
@@ -591,13 +616,13 @@ not by client-admin-console:
 - **Flow continuity**: workflow links carry a same-origin `redirect` query
   param (the original `/authorize` path + query) so "back to login"
   restores the authorize request. `sanitizeRelativeRedirect()` in
-  `adapters/http/ui/render.ts` rejects absolute / protocol-relative URLs
+  `adapters/http/request/helpers/redirect.ts` rejects absolute / protocol-relative URLs
   (open-redirect guard).
 - **Internal HTTP client (SSR self-calls)**: the render's API calls
   (session hydration, identity-provider/scope fetches) go through the
   client registered under `HTTPInjectionKey.UIHttpClient`.
   `HTTPModule.setup` registers the production default —
-  `createInternalUIHttpClient` (`adapters/http/ui/internal-http-client.ts`),
+  `createInternalUIHttpClient` (`adapters/http/ui/auth-console/http-client.ts`),
   a `@authup/core-http-kit` `Client` whose hapic `FetchTransport` rewrites
   every request targeting `publicUrl` (origin + sub-path prefix, wildcard
   listen hosts normalized to loopback) onto the server's own listen
@@ -619,12 +644,12 @@ not by client-admin-console:
   reverse proxy (e.g. `https://example.com/auth/* → authup /*`) with no
   extra config — the prefix is derived from `publicUrl`'s pathname
   (`getURLBasePath` in `@authup/kit`). The vite build keeps its fixed
-  `base: '/public/'`; `renderUIPage` rebases emitted asset URLs onto the
-  prefix per request (`rebasePublicAssetURLs` in
-  `adapters/http/ui/base-path.ts`, so the prebuilt dist stays
+  `base: '/public/'`; `renderAuthConsolePage` rebases emitted asset URLs onto the
+  prefix per request (`rebaseAssetURLs` in
+  `adapters/http/ui/shared/html.ts`, so the prebuilt dist stays
   deployment-agnostic). Inside the UI app the same prefix feeds the
-  vue-router history base (`ui/src/app.ts`) and the `useBasePath()`
-  composable (`ui/src/base-path.ts`) that pages use for inter-page hrefs
+  vue-router history base (`src/app.ts`) and the `useBasePath()`
+  composable (`src/base-path.ts`) that pages use for inter-page hrefs
   and rendered `redirect` values — `redirect`/`requestPath` params stay
   server-local (prefix-free); the prefix is applied only when a path is
   rendered as an href. Server-side `Location` redirects are unaffected
@@ -958,7 +983,7 @@ a spinner until mounted anyway. server-core depends on the package at
 RUNTIME and serves its built `dist/` ("embedded by default, relocatable by
 choice"):
 
-- **Serving seam** (`adapters/http/ui/account.ts`, the plan-081 static-SPA
+- **Serving seam** (`adapters/http/ui/account-console/module.ts`, the plan-081 static-SPA
   pilot): `AccountController` (`@DController('/account')`, `''` +
   `'/:page'` — client-side routing owns sub-paths, every route returns the
   same shell) calls `serveAccountConsolePage(event, { baseURL, features })`,
@@ -969,17 +994,18 @@ choice"):
   published install; only positive resolution is cached), injects the
   runtime config by replacing the
   `<!--account-config-->` marker in the built index.html
-  (`window.__AUTHUP_ACCOUNT__ = { apiUrl, basePath, features }`, escaped
+  (`window.__AUTHUP__ = { apiUrl, basePath, features }` — the shared
+  authup window global, escaped
   like every inline script payload), stamps lang/color-mode html attrs from
   the shared cookies (no FOUC), rebases the fixed `/account/` vite-base
   asset hrefs when publicUrl carries a sub-path, and sets the same security
-  headers as `renderUIPage`. Static assets ride the assets middleware
+  headers as `renderAuthConsolePage`. Static assets ride the assets middleware
   (`/account/assets` → `<pkg>/dist/assets`, registered in dev mode too — the
   bundle is prebuilt, not vite-transformed). A missing bundle 500s with an
   actionable message (build `apps/client-account-console` first).
 - **Runtime config contract** (`src/config.ts`): a standalone host serves
   the same dist under `/account` on its own origin and injects
-  `window.__AUTHUP_ACCOUNT__` (or replaces the marker) with `apiUrl` (+
+  `window.__AUTHUP__` (or replaces the marker) with `apiUrl` (+
   optional `basePath`); with nothing injected the app derives the API URL
   same-origin from its base path. Standalone hosting additionally needs the
   origin registered in `TRUSTED_ORIGINS` (drives the `account-console`
@@ -1083,9 +1109,15 @@ adapters/http/controllers/workflows/
   password-reset/module.ts          — PasswordResetController → IPasswordRecoveryService (POST API + GET serves SSR page)
   status/module.ts                  — StatusController (GET / → version + feature flags)
 
-adapters/http/ui/
-  render.ts                         — renderUIPage(event, {url, payload}) shared SSR plumbing + sanitizeRelativeRedirect()
-  base-path.ts                      — rebasePublicAssetURLs(html, basePath) sub-path asset rewrite (prefix from publicUrl pathname)
+adapters/http/ui/                   — one folder per served console + shared serving helpers
+  shared/html.ts                    — readUIClientPreferences (locale/color-mode cookies), stampHtmlAttributes,
+                                      applyUIPageHeaders (content-type + CSP frame-ancestors + XFO + referrer),
+                                      rebaseAssetURLs(html, basePath, viteBase), serializeInlineScriptJSON
+  auth-console/module.ts            — renderAuthConsolePage(event, {url, payload}) SSR render plumbing (JIT vs package dist)
+  auth-console/resolve.ts           — resolveAuthConsolePackagePath/-DistPath (locter locateUp resolution of @authup/client-auth-console)
+  auth-console/serve.ts             — serveWorkflowPage (workflow GET payload assembly + open-redirect guard)
+  auth-console/http-client.ts       — createInternalUIHttpClient (SSR self-call loopback transport)
+  account-console/module.ts         — resolveAccountConsoleDistPath + serveAccountConsolePage (config marker injection)
 
 adapters/http/request/helpers/
   actor.ts                          — buildActorContext(req) bridge function
@@ -1605,9 +1637,13 @@ Include authorization*.
 ## Deployment Topology & UI Boundary (plan 078)
 
 Two runtime services. **server-core is the IdP origin** — the OAuth2/OIDC
-protocol surface plus the embedded SSR auth pages (`/authorize`, `/register`,
+protocol surface plus the hosted SSR auth pages (`/authorize`, `/register`,
 `/activate`, `/password-forgot`, `/password-reset`, `/logout`). Those pages
-are **architectural, not incidental**, and must stay in server-core:
+are **architectural, not incidental**, and must stay served by server-core
+(since plan 083 their Vue app lives in its own workspace,
+`apps/client-auth-console`, but that is an ownership/packaging split only —
+server-core resolves and renders the package on its own origin, and the
+standalone-hosting question stays rejected):
 
 - **WebAuthn origin binding** — the rpId/origin derives from `publicUrl`;
   hosted login means every RP's second factor runs on the one IdP origin with
@@ -1957,7 +1993,7 @@ app (kit or non-kit) ends a lingering authup session on its own logout, so
   (`AEndSessionForm`) performs the bearer-authenticated sign-out, then navigates
   to it (`window.location`).
 
-The SSR page is `apps/server-core/ui/src/pages/logout.vue` → kit
+The SSR page is `apps/client-auth-console/src/pages/logout.vue` → kit
 `AEndSessionForm`; the typed URL builder is `buildEndSessionURL` in
 `client-web-kit`. **`AEndSessionForm` auto-clears local state on mount ONLY when
 `serverRevoked && hintSub === store.user.id && hintSubKind === 'user'`** — the
@@ -3300,7 +3336,7 @@ When adding a `name`-style column on a new entity (or extending an existing one)
 2. **Repository** — use `=` for name lookups, never `LIKE :name`.
 3. **Migration** — ship a data migration canonicalizing existing rows with an up-front collision pre-check, following the pattern of `apps/server-core/src/adapters/database/migrations/{mysql,postgres}/1779267068441-Default.ts`.
 
-## UI Layer (`apps/client-admin-console`, `apps/server-core/ui`, `packages/client-web-kit`)
+## UI Layer (`apps/client-admin-console`, `apps/client-auth-console`, `packages/client-web-kit`)
 
 The UI sits on the `@vuecs/*` 1.x line — see
 [`.agents/structure.md` → UI Stack](structure.md#ui-stack-appsclient-web-appsserver-coreui-packagesclient-web-kit)
@@ -3456,9 +3492,10 @@ owns one seam and stays framework-agnostic; each host supplies the bucket:
   request during SSR whose result was discarded when the render flushed).
 - **Hosts.** `apps/client-admin-console` wires it in the `authup:kit` Nuxt plugin over
   `nuxtApp.payload.data` (the same bucket `useAsyncData` transports through);
-  `apps/server-core/ui` wires it over `HydrationPayload.hydration`, which
+  `apps/client-auth-console` wires it over `HydrationPayload.hydration`, which
   works because `createWindowPayloadHTML(ctx.payload)` runs *after*
-  `renderToString` (`ui/src/server.ts`), so writes during the render still
+  `renderToString` (`apps/client-auth-console/src/server.ts`), so writes
+  during the render still
   reach the markup.
 - **Collections.** `defineEntityCollectionManager`'s initial load runs inside
   `onServerPrefetch` (so the renderer awaits the rows and they are in the
@@ -3499,7 +3536,7 @@ owns one seam and stays framework-agnostic; each host supplies the bucket:
   entity type plus query, with no actor in it, so two users requesting the same
   list derive the SAME key. Nothing may therefore outlive one request: both
   hosts build a fresh payload per request (Nuxt's `payload.data`; every
-  `renderUIPage` caller passes a new payload literal, and the process-level
+  `renderAuthConsolePage` caller passes a new payload literal, and the process-level
   caches in `render.ts` hold only the immutable template / manifest / bundle),
   and the store is provided on the per-request Vue app, so it is unreachable
   once the render ends. Same reasoning as the `lifetime: 'transient'`
@@ -3600,7 +3637,7 @@ new `@authup/client-web-theme` package.
   one theme: `app.use(vuecs, { themes: [authupTheme()] })`.
 - **Tailwind v4** — wired via `@tailwindcss/vite` in both
   `apps/client-admin-console/nuxt.config.ts` (`vite.plugins`) and
-  `apps/server-core/ui/vite.config.ts`. v3 is not supported because
+  `apps/client-auth-console/vite.config.ts`. v3 is not supported because
   theme-tailwind uses `@theme` and `--color-*` rebinds.
 - **Bootstrap-compat layer — fully retired.** The `@layer components`
   block in `packages/client-web-theme/assets/css/index.css` used to
@@ -3621,11 +3658,11 @@ new `@authup/client-web-theme` package.
   pass. Spacing utilities (`ms-*`, `me-*`, `mt-*`, `mb-*`, `p*`,
   `gap-*`) carry over unchanged — Tailwind v4 uses the same naming.
 - **Tailwind `@source` scanning** — the theme's CSS adds `@source`
-  directives for `apps/client-admin-console/**`, `apps/server-core/ui/**`,
+  directives for `apps/client-admin-console/**`, `apps/client-auth-console/**`,
   and `packages/client-web-kit/src/**` so the JIT picks up
   utility-class strings that live outside any single consumer app's
   source tree (notably, classes inside the kit's components and
-  the embedded consent SSR app).
+  the auth console SSR app).
 - **Theme-tailwind semantic colors** — `bg-bg`, `bg-bg-muted`,
   `bg-bg-elevated`, `text-fg`, `text-fg-muted`, `border-border`,
   `text-on-primary`, `text-on-success`, etc. — plus per-palette

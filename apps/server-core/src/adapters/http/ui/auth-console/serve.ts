@@ -5,22 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IAppEvent } from 'routup';
-import { sanitizeRelativeRedirect } from '../request/index.ts';
-import { renderUIPage } from './render.ts';
-
-export type ServeWorkflowPageOptions = {
-    url: string,
-    baseURL: string,
-    features: StatusResponseFeatures,
-    // Whether the page consumes the `realmId` (legacy `realm_id`) / `token`
-    // query params (e.g. prefill from an email deep link). Off by default so
-    // a page never reflects a param it doesn't use.
-    realmAware?: boolean,
-    tokenAware?: boolean,
-};
+import { sanitizeRelativeRedirect } from '../../request/index.ts';
+import { renderAuthConsolePage } from './module.ts';
+import type { ServeWorkflowPageOptions } from './types.ts';
 
 /**
  * Single SSR payload-assembly path for the auth workflow GET routes:
@@ -47,7 +36,7 @@ export function serveWorkflowPage(
         data.token = typeof query.token === 'string' ? query.token : undefined;
     }
 
-    return renderUIPage(event, {
+    return renderAuthConsolePage(event, {
         url: options.url,
         payload: {
             config: { baseURL: options.baseURL },

@@ -57,7 +57,7 @@ export default defineNuxtPlugin({
         // `config.locale` feed here.
         //
         // `buildVuecsInstallOptions()` (shared with the embedded SSR app in
-        // apps/server-core/ui) supplies the icon preset + the
+        // apps/client-auth-console) supplies the icon preset + the
         // translator-wired submit-button defaults; it runs after the kit's
         // translator install (`dependsOn: ['authup']`), so `useTranslation`
         // inside the helper sees the live ilingo locale provider.

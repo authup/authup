@@ -13,8 +13,8 @@ import tailwindcss from '@tailwindcss/vite';
 import { NuxtIconBundle } from '@nuxt/icon/vite';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const packagesRoot = path.resolve(__dirname, '..', '..', '..', 'packages');
-const repositoryRoot = path.resolve(__dirname, '..', '..', '..');
+const packagesRoot = path.resolve(__dirname, '..', '..', 'packages');
+const repositoryRoot = path.resolve(__dirname, '..', '..');
 
 export default defineConfig({
     base: '/public/',
@@ -48,7 +48,7 @@ export default defineConfig({
             cwd: repositoryRoot,
             scan: {
                 globInclude: [
-                    'apps/server-core/ui/src/**/*.{vue,ts}',
+                    'apps/client-auth-console/src/**/*.{vue,ts}',
                     'packages/client-web-kit/src/**/*.{vue,ts}',
                     'node_modules/@vuecs/icons-font-awesome/dist/*.mjs',
                 ],

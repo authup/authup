@@ -8,6 +8,7 @@
         "apps/authup": {"component": "authup"},
         "apps/client-account-console": {"component": "client-account-console"},
         "apps/client-admin-console": {"component": "client-admin-console"},
+        "apps/client-auth-console": {"component": "client-auth-console"},
         "apps/server-core": {"component": "server-core"},
 
         "packages/access": {"component": "access"},
@@ -44,6 +45,7 @@
                 "authup",
                 "client-account-console",
                 "client-admin-console",
+                "client-auth-console",
                 "server-core",
 
                 "access",

@@ -5,26 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IClient } from '@authup/core-http-kit';
 import type { SSRContext } from 'vue/server-renderer';
 import { renderToString } from 'vue/server-renderer';
 import { basename } from 'node:path';
 import { createApp } from './app';
 import { createWindowPayloadHTML } from './window';
-import type { HydrationPayload } from './types';
+import type { RenderContext, RenderResult } from './contract';
 
-export type RenderContext = {
-    url: string,
-    manifest: Record<string, string[]>,
-    payload: HydrationPayload,
-    /**
-     * Pre-built HTTP client handed to the Vue app instead of one
-     * constructed from payload.config.baseURL (test injection).
-     */
-    httpClient?: IClient
-};
+export type { RenderContext, RenderResult } from './contract';
 
-export async function render(ctx: RenderContext) {
+export async function render(ctx: RenderContext) : Promise<RenderResult> {
     const {
         app,
         router,

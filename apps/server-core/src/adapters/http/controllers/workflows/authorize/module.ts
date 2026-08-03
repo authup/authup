@@ -24,7 +24,7 @@ import type {
 import { OAuth2AccessDeniedError, OAuth2ErrorCode, isOAuth2AccessDeniedError } from '@authup/specs';
 import { ForceUserLoggedInMiddleware } from '../../../middleware/index.ts';
 import { HTTPOAuth2Authorizer } from '../../../adapters/index.ts';
-import { renderUIPage } from '../../../ui/index.ts';
+import { renderAuthConsolePage } from '../../../ui/index.ts';
 import { readFromLocations } from '../../../request/index.ts';
 import type { IOAuth2AuthorizationCodeRequestVerifier } from '../../../../../core/index.ts';
 import { OAuth2AuthorizationCodeRequestValidator } from '../../../../../core/index.ts';
@@ -186,7 +186,7 @@ export class AuthorizeController {
         // so those pages can lead back into this authorize request.
         const requestURL = new URL(event.request.url);
 
-        return renderUIPage(event, {
+        return renderAuthConsolePage(event, {
             url: '/authorize',
             payload: {
                 config: { baseURL: this.options.baseURL },

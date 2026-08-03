@@ -17,7 +17,7 @@ import { DEFAULT_BUTTON_SIZE } from '../../core';
  * between create and update modes via `@vuecs/forms`'s `useSubmitButton`
  * composable, whose values resolve through the vuecs `DefaultsManager`
  * (wired once at app bootstrap — see `buildSubmitButtonDefaults()` in
- * `apps/client-admin-console/plugins/vuecs.ts` / `apps/server-core/ui/src/app.ts`)
+ * `apps/client-admin-console/plugins/vuecs.ts` / `apps/client-auth-console/src/app.ts`)
  * so labels stay locale-reactive.
  */
 export const AFormSubmit = defineComponent({

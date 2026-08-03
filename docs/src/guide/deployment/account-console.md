@@ -64,7 +64,7 @@ addition to) the embedded serving:
 
    ```html
    <script>
-   window.__AUTHUP_ACCOUNT__ = {
+   window.__AUTHUP__ = {
        "apiUrl": "https://auth.example.com",
        "basePath": "/account"
    };

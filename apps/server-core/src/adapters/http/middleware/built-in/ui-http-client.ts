@@ -10,7 +10,7 @@ import type { App } from 'routup';
 import { defineCoreHandler } from 'routup';
 
 /**
- * Per-request handoff of an HTTP-client factory into renderUIPage —
+ * Per-request handoff of an HTTP-client factory into renderAuthConsolePage —
  * same mechanism as VITE_SERVER_STORE_KEY. The wiring passes a thunk
  * over the DI container (`() => container.resolve(UIHttpClient)`)
  * whose registration carries `lifetime: 'transient'`, so every SSR

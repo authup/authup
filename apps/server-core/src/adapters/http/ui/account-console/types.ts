@@ -5,6 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './account-console/index.ts';
-export * from './auth-console/index.ts';
-export * from './shared/index.ts';
+import type { StatusResponseFeatures } from '@authup/core-http-kit';
+
+export type AccountConsoleServeOptions = {
+    baseURL: string,
+    features: StatusResponseFeatures,
+};
