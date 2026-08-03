@@ -1,18 +1,15 @@
 {
     "extends": "../../tsconfig.json",
     "compilerOptions": {
+        "ignoreDeprecations": "6.0",
+        "declaration": false,
+        "declarationMap": false,
         "lib": [
             "ESNext",
             "DOM",
             "DOM.Iterable"
         ],
-        "jsx": "preserve",
-        "paths": {
-            "@authup/client-web-kit": ["../../packages/client-web-kit/src"],
-            "@authup/kit": ["../../packages/kit/src"],
-            "@authup/core-kit": ["../../packages/core-kit/src"],
-            "@authup/core-http-kit": ["../../packages/core-http-kit/src"]
-        }
+        "jsx": "preserve"
     },
     "include": [
         "src/**/*.ts",

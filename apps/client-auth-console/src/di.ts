@@ -21,5 +21,10 @@ export function providePayload<T extends Record<string, any>>(payload: Hydration
 }
 
 export function injectPayload<T extends Record<string, any>>() : HydrationPayload<T> {
-    return inject(HYDRATION_PAYLOAD);
+    const payload = inject<HydrationPayload<T>>(HYDRATION_PAYLOAD);
+    if (!payload) {
+        throw new Error('The hydration payload has not been provided.');
+    }
+
+    return payload;
 }

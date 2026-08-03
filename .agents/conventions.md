@@ -30,6 +30,18 @@
 - Build: `npm run build -w <workspace>` (from repo root, e.g. `-w apps/server-core`, `-w packages/kit`)
 - Lint: `npx eslint --fix path/to/changed/file1.ts path/to/changed/file2.ts`
 - Fix any build or lint errors before considering a task complete.
+- Every workspace splits `build` into `build:types` + `build:js` — packages emit
+  declarations (`tsc`/`vue-tsc --emitDeclarationOnly`), the console apps run a
+  pure type check (`vue-tsc --noEmit`, or `nuxi typecheck` in the admin
+  console) before bundling. The Vite console apps' tsconfigs deliberately
+  declare **no local `paths`**: they inherit the root `tsconfig.json` map
+  (`@authup/* → packages/*/src`), so the type check runs against package
+  SOURCE, matching the vite/nuxt `@authup/* → src` aliases the bundles are
+  built from. Do not re-add app-local relative `paths` entries — `paths`
+  resolve against the inherited root `baseUrl`, so `../../packages/...`
+  silently resolves outside the repo, never matches, and the check degrades to
+  the last-built dist declarations (where vue-tsc-emitted component prop
+  unions can differ from source).
 
 ## Testing
 
@@ -57,9 +69,16 @@ The workspace name grammar, shared with PrivateAIM/hub (whose tree is the refere
 implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
 `client-vue`, `server-kit`, `core-kit`):
 
-- **The prefix marks the side.** `server-` means server-side only, `client-` means
-  client-side only. An unprefixed workspace is isomorphic and safe on both sides:
-  `kit`, `errors`, `specs`, `access`, `i18n`, `core-*`.
+- **The prefix marks the side of the client-server relationship** that the
+  application sits on (apps) or is built for (packages): `server-` for server
+  applications, including third-party resource servers embedding the
+  `server-adapter-*` packages; `client-` for client applications. An unprefixed
+  workspace serves both sides: `kit`, `errors`, `specs`, `access`, `i18n`,
+  `core-*`. The prefix does NOT mark where code executes: a client app's code
+  may run server-side (the SSR auth console), and a server package may call
+  the API (the adapters fetch JWKS). A future API-driving CLI is a client
+  application and would be role-named `client-admin-cli`, next to
+  `client-admin-console` (Keycloak's `admin-cli` precedent).
 - **`core-*` names the core service's domain surface** (domain types, HTTP and
   realtime clients for `server-core`'s API). Consumed on both sides, hence unprefixed.
 - **Apps are role-named** after the prefix: `server-core` (the IdP),
@@ -80,9 +99,17 @@ implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
 - **Packages are surface- or platform-named** after the prefix: `client-web-kit` /
   `client-web-nuxt` / `client-web-theme` serve ANY web client (RP) embedding authup,
   not just the console; `server-kit` / `server-adapter-*` serve any server-side
-  consumer. App and package names deliberately do NOT mirror each other (hub
-  precedent: app `client-ui`, library `client-vue`), so renaming an app never
-  implies renaming a published package family.
+  consumer.
+- **The second slot answers a different question per species, by design.** Apps
+  are deployed by identity, so they carry a role (`client-admin-console`,
+  `server-core`); packages are picked up by kind, so they carry a platform or
+  surface (`client-web-kit`, `server-adapter-node`). Do not pad app names with
+  platform tokens for symmetry (`client-web-account-console`): the shape
+  difference is what keeps applications and libraries distinguishable in the
+  flat `@authup/*` npm scope, and console app names must keep matching their
+  per-realm OAuth2 client rows. App and package names deliberately do NOT
+  mirror each other (hub precedent: app `client-ui`, library `client-vue`), so
+  renaming an app never implies renaming a published package family.
 - **Operator-facing vocabulary is a separate, shorter layer**: binaries
   (`authup-server`, `authup-admin-console`), the CLI package selectors and config sections
   (`server.core`, `client.admin-console`; slash form `server/core` in the docker
@@ -92,6 +119,11 @@ implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
 History: `apps/client-web` (`@authup/client-web`, binary `authup-ui`) was renamed to
 `apps/client-admin-console` (`@authup/client-admin-console`, binary `authup-admin-console`) pre-1.0,
 with no aliases kept. The `client-web-*` packages keep their names on purpose.
+A `web-` platform-prefix grammar (`web-kit`, `web-admin-console`) was evaluated
+and rejected 2026-08-03: "web" already means Web-standard APIs in
+`server-adapter-web`, the kit's real constraint is Vue rather than "web", and
+aligning app names to package shapes would blur the app/library distinction in
+the npm scope.
 
 ## Dependency Classification (published packages)
 
