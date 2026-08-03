@@ -17,6 +17,7 @@ import {
     applyUIPageHeaders,
     readUIClientPreferences,
     rebaseAssetURLs,
+    replaceTemplateMarker,
     serializeInlineScriptJSON,
     stampHtmlAttributes,
 } from '../shared/index.ts';
@@ -97,7 +98,8 @@ export async function serveAccountConsolePage(
         features: options.features,
     };
 
-    let body = html.replace(
+    let body = replaceTemplateMarker(
+        html,
         CONFIG_MARKER,
         `<script>window.__AUTHUP__ = ${serializeInlineScriptJSON(config)};</script>`,
     );

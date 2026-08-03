@@ -44,7 +44,23 @@ export function stampHtmlAttributes(html: string, preferences: UIClientPreferenc
         htmlAttrs += ` class="${preferences.colorMode}"`;
     }
 
-    return html.replace(/<html\b[^>]*>/i, `<html ${htmlAttrs}>`);
+    return html.replace(/<html\b[^>]*>/i, () => `<html ${htmlAttrs}>`);
+}
+
+/**
+ * Replace a template marker (`<!--app-html-->`, `<!--account-config-->`, ...)
+ * with a rendered value.
+ *
+ * The replacement is passed as a FUNCTION on purpose. A string replacement
+ * expands the `$&`, `` $` ``, `$'` and `$$` patterns, so a `$'` anywhere in
+ * the value splices the template's own text back into the page. The values
+ * spliced here carry raw request input (the SSR hydration payload reflects
+ * query parameters), which made `?token=$'` return a page whose inline
+ * payload script was no longer valid JavaScript. Escaping cannot prevent
+ * this: the expansion happens after the value was built.
+ */
+export function replaceTemplateMarker(html: string, marker: string, value: string) : string {
+    return html.replace(marker, () => value);
 }
 
 /**
@@ -78,7 +94,7 @@ export function rebaseAssetURLs(html: string, basePath: string, viteBase: string
 
     return html.replace(
         new RegExp(`(src|href)="${viteBase.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}`, 'g'),
-        `$1="${basePath}${viteBase}`,
+        (_match, attribute) => `${attribute}="${basePath}${viteBase}`,
     );
 }
 

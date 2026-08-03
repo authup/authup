@@ -164,6 +164,39 @@ describe('src/http/controllers/workflows (SSR pages)', () => {
         expect(payload.data.token).toEqual(token);
     });
 
+    it.each([
+        ['$\'', 'token'],
+        ['$`', 'token'],
+        ['$&', 'token'],
+        ['$$', 'token'],
+    ])('should not expand the %s replacement pattern carried by %s', async (value, parameter) => {
+        const query = new URLSearchParams({ [parameter]: value });
+
+        const response = await httpRequest(suite, 'GET', `/password-reset?${query.toString()}`);
+        expect(response.status).toEqual(200);
+
+        const body = await response.text();
+
+        // A string replacement would expand the pattern and splice the
+        // template's own text into the payload, leaving invalid JavaScript
+        // that never assigns window.__AUTHUP__.
+        const payload = extractHydrationPayload(body);
+        expect(payload.data.token).toEqual(value);
+
+        expect(body.match(/<div id="app">/g)).toHaveLength(1);
+    });
+
+    it('should not expand a replacement pattern carried by the redirect parameter', async () => {
+        const redirect = '/authorize?state=$\'';
+        const query = new URLSearchParams({ redirect });
+
+        const response = await httpRequest(suite, 'GET', `/register?${query.toString()}`);
+        expect(response.status).toEqual(200);
+
+        const payload = extractHydrationPayload(await response.text());
+        expect(payload.data.redirect).toEqual(redirect);
+    });
+
     it('should pass a relative redirect through to the page', async () => {
         const redirect = '/authorize?client_id=web&response_type=code';
         const query = new URLSearchParams({ redirect });
