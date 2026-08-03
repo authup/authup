@@ -13,6 +13,8 @@ import path from 'node:path';
 import type { IAppEvent } from 'routup';
 import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
 import { PACKAGE_PATH } from '../../../../path.ts';
+import { useRequestTheme } from '../../middleware/index.ts';
+import { applyTheme } from '../theme/index.ts';
 import {
     applyUIPageHeaders,
     readUIClientPreferences,
@@ -106,6 +108,8 @@ export async function serveAccountConsolePage(
 
     body = stampHtmlAttributes(body, readUIClientPreferences(event));
     body = rebaseAssetURLs(body, basePath, '/account/');
+
+    body = applyTheme(body, useRequestTheme(event), basePath);
 
     applyUIPageHeaders(event);
 

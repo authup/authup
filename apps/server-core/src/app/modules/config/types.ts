@@ -36,6 +36,20 @@ export type Config = {
      */
     writableDirectoryPath: string,
 
+    /**
+     * Directory holding the operator theme applied to the served consoles
+     * (the auth console and the account console). Relative paths resolve
+     * against the rootPath.
+     *
+     * The directory is operator trust, exactly like the config file: its
+     * `assets/` sub-directory is served verbatim at `/theme`, and its
+     * `theme.json` injects CSS custom properties into both consoles.
+     * Mount it read-only and never from a source a tenant can write.
+     *
+     * default: '' (theming disabled)
+     */
+    themeDirectoryPath: string,
+
     // ----------------------------------------------------
 
     /**

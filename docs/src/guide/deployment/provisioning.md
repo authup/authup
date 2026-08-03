@@ -253,7 +253,7 @@ dropped. Write provisioning files in camelCase.
 Mount your provisioning files into the container's writable directory:
 
 ```bash
-docker run -v /path/to/provisioning:/opt/authup/writable/provisioning authup/authup
+docker run -v /path/to/provisioning:/usr/src/app/writable/provisioning authup/authup
 ```
 
 Or set the writable directory explicitly:

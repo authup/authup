@@ -59,6 +59,11 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.writableDirectoryPath = writableDirectoryPath;
     }
 
+    const themeDirectoryPath = read(ConfigEnvironmentVariableName.THEME_DIRECTORY_PATH);
+    if (themeDirectoryPath) {
+        options.themeDirectoryPath = themeDirectoryPath;
+    }
+
     // -------------------------------------------------------------
 
     if (hasEnvDataSourceOptions()) {

@@ -1,0 +1,260 @@
+/*
+ * Copyright (c) 2026.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+import { describe, expect, it } from 'vitest';
+import {
+    applyTheme,
+    buildThemeHead,
+    parseThemeManifest,
+} from '../../../../../src/adapters/http/ui/theme/index.ts';
+import type { IThemeProvider, ThemeManifest } from '../../../../../src/adapters/http/ui/theme/index.ts';
+import {
+    injectHeadContent,
+    stampDocumentTitle,
+} from '../../../../../src/adapters/http/ui/shared/index.ts';
+
+function createProvider(manifest: ThemeManifest | undefined) : IThemeProvider {
+    return {
+        load: async () => { /* noop */ },
+        getManifest: () => manifest,
+        getAssetsPath: () => undefined,
+        getHead: (basePath: string) => (manifest ? buildThemeHead(manifest, basePath) : ''),
+    };
+}
+
+describe('adapters/http/ui/theme', () => {
+    describe('parseThemeManifest', () => {
+        it('should accept a minimal manifest', () => {
+            const manifest = parseThemeManifest({ version: 1 }, 'theme.json');
+
+            expect(manifest.version).toEqual(1);
+        });
+
+        it('should reject an unknown contract version', () => {
+            expect(() => parseThemeManifest({ version: 2 }, 'theme.json')).toThrow();
+        });
+
+        it('should reject an unknown key', () => {
+            // .strict() — a typo must fail the boot, not silently do nothing.
+            expect(() => parseThemeManifest(
+                { version: 1, stylesheets: 'assets/theme.css' },
+                'theme.json',
+            )).toThrow();
+        });
+
+        it('should name the file and the offending path', () => {
+            expect(() => parseThemeManifest(
+                { version: 1, tokens: { '--ok': 'red', 'not-a-token': 'red' } },
+                '/etc/authup/theme/theme.json',
+            )).toThrow(/\/etc\/authup\/theme\/theme\.json/);
+        });
+
+        it.each([
+            ['--Authup-Accent', 'uppercase'],
+            ['authup-accent', 'no leading dashes'],
+            ['--1accent', 'leading digit'],
+            ['--authup accent', 'whitespace'],
+        ])('should reject the token name %s (%s)', (name) => {
+            expect(() => parseThemeManifest(
+                { version: 1, tokens: { [name]: 'red' } },
+                'theme.json',
+            )).toThrow();
+        });
+
+        it.each([
+            ['red}html{display:none', 'closes the declaration block'],
+            ['red;color:blue', 'injects a second declaration'],
+            ['</style><script>x()</script>', 'breaks out of the style element'],
+            ['url(https://evil.example.com/x)', 'turns the block into a request sink'],
+            ['expression(alert(1))', 'legacy dynamic expression'],
+            ['red/*comment', 'opens a comment'],
+            ['@import "x"', 'starts an at-rule'],
+        ])('should reject the token value %s (%s)', (value) => {
+            expect(() => parseThemeManifest(
+                { version: 1, tokens: { '--authup-auth-accent': value } },
+                'theme.json',
+            )).toThrow();
+        });
+
+        it('should accept realistic token values', () => {
+            const manifest = parseThemeManifest({
+                version: 1,
+                tokens: {
+                    '--authup-periwinkle': '#c0392b',
+                    '--authup-auth-card-max-width': '520px',
+                    '--font-sans': 'Inter, system-ui, sans-serif',
+                    '--authup-auth-card-box-shadow': '0 1px 2px rgba(0,0,0,.1)',
+                    '--radius-md': '2px',
+                    '--text-6xl': '3.75rem',
+                },
+            }, 'theme.json');
+
+            expect(Object.keys(manifest.tokens ?? {})).toHaveLength(6);
+        });
+
+        it.each([
+            ['/etc/passwd', 'absolute'],
+            ['../../etc/passwd', 'escapes the theme root'],
+            ['assets/../../etc/passwd', 'traverses out of assets'],
+            ['assets/a/../../../etc/passwd', 'traverses via a nested segment'],
+            ['theme.css', 'outside the assets directory'],
+            ['assets/index.html', 'not an allowlisted extension'],
+            ['assets/payload.js', 'not an allowlisted extension'],
+        ])('should reject the asset path %s (%s)', (value) => {
+            expect(() => parseThemeManifest(
+                { version: 1, stylesheet: value },
+                'theme.json',
+            )).toThrow();
+        });
+
+        it('should accept an asset path inside assets/', () => {
+            const manifest = parseThemeManifest({
+                version: 1,
+                stylesheet: 'assets/theme.css',
+                favicon: 'assets/brand/favicon.svg',
+            }, 'theme.json');
+
+            expect(manifest.stylesheet).toEqual('assets/theme.css');
+            expect(manifest.favicon).toEqual('assets/brand/favicon.svg');
+        });
+    });
+
+    describe('buildThemeHead', () => {
+        it('should emit the token block into its own cascade layer', () => {
+            const head = buildThemeHead({
+                version: 1,
+                tokens: { '--authup-auth-accent': '#c0392b' },
+            }, '');
+
+            expect(head).toEqual(
+                '<style>@layer authup-theme{:root{--authup-auth-accent:#c0392b}}</style>',
+            );
+        });
+
+        it('should emit .dark AFTER :root so the color-mode toggle keeps working', () => {
+            const head = buildThemeHead({
+                version: 1,
+                tokens: { '--authup-surface-app': '#fff' },
+                tokensDark: { '--authup-surface-app': '#141312' },
+            }, '');
+
+            expect(head.indexOf(':root'))
+                .toBeLessThan(head.indexOf('.dark'));
+            expect(head).toContain(':root{--authup-surface-app:#fff}');
+            expect(head).toContain('.dark{--authup-surface-app:#141312}');
+        });
+
+        it('should emit the stylesheet link last so it beats the token block', () => {
+            const head = buildThemeHead({
+                version: 1,
+                tokens: { '--authup-auth-accent': 'red' },
+                favicon: 'assets/favicon.svg',
+                stylesheet: 'assets/theme.css',
+            }, '');
+
+            expect(head.indexOf('<style>'))
+                .toBeLessThan(head.indexOf('rel="stylesheet"'));
+            expect(head.indexOf('rel="icon"'))
+                .toBeLessThan(head.indexOf('rel="stylesheet"'));
+        });
+
+        it('should map an asset path onto the /theme mount', () => {
+            const head = buildThemeHead({
+                version: 1,
+                stylesheet: 'assets/theme.css',
+            }, '');
+
+            expect(head).toContain('href="/theme/theme.css"');
+        });
+
+        it('should prefix asset hrefs with the sub-path base', () => {
+            // rebaseAssetURLs only rewrites the fixed /public/ and /account/
+            // vite bases, so /theme hrefs must be built prefixed.
+            const head = buildThemeHead({
+                version: 1,
+                favicon: 'assets/favicon.svg',
+                stylesheet: 'assets/theme.css',
+            }, '/auth');
+
+            expect(head).toContain('href="/auth/theme/favicon.svg"');
+            expect(head).toContain('href="/auth/theme/theme.css"');
+        });
+
+        it('should emit nothing for an empty manifest', () => {
+            expect(buildThemeHead({ version: 1 }, '')).toEqual('');
+            expect(buildThemeHead({ version: 1, tokens: {} }, '')).toEqual('');
+        });
+    });
+
+    describe('applyTheme', () => {
+        const html = '<html><head><title>Authup</title></head><body>x</body></html>';
+
+        it('should be a no-op without a provider', () => {
+            expect(applyTheme(html, undefined, '')).toEqual(html);
+        });
+
+        it('should be a no-op without a manifest', () => {
+            expect(applyTheme(html, createProvider(undefined), '')).toEqual(html);
+        });
+
+        it('should inject before </head>', () => {
+            const result = applyTheme(html, createProvider({
+                version: 1,
+                tokens: { '--authup-auth-accent': 'red' },
+            }), '');
+
+            expect(result).toContain('<style>@layer authup-theme{');
+            expect(result.indexOf('@layer authup-theme'))
+                .toBeLessThan(result.indexOf('</head>'));
+        });
+
+        it('should replace the document title', () => {
+            const result = applyTheme(html, createProvider({
+                version: 1,
+                title: 'Sign in to ACME',
+            }), '');
+
+            expect(result).toContain('<title>Sign in to ACME</title>');
+            expect(result).not.toContain('<title>Authup</title>');
+        });
+
+        it('should escape the title', () => {
+            const result = applyTheme(html, createProvider({
+                version: 1,
+                title: '</title><script>alert(1)</script>',
+            }), '');
+
+            expect(result).not.toContain('<script>alert(1)</script>');
+            expect(result).toContain('&lt;script&gt;');
+        });
+    });
+
+    describe('injectHeadContent', () => {
+        it('should return the html unchanged when there is no head', () => {
+            expect(injectHeadContent('<p>x</p>', '<style>a{}</style>')).toEqual('<p>x</p>');
+        });
+
+        it('should not expand replacement patterns', () => {
+            // A string replacement would expand $' into the template tail.
+            const result = injectHeadContent('<head></head>', "<meta content=\"$'$&$`\">");
+
+            expect(result).toEqual("<head><meta content=\"$'$&$`\"></head>");
+        });
+    });
+
+    describe('stampDocumentTitle', () => {
+        it('should replace a title carrying attributes', () => {
+            expect(stampDocumentTitle('<title data-x="1">Authup - Account</title>', 'ACME'))
+                .toEqual('<title>ACME</title>');
+        });
+
+        it('should not expand replacement patterns', () => {
+            expect(stampDocumentTitle('<title>Authup</title>', "A$'B"))
+                .toEqual("<title>A$'B</title>");
+        });
+    });
+});

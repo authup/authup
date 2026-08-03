@@ -64,6 +64,37 @@ export function replaceTemplateMarker(html: string, marker: string, value: strin
 }
 
 /**
+ * Insert markup immediately before `</head>`.
+ *
+ * Deliberately not a template marker: injecting at the closing tag works
+ * against console bundles that were built BEFORE this feature existed, so
+ * server-core never silently loses theming when it runs against an older
+ * console package. A shell without a `</head>` is returned unchanged.
+ *
+ * Function-replacement form for the same reason as replaceTemplateMarker.
+ */
+export function injectHeadContent(html: string, content: string) : string {
+    if (!content) {
+        return html;
+    }
+
+    const index = html.toLowerCase().indexOf('</head>');
+    if (index === -1) {
+        return html;
+    }
+
+    return html.slice(0, index) + content + html.slice(index);
+}
+
+/**
+ * Replace the document title. The value must already be HTML-escaped by
+ * the caller; matched by pattern so a reformatted tag still hits.
+ */
+export function stampDocumentTitle(html: string, title: string) : string {
+    return html.replace(/<title\b[^>]*>[\s\S]*?<\/title>/i, () => `<title>${title}</title>`);
+}
+
+/**
  * Response headers every served console page shares.
  *
  * Clickjacking guard: the pages mutate state behind explicit clicks and
@@ -75,6 +106,9 @@ export function replaceTemplateMarker(html: string, marker: string, value: strin
  */
 export function applyUIPageHeaders(event: IAppEvent) : void {
     event.response.headers.set('content-type', 'text/html; charset=utf-8');
+    // The shell is stamped from the vc-locale / vc-color-mode cookies, so
+    // it genuinely varies by them. It carried no Vary header at all.
+    event.response.headers.set('vary', 'cookie');
     event.response.headers.set('content-security-policy', "frame-ancestors 'none'");
     event.response.headers.set('x-frame-options', 'DENY');
     event.response.headers.set('referrer-policy', 'no-referrer');

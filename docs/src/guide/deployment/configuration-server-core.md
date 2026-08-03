@@ -53,6 +53,15 @@ export default {
     writableDirectoryPath: 'writable',
 
     /**
+     * Directory holding the operator theme applied to the served consoles.
+     * Relative paths are resolved against rootPath. Empty disables theming.
+     * See the Theming guide.
+     * env: THEME_DIRECTORY_PATH
+     * default: '' (disabled)
+     */
+    themeDirectoryPath: '/etc/authup/theme',
+
+    /**
      * Enable logging. File-only (no environment variable).
      * default: true
      */
@@ -452,6 +461,7 @@ export default {
 ```dotenv [authup.server.core.conf]
 env=production
 writableDirectoryPath=writable
+themeDirectoryPath=/etc/authup/theme
 port=3001
 host=0.0.0.0
 publicUrl=http://localhost:3001
@@ -496,6 +506,7 @@ permissionsDefaultPolicyAssignment=true
 ```dotenv [.env]
 NODE_ENV=production
 WRITABLE_DIRECTORY_PATH=writable
+THEME_DIRECTORY_PATH=/etc/authup/theme
 PORT=3001
 HOST=0.0.0.0
 PUBLIC_URL=http://localhost:3001

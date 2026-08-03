@@ -13,6 +13,7 @@ export const ConfigInjectionKey = new TypedToken<Config>('Config');
 export enum ConfigEnvironmentVariableName {
     NODE_ENV = 'NODE_ENV',
     WRITABLE_DIRECTORY_PATH = 'WRITABLE_DIRECTORY_PATH',
+    THEME_DIRECTORY_PATH = 'THEME_DIRECTORY_PATH',
 
     REDIS = 'REDIS',
     SMTP = 'SMTP',

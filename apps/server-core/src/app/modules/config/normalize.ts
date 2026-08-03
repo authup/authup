@@ -74,6 +74,12 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         env,
         rootPath: process.cwd(),
         writableDirectoryPath,
+        // '' = theming disabled. Deliberately NOT defaulted under
+        // writableDirectoryPath: that directory is process-writable, and
+        // pairing "process-writable" with "content injected into the login
+        // page" would turn any write primitive landing there into
+        // persistent branding control on the IdP origin.
+        themeDirectoryPath: '',
 
         logger: true,
         redis: false,
@@ -137,6 +143,13 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         // the raw parsed list (parsed.trustedOrigins is merged in above).
         trustedOrigins,
     };
+
+    // After the spread, so a relative value supplied by any config surface
+    // is resolved. Every consumer then receives an absolute path and none
+    // of them has to care what the process cwd was.
+    if (config.themeDirectoryPath) {
+        config.themeDirectoryPath = path.resolve(config.rootPath, config.themeDirectoryPath);
+    }
 
     // Canonicalize the string form on EVERY config surface (env, .conf,
     // file, programmatic) — proxy-addr accepts single-integer "long value"
