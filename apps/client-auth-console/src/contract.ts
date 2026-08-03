@@ -18,7 +18,7 @@ import type { IClient } from '@authup/core-http-kit';
 
 export type HydrationPayload<T extends Record<string, any> = Record<string, any>> = {
     config: {
-        baseURL?: string,
+        baseURL: string,
         [key: string]: any
     },
     data: T,
