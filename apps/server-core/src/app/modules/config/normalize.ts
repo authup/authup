@@ -81,6 +81,8 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         // persistent branding control on the IdP origin.
         themeDirectoryPath: '',
         themeFragmentsEnabled: false,
+        authConsolePath: '',
+        accountConsolePath: '',
 
         logger: true,
         redis: false,
@@ -150,6 +152,14 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
     // of them has to care what the process cwd was.
     if (config.themeDirectoryPath) {
         config.themeDirectoryPath = path.resolve(config.rootPath, config.themeDirectoryPath);
+    }
+
+    if (config.authConsolePath) {
+        config.authConsolePath = path.resolve(config.rootPath, config.authConsolePath);
+    }
+
+    if (config.accountConsolePath) {
+        config.accountConsolePath = path.resolve(config.rootPath, config.accountConsolePath);
     }
 
     // Canonicalize the string form on EVERY config surface (env, .conf,

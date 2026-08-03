@@ -69,6 +69,16 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.themeFragmentsEnabled = themeFragmentsEnabled;
     }
 
+    const authConsolePath = read(ConfigEnvironmentVariableName.AUTH_CONSOLE_PATH);
+    if (authConsolePath) {
+        options.authConsolePath = authConsolePath;
+    }
+
+    const accountConsolePath = read(ConfigEnvironmentVariableName.ACCOUNT_CONSOLE_PATH);
+    if (accountConsolePath) {
+        options.accountConsolePath = accountConsolePath;
+    }
+
     // -------------------------------------------------------------
 
     if (hasEnvDataSourceOptions()) {

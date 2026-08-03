@@ -21,9 +21,8 @@ engine. That draws a hard line through what theming can do.
 | UI copy and translations | no |
 | Icons | no |
 
-If you need markup, you are building your own console against the render
-contract, not theming. That path is deliberately separate and is not covered
-here.
+If you need markup, you are replacing the console rather than theming it. See
+[Replacing a console](#replacing-a-console) at the end of this page.
 
 ::: warning Trust boundary
 The theme directory is as sensitive as `authup.conf`. Its stylesheet is loaded
@@ -258,3 +257,51 @@ an un-themed page.
 - A manifest that becomes invalid **after** boot keeps the previous one and
   logs a warning. A broken theme must never take down a login page.
 - A missing asset returns 404 and the page renders without it.
+
+## Replacing a console
+
+Theming cannot change markup. When you need different fields, a different flow,
+or different copy, you replace the console package instead:
+
+| | |
+|---|---|
+| `authConsolePath` / `AUTH_CONSOLE_PATH` | package directory replacing `@authup/client-auth-console` |
+| `accountConsolePath` / `ACCOUNT_CONSOLE_PATH` | package directory replacing `@authup/client-account-console` |
+
+Each points at a directory containing the built `dist/`. When set, it is used
+instead of resolving the packaged console from `node_modules`.
+
+::: danger This replaces the login implementation
+The auth console is not a skin over the login. It owns the OIDC prompt ladder
+(`prompt=none`, `select_account`, `max_age`), PKCE and `state` handling, MFA
+step ordering, and the `redirectUriVerified` gating that keeps OAuth2 errors
+from being redirected to unregistered URIs.
+
+A replacement package inherits responsibility for all of it. Use the theme
+directory for branding, and reach for this only when you genuinely need a
+different flow.
+:::
+
+**The auth console contract.** Your package must ship:
+
+- `dist/client/index.html` containing the `<!--preload-links-->` and
+  `<!--app-html-->` markers, built with vite `base: '/public/'`
+- `dist/client/.vite/ssr-manifest.json` (`{}` is valid)
+- `dist/server/server.js` exporting `render(ctx)` and
+  `CONTRACT_VERSION`
+
+`CONTRACT_VERSION` is checked at boot against the version this authup
+implements, and a mismatch **stops the container** with a message naming both
+versions. That is deliberate: you replaced security-relevant code, so a drift
+must not surface as subtly wrong auth pages. A bundle without the export counts
+as version 1.
+
+The types are published in the package's `src/contract.ts`
+(`HydrationPayload`, `RenderContext`, `RenderResult`, `RenderFunction`).
+
+**The account console contract** is smaller: `dist/index.html` carrying the
+`<!--account-config-->` marker, plus `dist/assets/`. The marker is checked at
+boot; without it the injected `window.__AUTHUP__` never lands and the SPA would
+silently fall back to deriving its API URL from the origin.
+
+Both checks only run for a package you actually substituted.

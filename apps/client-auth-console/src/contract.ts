@@ -16,6 +16,21 @@
 
 import type { IClient } from '@authup/core-http-kit';
 
+/**
+ * The runtime version of the contract described in this file, re-exported
+ * from the server bundle so the host can check it before rendering.
+ *
+ * Bump it whenever a change here breaks a package built against the
+ * previous shape (a new required field the host will read, a changed
+ * return shape). Additive, optional changes do not bump.
+ *
+ * Types alone protect this boundary only at compile time: the host calls
+ * whatever function the resolved bundle exports, so a custom package built
+ * against an older contract would otherwise fail per request on
+ * `/authorize` rather than at boot with an actionable message.
+ */
+export const CONTRACT_VERSION = 1;
+
 export type HydrationPayload<T extends Record<string, any> = Record<string, any>> = {
     config: {
         baseURL: string,

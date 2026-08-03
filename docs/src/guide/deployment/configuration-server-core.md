@@ -71,6 +71,16 @@ export default {
     themeFragmentsEnabled: false,
 
     /**
+     * Package directories replacing the served consoles. Each points at
+     * a directory holding the built dist/. Empty resolves the packaged
+     * console from node_modules. See the Theming guide.
+     * env: AUTH_CONSOLE_PATH / ACCOUNT_CONSOLE_PATH
+     * default: '' (both)
+     */
+    authConsolePath: '',
+    accountConsolePath: '',
+
+    /**
      * Enable logging. File-only (no environment variable).
      * default: true
      */

@@ -7,5 +7,7 @@
 
 export * from './account-console/index.ts';
 export * from './auth-console/index.ts';
+export * from './contract.ts';
 export * from './shared/index.ts';
 export * from './theme/index.ts';
+export * from './types.ts';

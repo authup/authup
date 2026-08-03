@@ -62,6 +62,28 @@ export type Config = {
      */
     themeFragmentsEnabled: boolean,
 
+    /**
+     * Package directory of a substituted `@authup/client-auth-console`
+     * (the directory holding its package.json and dist/). Consulted before
+     * the node_modules resolution walk.
+     *
+     * This replaces the login/consent IMPLEMENTATION, not its styling: the
+     * substituted package owns the prompt ladder, PKCE and state handling,
+     * MFA ordering and redirect gating. Use the theme directory for
+     * branding.
+     *
+     * default: '' (resolve @authup/client-auth-console from node_modules)
+     */
+    authConsolePath: string,
+
+    /**
+     * Package directory of a substituted
+     * `@authup/client-account-console`. Same contract as authConsolePath.
+     *
+     * default: '' (resolve @authup/client-account-console from node_modules)
+     */
+    accountConsolePath: string,
+
     // ----------------------------------------------------
 
     /**
