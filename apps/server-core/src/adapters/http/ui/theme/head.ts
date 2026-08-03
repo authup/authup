@@ -10,6 +10,7 @@ import {
     THEME_ASSETS_DIRECTORY_NAME,
     THEME_ASSET_MOUNT_PATH,
     THEME_CSS_LAYER_NAME,
+    THEME_LOGO_TOKENS,
 } from './constants.ts';
 import type { IThemeProvider, ThemeManifest } from './types.ts';
 
@@ -58,8 +59,22 @@ export function buildThemeHead(
     const parts : string[] = [];
 
     const rules : string[] = [];
-    if (manifest.tokens && Object.keys(manifest.tokens).length > 0) {
-        rules.push(buildTokenRule(':root', manifest.tokens));
+
+    // The logo is a manifest field rather than a raw token because its
+    // value needs url(), which the token grammar forbids. Merged under
+    // :root so an explicit token of the same name still wins.
+    const tokens : Record<string, string> = {};
+    if (manifest.logo) {
+        const url = buildAssetURL(manifest.logo, basePath);
+        for (const pair of THEME_LOGO_TOKENS) {
+            tokens[pair.image] = `url("${url}")`;
+            tokens[pair.markVisibility] = 'hidden';
+        }
+    }
+    Object.assign(tokens, manifest.tokens);
+
+    if (Object.keys(tokens).length > 0) {
+        rules.push(buildTokenRule(':root', tokens));
     }
     // After :root, so it wins inside the layer by source order and the
     // color-mode switcher keeps working.

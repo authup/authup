@@ -190,6 +190,57 @@ describe('adapters/http/ui/theme', () => {
         });
     });
 
+    describe('buildThemeHead (logo)', () => {
+        it('should emit the logo token pair for both consoles', () => {
+            const head = buildThemeHead({ version: 1, logo: 'assets/logo.svg' }, '');
+
+            expect(head).toContain('--authup-auth-logo-image:url("/theme/logo.svg")');
+            expect(head).toContain('--authup-auth-logo-mark-visibility:hidden');
+            expect(head).toContain('--authup-account-logo-image:url("/theme/logo.svg")');
+            expect(head).toContain('--authup-account-logo-mark-visibility:hidden');
+        });
+
+        it('should prefix the logo url with the sub-path base', () => {
+            const head = buildThemeHead({ version: 1, logo: 'assets/logo.png' }, '/auth');
+
+            expect(head).toContain('url("/auth/theme/logo.png")');
+        });
+
+        it('should let an explicit token override the derived one', () => {
+            const head = buildThemeHead({
+                version: 1,
+                logo: 'assets/logo.svg',
+                tokens: { '--authup-account-logo-mark-visibility': 'visible' },
+            }, '');
+
+            expect(head).toContain('--authup-account-logo-mark-visibility:visible');
+            expect(head).not.toContain('--authup-account-logo-mark-visibility:hidden');
+        });
+
+        it('should emit no logo tokens without a logo', () => {
+            const head = buildThemeHead({ version: 1, tokens: { '--a': 'b' } }, '');
+
+            expect(head).not.toContain('logo-image');
+        });
+
+        it.each([
+            'assets/theme.css',
+            'assets/inter.woff2',
+        ])('should reject the non-image logo %s', (value) => {
+            expect(() => parseThemeManifest({ version: 1, logo: value }, 'theme.json'))
+                .toThrow();
+        });
+
+        it.each([
+            'assets/logo.svg',
+            'assets/logo.png',
+            'assets/brand/logo.webp',
+        ])('should accept the image logo %s', (value) => {
+            expect(parseThemeManifest({ version: 1, logo: value }, 'theme.json').logo)
+                .toEqual(value);
+        });
+    });
+
     describe('buildThemeHead (head fragment)', () => {
         it('should append the fragment after everything the manifest emitted', () => {
             const head = buildThemeHead({

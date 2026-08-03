@@ -98,6 +98,7 @@ including `.html` and `.js`.
   "version": 1,
   "title": "Sign in to ACME",
   "favicon": "assets/favicon.svg",
+  "logo": "assets/logo.svg",
   "stylesheet": "assets/theme.css",
   "tokens": {
     "--authup-periwinkle": "#c0392b",
@@ -129,6 +130,11 @@ including `.html` and `.js`.
 `tokens` applies always, `tokensDark` only in dark mode. Both are emitted into
 a dedicated CSS cascade layer, so they win over the bundle without
 `!important` and the colour-mode switcher keeps working.
+
+`logo` replaces the built-in mark on both consoles. It must be an image
+(`.svg`, `.png`, `.jpg`, `.gif`, `.webp`, `.avif`, `.ico`) and is painted into
+the existing mark's box, so it needs no size and changes no layout. Square
+artwork works best.
 
 Token names must be lowercase custom properties (`--foo-bar`). Values are
 capped at 256 characters and may not contain `}`, `<`, `>`, `;`, `@`, `\`,
@@ -172,13 +178,6 @@ for the things tokens cannot express.
 
 body { font-family: Inter, system-ui, sans-serif; font-size: 14px; }
 h1, h2, h3, h4, h5, h6 { font-family: Inter, system-ui, sans-serif; }
-
-/* Logo swap. The shell renders its mark as an inline svg. */
-.a-auth-shell-logo svg { display: none; }
-.a-auth-shell-logo {
-  width: 44px; height: 44px;
-  background: url("/theme/logo.svg") center / contain no-repeat;
-}
 
 .a-auth-shell-card { border: 1px solid var(--authup-surface-border); }
 .a-login-provider-box { border-radius: 2px; }

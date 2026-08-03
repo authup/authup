@@ -50,6 +50,14 @@
         --authup-auth-accent:                   var(--vc-color-primary-500);
         --authup-auth-accent-alt:               #cc8181;
         --authup-auth-logo-background:          #34353a;
+        /*
+         * Operator logo. `none` + `visible` keep the built-in mark, so both
+         * are inert until something sets them. server-core emits the pair
+         * from a theme manifest's `logo` field; the image replaces the mark
+         * inside its existing box, so no layout depends on it.
+         */
+        --authup-auth-logo-image:               none;
+        --authup-auth-logo-mark-visibility:     visible;
         --authup-auth-surface-background:       var(--vc-color-bg-elevated);
         --authup-auth-surface-background-muted: var(--vc-color-bg-muted);
         --authup-auth-surface-border-color:     var(--vc-color-border);
@@ -62,6 +70,8 @@
         --authup-auth-aurora-opacity:           0.5;
 
         /* account console (.a-account-shell) --------------------------- */
+        --authup-account-logo-image:            none;
+        --authup-account-logo-mark-visibility:  visible;
         --authup-account-max-width:             68rem;
         --authup-account-surface-background:    var(--vc-color-bg-elevated);
         --authup-account-surface-border-color:  var(--vc-color-border);

@@ -89,6 +89,22 @@
         justify-content: center;
     }
 
+    /*
+     * Operator logo. The image is painted onto the built-in mark's own svg
+     * box, and only the mark's shapes are hidden, so the swap keeps the
+     * exact layout and needs no size token. Inert by default.
+     */
+    .a-auth-shell-logo > svg {
+        background-image: var(--authup-auth-logo-image);
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: contain;
+    }
+
+    .a-auth-shell-logo > svg > * {
+        visibility: var(--authup-auth-logo-mark-visibility);
+    }
+
     .a-auth-gadgets {
         position: fixed;
         top: 1rem;

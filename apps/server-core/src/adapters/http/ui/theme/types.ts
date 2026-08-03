@@ -17,6 +17,13 @@ export type ThemeManifest = {
     version: number,
     title?: string,
     favicon?: string,
+
+    /**
+     * Replaces the built-in logo mark on both consoles. Maps onto the
+     * `--authup-{auth,account}-logo-*` token pairs.
+     */
+    logo?: string,
+
     stylesheet?: string,
     tokens?: Record<string, string>,
     tokensDark?: Record<string, string>,

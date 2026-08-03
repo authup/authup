@@ -25,6 +25,7 @@ const MANIFEST = {
     version: 1,
     title: 'Sign in to ACME',
     favicon: 'assets/favicon.svg',
+    logo: 'assets/logo.svg',
     stylesheet: 'assets/theme.css',
     tokens: {
         '--authup-periwinkle': '#c0392b',
@@ -58,6 +59,11 @@ function createThemeDirectory() : { themePath: string, outsidePath: string } {
     );
     fs.writeFileSync(
         path.join(assetsPath, 'favicon.svg'),
+        '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
+        'utf-8',
+    );
+    fs.writeFileSync(
+        path.join(assetsPath, 'logo.svg'),
         '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
         'utf-8',
     );
@@ -132,6 +138,14 @@ describe('http/controllers/workflows/ui-pages-theme', () => {
             expect(body).not.toContain('<title>Authup</title>');
         });
 
+        it('should emit the logo tokens the shell CSS consumes', async () => {
+            const response = await httpRequest(suite, 'GET', '/register');
+            const body = await response.text();
+
+            expect(body).toContain('--authup-auth-logo-image:url("/theme/logo.svg")');
+            expect(body).toContain('--authup-auth-logo-mark-visibility:hidden');
+        });
+
         it('should vary by cookie', async () => {
             const response = await httpRequest(suite, 'GET', '/register');
 
@@ -149,6 +163,14 @@ describe('http/controllers/workflows/ui-pages-theme', () => {
             expect(body).toContain('<style>@layer authup-theme{');
             expect(body).toContain('<link rel="stylesheet" href="/theme/theme.css">');
             expect(body).toContain('<title>Sign in to ACME</title>');
+        });
+
+        it('should emit the account logo tokens', async () => {
+            const response = await httpRequest(suite, 'GET', '/account');
+            const body = await response.text();
+
+            expect(body).toContain('--authup-account-logo-image:url("/theme/logo.svg")');
+            expect(body).toContain('--authup-account-logo-mark-visibility:hidden');
         });
 
         it('should keep the runtime config marker intact', async () => {

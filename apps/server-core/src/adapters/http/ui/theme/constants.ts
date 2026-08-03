@@ -90,6 +90,25 @@ export const THEME_ASSET_CONTENT_TYPES : Record<string, string> = {
 export const THEME_ASSET_EXTENSIONS = Object.keys(THEME_ASSET_CONTENT_TYPES);
 
 /**
+ * The subset a `logo` may use. Derived from the content-type map so a new
+ * image type is servable and usable as a logo in one edit.
+ */
+export const THEME_IMAGE_EXTENSIONS = THEME_ASSET_EXTENSIONS
+    .filter((extension) => THEME_ASSET_CONTENT_TYPES[extension].startsWith('image/'));
+
+/**
+ * Emitted by server-core from a manifest's `logo`, never authored as a raw
+ * token: the value carries a `url()`, which the token grammar forbids for
+ * operator-supplied values so the token block cannot become a
+ * request-emitting sink. The href is built from an already-validated asset
+ * path.
+ */
+export const THEME_LOGO_TOKENS = [
+    { image: '--authup-auth-logo-image', markVisibility: '--authup-auth-logo-mark-visibility' },
+    { image: '--authup-account-logo-image', markVisibility: '--authup-account-logo-mark-visibility' },
+] as const;
+
+/**
  * An SVG navigated to directly executes inline script, and a theme
  * directory is exactly where operator SVGs land. This neutralizes that
  * while leaving `<img>` and `background-image` rendering intact.

@@ -11,6 +11,7 @@ import { z } from 'zod';
 import {
     THEME_ASSETS_DIRECTORY_NAME,
     THEME_ASSET_EXTENSIONS,
+    THEME_IMAGE_EXTENSIONS,
     THEME_MANIFEST_VERSION,
     THEME_TOKEN_NAME_PATTERN,
     THEME_TOKEN_VALUE_FORBIDDEN_PATTERN,
@@ -32,6 +33,15 @@ const assetPathSchema = z.string()
             .includes(path.extname(value).toLowerCase()),
         `must end in one of: ${THEME_ASSET_EXTENSIONS.join(', ')}`,
     );
+
+/**
+ * A logo must be an image. The general asset allowlist also covers CSS and
+ * fonts, which would silently render as nothing here.
+ */
+const logoPathSchema = assetPathSchema.refine(
+    (value) => THEME_IMAGE_EXTENSIONS.includes(path.extname(value).toLowerCase()),
+    `must be an image (${THEME_IMAGE_EXTENSIONS.join(', ')})`,
+);
 
 const tokenMapSchema = z.record(
     z.string().regex(
@@ -57,6 +67,7 @@ export const themeManifestSchema = z.object({
     version: z.literal(THEME_MANIFEST_VERSION),
     title: z.string().min(1).max(200).optional(),
     favicon: assetPathSchema.optional(),
+    logo: logoPathSchema.optional(),
     stylesheet: assetPathSchema.optional(),
     tokens: tokenMapSchema.optional(),
     tokensDark: tokenMapSchema.optional(),
