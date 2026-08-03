@@ -263,7 +263,15 @@ usable at the service level and nothing in core depends on TypeORM:
   over by reference). Non-displaceable like a repository `andWhere`: a
   conflicting client condition intersects (empty result) instead of
   replacing the scope, and appended conditions bypass the decode
-  allow-lists (server context). The key/trust-anchor services use it for
+  allow-lists (server context). Since rapiq **beta.15**
+  (tada5hi/rapiq#871) the wrap is unconditional: `and()` on an EMPTY
+  receiver nests the injected conditions in their own group rather than
+  adopting them as a flat root-AND, closing the hole where a later
+  replace-merge could displace a scope injected onto a filter-less
+  query. A hostile replace-merge against such a tree now throws
+  `FILTERS_NOT_FLAT`, which authup never hits (nothing merges a filter
+  tree; every `.merge(` in the tree is a TypeORM entity merge). The
+  key/trust-anchor services use it for
   the nested `/realms/:realmId/*` mounts (`options.realmId` from
   `getRequestRealmID`); never splice a scope into the RAW wire query —
   on a `codec=url-expression` payload the bracket `filter` key is an
