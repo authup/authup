@@ -73,7 +73,7 @@ Apps:
   client-account-console → client-web-kit, kit, core-kit, core-http-kit, i18n, specs (all build-time only —
                       the published artifact is the static dist/)
   client-auth-console → client-web-kit, kit, core-kit, i18n (build-time only) + core-http-kit (a RUNTIME
-                      dependency — the published render-contract types, src/contract.ts, re-expose IClient)
+                      dependency: the published render-contract types, src/contract.ts, re-expose IClient)
   server-core       → access, i18n, kit, core-kit, core-http-kit, errors, server-kit, specs (+ ilingo runtime dep)
                       (client-account-console AND client-auth-console are RUNTIME dependencies, resolved as
                        packages whose built dist/ server-core serves — the /account SPA and the SSR auth
@@ -107,10 +107,10 @@ Apps:
 
 **Explicit component imports (preferred):** new/changed kit or app code should `import { VC* } from '@vuecs/*'` + register in a local `components: {}` (or import for `h()`), rather than relying on the consumer's global `app.use(installX)` registration. This makes the dependency visible, type-checks props locally, and catches latent prop-type bugs that global / `resolveComponent('VC*')` lookups hide. `VCButton` and `VCIcon` were swept to explicit imports across kit + app (the global `app.use(vuecs, …)` registration stays as a fallback); the other `<VC*>` (VCTimeago, VCTable, VCFormGroup, VCList, VCModal, …) are still mostly global — migrate them opportunistically when a file is touched.
 
-**Shared auth chrome + bootstrap fragments (plan 078).** The two UI apps —
-`apps/client-admin-console` (Nuxt) and the SSR auth app `apps/client-auth-console` —
-used to hand-mirror each other's auth-page shell and vuecs bootstrap, guarded
-only by "mirrors client-admin-console" comments. The common parts now live in the kit and
+**Shared auth chrome + bootstrap fragments (plan 078).** The two UI apps
+(`apps/client-admin-console`, Nuxt, and the SSR auth app
+`apps/client-auth-console`) used to hand-mirror each other's auth-page shell
+and vuecs bootstrap, guarded only by "mirrors client-admin-console" comments. The common parts now live in the kit and
 both sides are thin callers:
 
 - `AAuthApp` (`components/utility/`) — the shared page shell

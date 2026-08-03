@@ -77,7 +77,7 @@ export function rebaseAssetURLs(html: string, basePath: string, viteBase: string
     }
 
     return html.replace(
-        new RegExp(`(src|href)="${viteBase.replace(/\//g, '\\/')}`, 'g'),
+        new RegExp(`(src|href)="${viteBase.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}`, 'g'),
         `$1="${basePath}${viteBase}`,
     );
 }

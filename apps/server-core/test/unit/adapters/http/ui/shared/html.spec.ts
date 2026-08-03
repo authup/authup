@@ -50,4 +50,11 @@ describe('rebaseAssetURLs', () => {
         expect(rebaseAssetURLs(input, '/auth', '/account/'))
             .toBe('<script type="module" crossorigin src="/auth/account/assets/index-jkl.js"></script>');
     });
+
+    it('treats regex metacharacters in the vite base literally', () => {
+        const input = '<script src="/public.v2/assets/a.js"></script><script src="/publicXv2/assets/b.js"></script>';
+
+        expect(rebaseAssetURLs(input, '/auth', '/public.v2/'))
+            .toBe('<script src="/auth/public.v2/assets/a.js"></script><script src="/publicXv2/assets/b.js"></script>');
+    });
 });

@@ -64,8 +64,8 @@ implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
   realtime clients for `server-core`'s API). Consumed on both sides, hence unprefixed.
 - **Apps are role-named** after the prefix: `server-core` (the IdP),
   `client-admin-console` (the admin console), `client-account-console` (the
-  account console — a static SPA whose dist server-core serves at
-  `/account`), `client-auth-console` (the auth console — the SSR auth
+  account console: a static SPA whose dist server-core serves at
+  `/account`), `client-auth-console` (the auth console: the SSR auth
   workflow UI whose dist server-core renders on the IdP origin, plan 083),
   and the planned `server-core-worker` (optional background processor). The
   `authup` CLI supervisor is the eponymous exception. The admin app carries
@@ -73,7 +73,7 @@ implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
   surfaces are peers: admin console, account console and auth console.
   Console apps normally match their per-realm OAuth2 client rows
   (`admin-console`, `account-console`); **`client-auth-console` is the
-  deliberate exception** — the auth pages ARE the IdP surface (they issue
+  deliberate exception**. The auth pages ARE the IdP surface (they issue
   tokens rather than obtain them), so no client row exists for them. The
   name keeps the console-family symmetry anyway (settled 2026-08-02 with
   the maintainer, plan 083).

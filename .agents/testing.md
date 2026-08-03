@@ -142,7 +142,7 @@ selfClient.setAuthorizationHeader({ type: 'Bearer', token: token.access_token })
 
 ### Testing the SSR'd UI pages (fake HTTP client)
 
-The five SSR auth pages (`GET /authorize`, `/register`, `/activate`, `/password-forgot`, `/password-reset`) render the bundled Vue app under `apps/client-auth-console/`, which fires HTTP calls during render (session hydration via `store.resolve()`, identity-provider and scope fetches). Tests stub those by injecting a fake HTTP client into the SSR — don't let the rendered app depend on real network behavior unless the test targets exactly that (see `ui-pages-internal-client.spec.ts`):
+The six SSR auth pages (`GET /authorize`, `/register`, `/activate`, `/password-forgot`, `/password-reset`, `/logout`) render the bundled Vue app under `apps/client-auth-console/`, which fires HTTP calls during render (session hydration via `store.resolve()`, identity-provider and scope fetches). Tests stub those by injecting a fake HTTP client into the SSR — don't let the rendered app depend on real network behavior unless the test targets exactly that (see `ui-pages-internal-client.spec.ts`):
 
 ```typescript
 import { createFakeClient as createFakeHTTPClient } from '@authup/core-http-kit/testing';
