@@ -10,7 +10,6 @@ import { Query } from '@rapiq/core';
 import {
     CLIENT_ACCOUNT_CONSOLE_NAME,
     CLIENT_ADMIN_CONSOLE_NAME,
-    CLIENT_WEB_NAME,
     ScopeName,
 } from '@authup/core-kit';
 import type { ClientScope } from '@authup/core-kit';
@@ -30,15 +29,14 @@ import {
 import { FakeScopeRepository } from '../scope/fake-repository.ts';
 import { FakeClientRepository } from './fake-repository.ts';
 
-const webDefinition = SYSTEM_CLIENT_DEFINITIONS
-    .find((definition) => definition.name === CLIENT_WEB_NAME)!;
+const adminConsoleDefinition = SYSTEM_CLIENT_DEFINITIONS
+    .find((definition) => definition.name === CLIENT_ADMIN_CONSOLE_NAME)!;
 
 describe('core/entities/client/system-clients', () => {
     const appOrigins = ['http://localhost:3000', 'https://app.example.com'];
 
-    it('should declare the web, admin-console and account-console clients', () => {
+    it('should declare the admin-console and account-console clients', () => {
         expect(SYSTEM_CLIENT_DEFINITIONS.map((definition) => definition.name)).toEqual([
-            CLIENT_WEB_NAME,
             CLIENT_ADMIN_CONSOLE_NAME,
             CLIENT_ACCOUNT_CONSOLE_NAME,
         ]);
@@ -47,9 +45,9 @@ describe('core/entities/client/system-clients', () => {
     describe('buildSystemClientAttributes', () => {
         it('should build a public built-in client with wildcard redirect uris', () => {
             const realmId = randomUUID();
-            const attributes = buildSystemClientAttributes(webDefinition, { id: realmId }, appOrigins);
+            const attributes = buildSystemClientAttributes(adminConsoleDefinition, { id: realmId }, appOrigins);
 
-            expect(attributes.name).toBe(CLIENT_WEB_NAME);
+            expect(attributes.name).toBe(CLIENT_ADMIN_CONSOLE_NAME);
             expect(attributes.realmId).toBe(realmId);
             expect(attributes.authMethod).toBe('none');
             expect(attributes.tokenBindingMethod).toBe('none');
@@ -166,7 +164,7 @@ describe('core/entities/client/system-clients', () => {
             await provisioner.ensureForRealm({ id: realmId });
 
             const client = await repository.findOneBy({
-                name: CLIENT_WEB_NAME,
+                name: CLIENT_ACCOUNT_CONSOLE_NAME,
                 realmId,
             });
 
@@ -207,7 +205,7 @@ describe('core/entities/client/system-clients', () => {
             await provisioner.ensureForRealm({ id: realmId });
 
             const client = await repository.findOneBy({
-                name: CLIENT_WEB_NAME,
+                name: CLIENT_ACCOUNT_CONSOLE_NAME,
                 realmId,
             });
             const extra = scopeRepository.seed({
@@ -235,7 +233,7 @@ describe('core/entities/client/system-clients', () => {
             await provisioner.ensureForRealm({ id: realmId });
 
             const client = await repository.findOneBy({
-                name: CLIENT_WEB_NAME,
+                name: CLIENT_ACCOUNT_CONSOLE_NAME,
                 realmId,
             });
 
@@ -248,7 +246,7 @@ describe('core/entities/client/system-clients', () => {
             repository.seed([
                 {
                     id: randomUUID(),
-                    name: CLIENT_WEB_NAME,
+                    name: CLIENT_ACCOUNT_CONSOLE_NAME,
                     realmId,
                     builtIn: true,
                     authMethod: 'none',
@@ -260,7 +258,7 @@ describe('core/entities/client/system-clients', () => {
             await provisioner.ensureForRealm({ id: realmId });
 
             const updated = await repository.findOneBy({
-                name: CLIENT_WEB_NAME,
+                name: CLIENT_ACCOUNT_CONSOLE_NAME,
                 realmId,
             });
 

@@ -156,6 +156,7 @@ import {
 } from '../../../../core/index.ts';
 import { AuthenticationInjectionKey } from '../../authentication/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
+import { LazyWildcardRealmProvisioner } from '../../provisioning/lazy-wildcard.ts';
 import { IdentityInjectionKey } from '../../identity/index.ts';
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import type { Config } from '../../config/index.ts';
@@ -1005,8 +1006,11 @@ export class HTTPControllerModule {
 
         const service = new RealmService({
             repository,
-            systemClientProvisioner,
-            keyProvisioner,
+            realmProvisioners: [
+                systemClientProvisioner,
+                keyProvisioner,
+                new LazyWildcardRealmProvisioner(container),
+            ],
             logger,
         });
         const keyRepository = dataSource.getRepository(KeyEntity);

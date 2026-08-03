@@ -9,10 +9,11 @@ import type { Client, Realm, Role } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import type { PermissionPolicyBinding } from '@authup/access';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository  } from '@authup/server-kit';
+import type { IRealmProvisioner } from '../../provisioning/types.ts';
 
 /**
- * One system-provisioned public client (plan 079): `web`, `admin-console`
- * or `account-console`. `displayName` is seeded at CREATE only; the
+ * One system-provisioned public client (plan 079): `admin-console` or
+ * `account-console`. `displayName` is seeded at CREATE only; the
  * MERGE-owned attribute set is derived per definition by
  * `buildSystemClientAttributes`.
  */
@@ -23,12 +24,12 @@ export type SystemClientDefinition = {
 };
 
 /**
- * Ensures a realm has its system-provisioned public clients (`web`,
- * `admin-console`, `account-console`). Used by startup provisioning
+ * Ensures a realm has its system-provisioned public clients
+ * (`admin-console`, `account-console`). Used by startup provisioning
  * (every realm) and the runtime realm-create hook (a single realm).
  * System-level — never gated on an actor.
  */
-export interface ISystemClientProvisioner {
+export interface ISystemClientProvisioner extends IRealmProvisioner {
     ensureForRealm(realm: Realm | { id: string }): Promise<void>;
 }
 

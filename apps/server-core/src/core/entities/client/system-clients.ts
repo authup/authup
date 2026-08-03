@@ -8,7 +8,6 @@
 import {
     CLIENT_ACCOUNT_CONSOLE_NAME,
     CLIENT_ADMIN_CONSOLE_NAME,
-    CLIENT_WEB_NAME,
     ClientAuthMethod,
     ClientTokenBindingMethod,
     ScopeName,
@@ -41,22 +40,20 @@ export const SYSTEM_CLIENT_SCOPE_NAMES: string[] = [
 /**
  * The public (PKCE) clients provisioned for every realm (plan 079):
  *
- * - `web` — downstream UIs embedding client-web-kit,
  * - `admin-console` — authup's own admin console (apps/client-admin-console),
- * - `account-console` — the account self-service surface (plan 080; the
- *   row is provisioned ahead of the surface — `web`'s `<origin>/**`
- *   patterns already cover every path it can redirect to, so an inert row
- *   adds no redirect surface).
+ * - `account-console` — the account self-service surface (plan 080; each
+ *   definition gets its own `<origin>/**` patterns from
+ *   `buildSystemClientAttributes`, so an inert row adds no redirect
+ *   surface).
+ *
+ * Downstream RPs register their own clients (per realm, or in every realm
+ * via a wildcard realm provisioning entry, plan 082) — the former shared
+ * `web` client was removed.
  *
  * `displayName` is seeded at CREATE only and never re-asserted by the
  * MERGE, so an admin may relabel a client without the next boot undoing it.
  */
 export const SYSTEM_CLIENT_DEFINITIONS: SystemClientDefinition[] = [
-    {
-        name: CLIENT_WEB_NAME,
-        displayName: 'Web',
-        scopeNames: SYSTEM_CLIENT_SCOPE_NAMES,
-    },
     {
         name: CLIENT_ADMIN_CONSOLE_NAME,
         displayName: 'Admin Console',

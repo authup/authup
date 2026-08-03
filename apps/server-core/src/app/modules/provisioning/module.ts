@@ -48,7 +48,14 @@ import {
     ScopeProvisioningSynchronizer,
     UserProvisioningSynchronizer,
 } from '../../../core/provisioning/synchronizer/index.ts';
+import type { RealmProvisioningRelations } from '../../../core/provisioning/entities/index.ts';
+import {
+    WildcardRealmProvisioner,
+    expandWildcardRealmEntry,
+    extractWildcardRealmEntry,
+} from '../../../core/provisioning/wildcard/index.ts';
 import type { IProvisioningSource } from '../../../core/provisioning/types.ts';
+import { ProvisioningInjectionKey } from './constants.ts';
 import {
     ClientPermissionRepositoryAdapter,
     ClientRepositoryAdapter,
@@ -105,6 +112,21 @@ export class ProvisionerModule implements IModule {
 
         const composite = new CompositeProvisioningSource(sources);
         const data = await composite.load(container);
+
+        // ---------------------------------------------------------------
+        // Wildcard realm entry (plan 082): split the `name: "*"` entry out
+        // of `data.realms` and deep-merge it UNDER every explicit realm
+        // entry (explicit wins per attribute, relation lists union) so the
+        // graph sync below covers declared realms in one pass. Realms
+        // without an explicit entry get the wildcard applied by the
+        // backfill loop; runtime-created realms via the DI-registered
+        // provisioner (RealmService hook).
+        // ---------------------------------------------------------------
+        const wildcardEntry = extractWildcardRealmEntry(data);
+        let wildcardVariants : Map<string, RealmProvisioningRelations> | undefined;
+        if (wildcardEntry) {
+            wildcardVariants = expandWildcardRealmEntry(wildcardEntry, data);
+        }
 
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
@@ -248,10 +270,34 @@ export class ProvisionerModule implements IModule {
             logger: container.resolve(LoggerInjectionKey),
         });
 
+        // Wildcard realm provisioning (plan 082): one shared instance for
+        // the boot backfill below AND the runtime realm-create hook (the
+        // realm controller factory resolves the DI key lazily), so the two
+        // paths cannot drift. Registered only when a wildcard entry was
+        // declared.
+        let wildcardProvisioner : WildcardRealmProvisioner | undefined;
+        if (container.has(ProvisioningInjectionKey.WildcardRealmProvisioner)) {
+            container.unregister(ProvisioningInjectionKey.WildcardRealmProvisioner);
+        }
+        if (wildcardEntry) {
+            wildcardProvisioner = new WildcardRealmProvisioner({
+                relations: wildcardEntry.relations ?? {},
+                relationsByRealmName: wildcardVariants,
+                synchronizer: realmSynchronizer,
+                logger: container.resolve(LoggerInjectionKey),
+            });
+            container.register(ProvisioningInjectionKey.WildcardRealmProvisioner, { useValue: wildcardProvisioner });
+        }
+
         const realms = await realmRepository.find();
         for (const realm of realms) {
             await systemClientProvisioner.ensureForRealm(realm);
             await keyProvisioner.ensureForRealm(realm);
+            // Realms with an explicit entry were already covered by the
+            // wildcard expansion inside the graph sync above.
+            if (wildcardProvisioner && !wildcardProvisioner.hasExplicitEntry(realm)) {
+                await wildcardProvisioner.ensureForRealm(realm);
+            }
         }
 
         if (config.permissionsDefaultPolicyAssignment) {

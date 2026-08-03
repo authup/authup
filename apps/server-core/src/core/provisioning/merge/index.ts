@@ -5,6 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './module.ts';
 export * from './types.ts';
-export * from './validator.ts';
-export * from './wildcard-validator.ts';

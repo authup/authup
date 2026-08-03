@@ -134,10 +134,10 @@ export default {
      * to both its http and https origin — pass a full origin to
      * restrict to one scheme.
      * Each origin is added to the redirect-URI allowlist of the per-realm
-     * public `web` client (as `<origin>/**`).
+     * public system clients (as `<origin>/**`).
      * The origin of `publicUrl` is always trusted implicitly.
      *
-     * Security: the `web` client is built-in with global scope, so any
+     * Security: the system clients are built-in with global scope, so any
      * allowlisted origin can complete a login and obtain a full-permission
      * token — only add origins you control. In non-production, the
      * client-admin-console dev origin (http://localhost:3000) is seeded automatically.

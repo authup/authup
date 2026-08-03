@@ -16,16 +16,19 @@ import {
 import type { Realm } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult, Logger  } from '@authup/server-kit';
 import { AbstractEntityService } from '@authup/server-kit';
-import type { ISystemClientProvisioner } from '../client/types.ts';
-import type { IKeyProvisioner } from '../../key/types.ts';
+import type { IRealmProvisioner } from '../../provisioning/types.ts';
 import type { IRealmRepository, IRealmService } from './types.ts';
 import { decodeQuery } from '../../query/index.ts';
 import { realmSchema } from './schema.ts';
 
 export type RealmServiceContext = {
     repository: IRealmRepository;
-    systemClientProvisioner?: ISystemClientProvisioner;
-    keyProvisioner?: IKeyProvisioner;
+    /**
+     * Applied in order on realm CREATE (system clients, keys, wildcard
+     * provisioning defaults). Never-fail: a provisioner failure is logged
+     * and swallowed.
+     */
+    realmProvisioners?: IRealmProvisioner[];
     logger?: Logger;
 };
 
@@ -34,17 +37,14 @@ export class RealmService extends AbstractEntityService implements IRealmService
 
     protected validator: RealmValidator;
 
-    protected systemClientProvisioner?: ISystemClientProvisioner;
-
-    protected keyProvisioner?: IKeyProvisioner;
+    protected realmProvisioners?: IRealmProvisioner[];
 
     protected logger?: Logger;
 
     constructor(ctx: RealmServiceContext) {
         super();
         this.repository = ctx.repository;
-        this.systemClientProvisioner = ctx.systemClientProvisioner;
-        this.keyProvisioner = ctx.keyProvisioner;
+        this.realmProvisioners = ctx.realmProvisioners;
         this.logger = ctx.logger;
         this.validator = new RealmValidator();
     }
@@ -157,29 +157,26 @@ export class RealmService extends AbstractEntityService implements IRealmService
         entity = this.repository.create(validated);
         await this.repository.save(entity);
 
-        // Provision the realm's system clients (web, admin-console,
-        // account-console) via the system-level provisioner (NOT
-        // clientService.create) — it must not be gated on the actor's
-        // CLIENT_CREATE, since a realm creator may lack it. Realm creation
-        // must stay atomic from the caller's perspective: the realm is
-        // already persisted, so a provisioning failure is logged and
-        // swallowed (startup provisioning reconciles every realm's clients).
-        if (this.systemClientProvisioner) {
-            try {
-                await this.systemClientProvisioner.ensureForRealm(entity);
-            } catch (e) {
-                if (this.logger) {
-                    this.logger.warn(
-                        `Failed to provision system clients for realm ${entity.id}: ${e instanceof Error ? e.message : String(e)}`,
-                    );
+        // Provision the realm's baseline (system clients, sig + enc keys,
+        // wildcard provisioning defaults) via the system-level realm
+        // provisioners (NOT the entity services) — they must not be gated
+        // on the actor's permissions, since a realm creator may lack e.g.
+        // CLIENT_CREATE. Realm creation must stay atomic from the caller's
+        // perspective: the realm is already persisted, so a provisioner
+        // failure is logged and swallowed (startup provisioning reconciles
+        // every realm on the next boot).
+        if (this.realmProvisioners) {
+            for (const provisioner of this.realmProvisioners) {
+                try {
+                    await provisioner.ensureForRealm(entity);
+                } catch (e) {
+                    if (this.logger) {
+                        this.logger.warn(
+                            `${provisioner.constructor.name} failed for realm ${entity.id}: ${e instanceof Error ? e.message : String(e)}`,
+                        );
+                    }
                 }
             }
-        }
-
-        // Mint the realm's sig + enc keys eagerly (plan 071 hybrid model) —
-        // same system-level, never-fail posture as the web client above.
-        if (this.keyProvisioner) {
-            await this.keyProvisioner.ensureForRealm(entity);
         }
 
         return {

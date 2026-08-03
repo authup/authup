@@ -9,31 +9,45 @@ Your custom provisioning files are merged on top.
 
 ## Per-Realm System Clients
 
-Every realm automatically gets three built-in, public OAuth2 clients:
+Every realm automatically gets two built-in, public OAuth2 clients:
 
 | Name              | Used by                                                          |
 |-------------------|------------------------------------------------------------------|
-| `web`             | Your own applications embedding `@authup/client-web-kit`         |
 | `admin-console`   | Authup's admin console: selecting a realm on its login screen redirects the browser to `/authorize?client_id=admin-console&realm_id=<id>` |
 | `account-console` | Authup's [account console](./account-console.md), the self-service surface served at `<publicUrl>/account`: its sign-in redirects the browser to `/authorize?client_id=account-console&realm_id=<id>` |
 
-All three authenticate end users via the authorization-code flow with PKCE.
+Both authenticate end users via the authorization-code flow with PKCE.
 Splitting them keeps concerns separate per application: sessions and audit
 events carry the client they were issued for, and an access policy bound to
 `admin-console` restricts who may newly log in to the admin console without
-affecting logins of your own applications riding `web`. The policy gates
+affecting logins of your own applications. The policy gates
 admission (the authorization-code flow and code redemption), not tokens that
 were already issued.
+
+::: warning The `web` system client was removed
+Earlier releases additionally provisioned a shared, auto-consenting `web`
+client into every realm for applications embedding
+`@authup/client-web-kit`. That client no longer exists: register your own
+client instead: in one realm (admin console, API, or a provisioning file),
+or in every realm via a [wildcard realm entry](#realm-wildcard-name).
+
+Existing `web` rows are left untouched: they keep working, but changes to
+`publicUrl` / `trustedOrigins` no longer propagate to their redirect
+allowlists, and realms created after the upgrade do not get one. Once your
+applications have moved, delete the leftover rows via the API, or
+declaratively with a wildcard `absent` entry (see below). The name `web` is
+no longer reserved.
+:::
 
 The clients are provisioned for every existing realm on startup and for any
 realm created at runtime. Provisioning is idempotent: re-runs refresh the
 `redirectUri` allowlists but never duplicate anything.
 
-Their attributes are fixed (identical for all three, except `name`):
+Their attributes are fixed (identical for both, except `name`):
 
 | Attribute         | Value                                                              |
 |-------------------|--------------------------------------------------------------------|
-| `name`            | `web` / `admin-console` / `account-console`                        |
+| `name`            | `admin-console` / `account-console`                                |
 | `authMethod`      | `none` (public — no secret, PKCE required)                        |
 | `tokenBindingMethod` | `none`                                                         |
 | `builtIn`         | `true`                                                            |
@@ -75,7 +89,7 @@ raised. Redirect patterns in particular are configured through
 `trustedOrigins` (below), not per client.
 
 Every other attribute is left untouched and survives a restart —
-`displayName` is seeded once at creation (`Web`, `Admin Console`,
+`displayName` is seeded once at creation (`Admin Console`,
 `Account Console`) and then belongs to you. A provisioning file may
 therefore declare a system client to set `displayName`, `description`,
 `baseUrl`, `rootUrl` or `accessPolicyId`, and to assign additional roles,
@@ -88,9 +102,9 @@ realms:
       relations:
           clients:
               - attributes:
-                    name: web
+                    name: admin-console
                     builtIn: true
-                    displayName: Example Login
+                    displayName: Example Admin Console
 ```
 
 Scope assignments are additive. The built-in `global` and `openid` bindings
@@ -120,6 +134,93 @@ client-admin-console dev origin (`http://localhost:3000`) is seeded automaticall
 the realm-selection login works out of the box; in production nothing is
 seeded — set `trustedOrigins` explicitly for any UI origin other than
 `publicUrl`.
+:::
+
+## Realm Wildcard (`name: "*"`) {#realm-wildcard-name}
+
+A realm entry named with the literal `*` applies its relations to **every**
+realm: all realms existing at startup and every realm created later at
+runtime. Declare an entity once and each realm gets its own copy, with the
+target realm's id injected. Realm-level attributes and a realm-level
+`strategy` are not allowed on a wildcard entry (it selects realms, it does
+not declare one); the per-entity `strategy` vocabulary is fully available
+on its children.
+
+::: warning Quote the asterisk in YAML
+A bare `*` is a YAML alias token, so `name: *` is a parse error. Always
+write `name: "*"`.
+:::
+
+The canonical use case is a login client for your own applications in every
+realm (the replacement for the removed `web` system client), including an
+optional cleanup of leftover `web` rows:
+
+```yaml
+realms:
+    - attributes:
+          name: "*"
+      relations:
+          clients:
+              - attributes:
+                    name: portal
+                    displayName: Portal
+                    authMethod: none
+                    grantTypes: authorization_code refresh_token
+                    redirectUri: https://portal.example.com/**
+                    postLogoutRedirectUri: https://portal.example.com/**
+                    builtIn: true      # opt-in auto-consent, was web's behavior
+                relations:
+                    globalScopes:
+                        - global
+                        - openid
+              # optional: sweep the legacy web rows out of every realm
+              - attributes:
+                    name: web
+                strategy:
+                    type: absent
+```
+
+Another common template is a realm administrator in every realm:
+
+```yaml
+realms:
+    - attributes:
+          name: "*"
+      relations:
+          users:
+              - attributes:
+                    name: realm-admin
+                    password: replace-with-a-strong-secret # set per deployment!
+                relations:
+                    globalRoles:
+                        - realm_admin
+```
+
+Semantics:
+
+- **Strategies work per child, across all realms.** The default
+  `createOnly` seeds each realm once; after that the realm's own
+  administrators own the row (a later boot does not revert their edits).
+  `merge` / `replace` reassert the declared attributes in every realm on
+  every boot. `absent` removes the named entity from every realm.
+- **An explicit realm block wins.** For a realm that is also declared
+  explicitly (in any provisioning file), the wildcard entry is deep-merged
+  UNDER the explicit block with the same rules used when two files declare
+  the same entity: the explicit block wins per attribute, relation lists
+  are unioned, and an explicit child's `strategy` wins over the wildcard
+  child's.
+- **Reserved client names are rejected.** A wildcard entry declaring
+  `system`, `admin-console` or `account-console` fails validation at
+  startup: those clients are system-owned and reasserted from
+  configuration on every boot.
+- Only the literal `*` is supported; partial patterns (`tenant-*`) are
+  rejected.
+
+::: warning Template users carry template credentials
+A wildcard user with a static password puts the same credential into every
+realm. Prefer role / scope / client scaffolding in the wildcard entry, and
+create real users per realm, or at minimum rotate the seeded password
+immediately.
 :::
 
 ## File-Based Provisioning
@@ -187,7 +288,7 @@ export default {
             relations: {
                 users: [
                     {
-                        attributes: { name: 'alice', password: 'changeme' },
+                        attributes: { name: 'alice', password: 'replace-with-a-strong-secret' },
                         relations: { globalRoles: ['project-manager'] },
                     },
                 ],
@@ -228,7 +329,7 @@ realms:
       users:
         - attributes:
             name: alice
-            password: changeme
+            password: replace-with-a-strong-secret
           relations:
             globalRoles:
               - project-manager
@@ -347,6 +448,10 @@ the current contract and restores the intended decision.
 | `strategy`   | `Strategy`         | Sync strategy (optional)             |
 | `attributes` | object             | `name` (required), `description`, `displayName` |
 | `relations`  | object             | See below                            |
+
+A realm entry named `"*"` is a [wildcard](#realm-wildcard-name): its
+relations apply to every realm, and it may carry nothing besides the name
+and `relations`.
 
 **Realm relations** (all optional):
 

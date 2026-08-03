@@ -1,0 +1,7 @@
+realms:
+    - attributes:
+          name: "*"
+      relations:
+          clients:
+              - attributes:
+                    name: admin-console

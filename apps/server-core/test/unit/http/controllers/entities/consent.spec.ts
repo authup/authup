@@ -13,7 +13,7 @@ import {
     it,
 } from 'vitest';
 import type { Client, Realm, User } from '@authup/core-kit';
-import { CLIENT_WEB_NAME, IdentityType, ScopeName } from '@authup/core-kit';
+import { CLIENT_ADMIN_CONSOLE_NAME, IdentityType, ScopeName } from '@authup/core-kit';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
 import { generateOAuth2CodeVerifier } from '../../../../../src/core';
@@ -202,16 +202,16 @@ describe('consent', () => {
     });
 
     it('writes zero rows for a built_in client', async () => {
-        const { data: webClients } = await suite.client.client.getMany({ filters: { name: CLIENT_WEB_NAME, realmId: realm.id } });
-        expect(webClients).toHaveLength(1);
-        const [webClient] = webClients;
-        expect(webClient.builtIn).toBe(true);
+        const { data: builtInClients } = await suite.client.client.getMany({ filters: { name: CLIENT_ADMIN_CONSOLE_NAME, realmId: realm.id } });
+        expect(builtInClients).toHaveLength(1);
+        const [builtInClient] = builtInClients;
+        expect(builtInClient.builtIn).toBe(true);
 
-        // the per-realm web client is public: PKCE + state are mandatory, and
-        // its redirect patterns cover the trusted dev origin
+        // the per-realm console client is public: PKCE + state are mandatory,
+        // and its redirect patterns cover the trusted dev origin
         const response = await userClient.authorize.confirm({
             response_type: OAuth2AuthorizationResponseType.CODE,
-            client_id: webClient.id,
+            client_id: builtInClient.id,
             redirect_uri: 'http://localhost:3000/login/callback',
             scope: ScopeName.GLOBAL,
             state: generateOAuth2CodeVerifier(),
@@ -219,7 +219,7 @@ describe('consent', () => {
         });
         expect(new URL(response.url).searchParams.get('code')).toBeTruthy();
 
-        const { data } = await userClient.consent.getMany({ filters: { clientId: webClient.id } });
+        const { data } = await userClient.consent.getMany({ filters: { clientId: builtInClient.id } });
         expect(data).toHaveLength(0);
     });
 

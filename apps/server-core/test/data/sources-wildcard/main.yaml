@@ -1,0 +1,12 @@
+realms:
+    - attributes:
+          # quoted on purpose: a bare * is a YAML alias token
+          name: "*"
+      relations:
+          clients:
+              - attributes:
+                    name: portal
+                    displayName: Portal
+          roles:
+              - attributes:
+                    name: template-role

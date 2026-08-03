@@ -5,7 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './constants.ts';
 export * from './entities/index.ts';
+export * from './merge/index.ts';
 export * from './strategy/index.ts';
 export * from './synchronizer/index.ts';
 export * from './types.ts';
+export * from './wildcard/index.ts';

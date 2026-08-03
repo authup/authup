@@ -9,8 +9,8 @@ import { randomUUID } from 'node:crypto';
 import { eq, isQuery } from '@rapiq/core';
 import { applyQuery } from '@rapiq/adapter-memory';
 import {
+    CLIENT_ADMIN_CONSOLE_NAME,
     CLIENT_RESERVED_NAMES,
-    CLIENT_WEB_NAME,
     IdentityType,
     PermissionName,
 } from '@authup/core-kit';
@@ -626,8 +626,8 @@ describe('core/entities/client/service', () => {
     });
 
     describe('guardrails', () => {
-        // Covers every reserved system-client name — incl. the plan-079
-        // additions admin-console / account-console.
+        // Covers every reserved system-client name (system plus the
+        // plan-079 console clients; `web` left the list with plan 082).
         it.each(CLIENT_RESERVED_NAMES)('should reject creating a client with the reserved name "%s"', async (name) => {
             await expect(
                 service.create(
@@ -641,8 +641,19 @@ describe('core/entities/client/service', () => {
             const entity = repository.seed(createFakeClient({ name: 'renamable' }));
 
             await expect(
-                service.update(entity.id, { name: CLIENT_WEB_NAME }, createAllowAllActor()),
+                service.update(entity.id, { name: CLIENT_ADMIN_CONSOLE_NAME }, createAllowAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+        });
+
+        // Plan 082 removed the `web` system client, so the name is a plain,
+        // creatable client name again.
+        it('should allow creating a client named "web"', async () => {
+            const result = await service.create(
+                createFakeClient({ name: 'web' }),
+                createAllowAllActor(),
+            );
+
+            expect(result.name).toBe('web');
         });
 
         it('should strip builtIn on create so API callers cannot self-assign it', async () => {

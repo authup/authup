@@ -24,12 +24,12 @@ import {
 } from '@authup/server-test-kit';
 import { createFakeRealm } from '../../../../utils/domains/index.ts';
 import type { Realm } from '@authup/core-kit';
-import type { ISystemClientProvisioner } from '../../../../../src/core/entities/client/types.ts';
+import type { IRealmProvisioner } from '../../../../../src/core/provisioning/types.ts';
 
-class RecordingSystemClientProvisioner implements ISystemClientProvisioner {
+class RecordingRealmProvisioner implements IRealmProvisioner {
     public calls: string[] = [];
 
-    async ensureForRealm(realm: Realm | { id: string }): Promise<void> {
+    async ensureForRealm(realm: Realm): Promise<void> {
         this.calls.push(realm.id);
     }
 }
@@ -109,26 +109,26 @@ describe('core/entities/realm/service', () => {
             expect(found).not.toBeNull();
         });
 
-        it('should ensure a web client for the new realm when a provisioner is wired', async () => {
-            const systemClientProvisioner = new RecordingSystemClientProvisioner();
+        it('should invoke the realm provisioners for the new realm when wired', async () => {
+            const provisioner = new RecordingRealmProvisioner();
             service = new RealmService({
                 repository,
-                systemClientProvisioner,
+                realmProvisioners: [provisioner],
             });
 
             const result = await service.create(
-                { name: 'realm-with-web-client' },
+                { name: 'realm-with-provisioner' },
                 createAllowAllActor(),
             );
 
-            expect(systemClientProvisioner.calls).toEqual([result.id]);
+            expect(provisioner.calls).toEqual([result.id]);
         });
 
-        it('should not ensure a web client when updating an existing realm', async () => {
-            const systemClientProvisioner = new RecordingSystemClientProvisioner();
+        it('should not invoke the realm provisioners when updating an existing realm', async () => {
+            const provisioner = new RecordingRealmProvisioner();
             service = new RealmService({
                 repository,
-                systemClientProvisioner,
+                realmProvisioners: [provisioner],
             });
 
             const entity = repository.seed(createFakeRealm({
@@ -138,19 +138,24 @@ describe('core/entities/realm/service', () => {
 
             await service.update(entity.id, { description: 'updated description' }, createAllowAllActor());
 
-            expect(systemClientProvisioner.calls).toEqual([]);
+            expect(provisioner.calls).toEqual([]);
         });
 
-        it('should still persist the realm when web-client provisioning fails', async () => {
+        it('should still persist the realm and run later provisioners when one fails', async () => {
             // Realm creation must stay atomic from the caller's perspective:
-            // a provisioner failure is logged + swallowed, not propagated.
+            // a provisioner failure is logged + swallowed, not propagated,
+            // and must not starve the provisioners after it.
+            const provisioner = new RecordingRealmProvisioner();
             service = new RealmService({
                 repository,
-                systemClientProvisioner: {
-                    async ensureForRealm() {
-                        throw new Error('provisioning boom');
+                realmProvisioners: [
+                    {
+                        async ensureForRealm() {
+                            throw new Error('provisioning boom');
+                        },
                     },
-                },
+                    provisioner,
+                ],
             });
 
             const result = await service.create(
@@ -161,6 +166,7 @@ describe('core/entities/realm/service', () => {
             expect(result.id).toBeDefined();
             const found = await repository.findOneById(result.id);
             expect(found).not.toBeNull();
+            expect(provisioner.calls).toEqual([result.id]);
         });
     });
 
