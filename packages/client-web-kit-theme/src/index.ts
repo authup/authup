@@ -8,6 +8,12 @@
 import tailwindTheme, { merge } from '@vuecs/theme-tailwind';
 import { defineTheme, extend } from '@vuecs/core';
 
+// `ThemeElements` in @vuecs/core is empty until a component package's module
+// augmentation loads; these imports pull in the declarations for the element
+// keys styled below, so they type-check in every consumer compiling this file.
+import type {} from '@vuecs/button';
+import type {} from '@vuecs/forms';
+
 export { merge };
 
 /**
