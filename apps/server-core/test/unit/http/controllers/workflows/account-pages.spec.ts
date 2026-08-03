@@ -82,11 +82,75 @@ describe('src/http/controllers/workflows/account (SPA shell)', () => {
         const config = extractAccountConfig(body);
         expect(Object.keys(config).sort()).toEqual(['apiUrl', 'basePath', 'features']);
         expect(Object.keys(config.features).sort()).toEqual([
-            'accountConsole', 
-            'emailVerification', 
-            'passwordRecovery', 
+            'accountConsole',
+            'emailVerification',
+            'passwordRecovery',
             'registration',
         ]);
+    });
+
+    it('should inject a ref pointing at a trusted origin', async () => {
+        const response = await httpRequest(
+            suite,
+            'GET',
+            '/account?ref=http%3A%2F%2Flocalhost%3A3000%2Fsettings',
+        );
+        expect(response.status).toEqual(200);
+
+        const config = extractAccountConfig(await response.text());
+        expect(config.ref).toEqual('http://localhost:3000/settings');
+    });
+
+    it('should drop a ref pointing at an untrusted origin', async () => {
+        const response = await httpRequest(
+            suite,
+            'GET',
+            '/account?ref=https%3A%2F%2Fevil.test%2Fx',
+        );
+        expect(response.status).toEqual(200);
+
+        const config = extractAccountConfig(await response.text());
+        expect(config.ref).toBeUndefined();
+    });
+
+    it('should drop a non-http ref', async () => {
+        const response = await httpRequest(
+            suite,
+            'GET',
+            '/account?ref=javascript%3Aalert(1)',
+        );
+        expect(response.status).toEqual(200);
+
+        const config = extractAccountConfig(await response.text());
+        expect(config.ref).toBeUndefined();
+    });
+
+    it('should validate ref on a sub-path too', async () => {
+        const response = await httpRequest(
+            suite,
+            'GET',
+            '/account/sessions?ref=https%3A%2F%2Fevil.test%2Fx',
+        );
+        expect(response.status).toEqual(200);
+
+        const config = extractAccountConfig(await response.text());
+        expect(config.ref).toBeUndefined();
+    });
+
+    it('should not let a crafted ref break the inline script', async () => {
+        // A `$'` in a String.prototype.replace replacement expands to the
+        // text following the match. `replaceTemplateMarker` must prevent it.
+        const response = await httpRequest(
+            suite,
+            'GET',
+            `/account?ref=${encodeURIComponent("http://localhost:3000/$'$&$`")}`,
+        );
+        expect(response.status).toEqual(200);
+
+        const body = await response.text();
+        // The payload must still be exactly one parseable JSON object.
+        const config = extractAccountConfig(body);
+        expect(config.basePath).toEqual('/account');
     });
 });
 

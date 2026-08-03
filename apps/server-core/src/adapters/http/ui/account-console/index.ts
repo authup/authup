@@ -6,4 +6,5 @@
  */
 
 export * from './module.ts';
+export * from './ref.ts';
 export * from './types.ts';

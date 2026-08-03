@@ -7,6 +7,7 @@
 
 import { InternalError } from '@authup/errors';
 import { getURLBasePath } from '@authup/kit';
+import { useRequestQuery } from '@routup/basic/query';
 import { locateUpSync } from 'locter';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -21,6 +22,7 @@ import {
     serializeInlineScriptJSON,
     stampHtmlAttributes,
 } from '../shared/index.ts';
+import { resolveAccountConsoleRef } from './ref.ts';
 import type { AccountConsoleServeOptions } from './types.ts';
 
 const CONFIG_MARKER = '<!--account-config-->';
@@ -89,13 +91,23 @@ export async function serveAccountConsolePage(
 
     const basePath = getURLBasePath(options.baseURL);
 
-    // The injected config is not request-reflected (publicUrl + feature
-    // flags, both operator config), but escape like every inline <script>
-    // payload.
+    // publicUrl and the feature flags are operator config, but `ref` is
+    // request-reflected, so it is validated against the trusted app
+    // origins before it goes anywhere near the page.
+    //
+    // The splice below MUST stay `replaceTemplateMarker`. A plain
+    // String.prototype.replace expands `$&`, "$`", `$'` and `$$` inside the
+    // REPLACEMENT value, so a crafted `ref` could splice the template's own
+    // tail into the payload and break the inline script. That is the exact
+    // bug that killed the auth console's hydration payload.
     const config = {
         apiUrl: options.baseURL,
         basePath: `${basePath}/account`,
         features: options.features,
+        ref: resolveAccountConsoleRef(
+            useRequestQuery(event, 'ref'),
+            options.trustedOrigins,
+        ),
     };
 
     let body = replaceTemplateMarker(
