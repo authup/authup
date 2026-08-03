@@ -21,7 +21,12 @@ import { resolveAuthConsoleDistPath, resolveAuthConsolePackagePath } from '../..
 
 export const VITE_SERVER_STORE_KEY = Symbol('ViteServer');
 
-export async function registerAssetsMiddleware(router: App) {
+/**
+ * Returns the vite dev server it created (JIT mode only), so the caller can
+ * close it on teardown. It owns a file watcher and an HMR websocket, which
+ * outlive the http listener otherwise.
+ */
+export async function registerAssetsMiddleware(router: App) : Promise<ViteDevServer | undefined> {
     // Static assets of the account console SPA (its fixed vite base is
     // /account/). Served in dev mode too — the bundle is prebuilt, not
     // vite-transformed. A missing bundle only disables the mount; the page
@@ -59,7 +64,7 @@ export async function registerAssetsMiddleware(router: App) {
                 },
             ));
         }
-        return;
+        return undefined;
     }
 
     // JIT (dev) mode serves the auth console straight from the package
@@ -94,4 +99,6 @@ export async function registerAssetsMiddleware(router: App) {
         event.store[VITE_SERVER_STORE_KEY] = server;
         return event.next();
     }));
+
+    return server;
 }
