@@ -111,6 +111,11 @@ export type Options = {
     cookieSet?: CookieSetFn,
     cookieUnset?: CookieUnsetFn,
     cookieGet?: CookieGetFn,
+    /**
+     * Path the store cookies are written with: the app's own mount point.
+     * See the store install option of the same name.
+     */
+    cookiePath?: string,
 
     pinia?: Pinia,
     isServer?: boolean,

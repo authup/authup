@@ -15,7 +15,7 @@ import type {
     CookieSetFn, 
     CookieUnsetFn,
 } from '../../types';
-import { STORE_ID } from './constants';
+import { COOKIE_PATH, STORE_ID } from './constants';
 import { createStore } from './create';
 import { StoreDispatcherEventName, createStoreDispatcher, provideStoreDispatcher } from './dispatcher';
 import { hasStoreFactory, provideStoreFactory } from './singleton';
@@ -66,6 +66,46 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         const cookies = useCookies();
         cookieUnset = cookies.remove;
     }
+
+    // Written explicitly, because a cookie stored without a `Path` takes the
+    // browser's default-path: the directory of the writing document. The
+    // account console at `/account` and the hosted auth pages at `/` are one
+    // origin sharing one session under one set of cookie names, so the
+    // implicit paths gave them two shadowing sets that expire independently.
+    const cookiePath = options.cookiePath || COOKIE_PATH;
+
+    /**
+     * Drop the copies written before the path was pinned.
+     *
+     * Those sit on the browser's default-path for the writing document
+     * (RFC 6265 5.1.4): `/account` for the account console. A pinned write
+     * does not overwrite them, and they WIN the read, because
+     * `document.cookie` lists the longer path first and the parser keeps the
+     * first match. Hydration would then persist what they hold back onto the
+     * pinned path, replacing a live refresh token with a stale one, which the
+     * next refresh replays into family revocation. So they are cleared once,
+     * before reading, and the browser falls back to the pinned session (or to
+     * signed out, if that one already lapsed).
+     */
+    const dropDefaultPathCookies = () => {
+        const pathname = typeof window === 'undefined' ?
+            undefined :
+            window.location?.pathname;
+
+        if (typeof pathname !== 'string') {
+            return;
+        }
+
+        const index = pathname.lastIndexOf('/');
+        const defaultPath = index <= 0 ? '/' : pathname.slice(0, index);
+        if (defaultPath === cookiePath) {
+            return;
+        }
+
+        for (const key of Object.values(CookieName)) {
+            cookieUnset(key, { path: defaultPath });
+        }
+    };
 
     const readCookies = () => {
         if (store.cookiesRead) {
@@ -148,9 +188,12 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         StoreDispatcherEventName.ACCESS_TOKEN_EXPIRE_DATE_UPDATED,
         (input) => {
             if (input) {
-                cookieSet(CookieName.ACCESS_TOKEN_EXPIRE_DATE, input, { maxAge: maxAgeFn() });
+                cookieSet(CookieName.ACCESS_TOKEN_EXPIRE_DATE, input, {
+                    maxAge: maxAgeFn(),
+                    path: cookiePath,
+                });
             } else {
-                cookieUnset(CookieName.ACCESS_TOKEN_EXPIRE_DATE, {});
+                cookieUnset(CookieName.ACCESS_TOKEN_EXPIRE_DATE, { path: cookiePath });
             }
         },
     );
@@ -160,9 +203,12 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         (input) => {
             if (input) {
                 const maxAge = maxAgeFn();
-                cookieSet(CookieName.ACCESS_TOKEN, input, { maxAge });
+                cookieSet(CookieName.ACCESS_TOKEN, input, {
+                    maxAge,
+                    path: cookiePath,
+                });
             } else {
-                cookieUnset(CookieName.ACCESS_TOKEN, {});
+                cookieUnset(CookieName.ACCESS_TOKEN, { path: cookiePath });
             }
         },
     );
@@ -171,9 +217,9 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         StoreDispatcherEventName.REFRESH_TOKEN_UPDATED,
         (input) => {
             if (input) {
-                cookieSet(CookieName.REFRESH_TOKEN, input, {});
+                cookieSet(CookieName.REFRESH_TOKEN, input, { path: cookiePath });
             } else {
-                cookieUnset(CookieName.REFRESH_TOKEN, {});
+                cookieUnset(CookieName.REFRESH_TOKEN, { path: cookiePath });
             }
         },
     );
@@ -182,9 +228,9 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         StoreDispatcherEventName.ID_TOKEN_UPDATED,
         (input) => {
             if (input) {
-                cookieSet(CookieName.ID_TOKEN, input, {});
+                cookieSet(CookieName.ID_TOKEN, input, { path: cookiePath });
             } else {
-                cookieUnset(CookieName.ID_TOKEN, {});
+                cookieUnset(CookieName.ID_TOKEN, { path: cookiePath });
             }
         },
     );
@@ -193,9 +239,9 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         StoreDispatcherEventName.USER_UPDATED,
         (input) => {
             if (input) {
-                cookieSet(CookieName.USER, input, {});
+                cookieSet(CookieName.USER, input, { path: cookiePath });
             } else {
-                cookieUnset(CookieName.USER, {});
+                cookieUnset(CookieName.USER, { path: cookiePath });
             }
         },
     );
@@ -204,9 +250,9 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         StoreDispatcherEventName.REALM_UPDATED,
         (input) => {
             if (input) {
-                cookieSet(CookieName.REALM, input, {});
+                cookieSet(CookieName.REALM, input, { path: cookiePath });
             } else {
-                cookieUnset(CookieName.REALM, {});
+                cookieUnset(CookieName.REALM, { path: cookiePath });
             }
         },
     );
@@ -215,13 +261,14 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         StoreDispatcherEventName.REALM_MANAGEMENT_UPDATED,
         (input) => {
             if (input) {
-                cookieSet(CookieName.REALM_MANAGEMENT, input, {});
+                cookieSet(CookieName.REALM_MANAGEMENT, input, { path: cookiePath });
             } else {
-                cookieUnset(CookieName.REALM_MANAGEMENT, {});
+                cookieUnset(CookieName.REALM_MANAGEMENT, { path: cookiePath });
             }
         },
     );
 
+    dropDefaultPathCookies();
     readCookies();
 
     provideStoreFactory(storeFactory, app);
