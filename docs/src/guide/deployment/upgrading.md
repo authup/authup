@@ -25,7 +25,7 @@ Two behavior changes require action:
 
 Register a client of your own instead. To keep the every-realm semantics,
 declare it once via a [wildcard realm entry](./provisioning.md#realm-wildcard-name)
-(`realms[].name: "*"`), which also offers a declarative `absent` cleanup for
+(`realms[].attributes.name: "*"`), which also offers a declarative `absent` cleanup for
 the leftover `web` rows. `CLIENT_WEB_NAME` was removed from
 `@authup/core-kit`, and `web` is a regular, creatable client name again.
 

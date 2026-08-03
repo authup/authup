@@ -190,7 +190,7 @@ realms:
           users:
               - attributes:
                     name: realm-admin
-                    password: changeme    # set per deployment!
+                    password: replace-with-a-strong-secret # set per deployment!
                 relations:
                     globalRoles:
                         - realm_admin
@@ -288,7 +288,7 @@ export default {
             relations: {
                 users: [
                     {
-                        attributes: { name: 'alice', password: 'changeme' },
+                        attributes: { name: 'alice', password: 'replace-with-a-strong-secret' },
                         relations: { globalRoles: ['project-manager'] },
                     },
                 ],
@@ -329,7 +329,7 @@ realms:
       users:
         - attributes:
             name: alice
-            password: changeme
+            password: replace-with-a-strong-secret
           relations:
             globalRoles:
               - project-manager

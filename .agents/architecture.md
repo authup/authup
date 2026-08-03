@@ -872,7 +872,7 @@ one into every realm would fight the system MERGE on every boot).
 Scopes run first because they are leaf entities carrying no relations of their
 own, and a client in the same realm block may bind them via `realmScopes`.
 
-### Wildcard Realm Entry (`realms[].name: "*"`, plan 082)
+### Wildcard Realm Entry (`realms[].attributes.name: "*"`, plan 082)
 
 A `realms[]` entry whose name is the literal `*` (`REALM_WILDCARD_NAME`,
 `core/provisioning/constants.ts`) is a SELECTOR over realms, not a realm

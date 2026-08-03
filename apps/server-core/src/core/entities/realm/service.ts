@@ -172,7 +172,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
                 } catch (e) {
                     if (this.logger) {
                         this.logger.warn(
-                            `Failed to provision realm ${entity.id}: ${e instanceof Error ? e.message : String(e)}`,
+                            `${provisioner.constructor.name} failed for realm ${entity.id}: ${e instanceof Error ? e.message : String(e)}`,
                         );
                     }
                 }
