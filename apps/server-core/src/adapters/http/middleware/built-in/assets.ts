@@ -131,6 +131,7 @@ async function registerThemeAssets(router: App, options: AssetsMiddlewareOptions
 
     const provider = new ThemeProvider({
         directoryPath: themeDirectoryPath,
+        fragmentsEnabled: options.themeFragmentsEnabled,
         logger: options.logger,
     });
 

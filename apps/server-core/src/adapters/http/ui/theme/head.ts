@@ -50,7 +50,11 @@ function buildTokenRule(selector: string, tokens: Record<string, string>) : stri
  * `._/-`), so the emitted CSS cannot be broken out of. The title is the
  * one free-form field and is HTML-escaped.
  */
-export function buildThemeHead(manifest: ThemeManifest, basePath: string) : string {
+export function buildThemeHead(
+    manifest: ThemeManifest,
+    basePath: string,
+    fragment?: string,
+) : string {
     const parts : string[] = [];
 
     const rules : string[] = [];
@@ -76,6 +80,15 @@ export function buildThemeHead(manifest: ThemeManifest, basePath: string) : stri
         parts.push(`<link rel="stylesheet" href="${escapeHtml(buildAssetURL(manifest.stylesheet, basePath))}">`);
     }
 
+    // After the stylesheet, so a fragment can override everything the
+    // manifest emitted. Passed through verbatim: it is operator-authored
+    // markup, and a partial sanitizer would be worse than none because it
+    // invites treating fragments as untrusted-safe. The controls are that
+    // it is filesystem-only, off by default, and head-only.
+    if (fragment) {
+        parts.push(fragment);
+    }
+
     return parts.join('');
 }
 
@@ -89,14 +102,16 @@ export function applyTheme(
     provider: IThemeProvider | undefined,
     basePath: string,
 ) : string {
-    const manifest = provider?.getManifest();
-    if (!provider || !manifest) {
+    if (!provider) {
         return html;
     }
 
     let body = html;
 
-    if (manifest.title) {
+    // A directory may carry only a fragment, or only a stylesheet, so the
+    // manifest is not a precondition for applying the theme.
+    const manifest = provider.getManifest();
+    if (manifest?.title) {
         body = stampDocumentTitle(body, escapeHtml(manifest.title));
     }
 

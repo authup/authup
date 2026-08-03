@@ -17,6 +17,23 @@ export const THEME_ASSETS_DIRECTORY_NAME = 'assets';
 
 export const THEME_ASSET_MOUNT_PATH = 'theme';
 
+export const THEME_FRAGMENTS_DIRECTORY_NAME = 'fragments';
+
+/**
+ * Raw markup spliced into `<head>`. Read only when the operator opts in
+ * via `themeFragmentsEnabled`: a fragment is unsanitized markup on the
+ * IdP origin, so it must be a deliberate decision and never a consequence
+ * of dropping a file into the mounted directory.
+ *
+ * Head-only by design. There is deliberately no in-`<body>` slot: a
+ * fragment rendered next to the consent buttons is a strictly better
+ * consent-forgery primitive than one in `<head>` (it could relabel or
+ * overlay Allow with no CSS at all).
+ */
+export const THEME_HEAD_FRAGMENT_FILE_NAME = 'head.html';
+
+export const THEME_HEAD_FRAGMENT_MAX_LENGTH = 64 * 1024;
+
 /**
  * A manifest declares the contract version it was written against. An
  * unknown version fails the boot instead of being partially understood.

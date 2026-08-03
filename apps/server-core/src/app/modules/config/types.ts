@@ -50,6 +50,18 @@ export type Config = {
      */
     themeDirectoryPath: string,
 
+    /**
+     * Opt in to reading `fragments/head.html` from the theme directory and
+     * splicing it into the `<head>` of both served consoles.
+     *
+     * The fragment is raw, unsanitized markup running on the IdP origin,
+     * so it must be a deliberate operator decision and never a consequence
+     * of a file appearing in the mounted directory.
+     *
+     * default: false
+     */
+    themeFragmentsEnabled: boolean,
+
     // ----------------------------------------------------
 
     /**

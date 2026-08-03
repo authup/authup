@@ -11,8 +11,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {
     THEME_ASSETS_DIRECTORY_NAME,
+    THEME_FRAGMENTS_DIRECTORY_NAME,
+    THEME_HEAD_FRAGMENT_FILE_NAME,
+    THEME_HEAD_FRAGMENT_MAX_LENGTH,
     THEME_MANIFEST_FILE_NAME,
     THEME_MANIFEST_REVALIDATE_INTERVAL,
+    THEME_MANIFEST_VERSION,
 } from './constants.ts';
 import { buildThemeHead } from './head.ts';
 import { parseThemeManifest } from './manifest.ts';
@@ -36,13 +40,21 @@ export class ThemeProvider implements IThemeProvider {
 
     protected readonly manifestPath : string;
 
+    protected readonly fragmentPath : string;
+
+    protected readonly fragmentsEnabled : boolean;
+
     protected readonly logger : Logger | undefined;
 
     protected manifest : ThemeManifest | undefined;
 
+    protected headFragment : string | undefined;
+
     protected assetsPath : string | undefined;
 
     protected manifestSignature : string | undefined;
+
+    protected fragmentSignature : string | undefined;
 
     protected revalidatedAt = 0;
 
@@ -50,8 +62,14 @@ export class ThemeProvider implements IThemeProvider {
 
     constructor(ctx: ThemeProviderContext) {
         this.directoryPath = ctx.directoryPath;
+        this.fragmentsEnabled = ctx.fragmentsEnabled ?? false;
         this.logger = ctx.logger;
         this.manifestPath = path.join(ctx.directoryPath, THEME_MANIFEST_FILE_NAME);
+        this.fragmentPath = path.join(
+            ctx.directoryPath,
+            THEME_FRAGMENTS_DIRECTORY_NAME,
+            THEME_HEAD_FRAGMENT_FILE_NAME,
+        );
     }
 
     async load() : Promise<void> {
@@ -68,7 +86,12 @@ export class ThemeProvider implements IThemeProvider {
 
         if (typeof raw === 'string') {
             this.manifest = parseThemeManifest(this.parseJSON(raw), this.manifestPath);
-            this.manifestSignature = await this.readSignature();
+            this.manifestSignature = this.readSignature(this.manifestPath);
+        }
+
+        if (this.fragmentsEnabled) {
+            this.headFragment = this.readFragment();
+            this.fragmentSignature = this.readSignature(this.fragmentPath);
         }
 
         this.revalidatedAt = Date.now();
@@ -88,17 +111,19 @@ export class ThemeProvider implements IThemeProvider {
     }
 
     getHead(basePath: string) : string {
+        // Drives the revalidation for both files.
         const manifest = this.getManifest();
-        if (!manifest) {
-            return '';
-        }
 
         const cached = this.headCache.get(basePath);
         if (typeof cached === 'string') {
             return cached;
         }
 
-        const head = buildThemeHead(manifest, basePath);
+        const head = buildThemeHead(
+            manifest ?? { version: THEME_MANIFEST_VERSION },
+            basePath,
+            this.headFragment,
+        );
         this.headCache.set(basePath, head);
 
         return head;
@@ -136,14 +161,40 @@ export class ThemeProvider implements IThemeProvider {
         }
     }
 
-    protected async readSignature() : Promise<string | undefined> {
+    protected readSignature(filePath: string) : string | undefined {
         try {
-            const stats = await fs.promises.stat(this.manifestPath);
+            const stats = fs.statSync(filePath);
 
             return `${stats.size}-${stats.mtimeMs}`;
         } catch {
             return undefined;
         }
+    }
+
+    /**
+     * Read `fragments/head.html`. Never called when the operator has not
+     * opted in, so dropping the file into the directory does nothing on
+     * its own.
+     */
+    protected readFragment() : string | undefined {
+        let raw : string;
+        try {
+            raw = fs.readFileSync(this.fragmentPath, 'utf-8');
+        } catch {
+            return undefined;
+        }
+
+        if (raw.length > THEME_HEAD_FRAGMENT_MAX_LENGTH) {
+            this.logger?.warn(
+                `The head fragment "${this.fragmentPath}" exceeds ${THEME_HEAD_FRAGMENT_MAX_LENGTH} bytes and is ignored.`,
+            );
+
+            return undefined;
+        }
+
+        const trimmed = raw.trim();
+
+        return trimmed.length > 0 ? trimmed : undefined;
     }
 
     /**
@@ -159,14 +210,12 @@ export class ThemeProvider implements IThemeProvider {
         }
         this.revalidatedAt = now;
 
-        let signature : string | undefined;
-        try {
-            const stats = fs.statSync(this.manifestPath);
-            signature = `${stats.size}-${stats.mtimeMs}`;
-        } catch {
-            signature = undefined;
-        }
+        this.revalidateManifest();
+        this.revalidateFragment();
+    }
 
+    protected revalidateManifest() : void {
+        const signature = this.readSignature(this.manifestPath);
         if (signature === this.manifestSignature) {
             return;
         }
@@ -193,6 +242,23 @@ export class ThemeProvider implements IThemeProvider {
         }
     }
 
+    protected revalidateFragment() : void {
+        if (!this.fragmentsEnabled) {
+            return;
+        }
+
+        const signature = this.readSignature(this.fragmentPath);
+        if (signature === this.fragmentSignature) {
+            return;
+        }
+
+        this.fragmentSignature = signature;
+        this.headFragment = typeof signature === 'undefined' ?
+            undefined :
+            this.readFragment();
+        this.headCache.clear();
+    }
+
     /**
      * Always logged. The dominant failure mode of this feature is silence:
      * mount the wrong path and the page looks exactly like an un-themed
@@ -215,6 +281,18 @@ export class ThemeProvider implements IThemeProvider {
             );
         } else {
             this.logger.info(`Theme manifest: none (no ${THEME_MANIFEST_FILE_NAME})`);
+        }
+
+        if (!this.fragmentsEnabled) {
+            this.logger.info('Theme head fragment: disabled (themeFragmentsEnabled is off)');
+        } else if (this.headFragment) {
+            this.logger.info(
+                `Theme head fragment: loaded (${this.headFragment.length} bytes from ${THEME_FRAGMENTS_DIRECTORY_NAME}/${THEME_HEAD_FRAGMENT_FILE_NAME})`,
+            );
+        } else {
+            this.logger.info(
+                `Theme head fragment: none (no ${THEME_FRAGMENTS_DIRECTORY_NAME}/${THEME_HEAD_FRAGMENT_FILE_NAME})`,
+            );
         }
 
         if (!this.assetsPath) {

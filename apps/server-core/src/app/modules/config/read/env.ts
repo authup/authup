@@ -64,6 +64,11 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.themeDirectoryPath = themeDirectoryPath;
     }
 
+    const themeFragmentsEnabled = readBool(ConfigEnvironmentVariableName.THEME_FRAGMENTS_ENABLED);
+    if (typeof themeFragmentsEnabled !== 'undefined') {
+        options.themeFragmentsEnabled = themeFragmentsEnabled;
+    }
+
     // -------------------------------------------------------------
 
     if (hasEnvDataSourceOptions()) {

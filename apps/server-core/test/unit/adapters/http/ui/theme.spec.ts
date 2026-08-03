@@ -190,6 +190,34 @@ describe('adapters/http/ui/theme', () => {
         });
     });
 
+    describe('buildThemeHead (head fragment)', () => {
+        it('should append the fragment after everything the manifest emitted', () => {
+            const head = buildThemeHead({
+                version: 1,
+                tokens: { '--authup-auth-accent': 'red' },
+                stylesheet: 'assets/theme.css',
+            }, '', '<meta name="x" content="y">');
+
+            expect(head.indexOf('rel="stylesheet"'))
+                .toBeLessThan(head.indexOf('<meta name="x"'));
+        });
+
+        it('should pass the fragment through verbatim', () => {
+            // Operator-authored markup. A partial sanitizer would be worse
+            // than none, because it invites treating fragments as
+            // untrusted-safe.
+            const fragment = '<script>window.x=1</script>';
+            const head = buildThemeHead({ version: 1 }, '', fragment);
+
+            expect(head).toEqual(fragment);
+        });
+
+        it('should emit only the fragment when the manifest is empty', () => {
+            expect(buildThemeHead({ version: 1 }, '', '<meta name="a">'))
+                .toEqual('<meta name="a">');
+        });
+    });
+
     describe('applyTheme', () => {
         const html = '<html><head><title>Authup</title></head><body>x</body></html>';
 

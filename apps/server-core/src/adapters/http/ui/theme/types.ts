@@ -28,6 +28,13 @@ export type ThemeProviderContext = {
      * value against the rootPath).
      */
     directoryPath: string,
+
+    /**
+     * Opt in to reading `fragments/head.html`. Default off: the fragment
+     * is unsanitized markup served on the IdP origin.
+     */
+    fragmentsEnabled?: boolean,
+
     logger?: Logger,
 };
 

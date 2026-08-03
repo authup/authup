@@ -44,6 +44,7 @@ export class ConfigValidator extends Container<Config> {
             rootPath: stringValidator,
             writableDirectoryPath: stringValidator,
             themeDirectoryPath: stringValidator,
+            themeFragmentsEnabled: booleanValidator,
 
             logger: booleanValidator,
             db: createValidator(

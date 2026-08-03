@@ -62,6 +62,15 @@ export default {
     themeDirectoryPath: '/etc/authup/theme',
 
     /**
+     * Read fragments/head.html from the theme directory and splice it
+     * into the head of both served consoles. Raw, unsanitized markup on
+     * the identity provider origin, so it is opt-in.
+     * env: THEME_FRAGMENTS_ENABLED
+     * default: false
+     */
+    themeFragmentsEnabled: false,
+
+    /**
      * Enable logging. File-only (no environment variable).
      * default: true
      */
@@ -462,6 +471,7 @@ export default {
 env=production
 writableDirectoryPath=writable
 themeDirectoryPath=/etc/authup/theme
+themeFragmentsEnabled=false
 port=3001
 host=0.0.0.0
 publicUrl=http://localhost:3001
@@ -507,6 +517,7 @@ permissionsDefaultPolicyAssignment=true
 NODE_ENV=production
 WRITABLE_DIRECTORY_PATH=writable
 THEME_DIRECTORY_PATH=/etc/authup/theme
+THEME_FRAGMENTS_ENABLED=false
 PORT=3001
 HOST=0.0.0.0
 PUBLIC_URL=http://localhost:3001

@@ -95,6 +95,7 @@ export class HTTPMiddlewareModule {
         // passed down: adapters/http/ui/** must not read config itself.
         this.viteServer = await registerAssetsMiddleware(router, {
             themeDirectoryPath: config.themeDirectoryPath,
+            themeFragmentsEnabled: config.themeFragmentsEnabled,
             logger: container.resolve(LoggerInjectionKey),
         });
     }

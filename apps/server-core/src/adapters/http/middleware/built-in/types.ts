@@ -13,5 +13,11 @@ export type AssetsMiddlewareOptions = {
      * disables theming entirely.
      */
     themeDirectoryPath?: string,
+
+    /**
+     * Opt in to reading the theme's `fragments/head.html`. Default off.
+     */
+    themeFragmentsEnabled?: boolean,
+
     logger?: Logger,
 };

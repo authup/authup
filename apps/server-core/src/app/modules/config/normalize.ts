@@ -80,6 +80,7 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         // page" would turn any write primitive landing there into
         // persistent branding control on the IdP origin.
         themeDirectoryPath: '',
+        themeFragmentsEnabled: false,
 
         logger: true,
         redis: false,

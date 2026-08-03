@@ -16,7 +16,7 @@ engine. That draws a hard line through what theming can do.
 | Spacing, radii, font sizes, font family | yes |
 | Logo, favicon, background imagery | yes |
 | Document title | yes |
-| Extra `<head>` content (fonts, meta tags) | yes, opt-in |
+| Extra `<head>` content (fonts, meta tags, scripts) | yes, opt-in |
 | Markup, field order, which controls exist | no |
 | UI copy and translations | no |
 | Icons | no |
@@ -79,6 +79,8 @@ its `binaryData`.
     logo.svg
     favicon.svg
     inter.woff2
+  fragments/          opt-in, see Head fragment below
+    head.html
 ```
 
 `assets/` is a subdirectory on purpose. The HTTP mount root is
@@ -205,11 +207,39 @@ Tailwind runs at build time, so utility classes, `@apply`, `@theme` and
 `@source` do nothing in a mounted stylesheet. Write plain CSS, or compile
 elsewhere and mount the output.
 
+## Head fragment
+
+For things neither tokens nor CSS can express (a `<meta>` tag, a
+`<link rel="preconnect">`, an analytics snippet), put raw markup in
+`fragments/head.html` and opt in:
+
+```bash
+-e THEME_FRAGMENTS_ENABLED=true
+```
+
+It is spliced immediately before `</head>` on both consoles, after everything
+the manifest emitted, so it can override the token block and the stylesheet.
+The file is capped at 64 KB.
+
+The flag defaults to off and the file is not read at all while it is off.
+Dropping `fragments/head.html` into the directory does nothing by itself.
+
+::: danger Fragments are unsanitized
+The content is passed through verbatim, so a `<script>` there runs on the
+origin that holds your users' session cookies. Authup does not sanitize it: a
+partial sanitizer would be worse than none, because it invites treating
+fragments as safe for untrusted input.
+
+There is deliberately no in-`<body>` slot. Markup next to the consent buttons
+would be a far better consent-forgery primitive than markup in `<head>`.
+:::
+
 ## Reload
 
 Everything is live. You do not restart pods to change a colour.
 
-- `theme.json` is re-read when it changes, at most once per second.
+- `theme.json` and `fragments/head.html` are re-read when they change, at most
+  once per second.
 - Assets are revalidated per request and return `304` when unchanged, so a
   hard refresh picks up an edit.
 - In Kubernetes, `kubectl edit configmap authup-theme` propagates within about
