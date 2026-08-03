@@ -115,7 +115,7 @@ export type Config = {
 
     /**
      * Trusted first-party app origins (besides publicUrl) — used as
-     * redirect targets for the per-realm public `web` client. Does NOT
+     * redirect targets for the per-realm public system clients. Does NOT
      * drive CORS (the API reflects any origin by default; an explicit
      * CORS allowlist goes through middlewareCors), and does not affect
      * UIs using their own registered OAuth2 client. Input entries may be
@@ -123,10 +123,10 @@ export type Config = {
      * rejected) or bare hosts (host[:port]) — a bare host expands to
      * both its http and https origin during normalization, so the
      * normalized config always holds full origins (scheme://host[:port],
-     * no path); each is stored as `<origin>/**` in the web client's
+     * no path); each is stored as `<origin>/**` in the system clients'
      * redirect_uri set.
      *
-     * SECURITY: the `web` client is built_in (auto-consent + `global`
+     * SECURITY: the system clients are built_in (auto-consent + `global`
      * scope), so any origin listed here can obtain a full-permission user
      * token once a user logs in. Adding an origin grants it full login
      * capability for every realm.

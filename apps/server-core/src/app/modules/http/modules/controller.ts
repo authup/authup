@@ -154,8 +154,10 @@ import {
     UserRoleService,
     UserService,
 } from '../../../../core/index.ts';
+import type { IRealmProvisioner } from '../../../../core/index.ts';
 import { AuthenticationInjectionKey } from '../../authentication/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
+import { ProvisioningInjectionKey } from '../../provisioning/constants.ts';
 import { IdentityInjectionKey } from '../../identity/index.ts';
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import type { Config } from '../../config/index.ts';
@@ -1003,10 +1005,27 @@ export class HTTPControllerModule {
             logger,
         });
 
+        // The wildcard realm provisioner is registered by ProvisionerModule
+        // AFTER the async provisioning-source load, and the HTTP module does
+        // not depend on the provisioning module's boot order — resolve it
+        // lazily at request time. No wildcard entry declared => no-op.
+        const wildcardProvisioner : IRealmProvisioner = {
+            async ensureForRealm(realm) {
+                if (container.has(ProvisioningInjectionKey.WildcardRealmProvisioner)) {
+                    await container
+                        .resolve(ProvisioningInjectionKey.WildcardRealmProvisioner)
+                        .ensureForRealm(realm);
+                }
+            },
+        };
+
         const service = new RealmService({
             repository,
-            systemClientProvisioner,
-            keyProvisioner,
+            realmProvisioners: [
+                systemClientProvisioner,
+                keyProvisioner,
+                wildcardProvisioner,
+            ],
             logger,
         });
         const keyRepository = dataSource.getRepository(KeyEntity);

@@ -5,7 +5,31 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
-## Next release (after v1.0.0-beta.51)
+## Next release (after v1.0.0-beta.58)
+
+### The per-realm `web` client was removed
+
+The shared `web` system client is no longer provisioned. Authup's own
+consoles were moved off it earlier (`admin-console` / `account-console`);
+it existed purely for downstream applications and was default-on attack
+surface (auto-consent + `global` scope in every realm).
+
+**Existing `web` rows are not touched**: logins against them keep working.
+Two behavior changes require action:
+
+1. `PUBLIC_URL` / `TRUSTED_ORIGINS` changes no longer propagate to the
+   leftover rows; their `redirectUri` / `postLogoutRedirectUri` are
+   frozen as-is.
+2. Realms created after the upgrade get no `web` client, so a
+   `client_id=web` login breaks there.
+
+Register a client of your own instead. To keep the every-realm semantics,
+declare it once via a [wildcard realm entry](./provisioning.md#realm-wildcard-name)
+(`realms[].name: "*"`), which also offers a declarative `absent` cleanup for
+the leftover `web` rows. `CLIENT_WEB_NAME` was removed from
+`@authup/core-kit`, and `web` is a regular, creatable client name again.
+
+## v1.0.0-beta.52 (was: next release after v1.0.0-beta.51)
 
 ### Login redirect allowlist — set `TRUSTED_ORIGINS`
 

@@ -186,8 +186,8 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         const validated = await this.validator.run(data, { group });
 
-        // Reserve the system-provisioned client names (`system`, `web`) so an
-        // API caller can't create or rename a client onto them — that would
+        // Reserve the system-provisioned client names (`system`, the console
+        // clients) so an API caller can't create or rename a client onto them — that would
         // collide on unique(name, realmId) or shadow the builtIn client.
         // Provisioning and runtime hooks bypass this service, so they remain
         // free to manage the reserved clients. builtIn clients are exempt

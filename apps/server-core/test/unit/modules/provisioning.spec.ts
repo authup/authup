@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { randomUUID } from 'node:crypto';
 import { BuiltInPolicyType, SystemPolicyName } from '@authup/access';
 import type { CompositePolicy } from '@authup/access';
 import { DecisionStrategy } from '@authup/kit';
@@ -20,7 +21,6 @@ import type {
 import {
     CLIENT_ACCOUNT_CONSOLE_NAME,
     CLIENT_ADMIN_CONSOLE_NAME,
-    CLIENT_WEB_NAME,
     ClientAuthMethod,
     ClientTokenBindingMethod,
     REALM_MASTER_NAME,
@@ -58,6 +58,7 @@ import {
     PolicyRepositoryAdapter,
 } from '../../../src/app/modules/database/repositories/index.ts';
 import { DatabaseInjectionKey } from '../../../src/app/modules/database/index.ts';
+import { ProvisioningInjectionKey } from '../../../src/app/modules/provisioning/index.ts';
 import { createTestDatabaseModuleForSuite } from '../../app/index.ts';
 
 describe('app/modules/provisioning', () => {
@@ -203,19 +204,28 @@ describe('app/modules/provisioning', () => {
         expect(clientScopes.map((row) => row.scope.name).sort()).toEqual(['foo', 'realm-scope']);
     });
 
-    // Every realm carries a public `web` client whose provisioned scopes must
-    // reach the junction (#3347). `web` is also a reserved client name, so a
-    // non-built-in row predates the reservation and must not shadow the
-    // realm's login client.
-    it('should provision the web client of every realm with its scopes', async () => {
+    // Every realm carries the console system clients whose provisioned
+    // scopes must reach the junction (#3347). Their names are reserved, so
+    // a non-built-in row predates the reservation and must not shadow the
+    // realm's system client. A legacy `web` row (plan 082 removed the `web`
+    // system client) is an ordinary client now and must survive a boot
+    // untouched.
+    it('should provision the system clients of every realm and leave legacy web rows untouched', async () => {
         const realmRepository = di.resolve<Repository<Realm>>(RealmEntity);
         const clientRepository = di.resolve<Repository<Client>>(ClientEntity);
         const clientScopeRepository = di.resolve<Repository<ClientScope>>(ClientScopeEntity);
 
-        // A legacy realm holding a confidential client on the reserved name.
-        const legacyRealm = await realmRepository.save(realmRepository.create({ name: 'takeover' }));
+        // A legacy realm holding a confidential client on a reserved name,
+        // plus a pre-plan-082 `web` row the provisioner used to own.
+        const legacyRealmName = `takeover-${randomUUID().slice(0, 8)}`;
+        const legacyRealm = await realmRepository.save(realmRepository.create({ name: legacyRealmName }));
+        // a realm with nothing seeded: pins that provisioning creates no
+        // `web` row anymore
+        const freshRealm = await realmRepository.save(
+            realmRepository.create({ name: `fresh-${randomUUID().slice(0, 8)}` }),
+        );
         await clientRepository.save(clientRepository.create({
-            name: CLIENT_WEB_NAME,
+            name: CLIENT_ADMIN_CONSOLE_NAME,
             realmId: legacyRealm.id,
             builtIn: false,
             authMethod: ClientAuthMethod.SECRET,
@@ -223,6 +233,14 @@ describe('app/modules/provisioning', () => {
             secret: 'legacy-secret',
             secretHashed: false,
             redirectUri: 'http://user-owned.example.com/**',
+        }));
+        await clientRepository.save(clientRepository.create({
+            name: 'web',
+            realmId: legacyRealm.id,
+            builtIn: true,
+            authMethod: ClientAuthMethod.NONE,
+            tokenBindingMethod: ClientTokenBindingMethod.NONE,
+            redirectUri: 'http://legacy-web.example.com/**',
         }));
 
         const provisioning = new ProvisionerModule([
@@ -240,20 +258,28 @@ describe('app/modules/provisioning', () => {
         };
 
         const masterRealm = await realmRepository.findOneBy({ name: REALM_MASTER_NAME });
-        const masterWebClient = await clientRepository.findOneBy({
-            name: CLIENT_WEB_NAME,
-            realmId: masterRealm!.id,
-        });
 
-        expect(await readScopeNames(masterWebClient!.id)).toEqual(
-            [...SYSTEM_CLIENT_SCOPE_NAMES].sort(),
-        );
+        // No realm gets a `web` system client anymore. Asserted on realms
+        // THIS run created: a reused local mysql/postgres database may
+        // legitimately hold a legacy master `web` row from a pre-plan-082
+        // run (the documented survive-untouched posture).
+        expect(await clientRepository.findBy({ name: 'web', realmId: freshRealm.id }))
+            .toHaveLength(0);
+
+        // ... and a pre-existing `web` row is not modified by boot.
+        const legacyWebClient = await clientRepository.findOneBy({
+            name: 'web',
+            realmId: legacyRealm.id,
+        });
+        expect(legacyWebClient!.builtIn).toBe(true);
+        expect(legacyWebClient!.redirectUri).toBe('http://legacy-web.example.com/**');
+        expect(await readScopeNames(legacyWebClient!.id)).toEqual([]);
 
         // `secret` is a select:false column, so read it back explicitly.
         const legacyClient = await clientRepository
             .createQueryBuilder('client')
             .addSelect('client.secret')
-            .where('client.name = :name', { name: CLIENT_WEB_NAME })
+            .where('client.name = :name', { name: CLIENT_ADMIN_CONSOLE_NAME })
             .andWhere('client.realmId = :realmId', { realmId: legacyRealm.id })
             .getOne();
 
@@ -273,7 +299,7 @@ describe('app/modules/provisioning', () => {
         // account-console system clients, scopes bound and displayName
         // seeded at create.
         for (const name of [CLIENT_ADMIN_CONSOLE_NAME, CLIENT_ACCOUNT_CONSOLE_NAME]) {
-            for (const realm of [masterRealm!, legacyRealm]) {
+            for (const realm of [masterRealm!, legacyRealm, freshRealm]) {
                 const client = await clientRepository.findOneBy({
                     name,
                     realmId: realm.id,
@@ -287,6 +313,165 @@ describe('app/modules/provisioning', () => {
                     [...SYSTEM_CLIENT_SCOPE_NAMES].sort(),
                 );
             }
+        }
+    });
+
+    // ---------------------------------------------------------------
+    // Wildcard realm entry (plan 082)
+    // ---------------------------------------------------------------
+
+    it('should load a wildcard realm entry from a provisioning file', async () => {
+        const source = new FileProvisioningSource({ cwd: 'test/data/sources-wildcard' });
+        const output = await source.load();
+
+        expect(output.realms).toHaveLength(1);
+        expect(output.realms![0].attributes).toEqual({ name: '*' });
+        expect(output.realms![0].relations?.clients).toHaveLength(1);
+        expect(output.realms![0].relations?.roles).toHaveLength(1);
+    });
+
+    it('should reject a reserved client name in a wildcard realm entry naming the file', async () => {
+        const source = new FileProvisioningSource({ cwd: 'test/data/sources-wildcard-invalid' });
+
+        await expect(source.load()).rejects.toThrow(/reserved-client\.yaml/);
+        await expect(source.load()).rejects.toThrow(/reserved/);
+    });
+
+    it('should apply a wildcard realm entry to every realm', async () => {
+        const realmRepository = di.resolve<Repository<Realm>>(RealmEntity);
+        const clientRepository = di.resolve<Repository<Client>>(ClientEntity);
+        const roleRepository = di.resolve<Repository<Role>>(RoleEntity);
+
+        // exists before boot, not declared anywhere in config (random
+        // names: local mysql/postgres runs reuse the database)
+        const preExistingName = `wc-pre-${randomUUID().slice(0, 8)}`;
+        const declaredName = `wc-declared-${randomUUID().slice(0, 8)}`;
+        const runtimeName = `wc-runtime-${randomUUID().slice(0, 8)}`;
+        const preExisting = await realmRepository.save(
+            realmRepository.create({ name: preExistingName }),
+        );
+
+        const wildcardSource = {
+            async load() {
+                return {
+                    realms: [
+                        {
+                            attributes: { name: '*' },
+                            relations: {
+                                clients: [{ attributes: { name: 'portal', displayName: 'Portal' } }],
+                                roles: [{ attributes: { name: 'template-role' } }],
+                            },
+                        },
+                        {
+                            attributes: { name: declaredName },
+                            relations: { clients: [{ attributes: { name: 'portal', displayName: 'Explicit Portal' } }] },
+                        },
+                    ],
+                };
+            },
+        };
+
+        const provisioning = new ProvisionerModule([
+            new DefaultProvisioningSource(),
+            wildcardSource,
+        ]);
+        await provisioning.setup(di);
+
+        const masterRealm = await realmRepository.findOneBy({ name: REALM_MASTER_NAME });
+        const declaredRealm = await realmRepository.findOneBy({ name: declaredName });
+
+        // fan-out: master rides the expansion into its explicit (default
+        // source) block, the pre-existing realm rides the backfill loop
+        for (const realm of [masterRealm!, preExisting]) {
+            const portal = await clientRepository.findOneBy({ name: 'portal', realmId: realm.id });
+            expect(portal, `portal in ${realm.name}`).not.toBeNull();
+            expect(portal!.displayName).toBe('Portal');
+
+            const role = await roleRepository.findOneBy({ name: 'template-role', realmId: realm.id });
+            expect(role, `template-role in ${realm.name}`).not.toBeNull();
+        }
+
+        // explicit block wins per attribute; wildcard-only relations union in
+        const declaredPortal = await clientRepository.findOneBy({
+            name: 'portal',
+            realmId: declaredRealm!.id,
+        });
+        expect(declaredPortal!.displayName).toBe('Explicit Portal');
+        expect(await roleRepository.findOneBy({
+            name: 'template-role',
+            realmId: declaredRealm!.id,
+        })).not.toBeNull();
+
+        // runtime hook: the DI-registered provisioner covers realms created
+        // after boot (RealmService invokes it on create)
+        const runtimeRealm = await realmRepository.save(
+            realmRepository.create({ name: runtimeName }),
+        );
+        const wildcardProvisioner = di.resolve(ProvisioningInjectionKey.WildcardRealmProvisioner);
+        await wildcardProvisioner.ensureForRealm(runtimeRealm);
+
+        expect(await clientRepository.findOneBy({
+            name: 'portal',
+            realmId: runtimeRealm.id,
+        })).not.toBeNull();
+
+        // createOnly (the default): a per-realm admin edit survives a boot
+        await clientRepository.update({ id: declaredPortal!.id }, { displayName: 'Admin Edited' });
+        await new ProvisionerModule([
+            new DefaultProvisioningSource(),
+            wildcardSource,
+        ]).setup(di);
+        expect((await clientRepository.findOneBy({ id: declaredPortal!.id }))!.displayName)
+            .toBe('Admin Edited');
+
+        // a merge child reasserts on every realm each boot
+        await new ProvisionerModule([
+            new DefaultProvisioningSource(),
+            {
+                async load() {
+                    return {
+                        realms: [{
+                            attributes: { name: '*' },
+                            relations: {
+                                clients: [{
+                                    attributes: { name: 'portal', displayName: 'Reasserted' },
+                                    strategy: { type: 'merge' },
+                                }],
+                            },
+                        }],
+                    };
+                },
+            },
+        ]).setup(di);
+        for (const realm of [masterRealm!, preExisting, runtimeRealm]) {
+            const portal = await clientRepository.findOneBy({ name: 'portal', realmId: realm.id });
+            expect(portal!.displayName, `portal in ${realm.name}`).toBe('Reasserted');
+        }
+
+        // an absent child sweeps the entity out of every realm
+        await new ProvisionerModule([
+            new DefaultProvisioningSource(),
+            {
+                async load() {
+                    return {
+                        realms: [{
+                            attributes: { name: '*' },
+                            relations: {
+                                clients: [{
+                                    attributes: { name: 'portal' },
+                                    strategy: { type: 'absent' },
+                                }],
+                            },
+                        }],
+                    };
+                },
+            },
+        ]).setup(di);
+        for (const realm of [masterRealm!, preExisting, declaredRealm!, runtimeRealm]) {
+            expect(
+                await clientRepository.findOneBy({ name: 'portal', realmId: realm.id }),
+                `portal in ${realm.name}`,
+            ).toBeNull();
         }
     });
 

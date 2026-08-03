@@ -854,11 +854,14 @@ offending **file path** plus every issue rendered as
 with several mounted files a bad entry aborted the boot with nothing to act
 on.
 
-`CLIENT_RESERVED_NAMES` (`system`, `web`) is **not** enforced here. It stays
-a `ClientService.save()` (API-path) guard, because provisioning bypasses the
-service. Declaring either name is allowed and partially effective. See
-*Per-Realm System Clients* below for which attributes a declaration can
-and cannot set.
+`CLIENT_RESERVED_NAMES` (`system`, `admin-console`, `account-console`) is
+**not** enforced for explicit realm blocks. It stays a `ClientService.save()`
+(API-path) guard, because provisioning bypasses the service. Declaring a
+reserved name there is allowed and partially effective — see *Per-Realm
+System Clients* below for which attributes a declaration can and cannot set.
+A WILDCARD realm entry (below) is the exception: reserved client names are
+rejected at config load (new surface, no BC concern — a template stamping
+one into every realm would fight the system MERGE on every boot).
 
 ### Synchronization Order
 
@@ -869,19 +872,81 @@ and cannot set.
 Scopes run first because they are leaf entities carrying no relations of their
 own, and a client in the same realm block may bind them via `realmScopes`.
 
-### Per-Realm System Clients (`web`, `admin-console`, `account-console`)
+### Wildcard Realm Entry (`realms[].name: "*"`, plan 082)
 
-Every realm auto-provisions three public OAuth2 clients (plan 079;
+A `realms[]` entry whose name is the literal `*` (`REALM_WILDCARD_NAME`,
+`core/provisioning/constants.ts`) is a SELECTOR over realms, not a realm
+declaration: its relations (clients / roles / scopes / permissions / users)
+are ensured in **every** realm — existing at boot, new at creation. This is
+the operator surface that replaced the removed `web` system client (declare
+a downstream login client once, get it in every realm), and the mechanism
+behind the realm-admin-in-every-realm recipe (a wildcard user with
+`globalRoles: [realm_admin]`, issue #2927). YAML note: a bare `*` is an
+alias token, so it must be quoted (`name: "*"`).
+
+- **Relations-only:** a wildcard entry may carry nothing but
+  `attributes.name` and `relations`; realm-level attributes and a
+  realm-level `strategy` are rejected at validation
+  (`RealmWildcardProvisioningValidator`, dispatched by
+  `RealmProvisioningValidator.run` on the literal name; a partial pattern
+  like `tenant-*` fails the regular name check). Child strategies keep the
+  full vocabulary: `createOnly` (default — seed once, realm admins own the
+  row), `merge`/`replace` (reassert per boot on every realm), `absent`
+  (sweep the named entity out of every realm).
+- **Mechanism (expansion + fan-out):** `ProvisionerModule.setup` extracts
+  the wildcard entries after the composite load (folding multiples via the
+  shared merge helpers in `core/provisioning/merge/`), deep-merges the
+  folded entry UNDER every explicit realm entry (explicit wins per
+  attribute, relation lists union, the explicit child's strategy wins —
+  exactly the composite-source rules; a sequential run-after was rejected
+  because `createOnly` is first-writer-wins while `merge` is
+  last-writer-wins, so no ordering satisfies "explicit wins" for both), and
+  lets the graph sync cover declared realms in one pass. Realms without an
+  explicit entry get the entry applied by the startup backfill loop; realms
+  created at runtime via `RealmService.save` get it through the
+  DI-registered `WildcardRealmProvisioner`
+  (`ProvisioningInjectionKey.WildcardRealmProvisioner`, resolved lazily at
+  request time by `createRealmController` since HTTP has no boot-order
+  dependency on provisioning). One provisioner instance serves both paths.
+- **Clone per realm (load-bearing):** `RealmProvisioningSynchronizer`
+  MUTATES its input (realmId stamping onto child attribute objects; the
+  `replace` branch writes the resolved row id back), so
+  `WildcardRealmProvisioner` deep-clones the entry per realm application —
+  a shared object would leak one realm's ids into the next realm's sync.
+  Pinned by `test/unit/core/provisioning/wildcard.spec.ts`.
+- **`IRealmProvisioner` seam:** `RealmService` takes
+  `realmProvisioners?: IRealmProvisioner[]` (order: system clients → keys →
+  wildcard; each wrapped never-fail) — `ISystemClientProvisioner` and
+  `IKeyProvisioner` extend the same contract
+  (`core/provisioning/types.ts`).
+- Authup itself declares nothing via the wildcard — product infrastructure
+  (console clients, keys) stays code-owned, template data stays
+  operator-owned. The two ownership models drift oppositely by design
+  (system = MERGE-owned reassert; template = `createOnly`, admin edits
+  survive).
+
+### Per-Realm System Clients (`admin-console`, `account-console`)
+
+Every realm auto-provisions two public OAuth2 clients (plan 079;
 `SYSTEM_CLIENT_DEFINITIONS` in `core/entities/client/system-clients.ts`,
 name constants in `@authup/core-kit`):
 
-- **`web`** (`CLIENT_WEB_NAME`) — downstream UIs embedding `client-web-kit`.
 - **`admin-console`** (`CLIENT_ADMIN_CONSOLE_NAME`) — authup's own admin
   console (`apps/client-admin-console`; its login sends `client_id=admin-console`,
   runtime-overridable via `NUXT_PUBLIC_CLIENT_ID`).
 - **`account-console`** (`CLIENT_ACCOUNT_CONSOLE_NAME`) — the account
   self-service surface served by server-core at `<publicUrl>/account`
   (plan 080; see *Account Console* below).
+
+The former third definition — `web`, a shared auto-consenting client for
+downstream RPs — was REMOVED (plan 082): it was default-on attack surface
+stamped into every realm for apps that may not exist. Downstream RPs
+register their own clients (per realm, or in every realm via a wildcard
+realm entry — see above). Legacy `web` rows survive as ordinary clients:
+still functional, no longer MERGE-refreshed (`TRUSTED_ORIGINS` changes no
+longer propagate to them), absent from new realms; deletable via the API or
+a wildcard `absent` child entry. `CLIENT_WEB_NAME` is gone and `web` is a
+plain, creatable client name again.
 
 The split exists for admission control (`accessPolicyId` per app — restrict
 the admin console without touching downstream logins; with the account
@@ -940,8 +1005,10 @@ no new endpoint — the `/authorize` verifier already resolves clients via
      after the graph sync and upserts each realm's system clients (MERGE —
      refreshes `redirectUri` when config changes).
   2. **Runtime** — `RealmService.save()` calls `ensureForRealm` when it *creates*
-     a new realm, via the injected `systemClientProvisioner` (system-level, ungated —
-     a realm creator may lack `CLIENT_CREATE`). Not called on update.
+     a new realm, via the injected `realmProvisioners` array (system clients →
+     keys → wildcard defaults; each `IRealmProvisioner` is system-level,
+     ungated — a realm creator may lack `CLIENT_CREATE` — and never-fail).
+     Not called on update.
   Idempotent. The attribute MERGE is dirty-checked to keep a steady-state boot
   free of redundant UPDATEs, but the scope binding runs unconditionally. An
   instance provisioned before the junction rows existed carries a current
@@ -962,7 +1029,7 @@ no new endpoint — the `/authorize` verifier already resolves clients via
   `accessPolicyId` (deliberately omitted from the builder so an admin-set
   policy is not wiped), and every junction row, since `ensureScopes` only
   inserts what is missing and never deletes.
-- **Guardrails:** `system`, `web`, `admin-console` and `account-console` are
+- **Guardrails:** `system`, `admin-console` and `account-console` are
   reserved client names — `ClientService.save()`
   rejects API attempts to create/rename a client onto them (`CLIENT_RESERVED_NAMES`).
   An existing `builtIn` row keeping its own name is exempt, so an admin holding
@@ -1666,7 +1733,8 @@ all serve login/consent from the IdP origin.
 
 **client-admin-console is an ordinary OAuth2 RP** — an admin console authenticating via
 auth-code + PKCE against the per-realm public `admin-console` client (plan 079;
-downstream kit apps keep riding `web`), with no privileged
+downstream kit apps register their own clients — plan 082 removed the shared
+`web` client), with no privileged
 channel into server-core. It is deliberately NOT merged into server-core
 today. The recorded long-term endpoint — deferred until after the planned
 server+worker split — is folding the admin UI into server-core as a **static
@@ -1699,8 +1767,9 @@ session cookies.
 The authenticated identity's realm MUST equal the client's realm — an identity
 cannot authorize (or redeem a code / refresh a token) against a client in
 another realm. Without this an identity with a lingering session for realm A,
-redirected to `/authorize` for realm B's `web` client (a downstream app's realm
-picker), silently minted realm-A tokens against realm B's client (confused
+redirected to `/authorize` for realm B's client (a downstream app's realm
+picker riding the then-provisioned per-realm `web` client), silently minted
+realm-A tokens against realm B's client (confused
 deputy; the artifact carried realm-A `iss`/signing-key + realm-B `aud`).
 Enforced server-side at **three** points — the kit UI (realm-mismatch card in
 `Authorize.vue`) is UX only:
@@ -1721,14 +1790,15 @@ Enforced server-side at **three** points — the kit UI (realm-mismatch card in
    `authorize()` (identity-provider callback) and in-flight pre-deploy codes.
 3. **`/token` refresh parity** — a **public** client refreshing a token whose
    `realm_id` differs from the client's realm → `invalid_grant` (kills legacy
-   cross-realm public-`web`-client refresh tokens). Confidential clients are
+   cross-realm public-client refresh tokens). Confidential clients are
    exempt — the secret proves identity, and the documented cross-realm password
    grant (UUID user + master client) relies on that exemption.
 
-Deliberate breaking change: master-realm admins can no longer ride the built-in
-`web` client into other realms' apps. A name-identified client at `/authorize`
-now also requires a realm hint (`invalid_request` otherwise — every realm has a
-`web` client, so a bare name is ambiguous). All SSR auth pages emit
+Deliberate breaking change: master-realm admins can no longer ride one
+built-in client into other realms' apps. A name-identified client at
+`/authorize` now also requires a realm hint (`invalid_request` otherwise —
+client names are only unique per realm, and every realm carries the
+same-named system clients, so a bare name is ambiguous). All SSR auth pages emit
 `Content-Security-Policy: frame-ancestors 'none'` + `X-Frame-Options: DENY`
 (clickjacking guard — the pages hydrate first-party session state, so click-
 gating is only a defense when framing is denied).
@@ -1945,8 +2015,8 @@ app (kit or non-kit) ends a lingering authup session on its own logout, so
   counts as **unverified** (no revoke; confirm page still works). Realm-key
   resolution is fail-closed too: a supplied-but-unknown realm key skips client
   resolution entirely (no name, no redirect), and a **name**-form `client_id`
-  with no realm key anywhere fails closed as well (ambiguous — every realm has
-  a `web` client; same rule as the /authorize verifier). A UUID `client_id` —
+  with no realm key anywhere fails closed as well (ambiguous — client names
+  are only unique per realm; same rule as the /authorize verifier). A UUID `client_id` —
   including the sole-`aud`-derived one — resolves globally as before.
 - **Bounded expired-hint window (plan 042 item 2):** with config
   `endSessionHintGracePeriod` > 0 (seconds past `exp`, ENV
@@ -2030,7 +2100,7 @@ postLogoutRedirectUri: <origin>/login })`. With the hint the server revokes and
 bounces straight back; without it the server's confirm page returns to
 `/login`. **It passes NO `client_id`**: omitting it lets the service resolve
 the client from the hint's sole `aud` (the client **UUID**). Since plan 047.B a
-name-form `client_id` (`web`) would also work — the service resolves it to the
+name-form `client_id` (`admin-console`) would also work — the service resolves it to the
 UUID before the `aud` cross-check — but omission stays the simplest correct
 call (no name→realm ambiguity to think about). `store.logout()` remains
 local-only — the round-trip is the chosen mechanism, **not** a
@@ -2089,7 +2159,7 @@ neutral message: no identity/policy detail, no enumeration oracle).
   and is mounted `{ optional: true, nullable }` in every validator group so
   admins can set/clear it. `buildSystemClientAttributes` deliberately omits the
   key — the provisioner MERGE would otherwise wipe an admin-set policy on
-  each per-realm system client (`web`, `admin-console`, `account-console`)
+  each per-realm system client (`admin-console`, `account-console`)
   every boot. The admin form binds it via
   `APolicyPicker` in `AClientForm`. Client caches mean a policy
   (re)assignment lags ≤60s at `/token` (`CachePrefix.CLIENT` query cache).
@@ -2247,7 +2317,7 @@ at both chokepoints:
 Unknown values in the column are inert (they can only narrow, never widen). A
 refresh rejected this way is a plain `unauthorized_client` — **not** replay
 detection, so no family revocation; restoring the grant type restores service.
-Each provisioned per-realm system client (`web`, `admin-console`,
+Each provisioned per-realm system client (`admin-console`,
 `account-console`) lists `authorization_code refresh_token`
 (refreshed by `SystemClientProvisioner`'s MERGE on startup).
 
@@ -2289,8 +2359,8 @@ The three realm-resolving grants (`password`, `authorization_code`,
   identified by its UUID). This makes the refresh leg deterministic: a
   password login via master's client refreshes against master's client again
   instead of an unscoped name lookup matching an arbitrary same-named client
-  in another realm (every realm has a built-in `web` client, so collisions
-  are guaranteed). A client name that does not exist in the resolved realm
+  in another realm (every realm carries the same-named built-in system
+  clients, so collisions are guaranteed). A client name that does not exist in the resolved realm
   fails with `invalid_client`; register the client in that realm, pass a
   matching hint, or use its UUID. On the SSR `/authorize` page the login realm is
   pinned to the **client's** realm (`codeRequest.realm_id`, seeded into the

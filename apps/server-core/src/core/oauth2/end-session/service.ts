@@ -100,8 +100,9 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
             // Fail closed instead of dropping the realm predicate: a supplied
             // realm key that does not resolve never degrades to an unscoped
             // lookup, and a NAME-form client_id without any realm key is
-            // ambiguous (every realm has a built-in `web` client — same rule as
-            // the /authorize verifier). A UUID is globally unique and needs no
+            // ambiguous (client names are only unique per realm, and every
+            // realm carries the same-named system clients — same rule as the
+            // /authorize verifier). A UUID is globally unique and needs no
             // scope; the sole-aud-derived clientId is always a UUID.
             if (realm) {
                 client = await this.clientRepository.findOneByIdOrName(clientId, realm.id);

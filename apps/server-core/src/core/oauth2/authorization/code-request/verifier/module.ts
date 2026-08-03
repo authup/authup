@@ -47,9 +47,11 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
         }
 
         // A name-identified client needs a realm hint to resolve deterministically
-        // — every realm has a built-in `web` client, so `client_id=web` without a
-        // realm would bind to an arbitrary realm's client (and, post realm-gate,
-        // produce a confusing mismatch against a random realm). Require the hint.
+        // — client names are only unique per realm (every realm carries the
+        // same-named system clients, and a wildcard-provisioned client exists in
+        // every realm), so a bare name would bind to an arbitrary realm's client
+        // (and, post realm-gate, produce a confusing mismatch against a random
+        // realm). Require the hint.
         if (!isUUID(data.client_id) && !data.realm_id) {
             throw OAuth2RequestError.malformed('A realm is required to resolve a client by name.');
         }

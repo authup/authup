@@ -7,8 +7,9 @@
 
 import type { Key } from '@authup/core-kit';
 import type { JWKUse } from '@authup/specs';
+import type { IRealmProvisioner } from '../provisioning/types.ts';
 
-export interface IKeyProvisioner {
+export interface IKeyProvisioner extends IRealmProvisioner {
     /**
      * Ensure the realm holds at least one sig and one enc key row.
      * Idempotent; never throws (provisioning must not fail realm creation

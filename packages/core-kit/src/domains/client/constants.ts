@@ -11,13 +11,6 @@
 export const CLIENT_SYSTEM_NAME = 'system';
 
 /**
- * The public OAuth2 client provisioned for every realm for downstream
- * UIs embedding client-web-kit. Authup's own surfaces use the dedicated
- * admin-console / account-console clients instead.
- */
-export const CLIENT_WEB_NAME = 'web';
-
-/**
  * The public OAuth2 client provisioned for every realm for authup's own
  * admin console (apps/client-admin-console).
  */
@@ -55,7 +48,6 @@ export const CLIENT_CERTIFICATE_URI_PREFIX = 'urn:authup:client:';
  */
 export const CLIENT_RESERVED_NAMES = [
     CLIENT_SYSTEM_NAME,
-    CLIENT_WEB_NAME,
     CLIENT_ADMIN_CONSOLE_NAME,
     CLIENT_ACCOUNT_CONSOLE_NAME,
 ];
