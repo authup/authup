@@ -50,6 +50,7 @@ import Authenticators from './pages/authenticators.vue';
 import Overview from './pages/overview.vue';
 import Password from './pages/password.vue';
 import Sessions from './pages/sessions.vue';
+import { loadAccountConsoleRef } from './ref';
 
 const config = resolveAccountConsoleConfig();
 
@@ -136,10 +137,18 @@ router.beforeEach(async (to) => {
                 query.error = OAuth2ErrorCode.INVALID_GRANT;
             }
 
+            // The kick stashed the active ref because the redirect_uri
+            // carries no query string. Put it back so the URL is the
+            // source of truth again from the first authenticated render.
+            const ref = loadAccountConsoleRef();
+            if (ref && typeof query.ref === 'undefined') {
+                query.ref = ref;
+            }
+
             return {
-                path: to.path, 
-                query, 
-                hash: to.hash, 
+                path: to.path,
+                query,
+                hash: to.hash,
             };
         }
 
