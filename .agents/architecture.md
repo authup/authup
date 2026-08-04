@@ -1094,7 +1094,8 @@ choice"):
 - **Serving seam** (`adapters/http/ui/account-console/module.ts`, the plan-081 static-SPA
   pilot): `AccountController` (`@DController('/account')`, `''` +
   `'/:page'` — client-side routing owns sub-paths, every route returns the
-  same shell) calls `serveAccountConsolePage(event, { baseURL, features })`,
+  same shell) calls
+  `serveAccountConsolePage(event, { baseURL, features, trustedOrigins })`,
   which resolves the package via locter's
   `locateUpSync('node_modules/@authup/client-account-console/package.json',
   { cwd: PACKAGE_PATH })` — the node_modules ancestor walk from
@@ -1102,9 +1103,10 @@ choice"):
   published install; only positive resolution is cached), injects the
   runtime config by replacing the
   `<!--account-config-->` marker in the built index.html
-  (`window.__AUTHUP__ = { apiUrl, basePath, features }` — the shared
+  (`window.__AUTHUP__ = { apiUrl, basePath, features, ref }`: the shared
   authup window global, escaped
-  like every inline script payload), stamps lang/color-mode html attrs from
+  like every inline script payload; `ref` is the server-validated back-link
+  origin, see below), stamps lang/color-mode html attrs from
   the shared cookies (no FOUC), rebases the fixed `/account/` vite-base
   asset hrefs when publicUrl carries a sub-path, and sets the same security
   headers as `renderAuthConsolePage`. Static assets ride the assets middleware
@@ -2313,8 +2315,8 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   silent (`prompt=none`) branch redirects `consent_required` only when the
   settled probe found no covering consent — persisted consent is what makes
   `prompt=none` meaningful for non-`builtIn` clients.
-- **UI:** 4th settings tab "Applications"
-  (`apps/client-admin-console/pages/settings/index/applications.vue`) over the kit
+- **UI:** the account console's "Applications" page
+  (`apps/client-account-console/src/pages/applications.vue`) over the kit
   `<AConsents>` collection — rows grouped per client, granted scopes rendered
   as per-scope revoke chips plus a per-app "Revoke access" (looped per-row
   DELETEs behind an error-tone `useAlertDialog`). The self-service list
@@ -2712,10 +2714,12 @@ cases in `user.spec.ts`. When adding a per-row gate to a new
 `getMany`, wire `applyRealmScopeSelect` into its adapter with every column the
 gate reads.
 
-**UI:** two `<VCTable>` pages backed by the kit `<ASessions>` collection —
-`pages/settings/index/sessions.vue` (the actor's **own** sessions, `filter:
-{ userId }`) and `pages/users/[id]/sessions.vue` (an admin viewing a user's
-sessions). The settings page carries a **"log out other devices"** button
+**UI:** two pages backed by the kit `<ASessions>` collection:
+`apps/client-account-console/src/pages/sessions.vue` (the actor's **own**
+sessions, `filter: { userId }`) and
+`apps/client-admin-console/pages/users/[id]/sessions.vue` (a `<VCTable>`
+page for an admin viewing a user's sessions). The account console page
+carries a **"log out other devices"** button
 (`authupApp` `SESSION_REVOKE_OTHERS*` keys) that confirms via `useAlertDialog`
 then calls `client.session.deleteMany()` (`DELETE /sessions` — revoke-all-but-
 current), toasts the returned `count`, and reloads the collection; it disables
@@ -3233,11 +3237,13 @@ managing another user) and
 `AUserAuthenticators` (device-row list + delete + an "add" button opening the
 enroll flow in a `<VCModal>`; the enroll component's `closed` emit lets the
 recovery-codes terminal view dismiss the modal only when the user is done),
-hosted on the settings
-Authenticators tab (`settings/index/mfa.vue`, `@me`; the former combined
-Security tab is split — `settings/index/password.vue` keeps the password form)
-and an admin Authenticators tab
-(`users/[id]/authenticators.vue`, gated on `USER_AUTHENTICATOR_READ`). i18n:
+hosted on the account console's
+Authenticators tab (`apps/client-account-console/src/pages/authenticators.vue`,
+`@me`; the sibling Password tab is a separate page,
+`apps/client-account-console/src/pages/password.vue`) and an admin
+Authenticators tab
+(`apps/client-admin-console/pages/users/[id]/authenticators.vue`, gated on
+`USER_AUTHENTICATOR_READ`). i18n:
 `MFA_*` (`authupClient`) + `AUTHENTICATOR`/`MFA_SECURITY_*` (`authupApp`), ×4
 locales. Kit test `test/unit/components/workflows/mfa-challenge.spec.ts`.
 
