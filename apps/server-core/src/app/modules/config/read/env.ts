@@ -59,6 +59,26 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.writableDirectoryPath = writableDirectoryPath;
     }
 
+    const themeDirectoryPath = read(ConfigEnvironmentVariableName.THEME_DIRECTORY_PATH);
+    if (themeDirectoryPath) {
+        options.themeDirectoryPath = themeDirectoryPath;
+    }
+
+    const themeFragmentsEnabled = readBool(ConfigEnvironmentVariableName.THEME_FRAGMENTS_ENABLED);
+    if (typeof themeFragmentsEnabled !== 'undefined') {
+        options.themeFragmentsEnabled = themeFragmentsEnabled;
+    }
+
+    const authConsolePath = read(ConfigEnvironmentVariableName.AUTH_CONSOLE_PATH);
+    if (authConsolePath) {
+        options.authConsolePath = authConsolePath;
+    }
+
+    const accountConsolePath = read(ConfigEnvironmentVariableName.ACCOUNT_CONSOLE_PATH);
+    if (accountConsolePath) {
+        options.accountConsolePath = accountConsolePath;
+    }
+
     // -------------------------------------------------------------
 
     if (hasEnvDataSourceOptions()) {

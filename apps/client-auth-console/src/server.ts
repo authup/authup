@@ -14,6 +14,12 @@ import type { RenderContext, RenderResult } from './contract';
 
 export type { RenderContext, RenderResult } from './contract';
 
+/**
+ * Re-exported as a VALUE so the host can assert it against the contract it
+ * compiles against. Any package substituted for this one must export it.
+ */
+export { CONTRACT_VERSION } from './contract';
+
 export async function render(ctx: RenderContext) : Promise<RenderResult> {
     const {
         app,

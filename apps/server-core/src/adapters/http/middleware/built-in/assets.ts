@@ -9,6 +9,7 @@ import { InternalError } from '@authup/errors';
 import { read } from 'locter';
 import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
 import { createHandler } from '@routup/assets';
+import fs from 'node:fs';
 import path from 'node:path';
 import type { App } from 'routup';
 import { defineCoreHandler } from 'routup';
@@ -18,6 +19,9 @@ import type { ViteDevServer } from 'vite';
 import { PACKAGE_PATH } from '../../../../path.ts';
 import { resolveAccountConsoleDistPath } from '../../ui/account-console/index.ts';
 import { resolveAuthConsoleDistPath, resolveAuthConsolePackagePath } from '../../ui/auth-console/index.ts';
+import { THEME_ASSET_MOUNT_PATH, ThemeProvider, createThemeAssetsHandler } from '../../ui/theme/index.ts';
+import { registerThemeMiddleware } from './theme.ts';
+import type { AssetsMiddlewareOptions } from './types.ts';
 
 export const VITE_SERVER_STORE_KEY = Symbol('ViteServer');
 
@@ -26,7 +30,15 @@ export const VITE_SERVER_STORE_KEY = Symbol('ViteServer');
  * close it on teardown. It owns a file watcher and an HMR websocket, which
  * outlive the http listener otherwise.
  */
-export async function registerAssetsMiddleware(router: App) : Promise<ViteDevServer | undefined> {
+export async function registerAssetsMiddleware(
+    router: App,
+    options: AssetsMiddlewareOptions = {},
+) : Promise<ViteDevServer | undefined> {
+    // Mounted FIRST, and outside the JIT early-return below, so an
+    // operator theme applies in dev mode too. An invalid manifest throws
+    // here and fails the boot.
+    await registerThemeAssets(router, options);
+
     // Static assets of the account console SPA (its fixed vite base is
     // /account/). Served in dev mode too — the bundle is prebuilt, not
     // vite-transformed. A missing bundle only disables the mount; the page
@@ -101,4 +113,31 @@ export async function registerAssetsMiddleware(router: App) : Promise<ViteDevSer
     }));
 
     return server;
+}
+
+/**
+ * Load the operator theme and mount its `assets/` directory at /theme.
+ *
+ * A missing directory disables the feature entirely: no provider is
+ * created, no middleware is registered, and both console serve paths keep
+ * returning byte-identical un-themed pages. So the default configuration
+ * pays nothing, not even a per-request core handler.
+ */
+async function registerThemeAssets(router: App, options: AssetsMiddlewareOptions) : Promise<void> {
+    const { themeDirectoryPath } = options;
+    if (!themeDirectoryPath || !fs.existsSync(themeDirectoryPath)) {
+        return;
+    }
+
+    const provider = new ThemeProvider({
+        directoryPath: themeDirectoryPath,
+        fragmentsEnabled: options.themeFragmentsEnabled,
+        logger: options.logger,
+    });
+
+    await provider.load();
+
+    registerThemeMiddleware(router, provider);
+
+    router.use(THEME_ASSET_MOUNT_PATH, createThemeAssetsHandler(provider));
 }

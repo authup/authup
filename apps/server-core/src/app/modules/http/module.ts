@@ -11,7 +11,7 @@ import { App } from 'routup';
 import { serve } from 'routup/node';
 import { ConfigInjectionKey } from '../config/index.ts';
 import type { IModule } from 'orkos';
-import { createInternalUIHttpClient } from '../../../adapters/http/ui/index.ts';
+import { bindConsolePackages, createInternalUIHttpClient } from '../../../adapters/http/ui/index.ts';
 import { NoopAuthFlowMetrics } from '../../../core/index.ts';
 import { ModuleName } from '../constants.ts';
 import type { HTTPServer } from './constants.ts';
@@ -64,6 +64,14 @@ export class HTTPModule implements IModule {
                 `Invalid trustProxy (TRUST_PROXY) configuration: ${e instanceof Error ? e.message : String(e)}`,
             );
         }
+
+        // Before any route is mounted: a substituted console package that
+        // no longer fulfills its contract must stop the boot, not surface
+        // as a confusing per-request failure on /authorize.
+        await bindConsolePackages({
+            authConsolePath: config.authConsolePath,
+            accountConsolePath: config.accountConsolePath,
+        });
 
         this.registerUIHttpClient(container);
         this.registerMetrics(container);

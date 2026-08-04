@@ -262,6 +262,15 @@ export default defineConfig({
                     ],
                 },
                 {
+                    text: 'Theming',
+                    items: [
+                        {
+                            text: 'Overview',
+                            link: '/guide/deployment/theming',
+                        },
+                    ],
+                },
+                {
                     text: 'Reverse Proxy',
                     items: [
                         {

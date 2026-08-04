@@ -49,7 +49,7 @@ export class HTTPMiddlewareModule {
         await this.mountPrometheus(router, container);
         await this.mountLogger(router, container);
         await this.mountCors(router, container);
-        await this.mountAssets(router);
+        await this.mountAssets(router, container);
         await this.mountUIHttpClient(router, container);
         await this.mountBasic(router);
         await this.mountRateLimit(router, container);
@@ -88,8 +88,16 @@ export class HTTPMiddlewareModule {
         router.use(middleware);
     }
 
-    async mountAssets(router: App): Promise<void> {
-        this.viteServer = await registerAssetsMiddleware(router);
+    async mountAssets(router: App, container: IContainer): Promise<void> {
+        const config = container.resolve(ConfigInjectionKey);
+
+        // Config is resolved HERE, in the app-module layer, and the value is
+        // passed down: adapters/http/ui/** must not read config itself.
+        this.viteServer = await registerAssetsMiddleware(router, {
+            themeDirectoryPath: config.themeDirectoryPath,
+            themeFragmentsEnabled: config.themeFragmentsEnabled,
+            logger: container.resolve(LoggerInjectionKey),
+        });
     }
 
     /**

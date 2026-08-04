@@ -13,6 +13,8 @@ import path from 'node:path';
 import type { IAppEvent } from 'routup';
 import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
 import { PACKAGE_PATH } from '../../../../path.ts';
+import { useRequestTheme } from '../../middleware/index.ts';
+import { applyTheme } from '../theme/index.ts';
 import {
     applyUIPageHeaders,
     readUIClientPreferences,
@@ -27,6 +29,18 @@ const CONFIG_MARKER = '<!--account-config-->';
 
 let cachedDistPath: string | undefined;
 let cachedHtml: string | undefined;
+let overridePackagePath: string | undefined;
+
+/**
+ * Point the resolution at a substituted package (config
+ * `accountConsolePath`) instead of the node_modules walk. Called once at
+ * boot.
+ */
+export function setAccountConsolePackagePath(value: string | undefined) : void {
+    overridePackagePath = value || undefined;
+    cachedDistPath = undefined;
+    cachedHtml = undefined;
+}
 
 /**
  * Locate the built account console bundle. The SPA ships as the
@@ -42,12 +56,13 @@ export function resolveAccountConsoleDistPath() : string | undefined {
         return cachedDistPath;
     }
 
-    const manifest = locateUpSync(
+    const packagePath = overridePackagePath ?? locateUpSync(
         'node_modules/@authup/client-account-console/package.json',
         { cwd: PACKAGE_PATH },
-    );
-    if (manifest) {
-        const distPath = path.join(manifest.directory, 'dist');
+    )?.directory;
+
+    if (packagePath) {
+        const distPath = path.join(packagePath, 'dist');
 
         if (fs.existsSync(path.join(distPath, 'index.html'))) {
             cachedDistPath = distPath;
@@ -106,6 +121,8 @@ export async function serveAccountConsolePage(
 
     body = stampHtmlAttributes(body, readUIClientPreferences(event));
     body = rebaseAssetURLs(body, basePath, '/account/');
+
+    body = await applyTheme(body, useRequestTheme(event), basePath);
 
     applyUIPageHeaders(event);
 

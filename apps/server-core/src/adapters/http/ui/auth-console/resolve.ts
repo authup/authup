@@ -12,6 +12,17 @@ import { PACKAGE_PATH } from '../../../../path.ts';
 
 let cachedPackagePath: string | undefined;
 let cachedDistPath: string | undefined;
+let overridePackagePath: string | undefined;
+
+/**
+ * Point the resolution at a substituted package (config `authConsolePath`)
+ * instead of the node_modules walk. Called once at boot.
+ */
+export function setAuthConsolePackagePath(value: string | undefined) : void {
+    overridePackagePath = value || undefined;
+    cachedPackagePath = undefined;
+    cachedDistPath = undefined;
+}
 
 /**
  * Locate the auth console package. The SSR auth workflow UI ships as
@@ -23,6 +34,12 @@ let cachedDistPath: string | undefined;
  */
 export function resolveAuthConsolePackagePath() : string | undefined {
     if (cachedPackagePath) {
+        return cachedPackagePath;
+    }
+
+    if (overridePackagePath) {
+        cachedPackagePath = overridePackagePath;
+
         return cachedPackagePath;
     }
 

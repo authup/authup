@@ -36,6 +36,63 @@ export type Config = {
      */
     writableDirectoryPath: string,
 
+    /**
+     * EXPERIMENTAL. May change in a minor release: per-realm themes are
+     * likely to reshape the directory into `<root>/<theme name>/`. The
+     * manifest's `version` field makes a breaking change detectable.
+     *
+     * Directory holding the operator theme applied to the served consoles
+     * (the auth console and the account console). Relative paths resolve
+     * against the rootPath.
+     *
+     * The directory is operator trust, exactly like the config file: its
+     * `assets/` sub-directory is served verbatim at `/theme`, and its
+     * `theme.json` injects CSS custom properties into both consoles.
+     * Mount it read-only and never from a source a tenant can write.
+     *
+     * default: '' (theming disabled)
+     */
+    themeDirectoryPath: string,
+
+    /**
+     * EXPERIMENTAL, alongside themeDirectoryPath.
+     *
+     * Opt in to reading `fragments/head.html` from the theme directory and
+     * splicing it into the `<head>` of both served consoles.
+     *
+     * The fragment is raw, unsanitized markup running on the IdP origin,
+     * so it must be a deliberate operator decision and never a consequence
+     * of a file appearing in the mounted directory.
+     *
+     * default: false
+     */
+    themeFragmentsEnabled: boolean,
+
+    /**
+     * EXPERIMENTAL. The render contract it verifies is itself versioned
+     * (CONTRACT_VERSION), but this key and the boot-time assert may change.
+     *
+     * Package directory of a substituted `@authup/client-auth-console`
+     * (the directory holding its package.json and dist/). Consulted before
+     * the node_modules resolution walk.
+     *
+     * This replaces the login/consent IMPLEMENTATION, not its styling: the
+     * substituted package owns the prompt ladder, PKCE and state handling,
+     * MFA ordering and redirect gating. Use the theme directory for
+     * branding.
+     *
+     * default: '' (resolve @authup/client-auth-console from node_modules)
+     */
+    authConsolePath: string,
+
+    /**
+     * Package directory of a substituted
+     * `@authup/client-account-console`. Same contract as authConsolePath.
+     *
+     * default: '' (resolve @authup/client-account-console from node_modules)
+     */
+    accountConsolePath: string,
+
     // ----------------------------------------------------
 
     /**
