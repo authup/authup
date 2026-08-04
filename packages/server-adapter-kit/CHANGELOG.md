@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.0.0-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.58...v1.0.0-beta.59) (2026-08-04)
+
+
+### Bug Fixes
+
+* **deps:** bump jose from 6.2.4 to 6.2.6 in the minorandpatch group ([#3388](https://github.com/authup/authup/issues/3388)) ([78923bb](https://github.com/authup/authup/commit/78923bb49ec389c3085854bc3d4388942bd054f8))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-http-kit bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/core-kit bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/errors bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/kit bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/server-kit bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/specs bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+
 ## [1.0.0-beta.58](https://github.com/authup/authup/compare/v1.0.0-beta.57...v1.0.0-beta.58) (2026-07-31)
 
 
