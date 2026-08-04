@@ -43,10 +43,18 @@
         }
     }
 
+    /*
+     * No `justify-content: space-between` here on purpose: the fixed
+     * `.a-auth-gadgets` cluster occupies the same vertical band as this
+     * header from md up (see the padding-top override above), so a
+     * `space-between`-pushed child would render underneath it. Both
+     * children stay left-anchored instead: a single-child header
+     * (brand only) already rendered this way under `space-between`, so
+     * the brand's position is unchanged at every breakpoint.
+     */
     .a-account-shell-header {
         display: flex;
         align-items: center;
-        justify-content: space-between;
         flex-wrap: wrap;
         gap: 1rem;
         min-height: 2.25rem;
@@ -75,6 +83,12 @@
     .a-account-shell-back:hover {
         color: var(--authup-account-surface-color);
         text-decoration: underline;
+    }
+
+    .a-account-shell-back:focus-visible {
+        outline: 2px solid var(--authup-account-nav-active-background);
+        outline-offset: 2px;
+        border-radius: 0.25rem;
     }
 
     .a-account-shell-nav {

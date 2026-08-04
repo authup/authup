@@ -157,12 +157,12 @@ export default defineNuxtComponent({
                                 </a>
                             </li>
                             <li class="vc-nav-item">
-                                <NuxtLink
-                                    :to="'/settings'"
+                                <a
+                                    :href="accountUrl"
                                     class="vc-nav-link"
                                 >
                                     <VCIcon name="fa6-solid:gear" />
-                                </NuxtLink>
+                                </a>
                             </li>
                             <li class="vc-nav-item">
                                 <NuxtLink

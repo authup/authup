@@ -43,6 +43,27 @@ describe('AAccountShell', () => {
 
         expect(wrapper.find('.a-account-shell-body [data-test="content"]').exists()).toBeTruthy();
     });
+
+    it('should render the back link labelled with the URL host when backLink is parseable', () => {
+        const { wrapper } = mountKitComponent(AAccountShell, { items, backLink: 'https://example.com/dashboard' });
+
+        const link = wrapper.find('.a-account-shell-back');
+        expect(link.exists()).toBeTruthy();
+        expect(link.attributes('href')).toEqual('https://example.com/dashboard');
+        expect(link.text()).toContain('example.com');
+    });
+
+    it('should render no back link when backLink is not a parseable URL', () => {
+        const { wrapper } = mountKitComponent(AAccountShell, { items, backLink: 'not-a-url' });
+
+        expect(wrapper.find('.a-account-shell-back').exists()).toBeFalsy();
+    });
+
+    it('should render no back link when backLink is absent', () => {
+        const { wrapper } = mountKitComponent(AAccountShell, { items });
+
+        expect(wrapper.find('.a-account-shell-back').exists()).toBeFalsy();
+    });
 });
 
 describe('AAuthApp', () => {
