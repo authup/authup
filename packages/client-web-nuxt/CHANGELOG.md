@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.0.0-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.58...v1.0.0-beta.59) (2026-08-04)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([95d42be](https://github.com/authup/authup/commit/95d42be70feeeab7fe45c7dc81638aedb0c4324b))
+
+
+### Performance Improvements
+
+* carry only the translations ilingo cannot resolve synchronously ([#3367](https://github.com/authup/authup/issues/3367)) ([f66175b](https://github.com/authup/authup/commit/f66175b4747be12272deb08ed5b71b0dc9aa6ffa))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/client-web-kit bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/core-http-kit bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/kit bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+
 ## [1.0.0-beta.58](https://github.com/authup/authup/compare/v1.0.0-beta.57...v1.0.0-beta.58) (2026-07-31)
 
 

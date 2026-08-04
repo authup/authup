@@ -1,5 +1,41 @@
 # Change Log
 
+## [1.0.0-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.58...v1.0.0-beta.59) (2026-08-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* `**` is no longer accepted inside the host of a redirect pattern or a TRUSTED_ORIGINS entry. It matches the rest of the value outright, so `https://**.example.com/**` read as "any subdomain" but accepted every origin. A single `*` is unchanged. Stored patterns are not rewritten; new writes are rejected and an offending TRUSTED_ORIGINS value fails the boot with a message naming it.
+* @authup/server-core no longer embeds the auth UI under dist/ui; it resolves the @authup/client-auth-console package instead. The account console runtime-config global window.__AUTHUP_ACCOUNT__ (never released) is renamed to window.__AUTHUP__.
+* rename client-web app to client-admin-console ([#3370](https://github.com/authup/authup/issues/3370))
+
+### Features
+
+* add the account console (/account self-service surface) ([#3373](https://github.com/authup/authup/issues/3373)) ([2e11e5f](https://github.com/authup/authup/commit/2e11e5f9895a84d0eca4cfd4ae1803dcfa90db5e))
+* provision per-app system clients (admin-console, account-console) ([#3371](https://github.com/authup/authup/issues/3371)) ([140e9d2](https://github.com/authup/authup/commit/140e9d22789e2b0ed69517ce4cf4473c8d0c0b59))
+
+
+### Bug Fixes
+
+* **authup:** align plan spec regexes with the client.admin-console selector ([#3372](https://github.com/authup/authup/issues/3372)) ([77fbd8c](https://github.com/authup/authup/commit/77fbd8c650b73f3ecbc272b93d023e0fe9c30617))
+* redirect-pattern matching, plus fixes from the beta.58 release audit ([#3397](https://github.com/authup/authup/issues/3397)) ([e00c6ba](https://github.com/authup/authup/commit/e00c6ba635d206a16b5ad19467bd5540d021c37e))
+
+
+### Code Refactoring
+
+* extract the SSR auth UI into apps/client-auth-console ([#3375](https://github.com/authup/authup/issues/3375)) ([b131e2a](https://github.com/authup/authup/commit/b131e2ae81dfaf1aa46d44eaa0b32329d5227fbe))
+* rename client-web app to client-admin-console ([#3370](https://github.com/authup/authup/issues/3370)) ([77d48a4](https://github.com/authup/authup/commit/77d48a45b39df21eae0e04c41c2ec3df001a7f64))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-admin-console bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/errors bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/kit bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/server-core bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+
 ## [1.0.0-beta.58](https://github.com/authup/authup/compare/v1.0.0-beta.57...v1.0.0-beta.58) (2026-07-31)
 
 

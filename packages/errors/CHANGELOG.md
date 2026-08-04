@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.58...v1.0.0-beta.59) (2026-08-04)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([95d42be](https://github.com/authup/authup/commit/95d42be70feeeab7fe45c7dc81638aedb0c4324b))
+
 ## [1.0.0-beta.58](https://github.com/authup/authup/compare/v1.0.0-beta.57...v1.0.0-beta.58) (2026-07-31)
 
 
