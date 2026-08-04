@@ -9,8 +9,13 @@ import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@au
 import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
 import type { PropType } from 'vue';
-import { defineComponent } from 'vue';
-import { useTranslations } from '../../core';
+import {
+    computed,
+    defineComponent,
+    ref,
+    watchEffect,
+} from 'vue';
+import { useTranslations, useTranslator } from '../../core';
 import type { AAccountShellNavItem } from './types';
 
 // The account console's content chrome: brand + nav tabs + content card.
@@ -29,8 +34,12 @@ export default defineComponent({
             type: Array as PropType<AAccountShellNavItem[]>,
             default: () => [],
         },
+        // Absolute URL of the application the visitor came from. The host
+        // is responsible for validating it (server-core does so against
+        // the trusted app origins); the shell only renders it.
+        backLink: { type: String },
     },
-    setup() {
+    setup(props) {
         const translations = useTranslations([
             {
                 namespace: TranslatorTranslationNamespace.APP,
@@ -38,7 +47,42 @@ export default defineComponent({
             },
         ]);
 
-        return { translations };
+        const translate = useTranslator();
+
+        // Label the link with the target host rather than the full URL:
+        // shorter, and it is the part that identifies the application.
+        const backHost = computed(() => {
+            if (!props.backLink) {
+                return undefined;
+            }
+
+            try {
+                return new URL(props.backLink).host;
+            } catch {
+                return undefined;
+            }
+        });
+
+        const backLabel = ref<string>('');
+        watchEffect(async () => {
+            const host = backHost.value;
+            if (!host) {
+                backLabel.value = '';
+                return;
+            }
+
+            backLabel.value = await translate({
+                namespace: TranslatorTranslationNamespace.APP,
+                key: TranslatorTranslationAppKey.BACK_TO_APP,
+                data: { host },
+            });
+        });
+
+        return {
+            translations,
+            backHost,
+            backLabel,
+        };
     },
 });
 </script>
@@ -75,6 +119,14 @@ export default defineComponent({
                     {{ translations.account }}
                 </span>
             </div>
+            <a
+                v-if="backHost"
+                :href="backLink"
+                class="a-account-shell-back"
+            >
+                <VCIcon name="fa6-solid:chevron-left" />
+                {{ backLabel }}
+            </a>
         </div>
         <nav
             v-if="items.length > 0"

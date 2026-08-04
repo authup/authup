@@ -63,6 +63,20 @@
         font-weight: 600;
     }
 
+    .a-account-shell-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-size: 0.875rem;
+        color: var(--authup-account-fg-muted, var(--vc-color-fg-muted));
+        text-decoration: none;
+    }
+
+    .a-account-shell-back:hover {
+        color: var(--authup-account-fg, var(--vc-color-fg));
+        text-decoration: underline;
+    }
+
     .a-account-shell-nav {
         display: flex;
         flex-wrap: wrap;

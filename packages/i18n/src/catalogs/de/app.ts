@@ -76,4 +76,6 @@ export const TranslatorTranslationAppGerman : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.CONSENT_SCOPES]: 'Gewährte Berechtigungen',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_TITLE]: 'Verschlüsselungsschlüssel unwiderruflich löschen?',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_DESCRIPTION]: 'Dieser Schlüssel wird noch von {{count}} verschlüsselten Geheimnissen referenziert. Das Löschen macht sie dauerhaft unlesbar.',
+
+    [TranslatorTranslationAppKey.BACK_TO_APP]: 'Zurück zu {{host}}',
 };

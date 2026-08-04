@@ -76,4 +76,6 @@ export const TranslatorTranslationAppSpanish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.CONSENT_SCOPES]: 'Permisos concedidos',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_TITLE]: '¿Destruir la clave de cifrado?',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_DESCRIPTION]: 'Esta clave todavía es referenciada por {{count}} secreto(s) cifrado(s). Eliminarla los hará permanentemente irrecuperables.',
+
+    [TranslatorTranslationAppKey.BACK_TO_APP]: 'Volver a {{host}}',
 };

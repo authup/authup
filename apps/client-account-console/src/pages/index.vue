@@ -256,6 +256,7 @@ export default defineComponent({
         <AAccountShell
             v-if="authenticated && !denied"
             :items="items"
+            :back-link="backRef"
         >
             <RouterView />
         </AAccountShell>
