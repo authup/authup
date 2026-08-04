@@ -68,6 +68,112 @@ volumes:
 Every file below is text, so one ConfigMap holds the lot. Binary assets go in
 its `binaryData`.
 
+## Recipe: your first theme
+
+Five minutes from zero to a rebranded login page.
+
+**1. Make the directory.**
+
+```bash
+mkdir -p ~/authup-theme/assets
+```
+
+**2. Start with colours only.** Put this in `~/authup-theme/theme.json`. One
+token does most of the work: `--authup-periwinkle` is the accent the whole
+primary palette is mixed from, so it recolours the submit button, focus rings,
+links and the login backdrop at once.
+
+```json
+{
+  "version": 1,
+  "title": "Sign in to ACME",
+  "tokens": {
+    "--authup-periwinkle": "#c0392b"
+  }
+}
+```
+
+**3. Run it.**
+
+```bash
+docker run --rm -p 3001:3001 \
+  -e THEME_DIRECTORY_PATH=/etc/authup/theme \
+  -v ~/authup-theme:/etc/authup/theme:ro \
+  authup/authup
+```
+
+Open `http://localhost:3001/authorize?response_type=code&client_id=admin-console`.
+The submit button should be red. Check the startup log if not: authup prints
+the resolved theme directory, whether the manifest loaded, and every file it
+will serve.
+
+**4. Add the surfaces.** Colours split into an accent (above) and the surface
+ramp everything else derives from. Add to `tokens`, and mirror the
+colour-dependent ones under `tokensDark`:
+
+```json
+{
+  "tokens": {
+    "--authup-periwinkle": "#c0392b",
+    "--authup-surface-app": "#f5f3f0",
+    "--authup-surface-card": "#ffffff",
+    "--authup-surface-border": "#e2ded8",
+    "--authup-on-surface": "#1c1a19",
+    "--authup-on-surface-muted": "#6b6560"
+  },
+  "tokensDark": {
+    "--authup-surface-app": "#141312",
+    "--authup-surface-card": "#201e1d",
+    "--authup-surface-border": "#332f2c",
+    "--authup-on-surface": "#efece8",
+    "--authup-on-surface-muted": "#a49c95"
+  }
+}
+```
+
+Toggle the colour-mode switch in the top-right to check both. Edits apply on
+the next page load, no restart.
+
+**5. Add your logo and favicon.** Drop `logo.svg` and `favicon.svg` into
+`assets/` and reference them. Square artwork works best; the logo is painted
+into the existing mark's box, so it needs no sizing.
+
+```json
+{
+  "favicon": "assets/favicon.svg",
+  "logo": "assets/logo.svg"
+}
+```
+
+**6. Only now reach for CSS.** Most themes never need this step. When you do,
+add `"stylesheet": "assets/theme.css"` and write plain CSS against the
+structural classes listed below. Remember it is unlayered, so any colour you
+set here must also be set under `.dark`.
+
+```css
+.a-auth-shell-card { border: 1px solid var(--authup-surface-border); }
+.a-login-provider-box { border-radius: 2px; }
+
+.dark .a-auth-shell-card { border-color: #332f2c; }
+```
+
+**7. Ship it.** Mount the same directory read-only in production. In
+Kubernetes the whole thing fits in one ConfigMap, and the
+[helm chart](https://helm.authup.org) takes it as values:
+
+```yaml
+server:
+  theme:
+    enabled: true
+    files:
+      theme.json: |
+        {"version": 1, "tokens": {"--authup-periwinkle": "#c0392b"}}
+      assets/theme.css: |
+        .a-auth-shell-card { border-radius: 2px; }
+```
+
+The rest of this page is the reference for what you just used.
+
 ## Layout
 
 ```
