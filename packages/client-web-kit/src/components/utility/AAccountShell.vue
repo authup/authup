@@ -5,7 +5,11 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import {
+    TranslatorTranslationActionKey,
+    TranslatorTranslationAppKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
 import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
 import type { PropType } from 'vue';
@@ -67,6 +71,12 @@ export default defineComponent({
                 key: TranslatorTranslationAppKey.ACCOUNT,
             },
             {
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.BACK,
+            },
+            // Not rendered as text: this is the tooltip and the accessible
+            // name, where naming the target application earns its length.
+            {
                 namespace: TranslatorTranslationNamespace.APP,
                 key: TranslatorTranslationAppKey.BACK_TO_APP,
                 data: { host: computed(() => backHost.value ?? '') },
@@ -123,14 +133,22 @@ export default defineComponent({
                 strip. A trailing rule separates it from the tabs: it leaves
                 the console rather than selecting a section, so it must not
                 read as a permanently-inactive tab.
+
+                The visible label is the bare "Back", so the entry stays
+                short and the tabs keep their position. The host name rides
+                the tooltip, and `aria-label` carries the same string as the
+                accessible name so a screen reader announces which
+                application the link returns to, not just "Back".
             -->
             <VCLink
                 v-if="backHost"
                 :href="backLink"
                 class="a-account-shell-nav-link a-account-shell-nav-link--back"
+                :title="translations.backToApp"
+                :aria-label="translations.backToApp"
             >
                 <VCIcon name="fa6-solid:chevron-left" />
-                {{ translations.backToApp }}
+                {{ translations.back }}
             </VCLink>
             <VCLink
                 v-for="item in items"

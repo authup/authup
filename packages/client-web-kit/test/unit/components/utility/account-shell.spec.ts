@@ -44,13 +44,18 @@ describe('AAccountShell', () => {
         expect(wrapper.find('.a-account-shell-body [data-test="content"]').exists()).toBeTruthy();
     });
 
-    it('should render the back link labelled with the URL host when backLink is parseable', () => {
+    it('should label the back link with the host via tooltip and aria-label', () => {
         const { wrapper } = mountKitComponent(AAccountShell, { items, backLink: 'https://example.com/dashboard' });
 
         const link = wrapper.find('.a-account-shell-nav-link--back');
         expect(link.exists()).toBeTruthy();
         expect(link.attributes('href')).toEqual('https://example.com/dashboard');
-        expect(link.text()).toContain('example.com');
+        // Visible text stays short; the host rides the tooltip and the
+        // accessible name, so an icon-plus-"Back" entry is still announced
+        // with its target.
+        expect(link.text()).not.toContain('example.com');
+        expect(link.attributes('title')).toContain('example.com');
+        expect(link.attributes('aria-label')).toContain('example.com');
     });
 
     it('should render the back link as the first nav entry', () => {
