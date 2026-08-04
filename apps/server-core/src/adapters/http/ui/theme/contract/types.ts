@@ -22,6 +22,13 @@ export type ThemeManifest = {
      */
     logo?: string,
 
+    /**
+     * Dark-mode variant of `logo`. Without it dark mode inherits `logo`,
+     * which is wrong for a mark that is dark-on-light. Usable on its own to
+     * override only dark mode.
+     */
+    logoDark?: string,
+
     stylesheet?: string,
     tokens?: Record<string, string>,
     tokensDark?: Record<string, string>,

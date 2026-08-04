@@ -217,6 +217,57 @@ describe('adapters/http/ui/theme', () => {
             expect(head).not.toContain('--authup-account-logo-mark-visibility:hidden');
         });
 
+        it('should give dark mode its own logo', async () => {
+            // A dark-on-light mark would otherwise disappear against the
+            // dark card, since .dark would inherit the light image.
+            const head = buildThemeHead({
+                version: 1,
+                logo: 'assets/logo.svg',
+                logoDark: 'assets/logo-dark.svg',
+            }, '');
+
+            expect(head).toContain(':root{');
+            expect(head).toContain('.dark{');
+            expect(head.slice(head.indexOf(':root'), head.indexOf('.dark')))
+                .toContain('url("/theme/logo.svg")');
+            expect(head.slice(head.indexOf('.dark')))
+                .toContain('url("/theme/logo-dark.svg")');
+        });
+
+        it('should let dark mode inherit a single logo', async () => {
+            const head = buildThemeHead({ version: 1, logo: 'assets/logo.svg' }, '');
+
+            expect(head).not.toContain('.dark{');
+        });
+
+        it('should allow overriding only dark mode', async () => {
+            // Built-in mark in light, operator image in dark: the
+            // mark-visibility flag rides with whichever image is set.
+            const head = buildThemeHead({ version: 1, logoDark: 'assets/logo-dark.svg' }, '');
+
+            expect(head).not.toContain(':root{');
+            expect(head).toContain('.dark{');
+            expect(head).toContain('--authup-auth-logo-mark-visibility:hidden');
+        });
+
+        it('should keep an authored dark token over the derived one', async () => {
+            const head = buildThemeHead({
+                version: 1,
+                logoDark: 'assets/logo-dark.svg',
+                tokensDark: { '--authup-auth-logo-mark-visibility': 'visible' },
+            }, '');
+
+            expect(head).toContain('--authup-auth-logo-mark-visibility:visible');
+            expect(head).not.toContain('--authup-auth-logo-mark-visibility:hidden');
+        });
+
+        it('should reject a non-image logoDark', async () => {
+            await expect(parseThemeManifest(
+                { version: 1, logoDark: 'assets/theme.css' },
+                'theme.json',
+            )).rejects.toThrow();
+        });
+
         it('should emit no logo tokens without a logo', async () => {
             const head = buildThemeHead({ version: 1, tokens: { '--a': 'b' } }, '');
 

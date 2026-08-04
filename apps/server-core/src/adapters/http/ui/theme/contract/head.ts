@@ -34,6 +34,26 @@ function buildAssetURL(assetPath: string, basePath: string) : string {
     return `${basePath}/${THEME_ASSET_MOUNT_PATH}/${name}`;
 }
 
+/**
+ * The token pair that swaps the built-in mark for an operator image, for
+ * one color mode. Empty when that mode declares no logo, so the other
+ * mode's rule (or the built-in mark) stands.
+ */
+function buildLogoTokens(logo: string | undefined, basePath: string) : Record<string, string> {
+    const tokens : Record<string, string> = {};
+    if (!logo) {
+        return tokens;
+    }
+
+    const url = buildAssetURL(logo, basePath);
+    for (const pair of THEME_LOGO_TOKENS) {
+        tokens[pair.image] = `url("${url}")`;
+        tokens[pair.markVisibility] = 'hidden';
+    }
+
+    return tokens;
+}
+
 function buildTokenRule(selector: string, tokens: Record<string, string>) : string {
     const declarations = Object.keys(tokens)
         .map((name) => `${name}:${tokens[name]}`)
@@ -60,25 +80,30 @@ export function buildThemeHead(
     const rules : string[] = [];
 
     // The logo is a manifest field rather than a raw token because its
-    // value needs url(), which the token grammar forbids. Merged under
-    // :root so an explicit token of the same name still wins.
-    const tokens : Record<string, string> = {};
-    if (manifest.logo) {
-        const url = buildAssetURL(manifest.logo, basePath);
-        for (const pair of THEME_LOGO_TOKENS) {
-            tokens[pair.image] = `url("${url}")`;
-            tokens[pair.markVisibility] = 'hidden';
-        }
-    }
+    // value needs url(), which the token grammar forbids. Merged before
+    // the authored tokens so an explicit token of the same name still wins.
+    //
+    // `logo` and `logoDark` are emitted into their own rule, so a brand
+    // whose mark is dark-on-light can ship a light-on-dark variant instead
+    // of disappearing against the dark card. Each mode carries the
+    // mark-visibility flag alongside its image, which makes all three
+    // combinations coherent:
+    //   logo only      -> one image, inherited by dark mode
+    //   both           -> a per-mode image
+    //   logoDark only  -> the built-in mark in light, the operator's in dark
+    const tokens = buildLogoTokens(manifest.logo, basePath);
     Object.assign(tokens, manifest.tokens);
+
+    const tokensDark = buildLogoTokens(manifest.logoDark, basePath);
+    Object.assign(tokensDark, manifest.tokensDark);
 
     if (Object.keys(tokens).length > 0) {
         rules.push(buildTokenRule(':root', tokens));
     }
     // After :root, so it wins inside the layer by source order and the
     // color-mode switcher keeps working.
-    if (manifest.tokensDark && Object.keys(manifest.tokensDark).length > 0) {
-        rules.push(buildTokenRule('.dark', manifest.tokensDark));
+    if (Object.keys(tokensDark).length > 0) {
+        rules.push(buildTokenRule('.dark', tokensDark));
     }
 
     if (rules.length > 0) {

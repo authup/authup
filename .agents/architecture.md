@@ -1321,7 +1321,11 @@ middleware, and leaves both pages byte-identical.
   validated asset path; the kit theme paints the image onto the built-in
   mark's own `<svg>` box and hides only the mark's CHILDREN (`visibility`
   on the svg itself would take the background with it), so the swap needs
-  no size token and no component change. Both tokens default inert. This is
+  no size token and no component change. Both tokens default inert.
+  `logoDark` emits the same pair into the `.dark` rule instead, because a
+  dark-on-light mark would otherwise be inherited into dark mode and vanish
+  against the card; the mark-visibility flag rides with whichever image is
+  set, so light-only, dark-only and both are all coherent. This is
   the ONE part that does not apply to already-published console packages:
   the kit theme CSS ships raw and is inlined by each console's Tailwind
   build.

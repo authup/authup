@@ -145,6 +145,16 @@ into the existing mark's box, so it needs no sizing.
 }
 ```
 
+If your mark is dark-on-light it will vanish against the dark card, so add a
+light-on-dark variant and check the colour-mode toggle again:
+
+```json
+{
+  "logo": "assets/logo.svg",
+  "logoDark": "assets/logo-dark.svg"
+}
+```
+
 **6. Only now reach for CSS.** Most themes never need this step. When you do,
 add `"stylesheet": "assets/theme.css"` and write plain CSS against the
 structural classes listed below. Remember it is unlayered, so any colour you
@@ -178,10 +188,11 @@ The rest of this page is the reference for what you just used.
 
 ```
 /etc/authup/theme/
-  theme.json          design tokens, title, favicon, stylesheet
+  theme.json          design tokens, title, favicon, logo, stylesheet
   assets/             the only directory served over HTTP, at /theme
     theme.css
     logo.svg
+    logo-dark.svg
     favicon.svg
     inter.woff2
   fragments/          opt-in, see Head fragment below
@@ -204,6 +215,7 @@ including `.html` and `.js`.
   "title": "Sign in to ACME",
   "favicon": "assets/favicon.svg",
   "logo": "assets/logo.svg",
+  "logoDark": "assets/logo-dark.svg",
   "stylesheet": "assets/theme.css",
   "tokens": {
     "--authup-periwinkle": "#c0392b",
@@ -240,6 +252,11 @@ a dedicated CSS cascade layer, so they win over the bundle without
 (`.svg`, `.png`, `.jpg`, `.gif`, `.webp`, `.avif`, `.ico`) and is painted into
 the existing mark's box, so it needs no size and changes no layout. Square
 artwork works best.
+
+`logoDark` is the dark-mode variant. Without it dark mode reuses `logo`, which
+is wrong for a mark drawn dark-on-light: it disappears against the dark card.
+You can also set `logoDark` alone to override only dark mode and keep the
+built-in mark in light.
 
 Token names must be lowercase custom properties (`--foo-bar`). Values are
 capped at 256 characters and may not contain `}`, `<`, `>`, `;`, `@`, `\`,

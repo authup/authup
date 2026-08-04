@@ -79,6 +79,7 @@ export class ThemeManifestValidator extends Container<ThemeManifest> {
         this.mount('title', { optional: true }, createValidator(z.string().min(1).max(200)));
         this.mount('favicon', { optional: true }, createValidator(assetPathSchema));
         this.mount('logo', { optional: true }, createValidator(logoPathSchema));
+        this.mount('logoDark', { optional: true }, createValidator(logoPathSchema));
         this.mount('stylesheet', { optional: true }, createValidator(assetPathSchema));
         this.mount('tokens', { optional: true }, createValidator(tokenMapSchema));
         this.mount('tokensDark', { optional: true }, createValidator(tokenMapSchema));
@@ -98,6 +99,7 @@ const KNOWN_KEYS = [
     'title',
     'favicon',
     'logo',
+    'logoDark',
     'stylesheet',
     'tokens',
     'tokensDark',
