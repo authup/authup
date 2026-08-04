@@ -1009,6 +1009,28 @@ no new endpoint — the `/authorize` verifier already resolves clients via
   (plan 078 "relocatable by choice") registers its origin via
   `TRUSTED_ORIGINS`, never by editing the client row. `displayName` is seeded
   at CREATE only (never re-asserted), so admins can relabel.
+- **Pattern semantics** (`isSimpleMatch`, `@authup/kit`): `*` matches a run
+  of characters (empty included) that does not cross a `/`, `**` matches the
+  rest of the value, and once the value is exhausted a separator in front of
+  a wildcard is optional (so `<origin>/**` covers the bare origin). The `/`
+  boundary is what keeps a host wildcard inside the host:
+  `https://*.example.com/**` covers every subdomain but not
+  `https://a.example.com.evil.test/cb`, `https://a.example.com@evil.test/cb`
+  or a differing port. Matching is case sensitive, so a caller comparing URLs
+  canonicalizes first (`resolveAccountConsoleRef`). The matcher walks value
+  and pattern on separate indices with ONE backtrack point (the last `*`),
+  which bounds it at O(value x pattern) and keeps it regex-free, so no
+  pattern can be turned into a ReDoS. A property test pins it against a
+  recursive reference over every value/pattern pair up to length 4
+  (`packages/kit/test/unit/is-simple-match.spec.ts`) — keep that test when
+  touching the walk, since the backtracking is far easier to break than to
+  review. Before #3394 the single-`*` branch advanced ONE character instead
+  of consuming the run: a host wildcard was inert, and worse, the
+  no-separator-left early return made every path-less value match every
+  pattern sharing its literal prefix, so a client holding a single `*` in
+  `redirectUri` accepted `https://attacker.test` as a redirect target. The
+  provisioned `<origin>/**` patterns were never affected (their only
+  wildcard is a `**`, which returns early).
 - **Scopes** (`SYSTEM_CLIENT_SCOPE_NAMES` = `global` + `openid`, per
   definition) are bound as
   `auth_client_scopes` rows. That junction is the only source `/authorize`
