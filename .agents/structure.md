@@ -137,6 +137,24 @@ both sides are thin callers:
   consumer keeps its own sequencing: Nuxt's ordered plugins on one side, the
   manual choreography in `apps/client-auth-console/src/app.ts` on the other. The install ORDER is
   load-bearing (see the plugin-order trap below); only the values are shared.
+- `core/cookie.ts` + `core/color-mode.ts` (issue #3377) — `createCookieRef()`
+  (a `document.cookie`-backed `Ref<string>`, the non-Nuxt counterpart of
+  `useCookie()`; server-side there is no `document`, so the caller seeds the
+  value via `initial`) and `createColorMode()` on top of it (the shared
+  `vc-color-mode` cookie feeding `bindColorMode` from `@vuecs/design`). Both
+  consoles held byte-identical copies. `@vuecs/design` is a kit
+  peerDependency for this — every console already declared it, since the
+  theme CSS pulls it in regardless. The range is `^1.2.0` and that floor is
+  load-bearing: the persisted cookie value is a `string`, so it must be
+  narrowed by `isColorMode()` before it can satisfy `bindColorMode`, and
+  that guard only exists from 1.2.0 (tada5hi/vuecs#1701). Without the
+  narrowing a foreign stored value would round-trip onto the `<html>` class.
+  The per-app `di.ts` payload provide/inject modules were deliberately left
+  alone: they share a shape, not a body (different symbol, payload type and
+  function names per app), and the kit's own `core/{provide,inject}.ts`
+  carry DIFFERENT semantics (idempotent first-wins provide, undefined-not-throw
+  inject), so folding them together would be a behavior change dressed as a
+  dedup.
 
 The default backend URL is one exported constant, `API_URL_DEFAULT`
 (`@authup/core-http-kit`, `http://localhost:3001`) — it belongs to the HTTP

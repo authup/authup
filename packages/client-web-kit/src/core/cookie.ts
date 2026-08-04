@@ -18,23 +18,26 @@ export function readCookie(name: string) : string | undefined {
     }
 
     const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${escapeRegExp(name)}=([^;]+)`));
-    if (!match) {
+    const value = match?.[1];
+    if (!value) {
         return undefined;
     }
 
     // A malformed percent escape must degrade to the fallback value, not
     // throw a URIError out of the app bootstrap.
     try {
-        return decodeURIComponent(match[1]);
+        return decodeURIComponent(value);
     } catch {
         return undefined;
     }
 }
 
 /**
- * Cookie-backed ref — the counterpart of `useCookie()` in
- * client-admin-console. The app is client-only, so the cookie is read
- * directly on boot; writes persist back to the cookie.
+ * Cookie-backed ref for non-Nuxt consumers, the counterpart of
+ * `useCookie()` in client-admin-console. Client-side writes persist back
+ * to the cookie; server-side there is no `document`, so the caller seeds
+ * the value through `initial` (the auth console reads the cookie in
+ * `renderAuthConsolePage` and hands it over via the hydration payload).
  */
 export function createCookieRef(name: string, initial?: string, fallback = '') : Ref<string> {
     const source = ref(initial || readCookie(name) || fallback);

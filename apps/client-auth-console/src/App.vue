@@ -5,9 +5,8 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { AAuthApp } from '@authup/client-web-kit';
+import { AAuthApp, createColorMode } from '@authup/client-web-kit';
 import { defineComponent } from 'vue';
-import { createColorMode } from './color-mode';
 import { injectPayload } from './di';
 
 export default defineComponent({
