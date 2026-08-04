@@ -71,9 +71,17 @@ export function expandWildcardRealmEntry(
 
     if (data.realms) {
         data.realms = data.realms.map((entry) => {
+            // inheritStrategy: false — the precedence here is inverted
+            // relative to the composite source. The wildcard is the low
+            // precedence side, so it must not supply the lifecycle of an
+            // entity the operator declared explicitly: a wildcard child
+            // carrying `absent` would otherwise delete the very row the
+            // explicit realm block declares. A child that declares no
+            // strategy falls back to the normal default instead.
             const merged = mergeProvisioningEntity(
                 structuredClone(wildcard),
                 entry,
+                { inheritStrategy: false },
             ) as RealmProvisioningEntity;
 
             if (entry.attributes.name) {

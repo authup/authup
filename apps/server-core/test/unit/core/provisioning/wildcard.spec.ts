@@ -169,6 +169,91 @@ describe('core/provisioning/wildcard', () => {
             expect(variants.get('foo')!.clients![0].attributes.displayName).toBe('Explicit Portal');
         });
 
+        it('should not let a wildcard child supply the strategy of an explicitly declared one', () => {
+            // The documented sweep recipe: retire a client everywhere via a
+            // wildcard `absent` child. A realm that declares the same client
+            // explicitly must keep it — inheriting the wildcard's strategy
+            // would DELETE the row the explicit block declares, silently and
+            // on every boot.
+            const sweep : RealmProvisioningEntity = {
+                attributes: { name: REALM_WILDCARD_NAME },
+                relations: {
+                    clients: [{
+                        attributes: { name: 'portal' },
+                        strategy: { type: 'absent' },
+                    }],
+                },
+            };
+
+            const data : RootProvisioningEntity = {
+                realms: [{
+                    attributes: { name: 'keeps-it' },
+                    relations: { clients: [{ attributes: { name: 'portal', displayName: 'Kept' } }] },
+                }],
+            };
+
+            expandWildcardRealmEntry(sweep, data);
+
+            const [merged] = data.realms!;
+            const clients = merged.relations?.clients ?? [];
+
+            expect(clients).toHaveLength(1);
+            expect(clients[0].attributes.displayName).toBe('Kept');
+            expect(clients[0].strategy).toBeUndefined();
+        });
+
+        it('should still let an explicit child declare its own strategy over the wildcard', () => {
+            const sweep : RealmProvisioningEntity = {
+                attributes: { name: REALM_WILDCARD_NAME },
+                relations: {
+                    clients: [{
+                        attributes: { name: 'portal' },
+                        strategy: { type: 'absent' },
+                    }],
+                },
+            };
+
+            const data : RootProvisioningEntity = {
+                realms: [{
+                    attributes: { name: 'keeps-it' },
+                    relations: {
+                        clients: [{
+                            attributes: { name: 'portal' },
+                            strategy: { type: 'merge' },
+                        }],
+                    },
+                }],
+            };
+
+            expandWildcardRealmEntry(sweep, data);
+
+            const clients = data.realms![0].relations?.clients ?? [];
+
+            expect(clients[0].strategy).toEqual({ type: 'merge' });
+        });
+
+        it('should apply the wildcard strategy to a realm that does not declare the entity', () => {
+            // The sweep must still reach every realm that did NOT opt out.
+            const sweep : RealmProvisioningEntity = {
+                attributes: { name: REALM_WILDCARD_NAME },
+                relations: {
+                    clients: [{
+                        attributes: { name: 'portal' },
+                        strategy: { type: 'absent' },
+                    }],
+                },
+            };
+
+            const data : RootProvisioningEntity = { realms: [{ attributes: { name: 'untouched' } }] };
+
+            expandWildcardRealmEntry(sweep, data);
+
+            const clients = data.realms![0].relations?.clients ?? [];
+
+            expect(clients).toHaveLength(1);
+            expect(clients[0].strategy).toEqual({ type: 'absent' });
+        });
+
         it('should keep the recorded variants pristine when the expanded entries are mutated', () => {
             const data : RootProvisioningEntity = {
                 realms: [{
