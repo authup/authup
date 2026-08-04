@@ -8,12 +8,6 @@
 import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
-import {
-    VCBreadcrumb,
-    VCBreadcrumbItem,
-    VCBreadcrumbLink,
-    VCBreadcrumbList,
-} from '@vuecs/navigation';
 import type { PropType } from 'vue';
 import { computed, defineComponent } from 'vue';
 import { useTranslations } from '../../core';
@@ -25,10 +19,6 @@ import type { AAccountShellNavItem } from './types';
 // `gadgets` slot), so the page carries ONE top bar.
 export default defineComponent({
     components: {
-        VCBreadcrumb,
-        VCBreadcrumbItem,
-        VCBreadcrumbLink,
-        VCBreadcrumbList,
         VCIcon,
         VCLink,
     },
@@ -92,31 +82,6 @@ export default defineComponent({
 </script>
 <template>
     <div class="a-account-shell">
-        <!--
-            The return link to the referring application, on its own
-            full-width row above the brand. Not inside the header row (it
-            would render under the fixed gadget cluster from md up) and not
-            inside the nav (it would push the tab strip off the left edge
-            the brand and the content card share).
-
-            Composed rather than driven by `:items` so the single crumb
-            stays a link: the driver treats the last crumb as the current
-            page, which would render it as a non-navigable
-            `<VCBreadcrumbPage>`.
-        -->
-        <VCBreadcrumb
-            v-if="backHost"
-            class="a-account-shell-back"
-        >
-            <VCBreadcrumbList>
-                <VCBreadcrumbItem>
-                    <VCBreadcrumbLink :href="backLink">
-                        <VCIcon name="fa6-solid:chevron-left" />
-                        {{ translations.backToApp }}
-                    </VCBreadcrumbLink>
-                </VCBreadcrumbItem>
-            </VCBreadcrumbList>
-        </VCBreadcrumb>
         <div class="a-account-shell-header">
             <div class="a-account-shell-brand">
                 <svg
@@ -150,9 +115,23 @@ export default defineComponent({
             </div>
         </div>
         <nav
-            v-if="items.length > 0"
+            v-if="items.length > 0 || backHost"
             class="a-account-shell-nav"
         >
+            <!--
+                The return link to the referring application leads the tab
+                strip. A trailing rule separates it from the tabs: it leaves
+                the console rather than selecting a section, so it must not
+                read as a permanently-inactive tab.
+            -->
+            <VCLink
+                v-if="backHost"
+                :href="backLink"
+                class="a-account-shell-nav-link a-account-shell-nav-link--back"
+            >
+                <VCIcon name="fa6-solid:chevron-left" />
+                {{ translations.backToApp }}
+            </VCLink>
             <VCLink
                 v-for="item in items"
                 :key="item.key"

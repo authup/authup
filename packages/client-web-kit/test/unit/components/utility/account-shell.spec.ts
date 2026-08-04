@@ -47,20 +47,25 @@ describe('AAccountShell', () => {
     it('should render the back link labelled with the URL host when backLink is parseable', () => {
         const { wrapper } = mountKitComponent(AAccountShell, { items, backLink: 'https://example.com/dashboard' });
 
-        // `.a-account-shell-back` is the <nav> wrapper; the anchor is the
-        // vuecs breadcrumb link inside it.
-        const nav = wrapper.find('.a-account-shell-back');
-        expect(nav.exists()).toBeTruthy();
-
-        const link = nav.find('a');
+        const link = wrapper.find('.a-account-shell-nav-link--back');
+        expect(link.exists()).toBeTruthy();
         expect(link.attributes('href')).toEqual('https://example.com/dashboard');
         expect(link.text()).toContain('example.com');
+    });
+
+    it('should render the back link as the first nav entry', () => {
+        const { wrapper } = mountKitComponent(AAccountShell, { items, backLink: 'https://example.com/dashboard' });
+
+        const links = wrapper.findAll('.a-account-shell-nav-link');
+        expect(links).toHaveLength(items.length + 1);
+        expect(links[0].classes()).toContain('a-account-shell-nav-link--back');
+        expect(links[1].text()).toContain('Overview');
     });
 
     it('should render no back link when backLink is not a parseable URL', () => {
         const { wrapper } = mountKitComponent(AAccountShell, { items, backLink: 'not-a-url' });
 
-        expect(wrapper.find('.a-account-shell-back').exists()).toBeFalsy();
+        expect(wrapper.find('.a-account-shell-nav-link--back').exists()).toBeFalsy();
     });
 
     it('should render no back link for a non-http(s) scheme', () => {
@@ -71,14 +76,14 @@ describe('AAccountShell', () => {
         for (const backLink of ['ftp://example.com/x', 'javascript:alert(1)']) {
             const { wrapper } = mountKitComponent(AAccountShell, { items, backLink });
 
-            expect(wrapper.find('.a-account-shell-back').exists()).toBeFalsy();
+            expect(wrapper.find('.a-account-shell-nav-link--back').exists()).toBeFalsy();
         }
     });
 
     it('should render no back link when backLink is absent', () => {
         const { wrapper } = mountKitComponent(AAccountShell, { items });
 
-        expect(wrapper.find('.a-account-shell-back').exists()).toBeFalsy();
+        expect(wrapper.find('.a-account-shell-nav-link--back').exists()).toBeFalsy();
     });
 });
 

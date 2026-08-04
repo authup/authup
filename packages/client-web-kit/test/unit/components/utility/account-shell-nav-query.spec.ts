@@ -77,8 +77,12 @@ async function mountWithRouter(props: Record<string, any>) {
 
 // The account console builds nav entries as `link: { to, query }` and relies
 // on <VCLink>'s `query` prop to put the back-link ref onto every tab href.
-// `LinkProperties` has an index signature, so that contract is invisible to
-// the type checker: it has to be pinned here.
+// Pinned here because a rename or typo on that prop fails silently: the
+// tabs would simply stop carrying the ref.
+//
+// Select tabs by `:not(--back)`: the back entry leads the strip and shares
+// the nav-link class, but it points off-site and carries no ref query.
+const TABS = '.a-account-shell-nav-link:not(.a-account-shell-nav-link--back)';
 describe('AAccountShell nav query threading', () => {
     it('nav hrefs carry the ref query', async () => {
         const wrapper = await mountWithRouter({
@@ -86,17 +90,22 @@ describe('AAccountShell nav query threading', () => {
             backLink: REF,
         });
 
-        const hrefs = wrapper.findAll('.a-account-shell-nav-link').map((l) => l.attributes('href'));
+        const hrefs = wrapper.findAll(TABS).map((l) => l.attributes('href'));
 
+        expect(hrefs).toHaveLength(2);
         expect(hrefs[0]).toBeDefined();
         expect(hrefs[0]).toContain('ref=');
         expect(hrefs[1]).toContain('ref=');
+
+        // The back entry itself points off-site and must NOT gain the query.
+        const back = wrapper.find('.a-account-shell-nav-link--back');
+        expect(back.attributes('href')).toEqual(REF);
     });
 
     it('nav hrefs omit the ref query when none is active', async () => {
         const wrapper = await mountWithRouter({ items: buildItems(undefined) });
 
-        const hrefs = wrapper.findAll('.a-account-shell-nav-link').map((l) => l.attributes('href'));
+        const hrefs = wrapper.findAll(TABS).map((l) => l.attributes('href'));
 
         expect(hrefs[0]).toBeDefined();
         expect(hrefs[0]).not.toContain('ref=');
