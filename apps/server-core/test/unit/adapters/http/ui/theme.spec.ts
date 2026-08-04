@@ -21,7 +21,7 @@ function createProvider(manifest: ThemeManifest | undefined) : IThemeProvider {
     return {
         load: async () => { /* noop */ },
         getManifest: async () => manifest,
-        getAssetsPath: () => undefined,
+        getAssetsPath: async () => undefined,
         getHead: async (basePath: string) => (manifest ? buildThemeHead(manifest, basePath) : ''),
     };
 }
@@ -73,6 +73,20 @@ describe('adapters/http/ui/theme', () => {
             ['expression(alert(1))', 'legacy dynamic expression'],
             ['red/*comment', 'opens a comment'],
             ['@import "x"', 'starts an at-rule'],
+            // A `{` opens a block inside the declaration and swallows the rule
+            // that follows, so one stray brace in a light token silently
+            // absorbs the whole `.dark` rule and dark mode stops applying.
+            ['red{', 'opens a block that swallows the next rule'],
+            // Blocking url( alone does not close the request-sink hole: these
+            // all take a bare string URL, and a logo token is substituted
+            // straight into an image-accepting property.
+            ['image-set("https://evil.example.com/x.png" 1x)', 'fetches via image-set'],
+            ['-webkit-image-set("https://evil.example.com/x.png" 1x)', 'fetches via a vendor prefix'],
+            ['image("https://evil.example.com/x.png")', 'fetches via image'],
+            ['src("https://evil.example.com/x.png")', 'fetches via src'],
+            ['cross-fade(image-set("https://evil.example.com/x.png" 1x), none)', 'fetches via cross-fade'],
+            ['element(#x)', 'renders document content into a paint sink'],
+            ['paint(evil)', 'renders a paint worklet'],
         ])('should reject the token value %s (%s)', async (value) => {
             await expect(parseThemeManifest(
                 { version: 1, tokens: { '--authup-auth-accent': value } },
@@ -90,10 +104,16 @@ describe('adapters/http/ui/theme', () => {
                     '--authup-auth-card-box-shadow': '0 1px 2px rgba(0,0,0,.1)',
                     '--radius-md': '2px',
                     '--text-6xl': '3.75rem',
+                    // the function denylist must key on whole names, so a
+                    // value merely CONTAINING one stays valid
+                    '--authup-auth-backdrop': 'linear-gradient(to right, #fff, #000)',
+                    '--authup-surface-card': 'color-mix(in oklab, var(--a), var(--b) 40%)',
+                    '--authup-auth-card-padding': 'clamp(1rem, 2vw, 3rem)',
+                    '--authup-brand-image-token': 'var(--brand-image)',
                 },
             }, 'theme.json');
 
-            expect(Object.keys(manifest.tokens ?? {})).toHaveLength(6);
+            expect(Object.keys(manifest.tokens ?? {})).toHaveLength(10);
         });
 
         it.each([

@@ -46,7 +46,7 @@ export interface IThemeProvider {
      * The realpathed `<root>/assets` directory, or undefined when absent.
      * Every served path is re-checked against this value.
      */
-    getAssetsPath() : string | undefined;
+    getAssetsPath() : Promise<string | undefined>;
 
     /**
      * The markup injected before `</head>`, memoized per base path.

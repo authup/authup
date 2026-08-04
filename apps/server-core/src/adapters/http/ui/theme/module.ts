@@ -102,7 +102,9 @@ export class ThemeProvider implements IThemeProvider {
         return this.manifest;
     }
 
-    getAssetsPath() : string | undefined {
+    async getAssetsPath() : Promise<string | undefined> {
+        await this.revalidate();
+
         return this.assetsPath;
     }
 
@@ -217,6 +219,13 @@ export class ThemeProvider implements IThemeProvider {
             return;
         }
         this.revalidatedAt = now;
+
+        // Re-resolved with the manifest, not captured at boot: a directory
+        // that carried no `assets/` when the process started would otherwise
+        // 404 every asset forever, even though the manifest hot-reloads and
+        // can start referencing them. One stat, on the interval that already
+        // pays for two.
+        this.assetsPath = await this.resolveAssetsPath();
 
         await this.revalidateManifest();
         this.revalidateFragment();
