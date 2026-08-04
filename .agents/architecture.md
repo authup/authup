@@ -1113,12 +1113,14 @@ choice"):
   actionable message (build `apps/client-account-console` first).
 - **Runtime config contract** (`src/config.ts`): a standalone host serves
   the same dist under `/account` on its own origin and injects
-  `window.__AUTHUP__` (or replaces the marker) with `apiUrl` (+
-  optional `basePath`); with nothing injected the app derives the API URL
-  same-origin from its base path. Standalone hosting additionally needs the
-  origin registered in `TRUSTED_ORIGINS` (drives the `account-console`
-  client's redirect/post-logout allowlists). The launcher never spawns it —
-  no binary, no process.
+  `window.__AUTHUP__` (or replaces the marker) with `apiUrl` (+ optional
+  `basePath` and an already-validated `ref` of its own, since only
+  server-core's serving path runs the trusted-origin check below); with
+  nothing injected the app derives the API URL same-origin from its base
+  path. Standalone hosting additionally needs the origin registered in
+  `TRUSTED_ORIGINS` (drives the `account-console` client's
+  redirect/post-logout allowlists). The launcher never spawns it: no
+  binary, no process.
 - **`ref` back link:** an optional `ref` query parameter names the
   application the visitor came from. `serveAccountConsolePage` validates
   it against `getAppOrigins(config)` (each origin as an `<origin>/**`
@@ -1127,14 +1129,18 @@ choice"):
   still matches) and injects the survivor into `window.__AUTHUP__.ref`;
   anything else is dropped silently. This is the FIRST request-reflected
   value in that payload, so the `replaceTemplateMarker` splice is now
-  load-bearing against `$`-expansion, not merely conventional. Inside the
-  SPA the URL is the source of truth (nav links carry `?ref=`, and every
-  full load revalidates server-side); `sessionStorage` under
-  `authup:account:ref` carries it across the `/authorize` round-trip only,
-  written just before the kick and consumed by the router guard on return,
-  so no entry survives to go stale. The admin console's `/settings/*`
-  redirect stub and its header "Manage account" link both build their URL
-  through `useAccountConsoleURL()`, which attaches the origin.
+  load-bearing against `$`-expansion, not merely conventional. The
+  trusted value the app renders from lives only in an in-memory holder
+  (`src/ref.ts`), seeded from that server-validated config on every full
+  load; nav links carry `?ref=` for display and bookmarking only, and
+  the app never reads `route.query.ref` back (that would reintroduce the
+  exact allowlist bypass the server-side check exists to close).
+  `sessionStorage` under `authup:account:ref` carries the trusted value
+  across the `/authorize` round-trip only, written just before the kick
+  and consumed by the router guard on return, so no entry survives to go
+  stale. The admin console's `/settings/*` redirect stub and its header
+  "Manage account" link both build their URL through
+  `useAccountConsoleURL()`, which attaches the origin.
 - **App bootstrap** (`src/main.ts`): vue-router base = config `basePath`
   (routes are base-relative: `/`, `/password`, `/authenticators`,
   `/sessions`, `/applications`, catch-all → `/`), the same kit + vuecs
@@ -1179,9 +1185,12 @@ choice"):
   console's `pages/logout.vue`: capture `idToken`/`realmId`, local
   `store.logout()`, round-trip through `/logout` with `id_token_hint`,
   `post_logout_redirect_uri` back to the base path.
-- **No per-user state in the response**: the shell is static + operator
-  config only (no hydration payload at all — pinned in
-  `account-pages.spec.ts`).
+- **No actor-scoped state in the response**: the shell is static; the
+  payload carries only operator-level config (`apiUrl`/`basePath`/
+  `features`) plus the server-validated `ref` echo, which is
+  request input the server already checked, not actor data. Nothing
+  actor-scoped can leak into a (potentially cached) response, pinned in
+  `account-pages.spec.ts`.
 - **Packaging:** the package ships `dist/` only (`prepublishOnly` builds);
   it is packed in the launcher's `test:smoke:packed` workspace list so the
   packed server-core install resolves it from the tarball.
