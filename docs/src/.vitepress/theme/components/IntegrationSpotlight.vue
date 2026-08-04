@@ -53,7 +53,7 @@ export default defineComponent({
     image: authup/authup:latest
     restart: unless-stopped
     volumes:
-      - authup:/usr/src/writable
+      - authup:/usr/src/app/writable
     ports:
       - "3001:3000"
     environment:

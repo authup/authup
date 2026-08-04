@@ -274,9 +274,12 @@ Plain CSS, linked after everything else, so it beats the token block. Use it
 for the things tokens cannot express.
 
 ```css
+/* Relative to theme.css, not root-absolute. Authup rebases the hrefs it
+   generates, but your stylesheet is served verbatim, so "/theme/..." would
+   break when authup runs under a public URL prefix. */
 @font-face {
   font-family: Inter;
-  src: url("/theme/inter.woff2") format("woff2");
+  src: url("./inter.woff2") format("woff2");
   font-weight: 100 900;
   font-display: swap;
 }
@@ -393,8 +396,8 @@ different flow.
 - `dist/client/index.html` containing the `<!--preload-links-->` and
   `<!--app-html-->` markers, built with vite `base: '/public/'`
 - `dist/client/.vite/ssr-manifest.json` (`{}` is valid)
-- `dist/server/server.js` exporting `render(ctx)` and
-  `CONTRACT_VERSION`
+- `dist/server/server.js` exporting `render(ctx)`, plus `CONTRACT_VERSION`
+  once the contract moves past version 1 (omitting it means version 1)
 
 `CONTRACT_VERSION` is checked at boot against the version this authup
 implements, and a mismatch **stops the container** with a message naming both

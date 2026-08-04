@@ -133,17 +133,23 @@ export class ThemeProvider implements IThemeProvider {
 
     /**
      * The mount root is `<root>/assets`, never the theme root, so the
-     * manifest is unreachable over HTTP by construction. Realpathed once
-     * here so every served path can be compared against a canonical value.
+     * manifest is unreachable over HTTP by construction.
+     *
+     * Returns the LOGICAL path, deliberately not a realpath. A Kubernetes
+     * ConfigMap volume is a symlink farm whose update swaps `..data` to a
+     * NEW timestamped directory and deletes the old one, so a realpath
+     * captured here would dangle after the first update and every asset
+     * would 404 until the pod restarts. The asset handler resolves and
+     * re-asserts containment per request instead.
      */
     protected async resolveAssetsPath() : Promise<string | undefined> {
         const assetsPath = path.join(this.directoryPath, THEME_ASSETS_DIRECTORY_NAME);
 
         try {
-            const resolved = await fs.promises.realpath(assetsPath);
-            const stats = await fs.promises.stat(resolved);
+            // stat follows the symlink, so this still rejects a non-directory.
+            const stats = await fs.promises.stat(assetsPath);
 
-            return stats.isDirectory() ? resolved : undefined;
+            return stats.isDirectory() ? assetsPath : undefined;
         } catch {
             return undefined;
         }

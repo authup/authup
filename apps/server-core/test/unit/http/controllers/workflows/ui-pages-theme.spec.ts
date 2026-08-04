@@ -35,43 +35,63 @@ const MANIFEST = {
 };
 
 /**
- * The theme directory is built at runtime rather than committed: the
- * containment test needs a symlink pointing OUT of the mount, which is
- * exactly the shape a Kubernetes ConfigMap volume produces and exactly the
- * shape that must not be servable.
+ * Built at runtime as a Kubernetes ConfigMap volume actually looks: a
+ * symlink farm where every entry points through a `..data` symlink at a
+ * timestamped revision directory. Two things depend on it.
+ *
+ * Containment must survive it: a legitimate asset IS a symlink pointing
+ * out of the logical assets directory, so refusing symlinks would break
+ * every k8s deployment, while following them blindly would serve anything
+ * the farm can reach. `escape.css` below is the symlink that must NOT be
+ * served.
+ *
+ * And a ConfigMap update swaps `..data` to a NEW revision and deletes the
+ * old one, so nothing may cache a realpath across requests.
  */
+function writeRevision(root: string, revision: string, css: string) : void {
+    const dir = path.join(root, revision);
+    fs.mkdirSync(path.join(dir, 'assets'), { recursive: true });
+
+    fs.writeFileSync(path.join(dir, 'theme.json'), JSON.stringify(MANIFEST), 'utf-8');
+    fs.writeFileSync(path.join(dir, 'assets', 'theme.css'), css, 'utf-8');
+    fs.writeFileSync(
+        path.join(dir, 'assets', 'favicon.svg'),
+        '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
+        'utf-8',
+    );
+    fs.writeFileSync(
+        path.join(dir, 'assets', 'logo.svg'),
+        '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
+        'utf-8',
+    );
+}
+
+/** Atomic `..data` swap, exactly what kubelet does on a ConfigMap update. */
+function swapRevision(themePath: string, revision: string) : void {
+    const link = path.join(themePath, '..data');
+    fs.rmSync(link, { force: true });
+    fs.symlinkSync(revision, link);
+}
+
 function createThemeDirectory() : { themePath: string, outsidePath: string } {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'authup-theme-'));
 
     const themePath = path.join(root, 'theme');
-    const assetsPath = path.join(themePath, 'assets');
-    fs.mkdirSync(assetsPath, { recursive: true });
+    fs.mkdirSync(themePath, { recursive: true });
 
-    fs.writeFileSync(
-        path.join(themePath, 'theme.json'),
-        JSON.stringify(MANIFEST),
-        'utf-8',
-    );
-    fs.writeFileSync(
-        path.join(assetsPath, 'theme.css'),
-        ':root{--brand:#c0392b}',
-        'utf-8',
-    );
-    fs.writeFileSync(
-        path.join(assetsPath, 'favicon.svg'),
-        '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
-        'utf-8',
-    );
-    fs.writeFileSync(
-        path.join(assetsPath, 'logo.svg'),
-        '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
-        'utf-8',
-    );
+    writeRevision(themePath, '..2026_01_01_00_00_00.000000', ':root{--brand:#c0392b}');
+    swapRevision(themePath, '..2026_01_01_00_00_00.000000');
+
+    fs.symlinkSync(path.join('..data', 'theme.json'), path.join(themePath, 'theme.json'));
+    fs.symlinkSync(path.join('..data', 'assets'), path.join(themePath, 'assets'));
 
     // A file the operator did not intend to publish, next to the theme.
     const outsidePath = path.join(root, 'secret.css');
     fs.writeFileSync(outsidePath, 'body{content:"leaked"}', 'utf-8');
-    fs.symlinkSync(outsidePath, path.join(assetsPath, 'escape.css'));
+    fs.symlinkSync(
+        outsidePath,
+        path.join(themePath, '..2026_01_01_00_00_00.000000', 'assets', 'escape.css'),
+    );
 
     return { themePath, outsidePath };
 }
@@ -208,6 +228,27 @@ describe('http/controllers/workflows/ui-pages-theme', () => {
             const second = await httpRequest(suite, 'GET', '/theme/theme.css', { headers: { 'if-none-match': etag as string } });
 
             expect(second.status).toEqual(304);
+        });
+
+        it('should keep serving across a ConfigMap revision swap', async () => {
+            // kubelet writes a NEW timestamped directory, swaps ..data onto
+            // it and deletes the old one. A realpath cached at boot dangles
+            // (ENOENT) at that point, which would 404 every asset until the
+            // pod restarts.
+            const before = await httpRequest(suite, 'GET', '/theme/theme.css');
+            expect(before.status).toEqual(200);
+            expect(await before.text()).toContain('#c0392b');
+
+            writeRevision(themePath, '..2026_02_02_00_00_00.000000', ':root{--brand:#00ff00}');
+            swapRevision(themePath, '..2026_02_02_00_00_00.000000');
+            fs.rmSync(path.join(themePath, '..2026_01_01_00_00_00.000000'), {
+                recursive: true,
+                force: true,
+            });
+
+            const after = await httpRequest(suite, 'GET', '/theme/theme.css');
+            expect(after.status).toEqual(200);
+            expect(await after.text()).toContain('#00ff00');
         });
 
         it('should not serve the manifest', async () => {

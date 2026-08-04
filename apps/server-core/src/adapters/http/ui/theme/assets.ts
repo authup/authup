@@ -75,12 +75,22 @@ export function createThemeAssetsHandler(provider: IThemeProvider) : Handler {
             return null;
         }
 
-        // Resolve, then realpath and re-assert containment. The realpath is
-        // the control that survives a symlink pointing out of the mount;
-        // the pattern check above is only the cheap first pass.
+        // Both the root and the file are realpathed HERE, per request, and
+        // never cached. A Kubernetes ConfigMap update swaps the `..data`
+        // symlink to a new timestamped directory and deletes the old one,
+        // so a root realpath captured at boot dangles after the first
+        // update and every asset 404s until the pod restarts.
+        //
+        // The realpath is also the control that survives a symlink pointing
+        // out of the mount; the pattern check above is only the cheap first
+        // pass. Resolving both within the same request keeps the comparison
+        // consistent: a swap landing between the two calls fails closed
+        // (a transient 404), never open.
+        let root : string;
         let filePath : string;
         let stats : fs.Stats;
         try {
+            root = await fs.promises.realpath(assetsPath);
             filePath = await fs.promises.realpath(path.join(assetsPath, requestPath));
             stats = await fs.promises.stat(filePath);
         } catch {
@@ -91,7 +101,7 @@ export function createThemeAssetsHandler(provider: IThemeProvider) : Handler {
 
         if (
             !stats.isFile() ||
-            (filePath !== assetsPath && !filePath.startsWith(assetsPath + path.sep))
+            (filePath !== root && !filePath.startsWith(root + path.sep))
         ) {
             event.response.status = 404;
 
