@@ -46,11 +46,9 @@
     /*
      * No `justify-content: space-between` here on purpose: the fixed
      * `.a-auth-gadgets` cluster occupies the same vertical band as this
-     * header from md up (see the padding-top override above), so a
-     * `space-between`-pushed child would render underneath it. Both
-     * children stay left-anchored instead: a single-child header
-     * (brand only) already rendered this way under `space-between`, so
-     * the brand's position is unchanged at every breakpoint.
+     * header from md up (see the padding-top override above), so any
+     * child pushed to the right edge would render underneath it. Keep
+     * additions to this row left-anchored.
      */
     .a-account-shell-header {
         display: flex;
@@ -71,25 +69,28 @@
         font-weight: 600;
     }
 
+    /*
+     * The return link to the referring application. Its own full-width row
+     * above the brand: inside the header row it would render under the
+     * fixed `.a-auth-gadgets` cluster from md up, and inside the nav it
+     * would push the tab strip off the left edge the brand and the content
+     * card share.
+     *
+     * Layout only. Colour, hover, and the focus ring come from the vuecs
+     * `breadcrumb` theme element via `<VCBreadcrumbLink>`, so they are NOT
+     * restated here.
+     */
     .a-account-shell-back {
+        margin-bottom: 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    .a-account-shell-back .vc-breadcrumb-link {
         display: inline-flex;
         align-items: center;
         gap: 0.375rem;
-        font-size: 0.875rem;
-        color: var(--authup-account-surface-color-muted);
-        text-decoration: none;
     }
 
-    .a-account-shell-back:hover {
-        color: var(--authup-account-surface-color);
-        text-decoration: underline;
-    }
-
-    .a-account-shell-back:focus-visible {
-        outline: 2px solid var(--authup-account-nav-active-background);
-        outline-offset: 2px;
-        border-radius: 0.25rem;
-    }
 
     .a-account-shell-nav {
         display: flex;

@@ -8,6 +8,11 @@
 import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
+import {
+    VCBreadcrumbItem,
+    VCBreadcrumbLink,
+    VCBreadcrumbList,
+} from '@vuecs/navigation';
 import type { PropType } from 'vue';
 import { computed, defineComponent } from 'vue';
 import { useTranslations } from '../../core';
@@ -19,6 +24,9 @@ import type { AAccountShellNavItem } from './types';
 // `gadgets` slot), so the page carries ONE top bar.
 export default defineComponent({
     components: {
+        VCBreadcrumbItem,
+        VCBreadcrumbLink,
+        VCBreadcrumbList,
         VCIcon,
         VCLink,
     },
@@ -70,6 +78,32 @@ export default defineComponent({
 </script>
 <template>
     <div class="a-account-shell">
+        <!--
+            The return link to the referring application, on its own
+            full-width row above the brand. Not inside the header row (it
+            would render under the fixed gadget cluster from md up) and not
+            inside the nav (it would push the tab strip off the left edge
+            the brand and the content card share).
+
+            Composed by hand rather than through `<VCBreadcrumb :items>`:
+            the driver's inferred slot type is not nameable from outside
+            `@vuecs/navigation`, so declaration emit for this package fails
+            with TS4023. The compound form emits cleanly.
+        -->
+        <nav
+            v-if="backHost"
+            class="a-account-shell-back"
+            aria-label="Breadcrumb"
+        >
+            <VCBreadcrumbList>
+                <VCBreadcrumbItem>
+                    <VCBreadcrumbLink :href="backLink">
+                        <VCIcon name="fa6-solid:chevron-left" />
+                        {{ translations.backToApp }}
+                    </VCBreadcrumbLink>
+                </VCBreadcrumbItem>
+            </VCBreadcrumbList>
+        </nav>
         <div class="a-account-shell-header">
             <div class="a-account-shell-brand">
                 <svg
@@ -101,14 +135,6 @@ export default defineComponent({
                     {{ translations.account }}
                 </span>
             </div>
-            <a
-                v-if="backHost"
-                :href="backLink"
-                class="a-account-shell-back"
-            >
-                <VCIcon name="fa6-solid:chevron-left" />
-                {{ translations.backToApp }}
-            </a>
         </div>
         <nav
             v-if="items.length > 0"

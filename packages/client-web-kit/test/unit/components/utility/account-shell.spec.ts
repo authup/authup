@@ -47,8 +47,12 @@ describe('AAccountShell', () => {
     it('should render the back link labelled with the URL host when backLink is parseable', () => {
         const { wrapper } = mountKitComponent(AAccountShell, { items, backLink: 'https://example.com/dashboard' });
 
-        const link = wrapper.find('.a-account-shell-back');
-        expect(link.exists()).toBeTruthy();
+        // `.a-account-shell-back` is the <nav> wrapper; the anchor is the
+        // vuecs breadcrumb link inside it.
+        const nav = wrapper.find('.a-account-shell-back');
+        expect(nav.exists()).toBeTruthy();
+
+        const link = nav.find('a');
         expect(link.attributes('href')).toEqual('https://example.com/dashboard');
         expect(link.text()).toContain('example.com');
     });

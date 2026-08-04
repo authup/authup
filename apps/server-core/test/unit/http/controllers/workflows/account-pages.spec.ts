@@ -185,4 +185,39 @@ describe('src/http/controllers/workflows/account (disabled)', () => {
 
         expect(response.features.accountConsole).toEqual(false);
     });
+
+    // The admin console's redirect stub maps `/settings` to PATH_MAP[''] = '/',
+    // producing `<apiUrl>/account/` WITH a trailing slash. Every other test
+    // here hits `/account` without one, so the route the stub actually emits
+    // needs its own coverage.
+    it('should serve the shell for /account/ with a trailing slash', async () => {
+        const response = await httpRequest(suite, 'GET', '/account/');
+        expect(response.status).toEqual(200);
+        expect(response.headers.get('content-type')).toContain('text/html');
+    });
+
+    it('should validate ref on the trailing-slash route', async () => {
+        const response = await httpRequest(
+            suite,
+            'GET',
+            '/account/?ref=http%3A%2F%2Flocalhost%3A3000',
+        );
+        expect(response.status).toEqual(200);
+
+        const config = extractAccountConfig(await response.text());
+        expect(config.ref).toEqual('http://localhost:3000/');
+    });
+
+    it('should serve every route the settings redirect maps onto', async () => {
+        for (const path of [
+            '/account/',
+            '/account/password',
+            '/account/authenticators',
+            '/account/sessions',
+            '/account/applications',
+        ]) {
+            const response = await httpRequest(suite, 'GET', path);
+            expect(response.status).toEqual(200);
+        }
+    });
 });

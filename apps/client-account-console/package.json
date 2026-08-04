@@ -49,6 +49,7 @@
         "@vuecs/icons-font-awesome": "^1.3.0",
         "@vuecs/link": "^2.1.0",
         "@vuecs/locale": "^1.1.0",
+        "@vuecs/navigation": "^4.4.0",
         "@vuecs/overlays": "^1.3.0",
         "@vuecs/pagination": "^2.2.0",
         "@vuecs/theme-tailwind": "^6.4.0",
