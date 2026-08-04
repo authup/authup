@@ -265,6 +265,8 @@ export enum TranslatorTranslationAppKey {
     CONSENT_REVOKE_ALL_TITLE = 'consentRevokeAllTitle',
     CONSENT_REVOKE_ALL_DESCRIPTION = 'consentRevokeAllDescription',
     CONSENT_SCOPES = 'consentScopes',
+
+    BACK_TO_APP = 'backToApp',
 }
 
 /**

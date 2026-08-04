@@ -472,6 +472,7 @@ export class HTTPControllerModule {
             options: {
                 baseURL: config.publicUrl,
                 features: this.buildUIFeatures(config),
+                trustedOrigins: getAppOrigins(config),
             },
         });
     }

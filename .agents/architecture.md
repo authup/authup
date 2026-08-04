@@ -1094,7 +1094,8 @@ choice"):
 - **Serving seam** (`adapters/http/ui/account-console/module.ts`, the plan-081 static-SPA
   pilot): `AccountController` (`@DController('/account')`, `''` +
   `'/:page'` — client-side routing owns sub-paths, every route returns the
-  same shell) calls `serveAccountConsolePage(event, { baseURL, features })`,
+  same shell) calls
+  `serveAccountConsolePage(event, { baseURL, features, trustedOrigins })`,
   which resolves the package via locter's
   `locateUpSync('node_modules/@authup/client-account-console/package.json',
   { cwd: PACKAGE_PATH })` — the node_modules ancestor walk from
@@ -1102,9 +1103,10 @@ choice"):
   published install; only positive resolution is cached), injects the
   runtime config by replacing the
   `<!--account-config-->` marker in the built index.html
-  (`window.__AUTHUP__ = { apiUrl, basePath, features }` — the shared
+  (`window.__AUTHUP__ = { apiUrl, basePath, features, ref }`: the shared
   authup window global, escaped
-  like every inline script payload), stamps lang/color-mode html attrs from
+  like every inline script payload; `ref` is the server-validated back-link
+  origin, see below), stamps lang/color-mode html attrs from
   the shared cookies (no FOUC), rebases the fixed `/account/` vite-base
   asset hrefs when publicUrl carries a sub-path, and sets the same security
   headers as `renderAuthConsolePage`. Static assets ride the assets middleware
@@ -1113,12 +1115,34 @@ choice"):
   actionable message (build `apps/client-account-console` first).
 - **Runtime config contract** (`src/config.ts`): a standalone host serves
   the same dist under `/account` on its own origin and injects
-  `window.__AUTHUP__` (or replaces the marker) with `apiUrl` (+
-  optional `basePath`); with nothing injected the app derives the API URL
-  same-origin from its base path. Standalone hosting additionally needs the
-  origin registered in `TRUSTED_ORIGINS` (drives the `account-console`
-  client's redirect/post-logout allowlists). The launcher never spawns it —
-  no binary, no process.
+  `window.__AUTHUP__` (or replaces the marker) with `apiUrl` (+ optional
+  `basePath` and an already-validated `ref` of its own, since only
+  server-core's serving path runs the trusted-origin check below); with
+  nothing injected the app derives the API URL same-origin from its base
+  path. Standalone hosting additionally needs the origin registered in
+  `TRUSTED_ORIGINS` (drives the `account-console` client's
+  redirect/post-logout allowlists). The launcher never spawns it: no
+  binary, no process.
+- **`ref` back link:** an optional `ref` query parameter names the
+  application the visitor came from. `serveAccountConsolePage` validates
+  it against `getAppOrigins(config)` (each origin as an `<origin>/**`
+  `isSimpleMatch` pattern, the same shape as the client redirect
+  allowlist, after canonicalizing through `URL` so a case-differing host
+  still matches) and injects the survivor into `window.__AUTHUP__.ref`;
+  anything else is dropped silently. This is the FIRST request-reflected
+  value in that payload, so the `replaceTemplateMarker` splice is now
+  load-bearing against `$`-expansion, not merely conventional. The
+  trusted value the app renders from lives only in an in-memory holder
+  (`src/ref.ts`), seeded from that server-validated config on every full
+  load; nav links carry `?ref=` for display and bookmarking only, and
+  the app never reads `route.query.ref` back (that would reintroduce the
+  exact allowlist bypass the server-side check exists to close).
+  `sessionStorage` under `authup:account:ref` carries the trusted value
+  across the `/authorize` round-trip only, written just before the kick
+  and consumed by the router guard on return, so no entry survives to go
+  stale. The admin console's `/settings/*` redirect stub and its header
+  "Manage account" link both build their URL through
+  `useAccountConsoleURL()`, which attaches the origin.
 - **App bootstrap** (`src/main.ts`): vue-router base = config `basePath`
   (routes are base-relative: `/`, `/password`, `/authenticators`,
   `/sessions`, `/applications`, catch-all → `/`), the same kit + vuecs
@@ -1163,9 +1187,12 @@ choice"):
   console's `pages/logout.vue`: capture `idToken`/`realmId`, local
   `store.logout()`, round-trip through `/logout` with `id_token_hint`,
   `post_logout_redirect_uri` back to the base path.
-- **No per-user state in the response**: the shell is static + operator
-  config only (no hydration payload at all — pinned in
-  `account-pages.spec.ts`).
+- **No actor-scoped state in the response**: the shell is static; the
+  payload carries only operator-level config (`apiUrl`/`basePath`/
+  `features`) plus the server-validated `ref` echo, which is
+  request input the server already checked, not actor data. Nothing
+  actor-scoped can leak into a (potentially cached) response, pinned in
+  `account-pages.spec.ts`.
 - **Packaging:** the package ships `dist/` only (`prepublishOnly` builds);
   it is packed in the launcher's `test:smoke:packed` workspace list so the
   packed server-core install resolves it from the tarball.
@@ -2433,8 +2460,8 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   silent (`prompt=none`) branch redirects `consent_required` only when the
   settled probe found no covering consent — persisted consent is what makes
   `prompt=none` meaningful for non-`builtIn` clients.
-- **UI:** 4th settings tab "Applications"
-  (`apps/client-admin-console/pages/settings/index/applications.vue`) over the kit
+- **UI:** the account console's "Applications" page
+  (`apps/client-account-console/src/pages/applications.vue`) over the kit
   `<AConsents>` collection — rows grouped per client, granted scopes rendered
   as per-scope revoke chips plus a per-app "Revoke access" (looped per-row
   DELETEs behind an error-tone `useAlertDialog`). The self-service list
@@ -2832,10 +2859,12 @@ cases in `user.spec.ts`. When adding a per-row gate to a new
 `getMany`, wire `applyRealmScopeSelect` into its adapter with every column the
 gate reads.
 
-**UI:** two `<VCTable>` pages backed by the kit `<ASessions>` collection —
-`pages/settings/index/sessions.vue` (the actor's **own** sessions, `filter:
-{ userId }`) and `pages/users/[id]/sessions.vue` (an admin viewing a user's
-sessions). The settings page carries a **"log out other devices"** button
+**UI:** two pages backed by the kit `<ASessions>` collection:
+`apps/client-account-console/src/pages/sessions.vue` (the actor's **own**
+sessions, `filter: { userId }`) and
+`apps/client-admin-console/pages/users/[id]/sessions.vue` (a `<VCTable>`
+page for an admin viewing a user's sessions). The account console page
+carries a **"log out other devices"** button
 (`authupApp` `SESSION_REVOKE_OTHERS*` keys) that confirms via `useAlertDialog`
 then calls `client.session.deleteMany()` (`DELETE /sessions` — revoke-all-but-
 current), toasts the returned `count`, and reloads the collection; it disables
@@ -3353,11 +3382,13 @@ managing another user) and
 `AUserAuthenticators` (device-row list + delete + an "add" button opening the
 enroll flow in a `<VCModal>`; the enroll component's `closed` emit lets the
 recovery-codes terminal view dismiss the modal only when the user is done),
-hosted on the settings
-Authenticators tab (`settings/index/mfa.vue`, `@me`; the former combined
-Security tab is split — `settings/index/password.vue` keeps the password form)
-and an admin Authenticators tab
-(`users/[id]/authenticators.vue`, gated on `USER_AUTHENTICATOR_READ`). i18n:
+hosted on the account console's
+Authenticators tab (`apps/client-account-console/src/pages/authenticators.vue`,
+`@me`; the sibling Password tab is a separate page,
+`apps/client-account-console/src/pages/password.vue`) and an admin
+Authenticators tab
+(`apps/client-admin-console/pages/users/[id]/authenticators.vue`, gated on
+`USER_AUTHENTICATOR_READ`). i18n:
 `MFA_*` (`authupClient`) + `AUTHENTICATOR`/`MFA_SECURITY_*` (`authupApp`), ×4
 locales. Kit test `test/unit/components/workflows/mfa-challenge.spec.ts`.
 

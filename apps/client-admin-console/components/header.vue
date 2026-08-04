@@ -20,8 +20,8 @@ import {
     defineNuxtComponent,
     ref,
     useColorMode,
-    useRuntimeConfig,
 } from '#imports';
+import { useAccountConsoleURL } from '../composables/account-console';
 import { LayoutTopNavigation } from '../config/layout';
 import LogoSVG from './svg/LogoSVG';
 
@@ -51,15 +51,9 @@ export default defineNuxtComponent({
         );
 
         // The account self-service surface is served by server-core on the
-        // IdP origin (plan 080) — the stable "Manage account" link target.
-        // A missing apiUrl degrades to a same-origin relative link instead
-        // of throwing out of the header (which renders on every page).
-        const runtimeConfig = useRuntimeConfig();
-        const accountUrl = computed(() => {
-            const apiUrl = (runtimeConfig.public.apiUrl as string | undefined) ?? '';
-
-            return `${apiUrl.replace(/\/+$/, '')}/account`;
-        });
+        // IdP origin (plan 080). The helper attaches this app's origin as
+        // `ref` so the account console can link back here.
+        const accountUrl = useAccountConsoleURL();
 
         // Top nav is a single un-gated entry — pass it as a static
         // array straight to `<VCNavItems :data>` (no permission filter,
@@ -163,12 +157,12 @@ export default defineNuxtComponent({
                                 </a>
                             </li>
                             <li class="vc-nav-item">
-                                <NuxtLink
-                                    :to="'/settings'"
+                                <a
+                                    :href="accountUrl"
                                     class="vc-nav-link"
                                 >
                                     <VCIcon name="fa6-solid:gear" />
-                                </NuxtLink>
+                                </a>
                             </li>
                             <li class="vc-nav-item">
                                 <NuxtLink

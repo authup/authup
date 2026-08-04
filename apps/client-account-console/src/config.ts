@@ -27,12 +27,21 @@ export type AccountConsoleConfigInput = {
     features?: {
         accountConsole?: boolean,
     },
+
+    /**
+     * Absolute URL of the application the visitor came from, rendered as a
+     * back link. server-core validates it against the trusted app origins
+     * before injecting it; a standalone host that wants a back link injects
+     * its own already-validated value.
+     */
+    ref?: string,
 };
 
 export type AccountConsoleConfig = {
     apiUrl: string,
     basePath: string,
     enabled: boolean,
+    ref?: string,
 };
 
 declare global {
@@ -80,6 +89,7 @@ export function resolveAccountConsoleConfig(
         apiUrl: apiUrl.replace(/\/+$/, ''),
         basePath,
         enabled: injected.features?.accountConsole !== false,
+        ref: injected.ref,
     };
 }
 

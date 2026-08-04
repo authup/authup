@@ -33,7 +33,7 @@ import {
     OAuth2ErrorCode,
     unwrapOAuth2Scope,
 } from '@authup/specs';
-import type { LinkProperties } from '@vuecs/link';
+import type { LinkProps } from '@vuecs/link';
 import {
     StoreAuthOrigin,
     injectHTTPClient,
@@ -75,8 +75,8 @@ export default defineComponent({
         clientId: { type: String },
         scopes: { type: Array as PropType<Scope[]> },
         error: { type: Object as PropType<Error> },
-        registerLink: { type: Object as PropType<LinkProperties> },
-        passwordForgotLink: { type: Object as PropType<LinkProperties> },
+        registerLink: { type: Object as PropType<LinkProps> },
+        passwordForgotLink: { type: Object as PropType<LinkProps> },
         realm: { type: Object as PropType<RealmSummary> },
         redirectUriVerified: { type: Boolean, default: false },
     },

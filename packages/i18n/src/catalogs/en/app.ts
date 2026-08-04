@@ -76,4 +76,6 @@ export const TranslatorTranslationAppEnglish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.CONSENT_SCOPES]: 'Granted permissions',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_TITLE]: 'Crypto-shred encryption key?',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_DESCRIPTION]: 'This key is still referenced by {{count}} encrypted secret(s). Deleting it makes them permanently unrecoverable.',
+
+    [TranslatorTranslationAppKey.BACK_TO_APP]: 'Back to {{host}}',
 };

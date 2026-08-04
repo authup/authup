@@ -43,6 +43,7 @@ import {
 } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { injectAccountConsoleConfig } from '../di';
+import { saveAccountConsoleRef, useAccountConsoleRef } from '../ref';
 import { useAccountToasts } from './utils';
 
 export default defineComponent({
@@ -99,43 +100,57 @@ export default defineComponent({
             { namespace: TranslatorTranslationNamespace.ACTION, key: TranslatorTranslationActionKey.LOGIN },
         ]);
 
-        const items = computed<AAccountShellNavItem[]>(() => [
-            {
-                key: 'overview',
-                label: translations.account,
-                icon: 'fa6-solid:bars',
-                link: { to: '/' },
-                active: route.path === '/',
-            },
-            {
-                key: 'password',
-                label: translations.password,
-                icon: 'fa6-solid:key',
-                link: { to: '/password' },
-                active: route.path === '/password',
-            },
-            {
-                key: 'authenticators',
-                label: translations.authenticator,
-                icon: 'fa6-solid:shield-halved',
-                link: { to: '/authenticators' },
-                active: route.path === '/authenticators',
-            },
-            {
-                key: 'sessions',
-                label: translations.session,
-                icon: 'fa6-solid:desktop',
-                link: { to: '/sessions' },
-                active: route.path === '/sessions',
-            },
-            {
-                key: 'applications',
-                label: translations.applications,
-                icon: 'fa6-solid:grip',
-                link: { to: '/applications' },
-                active: route.path === '/applications',
-            },
-        ]);
+        // The trusted value, never the URL. `?ref=` is written into links
+        // for visibility; reading it back would bypass the server's
+        // allowlist.
+        const backRef = useAccountConsoleRef();
+
+        const items = computed<AAccountShellNavItem[]>(() => {
+            // VCLink merges a separate `query` prop into a string `to`
+            // (@vuecs/link's `extendLinkWithQuery`), so this stays within
+            // `LinkProps`'s `to?: string` shape instead of the wider
+            // route-location-object form the component also accepts but
+            // the type does not.
+            const query = backRef.value ? { ref: backRef.value } : undefined;
+
+            return [
+                {
+                    key: 'overview',
+                    label: translations.account,
+                    icon: 'fa6-solid:bars',
+                    link: { to: '/', query },
+                    active: route.path === '/',
+                },
+                {
+                    key: 'password',
+                    label: translations.password,
+                    icon: 'fa6-solid:key',
+                    link: { to: '/password', query },
+                    active: route.path === '/password',
+                },
+                {
+                    key: 'authenticators',
+                    label: translations.authenticator,
+                    icon: 'fa6-solid:shield-halved',
+                    link: { to: '/authenticators', query },
+                    active: route.path === '/authenticators',
+                },
+                {
+                    key: 'sessions',
+                    label: translations.session,
+                    icon: 'fa6-solid:desktop',
+                    link: { to: '/sessions', query },
+                    active: route.path === '/sessions',
+                },
+                {
+                    key: 'applications',
+                    label: translations.applications,
+                    icon: 'fa6-solid:grip',
+                    link: { to: '/applications', query },
+                    active: route.path === '/applications',
+                },
+            ];
+        });
 
         // Full auth-code + PKCE flow against the per-realm `account-console`
         // client (plan 080): per-app session attribution + access-policy
@@ -155,6 +170,8 @@ export default defineComponent({
                     client_id: CLIENT_ACCOUNT_CONSOLE_NAME,
                     realm_id: realmKey,
                 });
+
+                saveAccountConsoleRef(backRef.value);
 
                 window.location.href = buildAuthorizeURL({
                     baseURL: config.apiUrl,
@@ -225,6 +242,7 @@ export default defineComponent({
             authenticated,
             unauthenticated,
             items,
+            backRef,
             translations,
             handleRealmSelect,
             useAnotherAccount,
@@ -238,6 +256,7 @@ export default defineComponent({
         <AAccountShell
             v-if="authenticated && !denied"
             :items="items"
+            :back-link="backRef"
         >
             <RouterView />
         </AAccountShell>

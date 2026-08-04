@@ -17,6 +17,7 @@ import { serveAccountConsolePage } from '../../../ui/index.ts';
 export type AccountControllerOptions = {
     baseURL: string,
     features: StatusResponseFeatures,
+    trustedOrigins: string[],
 };
 
 export type AccountControllerContext = {
@@ -51,6 +52,7 @@ export class AccountController {
         return serveAccountConsolePage(event, {
             baseURL: this.options.baseURL,
             features: this.options.features,
+            trustedOrigins: this.options.trustedOrigins,
         });
     }
 }

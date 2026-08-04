@@ -24,7 +24,7 @@ import { z } from 'zod';
 import { VCButton } from '@vuecs/button';
 import { VCAlert } from '@vuecs/elements';
 import { VCFormGroup, VCFormInput, useSubmitButton } from '@vuecs/forms';
-import type { LinkProperties } from '@vuecs/link';
+import type { LinkProps } from '@vuecs/link';
 import { IFieldValidation } from '@ilingo/validup-vue';
 import { injectHTTPClient, useTranslations, wrapFnWithBusyState } from '../../../core';
 import { AAuthBackLink } from '../../utility';
@@ -47,7 +47,7 @@ export default defineComponent({
     },
     props: {
         realmId: { type: String },
-        backLink: { type: Object as PropType<LinkProperties> },
+        backLink: { type: Object as PropType<LinkProps> },
     },
     emits: ['done', 'failed'],
     setup(props, { emit }) {

@@ -50,18 +50,18 @@
   },
   "homepage": "https://github.com/authup/authup#readme",
   "devDependencies": {
-    "@vuecs/button": "^1.4.0",
+    "@vuecs/button": "^1.4.1",
     "@vuecs/core": "^3.5.0",
-    "@vuecs/design": "^1.1.0",
-    "@vuecs/forms": "^5.4.0",
-    "@vuecs/theme-tailwind": "^6.4.0",
+    "@vuecs/design": "^1.2.0",
+    "@vuecs/forms": "^5.4.1",
+    "@vuecs/theme-tailwind": "^6.4.1",
     "tailwindcss": "^4.3.2"
   },
   "peerDependencies": {
     "@authup/client-web-kit": "^1.0.0-beta.58",
     "@vuecs/core": "^3.5.0",
-    "@vuecs/design": "^1.1.0",
-    "@vuecs/theme-tailwind": "^6.4.0",
+    "@vuecs/design": "^1.2.0",
+    "@vuecs/theme-tailwind": "^6.4.1",
     "tailwindcss": "^4.3.2"
   },
   "peerDependenciesMeta": {

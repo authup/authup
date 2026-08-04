@@ -43,6 +43,43 @@ describe('AAccountShell', () => {
 
         expect(wrapper.find('.a-account-shell-body [data-test="content"]').exists()).toBeTruthy();
     });
+
+    it('should render the back link labelled with the URL host when backLink is parseable', () => {
+        const { wrapper } = mountKitComponent(AAccountShell, { items, backLink: 'https://example.com/dashboard' });
+
+        // `.a-account-shell-back` is the <nav> wrapper; the anchor is the
+        // vuecs breadcrumb link inside it.
+        const nav = wrapper.find('.a-account-shell-back');
+        expect(nav.exists()).toBeTruthy();
+
+        const link = nav.find('a');
+        expect(link.attributes('href')).toEqual('https://example.com/dashboard');
+        expect(link.text()).toContain('example.com');
+    });
+
+    it('should render no back link when backLink is not a parseable URL', () => {
+        const { wrapper } = mountKitComponent(AAccountShell, { items, backLink: 'not-a-url' });
+
+        expect(wrapper.find('.a-account-shell-back').exists()).toBeFalsy();
+    });
+
+    it('should render no back link for a non-http(s) scheme', () => {
+        // Defence in depth: validating backLink is the host's job, but the
+        // component must not render an ftp:/app-scheme link if a host
+        // mis-wires it. `javascript:` has no host and falls out anyway.
+        // eslint-disable-next-line no-script-url
+        for (const backLink of ['ftp://example.com/x', 'javascript:alert(1)']) {
+            const { wrapper } = mountKitComponent(AAccountShell, { items, backLink });
+
+            expect(wrapper.find('.a-account-shell-back').exists()).toBeFalsy();
+        }
+    });
+
+    it('should render no back link when backLink is absent', () => {
+        const { wrapper } = mountKitComponent(AAccountShell, { items });
+
+        expect(wrapper.find('.a-account-shell-back').exists()).toBeFalsy();
+    });
 });
 
 describe('AAuthApp', () => {

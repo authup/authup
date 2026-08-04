@@ -13,7 +13,7 @@ import type {
     Scope,
 } from '@authup/core-kit';
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
-import type { LinkProperties } from '@vuecs/link';
+import type { LinkProps } from '@vuecs/link';
 import { useToast } from '@vuecs/overlays';
 import { computed, defineComponent } from 'vue';
 import { useBasePath } from '../base-path';
@@ -37,7 +37,7 @@ export default defineComponent({
 
         const withBasePath = useBasePath();
 
-        const buildWorkflowLink = (path: string) : LinkProperties => {
+        const buildWorkflowLink = (path: string) : LinkProps => {
             const params = new URLSearchParams();
             if (app.data.codeRequest && app.data.codeRequest.realm_id) {
                 params.set('realmId', app.data.codeRequest.realm_id);
