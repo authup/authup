@@ -306,6 +306,10 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
                 'https://app.example.com@evil.test/callback',
                 'https://app.example.com:8443/callback',
                 'http://app.example.com/callback',
+                // a path-less URI used to satisfy every pattern sharing its
+                // literal prefix, which let any origin collect the code
+                'https://attacker.test',
+                'https://attacker.test?code=1',
             ];
 
             for (const redirectUri of candidates) {

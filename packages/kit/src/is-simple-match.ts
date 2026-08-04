@@ -8,18 +8,20 @@
 /**
  * Check if the remaining pattern can match an empty value.
  *
- * That is the case for a run of wildcards, optionally preceded by the
- * separator in front of the first one, so `https://example.com` matches
- * `https://example.com/**`.
+ * Wildcards match the empty run, and a separator in front of a wildcard is
+ * optional once the value is exhausted, so `https://example.com` matches
+ * `https://example.com/**`. Anything else has to be present in the value.
  */
 function matchesEmpty(pattern: string, index: number) : boolean {
     let i = index;
 
-    if (pattern[i] === '/' && pattern[i + 1] === '*') {
-        i++;
-    }
-
     while (i < pattern.length) {
+        if (pattern[i] === '/' && pattern[i + 1] === '*') {
+            i++;
+
+            continue;
+        }
+
         if (pattern[i] !== '*') {
             return false;
         }
@@ -39,8 +41,8 @@ function matchesEmpty(pattern: string, index: number) : boolean {
  *
  * `*` matches a run of characters (the empty run included) that does not
  * cross a `/`, `**` matches the rest of the value, separators included.
- * A pattern ending in `/*` or `/**` also matches the value that stops in
- * front of that separator.
+ * Once the value is exhausted, a separator in front of a wildcard is
+ * optional, so `https://example.com` matches `https://example.com/**`.
  *
  * The comparison is case sensitive, so a caller matching URLs has to
  * canonicalize the value first.
