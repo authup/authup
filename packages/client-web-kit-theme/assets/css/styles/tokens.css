@@ -45,7 +45,7 @@
         /*
          * auth chrome (.a-auth-shell / .a-auth-gadget / .a-auth-back-link
          * and the realm chooser) — the shared logged-out surfaces rendered
-         * by client-web's auth layout and the embedded SSR auth pages.
+         * by the admin console's auth layout and the embedded SSR auth pages.
          */
         --authup-auth-accent:                   var(--vc-color-primary-500);
         --authup-auth-accent-alt:               #cc8181;

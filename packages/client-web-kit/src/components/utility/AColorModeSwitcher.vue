@@ -14,7 +14,7 @@ import {
 import { useTranslations } from '../../core';
 
 // Presentational on purpose: color-mode *storage* is framework-specific
-// (client-web uses @vuecs/nuxt's cookie-backed useColorMode()), so the
+// (the admin console uses @vuecs/nuxt's cookie-backed useColorMode()), so the
 // component only owns the icon, the localized aria-labels and the toggle
 // event — bind it with `v-model:dark="isDark"`.
 export default defineComponent({

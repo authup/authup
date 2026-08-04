@@ -13,13 +13,17 @@ import { LayoutKey } from '../../config/layout';
 // Self-service moved to the account console, served by server-core on the
 // IdP origin. This stub keeps the sidebar entry and old bookmarks working
 // by mapping each retired settings path onto its account console route.
-const PATH_MAP : Record<string, string> = {
-    '': '/',
-    password: '/password',
-    mfa: '/authenticators',
-    sessions: '/sessions',
-    applications: '/applications',
-};
+// A Map rather than an object literal: the key comes from the URL, and a
+// plain record is read through Object.prototype, so `/settings/constructor`
+// would resolve to a function instead of undefined and never reach the
+// fallback below.
+const PATH_MAP = new Map<string, string>([
+    ['', '/'],
+    ['password', '/password'],
+    ['mfa', '/authenticators'],
+    ['sessions', '/sessions'],
+    ['applications', '/applications'],
+]);
 
 export default defineComponent({
     async setup() {
@@ -30,7 +34,7 @@ export default defineComponent({
         const key = Array.isArray(segments) ? segments.join('/') : (segments ?? '');
 
         await navigateTo(
-            useAccountConsoleURL(PATH_MAP[key] ?? '/'),
+            useAccountConsoleURL(PATH_MAP.get(key) ?? '/'),
             { external: true, redirectCode: 302 },
         );
     },

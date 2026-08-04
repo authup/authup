@@ -9,7 +9,7 @@ import { VCToastProvider, VCToaster } from '@vuecs/overlays';
 import { defineComponent } from 'vue';
 import AAuthGadgets from './AAuthGadgets.vue';
 
-// Shared shell for the logged-out auth surfaces (client-web's auth layout
+// Shared shell for the logged-out auth surfaces (the admin console's auth layout
 // + the embedded SSR app root):
 //
 //   - <VCToastProvider> wraps the root so any descendant <VCToaster> (or

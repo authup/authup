@@ -14,6 +14,9 @@ import {
     setAccountConsolePackagePath,
 } from '../account-console/index.ts';
 import { resolveAuthConsoleDistPath, setAuthConsolePackagePath } from '../auth-console/index.ts';
+// Type position only (see AUTH_CONSOLE_CONTRACT_VERSION_IN_SYNC below), so
+// the runtime stays a dist-file read and the layering rule holds.
+import type { CONTRACT_VERSION as AuthConsoleContractVersion } from '@authup/client-auth-console';
 import type { ConsolePackageOptions } from './types.ts';
 
 /**
@@ -24,6 +27,21 @@ import type { ConsolePackageOptions } from './types.ts';
  * change breaks a package built against the previous shape.
  */
 export const AUTH_CONSOLE_CONTRACT_VERSION = 1;
+
+/**
+ * Compile-time link to the value this constant mirrors.
+ *
+ * The runtime assert below only fires for a SUBSTITUTED package, so a bump
+ * on one side and not the other would otherwise go unnoticed until a
+ * substituted console failed at boot in someone else's deployment. The
+ * annotation costs nothing at runtime (types are erased) and fails this
+ * package's build the moment the two drift.
+ */
+type AuthConsoleContractVersionInSync =    typeof AuthConsoleContractVersion extends typeof AUTH_CONSOLE_CONTRACT_VERSION ?
+    true :
+    never;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const AUTH_CONSOLE_CONTRACT_VERSION_IN_SYNC : AuthConsoleContractVersionInSync = true;
 
 /**
  * The marker the account console's index.html must carry. It is that
