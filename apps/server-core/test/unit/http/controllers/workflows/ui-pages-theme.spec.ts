@@ -97,7 +97,7 @@ function createThemeDirectory() : { themePath: string, outsidePath: string } {
 }
 
 describe('http/controllers/workflows/ui-pages-theme', () => {
-    const { themePath } = createThemeDirectory();
+    const { themePath, outsidePath } = createThemeDirectory();
 
     const suite : TestHTTPApplication = createTestApplication({
         config: (config) => {
@@ -274,9 +274,33 @@ describe('http/controllers/workflows/ui-pages-theme', () => {
             // Following symlinks is mandatory (a ConfigMap volume is a
             // symlink farm), so containment is enforced by realpath, not by
             // refusing links.
+            //
+            // The link is (re)created inside the CURRENT revision on purpose.
+            // The fixture puts it in the first revision, which the swap test
+            // above deletes, so asserting a 404 without this would only prove
+            // the file is missing and would pass with the containment check
+            // removed.
+            const revision = fs.readlinkSync(path.join(themePath, '..data'));
+            const assetsPath = path.join(themePath, revision, 'assets');
+            const linkPath = path.join(assetsPath, 'escape.css');
+            fs.rmSync(linkPath, { force: true });
+            fs.symlinkSync(outsidePath, linkPath);
+
+            // Control: the link resolves and its target is readable through
+            // the mount, so a 404 can only come from containment. Without it
+            // this test cannot tell "refused" from "not there".
+            expect(fs.readFileSync(linkPath, 'utf-8')).toContain('leaked');
+
             const response = await httpRequest(suite, 'GET', '/theme/escape.css');
 
             expect(response.status).toEqual(404);
+
+            // Control: a legitimate asset in that same directory IS a symlink
+            // too and must still be served, so the 404 above is containment
+            // and not a blanket refusal to follow links.
+            const legitimate = await httpRequest(suite, 'GET', '/theme/theme.css');
+
+            expect(legitimate.status).toEqual(200);
         });
 
         it('should reject an extension outside the allowlist', async () => {

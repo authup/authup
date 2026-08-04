@@ -121,6 +121,36 @@ async function probe(url) {
     }
 }
 
+/**
+ * Assert that server-core can actually resolve and serve a console package.
+ *
+ * The `locateUpSync` walk that finds `@authup/client-auth-console` and
+ * `@authup/client-account-console` exists specifically for the published
+ * install layout, which only the packed scenario reproduces. Nothing else
+ * exercises it: a resolution regression, or a tarball shipped without its
+ * bundle (`npm pack` does not run `prepublishOnly`), degrades silently
+ * because boot still succeeds and only the console routes break.
+ */
+async function assertConsoleServed(name, url, marker) {
+    let response;
+    try {
+        response = await fetch(url, { redirect: 'follow' });
+    } catch (e) {
+        throw fail(`${name}: ${url} could not be reached (${e.message}).`);
+    }
+
+    if (response.status !== 200) {
+        throw fail(`${name}: ${url} answered ${response.status}, expected 200. The console package is probably unresolved or unbuilt.`);
+    }
+
+    const body = await response.text();
+    if (!body.includes(marker)) {
+        throw fail(`${name}: ${url} answered 200 but the body does not contain ${marker}, so the console shell was not rendered.`);
+    }
+
+    log(`${name}: ${url} served the console shell.`);
+}
+
 async function waitUntilReady(name, url, child) {
     const startedAt = Date.now();
 
@@ -208,6 +238,24 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
     try {
         await waitUntilReady(`${name}/server-core`, SERVER_URL, child);
         await waitUntilReady(`${name}/client-admin-console`, WEB_URL, child);
+
+        // Both consoles are RUNTIME dependencies of server-core, resolved out
+        // of node_modules and served from their built dist. Probing the root
+        // URLs alone leaves that resolution untested.
+        await assertConsoleServed(
+            `${name}/client-auth-console`,
+            `${SERVER_URL}/logout`,
+            'window.__AUTHUP__',
+        );
+        // window.__AUTHUP__ rather than the shell markup: it only appears if
+        // the `<!--account-config-->` marker was found and replaced, which is
+        // that console's entire runtime contract. Without it the SPA silently
+        // degrades to deriving its API URL from the origin.
+        await assertConsoleServed(
+            `${name}/client-account-console`,
+            `${SERVER_URL}/account`,
+            'window.__AUTHUP__',
+        );
 
         log(`${name}: sending SIGTERM.`);
         child.kill('SIGTERM');
