@@ -6,17 +6,11 @@
  */
 
 import type { ColorMode } from '@vuecs/design';
-import { bindColorMode } from '@vuecs/design';
+import { bindColorMode, isColorMode } from '@vuecs/design';
 import { computed } from 'vue';
 import { createCookieRef } from './cookie';
 
 const COOKIE_NAME = 'vc-color-mode';
-
-const COLOR_MODES: ColorMode[] = ['light', 'dark', 'system'];
-
-function isColorMode(value: string): value is ColorMode {
-    return (COLOR_MODES as string[]).includes(value);
-}
 
 /**
  * Non-Nuxt counterpart of `@vuecs/nuxt`'s `useColorMode()`: the same
