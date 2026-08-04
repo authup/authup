@@ -57,6 +57,17 @@ export default defineConfig(({ command }) => ({
         }),
     ],
     resolve: {
+        // The kit is bundled from source (see the aliases below), so `pinia`
+        // and `vue` resolve from packages/client-web-kit/node_modules for kit
+        // modules and from this app for app modules. Two copies of pinia mean
+        // two `Symbol('pinia')` values, so `app.use(pinia)` provides under one
+        // and the kit's `injectStore()` injects the other. It only appears to
+        // work because installing the store calls the factory with an explicit
+        // instance, which sets `activePinia` inside the kit's copy - a MODULE
+        // GLOBAL. Every SSR request builds its own pinia, so under concurrent
+        // renders that global points at whichever request installed last and a
+        // kit component can read another request's session.
+        dedupe: ['pinia', 'vue'],
         alias: {
             '@authup/access': path.join(packagesRoot, 'access', 'src'),
             '@authup/core-kit': path.join(packagesRoot, 'core-kit', 'src'),

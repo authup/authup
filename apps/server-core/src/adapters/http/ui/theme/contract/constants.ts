@@ -56,20 +56,68 @@ export const THEME_MANIFEST_VERSION = 1;
  * `@authup/client-web-kit-theme`, so nothing could bind the two and it
  * would rot in both directions: a newly added CSS token would fail
  * validation for a legitimate override, and a removed one would stay
- * accepted. The grammar cannot rot, and it is the same validation an
- * untrusted (per-realm) token source would need unchanged.
+ * accepted. The grammar cannot rot.
+ *
+ * It is NOT sufficient for an untrusted (per-realm) token source, and a
+ * later rung must not adopt it unchanged. Values are guarded by a denylist
+ * of CSS functions, and a denylist over a language that keeps gaining
+ * functions leaks by construction: `image-set()` and `src()` already had
+ * to be added after `url()`. Filesystem input is operator trust, equal to
+ * the process, so a denylist is proportionate here. Untrusted input needs
+ * an allowlist of accepted value SHAPES (a colour, a length, a keyword)
+ * per token, which is a different validator.
  */
 export const THEME_TOKEN_NAME_PATTERN = /^--[a-z][a-z0-9-]*$/;
 
 export const THEME_TOKEN_VALUE_MAX_LENGTH = 256;
 
 /**
+ * Every CSS function that can load a remote resource.
+ *
+ * Blocking `url(` alone does not close the request-emitting-sink hole:
+ * `image-set()`, `image()`, `src()` and `cross-fade()` all take a bare
+ * string URL, and a token like `--authup-auth-logo-image` is substituted
+ * straight into an image-accepting property. `element()` and `paint()`
+ * cannot fetch, but they render document content into a paint sink and
+ * have no business in an operator token either.
+ *
+ * A denylist over function names is still a denylist, so this list is the
+ * floor rather than the argument: the values it guards are operator
+ * authored, and an operator can already ship arbitrary CSS through
+ * `theme.css`. It exists so a value cannot QUIETLY do something the
+ * grammar advertises as impossible. A per-realm (untrusted) token source
+ * must not reuse it as-is; see the note on the name pattern below.
+ */
+const THEME_TOKEN_VALUE_FORBIDDEN_FUNCTIONS = [
+    'url',
+    'expression',
+    'image',
+    'image-set',
+    'src',
+    'cross-fade',
+    'element',
+    'paint',
+];
+
+/**
  * Keeps a token value from closing the declaration block, opening a tag,
  * starting a new at-rule or comment, or turning the server-emitted token
- * block into a request-emitting sink (`url(`). Layer 2 (`theme.css`) may
- * of course use `url()`; that asymmetry is deliberate and documented.
+ * block into a request-emitting sink. Layer 2 (`theme.css`) may of course
+ * use `url()`; that asymmetry is deliberate and documented.
+ *
+ * `{` is forbidden alongside `}`: it opens a block inside the declaration,
+ * which swallows the rule that follows. One stray brace in a light token
+ * silently absorbs the whole `.dark` rule, so dark mode stops applying
+ * with no error anywhere.
+ *
+ * Vendor prefixes are covered (`-webkit-image-set(`), and so is whitespace
+ * before the paren; escapes cannot be used to smuggle a name past this
+ * because `\` is forbidden outright.
  */
-export const THEME_TOKEN_VALUE_FORBIDDEN_PATTERN = /[}<>;@\\]|\/\*|url\s*\(|expression\s*\(/i;
+export const THEME_TOKEN_VALUE_FORBIDDEN_PATTERN = new RegExp(
+    `[{}<>;@\\\\]|\\/\\*|(?:^|[^a-z0-9-])(?:-[a-z]+-)?(?:${THEME_TOKEN_VALUE_FORBIDDEN_FUNCTIONS.join('|')})\\s*\\(`,
+    'i',
+);
 
 /**
  * Every asset kind a theme may contain, and the content type it is pinned

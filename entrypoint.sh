@@ -38,7 +38,15 @@ case "${SERVICE}" in
         export NUXT_PORT=3000
         exec npm run "${COMMAND}" --workspace=apps/client-admin-console
         ;;
-    *) echo "Unknown service: ${SERVICE}";;
+    # Must exit non-zero: the container would otherwise terminate
+    # SUCCESSFULLY having started nothing, which reads as a healthy run. The
+    # client/web -> client/admin-console rename makes this reachable for any
+    # deployment still passing the old name.
+    *)
+        echo "Unknown service: ${SERVICE}" >&2
+        echo "Expected one of: server/core, client/admin-console" >&2
+        exit 1
+        ;;
 esac
 
 

@@ -6,7 +6,7 @@
  */
 
 import { isObject } from '@authup/kit';
-import type { MergeableProvisioningEntity } from './types.ts';
+import type { MergeProvisioningOptions, MergeableProvisioningEntity } from './types.ts';
 
 export function buildProvisioningEntityKey(
     attributes: MergeableProvisioningEntity['attributes'],
@@ -18,6 +18,7 @@ export function buildProvisioningEntityKey(
 export function mergeProvisioningEntities<T extends MergeableProvisioningEntity>(
     target: T[] | undefined,
     source: T[] | undefined,
+    options: MergeProvisioningOptions = {},
 ): T[] | undefined {
     if (!source) return target;
     if (!target) return [...source];
@@ -32,7 +33,7 @@ export function mergeProvisioningEntities<T extends MergeableProvisioningEntity>
 
         const idx = result.findIndex((r) => buildProvisioningEntityKey(r.attributes) === key);
         if (idx !== -1) {
-            result[idx] = mergeProvisioningEntity(result[idx], item) as T;
+            result[idx] = mergeProvisioningEntity(result[idx], item, options) as T;
         } else {
             result.push(item);
         }
@@ -56,17 +57,23 @@ export function mergeProvisioningEntities<T extends MergeableProvisioningEntity>
 export function mergeProvisioningEntity(
     target: MergeableProvisioningEntity,
     source: MergeableProvisioningEntity,
+    options: MergeProvisioningOptions = {},
 ): MergeableProvisioningEntity {
     const output = { ...target, ...source };
 
     output.attributes = { ...target.attributes, ...source.attributes };
 
+    const inheritStrategy = options.inheritStrategy ?? true;
     if (target.strategy && !source.strategy) {
-        output.strategy = target.strategy;
+        if (inheritStrategy) {
+            output.strategy = target.strategy;
+        } else {
+            delete output.strategy;
+        }
     }
 
     if (target.relations && source.relations) {
-        output.relations = mergeProvisioningRecord(target.relations, source.relations);
+        output.relations = mergeProvisioningRecord(target.relations, source.relations, options);
     } else if (target.relations && !source.relations) {
         output.relations = target.relations;
     }
@@ -78,7 +85,7 @@ export function mergeProvisioningEntity(
     }
 
     if (target.children && source.children) {
-        output.children = mergeProvisioningEntities(target.children, source.children);
+        output.children = mergeProvisioningEntities(target.children, source.children, options);
     } else if (target.children && !source.children) {
         output.children = target.children;
     }
@@ -89,17 +96,22 @@ export function mergeProvisioningEntity(
 function mergeProvisioningRecord(
     target: Record<string, unknown>,
     source: Record<string, unknown>,
+    options: MergeProvisioningOptions = {},
 ): Record<string, unknown> {
     const output : Record<string, unknown> = { ...target };
     for (const key of Object.keys(source)) {
         output[key] = key in target ?
-            mergeProvisioningValue(target[key], source[key]) :
+            mergeProvisioningValue(target[key], source[key], options) :
             source[key];
     }
     return output;
 }
 
-function mergeProvisioningValue(target: unknown, source: unknown): unknown {
+function mergeProvisioningValue(
+    target: unknown,
+    source: unknown,
+    options: MergeProvisioningOptions = {},
+): unknown {
     if (typeof target === 'undefined') return source;
     if (typeof source === 'undefined') return target;
 
@@ -108,13 +120,14 @@ function mergeProvisioningValue(target: unknown, source: unknown): unknown {
             return mergeProvisioningEntities(
                 target as MergeableProvisioningEntity[],
                 source as MergeableProvisioningEntity[],
+                options,
             );
         }
         return [...new Set([...target, ...source])];
     }
 
     if (isObject(target) && isObject(source)) {
-        return mergeProvisioningRecord(target, source);
+        return mergeProvisioningRecord(target, source, options);
     }
 
     return source;

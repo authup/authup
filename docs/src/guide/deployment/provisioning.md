@@ -205,10 +205,15 @@ Semantics:
   every boot. `absent` removes the named entity from every realm.
 - **An explicit realm block wins.** For a realm that is also declared
   explicitly (in any provisioning file), the wildcard entry is deep-merged
-  UNDER the explicit block with the same rules used when two files declare
-  the same entity: the explicit block wins per attribute, relation lists
-  are unioned, and an explicit child's `strategy` wins over the wildcard
-  child's.
+  UNDER the explicit block: the explicit block wins per attribute and
+  relation lists are unioned.
+
+  A declared entity also owns its own lifecycle. When both sides declare the
+  same entity, the explicit child's `strategy` applies, and if it declares
+  none it falls back to the default (`createOnly`) rather than inheriting the
+  wildcard child's. This is what makes the sweep below safe to combine with an
+  explicit declaration: a wildcard `absent` child removes the entity from
+  every realm that does *not* declare it, and leaves the realms that do.
 - **Reserved client names are rejected.** A wildcard entry declaring
   `system`, `admin-console` or `account-console` fails validation at
   startup: those clients are system-owned and reasserted from

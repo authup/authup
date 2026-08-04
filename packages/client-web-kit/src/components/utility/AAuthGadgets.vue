@@ -9,7 +9,7 @@ import { defineComponent } from 'vue';
 import AColorModeSwitcher from './AColorModeSwitcher.vue';
 import { ALanguageSwitcherDropdown } from './ALanguageSwitcherDropdown';
 
-// Top-right control cluster shared by every auth surface (client-web's
+// Top-right control cluster shared by every auth surface (the admin console's
 // auth layout + the embedded SSR app + the account console): color mode
 // and language, plus a slot for host-specific gadgets (the account
 // console appends its user chip + sign-out here so the page has ONE top

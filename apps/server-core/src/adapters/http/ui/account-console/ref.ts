@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isSimpleMatch } from '@authup/kit';
+import { isSimpleURLMatch } from '@authup/kit';
 
 /**
  * Upper bound on an accepted `ref`, matching the cap
@@ -26,9 +26,11 @@ export const ACCOUNT_CONSOLE_REF_MAX_LENGTH = 2000;
  * host (`admin.example.com@evil.test`) and a scheme downgrade.
  *
  * The value is canonicalized through `URL` before matching, so a host
- * differing only in case still matches (`isSimpleMatch` is case-sensitive,
- * while a host is not). The canonical form is what gets returned, and it is
- * what the page embeds.
+ * differing only in case still matches (the matcher is case-sensitive, while
+ * a host is not). The canonical form is what gets returned, and it is what
+ * the page embeds. `isSimpleURLMatch` canonicalizes as well, which is what
+ * keeps a wildcard in a trusted origin from escaping the authority; doing it
+ * here too is what lets this function RETURN the canonical form.
  *
  * Returns undefined for anything that does not pass. The caller drops it
  * silently, the way `sanitizeRelativeRedirect` drops a bad workflow
@@ -60,7 +62,7 @@ export function resolveAccountConsoleRef(
 
     const candidate = `${url.origin}${url.pathname}${url.search}${url.hash}`;
 
-    if (!isSimpleMatch(candidate, trustedOrigins.map((origin) => `${origin}/**`))) {
+    if (!isSimpleURLMatch(candidate, trustedOrigins.map((origin) => `${origin}/**`))) {
         return undefined;
     }
 

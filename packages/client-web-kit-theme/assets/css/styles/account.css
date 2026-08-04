@@ -81,27 +81,7 @@
         font-weight: 600;
     }
 
-    /*
-     * The return link to the referring application, leading the tab strip.
-     * A trailing rule separates it from the tabs: it leaves the console
-     * rather than selecting a section, so it must not read as a
-     * permanently-inactive tab. Muted so the active tab stays dominant.
-     */
-    .a-account-shell-nav-link--back {
-        color: var(--authup-account-surface-color-muted);
-        gap: 0.375rem;
-        margin-right: 0.25rem;
-        padding-right: 0.75rem;
-        border-right: 1px solid var(--authup-account-surface-border-color);
-        border-radius: 0;
-    }
-
-    .a-account-shell-nav-link--back:hover {
-        color: var(--authup-account-surface-color);
-        background: none;
-    }
-
-.a-account-shell-nav {
+    .a-account-shell-nav {
         display: flex;
         flex-wrap: wrap;
         gap: 0.35rem;
@@ -126,6 +106,31 @@
     .a-account-shell-nav-link--active:hover {
         color: var(--authup-account-nav-active-color);
         background: var(--authup-account-nav-active-background);
+    }
+
+    /*
+     * The return link to the referring application, leading the tab strip.
+     * A trailing rule separates it from the tabs: it leaves the console
+     * rather than selecting a section, so it must not read as a
+     * permanently-inactive tab. Muted so the active tab stays dominant.
+     *
+     * Declared AFTER the base link rule on purpose. Both carry the same
+     * specificity and sit in the same layer, so source order decides, and
+     * placed before it the base rule silently won for every property they
+     * share (including the hover background this rule exists to remove).
+     */
+    .a-account-shell-nav-link--back {
+        color: var(--authup-account-surface-color-muted);
+        gap: 0.375rem;
+        margin-right: 0.25rem;
+        padding-right: 0.75rem;
+        border-right: 1px solid var(--authup-account-surface-border-color);
+        border-radius: 0;
+    }
+
+    .a-account-shell-nav-link--back:hover {
+        color: var(--authup-account-surface-color);
+        background: none;
     }
 
     .a-account-shell-body {

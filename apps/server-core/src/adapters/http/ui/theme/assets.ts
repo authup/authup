@@ -38,7 +38,7 @@ const REQUEST_PATH_PATTERN = /^[a-z0-9][a-z0-9._/-]*$/i;
  */
 export function createThemeAssetsHandler(provider: IThemeProvider) : Handler {
     return defineCoreHandler(async (event) => {
-        const assetsPath = provider.getAssetsPath();
+        const assetsPath = await provider.getAssetsPath();
         if (!assetsPath) {
             event.response.status = 404;
 

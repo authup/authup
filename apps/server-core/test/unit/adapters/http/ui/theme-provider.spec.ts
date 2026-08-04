@@ -15,6 +15,7 @@ import {
     it, 
 } from 'vitest';
 import { ThemeProvider } from '../../../../../src/adapters/http/ui/theme/index.ts';
+import { THEME_MANIFEST_REVALIDATE_INTERVAL } from '../../../../../src/adapters/http/ui/theme/constants.ts';
 
 const roots : string[] = [];
 
@@ -62,7 +63,7 @@ describe('adapters/http/ui/theme (ThemeProvider)', () => {
         await provider.load();
 
         expect(await provider.getManifest()).toBeUndefined();
-        expect(provider.getAssetsPath()).toBeDefined();
+        expect(await provider.getAssetsPath()).toBeDefined();
     });
 
     it('should ignore an assets path that is not a directory', async () => {
@@ -71,7 +72,7 @@ describe('adapters/http/ui/theme (ThemeProvider)', () => {
         const provider = new ThemeProvider({ directoryPath: root });
         await provider.load();
 
-        expect(provider.getAssetsPath()).toBeUndefined();
+        expect(await provider.getAssetsPath()).toBeUndefined();
     });
 
     it('should fail the boot when the manifest is a directory', async () => {
@@ -89,7 +90,29 @@ describe('adapters/http/ui/theme (ThemeProvider)', () => {
         const provider = new ThemeProvider({ directoryPath: root });
         await provider.load();
 
-        expect(provider.getAssetsPath()).toBeUndefined();
+        expect(await provider.getAssetsPath()).toBeUndefined();
+    });
+
+    it('should pick up an assets directory created after the boot', async () => {
+        // Captured once at boot, an operator adding assets/ later (or a
+        // ConfigMap gaining it) would 404 every asset until the pod restarts,
+        // even though the manifest itself hot-reloads and can start
+        // referencing them.
+        const root = createDirectory({ 'theme.json': JSON.stringify({ version: 1 }) });
+
+        const provider = new ThemeProvider({ directoryPath: root });
+        await provider.load();
+
+        expect(await provider.getAssetsPath()).toBeUndefined();
+
+        fs.mkdirSync(path.join(root, 'assets'), { recursive: true });
+
+        // The resolution rides the same debounce as the manifest reload.
+        await new Promise((resolve) => {
+            setTimeout(resolve, THEME_MANIFEST_REVALIDATE_INTERVAL + 50);
+        });
+
+        expect(await provider.getAssetsPath()).toBeDefined();
     });
 
     describe('head fragment', () => {

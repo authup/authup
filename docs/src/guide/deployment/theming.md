@@ -119,10 +119,28 @@ docker run --rm -p 3001:3001 \
   authup/authup
 ```
 
-Open `http://localhost:3001/authorize?response_type=code&client_id=admin-console`.
-The submit button should be red. Check the startup log if not: authup prints
-the resolved theme directory, whether the manifest loaded, and every file it
-will serve.
+The quickest check is `http://localhost:3001/logout`. It is served by the
+same console and carries the same theme, and it takes no parameters.
+
+To see the accent on the login form itself, open the hosted login page. Note
+that `/authorize` rejects an incomplete request by rendering an error card
+(with a `200`, so the page still loads), and every parameter below is
+required:
+
+```text
+http://localhost:3001/authorize?response_type=code&client_id=admin-console&realm_id=master&scope=openid&state=devstate&code_challenge=devchallenge&redirect_uri=http%3A%2F%2Flocalhost%3A3001%2F
+```
+
+The submit button should be red. `realm_id` is needed because a client
+identified by name is only unique per realm and every realm carries the
+same-named system clients; `state` (at least 5 characters) and
+`code_challenge` are required because `admin-console` is a public client; and
+`redirect_uri` has to match one of its registered patterns, which are derived
+from `PUBLIC_URL` and `TRUSTED_ORIGINS`.
+
+Check the startup log if the colour does not appear: authup prints the
+resolved theme directory, whether the manifest loaded, and every file it will
+serve.
 
 **4. Add the surfaces.** Colours split into an accent (above) and the surface
 ramp everything else derives from. Add to `tokens`, and mirror the

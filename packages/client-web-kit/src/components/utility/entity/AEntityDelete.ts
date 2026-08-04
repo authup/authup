@@ -123,7 +123,7 @@ const AEntityDelete = defineComponent({
         // in consumers/tests that skip @vuecs/overlays. `useAlertDialog()` only
         // calls inject() (no lifecycle hooks), so this one-time conditional
         // resolution in setup is safe. When enabled it injects the app-level
-        // manager (host: <VCAlertDialogProvider> in the client-web default
+        // manager (host: <VCAlertDialogProvider> in the admin console default
         // layout) and resolves true (Delete) / false (Abort / Escape); on the
         // server it resolves false without enqueuing, but onClick is client-only.
         const confirmDialog = props.withPrompt ? useAlertDialog() : undefined;

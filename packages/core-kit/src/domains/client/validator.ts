@@ -8,10 +8,51 @@
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
-import { ValidatorGroup } from '@authup/kit';
+import { ValidatorGroup, patternHasGlobstarInAuthority } from '@authup/kit';
 import type { Client } from './entity';
 import { isClientNameValid } from './helpers';
 import { ClientAuthMethod, ClientTokenBindingMethod } from './constants';
+
+/**
+ * Schema for a comma separated list of redirect patterns.
+ *
+ * Each element must be a URL, and none may place a `**` in its authority.
+ * `**` matches the rest of the value outright, so `https://**.example.com/**`
+ * reads as "any subdomain of example.com" but accepts every origin, which
+ * would make the allowlist meaningless. A single `*` stays supported: the
+ * matcher canonicalizes the candidate first, so a host wildcard cannot reach
+ * past the authority.
+ */
+function buildRedirectPatternSchema(name: string) {
+    return z
+        .string()
+        .check((ctx) => {
+            const validator = z.url();
+            const urls = ctx.value.split(',');
+            for (const url of urls) {
+                try {
+                    validator.parse(url);
+                } catch (e) {
+                    ctx.issues.push({
+                        input: url,
+                        code: 'custom',
+                        message: e instanceof Error ? e.message : `The ${name} is not valid.`,
+                    });
+
+                    continue;
+                }
+
+                if (patternHasGlobstarInAuthority(url)) {
+                    ctx.issues.push({
+                        input: url,
+                        code: 'custom',
+                        message: `The ${name} must not use ** in the host, it would match every origin. Use a single * for a host wildcard.`,
+                    });
+                }
+            }
+        })
+        .nullable();
+}
 
 export class ClientValidator extends Container<Client> {
     protected override initialize() {
@@ -110,51 +151,13 @@ export class ClientValidator extends Container<Client> {
         this.mount(
             'redirectUri',
             { optional: true },
-            createValidator(
-                z
-                    .string()
-                    .check((ctx) => {
-                        const validator = z.url();
-                        const urls = ctx.value.split(',');
-                        for (const url of urls) {
-                            try {
-                                validator.parse(url);
-                            } catch (e) {
-                                ctx.issues.push({
-                                    input: url,
-                                    code: 'custom',
-                                    message: e instanceof Error ? e.message : 'The redirectUri is not valid.',
-                                });
-                            }
-                        }
-                    })
-                    .nullable(),
-            ),
+            createValidator(buildRedirectPatternSchema('redirectUri')),
         );
 
         this.mount(
             'postLogoutRedirectUri',
             { optional: true },
-            createValidator(
-                z
-                    .string()
-                    .check((ctx) => {
-                        const validator = z.url();
-                        const urls = ctx.value.split(',');
-                        for (const url of urls) {
-                            try {
-                                validator.parse(url);
-                            } catch (e) {
-                                ctx.issues.push({
-                                    input: url,
-                                    code: 'custom',
-                                    message: e instanceof Error ? e.message : 'The postLogoutRedirectUri is not valid.',
-                                });
-                            }
-                        }
-                    })
-                    .nullable(),
-            ),
+            createValidator(buildRedirectPatternSchema('postLogoutRedirectUri')),
         );
 
         this.mount(
