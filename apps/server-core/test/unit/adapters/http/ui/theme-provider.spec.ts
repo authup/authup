@@ -65,6 +65,24 @@ describe('adapters/http/ui/theme (ThemeProvider)', () => {
         expect(provider.getAssetsPath()).toBeDefined();
     });
 
+    it('should ignore an assets path that is not a directory', async () => {
+        const root = createDirectory({ assets: 'not a directory' });
+
+        const provider = new ThemeProvider({ directoryPath: root });
+        await provider.load();
+
+        expect(provider.getAssetsPath()).toBeUndefined();
+    });
+
+    it('should fail the boot when the manifest is a directory', async () => {
+        // Odd, but it must fail loud rather than be read as "no manifest":
+        // silently serving an un-themed page is this feature's worst mode.
+        const root = createDirectory({ 'theme.json/keep': '' });
+
+        await expect(new ThemeProvider({ directoryPath: root }).load())
+            .rejects.toThrow(/theme\.json/);
+    });
+
     it('should report no assets path when the directory is absent', async () => {
         const root = createDirectory({ 'theme.json': JSON.stringify({ version: 1 }) });
 

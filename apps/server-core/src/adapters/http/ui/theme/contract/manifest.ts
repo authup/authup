@@ -31,8 +31,7 @@ const assetPathSchema = z.string()
         'must not contain a ".." segment',
     )
     .refine(
-        (value) => (THEME_ASSET_EXTENSIONS as readonly string[])
-            .includes(themeAssetExtension(value)),
+        (value) => THEME_ASSET_EXTENSIONS.includes(themeAssetExtension(value)),
         `must end in one of: ${THEME_ASSET_EXTENSIONS.join(', ')}`,
     );
 

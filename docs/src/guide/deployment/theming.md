@@ -248,6 +248,17 @@ including `.html` and `.js`.
 a dedicated CSS cascade layer, so they win over the bundle without
 `!important` and the colour-mode switcher keeps working.
 
+::: warning A colour in `tokens` overrides dark mode too
+Cascade layers beat specificity, so a `:root` token from `tokens` wins over
+authup's own `.dark` rule. That is what you want for a brand accent, which is
+the same in both modes, and wrong for a surface colour: set
+`--authup-surface-card` in `tokens` alone and dark mode gets the light card.
+
+Rule of thumb: accents go in `tokens`; anything named `--authup-surface-*` or
+`--authup-on-surface*` belongs in both `tokens` and `tokensDark`. The same
+applies to any colour you set in `theme.css`.
+:::
+
 `logo` replaces the built-in mark on both consoles. It must be an image
 (`.svg`, `.png`, `.jpg`, `.gif`, `.webp`, `.avif`, `.ico`) and is painted into
 the existing mark's box, so it needs no size and changes no layout. Square
@@ -316,10 +327,10 @@ Structural classes you can target: `.a-auth-app`, `.a-auth-shell`,
 `.a-login-provider-box`.
 
 ::: warning Dark mode in theme.css
-`theme.css` is unlayered, so it also overrides the bundle's dark-mode rules.
-A colour set only under `:root` there will leak into dark mode. Put colours in
-`theme.json` where possible; when you must set one in CSS, write both `:root`
-and a `.dark` rule, dark last.
+`theme.css` is unlayered, so it beats every layer including the bundle's
+dark-mode rules. Same trap as `tokens` above, with no `tokensDark` to fall
+back on: when you set a colour here, write both a `:root` and a `.dark` rule,
+dark last.
 :::
 
 ::: tip Self-host your fonts

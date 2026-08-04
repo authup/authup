@@ -11,7 +11,11 @@ import { Readable } from 'node:stream';
 import type { Handler } from 'routup';
 import { HeaderName, defineCoreHandler, sendFile } from 'routup';
 import { THEME_ASSET_CSP } from './constants.ts';
-import { THEME_ASSET_CONTENT_TYPES, THEME_ASSET_EXTENSIONS } from './contract/index.ts';
+import {
+    THEME_ASSET_CONTENT_TYPES,
+    THEME_ASSET_EXTENSIONS,
+    themeAssetExtension,
+} from './contract/index.ts';
 import type { IThemeProvider } from './types.ts';
 
 const REQUEST_PATH_PATTERN = /^[a-z0-9][a-z0-9._/-]*$/i;
@@ -59,13 +63,15 @@ export function createThemeAssetsHandler(provider: IThemeProvider) : Handler {
 
         requestPath = requestPath.replace(/^\/+/, '');
 
-        const extension = path.extname(requestPath).toLowerCase();
+        // The contract's own parser, so the set the handler serves cannot
+        // drift from the set the manifest validator accepts.
+        const extension = themeAssetExtension(requestPath);
 
         if (
             !requestPath ||
             !REQUEST_PATH_PATTERN.test(requestPath) ||
             requestPath.split('/').includes('..') ||
-            !(THEME_ASSET_EXTENSIONS as readonly string[]).includes(extension)
+            !THEME_ASSET_EXTENSIONS.includes(extension)
         ) {
             event.response.status = 404;
 
