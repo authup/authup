@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isSimpleMatch, isUUID } from '@authup/kit';
+import { isSimpleURLMatch, isUUID } from '@authup/kit';
 import type { Client, IdentityType } from '@authup/core-kit';
 import { EventName, EventRefType, EventScope } from '@authup/core-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
@@ -226,6 +226,10 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
             return false;
         }
 
-        return isSimpleMatch(candidate, registered.split(','));
+        // isSimpleURLMatch, never isSimpleMatch: matched against the raw
+        // string, a `*` in a registered pattern's host absorbs a `?`, `#` or
+        // `\`, which would turn this endpoint into a server-issued open
+        // redirect carrying `state`.
+        return isSimpleURLMatch(candidate, registered.split(','));
     }
 }

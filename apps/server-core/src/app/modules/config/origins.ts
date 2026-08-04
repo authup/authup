@@ -6,6 +6,7 @@
  */
 
 import { URL } from 'node:url';
+import { patternHasGlobstarInAuthority } from '@authup/kit';
 import type { Config } from './types.ts';
 
 const SCHEME_REGEX = /^[a-z][a-z0-9+.-]*:\/\//i;
@@ -27,6 +28,15 @@ const ALLOWED_PROTOCOLS = ['http:', 'https:'];
  * Throws on values that don't parse as a URL/host or use another scheme.
  */
 export function expandToOrigins(value: string): string[] {
+    // `new URL()` accepts `*` and `**` as a hostname, and every trusted origin
+    // becomes an `<origin>/**` redirect pattern for the system clients. A `**`
+    // there matches the rest of the value outright, so a single typo would
+    // turn the redirect allowlist of every realm's console clients into
+    // allow-any-origin. A single `*` is a supported host wildcard.
+    if (patternHasGlobstarInAuthority(value)) {
+        throw new Error(`A trusted origin must not use ** in the host, it would match every origin. Use a single * for a host wildcard, got: ${value}`);
+    }
+
     if (SCHEME_REGEX.test(value)) {
         const url = new URL(value);
         if (!ALLOWED_PROTOCOLS.includes(url.protocol)) {

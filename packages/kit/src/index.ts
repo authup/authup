@@ -15,6 +15,7 @@ export * from './generate-name';
 export * from './generate-secret';
 export * from './has-own-property';
 export * from './is-simple-match';
+export * from './is-simple-url-match';
 export * from './nanoid';
 export * from './slugify';
 export * from './object';
