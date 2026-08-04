@@ -45,13 +45,25 @@ export default defineComponent({
     setup(props) {
         // Label the link with the target host rather than the full URL:
         // shorter, and it is the part that identifies the application.
+        //
+        // The http(s) check is defence in depth. Validating `backLink` is
+        // the host's job (server-core matches it against the trusted app
+        // origins), but this component is a library surface, and a
+        // standalone host injecting its own value could otherwise have us
+        // render an `ftp:` or app-scheme link. Schemes with no host, such
+        // as `javascript:`, already fall out through the empty `host`.
         const backHost = computed(() => {
             if (!props.backLink) {
                 return undefined;
             }
 
             try {
-                return new URL(props.backLink).host;
+                const url = new URL(props.backLink);
+                if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+                    return undefined;
+                }
+
+                return url.host;
             } catch {
                 return undefined;
             }

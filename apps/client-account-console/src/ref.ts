@@ -30,10 +30,19 @@ export function saveAccountConsoleRef(ref: string | undefined) : void {
         return;
     }
 
-    if (ref) {
-        sessionStorage.setItem(ACCOUNT_CONSOLE_REF_STORAGE_KEY, ref);
-    } else {
-        sessionStorage.removeItem(ACCOUNT_CONSOLE_REF_STORAGE_KEY);
+    // A `typeof` guard only covers a missing global. The accessors
+    // themselves still throw when the browser refuses storage (blocked
+    // site data, a sandboxed frame, an exceeded quota). The back link is
+    // cosmetic and this runs on the path into `/authorize`, so a storage
+    // failure must degrade to "no back link", never break the login.
+    try {
+        if (ref) {
+            sessionStorage.setItem(ACCOUNT_CONSOLE_REF_STORAGE_KEY, ref);
+        } else {
+            sessionStorage.removeItem(ACCOUNT_CONSOLE_REF_STORAGE_KEY);
+        }
+    } catch {
+        // ignore: the back link is not worth failing a login over.
     }
 }
 
@@ -45,14 +54,22 @@ export function loadAccountConsoleRef() : string | undefined {
         return undefined;
     }
 
-    const value = sessionStorage.getItem(ACCOUNT_CONSOLE_REF_STORAGE_KEY);
-    if (!value) {
+    // Same reasoning as above, and it matters more here: this runs at the
+    // top of `router.beforeEach` on EVERY navigation, so an escaping
+    // exception would reject the navigation and break the whole app for
+    // anyone whose browser blocks storage.
+    try {
+        const value = sessionStorage.getItem(ACCOUNT_CONSOLE_REF_STORAGE_KEY);
+        if (!value) {
+            return undefined;
+        }
+
+        sessionStorage.removeItem(ACCOUNT_CONSOLE_REF_STORAGE_KEY);
+
+        return value;
+    } catch {
         return undefined;
     }
-
-    sessionStorage.removeItem(ACCOUNT_CONSOLE_REF_STORAGE_KEY);
-
-    return value;
 }
 
 // The trusted back-link target for this app instance. Seeded from the

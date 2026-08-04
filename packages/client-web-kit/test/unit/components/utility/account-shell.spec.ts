@@ -63,6 +63,18 @@ describe('AAccountShell', () => {
         expect(wrapper.find('.a-account-shell-back').exists()).toBeFalsy();
     });
 
+    it('should render no back link for a non-http(s) scheme', () => {
+        // Defence in depth: validating backLink is the host's job, but the
+        // component must not render an ftp:/app-scheme link if a host
+        // mis-wires it. `javascript:` has no host and falls out anyway.
+        // eslint-disable-next-line no-script-url
+        for (const backLink of ['ftp://example.com/x', 'javascript:alert(1)']) {
+            const { wrapper } = mountKitComponent(AAccountShell, { items, backLink });
+
+            expect(wrapper.find('.a-account-shell-back').exists()).toBeFalsy();
+        }
+    });
+
     it('should render no back link when backLink is absent', () => {
         const { wrapper } = mountKitComponent(AAccountShell, { items });
 

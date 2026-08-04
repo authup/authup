@@ -7,11 +7,12 @@
 
 // @vitest-environment happy-dom
 
-import { 
-    beforeEach, 
-    describe, 
-    expect, 
-    it, 
+import {
+    afterEach,
+    beforeEach,
+    describe,
+    expect,
+    it,
 } from 'vitest';
 import {
     ACCOUNT_CONSOLE_REF_STORAGE_KEY,
@@ -64,5 +65,53 @@ describe('account console ref stash', () => {
         setAccountConsoleRef('https://admin.example.com/');
         setAccountConsoleRef(undefined);
         expect(useAccountConsoleRef().value).toBeUndefined();
+    });
+});
+
+describe('account console ref stash: hostile storage', () => {
+    const original = globalThis.sessionStorage;
+
+    afterEach(() => {
+        Object.defineProperty(globalThis, 'sessionStorage', {
+            value: original,
+            configurable: true,
+        });
+    });
+
+    // Browsers throw from the accessors themselves when site data is
+    // blocked, the frame is sandboxed, or the quota is exceeded. The back
+    // link is cosmetic; a storage failure must never escape.
+    function installThrowingStorage() {
+        const boom = () => {
+            throw new Error('storage access denied');
+        };
+
+        Object.defineProperty(globalThis, 'sessionStorage', {
+            value: {
+                getItem: boom,
+                setItem: boom,
+                removeItem: boom,
+            },
+            configurable: true,
+        });
+    }
+
+    it('should not throw when setItem is blocked', () => {
+        installThrowingStorage();
+
+        expect(() => saveAccountConsoleRef('https://admin.example.com/')).not.toThrow();
+    });
+
+    it('should not throw when removeItem is blocked', () => {
+        installThrowingStorage();
+
+        expect(() => saveAccountConsoleRef(undefined)).not.toThrow();
+    });
+
+    it('should return undefined when getItem is blocked', () => {
+        installThrowingStorage();
+
+        expect(() => loadAccountConsoleRef()).not.toThrow();
+        expect(loadAccountConsoleRef()).toBeUndefined();
     });
 });
