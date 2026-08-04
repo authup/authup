@@ -9,13 +9,8 @@ import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@au
 import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
 import type { PropType } from 'vue';
-import {
-    computed,
-    defineComponent,
-    ref,
-    watchEffect,
-} from 'vue';
-import { useTranslations, useTranslator } from '../../core';
+import { computed, defineComponent } from 'vue';
+import { useTranslations } from '../../core';
 import type { AAccountShellNavItem } from './types';
 
 // The account console's content chrome: brand + nav tabs + content card.
@@ -40,15 +35,6 @@ export default defineComponent({
         backLink: { type: String },
     },
     setup(props) {
-        const translations = useTranslations([
-            {
-                namespace: TranslatorTranslationNamespace.APP,
-                key: TranslatorTranslationAppKey.ACCOUNT,
-            },
-        ]);
-
-        const translate = useTranslator();
-
         // Label the link with the target host rather than the full URL:
         // shorter, and it is the part that identifies the application.
         const backHost = computed(() => {
@@ -63,25 +49,21 @@ export default defineComponent({
             }
         });
 
-        const backLabel = ref<string>('');
-        watchEffect(async () => {
-            const host = backHost.value;
-            if (!host) {
-                backLabel.value = '';
-                return;
-            }
-
-            backLabel.value = await translate({
+        const translations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.APP,
+                key: TranslatorTranslationAppKey.ACCOUNT,
+            },
+            {
                 namespace: TranslatorTranslationNamespace.APP,
                 key: TranslatorTranslationAppKey.BACK_TO_APP,
-                data: { host },
-            });
-        });
+                data: { host: computed(() => backHost.value ?? '') },
+            },
+        ]);
 
         return {
             translations,
             backHost,
-            backLabel,
         };
     },
 });
@@ -125,7 +107,7 @@ export default defineComponent({
                 class="a-account-shell-back"
             >
                 <VCIcon name="fa6-solid:chevron-left" />
-                {{ backLabel }}
+                {{ translations.backToApp }}
             </a>
         </div>
         <nav

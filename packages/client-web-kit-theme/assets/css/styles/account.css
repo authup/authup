@@ -68,12 +68,12 @@
         align-items: center;
         gap: 0.375rem;
         font-size: 0.875rem;
-        color: var(--authup-account-fg-muted, var(--vc-color-fg-muted));
+        color: var(--authup-account-surface-color-muted);
         text-decoration: none;
     }
 
     .a-account-shell-back:hover {
-        color: var(--authup-account-fg, var(--vc-color-fg));
+        color: var(--authup-account-surface-color);
         text-decoration: underline;
     }
 
