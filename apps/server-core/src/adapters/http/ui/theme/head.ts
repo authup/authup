@@ -112,11 +112,11 @@ export function buildThemeHead(
  * theming is off or the directory carries no manifest, so both console
  * serve paths can call it unconditionally.
  */
-export function applyTheme(
+export async function applyTheme(
     html: string,
     provider: IThemeProvider | undefined,
     basePath: string,
-) : string {
+) : Promise<string> {
     if (!provider) {
         return html;
     }
@@ -125,12 +125,12 @@ export function applyTheme(
 
     // A directory may carry only a fragment, or only a stylesheet, so the
     // manifest is not a precondition for applying the theme.
-    const manifest = provider.getManifest();
+    const manifest = await provider.getManifest();
     if (manifest?.title) {
         body = stampDocumentTitle(body, escapeHtml(manifest.title));
     }
 
-    const head = provider.getHead(basePath);
+    const head = await provider.getHead(basePath);
     if (head) {
         body = injectHeadContent(body, head);
     }

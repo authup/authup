@@ -122,7 +122,7 @@ export async function serveAccountConsolePage(
     body = stampHtmlAttributes(body, readUIClientPreferences(event));
     body = rebaseAssetURLs(body, basePath, '/account/');
 
-    body = applyTheme(body, useRequestTheme(event), basePath);
+    body = await applyTheme(body, useRequestTheme(event), basePath);
 
     applyUIPageHeaders(event);
 

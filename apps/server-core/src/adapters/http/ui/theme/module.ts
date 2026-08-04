@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuthupError } from '@authup/errors';
+import { AuthupError, normalizeError } from '@authup/errors';
 import type { Logger } from '@authup/server-kit';
+import { read } from 'locter';
 import fs from 'node:fs';
 import path from 'node:path';
 import {
@@ -75,18 +76,12 @@ export class ThemeProvider implements IThemeProvider {
     async load() : Promise<void> {
         this.assetsPath = await this.resolveAssetsPath();
 
-        let raw : string | undefined;
-        try {
-            raw = await fs.promises.readFile(this.manifestPath, 'utf-8');
-        } catch {
-            // No manifest is a valid theme: the operator may ship only a
-            // stylesheet and let the assets mount serve it.
-            raw = undefined;
-        }
-
-        if (typeof raw === 'string') {
-            this.manifest = parseThemeManifest(this.parseJSON(raw), this.manifestPath);
-            this.manifestSignature = this.readSignature(this.manifestPath);
+        // Stat first: it doubles as the existence probe (no manifest is a
+        // valid theme — the operator may ship only a stylesheet) and as the
+        // revalidation signature.
+        this.manifestSignature = this.readSignature(this.manifestPath);
+        if (this.manifestSignature) {
+            this.manifest = await parseThemeManifest(await this.readManifest(), this.manifestPath);
         }
 
         if (this.fragmentsEnabled) {
@@ -100,8 +95,8 @@ export class ThemeProvider implements IThemeProvider {
         this.logInventory();
     }
 
-    getManifest() : ThemeManifest | undefined {
-        this.revalidate();
+    async getManifest() : Promise<ThemeManifest | undefined> {
+        await this.revalidate();
 
         return this.manifest;
     }
@@ -110,9 +105,9 @@ export class ThemeProvider implements IThemeProvider {
         return this.assetsPath;
     }
 
-    getHead(basePath: string) : string {
+    async getHead(basePath: string) : Promise<string> {
         // Drives the revalidation for both files.
-        const manifest = this.getManifest();
+        const manifest = await this.getManifest();
 
         const cached = this.headCache.get(basePath);
         if (typeof cached === 'string') {
@@ -155,14 +150,20 @@ export class ThemeProvider implements IThemeProvider {
         }
     }
 
-    protected parseJSON(raw: string) : unknown {
+    /**
+     * Read + decode the manifest through locter, the same loader
+     * FileProvisioningSource uses for its operator files. Its JSON reader
+     * is a plain read-and-parse with no content cache, so the live reload
+     * below still sees an edited file.
+     */
+    protected async readManifest() : Promise<unknown> {
         try {
-            return JSON.parse(raw);
+            return await read(this.manifestPath);
         } catch (e) {
-            const reason = e instanceof Error ? e.message : 'unknown error';
+            const reason = normalizeError(e).message;
 
             throw new AuthupError(
-                `The theme manifest "${this.manifestPath}" is not valid JSON.\n  ${reason}`,
+                `The theme manifest "${this.manifestPath}" could not be read.\n  ${reason}`,
             );
         }
     }
@@ -209,18 +210,18 @@ export class ThemeProvider implements IThemeProvider {
      * pass it precedes, and it is what makes an edit visible without a
      * restart (the property every operator asks about first).
      */
-    protected revalidate() : void {
+    protected async revalidate() : Promise<void> {
         const now = Date.now();
         if (now - this.revalidatedAt < THEME_MANIFEST_REVALIDATE_INTERVAL) {
             return;
         }
         this.revalidatedAt = now;
 
-        this.revalidateManifest();
+        await this.revalidateManifest();
         this.revalidateFragment();
     }
 
-    protected revalidateManifest() : void {
+    protected async revalidateManifest() : Promise<void> {
         const signature = this.readSignature(this.manifestPath);
         if (signature === this.manifestSignature) {
             return;
@@ -239,11 +240,10 @@ export class ThemeProvider implements IThemeProvider {
         this.manifestSignature = signature;
 
         try {
-            const raw = fs.readFileSync(this.manifestPath, 'utf-8');
-            this.manifest = parseThemeManifest(this.parseJSON(raw), this.manifestPath);
+            this.manifest = await parseThemeManifest(await this.readManifest(), this.manifestPath);
             this.headCache.clear();
         } catch (e) {
-            const reason = e instanceof Error ? e.message : 'unknown error';
+            const reason = normalizeError(e).message;
             this.logger?.warn(`The theme manifest changed but is invalid, keeping the previous one.\n${reason}`);
         }
     }

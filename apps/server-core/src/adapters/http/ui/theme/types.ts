@@ -56,8 +56,12 @@ export interface IThemeProvider {
     /**
      * The current manifest, re-read when the file changed on disk. Returns
      * undefined when the directory carries no manifest (Layer 2 only).
+     *
+     * Async because validation runs through validup. The re-read is
+     * debounced and the head is memoized, so a steady-state render awaits
+     * an already-resolved value.
      */
-    getManifest() : ThemeManifest | undefined;
+    getManifest() : Promise<ThemeManifest | undefined>;
 
     /**
      * The realpathed `<root>/assets` directory, or undefined when absent.
@@ -68,5 +72,5 @@ export interface IThemeProvider {
     /**
      * The markup injected before `</head>`, memoized per base path.
      */
-    getHead(basePath: string) : string;
+    getHead(basePath: string) : Promise<string>;
 }

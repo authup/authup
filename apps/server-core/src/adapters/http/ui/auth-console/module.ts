@@ -6,7 +6,7 @@
  */
 
 import type { RenderFunction } from '@authup/client-auth-console';
-import { InternalError } from '@authup/errors';
+import { InternalError, isError } from '@authup/errors';
 import { getURLBasePath } from '@authup/kit';
 import { read } from 'locter';
 import fs from 'node:fs';
@@ -106,7 +106,7 @@ export async function renderAuthConsolePage(event: IAppEvent, ctx: AuthConsoleRe
         // Map the bundled frames back onto the source files before the error
         // reaches the logger. Only the dev server can do this, so a production
         // render rethrows untouched.
-        if (vite && e instanceof Error) {
+        if (vite && isError(e)) {
             vite.ssrFixStacktrace(e);
         }
 
@@ -124,7 +124,7 @@ export async function renderAuthConsolePage(event: IAppEvent, ctx: AuthConsoleRe
     const basePath = getURLBasePath(ctx.payload.config.baseURL);
     body = rebaseAssetURLs(body, basePath, '/public/');
 
-    body = applyTheme(body, useRequestTheme(event), basePath);
+    body = await applyTheme(body, useRequestTheme(event), basePath);
 
     applyUIPageHeaders(event);
 

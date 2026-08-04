@@ -48,8 +48,11 @@ describe('adapters/http/ui/theme (ThemeProvider)', () => {
     it('should fail the boot on malformed JSON', async () => {
         const root = createDirectory({ 'theme.json': '{ not json' });
 
+        // Asserts the contract (fail loud, name the file), not the wording:
+        // the decode goes through locter, so the parser's own message is
+        // whatever it reports.
         await expect(new ThemeProvider({ directoryPath: root }).load())
-            .rejects.toThrow(/not valid JSON/);
+            .rejects.toThrow(/theme\.json/);
     });
 
     it('should load a directory carrying no manifest', async () => {
@@ -58,7 +61,7 @@ describe('adapters/http/ui/theme (ThemeProvider)', () => {
         const provider = new ThemeProvider({ directoryPath: root });
         await provider.load();
 
-        expect(provider.getManifest()).toBeUndefined();
+        expect(await provider.getManifest()).toBeUndefined();
         expect(provider.getAssetsPath()).toBeDefined();
     });
 
@@ -85,7 +88,7 @@ describe('adapters/http/ui/theme (ThemeProvider)', () => {
 
             // Dropping the file into the directory must do nothing on its
             // own — the fragment is raw markup on the IdP origin.
-            expect(provider.getHead('')).toEqual('');
+            expect(await provider.getHead('')).toEqual('');
         });
 
         it('should read the fragment when the flag is on', async () => {
@@ -100,7 +103,7 @@ describe('adapters/http/ui/theme (ThemeProvider)', () => {
             });
             await provider.load();
 
-            expect(provider.getHead('')).toEqual(FRAGMENT);
+            expect(await provider.getHead('')).toEqual(FRAGMENT);
         });
 
         it('should tolerate the flag being on with no fragment file', async () => {
@@ -112,7 +115,7 @@ describe('adapters/http/ui/theme (ThemeProvider)', () => {
             });
             await provider.load();
 
-            expect(provider.getHead('')).toEqual('');
+            expect(await provider.getHead('')).toEqual('');
         });
 
         it('should ignore an oversized fragment', async () => {
@@ -127,7 +130,7 @@ describe('adapters/http/ui/theme (ThemeProvider)', () => {
             });
             await provider.load();
 
-            expect(provider.getHead('')).toEqual('');
+            expect(await provider.getHead('')).toEqual('');
         });
 
         it('should serve a fragment without a manifest', async () => {
@@ -139,8 +142,8 @@ describe('adapters/http/ui/theme (ThemeProvider)', () => {
             });
             await provider.load();
 
-            expect(provider.getManifest()).toBeUndefined();
-            expect(provider.getHead('')).toEqual(FRAGMENT);
+            expect(await provider.getManifest()).toBeUndefined();
+            expect(await provider.getHead('')).toEqual(FRAGMENT);
         });
     });
 
@@ -155,7 +158,7 @@ describe('adapters/http/ui/theme (ThemeProvider)', () => {
 
             const provider = new ThemeProvider({ directoryPath: root });
             await provider.load();
-            expect(provider.getHead('')).toContain('red');
+            expect(await provider.getHead('')).toContain('red');
 
             fs.writeFileSync(
                 path.join(root, 'theme.json'),
@@ -166,7 +169,7 @@ describe('adapters/http/ui/theme (ThemeProvider)', () => {
             // A broken theme must never take down a login page, so the
             // request path keeps serving the previous value.
             await new Promise((resolve) => { setTimeout(resolve, 1_100); });
-            expect(provider.getHead('')).toContain('red');
+            expect(await provider.getHead('')).toContain('red');
         });
 
         it('should pick up a valid change', async () => {
@@ -179,7 +182,7 @@ describe('adapters/http/ui/theme (ThemeProvider)', () => {
 
             const provider = new ThemeProvider({ directoryPath: root });
             await provider.load();
-            expect(provider.getHead('')).toContain('red');
+            expect(await provider.getHead('')).toContain('red');
 
             fs.writeFileSync(
                 path.join(root, 'theme.json'),
@@ -191,8 +194,8 @@ describe('adapters/http/ui/theme (ThemeProvider)', () => {
             );
 
             await new Promise((resolve) => { setTimeout(resolve, 1_100); });
-            expect(provider.getHead('')).toContain('blue');
-            expect(provider.getHead('')).not.toContain('red');
+            expect(await provider.getHead('')).toContain('blue');
+            expect(await provider.getHead('')).not.toContain('red');
         });
     });
 });

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuthupError } from '@authup/errors';
+import { AuthupError, normalizeError } from '@authup/errors';
 import { read } from 'locter';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -75,7 +75,7 @@ async function assertAuthConsoleContract(packagePath: string) : Promise<void> {
     try {
         module = await read(entry) as Record<string, any>;
     } catch (e) {
-        const reason = e instanceof Error ? e.message : 'unknown error';
+        const reason = normalizeError(e).message;
 
         throw new AuthupError(`The auth console render entry "${entry}" could not be loaded.\n  ${reason}`);
     }
