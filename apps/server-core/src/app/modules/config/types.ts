@@ -37,6 +37,10 @@ export type Config = {
     writableDirectoryPath: string,
 
     /**
+     * EXPERIMENTAL. May change in a minor release: per-realm themes are
+     * likely to reshape the directory into `<root>/<theme name>/`. The
+     * manifest's `version` field makes a breaking change detectable.
+     *
      * Directory holding the operator theme applied to the served consoles
      * (the auth console and the account console). Relative paths resolve
      * against the rootPath.
@@ -51,6 +55,8 @@ export type Config = {
     themeDirectoryPath: string,
 
     /**
+     * EXPERIMENTAL, alongside themeDirectoryPath.
+     *
      * Opt in to reading `fragments/head.html` from the theme directory and
      * splicing it into the `<head>` of both served consoles.
      *
@@ -63,6 +69,9 @@ export type Config = {
     themeFragmentsEnabled: boolean,
 
     /**
+     * EXPERIMENTAL. The render contract it verifies is itself versioned
+     * (CONTRACT_VERSION), but this key and the boot-time assert may change.
+     *
      * Package directory of a substituted `@authup/client-auth-console`
      * (the directory holding its package.json and dist/). Consulted before
      * the node_modules resolution walk.

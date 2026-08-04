@@ -53,6 +53,7 @@ export default {
     writableDirectoryPath: 'writable',
 
     /**
+     * EXPERIMENTAL (may change in a minor release; see the Theming guide).
      * Directory holding the operator theme applied to the served consoles.
      * Relative paths are resolved against rootPath. Empty disables theming.
      * See the Theming guide.
@@ -62,6 +63,7 @@ export default {
     themeDirectoryPath: '/etc/authup/theme',
 
     /**
+     * EXPERIMENTAL, alongside themeDirectoryPath.
      * Read fragments/head.html from the theme directory and splice it
      * into the head of both served consoles. Raw, unsanitized markup on
      * the identity provider origin, so it is opt-in.
@@ -71,7 +73,7 @@ export default {
     themeFragmentsEnabled: false,
 
     /**
-     * Package directories replacing the served consoles. Each points at
+     * EXPERIMENTAL. Package directories replacing the served consoles. Each points at
      * a directory holding the built dist/. Empty resolves the packaged
      * console from node_modules. See the Theming guide.
      * env: AUTH_CONSOLE_PATH / ACCOUNT_CONSOLE_PATH

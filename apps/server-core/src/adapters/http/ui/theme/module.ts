@@ -278,7 +278,9 @@ export class ThemeProvider implements IThemeProvider {
             return;
         }
 
-        this.logger.info(`Theme directory: ${this.directoryPath}`);
+        this.logger.info(
+            `Theme directory: ${this.directoryPath} (theming is EXPERIMENTAL and may change in a minor release)`,
+        );
 
         if (this.manifest) {
             const tokens = Object.keys(this.manifest.tokens ?? {}).length;

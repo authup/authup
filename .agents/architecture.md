@@ -1276,6 +1276,13 @@ app/modules/provisioning/
 
 ## Console Theming (`themeDirectoryPath`)
 
+**EXPERIMENTAL.** Shipped deliberately unstable so per-realm themes (plan
+085) can reshape it without a major bump: the layout, the manifest field
+names and the `theme*` config keys may all change. The manifest's `version`
+field is the detection hook. What is NOT up for change is the trust
+boundary below and the `--authup-*` token names (those belong to the theme
+packages).
+
 Operator rebranding of BOTH served consoles from one mounted directory
 (`adapters/http/ui/theme/`), with no image build and no rebuild. Config
 `themeDirectoryPath` (`THEME_DIRECTORY_PATH`, default `''` = off, resolved

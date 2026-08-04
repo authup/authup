@@ -5,6 +5,23 @@ console** (the login, consent, registration, activation, password and logout
 pages) and the **account console** at `/account`. Both can be rebranded from a
 directory you mount into the container. No image build, no rebuild of authup.
 
+::: warning Experimental
+Theming is experimental and may change in a minor release. Per-realm themes
+are the planned next step, and they are likely to reshape the directory into
+`<theme root>/<theme name>/`, which would move every file below one level.
+The manifest carries a `version` field so a breaking change is detectable
+rather than silent, and this page will carry the migration.
+
+Concretely, treat as unstable: the directory layout, the manifest field names,
+and the `theme*` configuration keys. Treat as stable: the `--authup-*` token
+names (they are the theme packages' own published tokens) and the trust
+boundary below.
+
+Pin an authup patch version if you cannot absorb a change, and say so on the
+tracking issue if you are running this in production. Real usage is what
+promotes it to stable.
+:::
+
 ## What you can and cannot change
 
 Both consoles are compiled Vue bundles, so there is no request-time template
