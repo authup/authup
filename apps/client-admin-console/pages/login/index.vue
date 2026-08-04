@@ -23,13 +23,13 @@ import {
     useRoute,
     useRuntimeConfig,
 } from '#app';
-import LoginHeroSVG from '../../components/svg/LoginHeroSVG.vue';
+import LogoSVG from '../../components/svg/LogoSVG';
 import { LayoutKey } from '../../config/layout';
 
 export default defineNuxtComponent({
     components: {
         ARealmGrid,
-        LoginHeroSVG,
+        LogoSVG,
     },
     setup() {
         definePageMeta({
@@ -128,7 +128,11 @@ export default defineNuxtComponent({
 
         <div class="login-content mx-auto w-full max-w-screen-lg px-4">
             <div class="text-center login-hero">
-                <LoginHeroSVG :height="150" />
+                <LogoSVG
+                    class="mx-auto"
+                    :width="96"
+                    :height="96"
+                />
                 <h1 class="login-title">
                     {{ translations.loginTitle }}
                 </h1>
