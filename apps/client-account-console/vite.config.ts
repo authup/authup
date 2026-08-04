@@ -43,6 +43,11 @@ export default defineConfig({
         }),
     ],
     resolve: {
+        // Single copy of the state/runtime singletons. The kit is bundled from
+        // source, so without this its `pinia` resolves from
+        // packages/client-web-kit/node_modules while the app's resolves here,
+        // and the two `Symbol('pinia')` values never meet.
+        dedupe: ['pinia', 'vue'],
         alias: {
             '@authup/access': path.join(packagesRoot, 'access', 'src'),
             '@authup/core-kit': path.join(packagesRoot, 'core-kit', 'src'),
