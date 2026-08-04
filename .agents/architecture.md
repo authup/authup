@@ -1119,6 +1119,22 @@ choice"):
   origin registered in `TRUSTED_ORIGINS` (drives the `account-console`
   client's redirect/post-logout allowlists). The launcher never spawns it —
   no binary, no process.
+- **`ref` back link:** an optional `ref` query parameter names the
+  application the visitor came from. `serveAccountConsolePage` validates
+  it against `getAppOrigins(config)` (each origin as an `<origin>/**`
+  `isSimpleMatch` pattern, the same shape as the client redirect
+  allowlist, after canonicalizing through `URL` so a case-differing host
+  still matches) and injects the survivor into `window.__AUTHUP__.ref`;
+  anything else is dropped silently. This is the FIRST request-reflected
+  value in that payload, so the `replaceTemplateMarker` splice is now
+  load-bearing against `$`-expansion, not merely conventional. Inside the
+  SPA the URL is the source of truth (nav links carry `?ref=`, and every
+  full load revalidates server-side); `sessionStorage` under
+  `authup:account:ref` carries it across the `/authorize` round-trip only,
+  written just before the kick and consumed by the router guard on return,
+  so no entry survives to go stale. The admin console's `/settings/*`
+  redirect stub and its header "Manage account" link both build their URL
+  through `useAccountConsoleURL()`, which attaches the origin.
 - **App bootstrap** (`src/main.ts`): vue-router base = config `basePath`
   (routes are base-relative: `/`, `/password`, `/authenticators`,
   `/sessions`, `/applications`, catch-all → `/`), the same kit + vuecs
