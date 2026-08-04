@@ -17,11 +17,14 @@ import {
     ACCOUNT_CONSOLE_REF_STORAGE_KEY,
     loadAccountConsoleRef,
     saveAccountConsoleRef,
+    setAccountConsoleRef,
+    useAccountConsoleRef,
 } from '../../src/ref';
 
 describe('account console ref stash', () => {
     beforeEach(() => {
         sessionStorage.clear();
+        setAccountConsoleRef(undefined);
     });
 
     it('should round-trip a value', () => {
@@ -46,5 +49,20 @@ describe('account console ref stash', () => {
         saveAccountConsoleRef(undefined);
 
         expect(sessionStorage.getItem(ACCOUNT_CONSOLE_REF_STORAGE_KEY)).toBeNull();
+    });
+
+    it('should not seed the trusted ref from anything but an explicit set', () => {
+        expect(useAccountConsoleRef().value).toBeUndefined();
+    });
+
+    it('should expose an explicitly set trusted ref', () => {
+        setAccountConsoleRef('https://admin.example.com/');
+        expect(useAccountConsoleRef().value).toEqual('https://admin.example.com/');
+    });
+
+    it('should clear the trusted ref when set to undefined', () => {
+        setAccountConsoleRef('https://admin.example.com/');
+        setAccountConsoleRef(undefined);
+        expect(useAccountConsoleRef().value).toBeUndefined();
     });
 });

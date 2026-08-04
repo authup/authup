@@ -43,7 +43,7 @@ import {
 } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { injectAccountConsoleConfig } from '../di';
-import { saveAccountConsoleRef } from '../ref';
+import { saveAccountConsoleRef, useAccountConsoleRef } from '../ref';
 import { useAccountToasts } from './utils';
 
 export default defineComponent({
@@ -100,15 +100,10 @@ export default defineComponent({
             { namespace: TranslatorTranslationNamespace.ACTION, key: TranslatorTranslationActionKey.LOGIN },
         ]);
 
-        // The URL is the source of truth. The injected config seeds the
-        // first load; every later navigation carries it in the query.
-        const backRef = computed(() => {
-            const fromRoute = typeof route.query.ref === 'string' ?
-                route.query.ref :
-                undefined;
-
-            return fromRoute || config.ref;
-        });
+        // The trusted value, never the URL. `?ref=` is written into links
+        // for visibility; reading it back would bypass the server's
+        // allowlist.
+        const backRef = useAccountConsoleRef();
 
         const items = computed<AAccountShellNavItem[]>(() => {
             // VCLink merges a separate `query` prop into a string `to`

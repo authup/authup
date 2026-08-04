@@ -50,9 +50,13 @@ import Authenticators from './pages/authenticators.vue';
 import Overview from './pages/overview.vue';
 import Password from './pages/password.vue';
 import Sessions from './pages/sessions.vue';
-import { loadAccountConsoleRef } from './ref';
+import { loadAccountConsoleRef, setAccountConsoleRef } from './ref';
 
 const config = resolveAccountConsoleConfig();
+
+// Seed the trusted back-link holder from the server-validated injected
+// config. Only the login round-trip recovery below ever updates it again.
+setAccountConsoleRef(config.ref);
 
 const app = createApp(VApp);
 const pinia = createPinia();
@@ -101,6 +105,14 @@ const router = createRouter({
 router.beforeEach(async (to) => {
     const store = injectStore(pinia);
 
+    // Drain the login-kick stash on any return, not only a successful code
+    // exchange: an error=access_denied return must not leave an entry
+    // behind. Single use either way.
+    const recoveredRef = loadAccountConsoleRef();
+    if (recoveredRef) {
+        setAccountConsoleRef(recoveredRef);
+    }
+
     const code = typeof to.query.code === 'string' ? to.query.code : undefined;
     if (code) {
         // The login kick saved an authorization request carrying the PKCE
@@ -138,11 +150,11 @@ router.beforeEach(async (to) => {
             }
 
             // The kick stashed the active ref because the redirect_uri
-            // carries no query string. Put it back so the URL is the
-            // source of truth again from the first authenticated render.
-            const ref = loadAccountConsoleRef();
-            if (ref && typeof query.ref === 'undefined') {
-                query.ref = ref;
+            // carries no query string. Put it back into the URL for
+            // visibility (bookmarking, nav links); the trusted holder was
+            // already updated above.
+            if (recoveredRef && typeof query.ref === 'undefined') {
+                query.ref = recoveredRef;
             }
 
             return {
