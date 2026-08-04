@@ -10,18 +10,19 @@ import type { Logger } from '@authup/server-kit';
 import { read } from 'locter';
 import fs from 'node:fs';
 import path from 'node:path';
+import { THEME_MANIFEST_REVALIDATE_INTERVAL } from './constants.ts';
 import {
     THEME_ASSETS_DIRECTORY_NAME,
     THEME_FRAGMENTS_DIRECTORY_NAME,
     THEME_HEAD_FRAGMENT_FILE_NAME,
     THEME_HEAD_FRAGMENT_MAX_LENGTH,
     THEME_MANIFEST_FILE_NAME,
-    THEME_MANIFEST_REVALIDATE_INTERVAL,
     THEME_MANIFEST_VERSION,
-} from './constants.ts';
-import { buildThemeHead } from './head.ts';
-import { parseThemeManifest } from './manifest.ts';
-import type { IThemeProvider, ThemeManifest, ThemeProviderContext } from './types.ts';
+    buildThemeHead,
+    parseThemeManifest,
+} from './contract/index.ts';
+import type { ThemeManifest } from './contract/index.ts';
+import type { IThemeProvider, ThemeProviderContext } from './types.ts';
 
 /**
  * Owns the operator theme directory: manifest loading + validation, the

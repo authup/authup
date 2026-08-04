@@ -6,28 +6,7 @@
  */
 
 import type { Logger } from '@authup/server-kit';
-
-/**
- * The operator-authored `theme.json`, after validation.
- *
- * `favicon` / `stylesheet` are theme-relative paths inside `assets/`; they
- * are emitted as `<basePath>/theme/<name>` hrefs.
- */
-export type ThemeManifest = {
-    version: number,
-    title?: string,
-    favicon?: string,
-
-    /**
-     * Replaces the built-in logo mark on both consoles. Maps onto the
-     * `--authup-{auth,account}-logo-*` token pairs.
-     */
-    logo?: string,
-
-    stylesheet?: string,
-    tokens?: Record<string, string>,
-    tokensDark?: Record<string, string>,
-};
+import type { ThemeManifest } from './contract/index.ts';
 
 export type ThemeProviderContext = {
     /**

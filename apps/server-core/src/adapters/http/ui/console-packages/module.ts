@@ -12,8 +12,8 @@ import path from 'node:path';
 import {
     resolveAccountConsoleDistPath,
     setAccountConsolePackagePath,
-} from './account-console/index.ts';
-import { resolveAuthConsoleDistPath, setAuthConsolePackagePath } from './auth-console/index.ts';
+} from '../account-console/index.ts';
+import { resolveAuthConsoleDistPath, setAuthConsolePackagePath } from '../auth-console/index.ts';
 import type { ConsolePackageOptions } from './types.ts';
 
 /**

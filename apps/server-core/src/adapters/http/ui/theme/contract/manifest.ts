@@ -7,7 +7,6 @@
 
 import { AuthupError } from '@authup/errors';
 import { createValidator } from '@validup/zod';
-import path from 'node:path';
 import { Container, isValidupError, stringifyPath } from 'validup';
 import { z } from 'zod';
 import {
@@ -20,6 +19,7 @@ import {
     THEME_TOKEN_VALUE_MAX_LENGTH,
 } from './constants.ts';
 import type { ThemeManifest } from './types.ts';
+import { themeAssetExtension } from './utils.ts';
 
 const assetPathSchema = z.string()
     .regex(
@@ -32,7 +32,7 @@ const assetPathSchema = z.string()
     )
     .refine(
         (value) => (THEME_ASSET_EXTENSIONS as readonly string[])
-            .includes(path.extname(value).toLowerCase()),
+            .includes(themeAssetExtension(value)),
         `must end in one of: ${THEME_ASSET_EXTENSIONS.join(', ')}`,
     );
 
@@ -41,7 +41,7 @@ const assetPathSchema = z.string()
  * fonts, which would silently render as nothing here.
  */
 const logoPathSchema = assetPathSchema.refine(
-    (value) => THEME_IMAGE_EXTENSIONS.includes(path.extname(value).toLowerCase()),
+    (value) => THEME_IMAGE_EXTENSIONS.includes(themeAssetExtension(value)),
     `must be an image (${THEME_IMAGE_EXTENSIONS.join(', ')})`,
 );
 

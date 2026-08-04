@@ -1223,17 +1223,29 @@ adapters/http/ui/                   — one folder per served console + shared s
                                       rebaseAssetURLs(html, basePath, viteBase), serializeInlineScriptJSON,
                                       replaceTemplateMarker (the ONLY way to splice a value into a page template),
                                       injectHeadContent (splice before </head>), stampDocumentTitle
-  contract.ts                       — bindConsolePackages: binds authConsolePath/accountConsolePath and asserts
+  console-packages/module.ts        — bindConsolePackages: binds authConsolePath/accountConsolePath and asserts
                                       the render contract of a SUBSTITUTED package at boot (see Console Theming)
   auth-console/module.ts            — renderAuthConsolePage(event, {url, payload}) SSR render plumbing (JIT vs package dist)
   auth-console/resolve.ts           — resolveAuthConsolePackagePath/-DistPath (locter locateUp resolution of @authup/client-auth-console)
   auth-console/serve.ts             — serveWorkflowPage (workflow GET payload assembly + open-redirect guard)
   auth-console/http-client.ts       — createInternalUIHttpClient (SSR self-call loopback transport)
   account-console/module.ts         — resolveAccountConsoleDistPath + serveAccountConsolePage (config marker injection)
-  theme/module.ts                   — ThemeProvider: manifest load/validate, realpathed assets root, memoized head
-  theme/manifest.ts                 — zod theme.json schema (token GRAMMAR, asset-path allowlist, .strict())
-  theme/head.ts                     — buildThemeHead (token block + favicon/stylesheet links + fragment), applyTheme
-  theme/assets.ts                   — createThemeAssetsHandler (/theme; hand-written, realpath-contained)
+  theme/contract/                   — what a theme IS: PORTABLE, no node/http imports (only validup+zod+errors),
+                                      so a browser theme editor or a CLI validator can share it verbatim. This
+                                      folder is the extraction boundary for the planned @authup/theme-kit.
+    contract/constants.ts           — on-disk layout, manifest version, token grammar, asset kinds (the
+                                      extension allowlist is DERIVED from the content-type map), logo tokens
+    contract/types.ts               — ThemeManifest
+    contract/manifest.ts            — ThemeManifestValidator (validup + zod, like ConfigValidator) +
+                                      parseThemeManifest (async; rejects unknown keys explicitly, since
+                                      validup STRIPS them)
+    contract/head.ts                — buildThemeHead (token block + favicon/stylesheet links + fragment)
+    contract/utils.ts               — themeAssetExtension (hand-rolled so contract/ needs no node:path)
+  theme/module.ts                   — ThemeProvider: manifest load via locter, mtime revalidation, memoized head
+  theme/apply.ts                    — applyTheme (provider -> served document; outside contract/ because it
+                                      takes a filesystem-backed provider)
+  theme/assets.ts                   — createThemeAssetsHandler (/theme; hand-written, realpath-per-request)
+  theme/constants.ts                — SERVING only: revalidate interval, asset CSP
 
 adapters/http/request/helpers/
   actor.ts                          — buildActorContext(req) bridge function
@@ -1290,6 +1302,13 @@ middleware, and leaves both pages byte-identical.
   applies to console packages built BEFORE the feature existed. Splices go
   through `injectHeadContent` / `stampDocumentTitle` (function-replacement
   form, same `$'`-expansion trap as `replaceTemplateMarker`).
+- **`theme/contract/` is portable on purpose.** It imports nothing from
+  node or routup, so the manifest validator, the token grammar and the head
+  builder can be lifted into `@authup/theme-kit` (plan 085) as a directory
+  move, and can already be reused by a browser-side theme editor. Anything
+  touching the filesystem or a response stays one level up. Keep it that
+  way: `themeAssetExtension` exists only because `node:path`'s extname
+  would have broken the rule.
 - **Token GRAMMAR, never a token allowlist.** Names match
   `^--[a-z][a-z0-9-]*$`; values are ≤256 chars and may not contain
   `} < > ; @ \ /* url( expression(`. A closed list would have to live in
