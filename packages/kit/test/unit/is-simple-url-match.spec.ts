@@ -84,6 +84,27 @@ describe('is-simple-url-match', () => {
         expect(isSimpleURLMatch('http://app.example.com:80/cb', 'http://app.example.com/**')).toBeTruthy();
     });
 
+    // Normalizing only the candidate would make the comparison asymmetric and
+    // silently stop a stored pattern from ever matching, which on upgrade
+    // reads as "login broke".
+    it('should normalize the pattern as well as the value', () => {
+        expect(isSimpleURLMatch('https://app.example.com:443/cb', 'https://app.example.com:443/**')).toBeTruthy();
+        expect(isSimpleURLMatch('http://app.example.com:80/cb', 'http://app.example.com:80/**')).toBeTruthy();
+        expect(isSimpleURLMatch('https://APP.example.com/cb', 'https://APP.example.com/**')).toBeTruthy();
+
+        // and the two sides meet in the middle
+        expect(isSimpleURLMatch('https://app.example.com/cb', 'https://APP.example.com/**')).toBeTruthy();
+        expect(isSimpleURLMatch('https://app.example.com/cb', 'https://app.example.com:443/**')).toBeTruthy();
+        expect(isSimpleURLMatch('https://app.example.com/cb', 'https://user@app.example.com/**')).toBeTruthy();
+    });
+
+    it('should keep normalizing the pattern from narrowing a match', () => {
+        // a normalized pattern must not start matching a foreign origin
+        expect(isSimpleURLMatch('https://evil.test/cb', 'https://APP.example.com/**')).toBeFalsy();
+        expect(isSimpleURLMatch('https://app.example.com.evil.test/cb', 'https://app.example.com:443/**')).toBeFalsy();
+        expect(isSimpleURLMatch('http://app.example.com/cb', 'https://app.example.com:443/**')).toBeFalsy();
+    });
+
     it('should match a custom scheme verbatim', () => {
         expect(isSimpleURLMatch('myapp://callback', 'myapp://callback')).toBeTruthy();
         expect(isSimpleURLMatch('myapp://callback/x', 'myapp://callback/**')).toBeTruthy();
@@ -109,7 +130,17 @@ describe('is-simple-url-match', () => {
     // accepted: those are the overwhelming majority of configured patterns,
     // and this change must not log anyone out of a working deployment.
     it('should not narrow what a wildcard-free pattern accepts', () => {
-        const hosts = ['app.example.com', 'localhost:3000', 'a.b.example.com'];
+        // The pattern hosts deliberately include NON-canonical spellings. A
+        // sweep over already-canonical patterns cannot see the asymmetry that
+        // normalizing only the candidate introduces, which is exactly how a
+        // stored `:443` or mixed-case pattern silently stopped matching.
+        const hosts = [
+            'app.example.com',
+            'localhost:3000',
+            'a.b.example.com',
+            'app.example.com:443',
+            'APP.example.com',
+        ];
         const patternPaths = ['/**', '/*', '/cb', ''];
         const valuePaths = ['', '/', '/cb', '/auth/callback', '/a/b/c', '/cb?x=1', '/cb#f'];
 
@@ -146,6 +177,14 @@ describe('is-simple-url-match', () => {
             expect(patternHasGlobstarInAuthority('https://app.example.com/**/cb')).toBeFalsy();
             expect(patternHasGlobstarInAuthority('http://localhost:3000/**')).toBeFalsy();
             expect(patternHasGlobstarInAuthority('myapp://cb/**')).toBeFalsy();
+        });
+
+        it('should end the authority at a query or fragment, not only at a slash', () => {
+            // scanning to `/` alone swallows the query and fragment, so a `**`
+            // nowhere near the host would reject an origin-scoped pattern
+            expect(patternHasGlobstarInAuthority('https://app.example.com?next=**')).toBeFalsy();
+            expect(patternHasGlobstarInAuthority('https://app.example.com#**')).toBeFalsy();
+            expect(patternHasGlobstarInAuthority('https://app.example.com\\**')).toBeFalsy();
         });
     });
 });

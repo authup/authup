@@ -127,7 +127,7 @@ that `/authorize` rejects an incomplete request by rendering an error card
 (with a `200`, so the page still loads), and every parameter below is
 required:
 
-```
+```text
 http://localhost:3001/authorize?response_type=code&client_id=admin-console&realm_id=master&scope=openid&state=devstate&code_challenge=devchallenge&redirect_uri=http%3A%2F%2Flocalhost%3A3001%2F
 ```
 

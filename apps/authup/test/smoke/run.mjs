@@ -131,16 +131,22 @@ async function probe(url) {
  * bundle (`npm pack` does not run `prepublishOnly`), degrades silently
  * because boot still succeeds and only the console routes break.
  */
-async function assertConsoleServed(name, url, marker) {
+async function assertConsoleServed(name, route, marker) {
+    // SERVER_URL carries a trailing slash, so build the target with `new URL`
+    // rather than interpolating (`${SERVER_URL}/logout` requests `//logout`).
+    const url = new URL(route, SERVER_URL).href;
+
     let response;
     try {
-        response = await fetch(url, { redirect: 'follow' });
+        // Not `follow`: a redirect to some other page that happens to contain
+        // the marker would hide a broken console route.
+        response = await fetch(url, { redirect: 'manual' });
     } catch (e) {
         throw fail(`${name}: ${url} could not be reached (${e.message}).`);
     }
 
     if (response.status !== 200) {
-        throw fail(`${name}: ${url} answered ${response.status}, expected 200. The console package is probably unresolved or unbuilt.`);
+        throw fail(`${name}: ${url} answered ${response.status}, expected 200 without a redirect. The console package is probably unresolved or unbuilt.`);
     }
 
     const body = await response.text();
@@ -244,7 +250,7 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
         // URLs alone leaves that resolution untested.
         await assertConsoleServed(
             `${name}/client-auth-console`,
-            `${SERVER_URL}/logout`,
+            'logout',
             'window.__AUTHUP__',
         );
         // window.__AUTHUP__ rather than the shell markup: it only appears if
@@ -253,7 +259,7 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
         // degrades to deriving its API URL from the origin.
         await assertConsoleServed(
             `${name}/client-account-console`,
-            `${SERVER_URL}/account`,
+            'account',
             'window.__AUTHUP__',
         );
 

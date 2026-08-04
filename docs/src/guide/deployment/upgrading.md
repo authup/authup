@@ -20,15 +20,19 @@ authorized is the string the browser navigates to. **No action is required**,
 and no legitimate redirect stops matching. Three side effects are worth
 knowing:
 
-1. A pattern is now matched against the normalized URL, so a host differing
-   only in case, an explicit default port (`:443` on https) and `.`/`..`
-   segments resolve before comparison. A path-scoped pattern can no longer be
-   walked out of with `..`.
+1. Both the request and the stored pattern are normalized before comparison,
+   so a host differing only in case, an explicit default port (`:443` on
+   https) and `.`/`..` segments resolve on either side. A path-scoped pattern
+   can no longer be walked out of with `..`, and a pattern that was written
+   non-canonically (`https://APP.example.com/**`, `https://app.example.com:443/**`)
+   now matches the requests it always looked like it should.
 2. `**` is no longer accepted inside the host of a pattern. It matches the
    rest of the value outright, so `https://**.example.com/**` read as "any
-   subdomain" but accepted every origin. A single `*` is unchanged and still
-   means "one host label". A stored pattern is not rewritten; only new writes
-   are rejected.
+   subdomain" but accepted every origin. A single `*` is unchanged: it matches
+   any run of characters that does not cross a `/`, so it spans dots and
+   `https://*.example.com/**` covers `https://a.b.example.com/cb` as well as
+   `https://a.example.com/cb`. A stored pattern is not rewritten; only new
+   writes are rejected.
 3. `TRUSTED_ORIGINS` rejects the same shape at startup, with a message naming
    the offending value.
 

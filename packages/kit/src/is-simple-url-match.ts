@@ -37,6 +37,36 @@ function canonicalizeHttpURL(url: URL) : string[] {
 }
 
 /**
+ * Reduce a pattern to the same canonical form as the candidate.
+ *
+ * Both sides have to be normalized or the comparison is asymmetric: a stored
+ * `https://app.example.com:443/**` or `https://APP.example.com/**` would stop
+ * matching the moment the candidate is canonicalized, which would log users
+ * out of a working deployment.
+ *
+ * Wildcards survive it. `*` is a legal host and path character, so `URL`
+ * leaves `*` and `**` untouched wherever they appear and only normalizes what
+ * should be normalized (host case, default port, userinfo, dot segments).
+ *
+ * A pattern that is not an http(s) URL is returned untouched, so custom
+ * schemes and any non-URL pattern keep comparing verbatim.
+ */
+function canonicalizePattern(pattern: string) : string {
+    let url : URL;
+    try {
+        url = new URL(pattern);
+    } catch {
+        return pattern;
+    }
+
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+        return pattern;
+    }
+
+    return `${url.origin}${url.pathname}${url.search}${url.hash}`;
+}
+
+/**
  * Match a URL against a glob pattern, or against any pattern of a list.
  *
  * The wildcard vocabulary is `isSimpleMatch`'s (`*` stays inside a path
@@ -53,7 +83,9 @@ function canonicalizeHttpURL(url: URL) : string[] {
  * puts a `/` behind the authority and the wildcard can no longer cross it.
  *
  * Case, default port, userinfo and `..` segments are resolved by the same
- * step, so a path-scoped pattern can no longer be walked out of either.
+ * step, so a path-scoped pattern can no longer be walked out of either. The
+ * pattern is normalized the same way, since normalizing only one side would
+ * stop a stored `https://APP.example.com/**` from matching anything.
  *
  * Use this for every trust decision over a URL. `isSimpleMatch` on a raw URL
  * string is not safe when the pattern may carry a wildcard in its authority.
@@ -62,6 +94,8 @@ export function isSimpleURLMatch(
     value: string,
     pattern: string | string[],
 ) : boolean {
+    const patterns = Array.isArray(pattern) ? pattern : [pattern];
+
     let url : URL;
     try {
         url = new URL(value);
@@ -72,15 +106,19 @@ export function isSimpleURLMatch(
 
     if (url.protocol !== 'http:' && url.protocol !== 'https:') {
         // Custom scheme: no origin to canonicalize against, matched verbatim
-        // as before. A wildcard in the authority of such a pattern is rejected
-        // at write time by `patternHasGlobstarInAuthority`.
-        return isSimpleMatch(value, pattern);
+        // as before. A `**` in the authority of such a pattern is rejected at
+        // write time by `patternHasGlobstarInAuthority`.
+        return isSimpleMatch(value, patterns);
     }
 
     const candidates = canonicalizeHttpURL(url);
-    for (const candidate of candidates) {
-        if (isSimpleMatch(candidate, pattern)) {
-            return true;
+    for (const item of patterns) {
+        const canonicalPattern = canonicalizePattern(item);
+
+        for (const candidate of candidates) {
+            if (isSimpleMatch(candidate, canonicalPattern)) {
+                return true;
+            }
         }
     }
 
@@ -102,8 +140,13 @@ export function patternHasGlobstarInAuthority(pattern: string) : boolean {
     const separator = pattern.indexOf('://');
 
     const start = separator === -1 ? 0 : separator + '://'.length;
-    const end = pattern.indexOf('/', start);
-    const authority = end === -1 ? pattern.slice(start) : pattern.slice(start, end);
 
-    return authority.includes('**');
+    // The authority ends at the FIRST of these, not at `/` alone. Scanning
+    // only for `/` swallows the query and fragment, so an origin-scoped
+    // `https://app.example.com?next=**` would be rejected for a `**` that is
+    // nowhere near the host.
+    const offset = pattern.slice(start).search(/[/?#\\]/);
+    const end = offset === -1 ? pattern.length : start + offset;
+
+    return pattern.slice(start, end).includes('**');
 }
