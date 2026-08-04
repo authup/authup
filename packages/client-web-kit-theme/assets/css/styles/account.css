@@ -82,29 +82,26 @@
     }
 
     /*
-     * The return link to the referring application. Its own full-width row
-     * above the brand: inside the header row it would render under the
-     * fixed `.a-auth-gadgets` cluster from md up, and inside the nav it
-     * would push the tab strip off the left edge the brand and the content
-     * card share.
-     *
-     * Layout only. Colour, hover, and the focus ring come from the vuecs
-     * `breadcrumb` theme element via `<VCBreadcrumbLink>`, so they are NOT
-     * restated here.
+     * The return link to the referring application, leading the tab strip.
+     * A trailing rule separates it from the tabs: it leaves the console
+     * rather than selecting a section, so it must not read as a
+     * permanently-inactive tab. Muted so the active tab stays dominant.
      */
-    .a-account-shell-back {
-        margin-bottom: 0.75rem;
-        font-size: 0.875rem;
-    }
-
-    .a-account-shell-back .vc-breadcrumb-link {
-        display: inline-flex;
-        align-items: center;
+    .a-account-shell-nav-link--back {
+        color: var(--authup-account-surface-color-muted);
         gap: 0.375rem;
+        margin-right: 0.25rem;
+        padding-right: 0.75rem;
+        border-right: 1px solid var(--authup-account-surface-border-color);
+        border-radius: 0;
     }
 
+    .a-account-shell-nav-link--back:hover {
+        color: var(--authup-account-surface-color);
+        background: none;
+    }
 
-    .a-account-shell-nav {
+.a-account-shell-nav {
         display: flex;
         flex-wrap: wrap;
         gap: 0.35rem;

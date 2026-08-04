@@ -5,15 +5,13 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import {
+    TranslatorTranslationActionKey,
+    TranslatorTranslationAppKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
 import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
-import {
-    VCBreadcrumb,
-    VCBreadcrumbItem,
-    VCBreadcrumbLink,
-    VCBreadcrumbList,
-} from '@vuecs/navigation';
 import type { PropType } from 'vue';
 import { computed, defineComponent } from 'vue';
 import { useTranslations } from '../../core';
@@ -25,10 +23,6 @@ import type { AAccountShellNavItem } from './types';
 // `gadgets` slot), so the page carries ONE top bar.
 export default defineComponent({
     components: {
-        VCBreadcrumb,
-        VCBreadcrumbItem,
-        VCBreadcrumbLink,
-        VCBreadcrumbList,
         VCIcon,
         VCLink,
     },
@@ -77,6 +71,12 @@ export default defineComponent({
                 key: TranslatorTranslationAppKey.ACCOUNT,
             },
             {
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.BACK,
+            },
+            // Not rendered as text: this is the tooltip and the accessible
+            // name, where naming the target application earns its length.
+            {
                 namespace: TranslatorTranslationNamespace.APP,
                 key: TranslatorTranslationAppKey.BACK_TO_APP,
                 data: { host: computed(() => backHost.value ?? '') },
@@ -92,31 +92,6 @@ export default defineComponent({
 </script>
 <template>
     <div class="a-account-shell">
-        <!--
-            The return link to the referring application, on its own
-            full-width row above the brand. Not inside the header row (it
-            would render under the fixed gadget cluster from md up) and not
-            inside the nav (it would push the tab strip off the left edge
-            the brand and the content card share).
-
-            Composed rather than driven by `:items` so the single crumb
-            stays a link: the driver treats the last crumb as the current
-            page, which would render it as a non-navigable
-            `<VCBreadcrumbPage>`.
-        -->
-        <VCBreadcrumb
-            v-if="backHost"
-            class="a-account-shell-back"
-        >
-            <VCBreadcrumbList>
-                <VCBreadcrumbItem>
-                    <VCBreadcrumbLink :href="backLink">
-                        <VCIcon name="fa6-solid:chevron-left" />
-                        {{ translations.backToApp }}
-                    </VCBreadcrumbLink>
-                </VCBreadcrumbItem>
-            </VCBreadcrumbList>
-        </VCBreadcrumb>
         <div class="a-account-shell-header">
             <div class="a-account-shell-brand">
                 <svg
@@ -150,9 +125,31 @@ export default defineComponent({
             </div>
         </div>
         <nav
-            v-if="items.length > 0"
+            v-if="items.length > 0 || backHost"
             class="a-account-shell-nav"
         >
+            <!--
+                The return link to the referring application leads the tab
+                strip. A trailing rule separates it from the tabs: it leaves
+                the console rather than selecting a section, so it must not
+                read as a permanently-inactive tab.
+
+                The visible label is the bare "Back", so the entry stays
+                short and the tabs keep their position. The host name rides
+                the tooltip, and `aria-label` carries the same string as the
+                accessible name so a screen reader announces which
+                application the link returns to, not just "Back".
+            -->
+            <VCLink
+                v-if="backHost"
+                :href="backLink"
+                class="a-account-shell-nav-link a-account-shell-nav-link--back"
+                :title="translations.backToApp"
+                :aria-label="translations.backToApp"
+            >
+                <VCIcon name="fa6-solid:chevron-left" />
+                {{ translations.back }}
+            </VCLink>
             <VCLink
                 v-for="item in items"
                 :key="item.key"
