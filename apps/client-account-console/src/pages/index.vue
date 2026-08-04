@@ -108,7 +108,7 @@ export default defineComponent({
         const items = computed<AAccountShellNavItem[]>(() => {
             // VCLink merges a separate `query` prop into a string `to`
             // (@vuecs/link's `extendLinkWithQuery`), so this stays within
-            // `LinkProperties`'s `to?: string` shape instead of the wider
+            // `LinkProps`'s `to?: string` shape instead of the wider
             // route-location-object form the component also accepts but
             // the type does not.
             const query = backRef.value ? { ref: backRef.value } : undefined;

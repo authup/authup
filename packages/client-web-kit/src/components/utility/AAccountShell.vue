@@ -9,6 +9,7 @@ import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@au
 import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
 import {
+    VCBreadcrumb,
     VCBreadcrumbItem,
     VCBreadcrumbLink,
     VCBreadcrumbList,
@@ -24,6 +25,7 @@ import type { AAccountShellNavItem } from './types';
 // `gadgets` slot), so the page carries ONE top bar.
 export default defineComponent({
     components: {
+        VCBreadcrumb,
         VCBreadcrumbItem,
         VCBreadcrumbLink,
         VCBreadcrumbList,
@@ -97,15 +99,14 @@ export default defineComponent({
             inside the nav (it would push the tab strip off the left edge
             the brand and the content card share).
 
-            Composed by hand rather than through `<VCBreadcrumb :items>`:
-            the driver's inferred slot type is not nameable from outside
-            `@vuecs/navigation`, so declaration emit for this package fails
-            with TS4023. The compound form emits cleanly.
+            Composed rather than driven by `:items` so the single crumb
+            stays a link: the driver treats the last crumb as the current
+            page, which would render it as a non-navigable
+            `<VCBreadcrumbPage>`.
         -->
-        <nav
+        <VCBreadcrumb
             v-if="backHost"
             class="a-account-shell-back"
-            aria-label="Breadcrumb"
         >
             <VCBreadcrumbList>
                 <VCBreadcrumbItem>
@@ -115,7 +116,7 @@ export default defineComponent({
                     </VCBreadcrumbLink>
                 </VCBreadcrumbItem>
             </VCBreadcrumbList>
-        </nav>
+        </VCBreadcrumb>
         <div class="a-account-shell-header">
             <div class="a-account-shell-brand">
                 <svg

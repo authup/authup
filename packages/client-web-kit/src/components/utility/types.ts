@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { LinkProperties } from '@vuecs/link';
+import type { LinkProps } from '@vuecs/link';
 
 export type AAccountShellNavItem = {
     key: string,
     label: string,
     icon?: string,
-    link: LinkProperties,
+    link: LinkProps,
     active?: boolean,
 };

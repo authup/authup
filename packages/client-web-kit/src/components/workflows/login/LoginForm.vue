@@ -36,7 +36,7 @@ import { defineQuery } from '@rapiq/core';
 import { VCButton } from '@vuecs/button';
 import { VCAlert } from '@vuecs/elements';
 import { VCFormGroup, VCFormInput, useSubmitButton } from '@vuecs/forms';
-import type { LinkProperties } from '@vuecs/link';
+import type { LinkProps } from '@vuecs/link';
 import { VCLink } from '@vuecs/link';
 import type { UserAuthenticatorChallengeVerifyResponse } from '@authup/core-http-kit';
 import { AIdentityProviderIcon, AIdentityProviders, ARealmPicker } from '../../entities';
@@ -87,8 +87,8 @@ export default defineComponent({
         // form. VCLink resolves RouterLink/NuxtLink when a router is present
         // and `to` is used, otherwise renders a plain anchor — the consumer
         // controls navigation policy through the props themselves.
-        registerLink: { type: Object as PropType<LinkProperties> },
-        passwordForgotLink: { type: Object as PropType<LinkProperties> },
+        registerLink: { type: Object as PropType<LinkProps> },
+        passwordForgotLink: { type: Object as PropType<LinkProps> },
         // OIDC login_hint — pre-fills the identifier field.
         usernameHint: { type: String },
     },
