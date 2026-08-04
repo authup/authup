@@ -1009,6 +1009,18 @@ no new endpoint — the `/authorize` verifier already resolves clients via
   (plan 078 "relocatable by choice") registers its origin via
   `TRUSTED_ORIGINS`, never by editing the client row. `displayName` is seeded
   at CREATE only (never re-asserted), so admins can relabel.
+- **Pattern semantics** (`isSimpleMatch`, `@authup/kit`): `*` matches a run
+  of characters (empty included) that does not cross a `/`, `**` matches the
+  rest of the value, and a pattern ending in `/*` or `/**` also matches the
+  value stopping in front of that separator (so `<origin>/**` covers the bare
+  origin). The `/` boundary is what keeps a host wildcard inside the host:
+  `https://*.example.com/**` covers every subdomain but not
+  `https://a.example.com.evil.test/cb`, `https://a.example.com@evil.test/cb`
+  or a differing port. Matching is case sensitive, so a caller comparing URLs
+  canonicalizes first (`resolveAccountConsoleRef`). Before #3394 the single-`*`
+  branch advanced one character instead of consuming the run, which made a
+  host wildcard inert AND matched any value carrying no further `/` against
+  any pattern holding a `*`.
 - **Scopes** (`SYSTEM_CLIENT_SCOPE_NAMES` = `global` + `openid`, per
   definition) are bound as
   `auth_client_scopes` rows. That junction is the only source `/authorize`

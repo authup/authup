@@ -278,5 +278,45 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
             });
             expect(result.redirectUriVerified).toBe(true);
         });
+
+        it('should accept a redirect matching a registered host wildcard', async () => {
+            const client = clientRepository.seed({
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
+                redirectUri: 'https://*.example.com/**',
+            });
+            const result = await verifier.verify({
+                client_id: client.id,
+                response_type: OAuth2AuthorizationResponseType.CODE,
+                redirect_uri: 'https://app.example.com/callback',
+            });
+            expect(result.redirectUriVerified).toBe(true);
+        });
+
+        it('should reject a redirect a registered host wildcard does not cover', async () => {
+            // the wildcard never crosses a `/`, so it stays inside the host
+            const client = clientRepository.seed({
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
+                redirectUri: 'https://*.example.com/**',
+            });
+
+            const candidates = [
+                'https://app.example.com.evil.test/callback',
+                'https://app.example.com@evil.test/callback',
+                'https://app.example.com:8443/callback',
+                'http://app.example.com/callback',
+            ];
+
+            for (const redirectUri of candidates) {
+                await expect(
+                    verifier.verify({
+                        client_id: client.id,
+                        response_type: OAuth2AuthorizationResponseType.CODE,
+                        redirect_uri: redirectUri,
+                    }),
+                ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_REDIRECT_URI_MISMATCH }));
+            }
+        });
     });
 });

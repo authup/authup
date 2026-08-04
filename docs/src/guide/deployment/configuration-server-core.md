@@ -166,10 +166,16 @@ export default {
      * Each origin is added to the redirect-URI allowlist of the per-realm
      * public system clients (as `<origin>/**`).
      * The origin of `publicUrl` is always trusted implicitly.
+     * A host may carry a `*` (e.g. https://*.example.com), which matches
+     * any host ending in `.example.com`. The wildcard never crosses a `/`,
+     * so it cannot reach past the host, and a non-default port has to be
+     * written out (https://*.example.com:8443).
      *
      * Security: the system clients are built-in with global scope, so any
      * allowlisted origin can complete a login and obtain a full-permission
-     * token — only add origins you control. In non-production, the
+     * token — only add origins you control. A wildcard host trusts every
+     * subdomain, so use one only where you control the whole domain.
+     * In non-production, the
      * client-admin-console dev origin (http://localhost:3000) is seeded automatically.
      * env: TRUSTED_ORIGINS (comma-separated)
      * default: []
