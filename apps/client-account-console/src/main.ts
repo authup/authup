@@ -8,6 +8,7 @@
 import {
     buildVuecsInstallOptions,
     clearAuthorizationRequest,
+    createCookieRef,
     injectStore,
     install,
     loadAuthorizationRequest,
@@ -42,7 +43,6 @@ import 'virtual:nuxt-icon-bundle/register';
 
 import VApp from './App.vue';
 import { resolveAccountConsoleConfig } from './config';
-import { createCookieRef } from './cookie';
 import { provideAccountConsoleConfig } from './di';
 import AccountShell from './pages/index.vue';
 import Applications from './pages/applications.vue';

@@ -7,6 +7,7 @@
 
 import {
     buildVuecsInstallOptions,
+    createCookieRef,
     injectStore,
     install,
     syncTranslatorLocaleFromManager,
@@ -44,7 +45,6 @@ import PasswordForgot from './pages/password-forgot.vue';
 import PasswordReset from './pages/password-reset.vue';
 import Register from './pages/register.vue';
 import VApp from './App.vue';
-import { createCookieRef } from './cookie';
 import { providePayload } from './di';
 import type { HydrationPayload } from './contract';
 

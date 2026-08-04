@@ -10,6 +10,7 @@ import {
     AAuthApp,
     StoreAuthStatus,
     buildEndSessionURL,
+    createColorMode,
     injectStore,
     useTranslation,
 } from '@authup/client-web-kit';
@@ -18,7 +19,6 @@ import { VCIcon } from '@vuecs/icon';
 import { VCAlertDialogProvider } from '@vuecs/overlays';
 import { storeToRefs } from 'pinia';
 import { computed, defineComponent } from 'vue';
-import { createColorMode } from './color-mode';
 import { injectAccountConsoleConfig } from './di';
 
 export default defineComponent({
