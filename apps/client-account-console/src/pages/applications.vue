@@ -170,6 +170,32 @@ export default defineComponent({
                     ));
                 }
 
+                // Consent is prompt-level: it stops the next silent issue and
+                // leaves live tokens working. Revoking the application's tokens
+                // is what actually signs the user out of it, and because the
+                // rows hang off the session rather than the session itself, the
+                // other applications on the same session stay signed in.
+                //
+                // Scoped to THIS user's own sessions explicitly. The server
+                // force-scopes a caller that lacks SESSION_DELETE, but an admin
+                // holds it, so relying on that would have an administrator
+                // revoke the application for everyone from their own account
+                // page.
+                const { data: sessions } = await httpClient.session.getMany({
+                    filters: { userId: userId.value ?? undefined },
+                    pagination: { limit: 50 },
+                });
+
+                const sessionIds = sessions.map((session) => session.id);
+                if (sessionIds.length > 0) {
+                    await httpClient.sessionToken.deleteMany({
+                        filters: {
+                            sessionId: sessionIds,
+                            clientId: group.clientId,
+                        },
+                    });
+                }
+
                 toasts.success(translations.consentRevokeAllSuccess);
 
                 await reload();
