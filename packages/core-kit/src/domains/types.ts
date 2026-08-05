@@ -27,6 +27,7 @@ import type { RoleAttribute } from './role-attribute';
 import type { RolePermission } from './role-permission';
 import type { Scope } from './scope';
 import type { Session } from './session';
+import type { SessionToken } from './session-token';
 import type { TrustAnchor } from './trust-anchor';
 import type { User } from './user';
 import type { UserAttribute } from './user-attribute';
@@ -55,6 +56,7 @@ type EntityTypeMapRaw = {
     [EntityType.ROLE_PERMISSION]: RolePermission,
     [EntityType.SCOPE]: Scope,
     [EntityType.SESSION]: Session,
+    [EntityType.SESSION_TOKEN]: SessionToken,
     [EntityType.TRUST_ANCHOR]: TrustAnchor,
     [EntityType.USER]: User,
     [EntityType.USER_ATTRIBUTE]: UserAttribute,

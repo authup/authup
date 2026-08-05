@@ -29,6 +29,7 @@ export enum EntityType {
     ROLE_PERMISSION = 'rolePermission',
     SCOPE = 'scope', // todo: add
     SESSION = 'session',
+    SESSION_TOKEN = 'sessionToken',
     TRUST_ANCHOR = 'trustAnchor',
     USER = 'user',
     USER_ATTRIBUTE = 'userAttribute',

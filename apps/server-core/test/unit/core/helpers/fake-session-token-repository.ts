@@ -37,6 +37,7 @@ export class FakeSessionTokenRepository implements ISessionTokenRepository {
         const row: SessionToken = {
             id: input.id,
             sessionId: input.sessionId,
+            clientId: input.clientId ?? null,
             kind: input.kind,
             parentId: input.parentId ?? null,
             refreshTokenId: input.refreshTokenId ?? null,
@@ -113,6 +114,24 @@ export class FakeSessionTokenRepository implements ISessionTokenRepository {
         }
 
         return refs;
+    }
+
+    // Query surface (plan 089). The grant-level specs this fake serves never
+    // exercise it, so it stays deliberately inert rather than growing a second
+    // in-memory query engine that could drift from the real one.
+    async findMany() {
+        return {
+            data: [],
+            meta: { total: 0 },
+        } as any;
+    }
+
+    async findAllByQuery() {
+        return [];
+    }
+
+    async findOneWithSessionById(id: string) {
+        return this.findOneById(id);
     }
 
     async deleteExpired(before: string): Promise<number> {

@@ -24,8 +24,11 @@ against the per-realm `account-console` system client (see
 [Provisioning](./provisioning.md#per-realm-system-clients)). A user visiting
 `/account` without a session picks a realm (a single-realm deployment skips
 the picker) and is redirected to the hosted login. An existing session on the
-IdP origin is reused: no second session row is created, and the session is
-attributed to the `account-console` client from then on.
+IdP origin is reused, so no second session row is created. Attribution is per
+token (`auth_session_tokens.client_id`), so the tokens the account console
+obtains name the `account-console` client. The session row itself records no
+application: its `client_id` is a subject foreign key and stays null for a
+user's session.
 
 A deep link may pin the realm up front: `<publicUrl>/account?realmId=<id-or-name>`.
 

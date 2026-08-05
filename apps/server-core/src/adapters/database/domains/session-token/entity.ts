@@ -14,8 +14,14 @@ import {
     ManyToOne,
     PrimaryColumn,
 } from 'typeorm';
-import type { Session, SessionToken, SessionTokenKind } from '@authup/core-kit';
+import type {
+    Client,
+    Session,
+    SessionToken,
+    SessionTokenKind,
+} from '@authup/core-kit';
 import { dateToISOStringTransformer } from '../../helpers/index.ts';
+import { ClientEntity } from '../client/index.ts';
 import { SessionEntity } from '../session/index.ts';
 
 @Entity({ name: 'auth_session_tokens' })
@@ -30,6 +36,26 @@ export class SessionTokenEntity implements SessionToken {
     @ManyToOne(() => SessionEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'session_id' })
     session: SessionEntity;
+
+    // Per-application attribution (plan 086). It sits on the token row rather
+    // than the session, because one browser session serves several
+    // applications on the IdP origin, so `auth_sessions.client_id` can only
+    // ever name one of them. Null when the issuing path knows no client (an
+    // MFA-login completion rides a client-less session) and on rows that
+    // predate the column.
+    @Column({
+        name: 'client_id',
+        nullable: true,
+        default: null,
+    })
+    clientId: Client['id'] | null;
+
+    @ManyToOne(() => ClientEntity, {
+        onDelete: 'CASCADE',
+        nullable: true,
+    })
+    @JoinColumn({ name: 'client_id' })
+    client: ClientEntity | null;
 
     @Index()
     @Column({

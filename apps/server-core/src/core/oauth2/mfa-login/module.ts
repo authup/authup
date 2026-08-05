@@ -73,7 +73,9 @@ export class OAuth2MfaLoginService implements IOAuth2MfaLoginService {
             userAgent: options.userAgent,
             ipAddress: options.ipAddress,
             realmId: user.realmId,
-            clientId,
+            // no `clientId`: a USER-subject session, and the column is the
+            // client-SUBJECT foreign key. The application rides the ticket
+            // and lands on the token rows at completion.
             sub: user.id,
             subKind: IdentityType.USER,
             mfaAt: null,
@@ -129,7 +131,7 @@ export class OAuth2MfaLoginService implements IOAuth2MfaLoginService {
         }
 
         const issuePayload : Partial<OAuth2TokenPayload> = {
-            client_id: session.clientId ?? undefined,
+            client_id: ticket.client_id ?? undefined,
             session_id: session.id,
             user_agent: session.userAgent,
             remote_address: session.ipAddress,
@@ -150,7 +152,7 @@ export class OAuth2MfaLoginService implements IOAuth2MfaLoginService {
             name: EventName.LOGIN,
             refType: EventRefType.SESSION,
             refId: session.id,
-            clientId: session.clientId ?? null,
+            clientId: ticket.client_id ?? null,
             actorType: IdentityType.USER,
             actorId: session.sub,
             actorName: input.userName ?? null,

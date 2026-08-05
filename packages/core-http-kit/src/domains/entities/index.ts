@@ -23,6 +23,7 @@ export * from './role-attribute';
 export * from './role-permission';
 export * from './scope';
 export * from './session';
+export * from './session-token';
 export * from './trust-anchor';
 export * from './user';
 export * from './user-attribute';

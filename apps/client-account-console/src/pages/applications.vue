@@ -141,6 +141,18 @@ export default defineComponent({
                 return;
             }
 
+            // Re-read the subject AFTER the dialog resolved. The template only
+            // renders these controls while a user is present, but the await
+            // above is a window: a logout or an expired session in the
+            // meantime clears the store, and every filter below would then
+            // widen to "no subject". For an administrator, who is not
+            // force-scoped server-side, that turns a personal revoke into one
+            // that reaches every user of the application.
+            const subject = userId.value;
+            if (!subject) {
+                return;
+            }
+
             revoking.value = true;
             try {
                 // Revoke every consent for this client, not only the rows on
@@ -155,7 +167,7 @@ export default defineComponent({
                     const { data: rows } = await httpClient.consent.getMany({
                         filters: {
                             clientId: group.clientId,
-                            sub: userId.value ?? undefined,
+                            sub: subject,
                             subKind: 'user',
                         },
                         pagination: { limit: 50 },
@@ -168,6 +180,52 @@ export default defineComponent({
                     await Promise.all(rows.map(
                         (row) => httpClient.consent.delete(row.id),
                     ));
+                }
+
+                // Consent is prompt-level: it stops the next silent issue and
+                // leaves live tokens working. Revoking the application's tokens
+                // is what actually signs the user out of it, and because the
+                // rows hang off the session rather than the session itself, the
+                // other applications on the same session stay signed in.
+                //
+                // Scoped to THIS user's own sessions explicitly. The server
+                // force-scopes a caller that lacks SESSION_DELETE, but an admin
+                // holds it, so relying on that would have an administrator
+                // revoke the application for everyone from their own account
+                // page.
+                // Page through the sessions and revoke per batch. A single
+                // page would leave the application signed in on every session
+                // past the server's page cap, and batching also keeps the
+                // session id list out of an unbounded query string.
+                //
+                // Offset paging, not the fetch-until-empty loop the consents
+                // use above: those rows are deleted as they are read, so that
+                // loop converges. Sessions survive this operation, so it would
+                // never terminate. The iteration bound is a defensive backstop.
+                const limit = 50;
+                for (let i = 0; i < 100; i++) {
+                    const { data: sessions } = await httpClient.session.getMany({
+                        filters: { userId: subject },
+                        pagination: {
+                            limit,
+                            offset: i * limit,
+                        },
+                    });
+
+                    if (sessions.length === 0) {
+                        break;
+                    }
+
+                    await httpClient.sessionToken.deleteMany({
+                        filters: {
+                            sessionId: sessions.map((session) => session.id),
+                            clientId: group.clientId,
+                        },
+                    });
+
+                    if (sessions.length < limit) {
+                        break;
+                    }
                 }
 
                 toasts.success(translations.consentRevokeAllSuccess);

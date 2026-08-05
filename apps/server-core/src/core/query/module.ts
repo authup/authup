@@ -31,6 +31,7 @@ import { roleAttributeSchema } from '../entities/role-attribute/schema.ts';
 import { rolePermissionSchema } from '../entities/role-permission/schema.ts';
 import { scopeSchema } from '../entities/scope/schema.ts';
 import { sessionSchema } from '../entities/session/schema.ts';
+import { sessionTokenSchema } from '../entities/session-token/schema.ts';
 import { trustAnchorSchema } from '../entities/trust-anchor/schema.ts';
 import { userSchema } from '../entities/user/schema.ts';
 import { userAttributeSchema } from '../entities/user-attribute/schema.ts';
@@ -75,6 +76,7 @@ const schemas : Schema<any>[] = [
     rolePermissionSchema,
     scopeSchema,
     sessionSchema,
+    sessionTokenSchema,
     trustAnchorSchema,
     userSchema,
     userAttributeSchema,
