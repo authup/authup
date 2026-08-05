@@ -34,6 +34,14 @@ export type SessionFindManyOptions = {
      * mandatory WHERE that a rapiq query filter cannot override.
      */
     owner?: SessionOwner,
+    /**
+     * Restrict to sessions that issued a token for one of these clients.
+     * Applied as a mandatory WHERE alongside `owner`: the session's own
+     * `client_id` (the client that first authorized on it) OR an EXISTS over
+     * `auth_session_tokens`, which is where per-application attribution
+     * actually lives. An empty array is treated as absent.
+     */
+    clientIds?: string[],
 };
 
 export interface ISessionRepository {
@@ -49,7 +57,7 @@ export interface ISessionRepository {
      * the admin "force-logout" path; per-session authorization is enforced by
      * the caller (`SessionService`).
      */
-    findAllByQuery(query: IQuery): Promise<Session[]>;
+    findAllByQuery(query: IQuery, options?: SessionFindManyOptions): Promise<Session[]>;
 
     save(session: Partial<Session>): Promise<Session>;
 

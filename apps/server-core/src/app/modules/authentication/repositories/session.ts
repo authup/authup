@@ -9,7 +9,8 @@ import type { Session } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import type { EntityRepositoryFindManyResult, ICache } from '@authup/server-kit';
 import { buildCacheKey } from '@authup/server-kit';
-import type { Repository } from 'typeorm';
+import type { Repository, SelectQueryBuilder } from 'typeorm';
+import { Brackets } from 'typeorm';
 import { applyQuery, redactFieldConditions } from '../../database/repositories/query.ts';
 import type {
     ISessionRepository,
@@ -55,6 +56,43 @@ export class SessionRepository implements ISessionRepository {
 
     // -----------------------------------------------------
 
+    /**
+     * Restrict to sessions that served one of the given clients.
+     *
+     * Two reaches, OR-ed inside one bracket so the whole thing stays a single
+     * AND-ed term and cannot widen the surrounding WHERE: the session's own
+     * `client_id` (write-once, so it names the client that FIRST authorized
+     * on the row) and an EXISTS over `auth_session_tokens`, which carries the
+     * per-application attribution for every client the session went on to
+     * serve. The session column alone would miss every later application, and
+     * the EXISTS alone would miss a session whose tokens have since been
+     * swept, so both are needed.
+     *
+     * Raw column names rather than property paths: this is a correlated
+     * subquery against a table with no query surface of its own.
+     *
+     * The bind parameter stays named `usedClientIds` rather than matching the
+     * option. It shares a builder with the conditions rapiq generates from the
+     * client's own query, and a name that reads like a column is exactly the
+     * one at risk of colliding there, which TypeORM would resolve by silently
+     * overwriting a binding.
+     */
+    protected applyClientIds(qb: SelectQueryBuilder<Session>, ids?: string[]) {
+        if (!ids || ids.length === 0) {
+            return;
+        }
+
+        qb.andWhere(new Brackets((where) => {
+            where.where('session.client_id IN (:...usedClientIds)', { usedClientIds: ids })
+                .orWhere(
+                    'EXISTS (SELECT 1 FROM auth_session_tokens ust' +
+                    ' WHERE ust.session_id = session.id' +
+                    ' AND ust.client_id IN (:...usedClientIds))',
+                    { usedClientIds: ids },
+                );
+        }));
+    }
+
     async findMany(
         query: IQuery,
         options: SessionFindManyOptions = {},
@@ -72,6 +110,8 @@ export class SessionRepository implements ISessionRepository {
                 ownerSubKind: options.owner.subKind,
             });
         }
+
+        this.applyClientIds(qb, options.clientIds);
 
         const [entities, total] = await qb.getManyAndCount();
 
@@ -93,7 +133,7 @@ export class SessionRepository implements ISessionRepository {
             .getMany();
     }
 
-    async findAllByQuery(query: IQuery): Promise<Session[]> {
+    async findAllByQuery(query: IQuery, options: SessionFindManyOptions = {}): Promise<Session[]> {
         const qb = this.repository.createQueryBuilder('session');
 
         // NOTE: `parameters: ['filters']` — a bulk revoke must reach every
@@ -103,6 +143,8 @@ export class SessionRepository implements ISessionRepository {
         applyQuery(qb, query);
 
         applyRealmScopeSelect(qb, 'session', ['sub', 'subKind']);
+
+        this.applyClientIds(qb, options.clientIds);
 
         return qb.getMany();
     }

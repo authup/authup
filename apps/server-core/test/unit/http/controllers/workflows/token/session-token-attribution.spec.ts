@@ -314,6 +314,73 @@ describe('src/http/controllers/token (session-token client attribution)', () => 
         expect(sessions.data.filter((s) => s.sub === user.id)).toHaveLength(1);
     });
 
+    it('revokes by usedClientId a session the application served but did not create', async () => {
+        // The capability `filter[clientId]` cannot provide. Session.clientId is
+        // write-once, so a second application riding the same browser session
+        // is invisible to it, and an operator revoking that application after a
+        // compromise would match nothing.
+        const firstSecret = generateOAuth2CodeVerifier();
+        const firstApp = await createConfidentialClient(firstSecret);
+        const secondSecret = generateOAuth2CodeVerifier();
+        const secondApp = await createConfidentialClient(secondSecret);
+
+        const password = 'attribution-used-client-password';
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+        const login = await suite.client.token.createWithPassword({
+            username: user.name,
+            password,
+        });
+
+        const bearer = new HTTPClient({ baseURL: suite.baseURL });
+        bearer.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
+        const sessionId = decodeJwtPayload(login.access_token).session_id!;
+
+        await authorizeAndExchange(bearer, firstApp, firstSecret);
+        await authorizeAndExchange(bearer, secondApp, secondSecret);
+
+        const admin = { Authorization: `Basic ${Buffer.from('admin:start123').toString('base64')}` };
+
+        // The session column names only the first application, so the plain
+        // filter cannot reach it for the second.
+        const byColumn = await httpRequest(
+            suite,
+            'GET',
+            `/sessions?filter[clientId]=${secondApp.id}`,
+            { headers: admin },
+        );
+        expect(byColumn.status).toEqual(200);
+        expect((await byColumn.json()).data.map((s: any) => s.id)).not.toContain(sessionId);
+
+        // usedClientId reaches it, because the token rows carry the real
+        // per-application attribution.
+        const byUsage = await httpRequest(
+            suite,
+            'GET',
+            `/sessions?usedClientId=${secondApp.id}`,
+            { headers: admin },
+        );
+        expect(byUsage.status).toEqual(200);
+        expect((await byUsage.json()).data.map((s: any) => s.id)).toContain(sessionId);
+
+        // and the revoke reaches it too
+        const revoked = await httpRequest(
+            suite,
+            'DELETE',
+            `/sessions?usedClientId=${secondApp.id}`,
+            { headers: admin },
+        );
+        expect(revoked.status).toEqual(202);
+        expect((await revoked.json()).count).toBeGreaterThanOrEqual(1);
+
+        const remaining = await httpRequest(
+            suite,
+            'GET',
+            `/sessions?filter[sub]=${user.id}`,
+            { headers: admin },
+        );
+        expect((await remaining.json()).data.map((s: any) => s.id)).not.toContain(sessionId);
+    });
+
     it('derives the mfa-login completion attribution from the pending session', async () => {
         const password = 'attribution-mfa-password';
 

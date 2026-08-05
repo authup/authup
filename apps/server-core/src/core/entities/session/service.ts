@@ -24,7 +24,12 @@ import { AbstractEntityService } from '@authup/server-kit';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { ISessionRepository } from '../../authentication/index.ts';
 import { SESSION_FILTER_KEYS } from '../../authentication/index.ts';
-import type { ISessionService, SessionDeleteManyOptions, SessionDeleteManyResult } from './types.ts';
+import type {
+    ISessionService,
+    SessionDeleteManyOptions,
+    SessionDeleteManyResult,
+    SessionGetManyOptions,
+} from './types.ts';
 import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
 import { sessionSchema } from './schema.ts';
 
@@ -49,6 +54,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
     async getMany(
         query: Record<string, any>,
         actor: ActorContext,
+        options: SessionGetManyOptions = {},
     ): Promise<EntityRepositoryFindManyResult<Session>> {
         const parsed = await decodeQuery(query, { schema: sessionSchema, actor });
 
@@ -69,6 +75,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
                     sub: actor.identity!.data.id,
                     subKind: actor.identity!.type,
                 },
+                clientIds: options.clientIds,
             });
         }
 
@@ -92,10 +99,13 @@ export class SessionService extends AbstractEntityService implements ISessionSer
                 );
             }
 
-            return this.repository.findMany(scoped);
+            return this.repository.findMany(scoped, { clientIds: options.clientIds });
         }
 
-        const { data: entities, meta } = await this.repository.findMany(parsed);
+        const { data: entities, meta } = await this.repository.findMany(
+            parsed,
+            { clientIds: options.clientIds },
+        );
 
         const data: Session[] = [];
         let { total } = meta;
@@ -181,8 +191,16 @@ export class SessionService extends AbstractEntityService implements ISessionSer
             throw new AuthupError({ code: ErrorCode.IDENTITY_UNAUTHORIZED, message: 'Authentication required.' });
         }
 
-        if (this.hasTargetFilter(options.query)) {
-            return this.deleteManyByQuery(actor, options.query!);
+        // A `usedClientId` parameter targets just as precisely as a filter
+        // does, so it selects the admin path on its own. Without this the
+        // call would fall through to self-service and silently revoke the
+        // caller's own devices instead of the named application's sessions.
+        const clientIds = options.clientIds && options.clientIds.length > 0 ?
+            options.clientIds :
+            undefined;
+
+        if (clientIds || this.hasTargetFilter(options.query)) {
+            return this.deleteManyByQuery(actor, options.query ?? {}, clientIds);
         }
 
         return this.deleteManyForSelf(actor, options.currentSessionId);
@@ -261,6 +279,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
     protected async deleteManyByQuery(
         actor: ActorContext,
         query: Record<string, any>,
+        clientIds?: string[],
     ): Promise<SessionDeleteManyResult> {
         // Gate: an actor without SESSION_DELETE cannot force-logout anyone → 403.
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.SESSION_DELETE });
@@ -271,6 +290,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
                 parameters: ['filters'], 
                 actor, 
             }),
+            { clientIds },
         );
 
         let count = 0;

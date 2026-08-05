@@ -27,6 +27,28 @@ import {
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext, useRequestSessionId } from '../../../request/index.ts';
 
+/**
+ * Read the `usedClientId` request parameter: the "every session that served
+ * application X" target, accepting a single id or a comma list.
+ *
+ * It is deliberately not a rapiq filter. `filter[clientId]` matches the
+ * session's own column, which names only the client that FIRST authorized on
+ * the row, and inferring intent from a user-supplied condition tree (what
+ * does a negated or OR-nested value mean?) is not something a bulk delete
+ * should be doing.
+ */
+function useRequestUsedClientIds(event: IAppEvent) : string[] | undefined {
+    const raw = useRequestQuery(event)?.usedClientId;
+
+    const values = (Array.isArray(raw) ? raw : [raw])
+        .filter((value): value is string => typeof value === 'string')
+        .flatMap((value) => value.split(','))
+        .map((value) => value.trim())
+        .filter((value) => value.length > 0);
+
+    return values.length > 0 ? values : undefined;
+}
+
 export type SessionControllerContext = {
     service: ISessionService,
 };
@@ -48,7 +70,7 @@ export class SessionController {
         const {
             data,
             meta,
-        } = await this.service.getMany(useRequestQuery(event), actor);
+        } = await this.service.getMany(useRequestQuery(event), actor, { clientIds: useRequestUsedClientIds(event) });
 
         return {
             data,
@@ -86,6 +108,7 @@ export class SessionController {
         const result = await this.service.deleteMany(actor, {
             query: useRequestQuery(event),
             currentSessionId: useRequestSessionId(event),
+            clientIds: useRequestUsedClientIds(event),
         });
 
         event.response.status = 202;
