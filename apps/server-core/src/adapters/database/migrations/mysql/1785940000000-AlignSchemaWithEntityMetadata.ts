@@ -30,6 +30,16 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  * siblings - data loss that reads as routine in review. MODIFY COLUMN
  * widens in place, so the values survive.
  *
+ * The widening runs FIRST, before the renames, and the order is
+ * load-bearing. MySQL commits each DDL statement regardless of the
+ * surrounding transaction, so a boot killed partway through leaves the
+ * migration applied but unrecorded and the whole `up` re-runs. Widening
+ * is re-runnable (a MODIFY COLUMN onto the width a column already has
+ * succeeds) while a rename is not (`RENAME INDEX` on an already-renamed
+ * index fails with ER_KEY_DOES_NOT_EXITS). Putting the minutes-long
+ * phase first and the instant one last means a kill during the phase
+ * that can realistically be killed retries cleanly.
+ *
  * Foreign key checks are disabled for the duration: every constraint is
  * re-added exactly as it already existed, so re-validating it would only
  * add a table scan and a failure mode for rows some past import inserted
@@ -41,6 +51,12 @@ export class AlignSchemaWithEntityMetadata1785940000000 implements MigrationInte
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query('SET FOREIGN_KEY_CHECKS = 0');
+        await queryRunner.query('ALTER TABLE `auth_clients` MODIFY COLUMN `access_policy_id` varchar(255) NULL');
+        await queryRunner.query('ALTER TABLE `auth_consents` MODIFY COLUMN `client_id` varchar(255) NOT NULL, MODIFY COLUMN `realm_id` varchar(255) NOT NULL, MODIFY COLUMN `user_id` varchar(255) NULL');
+        await queryRunner.query('ALTER TABLE `auth_events` MODIFY COLUMN `id` varchar(255) NOT NULL, MODIFY COLUMN `client_id` varchar(255) NULL, MODIFY COLUMN `actor_id` varchar(255) NULL, MODIFY COLUMN `realm_id` varchar(255) NULL');
+        await queryRunner.query('ALTER TABLE `auth_session_tokens` MODIFY COLUMN `id` varchar(255) NOT NULL, MODIFY COLUMN `session_id` varchar(255) NOT NULL, MODIFY COLUMN `parent_id` varchar(255) NULL, MODIFY COLUMN `refresh_token_id` varchar(255) NULL');
+        await queryRunner.query('ALTER TABLE `auth_trust_anchors` MODIFY COLUMN `realm_id` varchar(255) NOT NULL');
+        await queryRunner.query('ALTER TABLE `auth_user_authenticators` MODIFY COLUMN `user_id` varchar(255) NOT NULL, MODIFY COLUMN `realm_id` varchar(255) NOT NULL');
         await queryRunner.query('ALTER TABLE `auth_consents` RENAME INDEX `IDX_auth_consents_sub` TO `IDX_482fa13b8f47218a844e333282`');
         await queryRunner.query('ALTER TABLE `auth_consents` RENAME INDEX `IDX_auth_consents_client_id` TO `IDX_adc5a3c5fa915f59ddac529f2b`');
         await queryRunner.query('ALTER TABLE `auth_consents` RENAME INDEX `IDX_auth_consents_realm_id` TO `IDX_089778fa70ab97a637b84957a8`');
@@ -82,12 +98,6 @@ export class AlignSchemaWithEntityMetadata1785940000000 implements MigrationInte
         await queryRunner.query('ALTER TABLE `auth_user_authenticators` ADD CONSTRAINT `FK_ed232e3a899e0556f1b052bc50e` FOREIGN KEY (`user_id`) REFERENCES `auth_users`(`id`) ON DELETE CASCADE ON UPDATE NO ACTION');
         await queryRunner.query('ALTER TABLE `auth_user_authenticators` DROP FOREIGN KEY `FK_auth_user_authenticators_realm_id`');
         await queryRunner.query('ALTER TABLE `auth_user_authenticators` ADD CONSTRAINT `FK_db13de293f01ac8ab7bc0342c4f` FOREIGN KEY (`realm_id`) REFERENCES `auth_realms`(`id`) ON DELETE CASCADE ON UPDATE NO ACTION');
-        await queryRunner.query('ALTER TABLE `auth_clients` MODIFY COLUMN `access_policy_id` varchar(255) NULL');
-        await queryRunner.query('ALTER TABLE `auth_consents` MODIFY COLUMN `client_id` varchar(255) NOT NULL, MODIFY COLUMN `realm_id` varchar(255) NOT NULL, MODIFY COLUMN `user_id` varchar(255) NULL');
-        await queryRunner.query('ALTER TABLE `auth_events` MODIFY COLUMN `id` varchar(255) NOT NULL, MODIFY COLUMN `client_id` varchar(255) NULL, MODIFY COLUMN `actor_id` varchar(255) NULL, MODIFY COLUMN `realm_id` varchar(255) NULL');
-        await queryRunner.query('ALTER TABLE `auth_session_tokens` MODIFY COLUMN `id` varchar(255) NOT NULL, MODIFY COLUMN `session_id` varchar(255) NOT NULL, MODIFY COLUMN `parent_id` varchar(255) NULL, MODIFY COLUMN `refresh_token_id` varchar(255) NULL');
-        await queryRunner.query('ALTER TABLE `auth_trust_anchors` MODIFY COLUMN `realm_id` varchar(255) NOT NULL');
-        await queryRunner.query('ALTER TABLE `auth_user_authenticators` MODIFY COLUMN `user_id` varchar(255) NOT NULL, MODIFY COLUMN `realm_id` varchar(255) NOT NULL');
         await queryRunner.query('SET FOREIGN_KEY_CHECKS = 1');
     }
 
