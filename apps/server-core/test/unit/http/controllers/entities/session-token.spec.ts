@@ -201,6 +201,110 @@ describe('src/http/controllers/session-token', () => {
         expect(secondGrant.refresh_token).toBeDefined();
     });
 
+    it('scopes a non-privileged reader to its own sessions tokens', async () => {
+        // The self-service path, and the one that fails OPEN if the injected
+        // ownership condition does not resolve: an unscoped read would hand
+        // every user's token inventory to anyone who asks.
+        const password = 'session-token-self-service-password';
+        const { data: mine } = await suite.client.user.create(createFakeUser({ password }));
+        const { data: other } = await suite.client.user.create(createFakeUser({ password }));
+
+        const myLogin = await suite.client.token.createWithPassword({ username: mine.name, password });
+        const otherLogin = await suite.client.token.createWithPassword({ username: other.name, password });
+
+        const mySessionId = decodeJwtPayload(myLogin.access_token).session_id!;
+        const otherSessionId = decodeJwtPayload(otherLogin.access_token).session_id!;
+        expect(mySessionId).not.toEqual(otherSessionId);
+
+        const response = await httpRequest(suite, 'GET', '/session-tokens', { headers: { Authorization: `Bearer ${myLogin.access_token}` } });
+        expect(response.status).toEqual(200);
+
+        const body = await response.json();
+        const sessionIds = body.data.map((row: any) => row.sessionId);
+
+        expect(sessionIds).toContain(mySessionId);
+        expect(sessionIds).not.toContain(otherSessionId);
+        expect(new Set(sessionIds)).toEqual(new Set([mySessionId]));
+    });
+
+    it('refuses a non-privileged bulk revoke of another subject tokens', async () => {
+        const password = 'session-token-cross-subject-password';
+        const { data: mine } = await suite.client.user.create(createFakeUser({ password }));
+        const { data: other } = await suite.client.user.create(createFakeUser({ password }));
+
+        const myLogin = await suite.client.token.createWithPassword({ username: mine.name, password });
+        const otherLogin = await suite.client.token.createWithPassword({ username: other.name, password });
+        const otherSessionId = decodeJwtPayload(otherLogin.access_token).session_id!;
+
+        const response = await httpRequest(
+            suite,
+            'DELETE',
+            `/session-tokens?filter[sessionId]=${otherSessionId}`,
+            { headers: { Authorization: `Bearer ${myLogin.access_token}` } },
+        );
+
+        // Either refused outright or a no-op, but never a revoke: the other
+        // subject's rows must survive untouched.
+        if (response.status < 400) {
+            expect((await response.json()).count).toEqual(0);
+        }
+
+        const rows = await suite.dataSource
+            .getRepository(SessionTokenEntity)
+            .find({ where: { sessionId: otherSessionId } });
+        expect(rows.length).toBeGreaterThan(0);
+        for (const row of rows) {
+            expect(row.revokedAt).toBeNull();
+        }
+    });
+
+    it.each(['session', 'client', 'session,client'])('survives include=%s', async (include) => {
+        // The repository joins `session` unconditionally for the gate. If
+        // rapiq auto-joins the same relation under a different alias for an
+        // explicit include, the second join would collide.
+        const { sessionId } = await buildTwoAppSession();
+
+        const response = await httpRequest(
+            suite,
+            'GET',
+            `/session-tokens?filter[sessionId]=${sessionId}&include=${include}`,
+            { headers: admin },
+        );
+
+        expect(response.status).toEqual(200);
+        const body = await response.json();
+        expect(body.data.length).toBeGreaterThan(0);
+    });
+
+    it('revokes across several sessions through the typed client', async () => {
+        // The exact call the account console makes: an ARRAY of session ids
+        // plus a client id. If the array did not serialize as a comma list the
+        // scope would silently change shape.
+        const first = await buildTwoAppSession();
+        const second = await buildTwoAppSession();
+
+        const result = await suite.client.sessionToken.deleteMany({
+            filters: {
+                sessionId: [first.sessionId, second.sessionId],
+                clientId: first.secondApp.id,
+            },
+        });
+
+        expect(result.count).toBeGreaterThan(0);
+
+        const revoked = await suite.dataSource
+            .getRepository(SessionTokenEntity)
+            .find({ where: { sessionId: first.sessionId } });
+
+        for (const row of revoked) {
+            if (row.clientId === first.secondApp.id) {
+                expect(row.revokedAt).not.toBeNull();
+            } else {
+                expect(row.revokedAt).toBeNull();
+            }
+        }
+    });
+
     it('rejects a bulk revoke that carries no target filter', async () => {
         // No self-service fallback here, unlike DELETE /sessions, so an
         // unscoped call must fail loudly rather than revoke everything.

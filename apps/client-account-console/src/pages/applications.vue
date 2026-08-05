@@ -141,6 +141,18 @@ export default defineComponent({
                 return;
             }
 
+            // Re-read the subject AFTER the dialog resolved. The template only
+            // renders these controls while a user is present, but the await
+            // above is a window: a logout or an expired session in the
+            // meantime clears the store, and every filter below would then
+            // widen to "no subject". For an administrator, who is not
+            // force-scoped server-side, that turns a personal revoke into one
+            // that reaches every user of the application.
+            const subject = userId.value;
+            if (!subject) {
+                return;
+            }
+
             revoking.value = true;
             try {
                 // Revoke every consent for this client, not only the rows on
@@ -155,7 +167,7 @@ export default defineComponent({
                     const { data: rows } = await httpClient.consent.getMany({
                         filters: {
                             clientId: group.clientId,
-                            sub: userId.value ?? undefined,
+                            sub: subject,
                             subKind: 'user',
                         },
                         pagination: { limit: 50 },
@@ -182,7 +194,7 @@ export default defineComponent({
                 // revoke the application for everyone from their own account
                 // page.
                 const { data: sessions } = await httpClient.session.getMany({
-                    filters: { userId: userId.value ?? undefined },
+                    filters: { userId: subject },
                     pagination: { limit: 50 },
                 });
 
