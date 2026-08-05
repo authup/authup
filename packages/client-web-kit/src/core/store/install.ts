@@ -75,6 +75,19 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
     const cookiePath = options.cookiePath || COOKIE_PATH;
 
     /**
+     * Namespace a store cookie under the configured application.
+     *
+     * `.` rather than `:` because RFC 6265 defines a cookie name as an RFC
+     * 2616 token, whose separator set includes `:`. Browsers accept it,
+     * proxies and cookie libraries do not uniformly.
+     */
+    const cookieName = (name: string) => (
+        options.cookiePrefix ? `${options.cookiePrefix}.${name}` : name
+    );
+
+    const cookieNames = Object.values(CookieName).map(cookieName);
+
+    /**
      * Drop the copies written before the path was pinned.
      *
      * Those sit on the browser's default-path for the writing document
@@ -93,6 +106,10 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
      * redundant: `/account` serves the console too, and a copy written from
      * `/account/password` sits on exactly `/account`, matching it. Only the
      * store's own names are touched, and never on the pinned path.
+     *
+     * With a `cookiePrefix` set, only THIS application's names are cleared.
+     * The bare tier belongs to the hosted auth pages, so clearing it would
+     * sign the visitor out of the IdP as a side effect of loading an app.
      */
     const dropShadowingCookies = () => {
         const pathname = typeof window === 'undefined' ?
@@ -114,7 +131,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
                 continue;
             }
 
-            for (const key of Object.values(CookieName)) {
+            for (const key of cookieNames) {
                 cookieUnset(key, { path });
             }
         }
@@ -141,7 +158,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
 
         let value : any;
         for (const key of keys) {
-            value = cookieGet(key);
+            value = cookieGet(cookieName(key));
             if (!value) {
                 continue;
             }
@@ -201,12 +218,12 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         StoreDispatcherEventName.ACCESS_TOKEN_EXPIRE_DATE_UPDATED,
         (input) => {
             if (input) {
-                cookieSet(CookieName.ACCESS_TOKEN_EXPIRE_DATE, input, {
+                cookieSet(cookieName(CookieName.ACCESS_TOKEN_EXPIRE_DATE), input, {
                     maxAge: maxAgeFn(),
                     path: cookiePath,
                 });
             } else {
-                cookieUnset(CookieName.ACCESS_TOKEN_EXPIRE_DATE, { path: cookiePath });
+                cookieUnset(cookieName(CookieName.ACCESS_TOKEN_EXPIRE_DATE), { path: cookiePath });
             }
         },
     );
@@ -216,12 +233,12 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         (input) => {
             if (input) {
                 const maxAge = maxAgeFn();
-                cookieSet(CookieName.ACCESS_TOKEN, input, {
+                cookieSet(cookieName(CookieName.ACCESS_TOKEN), input, {
                     maxAge,
                     path: cookiePath,
                 });
             } else {
-                cookieUnset(CookieName.ACCESS_TOKEN, { path: cookiePath });
+                cookieUnset(cookieName(CookieName.ACCESS_TOKEN), { path: cookiePath });
             }
         },
     );
@@ -230,9 +247,9 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         StoreDispatcherEventName.REFRESH_TOKEN_UPDATED,
         (input) => {
             if (input) {
-                cookieSet(CookieName.REFRESH_TOKEN, input, { path: cookiePath });
+                cookieSet(cookieName(CookieName.REFRESH_TOKEN), input, { path: cookiePath });
             } else {
-                cookieUnset(CookieName.REFRESH_TOKEN, { path: cookiePath });
+                cookieUnset(cookieName(CookieName.REFRESH_TOKEN), { path: cookiePath });
             }
         },
     );
@@ -241,9 +258,9 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         StoreDispatcherEventName.ID_TOKEN_UPDATED,
         (input) => {
             if (input) {
-                cookieSet(CookieName.ID_TOKEN, input, { path: cookiePath });
+                cookieSet(cookieName(CookieName.ID_TOKEN), input, { path: cookiePath });
             } else {
-                cookieUnset(CookieName.ID_TOKEN, { path: cookiePath });
+                cookieUnset(cookieName(CookieName.ID_TOKEN), { path: cookiePath });
             }
         },
     );
@@ -252,9 +269,9 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         StoreDispatcherEventName.USER_UPDATED,
         (input) => {
             if (input) {
-                cookieSet(CookieName.USER, input, { path: cookiePath });
+                cookieSet(cookieName(CookieName.USER), input, { path: cookiePath });
             } else {
-                cookieUnset(CookieName.USER, { path: cookiePath });
+                cookieUnset(cookieName(CookieName.USER), { path: cookiePath });
             }
         },
     );
@@ -263,9 +280,9 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         StoreDispatcherEventName.REALM_UPDATED,
         (input) => {
             if (input) {
-                cookieSet(CookieName.REALM, input, { path: cookiePath });
+                cookieSet(cookieName(CookieName.REALM), input, { path: cookiePath });
             } else {
-                cookieUnset(CookieName.REALM, { path: cookiePath });
+                cookieUnset(cookieName(CookieName.REALM), { path: cookiePath });
             }
         },
     );
@@ -274,9 +291,9 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         StoreDispatcherEventName.REALM_MANAGEMENT_UPDATED,
         (input) => {
             if (input) {
-                cookieSet(CookieName.REALM_MANAGEMENT, input, { path: cookiePath });
+                cookieSet(cookieName(CookieName.REALM_MANAGEMENT), input, { path: cookiePath });
             } else {
-                cookieUnset(CookieName.REALM_MANAGEMENT, { path: cookiePath });
+                cookieUnset(cookieName(CookieName.REALM_MANAGEMENT), { path: cookiePath });
             }
         },
     );

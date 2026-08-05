@@ -47,7 +47,7 @@ type CookieUnsetCall = {
     options: CookieOptions
 };
 
-function buildApp(seed: Record<string, unknown> = {}, cookiePath?: string) {
+function buildApp(seed: Record<string, unknown> = {}, cookiePath?: string, cookiePrefix?: string) {
     const jar = new Map<string, unknown>(Object.entries(seed));
     const setCalls : CookieSetCall[] = [];
     const unsetCalls : CookieUnsetCall[] = [];
@@ -67,6 +67,7 @@ function buildApp(seed: Record<string, unknown> = {}, cookiePath?: string) {
 
     installStore(app, {
         cookiePath,
+        cookiePrefix,
         httpClient,
         pinia,
         cookieGet: (key) => jar.get(key),
@@ -91,6 +92,7 @@ function buildApp(seed: Record<string, unknown> = {}, cookiePath?: string) {
         httpClient, 
         setCalls, 
         unsetCalls,
+        jar,
     };
 }
 
@@ -297,6 +299,108 @@ describe('core/store/install-cookies path', () => {
         expect(unsetCalls).not.toHaveLength(0);
         for (const call of [...setCalls, ...unsetCalls]) {
             expect(call.options.path).toEqual('/auth');
+        }
+    });
+});
+
+describe('core/store/install-cookies (per-client namespace)', () => {
+    const PREFIX = 'account-console';
+    const name = (key: string) => `${PREFIX}.${key}`;
+
+    it('hydrates from the namespaced cookies', () => {
+        const { store } = buildApp({
+            [name(CookieName.ACCESS_TOKEN)]: 'mine-at',
+            [name(CookieName.ACCESS_TOKEN_EXPIRE_DATE)]: '2099-01-01T00:00:00.000Z',
+            [name(CookieName.REFRESH_TOKEN)]: 'mine-rt',
+            [name(CookieName.REALM)]: { id: 'realm-1', name: 'master' },
+        }, undefined, PREFIX);
+
+        expect(store.accessToken).toEqual('mine-at');
+        expect(store.refreshToken).toEqual('mine-rt');
+        expect(store.realm).toMatchObject({ id: 'realm-1' });
+    });
+
+    it('does NOT adopt the bare tier', () => {
+        // The bare names are the IdP's own SSO session, written by the hosted
+        // auth pages on the same origin. A namespaced app must ignore them:
+        // adopting them is the whole defect this replaces.
+        const { store } = buildApp({
+            [CookieName.ACCESS_TOKEN]: 'sso-at',
+            [CookieName.REFRESH_TOKEN]: 'sso-rt',
+            [CookieName.USER]: { id: 'someone-else', name: 'other' },
+        }, undefined, PREFIX);
+
+        expect(store.accessToken).toBeNull();
+        expect(store.refreshToken).toBeNull();
+        expect(store.user).toBeNull();
+        expect(store.loggedIn).toBe(false);
+    });
+
+    it('writes only namespaced cookies, leaving the bare tier untouched', async () => {
+        const {
+            store, 
+            setCalls, 
+            jar, 
+        } = buildApp({ [CookieName.ACCESS_TOKEN]: 'sso-at' }, undefined, PREFIX);
+
+        await store.login({ name: 'admin', password: 'start123' });
+
+        expect(setCalls).not.toHaveLength(0);
+        for (const call of setCalls) {
+            expect(call.key.startsWith(`${PREFIX}.`)).toBe(true);
+        }
+
+        // the reverse leak: this app's tokens are not readable under the bare
+        // names, so the next surface on the origin cannot pick them up
+        expect(jar.get(CookieName.ACCESS_TOKEN)).toEqual('sso-at');
+        expect(jar.get(name(CookieName.ACCESS_TOKEN))).toEqual('at-1');
+    });
+
+    it('keeps the pinned hydration order under a prefix', () => {
+        // The expire date must still hydrate before the access token, or the
+        // write-back echo re-persists the token as a session cookie.
+        const { setCalls } = buildApp({
+            [name(CookieName.ACCESS_TOKEN)]: 'mine-at',
+            [name(CookieName.ACCESS_TOKEN_EXPIRE_DATE)]: '2099-01-01T00:00:00.000Z',
+        }, undefined, PREFIX);
+
+        const echo = setCalls.find((call) => call.key === name(CookieName.ACCESS_TOKEN));
+        expect(echo!.options.maxAge).toBeTypeOf('number');
+        expect(echo!.options.maxAge!).toBeGreaterThan(0);
+    });
+
+    it('clears only its own names when dropping shadowing copies', () => {
+        // The clear only runs for a path with segments, so the document has
+        // to sit below the root for this to exercise anything.
+        Object.defineProperty(window, 'location', {
+            configurable: true,
+            writable: true,
+            value: { pathname: '/account/password' },
+        });
+
+        try {
+            const { unsetCalls } = buildApp({}, undefined, PREFIX);
+
+            expect(unsetCalls).not.toHaveLength(0);
+
+            // Every clear targets this app's namespace. Clearing the bare
+            // tier would sign the visitor out of the IdP as a side effect of
+            // loading this app.
+            for (const call of unsetCalls) {
+                expect(call.key.startsWith(`${PREFIX}.`)).toBe(true);
+            }
+
+            // and it does reach its own names on a shadowing path
+            expect(unsetCalls.some(
+                (call) => call.key === name(CookieName.ACCESS_TOKEN) &&
+                    call.options.path === '/account',
+            )).toBe(true);
+        } finally {
+            Object.defineProperty(window, 'location', {
+                configurable: true,
+                writable: true,
+                value: { pathname: '/' },
+            });
         }
     });
 });
