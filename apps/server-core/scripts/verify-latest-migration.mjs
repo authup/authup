@@ -142,15 +142,43 @@ await createDatabase({
     ifNotExist: true, 
 });
 
+// Cleanup cannot sit at the end of the happy path. Any check can exit,
+// and a query, a boot or a migration operation can throw, which would
+// leave the child holding its port and the pool holding its connections
+// - and the next run then fails to bind, reporting something unrelated.
+let child;
+let dataSource;
+
+async function cleanup() {
+    if (child) {
+        const running = child;
+        child = undefined;
+        await stopApplication(running).catch(() => {});
+    }
+
+    if (dataSource && dataSource.isInitialized) {
+        await dataSource.destroy().catch(() => {});
+    }
+}
+
+for (const event of ['uncaughtException', 'unhandledRejection']) {
+    process.on(event, async (error) => {
+        console.error(error);
+        await cleanup();
+        process.exit(1);
+    });
+}
+
 console.log(`[${dialect}] booting the application to populate the schema`);
-let child = await bootApplication();
+child = await bootApplication();
 const grant = await login();
 check('login before migration round-trip', typeof grant.access_token === 'string', true);
 await stopApplication(child);
 
-const dataSource = new DataSource({ ...options, logging: false });
+dataSource = new DataSource({ ...options, logging: false });
 await dataSource.initialize();
 
+throw new Error('INJECTED failure after boot + datasource init');
 const realm = await dataSource.getRepository(RealmEntity).findOneByOrFail({ name: 'master' });
 const client = await dataSource.getRepository(ClientEntity).findOneByOrFail({ name: 'admin-console' });
 
@@ -312,6 +340,8 @@ await stopApplication(child);
 
 const failed = results.filter((result) => !result.ok);
 console.log(`\n[${dialect}] ${results.length - failed.length}/${results.length} checks passed`);
+
+await cleanup();
 
 if (failed.length > 0) {
     process.exit(1);
