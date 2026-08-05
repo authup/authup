@@ -14,6 +14,7 @@ import {
     loadAuthorizationRequest,
     syncTranslatorLocaleFromManager,
 } from '@authup/client-web-kit';
+import { CLIENT_ACCOUNT_CONSOLE_NAME } from '@authup/core-kit';
 import { matchLocale } from '@authup/i18n';
 import { omitRecord } from '@authup/kit';
 import { OAuth2ErrorCode } from '@authup/specs';
@@ -199,6 +200,11 @@ const localeHandles = installLocale(app, {
 install(app, {
     baseURL: config.apiUrl,
     pinia,
+    // This console is served from the IdP origin, so without a namespace it
+    // shares one cookie set with the hosted auth pages: it would adopt
+    // whatever login came before it, and its own tokens would be readable by
+    // the next surface on the origin (plan 087).
+    cookiePrefix: CLIENT_ACCOUNT_CONSOLE_NAME,
     translatorLocale: matchLocale(localeHandles.resolved.value),
 });
 

@@ -193,6 +193,11 @@ export default defineComponent({
         // A `?realmId=` hint (deep link from a realm-specific app) skips the
         // realm chooser. Suppressed while an error param is present so a
         // denial cannot loop back into the flow without a user action.
+        //
+        // NOTE: with its own cookie namespace this console no longer adopts
+        // the IdP session, so a visitor arriving from another application
+        // picks a realm once. Seeding that from the IdP session needs a
+        // carrier the store does not currently write (see plan 087).
         const kicked = ref(false);
         watchEffect(() => {
             if (kicked.value ||

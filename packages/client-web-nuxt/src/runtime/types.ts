@@ -35,6 +35,17 @@ export type RuntimeOptions = {
     cookieDomainRuntimeKey?: string,
 
     /**
+     * Namespace the store cookies under this application's OAuth2 client
+     * name, as `<prefix>.<name>`.
+     *
+     * Set it whenever the app can share an origin (or a host, since cookies
+     * ignore the port) with the authup IdP or another kit app. Bare names
+     * belong to the IdP's own SSO session; a prefixed set belongs to one
+     * application.
+     */
+    cookiePrefix?: string,
+
+    /**
      * Path of the home route
      * Default: /
      */

@@ -116,6 +116,13 @@ export type Options = {
      * See the store install option of the same name.
      */
     cookiePath?: string,
+    /**
+     * Namespace the store cookies under this application's OAuth2 client
+     * name, as `<prefix>.<name>`. See the store install option of the same
+     * name: bare names are the IdP's own SSO session, a prefixed set belongs
+     * to one application.
+     */
+    cookiePrefix?: string,
 
     pinia?: Pinia,
     isServer?: boolean,
