@@ -178,7 +178,6 @@ await stopApplication(child);
 dataSource = new DataSource({ ...options, logging: false });
 await dataSource.initialize();
 
-throw new Error('INJECTED failure after boot + datasource init');
 const realm = await dataSource.getRepository(RealmEntity).findOneByOrFail({ name: 'master' });
 const client = await dataSource.getRepository(ClientEntity).findOneByOrFail({ name: 'admin-console' });
 
