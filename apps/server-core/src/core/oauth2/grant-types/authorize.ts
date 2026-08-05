@@ -130,16 +130,19 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
                 existing.subKind === authorizationCode.sub_kind &&
                 existing.realmId === authorizationCode.realm_id
             ) {
-                // Write-once (plan 086): per-application attribution now lives
-                // on the token row (`auth_session_tokens.client_id`), so this
-                // column records the client that FIRST authorized on the
-                // session. Overwriting made it last-writer-wins across every
-                // app riding the IdP origin, where a session legitimately
-                // serves several of them.
-                if (!existing.clientId && authorizationCode.client_id) {
-                    existing.clientId = authorizationCode.client_id;
-                }
-
+                // `auth_sessions.client_id` is deliberately NOT touched. It
+                // is the client-SUBJECT foreign key, the counterpart of
+                // `user_id` that `SessionManager.create` populates from `sub`
+                // when `subKind` is client, and its ON DELETE CASCADE means
+                // "this client owns this row". Writing the authorizing
+                // application into it put an unrelated id behind that cascade,
+                // so deleting that application deleted a USER's session and,
+                // through `auth_session_tokens.session_id`, every other
+                // application's tokens on it.
+                //
+                // Which application authorized is recorded per token, on
+                // `auth_session_tokens.client_id`, where a session serving
+                // several applications can say so.
                 return this.sessionManager.refresh(existing);
             }
         }
@@ -148,7 +151,6 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
             userAgent: options.userAgent,
             ipAddress: options.ipAddress,
             realmId: authorizationCode.realm_id,
-            clientId: authorizationCode.client_id,
             subKind: authorizationCode.sub_kind,
             sub: authorizationCode.sub,
             authMethod: authorizationCode.auth_method ?? null,

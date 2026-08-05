@@ -266,7 +266,7 @@ describe('src/http/controllers/token (session-token client attribution)', () => 
     // was overwritten on every exchange, so it reported whichever application
     // authorized most recently and per-app attribution (plan 079) did not hold
     // in this topology at all.
-    it('keeps session.clientId at the FIRST client while each application\'s rows carry their own', async () => {
+    it('leaves the session subject FK alone while each application\'s rows carry their own client', async () => {
         const firstSecret = generateOAuth2CodeVerifier();
         const firstApp = await createConfidentialClient(firstSecret);
         const secondSecret = generateOAuth2CodeVerifier();
@@ -288,19 +288,18 @@ describe('src/http/controllers/token (session-token client attribution)', () => 
         const firstGrant = await authorizeAndExchange(bearer, firstApp, firstSecret);
         expect(decodeJwtPayload(firstGrant.access_token).session_id).toEqual(sessionId);
 
+        // The session's subject is a user, so its client-subject FK stays
+        // null no matter how many applications authorize on it.
         const afterFirst = await suite.client.session.getOne(sessionId);
-        expect(afterFirst.data.clientId).toEqual(firstApp.id);
+        expect(afterFirst.data.clientId).toBeNull();
 
         // 3) the second application authorizes on the SAME session, using the
         //    same bearer — the shared cookie jar of the IdP origin.
         const secondGrant = await authorizeAndExchange(bearer, secondApp, secondSecret);
         expect(decodeJwtPayload(secondGrant.access_token).session_id).toEqual(sessionId);
 
-        // the session records the client that FIRST authorized on it, and is
-        // never overwritten afterwards.
         const afterSecond = await suite.client.session.getOne(sessionId);
-        expect(afterSecond.data.clientId).toEqual(firstApp.id);
-        expect(afterSecond.data.clientId).not.toEqual(secondApp.id);
+        expect(afterSecond.data.clientId).toBeNull();
 
         // attribution that IS per application lives on the token rows
         expect((await readTokenRow(firstGrant.access_token)).clientId).toEqual(firstApp.id);

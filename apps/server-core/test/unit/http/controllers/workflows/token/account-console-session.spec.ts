@@ -124,7 +124,7 @@ describe('account-console session continuity (plan 080 work item 0)', () => {
         return client;
     }
 
-    it('reuses the login session and stamps its clientId on the account-console code flow', async () => {
+    it('reuses the login session without touching its subject FK', async () => {
         const accountConsole = await resolveSystemClient(CLIENT_ACCOUNT_CONSOLE_NAME);
 
         const password = 'account-console-session-pw';
@@ -164,7 +164,9 @@ describe('account-console session continuity (plan 080 work item 0)', () => {
 
         // ... and the client-less row is claimed by the account-console
         // client, the first application to authorize on this session.
-        expect(own[0].clientId).toEqual(accountConsole.entity.id);
+        // not stamped: `clientId` is the client-subject FK, and this session
+        // belongs to a user. The account-console attribution is on the tokens.
+        expect(own[0].clientId).toBeNull();
     });
 
     // Plan 086: the visitor arrives at /account with an admin-console session,
@@ -211,7 +213,7 @@ describe('account-console session continuity (plan 080 work item 0)', () => {
         expect(own[0].id).toEqual(sessionId);
 
         // the session keeps the admin console, which got there first ...
-        expect(own[0].clientId).toEqual(adminConsole.entity.id);
+        expect(own[0].clientId).toBeNull();
 
         // ... while each console's tokens carry their own application
         expect((await readTokenRow(adminGrant.access_token)).clientId).toEqual(adminConsole.entity.id);

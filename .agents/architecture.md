@@ -1195,8 +1195,8 @@ choice"):
   cross-origin too, since the session id rides the code blob server-side).
   Attribution rides the TOKEN, not the session (plan 086):
   `auth_session_tokens.client_id` names the client each token was issued
-  for, while `auth_sessions.client_id` is write-once and keeps the client
-  that FIRST authorized on the row.
+  for. `auth_sessions.client_id` is NOT touched by the authorize flow: it is
+  the client-SUBJECT foreign key (see *Session subject foreign keys*).
   An EXISTING authenticated session renders the shell directly (admission
   control gates fresh logins only). `access_denied` from an
   `accessPolicyId` on the client renders a readable denial card (wins over
@@ -2939,12 +2939,20 @@ auth-code blob:
   `OAuth2AuthorizationCodeIssuer.issue(..., { sessionId })` → `entity.session_id`.
 - `OAuth2AuthorizeGrant.resolveSession` reuses the referenced session iff it
   still exists **and** matches the code's `sub` / `sub_kind` / `realm_id`
-  (defense in depth); it stamps the authorizing `clientId` onto the row only
-  when the row is still client-less (WRITE-ONCE since plan 086, so the column
-  means "the client that first authorized here" rather than "the client that
-  authorized most recently"; per-app attribution moved to
-  `auth_session_tokens.client_id`) and
-  `sessionManager.refresh()`es it. Any mismatch, or a **session-less** authorize
+  (defense in depth) and `sessionManager.refresh()`es it. It does NOT write
+  `clientId`.
+
+  **Session subject foreign keys.** `auth_sessions` carries a nullable
+  `user_id` AND a nullable `client_id`, and `SessionManager.create` populates
+  exactly one of them from `sub` according to `subKind` (the same trick
+  `auth_consents` uses): they are typed foreign keys for a polymorphic
+  subject, so `ON DELETE CASCADE` can drop a subject's own sessions. Writing
+  the AUTHORIZING application into `client_id` therefore put an unrelated id
+  behind a cascade meaning "this client owns this row", so deleting that
+  application deleted a USER's session and, through
+  `auth_session_tokens.session_id`, every other application's tokens on it.
+  Per-app attribution is `auth_session_tokens.client_id`; the session column
+  is the subject FK and nothing else. Any mismatch, or a **session-less** authorize
   flow (external-IdP callback — `IdentityProviderController` issues its code with
   no `sessionId`; non-interactive clients), falls back to `sessionManager.create()`,
   preserving prior behavior.
