@@ -83,39 +83,21 @@ export class AlignSchemaWithEntityMetadata1785940000000 implements MigrationInte
         await queryRunner.query('ALTER TABLE `auth_user_authenticators` DROP FOREIGN KEY `FK_auth_user_authenticators_realm_id`');
         await queryRunner.query('ALTER TABLE `auth_user_authenticators` ADD CONSTRAINT `FK_db13de293f01ac8ab7bc0342c4f` FOREIGN KEY (`realm_id`) REFERENCES `auth_realms`(`id`) ON DELETE CASCADE ON UPDATE NO ACTION');
         await queryRunner.query('ALTER TABLE `auth_clients` MODIFY COLUMN `access_policy_id` varchar(255) NULL');
-        await queryRunner.query('ALTER TABLE `auth_consents` MODIFY COLUMN `client_id` varchar(255) NOT NULL');
-        await queryRunner.query('ALTER TABLE `auth_consents` MODIFY COLUMN `realm_id` varchar(255) NOT NULL');
-        await queryRunner.query('ALTER TABLE `auth_consents` MODIFY COLUMN `user_id` varchar(255) NULL');
-        await queryRunner.query('ALTER TABLE `auth_events` MODIFY COLUMN `id` varchar(255) NOT NULL');
-        await queryRunner.query('ALTER TABLE `auth_events` MODIFY COLUMN `client_id` varchar(255) NULL');
-        await queryRunner.query('ALTER TABLE `auth_events` MODIFY COLUMN `actor_id` varchar(255) NULL');
-        await queryRunner.query('ALTER TABLE `auth_events` MODIFY COLUMN `realm_id` varchar(255) NULL');
-        await queryRunner.query('ALTER TABLE `auth_session_tokens` MODIFY COLUMN `id` varchar(255) NOT NULL');
-        await queryRunner.query('ALTER TABLE `auth_session_tokens` MODIFY COLUMN `session_id` varchar(255) NOT NULL');
-        await queryRunner.query('ALTER TABLE `auth_session_tokens` MODIFY COLUMN `parent_id` varchar(255) NULL');
-        await queryRunner.query('ALTER TABLE `auth_session_tokens` MODIFY COLUMN `refresh_token_id` varchar(255) NULL');
+        await queryRunner.query('ALTER TABLE `auth_consents` MODIFY COLUMN `client_id` varchar(255) NOT NULL, MODIFY COLUMN `realm_id` varchar(255) NOT NULL, MODIFY COLUMN `user_id` varchar(255) NULL');
+        await queryRunner.query('ALTER TABLE `auth_events` MODIFY COLUMN `id` varchar(255) NOT NULL, MODIFY COLUMN `client_id` varchar(255) NULL, MODIFY COLUMN `actor_id` varchar(255) NULL, MODIFY COLUMN `realm_id` varchar(255) NULL');
+        await queryRunner.query('ALTER TABLE `auth_session_tokens` MODIFY COLUMN `id` varchar(255) NOT NULL, MODIFY COLUMN `session_id` varchar(255) NOT NULL, MODIFY COLUMN `parent_id` varchar(255) NULL, MODIFY COLUMN `refresh_token_id` varchar(255) NULL');
         await queryRunner.query('ALTER TABLE `auth_trust_anchors` MODIFY COLUMN `realm_id` varchar(255) NOT NULL');
-        await queryRunner.query('ALTER TABLE `auth_user_authenticators` MODIFY COLUMN `user_id` varchar(255) NOT NULL');
-        await queryRunner.query('ALTER TABLE `auth_user_authenticators` MODIFY COLUMN `realm_id` varchar(255) NOT NULL');
+        await queryRunner.query('ALTER TABLE `auth_user_authenticators` MODIFY COLUMN `user_id` varchar(255) NOT NULL, MODIFY COLUMN `realm_id` varchar(255) NOT NULL');
         await queryRunner.query('SET FOREIGN_KEY_CHECKS = 1');
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query('SET FOREIGN_KEY_CHECKS = 0');
-        await queryRunner.query('ALTER TABLE `auth_user_authenticators` MODIFY COLUMN `realm_id` varchar(36) NOT NULL');
-        await queryRunner.query('ALTER TABLE `auth_user_authenticators` MODIFY COLUMN `user_id` varchar(36) NOT NULL');
+        await queryRunner.query('ALTER TABLE `auth_user_authenticators` MODIFY COLUMN `realm_id` varchar(36) NOT NULL, MODIFY COLUMN `user_id` varchar(36) NOT NULL');
         await queryRunner.query('ALTER TABLE `auth_trust_anchors` MODIFY COLUMN `realm_id` varchar(36) NOT NULL');
-        await queryRunner.query('ALTER TABLE `auth_session_tokens` MODIFY COLUMN `refresh_token_id` varchar(36) NULL');
-        await queryRunner.query('ALTER TABLE `auth_session_tokens` MODIFY COLUMN `parent_id` varchar(36) NULL');
-        await queryRunner.query('ALTER TABLE `auth_session_tokens` MODIFY COLUMN `session_id` varchar(36) NOT NULL');
-        await queryRunner.query('ALTER TABLE `auth_session_tokens` MODIFY COLUMN `id` varchar(36) NOT NULL');
-        await queryRunner.query('ALTER TABLE `auth_events` MODIFY COLUMN `realm_id` varchar(36) NULL');
-        await queryRunner.query('ALTER TABLE `auth_events` MODIFY COLUMN `actor_id` varchar(36) NULL');
-        await queryRunner.query('ALTER TABLE `auth_events` MODIFY COLUMN `client_id` varchar(36) NULL');
-        await queryRunner.query('ALTER TABLE `auth_events` MODIFY COLUMN `id` varchar(36) NOT NULL');
-        await queryRunner.query('ALTER TABLE `auth_consents` MODIFY COLUMN `user_id` varchar(36) NULL');
-        await queryRunner.query('ALTER TABLE `auth_consents` MODIFY COLUMN `realm_id` varchar(36) NOT NULL');
-        await queryRunner.query('ALTER TABLE `auth_consents` MODIFY COLUMN `client_id` varchar(36) NOT NULL');
+        await queryRunner.query('ALTER TABLE `auth_session_tokens` MODIFY COLUMN `refresh_token_id` varchar(36) NULL, MODIFY COLUMN `parent_id` varchar(36) NULL, MODIFY COLUMN `session_id` varchar(36) NOT NULL, MODIFY COLUMN `id` varchar(36) NOT NULL');
+        await queryRunner.query('ALTER TABLE `auth_events` MODIFY COLUMN `realm_id` varchar(36) NULL, MODIFY COLUMN `actor_id` varchar(36) NULL, MODIFY COLUMN `client_id` varchar(36) NULL, MODIFY COLUMN `id` varchar(36) NOT NULL');
+        await queryRunner.query('ALTER TABLE `auth_consents` MODIFY COLUMN `user_id` varchar(36) NULL, MODIFY COLUMN `realm_id` varchar(36) NOT NULL, MODIFY COLUMN `client_id` varchar(36) NOT NULL');
         await queryRunner.query('ALTER TABLE `auth_clients` MODIFY COLUMN `access_policy_id` varchar(36) NULL');
         await queryRunner.query('ALTER TABLE `auth_user_authenticators` DROP FOREIGN KEY `FK_db13de293f01ac8ab7bc0342c4f`');
         await queryRunner.query('ALTER TABLE `auth_user_authenticators` ADD CONSTRAINT `FK_auth_user_authenticators_realm_id` FOREIGN KEY (`realm_id`) REFERENCES `auth_realms`(`id`) ON DELETE CASCADE ON UPDATE NO ACTION');
