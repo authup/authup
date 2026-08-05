@@ -133,7 +133,8 @@ describe('OAuth2AuthorizeGrant', () => {
         expect(sessionManager.createCalls).toHaveLength(0);
         expect(sessionManager.findOneByIdCalls).toContain(sessionId);
         expect(sessionManager.refreshCalls).toHaveLength(1);
-        // the reused session gets the authorize client stamped onto it
+        // a still-unclaimed session gets the authorize client stamped onto it
+        // (the first writer wins; see the write-once case below)
         expect(sessionManager.refreshCalls[0]).toEqual(
             expect.objectContaining({ id: sessionId, clientId }),
         );
@@ -144,6 +145,43 @@ describe('OAuth2AuthorizeGrant', () => {
         expect(refreshTokenIssuer.issueCalls).toContainEqual(payload);
 
         expect(result).toHaveProperty('access_token');
+    });
+
+    // plan 086: per-application attribution moved down onto the token rows
+    // (auth_session_tokens.client_id), so the session column is WRITE-ONCE and
+    // means "the client that first authorized on this session". Overwriting it
+    // made it last-writer-wins across every application riding the IdP origin,
+    // where one session legitimately serves several of them.
+    it('should keep the first client when a SECOND client reuses the same session', async () => {
+        const sessionId = randomUUID();
+        const firstClientId = randomUUID();
+        // the session was already claimed by another application
+        await sessionManager.create({
+            id: sessionId,
+            sub: userId,
+            subKind: OAuth2SubKind.USER,
+            realmId,
+            clientId: firstClientId,
+        });
+        sessionManager.createCalls.length = 0;
+
+        // the code belongs to a DIFFERENT application (the suite-level clientId)
+        await grant.runWith(buildCode({ session_id: sessionId }));
+
+        // the session keeps its first client ...
+        expect(sessionManager.createCalls).toHaveLength(0);
+        expect(sessionManager.refreshCalls[0]).toEqual(
+            expect.objectContaining({ id: sessionId, clientId: firstClientId }),
+        );
+        const stored = await sessionManager.findOneById(sessionId);
+        expect(stored?.clientId).toEqual(firstClientId);
+        expect(stored?.clientId).not.toEqual(clientId);
+
+        // ... while the tokens are minted for the second one, which is what
+        // their auth_session_tokens rows are attributed from.
+        const payload = expect.objectContaining({ session_id: sessionId, client_id: clientId });
+        expect(accessTokenIssuer.issueCalls).toContainEqual(payload);
+        expect(refreshTokenIssuer.issueCalls).toContainEqual(payload);
     });
 
     it('should fall back to create when the referenced session does not exist', async () => {
