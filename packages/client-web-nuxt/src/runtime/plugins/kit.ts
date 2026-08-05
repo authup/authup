@@ -91,6 +91,7 @@ export default defineNuxtPlugin({
         install(ctx.vueApp, {
             pinia: ctx.$pinia as Pinia,
             baseURL,
+            cookiePrefix: (runtimeConfig.public.authup as RuntimeOptions).cookiePrefix,
             cookieSet: (key, value, options) => {
                 const app = tryUseNuxtApp();
                 if (app) {

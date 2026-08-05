@@ -44,6 +44,7 @@ import {
 import { useRoute, useRouter } from 'vue-router';
 import { injectAccountConsoleConfig } from '../di';
 import { saveAccountConsoleRef, useAccountConsoleRef } from '../ref';
+import { readSsoRealmId } from '../sso-session';
 import { useAccountToasts } from './utils';
 
 export default defineComponent({
@@ -191,8 +192,14 @@ export default defineComponent({
         const handleRealmSelect = (realm: Realm) => kick(realm.id);
 
         // A `?realmId=` hint (deep link from a realm-specific app) skips the
-        // realm chooser. Suppressed while an error param is present so a
-        // denial cannot loop back into the flow without a user action.
+        // realm chooser, and so does an existing IdP session: this console
+        // holds its own cookie namespace (plan 087), so a visitor arriving
+        // from another application reads UNAUTHENTICATED here even though the
+        // IdP knows them. Their realm names what to authorize against, and
+        // the hosted page then issues without asking for credentials again.
+        //
+        // Suppressed while an error param is present so a denial cannot loop
+        // back into the flow without a user action.
         const kicked = ref(false);
         watchEffect(() => {
             if (kicked.value ||
@@ -204,9 +211,10 @@ export default defineComponent({
             const hint = typeof route.query.realmId === 'string' ?
                 route.query.realmId :
                 undefined;
-            if (hint) {
+            const realmKey = hint || readSsoRealmId();
+            if (realmKey) {
                 kicked.value = true;
-                Promise.resolve().then(() => kick(hint));
+                Promise.resolve().then(() => kick(realmKey));
             }
         });
 

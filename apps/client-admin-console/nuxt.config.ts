@@ -109,6 +109,12 @@ export default defineNuxtConfig({
             {
                 apiURLRuntimeKey: 'apiUrl',
                 cookieDomainRuntimeKey: 'cookieDomain',
+                // Namespace this console's store cookies (plan 087). Its own
+                // origin would not need it, but cookies ignore the port, so
+                // in the default dev setup `localhost:3000` shares a jar with
+                // server-core on `:3001` and the two consoles would otherwise
+                // overwrite each other's session.
+                cookiePrefix: CLIENT_ADMIN_CONSOLE_NAME,
             } satisfies ModuleOptions,
         ],
         [

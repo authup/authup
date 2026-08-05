@@ -39,6 +39,7 @@ export default defineNuxtModule<ModuleOptions>({
 
             cookieDomain: options.cookieDomain,
             cookieDomainRuntimeKey: options.cookieDomainRuntimeKey,
+            cookiePrefix: options.cookiePrefix,
 
             homeRoute: options.homeRoute,
             loginRoute: options.loginRoute,

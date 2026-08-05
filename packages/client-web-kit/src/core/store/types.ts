@@ -71,5 +71,32 @@ export type StoreInstallOptions = {
      * reads any path through an iframe.
      */
     cookiePath?: string,
+    /**
+     * Namespace the store cookies under an application, as
+     * `<prefix>.<name>` (`account-console.access_token`).
+     *
+     * Cookies are per ORIGIN, not per application, and the hosted auth pages
+     * live on the same origin as anything server-core serves. Without a
+     * prefix every surface there shares one session: an application adopts
+     * whatever login came before it, and its own tokens are readable by the
+     * next one. Locally it is broader still, since cookies ignore the port,
+     * so an app on `localhost:3000` shares the jar with the IdP on `:3001`.
+     *
+     * The prefix is what makes the tiers distinguishable. BARE names belong
+     * to the IdP's own SSO session, owned by the hosted auth pages; a
+     * PREFIXED set belongs to one application. Every relying party embedding
+     * the kit should set it to its OAuth2 client name. The auth pages must
+     * not: they are the IdP surface rather than a client, and their session
+     * is what the `prompt=none` / `select_account` ladder reads.
+     *
+     * Use the client NAME, which an application knows before it has any
+     * session, never the client id, which it cannot know until it has one.
+     * Names are unique per realm, so two realms' same-named clients still
+     * collide on one origin and switching realms replaces the session. That
+     * matches the single-cookie-set behaviour this replaces.
+     *
+     * Unset keeps the bare names, so an existing consumer is unchanged.
+     */
+    cookiePrefix?: string,
     pinia?: Pinia
 };
