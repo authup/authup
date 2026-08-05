@@ -59,6 +59,9 @@ export class OAuth2AccessTokenIssuer extends OAuth2BaseTokenIssuer implements IO
             await this.sessionTokenRepository.create({
                 id: data.jti,
                 sessionId: data.session_id,
+                // Per-application attribution (plan 086). The same client the
+                // payload was minted for, so the row needs no extra lookup.
+                clientId: data.client_id ?? null,
                 kind: 'access',
                 refreshTokenId: input.refresh_token_id ?? null,
                 ipAddress: data.remote_address ?? '',

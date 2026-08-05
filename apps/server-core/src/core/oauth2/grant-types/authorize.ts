@@ -130,7 +130,15 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
                 existing.subKind === authorizationCode.sub_kind &&
                 existing.realmId === authorizationCode.realm_id
             ) {
-                existing.clientId = authorizationCode.client_id || null;
+                // Write-once (plan 086): per-application attribution now lives
+                // on the token row (`auth_session_tokens.client_id`), so this
+                // column records the client that FIRST authorized on the
+                // session. Overwriting made it last-writer-wins across every
+                // app riding the IdP origin, where a session legitimately
+                // serves several of them.
+                if (!existing.clientId && authorizationCode.client_id) {
+                    existing.clientId = authorizationCode.client_id;
+                }
 
                 return this.sessionManager.refresh(existing);
             }

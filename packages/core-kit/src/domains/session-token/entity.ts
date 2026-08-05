@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Client } from '../client';
+
 export type SessionTokenKind = 'access' | 'refresh';
 
 export interface SessionToken {
@@ -17,6 +19,17 @@ export interface SessionToken {
      * Owning session.
      */
     sessionId: string;
+
+    /**
+     * The client the token was issued for. Attribution sits here rather than
+     * on the session, because one browser session may serve several
+     * applications.
+     *
+     * Null when the issuing path does not know the client (an MFA-login
+     * completion rides a client-less session) and on rows created before the
+     * column existed.
+     */
+    clientId: Client['id'] | null;
 
     /**
      * Token kind.

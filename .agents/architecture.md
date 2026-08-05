@@ -993,7 +993,9 @@ The split exists for admission control (`accessPolicyId` per app — restrict
 the admin console without touching downstream logins; with the account
 surface shipped, regular users no longer need the console's settings pages,
 so restricting `admin-console` to administrators is the documented posture),
-per-app session/audit attribution by `clientId`, and per-app
+per-app session/audit attribution by `auth_session_tokens.client_id`
+(per token since plan 086, because one browser session serves several
+applications), and per-app
 grant/redirect/logout allowlists. Each client powers the realm-selection
 login flow (auth-code + PKCE), so there is no per-realm FK, no migration, and
 no new endpoint — the `/authorize` verifier already resolves clients via
@@ -1189,9 +1191,12 @@ choice"):
   (name-identified clients need a realm hint at `/authorize`); a
   `?realmId=` deep link skips the picker. The #3191 session-continuity
   machinery makes the exchange REUSE the session row created by the hosted
-  login and re-stamp its `clientId` to `account-console` (pinned by
-  `account-console-session.spec.ts` — one row, clientId re-stamped; holds
+  login (pinned by `account-console-session.spec.ts`: one row; holds
   cross-origin too, since the session id rides the code blob server-side).
+  Attribution rides the TOKEN, not the session (plan 086):
+  `auth_session_tokens.client_id` names the client each token was issued
+  for, while `auth_sessions.client_id` is write-once and keeps the client
+  that FIRST authorized on the row.
   An EXISTING authenticated session renders the shell directly (admission
   control gates fresh logins only). `access_denied` from an
   `accessPolicyId` on the client renders a readable denial card (wins over
@@ -2729,7 +2734,10 @@ TypeORM entity `SessionTokenEntity` (`adapters/database/domains/session-token/`)
 domain type `SessionToken` in `@authup/core-kit`. Columns: `id` (= jti,
 app-provided `@PrimaryColumn('uuid')`), `session_id` (FK → `auth_sessions`
 **ON DELETE CASCADE**), `kind` (`access`|`refresh`), `parent_id` /
-`refresh_token_id` (plain nullable uuid — informational lineage, **no** self-FK),
+`client_id` (nullable FK → `auth_clients` **ON DELETE CASCADE**; the
+per-application attribution added by plan 086, null when the minting path
+has no client, e.g. an MFA-login completion, and on rows predating the
+column), `refresh_token_id` (plain nullable uuid — informational lineage, **no** self-FK),
 `ip_address(45)` / `user_agent(512)`, `consumed_at` / `revoked_at` /
 `expires_at` (varchar(28) ISO), `created_at`. Indexes on `session_id`, `kind`,
 `expires_at`. **No subscriber** (not cached / not realtime). The same migration
@@ -2931,7 +2939,11 @@ auth-code blob:
   `OAuth2AuthorizationCodeIssuer.issue(..., { sessionId })` → `entity.session_id`.
 - `OAuth2AuthorizeGrant.resolveSession` reuses the referenced session iff it
   still exists **and** matches the code's `sub` / `sub_kind` / `realm_id`
-  (defense in depth); it stamps the authorizing `clientId` onto the row and
+  (defense in depth); it stamps the authorizing `clientId` onto the row only
+  when the row is still client-less (WRITE-ONCE since plan 086, so the column
+  means "the client that first authorized here" rather than "the client that
+  authorized most recently"; per-app attribution moved to
+  `auth_session_tokens.client_id`) and
   `sessionManager.refresh()`es it. Any mismatch, or a **session-less** authorize
   flow (external-IdP callback — `IdentityProviderController` issues its code with
   no `sessionId`; non-interactive clients), falls back to `sessionManager.create()`,

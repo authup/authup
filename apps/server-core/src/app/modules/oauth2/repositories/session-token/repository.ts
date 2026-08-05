@@ -26,6 +26,7 @@ export class SessionTokenRepositoryAdapter implements ISessionTokenRepository {
         const entity = this.repository.create({
             id: input.id,
             sessionId: input.sessionId,
+            clientId: input.clientId ?? null,
             kind: input.kind,
             parentId: input.parentId ?? null,
             refreshTokenId: input.refreshTokenId ?? null,

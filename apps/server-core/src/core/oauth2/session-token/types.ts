@@ -10,6 +10,11 @@ import type { SessionToken, SessionTokenKind } from '@authup/core-kit';
 export type SessionTokenCreateInput = {
     id: string,
     sessionId: string,
+    /**
+     * The client the token is issued for. Optional: a mint site that knows no
+     * client (an MFA-login completion) persists null rather than guessing.
+     */
+    clientId?: string | null,
     kind: SessionTokenKind,
     parentId?: string | null,
     refreshTokenId?: string | null,

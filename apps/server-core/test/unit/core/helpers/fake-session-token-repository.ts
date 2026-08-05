@@ -37,6 +37,7 @@ export class FakeSessionTokenRepository implements ISessionTokenRepository {
         const row: SessionToken = {
             id: input.id,
             sessionId: input.sessionId,
+            clientId: input.clientId ?? null,
             kind: input.kind,
             parentId: input.parentId ?? null,
             refreshTokenId: input.refreshTokenId ?? null,
