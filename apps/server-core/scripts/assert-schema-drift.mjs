@@ -15,6 +15,13 @@
  * (auth_permissions.client_id, auth_roles.client_id) and once as an
  * entire naming/column-type split (1783325495597, 1783769340000).
  *
+ * This wraps typeorm-extension's `assertSchemaMatchesMetadata` rather
+ * than calling the `typeorm-extension db drift` CLI, because the CLI
+ * discovers a DataSource from a file while this application builds its
+ * options programmatically (DataSourceOptionsBuilder injects the
+ * entities, migrations and subscribers around the env-derived
+ * connection).
+ *
  * Run it against a database the migration chain has been applied to:
  *
  *   node dist/cli/index.mjs migration run
@@ -22,26 +29,22 @@
  */
 
 import process from 'node:process';
-import { getSchemaDrift } from 'typeorm-extension';
+import { assertSchemaMatchesMetadata } from 'typeorm-extension';
 import { DataSourceOptionsBuilder } from '../dist/adapters/database/index.mjs';
 
 const options = new DataSourceOptionsBuilder().buildWithEnv();
 
-// sqlite carries no migrations and synchronizes from the entities, so
-// there are never two descriptions to compare
-const drift = await getSchemaDrift(options, { skipWithoutMigrations: true });
+try {
+    // sqlite carries no migrations and synchronizes from the entities, so
+    // there are never two descriptions to compare
+    await assertSchemaMatchesMetadata(options, { skipWithoutMigrations: true });
+} catch (error) {
+    console.error(`[schema-drift] ${options.type}: the migrated schema and the entity metadata disagree.`);
+    console.error('Either the entities changed without a migration, or a migration wrote');
+    console.error('something the entities do not describe.\n');
+    console.error(error.message);
 
-if (!drift.exists) {
-    console.log(`[schema-drift] ${options.type}: schema matches the entity metadata`);
-    process.exit(0);
+    process.exit(1);
 }
 
-console.error(`[schema-drift] ${options.type}: ${drift.up.length} statement(s) would be needed to reconcile`);
-console.error('the migrated schema with the entity metadata. Either the entities changed');
-console.error('without a migration, or a migration wrote something the entities do not describe.\n');
-
-for (const statement of drift.up) {
-    console.error(`  ${statement.query}`);
-}
-
-process.exit(1);
+console.log(`[schema-drift] ${options.type}: schema matches the entity metadata`);
