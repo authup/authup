@@ -19,7 +19,12 @@ import {
 import { SessionTokenEntity } from '../../../../../src/adapters/database/domains';
 import { generateOAuth2CodeVerifier } from '../../../../../src/core';
 import { createTestApplication } from '../../../../app';
-import { createFakeClient, createFakeUser, httpRequest } from '../../../../utils';
+import {
+    createFakeClient,
+    createFakeUser,
+    expectClientError,
+    httpRequest,
+} from '../../../../utils';
 
 const REDIRECT_URI = 'https://example.com/redirect';
 
@@ -104,7 +109,9 @@ describe('src/http/controllers/session-token', () => {
             bearer,
             sessionId,
             firstApp,
+            firstSecret,
             secondApp,
+            secondSecret,
             firstGrant,
             secondGrant,
         };
@@ -158,7 +165,9 @@ describe('src/http/controllers/session-token', () => {
         const {
             sessionId,
             firstApp,
+            firstSecret,
             secondApp,
+            secondSecret,
             firstGrant,
             secondGrant,
         } = await buildTwoAppSession();
@@ -189,16 +198,25 @@ describe('src/http/controllers/session-token', () => {
         const session = await suite.client.session.getOne(sessionId);
         expect(session.data.id).toEqual(sessionId);
 
-        // and the untouched application can still refresh
+        // The untouched application can still refresh: the session and its
+        // rows are intact.
         const refreshed = await suite.client.token.createWithRefreshToken({
             refresh_token: firstGrant.refresh_token!,
             client_id: firstApp.id,
-            client_secret: undefined as any,
-        }).catch(() => undefined);
-        expect(refreshed === undefined || typeof refreshed.access_token === 'string').toBe(true);
+            client_secret: firstSecret,
+        });
+        expect(typeof refreshed.access_token).toEqual('string');
 
-        // the revoked one cannot
-        expect(secondGrant.refresh_token).toBeDefined();
+        // The revoked one cannot. The row is the authority for refresh
+        // validity (plan 016), so a stamped row rejects the grant.
+        await expectClientError(
+            () => suite.client.token.createWithRefreshToken({
+                refresh_token: secondGrant.refresh_token!,
+                client_id: secondApp.id,
+                client_secret: secondSecret,
+            }),
+            { status: 400 },
+        );
     });
 
     it('scopes a non-privileged reader to its own sessions tokens', async () => {
@@ -312,6 +330,85 @@ describe('src/http/controllers/session-token', () => {
 
         expect(response.status).toBeGreaterThanOrEqual(400);
         expect(response.status).toBeLessThan(500);
+    });
+
+    it.each([
+        // bracket dialect
+        ['a negation', 'filter[id]=!00000000-0000-4000-8000-000000000000'],
+        ['a suffix match', 'filter[id]=~0'],
+        // expression dialect: rapiq collapses not(eq(..)) into an `ne` leaf,
+        // but a negated CONJUNCTION stays a compound node, and `or` has no
+        // bracket spelling at all. Both name a target key without bounding
+        // the result set.
+        [
+            'a negated conjunction',
+            "codec=url-expression&filter=not(and(eq(id,'a'),eq(clientId,'b')))",
+        ],
+        [
+            'a disjunction with an unscoped branch',
+            "codec=url-expression&filter=or(eq(id,'a'),eq(kind,'access'))",
+        ],
+    ])('refuses a bulk revoke scoped only by %s', async (_label, query) => {
+        // A target KEY is not a target SCOPE.
+        const { sessionId } = await buildTwoAppSession();
+
+        const response = await httpRequest(suite, 'DELETE', `/session-tokens?${query}`, { headers: admin });
+        expect(response.status).toBeGreaterThanOrEqual(400);
+        expect(response.status).toBeLessThan(500);
+
+        const rows = await suite.dataSource
+            .getRepository(SessionTokenEntity)
+            .find({ where: { sessionId } });
+        expect(rows.length).toBeGreaterThan(0);
+        for (const row of rows) {
+            expect(row.revokedAt).toBeNull();
+        }
+    });
+
+    it('still accepts a disjunction whose every branch is scoped', async () => {
+        // The rule is "bounded", not "no or": an or of scoped branches is
+        // still bounded, and rejecting it would be a false positive.
+        const first = await buildTwoAppSession();
+        const second = await buildTwoAppSession();
+
+        const query = `codec=url-expression&filter=or(eq(sessionId,'${first.sessionId}'),eq(sessionId,'${second.sessionId}'))`;
+        const response = await httpRequest(suite, 'DELETE', `/session-tokens?${query}`, { headers: admin });
+
+        expect(response.status).toEqual(202);
+        expect((await response.json()).count).toBeGreaterThan(0);
+    });
+
+    it('filters through the session relation without listing dotted keys', async () => {
+        // rapiq resolves a dotted key against the RELATION's own registered
+        // schema via `schemaMapping`, so `session.realmId` is allow-listed by
+        // the session schema rather than repeated here. Listing it locally is
+        // not even expressible: every `allowed` list is typed as simple keys
+        // or relation names.
+        const { sessionId } = await buildTwoAppSession();
+        const { data: session } = await suite.client.session.getOne(sessionId);
+
+        // Paired with the session id so the assertion cannot depend on how
+        // many other rows the suite has produced, and asserted in BOTH
+        // directions so it proves the dotted key constrains the query rather
+        // than merely being accepted and ignored.
+        const matching = await httpRequest(
+            suite,
+            'GET',
+            `/session-tokens?filter[sessionId]=${sessionId}&filter[session.realmId]=${session.realmId}`,
+            { headers: admin },
+        );
+        expect(matching.status).toEqual(200);
+        expect((await matching.json()).data.length).toBeGreaterThan(0);
+
+        const foreignRealm = '00000000-0000-4000-8000-00000000beef';
+        const excluded = await httpRequest(
+            suite,
+            'GET',
+            `/session-tokens?filter[sessionId]=${sessionId}&filter[session.realmId]=${foreignRealm}`,
+            { headers: admin },
+        );
+        expect(excluded.status).toEqual(200);
+        expect((await excluded.json()).data).toHaveLength(0);
     });
 
     it('revokes a single token by its jti', async () => {

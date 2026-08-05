@@ -11,6 +11,8 @@ import { isObject } from '@authup/kit';
 import { createURLCodec } from '@rapiq/codec-url';
 import type { ICondition } from '@rapiq/core';
 import {
+    FilterCompoundOperator,
+    FilterFieldOperator,
     and,
     eq,
     isFilter,
@@ -281,14 +283,63 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
         return this.hasTargetCondition(parsed.filters);
     }
 
+    /**
+     * Whether the condition BOUNDS the query to a target scope.
+     *
+     * The question is not "does a target key appear somewhere" but "is the
+     * result set constrained by one". Those differ, and the difference is a
+     * mass revoke:
+     *
+     * - `and` is bounded when ANY conjunct is: the others can only narrow it.
+     * - `or` is bounded only when EVERY branch is. `or(eq(id,x), eq(kind,access))`
+     *   names a target key and still selects every access token.
+     * - `not` is never a scope. A negation of a scoped predicate is its
+     *   complement, which is nearly everything.
+     *
+     * The expression dialect is what makes the last two reachable: rapiq
+     * collapses `not(eq(...))` into an `ne` leaf, but `not(and(...))` stays a
+     * compound node, and `or(...)` has no bracket-dialect spelling at all.
+     */
     protected hasTargetCondition(condition: ICondition): boolean {
         if (isFilters(condition)) {
+            if (condition.operator === FilterCompoundOperator.NOT) {
+                return false;
+            }
+
+            if (condition.operator === FilterCompoundOperator.OR) {
+                return condition.value.length > 0 &&
+                    condition.value.every((child) => this.hasTargetCondition(child));
+            }
+
             return condition.value.some((child) => this.hasTargetCondition(child));
         }
 
         if (isFilter(condition)) {
-            return (SESSION_TOKEN_FILTER_KEYS as readonly string[]).includes(condition.field) &&
-                condition.value !== '';
+            if (!(SESSION_TOKEN_FILTER_KEYS as readonly string[]).includes(condition.field)) {
+                return false;
+            }
+
+            // The OPERATOR decides, not just the field. A negation or a range
+            // names a target key while selecting nearly every row.
+            //
+            // Note this guard is inverted relative to the session bulk revoke,
+            // which was the model for it: there, failing the check falls back
+            // to the SELF-service path, so a permissive check is the safe
+            // direction. Here, passing it IS the destructive path.
+            if (condition.operator === FilterFieldOperator.EQUAL) {
+                return condition.value !== '' &&
+                    condition.value !== null &&
+                    typeof condition.value !== 'undefined';
+            }
+
+            if (condition.operator === FilterFieldOperator.IN) {
+                // An empty membership set is not a scope: it decodes to a
+                // predicate nothing satisfies, but it would still authorize the
+                // admin path alongside whatever else the query carries.
+                return Array.isArray(condition.value) && condition.value.length > 0;
+            }
+
+            return false;
         }
 
         return false;

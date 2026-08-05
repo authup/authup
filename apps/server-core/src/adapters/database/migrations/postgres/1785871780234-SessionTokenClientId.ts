@@ -19,8 +19,14 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  * under one user session) use.
  *
  * The FK matches auth_sessions.client_id: ON DELETE CASCADE, so deleting a
- * client drops the tokens issued for it. Existing rows keep NULL, which reads
- * as "attribution predates this change" and never as "no client".
+ * client drops the tokens issued for it.
+ *
+ * NULL carries two meanings and neither is "the client is unknown to us":
+ * rows written before this migration have no attribution to record, and a
+ * minting path that legitimately has no client (an MFA-login completion rides
+ * a client-less session) stores NULL deliberately. Consumers must therefore
+ * treat NULL as "not attributable to an application", never as a client to
+ * match against.
  */
 export class SessionTokenClientId1785871780234 implements MigrationInterface {
     name = 'SessionTokenClientId1785871780234';

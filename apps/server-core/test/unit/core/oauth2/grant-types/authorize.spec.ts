@@ -170,6 +170,8 @@ describe('OAuth2AuthorizeGrant', () => {
 
         // the session keeps its first client ...
         expect(sessionManager.createCalls).toHaveLength(0);
+        // exactly one refresh, so indexing [0] cannot drift onto another call
+        expect(sessionManager.refreshCalls).toHaveLength(1);
         expect(sessionManager.refreshCalls[0]).toEqual(
             expect.objectContaining({ id: sessionId, clientId: firstClientId }),
         );
