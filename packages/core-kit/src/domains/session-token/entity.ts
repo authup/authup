@@ -6,6 +6,7 @@
  */
 
 import type { Client } from '../client';
+import type { Session } from '../session';
 
 export type SessionTokenKind = 'access' | 'refresh';
 
@@ -78,4 +79,11 @@ export interface SessionToken {
      * Creation date (iso).
      */
     createdAt: string;
+
+    // Relations. The rows carry no realm or subject of their own, so both
+    // ownership and the realm gate resolve through `session`; the query schema
+    // types its dotted filter keys off these.
+    session?: Session;
+
+    client?: Client | null;
 }

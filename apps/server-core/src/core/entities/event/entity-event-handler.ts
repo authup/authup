@@ -38,6 +38,10 @@ const ENTITY_REALM_KEY_MAP : Record<`${EntityType}`, string> = {
     [EntityType.CLIENT_ROLE]: 'clientRealmId',
     [EntityType.CLIENT_SCOPE]: 'clientRealmId',
     [EntityType.CONSENT]: 'realmId',
+    // Unreachable in practice: auth_session_tokens has no entity subscriber,
+    // so no domain event is ever published for it. Present for exhaustiveness,
+    // and the key is the one it would resolve through if that changed.
+    [EntityType.SESSION_TOKEN]: 'sessionId',
     [EntityType.EVENT]: 'realmId',
     [EntityType.IDENTITY_PROVIDER]: 'realmId',
     [EntityType.IDENTITY_PROVIDER_ACCOUNT]: 'userRealmId',

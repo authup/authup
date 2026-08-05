@@ -6,8 +6,11 @@
  */
 
 import type { SessionToken } from '@authup/core-kit';
-import type { DataSource, Repository } from 'typeorm';
+import type { IQuery } from '@rapiq/core';
+import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
+import type { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
 import { In, LessThan } from 'typeorm';
+import { applyQuery, redactFieldConditions } from '../../../database/repositories/query.ts';
 import { SessionTokenEntity } from '../../../../../adapters/database/domains/index.ts';
 import type {
     ISessionTokenRepository,
@@ -107,6 +110,65 @@ export class SessionTokenRepositoryAdapter implements ISessionTokenRepository {
         }
 
         return refs;
+    }
+
+    /**
+     * Join the session and pin the columns authorization reads.
+     *
+     * A token row carries no realm or subject, so `SessionTokenService`
+     * resolves both through `session`. The join is unconditional and the three
+     * columns are selected regardless of the client's `fields` projection, so
+     * a projection cannot neutralize the gate the way a stripped `realmId`
+     * once could on the entity repositories (plan 039).
+     */
+    protected joinSessionForGate(qb: SelectQueryBuilder<SessionTokenEntity>) {
+        if (!qb.expressionMap.joinAttributes.some((join) => join.alias.name === 'session')) {
+            qb.leftJoin('sessionToken.session', 'session');
+        }
+
+        qb.addSelect([
+            'session.id',
+            'session.sub',
+            'session.subKind',
+            'session.realmId',
+        ]);
+    }
+
+    async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<SessionToken>> {
+        const qb = this.repository.createQueryBuilder('sessionToken');
+
+        const { pagination } = applyQuery(qb, query);
+
+        this.joinSessionForGate(qb);
+
+        const [entities, total] = await qb.getManyAndCount();
+
+        return {
+            data: redactFieldConditions(query, entities),
+            meta: {
+                total,
+                ...pagination,
+            },
+        };
+    }
+
+    async findOneWithSessionById(id: string): Promise<SessionToken | null> {
+        const qb = this.repository.createQueryBuilder('sessionToken')
+            .where('sessionToken.id = :id', { id });
+
+        this.joinSessionForGate(qb);
+
+        return qb.getOne();
+    }
+
+    async findAllByQuery(query: IQuery): Promise<SessionToken[]> {
+        const qb = this.repository.createQueryBuilder('sessionToken');
+
+        applyQuery(qb, query);
+
+        this.joinSessionForGate(qb);
+
+        return qb.getMany();
     }
 
     async deleteExpired(before: string): Promise<number> {

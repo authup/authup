@@ -91,6 +91,7 @@ import {
     RolePermissionController,
     ScopeController,
     SessionController,
+    SessionTokenController,
     TrustAnchorController,
     UserAttributeController,
     UserAuthenticatorController,
@@ -145,6 +146,7 @@ import {
     RoleService,
     ScopeService,
     SessionService,
+    SessionTokenService,
     SystemClientProvisioner,
     TrustAnchorService,
     UserAttributeService,
@@ -183,6 +185,7 @@ export class HTTPControllerModule {
         const keyController = this.createKeyController(container);
         const trustAnchorController = this.createTrustAnchorController(container);
         const sessionController = this.createSessionController(container);
+        const sessionTokenController = this.createSessionTokenController(container);
         const consentController = this.createConsentController(container);
         const userController = this.createUserController(container);
         const userAttributeController = this.createUserAttributeController(container);
@@ -228,6 +231,7 @@ export class HTTPControllerModule {
                 rolePermissionController,
                 scopeController,
                 sessionController,
+                sessionTokenController,
                 userController,
                 userAttributeController,
                 userAuthenticatorController,
@@ -745,6 +749,13 @@ export class HTTPControllerModule {
             requestContext: useRequestEventContext,
         });
         return new TrustAnchorController({ service });
+    }
+
+    createSessionTokenController(container: IContainer) {
+        const repository = container.resolve(OAuth2InjectionToken.SessionTokenRepository);
+        const tokenRepository = container.resolve(OAuth2InjectionToken.TokenRepository);
+        const service = new SessionTokenService({ repository, tokenRepository });
+        return new SessionTokenController({ service });
     }
 
     createSessionController(container: IContainer) {
