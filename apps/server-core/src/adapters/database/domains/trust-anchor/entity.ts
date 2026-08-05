@@ -47,11 +47,14 @@ export class TrustAnchorEntity implements TrustAnchor {
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 
-    @Index()
+    @Index('IDX_auth_trust_anchors_realm_id')
     @Column({ name: 'realm_id' })
     realmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'realm_id' })
+    @JoinColumn({
+        name: 'realm_id',
+        foreignKeyConstraintName: 'FK_auth_trust_anchors_realm_id',
+    })
     realm: RealmEntity;
 }

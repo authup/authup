@@ -28,8 +28,8 @@ import { dateToISOStringTransformer } from '../../helpers/index.ts';
 // Append-only audit record. All references (actor, client, realm, ref) are
 // plain columns without FKs — a row must survive deletion of everything it
 // references. Not cached, not realtime-broadcast: no subscriber.
-@Index(['name', 'scope'])
-@Index(['refType', 'refId'])
+@Index('IDX_auth_events_name_scope', ['name', 'scope'])
+@Index('IDX_auth_events_ref_type_ref_id', ['refType', 'refId'])
 @Entity({ name: 'auth_events' })
 export class EventEntity implements Event {
     @PrimaryColumn({ type: 'uuid' })
@@ -65,7 +65,7 @@ export class EventEntity implements Event {
     })
     refId: string | null;
 
-    @Index()
+    @Index('IDX_auth_events_client_id')
     @Column({
         name: 'client_id', 
         type: 'uuid', 
@@ -83,7 +83,7 @@ export class EventEntity implements Event {
     })
     actorType: `${IdentityType}` | null;
 
-    @Index()
+    @Index('IDX_auth_events_actor_id')
     @Column({
         name: 'actor_id', 
         type: 'uuid', 
@@ -92,7 +92,7 @@ export class EventEntity implements Event {
     })
     actorId: string | null;
 
-    @Index()
+    @Index('IDX_auth_events_actor_name')
     @Column({
         name: 'actor_name', 
         type: 'varchar', 
@@ -120,7 +120,7 @@ export class EventEntity implements Event {
     })
     requestMethod: string | null;
 
-    @Index()
+    @Index('IDX_auth_events_request_ip_address')
     @Column({
         name: 'request_ip_address', 
         type: 'varchar', 
@@ -139,7 +139,7 @@ export class EventEntity implements Event {
     })
     requestUserAgent: string | null;
 
-    @Index()
+    @Index('IDX_auth_events_realm_id')
     @Column({
         name: 'realm_id', 
         type: 'uuid', 
@@ -167,11 +167,11 @@ export class EventEntity implements Event {
     })
     data: Record<string, any> | null;
 
-    @Index()
+    @Index('IDX_auth_events_expiring')
     @Column({ type: 'boolean', default: false })
     expiring: boolean;
 
-    @Index()
+    @Index('IDX_auth_events_expires_at')
     @Column({
         name: 'expires_at', 
         type: 'varchar', 
@@ -181,7 +181,7 @@ export class EventEntity implements Event {
     })
     expiresAt: string | null;
 
-    @Index()
+    @Index('IDX_auth_events_created_at')
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 }

@@ -29,12 +29,15 @@ export class SessionTokenEntity implements SessionToken {
     @PrimaryColumn({ type: 'uuid' })
     id: string;
 
-    @Index()
+    @Index('IDX_auth_session_tokens_session_id')
     @Column({ name: 'session_id', type: 'uuid' })
     sessionId: Session['id'];
 
     @ManyToOne(() => SessionEntity, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'session_id' })
+    @JoinColumn({
+        name: 'session_id',
+        foreignKeyConstraintName: 'FK_auth_session_tokens_session_id',
+    })
     session: SessionEntity;
 
     // Per-application attribution (plan 086). It sits on the token row rather
@@ -54,10 +57,13 @@ export class SessionTokenEntity implements SessionToken {
         onDelete: 'CASCADE',
         nullable: true,
     })
-    @JoinColumn({ name: 'client_id' })
+    @JoinColumn({
+        name: 'client_id',
+        foreignKeyConstraintName: 'FK_auth_session_tokens_client_id',
+    })
     client: ClientEntity | null;
 
-    @Index()
+    @Index('IDX_auth_session_tokens_kind')
     @Column({
         type: 'varchar',
         length: 16,
@@ -114,11 +120,11 @@ export class SessionTokenEntity implements SessionToken {
     })
     revokedAt: string | null;
 
-    @Index()
+    @Index('IDX_auth_session_tokens_expires_at')
     @Column({
-        name: 'expires_at', 
-        type: 'varchar', 
-        length: 28, 
+        name: 'expires_at',
+        type: 'varchar',
+        length: 28,
     })
     expiresAt: string;
 
