@@ -141,10 +141,7 @@ export class ClientEntity implements Client {
         onDelete: 'SET NULL',
         nullable: true,
     })
-    @JoinColumn({
-        name: 'access_policy_id',
-        foreignKeyConstraintName: 'FK_auth_clients_access_policy_id',
-    })
+    @JoinColumn({ name: 'access_policy_id' })
     accessPolicy: Policy | null;
 
     @Column({

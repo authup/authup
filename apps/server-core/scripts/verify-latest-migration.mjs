@@ -152,7 +152,7 @@ const dataSource = new DataSource({ ...options, logging: false });
 await dataSource.initialize();
 
 const realm = await dataSource.getRepository(RealmEntity).findOneByOrFail({ name: 'master' });
-const client = await dataSource.getRepository(ClientEntity).findOneByOrFail({ name: 'web' });
+const client = await dataSource.getRepository(ClientEntity).findOneByOrFail({ name: 'admin-console' });
 
 // the second factor is seeded on a dedicated user: on the admin it
 // would make the password grant demand an otp and break the login probe
