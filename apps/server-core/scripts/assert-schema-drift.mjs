@@ -29,7 +29,7 @@
  */
 
 import process from 'node:process';
-import { assertSchemaMatchesMetadata } from 'typeorm-extension';
+import { SchemaDriftError, assertSchemaMatchesMetadata } from 'typeorm-extension';
 import { DataSourceOptionsBuilder } from '../dist/adapters/database/index.mjs';
 
 const options = new DataSourceOptionsBuilder().buildWithEnv();
@@ -39,6 +39,13 @@ try {
     // there are never two descriptions to compare
     await assertSchemaMatchesMetadata(options, { skipWithoutMigrations: true });
 } catch (error) {
+    // anything else (unreachable server, bad credentials, missing database)
+    // is not drift, and reporting it as drift would send whoever reads the
+    // CI log looking for a schema problem that does not exist
+    if (!(error instanceof SchemaDriftError)) {
+        throw error;
+    }
+
     console.error(`[schema-drift] ${options.type}: the migrated schema and the entity metadata disagree.`);
     console.error('Either the entities changed without a migration, or a migration wrote');
     console.error('something the entities do not describe.\n');
