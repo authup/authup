@@ -232,6 +232,10 @@ jobs:
                 working-directory: apps/server-core
                 run: npm run test:schema-drift
 
+            -   name: Round-trip the newest migration against populated data
+                working-directory: apps/server-core
+                run: npm run test:migration-latest
+
     tests-launcher:
         name: Test Launcher (smoke)
         needs: [build]
