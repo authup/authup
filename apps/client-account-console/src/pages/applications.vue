@@ -193,19 +193,39 @@ export default defineComponent({
                 // holds it, so relying on that would have an administrator
                 // revoke the application for everyone from their own account
                 // page.
-                const { data: sessions } = await httpClient.session.getMany({
-                    filters: { userId: subject },
-                    pagination: { limit: 50 },
-                });
+                // Page through the sessions and revoke per batch. A single
+                // page would leave the application signed in on every session
+                // past the server's page cap, and batching also keeps the
+                // session id list out of an unbounded query string.
+                //
+                // Offset paging, not the fetch-until-empty loop the consents
+                // use above: those rows are deleted as they are read, so that
+                // loop converges. Sessions survive this operation, so it would
+                // never terminate. The iteration bound is a defensive backstop.
+                const limit = 50;
+                for (let i = 0; i < 100; i++) {
+                    const { data: sessions } = await httpClient.session.getMany({
+                        filters: { userId: subject },
+                        pagination: {
+                            limit,
+                            offset: i * limit,
+                        },
+                    });
 
-                const sessionIds = sessions.map((session) => session.id);
-                if (sessionIds.length > 0) {
+                    if (sessions.length === 0) {
+                        break;
+                    }
+
                     await httpClient.sessionToken.deleteMany({
                         filters: {
-                            sessionId: sessionIds,
+                            sessionId: sessions.map((session) => session.id),
                             clientId: group.clientId,
                         },
                     });
+
+                    if (sessions.length < limit) {
+                        break;
+                    }
                 }
 
                 toasts.success(translations.consentRevokeAllSuccess);

@@ -418,6 +418,10 @@ describe('src/http/controllers/session-token', () => {
         const response = await httpRequest(suite, 'DELETE', `/session-tokens/${jti}`, { headers: admin });
         expect(response.status).toEqual(202);
 
+        // The response body must reflect the revoke it just performed, not the
+        // row as it was read a moment earlier.
+        expect((await response.json()).data.revokedAt).not.toBeNull();
+
         const row = await suite.dataSource
             .getRepository(SessionTokenEntity)
             .findOne({ where: { id: jti } });

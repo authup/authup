@@ -26,8 +26,9 @@ against the per-realm `account-console` system client (see
 the picker) and is redirected to the hosted login. An existing session on the
 IdP origin is reused, so no second session row is created. Attribution is per
 token (`auth_session_tokens.client_id`), so the tokens the account console
-obtains name the `account-console` client, while the session row keeps the
-client that first authorized on it.
+obtains name the `account-console` client. The session row itself records no
+application: its `client_id` is a subject foreign key and stays null for a
+user's session.
 
 A deep link may pin the realm up front: `<publicUrl>/account?realmId=<id-or-name>`.
 

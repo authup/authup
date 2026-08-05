@@ -254,7 +254,14 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
      * introspecting as active instead of surviving to its own `exp`.
      */
     protected async revoke(entity: SessionToken): Promise<void> {
-        await this.repository.revokeById(entity.id, new Date().toISOString());
+        const at = new Date().toISOString();
+
+        await this.repository.revokeById(entity.id, at);
+
+        // Stamp the in-memory row too: `delete()` returns this object as the
+        // response body, and without it a just-revoked token reports
+        // `revokedAt: null` until the client reads it again.
+        entity.revokedAt = at;
 
         if (this.tokenRepository) {
             await this.tokenRepository.setInactive(
