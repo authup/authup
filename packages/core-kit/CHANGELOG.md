@@ -1,5 +1,65 @@
 # Change Log
 
+## [1.0.0-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.58...v1.0.0-beta.59) (2026-08-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* `**` is no longer accepted inside the host of a redirect pattern or a TRUSTED_ORIGINS entry. It matches the rest of the value outright, so `https://**.example.com/**` read as "any subdomain" but accepted every origin. A single `*` is unchanged. Stored patterns are not rewritten; new writes are rejected and an offending TRUSTED_ORIGINS value fails the boot with a message naming it.
+* the per-realm `web` system client is no longer provisioned. Existing rows survive untouched (still functional, but PUBLIC_URL / TRUSTED_ORIGINS changes no longer propagate to them), and realms created after the upgrade get no `web` client. Downstream applications must register their own client, e.g. once for every realm via a wildcard realm entry; see the migration recipe in docs/src/guide/deployment/upgrading.md. Leftover rows can be removed via the API or a wildcard `absent` child entry.
+
+### Features
+
+* provision per-app system clients (admin-console, account-console) ([#3371](https://github.com/authup/authup/issues/3371)) ([140e9d2](https://github.com/authup/authup/commit/140e9d22789e2b0ed69517ce4cf4473c8d0c0b59))
+* wildcard realm provisioning, remove the web system client ([#3379](https://github.com/authup/authup/issues/3379)) ([b50c526](https://github.com/authup/authup/commit/b50c52623d51d299310da5a10aa7de35c84a70e1))
+
+
+### Bug Fixes
+
+* redirect-pattern matching, plus fixes from the beta.58 release audit ([#3397](https://github.com/authup/authup/issues/3397)) ([e00c6ba](https://github.com/authup/authup/commit/e00c6ba635d206a16b5ad19467bd5540d021c37e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/errors bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/specs bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+
+## [1.0.0-beta.58](https://github.com/authup/authup/compare/v1.0.0-beta.57...v1.0.0-beta.58) (2026-07-31)
+
+
+### Bug Fixes
+
+* a user (or client) never moves between realms ([#3362](https://github.com/authup/authup/issues/3362)) ([d45cc67](https://github.com/authup/authup/commit/d45cc677a79330b43bb6b319b70d438fbba24576))
+* **deps:** bump ilingo, validup and trapi to their latest versions ([6d69f90](https://github.com/authup/authup/commit/6d69f90665f23022de5bf3ef8c6916a50c449494))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/errors bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/specs bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+
+## [1.0.0-beta.57](https://github.com/authup/authup/compare/v1.0.0-beta.56...v1.0.0-beta.57) (2026-07-29)
+
+
+### Bug Fixes
+
+* complete schema field projections and re-target role client FK ([#3324](https://github.com/authup/authup/issues/3324)) ([9eec343](https://github.com/authup/authup/commit/9eec343965bf98990560b0092d26bd0c82a2561f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+    * @authup/errors bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+    * @authup/specs bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+
 ## [1.0.0-beta.56](https://github.com/authup/authup/compare/v1.0.0-beta.55...v1.0.0-beta.56) (2026-07-24)
 
 

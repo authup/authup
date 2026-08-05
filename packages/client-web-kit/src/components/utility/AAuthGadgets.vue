@@ -9,10 +9,12 @@ import { defineComponent } from 'vue';
 import AColorModeSwitcher from './AColorModeSwitcher.vue';
 import { ALanguageSwitcherDropdown } from './ALanguageSwitcherDropdown';
 
-// Top-right control cluster shared by every logged-out auth surface
-// (client-web's auth layout + the embedded SSR app): the two controls a
-// visitor still needs — color mode and language. Color-mode storage is
-// app-specific, so `dark` is a controlled `v-model:dark` binding.
+// Top-right control cluster shared by every auth surface (the admin console's
+// auth layout + the embedded SSR app + the account console): color mode
+// and language, plus a slot for host-specific gadgets (the account
+// console appends its user chip + sign-out here so the page has ONE top
+// bar). Color-mode storage is app-specific, so `dark` is a controlled
+// `v-model:dark` binding.
 export default defineComponent({
     components: { AColorModeSwitcher, ALanguageSwitcherDropdown },
     props: {
@@ -32,5 +34,6 @@ export default defineComponent({
             @update:dark="$emit('update:dark', $event)"
         />
         <ALanguageSwitcherDropdown link-class-extra="a-auth-gadget" />
+        <slot />
     </div>
 </template>

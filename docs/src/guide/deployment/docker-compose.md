@@ -36,19 +36,19 @@ services:
       restart: unless-stopped
       volumes:
         # Docker managed volume
-        - authup:/usr/src/writable
+        - authup:/usr/src/app/writable
         # storage in mounted volume
-        #- ./writable:/usr/src/writable
+        #- ./writable:/usr/src/app/writable
       ports:
         - "3001:3000"
       command: server/core start
       networks:
           authup:
               
-  client-web:
+  client-admin-console:
       image: authup/authup:latest
       pull_policy: always
-      container_name: client-web
+      container_name: client-admin-console
       restart: unless-stopped
       depends_on:
           - server-core
@@ -57,7 +57,7 @@ services:
         - NUXT_PUBLIC_PUBLIC_URL=http://localhost:3000 #optional
       ports:
           - "3000:3000"
-      command: client/web start
+      command: client/admin-console start
       networks:
         authup:
 
@@ -110,7 +110,7 @@ services:
     container_name: authup
     restart: unless-stopped
     volumes:
-      - authup:/usr/src/writable
+      - authup:/usr/src/app/writable
     ports:
       - "3001:3000"
     environment:
@@ -173,7 +173,7 @@ services:
         container_name: server-core
         restart: unless-stopped
         volumes:
-            - authup_data:/usr/src/writable
+            - authup_data:/usr/src/app/writable
         ports:
             - "3001:3000"
         depends_on:
@@ -188,9 +188,9 @@ services:
             - DB_DATABASE=postgres
             - REDIS_URL=redis://redis:6379
         command: server/core start
-    client-web:
+    client-admin-console:
         image: authup/authup:latest
-        container_name: client-web
+        container_name: client-admin-console
         restart: unless-stopped
         environment:
           - NUXT_PUBLIC_API_URL=http://localhost:3001 #optional
@@ -199,7 +199,7 @@ services:
           - server-core
         ports:
             - "3000:3000"
-        command: client/web start
+        command: client/admin-console start
     
     postgres:
         image: postgres:14

@@ -8,6 +8,7 @@ import type {
     Client,
     ClientPermission,
     ClientRole,
+    ClientScope,
     PermissionPolicy,
     Realm,
     Role,
@@ -21,6 +22,7 @@ import {
     ClientEntity,
     ClientPermissionEntity,
     ClientRoleEntity,
+    ClientScopeEntity,
     PermissionEntity,
     RealmEntity,
     RoleEntity,
@@ -46,11 +48,19 @@ import {
     ScopeProvisioningSynchronizer,
     UserProvisioningSynchronizer,
 } from '../../../core/provisioning/synchronizer/index.ts';
+import type { RealmProvisioningRelations } from '../../../core/provisioning/entities/index.ts';
+import {
+    WildcardRealmProvisioner,
+    expandWildcardRealmEntry,
+    extractWildcardRealmEntry,
+} from '../../../core/provisioning/wildcard/index.ts';
 import type { IProvisioningSource } from '../../../core/provisioning/types.ts';
+import { ProvisioningInjectionKey } from './constants.ts';
 import {
     ClientPermissionRepositoryAdapter,
     ClientRepositoryAdapter,
     ClientRoleRepositoryAdapter,
+    ClientScopeRepositoryAdapter,
     KeyRepositoryAdapter,
     PermissionPolicyRepositoryAdapter,
     PermissionRepositoryAdapter,
@@ -71,7 +81,7 @@ import path from 'node:path';
 import { ConfigInjectionKey, getAppOrigins } from '../config/index.ts';
 import { SymmetricCipher } from '@authup/server-kit';
 import { LoggerInjectionKey } from '../logger/index.ts';
-import { WebClientProvisioner } from '../../../core/entities/client/index.ts';
+import { SystemClientProvisioner } from '../../../core/entities/client/index.ts';
 import { KeyProvisioner } from '../../../core/key/index.ts';
 import { CompositeProvisioningSource, FileProvisioningSource } from './sources/index.ts';
 
@@ -102,6 +112,21 @@ export class ProvisionerModule implements IModule {
 
         const composite = new CompositeProvisioningSource(sources);
         const data = await composite.load(container);
+
+        // ---------------------------------------------------------------
+        // Wildcard realm entry (plan 082): split the `name: "*"` entry out
+        // of `data.realms` and deep-merge it UNDER every explicit realm
+        // entry (explicit wins per attribute, relation lists union) so the
+        // graph sync below covers declared realms in one pass. Realms
+        // without an explicit entry get the wildcard applied by the
+        // backfill loop; runtime-created realms via the DI-registered
+        // provisioner (RealmService hook).
+        // ---------------------------------------------------------------
+        const wildcardEntry = extractWildcardRealmEntry(data);
+        let wildcardVariants : Map<string, RealmProvisioningRelations> | undefined;
+        if (wildcardEntry) {
+            wildcardVariants = expandWildcardRealmEntry(wildcardEntry, data);
+        }
 
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
@@ -137,6 +162,13 @@ export class ProvisionerModule implements IModule {
             repository: container.resolve<Repository<Client>>(ClientEntity),
             realmRepository,
         });
+        const scopeRepository = new ScopeRepositoryAdapter({
+            repository: container.resolve<Repository<Scope>>(ScopeEntity),
+            realmRepository,
+        });
+        const clientScopeRepository = new ClientScopeRepositoryAdapter(
+            container.resolve<Repository<ClientScope>>(ClientScopeEntity),
+        );
 
         const permissionSynchronizer = new PermissionProvisioningSynchronizer({
             repository: permissionRepository,
@@ -160,9 +192,11 @@ export class ProvisionerModule implements IModule {
             clientPermissionRepository: new ClientPermissionRepositoryAdapter(
                 container.resolve<Repository<ClientPermission>>(ClientPermissionEntity),
             ),
+            clientScopeRepository,
 
             roleRepository,
             permissionRepository,
+            scopeRepository,
 
             roleSynchronizer,
             permissionSynchronizer,
@@ -183,11 +217,6 @@ export class ProvisionerModule implements IModule {
             clientRepository,
             roleRepository,
             permissionRepository,
-        });
-
-        const scopeRepository = new ScopeRepositoryAdapter({
-            repository: container.resolve<Repository<Scope>>(ScopeEntity),
-            realmRepository,
         });
 
         const scopeSynchronizer = new ScopeProvisioningSynchronizer({ repository: scopeRepository });
@@ -213,12 +242,15 @@ export class ProvisionerModule implements IModule {
         await rootSynchronizer.synchronize(data);
 
         // ---------------------------------------------------------------
-        // Per-realm public `web` client. Single provisioning mechanism:
-        // list every realm (incl. pre-existing) and upsert its web client.
+        // Per-realm system clients (web, admin-console, account-console).
+        // Single provisioning mechanism: list every realm (incl.
+        // pre-existing) and upsert its clients.
         // Idempotent; guarded on builtIn inside the provisioner.
         // ---------------------------------------------------------------
-        const webClientProvisioner = new WebClientProvisioner({
+        const systemClientProvisioner = new SystemClientProvisioner({
             clientRepository,
+            scopeRepository,
+            clientScopeRepository,
             appOrigins: getAppOrigins(config),
             logger: container.resolve(LoggerInjectionKey),
         });
@@ -238,10 +270,34 @@ export class ProvisionerModule implements IModule {
             logger: container.resolve(LoggerInjectionKey),
         });
 
+        // Wildcard realm provisioning (plan 082): one shared instance for
+        // the boot backfill below AND the runtime realm-create hook (the
+        // realm controller factory resolves the DI key lazily), so the two
+        // paths cannot drift. Registered only when a wildcard entry was
+        // declared.
+        let wildcardProvisioner : WildcardRealmProvisioner | undefined;
+        if (container.has(ProvisioningInjectionKey.WildcardRealmProvisioner)) {
+            container.unregister(ProvisioningInjectionKey.WildcardRealmProvisioner);
+        }
+        if (wildcardEntry) {
+            wildcardProvisioner = new WildcardRealmProvisioner({
+                relations: wildcardEntry.relations ?? {},
+                relationsByRealmName: wildcardVariants,
+                synchronizer: realmSynchronizer,
+                logger: container.resolve(LoggerInjectionKey),
+            });
+            container.register(ProvisioningInjectionKey.WildcardRealmProvisioner, { useValue: wildcardProvisioner });
+        }
+
         const realms = await realmRepository.find();
         for (const realm of realms) {
-            await webClientProvisioner.ensureForRealm(realm);
+            await systemClientProvisioner.ensureForRealm(realm);
             await keyProvisioner.ensureForRealm(realm);
+            // Realms with an explicit entry were already covered by the
+            // wildcard expansion inside the graph sync above.
+            if (wildcardProvisioner && !wildcardProvisioner.hasExplicitEntry(realm)) {
+                await wildcardProvisioner.ensureForRealm(realm);
+            }
         }
 
         if (config.permissionsDefaultPolicyAssignment) {

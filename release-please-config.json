@@ -1,12 +1,14 @@
 {
     "include-component-in-tag": false,
     "release-type": "node",
-    "release-as": "1.0.0-beta.56",
+    "release-as": "1.0.0-beta.59",
     "packages": {
         ".": {"component": "root", "extra-files": ["CITATION.cff"]},
 
         "apps/authup": {"component": "authup"},
-        "apps/client-web": {"component": "client-web"},
+        "apps/client-account-console": {"component": "client-account-console"},
+        "apps/client-admin-console": {"component": "client-admin-console"},
+        "apps/client-auth-console": {"component": "client-auth-console"},
         "apps/server-core": {"component": "server-core"},
 
         "packages/access": {"component": "access"},
@@ -41,7 +43,9 @@
                 "root",
 
                 "authup",
-                "client-web",
+                "client-account-console",
+                "client-admin-console",
+                "client-auth-console",
                 "server-core",
 
                 "access",

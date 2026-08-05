@@ -16,6 +16,7 @@ export const TranslatorTranslationAppGerman : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.SETTINGS]: 'Einstellungen',
     [TranslatorTranslationAppKey.LOGOUT]: 'Abmelden',
     [TranslatorTranslationAppKey.ACCOUNT]: 'Konto',
+    [TranslatorTranslationAppKey.MANAGE_ACCOUNT]: 'Konto verwalten',
     [TranslatorTranslationAppKey.SECURITY]: 'Sicherheit',
 
     [TranslatorTranslationAppKey.MANAGEMENT]: 'Verwaltung',
@@ -69,9 +70,12 @@ export const TranslatorTranslationAppGerman : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.CONSENT_EMPTY]: 'Du hast noch keiner Anwendung Zugriff gewährt.',
     [TranslatorTranslationAppKey.CONSENT_REVOKE]: 'Widerrufen',
     [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL]: 'Zugriff widerrufen',
+    [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_SUCCESS]: 'Der Anwendungszugriff wurde widerrufen.',
     [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_TITLE]: 'Anwendungszugriff widerrufen',
     [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_DESCRIPTION]: 'Die Anwendung wird bei der nächsten Anmeldung erneut um deine Einwilligung bitten.',
     [TranslatorTranslationAppKey.CONSENT_SCOPES]: 'Gewährte Berechtigungen',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_TITLE]: 'Verschlüsselungsschlüssel unwiderruflich löschen?',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_DESCRIPTION]: 'Dieser Schlüssel wird noch von {{count}} verschlüsselten Geheimnissen referenziert. Das Löschen macht sie dauerhaft unlesbar.',
+
+    [TranslatorTranslationAppKey.BACK_TO_APP]: 'Zurück zu {{host}}',
 };

@@ -8,5 +8,5 @@
 export * from './constants.ts';
 export * from './service.ts';
 export * from './types.ts';
-export * from './web-client.ts';
+export * from './system-clients.ts';
 export * from './schema.ts';

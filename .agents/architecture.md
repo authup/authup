@@ -263,7 +263,15 @@ usable at the service level and nothing in core depends on TypeORM:
   over by reference). Non-displaceable like a repository `andWhere`: a
   conflicting client condition intersects (empty result) instead of
   replacing the scope, and appended conditions bypass the decode
-  allow-lists (server context). The key/trust-anchor services use it for
+  allow-lists (server context). Since rapiq **beta.15**
+  (tada5hi/rapiq#871) the wrap is unconditional: `and()` on an EMPTY
+  receiver nests the injected conditions in their own group rather than
+  adopting them as a flat root-AND, closing the hole where a later
+  replace-merge could displace a scope injected onto a filter-less
+  query. A hostile replace-merge against such a tree now throws
+  `FILTERS_NOT_FLAT`, which authup never hits (nothing merges a filter
+  tree; every `.merge(` in the tree is a TypeORM entity merge). The
+  key/trust-anchor services use it for
   the nested `/realms/:realmId/*` mounts (`options.realmId` from
   `getRequestRealmID`); never splice a scope into the RAW wire query —
   on a `codec=url-expression` payload the bracket `filter` key is an
@@ -571,15 +579,73 @@ into the URL (the reset form asks for email/name).
 
 #### Auth Workflow UI (backend-served SSR pages) + Status Endpoint
 
-Authup can run headless (server-core without client-web), so every auth
-workflow page is served by the embedded SSR app (`apps/server-core/ui`),
-not by client-web:
+Authup can run headless (server-core without client-admin-console), so every auth
+workflow page is served by the SSR auth app (`apps/client-auth-console`,
+resolved and rendered by server-core — plan 083),
+not by client-admin-console:
 
 - **Routes**: `/authorize`, `/register`, `/activate`, `/password-forgot`,
   `/password-reset` — each `GET` serves SSR HTML while `POST` on the same
   path remains the JSON API. The render plumbing is shared:
-  `renderUIPage(event, { url, payload })` in `adapters/http/ui/render.ts`
-  (JIT vs dist, template, manifest, preload links, content-type).
+  `renderAuthConsolePage(event, { url, payload })` in
+  `adapters/http/ui/auth-console/module.ts` (JIT vs dist, template,
+  manifest, preload links, headers), composing the cross-console helpers
+  in `adapters/http/ui/shared/` (cookie-derived html attrs, security
+  headers, asset rebasing). The payload reaches the client as
+  `window.__AUTHUP__` — the ONE reserved window global every served
+  console shares (Nuxt's `__NUXT__` model; each console is its own
+  document, so the shapes never coexist — the account console injects its
+  runtime config under the same name).
+- **Template splicing goes through `replaceTemplateMarker`** (never a bare
+  `String.prototype.replace` with a string replacement). A string
+  replacement expands `$&`, `` $` ``, `$'` and `$$` **in the replacement
+  value**, and the value spliced into `<!--app-html-->` carries the SSR
+  hydration payload, which reflects raw query parameters. `?token=$'`
+  therefore used to splice the template's own tail into the payload,
+  leaving an inline script that was no longer valid JavaScript, so
+  `window.__AUTHUP__` was never assigned and the page died with "No
+  hydration data set." (not XSS: the injected span is template-derived).
+  No escaping helper can defend against this, because the expansion
+  happens after the value has been built: the auth console payload is
+  serialized inside the bundle (`serializePayload` in
+  `apps/client-auth-console/src/window.ts`), the account console config by
+  `serializeInlineScriptJSON`, and both produce a string that
+  `String.prototype.replace` then re-interprets. The same rule covers the
+  account console's `<!--account-config-->` splice.
+- **Serving seam (plan 083)**: the Vue app ships as
+  `@authup/client-auth-console` (a server-core runtime dependency),
+  resolved via `resolveAuthConsolePackagePath`/`-DistPath`
+  (`adapters/http/ui/auth-console/resolve.ts`, the same locter `locateUpSync`
+  walk as the account console). Production reads the built dist
+  (`dist/client/index.html` + `.vite/ssr-manifest.json`,
+  `dist/server/server.js` for `render()`; client assets mounted at
+  `/public`); JIT dev mode roots the embedded vite dev server at the
+  package SOURCE dir (the workspace symlink — vite auto-loads the
+  package's own `vite.config.ts`; a published install has no JIT). The
+  boundary is typed by the package's `src/contract.ts`
+  (`HydrationPayload`, `RenderContext`, `RenderFunction`) — server-core
+  imports those TYPES only, the runtime stays a dist-file `read()`.
+  Substituting a package that fulfills the contract is the supported way
+  to replace the hosted auth UI (the Keycloak login-theme analog). A
+  missing bundle 500s with an actionable message (build
+  `apps/client-auth-console` first).
+- **JIT dev mode caveats.** `ssr.noExternal: true` is scoped to
+  `command === 'build'` in the auth console's `vite.config.ts`: it is what
+  makes the published `dist/server/server.js` self-contained, but applying
+  it in dev inlines `vue/server-renderer`, which resolves to its CJS build
+  under the node condition and cannot be evaluated by the SSR module
+  runner (`exports is not defined` through `ssrLoadModule` and the ssr
+  environment runner alike). The key is omitted rather than set to
+  `false`, which rolldown rejects. The app's `resolve.alias` list must
+  also cover every `@authup/*` package it pulls in transitively, so dev
+  resolution reaches package source instead of a possibly unbuilt dist
+  (and so the bundle agrees with the root tsconfig paths `vue-tsc`
+  checks). Note the gate itself, `isCodeTransformation(JUST_IN_TIME)`, is
+  only true under ts-node/tsx, and no server-core script runs that way.
+  The branch is therefore unreachable in practice, which is why its
+  breakage went unnoticed. The vite dev server is created once in
+  `registerAssetsMiddleware` and closed by `HTTPMiddlewareModule.teardown`
+  (it owns a file watcher plus an HMR websocket).
 - **Feature flags** ride the hydration payload (`data.features`,
   `StatusResponseFeatures` shape) — pages render the form when the
   workflow is enabled, otherwise a localized "disabled" notice (no 404:
@@ -591,13 +657,13 @@ not by client-web:
 - **Flow continuity**: workflow links carry a same-origin `redirect` query
   param (the original `/authorize` path + query) so "back to login"
   restores the authorize request. `sanitizeRelativeRedirect()` in
-  `adapters/http/ui/render.ts` rejects absolute / protocol-relative URLs
+  `adapters/http/request/helpers/redirect.ts` rejects absolute / protocol-relative URLs
   (open-redirect guard).
 - **Internal HTTP client (SSR self-calls)**: the render's API calls
   (session hydration, identity-provider/scope fetches) go through the
   client registered under `HTTPInjectionKey.UIHttpClient`.
   `HTTPModule.setup` registers the production default —
-  `createInternalUIHttpClient` (`adapters/http/ui/internal-http-client.ts`),
+  `createInternalUIHttpClient` (`adapters/http/ui/auth-console/http-client.ts`),
   a `@authup/core-http-kit` `Client` whose hapic `FetchTransport` rewrites
   every request targeting `publicUrl` (origin + sub-path prefix, wildcard
   listen hosts normalized to loopback) onto the server's own listen
@@ -619,12 +685,12 @@ not by client-web:
   reverse proxy (e.g. `https://example.com/auth/* → authup /*`) with no
   extra config — the prefix is derived from `publicUrl`'s pathname
   (`getURLBasePath` in `@authup/kit`). The vite build keeps its fixed
-  `base: '/public/'`; `renderUIPage` rebases emitted asset URLs onto the
-  prefix per request (`rebasePublicAssetURLs` in
-  `adapters/http/ui/base-path.ts`, so the prebuilt dist stays
+  `base: '/public/'`; `renderAuthConsolePage` rebases emitted asset URLs onto the
+  prefix per request (`rebaseAssetURLs` in
+  `adapters/http/ui/shared/html.ts`, so the prebuilt dist stays
   deployment-agnostic). Inside the UI app the same prefix feeds the
-  vue-router history base (`ui/src/app.ts`) and the `useBasePath()`
-  composable (`ui/src/base-path.ts`) that pages use for inter-page hrefs
+  vue-router history base (`src/app.ts`) and the `useBasePath()`
+  composable (`src/base-path.ts`) that pages use for inter-page hrefs
   and rendered `redirect` values — `redirect`/`requestPath` params stay
   server-local (prefix-free); the prefix is applied only when a path is
   rendered as an href. Server-side `Location` redirects are unaffected
@@ -739,7 +805,7 @@ threads instances through constructor/context args:
   type from `@authup/server-kit`) explicitly: middlewares take it via options
   (`createLoggerMiddleware({ env, logger })`, `registerErrorMiddleware(router,
   { logger })`), core services via their context (`RealmService` /
-  `WebClientProvisioner` accept optional `logger`). A service without a logger
+  `SystemClientProvisioner` accept optional `logger`). A service without a logger
   simply stays silent (`this.logger?.warn(...)` guard style).
 - **Domain events** — `DomainEventPublisher` (from `@authup/server-kit`,
   optional `logger` ctx) aggregates `IDomainEventHandler`s
@@ -784,11 +850,11 @@ The provisioning system declaratively synchronizes entities (permissions, roles,
 
 ### Layers
 
-- **core/provisioning/entities/**: Provisioning entity types and validators (what can be provisioned)
+- **core/provisioning/entities/**: Provisioning entity types and validators (what can be provisioned). A client declares `permissions` / `roles` (define new client-scoped ones) plus `globalPermissions` / `realmPermissions` / `globalRoles` / `realmRoles` / `globalScopes` / `realmScopes` (assign existing). Every assign list lands in the matching junction table
 - **core/provisioning/strategy/**: Strategy types (`createOnly`, `merge`, `replace`, `absent`) and normalization
 - **core/provisioning/synchronizer/**: Business logic that applies strategies and manages relations
-  - `entity-resolver.ts`: `ProvisioningEntityResolver<T>` — resolves Permission/Role entities by name with wildcard support and scope filtering (global, realm, client)
-  - `junction-synchronizer.ts`: `ProvisioningJunctionSynchronizer<T>` — ensures junction entries (e.g. RolePermission, UserRole) exist between owner and target entities
+  - `entity-resolver.ts`: `ProvisioningEntityResolver<T>` — resolves Permission/Role/Scope entities by name with wildcard support and scope filtering (global, realm, client). The client dimension is always pinned so a client-ownable entity never resolves another owner's rows; entities without one (scope) opt out via `{ clientScoped: false }`, since the predicate would not compile against their table
+  - `junction-synchronizer.ts`: `ProvisioningJunctionSynchronizer<T>` — ensures junction entries (e.g. RolePermission, UserRole, ClientScope) exist between owner and target entities
   - `{entity}/module.ts`: Per-entity synchronizer composing resolver + junction helpers
 - **app/modules/provisioning/sources/**: Data sources that produce `RootProvisioningEntity`
   - `default/`: Built-in defaults (system policies, admin user, system client, all permissions/scopes)
@@ -822,28 +888,161 @@ dropped from the validator output) are validated via
 `PolicyProvisioningValidator` (attributes + `extraAttributes` + recursive
 `children`) and provisioned.
 
+A validation failure is re-thrown by `FileProvisioningSource` with the
+offending **file path** plus every issue rendered as
+`<path>: <message>`. The raw `ValidupError` message is the generic
+"Property `<path>` is invalid" and names neither the file nor the reason, so
+with several mounted files a bad entry aborted the boot with nothing to act
+on.
+
+`CLIENT_RESERVED_NAMES` (`system`, `admin-console`, `account-console`) is
+**not** enforced for explicit realm blocks. It stays a `ClientService.save()`
+(API-path) guard, because provisioning bypasses the service. Declaring a
+reserved name there is allowed and partially effective — see *Per-Realm
+System Clients* below for which attributes a declaration can and cannot set.
+A WILDCARD realm entry (below) is the exception: reserved client names are
+rejected at config load (new surface, no BC concern — a template stamping
+one into every realm would fight the system MERGE on every boot).
+
 ### Synchronization Order
 
 `ProvisionerModule` runs (1) `GraphProvisioningSynchronizer`, (2) backfill via `assignDefaultPolicy` (config-gated, deprecated).
 
 `GraphProvisioningSynchronizer` processes in order: policies → permissions → roles → scopes → realms.
-`RealmProvisioningSynchronizer` processes per realm: clients → permissions → roles → users → scopes.
+`RealmProvisioningSynchronizer` processes per realm: scopes → clients → permissions → roles → users.
+Scopes run first because they are leaf entities carrying no relations of their
+own, and a client in the same realm block may bind them via `realmScopes`.
 
-### Per-Realm Public `web` Client
+### Wildcard Realm Entry (`realms[].attributes.name: "*"`, plan 082)
 
-Every realm auto-provisions a public OAuth2 client named **`web`** (constant
-`CLIENT_WEB_NAME` in `@authup/core-kit`) used by authup's own client-web and any
-downstream UI embedding `client-web-kit`. It powers the realm-selection login
-flow (auth-code + PKCE), so there is no per-realm FK, no migration, and no new
-endpoint — the `/authorize` verifier already resolves clients via
-`findOneByIdOrName('web', realmId)`.
+A `realms[]` entry whose name is the literal `*` (`REALM_WILDCARD_NAME`,
+`core/provisioning/constants.ts`) is a SELECTOR over realms, not a realm
+declaration: its relations (clients / roles / scopes / permissions / users)
+are ensured in **every** realm — existing at boot, new at creation. This is
+the operator surface that replaced the removed `web` system client (declare
+a downstream login client once, get it in every realm), and the mechanism
+behind the realm-admin-in-every-realm recipe (a wildcard user with
+`globalRoles: [realm_admin]`, issue #2927). YAML note: a bare `*` is an
+alias token, so it must be quoted (`name: "*"`).
 
-- **Attributes** (`buildWebClientAttributes`, `core/entities/client/web-client.ts`):
+- **Relations-only:** a wildcard entry may carry nothing but
+  `attributes.name` and `relations`; realm-level attributes and a
+  realm-level `strategy` are rejected at validation
+  (`RealmWildcardProvisioningValidator`, dispatched by
+  `RealmProvisioningValidator.run` on the literal name; a partial pattern
+  like `tenant-*` fails the regular name check). Child strategies keep the
+  full vocabulary: `createOnly` (default — seed once, realm admins own the
+  row), `merge`/`replace` (reassert per boot on every realm), `absent`
+  (sweep the named entity out of every realm).
+- **Mechanism (expansion + fan-out):** `ProvisionerModule.setup` extracts
+  the wildcard entries after the composite load (folding multiples via the
+  shared merge helpers in `core/provisioning/merge/`), deep-merges the
+  folded entry UNDER every explicit realm entry (explicit wins per
+  attribute, relation lists union, the explicit child's strategy wins —
+  exactly the composite-source rules; a sequential run-after was rejected
+  because `createOnly` is first-writer-wins while `merge` is
+  last-writer-wins, so no ordering satisfies "explicit wins" for both), and
+  lets the graph sync cover declared realms in one pass. Realms without an
+  explicit entry get the entry applied by the startup backfill loop; realms
+  created at runtime via `RealmService.save` get it through the
+  DI-registered `WildcardRealmProvisioner`
+  (`ProvisioningInjectionKey.WildcardRealmProvisioner`, resolved lazily at
+  request time by `createRealmController` since HTTP has no boot-order
+  dependency on provisioning). One provisioner instance serves both paths.
+- **Clone per realm (load-bearing):** `RealmProvisioningSynchronizer`
+  MUTATES its input (realmId stamping onto child attribute objects; the
+  `replace` branch writes the resolved row id back), so
+  `WildcardRealmProvisioner` deep-clones the entry per realm application —
+  a shared object would leak one realm's ids into the next realm's sync.
+  Pinned by `test/unit/core/provisioning/wildcard.spec.ts`.
+- **`IRealmProvisioner` seam:** `RealmService` takes
+  `realmProvisioners?: IRealmProvisioner[]` (order: system clients → keys →
+  wildcard; each wrapped never-fail) — `ISystemClientProvisioner` and
+  `IKeyProvisioner` extend the same contract
+  (`core/provisioning/types.ts`).
+- Authup itself declares nothing via the wildcard — product infrastructure
+  (console clients, keys) stays code-owned, template data stays
+  operator-owned. The two ownership models drift oppositely by design
+  (system = MERGE-owned reassert; template = `createOnly`, admin edits
+  survive).
+
+### Per-Realm System Clients (`admin-console`, `account-console`)
+
+Every realm auto-provisions two public OAuth2 clients (plan 079;
+`SYSTEM_CLIENT_DEFINITIONS` in `core/entities/client/system-clients.ts`,
+name constants in `@authup/core-kit`):
+
+- **`admin-console`** (`CLIENT_ADMIN_CONSOLE_NAME`) — authup's own admin
+  console (`apps/client-admin-console`; its login sends `client_id=admin-console`,
+  runtime-overridable via `NUXT_PUBLIC_CLIENT_ID`).
+- **`account-console`** (`CLIENT_ACCOUNT_CONSOLE_NAME`) — the account
+  self-service surface served by server-core at `<publicUrl>/account`
+  (plan 080; see *Account Console* below).
+
+The former third definition — `web`, a shared auto-consenting client for
+downstream RPs — was REMOVED (plan 082): it was default-on attack surface
+stamped into every realm for apps that may not exist. Downstream RPs
+register their own clients (per realm, or in every realm via a wildcard
+realm entry — see above). Legacy `web` rows survive as ordinary clients:
+still functional, no longer MERGE-refreshed (`TRUSTED_ORIGINS` changes no
+longer propagate to them), absent from new realms; deletable via the API or
+a wildcard `absent` child entry. `CLIENT_WEB_NAME` is gone and `web` is a
+plain, creatable client name again.
+
+The split exists for admission control (`accessPolicyId` per app — restrict
+the admin console without touching downstream logins; with the account
+surface shipped, regular users no longer need the console's settings pages,
+so restricting `admin-console` to administrators is the documented posture),
+per-app session/audit attribution by `auth_session_tokens.client_id`
+(per token since plan 086, because one browser session serves several
+applications), and per-app
+grant/redirect/logout allowlists. Each client powers the realm-selection
+login flow (auth-code + PKCE), so there is no per-realm FK, no migration, and
+no new endpoint — the `/authorize` verifier already resolves clients via
+`findOneByIdOrName(name, realmId)`.
+
+- **Attributes** (`buildSystemClientAttributes(definition, realm, appOrigins)`):
   `authMethod: 'none'`, `tokenBindingMethod: 'none'`, `builtIn: true`, `active: true`,
   `grantTypes: 'authorization_code refresh_token'` (an enforced allowlist —
   see *Per-client grant allowlist* under the token-endpoint section),
-  `scope: 'global openid'`, `redirectUri` = one `<origin>/**` wildcard per
-  trusted app origin (matched by `isSimpleMatch`).
+  `redirectUri` = one `<origin>/**` wildcard per trusted app origin (matched
+  by `isSimpleMatch`) — deliberately the SHARED app-origin set for every
+  definition, since `redirectUri` is MERGE-owned: a separately-hosted surface
+  (plan 078 "relocatable by choice") registers its origin via
+  `TRUSTED_ORIGINS`, never by editing the client row. `displayName` is seeded
+  at CREATE only (never re-asserted), so admins can relabel.
+- **Pattern semantics** (`isSimpleMatch`, `@authup/kit`): `*` matches a run
+  of characters (empty included) that does not cross a `/`, `**` matches the
+  rest of the value, and once the value is exhausted a separator in front of
+  a wildcard is optional (so `<origin>/**` covers the bare origin). The `/`
+  boundary is what keeps a host wildcard inside the host:
+  `https://*.example.com/**` covers every subdomain but not
+  `https://a.example.com.evil.test/cb`, `https://a.example.com@evil.test/cb`
+  or a differing port. Matching is case sensitive, so a caller comparing URLs
+  canonicalizes first (`resolveAccountConsoleRef`). The matcher walks value
+  and pattern on separate indices with ONE backtrack point (the last `*`),
+  which bounds it at O(value x pattern) and keeps it regex-free, so no
+  pattern can be turned into a ReDoS. A property test pins it against a
+  recursive reference over every value/pattern pair up to length 4
+  (`packages/kit/test/unit/is-simple-match.spec.ts`) — keep that test when
+  touching the walk, since the backtracking is far easier to break than to
+  review. Before #3394 the single-`*` branch advanced ONE character instead
+  of consuming the run: a host wildcard was inert, and worse, the
+  no-separator-left early return made every path-less value match every
+  pattern sharing its literal prefix, so a client holding a single `*` in
+  `redirectUri` accepted `https://attacker.test` as a redirect target. The
+  provisioned `<origin>/**` patterns were never affected (their only
+  wildcard is a `**`, which returns early).
+- **Scopes** (`SYSTEM_CLIENT_SCOPE_NAMES` = `global` + `openid`, per
+  definition) are bound as
+  `auth_client_scopes` rows. That junction is the only source `/authorize`
+  reads scopes from (`OAuth2ScopeRepository.findByClientId`). The `Client.scope` column carries
+  the same list but is descriptive only: nothing on any production path reads
+  it. Writing the column alone left the client with an empty granted set, so a
+  standard OIDC `scope=openid` request failed with `insufficient_scope` while
+  only requests carrying `global` passed via the verifier's bypass (#3347).
+  The junction rows are additive: a scope an admin bound by hand survives the
+  next boot.
 - **App origins** come from `getAppOrigins(config)` = publicUrl's origin +
   `config.trustedOrigins` merged verbatim. A `trustedOrigins` entry may carry
   an http(s) scheme (contributes exactly that origin; other protocols are
@@ -857,29 +1056,175 @@ endpoint — the `/authorize` verifier already resolves clients via
   map is the compile-time exhaustiveness guard — an unmounted Config key fails
   the build instead of being silently stripped), making
   `parseConfig`/`normalizeConfig` async. `TRUSTED_ORIGINS` (env, comma-separated) is
-  **security-sensitive**: the `web` client is `builtIn` (auto-consent) + `global`
+  **security-sensitive**: every system client is `builtIn` (auto-consent) + `global`
   scope, so any allowlisted origin can obtain a full-permission user token.
   The origin list does NOT drive CORS — CORS reflects any origin by default
   (auth is header-based only, and OAuth2 clients are registered at runtime on
   domains unknown at startup; an explicit allowlist can be set via the
   `middlewareCors` config options). In non-production,
-  `http://localhost:3000` is dev-seeded so client-web works on first run.
-- **Provisioning (`WebClientProvisioner.ensureForRealm`)** is the single upsert
-  mechanism, run two ways and sharing the same factory so they can't drift:
+  `http://localhost:3000` is dev-seeded so client-admin-console works on first run.
+- **Provisioning (`SystemClientProvisioner.ensureForRealm`)** is the single
+  upsert mechanism — it loops `SYSTEM_CLIENT_DEFINITIONS` — run two ways and
+  sharing the same factory so they can't drift:
   1. **Startup** — `ProvisionerModule` lists every realm (incl. pre-existing)
-     after the graph sync and upserts each realm's `web` client (MERGE — refreshes
-     `redirectUri` when config changes).
+     after the graph sync and upserts each realm's system clients (MERGE —
+     refreshes `redirectUri` when config changes).
   2. **Runtime** — `RealmService.save()` calls `ensureForRealm` when it *creates*
-     a new realm, via the injected `webClientProvisioner` (system-level, ungated —
-     a realm creator may lack `CLIENT_CREATE`). Not called on update.
-  Idempotent; guarded on `builtIn` — a non-built-in client named `web` is never
-  overwritten (skip + warn).
-- **Guardrails:** `web` and `system` are reserved client names — `ClientService.save()`
+     a new realm, via the injected `realmProvisioners` array (system clients →
+     keys → wildcard defaults; each `IRealmProvisioner` is system-level,
+     ungated — a realm creator may lack `CLIENT_CREATE` — and never-fail).
+     Not called on update.
+  Idempotent. The attribute MERGE is dirty-checked to keep a steady-state boot
+  free of redundant UPDATEs, but the scope binding runs unconditionally. An
+  instance provisioned before the junction rows existed carries a current
+  client with no scopes at all. Every system client name is reserved, so the
+  row belongs to the system whatever state it is in: a non-built-in client
+  squatting one predates the reservation and is taken over (overwrite + warn)
+  rather than left to shadow the realm's system client.
+- **The ten attributes in `buildSystemClientAttributes` are owned by the
+  provisioner and reassert on every boot.** Whatever writes a different value
+  to `name`, `realmId`, `authMethod`, `tokenBindingMethod`, `builtIn`,
+  `active`, `grantTypes`, `scope`, `redirectUri` or `postLogoutRedirectUri`,
+  a provisioning file or the API, the MERGE reverts it at the next start with
+  no error (the takeover `warn` above fires only for a non-`builtIn` row).
+  Redirect patterns are configured through `trustedOrigins`, not per client.
+  Everything outside that set survives a boot and is the supported way to
+  extend the client: `displayName` (seeded from the definition at create,
+  then admin-owned), `description`, `baseUrl`, `rootUrl`,
+  `accessPolicyId` (deliberately omitted from the builder so an admin-set
+  policy is not wiped), and every junction row, since `ensureScopes` only
+  inserts what is missing and never deletes.
+- **Guardrails:** `system`, `admin-console` and `account-console` are
+  reserved client names — `ClientService.save()`
   rejects API attempts to create/rename a client onto them (`CLIENT_RESERVED_NAMES`).
+  An existing `builtIn` row keeping its own name is exempt, so an admin holding
+  `CLIENT_UPDATE` can edit a provisioned system client through the API; only
+  the owned attributes above snap back on the next boot.
   The client validator strips `builtIn` on create/update, so no API caller can
   self-assign it — only provisioned clients are `builtIn`. The SSR `AuthorizeForm`
   auto-submits consent for `builtIn` clients (skips the Allow/Deny step); user-
   created clients are never `builtIn` and still show consent.
+
+### Account Console (`/account`, plan 080)
+
+End-user self-service, shipped as its own app workspace
+`apps/client-account-console` (`@authup/client-account-console`): a
+client-only Vite/Vue SPA — deliberately NO SSR, since auth-gated content
+cannot server-render (header-only auth) and the SSR ui app's pages render
+a spinner until mounted anyway. server-core depends on the package at
+RUNTIME and serves its built `dist/` ("embedded by default, relocatable by
+choice"):
+
+- **Serving seam** (`adapters/http/ui/account-console/module.ts`, the plan-081 static-SPA
+  pilot): `AccountController` (`@DController('/account')`, `''` +
+  `'/:page'` — client-side routing owns sub-paths, every route returns the
+  same shell) calls
+  `serveAccountConsolePage(event, { baseURL, features, trustedOrigins })`,
+  which resolves the package via locter's
+  `locateUpSync('node_modules/@authup/client-account-console/package.json',
+  { cwd: PACKAGE_PATH })` — the node_modules ancestor walk from
+  server-core's package root (works for the workspace symlink AND a
+  published install; only positive resolution is cached), injects the
+  runtime config by replacing the
+  `<!--account-config-->` marker in the built index.html
+  (`window.__AUTHUP__ = { apiUrl, basePath, features, ref }`: the shared
+  authup window global, escaped
+  like every inline script payload; `ref` is the server-validated back-link
+  origin, see below), stamps lang/color-mode html attrs from
+  the shared cookies (no FOUC), rebases the fixed `/account/` vite-base
+  asset hrefs when publicUrl carries a sub-path, and sets the same security
+  headers as `renderAuthConsolePage`. Static assets ride the assets middleware
+  (`/account/assets` → `<pkg>/dist/assets`, registered in dev mode too — the
+  bundle is prebuilt, not vite-transformed). A missing bundle 500s with an
+  actionable message (build `apps/client-account-console` first).
+- **Runtime config contract** (`src/config.ts`): a standalone host serves
+  the same dist under `/account` on its own origin and injects
+  `window.__AUTHUP__` (or replaces the marker) with `apiUrl` (+ optional
+  `basePath` and an already-validated `ref` of its own, since only
+  server-core's serving path runs the trusted-origin check below); with
+  nothing injected the app derives the API URL same-origin from its base
+  path. Standalone hosting additionally needs the origin registered in
+  `TRUSTED_ORIGINS` (drives the `account-console` client's
+  redirect/post-logout allowlists). The launcher never spawns it: no
+  binary, no process.
+- **`ref` back link:** an optional `ref` query parameter names the
+  application the visitor came from. `serveAccountConsolePage` validates
+  it against `getAppOrigins(config)` (each origin as an `<origin>/**`
+  `isSimpleMatch` pattern, the same shape as the client redirect
+  allowlist, after canonicalizing through `URL` so a case-differing host
+  still matches) and injects the survivor into `window.__AUTHUP__.ref`;
+  anything else is dropped silently. This is the FIRST request-reflected
+  value in that payload, so the `replaceTemplateMarker` splice is now
+  load-bearing against `$`-expansion, not merely conventional. The
+  trusted value the app renders from lives only in an in-memory holder
+  (`src/ref.ts`), seeded from that server-validated config on every full
+  load; nav links carry `?ref=` for display and bookmarking only, and
+  the app never reads `route.query.ref` back (that would reintroduce the
+  exact allowlist bypass the server-side check exists to close).
+  `sessionStorage` under `authup:account:ref` carries the trusted value
+  across the `/authorize` round-trip only, written just before the kick
+  and consumed by the router guard on return, so no entry survives to go
+  stale. The admin console's `/settings/*` redirect stub and its header
+  "Manage account" link both build their URL through
+  `useAccountConsoleURL()`, which attaches the origin.
+- **App bootstrap** (`src/main.ts`): vue-router base = config `basePath`
+  (routes are base-relative: `/`, `/password`, `/authenticators`,
+  `/sessions`, `/applications`, catch-all → `/`), the same kit + vuecs
+  install choreography as the SSR ui app minus SSR/hydration (no
+  `hydrationStore` — nothing to hand off), `vc-locale`/`vc-color-mode`
+  cookie continuity with the auth pages, own `NuxtIconBundle` scan
+  (app src + kit src + vuecs icon preset).
+- **Feature flag `accountConsoleEnabled`** (env `ACCOUNT_CONSOLE_ENABLED`,
+  default `true`): rides `StatusResponseFeatures.accountConsole`
+  (`buildUIFeatures` → status endpoint + the injected config); disabled →
+  the shell renders `AWorkflowDisabledNotice` client-side (no 404).
+- **Login = full auth-code + PKCE against the per-realm `account-console`
+  client** (Keycloak model — per-app attribution + access-policy
+  enforceability), NOT bare reuse of the lingering kit-store session. The
+  shell page's kick saves the kit `AuthorizationRequest` (sessionStorage)
+  and redirects to `/authorize`; the app's router guard consumes it on
+  return — state check, PKCE params on `exchangeAuthorizationCode`, strip
+  `code`/`state`, on failure append `error=invalid_grant` (which also
+  suppresses the auto-re-kick — no unattended redirect loop); a code with
+  no saved request is dropped from the URL (it cannot be redeemed — the
+  client mandates PKCE). A session-less visit renders `ARealmGrid`
+  (name-identified clients need a realm hint at `/authorize`); a
+  `?realmId=` deep link skips the picker. The #3191 session-continuity
+  machinery makes the exchange REUSE the session row created by the hosted
+  login (pinned by `account-console-session.spec.ts`: one row; holds
+  cross-origin too, since the session id rides the code blob server-side).
+  Attribution rides the TOKEN, not the session (plan 086):
+  `auth_session_tokens.client_id` names the client each token was issued
+  for. `auth_sessions.client_id` is NOT touched by the authorize flow: it is
+  the client-SUBJECT foreign key (see *Session subject foreign keys*).
+  An EXISTING authenticated session renders the shell directly (admission
+  control gates fresh logins only). `access_denied` from an
+  `accessPolicyId` on the client renders a readable denial card (wins over
+  the authenticated state, since the hosted login establishes the cookie
+  session even when consent is denied) with a logout-and-retry escape
+  hatch. The logged-in chrome is the kit's `AAccountShell`
+  (`components/utility/`) styled by `client-web-kit-theme`'s
+  `styles/account.css` behind `--authup-account-*` tokens; the pages are
+  thin wrappers over `AUserForm` / `AUserPasswordForm` /
+  `AUserAuthenticators user-id="@me"` / `ASessions` / `AConsents`. The
+  user chip + sign-out are NOT part of the shell — App.vue appends them to
+  `AAuthApp`'s single fixed gadget cluster via the `gadgets` slot (one top
+  bar; the shell's brand row aligns onto the gadget line from md up).
+- **Sign-out** (the gadget-cluster button in App.vue) mirrors the admin
+  console's `pages/logout.vue`: capture `idToken`/`realmId`, local
+  `store.logout()`, round-trip through `/logout` with `id_token_hint`,
+  `post_logout_redirect_uri` back to the base path.
+- **No actor-scoped state in the response**: the shell is static; the
+  payload carries only operator-level config (`apiUrl`/`basePath`/
+  `features`) plus the server-validated `ref` echo, which is
+  request input the server already checked, not actor data. Nothing
+  actor-scoped can leak into a (potentially cached) response, pinned in
+  `account-pages.spec.ts`.
+- **Packaging:** the package ships `dist/` only (`prepublishOnly` builds);
+  it is packed in the launcher's `test:smoke:packed` workspace list so the
+  packed server-core install resolves it from the tarball.
+- **Link surface:** `<publicUrl>/account` is the stable "Manage account"
+  target; the admin console header links the user name to it.
 
 ### File Structure
 
@@ -926,9 +1271,35 @@ adapters/http/controllers/workflows/
   password-reset/module.ts          — PasswordResetController → IPasswordRecoveryService (POST API + GET serves SSR page)
   status/module.ts                  — StatusController (GET / → version + feature flags)
 
-adapters/http/ui/
-  render.ts                         — renderUIPage(event, {url, payload}) shared SSR plumbing + sanitizeRelativeRedirect()
-  base-path.ts                      — rebasePublicAssetURLs(html, basePath) sub-path asset rewrite (prefix from publicUrl pathname)
+adapters/http/ui/                   — one folder per served console + shared serving helpers
+  shared/html.ts                    — readUIClientPreferences (locale/color-mode cookies), stampHtmlAttributes,
+                                      applyUIPageHeaders (content-type + CSP frame-ancestors + XFO + referrer),
+                                      rebaseAssetURLs(html, basePath, viteBase), serializeInlineScriptJSON,
+                                      replaceTemplateMarker (the ONLY way to splice a value into a page template),
+                                      injectHeadContent (splice before </head>), stampDocumentTitle
+  console-packages/module.ts        — bindConsolePackages: binds authConsolePath/accountConsolePath and asserts
+                                      the render contract of a SUBSTITUTED package at boot (see Console Theming)
+  auth-console/module.ts            — renderAuthConsolePage(event, {url, payload}) SSR render plumbing (JIT vs package dist)
+  auth-console/resolve.ts           — resolveAuthConsolePackagePath/-DistPath (locter locateUp resolution of @authup/client-auth-console)
+  auth-console/serve.ts             — serveWorkflowPage (workflow GET payload assembly + open-redirect guard)
+  auth-console/http-client.ts       — createInternalUIHttpClient (SSR self-call loopback transport)
+  account-console/module.ts         — resolveAccountConsoleDistPath + serveAccountConsolePage (config marker injection)
+  theme/contract/                   — what a theme IS: PORTABLE, no node/http imports (only validup+zod+errors),
+                                      so a browser theme editor or a CLI validator can share it verbatim. This
+                                      folder is the extraction boundary for the planned @authup/theme-kit.
+    contract/constants.ts           — on-disk layout, manifest version, token grammar, asset kinds (the
+                                      extension allowlist is DERIVED from the content-type map), logo tokens
+    contract/types.ts               — ThemeManifest
+    contract/manifest.ts            — ThemeManifestValidator (validup + zod, like ConfigValidator) +
+                                      parseThemeManifest (async; rejects unknown keys explicitly, since
+                                      validup STRIPS them)
+    contract/head.ts                — buildThemeHead (token block + favicon/stylesheet links + fragment)
+    contract/utils.ts               — themeAssetExtension (hand-rolled so contract/ needs no node:path)
+  theme/module.ts                   — ThemeProvider: manifest load via locter, mtime revalidation, memoized head
+  theme/apply.ts                    — applyTheme (provider -> served document; outside contract/ because it
+                                      takes a filesystem-backed provider)
+  theme/assets.ts                   — createThemeAssetsHandler (/theme; hand-written, realpath-per-request)
+  theme/constants.ts                — SERVING only: revalidate interval, asset CSP
 
 adapters/http/request/helpers/
   actor.ts                          — buildActorContext(req) bridge function
@@ -957,6 +1328,132 @@ app/modules/provisioning/
   sources/composite/module.ts       — CompositeProvisioningSource (deep merge + dedup, relations unioned)
 ```
 
+## Console Theming (`themeDirectoryPath`)
+
+**EXPERIMENTAL.** Shipped deliberately unstable so per-realm themes (plan
+085) can reshape it without a major bump: the layout, the manifest field
+names and the `theme*` config keys may all change. The manifest's `version`
+field is the detection hook. What is NOT up for change is the trust
+boundary below and the `--authup-*` token names (those belong to the theme
+packages).
+
+Operator rebranding of BOTH served consoles from one mounted directory
+(`adapters/http/ui/theme/`), with no image build and no rebuild. Config
+`themeDirectoryPath` (`THEME_DIRECTORY_PATH`, default `''` = off, resolved
+against `rootPath`); a missing directory creates no provider, registers no
+middleware, and leaves both pages byte-identical.
+
+- **Layout.** `theme.json` (manifest) + `assets/` + `fragments/`. The HTTP
+  mount root is `<root>/assets`, never the theme root, so the manifest and
+  fragments are unreachable over HTTP **by construction** rather than by an
+  extension filter a later edit could loosen.
+- **Precedence.** Tokens are emitted as
+  `<style>@layer authup-theme{:root{…}.dark{…}}</style>` injected before
+  `</head>`. A layer name absent from the bundle's `@layer` statement is
+  appended LAST, so it beats `@layer authup` (kit tokens) and `@layer base`
+  (app theme + its `.dark` flips) with no `!important`, while `.dark` still
+  wins by source order. **Never an inline `style` attribute on `<html>`:**
+  that also wins but permanently, and `AAuthGadgets` flips the `.dark`
+  class client-side with no reload, so the brand would freeze at the
+  render-time cookie value. Operator `theme.css` is unlayered and therefore
+  beats the token block (documented asymmetry: it also beats the bundle's
+  `@layer base .dark` rules, so a colour set only under `:root` there leaks
+  into dark mode).
+- **Injection point is `</head>`, not a template marker** — so theming
+  applies to console packages built BEFORE the feature existed. Splices go
+  through `injectHeadContent` / `stampDocumentTitle` (function-replacement
+  form, same `$'`-expansion trap as `replaceTemplateMarker`).
+- **`theme/contract/` is portable on purpose.** It imports nothing from
+  node or routup, so the manifest validator, the token grammar and the head
+  builder can be lifted into `@authup/theme-kit` (plan 085) as a directory
+  move, and can already be reused by a browser-side theme editor. Anything
+  touching the filesystem or a response stays one level up. Keep it that
+  way: `themeAssetExtension` exists only because `node:path`'s extname
+  would have broken the rule.
+- **Token GRAMMAR, never a token allowlist.** Names match
+  `^--[a-z][a-z0-9-]*$`; values are ≤256 chars and may not contain
+  `} < > ; @ \ /* url( expression(`. A closed list would have to live in
+  server-core, which cannot depend on `client-web-kit-theme`, so nothing
+  could bind the two and it would rot in both directions. Same validator a
+  future untrusted (per-realm) token source would reuse unchanged.
+- **`logo` is a manifest FIELD, not a token** — its value needs `url()`,
+  which the grammar forbids. server-core derives
+  `--authup-{auth,account}-logo-image` + `-logo-mark-visibility` from the
+  validated asset path; the kit theme paints the image onto the built-in
+  mark's own `<svg>` box and hides only the mark's CHILDREN (`visibility`
+  on the svg itself would take the background with it), so the swap needs
+  no size token and no component change. Both tokens default inert.
+  `logoDark` emits the same pair into the `.dark` rule instead, because a
+  dark-on-light mark would otherwise be inherited into dark mode and vanish
+  against the card; the mark-visibility flag rides with whichever image is
+  set, so light-only, dark-only and both are all coherent. This is
+  the ONE part that does not apply to already-published console packages:
+  the kit theme CSS ships raw and is inlined by each console's Tailwind
+  build.
+- **`/theme` is hand-written, NOT `@routup/assets`** (`theme/assets.ts`).
+  That plugin's `lookupPath` walks path SUFFIXES (`/theme/x/logo.svg` would
+  serve `/logo.svg`), probes `.html`/`index.html`, and does no realpath
+  containment check. Symlinks MUST be followed (a Kubernetes ConfigMap
+  volume is a symlink farm, `key -> ..data/key`), so containment is
+  realpath-per-request against the mount root. Content types are pinned
+  from a map the extension allowlist is DERIVED from; SVG is served with
+  `sandbox; default-src 'none'` (it is active content).
+- **Failure posture is deliberately asymmetric, inverting the
+  FileProvisioningSource precedent for the request path:** an invalid
+  manifest fails the BOOT (file path + every issue, `.strict()` so a typo'd
+  key is reported rather than ignored); a manifest that becomes invalid
+  AFTER boot keeps the last good value and logs. Provisioning seeds
+  authorization data; a theme is decoration, and a broken logo must never
+  take down an IdP's login page. Boot always logs an inventory (resolved
+  path, token counts, every servable file) because the dominant failure
+  mode is silence.
+- **Trust boundary (write it down before anyone proposes per-realm CSS).**
+  Filesystem = operator trust, equal to the process. Arbitrary CSS on
+  `/authorize` can overlay or relabel the consent buttons; `frame-ancestors
+  'none'` stops framing, not same-document overlay. So Layers 1-3 are
+  filesystem-only **forever**, and any future per-realm rung may carry
+  **data only** (a theme name, or a token map through the same validator),
+  never a stylesheet and never markup. The default is deliberately NOT
+  under `writableDirectoryPath`: pairing a process-writable directory with
+  login-page content injection would turn any write primitive landing there
+  into persistent branding control on the IdP origin.
+- **`themeFragmentsEnabled`** (`THEME_FRAGMENTS_ENABLED`, default false)
+  opts into `fragments/head.html`, spliced last (so it overrides the
+  manifest) and passed through VERBATIM. No sanitizer: a partial one
+  invites treating fragments as untrusted-safe. Head-only, no in-`<body>`
+  slot — markup next to the consent buttons is a strictly better
+  consent-forgery primitive.
+- **Live reload.** `theme.json` / `head.html` are mtime-revalidated with a
+  1s debounce (one `statSync` per render, negligible next to an SSR pass);
+  assets revalidate per request with a weak size+mtime ETag. No restart to
+  change a colour. Kubernetes needs a WHOLE-volume mount — a `subPath`
+  projection is frozen until the pod restarts.
+- **Per-request isolation.** The provider rides `event.store` via
+  `THEME_STORE_KEY` (`registerThemeMiddleware`, mirroring
+  `UI_HTTP_CLIENT_FACTORY_STORE_KEY`), not module-scope state, so two
+  applications in one process never share a theme.
+
+### Console substitution (`authConsolePath` / `accountConsolePath`)
+
+Theming cannot change markup. `authConsolePath` (`AUTH_CONSOLE_PATH`) and
+`accountConsolePath` (`ACCOUNT_CONSOLE_PATH`) point at package directories
+consulted BEFORE the locter `node_modules` walk, so replacing a console no
+longer means mounting over a workspace symlink.
+
+`bindConsolePackages` (`adapters/http/ui/contract.ts`, called from
+`HTTPModule.setup` before any route mounts) asserts the contract — but
+**only for a package actually substituted**: with the default resolution
+the consoles ship from this repo with linked versions, so the assert would
+compare a constant against itself, and loading the SSR bundle at boot would
+turn a missing build into a failed start instead of an actionable page
+error. `@authup/client-auth-console` exports `CONTRACT_VERSION` as a
+runtime value alongside `render()` (missing = version 1); the account
+console's contract is the `<!--account-config-->` marker, whose absence
+silently degrades the SPA to same-origin API derivation. **Fail-closed**,
+unlike the theme: a replacement owns the prompt ladder, PKCE/`state`
+handling, MFA ordering and `redirectUriVerified` gating, so drift must stop
+the container rather than render subtly wrong auth pages.
+
 ## Realm Scoping Model
 
 ### Entity Categories
@@ -978,6 +1475,57 @@ if (!validated.realmId && actor.identity) {
 ```
 
 To create a global entity (`realmId: null`), the caller must explicitly pass `realmId: null`. The policy engine controls whether the actor is authorized to do so.
+
+### Realm immutability (an entity never moves between realms)
+
+An entity's realm is fixed at creation. Every entity validator mounts `realmId`
+for `CREATE` / `PROVISIONING` only, so a `realmId` submitted on `POST /<entity>/:id`
+is silently stripped by the validator and `merge()` never sees it. There is no
+"move to another realm" operation and none is planned.
+
+The reason is denormalization. A user's realm is copied into
+`auth_user_roles.user_realm_id`, `auth_user_permissions.user_realm_id` and
+`auth_identity_provider_accounts.user_realm_id`, and every per-user child row
+carries its own `realm_id` (`auth_user_attributes`, `auth_user_authenticators`,
+`auth_sessions`, `auth_consents`). A client's realm is copied the same way into
+`auth_client_roles` / `auth_client_permissions` / `auth_client_scopes`. Those
+copies are what the `realmScope` reach factor evaluates against
+(`JunctionEntityService.junctionResourceRealm`), so moving the parent row alone
+would leave every grant and child row stranded in the old realm: still
+readable/writable by the old realm's admins, invisible to the new one. A real
+move would have to rewrite all of them plus re-verify that the target realm
+actually holds the referenced roles, permissions and scopes.
+
+Consequences to keep in mind when touching these paths:
+
+- The realm-scoped lookup in `save()` (`where.realmId = <resolved body/route realm>`)
+  means an update carrying a **foreign** realm key finds nothing:
+  `POST /users/:id` answers `404` rather than moving the row. That is also the
+  correct answer for the nested `/realms/:realmId/users/:id` mount (the row is
+  not in that realm), and it deliberately reveals nothing about the row's real
+  realm.
+- The `PUT /<entity>/:key` upsert takes the same scoped lookup, so a foreign
+  realm key makes it miss. **Only a NAME key may then create** ("ensure an
+  entity with this name exists in this realm"); a UUID key addresses one
+  specific row, so a miss is `EntityNotFoundError` instead. Without that rule
+  the upsert answered a realm change by writing a **second** row (a fresh id,
+  same name) into the target realm, which reads like a move in the
+  realm-scoped UI. The guard is one condition
+  (`if (!entity && (options.updateOnly || where.id))`) in every `save()` that
+  upserts: role, user, scope, permission, client, policy, realm, plus
+  `IdentityProviderController.write()`.
+- Realm pickers in the kit's entity forms are **create-time controls**
+  (`AUserForm`, `AClientForm`, `APolicyBasicForm`, ... all gate them on
+  `!isEditing`). Rendering one on an existing record promises a move the API
+  will not perform.
+- The `*_SELF_MANAGE` denylists (`system.user-names-self-manage`,
+  `system.client-names-self-manage`) list `realmId` as well, so the strip is
+  backed by an explicit policy rejection on the self-edit path.
+
+Pinned by *should strip realmId at UPDATE for realm bound entities*
+(`packages/core-kit/test/unit/domains/validator-groups.spec.ts`) and *should not
+move the user to another realm*
+(`apps/server-core/test/unit/core/entities/user/service.spec.ts`).
 
 ### Realm reach is a coarse `realmScope` enum on the grant (NOT a policy)
 
@@ -1397,9 +1945,13 @@ Include authorization*.
 ## Deployment Topology & UI Boundary (plan 078)
 
 Two runtime services. **server-core is the IdP origin** — the OAuth2/OIDC
-protocol surface plus the embedded SSR auth pages (`/authorize`, `/register`,
+protocol surface plus the hosted SSR auth pages (`/authorize`, `/register`,
 `/activate`, `/password-forgot`, `/password-reset`, `/logout`). Those pages
-are **architectural, not incidental**, and must stay in server-core:
+are **architectural, not incidental**, and must stay served by server-core
+(since plan 083 their Vue app lives in its own workspace,
+`apps/client-auth-console`, but that is an ownership/packaging split only —
+server-core resolves and renders the package on its own origin, and the
+standalone-hosting question stays rejected):
 
 - **WebAuthn origin binding** — the rpId/origin derives from `publicUrl`;
   hosted login means every RP's second factor runs on the one IdP origin with
@@ -1414,14 +1966,16 @@ are **architectural, not incidental**, and must stay in server-core:
   pages are the render half of the API surface.
 - **Mail deep links** (`/activate?token=…`, `/password-reset?token=…`) land on
   these pages.
-- **Headless deployments** (server-core without client-web) still need every
+- **Headless deployments** (server-core without client-admin-console) still need every
   auth workflow to be usable.
 
 This split is cohort-universal: Keycloak, Authentik, Zitadel, Casdoor and Dex
 all serve login/consent from the IdP origin.
 
-**client-web is an ordinary OAuth2 RP** — an admin console authenticating via
-auth-code + PKCE against the per-realm public `web` client, with no privileged
+**client-admin-console is an ordinary OAuth2 RP** — an admin console authenticating via
+auth-code + PKCE against the per-realm public `admin-console` client (plan 079;
+downstream kit apps register their own clients — plan 082 removed the shared
+`web` client), with no privileged
 channel into server-core. It is deliberately NOT merged into server-core
 today. The recorded long-term endpoint — deferred until after the planned
 server+worker split — is folding the admin UI into server-core as a **static
@@ -1430,7 +1984,7 @@ SPA**; any future consolidation discussion starts from
 
 **Process topology:** containers with one service each (docker /
 docker-compose) are the production topology. The `authup` CLI is the
-bare-metal / quickstart **supervisor**: it spawns server-core and client-web
+bare-metal / quickstart **supervisor**: it spawns server-core and client-admin-console
 as child processes with full environment passthrough plus per-child
 `PORT`/`HOST` and `NUXT_PUBLIC_API_URL` overrides derived from the
 multi-section config file, forwards SIGINT/SIGTERM to the children, and exits
@@ -1444,7 +1998,7 @@ fallbacks) on every CLI command; lookup defaults to the process cwd,
 overridable via `--configDirectory` / `--configFile`, and environment
 variables always beat file values.
 
-**Unsupported:** sharing one `COOKIE_DOMAIN` between client-web and the
+**Unsupported:** sharing one `COOKIE_DOMAIN` between client-admin-console and the
 hosted auth pages — both surfaces embed the kit store under identical cookie
 names, so a widened cookie domain has the two apps clobbering each other's
 session cookies.
@@ -1454,8 +2008,9 @@ session cookies.
 The authenticated identity's realm MUST equal the client's realm — an identity
 cannot authorize (or redeem a code / refresh a token) against a client in
 another realm. Without this an identity with a lingering session for realm A,
-redirected to `/authorize` for realm B's `web` client (a downstream app's realm
-picker), silently minted realm-A tokens against realm B's client (confused
+redirected to `/authorize` for realm B's client (a downstream app's realm
+picker riding the then-provisioned per-realm `web` client), silently minted
+realm-A tokens against realm B's client (confused
 deputy; the artifact carried realm-A `iss`/signing-key + realm-B `aud`).
 Enforced server-side at **three** points — the kit UI (realm-mismatch card in
 `Authorize.vue`) is UX only:
@@ -1476,14 +2031,15 @@ Enforced server-side at **three** points — the kit UI (realm-mismatch card in
    `authorize()` (identity-provider callback) and in-flight pre-deploy codes.
 3. **`/token` refresh parity** — a **public** client refreshing a token whose
    `realm_id` differs from the client's realm → `invalid_grant` (kills legacy
-   cross-realm public-`web`-client refresh tokens). Confidential clients are
+   cross-realm public-client refresh tokens). Confidential clients are
    exempt — the secret proves identity, and the documented cross-realm password
    grant (UUID user + master client) relies on that exemption.
 
-Deliberate breaking change: master-realm admins can no longer ride the built-in
-`web` client into other realms' apps. A name-identified client at `/authorize`
-now also requires a realm hint (`invalid_request` otherwise — every realm has a
-`web` client, so a bare name is ambiguous). All SSR auth pages emit
+Deliberate breaking change: master-realm admins can no longer ride one
+built-in client into other realms' apps. A name-identified client at
+`/authorize` now also requires a realm hint (`invalid_request` otherwise —
+client names are only unique per realm, and every realm carries the
+same-named system clients, so a bare name is ambiguous). All SSR auth pages emit
 `Content-Security-Policy: frame-ancestors 'none'` + `X-Frame-Options: DENY`
 (clickjacking guard — the pages hydrate first-party session state, so click-
 gating is only a defense when framing is denied).
@@ -1700,8 +2256,8 @@ app (kit or non-kit) ends a lingering authup session on its own logout, so
   counts as **unverified** (no revoke; confirm page still works). Realm-key
   resolution is fail-closed too: a supplied-but-unknown realm key skips client
   resolution entirely (no name, no redirect), and a **name**-form `client_id`
-  with no realm key anywhere fails closed as well (ambiguous — every realm has
-  a `web` client; same rule as the /authorize verifier). A UUID `client_id` —
+  with no realm key anywhere fails closed as well (ambiguous — client names
+  are only unique per realm; same rule as the /authorize verifier). A UUID `client_id` —
   including the sole-`aud`-derived one — resolves globally as before.
 - **Bounded expired-hint window (plan 042 item 2):** with config
   `endSessionHintGracePeriod` > 0 (seconds past `exp`, ENV
@@ -1731,9 +2287,14 @@ app (kit or non-kit) ends a lingering authup session on its own logout, so
   `ClientSummary` DTO, **added** to the client repository `fields.default`
   allow-list so reads return it). The migration is folded into the
   still-unreleased `1783325495597-Default.ts` (both dialects, up/down verified
-  by the `tests-migrations` round-trip). `buildWebClientAttributes` sets it to
+  by the `tests-migrations` round-trip). `buildSystemClientAttributes` sets it to
   the same `<origin>/**`-per-app-origin patterns as `redirectUri`, so
-  `WebClientProvisioner`'s MERGE widens it on the next startup.
+  `SystemClientProvisioner`'s MERGE widens it on the next startup. `AClientForm`
+  renders it as its own `AFormInputList`, deliberately a **second** list rather
+  than a shared one — the whole point of the split is that a login redirect
+  does not imply a logout redirect, so the two allow-lists must be editable
+  independently. Clearing every pattern submits `null` (no bounce: logout ends
+  on the confirm page), never `''`.
 - **The server-side bounce fires ONLY when the logout was actually performed**
   (`serverRevoked` — a verified hint revoked the session). A hint-less or
   forged request with an otherwise-valid `post_logout_redirect_uri` must **not**
@@ -1743,7 +2304,7 @@ app (kit or non-kit) ends a lingering authup session on its own logout, so
   (`AEndSessionForm`) performs the bearer-authenticated sign-out, then navigates
   to it (`window.location`).
 
-The SSR page is `apps/server-core/ui/src/pages/logout.vue` → kit
+The SSR page is `apps/client-auth-console/src/pages/logout.vue` → kit
 `AEndSessionForm`; the typed URL builder is `buildEndSessionURL` in
 `client-web-kit`. **`AEndSessionForm` auto-clears local state on mount ONLY when
 `serverRevoked && hintSub === store.user.id && hintSubKind === 'user'`** — the
@@ -1759,7 +2320,7 @@ forwards `hintSub` + `hintSubKind` (only for a verified hint) and the validated
 id_token can force-logout its own session (annoyance, not privilege escalation)
 — mitigated by the sub-match + short id_token TTL.
 
-**Kit store retains the id_token; client-web round-trips through `/logout`
+**Kit store retains the id_token; client-admin-console round-trips through `/logout`
 (plan 042 items 8a + 8).** The `@authup/client-web-kit` store now keeps the
 grant response's `id_token` as an `idToken` ref (setter emits
 `StoreDispatcherEventName.ID_TOKEN_UPDATED`, cookie-persisted via
@@ -1770,7 +2331,7 @@ returns no id_token) rather than clearing it; to keep that retain safe,
 mirroring `exchangeAuthorizationCode` — so a stale id_token can never survive
 onto a newly-authenticated user (plan 047.3). This gives every kit RP an
 `id_token_hint` to pass to the `end_session_endpoint` — without it they all
-degrade to the click-gated confirm page. `apps/client-web/pages/logout.vue`
+degrade to the click-gated confirm page. `apps/client-admin-console/pages/logout.vue`
 uses it: the page deliberately does **not** set `REQUIRED_LOGGED_OUT` (that meta
 makes the routing interceptor run `store.logout()` before the page's setup,
 discarding the id_token), captures `idToken`/`realmId` on mount, runs the
@@ -1780,7 +2341,7 @@ postLogoutRedirectUri: <origin>/login })`. With the hint the server revokes and
 bounces straight back; without it the server's confirm page returns to
 `/login`. **It passes NO `client_id`**: omitting it lets the service resolve
 the client from the hint's sole `aud` (the client **UUID**). Since plan 047.B a
-name-form `client_id` (`web`) would also work — the service resolves it to the
+name-form `client_id` (`admin-console`) would also work — the service resolves it to the
 UUID before the `aud` cross-check — but omission stays the simplest correct
 call (no name→realm ambiguity to think about). `store.logout()` remains
 local-only — the round-trip is the chosen mechanism, **not** a
@@ -1837,9 +2398,10 @@ neutral message: no identity/policy detail, no enumeration oracle).
   ATTRIBUTE_NAMES denylist (a self-managing client cannot change its own
   gate), stays **out** of the anonymous `GET /authorize` `ClientSummary` DTO,
   and is mounted `{ optional: true, nullable }` in every validator group so
-  admins can set/clear it. `buildWebClientAttributes` deliberately omits the
-  key — the provisioner MERGE would otherwise wipe an admin-set policy on the
-  per-realm `web` client every boot. The admin form binds it via
+  admins can set/clear it. `buildSystemClientAttributes` deliberately omits the
+  key — the provisioner MERGE would otherwise wipe an admin-set policy on
+  each per-realm system client (`admin-console`, `account-console`)
+  every boot. The admin form binds it via
   `APolicyPicker` in `AClientForm`. Client caches mean a policy
   (re)assignment lags ≤60s at `/token` (`CachePrefix.CLIENT` query cache).
 - **Observability (leg-scoped):** a denial at the **interactive
@@ -1925,8 +2487,8 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   silent (`prompt=none`) branch redirects `consent_required` only when the
   settled probe found no covering consent — persisted consent is what makes
   `prompt=none` meaningful for non-`builtIn` clients.
-- **UI:** 4th settings tab "Applications"
-  (`apps/client-web/pages/settings/index/applications.vue`) over the kit
+- **UI:** the account console's "Applications" page
+  (`apps/client-account-console/src/pages/applications.vue`) over the kit
   `<AConsents>` collection — rows grouped per client, granted scopes rendered
   as per-scope revoke chips plus a per-app "Revoke access" (looped per-row
   DELETEs behind an error-tone `useAlertDialog`). The self-service list
@@ -1996,8 +2558,9 @@ at both chokepoints:
 Unknown values in the column are inert (they can only narrow, never widen). A
 refresh rejected this way is a plain `unauthorized_client` — **not** replay
 detection, so no family revocation; restoring the grant type restores service.
-The provisioned per-realm `web` client lists `authorization_code refresh_token`
-(refreshed by `WebClientProvisioner`'s MERGE on startup).
+Each provisioned per-realm system client (`admin-console`,
+`account-console`) lists `authorization_code refresh_token`
+(refreshed by `SystemClientProvisioner`'s MERGE on startup).
 
 **Admin UI:** `AClientForm` renders the column as a `<VCFormCheckboxGroup>` over
 the closed `OAuth2TokenGrant` vocabulary (the only strings
@@ -2037,8 +2600,8 @@ The three realm-resolving grants (`password`, `authorization_code`,
   identified by its UUID). This makes the refresh leg deterministic: a
   password login via master's client refreshes against master's client again
   instead of an unscoped name lookup matching an arbitrary same-named client
-  in another realm (every realm has a built-in `web` client, so collisions
-  are guaranteed). A client name that does not exist in the resolved realm
+  in another realm (every realm carries the same-named built-in system
+  clients, so collisions are guaranteed). A client name that does not exist in the resolved realm
   fails with `invalid_client`; register the client in that realm, pass a
   matching hint, or use its UUID. On the SSR `/authorize` page the login realm is
   pinned to the **client's** realm (`codeRequest.realm_id`, seeded into the
@@ -2171,7 +2734,10 @@ TypeORM entity `SessionTokenEntity` (`adapters/database/domains/session-token/`)
 domain type `SessionToken` in `@authup/core-kit`. Columns: `id` (= jti,
 app-provided `@PrimaryColumn('uuid')`), `session_id` (FK → `auth_sessions`
 **ON DELETE CASCADE**), `kind` (`access`|`refresh`), `parent_id` /
-`refresh_token_id` (plain nullable uuid — informational lineage, **no** self-FK),
+`client_id` (nullable FK → `auth_clients` **ON DELETE CASCADE**; the
+per-application attribution added by plan 086, null when the minting path
+has no client, e.g. an MFA-login completion, and on rows predating the
+column), `refresh_token_id` (plain nullable uuid — informational lineage, **no** self-FK),
 `ip_address(45)` / `user_agent(512)`, `consumed_at` / `revoked_at` /
 `expires_at` (varchar(28) ISO), `created_at`. Indexes on `session_id`, `kind`,
 `expires_at`. **No subscriber** (not cached / not realtime). The same migration
@@ -2323,10 +2889,12 @@ cases in `user.spec.ts`. When adding a per-row gate to a new
 `getMany`, wire `applyRealmScopeSelect` into its adapter with every column the
 gate reads.
 
-**UI:** two `<VCTable>` pages backed by the kit `<ASessions>` collection —
-`pages/settings/index/sessions.vue` (the actor's **own** sessions, `filter:
-{ userId }`) and `pages/users/[id]/sessions.vue` (an admin viewing a user's
-sessions). The settings page carries a **"log out other devices"** button
+**UI:** two pages backed by the kit `<ASessions>` collection:
+`apps/client-account-console/src/pages/sessions.vue` (the actor's **own**
+sessions, `filter: { userId }`) and
+`apps/client-admin-console/pages/users/[id]/sessions.vue` (a `<VCTable>`
+page for an admin viewing a user's sessions). The account console page
+carries a **"log out other devices"** button
 (`authupApp` `SESSION_REVOKE_OTHERS*` keys) that confirms via `useAlertDialog`
 then calls `client.session.deleteMany()` (`DELETE /sessions` — revoke-all-but-
 current), toasts the returned `count`, and reloads the collection; it disables
@@ -2352,7 +2920,7 @@ logout).
 
 ### Session continuity: one session per interactive login
 
-An interactive client-web login used to create **two** `auth_sessions` rows: the
+An interactive client-admin-console login used to create **two** `auth_sessions` rows: the
 SSR `/authorize` page password-grants a (client-less) bearer session purely to
 authenticate `POST /authorize`, then `/login/callback` exchanges the auth code —
 whose `authorization_code` grant `create()`d a *second* session. The bearer
@@ -2371,8 +2939,20 @@ auth-code blob:
   `OAuth2AuthorizationCodeIssuer.issue(..., { sessionId })` → `entity.session_id`.
 - `OAuth2AuthorizeGrant.resolveSession` reuses the referenced session iff it
   still exists **and** matches the code's `sub` / `sub_kind` / `realm_id`
-  (defense in depth); it stamps the authorizing `clientId` onto the row and
-  `sessionManager.refresh()`es it. Any mismatch, or a **session-less** authorize
+  (defense in depth) and `sessionManager.refresh()`es it. It does NOT write
+  `clientId`.
+
+  **Session subject foreign keys.** `auth_sessions` carries a nullable
+  `user_id` AND a nullable `client_id`, and `SessionManager.create` populates
+  exactly one of them from `sub` according to `subKind` (the same trick
+  `auth_consents` uses): they are typed foreign keys for a polymorphic
+  subject, so `ON DELETE CASCADE` can drop a subject's own sessions. Writing
+  the AUTHORIZING application into `client_id` therefore put an unrelated id
+  behind a cascade meaning "this client owns this row", so deleting that
+  application deleted a USER's session and, through
+  `auth_session_tokens.session_id`, every other application's tokens on it.
+  Per-app attribution is `auth_session_tokens.client_id`; the session column
+  is the subject FK and nothing else. Any mismatch, or a **session-less** authorize
   flow (external-IdP callback — `IdentityProviderController` issues its code with
   no `sessionId`; non-interactive clients), falls back to `sessionManager.create()`,
   preserving prior behavior.
@@ -2798,7 +3378,7 @@ must be visible in `auth_events`). The table was folded into migration
   CASCADE, so deleting a realm drops its enc keys and every seed encrypted
   under them becomes unrecoverable noise.
 
-**UI:** top-level `/keys` pages in client-web (list + add + detail edit,
+**UI:** top-level `/keys` pages in client-admin-console (list + add + detail edit,
 realm-switch scoped like users/roles, nav entry gated on `KEY_*`), backed by
 kit `AKeys` / `AKey` / `AKeyForm` (`components/entities/key/`; the form
 covers generate/import on create and name/priority/status on edit); the list
@@ -2844,11 +3424,13 @@ managing another user) and
 `AUserAuthenticators` (device-row list + delete + an "add" button opening the
 enroll flow in a `<VCModal>`; the enroll component's `closed` emit lets the
 recovery-codes terminal view dismiss the modal only when the user is done),
-hosted on the settings
-Authenticators tab (`settings/index/mfa.vue`, `@me`; the former combined
-Security tab is split — `settings/index/password.vue` keeps the password form)
-and an admin Authenticators tab
-(`users/[id]/authenticators.vue`, gated on `USER_AUTHENTICATOR_READ`). i18n:
+hosted on the account console's
+Authenticators tab (`apps/client-account-console/src/pages/authenticators.vue`,
+`@me`; the sibling Password tab is a separate page,
+`apps/client-account-console/src/pages/password.vue`) and an admin
+Authenticators tab
+(`apps/client-admin-console/pages/users/[id]/authenticators.vue`, gated on
+`USER_AUTHENTICATOR_READ`). i18n:
 `MFA_*` (`authupClient`) + `AUTHENTICATOR`/`MFA_SECURITY_*` (`authupApp`), ×4
 locales. Kit test `test/unit/components/workflows/mfa-challenge.spec.ts`.
 
@@ -2985,7 +3567,7 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   auto-provisions via `Object.values(PermissionName)`:
   `admin` = `any`, `realm_admin` = `ownOrNull` (deliberately NOT in the OWN
   override list). Typed client: `client.event.getMany/getOne`.
-- **Admin UI:** `apps/client-web/pages/events/` — a read-only list page
+- **Admin UI:** `apps/client-admin-console/pages/events/` — a read-only list page
   (`index.vue` + `index/index.vue`; kit collection `<AEvents>`
   (`EntityType.EVENT`, no server-side subscriber — the socket subscription is
   inert, same as sessions) rendering a `<VCTable>` with name/scope, ref,
@@ -3084,7 +3666,7 @@ When adding a `name`-style column on a new entity (or extending an existing one)
 2. **Repository** — use `=` for name lookups, never `LIKE :name`.
 3. **Migration** — ship a data migration canonicalizing existing rows with an up-front collision pre-check, following the pattern of `apps/server-core/src/adapters/database/migrations/{mysql,postgres}/1779267068441-Default.ts`.
 
-## UI Layer (`apps/client-web`, `apps/server-core/ui`, `packages/client-web-kit`)
+## UI Layer (`apps/client-admin-console`, `apps/client-auth-console`, `packages/client-web-kit`)
 
 The UI sits on the `@vuecs/*` 1.x line — see
 [`.agents/structure.md` → UI Stack](structure.md#ui-stack-appsclient-web-appsserver-coreui-packagesclient-web-kit)
@@ -3210,6 +3792,8 @@ integration:
   `IQuery` load input replaces the interactive state wholesale.
   Pinned by
   `test/unit/components/utility/entity-collection.spec.ts`.
+  **Initial load & the SSR handoff (issue #2773):** see
+  *SSR data handoff* below.
 - **Pagination** — `<APagination>`
   (`components/utility/pagination/APagination.ts`) is a thin **adapter**
   that bridges the entity-collection footer contract (`ListMeta` =
@@ -3224,9 +3808,91 @@ integration:
   `.vc-pagination` rule (`client-web-theme/assets/css/index.css`) and
   applies to the underlying `<VCPagination>` regardless of the wrapper.
 
+### SSR data handoff (issue #2773)
+
+Everything a server render fetches or resolves is handed to the browser
+through the host's hydration payload, so the client never repeats it. The kit
+owns one seam and stays framework-agnostic; each host supplies the bucket:
+
+- **The seam.** `HydrationStore` (`core/hydration/`, a `get`/`set`/`delete`
+  map) passed to `install({ hydrationStore })` and read via
+  `injectHydrationStore()`. **Without a store the kit performs no server-side
+  loads at all**, because the response could not reach the client and firing it would
+  only waste a round trip (the pre-#2773 behaviour: every collection fired a
+  request during SSR whose result was discarded when the render flushed).
+- **Hosts.** `apps/client-admin-console` wires it in the `authup:kit` Nuxt plugin over
+  `nuxtApp.payload.data` (the same bucket `useAsyncData` transports through);
+  `apps/client-auth-console` wires it over `HydrationPayload.hydration`, which
+  works because `createWindowPayloadHTML(ctx.payload)` runs *after*
+  `renderToString` (`apps/client-auth-console/src/server.ts`), so writes
+  during the render still
+  reach the markup.
+- **Collections.** `defineEntityCollectionManager`'s initial load runs inside
+  `onServerPrefetch` (so the renderer awaits the rows and they are in the
+  HTML) and records `{ data, total, pagination }` under
+  `authup:collection:<type><serialized query>`. The key is the identity of the
+  request the load would send (`buildQueryString` over the composed query), so
+  both sides derive it identically; a miss just loads normally. Collection
+  snapshots are **consumed on read**, so a later client-side visit fetches fresh
+  rows instead of replaying the first render's.
+- **`usePermissionCheck`.** The permission evaluator awaits the policy engine,
+  so a server-rendered subtree would hydrate against a fail-closed `false`
+  where the markup shows an enabled control. It records its verdict through
+  `useHydratedValue()` and seeds the first client render from it. These
+  entries are **not** consumed on read (the same key is shared by every
+  component asking the same question), and a permission key carries the actor
+  (`userId`/`realmId`) so an account switch cannot adopt the previous actor's
+  verdict; checks carrying a `PolicyData` bag are not keyed at all and keep
+  evaluating from their fail-closed default.
+- **`useTranslation` records only what the sync read could not answer.** It
+  used to record every string, because ilingo had no synchronous read path and
+  a fresh ref carried the `authupField.name` placeholder where the markup said
+  `Name`. That path landed in **ilingo 6.1.0** (tada5hi/ilingo#988):
+  `@ilingo/vue` **seeds** the ref from `IIlingo.getSync()`, then resolves the
+  async `get()` as before. Authup's catalogs are a `MemoryStore`, so the seed
+  is the translation and nothing rides the payload for any authup key. The
+  recording survives as the fallback for the case the seed cannot cover: a
+  store that needs I/O (a cold `FSStore`/`LoaderStore`, a remote adapter a
+  consumer registers ahead of the kit's own) throws `SyncUnavailableError` out
+  of the sync read, leaving the placeholder in the first render of a
+  server-rendered subtree. Detecting that takes both halves of ilingo's
+  contract, because `@ilingo/vue` falls back to the same
+  `<namespace>.<key>` placeholder for a **refused** read and for a **missing**
+  key. A seed equal to the placeholder therefore only rules the seed out; the
+  kit then asks `getSync()` itself, and hands the resolved string over only
+  when the call throws. A key the store answers `undefined` for is missing in
+  the async pass too, so there would be nothing to record.
+- **Per-request isolation is the security property.** A collection key is
+  entity type plus query, with no actor in it, so two users requesting the same
+  list derive the SAME key. Nothing may therefore outlive one request: both
+  hosts build a fresh payload per request (Nuxt's `payload.data`; every
+  `renderAuthConsolePage` caller passes a new payload literal, and the process-level
+  caches in `render.ts` hold only the immutable template / manifest / bundle),
+  and the store is provided on the per-request Vue app, so it is unreachable
+  once the render ends. Same reasoning as the `lifetime: 'transient'`
+  registration of the SSR UI HTTP client. Backing the store with anything
+  shared between requests would serve one client's rows to another. As a second
+  layer the kit's server path is **write-only**: `useHydratedValue` returns
+  before its read, and the collection manager's server branch never adopts (it
+  is the producer), so a mis-wired host store can waste a write but cannot leak
+  across users. Pinned by *never adopts an existing entry while rendering on
+  the server* in `entity-collection-hydration.spec.ts`. The payload is exactly
+  as sensitive as the HTML it travels in, so an authenticated page must never
+  be served from a shared cache (no `swr` / `isr` route rules, which is why
+  client-admin-console sets none).
+- **Detail pages.** `apps/client-admin-console/pages/<entity>/[id].vue` fetch through
+  ``useAsyncData(`<entity>:${id}`, ...)`` rather than a bare `await` in
+  `setup()`, which is what made every record fetch run twice (once server-side,
+  once again on hydration). The `data` ref is cast to `Ref<Entity>` after the
+  not-found redirect, so the rest of each page is unchanged.
+
+Verified end to end in a browser (CDP): `/users` renders its rows server-side,
+the client issues **no** collection request on hydration, and Vue reports no
+hydration mismatch.
+
 ### Table usage
 
-All 9 entity index pages (`apps/client-web/pages/<entity>/index/index.vue`)
+All 9 entity index pages (`apps/client-admin-console/pages/<entity>/index/index.vue`)
 use `<VCTable>` directly with `:data="props.data"` + `:columns="columns"`.
 Per-cell rendering flows through the `#cell-<key>` template slots that
 `<VCTable>`'s auto-render path dispatches onto each `<VCTableCell>`
@@ -3276,14 +3942,14 @@ equivalents:
   typing for `cell-<key>` / `header-<key>`)
 - `useToast()` from bvnext → `useToast()` from `@vuecs/overlays`,
   via the thin wrapper in
-  `apps/client-web/composables/toast.ts` that preserves the
+  `apps/client-admin-console/composables/toast.ts` that preserves the
   `toast.show('msg')` / `toast.show({ variant, body })` calling shape
 - `BOrchestrator` → `<VCToaster position="top-center" />`
-  mounted in `apps/client-web/components/footer.vue`
+  mounted in `apps/client-admin-console/components/footer.vue`
 - `BDropdownItem` (opportunistic fallback in `<AEntityDelete>`) →
   `<VCDropdownMenuItem>` resolved via `app.component(...)` lookup
 - `createBootstrap` → not needed; `app.use(vuecs, ...)` configures
-  vuecs in `apps/client-web/plugins/vuecs.ts` (the old
+  vuecs in `apps/client-admin-console/plugins/vuecs.ts` (the old
   `plugins/bootstrap.ts` was deleted)
 
 ### Tailwind v4 migration
@@ -3300,8 +3966,8 @@ new `@authup/client-web-theme` package.
   `@vuecs/theme-tailwind` (Tailwind ↔ vc-color rebind). Consumers register
   one theme: `app.use(vuecs, { themes: [authupTheme()] })`.
 - **Tailwind v4** — wired via `@tailwindcss/vite` in both
-  `apps/client-web/nuxt.config.ts` (`vite.plugins`) and
-  `apps/server-core/ui/vite.config.ts`. v3 is not supported because
+  `apps/client-admin-console/nuxt.config.ts` (`vite.plugins`) and
+  `apps/client-auth-console/vite.config.ts`. v3 is not supported because
   theme-tailwind uses `@theme` and `--color-*` rebinds.
 - **Bootstrap-compat layer — fully retired.** The `@layer components`
   block in `packages/client-web-theme/assets/css/index.css` used to
@@ -3322,11 +3988,11 @@ new `@authup/client-web-theme` package.
   pass. Spacing utilities (`ms-*`, `me-*`, `mt-*`, `mb-*`, `p*`,
   `gap-*`) carry over unchanged — Tailwind v4 uses the same naming.
 - **Tailwind `@source` scanning** — the theme's CSS adds `@source`
-  directives for `apps/client-web/**`, `apps/server-core/ui/**`,
+  directives for `apps/client-admin-console/**`, `apps/client-auth-console/**`,
   and `packages/client-web-kit/src/**` so the JIT picks up
   utility-class strings that live outside any single consumer app's
   source tree (notably, classes inside the kit's components and
-  the embedded consent SSR app).
+  the auth console SSR app).
 - **Theme-tailwind semantic colors** — `bg-bg`, `bg-bg-muted`,
   `bg-bg-elevated`, `text-fg`, `text-fg-muted`, `border-border`,
   `text-on-primary`, `text-on-success`, etc. — plus per-palette
@@ -3394,7 +4060,7 @@ new `@authup/client-web-theme` package.
   - Browser minimums: Chrome 111+, Safari 16.4+, Firefox 128+. v4
     drops the older fallbacks v3 carried.
 - **Plugin install order** — the theme manager is still
-  first-install-wins; `apps/client-web/plugins/vuecs.ts` keeps its
+  first-install-wins; `apps/client-admin-console/plugins/vuecs.ts` keeps its
   `name: 'vuecs'` declaration, and `vuecs-navigation.ts` still
   `dependsOn: ['vuecs']`. Per-package plugins (`installForms`,
   `installPagination`, ...) still install AFTER

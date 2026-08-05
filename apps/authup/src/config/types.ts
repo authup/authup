@@ -11,7 +11,7 @@ export type ServerCoreSectionConfig = {
     publicUrl?: string,
 };
 
-export type ClientWebSectionConfig = {
+export type ClientAdminConsoleSectionConfig = {
     port?: number,
     host?: string,
     apiUrl?: string,
@@ -20,7 +20,7 @@ export type ClientWebSectionConfig = {
 
 export type LauncherConfig = {
     serverCore: ServerCoreSectionConfig,
-    clientWeb: ClientWebSectionConfig,
+    clientAdminConsole: ClientAdminConsoleSectionConfig,
 };
 
 export type LauncherConfigReadOptions = {

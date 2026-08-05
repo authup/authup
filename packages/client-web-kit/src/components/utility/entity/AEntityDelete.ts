@@ -123,7 +123,7 @@ const AEntityDelete = defineComponent({
         // in consumers/tests that skip @vuecs/overlays. `useAlertDialog()` only
         // calls inject() (no lifecycle hooks), so this one-time conditional
         // resolution in setup is safe. When enabled it injects the app-level
-        // manager (host: <VCAlertDialogProvider> in the client-web default
+        // manager (host: <VCAlertDialogProvider> in the admin console default
         // layout) and resolves true (Delete) / false (Abort / Escape); on the
         // server it resolves false without enqueuing, but onClick is client-only.
         const confirmDialog = props.withPrompt ? useAlertDialog() : undefined;
@@ -157,6 +157,12 @@ const AEntityDelete = defineComponent({
 
         const onClick = async ($event: any) => {
             $event.preventDefault();
+
+            // The anchor / dropdown-item render path has no native disabled
+            // semantics, so the click has to be dropped here.
+            if (busy.value || props.disabled) {
+                return undefined;
+            }
 
             if (props.withPrompt && confirmDialog) {
                 const confirmed = await confirmDialog({

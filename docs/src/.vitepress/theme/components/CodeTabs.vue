@@ -57,7 +57,7 @@ export default defineComponent({
 docker run -d \\
   --name authup \\
   -p 3000:3000 \\
-  -v authup:/usr/src/writable \\
+  -v authup:/usr/src/app/writable \\
   authup/authup:latest \\
   server/core start`,
             },

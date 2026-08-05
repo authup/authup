@@ -5,12 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './color-mode';
 export * from './constants';
+export * from './cookie';
 export * from './error';
 export * from './http-client';
 export * from './inject';
 export * from './provide';
 export * from './form';
+export * from './hydration';
 export * from './query';
 export * from './busy';
 export * from './oauth2';

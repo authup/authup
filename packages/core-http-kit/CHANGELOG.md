@@ -1,5 +1,79 @@
 # Change Log
 
+## [1.0.0-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.58...v1.0.0-beta.59) (2026-08-04)
+
+
+### Features
+
+* add the account console (/account self-service surface) ([#3373](https://github.com/authup/authup/issues/3373)) ([2e11e5f](https://github.com/authup/authup/commit/2e11e5f9895a84d0eca4cfd4ae1803dcfa90db5e))
+
+
+### Bug Fixes
+
+* **deps:** bump @rapiq/* to 2.0.0-beta.15 ([66958e7](https://github.com/authup/authup/commit/66958e7f11a3462dce3cea6b74f0435c780524e7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/core-kit bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/kit bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/specs bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+
+## [1.0.0-beta.58](https://github.com/authup/authup/compare/v1.0.0-beta.57...v1.0.0-beta.58) (2026-07-31)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([d3d06f6](https://github.com/authup/authup/commit/d3d06f6a81a8fc548825bec9af551d0113eb2c89))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/core-kit bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/kit bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/specs bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+
+## [1.0.0-beta.57](https://github.com/authup/authup/compare/v1.0.0-beta.56...v1.0.0-beta.57) (2026-07-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* API consumers reading bare record bodies must unwrap data; old clients against a new server break (lockstep beta release).
+
+### Features
+
+* query-capability discovery via meta.schema + entity record response envelope ([#3332](https://github.com/authup/authup/issues/3332)) ([00f2f4c](https://github.com/authup/authup/commit/00f2f4c3aec069fef4b8eecc2da4d39ba19f0483))
+* restore file config, harden the launcher and dedupe the UI bootstrap ([#3344](https://github.com/authup/authup/issues/3344)) ([13b611d](https://github.com/authup/authup/commit/13b611da9ee980d97887a2a542b84beae5f730ff))
+
+
+### Bug Fixes
+
+* complete schema field projections and re-target role client FK ([#3324](https://github.com/authup/authup/issues/3324)) ([9eec343](https://github.com/authup/authup/commit/9eec343965bf98990560b0092d26bd0c82a2561f))
+* **deps:** bump @rapiq/* to 2.0.0-beta.11 ([#3333](https://github.com/authup/authup/issues/3333)) ([728dbb1](https://github.com/authup/authup/commit/728dbb1f16deb14c5901f0406a34ae50c791dbd6))
+* **deps:** replace @rapiq/{typeorm,sql,memory} with @rapiq/adapter-* ([9219e75](https://github.com/authup/authup/commit/9219e75c10bf1ba9164804f8676b049b44dc549c)), closes [#3341](https://github.com/authup/authup/issues/3341)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+    * @authup/core-kit bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+    * @authup/kit bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+    * @authup/specs bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+
 ## [1.0.0-beta.56](https://github.com/authup/authup/compare/v1.0.0-beta.55...v1.0.0-beta.56) (2026-07-24)
 
 

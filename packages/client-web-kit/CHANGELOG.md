@@ -1,5 +1,120 @@
 # Change Log
 
+## [1.0.0-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.58...v1.0.0-beta.59) (2026-08-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* `**` is no longer accepted inside the host of a redirect pattern or a TRUSTED_ORIGINS entry. It matches the rest of the value outright, so `https://**.example.com/**` read as "any subdomain" but accepted every origin. A single `*` is unchanged. Stored patterns are not rewritten; new writes are rejected and an offending TRUSTED_ORIGINS value fails the boot with a message naming it.
+* the five settings pages are gone and their URLs now leave the application, redirecting to <apiUrl>/account instead.
+* @authup/server-core no longer embeds the auth UI under dist/ui; it resolves the @authup/client-auth-console package instead. The account console runtime-config global window.__AUTHUP_ACCOUNT__ (never released) is renamed to window.__AUTHUP__.
+* rename client-web app to client-admin-console ([#3370](https://github.com/authup/authup/issues/3370))
+
+### Features
+
+* add the account console (/account self-service surface) ([#3373](https://github.com/authup/authup/issues/3373)) ([2e11e5f](https://github.com/authup/authup/commit/2e11e5f9895a84d0eca4cfd4ae1803dcfa90db5e))
+
+
+### Bug Fixes
+
+* **deps:** bump @rapiq/* to 2.0.0-beta.15 ([66958e7](https://github.com/authup/authup/commit/66958e7f11a3462dce3cea6b74f0435c780524e7))
+* redirect-pattern matching, plus fixes from the beta.58 release audit ([#3397](https://github.com/authup/authup/issues/3397)) ([e00c6ba](https://github.com/authup/authup/commit/e00c6ba635d206a16b5ad19467bd5540d021c37e))
+* repair the account console session and the userinfo email claim ([#3384](https://github.com/authup/authup/issues/3384)) ([d8ff846](https://github.com/authup/authup/commit/d8ff846599259c5ac943d842f3fcb5811d7a08c8))
+
+
+### Performance Improvements
+
+* carry only the translations ilingo cannot resolve synchronously ([#3367](https://github.com/authup/authup/issues/3367)) ([f66175b](https://github.com/authup/authup/commit/f66175b4747be12272deb08ed5b71b0dc9aa6ffa))
+
+
+### Code Refactoring
+
+* consolidate self-service into the account console ([#3392](https://github.com/authup/authup/issues/3392)) ([f380f5f](https://github.com/authup/authup/commit/f380f5f90ee55c4a661e9e32cadc02c5f66ac2ef))
+* extract the SSR auth UI into apps/client-auth-console ([#3375](https://github.com/authup/authup/issues/3375)) ([b131e2a](https://github.com/authup/authup/commit/b131e2ae81dfaf1aa46d44eaa0b32329d5227fbe))
+* rename client-web app to client-admin-console ([#3370](https://github.com/authup/authup/issues/3370)) ([77d48a4](https://github.com/authup/authup/commit/77d48a45b39df21eae0e04c41c2ec3df001a7f64))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/core-http-kit bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/core-kit bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/i18n bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/kit bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/specs bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+
+## [1.0.0-beta.58](https://github.com/authup/authup/compare/v1.0.0-beta.57...v1.0.0-beta.58) (2026-07-31)
+
+
+### Features
+
+* hand server-rendered data to the client instead of fetching it twice ([#3358](https://github.com/authup/authup/issues/3358)) ([0748d85](https://github.com/authup/authup/commit/0748d85a0475b1dbddbad80c10b9ce5f4a099ab2))
+
+
+### Bug Fixes
+
+* a user (or client) never moves between realms ([#3362](https://github.com/authup/authup/issues/3362)) ([d45cc67](https://github.com/authup/authup/commit/d45cc677a79330b43bb6b319b70d438fbba24576))
+* **deps:** bump ilingo, validup and trapi to their latest versions ([6d69f90](https://github.com/authup/authup/commit/6d69f90665f23022de5bf3ef8c6916a50c449494))
+* **deps:** bump the minorandpatch group with 4 updates ([#3359](https://github.com/authup/authup/issues/3359)) ([e1dbd50](https://github.com/authup/authup/commit/e1dbd509e2c0dd4931b8f1bb73c0e69a296bdadf))
+* enforce the permission guard on entity index detail links ([#3363](https://github.com/authup/authup/issues/3363)) ([28c9c18](https://github.com/authup/authup/commit/28c9c18aee3a7c56561746f05febef8fa59ddecc))
+
+
+### Performance Improvements
+
+* **ui:** bundle only the icons the apps render ([#3365](https://github.com/authup/authup/issues/3365)) ([7b1e041](https://github.com/authup/authup/commit/7b1e041ef006e3ac240fa8b5d49f0841f97e49f4)), closes [#3345](https://github.com/authup/authup/issues/3345)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/core-http-kit bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/core-kit bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/i18n bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/kit bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/specs bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+
+## [1.0.0-beta.57](https://github.com/authup/authup/compare/v1.0.0-beta.56...v1.0.0-beta.57) (2026-07-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* API consumers reading bare record bodies must unwrap data; old clients against a new server break (lockstep beta release).
+
+### Features
+
+* add a grant-types form control to the client form ([#3348](https://github.com/authup/authup/issues/3348)) ([0f4b675](https://github.com/authup/authup/commit/0f4b67513cf1bee06fc769668f636831f9de9c93))
+* add a post-logout redirect-uri list to the client form ([#3350](https://github.com/authup/authup/issues/3350)) ([bdf23d1](https://github.com/authup/authup/commit/bdf23d12322171322e554fdafd0bdb190ad72e4f))
+* query-capability discovery via meta.schema + entity record response envelope ([#3332](https://github.com/authup/authup/issues/3332)) ([00f2f4c](https://github.com/authup/authup/commit/00f2f4c3aec069fef4b8eecc2da4d39ba19f0483))
+* restore file config, harden the launcher and dedupe the UI bootstrap ([#3344](https://github.com/authup/authup/issues/3344)) ([13b611d](https://github.com/authup/authup/commit/13b611da9ee980d97887a2a542b84beae5f730ff))
+
+
+### Bug Fixes
+
+* complete schema field projections and re-target role client FK ([#3324](https://github.com/authup/authup/issues/3324)) ([9eec343](https://github.com/authup/authup/commit/9eec343965bf98990560b0092d26bd0c82a2561f))
+* **deps:** bump @rapiq/* to 2.0.0-beta.11 ([#3333](https://github.com/authup/authup/issues/3333)) ([728dbb1](https://github.com/authup/authup/commit/728dbb1f16deb14c5901f0406a34ae50c791dbd6))
+* **deps:** bump the minorandpatch group across 1 directory with 6 updates ([#3334](https://github.com/authup/authup/issues/3334)) ([4545dee](https://github.com/authup/authup/commit/4545deed8011b32a914dad979d5ce2e13d702650))
+* **deps:** replace @rapiq/{typeorm,sql,memory} with @rapiq/adapter-* ([9219e75](https://github.com/authup/authup/commit/9219e75c10bf1ba9164804f8676b049b44dc549c)), closes [#3341](https://github.com/authup/authup/issues/3341)
+* space the redirect-uri list off the grant-types selection ([1c23b7b](https://github.com/authup/authup/commit/1c23b7b2f0e9d3d6492f624a44edd25022aa01a1))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+    * @authup/core-http-kit bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+    * @authup/core-kit bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+    * @authup/i18n bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+    * @authup/kit bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+    * @authup/specs bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+
 ## [1.0.0-beta.56](https://github.com/authup/authup/compare/v1.0.0-beta.55...v1.0.0-beta.56) (2026-07-24)
 
 

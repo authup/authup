@@ -16,17 +16,116 @@ import {
     useTranslationsForField as _useTranslationsForField,
 } from '@ilingo/validup-vue';
 import type { FieldTranslations } from '@ilingo/validup-vue';
-import type { GetContextReactive } from '@ilingo/vue';
-import type { GetContext } from 'ilingo';
+import type { DataMaybeRef, GetContextReactive } from '@ilingo/vue';
+import type { GetContext, IIlingo } from 'ilingo';
 import type { ObjectLiteral } from 'validup';
 import type { Ref } from 'vue';
+import { computed, ref, unref } from 'vue';
+import { injectHydrationStore, useHydratedValue } from '../hydration';
 
 export function injectTranslatorLocale(): Ref<string> {
     return injectLocale();
 }
 
+function unwrapTranslationData(input: DataMaybeRef) : Record<string, string | number> {
+    const output : Record<string, string | number> = {};
+    const entries = Object.entries(input);
+    for (const [key, value] of entries) {
+        output[key] = unref(value);
+    }
+
+    return output;
+}
+
+function buildTranslationHydrationKey(ctx: GetContext) : string {
+    return `authup:translation:${ctx.locale}:${ctx.namespace}:${ctx.key}:${ctx.count ?? ''}:${ctx.data ? JSON.stringify(ctx.data) : ''}`;
+}
+
+/**
+ * Whether the instance refused this lookup instead of answering it.
+ *
+ * ilingo signals a store that cannot read without I/O by throwing
+ * `SyncUnavailableError` out of `getSync`, deliberately not by returning
+ * `undefined` (which means the key is genuinely missing). Only the refusal is
+ * worth a handoff: a missing key misses in the async pass too, so there would
+ * be nothing to record. Any other fault counts as refused, so the async pass
+ * still gets its chance at a value.
+ */
+function isSyncUnavailable(instance: IIlingo, ctx: GetContext) : boolean {
+    try {
+        instance.getSync(ctx);
+
+        return false;
+    } catch {
+        return true;
+    }
+}
+
+/**
+ * Reactive translation lookup.
+ *
+ * `@ilingo/vue` resolves through ilingo's async `get()`, seeding the ref
+ * with what the synchronous `getSync()` can answer (tada5hi/ilingo#988).
+ * Authup's catalogs are a `MemoryStore`, so that seed IS the translation and
+ * both the server-rendered markup and the render the client hydrates it
+ * against hold the real string.
+ *
+ * A store that needs I/O (a cold `FSStore`/`LoaderStore`, a remote adapter a
+ * consumer registers ahead of the kit's own) declines the synchronous read,
+ * and the seed stays the `<namespace>.<key>` placeholder until the async
+ * lookup settles a microtask later. That is a mismatch for every translated
+ * string in a server-rendered subtree, so for those the server records what
+ * it resolved and the hydrating client shows it until its own lookup
+ * settles. Nothing is recorded when the seed already answered, which is
+ * every authup key.
+ */
 export function useTranslation(input: GetContextReactive): Ref<string> {
-    return _useTranslation(input);
+    const source = _useTranslation(input);
+
+    const store = injectHydrationStore();
+    if (!store) {
+        return source;
+    }
+
+    // `@ilingo/vue` falls back to this for a refused read AND for a missing
+    // key, so it only rules the seed out, it does not say which happened
+    const placeholder = `${input.namespace}.${input.key}`;
+    if (source.value !== placeholder) {
+        return source;
+    }
+
+    const ilingo = injectIlingo();
+    const locale = injectLocale();
+
+    const context = () : GetContext => ({
+        locale: input.locale ? input.locale : locale.value,
+        namespace: input.namespace,
+        key: input.key,
+        count: unref(input.count),
+        data: input.data ? unwrapTranslationData(input.data) : undefined,
+    });
+
+    if (!isSyncUnavailable(ilingo, context())) {
+        return source;
+    }
+
+    const recorded = ref<string>();
+
+    useHydratedValue<string>({
+        key: buildTranslationHydrationKey(context()),
+        resolve: () => ilingo.get(context()),
+        apply: (value) => {
+            recorded.value = value;
+        },
+    });
+
+    return computed(() => {
+        if (source.value === placeholder && recorded.value) {
+            return recorded.value;
+        }
+
+        return source.value;
+    });
 }
 
 /**

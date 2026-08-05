@@ -53,6 +53,36 @@ export default {
     writableDirectoryPath: 'writable',
 
     /**
+     * EXPERIMENTAL (may change in a minor release; see the Theming guide).
+     * Directory holding the operator theme applied to the served consoles.
+     * Relative paths are resolved against rootPath. Empty disables theming.
+     * See the Theming guide.
+     * env: THEME_DIRECTORY_PATH
+     * default: '' (disabled)
+     */
+    themeDirectoryPath: '/etc/authup/theme',
+
+    /**
+     * EXPERIMENTAL, alongside themeDirectoryPath.
+     * Read fragments/head.html from the theme directory and splice it
+     * into the head of both served consoles. Raw, unsanitized markup on
+     * the identity provider origin, so it is opt-in.
+     * env: THEME_FRAGMENTS_ENABLED
+     * default: false
+     */
+    themeFragmentsEnabled: false,
+
+    /**
+     * EXPERIMENTAL. Package directories replacing the served consoles. Each points at
+     * a directory holding the built dist/. Empty resolves the packaged
+     * console from node_modules. See the Theming guide.
+     * env: AUTH_CONSOLE_PATH / ACCOUNT_CONSOLE_PATH
+     * default: '' (both)
+     */
+    authConsolePath: '',
+    accountConsolePath: '',
+
+    /**
      * Enable logging. File-only (no environment variable).
      * default: true
      */
@@ -134,13 +164,19 @@ export default {
      * to both its http and https origin — pass a full origin to
      * restrict to one scheme.
      * Each origin is added to the redirect-URI allowlist of the per-realm
-     * public `web` client (as `<origin>/**`).
+     * public system clients (as `<origin>/**`).
      * The origin of `publicUrl` is always trusted implicitly.
+     * A host may carry a `*` (e.g. https://*.example.com), which matches
+     * any host ending in `.example.com`. The wildcard never crosses a `/`,
+     * so it cannot reach past the host, and a non-default port has to be
+     * written out (https://*.example.com:8443).
      *
-     * Security: the `web` client is built-in with global scope, so any
+     * Security: the system clients are built-in with global scope, so any
      * allowlisted origin can complete a login and obtain a full-permission
-     * token — only add origins you control. In non-production, the
-     * client-web dev origin (http://localhost:3000) is seeded automatically.
+     * token — only add origins you control. A wildcard host trusts every
+     * subdomain, so use one only where you control the whole domain.
+     * In non-production, the
+     * client-admin-console dev origin (http://localhost:3000) is seeded automatically.
      * env: TRUSTED_ORIGINS (comma-separated)
      * default: []
      */
@@ -238,6 +274,15 @@ export default {
      * default: 10
      */
     passwordMinLength: 10,
+
+    /**
+     * Serve the account self-service surface at `<publicUrl>/account`
+     * (profile, password, authenticators, sessions, applications).
+     * Disable it when you run your own self-service portal.
+     * env: ACCOUNT_CONSOLE_ENABLED
+     * default: true
+     */
+    accountConsoleEnabled: true,
 
     /**
      * Persist security events (login, loginFailed, authorize,
@@ -443,6 +488,8 @@ export default {
 ```dotenv [authup.server.core.conf]
 env=production
 writableDirectoryPath=writable
+themeDirectoryPath=/etc/authup/theme
+themeFragmentsEnabled=false
 port=3001
 host=0.0.0.0
 publicUrl=http://localhost:3001
@@ -459,6 +506,7 @@ registrationEnabled=false
 emailVerificationEnabled=false
 passwordRecoveryEnabled=false
 passwordMinLength=10
+accountConsoleEnabled=true
 eventLogEnabled=true
 eventLogRetentionDays=90
 eventLogEntityEnabled=true
@@ -486,6 +534,8 @@ permissionsDefaultPolicyAssignment=true
 ```dotenv [.env]
 NODE_ENV=production
 WRITABLE_DIRECTORY_PATH=writable
+THEME_DIRECTORY_PATH=/etc/authup/theme
+THEME_FRAGMENTS_ENABLED=false
 PORT=3001
 HOST=0.0.0.0
 PUBLIC_URL=http://localhost:3001
@@ -502,6 +552,7 @@ REGISTRATION_ENABLED=false
 EMAIL_VERIFICATION_ENABLED=false
 PASSWORD_RECOVERY_ENABLED=false
 PASSWORD_MIN_LENGTH=10
+ACCOUNT_CONSOLE_ENABLED=true
 EVENT_LOG_ENABLED=true
 EVENT_LOG_RETENTION_DAYS=90
 EVENT_LOG_ENTITY_ENABLED=true

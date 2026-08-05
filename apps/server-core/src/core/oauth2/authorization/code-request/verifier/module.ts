@@ -7,7 +7,7 @@
 
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { ScopeName, isClientPublic } from '@authup/core-kit';
-import { isSimpleMatch, isUUID } from '@authup/kit';
+import { isSimpleURLMatch, isUUID } from '@authup/kit';
 import {
     OAuth2ClientError,
     OAuth2GrantError,
@@ -47,9 +47,11 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
         }
 
         // A name-identified client needs a realm hint to resolve deterministically
-        // — every realm has a built-in `web` client, so `client_id=web` without a
-        // realm would bind to an arbitrary realm's client (and, post realm-gate,
-        // produce a confusing mismatch against a random realm). Require the hint.
+        // — client names are only unique per realm (every realm carries the
+        // same-named system clients, and a wildcard-provisioned client exists in
+        // every realm), so a bare name would bind to an arbitrary realm's client
+        // (and, post realm-gate, produce a confusing mismatch against a random
+        // realm). Require the hint.
         if (!isUUID(data.client_id) && !data.realm_id) {
             throw OAuth2RequestError.malformed('A realm is required to resolve a client by name.');
         }
@@ -115,7 +117,12 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
         if (data.redirect_uri) {
             const redirectUris = client.redirectUri.split(',');
 
-            if (!isSimpleMatch(data.redirect_uri, redirectUris)) {
+            // isSimpleURLMatch, never isSimpleMatch: the raw matcher treats `/`
+            // as its only boundary, so a `*` in a registered pattern's host
+            // absorbs a `?`, `#` or `\` and the pattern's remaining host
+            // literal lands in the query of a foreign origin. The code would
+            // then be issued to that origin.
+            if (!isSimpleURLMatch(data.redirect_uri, redirectUris)) {
                 throw OAuth2GrantError.redirectUriMismatch();
             }
         }

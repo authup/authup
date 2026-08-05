@@ -1,0 +1,7 @@
+realms:
+    - attributes:
+          name: master
+      relations:
+          clients:
+              - attributes:
+                    name: not a valid name

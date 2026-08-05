@@ -10,7 +10,7 @@ import { defineComponent } from 'vue';
 export default defineComponent({
     props: {
         // Compact authup mark in the card header. The full hero artwork
-        // stays an app concern (client-web's login entry); the shell only
+        // stays an app concern (the admin console's login entry); the shell only
         // carries the small brand identity for backend-served auth pages.
         logo: {
             type: Boolean,

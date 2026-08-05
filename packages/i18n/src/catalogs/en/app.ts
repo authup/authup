@@ -16,6 +16,7 @@ export const TranslatorTranslationAppEnglish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.SETTINGS]: 'Settings',
     [TranslatorTranslationAppKey.LOGOUT]: 'Logout',
     [TranslatorTranslationAppKey.ACCOUNT]: 'Account',
+    [TranslatorTranslationAppKey.MANAGE_ACCOUNT]: 'Manage account',
     [TranslatorTranslationAppKey.SECURITY]: 'Security',
 
     [TranslatorTranslationAppKey.MANAGEMENT]: 'Management',
@@ -69,9 +70,12 @@ export const TranslatorTranslationAppEnglish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.CONSENT_EMPTY]: 'You have not granted any application access yet.',
     [TranslatorTranslationAppKey.CONSENT_REVOKE]: 'Revoke',
     [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL]: 'Revoke access',
+    [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_SUCCESS]: 'Application access was revoked.',
     [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_TITLE]: 'Revoke application access',
     [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_DESCRIPTION]: 'The application will ask for your consent again on the next sign-in.',
     [TranslatorTranslationAppKey.CONSENT_SCOPES]: 'Granted permissions',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_TITLE]: 'Crypto-shred encryption key?',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_DESCRIPTION]: 'This key is still referenced by {{count}} encrypted secret(s). Deleting it makes them permanently unrecoverable.',
+
+    [TranslatorTranslationAppKey.BACK_TO_APP]: 'Back to {{host}}',
 };

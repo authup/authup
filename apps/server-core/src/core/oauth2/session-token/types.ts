@@ -6,10 +6,17 @@
  */
 
 import type { SessionToken, SessionTokenKind } from '@authup/core-kit';
+import type { IQuery } from '@rapiq/core';
+import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 
 export type SessionTokenCreateInput = {
     id: string,
     sessionId: string,
+    /**
+     * The client the token is issued for. Optional: a mint site that knows no
+     * client (an MFA-login completion) persists null rather than guessing.
+     */
+    clientId?: string | null,
     kind: SessionTokenKind,
     parentId?: string | null,
     refreshTokenId?: string | null,
@@ -24,6 +31,33 @@ export type SessionTokenRef = {
 };
 
 export interface ISessionTokenRepository {
+    /**
+     * Paginated inventory read.
+     *
+     * The `session` relation is joined unconditionally, because the caller's
+     * authorization resolves through it: the rows carry no realm or subject of
+     * their own. A `fields` projection must not be able to strip what the gate
+     * reads (the plan-039 discipline, through a relation instead of a column).
+     */
+    findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<SessionToken>>;
+
+    /**
+     * Load EVERY row matching a query, unbounded. A bulk revoke must reach
+     * every match, so the schema's pagination cap is deliberately not applied
+     * (same reasoning as `ISessionRepository.findAllByQuery`).
+     */
+    findAllByQuery(query: IQuery): Promise<SessionToken[]>;
+
+    /**
+     * Load one row by jti WITH its session joined.
+     *
+     * Separate from `findOneById` because authorization resolves through the
+     * session: ownership and realm both live there, and a row without it fails
+     * closed. Deliberately not expressed as a query, so the lookup cannot be
+     * weakened by a decode that silently drops the predicate.
+     */
+    findOneWithSessionById(id: string): Promise<SessionToken | null>;
+
     /**
      * Persist a newly issued session-token row.
      */

@@ -7,7 +7,7 @@
 <script lang="ts">
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
-import type { LinkProperties } from '@vuecs/link';
+import type { LinkProps } from '@vuecs/link';
 import { VCLink } from '@vuecs/link';
 import { VCIcon } from '@vuecs/icon';
 import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
@@ -18,7 +18,7 @@ import { useTranslations } from '../../core';
 // straight through.
 export default defineComponent({
     components: { VCLink, VCIcon },
-    props: { link: { type: Object as PropType<LinkProperties> } },
+    props: { link: { type: Object as PropType<LinkProps> } },
     setup() {
         const translations = useTranslations([
             {

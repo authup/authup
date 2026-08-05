@@ -42,7 +42,9 @@ graph TD
 
     subgraph Apps
         server-core
-        client-web
+        client-account-console
+        client-admin-console
+        client-auth-console
         authup
     end
 
@@ -63,7 +65,6 @@ graph TD
     server-kit --> access
     server-kit --> core-kit
     server-kit --> core-realtime-kit
-    server-kit --> errors
     server-kit --> kit
     server-kit --> specs
 
@@ -85,8 +86,9 @@ graph TD
     server-test-kit --> server-kit
 
     %% Layer 4
+    server-adapter-node --> errors
     server-adapter-node --> server-adapter-kit
-    server-adapter-socket-io --> core-kit
+    server-adapter-socket-io --> errors
     server-adapter-socket-io --> server-adapter-kit
     server-adapter-web --> errors
     server-adapter-web --> server-adapter-kit
@@ -103,14 +105,14 @@ graph TD
     client-web-kit-theme --> client-web-kit
     client-web-nuxt --> access
     client-web-nuxt --> client-web-kit
+    client-web-nuxt --> core-http-kit
     client-web-nuxt --> kit
     client-web-theme --> client-web-kit-theme
 
     %% Apps
     server-core --> access
-    server-core --> client-web-kit
-    server-core --> client-web-kit-theme
-    server-core --> client-web-theme
+    server-core --> client-account-console
+    server-core --> client-auth-console
     server-core --> core-http-kit
     server-core --> core-kit
     server-core --> errors
@@ -119,16 +121,31 @@ graph TD
     server-core --> server-kit
     server-core --> server-test-kit
     server-core --> specs
-    client-web --> client-web-kit
-    client-web --> client-web-kit-theme
-    client-web --> client-web-nuxt
-    client-web --> client-web-theme
-    client-web --> core-http-kit
-    client-web --> core-kit
-    client-web --> i18n
-    client-web --> kit
-    authup --> client-web
-    authup --> core-kit
+    client-account-console --> client-web-kit
+    client-account-console --> client-web-kit-theme
+    client-account-console --> client-web-theme
+    client-account-console --> core-http-kit
+    client-account-console --> core-kit
+    client-account-console --> i18n
+    client-account-console --> kit
+    client-account-console --> specs
+    client-auth-console --> client-web-kit
+    client-auth-console --> client-web-kit-theme
+    client-auth-console --> client-web-theme
+    client-auth-console --> core-http-kit
+    client-auth-console --> core-kit
+    client-auth-console --> i18n
+    client-auth-console --> kit
+    client-admin-console --> client-web-kit
+    client-admin-console --> client-web-kit-theme
+    client-admin-console --> client-web-nuxt
+    client-admin-console --> client-web-theme
+    client-admin-console --> core-http-kit
+    client-admin-console --> core-kit
+    client-admin-console --> i18n
+    client-admin-console --> kit
+    authup --> client-admin-console
+    authup --> errors
     authup --> kit
     authup --> server-core
 ```

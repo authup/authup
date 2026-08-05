@@ -43,6 +43,7 @@ export enum TranslatorTranslationClientKey {
     NAME_HINT = 'nameHint',
     DESCRIPTION_HINT = 'descriptionHint',
     REDIRECT_URI_HINT = 'redirectURIHint',
+    POST_LOGOUT_REDIRECT_URI_HINT = 'postLogoutRedirectURIHint',
     GRANT_TYPES_HINT = 'grantTypesHint',
     AUTH_METHOD = 'authMethod',
     AUTH_METHOD_NONE = 'authMethodNone',
@@ -140,6 +141,8 @@ export enum TranslatorTranslationClientKey {
     LOGOUT_DONE = 'logoutDone',
     SIGN_OUT = 'signOut',
 
+    ACCOUNT_SIGN_IN_INTRO = 'accountSignInIntro',
+
     MFA_TITLE = 'mfaTitle',
     MFA_CHALLENGE_INTRO = 'mfaChallengeIntro',
     MFA_CODE = 'mfaCode',
@@ -186,12 +189,13 @@ export enum TranslatorTranslationClientKey {
 }
 
 /**
- * App-only chrome: navigation labels, page-title decoration
+ * Application chrome: navigation labels, page-title decoration
  * (management/details), the sidebar session countdown, header
  * accessibility labels, and the parameterized success toasts. These live
  * apart from the shared entity/field/action/common namespaces because
- * they are consumed exclusively by `apps/client-web`, never by the
- * reusable `@authup/client-web-kit` components.
+ * they belong to authup's own application surfaces (the admin console and
+ * the server-core-embedded account console), not to the reusable form /
+ * collection components a downstream consumer embeds.
  */
 export enum TranslatorTranslationAppKey {
     HOME = 'home',
@@ -201,6 +205,7 @@ export enum TranslatorTranslationAppKey {
     SETTINGS = 'settings',
     LOGOUT = 'logout',
     ACCOUNT = 'account',
+    MANAGE_ACCOUNT = 'manageAccount',
     SECURITY = 'security',
 
     MANAGEMENT = 'management',
@@ -256,9 +261,12 @@ export enum TranslatorTranslationAppKey {
     CONSENT_EMPTY = 'consentEmpty',
     CONSENT_REVOKE = 'consentRevoke',
     CONSENT_REVOKE_ALL = 'consentRevokeAll',
+    CONSENT_REVOKE_ALL_SUCCESS = 'consentRevokeAllSuccess',
     CONSENT_REVOKE_ALL_TITLE = 'consentRevokeAllTitle',
     CONSENT_REVOKE_ALL_DESCRIPTION = 'consentRevokeAllDescription',
     CONSENT_SCOPES = 'consentScopes',
+
+    BACK_TO_APP = 'backToApp',
 }
 
 /**
@@ -323,6 +331,7 @@ export enum TranslatorTranslationFieldKey {
     DESCRIPTION = 'description',
     SECRET = 'secret',
     REDIRECT_URIS = 'redirectUris',
+    POST_LOGOUT_REDIRECT_URIS = 'postLogoutRedirectUris',
     GRANT_TYPES = 'grantTypes',
     PASSWORD = 'password',
     PASSWORD_REPEAT = 'passwordRepeat',

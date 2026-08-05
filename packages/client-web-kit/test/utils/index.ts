@@ -10,6 +10,7 @@ import type { FakeClient, FakeHandlerMap, FakeRequest } from '@authup/core-http-
 import { mount } from '@vue/test-utils';
 import type { Component } from 'vue';
 import vuecs from '@vuecs/core';
+import installOverlays from '@vuecs/overlays';
 import { createPinia } from 'pinia';
 import { ALoginForm } from '../../src/components/workflows/login';
 import { install } from '../../src/module';
@@ -21,6 +22,8 @@ export function mountKitComponent(
     component: Component,
     props: Record<string, any> = {},
     handlers: FakeHandlerMap = {},
+    overrides: Partial<Options> = {},
+    mountOptions: { slots?: Record<string, string> } = {},
 ) {
     const pinia = createPinia();
     const httpClient = createFakeClient({
@@ -43,15 +46,20 @@ export function mountKitComponent(
         cookieGet: noop,
         cookieSet: noop,
         cookieUnset: noop,
+        ...overrides,
     };
 
     const wrapper = mount(component, {
         props,
+        slots: mountOptions.slots,
         global: {
             components: { VCIcon: { render: () => null } },
             plugins: [
                 pinia,
                 [vuecs, {}],
+                // app-level Toast/AlertDialog managers (what the consumer
+                // apps get from their own installOverlays call)
+                installOverlays,
                 [{ install }, options],
             ],
         },

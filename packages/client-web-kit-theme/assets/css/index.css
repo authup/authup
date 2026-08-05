@@ -56,6 +56,7 @@
    ------------------------------------------------------------------ */
 @import "./styles/tokens.css";
 @import "./styles/picker.css";
+@import "./styles/account.css";
 @import "./styles/auth.css";
 @import "./styles/realm.css";
 @import "./styles/login.css";
@@ -77,9 +78,9 @@
  * leaking into dark mode.
  *
  * Lives in the kit theme rather than `@authup/client-web-theme` so
- * any consumer of the kit theme — including the embedded
- * `apps/server-core/ui/` consent app — inherits the same dark-
- * variant semantics without re-declaring this in each entry.
+ * any consumer of the kit theme (including the `apps/client-auth-console/`
+ * SSR auth app) inherits the same dark-variant semantics without
+ * re-declaring this in each entry.
  */
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -98,7 +99,7 @@
  *
  * Consumer apps add their own `@source` directives for their template
  * trees + any locally-nested vuecs deps in a per-app CSS entry
- * (e.g. `apps/client-web/assets/css/tailwind.css`).
+ * (e.g. `apps/client-admin-console/assets/css/tailwind.css`).
  *
  * Every path below must resolve relative to where this stylesheet
  * lives in BOTH consumption contexts (Tailwind v4 resolves `@source`

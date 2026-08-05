@@ -154,7 +154,9 @@ export class ClientService extends AbstractEntityService implements IClientServi
             }
 
             entity = await this.repository.findOneWithSecret(where);
-            if (!entity && options.updateOnly) {
+            // Only a NAME key may upsert-create. A UUID addresses one specific
+            // row, so a miss is a 404 (creating would write a different id).
+            if (!entity && (options.updateOnly || where.id)) {
                 throw new EntityNotFoundError();
             }
         } else if (options.updateOnly) {
@@ -184,8 +186,8 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         const validated = await this.validator.run(data, { group });
 
-        // Reserve the system-provisioned client names (`system`, `web`) so an
-        // API caller can't create or rename a client onto them — that would
+        // Reserve the system-provisioned client names (`system`, the console
+        // clients) so an API caller can't create or rename a client onto them — that would
         // collide on unique(name, realmId) or shadow the builtIn client.
         // Provisioning and runtime hooks bypass this service, so they remain
         // free to manage the reserved clients. builtIn clients are exempt

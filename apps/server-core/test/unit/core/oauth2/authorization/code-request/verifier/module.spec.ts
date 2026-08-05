@@ -278,5 +278,100 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
             });
             expect(result.redirectUriVerified).toBe(true);
         });
+
+        it('should accept a redirect matching a registered host wildcard', async () => {
+            const client = clientRepository.seed({
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
+                redirectUri: 'https://*.example.com/**',
+            });
+            const result = await verifier.verify({
+                client_id: client.id,
+                response_type: OAuth2AuthorizationResponseType.CODE,
+                redirect_uri: 'https://app.example.com/callback',
+            });
+            expect(result.redirectUriVerified).toBe(true);
+        });
+
+        it('should reject a redirect a registered host wildcard does not cover', async () => {
+            // the wildcard never crosses a `/`, so it stays inside the host
+            const client = clientRepository.seed({
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
+                redirectUri: 'https://*.example.com/**',
+            });
+
+            const candidates = [
+                'https://app.example.com.evil.test/callback',
+                'https://app.example.com@evil.test/callback',
+                'https://app.example.com:8443/callback',
+                'http://app.example.com/callback',
+                // a path-less URI used to satisfy every pattern sharing its
+                // literal prefix, which let any origin collect the code
+                'https://attacker.test',
+                'https://attacker.test?code=1',
+            ];
+
+            for (const redirectUri of candidates) {
+                await expect(
+                    verifier.verify({
+                        client_id: client.id,
+                        response_type: OAuth2AuthorizationResponseType.CODE,
+                        redirect_uri: redirectUri,
+                    }),
+                ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_REDIRECT_URI_MISMATCH }));
+            }
+        });
+
+        it('should reject a redirect whose authority terminator a host wildcard would absorb', async () => {
+            // The matcher's only boundary is `/`, but a URL authority also ends
+            // at `?`, `#` and `\`. Matched against the raw string, the wildcard
+            // absorbs one of those and `.example.com` lands in the query or
+            // fragment of a foreign origin, so the code would be issued to
+            // https://evil.test. Canonicalizing the candidate first is what
+            // stops it, which is why the verifier must not call isSimpleMatch.
+            const client = clientRepository.seed({
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
+                redirectUri: 'https://*.example.com/**',
+            });
+
+            const candidates = [
+                'https://evil.test?.example.com/callback',
+                'https://evil.test#.example.com/callback',
+                'https://evil.test\\.example.com/callback',
+                'https://user@evil.test#.example.com/callback',
+                'https://evil.test:8443#.example.com/callback',
+            ];
+
+            for (const redirectUri of candidates) {
+                await expect(
+                    verifier.verify({
+                        client_id: client.id,
+                        response_type: OAuth2AuthorizationResponseType.CODE,
+                        redirect_uri: redirectUri,
+                    }),
+                ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_REDIRECT_URI_MISMATCH }));
+            }
+        });
+
+        it('should reject a redirect that walks out of a path scoped pattern', async () => {
+            // The authorized string has to be the string the browser navigates
+            // to: `new URL(...)` collapses the dot segments, so without
+            // canonicalization the target ends up outside the allowed prefix.
+            const client = clientRepository.seed({
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
+                redirectUri: 'https://app.example.com/tenant-a/**',
+            });
+
+            await expect(
+                verifier.verify({
+                    client_id: client.id,
+                    response_type: OAuth2AuthorizationResponseType.CODE,
+                    redirect_uri: 'https://app.example.com/tenant-a/../tenant-b/callback',
+                }),
+            ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_REDIRECT_URI_MISMATCH }));
+        });
     });
 });

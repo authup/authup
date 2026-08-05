@@ -103,6 +103,9 @@ describe('grant-authorize session reuse', () => {
         expect(own).toHaveLength(1);
         expect(own[0].id).toEqual(loginSessionId);
         // and the reused session now carries the authorizing client
-        expect(own[0].clientId).toEqual(client.id);
+        // The session's `clientId` is the client-SUBJECT foreign key and this
+        // session's subject is a user, so it stays null. Which application
+        // authorized is on the token rows.
+        expect(own[0].clientId).toBeNull();
     });
 });

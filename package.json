@@ -8,7 +8,7 @@
         "url": "https://github.com/tada5hi"
     },
     "license": "AGPL-3.0-only",
-    "version": "1.0.0-beta.56",
+    "version": "1.0.0-beta.59",
     "workspaces": [
         "docs",
         "apps/*",
@@ -75,7 +75,7 @@
     "overrides": {
         "typeorm": "1.1.0",
         "vue": "3.5.40",
-        "validup": "^0.5.1",
-        "@vuecs/core": "3.4.0"
+        "validup": "^1.0.0",
+        "@vuecs/core": "3.5.0"
     }
 }

@@ -1,5 +1,50 @@
 # Changelog
 
+## [1.0.0-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.58...v1.0.0-beta.59) (2026-08-04)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([95d42be](https://github.com/authup/authup/commit/95d42be70feeeab7fe45c7dc81638aedb0c4324b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+    * @authup/kit bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+
+## [1.0.0-beta.58](https://github.com/authup/authup/compare/v1.0.0-beta.57...v1.0.0-beta.58) (2026-07-31)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([d3d06f6](https://github.com/authup/authup/commit/d3d06f6a81a8fc548825bec9af551d0113eb2c89))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+    * @authup/kit bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+
+## [1.0.0-beta.57](https://github.com/authup/authup/compare/v1.0.0-beta.56...v1.0.0-beta.57) (2026-07-29)
+
+
+### Bug Fixes
+
+* **errors:** keep guard inheritance match for JSON-rehydrated errors ([#3331](https://github.com/authup/authup/issues/3331)) ([352fccc](https://github.com/authup/authup/commit/352fccc591be502f20b4928767f7457bea278e1c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+    * @authup/kit bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+
 ## [1.0.0-beta.56](https://github.com/authup/authup/compare/v1.0.0-beta.55...v1.0.0-beta.56) (2026-07-24)
 
 

@@ -8,7 +8,12 @@
 import { CookieName } from '@authup/core-http-kit';
 import { createFakeClient } from '@authup/core-http-kit/testing';
 import { createPinia } from 'pinia';
-import { describe, expect, it } from 'vitest';
+import {
+    afterEach,
+    describe,
+    expect,
+    it,
+} from 'vitest';
 import { createApp, h } from 'vue';
 import type { CookieOptions } from '../../../../src/types';
 import { injectStore, installStore } from '../../../../src/core/store';
@@ -37,10 +42,15 @@ type CookieSetCall = {
     options: CookieOptions
 };
 
-function buildApp(seed: Record<string, unknown> = {}) {
+type CookieUnsetCall = {
+    key: string,
+    options: CookieOptions
+};
+
+function buildApp(seed: Record<string, unknown> = {}, cookiePath?: string) {
     const jar = new Map<string, unknown>(Object.entries(seed));
     const setCalls : CookieSetCall[] = [];
-    const unsetCalls : string[] = [];
+    const unsetCalls : CookieUnsetCall[] = [];
 
     const httpClient = createFakeClient({
         handlers: {
@@ -56,6 +66,7 @@ function buildApp(seed: Record<string, unknown> = {}) {
     app.use(pinia);
 
     installStore(app, {
+        cookiePath,
         httpClient,
         pinia,
         cookieGet: (key) => jar.get(key),
@@ -67,8 +78,8 @@ function buildApp(seed: Record<string, unknown> = {}) {
             });
             jar.set(key, value);
         },
-        cookieUnset: (key) => {
-            unsetCalls.push(key);
+        cookieUnset: (key, options) => {
+            unsetCalls.push({ key, options });
             jar.delete(key);
         },
     });
@@ -162,7 +173,7 @@ describe('core/store/install-cookies', () => {
 
         await store.logout();
 
-        expect(unsetCalls).toEqual([
+        expect(unsetCalls.map((call) => call.key)).toEqual([
             CookieName.ACCESS_TOKEN,
             CookieName.ACCESS_TOKEN_EXPIRE_DATE,
             CookieName.REFRESH_TOKEN,
@@ -172,5 +183,120 @@ describe('core/store/install-cookies', () => {
             CookieName.REALM_MANAGEMENT,
         ]);
         expect(setCalls).toHaveLength(0);
+    });
+});
+
+describe('core/store/install-cookies path', () => {
+    const setPathname = (pathname: string) => {
+        Object.defineProperty(window, 'location', {
+            configurable: true,
+            writable: true,
+            value: { pathname },
+        });
+    };
+
+    afterEach(() => {
+        setPathname('/');
+    });
+
+    // A cookie stored without an explicit `Path` inherits the browser's
+    // default-path, the directory of the writing document. The account
+    // console at `/account` and the hosted auth pages at `/` are one origin
+    // sharing one session under one set of cookie names, so the implicit
+    // paths gave them two shadowing sets that expire independently: a `user`
+    // from one login then pairs up with an `access_token` from another and
+    // the store renders an identity that is not the token's subject.
+    it('writes and clears every cookie at the default root path', async () => {
+        const {
+            store,
+            setCalls,
+            unsetCalls,
+        } = buildApp();
+
+        await store.login({
+            name: 'admin',
+            password: 'start123',
+        });
+
+        expect(setCalls).not.toHaveLength(0);
+        for (const call of setCalls) {
+            expect(call.options.path).toEqual('/');
+        }
+
+        await store.logout();
+
+        expect(unsetCalls).not.toHaveLength(0);
+        for (const call of unsetCalls) {
+            expect(call.options.path).toEqual('/');
+        }
+    });
+
+    // Copies written before the path was pinned sit on the browser's
+    // default-path and WIN the read, so hydration would persist their
+    // contents onto the pinned path: a stale refresh token replacing a live
+    // one, replayed into family revocation on the next refresh.
+    it('clears the pre-pinning copies that can reach the document', () => {
+        setPathname('/account/password');
+
+        const { unsetCalls } = buildApp();
+
+        const paths = new Set(unsetCalls.map((call) => call.options.path));
+        expect(paths).toEqual(new Set(['/account', '/account/password']));
+
+        for (const path of paths) {
+            expect(unsetCalls
+                .filter((call) => call.options.path === path)
+                .map((call) => call.key)
+                .sort())
+                .toEqual(Object.values(CookieName).sort());
+        }
+    });
+
+    // `/account` serves the console as well, and a copy written from
+    // `/account/password` sits on exactly `/account` — which path-matches it.
+    // Clearing only the document's default-path (`/` here) would leave it to
+    // win hydration.
+    it('clears the mount path itself on a trailing-slash-less route', () => {
+        setPathname('/account');
+
+        const { unsetCalls } = buildApp();
+
+        const paths = new Set(unsetCalls.map((call) => call.options.path));
+        expect(paths).toEqual(new Set(['/account']));
+    });
+
+    it('clears nothing when the document sits on the cookie path', () => {
+        setPathname('/');
+
+        const { unsetCalls } = buildApp();
+
+        expect(unsetCalls).toHaveLength(0);
+    });
+
+    it('writes and clears every cookie at a host-declared path', async () => {
+        setPathname('/auth/account/');
+
+        const {
+            store,
+            setCalls,
+            unsetCalls,
+        } = buildApp({}, '/auth');
+
+        // ignore the install-time migration drops
+        setCalls.length = 0;
+        unsetCalls.length = 0;
+
+        await store.login({
+            name: 'admin',
+            password: 'start123',
+        });
+
+        await store.logout();
+
+        expect(setCalls).not.toHaveLength(0);
+        expect(unsetCalls).not.toHaveLength(0);
+        for (const call of [...setCalls, ...unsetCalls]) {
+            expect(call.options.path).toEqual('/auth');
+        }
     });
 });

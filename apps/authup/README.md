@@ -5,7 +5,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/authup/authup/badge.svg)](https://snyk.io/test/github/authup/authup)
 
 This package contains the CLI — a thin supervisor that boots the authup applications
-(`@authup/server-core`, `@authup/client-web`) as child processes.
+(`@authup/server-core`, `@authup/client-admin-console`) as child processes.
 
 Authup is designed to be easy to use and flexible, with support for multiple authentication strategies.
 With Authup, developers can quickly and easily add authentication & authorization to their applications.
@@ -46,8 +46,8 @@ exits with that first application's exit code.
 ## Commands
 
 ```shell
-$ authup start                 # start server-core and client-web
-$ authup start server.core     # start a subset (client.web, server.core)
+$ authup start                 # start server-core and client-admin-console
+$ authup start server.core     # start a subset (client.admin-console, server.core)
 $ authup migration run         # forwarded to server-core only
 $ authup healthcheck           # forwarded to server-core only
 ```
@@ -62,17 +62,17 @@ server.core.port=3001
 server.core.host=0.0.0.0
 server.core.publicUrl=http://localhost:3001
 
-client.web.port=3000
-client.web.host=0.0.0.0
-client.web.apiUrl=http://localhost:3001
-client.web.cookieDomain=example.com
+client.admin-console.port=3000
+client.admin-console.host=0.0.0.0
+client.admin-console.apiUrl=http://localhost:3001
+client.admin-console.cookieDomain=example.com
 ```
 
 The `server.core` section is passed through to the server process
-(`--configFile`/`--configDirectory` are forwarded as well); the `client.web`
+(`--configFile`/`--configDirectory` are forwarded as well); the `client.admin-console`
 section is mapped onto the web application's environment
 (`PORT`, `HOST`, `NUXT_PUBLIC_API_URL`, `NUXT_PUBLIC_COOKIE_DOMAIN`).
-When `client.web.apiUrl` is not set, it is derived from `server.core.publicUrl`.
+When `client.admin-console.apiUrl` is not set, it is derived from `server.core.publicUrl`.
 
 Both applications otherwise inherit the CLI's environment, with one deliberate
 exception: `PORT` and `HOST` are **always** set per application — from the

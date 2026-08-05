@@ -14,13 +14,13 @@ jobs:
         steps:
             -   uses: actions/checkout@v6
 
-            -   uses: tada5hi/action-docker-image-publish@v3
+            -   uses: tada5hi/craneship@v4
                 with:
                     cleanup: false
                     registryRepository: authup/authup
                     registryTag: next
 
-            -   uses: tada5hi/action-docker-image-publish@v3
+            -   uses: tada5hi/craneship@v4
                 with:
                     registryHost: docker.io
                     registryRepository: authup/authup

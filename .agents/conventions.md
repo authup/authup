@@ -6,8 +6,8 @@
 |------------------|---------------------------------------------------|
 | NX               | Monorepo task runner (dependency-ordered builds)   |
 | tsdown           | Package JS bundling (rolldown-based)               |
-| Vite             | server-core embedded UI builds (`apps/server-core/ui/`) |
-| Nuxt             | client-web builds                                 |
+| Vite             | auth console SSR builds (`apps/client-auth-console/`) and account console SPA builds (`apps/client-account-console/`) |
+| Nuxt             | client-admin-console builds                                 |
 | Vitest + SWC     | Test runner with fast compilation                  |
 | ESLint           | Linting (`@tada5hi/eslint-config-vue-typescript`) |
 | Husky            | Pre-commit hooks via lint-staged                   |
@@ -30,6 +30,33 @@
 - Build: `npm run build -w <workspace>` (from repo root, e.g. `-w apps/server-core`, `-w packages/kit`)
 - Lint: `npx eslint --fix path/to/changed/file1.ts path/to/changed/file2.ts`
 - Fix any build or lint errors before considering a task complete.
+- Every workspace splits `build` into `build:types` + `build:js` — packages emit
+  declarations (`tsc`/`vue-tsc --emitDeclarationOnly`), the console apps run a
+  pure type check (`vue-tsc --noEmit`, or `nuxi typecheck` in the admin
+  console) before bundling. The Vite console apps' tsconfigs deliberately
+  declare **no local `paths`**: they inherit the root `tsconfig.json` map
+  (`@authup/* → packages/*/src`), so the type check runs against package
+  SOURCE, matching the vite/nuxt `@authup/* → src` aliases the bundles are
+  built from. Do not re-add app-local relative `paths` entries — `paths`
+  resolve against the inherited root `baseUrl`, so `../../packages/...`
+  silently resolves outside the repo, never matches, and the check degrades to
+  the last-built dist declarations (where vue-tsc-emitted component prop
+  unions can differ from source). The corollary is that each Vite console
+  app's `resolve.alias` map must list **every** `@authup/*` package it pulls
+  in, transitive ones included: an unaliased package is bundled from its
+  built dist while `vue-tsc` checks the source, so the two silently disagree
+  until a rebuild.
+- The auth console emits both halves of its SSR output from one
+  `vite build`, declared as `environments: { client, ssr }` plus
+  `builder: {}` rather than two invocations with CLI flags. The output
+  paths are load-bearing (server-core reads `dist/client/index.html`,
+  `dist/client/.vite/ssr-manifest.json` and `dist/server/server.js`), so
+  the SSR `entryFileNames` is pinned instead of derived from the entry
+  name. Leave `builder.sharedPlugins` at its default (off): plugin
+  instances hold `configResolved`-scoped state, and the environments
+  resolve differently enough (`consumer`, `build.ssr`, outDir) that
+  sharing one instance across both is not something the plugin set is
+  written for.
 
 ## Testing
 
@@ -58,11 +85,75 @@ Migrations live in `apps/server-core/src/adapters/database/migrations/{mysql,pos
 
   This is not a style preference. Every schema defect found so far came from hand-authored DDL diverging from the entity model: two foreign keys pointing at the wrong table (`auth_permissions.client_id` in `1766830857009`, `auth_roles.client_id` in `1784970000000`), and the naming + column-type split that `1783325495597` / `1783769340000` introduced and `1785264000000-AlignSchemaWithEntityMetadata` had to repair across 28 constraints and 15 columns. Two traps in particular are invisible while hand-writing and unmissable when generating: constraint names are typeorm's table+column hash (`IDX_<hash>` / `FK_<hash>`, never a readable `IDX_auth_events_actor_name`), and a plain `@Column({ type: 'uuid' })` is `varchar(255)` on MySQL, not `varchar(36)` — pinning `length: 36` is no escape, Postgres rejects a length on `uuid` at `DataSource.initialize()`. The `test:schema-drift` gate in the `tests-migrations` job fails the build on any divergence; see [testing.md](testing.md#schema-drift-gate-npm-run-testschema-drift).
 - Planned for `v1.0.0` final: squash the entire beta chain into a single baseline migration with a stepping-stone upgrade path (upgrade to the last beta first).
+- **Constraint names that a migration spelled out must be pinned on the entity.** `migration generate` diffs the live schema against the entity metadata, so a hand-authored `CREATE INDEX IDX_auth_events_actor_id` that the model does not declare reads as drift: the next generated migration drops it and recreates it under typeorm's `IDX_<hash>`, burying whatever real change was being generated. The readable names introduced by the hand-authored beta.52/beta.53 migrations (9 foreign keys, 20 indexes, 3 unique constraints across `auth_clients`, `auth_consents`, `auth_events`, `auth_session_tokens`, `auth_trust_anchors`, `auth_user_authenticators`) are therefore declared on the entities via `@Index('IDX_...')`, `@Unique('UQ_...', [...])` and `@JoinColumn({ foreignKeyConstraintName: 'FK_...' })`. Do not drop those arguments as noise. Primary keys need no pinning: the schema builder does not compare their constraint names.
+- **Known residual drift, mysql only:** 15 uuid columns were declared `varchar(36)` by those same migrations, while `@Column({ type: 'uuid' })` derives `varchar(255)` on mysql (`MysqlDriver.getColumnLength` only shortens to 36 for values typeorm generates itself). Postgres has a native `uuid` type and is unaffected. This one cannot be closed from the entity: `length` on a `uuid` column makes postgres fail at `DataSource.initialize()` with "does not support length property", and a dialect-conditional type is impossible because `migration generate` builds both dialects in one process off the same entity classes. So `migration generate` currently emits nothing on postgres and a mysql-only file whose statements are all attributable to those 15 columns. **Inspect a generated mysql migration before using it**: the drift renders as `DROP COLUMN` plus re-`ADD`, which is data loss that reads as routine. The closing move is to pin `length: 36` on those 15 columns, which needs no migration; it is parked on typeorm relaxing `EntityMetadataValidator` (typeorm/typeorm#12742 is the prerequisite, since it stops postgres rendering the invalid `uuid(36)`). Deliberately **not** closed by widening the columns to `varchar(255)`: 36 is the correct width for a uuid, so widening would remove the diff by making the schema worse (wider entries in the indexes on `auth_events.actor_id`, `auth_session_tokens.session_id` and the rest, plus a rebuild of 6 tables). Tracked in PR #3352.
 
 ## File Organization
 
 - Exported **types** (interfaces, type aliases) must live in a `types.ts` file in the same directory, not inline in the implementation module. Implementation files import from `types.ts`.
 - Barrel `index.ts` files re-export from `types.ts` and implementation modules.
+
+## Workspace Naming (apps & packages)
+
+The workspace name grammar, shared with PrivateAIM/hub (whose tree is the reference
+implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
+`client-vue`, `server-kit`, `core-kit`):
+
+- **The prefix marks the side of the client-server relationship** that the
+  application sits on (apps) or is built for (packages): `server-` for server
+  applications, including third-party resource servers embedding the
+  `server-adapter-*` packages; `client-` for client applications. An unprefixed
+  workspace serves both sides: `kit`, `errors`, `specs`, `access`, `i18n`,
+  `core-*`. The prefix does NOT mark where code executes: a client app's code
+  may run server-side (the SSR auth console), and a server package may call
+  the API (the adapters fetch JWKS). A future API-driving CLI is a client
+  application and would be role-named `client-admin-cli`, next to
+  `client-admin-console` (Keycloak's `admin-cli` precedent).
+- **`core-*` names the core service's domain surface** (domain types, HTTP and
+  realtime clients for `server-core`'s API). Consumed on both sides, hence unprefixed.
+- **Apps are role-named** after the prefix: `server-core` (the IdP),
+  `client-admin-console` (the admin console), `client-account-console` (the
+  account console: a static SPA whose dist server-core serves at
+  `/account`), `client-auth-console` (the auth console: the SSR auth
+  workflow UI whose dist server-core renders on the IdP origin, plan 083),
+  and the planned `server-core-worker` (optional background processor). The
+  `authup` CLI supervisor is the eponymous exception. The admin app carries
+  the full `admin-console` role (not bare `console`) because the UI
+  surfaces are peers: admin console, account console and auth console.
+  Console apps normally match their per-realm OAuth2 client rows
+  (`admin-console`, `account-console`); **`client-auth-console` is the
+  deliberate exception**. The auth pages ARE the IdP surface (they issue
+  tokens rather than obtain them), so no client row exists for them. The
+  name keeps the console-family symmetry anyway (settled 2026-08-02 with
+  the maintainer, plan 083).
+- **Packages are surface- or platform-named** after the prefix: `client-web-kit` /
+  `client-web-nuxt` / `client-web-theme` serve ANY web client (RP) embedding authup,
+  not just the console; `server-kit` / `server-adapter-*` serve any server-side
+  consumer.
+- **The second slot answers a different question per species, by design.** Apps
+  are deployed by identity, so they carry a role (`client-admin-console`,
+  `server-core`); packages are picked up by kind, so they carry a platform or
+  surface (`client-web-kit`, `server-adapter-node`). Do not pad app names with
+  platform tokens for symmetry (`client-web-account-console`): the shape
+  difference is what keeps applications and libraries distinguishable in the
+  flat `@authup/*` npm scope, and console app names must keep matching their
+  per-realm OAuth2 client rows. App and package names deliberately do NOT
+  mirror each other (hub precedent: app `client-ui`, library `client-vue`), so
+  renaming an app never implies renaming a published package family.
+- **Operator-facing vocabulary is a separate, shorter layer**: binaries
+  (`authup-server`, `authup-admin-console`), the CLI package selectors and config sections
+  (`server.core`, `client.admin-console`; slash form `server/core` in the docker
+  entrypoint), and helm values keys. The grammar above governs workspace directory
+  and npm package identity only.
+
+History: `apps/client-web` (`@authup/client-web`, binary `authup-ui`) was renamed to
+`apps/client-admin-console` (`@authup/client-admin-console`, binary `authup-admin-console`) pre-1.0,
+with no aliases kept. The `client-web-*` packages keep their names on purpose.
+A `web-` platform-prefix grammar (`web-kit`, `web-admin-console`) was evaluated
+and rejected 2026-08-03: "web" already means Web-standard APIs in
+`server-adapter-web`, the kit's real constraint is Vue rather than "web", and
+aligning app names to package shapes would blur the app/library distinction in
+the npm scope.
 
 ## Dependency Classification (published packages)
 
@@ -139,6 +230,23 @@ Current references:
 - [typeorm.md](references/typeorm.md) — typeorm + typeorm-extension: uuid column widths per dialect,
   the postgres `createFullType` length quirk, `synchronizeDatabaseSchema` boot behaviour, and the
   `migration generate` / schema-drift tooling.
+
+## Writing Style
+
+Applies to everything written in this repo: code comments, doc-comments, the
+`.agents/**` docs, commit messages, issue and pull-request text, and above all
+user-facing copy such as the `@authup/i18n` catalogs.
+
+- **Avoid the em dash (`—`).** Use a full stop, a colon, a semicolon, or
+  parentheses instead. Two short sentences almost always beat one sentence
+  spliced with a dash. `An RP-initiated logout may redirect back to this URI.
+  Leave empty to end on the confirmation page.` reads better than the same text
+  joined by a dash.
+- Prefer plain ASCII punctuation in general. Non-ASCII characters are fine when
+  they carry meaning (accented words in the de / fr / es catalogs, arrows in
+  tables), not as decoration.
+- Keep i18n copy short and declarative. A hint should say what the field does
+  and what an empty value means, in as few clauses as possible.
 
 ## Best Practices
 

@@ -1,0 +1,27 @@
+/*
+ * Tailwind v4 entry for apps/client-admin-console.
+ *
+ * Pulls in the authup theme (tailwindcss + @vuecs/design + theme-tailwind
+ * + compat layer), then declares this app's local `@source` scopes so
+ * the JIT picks up class-name tokens it can't reach via the theme alone.
+ */
+
+@import "@authup/client-web-theme";
+
+/*
+ * Scan this app's templates. Tailwind v4 auto-scans the CSS file's
+ * directory; the explicit `@source ../..` re-anchors to the app root
+ * so pages/components/layouts/plugins are all covered regardless of
+ * where this file moves to.
+ */
+@source "../..";
+
+/*
+ * Per-app nested vuecs deps. npm workspaces hoist most `@vuecs/*` to
+ * the repo root (covered by the theme), but a few (`forms`, `list`,
+ * `pagination`, `navigation`, `timeago`, `countdown`, `icons-font-awesome`)
+ * land under `apps/client-admin-console/node_modules/@vuecs/` due to peer
+ * deduplication. Without scanning here, their element class strings
+ * aren't in the JIT corpus.
+ */
+@source "../../node_modules/@vuecs";

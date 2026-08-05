@@ -221,8 +221,8 @@ export default defineConfig({
                             ],
                         },
                         {
-                            text: 'client:web',
-                            link: '/guide/deployment/configuration-client-web', 
+                            text: 'client:admin-console',
+                            link: '/guide/deployment/configuration-client-admin-console', 
                         },
                     ],
                 },
@@ -248,7 +248,25 @@ export default defineConfig({
                     items: [
                         {
                             text: 'Overview',
-                            link: '/guide/deployment/provisioning', 
+                            link: '/guide/deployment/provisioning',
+                        },
+                    ],
+                },
+                {
+                    text: 'Account Console',
+                    items: [
+                        {
+                            text: 'Overview',
+                            link: '/guide/deployment/account-console',
+                        },
+                    ],
+                },
+                {
+                    text: 'Theming',
+                    items: [
+                        {
+                            text: 'Overview',
+                            link: '/guide/deployment/theming',
                         },
                     ],
                 },

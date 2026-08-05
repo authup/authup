@@ -78,7 +78,7 @@ export default defineComponent({
         // doesn't require `app.use(installOverlays)`. `useAlertDialog()` only
         // calls inject() (no lifecycle hooks), so this one-time conditional
         // resolution in setup is safe. Host: <VCAlertDialogProvider> in the
-        // client-web default layout.
+        // admin console default layout.
         const confirmDialog = props.withPrompt ? useAlertDialog() : undefined;
 
         const handleClick = async (e: Event) => {

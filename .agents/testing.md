@@ -142,7 +142,7 @@ selfClient.setAuthorizationHeader({ type: 'Bearer', token: token.access_token })
 
 ### Testing the SSR'd UI pages (fake HTTP client)
 
-The five SSR auth pages (`GET /authorize`, `/register`, `/activate`, `/password-forgot`, `/password-reset`) render the bundled Vue app under `apps/server-core/ui/`, which fires HTTP calls during render (session hydration via `store.resolve()`, identity-provider and scope fetches). Tests stub those by injecting a fake HTTP client into the SSR — don't let the rendered app depend on real network behavior unless the test targets exactly that (see `ui-pages-internal-client.spec.ts`):
+The six SSR auth pages (`GET /authorize`, `/register`, `/activate`, `/password-forgot`, `/password-reset`, `/logout`) render the bundled Vue app under `apps/client-auth-console/`, which fires HTTP calls during render (session hydration via `store.resolve()`, identity-provider and scope fetches). Tests stub those by injecting a fake HTTP client into the SSR — don't let the rendered app depend on real network behavior unless the test targets exactly that (see `ui-pages-internal-client.spec.ts`):
 
 ```typescript
 import { createFakeClient as createFakeHTTPClient } from '@authup/core-http-kit/testing';
@@ -159,11 +159,11 @@ await suite.setup();
 const response = await httpRequest(suite, 'GET', '/register');
 ```
 
-Wiring: `HTTPModule.setup` registers a DEFAULT client under `HTTPInjectionKey.UIHttpClient` — `createInternalUIHttpClient`, whose transport rewrites requests targeting `publicUrl` onto the server's own listen address (see architecture.md → Auth Workflow UI) — unless the token is already bound, so a fake registered before `suite.setup()` wins. A per-request middleware stamps a resolve-thunk onto `event.store`; `renderUIPage` resolves per render. Register with `useFactory` + `lifetime: 'transient'` (eldin) — never a singleton-lifetime instance, the client carries per-user Authorization state — and the client is forwarded into the SSR `render()`, and `@authup/client-web-kit`'s `install({ httpClient })` uses it for the provided client, the session store, and the authentication hook alike. See `test/unit/http/controllers/workflows/ui-pages.spec.ts` for hydration-payload assertions (XSS escaping, redirect sanitizing, feature flags) and `ui-pages-internal-client.spec.ts` for the default-client path (loopback dispatch, public hrefs, sub-path `publicUrl` — the test factory takes a config override: `createTestApplication({ config: (c) => { c.publicUrl = '...'; } })`).
+Wiring: `HTTPModule.setup` registers a DEFAULT client under `HTTPInjectionKey.UIHttpClient` — `createInternalUIHttpClient`, whose transport rewrites requests targeting `publicUrl` onto the server's own listen address (see architecture.md → Auth Workflow UI) — unless the token is already bound, so a fake registered before `suite.setup()` wins. A per-request middleware stamps a resolve-thunk onto `event.store`; `renderAuthConsolePage` resolves per render. Register with `useFactory` + `lifetime: 'transient'` (eldin) — never a singleton-lifetime instance, the client carries per-user Authorization state — and the client is forwarded into the SSR `render()`, and `@authup/client-web-kit`'s `install({ httpClient })` uses it for the provided client, the session store, and the authentication hook alike. See `test/unit/http/controllers/workflows/ui-pages.spec.ts` for hydration-payload assertions (XSS escaping, redirect sanitizing, feature flags) and `ui-pages-internal-client.spec.ts` for the default-client path (loopback dispatch, public hrefs, sub-path `publicUrl` — the test factory takes a config override: `createTestApplication({ config: (c) => { c.publicUrl = '...'; } })`).
 
 Caveats:
 - Register the fake **before** `suite.setup()` — the middleware mount is decided at boot.
-- The SSR renders from the **dist** bundle (`dist/ui/server/server.js`) — rebuild `apps/server-core` after changing the UI app or `client-web-kit`, or the tests exercise a stale bundle.
+- The SSR renders from the **built** `@authup/client-auth-console` bundle (`apps/client-auth-console/dist/server/server.js`, resolved through node_modules) — rebuild `apps/client-auth-console` after changing that app or `client-web-kit`, or the tests exercise a stale bundle. server-core itself no longer embeds any UI build.
 - The default unmatched-route fallback returns a collection shape (`{ data: [], meta: { total: 0 } }`); session endpoints need explicit handlers for logged-in renders. Entity-collection loads catch their own errors (they emit `failed` instead of rejecting — SSR crash hardening), but handlers on OTHER fire-and-forget fetch paths must not throw (an unawaited rejection fails vitest).
 - Alias the import (`createFakeHTTPClient`) — `test/utils` already exports a `createFakeClient` entity factory.
 
@@ -196,6 +196,22 @@ via `setProps`; empty realm omitted from the grant body) and
 `ctx.realmId` even though the store's own realm ref is null pre-login — the
 original one-line bug).
 
+**Server-render specs.** The SSR data handoff (architecture.md → *SSR data
+handoff*) branches on `typeof window`, so its server half cannot be exercised
+in the default `happy-dom` environment. Those specs opt into node with a
+`// @vitest-environment node` docblock and render through
+`renderKitComponent()` (`test/utils/ssr.ts`: `createSSRApp` + the same install
+options + `renderToString`), asserting on the returned HTML plus the entries a
+`createFakeHydrationStore()` (`test/utils/hydration.ts`) collected. The client
+half stays in `happy-dom` and seeds the same store before mounting. The
+recorded key is asserted verbatim on both sides
+(`test/unit/core/hydration{,-ssr}.spec.ts`,
+`test/unit/components/utility/entity-collection-hydration.spec.ts`), so a
+change to the key format fails both rather than silently degrading to a
+cache miss. Assertions about the seeded first render must NOT
+`await flushPromises()`: the point is the render the markup is hydrated
+against, before the async lookup settles.
+
 ## Launcher Tests (apps/authup)
 
 The `authup` CLI is a process supervisor, so its suite is split in two:
@@ -204,7 +220,7 @@ The `authup` CLI is a process supervisor, so its suite is split in two:
   every other workspace): entrypoint resolution against fixture `node_modules`
   trees (bin-field reading, the resolution-preference regression, npx fallback),
   the config-section → child-env mapping, and command routing (`migration` /
-  `healthcheck` must not boot client-web).
+  `healthcheck` must not boot client-admin-console).
 - **Smoke** (`npm run test:smoke`): boots the built CLI's `start` against sqlite
   on non-default ports, polls both children's endpoints, sends SIGTERM, asserts
   both children exit and the CLI exits 0. `npm run test:smoke:packed` runs the

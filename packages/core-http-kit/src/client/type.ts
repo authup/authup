@@ -32,6 +32,7 @@ import type {
     IRolePermissionAPI,
     IScopeAPI,
     ISessionAPI,
+    ISessionTokenAPI,
     IStatusAPI,
     ITrustAnchorAPI,
     IUserAPI,
@@ -86,6 +87,8 @@ export interface IClient extends IBaseClient {
     readonly scope : IScopeAPI;
 
     readonly session : ISessionAPI;
+
+    readonly sessionToken : ISessionTokenAPI;
 
     readonly status : IStatusAPI;
 

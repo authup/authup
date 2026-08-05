@@ -27,11 +27,27 @@ function extractHydrationPayload(body: string) : Record<string, any> {
 describe('src/http/controllers/workflows (SSR pages)', () => {
     const suite = createTestApplication();
 
+    const identityProvider = {
+        id: '9c1b1c2a-4c1b-4c1b-9c1b-1c2a4c1b4c1b',
+        name: 'example',
+        displayName: 'Example Provider',
+        protocol: 'oidc',
+        realmId: null,
+    };
+
     const httpClient = createFakeHTTPClient({
         handlers: {
             // consent covering probe (plan 055) — logged-in authorize renders
             // fire it; an empty collection means "not covered" (re-prompt)
             'GET /consents': () => ({ data: [], meta: { total: 0 } }),
+            'GET /identity-providers': () => ({
+                data: [identityProvider],
+                meta: {
+                    total: 1,
+                    limit: 10,
+                    offset: 0,
+                },
+            }),
         },
     });
 
@@ -93,6 +109,38 @@ describe('src/http/controllers/workflows (SSR pages)', () => {
         expect(payload.data.client).toBeUndefined();
     });
 
+    it('should render collections during the SSR and hand them to the client', async () => {
+        const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        const { data: client } = await suite.client.client.create(createFakeClient());
+        await suite.client.clientScope.create({
+            scopeId: scope.id,
+            clientId: client.id,
+        });
+
+        const query = new URLSearchParams({
+            response_type: 'code',
+            client_id: client.id,
+            redirect_uri: 'https://example.com/redirect',
+            scope: ScopeName.GLOBAL,
+        });
+
+        const response = await httpRequest(suite, 'GET', `/authorize?${query.toString()}`);
+        const body = await response.text();
+        const payload = extractHydrationPayload(body);
+
+        // the login form's identity-provider list is loaded while rendering,
+        // so it is already in the markup ...
+        expect(body).toContain('Example Provider');
+
+        // ... and travels in the payload, so the hydrating client adopts it
+        // instead of fetching the same collection again
+        const keys = Object.keys(payload.hydration || {});
+        const key = keys.find((entry) => entry.startsWith('authup:collection:identityProvider'));
+        expect(key).toBeDefined();
+        expect(payload.hydration[key!].data).toEqual([identityProvider]);
+        expect(payload.hydration[key!].total).toEqual(1);
+    });
+
     it('should serve the register page with feature flags', async () => {
         const response = await httpRequest(suite, 'GET', '/register');
         expect(response.status).toEqual(200);
@@ -114,6 +162,39 @@ describe('src/http/controllers/workflows (SSR pages)', () => {
 
         const payload = extractHydrationPayload(body);
         expect(payload.data.token).toEqual(token);
+    });
+
+    it.each([
+        ['$\'', 'token'],
+        ['$`', 'token'],
+        ['$&', 'token'],
+        ['$$', 'token'],
+    ])('should not expand the %s replacement pattern carried by %s', async (value, parameter) => {
+        const query = new URLSearchParams({ [parameter]: value });
+
+        const response = await httpRequest(suite, 'GET', `/password-reset?${query.toString()}`);
+        expect(response.status).toEqual(200);
+
+        const body = await response.text();
+
+        // A string replacement would expand the pattern and splice the
+        // template's own text into the payload, leaving invalid JavaScript
+        // that never assigns window.__AUTHUP__.
+        const payload = extractHydrationPayload(body);
+        expect(payload.data.token).toEqual(value);
+
+        expect(body.match(/<div id="app">/g)).toHaveLength(1);
+    });
+
+    it('should not expand a replacement pattern carried by the redirect parameter', async () => {
+        const redirect = '/authorize?state=$\'';
+        const query = new URLSearchParams({ redirect });
+
+        const response = await httpRequest(suite, 'GET', `/register?${query.toString()}`);
+        expect(response.status).toEqual(200);
+
+        const payload = extractHydrationPayload(await response.text());
+        expect(payload.data.redirect).toEqual(redirect);
     });
 
     it('should pass a relative redirect through to the page', async () => {

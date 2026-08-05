@@ -6,10 +6,12 @@
  */
 
 import type {
-    ClientPermission, 
-    ClientRole, 
-    Permission, 
+    ClientPermission,
+    ClientRole,
+    ClientScope,
+    Permission,
     Role,
+    Scope,
 } from '@authup/core-kit';
 import { pickRecord } from '@authup/kit';
 import type { IClientRepository } from '../../../entities/index.ts';
@@ -30,9 +32,13 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
 
     protected roleResolver: ProvisioningEntityResolver<Role>;
 
+    protected scopeResolver: ProvisioningEntityResolver<Scope>;
+
     protected permissionJunction: ProvisioningJunctionSynchronizer<ClientPermission>;
 
     protected roleJunction: ProvisioningJunctionSynchronizer<ClientRole>;
+
+    protected scopeJunction: ProvisioningJunctionSynchronizer<ClientScope>;
 
     protected permissionSynchronizer: IProvisioningSynchronizer<PermissionProvisioningEntity>;
 
@@ -45,6 +51,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
 
         this.permissionResolver = new ProvisioningEntityResolver(ctx.permissionRepository);
         this.roleResolver = new ProvisioningEntityResolver(ctx.roleRepository);
+        this.scopeResolver = new ProvisioningEntityResolver(ctx.scopeRepository, { clientScoped: false });
 
         this.permissionJunction = new ProvisioningJunctionSynchronizer({
             repository: ctx.clientPermissionRepository,
@@ -53,6 +60,11 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
         });
         this.roleJunction = new ProvisioningJunctionSynchronizer({
             repository: ctx.clientRoleRepository,
+            ownerKey: 'clientId',
+            ownerRealmKey: 'clientRealmId',
+        });
+        this.scopeJunction = new ProvisioningJunctionSynchronizer({
+            repository: ctx.clientScopeRepository,
             ownerKey: 'clientId',
             ownerRealmKey: 'clientRealmId',
         });
@@ -142,6 +154,29 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
                 roles,
                 'roleId',
                 'roleRealmId',
+            );
+        }
+
+        // Scopes (Global + Realm). The junction is the only source the
+        // /authorize code-request verifier reads scopes from.
+        const scopes = [
+            ...await this.scopeResolver.resolveGlobal(
+                input.relations && input.relations.globalScopes,
+            ),
+            ...(attributes.realmId ?
+                await this.scopeResolver.resolveRealm(
+                    input.relations && input.relations.realmScopes,
+                    attributes.realmId,
+                ) :
+                []),
+        ];
+
+        if (scopes.length > 0) {
+            await this.scopeJunction.synchronize(
+                attributes,
+                scopes,
+                'scopeId',
+                'scopeRealmId',
             );
         }
 

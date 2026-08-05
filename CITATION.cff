@@ -28,12 +28,12 @@ identifiers:
   - type: doi
     value: "10.5281/zenodo.20836542"
     description: "Concept DOI (all versions)"
-# Authup is dual-licensed: the applications (server-core, client-web, authup CLI)
+# Authup is dual-licensed: the applications (server-core, client-admin-console, authup CLI)
 # under AGPL-3.0-only (+ commercial), all packages under Apache-2.0.
 license:
   - AGPL-3.0-only
   - Apache-2.0
-version: 1.0.0-beta.56 # x-release-please-version
+version: 1.0.0-beta.59 # x-release-please-version
 # date-released: 2026-01-01  # set/automate to the release date of `version`
 keywords:
   - authentication

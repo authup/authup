@@ -9,7 +9,7 @@ import { VCToastProvider, VCToaster } from '@vuecs/overlays';
 import { defineComponent } from 'vue';
 import AAuthGadgets from './AAuthGadgets.vue';
 
-// Shared shell for the logged-out auth surfaces (client-web's auth layout
+// Shared shell for the logged-out auth surfaces (the admin console's auth layout
 // + the embedded SSR app root):
 //
 //   - <VCToastProvider> wraps the root so any descendant <VCToaster> (or
@@ -43,7 +43,11 @@ export default defineComponent({
             <AAuthGadgets
                 :dark="dark"
                 @update:dark="$emit('update:dark', $event)"
-            />
+            >
+                <!-- host-specific gadgets (e.g. the account console's user
+                     chip + sign-out) join the one top-right cluster -->
+                <slot name="gadgets" />
+            </AAuthGadgets>
 
             <slot />
 

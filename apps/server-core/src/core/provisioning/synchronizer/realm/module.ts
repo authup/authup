@@ -78,6 +78,18 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             attributes = await this.repository.save(this.repository.create(input.attributes));
         }
 
+        // Scopes first: they are leaf entities carrying no relations of their
+        // own, and a client below may bind them through `realmScopes`.
+        if (input.relations && input.relations.scopes) {
+            const scopes = input.relations.scopes.map((child) => {
+                child.attributes.realmId = attributes.id;
+                child.attributes.realm = attributes;
+                return child;
+            });
+
+            await this.scopeSynchronizer.synchronizeMany(scopes);
+        }
+
         if (input.relations && input.relations.clients) {
             const clients = input.relations.clients.map(
                 (child) => {
@@ -118,16 +130,6 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             });
 
             await this.userSynchronizer.synchronizeMany(users);
-        }
-
-        if (input.relations && input.relations.scopes) {
-            const scopes = input.relations.scopes.map((child) => {
-                child.attributes.realmId = attributes.id;
-                child.attributes.realm = attributes;
-                return child;
-            });
-
-            await this.scopeSynchronizer.synchronizeMany(scopes);
         }
 
         return {

@@ -5,7 +5,91 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
-## Next release (after v1.0.0-beta.51)
+## Next release (after v1.0.0-beta.58)
+
+### Security fix: redirect patterns with a host wildcard
+
+A `redirectUri` / `postLogoutRedirectUri` pattern carrying a `*` in its host
+(`https://*.example.com/**`) matched more than its host. The matcher treats
+`/` as its only boundary, while a URL authority also ends at `?`, `#` and
+`\`, so `https://evil.test?.example.com/cb` matched the pattern above and an
+authorization code was issued to `evil.test`.
+
+The candidate is now canonicalized before matching, so the string that gets
+authorized is the string the browser navigates to. **No action is required**,
+and no legitimate redirect stops matching. Three side effects are worth
+knowing:
+
+1. Both the request and the stored pattern are normalized before comparison,
+   so a host differing only in case, an explicit default port (`:443` on
+   https) and `.`/`..` segments resolve on either side. A path-scoped pattern
+   can no longer be walked out of with `..`, and a pattern that was written
+   non-canonically (`https://APP.example.com/**`, `https://app.example.com:443/**`)
+   now matches the requests it always looked like it should.
+2. `**` is no longer accepted inside the host of a pattern. It matches the
+   rest of the value outright, so `https://**.example.com/**` read as "any
+   subdomain" but accepted every origin. A single `*` is unchanged: it matches
+   any run of characters that does not cross a `/`, so it spans dots and
+   `https://*.example.com/**` covers `https://a.b.example.com/cb` as well as
+   `https://a.example.com/cb`. A stored pattern is not rewritten; only new
+   writes are rejected.
+3. `TRUSTED_ORIGINS` rejects the same shape at startup, with a message naming
+   the offending value.
+
+### `client/web` was renamed to `client/admin-console`
+
+The rename of the admin console app (`@authup/client-web` →
+`@authup/client-admin-console`) reaches the operator surface. There is **no
+backwards alias**, and an unknown selector is now a hard error instead of a
+silent success:
+
+- **Docker**: `docker run authup/authup client/web start` →
+  `client/admin-console start`. The entrypoint used to exit `0` on an unknown
+  service, so this previously looked like a healthy container that started
+  nothing. It now exits `1`.
+- **Launcher config**: a `client.web` section in `authup.conf` is no longer
+  read. Rename it to `client.admin-console`, otherwise every key in it
+  (`port`, `host`, `apiUrl`, `cookieDomain`) silently falls back to its
+  default.
+- **CLI**: `authup start client/web` → `authup start client/admin-console`.
+- **Binary**: `authup-ui` → `authup-admin-console`.
+
+### `admin-console` and `account-console` are reserved client names
+
+Both names are now provisioned as system clients in every realm. If a client
+of either name already exists, **it is taken over** rather than left alone:
+the provisioner overwrites `name`, `realmId`, `authMethod`,
+`tokenBindingMethod`, `builtIn`, `active`, `grantTypes`, `scope`,
+`redirectUri` and `postLogoutRedirectUri`, which makes it a public
+(secret-less) auto-consenting client.
+
+Rename any existing client on those names **before** upgrading. Attributes
+outside that list (`displayName`, `description`, `accessPolicyId`, junction
+rows) are preserved.
+
+### The per-realm `web` client was removed
+
+The shared `web` system client is no longer provisioned. Authup's own
+consoles were moved off it earlier (`admin-console` / `account-console`);
+it existed purely for downstream applications and was default-on attack
+surface (auto-consent + `global` scope in every realm).
+
+**Existing `web` rows are not touched**: logins against them keep working.
+Two behavior changes require action:
+
+1. `PUBLIC_URL` / `TRUSTED_ORIGINS` changes no longer propagate to the
+   leftover rows; their `redirectUri` / `postLogoutRedirectUri` are
+   frozen as-is.
+2. Realms created after the upgrade get no `web` client, so a
+   `client_id=web` login breaks there.
+
+Register a client of your own instead. To keep the every-realm semantics,
+declare it once via a [wildcard realm entry](./provisioning.md#realm-wildcard-name)
+(`realms[].attributes.name: "*"`), which also offers a declarative `absent` cleanup for
+the leftover `web` rows. `CLIENT_WEB_NAME` was removed from
+`@authup/core-kit`, and `web` is a regular, creatable client name again.
+
+## v1.0.0-beta.52 (was: next release after v1.0.0-beta.51)
 
 ### Login redirect allowlist — set `TRUSTED_ORIGINS`
 

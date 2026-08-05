@@ -1,5 +1,58 @@
 # Changelog
 
+## [1.0.0-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.58...v1.0.0-beta.59) (2026-08-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* the five settings pages are gone and their URLs now leave the application, redirecting to <apiUrl>/account instead.
+* rename client-web app to client-admin-console ([#3370](https://github.com/authup/authup/issues/3370))
+
+### Bug Fixes
+
+* ensure consistent version for release ([95d42be](https://github.com/authup/authup/commit/95d42be70feeeab7fe45c7dc81638aedb0c4324b))
+
+
+### Code Refactoring
+
+* consolidate self-service into the account console ([#3392](https://github.com/authup/authup/issues/3392)) ([f380f5f](https://github.com/authup/authup/commit/f380f5f90ee55c4a661e9e32cadc02c5f66ac2ef))
+* rename client-web app to client-admin-console ([#3370](https://github.com/authup/authup/issues/3370)) ([77d48a4](https://github.com/authup/authup/commit/77d48a45b39df21eae0e04c41c2ec3df001a7f64))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.58 to ^1.0.0-beta.59
+
+## [1.0.0-beta.58](https://github.com/authup/authup/compare/v1.0.0-beta.57...v1.0.0-beta.58) (2026-07-31)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([d3d06f6](https://github.com/authup/authup/commit/d3d06f6a81a8fc548825bec9af551d0113eb2c89))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.57 to ^1.0.0-beta.58
+
+## [1.0.0-beta.57](https://github.com/authup/authup/compare/v1.0.0-beta.56...v1.0.0-beta.57) (2026-07-29)
+
+
+### Features
+
+* add a post-logout redirect-uri list to the client form ([#3350](https://github.com/authup/authup/issues/3350)) ([bdf23d1](https://github.com/authup/authup/commit/bdf23d12322171322e554fdafd0bdb190ad72e4f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.56 to ^1.0.0-beta.57
+
 ## [1.0.0-beta.56](https://github.com/authup/authup/compare/v1.0.0-beta.55...v1.0.0-beta.56) (2026-07-24)
 
 

@@ -16,10 +16,10 @@ import {
     it,
 } from 'vitest';
 import {
-    CLIENT_WEB_PORT_DEFAULT,
+    CLIENT_ADMIN_CONSOLE_PORT_DEFAULT,
     LISTEN_HOST_DEFAULT,
     SERVER_CORE_PORT_DEFAULT,
-    buildClientWebEnv,
+    buildClientAdminConsoleEnv,
     buildServerCoreEnv,
     readLauncherConfig,
 } from '../../../src/config';
@@ -34,8 +34,8 @@ beforeAll(() => {
         'server.core.port=4310',
         'server.core.host=127.0.0.1',
         'server.core.publicUrl=http://127.0.0.1:4310',
-        'client.web.port=4311',
-        'client.web.cookieDomain=example.com',
+        'client.admin-console.port=4311',
+        'client.admin-console.cookieDomain=example.com',
     ].join('\n'));
 });
 
@@ -46,7 +46,7 @@ afterAll(() => {
 function buildLauncherConfig(input?: Partial<LauncherConfig>) : LauncherConfig {
     return {
         serverCore: {},
-        clientWeb: {},
+        clientAdminConsole: {},
         ...input,
     };
 }
@@ -61,7 +61,7 @@ describe('src/config', () => {
             publicUrl: 'http://127.0.0.1:4310',
         });
 
-        expect(config.clientWeb).toEqual({
+        expect(config.clientAdminConsole).toEqual({
             port: 4311,
             host: undefined,
             apiUrl: undefined,
@@ -76,7 +76,7 @@ describe('src/config', () => {
             const config = await readLauncherConfig({ directory: emptyDirectory });
 
             expect(config.serverCore.port).toBeUndefined();
-            expect(config.clientWeb.port).toBeUndefined();
+            expect(config.clientAdminConsole.port).toBeUndefined();
         } finally {
             fs.rmSync(emptyDirectory, { recursive: true, force: true });
         }
@@ -104,16 +104,16 @@ describe('src/config', () => {
         const config = buildLauncherConfig();
 
         const serverCore = buildServerCoreEnv(config);
-        const clientWeb = buildClientWebEnv(config);
+        const clientAdminConsole = buildClientAdminConsoleEnv(config);
 
-        expect(serverCore.PORT).not.toEqual(clientWeb.PORT);
-        expect(clientWeb.PORT).toEqual(`${CLIENT_WEB_PORT_DEFAULT}`);
-        expect(clientWeb.HOST).toEqual(LISTEN_HOST_DEFAULT);
+        expect(serverCore.PORT).not.toEqual(clientAdminConsole.PORT);
+        expect(clientAdminConsole.PORT).toEqual(`${CLIENT_ADMIN_CONSOLE_PORT_DEFAULT}`);
+        expect(clientAdminConsole.HOST).toEqual(LISTEN_HOST_DEFAULT);
     });
 
-    it('should map the client-web section onto PORT/HOST and nuxt runtime overrides', () => {
-        const env = buildClientWebEnv(buildLauncherConfig({
-            clientWeb: {
+    it('should map the client-admin-console section onto PORT/HOST and nuxt runtime overrides', () => {
+        const env = buildClientAdminConsoleEnv(buildLauncherConfig({
+            clientAdminConsole: {
                 port: 4311,
                 host: '127.0.0.1',
                 apiUrl: 'https://api.example.com',
@@ -130,22 +130,22 @@ describe('src/config', () => {
     });
 
     it('should derive the api url from the server-core public url', () => {
-        const env = buildClientWebEnv(buildLauncherConfig({ serverCore: { publicUrl: 'http://127.0.0.1:4310' } }));
+        const env = buildClientAdminConsoleEnv(buildLauncherConfig({ serverCore: { publicUrl: 'http://127.0.0.1:4310' } }));
 
         expect(env.NUXT_PUBLIC_API_URL).toEqual('http://127.0.0.1:4310');
     });
 
-    it('should prefer the client-web api url over the derived one', () => {
-        const env = buildClientWebEnv(buildLauncherConfig({
+    it('should prefer the client-admin-console api url over the derived one', () => {
+        const env = buildClientAdminConsoleEnv(buildLauncherConfig({
             serverCore: { publicUrl: 'http://127.0.0.1:4310' },
-            clientWeb: { apiUrl: 'https://api.example.com' },
+            clientAdminConsole: { apiUrl: 'https://api.example.com' },
         }));
 
         expect(env.NUXT_PUBLIC_API_URL).toEqual('https://api.example.com');
     });
 
     it('should leave the api url to the application when no section names one', () => {
-        const env = buildClientWebEnv(buildLauncherConfig());
+        const env = buildClientAdminConsoleEnv(buildLauncherConfig());
 
         expect(env.NUXT_PUBLIC_API_URL).toBeUndefined();
         expect(env.NUXT_PUBLIC_COOKIE_DOMAIN).toBeUndefined();

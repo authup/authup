@@ -249,10 +249,10 @@ jobs:
             -   name: Build
                 uses: ./.github/actions/build
 
-            -   name: Build client-web server output
+            -   name: Build client-admin-console server output
                 run: |
-                    if [ ! -f apps/client-web/.output/server/index.mjs ]; then
-                        npm run build --workspace=apps/client-web
+                    if [ ! -f apps/client-admin-console/.output/server/index.mjs ]; then
+                        npm run build --workspace=apps/client-admin-console
                     fi
 
             -   name: Run launcher smoke test (workspace dist)

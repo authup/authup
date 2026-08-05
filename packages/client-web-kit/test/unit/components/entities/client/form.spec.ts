@@ -11,6 +11,7 @@ import { createFakeClient } from '@authup/core-http-kit/testing';
 import type { FakeClient, FakeRequest } from '@authup/core-http-kit/testing';
 import { flushPromises, mount } from '@vue/test-utils';
 import vuecs from '@vuecs/core';
+import { install as installForms } from '@vuecs/forms';
 import { createPinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
 import AClientForm from '../../../../../src/components/entities/client/AClientForm.vue';
@@ -196,6 +197,195 @@ describe('AClientForm access policy', () => {
         const request = findUpdateRequest(httpClient);
         expect(request).toBeDefined();
         expect(request!.body).toHaveProperty('accessPolicyId', null);
+    });
+});
+
+// Both url lists are initialised to `''` like every other optional string on
+// this form, and `submit()` posts the raw form state. What makes that safe is
+// the transport: `ClientAPI.create/update/put` run the payload through
+// `nullifyEmptyObjectProperties`, so `''` reaches the server as `null`. That
+// matters because the server validator applies `z.url()` per comma-separated
+// segment and rejects `''` outright (`''.split(',')` -> `['']`). Pinned here
+// because the `''` initialiser reads unsafe without knowing about the nullify
+// step, and dropping that step would 400 every client created without a
+// redirect uri.
+describe('AClientForm untouched url lists', () => {
+    it('submits null for both url lists when neither is touched', async () => {
+        const pinia = createPinia();
+        const httpClient = createFakeClient({
+            handlers: {
+                'POST /clients': (request: FakeRequest) => ({
+                    data: { ...(request.body as Record<string, any>), id: 'new-id' },
+                    meta: {},
+                }),
+            },
+        });
+
+        const options : Options = {
+            baseURL: 'http://fake.test',
+            httpClient,
+            pinia,
+            isServer: true,
+            cookieGet: noop,
+            cookieSet: noop,
+            cookieUnset: noop,
+        };
+
+        const wrapper = mount(AClientForm, {
+            global: {
+                components: { VCIcon: { render: () => null } },
+                stubs: {
+                    APolicyPicker: { template: '<div />' },
+                    ARealmPicker: { template: '<div />' },
+                    ANameInput: { props: ['modelValue', 'disabled'], template: '<input />' },
+                    ASecretInput: { props: ['modelValue', 'disabled'], template: '<input />' },
+                    VCFormGroup: { template: '<div><slot /></div>' },
+                    VCFormInput: { props: ['modelValue', 'disabled'], template: '<input />' },
+                    VCFormTextarea: { props: ['modelValue'], template: '<textarea />' },
+                    VCFormSwitch: { props: ['modelValue', 'label', 'labelContent'], template: '<input type="checkbox" />' },
+                    VCFormSelect: { props: ['modelValue', 'options'], template: '<select />' },
+                    VCFormCheckboxGroup: {
+                        name: 'VCFormCheckboxGroup', 
+                        props: ['modelValue'], 
+                        template: '<div><slot /></div>', 
+                    },
+                    VCFormCheckbox: {
+                        name: 'VCFormCheckbox', 
+                        props: ['value', 'label', 'labelContent'], 
+                        template: '<input type="checkbox" />', 
+                    },
+                },
+                plugins: [pinia, [vuecs, {}], [{ install }, options]],
+            },
+        });
+
+        await flushPromises();
+
+        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await flushPromises();
+
+        const request = httpClient.requests.find(
+            (candidate) => candidate.method === 'POST' &&
+                new URL(candidate.url, 'http://localhost').pathname === '/clients',
+        );
+        expect(request).toBeDefined();
+        expect(request!.body).toHaveProperty('redirectUri', null);
+        expect(request!.body).toHaveProperty('postLogoutRedirectUri', null);
+    });
+});
+
+describe('AClientForm post-logout redirect uris', () => {
+    // The list is keyed by label, so target it by index: redirect URIs first,
+    // post-logout second.
+    const findList = (wrapper: ReturnType<typeof mountForm>['wrapper']) => wrapper
+        .findAllComponents({ name: 'AFormInputList' })[1]!;
+
+    it('hydrates from the comma-separated column, independently of redirectUri', async () => {
+        const entity = createEntity();
+        entity.postLogoutRedirectUri = 'https://app.example.com/bye,https://alt.example.com/**';
+
+        const { wrapper } = mountForm(entity);
+        await flushPromises();
+
+        expect(findList(wrapper).props('names')).toEqual([
+            'https://app.example.com/bye',
+            'https://alt.example.com/**',
+        ]);
+        // the login redirect list must not pick the post-logout value up
+        expect(wrapper.findAllComponents({ name: 'AFormInputList' })[0]!.props('names'))
+            .toEqual(['https://app.example.com/cb']);
+    });
+
+    it('submits the patterns comma-joined', async () => {
+        const { wrapper, httpClient } = mountForm(createEntity());
+        await flushPromises();
+
+        findList(wrapper).vm.$emit('changed', [
+            'https://app.example.com/bye',
+            'https://alt.example.com/**',
+        ]);
+        await flushPromises();
+
+        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await flushPromises();
+
+        const request = findUpdateRequest(httpClient);
+        expect(request).toBeDefined();
+        expect(request!.body).toMatchObject({ postLogoutRedirectUri: 'https://app.example.com/bye,https://alt.example.com/**' });
+    });
+
+    it('submits null when every pattern is removed', async () => {
+        const entity = createEntity();
+        entity.postLogoutRedirectUri = 'https://app.example.com/bye';
+
+        const { wrapper, httpClient } = mountForm(entity);
+        await flushPromises();
+
+        findList(wrapper).vm.$emit('changed', []);
+        await flushPromises();
+
+        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await flushPromises();
+
+        const request = findUpdateRequest(httpClient);
+        expect(request).toBeDefined();
+        expect(request!.body).toHaveProperty('postLogoutRedirectUri', null);
+    });
+});
+
+// A checked box has to actually show a checkmark. It once did not: the glyph
+// lived only in `@vuecs/forms`' base stylesheet, which the tailwind theme stack
+// does not load, so a checked box rendered as a solid square (tada5hi/vuecs#1694,
+// fixed in @vuecs/forms 5.4.0 by moving the glyph into the component). The glyph
+// now comes from the component itself, and this guards that it stays visible.
+describe('AClientForm checkbox indicator', () => {
+    it('renders a glyph in the checked box and nothing in the unchecked ones', async () => {
+        const entity = createEntity();
+        entity.grantTypes = 'authorization_code';
+
+        const pinia = createPinia();
+        const options : Options = {
+            baseURL: 'http://fake.test',
+            httpClient: createFakeClient({ handlers: {} }),
+            pinia,
+            isServer: true,
+            cookieGet: noop,
+            cookieSet: noop,
+            cookieUnset: noop,
+        };
+
+        const wrapper = mount(AClientForm, {
+            props: { entity },
+            global: {
+                stubs: {
+                    APolicyPicker: { template: '<div />' },
+                    ARealmPicker: { template: '<div />' },
+                },
+                plugins: [
+                    pinia,
+                    [vuecs, {}],
+                    { install: installForms },
+                    [{ install }, options],
+                ],
+            },
+        });
+
+        await flushPromises();
+
+        const boxes = wrapper.findAll('[role="checkbox"]');
+        const checked = boxes.filter((box) => box.attributes('data-state') === 'checked');
+        const unchecked = boxes.filter((box) => box.attributes('data-state') === 'unchecked');
+
+        expect(checked).toHaveLength(1);
+        expect(unchecked.length).toBeGreaterThan(0);
+
+        // a real drawn glyph, not just an empty indicator element
+        expect(checked[0]!.element.innerHTML).toContain('<svg');
+        expect(checked[0]!.element.innerHTML).toContain('<path');
+
+        for (const box of unchecked) {
+            expect(box.element.innerHTML).not.toContain('<svg');
+        }
     });
 });
 

@@ -16,6 +16,7 @@ export const TranslatorTranslationAppSpanish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.SETTINGS]: 'Ajustes',
     [TranslatorTranslationAppKey.LOGOUT]: 'Cerrar sesión',
     [TranslatorTranslationAppKey.ACCOUNT]: 'Cuenta',
+    [TranslatorTranslationAppKey.MANAGE_ACCOUNT]: 'Administrar la cuenta',
     [TranslatorTranslationAppKey.SECURITY]: 'Seguridad',
 
     [TranslatorTranslationAppKey.MANAGEMENT]: 'Gestión',
@@ -69,9 +70,12 @@ export const TranslatorTranslationAppSpanish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.CONSENT_EMPTY]: 'Aún no has concedido acceso a ninguna aplicación.',
     [TranslatorTranslationAppKey.CONSENT_REVOKE]: 'Revocar',
     [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL]: 'Revocar acceso',
+    [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_SUCCESS]: 'Se revocó el acceso de la aplicación.',
     [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_TITLE]: 'Revocar el acceso de la aplicación',
     [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_DESCRIPTION]: 'La aplicación volverá a pedir tu consentimiento en el próximo inicio de sesión.',
     [TranslatorTranslationAppKey.CONSENT_SCOPES]: 'Permisos concedidos',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_TITLE]: '¿Destruir la clave de cifrado?',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_DESCRIPTION]: 'Esta clave todavía es referenciada por {{count}} secreto(s) cifrado(s). Eliminarla los hará permanentemente irrecuperables.',
+
+    [TranslatorTranslationAppKey.BACK_TO_APP]: 'Volver a {{host}}',
 };

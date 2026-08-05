@@ -11,10 +11,16 @@
 export const CLIENT_SYSTEM_NAME = 'system';
 
 /**
- * The public OAuth2 client provisioned for every realm. Shared by
- * authup's own client-web and any downstream UI embedding client-web-kit.
+ * The public OAuth2 client provisioned for every realm for authup's own
+ * admin console (apps/client-admin-console).
  */
-export const CLIENT_WEB_NAME = 'web';
+export const CLIENT_ADMIN_CONSOLE_NAME = 'admin-console';
+
+/**
+ * The public OAuth2 client provisioned for every realm for authup's
+ * account self-service surface (served by server-core).
+ */
+export const CLIENT_ACCOUNT_CONSOLE_NAME = 'account-console';
 
 /**
  * How an OAuth client authenticates at the token endpoint.
@@ -42,5 +48,6 @@ export const CLIENT_CERTIFICATE_URI_PREFIX = 'urn:authup:client:';
  */
 export const CLIENT_RESERVED_NAMES = [
     CLIENT_SYSTEM_NAME,
-    CLIENT_WEB_NAME,
+    CLIENT_ADMIN_CONSOLE_NAME,
+    CLIENT_ACCOUNT_CONSOLE_NAME,
 ];

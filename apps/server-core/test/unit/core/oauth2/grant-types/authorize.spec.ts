@@ -105,11 +105,15 @@ describe('OAuth2AuthorizeGrant', () => {
                 realmId,
                 sub: userId,
                 subKind: OAuth2SubKind.USER,
-                clientId,
                 userAgent: 'TestAgent',
                 ipAddress: '10.0.0.1',
             }),
         );
+
+        // `clientId` is the client-SUBJECT foreign key, and this session's
+        // subject is a user. The authorizing application is recorded on the
+        // token rows, not here.
+        expect(sessionManager.createCalls[0]).not.toHaveProperty('clientId');
 
         expect(result).toHaveProperty('access_token');
         expect(result).toHaveProperty('refresh_token');
@@ -133,9 +137,12 @@ describe('OAuth2AuthorizeGrant', () => {
         expect(sessionManager.createCalls).toHaveLength(0);
         expect(sessionManager.findOneByIdCalls).toContain(sessionId);
         expect(sessionManager.refreshCalls).toHaveLength(1);
-        // the reused session gets the authorize client stamped onto it
+        // The authorizing application is NOT written onto the session: the
+        // column is the client-subject FK, whose ON DELETE CASCADE means
+        // "this client owns this row". Putting an application there made
+        // deleting it delete a user's session.
         expect(sessionManager.refreshCalls[0]).toEqual(
-            expect.objectContaining({ id: sessionId, clientId }),
+            expect.objectContaining({ id: sessionId, clientId: null }),
         );
 
         // the issued tokens reference the reused session
@@ -144,6 +151,45 @@ describe('OAuth2AuthorizeGrant', () => {
         expect(refreshTokenIssuer.issueCalls).toContainEqual(payload);
 
         expect(result).toHaveProperty('access_token');
+    });
+
+    // `auth_sessions.client_id` is the client-SUBJECT foreign key, the
+    // counterpart of `user_id`. The authorize grant must leave it alone: an
+    // application written there sits behind an ON DELETE CASCADE that means
+    // "this client owns this row", so deleting the application deleted the
+    // session and, through it, every other application's tokens.
+    it('should never write the authorizing client onto the session subject FK', async () => {
+        const sessionId = randomUUID();
+        const firstClientId = randomUUID();
+        // the session was already claimed by another application
+        await sessionManager.create({
+            id: sessionId,
+            sub: userId,
+            subKind: OAuth2SubKind.USER,
+            realmId,
+            clientId: firstClientId,
+        });
+        sessionManager.createCalls.length = 0;
+
+        // the code belongs to a DIFFERENT application (the suite-level clientId)
+        await grant.runWith(buildCode({ session_id: sessionId }));
+
+        // the session keeps whatever its subject FK held ...
+        expect(sessionManager.createCalls).toHaveLength(0);
+        // exactly one refresh, so indexing [0] cannot drift onto another call
+        expect(sessionManager.refreshCalls).toHaveLength(1);
+        expect(sessionManager.refreshCalls[0]).toEqual(
+            expect.objectContaining({ id: sessionId, clientId: firstClientId }),
+        );
+        const stored = await sessionManager.findOneById(sessionId);
+        expect(stored?.clientId).toEqual(firstClientId);
+        expect(stored?.clientId).not.toEqual(clientId);
+
+        // ... while the tokens are minted for the authorizing application,
+        // which is what their auth_session_tokens rows are attributed from.
+        const payload = expect.objectContaining({ session_id: sessionId, client_id: clientId });
+        expect(accessTokenIssuer.issueCalls).toContainEqual(payload);
+        expect(refreshTokenIssuer.issueCalls).toContainEqual(payload);
     });
 
     it('should fall back to create when the referenced session does not exist', async () => {

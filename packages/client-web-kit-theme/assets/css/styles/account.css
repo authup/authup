@@ -1,0 +1,143 @@
+/*
+ * Copyright (c) 2026.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+/*
+ * Account console shell from @authup/client-web-kit:
+ *
+ *   - <AAccountShell> — the authenticated self-service surface served by
+ *     server-core at /account: header (brand + user chip + sign-out),
+ *     horizontal nav tabs, and the content card the pages render into.
+ *
+ * Colors come from the --authup-account-* tokens (see ./tokens.css).
+ *
+ * Rules live in `@layer components` (before `utilities` in the layer
+ * order, see ../index.css) so a consumer can override any single
+ * property with a plain Tailwind utility on the element.
+ */
+@layer components {
+    .a-account-shell {
+        width: 100%;
+        max-width: var(--authup-account-max-width);
+        margin: 0 auto;
+        /* narrow screens: stack below the fixed .a-auth-gadgets cluster */
+        padding: 4.25rem 1.25rem 2.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        color: var(--authup-account-surface-color);
+    }
+
+    /*
+     * One top bar: from md up the brand row rises onto the same line as
+     * the fixed gadget cluster (top: 1rem, 2.25rem tall) — identity and
+     * session controls live THERE (AAuthApp's `gadgets` slot), not in
+     * the shell.
+     */
+    @media (min-width: 48rem) {
+        .a-account-shell {
+            padding-top: 1rem;
+        }
+    }
+
+    /*
+     * No `justify-content: space-between` here on purpose: the fixed
+     * `.a-auth-gadgets` cluster occupies the same vertical band as this
+     * header from md up (see the padding-top override above), so any
+     * child pushed to the right edge would render underneath it. Keep
+     * additions to this row left-anchored.
+     */
+    .a-account-shell-header {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        min-height: 2.25rem;
+    }
+
+    .a-account-shell-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    /* Operator logo — see .a-auth-shell-logo in auth.css. */
+    .a-account-shell-brand > svg {
+        background-image: var(--authup-account-logo-image);
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: contain;
+    }
+
+    .a-account-shell-brand > svg > * {
+        visibility: var(--authup-account-logo-mark-visibility);
+    }
+
+    .a-account-shell-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    .a-account-shell-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+
+    .a-account-shell-nav-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.45rem 0.9rem;
+        border-radius: 0.6rem;
+        color: var(--authup-account-surface-color-muted);
+        transition: color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .a-account-shell-nav-link:hover {
+        color: var(--authup-account-surface-color);
+        background: var(--authup-account-nav-hover-background);
+    }
+
+    .a-account-shell-nav-link--active,
+    .a-account-shell-nav-link--active:hover {
+        color: var(--authup-account-nav-active-color);
+        background: var(--authup-account-nav-active-background);
+    }
+
+    /*
+     * The return link to the referring application, leading the tab strip.
+     * A trailing rule separates it from the tabs: it leaves the console
+     * rather than selecting a section, so it must not read as a
+     * permanently-inactive tab. Muted so the active tab stays dominant.
+     *
+     * Declared AFTER the base link rule on purpose. Both carry the same
+     * specificity and sit in the same layer, so source order decides, and
+     * placed before it the base rule silently won for every property they
+     * share (including the hover background this rule exists to remove).
+     */
+    .a-account-shell-nav-link--back {
+        color: var(--authup-account-surface-color-muted);
+        gap: 0.375rem;
+        margin-right: 0.25rem;
+        padding-right: 0.75rem;
+        border-right: 1px solid var(--authup-account-surface-border-color);
+        border-radius: 0;
+    }
+
+    .a-account-shell-nav-link--back:hover {
+        color: var(--authup-account-surface-color);
+        background: none;
+    }
+
+    .a-account-shell-body {
+        border: 1px solid var(--authup-account-surface-border-color);
+        border-radius: var(--authup-account-card-border-radius);
+        background: var(--authup-account-surface-background);
+        padding: var(--authup-account-card-padding);
+        box-shadow: var(--authup-account-card-box-shadow);
+    }
+}

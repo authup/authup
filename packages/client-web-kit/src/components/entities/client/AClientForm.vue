@@ -100,6 +100,7 @@ export default defineComponent({
             description: '',
             realmId: '',
             redirectUri: '',
+            postLogoutRedirectUri: '',
             baseUrl: '',
             rootUrl: '',
             authMethod: `${ClientAuthMethod.SECRET}` as `${ClientAuthMethod}`,
@@ -211,6 +212,7 @@ export default defineComponent({
                 { key: TranslatorTranslationClientKey.NAME_HINT },
                 { key: TranslatorTranslationClientKey.DESCRIPTION_HINT },
                 { key: TranslatorTranslationClientKey.REDIRECT_URI_HINT },
+                { key: TranslatorTranslationClientKey.POST_LOGOUT_REDIRECT_URI_HINT },
                 { key: TranslatorTranslationClientKey.AUTH_METHOD },
                 { key: TranslatorTranslationClientKey.AUTH_METHOD_NONE },
                 { key: TranslatorTranslationClientKey.AUTH_METHOD_SECRET },
@@ -247,8 +249,12 @@ export default defineComponent({
                     count: 1, 
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.FIELD, 
-                    key: TranslatorTranslationFieldKey.REDIRECT_URIS, 
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.REDIRECT_URIS,
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.POST_LOGOUT_REDIRECT_URIS,
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD,
@@ -267,6 +273,11 @@ export default defineComponent({
 
         const redirectUris = computed(() => {
             const value = v.fields.redirectUri.$model.value as string | undefined;
+            return value ? value.split(',') : [];
+        });
+
+        const postLogoutRedirectUris = computed(() => {
+            const value = v.fields.postLogoutRedirectUri.$model.value as string | undefined;
             return value ? value.split(',') : [];
         });
 
@@ -322,6 +333,7 @@ export default defineComponent({
             tokenBindingMethodOptions,
             clientCertificateURI,
             redirectUris,
+            postLogoutRedirectUris,
             grantTypeSelection,
             grantTypeOptions,
             setGrantTypes,
@@ -518,6 +530,24 @@ export default defineComponent({
                 </template>
                 <template #hint>
                     {{ translationsClient.redirectURIHint }}
+                </template>
+            </AFormInputList>
+            <AFormInputList
+                class="mb-3"
+                :names="postLogoutRedirectUris"
+                @changed="(value) => {
+                    if (value.length === 0) {
+                        v.fields.postLogoutRedirectUri.$model.value = null;
+                        return;
+                    }
+                    v.fields.postLogoutRedirectUri.$model.value = value.join(',');
+                }"
+            >
+                <template #label>
+                    {{ translationsDefault.postLogoutRedirectUris }}
+                </template>
+                <template #hint>
+                    {{ translationsClient.postLogoutRedirectURIHint }}
                 </template>
             </AFormInputList>
             <IFieldValidation

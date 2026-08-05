@@ -91,6 +91,7 @@ import {
     RolePermissionController,
     ScopeController,
     SessionController,
+    SessionTokenController,
     TrustAnchorController,
     UserAttributeController,
     UserAuthenticatorController,
@@ -100,6 +101,7 @@ import {
     useRequestEventContext,
 } from '../../../../adapters/http/index.ts';
 import {
+    AccountController,
     ActivateController,
     AuthenticatorChallengeController,
     AuthorizeController,
@@ -144,6 +146,8 @@ import {
     RoleService,
     ScopeService,
     SessionService,
+    SessionTokenService,
+    SystemClientProvisioner,
     TrustAnchorService,
     UserAttributeService,
     UserAuthenticator,
@@ -151,10 +155,10 @@ import {
     UserPermissionService,
     UserRoleService,
     UserService,
-    WebClientProvisioner,
 } from '../../../../core/index.ts';
 import { AuthenticationInjectionKey } from '../../authentication/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
+import { LazyWildcardRealmProvisioner } from '../../provisioning/lazy-wildcard.ts';
 import { IdentityInjectionKey } from '../../identity/index.ts';
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import type { Config } from '../../config/index.ts';
@@ -181,6 +185,7 @@ export class HTTPControllerModule {
         const keyController = this.createKeyController(container);
         const trustAnchorController = this.createTrustAnchorController(container);
         const sessionController = this.createSessionController(container);
+        const sessionTokenController = this.createSessionTokenController(container);
         const consentController = this.createConsentController(container);
         const userController = this.createUserController(container);
         const userAttributeController = this.createUserAttributeController(container);
@@ -203,6 +208,7 @@ export class HTTPControllerModule {
                 this.createLogoutController(container),
                 this.createAuthenticatorChallengeController(container),
                 this.createUserInfoController(container),
+                this.createAccountController(container),
 
                 this.createStatusController(container),
 
@@ -225,6 +231,7 @@ export class HTTPControllerModule {
                 rolePermissionController,
                 scopeController,
                 sessionController,
+                sessionTokenController,
                 userController,
                 userAttributeController,
                 userAuthenticatorController,
@@ -462,11 +469,24 @@ export class HTTPControllerModule {
         return new StatusController({ options: { features: this.buildUIFeatures(config) } });
     }
 
+    createAccountController(container: IContainer) {
+        const config = container.resolve(ConfigInjectionKey);
+
+        return new AccountController({
+            options: {
+                baseURL: config.publicUrl,
+                features: this.buildUIFeatures(config),
+                trustedOrigins: getAppOrigins(config),
+            },
+        });
+    }
+
     buildUIFeatures(config: Config) : StatusResponseFeatures {
         return {
             registration: config.registrationEnabled,
             passwordRecovery: config.passwordRecoveryEnabled,
             emailVerification: config.emailVerificationEnabled,
+            accountConsole: config.accountConsoleEnabled,
         };
     }
 
@@ -731,6 +751,13 @@ export class HTTPControllerModule {
         return new TrustAnchorController({ service });
     }
 
+    createSessionTokenController(container: IContainer) {
+        const repository = container.resolve(OAuth2InjectionToken.SessionTokenRepository);
+        const tokenRepository = container.resolve(OAuth2InjectionToken.TokenRepository);
+        const service = new SessionTokenService({ repository, tokenRepository });
+        return new SessionTokenController({ service });
+    }
+
     createSessionController(container: IContainer) {
         const repository = container.resolve(AuthenticationInjectionKey.SessionRepository);
         const service = new SessionService({ repository });
@@ -972,8 +999,15 @@ export class HTTPControllerModule {
             realmRepository,
         });
         const logger = container.resolve(LoggerInjectionKey);
-        const webClientProvisioner = new WebClientProvisioner({
+        const systemClientProvisioner = new SystemClientProvisioner({
             clientRepository,
+            scopeRepository: new ScopeRepositoryAdapter({
+                repository: container.resolve<Repository<Scope>>(ScopeEntity),
+                realmRepository,
+            }),
+            clientScopeRepository: new ClientScopeRepositoryAdapter(
+                container.resolve<Repository<ClientScope>>(ClientScopeEntity),
+            ),
             appOrigins: getAppOrigins(config),
             logger,
         });
@@ -984,8 +1018,11 @@ export class HTTPControllerModule {
 
         const service = new RealmService({
             repository,
-            webClientProvisioner,
-            keyProvisioner,
+            realmProvisioners: [
+                systemClientProvisioner,
+                keyProvisioner,
+                new LazyWildcardRealmProvisioner(container),
+            ],
             logger,
         });
         const keyRepository = dataSource.getRepository(KeyEntity);

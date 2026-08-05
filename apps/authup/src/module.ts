@@ -12,7 +12,7 @@ import { read } from 'locter';
 import path from 'node:path';
 import process from 'node:process';
 import {
-    buildClientWebEnv,
+    buildClientAdminConsoleEnv,
     buildServerCoreEnv,
     readLauncherConfig,
 } from './config';
@@ -50,7 +50,7 @@ export async function createCLIEntryPointCommand() {
             },
             package: {
                 type: 'positional',
-                description: 'The package(s) to target (client.web, server.core) or arguments forwarded to the command.',
+                description: 'The package(s) to target (client.admin-console, server.core) or arguments forwarded to the command.',
                 required: false,
             },
             configDirectory: {
@@ -112,7 +112,7 @@ export async function createCLIEntryPointCommand() {
                     children.push({
                         id: packageId,
                         ...buildPackageProcessArgv(entrypoint, []),
-                        env: buildClientWebEnv(config),
+                        env: buildClientAdminConsoleEnv(config),
                     });
                 }
             }

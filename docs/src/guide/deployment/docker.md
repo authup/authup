@@ -48,7 +48,7 @@ docker run \
 ```shell
 docker run \
   -p 3000:3000 \
-  authup/authup:latest client/web start
+  authup/authup:latest client/admin-console start
 ```
 
 Now all should be set up, and you are ready to go :tada:

@@ -11,7 +11,7 @@
  *
  * Default (workspace) variant: runs the built dist entry of apps/authup against
  * the built workspace artifacts of apps/server-core (dist/cli/index.mjs) and
- * apps/client-web (.output/server/index.mjs), boots both on unusual ports with
+ * apps/client-admin-console (.output/server/index.mjs), boots both on unusual ports with
  * a sqlite database, waits until both answer HTTP 200, then terminates the CLI
  * with SIGTERM and asserts a clean exit.
  *
@@ -88,7 +88,7 @@ function buildChildEnv(writableDirectory) {
     // Children inherit this environment, so an ambient PORT/HOST must not be
     // able to reach both of them (a PaaS injects one; the project Dockerfile
     // sets PORT=3000). The supervisor is expected to override it per child —
-    // verified: reverting that override makes client-web bind AMBIENT_PORT and
+    // verified: reverting that override makes client-admin-console bind AMBIENT_PORT and
     // this scenario fails on the readiness probe.
     env.PORT = `${AMBIENT_PORT}`;
     env.HOST = '0.0.0.0';
@@ -101,8 +101,8 @@ function writeLauncherConfig(directory) {
         `server.core.port=${SERVER_PORT}`,
         'server.core.host=127.0.0.1',
         `server.core.publicUrl=http://127.0.0.1:${SERVER_PORT}`,
-        `client.web.port=${WEB_PORT}`,
-        'client.web.host=127.0.0.1',
+        `client.admin-console.port=${WEB_PORT}`,
+        'client.admin-console.host=127.0.0.1',
     ].join('\n'));
 }
 
@@ -119,6 +119,42 @@ async function probe(url) {
     } catch {
         return undefined;
     }
+}
+
+/**
+ * Assert that server-core can actually resolve and serve a console package.
+ *
+ * The `locateUpSync` walk that finds `@authup/client-auth-console` and
+ * `@authup/client-account-console` exists specifically for the published
+ * install layout, which only the packed scenario reproduces. Nothing else
+ * exercises it: a resolution regression, or a tarball shipped without its
+ * bundle (`npm pack` does not run `prepublishOnly`), degrades silently
+ * because boot still succeeds and only the console routes break.
+ */
+async function assertConsoleServed(name, route, marker) {
+    // SERVER_URL carries a trailing slash, so build the target with `new URL`
+    // rather than interpolating (`${SERVER_URL}/logout` requests `//logout`).
+    const url = new URL(route, SERVER_URL).href;
+
+    let response;
+    try {
+        // Not `follow`: a redirect to some other page that happens to contain
+        // the marker would hide a broken console route.
+        response = await fetch(url, { redirect: 'manual' });
+    } catch (e) {
+        throw fail(`${name}: ${url} could not be reached (${e.message}).`);
+    }
+
+    if (response.status !== 200) {
+        throw fail(`${name}: ${url} answered ${response.status}, expected 200 without a redirect. The console package is probably unresolved or unbuilt.`);
+    }
+
+    const body = await response.text();
+    if (!body.includes(marker)) {
+        throw fail(`${name}: ${url} answered 200 but the body does not contain ${marker}, so the console shell was not rendered.`);
+    }
+
+    log(`${name}: ${url} served the console shell.`);
 }
 
 async function waitUntilReady(name, url, child) {
@@ -207,7 +243,25 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
 
     try {
         await waitUntilReady(`${name}/server-core`, SERVER_URL, child);
-        await waitUntilReady(`${name}/client-web`, WEB_URL, child);
+        await waitUntilReady(`${name}/client-admin-console`, WEB_URL, child);
+
+        // Both consoles are RUNTIME dependencies of server-core, resolved out
+        // of node_modules and served from their built dist. Probing the root
+        // URLs alone leaves that resolution untested.
+        await assertConsoleServed(
+            `${name}/client-auth-console`,
+            'logout',
+            'window.__AUTHUP__',
+        );
+        // window.__AUTHUP__ rather than the shell markup: it only appears if
+        // the `<!--account-config-->` marker was found and replaced, which is
+        // that console's entire runtime contract. Without it the SPA silently
+        // degrades to deriving its API URL from the origin.
+        await assertConsoleServed(
+            `${name}/client-account-console`,
+            'account',
+            'window.__AUTHUP__',
+        );
 
         log(`${name}: sending SIGTERM.`);
         child.kill('SIGTERM');
@@ -247,8 +301,8 @@ async function executeWorkspaceScenario() {
         'run: npm run build -w apps/server-core',
     );
     assertFileExists(
-        path.join(repositoryDirectory, 'apps', 'client-web', '.output', 'server', 'index.mjs'),
-        'run: npm run build -w apps/client-web',
+        path.join(repositoryDirectory, 'apps', 'client-admin-console', '.output', 'server', 'index.mjs'),
+        'run: npm run build -w apps/client-admin-console',
     );
 
     // cwd apps/server-core: typeorm resolves nested workspace driver installs
@@ -266,7 +320,13 @@ function collectPackWorkspaces() {
     const workspaces = [
         'apps/authup',
         'apps/server-core',
-        'apps/client-web',
+        // server-core resolves the account console SPA bundle and the auth
+        // console SSR bundle from these packages at runtime — without their
+        // tarballs the packed install would try (and fail) to fetch them
+        // from the registry.
+        'apps/client-account-console',
+        'apps/client-auth-console',
+        'apps/client-admin-console',
     ];
 
     const packagesDirectory = path.join(repositoryDirectory, 'packages');

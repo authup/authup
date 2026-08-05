@@ -6,14 +6,14 @@
  */
 
 import { isObject } from '@authup/kit';
-import { Container } from 'confinity';
+import { FSStore } from 'confinity';
 import {
-    CLIENT_WEB_PORT_DEFAULT,
+    CLIENT_ADMIN_CONSOLE_PORT_DEFAULT,
     LISTEN_HOST_DEFAULT,
     SERVER_CORE_PORT_DEFAULT,
 } from './constants';
 import type {
-    ClientWebSectionConfig,
+    ClientAdminConsoleSectionConfig,
     LauncherConfig,
     LauncherConfigReadOptions,
     ServerCoreSectionConfig,
@@ -67,7 +67,7 @@ export function normalizeServerCoreSection(input: unknown) : ServerCoreSectionCo
     };
 }
 
-export function normalizeClientWebSection(input: unknown) : ClientWebSectionConfig {
+export function normalizeClientAdminConsoleSection(input: unknown) : ClientAdminConsoleSectionConfig {
     const record = toRecord(input);
 
     return {
@@ -81,20 +81,24 @@ export function normalizeClientWebSection(input: unknown) : ClientWebSectionConf
 export async function readLauncherConfig(
     options: LauncherConfigReadOptions = {},
 ) : Promise<LauncherConfig> {
-    const container = new Container({
+    const store = new FSStore({
         prefix: 'authup',
         cwd: options.directory,
     });
 
     if (options.file) {
-        await container.loadFile(options.file);
+        await store.loadFile(options.file);
     } else {
-        await container.load();
+        await store.load();
     }
 
+    // `getSync` after the explicit load, not `get`. In confinity v2 `get` is
+    // asynchronous, and both normalizers take `unknown` — so a missing `await`
+    // would compile cleanly, hand them a Promise, and silently start every
+    // service on its defaults.
     return {
-        serverCore: normalizeServerCoreSection(container.get('server.core')),
-        clientWeb: normalizeClientWebSection(container.get('client.web')),
+        serverCore: normalizeServerCoreSection(store.getSync('server.core')),
+        clientAdminConsole: normalizeClientAdminConsoleSection(store.getSync('client.admin-console')),
     };
 }
 
@@ -105,21 +109,21 @@ export function buildServerCoreEnv(config: LauncherConfig) : Record<string, stri
     };
 }
 
-export function buildClientWebEnv(config: LauncherConfig) : Record<string, string> {
+export function buildClientAdminConsoleEnv(config: LauncherConfig) : Record<string, string> {
     const env : Record<string, string> = {
-        PORT: `${config.clientWeb.port ?? CLIENT_WEB_PORT_DEFAULT}`,
-        HOST: config.clientWeb.host ?? LISTEN_HOST_DEFAULT,
+        PORT: `${config.clientAdminConsole.port ?? CLIENT_ADMIN_CONSOLE_PORT_DEFAULT}`,
+        HOST: config.clientAdminConsole.host ?? LISTEN_HOST_DEFAULT,
     };
 
     // Only override what the config actually names — with neither key set the
     // web application applies its own default.
-    const apiUrl = config.clientWeb.apiUrl ?? config.serverCore.publicUrl;
+    const apiUrl = config.clientAdminConsole.apiUrl ?? config.serverCore.publicUrl;
     if (apiUrl) {
         env.NUXT_PUBLIC_API_URL = apiUrl;
     }
 
-    if (config.clientWeb.cookieDomain) {
-        env.NUXT_PUBLIC_COOKIE_DOMAIN = config.clientWeb.cookieDomain;
+    if (config.clientAdminConsole.cookieDomain) {
+        env.NUXT_PUBLIC_COOKIE_DOMAIN = config.clientAdminConsole.cookieDomain;
     }
 
     return env;

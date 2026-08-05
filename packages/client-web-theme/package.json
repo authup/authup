@@ -1,7 +1,7 @@
 {
   "name": "@authup/client-web-theme",
   "type": "module",
-  "version": "1.0.0-beta.56",
+  "version": "1.0.0-beta.59",
   "description": "Authup theme for vuecs components, built on top of @vuecs/theme-tailwind.",
   "license": "Apache-2.0",
   "exports": {
@@ -49,18 +49,20 @@
   },
   "homepage": "https://github.com/authup/authup#readme",
   "dependencies": {
-    "@authup/client-web-kit-theme": "^1.0.0-beta.56"
+    "@authup/client-web-kit-theme": "^1.0.0-beta.59"
   },
   "devDependencies": {
-    "@vuecs/core": "^3.4.0",
-    "@vuecs/design": "^1.0.8",
-    "@vuecs/theme-tailwind": "^6.3.1",
+    "@vuecs/button": "^1.4.1",
+    "@vuecs/core": "^3.5.0",
+    "@vuecs/design": "^1.2.0",
+    "@vuecs/table": "^1.6.1",
+    "@vuecs/theme-tailwind": "^6.4.1",
     "tailwindcss": "^4.3.2"
   },
   "peerDependencies": {
-    "@vuecs/core": "^3.4.0",
-    "@vuecs/design": "^1.0.8",
-    "@vuecs/theme-tailwind": "^6.3.1",
+    "@vuecs/core": "^3.5.0",
+    "@vuecs/design": "^1.2.0",
+    "@vuecs/theme-tailwind": "^6.4.1",
     "tailwindcss": "^4.3.2"
   },
   "publishConfig": {

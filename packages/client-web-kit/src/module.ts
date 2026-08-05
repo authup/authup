@@ -15,6 +15,7 @@ import {
     installSocketManager,
     installStore,
     installTranslator,
+    provideHydrationStore,
 } from './core';
 import type { Options } from './types';
 
@@ -45,6 +46,10 @@ export function installComponents(app: App, input?: boolean | string[]) {
 }
 
 export function install(app: App, options: Options): void {
+    if (options.hydrationStore) {
+        provideHydrationStore(options.hydrationStore, app);
+    }
+
     if (options.realtime) {
         installSocketManager(app, {
             pinia: options.pinia,
@@ -59,6 +64,7 @@ export function install(app: App, options: Options): void {
         cookieSet: options.cookieSet,
         cookieGet: options.cookieGet,
         cookieUnset: options.cookieUnset,
+        cookiePath: options.cookiePath,
     });
 
     installHTTPClientAuthenticationHook(app, {
@@ -99,6 +105,6 @@ export function install(app: App, options: Options): void {
     // in `@vuecs/core`). Installing them inside the kit before the app's
     // own `app.use(vuecs, { themes: [...] })` runs would freeze the theme
     // manager with no themes, silently dropping every theme override.
-    // The consumer plugin (see apps/client-web/plugins/vuecs.ts) installs
+    // The consumer plugin (see apps/client-admin-console/plugins/vuecs.ts) installs
     // `vuecs` first, then the per-package plugins on top.
 }

@@ -60,7 +60,9 @@ export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput>
             userAgent: options.userAgent,
             ipAddress: options.ipAddress,
             realmId: user.realmId,
-            clientId,
+            // no `clientId`: this is a USER-subject session, and the column is
+            // the client-SUBJECT foreign key. The authenticating application is
+            // recorded on the token rows instead.
             sub: user.id,
             subKind: IdentityType.USER,
             mfaAt: input.mfaVerifiedAt ?? null,

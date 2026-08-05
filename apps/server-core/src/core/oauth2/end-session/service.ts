@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isSimpleMatch, isUUID } from '@authup/kit';
+import { isSimpleURLMatch, isUUID } from '@authup/kit';
 import type { Client, IdentityType } from '@authup/core-kit';
 import { EventName, EventRefType, EventScope } from '@authup/core-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
@@ -100,8 +100,9 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
             // Fail closed instead of dropping the realm predicate: a supplied
             // realm key that does not resolve never degrades to an unscoped
             // lookup, and a NAME-form client_id without any realm key is
-            // ambiguous (every realm has a built-in `web` client — same rule as
-            // the /authorize verifier). A UUID is globally unique and needs no
+            // ambiguous (client names are only unique per realm, and every
+            // realm carries the same-named system clients — same rule as the
+            // /authorize verifier). A UUID is globally unique and needs no
             // scope; the sole-aud-derived clientId is always a UUID.
             if (realm) {
                 client = await this.clientRepository.findOneByIdOrName(clientId, realm.id);
@@ -225,6 +226,10 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
             return false;
         }
 
-        return isSimpleMatch(candidate, registered.split(','));
+        // isSimpleURLMatch, never isSimpleMatch: matched against the raw
+        // string, a `*` in a registered pattern's host absorbs a `?`, `#` or
+        // `\`, which would turn this endpoint into a server-issued open
+        // redirect carrying `state`.
+        return isSimpleURLMatch(candidate, registered.split(','));
     }
 }

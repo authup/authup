@@ -58,7 +58,7 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         }
     }
 
-    // In non-production (development & test) client-web runs on :3000 while
+    // In non-production (development & test) client-admin-console runs on :3000 while
     // the API (publicUrl) runs on :3001. Seed :3000 into the trusted origins
     // so the redirect allowlist (<origin>/**) and CORS accept logins from the
     // dev UI out of the box; otherwise the realm-selection login is dead on
@@ -74,6 +74,15 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         env,
         rootPath: process.cwd(),
         writableDirectoryPath,
+        // '' = theming disabled. Deliberately NOT defaulted under
+        // writableDirectoryPath: that directory is process-writable, and
+        // pairing "process-writable" with "content injected into the login
+        // page" would turn any write primitive landing there into
+        // persistent branding control on the IdP origin.
+        themeDirectoryPath: '',
+        themeFragmentsEnabled: false,
+        authConsolePath: '',
+        accountConsolePath: '',
 
         logger: true,
         redis: false,
@@ -102,6 +111,7 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         emailVerificationEnabled: false,
         passwordRecoveryEnabled: false,
         passwordMinLength: USER_PASSWORD_MIN_LENGTH,
+        accountConsoleEnabled: true,
 
         eventLogEnabled: true,
         eventLogRetentionDays: EVENT_LOG_RETENTION_DAYS_DEFAULT,
@@ -136,6 +146,21 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         // the raw parsed list (parsed.trustedOrigins is merged in above).
         trustedOrigins,
     };
+
+    // After the spread, so a relative value supplied by any config surface
+    // is resolved. Every consumer then receives an absolute path and none
+    // of them has to care what the process cwd was.
+    if (config.themeDirectoryPath) {
+        config.themeDirectoryPath = path.resolve(config.rootPath, config.themeDirectoryPath);
+    }
+
+    if (config.authConsolePath) {
+        config.authConsolePath = path.resolve(config.rootPath, config.authConsolePath);
+    }
+
+    if (config.accountConsolePath) {
+        config.accountConsolePath = path.resolve(config.rootPath, config.accountConsolePath);
+    }
 
     // Canonicalize the string form on EVERY config surface (env, .conf,
     // file, programmatic) — proxy-addr accepts single-integer "long value"

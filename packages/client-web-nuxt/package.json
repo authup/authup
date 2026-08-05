@@ -1,7 +1,7 @@
 {
     "name": "@authup/client-web-nuxt",
     "type": "module",
-    "version": "1.0.0-beta.56",
+    "version": "1.0.0-beta.59",
     "description": "Nuxt module for the authup ecosystem",
     "license": "Apache-2.0",
     "repository": {
@@ -30,10 +30,10 @@
         "node": "^22.13.0 || ^23.5.0 || >=24.0.0"
     },
     "dependencies": {
-        "@authup/access": "^1.0.0-beta.56",
-        "@authup/client-web-kit": "^1.0.0-beta.56",
-        "@authup/core-http-kit": "^1.0.0-beta.56",
-        "@authup/kit": "^1.0.0-beta.56",
+        "@authup/access": "^1.0.0-beta.59",
+        "@authup/client-web-kit": "^1.0.0-beta.59",
+        "@authup/core-http-kit": "^1.0.0-beta.59",
+        "@authup/kit": "^1.0.0-beta.59",
         "@nuxt/kit": "^4.0.0",
         "pathtrace": "^2.2.0",
         "smob": "^1.6.1"
@@ -41,18 +41,18 @@
     "devDependencies": {
         "@nuxt/module-builder": "^1.0.3",
         "@nuxt/schema": "^4.0.0",
-        "@pinia/nuxt": "^0.11.3",
+        "@pinia/nuxt": "^1.0.1",
         "fix-dts-default-cjs-exports": "^1.0.1",
         "mkdist": "^2.3.0",
         "nuxt": "^4.5.1",
-        "pinia": "^3.0.0",
+        "pinia": "^4.0.2",
         "rollup-plugin-dts": "^6.3.0",
         "strip-literal": "^3.1.0",
         "vue-router": "^5.0.7"
     },
     "peerDependencies": {
         "@pinia/nuxt": "*",
-        "pinia": "^3.0.0"
+        "pinia": "^4.0.2"
     },
     "keywords": [
         "auth",

@@ -123,7 +123,7 @@ describe('refresh-token', () => {
     it('should grant refresh for a PUBLIC bound token without client auth', async () => {
         // A public client cannot authenticate (no secret) and RFC 6749 §10.4
         // does not require it to — the server extracts the bound client_id from
-        // the signed token. This is what lets the public client-web `web`
+        // the signed token. This is what lets the public client-admin-console `web`
         // client auto-refresh with just { refresh_token }.
         const { data: publicClient } = await suite.client
             .client

@@ -95,5 +95,5 @@ Where they disagree, the repo has moved on:
   a Tailwind JIT build against the app's sources and are not extractable as
   static CSS.
 - **Fonts** — Asap + Nunito load from Google Fonts (this project's root
-  `styles.css` already does that; the repo's client-web uses
+  `styles.css` already does that; the repo's client-admin-console uses
   `@nuxtjs/google-fonts`).
