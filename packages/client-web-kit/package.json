@@ -102,7 +102,7 @@
         "validup": "^1.0.0",
         "vitest": "^4.0.14",
         "vue": "^3.5.40",
-        "vue-tsc": "^3.3.8"
+        "vue-tsc": "^3.3.9"
     },
     "peerDependencies": {
         "@iconify/vue": "^5.0.0",
