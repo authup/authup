@@ -7,9 +7,9 @@
 
 import { createURLCodec } from '@rapiq/codec-url';
 import type {
-    ICondition, 
-    IQuery, 
-    ObjectLiteral, 
+    ICondition,
+    IQuery,
+    ObjectLiteral,
     Schema,
 } from '@rapiq/core';
 import { Query, SchemaRegistry, isObject } from '@rapiq/core';
@@ -144,6 +144,12 @@ export async function decodeQuery<RECORD extends ObjectLiteral = ObjectLiteral>(
  * carried over **by reference**, so the input query stays untouched and
  * nothing is copied. The node enumeration mirrors rapiq's
  * `QueryContext` — keep it in sync when the IR gains a parameter.
+ *
+ * Non-displaceability is carried by an explicit seal marker that
+ * `IFilters.and` stamps onto what it injects (rapiq beta.16,
+ * tada5hi/rapiq#876). Since beta.18 (tada5hi/rapiq#887) `seal()` is part of
+ * the `ICondition` contract itself, so every value this accepts can actually
+ * be sealed and the parameter type needs no narrowing to stay sound.
  */
 export function appendQueryConditions(query: IQuery, ...conditions: ICondition[]) : Query {
     return new Query({

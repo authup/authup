@@ -101,6 +101,13 @@ function stripPagination(input: IQuery) : Query {
  * AND-combine interactive filters with an injected scope. The scope
  * rides as its own condition subtree, so a later input can never
  * displace it — the same guarantee the server pipeline has.
+ *
+ * Since rapiq beta.16 (tada5hi/rapiq#876) `and` also SEALS what it
+ * injects, and a sealed node is inert to `flatten`, so the subtree
+ * survives the normalization below instead of being collapsed into the
+ * root AND. The seal itself is a composition marker that does not
+ * survive encoding; the nesting it preserves is what carries the
+ * guarantee onward, since a nested group is inert to a merge too.
  */
 function combineScopedFilters(
     input?: IFilters,

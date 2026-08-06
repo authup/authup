@@ -263,14 +263,27 @@ usable at the service level and nothing in core depends on TypeORM:
   over by reference). Non-displaceable like a repository `andWhere`: a
   conflicting client condition intersects (empty result) instead of
   replacing the scope, and appended conditions bypass the decode
-  allow-lists (server context). Since rapiq **beta.15**
-  (tada5hi/rapiq#871) the wrap is unconditional: `and()` on an EMPTY
-  receiver nests the injected conditions in their own group rather than
-  adopting them as a flat root-AND, closing the hole where a later
-  replace-merge could displace a scope injected onto a filter-less
-  query. A hostile replace-merge against such a tree now throws
-  `FILTERS_NOT_FLAT`, which authup never hits (nothing merges a filter
-  tree; every `.merge(` in the tree is a TypeORM entity merge). The
+  allow-lists (server context). Since rapiq **beta.16**
+  (tada5hi/rapiq#876) non-displaceability is carried by an explicit
+  **seal marker** rather than by tree nesting: `IFilters.and` seals what
+  it injects, a sealed condition is inert to both `flatten` (never
+  collapsed into the root AND) and `merge` (never displaced, never
+  dropped), and `merge` became total instead of rejecting a non-flat
+  root, so the former `FILTERS_NOT_FLAT` throw is gone. Since **beta.18**
+  (tada5hi/rapiq#887) `seal()` is part of the `ICondition` contract
+  itself, so the parameter type needs no narrowing: a value that cannot
+  be sealed is not an `ICondition`. That closed a real hole, since
+  `seal()` returns a non-node **unsealed** rather than throwing, so under
+  the older wider contract a structurally-shaped plain object could be
+  appended as a displaceable condition and silently downgrade a mandatory
+  scope. Note the seal is a server-side composition marker that does NOT
+  survive encoding; over the wire the guarantee rides on the nesting the
+  seal preserved, which a merge treats as inert too. Pruning interacts with
+  the seal: rapiq throws `SCHEMA_SEALED_CONDITION_PRUNED` rather than
+  silently resolving a relations-gate rejection inside a sealed subtree.
+  Authup cannot reach that throw because sealing happens strictly AFTER
+  decoding (`decodeQuery` prunes, then `appendQueryConditions` seals), so
+  keep that order if a caller is ever restructured. The
   key/trust-anchor services use it for
   the nested `/realms/:realmId/*` mounts (`options.realmId` from
   `getRequestRealmID`); never splice a scope into the RAW wire query —
