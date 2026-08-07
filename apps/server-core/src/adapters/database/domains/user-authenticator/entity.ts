@@ -30,7 +30,7 @@ export class UserAuthenticatorEntity implements UserAuthenticator {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Index('IDX_auth_user_authenticators_kind')
+    @Index()
     @Column({
         type: 'varchar',
         length: 16,
@@ -92,24 +92,18 @@ export class UserAuthenticatorEntity implements UserAuthenticator {
 
     // ------------------------------------------------------------------
 
-    @Index('IDX_auth_user_authenticators_user_id')
+    @Index()
     @Column({ name: 'user_id', type: 'uuid' })
     userId: User['id'];
 
     @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
-    @JoinColumn({
-        name: 'user_id',
-        foreignKeyConstraintName: 'FK_auth_user_authenticators_user_id',
-    })
+    @JoinColumn({ name: 'user_id' })
     user: UserEntity;
 
     @Column({ name: 'realm_id', type: 'uuid' })
     realmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
-    @JoinColumn({
-        name: 'realm_id',
-        foreignKeyConstraintName: 'FK_auth_user_authenticators_realm_id',
-    })
+    @JoinColumn({ name: 'realm_id' })
     realm: RealmEntity;
 }

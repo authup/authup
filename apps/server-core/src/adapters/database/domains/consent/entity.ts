@@ -28,13 +28,13 @@ import { RealmEntity } from '../realm/index.ts';
 import { UserEntity } from '../user/index.ts';
 import { CONSENT_SCOPE_MAX_LENGTH } from '../../../../core/entities/consent/types.ts';
 
-@Unique('UQ_auth_consents_subject_scope', ['clientId', 'sub', 'subKind', 'scope'])
+@Unique(['clientId', 'sub', 'subKind', 'scope'])
 @Entity({ name: 'auth_consents' })
 export class ConsentEntity implements Consent {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Index('IDX_auth_consents_sub')
+    @Index()
     @Column({
         type: 'varchar',
         length: 64,
@@ -73,41 +73,32 @@ export class ConsentEntity implements Consent {
 
     // ------------------------------------------------------------------
 
-    @Index('IDX_auth_consents_client_id')
+    @Index()
     @Column({ name: 'client_id', type: 'uuid' })
     clientId: Client['id'];
 
     @ManyToOne(() => ClientEntity, { onDelete: 'CASCADE' })
-    @JoinColumn({
-        name: 'client_id',
-        foreignKeyConstraintName: 'FK_auth_consents_client_id',
-    })
+    @JoinColumn({ name: 'client_id' })
     client: ClientEntity;
 
-    @Index('IDX_auth_consents_realm_id')
+    @Index()
     @Column({ name: 'realm_id', type: 'uuid' })
     realmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
-    @JoinColumn({
-        name: 'realm_id',
-        foreignKeyConstraintName: 'FK_auth_consents_realm_id',
-    })
+    @JoinColumn({ name: 'realm_id' })
     realm: RealmEntity;
 
-    @Index('IDX_auth_consents_user_id')
+    @Index()
     @Column({
-        name: 'user_id',
-        type: 'uuid',
-        nullable: true,
-        default: null,
+        name: 'user_id', 
+        type: 'uuid', 
+        nullable: true, 
+        default: null, 
     })
     userId: User['id'] | null;
 
     @ManyToOne(() => UserEntity, { onDelete: 'CASCADE', nullable: true })
-    @JoinColumn({
-        name: 'user_id',
-        foreignKeyConstraintName: 'FK_auth_consents_user_id',
-    })
+    @JoinColumn({ name: 'user_id' })
     user: UserEntity | null;
 }
