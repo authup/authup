@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.1-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.59...v1.0.1-beta.59) (2026-08-07)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/server-adapter-kit bumped from ^1.0.0-beta.59 to ^1.0.1-beta.59
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.59 to ^1.0.1-beta.59
+
 ## [1.0.0-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.58...v1.0.0-beta.59) (2026-08-04)
 
 
