@@ -19,7 +19,9 @@ export class FakeOAuth2TokenIssuer implements IOAuth2TokenIssuer {
 
     constructor(private exp: number = Math.floor(Date.now() / 1000) + 3600) {}
 
-    async issue(input: OAuth2TokenPayload): Promise<OAuth2TokenIssuerResponse> {
+    async issue(
+        input: OAuth2TokenPayload,
+    ): Promise<OAuth2TokenIssuerResponse> {
         this.issueCalls.push(input);
         const jti = randomUUID();
         const payload: OAuth2TokenPayload = {

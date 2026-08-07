@@ -122,19 +122,22 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
 
         await this.sessionManager.verify(session);
 
-        if (options.userAgent) {
-            session.userAgent = options.userAgent;
-        }
-        if (options.ipAddress) {
-            session.ipAddress = options.ipAddress;
-        }
+        // `userAgent` / `ipAddress` are pinned at creation and deliberately NOT
+        // re-stamped from this request. A refresh does not have to come from the
+        // subject's device: a server-side renderer holding the auth cookies (the
+        // Nuxt admin console resolves the store during SSR) refreshes from its
+        // own process, which used to rewrite the row to `node` plus the
+        // renderer's address. That made the sessions UI show a user's own
+        // session as an unknown device, and would have shown a genuinely foreign
+        // session as theirs. `refresh()` still slides refreshedAt / seenAt /
+        // expiresAt, so "last active" stays accurate.
         await this.sessionManager.refresh(session);
 
         const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue({
             ...payload,
             ...(options.confirmation ? { cnf: options.confirmation } : {}),
-            user_agent: session.userAgent,
-            remote_address: session.ipAddress,
+            user_agent: options.userAgent ?? session.userAgent,
+            remote_address: options.ipAddress ?? session.ipAddress,
             exp: this.refreshTokenIssuer.buildExp(),
             parent_id: payload.jti,
         });
@@ -142,8 +145,8 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
             ...payload,
             ...(options.confirmation ? { cnf: options.confirmation } : {}),
-            user_agent: session.userAgent,
-            remote_address: session.ipAddress,
+            user_agent: options.userAgent ?? session.userAgent,
+            remote_address: options.ipAddress ?? session.ipAddress,
             exp: this.accessTokenIssuer.buildExp(),
             refresh_token_id: refreshTokenPayload.jti,
         });

@@ -2794,6 +2794,56 @@ old jti`) then AT (`refreshTokenId = new RT jti`). On consume-failure →
 `sessionId` is present (M2M client-credentials writes only an access row —
 it mints no RT).
 
+**Device identity and issuance provenance are separate fields.** The session
+says which device it belongs to, the `auth_session_tokens` row says where each
+token was issued from. Conflating them into one mutable column is what produced
+the bug below.
+
+**A refresh never re-attributes the session's device.** `auth_sessions`
+`ip_address` / `user_agent` are pinned at creation; the refresh grant slides
+only `refreshedAt` / `seenAt` / `expiresAt`. The refreshing request is NOT
+necessarily the subject's device: a server-side renderer holding the auth
+cookies refreshes from its own process. Concretely, the Nuxt admin console
+reads the kit cookies server-side (`useCookie`) and its routing interceptor
+awaits `store.resolve()` during SSR, which refreshes whenever the 900s access
+token has lapsed while the 3-day refresh token has not. So on roughly every
+full page load after 15 idle minutes, the refresh reaches `/token` from the
+renderer. Stamping that request onto the row rewrote real browser sessions to
+`user_agent: node` (undici's default UA) plus the renderer's pod address,
+which made the sessions UI show a user's own session as an unknown device and
+would have shown a genuinely foreign session as theirs. The issued pair's
+`user_agent` / `remote_address` claims (and the `auth_session_tokens` row
+derived from them) therefore mirror the session, matching every other
+session-backed grant (password, identity, client-credentials, mfa-login);
+only `authorize.ts` reads the request's values, at session CREATION.
+
+**The refreshing request is recorded, one level down.** The grant builds the
+device values (`options.userAgent ?? session.userAgent`, same for the address)
+and passes them as the payload's `user_agent` / `remote_address`; the issuers
+stay dumb and write what they are handed, deriving the inventory row from the
+same payload. So the rotated tokens advertise the request that minted them
+while `auth_sessions` keeps the device, and a caller with no request context
+(nothing to attribute an issuance to) falls back to the session. Note the row
+column is camelCase `userAgent` while the payload claim is frozen snake_case
+`user_agent`: `OAuth2TokenPayload` carries an index signature, so reading the
+wrong one type-checks and silently writes an empty string to every row on every
+grant. Only a test catches that.
+
+A relocated device and a server-side refresher both appear as new rows under
+`/session-tokens?filter[sessionId]=`, which is truthful but does NOT tell the
+two apart: at `/token` they are indistinguishable, both presenting the
+subject's refresh token from an address that is not the session's. Separating
+them needs the renderer to forward the browser's address as `X-Forwarded-For`
+under `trustProxy`. The docs already recommend a bounded hop count
+(`configuration-server-core.md` ships `trustProxy: 1`), but the built-in
+default is `true`, which trusts the whole chain and therefore returns the
+left-most, client-supplied entry. Pinned by *should not re-attribute the
+session device on refresh* + *should fall back to the session device when the
+caller has no request context*
+(`test/unit/core/oauth2/grant-types/refresh-token.spec.ts`) and the end-to-end
+*should keep the session device pinned and record the refresh on the token row*
+(`test/unit/http/controllers/workflows/token/grant-refresh-token.spec.ts`).
+
 ### Family revoke = the `auth_sessions` row, never a wider SSO session
 
 `revokeFamily`: `revokeBySessionId` soft-revokes every row and returns
