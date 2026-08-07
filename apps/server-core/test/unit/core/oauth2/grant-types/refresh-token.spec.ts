@@ -65,11 +65,11 @@ describe('OAuth2RefreshTokenGrant', () => {
         await sessionManager.create({
             id: sessionId,
             sub: userId,
-            sub_kind: OAuth2SubKind.USER,
-            realm_id: realmId,
-            ip_address: '127.0.0.1',
-            user_agent: 'test-agent',
-            expires_at: new Date(Date.now() + 100_000).toISOString(),
+            subKind: OAuth2SubKind.USER,
+            realmId,
+            ipAddress: '203.0.113.10',
+            userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+            expiresAt: new Date(Date.now() + 100_000).toISOString(),
         } as Partial<Session>);
 
         await sessionTokenRepository.create({
@@ -132,6 +132,48 @@ describe('OAuth2RefreshTokenGrant', () => {
         // session slid + old token blocklisted in the cache
         expect(sessionManager.refreshCalls).toHaveLength(1);
         expect(tokenRepository.setInactiveCalls.map((c) => c.id)).toContain(refreshJti);
+    });
+
+    // A refresh does not have to come from the subject's device: a server-side
+    // renderer holding the auth cookies (the Nuxt admin console resolves the
+    // store during SSR) refreshes from its own process. Re-attributing the
+    // session to the refreshing request stamped `node` plus the renderer's
+    // address onto the row, so the sessions UI showed the user's own session as
+    // an unknown device, and would have shown a genuinely foreign one as
+    // theirs. The device belongs to the session, not to the request.
+    it('should not re-attribute the session device on refresh', async () => {
+        const payload = await seed();
+        const grant = build();
+
+        await grant.runWith(payload, {
+            userAgent: 'node',
+            ipAddress: '10.1.53.117',
+        });
+
+        expect(sessionManager.refreshCalls).toHaveLength(1);
+        expect(sessionManager.refreshCalls[0].userAgent).toEqual('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)');
+        expect(sessionManager.refreshCalls[0].ipAddress).toEqual('203.0.113.10');
+
+        // The issued pair carries the refreshing request instead, which is what
+        // puts it on the inventory row the issuer derives from the payload. So
+        // a relocated device stays observable per issuance without the session
+        // (the device identity) being repainted.
+        expect(accessTokenIssuer.issueCalls[0].user_agent).toEqual('node');
+        expect(accessTokenIssuer.issueCalls[0].remote_address).toEqual('10.1.53.117');
+        expect(refreshTokenIssuer.issueCalls[0].user_agent).toEqual('node');
+        expect(refreshTokenIssuer.issueCalls[0].remote_address).toEqual('10.1.53.117');
+    });
+
+    // The fallback matters for callers that carry no request context (nothing
+    // to attribute the issuance to), where the session stays the best answer.
+    it('should fall back to the session device when the caller has no request context', async () => {
+        const payload = await seed();
+        const grant = build();
+
+        await grant.runWith(payload);
+
+        expect(accessTokenIssuer.issueCalls[0].user_agent).toEqual('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)');
+        expect(accessTokenIssuer.issueCalls[0].remote_address).toEqual('203.0.113.10');
     });
 
     it('should revoke the whole session family on replay of a consumed token', async () => {
