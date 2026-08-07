@@ -263,27 +263,28 @@ usable at the service level and nothing in core depends on TypeORM:
   over by reference). Non-displaceable like a repository `andWhere`: a
   conflicting client condition intersects (empty result) instead of
   replacing the scope, and appended conditions bypass the decode
-  allow-lists (server context). Since rapiq **beta.16**
-  (tada5hi/rapiq#876) non-displaceability is carried by an explicit
-  **seal marker** rather than by tree nesting: `IFilters.and` seals what
-  it injects, a sealed condition is inert to both `flatten` (never
-  collapsed into the root AND) and `merge` (never displaced, never
-  dropped), and `merge` became total instead of rejecting a non-flat
-  root, so the former `FILTERS_NOT_FLAT` throw is gone. Since **beta.18**
-  (tada5hi/rapiq#887) `seal()` is part of the `ICondition` contract
-  itself, so the parameter type needs no narrowing: a value that cannot
-  be sealed is not an `ICondition`. That closed a real hole, since
-  `seal()` returns a non-node **unsealed** rather than throwing, so under
-  the older wider contract a structurally-shaped plain object could be
-  appended as a displaceable condition and silently downgrade a mandatory
-  scope. Note the seal is a server-side composition marker that does NOT
-  survive encoding; over the wire the guarantee rides on the nesting the
-  seal preserved, which a merge treats as inert too. Pruning interacts with
-  the seal: rapiq throws `SCHEMA_SEALED_CONDITION_PRUNED` rather than
-  silently resolving a relations-gate rejection inside a sealed subtree.
-  Authup cannot reach that throw because sealing happens strictly AFTER
-  decoding (`decodeQuery` prunes, then `appendQueryConditions` seals), so
-  keep that order if a caller is ever restructured. The
+  allow-lists (server context). Since rapiq **beta.19**
+  (tada5hi/rapiq#890) non-displaceability is **structural**: filter
+  composition is conjunctive throughout, so `IFilters.merge` and
+  `mergeQueries` retain every conjunct of both sides (empty group =
+  identity) instead of replacing same-field conditions, and no later
+  composition step can drop an injected scope. Nothing needs a marker,
+  and `and()` no longer wraps the injection in a distinguishable
+  subtree, so the encoded filter is the plain AND it reads as. The
+  displaceability machinery this replaced is gone with it: the beta.15
+  `FILTERS_NOT_FLAT` throw, the beta.16 seal marker, and the beta.18
+  `ICondition.seal()` contract member. The surviving marker is
+  `preserve()` (a standalone helper, NOT part of the contract), whose
+  only job is keeping a group atomic for **relation pruning**: rapiq
+  throws `SCHEMA_PRESERVED_CONDITION_PRUNED` rather than silently
+  resolving a relations-gate rejection inside a preserved subtree.
+  Authup calls neither `preserve()` nor a filters `merge`, so it reaches
+  neither. **The conjunctive merge has one caller-facing consequence to
+  respect:** two `eq` conditions on the same field now intersect to
+  nothing instead of the receiver winning, so transient UI state must be
+  REPLACED before the query is built rather than merged over (the kit's
+  collection manager already keeps interactive filters in its own state
+  and composes them separately, so it is unaffected). The
   key/trust-anchor services use it for
   the nested `/realms/:realmId/*` mounts (`options.realmId` from
   `getRequestRealmID`); never splice a scope into the RAW wire query —

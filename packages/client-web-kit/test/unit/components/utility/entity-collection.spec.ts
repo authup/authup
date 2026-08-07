@@ -115,14 +115,14 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
         const requests = listRequests(httpClient.requests);
         expect(requests).toHaveLength(2);
         expect(requests[1].searchParams.get('filter'))
-            .toEqual("and(contains(name,'foo'),and(in(realmId,'realm-1',null)))");
+            .toEqual("and(contains(name,'foo'),in(realmId,'realm-1',null))");
 
         // even an input targeting the scoped field only narrows further
         await (wrapper.vm as any).load({ filters: { realmId: 'other' } });
 
         const next = listRequests(httpClient.requests);
         expect(next[2].searchParams.get('filter'))
-            .toEqual("and(eq(realmId,'other'),and(in(realmId,'realm-1',null)))");
+            .toEqual("and(eq(realmId,'other'),in(realmId,'realm-1',null))");
     });
 
     it('a pagination-only load keeps the current search', async () => {
@@ -138,7 +138,7 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
         const requests = listRequests(httpClient.requests);
         expect(requests).toHaveLength(3);
         expect(requests[2].searchParams.get('filter'))
-            .toEqual("and(contains(name,'foo'),and(in(realmId,'realm-1',null)))");
+            .toEqual("and(contains(name,'foo'),in(realmId,'realm-1',null))");
         expect(requests[2].searchParams.get('page[offset]')).toEqual('10');
     });
 
@@ -165,7 +165,7 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
 
         const requests = listRequests(httpClient.requests);
         expect(requests[1].searchParams.get('filter'))
-            .toEqual("and(or(contains(name,'foo'),contains(displayName,'foo')),and(in(realmId,'realm-1',null)))");
+            .toEqual("and(or(contains(name,'foo'),contains(displayName,'foo')),in(realmId,'realm-1',null))");
     });
 
     it('an assembled load input replaces the interactive state wholesale', async () => {
@@ -177,7 +177,7 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
 
         const requests = listRequests(httpClient.requests);
         expect(requests[2].searchParams.get('filter'))
-            .toEqual("and(eq(displayName,'bar'),and(in(realmId,'realm-1',null)))");
+            .toEqual("and(eq(displayName,'bar'),in(realmId,'realm-1',null))");
     });
 
     it('composes context query and props query, both non-displaceable', async () => {
@@ -189,7 +189,7 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
 
         const [request] = listRequests(httpClient.requests);
         expect(request.searchParams.get('filter'))
-            .toEqual("and(in(realmId,'realm-1',null),and(eq(clientId,'c-1')))");
+            .toEqual("and(in(realmId,'realm-1',null),eq(clientId,'c-1'))");
     });
 });
 
