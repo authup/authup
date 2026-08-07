@@ -79,15 +79,6 @@ type ComposedQuery = {
     interactive: Query
 };
 
-function stripFilters(input: IQuery) : Query {
-    return new Query({
-        fields: input.fields,
-        relations: input.relations,
-        sorts: input.sorts,
-        pagination: input.pagination,
-    });
-}
-
 function stripPagination(input: IQuery) : Query {
     return new Query({
         fields: input.fields,
@@ -95,32 +86,6 @@ function stripPagination(input: IQuery) : Query {
         relations: input.relations,
         sorts: input.sorts,
     });
-}
-
-/**
- * AND-combine interactive filters with an injected scope, so a later
- * input can never displace it — the same guarantee the server pipeline
- * has.
- *
- * Since rapiq beta.19 (tada5hi/rapiq#890) filter composition is
- * conjunctive throughout: `merge` retains every conjunct of both sides
- * instead of replacing same-field conditions. Nothing can displace
- * anything, so the guarantee no longer rests on keeping the scope in a
- * distinguishable subtree and the flattened output below is the plain
- * AND it reads as.
- */
-function combineScopedFilters(
-    input?: IFilters,
-    scope?: IFilters,
-) : IFilters | undefined {
-    const a = input && input.value.length > 0 ? input : undefined;
-    const b = scope && scope.value.length > 0 ? scope : undefined;
-
-    if (a && b) {
-        return a.and(b).flatten();
-    }
-
-    return a || b;
 }
 
 function create<
@@ -185,18 +150,7 @@ function create<
         }
 
         if (propsQuery && contextQuery) {
-            const chrome = mergeQueries(
-                stripFilters(propsQuery),
-                stripFilters(contextQuery),
-            );
-
-            return new Query({
-                fields: chrome.fields,
-                relations: chrome.relations,
-                sorts: chrome.sorts,
-                pagination: chrome.pagination,
-                filters: combineScopedFilters(propsQuery.filters, contextQuery.filters),
-            });
+            return mergeQueries(propsQuery, contextQuery);
         }
 
         return propsQuery || contextQuery || new Query();
@@ -267,25 +221,18 @@ function create<
             statePagination.offset = meta.value.pagination.offset;
         }
 
-        const chrome = mergeQueries(
-            new Query({
-                fields: interactiveNext.fields,
-                relations: interactiveNext.relations,
-                sorts: interactiveNext.sorts,
-                pagination: inputQuery.pagination,
-            }),
-            new Query({ pagination: definePagination(statePagination) }),
-            stripFilters(base),
-        );
-
         return {
-            query: new Query({
-                fields: chrome.fields,
-                relations: chrome.relations,
-                sorts: chrome.sorts,
-                pagination: chrome.pagination,
-                filters: combineScopedFilters(interactiveNext.filters, base.filters),
-            }),
+            query: mergeQueries(
+                new Query({
+                    fields: interactiveNext.fields,
+                    filters: interactiveNext.filters,
+                    relations: interactiveNext.relations,
+                    sorts: interactiveNext.sorts,
+                    pagination: inputQuery.pagination,
+                }),
+                new Query({ pagination: definePagination(statePagination) }),
+                base,
+            ),
             interactive: interactiveNext,
         };
     }

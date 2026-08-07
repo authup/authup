@@ -283,8 +283,8 @@ usable at the service level and nothing in core depends on TypeORM:
   respect:** two `eq` conditions on the same field now intersect to
   nothing instead of the receiver winning, so transient UI state must be
   REPLACED before the query is built rather than merged over (the kit's
-  collection manager already keeps interactive filters in its own state
-  and composes them separately, so it is unaffected). The
+  collection manager rebuilds its interactive filters from each load
+  input rather than accumulating them, so it is unaffected). The
   key/trust-anchor services use it for
   the nested `/realms/:realmId/*` mounts (`options.realmId` from
   `getRequestRealmID`); never splice a scope into the RAW wire query —
@@ -3781,14 +3781,20 @@ integration:
   is `QueryBuildInput<T, 3>` — needs rapiq ≥ 2.0.0-beta.3, where the
   DEPTH parameter is threaded into the string-key arms; on beta.2 the
   self-recursive entities tripped vue-tsc's TS2590, tada5hi/rapiq#790)
-  and is desugared at the boundary. Per load, fields/relations/sorts/pagination merge via
-  `mergeQueries` (left priority: load input ▷ retained interactive
-  state ▷ meta pagination ▷ base query), while **filters are kept out
-  of `mergeQueries`** and the base (props + context) filters are
-  AND-injected via `Filters.and()` — an injected scope
-  (`realmId`/`clientId` filter) can never be displaced by a search or
-  sort load, and compound trees (`or(...)`) never hit
-  `Filters.merge`'s flat-root-AND restriction. The
+  and is desugared at the boundary. Per load, **every** parameter merges
+  via `mergeQueries` (left priority: load input ▷ retained interactive
+  state ▷ meta pagination ▷ base query). Filters used to be carved out
+  of that call and AND-injected by hand, because the old `Filters.merge`
+  did per-field replace and would have let a search input displace an
+  injected `realmId`/`clientId` scope. Since rapiq **beta.19**
+  (tada5hi/rapiq#890) filter merging is conjunctive, so the carve-out
+  (`stripFilters` + `combineScopedFilters`) was removed and the plain
+  `mergeQueries` result carries the same guarantee: a scope cannot be
+  displaced by a search or sort load, and compound trees (`or(...)`)
+  survive as conjuncts. Pinned by *search input cannot displace the
+  injected scope* and *composes context query and props query, both
+  non-displaceable* in `entity-collection.spec.ts`, which both still
+  assert the pre-refactor filter strings. The
   `queryFilters` context hook may return an `ICondition`
   (`or(contains('name', q), contains('displayName', q))`) or a legacy
   filters record. **`ASearch` passes the raw search text as a bare
