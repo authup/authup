@@ -53,8 +53,8 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/errors": "^1.0.0-beta.59",
-        "@authup/kit": "^1.0.0-beta.59",
+        "@authup/errors": "^1.0.1-beta.59",
+        "@authup/kit": "^1.0.1-beta.59",
         "@rapiq/adapter-memory": "^2.0.0-beta.19",
         "@rapiq/core": "^2.0.0-beta.19",
         "@rapiq/parser-mongo": "^2.0.0-beta.19",

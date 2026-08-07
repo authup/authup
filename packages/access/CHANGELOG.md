@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.0-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.59...v1.0.0-beta.59) (2026-08-07)
+
+
+### Bug Fixes
+
+* **deps:** bump @rapiq/* to 2.0.0-beta.18 ([a01fabb](https://github.com/authup/authup/commit/a01fabbb6c7bf6671f3ccb757cd0c4c695510679))
+* **deps:** bump @rapiq/* to 2.0.0-beta.19 ([21c92fb](https://github.com/authup/authup/commit/21c92fb67aead43a68c0152ef8d15507c2bf9130))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.59 to ^1.0.1-beta.59
+    * @authup/kit bumped from ^1.0.0-beta.59 to ^1.0.1-beta.59
+
 ## [1.0.0-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.58...v1.0.0-beta.59) (2026-08-04)
 
 

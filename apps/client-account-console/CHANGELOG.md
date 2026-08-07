@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.0.0-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.59...v1.0.0-beta.59) (2026-08-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* auth_sessions.client_id now names the client that first authorized on a session rather than the most recent one, so GET/DELETE /sessions?filter[clientId] selects on that basis. The two differ only where several applications share one session. Revocation that should reach every session an application served must filter auth_session_tokens.client_id instead.
+
+### Features
+
+* per-application session token attribution, inventory API and revocation ([#3404](https://github.com/authup/authup/issues/3404)) ([6027f84](https://github.com/authup/authup/commit/6027f849fda7ca1b115787e3ef7b08a750fd0778))
+
+
+### Bug Fixes
+
+* **deps:** bump @rapiq/* to 2.0.0-beta.18 ([a01fabb](https://github.com/authup/authup/commit/a01fabbb6c7bf6671f3ccb757cd0c4c695510679))
+* **deps:** bump @rapiq/* to 2.0.0-beta.19 ([21c92fb](https://github.com/authup/authup/commit/21c92fb67aead43a68c0152ef8d15507c2bf9130))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.59 to ^1.0.1-beta.59
+    * @authup/client-web-theme bumped from ^1.0.0-beta.59 to ^1.0.1-beta.59
+    * @authup/i18n bumped from ^1.0.0-beta.59 to ^1.0.1-beta.59
+    * @authup/kit bumped from ^1.0.0-beta.59 to ^1.0.1-beta.59
+    * @authup/specs bumped from ^1.0.0-beta.59 to ^1.0.1-beta.59
+
 ## [1.0.0-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.58...v1.0.0-beta.59) (2026-08-04)
 
 
