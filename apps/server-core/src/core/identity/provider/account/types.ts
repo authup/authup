@@ -31,4 +31,15 @@ export interface IIdentityProviderAccountManager {
      * @param identity
      */
     save(identity: IdentityProviderIdentity) : Promise<IdentityProviderAccount>;
+
+    /**
+     * Explicitly link the external identity to an EXISTING user (plan
+     * 091): creates or refreshes the account row only. Never mutates the
+     * user, never runs attribute/role/permission mappers, never creates
+     * a user.
+     *
+     * @param identity
+     * @param userId
+     */
+    link(identity: IdentityProviderIdentity, userId: string) : Promise<IdentityProviderAccount>;
 }

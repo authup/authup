@@ -6,6 +6,7 @@
  */
 
 import type {
+    IEventService,
     IIdentityProviderAccountManager,
     IIdentityProviderRepository,
     IOAuth2AccessPolicyEvaluator,
@@ -33,4 +34,5 @@ export type IdentityProviderControllerContext = {
     stateManager: IOAuth2AuthorizationStateManager,
 
     accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,
+    eventService?: IEventService,
 };

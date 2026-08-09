@@ -15,6 +15,7 @@ import { BaseAPI } from '../../base';
 import type {
     IIdentityProviderAPI,
     IdentityProviderCreatePayload,
+    IdentityProviderLinkRequestResponse,
     IdentityProviderSavePayload,
     IdentityProviderUpdatePayload,
 } from './types';
@@ -22,6 +23,12 @@ import type {
 export class IdentityProviderAPI extends BaseAPI implements IIdentityProviderAPI {
     getAuthorizeUri(id: IdentityProvider['id']): string {
         return cleanDoubleSlashes(`${this.client.getBaseURL()}/${buildIdentityProviderAuthorizePath(id)}`);
+    }
+
+    async createLinkRequest(id: IdentityProvider['id']): Promise<IdentityProviderLinkRequestResponse> {
+        const response = await this.client.post(`identity-providers/${id}/link-request`);
+
+        return response.data;
     }
 
     async getMany(record?: EntityQueryInput<IdentityProvider>): Promise<EntityCollectionResponse<IdentityProvider>> {

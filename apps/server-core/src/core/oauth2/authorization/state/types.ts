@@ -7,8 +7,19 @@
 
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 
+export type OAuth2AuthorizationStateLink = {
+    userId: string,
+};
+
 export type OAuth2AuthorizationState = {
     codeRequest?: OAuth2AuthorizationCodeRequest,
+    /**
+     * Present on an account-linking round-trip (plan 091): the callback
+     * links the external identity to this user instead of running the
+     * login path. Minted only by the bearer-authenticated link-request
+     * endpoint, never from client input.
+     */
+    link?: OAuth2AuthorizationStateLink,
     ip: string,
     userAgent?: string | null
 };

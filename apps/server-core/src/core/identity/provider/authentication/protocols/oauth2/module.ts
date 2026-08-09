@@ -64,13 +64,19 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
 
     //----------------------------------------------------------------------
 
-    async authenticate(params: OAuth2AuthorizationCodeGrantPayload): Promise<User> {
+    async resolveIdentity(params: OAuth2AuthorizationCodeGrantPayload): Promise<IdentityProviderIdentity> {
         const token = await this.client.token.createWithAuthorizationCode(params);
 
         const identity = await this.buildIdentityWithTokenGrantResponse(token);
         if (this.options.clientId) {
             identity.clientId = this.options.clientId;
         }
+
+        return identity;
+    }
+
+    async authenticate(params: OAuth2AuthorizationCodeGrantPayload): Promise<User> {
+        const identity = await this.resolveIdentity(params);
 
         const account = await this.accountManager.save(identity);
 

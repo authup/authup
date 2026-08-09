@@ -554,6 +554,7 @@ export class HTTPControllerModule {
             stateManager,
 
             accessPolicyEvaluator: this.resolveAccessPolicyEvaluator(container),
+            eventService: container.resolve(DatabaseInjectionKey.EventService),
         });
     }
 

@@ -23,7 +23,16 @@ export type IdentityProviderUpdatePayload = Pick<IdentityProvider, 'protocol'> &
     Record<string, any>;
 export type IdentityProviderSavePayload = IdentityProviderCreatePayload;
 
+/**
+ * Response of `POST /identity-providers/:id/link-request` (plan 091):
+ * the external provider's authorize URL the browser navigates to.
+ */
+export type IdentityProviderLinkRequestResponse = {
+    url: string,
+};
+
 export interface IIdentityProviderAPI extends IEntityAPI<IdentityProvider, IdentityProviderCreatePayload, IdentityProviderUpdatePayload> {
     getAuthorizeUri(id: IdentityProvider['id']) : string;
     createOrUpdate(idOrName: string, data: IdentityProviderSavePayload) : Promise<EntityRecordResponse<IdentityProvider>>;
+    createLinkRequest(id: IdentityProvider['id']) : Promise<IdentityProviderLinkRequestResponse>;
 }
