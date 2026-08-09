@@ -15,13 +15,16 @@ import type {
 import type { Repository } from 'typeorm';
 import {
     ClientIdentityRepository,
-    IdentityProviderAccountRepository,
     IdentityProviderAttributeMappingRepository,
     IdentityProviderPermissionMappingRepository,
     IdentityProviderRoleMappingRepository,
     UserIdentityRepository,
 } from './repositories/index.ts';
-import { DatabaseInjectionKey, IdentityProviderRepositoryAdapter } from '../database/index.ts';
+import {
+    DatabaseInjectionKey,
+    IdentityProviderAccountRepositoryAdapter,
+    IdentityProviderRepositoryAdapter,
+} from '../database/index.ts';
 import {
     ClientEntity,
     IdentityProviderRepository,
@@ -125,7 +128,7 @@ export class IdentityModule implements IModule {
         const permissionMapperRepository = new IdentityProviderPermissionMappingRepository(dataSource);
         const permissionMapper = new IdentityProviderPermissionMapper(permissionMapperRepository);
 
-        const providerAccountRepository = new IdentityProviderAccountRepository(dataSource);
+        const providerAccountRepository = new IdentityProviderAccountRepositoryAdapter(dataSource);
 
         container.register(IdentityInjectionKey.ProviderAccountManager, {
             useFactory: () => new IdentityProviderAccountManager({

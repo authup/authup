@@ -17,6 +17,7 @@ import {
     ClientScopeEntity,
     ConsentEntity,
     EventEntity,
+    IdentityProviderAccountEntity,
     IdentityProviderEntity,
     IdentityProviderRoleMappingEntity,
     KeyEntity,
@@ -51,6 +52,7 @@ const SCHEMA_ENTITY_TARGETS : Record<string, EntityTarget<ObjectLiteral>> = {
     [EntityType.CONSENT]: ConsentEntity,
     [EntityType.EVENT]: EventEntity,
     [EntityType.IDENTITY_PROVIDER]: IdentityProviderEntity,
+    [EntityType.IDENTITY_PROVIDER_ACCOUNT]: IdentityProviderAccountEntity,
     [EntityType.IDENTITY_PROVIDER_ROLE_MAPPING]: IdentityProviderRoleMappingEntity,
     [EntityType.KEY]: KeyEntity,
     [EntityType.PERMISSION]: PermissionEntity,
@@ -82,6 +84,9 @@ const SCHEMA_FIELD_EXCLUSIONS : Record<string, string[]> = {
     // signature counter) — surfaced only through the challenge endpoint's
     // trimmed view.
     [EntityType.USER_AUTHENTICATOR]: ['parameters'],
+    // external-provider token material plus its expiry metadata — never
+    // rides the API projection.
+    [EntityType.IDENTITY_PROVIDER_ACCOUNT]: ['accessToken', 'refreshToken', 'expiresIn', 'expiresAt'],
 };
 
 /**

@@ -20,6 +20,7 @@ import { clientScopeSchema } from '../entities/client-scope/schema.ts';
 import { consentSchema } from '../entities/consent/schema.ts';
 import { eventSchema } from '../entities/event/schema.ts';
 import { identityProviderSchema } from '../entities/identity-provider/schema.ts';
+import { identityProviderAccountSchema } from '../entities/identity-provider-account/schema.ts';
 import { identityProviderRoleMappingSchema } from '../entities/identity-provider-role-mapping/schema.ts';
 import { keySchema } from '../entities/key/schema.ts';
 import { permissionSchema } from '../entities/permission/schema.ts';
@@ -65,6 +66,7 @@ const schemas : Schema<any>[] = [
     consentSchema,
     eventSchema,
     identityProviderSchema,
+    identityProviderAccountSchema,
     identityProviderRoleMappingSchema,
     keySchema,
     permissionSchema,
