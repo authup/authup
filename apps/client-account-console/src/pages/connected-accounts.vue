@@ -63,6 +63,7 @@ export default defineComponent({
         const accounts = ref<IdentityProviderAccount[]>([]);
         const busy = ref(false);
         const loaded = ref(false);
+        const errored = ref(false);
 
         const accountByProvider = computed(() => {
             const map = new Map<string, IdentityProviderAccount>();
@@ -75,6 +76,7 @@ export default defineComponent({
                 return;
             }
 
+            errored.value = false;
             try {
                 const [providerResponse, accountResponse] = await Promise.all([
                     httpClient.identityProvider.getMany({
@@ -97,6 +99,11 @@ export default defineComponent({
                 providers.value = providerResponse.data;
                 accounts.value = accountResponse.data;
             } catch (e) {
+                // A load failure must not fall through to the empty state
+                // ("no providers configured") — it would misreport an error
+                // as an absence. The toast carries the failure; the empty
+                // state is suppressed by `errored`.
+                errored.value = true;
                 await toasts.error(e);
             } finally {
                 loaded.value = true;
@@ -194,6 +201,7 @@ export default defineComponent({
             translations,
             busy,
             loaded,
+            errored,
             connect,
             disconnect,
         };
@@ -206,7 +214,7 @@ export default defineComponent({
             {{ translations.connectedAccounts }}
         </h2>
         <div
-            v-if="loaded && providers.length === 0"
+            v-if="loaded && !errored && providers.length === 0"
             class="text-fg-muted"
         >
             {{ translations.connectedAccountsNone }}

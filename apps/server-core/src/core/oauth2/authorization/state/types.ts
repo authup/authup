@@ -9,6 +9,11 @@ import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 
 export type OAuth2AuthorizationStateLink = {
     userId: string,
+    // The provider the link was initiated for. The callback rejects a
+    // state whose providerId does not match the provider of the callback
+    // route it arrives on, so a link state cannot be replayed against a
+    // different provider's callback.
+    providerId: string,
 };
 
 export type OAuth2AuthorizationState = {

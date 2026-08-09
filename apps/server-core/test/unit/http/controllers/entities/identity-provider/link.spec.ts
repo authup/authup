@@ -235,4 +235,30 @@ describe('identity-provider link flow', () => {
 
         externalUserId = 'external-user-1';
     });
+
+    it('rejects a link state replayed against a different provider callback', async () => {
+        // a second provider in the same realm; a state minted for `provider`
+        // must not complete a link on `otherProvider`'s callback.
+        const otherProvider = (await suite.client.identityProvider.create(createFakeOAuth2IdentityProvider({
+            realmId: realm.id,
+            tokenUrl: `${idpURL}/token`,
+            authorizeUrl: `${idpURL}/authorize`,
+        }))).data;
+
+        const { state } = await requestLink(userToken);
+
+        const response = await httpRequest(
+            suite,
+            'GET',
+            `identity-providers/${otherProvider.id}/authorize-in?state=${state}&code=any-code`,
+            {
+                headers: { 'user-agent': USER_AGENT },
+                redirect: 'manual',
+            },
+        );
+        expect(response.status).toEqual(302);
+        const target = new URL(response.headers.get('location') as string);
+        expect(target.searchParams.get('linked')).toBeNull();
+        expect(target.searchParams.get('linkError')).toEqual('link_failed');
+    });
 });

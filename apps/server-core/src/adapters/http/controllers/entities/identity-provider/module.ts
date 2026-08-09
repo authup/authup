@@ -348,7 +348,7 @@ export class IdentityProviderController {
         });
 
         const state = await this.stateManager.save({
-            link: { userId: identity.id },
+            link: { userId: identity.id, providerId: entity.id },
             ip: getRequestIP(event) ?? '',
             userAgent: getRequestHeader(event, 'user-agent') ?? undefined,
         });
@@ -582,6 +582,14 @@ export class IdentityProviderController {
         const { code } = useRequestQuery(event);
 
         try {
+            // The state is bound to the provider it was minted for, and the
+            // provider must still be enabled at completion — a state cannot
+            // be replayed against a different provider's callback, nor
+            // complete a link after its provider was disabled.
+            if (link.providerId !== provider.id || !provider.enabled) {
+                throw new BadRequestError('The identity provider is not available for account linking.');
+            }
+
             if (typeof code !== 'string' || code.length === 0) {
                 throw new BadRequestError('The authorization code is missing.');
             }
