@@ -2563,8 +2563,12 @@ linking is the only way to bind an external identity to an EXISTING user).
   `userId`/`userRealmId` inline instead of `applyRealmScopeSelect`).
   Permissions auto-provision; `realm_admin` = `ownOrNull` read + `own`
   delete (OWN-override list). The external token columns
-  (`accessToken`/`refreshToken` + expiry metadata) are excluded via
-  `SCHEMA_FIELD_EXCLUSIONS` and never ride the API. `include=provider`
+  (`accessToken`/`refreshToken` + expiry metadata) are `select: false` on
+  the entity (like `user.password` / authenticator secrets), so no read
+  surface can return them — the collection projection, an explicit
+  `fields=accessToken`, or the un-projected single-record / delete-response
+  read alike — and they are auto-exempt from the boot field-coverage
+  assertion. `include=provider`
   is allowed (ungated target, benign columns); `user` is not in the
   relations allow-list.
 - **Unlink lockout guard** — `delete` refuses for EVERY caller (admin

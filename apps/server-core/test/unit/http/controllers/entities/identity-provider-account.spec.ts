@@ -129,6 +129,39 @@ describe('identity-provider-account', () => {
         await suite.client.delete(`identity-provider-accounts/${own.id}`);
     });
 
+    it('should never ship the external tokens even when explicitly projected', async () => {
+        // accessToken/refreshToken are ordinary selectable columns kept off
+        // the wire only by omission from the schema allow-list
+        // (SCHEMA_FIELD_EXCLUSIONS). A client explicitly requesting them via
+        // a fields projection must NOT surface them (the projection derives
+        // from the allow-list and drops non-listed columns; it must never
+        // fall back to select-all when every requested field is disallowed).
+        const account = await seedAccount({ userId: user.id, userRealmId: realm.id });
+
+        const explicit = [
+            `identity-provider-accounts?filter[userId]=${user.id}&fields=accessToken,refreshToken`,
+            `identity-provider-accounts?filter[userId]=${user.id}&fields[identityProviderAccount]=accessToken`,
+            `identity-provider-accounts?filter[userId]=${user.id}&fields=+accessToken`,
+        ];
+
+        for (const path of explicit) {
+            const response = await suite.client.get(path);
+            const rows = response.data.data;
+            expect(rows.length).toBeGreaterThanOrEqual(1);
+            for (const row of rows) {
+                expect(row).not.toHaveProperty('accessToken');
+                expect(row).not.toHaveProperty('refreshToken');
+            }
+        }
+
+        // and the single-record read path
+        const record = await suite.client.get(`identity-provider-accounts/${account.id}?fields=accessToken,refreshToken`);
+        expect(record.data.data).not.toHaveProperty('accessToken');
+        expect(record.data.data).not.toHaveProperty('refreshToken');
+
+        await suite.client.delete(`identity-provider-accounts/${account.id}`);
+    });
+
     it('should let a user delete its own row', async () => {
         const account = await seedAccount({ userId: user.id, userRealmId: realm.id });
 

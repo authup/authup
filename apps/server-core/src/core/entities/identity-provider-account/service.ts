@@ -165,7 +165,11 @@ export class IdentityProviderAccountService extends AbstractEntityService implem
 
         // Lockout guard, enforced for EVERY caller (admin included): the
         // last linked account of a password-less user is their only way
-        // in. An admin sets a password for the user first.
+        // in. An admin sets a password for the user first. Best-effort
+        // check-then-act (no row lock): two concurrent deletes of a
+        // password-less user's last two links could both pass and lock the
+        // account out — a self-inflicted, admin-recoverable race (password
+        // reset), not a privilege boundary.
         const count = await this.repository.countByUserId(entity.userId);
         if (count <= 1) {
             const user = await this.userRepository.findOneById(entity.userId);

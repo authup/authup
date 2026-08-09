@@ -21,7 +21,10 @@ export const identityProviderAccountSchema = defineSchema<IdentityProviderAccoun
         // `default` (not just `allowed`) so the adapter's plan-039
         // force-select can dedupe against an explicit projection. The
         // external-token columns (accessToken/refreshToken + their expiry
-        // metadata) are excluded via SCHEMA_FIELD_EXCLUSIONS.
+        // metadata) are `select: false` on the entity, so they can never
+        // ride ANY read surface — the collection projection, an explicit
+        // `fields=accessToken`, or the un-projected single-record read —
+        // and are auto-exempt from the boot field-coverage assertion.
         default: [
             'id',
             'providerUserId',
