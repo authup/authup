@@ -250,6 +250,23 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         },
     },
     {
+        name: 'Sessions',
+        type: 'link',
+        url: '/sessions',
+        icon: 'fa6-solid:desktop',
+        meta: {
+            [LayoutKey.REQUIRED_LOGGED_IN]: true,
+            i18n: {
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.SESSION,
+                count: 2,
+            },
+            [LayoutKey.REQUIRED_PERMISSIONS]: [
+                PermissionName.SESSION_READ,
+            ],
+        },
+    },
+    {
         name: 'Events',
         type: 'link',
         url: '/events',
