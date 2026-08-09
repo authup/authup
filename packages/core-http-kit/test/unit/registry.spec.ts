@@ -17,11 +17,11 @@ describe('client/registry', () => {
         expect(pickEntityAPI(client, 'session')).toBe(client.session);
         expect(pickEntityAPI(client, 'clientPermission')).toBe(client.clientPermission);
         expect(pickEntityAPI(client, 'event')).toBe(client.event);
+        expect(pickEntityAPI(client, 'identityProviderAccount')).toBe(client.identityProviderAccount);
     });
 
     it('should not resolve entity types without a sub-api', () => {
         expect(pickEntityAPI(client, 'policyAttribute')).toBeUndefined();
-        expect(pickEntityAPI(client, 'identityProviderAccount')).toBeUndefined();
         expect(pickEntityAPI(client, 'identityProviderAttribute')).toBeUndefined();
     });
 
