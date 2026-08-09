@@ -50,6 +50,9 @@ export enum PermissionName {
     IDENTITY_PROVIDER_UPDATE = 'identity_provider_update',
     IDENTITY_PROVIDER_READ = 'identity_provider_read',
 
+    IDENTITY_PROVIDER_ACCOUNT_READ = 'identity_provider_account_read',
+    IDENTITY_PROVIDER_ACCOUNT_DELETE = 'identity_provider_account_delete',
+
     IDENTITY_PROVIDER_ROLE_CREATE = 'identity_provider_role_create',
     IDENTITY_PROVIDER_ROLE_DELETE = 'identity_provider_role_delete',
     IDENTITY_PROVIDER_ROLE_UPDATE = 'identity_provider_role_update',

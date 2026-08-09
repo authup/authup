@@ -30,6 +30,8 @@ export const TranslatorTranslationErrorEnglish : NamespaceTranslations<`${ErrorC
     [ErrorCode.LOGIN_ATTEMPT_THROTTLED]: 'Too many failed login attempts. Please try again later.',
     [ErrorCode.MFA_ATTEMPT_THROTTLED]: 'Too many failed verification attempts. Please try again later.',
     [ErrorCode.MFA_NOT_CONFIGURABLE]: 'Multi-factor authentication is not available on this server.',
+    [ErrorCode.IDENTITY_PROVIDER_ACCOUNT_ALREADY_LINKED]: 'This external account is already connected to another user.',
+    [ErrorCode.IDENTITY_PROVIDER_ACCOUNT_UNLINK_BLOCKED]: 'This is the last way to sign in to this account. Set a password before disconnecting it.',
 
     [ErrorCode.STORAGE_INSUFFICIENT]: 'There is not enough storage available to complete this action.',
 

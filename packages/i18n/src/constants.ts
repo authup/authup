@@ -266,6 +266,16 @@ export enum TranslatorTranslationAppKey {
     CONSENT_REVOKE_ALL_DESCRIPTION = 'consentRevokeAllDescription',
     CONSENT_SCOPES = 'consentScopes',
 
+    CONNECTED_ACCOUNTS = 'connectedAccounts',
+    CONNECTED_ACCOUNTS_NONE = 'connectedAccountsNone',
+    IDENTITY_PROVIDER_CONNECT = 'identityProviderConnect',
+    IDENTITY_PROVIDER_CONNECTED_AS = 'identityProviderConnectedAs',
+    IDENTITY_PROVIDER_DISCONNECT = 'identityProviderDisconnect',
+    IDENTITY_PROVIDER_DISCONNECT_CONFIRM_TITLE = 'identityProviderDisconnectConfirmTitle',
+    IDENTITY_PROVIDER_DISCONNECT_CONFIRM_DESCRIPTION = 'identityProviderDisconnectConfirmDescription',
+    IDENTITY_PROVIDER_LINK_SUCCESS = 'identityProviderLinkSuccess',
+    IDENTITY_PROVIDER_LINK_FAILED = 'identityProviderLinkFailed',
+
     BACK_TO_APP = 'backToApp',
 }
 
@@ -307,6 +317,7 @@ export enum TranslatorTranslationEntityKey {
     CONSENT = 'consent',
     EVENT = 'event',
     IDENTITY_PROVIDER = 'identityProvider',
+    IDENTITY_PROVIDER_ACCOUNT = 'identityProviderAccount',
     KEY = 'key',
     PERMISSION = 'permission',
     POLICY = 'policy',

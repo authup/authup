@@ -74,6 +74,16 @@ export const TranslatorTranslationAppFrench : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_TITLE]: 'Révoquer l\'accès de l\'application',
     [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_DESCRIPTION]: 'L\'application demandera à nouveau votre consentement lors de la prochaine connexion.',
     [TranslatorTranslationAppKey.CONSENT_SCOPES]: 'Permissions accordées',
+
+    [TranslatorTranslationAppKey.CONNECTED_ACCOUNTS]: 'Comptes liés',
+    [TranslatorTranslationAppKey.CONNECTED_ACCOUNTS_NONE]: 'Aucun fournisseur d\'identité n\'est configuré.',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_CONNECT]: 'Connecter',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_CONNECTED_AS]: 'Connecté en tant que {{name}}',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_DISCONNECT]: 'Déconnecter',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_DISCONNECT_CONFIRM_TITLE]: 'Déconnecter le compte ?',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_DISCONNECT_CONFIRM_DESCRIPTION]: 'La connexion via ce fournisseur ne fonctionnera plus pour ce compte.',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_LINK_SUCCESS]: 'Le compte a été connecté.',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_LINK_FAILED]: 'Le compte n\'a pas pu être connecté.',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_TITLE]: 'Détruire la clé de chiffrement ?',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_DESCRIPTION]: 'Cette clé est encore référencée par {{count}} secret(s) chiffré(s). Sa suppression les rendra définitivement irrécupérables.',
 

@@ -30,6 +30,8 @@ export const TranslatorTranslationErrorSpanish : NamespaceTranslations<`${ErrorC
     [ErrorCode.LOGIN_ATTEMPT_THROTTLED]: 'Demasiados intentos de inicio de sesión fallidos. Inténtelo de nuevo más tarde.',
     [ErrorCode.MFA_ATTEMPT_THROTTLED]: 'Demasiados intentos de verificación fallidos. Inténtelo de nuevo más tarde.',
     [ErrorCode.MFA_NOT_CONFIGURABLE]: 'La autenticación multifactor no está disponible en este servidor.',
+    [ErrorCode.IDENTITY_PROVIDER_ACCOUNT_ALREADY_LINKED]: 'Esta cuenta externa ya está vinculada a otro usuario.',
+    [ErrorCode.IDENTITY_PROVIDER_ACCOUNT_UNLINK_BLOCKED]: 'Es la última forma de iniciar sesión en esta cuenta. Establezca una contraseña antes de desconectarla.',
 
     [ErrorCode.STORAGE_INSUFFICIENT]: 'No hay suficiente almacenamiento disponible para completar esta acción.',
 

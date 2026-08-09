@@ -74,6 +74,16 @@ export const TranslatorTranslationAppGerman : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_TITLE]: 'Anwendungszugriff widerrufen',
     [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_DESCRIPTION]: 'Die Anwendung wird bei der nächsten Anmeldung erneut um deine Einwilligung bitten.',
     [TranslatorTranslationAppKey.CONSENT_SCOPES]: 'Gewährte Berechtigungen',
+
+    [TranslatorTranslationAppKey.CONNECTED_ACCOUNTS]: 'Verknüpfte Konten',
+    [TranslatorTranslationAppKey.CONNECTED_ACCOUNTS_NONE]: 'Es sind keine Identitätsanbieter konfiguriert.',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_CONNECT]: 'Verbinden',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_CONNECTED_AS]: 'Verbunden als {{name}}',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_DISCONNECT]: 'Trennen',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_DISCONNECT_CONFIRM_TITLE]: 'Konto trennen?',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_DISCONNECT_CONFIRM_DESCRIPTION]: 'Die Anmeldung über diesen Anbieter funktioniert für dieses Konto dann nicht mehr.',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_LINK_SUCCESS]: 'Das Konto wurde verbunden.',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_LINK_FAILED]: 'Das Konto konnte nicht verbunden werden.',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_TITLE]: 'Verschlüsselungsschlüssel unwiderruflich löschen?',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_DESCRIPTION]: 'Dieser Schlüssel wird noch von {{count}} verschlüsselten Geheimnissen referenziert. Das Löschen macht sie dauerhaft unlesbar.',
 

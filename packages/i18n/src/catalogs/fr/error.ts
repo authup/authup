@@ -30,6 +30,8 @@ export const TranslatorTranslationErrorFrench : NamespaceTranslations<`${ErrorCo
     [ErrorCode.LOGIN_ATTEMPT_THROTTLED]: 'Trop de tentatives de connexion échouées. Veuillez réessayer plus tard.',
     [ErrorCode.MFA_ATTEMPT_THROTTLED]: 'Trop de tentatives de vérification échouées. Veuillez réessayer plus tard.',
     [ErrorCode.MFA_NOT_CONFIGURABLE]: "L'authentification multifacteur n'est pas disponible sur ce serveur.",
+    [ErrorCode.IDENTITY_PROVIDER_ACCOUNT_ALREADY_LINKED]: 'Ce compte externe est déjà lié à un autre utilisateur.',
+    [ErrorCode.IDENTITY_PROVIDER_ACCOUNT_UNLINK_BLOCKED]: "C'est le dernier moyen de connexion de ce compte. Définissez un mot de passe avant de le déconnecter.",
 
     [ErrorCode.STORAGE_INSUFFICIENT]: 'L\'espace de stockage disponible est insuffisant pour effectuer cette action.',
 
