@@ -8,6 +8,17 @@
 import swc from 'unplugin-swc';
 import { defineConfig } from 'vitest/config';
 
+// The sqlite run isolates parallel workers via per-worker copies of the
+// provisioned template database (see test/app/database.ts). The
+// mysql/postgres runs have no equivalent (every worker shares the one
+// server database), so their spec files must not run concurrently:
+// concurrent files corrupt each other's rows and the suite fails on a
+// different spec each run (#3405).
+const databaseType = process.env.DB_TYPE;
+const usesSharedServerDatabase = !!databaseType &&
+    databaseType !== 'better-sqlite3' &&
+    databaseType !== 'sqlite';
+
 export default defineConfig({
     test: {
         globalSetup: ['test/setup'],
@@ -17,6 +28,7 @@ export default defineConfig({
         // import time. Production entry points already import it first.
         setupFiles: ['reflect-metadata'],
         include: ['test/unit/**/*.spec.ts'],
+        fileParallelism: !usesSharedServerDatabase,
     },
     plugins: [swc.vite()],
 });
