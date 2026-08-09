@@ -4,6 +4,7 @@ import type { Session, SessionToken } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { defineQuery } from '@rapiq/core';
 import {
+    TranslatorTranslationActionKey,
     TranslatorTranslationAppKey,
     TranslatorTranslationCommonKey,
     TranslatorTranslationEntityKey,
@@ -15,10 +16,13 @@ import {
     APagination,
     ASessionTokens,
     injectHTTPClient,
+    injectStore,
+    usePermissionCheck,
     useTranslation,
     useTranslations,
     useTranslationsForNamespace,
 } from '@authup/client-web-kit';
+import { storeToRefs } from 'pinia';
 import type { TableColumn } from '@vuecs/table';
 import { VCIcon } from '@vuecs/icon';
 import type { Ref } from 'vue';
@@ -50,6 +54,11 @@ export default defineComponent({
         const route = useRoute();
         const httpClient = injectHTTPClient();
 
+        const store = injectStore();
+        const { sessionId } = storeToRefs(store);
+
+        const hasDropPermission = usePermissionCheck({ name: PermissionName.SESSION_DELETE });
+
         const translations = useTranslations([
             { namespace: TranslatorTranslationNamespace.COMMON, key: TranslatorTranslationCommonKey.GENERAL },
             { namespace: TranslatorTranslationNamespace.COMMON, key: TranslatorTranslationCommonKey.APPLICATION },
@@ -65,12 +74,14 @@ export default defineComponent({
             { namespace: TranslatorTranslationNamespace.FIELD, key: TranslatorTranslationFieldKey.EXPIRES_AT },
             { namespace: TranslatorTranslationNamespace.FIELD, key: TranslatorTranslationFieldKey.STATUS },
             { namespace: TranslatorTranslationNamespace.FIELD, key: TranslatorTranslationFieldKey.ID },
+            { namespace: TranslatorTranslationNamespace.ACTION, key: TranslatorTranslationActionKey.BACK },
         ]);
 
         const translationsApp = useTranslationsForNamespace(
             TranslatorTranslationNamespace.APP,
             [
                 { key: TranslatorTranslationAppKey.DETAILS },
+                { key: TranslatorTranslationAppKey.SESSION_CURRENT },
                 { key: TranslatorTranslationAppKey.SESSION_TOKEN_STATUS_ACTIVE },
                 { key: TranslatorTranslationAppKey.SESSION_TOKEN_STATUS_CONSUMED },
                 { key: TranslatorTranslationAppKey.SESSION_TOKEN_STATUS_REVOKED },
@@ -187,7 +198,7 @@ export default defineComponent({
 
         const items = computed(() => [
             {
-                name: '',
+                name: translations.back,
                 icon: 'fa6-solid:arrow-left',
                 url: '/sessions',
             },
@@ -200,6 +211,8 @@ export default defineComponent({
         return {
             entity,
             subjectName,
+            sessionId,
+            hasDropPermission,
             items,
             tokensQuery,
             tokenColumns,
@@ -226,10 +239,18 @@ export default defineComponent({
                 :data="items"
                 variant="pills"
             />
+            <span
+                v-if="entity.id === sessionId"
+                class="inline-flex items-center rounded-full bg-primary-600/10 px-2 py-0.5 text-xs font-medium text-primary-600"
+            >
+                {{ translationsApp.sessionCurrent }}
+            </span>
             <AEntityDelete
+                v-else
                 :entity-id="entity.id"
                 entity-type="session"
                 :with-text="true"
+                :disabled="!hasDropPermission"
                 @deleted="handleDeleted"
             />
         </div>
