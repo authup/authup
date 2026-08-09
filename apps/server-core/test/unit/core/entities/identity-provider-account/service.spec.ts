@@ -15,6 +15,7 @@ import {
     expect,
     it,
 } from 'vitest';
+import type { FakePermissionEvaluator } from '@authup/server-test-kit';
 import { createAllowAllActor, createDenyAllActor } from '@authup/server-test-kit';
 import { EntityNotFoundError } from '@authup/errors';
 import { IdentityProviderAccountService } from '../../../../../src/core/entities/identity-provider-account/service.ts';
@@ -107,7 +108,7 @@ describe('IdentityProviderAccountService', () => {
             seedForeign();
 
             const actor = withIdentity(createAllowAllActor());
-            actor.permissionEvaluator.deny('evaluate');
+            (actor.permissionEvaluator as FakePermissionEvaluator).deny('evaluate');
 
             const result = await service.getMany({}, actor);
 

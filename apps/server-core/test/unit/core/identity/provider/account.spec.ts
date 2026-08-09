@@ -24,7 +24,7 @@ import {
 } from '../../../../../src/core';
 import claims from '../../../../data/jwt.json';
 import {
-    IdentityProviderAccountRepository,
+    IdentityProviderAccountRepositoryAdapter,
     IdentityProviderAttributeMappingRepository,
     IdentityProviderPermissionMappingEntity,
     IdentityProviderPermissionMappingRepository,
@@ -91,7 +91,7 @@ describe('core/identity/provider/account', () => {
         const permissionMapperRepository = new IdentityProviderPermissionMappingRepository(suite.dataSource);
         const permissionMapper = new IdentityProviderPermissionMapper(permissionMapperRepository);
 
-        const providerAccountRepository = new IdentityProviderAccountRepository(suite.dataSource);
+        const providerAccountRepository = new IdentityProviderAccountRepositoryAdapter(suite.dataSource);
 
         const userRepository = new UserIdentityRepository({
             repository: new UserRepository(suite.dataSource),
