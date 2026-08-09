@@ -5,6 +5,7 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
+/* global window */
 import type { IdentityProvider, IdentityProviderAccount } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
 import {
