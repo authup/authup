@@ -176,6 +176,7 @@ export default defineNuxtComponent({
                 <VCFormSelect
                     v-model="subjectKind"
                     :options="subjectKindOptions"
+                    :aria-label="translations.subject"
                     @update:model-value="applySubjectKind(props.load)"
                 />
             </div>
@@ -275,6 +276,7 @@ export default defineNuxtComponent({
                         :disabled="!hasDropPermission"
                         class="ms-2"
                         @deleted="props.deleted"
+                        @failed="handleFailed"
                     />
                 </template>
             </VCTable>

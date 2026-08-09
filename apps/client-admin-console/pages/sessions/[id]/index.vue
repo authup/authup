@@ -27,7 +27,7 @@ import type { TableColumn } from '@vuecs/table';
 import { VCIcon } from '@vuecs/icon';
 import type { Ref } from 'vue';
 import { computed, defineComponent } from 'vue';
-import { definePageMeta } from '#imports';
+import { definePageMeta, useErrorToast } from '#imports';
 import {
     createError,
     navigateTo,
@@ -58,6 +58,9 @@ export default defineComponent({
         const { sessionId } = storeToRefs(store);
 
         const hasDropPermission = usePermissionCheck({ name: PermissionName.SESSION_DELETE });
+
+        const errorToast = useErrorToast();
+        const handleFailed = (e: Error) => errorToast.show(e);
 
         const translations = useTranslations([
             { namespace: TranslatorTranslationNamespace.COMMON, key: TranslatorTranslationCommonKey.GENERAL },
@@ -216,6 +219,7 @@ export default defineComponent({
             translationsApp,
             translationTokens,
             handleDeleted,
+            handleFailed,
         };
     },
 });
@@ -247,6 +251,7 @@ export default defineComponent({
                 :with-text="true"
                 :disabled="!hasDropPermission"
                 @deleted="handleDeleted"
+                @failed="handleFailed"
             />
         </div>
         <div class="flex flex-wrap -mx-2">
@@ -264,7 +269,14 @@ export default defineComponent({
                 </div>
                 <div class="flex justify-between gap-2 border-b border-border py-1 text-sm">
                     <span class="text-fg-muted">{{ translations.authMethod }}</span>
-                    <span class="text-right break-all font-mono">{{ entity.authMethod ?? '–' }}</span>
+                    <span
+                        v-if="entity.authMethod"
+                        class="text-right break-all font-mono"
+                    >{{ entity.authMethod }}</span>
+                    <span
+                        v-else
+                        class="text-right"
+                    >&ndash;</span>
                 </div>
                 <div class="flex justify-between gap-2 border-b border-border py-1 text-sm">
                     <span class="text-fg-muted">{{ translations.mfaAt }}</span>
@@ -333,6 +345,7 @@ export default defineComponent({
             :query="tokensQuery"
             :body="{ tag: 'div' }"
             :footer="true"
+            @failed="handleFailed"
         >
             <template #footer="props">
                 <APagination
