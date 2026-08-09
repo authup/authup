@@ -252,6 +252,10 @@ export enum TranslatorTranslationAppKey {
     SESSION_REVOKE_ALL_SUCCESS = 'sessionRevokeAllSuccess',
 
     SESSION_CURRENT = 'sessionCurrent',
+    SESSION_TOKEN_STATUS_ACTIVE = 'sessionTokenStatusActive',
+    SESSION_TOKEN_STATUS_CONSUMED = 'sessionTokenStatusConsumed',
+    SESSION_TOKEN_STATUS_REVOKED = 'sessionTokenStatusRevoked',
+    SESSION_TOKEN_STATUS_EXPIRED = 'sessionTokenStatusExpired',
 
     AUTHENTICATOR = 'authenticator',
     MFA_SECURITY_TITLE = 'mfaSecurityTitle',
@@ -314,6 +318,7 @@ export enum TranslatorTranslationEntityKey {
     ROLE = 'role',
     SCOPE = 'scope',
     SESSION = 'session',
+    SESSION_TOKEN = 'sessionToken',
     TRUST_ANCHOR = 'trustAnchor',
     USER = 'user',
 }
@@ -359,6 +364,11 @@ export enum TranslatorTranslationFieldKey {
     EXPIRES_AT = 'expiresAt',
     IP_ADDRESS = 'ipAddress',
     USER_AGENT = 'userAgent',
+    AUTH_METHOD = 'authMethod',
+    KIND = 'kind',
+    SUBJECT = 'subject',
+    REFRESHED_AT = 'refreshedAt',
+    MFA_AT = 'mfaAt',
     PROTOCOL = 'protocol',
     PROTOCOLS = 'protocols',
     PRESET = 'preset',
@@ -425,6 +435,7 @@ export enum TranslatorTranslationActionKey {
 export enum TranslatorTranslationCommonKey {
     GENERAL = 'general',
     OVERVIEW = 'overview',
+    ALL = 'all',
     LOADING = 'loading',
     ACTIVE = 'active',
     INACTIVE = 'inactive',
