@@ -75,6 +75,7 @@ export default defineNuxtComponent({
             { namespace: TranslatorTranslationNamespace.FIELD, key: TranslatorTranslationFieldKey.MFA_AT },
             { namespace: TranslatorTranslationNamespace.COMMON, key: TranslatorTranslationCommonKey.ALL },
             { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.SESSION_CURRENT },
+            { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.DETAILS },
         ]);
 
         const translationUser = useTranslation({
@@ -197,18 +198,30 @@ export default defineNuxtComponent({
                         :name="row.subKind === 'client' ? 'fa6-solid:cube' : 'fa6-solid:user'"
                         class="me-1 text-fg-muted"
                     />
-                    <VCLink
-                        v-if="row.userId"
-                        :to="hasUserReadPermission ? `/users/${row.userId}` : undefined"
-                    >
-                        {{ row.user?.name ?? row.sub }}
-                    </VCLink>
-                    <VCLink
-                        v-else-if="row.clientId"
-                        :to="hasClientReadPermission ? `/clients/${row.clientId}` : undefined"
-                    >
-                        {{ row.client?.name ?? row.sub }}
-                    </VCLink>
+                    <template v-if="row.userId">
+                        <VCLink
+                            v-if="hasUserReadPermission"
+                            :to="`/users/${row.userId}`"
+                        >
+                            {{ row.user?.name ?? row.sub }}
+                        </VCLink>
+                        <span
+                            v-else
+                            class="break-all"
+                        >{{ row.user?.name ?? row.sub }}</span>
+                    </template>
+                    <template v-else-if="row.clientId">
+                        <VCLink
+                            v-if="hasClientReadPermission"
+                            :to="`/clients/${row.clientId}`"
+                        >
+                            {{ row.client?.name ?? row.sub }}
+                        </VCLink>
+                        <span
+                            v-else
+                            class="break-all"
+                        >{{ row.client?.name ?? row.sub }}</span>
+                    </template>
                     <span
                         v-else
                         class="font-mono"
@@ -241,7 +254,11 @@ export default defineNuxtComponent({
                     <VCTimeago :datetime="row.expiresAt" />
                 </template>
                 <template #cell-options="{ row }">
-                    <VCLink :to="`/sessions/${row.id}`">
+                    <VCLink
+                        :to="`/sessions/${row.id}`"
+                        :aria-label="translations.details"
+                        :title="translations.details"
+                    >
                         <VCIcon name="fa6-solid:bars" />
                     </VCLink>
                     <span
