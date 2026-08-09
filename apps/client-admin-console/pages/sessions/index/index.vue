@@ -89,19 +89,19 @@ export default defineNuxtComponent({
             count: 2,
         });
 
-        const subjectKind = ref('');
+        const subjectKind = ref('all');
         const subjectKindOptions = computed<FormOption[]>(() => [
-            { value: '', label: translations.all },
+            { value: 'all', label: translations.all },
             { value: 'user', label: translationUser.value },
             { value: 'client', label: translationClient.value },
         ]);
 
         const applySubjectKind = (load: (input: IQuery) => Promise<unknown>) => {
-            if (subjectKind.value) {
-                return load(defineQuery<Session>({ filters: { subKind: subjectKind.value } }));
+            if (subjectKind.value === 'all') {
+                return load(defineQuery<Session>({ filters: {} }));
             }
 
-            return load(defineQuery<Session>({ filters: {} }));
+            return load(defineQuery<Session>({ filters: { subKind: subjectKind.value } }));
         };
 
         const columns = computed<TableColumn<Session>[]>(() => [
