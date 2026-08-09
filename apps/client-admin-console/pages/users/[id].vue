@@ -70,6 +70,11 @@ export default defineComponent({
                 key: TranslatorTranslationEntityKey.SESSION,
                 count: 2,
             },
+            {
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.IDENTITY_PROVIDER_ACCOUNT,
+                count: 2,
+            },
         ]);
 
         const translationsApp = useTranslationsForNamespace(
@@ -93,6 +98,13 @@ export default defineComponent({
         // self-service on the settings page, not here). The child route is
         // protected in its own definePageMeta.
         const hasAuthenticatorReadPermission = usePermissionCheck({ name: PermissionName.USER_AUTHENTICATOR_READ });
+
+        // The connected-accounts tab lists the user's linked external
+        // identity-provider accounts — only an actor holding
+        // IDENTITY_PROVIDER_ACCOUNT_READ may list another user's rows (the
+        // server force-scopes everyone else to their own). The child route
+        // is protected in its own definePageMeta.
+        const hasIdentityProviderAccountReadPermission = usePermissionCheck({ name: PermissionName.IDENTITY_PROVIDER_ACCOUNT_READ });
 
         const httpClient = injectHTTPClient();
 
@@ -144,6 +156,11 @@ export default defineComponent({
                 name: translationsApp.authenticator,
                 icon: 'fa6-solid:shield-halved',
                 url: `/users/${entity.value.id}/authenticators`,
+            }] : []),
+            ...(hasIdentityProviderAccountReadPermission.value ? [{
+                name: translationsDefault.identityProviderAccount,
+                icon: 'fa6-solid:link',
+                url: `/users/${entity.value.id}/identity-provider-accounts`,
             }] : []),
         ]);
 
