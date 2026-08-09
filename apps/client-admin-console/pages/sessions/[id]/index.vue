@@ -97,10 +97,24 @@ export default defineComponent({
 
         const { data, error } = await useAsyncData(
             `session:${route.params.id}`,
-            () => httpClient
-                .session
-                .getOne(route.params.id as string)
-                .then((response) => response.data),
+            async () => {
+                const response = await httpClient.session.getOne(route.params.id as string);
+
+                let subjectName: string | null = null;
+                try {
+                    if (response.data.userId) {
+                        const userResponse = await httpClient.user.getOne(response.data.userId);
+                        subjectName = userResponse.data.name;
+                    } else if (response.data.clientId) {
+                        const clientResponse = await httpClient.client.getOne(response.data.clientId);
+                        subjectName = clientResponse.data.name;
+                    }
+                } catch {
+                    // stripped by permissions or deleted subject: fall back to the sub uuid
+                }
+
+                return { session: response.data, subjectName };
+            },
         );
 
         if (error.value || !data.value) {
@@ -108,28 +122,9 @@ export default defineComponent({
             throw createError({});
         }
 
-        const entity = data as Ref<Session>;
-
-        const { data: subjectName } = await useAsyncData(
-            `session:${route.params.id}:subject`,
-            async () => {
-                try {
-                    if (entity.value.userId) {
-                        const response = await httpClient.user.getOne(entity.value.userId);
-                        return response.data.name;
-                    }
-
-                    if (entity.value.clientId) {
-                        const response = await httpClient.client.getOne(entity.value.clientId);
-                        return response.data.name;
-                    }
-                } catch {
-                    // stripped by permissions or deleted subject: fall back to the sub uuid
-                }
-
-                return null;
-            },
-        );
+        const resolved = data as Ref<{ session: Session, subjectName: string | null }>;
+        const entity = computed(() => resolved.value.session);
+        const subjectName = computed(() => resolved.value.subjectName);
 
         const tokensQuery = defineQuery<SessionToken>({
             filters: { sessionId: route.params.id as string },
