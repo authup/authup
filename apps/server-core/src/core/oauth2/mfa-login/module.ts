@@ -153,16 +153,14 @@ export class OAuth2MfaLoginService implements IOAuth2MfaLoginService {
             refType: EventRefType.SESSION,
             refId: session.id,
             clientId: ticket.client_id ?? null,
+            sessionId: session.id,
             actorType: IdentityType.USER,
             actorId: session.sub,
             actorName: input.userName ?? null,
             realmId: session.realmId,
             requestIpAddress: session.ipAddress ?? null,
             requestUserAgent: session.userAgent ?? null,
-            data: {
-                grantType: OAuth2TokenGrant.PASSWORD,
-                sessionId: session.id,
-            },
+            data: { grantType: OAuth2TokenGrant.PASSWORD },
         });
         this.metrics?.recordLogin('success');
 
