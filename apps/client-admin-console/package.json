@@ -75,7 +75,7 @@
         "tailwindcss": "^4.3.1",
         "universal-cookie": "^8.1.2",
         "validup": "^1.0.0",
-        "vue": "^3.5.40",
+        "vue": "^3.5.41",
         "vue-router": "^5.0.7"
     },
     "publishConfig": {
