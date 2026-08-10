@@ -26,6 +26,7 @@ import {
     createFakeClient,
     createFakeRealm,
     createFakeRole,
+    createFakeUser,
     httpRequest,
 } from '../../../../utils';
 
@@ -135,6 +136,52 @@ describe('event (entity-CRUD bridge)', () => {
             const diffKeys = Object.keys(row.data?.diff ?? {});
             expect(diffKeys.filter((key) => SECRET_KEY_REGEX.test(key))).toHaveLength(0);
         }
+    });
+
+    it('attributes a bearer-authenticated entity write to the acting session', async () => {
+        const password = 'bridge-session-attribution-secret';
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.ROLE_CREATE);
+        await suite.client.userPermission.create({
+            userId: user.id,
+            permissionId: permission.id,
+        });
+
+        const token = await suite.client.token.createWithPassword({
+            username: user.name,
+            password,
+        });
+        const actor = new HTTPClient({ baseURL: suite.baseURL });
+        actor.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
+
+        const { data: role } = await actor.role.create(createFakeRole());
+
+        // the login row names the session the bearer belongs to
+        const login = await suite.client.event.getMany({
+            filters: {
+                name: EventName.LOGIN,
+                actorId: user.id,
+            },
+        });
+        expect(login.data).toHaveLength(1);
+        const { sessionId } = login.data[0];
+        expect(sessionId).toBeTruthy();
+        expect(sessionId).toEqual(login.data[0].refId);
+
+        // the entity write the bearer performed carries the very same session
+        const { data } = await suite.client.event.getMany({
+            filters: {
+                scope: EventScope.ENTITY,
+                name: EventName.CREATED,
+                refId: role.id,
+            },
+        });
+
+        expect(data).toHaveLength(1);
+        expect(data[0].actorType).toEqual('user');
+        expect(data[0].actorId).toEqual(user.id);
+        expect(data[0].sessionId).toEqual(sessionId);
     });
 
     it('records a deleted row for an entity delete', async () => {

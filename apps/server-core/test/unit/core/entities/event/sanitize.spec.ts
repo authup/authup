@@ -19,9 +19,7 @@ describe('sanitizeEventData', () => {
         ['reason', 'replay'],
         ['clientName', 'web'],
         ['realmName', 'master'],
-        ['sessionId', 'b0e8b3d2-0000-0000-0000-000000000000'],
         ['jti', 'b0e8b3d2-1111-1111-1111-111111111111'],
-        ['revokedSessionId', 'b0e8b3d2-2222-2222-2222-222222222222'],
         ['name', 'sig-primary'],
         ['use', 'enc'],
         ['status', 'disabled'],
@@ -56,6 +54,17 @@ describe('sanitizeEventData', () => {
 
     it('drops arbitrary non-allowlisted keys', () => {
         expect(sanitizeEventData({ foo: 'bar', username: 'admin' })).toBeNull();
+    });
+
+    it.each([
+        ['sessionId'],
+        ['revokedSessionId'],
+    ])('drops the session id key %s (it rides the dedicated column)', (key) => {
+        const value = 'b0e8b3d2-0000-0000-0000-000000000000';
+
+        expect(sanitizeEventData({ [key]: value })).toBeNull();
+        expect(sanitizeEventData({ grantType: 'password', [key]: value }))
+            .toEqual({ grantType: 'password' });
     });
 
     it.each([
