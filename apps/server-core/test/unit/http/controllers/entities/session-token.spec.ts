@@ -143,6 +143,58 @@ describe('src/http/controllers/session-token', () => {
         expect(clientIds.has(secondApp.id)).toBe(true);
     });
 
+    it('serves a client summary that include=client cannot widen', async () => {
+        const { sessionId, firstApp } = await buildTwoAppSession();
+
+        const response = await httpRequest(
+            suite,
+            'GET',
+            `/session-tokens?filter[sessionId]=${sessionId}&include=client`,
+            { headers: admin },
+        );
+        expect(response.status).toEqual(200);
+
+        const body = await response.json();
+        const row = body.data.find((entry: any) => entry.clientId === firstApp.id);
+
+        expect(row.client).toBeDefined();
+        expect(row.client.name).toEqual(firstApp.name);
+
+        // Summary only (the consent-list shape): the full client row must
+        // never ride a token read, whatever the reader includes.
+        expect(row.client.redirectUri).toBeUndefined();
+        expect(row.client.grantTypes).toBeUndefined();
+        expect(row.client.secret).toBeUndefined();
+        expect(row.client.accessPolicyId).toBeUndefined();
+    });
+
+    it('serves the client summary to a non-privileged reader', async () => {
+        // The account console renders application names off this: a reader
+        // without CLIENT_READ cannot include the client relation, so the
+        // summary has to ride the row unconditionally.
+        const {
+            sessionId, 
+            firstApp, 
+            firstGrant, 
+        } = await buildTwoAppSession();
+
+        const response = await httpRequest(
+            suite,
+            'GET',
+            `/session-tokens?filter[sessionId]=${sessionId}`,
+            { headers: { Authorization: `Bearer ${firstGrant.access_token}` } },
+        );
+        expect(response.status).toEqual(200);
+
+        const body = await response.json();
+        const row = body.data.find((entry: any) => entry.clientId === firstApp.id);
+
+        expect(row.client).toBeDefined();
+        expect(row.client.name).toEqual(firstApp.name);
+        expect(row.client.redirectUri).toBeUndefined();
+        expect(row.client.secret).toBeUndefined();
+    });
+
     it('finds every session an application served', async () => {
         const { sessionId, secondApp } = await buildTwoAppSession();
 
