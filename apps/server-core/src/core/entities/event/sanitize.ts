@@ -20,6 +20,8 @@ import { EVENT_DIFF_SECRET_KEY_REGEX } from './diff.ts';
  * name / use / status / enabled / force describe key & trust-anchor lifecycle
  * operations (issue #3269) — canonical identifiers and enum/flag metadata,
  * never material. kind is the MFA authenticator kind (totp/email/...).
+ * providerId / providerName identify the identity provider on account link &
+ * unlink events (plan 091): metadata only, never external tokens.
  *
  * The single structured exception is `diff` (entity-CRUD bridge): it survives
  * only as a one-level object of `{ next, previous }` scalar pairs, keys
@@ -43,6 +45,8 @@ const DATA_KEY_ALLOW_LIST = [
     'enabled',
     'force',
     'kind',
+    'providerId',
+    'providerName',
 ] as const;
 
 const DATA_VALUE_MAX_LENGTH = 512;

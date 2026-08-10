@@ -268,6 +268,7 @@ describe('IdentityProviderAccountService', () => {
                 refId: entity.id,
                 actorId: userId,
                 sessionId: requestSessionId,
+                data: { providerId },
             });
         });
 

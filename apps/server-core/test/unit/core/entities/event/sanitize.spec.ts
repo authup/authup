@@ -26,6 +26,8 @@ describe('sanitizeEventData', () => {
         ['enabled', 'true'],
         ['force', 'true'],
         ['kind', 'totp'],
+        ['providerId', 'b0e8b3d2-2222-2222-2222-222222222222'],
+        ['providerName', 'keycloak'],
     ])('keeps the allowlisted scalar key %s', (key, value) => {
         expect(sanitizeEventData({ [key]: value })).toEqual({ [key]: value });
     });
