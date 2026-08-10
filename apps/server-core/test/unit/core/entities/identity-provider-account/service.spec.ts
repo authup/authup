@@ -7,7 +7,7 @@
 
 import { randomUUID } from 'node:crypto';
 import type { User } from '@authup/core-kit';
-import { IdentityType } from '@authup/core-kit';
+import { EventName, EventRefType, IdentityType } from '@authup/core-kit';
 import type { ActorContext } from '@authup/server-kit';
 import {
     beforeEach,
@@ -20,6 +20,7 @@ import { createAllowAllActor, createDenyAllActor } from '@authup/server-test-kit
 import { EntityNotFoundError } from '@authup/errors';
 import { IdentityProviderAccountService } from '../../../../../src/core/entities/identity-provider-account/service.ts';
 import { IdentityProviderAccountUnlinkBlockedError } from '../../../../../src/core/entities/identity-provider-account/error.ts';
+import { FakeEventService } from '../../helpers/index.ts';
 import { FakeIdentityProviderAccountRepository } from './fake-repository.ts';
 import { FakeUserIdentityRepository } from './fake-user-repository.ts';
 
@@ -28,6 +29,7 @@ const otherRealmId = randomUUID();
 const providerId = randomUUID();
 const userId = randomUUID();
 const otherUserId = randomUUID();
+const requestSessionId = 'f3b0dc71-0000-4000-8000-000000000006';
 
 function withIdentity(
     actor: ActorContext,
@@ -47,12 +49,28 @@ function withIdentity(
 describe('IdentityProviderAccountService', () => {
     let repository: FakeIdentityProviderAccountRepository;
     let userRepository: FakeUserIdentityRepository;
+    let eventService: FakeEventService;
     let service: IdentityProviderAccountService;
 
     beforeEach(() => {
         repository = new FakeIdentityProviderAccountRepository();
         userRepository = new FakeUserIdentityRepository();
-        service = new IdentityProviderAccountService({ repository, userRepository });
+        eventService = new FakeEventService();
+        service = new IdentityProviderAccountService({
+            repository,
+            userRepository,
+            eventService,
+            requestContext: () => ({
+                actorType: null,
+                actorId: null,
+                actorName: null,
+                sessionId: requestSessionId,
+                requestPath: null,
+                requestMethod: null,
+                requestIpAddress: null,
+                requestUserAgent: null,
+            }),
+        });
     });
 
     function seedOwn() {
@@ -229,6 +247,29 @@ describe('IdentityProviderAccountService', () => {
             await service.delete(entity.id, actor);
 
             expect(repository.removeCalls).toHaveLength(1);
+        });
+
+        it('records an unlink event attributed to the acting session', async () => {
+            userRepository.seed({
+                id: userId,
+                realmId,
+                password: 'hashed',
+            } as Partial<User>);
+            const entity = seedOwn();
+
+            const actor = withIdentity(createDenyAllActor());
+            await service.delete(entity.id, actor);
+
+            expect(eventService.recordCalls).toHaveLength(1);
+            const [call] = eventService.recordCalls;
+            expect(call).toMatchObject({
+                name: EventName.IDENTITY_PROVIDER_UNLINKED,
+                refType: EventRefType.IDENTITY_PROVIDER_ACCOUNT,
+                refId: entity.id,
+                actorId: userId,
+                sessionId: requestSessionId,
+                data: { providerId },
+            });
         });
 
         it('fails not-found on a realm-mismatched nested delete', async () => {

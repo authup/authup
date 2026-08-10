@@ -219,6 +219,7 @@ describe('OAuth2RefreshTokenGrant', () => {
         expect(record.name).toEqual(EventName.REFRESH_REPLAY_DETECTED);
         expect(record.refType).toEqual(EventRefType.SESSION);
         expect(record.refId).toEqual(sessionId);
+        expect(record.sessionId).toEqual(sessionId);
         expect(record.data).toEqual({ jti: refreshJti });
 
         expect(metrics.refreshReplayCalls).toEqual(1);

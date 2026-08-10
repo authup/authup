@@ -126,6 +126,7 @@ export class EntityEventHandler implements IDomainEventHandler {
                 actorType: requestContext?.actorType ?? null,
                 actorId: requestContext?.actorId ?? null,
                 actorName: requestContext?.actorName ?? null,
+                sessionId: requestContext?.sessionId ?? null,
                 requestPath: requestContext?.requestPath ?? null,
                 requestMethod: requestContext?.requestMethod ?? null,
                 requestIpAddress: requestContext?.requestIpAddress ?? null,

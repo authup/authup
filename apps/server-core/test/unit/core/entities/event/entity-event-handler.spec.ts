@@ -31,6 +31,7 @@ const requestContext: EventRequestContext = {
     actorType: IdentityType.USER,
     actorId,
     actorName: 'admin',
+    sessionId: 'f3b0dc71-0000-4000-8000-000000000002',
     requestPath: '/roles',
     requestMethod: 'POST',
     requestIpAddress: '127.0.0.1',
@@ -173,6 +174,7 @@ describe('EntityEventHandler', () => {
         expect(call.actorType).toEqual(IdentityType.USER);
         expect(call.actorId).toEqual(actorId);
         expect(call.actorName).toEqual('admin');
+        expect(eventService.recordCalls[0].sessionId).toEqual('f3b0dc71-0000-4000-8000-000000000002');
         expect(call.requestPath).toEqual('/roles');
         expect(call.requestMethod).toEqual('POST');
         expect(call.requestIpAddress).toEqual('127.0.0.1');
@@ -186,6 +188,7 @@ describe('EntityEventHandler', () => {
         expect(call.actorType).toBeNull();
         expect(call.actorId).toBeNull();
         expect(call.actorName).toBeNull();
+        expect(call.sessionId).toBeNull();
         expect(call.requestPath).toBeNull();
         expect(call.requestMethod).toBeNull();
         expect(call.requestIpAddress).toBeNull();

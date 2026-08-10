@@ -173,10 +173,10 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
             name: EventName.LOGOUT,
             refType: EventRefType.SESSION,
             refId: sessionId,
+            sessionId,
             actorType: session.subKind as `${IdentityType}`,
             actorId: session.sub,
             realmId: session.realmId,
-            data: { revokedSessionId: sessionId },
         });
 
         return true;

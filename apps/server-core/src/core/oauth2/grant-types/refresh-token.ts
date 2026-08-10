@@ -203,6 +203,7 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
             name: EventName.REFRESH_REPLAY_DETECTED,
             refType: EventRefType.SESSION,
             refId: sessionId,
+            sessionId,
             data: { jti },
         });
         this.metrics?.recordRefreshReplay();

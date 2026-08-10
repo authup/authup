@@ -40,6 +40,8 @@ const NON_CA_CERTIFICATE = readFileSync(
     'utf8',
 );
 
+const REQUEST_SESSION_ID = 'f3b0dc71-0000-4000-8000-000000000006';
+
 function buildTrustAnchor(overrides: Partial<TrustAnchor> = {}): Partial<TrustAnchor> {
     return {
         name: `ca-${randomUUID().slice(0, 8)}`,
@@ -212,6 +214,7 @@ describe('core/entities/trust-anchor/service', () => {
                     actorType: null,
                     actorId: null,
                     actorName: null,
+                    sessionId: REQUEST_SESSION_ID,
                     requestPath: '/trust-anchors',
                     requestMethod: 'POST',
                     requestIpAddress: '203.0.113.7',
@@ -240,6 +243,7 @@ describe('core/entities/trust-anchor/service', () => {
                 actorType: IdentityType.USER,
                 actorId,
                 actorName: 'admin',
+                sessionId: REQUEST_SESSION_ID,
                 requestPath: '/trust-anchors',
                 requestIpAddress: '203.0.113.7',
             });

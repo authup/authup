@@ -659,7 +659,11 @@ describe('OAuth2Authorization access policy gate (plan 052)', () => {
         const client = buildClient({ accessPolicyId: randomUUID() });
 
         await expect(
-            authorization.authorize(buildData(), identity, { client, redirectUriVerified: true }),
+            authorization.authorize(buildData(), identity, {
+                client,
+                redirectUriVerified: true,
+                sessionId: 'f3b0dc71-0000-4000-8000-000000000003',
+            }),
         ).rejects.toMatchObject({ code: ErrorCode.OAUTH_ACCESS_DENIED });
 
         expect(metrics.authorizeCalls).toEqual(['denied']);
@@ -670,6 +674,28 @@ describe('OAuth2Authorization access policy gate (plan 052)', () => {
             actorId: userId,
             data: { reason: 'accessPolicy' },
         }));
+        expect(eventService.recordCalls[0].sessionId).toEqual('f3b0dc71-0000-4000-8000-000000000003');
+    });
+
+    it('should stamp the acting session id on the AUTHORIZE event', async () => {
+        const eventService = new FakeEventService();
+        const authorization = new OAuth2Authorization({
+            codeIssuer,
+            sessionManager,
+            eventService,
+        });
+        const client = buildClient();
+
+        const result = await authorization.authorize(buildData(), identity, {
+            client,
+            redirectUriVerified: true,
+            sessionId: 'f3b0dc71-0000-4000-8000-000000000003',
+        });
+
+        expect(result.authorizationCode).toBeDefined();
+        expect(eventService.recordCalls).toHaveLength(1);
+        expect(eventService.recordCalls[0].name).toEqual(EventName.AUTHORIZE);
+        expect(eventService.recordCalls[0].sessionId).toEqual('f3b0dc71-0000-4000-8000-000000000003');
     });
 
     it('should enforce the MFA backstop before the access policy gate (gate order)', async () => {
