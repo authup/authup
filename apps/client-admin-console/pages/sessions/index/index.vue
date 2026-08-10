@@ -23,6 +23,7 @@ import { storeToRefs } from 'pinia';
 import type { TableColumn } from '@vuecs/table';
 import type { FormOption } from '@vuecs/forms';
 import { VCFormSelect } from '@vuecs/forms';
+import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
 import { computed, ref } from 'vue';
@@ -35,6 +36,7 @@ export default defineNuxtComponent({
         AEntityDelete,
         APagination,
         ASessions,
+        VCButton,
         VCFormSelect,
         VCIcon,
         VCLink,
@@ -160,6 +162,7 @@ export default defineNuxtComponent({
             subjectKind,
             subjectKindOptions,
             applySubjectKind,
+            VCLink,
         };
     },
 });
@@ -255,13 +258,19 @@ export default defineNuxtComponent({
                     <VCTimeago :datetime="row.expiresAt" />
                 </template>
                 <template #cell-options="{ row }">
-                    <VCLink
+                    <VCButton
+                        :as="VCLink"
                         :to="`/sessions/${row.id}`"
                         :aria-label="translations.details"
                         :title="translations.details"
+                        size="sm"
+                        color="primary"
+                        variant="outline"
                     >
-                        <VCIcon name="fa6-solid:bars" />
-                    </VCLink>
+                        <template #leading>
+                            <VCIcon name="fa6-solid:bars" />
+                        </template>
+                    </VCButton>
                     <span
                         v-if="row.id === sessionId"
                         class="ms-2 inline-flex items-center rounded-full bg-primary-600/10 px-2 py-0.5 text-xs font-medium text-primary-600"
