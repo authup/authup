@@ -49,9 +49,16 @@ export interface IIdentityProviderAccountRepository {
     remove(entity: IdentityProviderAccount): Promise<void>;
 
     /**
-     * Number of linked accounts a user holds (the unlink guardrail input).
+     * Atomically remove the account, refusing (returning `false`) when it
+     * is the user's LAST linked account and `userHasOtherLogin` is false —
+     * the unlink lockout guard. The count and the delete run in one
+     * transaction with the user's account rows locked (on drivers that
+     * support row locks), so two concurrent unlinks for the same user
+     * cannot both pass the guard and strand a password-less user with no
+     * login. Fires the entity subscriber like `remove`. Returns `true`
+     * when the row was removed.
      */
-    countByUserId(userId: string): Promise<number>;
+    removeGuarded(entity: IdentityProviderAccount, userHasOtherLogin: boolean): Promise<boolean>;
 
     /**
      * Find identity account with user relation (federated login + link flow).

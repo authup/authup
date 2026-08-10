@@ -66,8 +66,15 @@ export class FakeIdentityProviderAccountRepository implements IIdentityProviderA
         return this.accounts.get(id) ?? null;
     }
 
-    async countByUserId(userId: string): Promise<number> {
-        return this.rows().filter((account) => account.userId === userId).length;
+    async removeGuarded(entity: IdentityProviderAccount, userHasOtherLogin: boolean): Promise<boolean> {
+        const count = this.rows().filter((account) => account.userId === entity.userId).length;
+        if (count <= 1 && !userHasOtherLogin) {
+            return false;
+        }
+
+        this.removeCalls.push(entity);
+        this.accounts.delete(entity.id);
+        return true;
     }
 
     async findOneByProviderIdentity(identity: IdentityProviderIdentity): Promise<IdentityProviderAccount | null> {

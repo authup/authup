@@ -182,6 +182,32 @@ describe('identity-provider-account', () => {
         expect(after.data.data).toHaveLength(1);
     });
 
+    it('should allow unlinking a password-less user account when another remains', async () => {
+        // the guard's transaction must NOT over-block: with two links, a
+        // password-less user can still remove one.
+        const secondProvider = (await suite.client.identityProvider.create(createFakeOAuth2IdentityProvider({ realmId: realm.id }))).data;
+
+        const subject = await createRealmUser(realm.id, null);
+        const first = await seedAccount({ userId: subject.id, userRealmId: realm.id });
+        await seedAccount({
+            userId: subject.id, 
+            userRealmId: realm.id, 
+            providerId: secondProvider.id, 
+        });
+
+        const response = await suite.client.delete(`identity-provider-accounts/${first.id}`);
+        expect(response.status).toEqual(202);
+
+        const after = await suite.client.get(`identity-provider-accounts?filter[userId]=${subject.id}`);
+        expect(after.data.data).toHaveLength(1);
+
+        // and now it is the last one — the guard blocks removing it
+        await expectClientError(
+            () => suite.client.delete(`identity-provider-accounts/${after.data.data[0].id}`),
+            { status: 400, code: ErrorCode.IDENTITY_PROVIDER_ACCOUNT_UNLINK_BLOCKED },
+        );
+    });
+
     it('should scope the nested realm mount', async () => {
         const otherRealm = (await suite.client.realm.create(createFakeRealm())).data;
         const otherProvider = (await suite.client.identityProvider.create(createFakeOAuth2IdentityProvider({ realmId: otherRealm.id }))).data;

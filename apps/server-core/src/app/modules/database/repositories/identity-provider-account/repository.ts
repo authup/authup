@@ -15,6 +15,7 @@ import type {
 } from 'typeorm';
 import { applyQuery, redactFieldConditions } from '../query.ts';
 import { IdentityProviderAccountEntity } from '../../../../../adapters/database/domains/index.ts';
+import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
 import type {
     IIdentityProviderAccountRepository,
     IdentityProviderAccountFindManyOptions,
@@ -22,9 +23,12 @@ import type {
 } from '../../../../../core/index.ts';
 
 export class IdentityProviderAccountRepositoryAdapter implements IIdentityProviderAccountRepository {
+    protected dataSource: DataSource;
+
     protected repository: Repository<IdentityProviderAccountEntity>;
 
     constructor(dataSource: DataSource) {
+        this.dataSource = dataSource;
         this.repository = dataSource.getRepository(IdentityProviderAccountEntity);
     }
 
@@ -74,8 +78,42 @@ export class IdentityProviderAccountRepositoryAdapter implements IIdentityProvid
         return this.repository.findOneBy({ id });
     }
 
-    async countByUserId(userId: string): Promise<number> {
-        return this.repository.countBy({ userId });
+    async removeGuarded(entity: IdentityProviderAccount, userHasOtherLogin: boolean): Promise<boolean> {
+        if (!isDatabaseTypeRowLockable(this.dataSource.options.type)) {
+            // better-sqlite3: a single synchronous writer, so the
+            // count/delete race cannot manifest and no transaction is
+            // needed. Deliberately NOT wrapped in one — a held write
+            // transaction would contend the database lock (single-file
+            // driver) without buying any atomicity here. Plain
+            // count-then-remove, exactly as the un-guarded path did.
+            const count = await this.repository.countBy({ userId: entity.userId });
+            if (count <= 1 && !userHasOtherLogin) {
+                return false;
+            }
+
+            await this.repository.remove(entity as IdentityProviderAccountEntity);
+            return true;
+        }
+
+        // mysql / postgres: real concurrency. Lock the user's account rows,
+        // count, and delete in one transaction so two concurrent unlinks for
+        // the same user cannot both read > 1 and both delete.
+        return this.dataSource.transaction(async (manager) => {
+            const repository = manager.getRepository(IdentityProviderAccountEntity);
+
+            const rows = await repository.createQueryBuilder('identityProviderAccount')
+                .select(['identityProviderAccount.id'])
+                .where('identityProviderAccount.userId = :userId', { userId: entity.userId })
+                .setLock('pessimistic_write')
+                .getMany();
+
+            if (rows.length <= 1 && !userHasOtherLogin) {
+                return false;
+            }
+
+            await repository.remove(entity as IdentityProviderAccountEntity);
+            return true;
+        });
     }
 
     async findOneByProviderIdentity(identity: IdentityProviderIdentity): Promise<IdentityProviderAccount | null> {

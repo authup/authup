@@ -164,22 +164,22 @@ export class IdentityProviderAccountService extends AbstractEntityService implem
         }
 
         // Lockout guard, enforced for EVERY caller (admin included): the
-        // last linked account of a password-less user is their only way
-        // in. An admin sets a password for the user first. Best-effort
-        // check-then-act (no row lock): two concurrent deletes of a
-        // password-less user's last two links could both pass and lock the
-        // account out — a self-inflicted, admin-recoverable race (password
-        // reset), not a privilege boundary.
-        const count = await this.repository.countByUserId(entity.userId);
-        if (count <= 1) {
-            const user = await this.userRepository.findOneById(entity.userId);
-            if (user && !user.password) {
-                throw new IdentityProviderAccountUnlinkBlockedError();
-            }
-        }
+        // last linked account of a user with no alternative login (no
+        // password) is their only way in. An admin sets a password first.
+        // The count and the delete run atomically in the repository (one
+        // transaction, the user's rows locked), so two concurrent unlinks
+        // cannot both pass the guard and strand the account. `password` is
+        // immutable on this path, so reading it here (outside the
+        // transaction) is safe: a concurrent password set can only make the
+        // guard more permissive, never less.
+        const user = await this.userRepository.findOneById(entity.userId);
+        const userHasOtherLogin = !user || !!user.password;
 
         const { id: entityId } = entity;
-        await this.repository.remove(entity);
+        const removed = await this.repository.removeGuarded(entity, userHasOtherLogin);
+        if (!removed) {
+            throw new IdentityProviderAccountUnlinkBlockedError();
+        }
         entity.id = entityId;
 
         const requestContext = this.requestContext ?
