@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import type { Session, SessionToken } from '@authup/core-kit';
+import type { Event as EventEntity, Session, SessionToken } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { defineQuery } from '@rapiq/core';
 import {
@@ -13,6 +13,7 @@ import {
 } from '@authup/i18n';
 import {
     AEntityDelete,
+    AEvents,
     APagination,
     ASessionTokens,
     injectHTTPClient,
@@ -39,6 +40,7 @@ import { LayoutKey } from '../../../config/layout';
 export default defineComponent({
     components: {
         AEntityDelete,
+        AEvents,
         APagination,
         ASessionTokens,
         VCIcon,
@@ -58,6 +60,7 @@ export default defineComponent({
         const { sessionId } = storeToRefs(store);
 
         const hasDropPermission = usePermissionCheck({ name: PermissionName.SESSION_DELETE });
+        const hasEventReadPermission = usePermissionCheck({ name: PermissionName.EVENT_READ });
 
         const errorToast = useErrorToast();
         const handleFailed = (e: Error) => errorToast.show(e);
@@ -77,6 +80,8 @@ export default defineComponent({
             { namespace: TranslatorTranslationNamespace.FIELD, key: TranslatorTranslationFieldKey.EXPIRES_AT },
             { namespace: TranslatorTranslationNamespace.FIELD, key: TranslatorTranslationFieldKey.STATUS },
             { namespace: TranslatorTranslationNamespace.FIELD, key: TranslatorTranslationFieldKey.ID },
+            { namespace: TranslatorTranslationNamespace.FIELD, key: TranslatorTranslationFieldKey.NAME },
+            { namespace: TranslatorTranslationNamespace.FIELD, key: TranslatorTranslationFieldKey.ACTOR },
             { namespace: TranslatorTranslationNamespace.ACTION, key: TranslatorTranslationActionKey.BACK },
         ]);
 
@@ -95,6 +100,12 @@ export default defineComponent({
         const translationTokens = useTranslation({
             namespace: TranslatorTranslationNamespace.ENTITY,
             key: TranslatorTranslationEntityKey.SESSION_TOKEN,
+            count: 2,
+        });
+
+        const translationEvents = useTranslation({
+            namespace: TranslatorTranslationNamespace.ENTITY,
+            key: TranslatorTranslationEntityKey.EVENT,
             count: 2,
         });
 
@@ -132,6 +143,11 @@ export default defineComponent({
         const tokensQuery = defineQuery<SessionToken>({
             filters: { sessionId: route.params.id as string },
             relations: ['client'],
+            sort: { createdAt: 'DESC' },
+        });
+
+        const eventsQuery = defineQuery<EventEntity>({
+            filters: { sessionId: route.params.id as string },
             sort: { createdAt: 'DESC' },
         });
 
@@ -194,6 +210,33 @@ export default defineComponent({
             },
         ]);
 
+        const eventColumns = computed<TableColumn<EventEntity>[]>(() => [
+            {
+                key: 'name',
+                label: translations.name,
+                headerClass: 'text-left',
+                cellClass: 'text-left',
+            },
+            {
+                key: 'actor',
+                label: translations.actor,
+                headerClass: 'text-left',
+                cellClass: 'text-left',
+            },
+            {
+                key: 'requestIpAddress',
+                label: translations.ipAddress,
+                headerClass: 'text-left',
+                cellClass: 'text-left',
+            },
+            {
+                key: 'createdAt',
+                label: translations.createdAt,
+                headerClass: 'text-center',
+                cellClass: 'text-center',
+            },
+        ]);
+
         const items = computed(() => [
             {
                 name: translations.back,
@@ -211,13 +254,17 @@ export default defineComponent({
             subjectName,
             sessionId,
             hasDropPermission,
+            hasEventReadPermission,
             items,
             tokensQuery,
             tokenColumns,
             tokenStatus,
+            eventsQuery,
+            eventColumns,
             translations,
             translationsApp,
             translationTokens,
+            translationEvents,
             handleDeleted,
             handleFailed,
         };
@@ -385,5 +432,62 @@ export default defineComponent({
                 </VCTable>
             </template>
         </ASessionTokens>
+        <template v-if="hasEventReadPermission">
+            <h6 class="title mt-3">
+                {{ translationEvents }}
+            </h6>
+            <AEvents
+                :query="eventsQuery"
+                :body="{ tag: 'div' }"
+                :footer="true"
+                @failed="handleFailed"
+            >
+                <template #footer="props">
+                    <APagination
+                        :busy="props.busy"
+                        :meta="props.meta"
+                        :load="props.load"
+                    />
+                </template>
+                <template #body="props">
+                    <VCTable
+                        :data="props.data"
+                        :columns="eventColumns"
+                        :busy="props.busy"
+                    >
+                        <template #cell-name="{ row }">
+                            <div class="leading-tight">
+                                {{ row.name }}
+                                <div class="text-xs text-fg-muted">
+                                    {{ row.scope }}
+                                </div>
+                            </div>
+                        </template>
+                        <template #cell-actor="{ row }">
+                            <div
+                                v-if="row.actorName || row.actorId"
+                                class="leading-tight"
+                            >
+                                {{ row.actorName ?? row.actorId }}
+                                <div
+                                    v-if="row.actorType"
+                                    class="text-xs text-fg-muted"
+                                >
+                                    {{ row.actorType }}
+                                </div>
+                            </div>
+                            <span v-else>&ndash;</span>
+                        </template>
+                        <template #cell-requestIpAddress="{ row }">
+                            <span v-if="row.requestIpAddress">{{ row.requestIpAddress }}</span>
+                            <span v-else>&ndash;</span>
+                        </template>
+                        <template #cell-createdAt="{ row }">
+                            <VCTimeago :datetime="row.createdAt" />
+                        </template>
+                    </VCTable>
+                </template>
+            </AEvents>
+        </template>
     </div>
 </template>
