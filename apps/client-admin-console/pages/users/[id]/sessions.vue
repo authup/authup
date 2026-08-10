@@ -20,6 +20,7 @@ import {
 import type { TableColumn } from '@vuecs/table';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
+import { VCLink } from '@vuecs/link';
 import { useAlertDialog } from '@vuecs/overlays';
 import type { PropType } from 'vue';
 import { computed, ref } from 'vue';
@@ -60,6 +61,7 @@ export default defineNuxtComponent({
             { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.SESSION_REVOKE_ALL_CONFIRM_TITLE },
             { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.SESSION_REVOKE_ALL_CONFIRM_DESCRIPTION },
             { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.LOGOUT },
+            { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.DETAILS },
             { namespace: TranslatorTranslationNamespace.ACTION, key: TranslatorTranslationActionKey.ABORT },
         ]);
 
@@ -149,6 +151,7 @@ export default defineNuxtComponent({
             translations,
             revoking,
             revokeAll,
+            VCLink,
         };
     },
 });
@@ -205,6 +208,20 @@ export default defineNuxtComponent({
                     <VCTimeago :datetime="row.expiresAt" />
                 </template>
                 <template #cell-options="{ row }">
+                    <VCButton
+                        :as="VCLink"
+                        :to="`/sessions/${row.id}`"
+                        :aria-label="translations.details"
+                        :title="translations.details"
+                        size="sm"
+                        color="primary"
+                        variant="outline"
+                        class="me-1"
+                    >
+                        <template #leading>
+                            <VCIcon name="fa6-solid:bars" />
+                        </template>
+                    </VCButton>
                     <AEntityDelete
                         :entity-id="row.id"
                         entity-type="session"
