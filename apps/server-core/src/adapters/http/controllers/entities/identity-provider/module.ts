@@ -44,7 +44,6 @@ import {
 } from '@authup/core-kit';
 import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import { resolveURL } from '../../../../../utils/index.ts';
-import type { AuthorizeParameters } from '@hapic/oauth2';
 import { useRequestQuery } from '@routup/basic/query';
 import { readRequestBody } from '@routup/basic/body';
 import { OAuth2ErrorCode, OAuth2RequestError } from '@authup/specs';
@@ -278,13 +277,7 @@ export class IdentityProviderController {
             throw new BadRequestError('Only an identity-provider based on the oauth protocol supports authorize redirect.');
         }
 
-        const authenticator = createIdentityProviderOAuth2Authenticator({
-            accountManager: this.accountManager,
-            provider: entity,
-            options: { baseURL: this.options.baseURL },
-        });
-
-        const parameters : AuthorizeParameters = {};
+        const authenticator = this.buildProviderAuthenticator(entity);
 
         let codeRequest: OAuth2AuthorizationCodeRequest | undefined;
         const query = useRequestQuery(event);
@@ -311,9 +304,9 @@ export class IdentityProviderController {
             codeRequest = data.data;
         }
 
-        parameters.state = await this.saveAuthorizationState(event, codeRequest);
+        const state = await this.saveAuthorizationState(event, { codeRequest });
 
-        return sendRedirect(event, authenticator.buildRedirectURL(parameters));
+        return sendRedirect(event, authenticator.buildRedirectURL({ state }));
     }
 
     @DPost('/:id/link-request', [ForceLoggedInMiddleware])
@@ -341,17 +334,9 @@ export class IdentityProviderController {
             throw new BadRequestError('The identity provider does not belong to the user realm.');
         }
 
-        const authenticator = createIdentityProviderOAuth2Authenticator({
-            accountManager: this.accountManager,
-            provider: entity,
-            options: { baseURL: this.options.baseURL },
-        });
+        const authenticator = this.buildProviderAuthenticator(entity);
 
-        const state = await this.stateManager.save({
-            link: { userId: identity.id, providerId: entity.id },
-            ip: getRequestIP(event) ?? '',
-            userAgent: getRequestHeader(event, 'user-agent') ?? undefined,
-        });
+        const state = await this.saveAuthorizationState(event, { link: { userId: identity.id, providerId: entity.id } });
 
         return { url: authenticator.buildRedirectURL({ state }) };
     }
@@ -386,14 +371,7 @@ export class IdentityProviderController {
 
         const { code } = useRequestQuery(event);
 
-        const authenticator = createIdentityProviderOAuth2Authenticator({
-            accountManager: this.accountManager,
-            provider: entity,
-            options: {
-                baseURL: this.options.baseURL,
-                clientId: data.codeRequest?.client_id,
-            },
-        });
+        const authenticator = this.buildProviderAuthenticator(entity, { clientId: data.codeRequest?.client_id });
 
         const user = await authenticator.authenticate(code);
 
@@ -594,11 +572,7 @@ export class IdentityProviderController {
                 throw new BadRequestError('The authorization code is missing.');
             }
 
-            const authenticator = createIdentityProviderOAuth2Authenticator({
-                accountManager: this.accountManager,
-                provider,
-                options: { baseURL: this.options.baseURL },
-            });
+            const authenticator = this.buildProviderAuthenticator(provider);
 
             const identity = await authenticator.resolveIdentity({ code });
             const account = await this.accountManager.link(identity, link.userId);
@@ -660,12 +634,26 @@ export class IdentityProviderController {
 
     // ---------------------------------------------------------
 
+    private buildProviderAuthenticator(
+        provider: OAuth2IdentityProvider | OpenIDIdentityProvider,
+        options: { clientId?: string } = {},
+    ) {
+        return createIdentityProviderOAuth2Authenticator({
+            accountManager: this.accountManager,
+            provider,
+            options: {
+                baseURL: this.options.baseURL,
+                clientId: options.clientId,
+            },
+        });
+    }
+
     private async saveAuthorizationState(
         event: IAppEvent,
-        codeRequest?: OAuth2AuthorizationCodeRequest,
+        data: Pick<OAuth2AuthorizationState, 'codeRequest' | 'link'> = {},
     ) : Promise<string> {
         return this.stateManager.save({
-            codeRequest,
+            ...data,
             ip: getRequestIP(event) ?? '',
             userAgent: getRequestHeader(event, 'user-agent') ?? undefined,
         });
