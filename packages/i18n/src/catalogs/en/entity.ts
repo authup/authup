@@ -14,6 +14,7 @@ export const TranslatorTranslationEntityEnglish : NamespaceTranslations<`${Trans
     [TranslatorTranslationEntityKey.CONSENT]: definePlural({ one: 'Consent', other: 'Consents' }),
     [TranslatorTranslationEntityKey.EVENT]: definePlural({ one: 'Event', other: 'Events' }),
     [TranslatorTranslationEntityKey.IDENTITY_PROVIDER]: definePlural({ one: 'Identity provider', other: 'Identity providers' }),
+    [TranslatorTranslationEntityKey.IDENTITY_PROVIDER_ACCOUNT]: definePlural({ one: 'Connected account', other: 'Connected accounts' }),
     [TranslatorTranslationEntityKey.KEY]: definePlural({ one: 'Key', other: 'Keys' }),
     [TranslatorTranslationEntityKey.PERMISSION]: definePlural({ one: 'Permission', other: 'Permissions' }),
     [TranslatorTranslationEntityKey.POLICY]: definePlural({ one: 'Policy', other: 'Policies' }),

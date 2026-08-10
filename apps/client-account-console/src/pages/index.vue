@@ -86,6 +86,7 @@ export default defineComponent({
             { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.ACCOUNT },
             { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.AUTHENTICATOR },
             { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.APPLICATIONS },
+            { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.CONNECTED_ACCOUNTS },
             {
                 namespace: TranslatorTranslationNamespace.ENTITY,
                 key: TranslatorTranslationEntityKey.SESSION,
@@ -134,6 +135,13 @@ export default defineComponent({
                     icon: 'fa6-solid:shield-halved',
                     link: { to: '/authenticators', query },
                     active: route.path === '/authenticators',
+                },
+                {
+                    key: 'connected-accounts',
+                    label: translations.connectedAccounts,
+                    icon: 'fa6-solid:link',
+                    link: { to: '/connected-accounts', query },
+                    active: route.path === '/connected-accounts',
                 },
                 {
                     key: 'sessions',

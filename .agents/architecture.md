@@ -1183,7 +1183,8 @@ choice"):
   `useAccountConsoleURL()`, which attaches the origin.
 - **App bootstrap** (`src/main.ts`): vue-router base = config `basePath`
   (routes are base-relative: `/`, `/password`, `/authenticators`,
-  `/sessions`, `/applications`, catch-all → `/`), the same kit + vuecs
+  `/connected-accounts`, `/sessions`, `/applications`, catch-all → `/`),
+  the same kit + vuecs
   install choreography as the SSR ui app minus SSR/hydration (no
   `hydrationStore` — nothing to hand off), `vc-locale`/`vc-color-mode`
   cookie continuity with the auth pages, own `NuxtIconBundle` scan
@@ -2530,6 +2531,91 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   A race-losing duplicate insert under the unique index is swallowed via
   `isUniqueConstraintDatabaseError` (`adapters/database/errors/driver.ts`, the
   reusable driver-error-code unwrapper covering mysql/postgres/sqlite).
+
+## Identity-Provider Account Linking (plan 091)
+
+`auth_identity_provider_accounts` (external identity → `userId`; unique
+`(providerId, userId)` — one link per provider per user) is surfaced as a
+read+delete entity API and an explicit self-service link flow. No migration:
+the table predates the feature (federated login has always written it, and
+still auto-creates a NEW user for an unknown external identity — explicit
+linking is the only way to bind an external identity to an EXISTING user).
+
+- **Unified repository port** — `IIdentityProviderAccountRepository`
+  (`core/entities/identity-provider-account/types.ts`) carries the entity
+  CRUD surface (`findMany`/`findOneById`/`remove`/`countByUserId`) AND the
+  account-manager methods (`findOneByProviderIdentity`/`save`); the old
+  port definition in `core/identity/provider/account/types.ts` re-exports
+  it, and ONE adapter (`IdentityProviderAccountRepositoryAdapter`,
+  `app/modules/database/repositories/identity-provider-account/`) serves
+  the management API, the federated login and the link flow.
+- **Entity API** — `IdentityProviderAccountService` + controller
+  dual-mounted `/identity-provider-accounts` +
+  `/realms/:realmId/identity-provider-accounts`, read + delete only
+  (rows are created only by federated login / the link flow). Session/
+  consent shape: a caller without `IDENTITY_PROVIDER_ACCOUNT_READ` is
+  force-scoped to `userId = own id` (user identities only); own-row
+  read/delete needs no permission; foreign rows take per-row `evaluate`
+  with `REALM_MATCH: userRealmId` (the owner realm; the entity has no
+  `realmId` column, which is also why the service deliberately skips the
+  `compile()` WHERE-pushdown — the compiled reach condition would bind a
+  nonexistent `realmId` column — and why the adapter force-selects
+  `userId`/`userRealmId` inline instead of `applyRealmScopeSelect`).
+  Permissions auto-provision; `realm_admin` = `ownOrNull` read + `own`
+  delete (OWN-override list). The external token columns
+  (`accessToken`/`refreshToken` + expiry metadata) are `select: false` on
+  the entity (like `user.password` / authenticator secrets), so no read
+  surface can return them — the collection projection, an explicit
+  `fields=accessToken`, or the un-projected single-record / delete-response
+  read alike — and they are auto-exempt from the boot field-coverage
+  assertion. `include=provider`
+  is allowed (ungated target, benign columns); `user` is not in the
+  relations allow-list.
+- **Unlink lockout guard** — `delete` refuses for EVERY caller (admin
+  included) when the row is the user's LAST linked account and the user
+  has no password (`IdentityProviderAccountUnlinkBlockedError`,
+  `ErrorCode.IDENTITY_PROVIDER_ACCOUNT_UNLINK_BLOCKED`, 400): the row may
+  be the only way into the account. An admin sets a password first.
+- **Link flow (server-completed)** — server auth is header-only, so the
+  browser round-trip cannot carry a bearer; the link intent rides the
+  one-time, IP+UA-bound `stateManager` blob instead:
+  `POST /identity-providers/:id/link-request` (ForceLoggedIn, user
+  identities only; provider must be OAuth2/OIDC, enabled, and in the
+  actor's realm) saves a state with the new optional
+  `link: { userId }` field (`OAuth2AuthorizationState`; cache blob, no
+  migration) and returns `{ url }` = the external authorize URL
+  (`IdentityProviderLinkRequestResponse` in core-http-kit;
+  `client.identityProvider.createLinkRequest(id)`). The `authorize-in`
+  callback branches on `state.link`: `authenticator.resolveIdentity(code)`
+  (token exchange + identity build, extracted from `authenticate()` —
+  which is now `resolveIdentity` + `accountManager.save`, login path
+  unchanged) then `accountManager.link(identity, userId)`: rejects an
+  identity linked to a DIFFERENT user
+  (`IdentityProviderAccountAlreadyLinkedError`), refreshes idempotently
+  for the same user, verifies user existence + provider/user realm match,
+  and NEVER runs mappers, mutates the user, mints a code or creates a
+  session. The redirect back is fixed and server-derived:
+  `<publicUrl>/account/connected-accounts?linked=<providerId>` or
+  `?linkError=already_linked|link_failed`. Takeover posture: linking an
+  attacker's external identity to a victim requires a state blob carrying
+  the victim's userId, which only the victim's bearer can mint.
+- **Events** — `identityProviderLinked` (recorded in the callback branch)
+  / `identityProviderUnlinked` (recorded in the service delete), IDENTITY
+  scope, `refType: identityProviderAccount`, metadata only (provider
+  id/name — never tokens).
+- **UI** — account console page `/connected-accounts` (realm providers ×
+  own linked rows; Connect = `createLinkRequest` navigation, Disconnect =
+  confirm + delete; reads and strips the `linked`/`linkError` return
+  params) + admin console tab `users/[id]/identity-provider-accounts`
+  (kit collection `AIdentityProviderAccounts`, gated on
+  `IDENTITY_PROVIDER_ACCOUNT_READ` like the sessions tab).
+- **Tests** — service matrix + guardrail
+  (`test/unit/core/entities/identity-provider-account/service.spec.ts`),
+  manager link semantics (`core/identity/provider/account-link.spec.ts`),
+  HTTP surfaces (`http/controllers/entities/identity-provider-account.spec.ts`)
+  and the full link round-trip against a fake external IdP token endpoint
+  (`http/controllers/entities/identity-provider/link.spec.ts` — unsigned
+  three-segment JWT, `extractTokenPayload` decodes without verification).
 
 ## OAuth2 Token Endpoint Authentication
 

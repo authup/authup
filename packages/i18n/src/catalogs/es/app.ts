@@ -78,6 +78,16 @@ export const TranslatorTranslationAppSpanish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_TITLE]: 'Revocar el acceso de la aplicación',
     [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_DESCRIPTION]: 'La aplicación volverá a pedir tu consentimiento en el próximo inicio de sesión.',
     [TranslatorTranslationAppKey.CONSENT_SCOPES]: 'Permisos concedidos',
+
+    [TranslatorTranslationAppKey.CONNECTED_ACCOUNTS]: 'Cuentas vinculadas',
+    [TranslatorTranslationAppKey.CONNECTED_ACCOUNTS_NONE]: 'No hay proveedores de identidad configurados.',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_CONNECT]: 'Conectar',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_CONNECTED_AS]: 'Conectado como {{name}}',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_DISCONNECT]: 'Desconectar',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_DISCONNECT_CONFIRM_TITLE]: '¿Desconectar la cuenta?',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_DISCONNECT_CONFIRM_DESCRIPTION]: 'Iniciar sesión con este proveedor dejará de funcionar para esta cuenta.',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_LINK_SUCCESS]: 'La cuenta fue conectada.',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_LINK_FAILED]: 'La cuenta no pudo ser conectada.',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_TITLE]: '¿Destruir la clave de cifrado?',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_DESCRIPTION]: 'Esta clave todavía es referenciada por {{count}} secreto(s) cifrado(s). Eliminarla los hará permanentemente irrecuperables.',
 

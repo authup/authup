@@ -78,6 +78,16 @@ export const TranslatorTranslationAppEnglish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_TITLE]: 'Revoke application access',
     [TranslatorTranslationAppKey.CONSENT_REVOKE_ALL_DESCRIPTION]: 'The application will ask for your consent again on the next sign-in.',
     [TranslatorTranslationAppKey.CONSENT_SCOPES]: 'Granted permissions',
+
+    [TranslatorTranslationAppKey.CONNECTED_ACCOUNTS]: 'Connected accounts',
+    [TranslatorTranslationAppKey.CONNECTED_ACCOUNTS_NONE]: 'No identity providers are configured.',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_CONNECT]: 'Connect',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_CONNECTED_AS]: 'Connected as {{name}}',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_DISCONNECT]: 'Disconnect',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_DISCONNECT_CONFIRM_TITLE]: 'Disconnect account?',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_DISCONNECT_CONFIRM_DESCRIPTION]: 'Signing in through this provider will stop working for this account.',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_LINK_SUCCESS]: 'The account was connected.',
+    [TranslatorTranslationAppKey.IDENTITY_PROVIDER_LINK_FAILED]: 'The account could not be connected.',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_TITLE]: 'Crypto-shred encryption key?',
     [TranslatorTranslationAppKey.KEY_DELETE_FORCE_CONFIRM_DESCRIPTION]: 'This key is still referenced by {{count}} encrypted secret(s). Deleting it makes them permanently unrecoverable.',
 
