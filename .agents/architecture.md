@@ -3656,6 +3656,23 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   smuggle a secret; `password`/`client_secret`/`code`/`*token*` are simply never
   allowlisted). A structured logger line fires per event even when persistence
   is disabled (`eventLogEnabled=false`) — the free SIEM/Loki complement.
+- **Session attribution (plan 093):** a row carries the acting or affected
+  `auth_sessions` row in a nullable, indexed `sessionId`
+  (`auth_events.session_id`), deliberately **FK-less**: the log is append-only
+  and must outlive everything it references, so a CASCADE would erase audit
+  history and a SET NULL would destroy the correlation. NULL means the row is
+  not attributable to a session (rows predating the column, plus the
+  genuinely session-less flows: a failed login, registration, password
+  recovery, the unauthenticated external IdP callback). Two mechanisms fill
+  it: the AsyncLocalStorage request context snapshots the bearer's session id
+  (`useRequestSessionId`), so the entity-CRUD bridge and every
+  `useRequestEventContext` consumer inherit it; and the OAuth2 / MFA emit
+  sites stamp the session they created or acted on explicitly (password
+  grant, MFA-ticket completion, `/authorize`, refresh-replay, end-session
+  revoke, authenticator challenge), because those run before or outside a
+  bearer context. `LOGIN` and `LOGOUT` therefore no longer duplicate the id
+  into `data`, and `sessionId` is a queryable filter
+  (`GET /events?filter[sessionId]=…`, the session detail page's event lens).
 - **Emit sites** (explicit `record()` calls via optional `eventService?`
   ctx — security events never ride the CRUD subscriber bus): password grant
   `LOGIN` (core `runWith`, after issuance) and `LOGIN_FAILED` (HTTP adapter
