@@ -11,6 +11,7 @@ import type { NamespaceTranslations } from '../../types';
 export const TranslatorTranslationCommonGerman : NamespaceTranslations<`${TranslatorTranslationCommonKey}`> = {
     [TranslatorTranslationCommonKey.GENERAL]: 'Allgemein',
     [TranslatorTranslationCommonKey.OVERVIEW]: 'Überblick',
+    [TranslatorTranslationCommonKey.ALL]: 'Alle',
     [TranslatorTranslationCommonKey.LOADING]: 'Wird geladen...',
     [TranslatorTranslationCommonKey.ACTIVE]: 'Aktiv',
     [TranslatorTranslationCommonKey.INACTIVE]: 'Inaktiv',

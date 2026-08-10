@@ -61,6 +61,10 @@ export const TranslatorTranslationAppGerman : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.SESSION_REVOKE_ALL_SUCCESS]: '{{amount}} Sitzung(en) abgemeldet.',
 
     [TranslatorTranslationAppKey.SESSION_CURRENT]: 'Dieses Gerät',
+    [TranslatorTranslationAppKey.SESSION_TOKEN_STATUS_ACTIVE]: 'Aktiv',
+    [TranslatorTranslationAppKey.SESSION_TOKEN_STATUS_CONSUMED]: 'Verbraucht',
+    [TranslatorTranslationAppKey.SESSION_TOKEN_STATUS_REVOKED]: 'Widerrufen',
+    [TranslatorTranslationAppKey.SESSION_TOKEN_STATUS_EXPIRED]: 'Abgelaufen',
 
     [TranslatorTranslationAppKey.AUTHENTICATOR]: 'Authentifikatoren',
     [TranslatorTranslationAppKey.MFA_SECURITY_TITLE]: 'Zwei-Faktor-Authentifizierung',

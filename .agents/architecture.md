@@ -2953,10 +2953,8 @@ cases in `user.spec.ts`. When adding a per-row gate to a new
 `getMany`, wire `applyRealmScopeSelect` into its adapter with every column the
 gate reads.
 
-**UI:** two pages backed by the kit `<ASessions>` collection:
-`apps/client-account-console/src/pages/sessions.vue` (the actor's **own**
-sessions, `filter: { userId }`) and
-`apps/client-admin-console/pages/users/[id]/sessions.vue` (a `<VCTable>`
+**UI:** three surfaces backed by the kit `<ASessions>` collection: the top-level admin pages `apps/client-admin-console/pages/sessions/` (list of every session the actor's realm reach permits, subject names via the gated `include=user,client` — the session schema's `relations.allowed` is `['realm', 'user', 'client']`, each include gated by the #3295 relations read gate on the target's read permission — plus a `/sessions/:id` detail page rendering the session's `auth_session_tokens` inventory through the kit `<ASessionTokens>` collection over `GET /session-tokens?filter[sessionId]=…&include=client`), `apps/client-account-console/src/pages/sessions.vue` (the actor's **own**
+sessions, `filter: { userId }`), and `apps/client-admin-console/pages/users/[id]/sessions.vue` (a `<VCTable>`
 page for an admin viewing a user's sessions). The account console page
 carries a **"log out other devices"** button
 (`authupApp` `SESSION_REVOKE_OTHERS*` keys) that confirms via `useAlertDialog`

@@ -168,7 +168,7 @@ application's own default in charge.
 ### Page placement — top-level pages vs detail tabs (client-admin-console)
 
 **Entity-type collections always get a top-level page** (`/users`, `/roles`,
-`/keys`, `/events`, …), scoped to the active realm by the header realm
+`/keys`, `/events`, `/sessions`, …), scoped to the active realm by the header realm
 switcher (`filter: { realmId: [realmManagementId ?? null, null] }` — active
 realm + global rows). The realm switcher makes the realm context global
 chrome, so realm-scoped entities do NOT move under `/realms/[id]` — a realm
@@ -182,7 +182,9 @@ collections: junction-table associations (`users/[id]/roles` via
 children owned by the row (`users/[id]/sessions`, `users/[id]/authenticators`
 — subject-owned records; also surfaced under `settings/*` for the own-user
 view). A tab like `users/[id]/sessions` is a parent-scoped *lens* over a
-collection, not its canonical home.
+collection, not its canonical home. Sessions' canonical home is the top-level
+`/sessions` page (subject names via gated includes); the per-user tab remains
+the parent-scoped lens.
 
 `@vuecs/core` ≥ 3.1.0 (`installThemeManager`) now **merges install
 options into the existing manager** rather than dropping them on second
