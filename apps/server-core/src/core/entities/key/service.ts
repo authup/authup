@@ -379,6 +379,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             actorType: actor.identity?.type ?? null,
             actorId: actor.identity?.data.id ?? null,
             actorName: actor.identity?.data.name ?? null,
+            sessionId: requestContext?.sessionId ?? null,
             requestPath: requestContext?.requestPath ?? null,
             requestMethod: requestContext?.requestMethod ?? null,
             requestIpAddress: requestContext?.requestIpAddress ?? null,

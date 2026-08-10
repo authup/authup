@@ -123,6 +123,7 @@ export type EventRequestContext = {
     actorType: `${IdentityType}` | null,
     actorId: string | null,
     actorName: string | null,
+    sessionId: string | null,
     requestPath: string | null,
     requestMethod: string | null,
     requestIpAddress: string | null,

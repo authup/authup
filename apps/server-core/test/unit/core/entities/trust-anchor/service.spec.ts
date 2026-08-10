@@ -212,6 +212,7 @@ describe('core/entities/trust-anchor/service', () => {
                     actorType: null,
                     actorId: null,
                     actorName: null,
+                    sessionId: null,
                     requestPath: '/trust-anchors',
                     requestMethod: 'POST',
                     requestIpAddress: '203.0.113.7',

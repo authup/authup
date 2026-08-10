@@ -9,7 +9,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { defineCoreHandler, getRequestHeader, getRequestIP } from 'routup';
 import type { Handler } from 'routup';
 import type { EventRequestContext } from '../../../core/index.ts';
-import { useRequestIdentity } from './helpers/index.ts';
+import { useRequestIdentity, useRequestSessionId } from './helpers/index.ts';
 
 /**
  * Actor + request attribution snapshot for entity-CRUD audit rows, carried
@@ -46,6 +46,7 @@ export function createRequestEventContextMiddleware() : Handler {
             actorType: identity ? identity.type : null,
             actorId: identity ? identity.id : null,
             actorName: identity ? identity.data.name ?? null : null,
+            sessionId: useRequestSessionId(event) ?? null,
             requestPath: event.path,
             requestMethod: event.method,
             requestIpAddress: getRequestIP(event) ?? null,
