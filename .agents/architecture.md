@@ -3039,9 +3039,19 @@ cases in `user.spec.ts`. When adding a per-row gate to a new
 `getMany`, wire `applyRealmScopeSelect` into its adapter with every column the
 gate reads.
 
-**UI:** three surfaces backed by the kit `<ASessions>` collection: the top-level admin pages `apps/client-admin-console/pages/sessions/` (list of every session the actor's realm reach permits, subject names via the gated `include=user,client` — the session schema's `relations.allowed` is `['realm', 'user', 'client']`, each include gated by the #3295 relations read gate on the target's read permission — plus a `/sessions/:id` detail page rendering the session's `auth_session_tokens` inventory through the kit `<ASessionTokens>` collection over `GET /session-tokens?filter[sessionId]=…&include=client`), `apps/client-account-console/src/pages/sessions.vue` (the actor's **own**
-sessions, `filter: { userId }`), and `apps/client-admin-console/pages/users/[id]/sessions.vue` (a `<VCTable>`
-page for an admin viewing a user's sessions). The account console page
+**UI:** three surfaces backed by the kit `<ASessions>` collection: the top-level admin pages `apps/client-admin-console/pages/sessions/` (list of every session the actor's realm reach permits, subject names via the gated `include=user,client` — the session schema's `relations.allowed` is `['realm', 'user', 'client']`, each include gated by the #3295 relations read gate on the target's read permission — plus a `/sessions/:id` detail page rendering the session's `auth_session_tokens` inventory through the kit `<ASessionTokens>` collection over `GET /session-tokens?filter[sessionId]=…`), `apps/client-account-console/src/pages/sessions.vue` (the actor's **own**
+sessions, `filter: { userId }`, each session card expandable into its own
+`<ASessionTokens>` inventory — application, kind, created/expires, status;
+deliberately no per-token ip/user-agent, since server-side renderer refreshes
+stamp values like `node` that would read as an unknown device to an end
+user), and `apps/client-admin-console/pages/users/[id]/sessions.vue` (a `<VCTable>`
+page for an admin viewing a user's sessions; each row links to the
+`/sessions/:id` detail page). **Session-token reads carry a client SUMMARY
+unconditionally** (id / name / displayName, joined by the repository adapter —
+the consent-list shape): `client` is deliberately absent from the session-token
+schema's `relations.allowed`, so a raw `?include=client` cannot force the
+full-column join, while a self-service reader without `CLIENT_READ` still gets
+application names for its own token rows. The account console page
 carries a **"log out other devices"** button
 (`authupApp` `SESSION_REVOKE_OTHERS*` keys) that confirms via `useAlertDialog`
 then calls `client.session.deleteMany()` (`DELETE /sessions` — revoke-all-but-

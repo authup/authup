@@ -134,12 +134,30 @@ export class SessionTokenRepositoryAdapter implements ISessionTokenRepository {
         ]);
     }
 
+    /**
+     * Always expose only a client SUMMARY (id / name / displayName) on the
+     * read paths — the consent-list shape. `client` is deliberately absent
+     * from the schema's relations allow-list, so a raw `?include=client`
+     * cannot force the full-column join (redirect patterns, grant types,
+     * secret storage flags, accessPolicyId), while a self-service reader
+     * without CLIENT_READ still gets the application name per token row.
+     */
+    protected joinClientSummary(qb: SelectQueryBuilder<SessionTokenEntity>) {
+        qb.leftJoin('sessionToken.client', 'client');
+        qb.addSelect([
+            'client.id',
+            'client.name',
+            'client.displayName',
+        ]);
+    }
+
     async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<SessionToken>> {
         const qb = this.repository.createQueryBuilder('sessionToken');
 
         const { pagination } = applyQuery(qb, query);
 
         this.joinSessionForGate(qb);
+        this.joinClientSummary(qb);
 
         const [entities, total] = await qb.getManyAndCount();
 
@@ -157,6 +175,7 @@ export class SessionTokenRepositoryAdapter implements ISessionTokenRepository {
             .where('sessionToken.id = :id', { id });
 
         this.joinSessionForGate(qb);
+        this.joinClientSummary(qb);
 
         return qb.getOne();
     }

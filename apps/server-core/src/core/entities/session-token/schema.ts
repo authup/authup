@@ -10,10 +10,7 @@ import type { SessionToken } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import { createRelationsReadGate } from '../../query/relations.ts';
 
-const schemaMapping = {
-    session: EntityType.SESSION,
-    client: EntityType.CLIENT,
-};
+const schemaMapping = { session: EntityType.SESSION };
 
 /**
  * The token inventory as a query surface.
@@ -57,7 +54,11 @@ export const sessionTokenSchema = defineSchema<SessionToken>({
             'kind',
         ],
     },
-    relations: { allowed: ['session', 'client'], validate: createRelationsReadGate(schemaMapping) },
+    // `client` is deliberately absent: the repository always joins a client
+    // SUMMARY (id / name / displayName — the consent-list shape), so a raw
+    // `?include=client` cannot force the full-column join and a self-service
+    // reader still gets application names without CLIENT_READ.
+    relations: { allowed: ['session'], validate: createRelationsReadGate(schemaMapping) },
     sort: { allowed: ['createdAt', 'expiresAt'] },
     pagination: { maxLimit: 50 },
     schemaMapping,

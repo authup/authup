@@ -131,7 +131,6 @@ export default defineComponent({
 
         const tokensQuery = defineQuery<SessionToken>({
             filters: { sessionId: route.params.id as string },
-            relations: ['client'],
             sort: { createdAt: 'DESC' },
         });
 
