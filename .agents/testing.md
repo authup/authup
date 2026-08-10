@@ -308,7 +308,7 @@ This catches SQL syntax errors, cross-DB type mismatches, and `down()` regressio
 
 ### Schema-drift gate (`npm run test:schema-drift`)
 
-`apps/server-core/scripts/assert-schema-drift.mjs` runs `createSchemaBuilder().log()` against a migrated database and fails when it returns any statement — i.e. when the migration chain and the entity classes, two independent descriptions of the same schema, disagree. Every divergence so far was found by hand: two foreign keys pointing at the wrong table (`auth_permissions.client_id` in `1766830857009`, `auth_roles.client_id` in `1784970000000`) and an entire naming + column-type split introduced by the hand-authored `1783325495597` / `1783769340000` and closed by `1785940000000-AlignSchemaWithEntityMetadata`.
+`apps/server-core/scripts/assert-schema-drift.mjs` runs `createSchemaBuilder().log()` against a migrated database and fails when it returns any statement — i.e. when the migration chain and the entity classes, two independent descriptions of the same schema, disagree. Every divergence so far was found by hand: two foreign keys pointing at the wrong table (`auth_permissions.client_id` in `1766830857009`, `auth_roles.client_id` in `1784970000000`) and an entire naming + column-type split introduced by the hand-authored `1783325495597` / `1783769340000` and closed by `1785871780234-AlignSchemaWithEntityMetadata`.
 
 The rule that keeps the gate green is in [conventions.md](conventions.md#database-migrations): **DDL is generated with `migration generate`, never hand-written.** A green gate is the normal state — with the chain applied, `migration generate` writes no file at all.
 

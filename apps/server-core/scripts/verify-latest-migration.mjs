@@ -287,11 +287,27 @@ check('no drift after the full chain', await drift(), 0);
 
 await dataSource.undoLastMigration({ transaction: options.migrationsTransactionMode });
 check('row counts unchanged after revert', await snapshot(), before);
-check('column values unchanged after revert', await values(), valuesBefore);
+
+/**
+ * Columns the reverted migration itself added exist only on its side of
+ * the boundary: the revert drops them together with their values, and the
+ * re-run re-adds them empty. That is the migration's contract, not data
+ * loss, so they are exempt from the value comparison - which keeps
+ * guarding every pre-existing column against a type change implemented
+ * as DROP plus ADD.
+ */
+const valuesAfterRevert = await values();
+const addedColumns = new Set(Object.keys(valuesBefore).filter((column) => !(column in valuesAfterRevert)));
+const withoutAddedColumns = (snapshotValues) => Object.fromEntries(
+    Object.entries(snapshotValues).filter(([column]) => !addedColumns.has(column)),
+);
+check('column values unchanged after revert', valuesAfterRevert, withoutAddedColumns(valuesBefore));
 
 await dataSource.runMigrations({ transaction: options.migrationsTransactionMode });
 check('row counts unchanged after re-run', await snapshot(), before);
-check('column values unchanged after re-run', await values(), valuesBefore);
+const valuesAfterRerun = await values();
+check('column values unchanged after re-run', withoutAddedColumns(valuesAfterRerun), withoutAddedColumns(valuesBefore));
+check('re-run restores the added columns', [...addedColumns].every((column) => column in valuesAfterRerun), true);
 check('no drift after re-run', await drift(), 0);
 
 let rejected = false;

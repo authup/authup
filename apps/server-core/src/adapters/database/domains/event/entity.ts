@@ -74,7 +74,7 @@ export class EventEntity implements Event {
     })
     clientId: string | null;
 
-    @Index('IDX_auth_events_session_id')
+    @Index()
     @Column({
         name: 'session_id',
         type: 'uuid',
