@@ -78,6 +78,7 @@ export type EventRecordInput = {
     refType?: string | null,
     refId?: string | null,
     clientId?: string | null,
+    sessionId?: string | null,
     actorType?: `${IdentityType}` | null,
     actorId?: string | null,
     actorName?: string | null,

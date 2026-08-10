@@ -106,6 +106,31 @@ describe('EventService', () => {
             expect(row.realmId).toEqual(realmId);
         });
 
+        it('persists the session id', async () => {
+            await service.record({
+                scope: EventScope.OAUTH2,
+                name: EventName.LOGIN,
+                actorType: IdentityType.USER,
+                actorId: userId,
+                sessionId: 'f3b0dc71-0000-4000-8000-000000000001',
+                realmId,
+            });
+
+            expect(repository.rows[0].sessionId).toEqual('f3b0dc71-0000-4000-8000-000000000001');
+        });
+
+        it('stores a null session id when the input carries none', async () => {
+            await service.record({
+                scope: EventScope.OAUTH2,
+                name: EventName.LOGIN,
+                actorType: IdentityType.USER,
+                actorId: userId,
+                realmId,
+            });
+
+            expect(repository.rows[0].sessionId).toBeNull();
+        });
+
         it('strips secrets from the context data via the sanitizer', async () => {
             await service.record({
                 scope: EventScope.OAUTH2,

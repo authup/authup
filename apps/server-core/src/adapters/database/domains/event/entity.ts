@@ -67,12 +67,21 @@ export class EventEntity implements Event {
 
     @Index('IDX_auth_events_client_id')
     @Column({
-        name: 'client_id', 
-        type: 'uuid', 
-        nullable: true, 
-        default: null, 
+        name: 'client_id',
+        type: 'uuid',
+        nullable: true,
+        default: null,
     })
     clientId: string | null;
+
+    @Index('IDX_auth_events_session_id')
+    @Column({
+        name: 'session_id',
+        type: 'uuid',
+        nullable: true,
+        default: null,
+    })
+    sessionId: string | null;
 
     @Column({
         name: 'actor_type', 

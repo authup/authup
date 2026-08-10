@@ -37,6 +37,13 @@ export interface Event {
      */
     clientId: string | null;
 
+    /**
+     * The auth_sessions row acting or affected. NULL = not attributable to
+     * a session (rows predating the column, session-less flows such as a
+     * failed login or registration).
+     */
+    sessionId: string | null;
+
     // ------------------------------------------------------------------
 
     actorType: `${IdentityType}` | null;
