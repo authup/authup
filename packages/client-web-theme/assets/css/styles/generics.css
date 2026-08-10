@@ -13,9 +13,11 @@
     height: 250px !important;
 }
 
-.flex {
-    display: flex;
-}
+/*
+ * No `.flex` rule here: Tailwind generates it in `@layer utilities`, and an
+ * unlayered duplicate would beat every layered utility that changes `display`
+ * on a `.flex` element (`sm:contents`, `sm:hidden`, ...).
+ */
 
 .justify-space-between {
     justify-content: space-between;
