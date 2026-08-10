@@ -47,6 +47,7 @@ import { provideAccountConsoleConfig } from './di';
 import AccountShell from './pages/index.vue';
 import Applications from './pages/applications.vue';
 import Authenticators from './pages/authenticators.vue';
+import ConnectedAccounts from './pages/connected-accounts.vue';
 import Overview from './pages/overview.vue';
 import Password from './pages/password.vue';
 import Sessions from './pages/sessions.vue';
@@ -84,6 +85,10 @@ const router = createRouter({
                 {
                     component: Authenticators,
                     path: 'authenticators',
+                },
+                {
+                    component: ConnectedAccounts,
+                    path: 'connected-accounts',
                 },
                 {
                     component: Sessions,

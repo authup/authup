@@ -5,15 +5,18 @@ import { PermissionName } from '@authup/core-kit';
 import {
     TranslatorTranslationAppKey,
     TranslatorTranslationCommonKey,
+    TranslatorTranslationEntityKey,
     TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import {
     injectHTTPClient,
+    useTranslation,
     useTranslations,
     useTranslationsForNamespace,
 } from '@authup/client-web-kit';
 import { VCIcon } from '@vuecs/icon';
+import { VCLink } from '@vuecs/link';
 import type { Ref } from 'vue';
 import { computed, defineComponent } from 'vue';
 import { definePageMeta } from '#imports';
@@ -26,7 +29,7 @@ import {
 import { LayoutKey } from '../../../config/layout';
 
 export default defineComponent({
-    components: { VCIcon },
+    components: { VCIcon, VCLink },
     async setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
@@ -107,6 +110,12 @@ export default defineComponent({
             ],
         );
 
+        const translationSession = useTranslation({
+            namespace: TranslatorTranslationNamespace.ENTITY,
+            key: TranslatorTranslationEntityKey.SESSION,
+            count: 1,
+        });
+
         const httpClient = injectHTTPClient();
 
         const { data, error } = await useAsyncData(
@@ -149,6 +158,7 @@ export default defineComponent({
             dataFormatted,
             translations,
             translationsApp,
+            translationSession,
         };
     },
 });
@@ -237,6 +247,20 @@ export default defineComponent({
                 <div class="flex justify-between gap-2 border-b border-border py-1 text-sm">
                     <span class="text-fg-muted">{{ translations.ipAddress }}</span>
                     <span class="text-right break-all">{{ entity.requestIpAddress ?? '–' }}</span>
+                </div>
+                <div class="flex justify-between gap-2 border-b border-border py-1 text-sm">
+                    <span class="text-fg-muted">{{ translationSession }}</span>
+                    <VCLink
+                        v-if="entity.sessionId"
+                        :to="'/sessions/' + entity.sessionId"
+                        class="text-right break-all font-mono"
+                    >
+                        {{ entity.sessionId }}
+                    </VCLink>
+                    <span
+                        v-else
+                        class="text-right"
+                    >&ndash;</span>
                 </div>
                 <div class="flex justify-between gap-2 py-1 text-sm">
                     <span class="text-fg-muted">{{ translations.userAgent }}</span>

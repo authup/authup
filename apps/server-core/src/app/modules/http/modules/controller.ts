@@ -54,6 +54,7 @@ import {
     ClientRoleRepositoryAdapter,
     ClientScopeRepositoryAdapter,
     DatabaseInjectionKey,
+    IdentityProviderAccountRepositoryAdapter,
     IdentityProviderRepositoryAdapter,
     IdentityProviderRoleMappingRepositoryAdapter,
     PermissionDatabaseProvider,
@@ -79,6 +80,7 @@ import {
     ClientScopeController,
     ConsentController,
     EventController,
+    IdentityProviderAccountController,
     IdentityProviderController,
     IdentityProviderRoleMappingController,
     KeyController,
@@ -124,6 +126,7 @@ import {
     ClientService,
     ConsentService,
     CredentialsAuthenticator,
+    IdentityProviderAccountService,
     IdentityProviderRoleMappingService,
     KeyProvisioner,
     KeyService,
@@ -159,7 +162,7 @@ import {
 import { AuthenticationInjectionKey } from '../../authentication/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
 import { LazyWildcardRealmProvisioner } from '../../provisioning/lazy-wildcard.ts';
-import { IdentityInjectionKey } from '../../identity/index.ts';
+import { IdentityInjectionKey, UserIdentityRepository } from '../../identity/index.ts';
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import type { Config } from '../../config/index.ts';
 import { ConfigInjectionKey, getAppOrigins } from '../../config/index.ts';
@@ -187,6 +190,7 @@ export class HTTPControllerModule {
         const sessionController = this.createSessionController(container);
         const sessionTokenController = this.createSessionTokenController(container);
         const consentController = this.createConsentController(container);
+        const identityProviderAccountController = this.createIdentityProviderAccountController(container);
         const userController = this.createUserController(container);
         const userAttributeController = this.createUserAttributeController(container);
         const userAuthenticatorController = this.createUserAuthenticatorController(container);
@@ -218,6 +222,7 @@ export class HTTPControllerModule {
                 clientScopeController,
                 consentController,
                 eventController,
+                identityProviderAccountController,
                 identityProviderRoleController,
                 this.createIdentityProvider(container),
                 keyController,
@@ -549,6 +554,7 @@ export class HTTPControllerModule {
             stateManager,
 
             accessPolicyEvaluator: this.resolveAccessPolicyEvaluator(container),
+            eventService: container.resolve(DatabaseInjectionKey.EventService),
         });
     }
 
@@ -773,6 +779,21 @@ export class HTTPControllerModule {
         return new ConsentController({ service: this.createConsentService(container) });
     }
 
+    createIdentityProviderAccountController(container: IContainer) {
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
+        const service = new IdentityProviderAccountService({
+            repository: new IdentityProviderAccountRepositoryAdapter(dataSource),
+            userRepository: new UserIdentityRepository({
+                repository: new UserRepository(dataSource),
+                userPermissionRepository: container.resolve<Repository<UserPermission>>(UserPermissionEntity),
+                userRoleRepository: container.resolve<Repository<UserRole>>(UserRoleEntity),
+            }),
+            eventService: container.resolve(DatabaseInjectionKey.EventService),
+            requestContext: useRequestEventContext,
+        });
+        return new IdentityProviderAccountController({ service });
+    }
+
     private accessPolicyEvaluator? : OAuth2AccessPolicyEvaluator;
 
     protected resolveAccessPolicyEvaluator(container: IContainer) : OAuth2AccessPolicyEvaluator {
@@ -834,6 +855,7 @@ export class HTTPControllerModule {
             cache: container.resolve(CacheInjectionKey),
             cipher: new RealmCipher({ keyStore: container.resolve(OAuth2InjectionToken.KeyStore) }),
             eventService: container.resolve(DatabaseInjectionKey.EventService),
+            requestContext: useRequestEventContext,
             mailClient: container.resolve(MailInjectionKey),
             mailTemplateRenderer: container.resolve(MailTemplateRendererInjectionKey),
             options: {

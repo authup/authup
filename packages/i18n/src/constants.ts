@@ -252,6 +252,10 @@ export enum TranslatorTranslationAppKey {
     SESSION_REVOKE_ALL_SUCCESS = 'sessionRevokeAllSuccess',
 
     SESSION_CURRENT = 'sessionCurrent',
+    SESSION_TOKEN_STATUS_ACTIVE = 'sessionTokenStatusActive',
+    SESSION_TOKEN_STATUS_CONSUMED = 'sessionTokenStatusConsumed',
+    SESSION_TOKEN_STATUS_REVOKED = 'sessionTokenStatusRevoked',
+    SESSION_TOKEN_STATUS_EXPIRED = 'sessionTokenStatusExpired',
 
     AUTHENTICATOR = 'authenticator',
     MFA_SECURITY_TITLE = 'mfaSecurityTitle',
@@ -265,6 +269,16 @@ export enum TranslatorTranslationAppKey {
     CONSENT_REVOKE_ALL_TITLE = 'consentRevokeAllTitle',
     CONSENT_REVOKE_ALL_DESCRIPTION = 'consentRevokeAllDescription',
     CONSENT_SCOPES = 'consentScopes',
+
+    CONNECTED_ACCOUNTS = 'connectedAccounts',
+    CONNECTED_ACCOUNTS_NONE = 'connectedAccountsNone',
+    IDENTITY_PROVIDER_CONNECT = 'identityProviderConnect',
+    IDENTITY_PROVIDER_CONNECTED_AS = 'identityProviderConnectedAs',
+    IDENTITY_PROVIDER_DISCONNECT = 'identityProviderDisconnect',
+    IDENTITY_PROVIDER_DISCONNECT_CONFIRM_TITLE = 'identityProviderDisconnectConfirmTitle',
+    IDENTITY_PROVIDER_DISCONNECT_CONFIRM_DESCRIPTION = 'identityProviderDisconnectConfirmDescription',
+    IDENTITY_PROVIDER_LINK_SUCCESS = 'identityProviderLinkSuccess',
+    IDENTITY_PROVIDER_LINK_FAILED = 'identityProviderLinkFailed',
 
     BACK_TO_APP = 'backToApp',
 }
@@ -307,6 +321,7 @@ export enum TranslatorTranslationEntityKey {
     CONSENT = 'consent',
     EVENT = 'event',
     IDENTITY_PROVIDER = 'identityProvider',
+    IDENTITY_PROVIDER_ACCOUNT = 'identityProviderAccount',
     KEY = 'key',
     PERMISSION = 'permission',
     POLICY = 'policy',
@@ -314,6 +329,7 @@ export enum TranslatorTranslationEntityKey {
     ROLE = 'role',
     SCOPE = 'scope',
     SESSION = 'session',
+    SESSION_TOKEN = 'sessionToken',
     TRUST_ANCHOR = 'trustAnchor',
     USER = 'user',
 }
@@ -359,6 +375,11 @@ export enum TranslatorTranslationFieldKey {
     EXPIRES_AT = 'expiresAt',
     IP_ADDRESS = 'ipAddress',
     USER_AGENT = 'userAgent',
+    AUTH_METHOD = 'authMethod',
+    KIND = 'kind',
+    SUBJECT = 'subject',
+    REFRESHED_AT = 'refreshedAt',
+    MFA_AT = 'mfaAt',
     PROTOCOL = 'protocol',
     PROTOCOLS = 'protocols',
     PRESET = 'preset',
@@ -425,6 +446,7 @@ export enum TranslatorTranslationActionKey {
 export enum TranslatorTranslationCommonKey {
     GENERAL = 'general',
     OVERVIEW = 'overview',
+    ALL = 'all',
     LOADING = 'loading',
     ACTIVE = 'active',
     INACTIVE = 'inactive',

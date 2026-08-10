@@ -24,9 +24,16 @@ import {
     getRequestIP,
     sendRedirect,
 } from 'routup';
-import type { IdentityProvider, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import type {
+    IdentityProvider,
+    OAuth2AuthorizationCodeRequest,
+    OAuth2IdentityProvider,
+    OpenIDIdentityProvider,
+} from '@authup/core-kit';
 import {
-
+    EventName,
+    EventRefType,
+    EventScope,
     IdentityProviderAttributesValidator,
     IdentityProviderValidator,
     IdentityType,
@@ -37,7 +44,6 @@ import {
 } from '@authup/core-kit';
 import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import { resolveURL } from '../../../../../utils/index.ts';
-import type { AuthorizeParameters } from '@hapic/oauth2';
 import { useRequestQuery } from '@routup/basic/query';
 import { readRequestBody } from '@routup/basic/body';
 import { OAuth2ErrorCode, OAuth2RequestError } from '@authup/specs';
@@ -45,11 +51,13 @@ import type {
     EntityCollectionResponse,
     EntityRecordResponse,
     IdentityProviderCreatePayload,
+    IdentityProviderLinkRequestResponse,
     IdentityProviderSavePayload,
     IdentityProviderUpdatePayload,
 } from '@authup/core-http-kit';
 import { URL } from 'node:url';
 import type {
+    IEventService,
     IIdentityProviderAccountManager,
     IIdentityProviderRepository,
     IOAuth2AccessPolicyEvaluator,
@@ -59,6 +67,7 @@ import type {
     IOAuth2ClientRepository,
     IRealmRepository,
     OAuth2AuthorizationState,
+    OAuth2AuthorizationStateLink,
 } from '../../../../../core/index.ts';
 import {
     OAuth2AuthorizationCodeRequestValidator,
@@ -67,6 +76,7 @@ import {
     decodeQuery,
     describeQuerySchema,
     identityProviderSchema,
+    isIdentityProviderAccountAlreadyLinkedError,
     toIdentityPolicyData,
 } from '../../../../../core/index.ts';
 import {
@@ -105,6 +115,8 @@ export class IdentityProviderController {
 
     protected accessPolicyEvaluator? : IOAuth2AccessPolicyEvaluator;
 
+    protected eventService? : IEventService;
+
     // ---------------------------------------------------------
 
     constructor(ctx: IdentityProviderControllerContext) {
@@ -118,6 +130,7 @@ export class IdentityProviderController {
         this.codeRequestValidator = new OAuth2AuthorizationCodeRequestValidator();
         this.stateManager = ctx.stateManager;
         this.accessPolicyEvaluator = ctx.accessPolicyEvaluator;
+        this.eventService = ctx.eventService;
     }
 
     // ---------------------------------------------------------
@@ -264,13 +277,7 @@ export class IdentityProviderController {
             throw new BadRequestError('Only an identity-provider based on the oauth protocol supports authorize redirect.');
         }
 
-        const authenticator = createIdentityProviderOAuth2Authenticator({
-            accountManager: this.accountManager,
-            provider: entity,
-            options: { baseURL: this.options.baseURL },
-        });
-
-        const parameters : AuthorizeParameters = {};
+        const authenticator = this.buildProviderAuthenticator(entity);
 
         let codeRequest: OAuth2AuthorizationCodeRequest | undefined;
         const query = useRequestQuery(event);
@@ -297,9 +304,41 @@ export class IdentityProviderController {
             codeRequest = data.data;
         }
 
-        parameters.state = await this.saveAuthorizationState(event, codeRequest);
+        const state = await this.saveAuthorizationState(event, { codeRequest });
 
-        return sendRedirect(event, authenticator.buildRedirectURL(parameters));
+        return sendRedirect(event, authenticator.buildRedirectURL({ state }));
+    }
+
+    @DPost('/:id/link-request', [ForceLoggedInMiddleware])
+    async linkRequest(
+        @DPath('id') _id: string,
+        @DContext() event: IAppEvent,
+    ) : Promise<IdentityProviderLinkRequestResponse> {
+        const id = useRequestParamID(event);
+        const entity = await this.resolve(id);
+
+        if (!isOAuth2IdentityProvider(entity) && !isOpenIDIdentityProvider(entity)) {
+            throw new BadRequestError('Only an identity-provider based on the oauth protocol supports account linking.');
+        }
+
+        if (!entity.enabled) {
+            throw new BadRequestError('The identity provider is not enabled.');
+        }
+
+        const identity = useRequestIdentityOrFail(event);
+        if (identity.type !== IdentityType.USER) {
+            throw new BadRequestError('Only a user can link an identity provider account.');
+        }
+
+        if (entity.realmId && entity.realmId !== identity.realmId) {
+            throw new BadRequestError('The identity provider does not belong to the user realm.');
+        }
+
+        const authenticator = this.buildProviderAuthenticator(entity);
+
+        const state = await this.saveAuthorizationState(event, { link: { userId: identity.id, providerId: entity.id } });
+
+        return { url: authenticator.buildRedirectURL({ state }) };
     }
 
     @DGet('/:id/authorize-in', [])
@@ -316,6 +355,11 @@ export class IdentityProviderController {
         }
 
         const data = await this.verifyAuthorizationState(event);
+
+        if (data.link) {
+            return this.completeLink(event, entity, data.link);
+        }
+
         if (
             entity.realmId &&
             data.codeRequest &&
@@ -327,14 +371,7 @@ export class IdentityProviderController {
 
         const { code } = useRequestQuery(event);
 
-        const authenticator = createIdentityProviderOAuth2Authenticator({
-            accountManager: this.accountManager,
-            provider: entity,
-            options: {
-                baseURL: this.options.baseURL,
-                clientId: data.codeRequest?.client_id,
-            },
-        });
+        const authenticator = this.buildProviderAuthenticator(entity, { clientId: data.codeRequest?.client_id });
 
         const user = await authenticator.authenticate(code);
 
@@ -505,6 +542,67 @@ export class IdentityProviderController {
 
     // ---------------------------------------------------------
 
+    /**
+     * Callback half of the account-linking round-trip (plan 091): the
+     * external identity is bound to the state-referenced user instead of
+     * running the login path. No auth code and no session is minted; the
+     * browser lands back on the account console with a marker param.
+     */
+    private async completeLink(
+        event: IAppEvent,
+        provider: OAuth2IdentityProvider | OpenIDIdentityProvider,
+        link: OAuth2AuthorizationStateLink,
+    ) {
+        // Fixed, server-derived return target (the account console page).
+        // No client-supplied redirect exists on this path.
+        const url = new URL(resolveURL(this.options.baseURL, 'account/connected-accounts'));
+
+        const { code } = useRequestQuery(event);
+
+        try {
+            // The state is bound to the provider it was minted for, and the
+            // provider must still be enabled at completion — a state cannot
+            // be replayed against a different provider's callback, nor
+            // complete a link after its provider was disabled.
+            if (link.providerId !== provider.id || !provider.enabled) {
+                throw new BadRequestError('The identity provider is not available for account linking.');
+            }
+
+            if (typeof code !== 'string' || code.length === 0) {
+                throw new BadRequestError('The authorization code is missing.');
+            }
+
+            const authenticator = this.buildProviderAuthenticator(provider);
+
+            const identity = await authenticator.resolveIdentity({ code });
+            const account = await this.accountManager.link(identity, link.userId);
+
+            await this.eventService?.record({
+                scope: EventScope.IDENTITY,
+                name: EventName.IDENTITY_PROVIDER_LINKED,
+                refType: EventRefType.IDENTITY_PROVIDER_ACCOUNT,
+                refId: account.id,
+                realmId: account.userRealmId ?? provider.realmId ?? null,
+                actorType: IdentityType.USER,
+                actorId: account.userId,
+                requestIpAddress: getRequestIP(event) ?? null,
+                requestUserAgent: getRequestHeader(event, 'user-agent') ?? null,
+                data: { providerId: provider.id, providerName: provider.name },
+            });
+
+            url.searchParams.set('linked', provider.id);
+        } catch (e) {
+            url.searchParams.set(
+                'linkError',
+                isIdentityProviderAccountAlreadyLinkedError(e) ? 'already_linked' : 'link_failed',
+            );
+        }
+
+        return sendRedirect(event, url.href);
+    }
+
+    // ---------------------------------------------------------
+
     private buildHostedAuthorizeURL(codeRequest: OAuth2AuthorizationCodeRequest): URL {
         const url = new URL(resolveURL(this.options.baseURL, 'authorize'));
 
@@ -536,12 +634,26 @@ export class IdentityProviderController {
 
     // ---------------------------------------------------------
 
+    private buildProviderAuthenticator(
+        provider: OAuth2IdentityProvider | OpenIDIdentityProvider,
+        options: { clientId?: string } = {},
+    ) {
+        return createIdentityProviderOAuth2Authenticator({
+            accountManager: this.accountManager,
+            provider,
+            options: {
+                baseURL: this.options.baseURL,
+                clientId: options.clientId,
+            },
+        });
+    }
+
     private async saveAuthorizationState(
         event: IAppEvent,
-        codeRequest?: OAuth2AuthorizationCodeRequest,
+        data: Pick<OAuth2AuthorizationState, 'codeRequest' | 'link'> = {},
     ) : Promise<string> {
         return this.stateManager.save({
-            codeRequest,
+            ...data,
             ip: getRequestIP(event) ?? '',
             userAgent: getRequestHeader(event, 'user-agent') ?? undefined,
         });

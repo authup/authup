@@ -6,7 +6,11 @@
  */
 
 import type { OAuth2TokenPayload } from '@authup/specs';
-import type { IOAuth2TokenIssuer, OAuth2TokenIssuerOptions, OAuth2TokenIssuerResponse } from './types.ts';
+import type {
+    IOAuth2TokenIssuer,
+    OAuth2TokenIssuerOptions,
+    OAuth2TokenIssuerResponse,
+} from './types.ts';
 
 export abstract class OAuth2BaseTokenIssuer implements IOAuth2TokenIssuer {
     protected options: OAuth2TokenIssuerOptions;
@@ -19,7 +23,7 @@ export abstract class OAuth2BaseTokenIssuer implements IOAuth2TokenIssuer {
 
     // ------------------------------------------------------------------
 
-    abstract issue(input: OAuth2TokenPayload, options?: OAuth2TokenIssuerOptions): Promise<OAuth2TokenIssuerResponse>;
+    abstract issue(input: OAuth2TokenPayload): Promise<OAuth2TokenIssuerResponse>;
 
     // ------------------------------------------------------------------
 

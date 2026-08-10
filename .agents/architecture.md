@@ -263,14 +263,28 @@ usable at the service level and nothing in core depends on TypeORM:
   over by reference). Non-displaceable like a repository `andWhere`: a
   conflicting client condition intersects (empty result) instead of
   replacing the scope, and appended conditions bypass the decode
-  allow-lists (server context). Since rapiq **beta.15**
-  (tada5hi/rapiq#871) the wrap is unconditional: `and()` on an EMPTY
-  receiver nests the injected conditions in their own group rather than
-  adopting them as a flat root-AND, closing the hole where a later
-  replace-merge could displace a scope injected onto a filter-less
-  query. A hostile replace-merge against such a tree now throws
-  `FILTERS_NOT_FLAT`, which authup never hits (nothing merges a filter
-  tree; every `.merge(` in the tree is a TypeORM entity merge). The
+  allow-lists (server context). Since rapiq **beta.19**
+  (tada5hi/rapiq#890) non-displaceability is **structural**: filter
+  composition is conjunctive throughout, so `IFilters.merge` and
+  `mergeQueries` retain every conjunct of both sides (empty group =
+  identity) instead of replacing same-field conditions, and no later
+  composition step can drop an injected scope. Nothing needs a marker,
+  and `and()` no longer wraps the injection in a distinguishable
+  subtree, so the encoded filter is the plain AND it reads as. The
+  displaceability machinery this replaced is gone with it: the beta.15
+  `FILTERS_NOT_FLAT` throw, the beta.16 seal marker, and the beta.18
+  `ICondition.seal()` contract member. The surviving marker is
+  `preserve()` (a standalone helper, NOT part of the contract), whose
+  only job is keeping a group atomic for **relation pruning**: rapiq
+  throws `SCHEMA_PRESERVED_CONDITION_PRUNED` rather than silently
+  resolving a relations-gate rejection inside a preserved subtree.
+  Authup calls neither `preserve()` nor a filters `merge`, so it reaches
+  neither. **The conjunctive merge has one caller-facing consequence to
+  respect:** two `eq` conditions on the same field now intersect to
+  nothing instead of the receiver winning, so transient UI state must be
+  REPLACED before the query is built rather than merged over (the kit's
+  collection manager rebuilds its interactive filters from each load
+  input rather than accumulating them, so it is unaffected). The
   key/trust-anchor services use it for
   the nested `/realms/:realmId/*` mounts (`options.realmId` from
   `getRequestRealmID`); never splice a scope into the RAW wire query —
@@ -1169,7 +1183,8 @@ choice"):
   `useAccountConsoleURL()`, which attaches the origin.
 - **App bootstrap** (`src/main.ts`): vue-router base = config `basePath`
   (routes are base-relative: `/`, `/password`, `/authenticators`,
-  `/sessions`, `/applications`, catch-all → `/`), the same kit + vuecs
+  `/connected-accounts`, `/sessions`, `/applications`, catch-all → `/`),
+  the same kit + vuecs
   install choreography as the SSR ui app minus SSR/hydration (no
   `hydrationStore` — nothing to hand off), `vc-locale`/`vc-color-mode`
   cookie continuity with the auth pages, own `NuxtIconBundle` scan
@@ -2517,6 +2532,91 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   `isUniqueConstraintDatabaseError` (`adapters/database/errors/driver.ts`, the
   reusable driver-error-code unwrapper covering mysql/postgres/sqlite).
 
+## Identity-Provider Account Linking (plan 091)
+
+`auth_identity_provider_accounts` (external identity → `userId`; unique
+`(providerId, userId)` — one link per provider per user) is surfaced as a
+read+delete entity API and an explicit self-service link flow. No migration:
+the table predates the feature (federated login has always written it, and
+still auto-creates a NEW user for an unknown external identity — explicit
+linking is the only way to bind an external identity to an EXISTING user).
+
+- **Unified repository port** — `IIdentityProviderAccountRepository`
+  (`core/entities/identity-provider-account/types.ts`) carries the entity
+  CRUD surface (`findMany`/`findOneById`/`remove`/`countByUserId`) AND the
+  account-manager methods (`findOneByProviderIdentity`/`save`); the old
+  port definition in `core/identity/provider/account/types.ts` re-exports
+  it, and ONE adapter (`IdentityProviderAccountRepositoryAdapter`,
+  `app/modules/database/repositories/identity-provider-account/`) serves
+  the management API, the federated login and the link flow.
+- **Entity API** — `IdentityProviderAccountService` + controller
+  dual-mounted `/identity-provider-accounts` +
+  `/realms/:realmId/identity-provider-accounts`, read + delete only
+  (rows are created only by federated login / the link flow). Session/
+  consent shape: a caller without `IDENTITY_PROVIDER_ACCOUNT_READ` is
+  force-scoped to `userId = own id` (user identities only); own-row
+  read/delete needs no permission; foreign rows take per-row `evaluate`
+  with `REALM_MATCH: userRealmId` (the owner realm; the entity has no
+  `realmId` column, which is also why the service deliberately skips the
+  `compile()` WHERE-pushdown — the compiled reach condition would bind a
+  nonexistent `realmId` column — and why the adapter force-selects
+  `userId`/`userRealmId` inline instead of `applyRealmScopeSelect`).
+  Permissions auto-provision; `realm_admin` = `ownOrNull` read + `own`
+  delete (OWN-override list). The external token columns
+  (`accessToken`/`refreshToken` + expiry metadata) are `select: false` on
+  the entity (like `user.password` / authenticator secrets), so no read
+  surface can return them — the collection projection, an explicit
+  `fields=accessToken`, or the un-projected single-record / delete-response
+  read alike — and they are auto-exempt from the boot field-coverage
+  assertion. `include=provider`
+  is allowed (ungated target, benign columns); `user` is not in the
+  relations allow-list.
+- **Unlink lockout guard** — `delete` refuses for EVERY caller (admin
+  included) when the row is the user's LAST linked account and the user
+  has no password (`IdentityProviderAccountUnlinkBlockedError`,
+  `ErrorCode.IDENTITY_PROVIDER_ACCOUNT_UNLINK_BLOCKED`, 400): the row may
+  be the only way into the account. An admin sets a password first.
+- **Link flow (server-completed)** — server auth is header-only, so the
+  browser round-trip cannot carry a bearer; the link intent rides the
+  one-time, IP+UA-bound `stateManager` blob instead:
+  `POST /identity-providers/:id/link-request` (ForceLoggedIn, user
+  identities only; provider must be OAuth2/OIDC, enabled, and in the
+  actor's realm) saves a state with the new optional
+  `link: { userId }` field (`OAuth2AuthorizationState`; cache blob, no
+  migration) and returns `{ url }` = the external authorize URL
+  (`IdentityProviderLinkRequestResponse` in core-http-kit;
+  `client.identityProvider.createLinkRequest(id)`). The `authorize-in`
+  callback branches on `state.link`: `authenticator.resolveIdentity(code)`
+  (token exchange + identity build, extracted from `authenticate()` —
+  which is now `resolveIdentity` + `accountManager.save`, login path
+  unchanged) then `accountManager.link(identity, userId)`: rejects an
+  identity linked to a DIFFERENT user
+  (`IdentityProviderAccountAlreadyLinkedError`), refreshes idempotently
+  for the same user, verifies user existence + provider/user realm match,
+  and NEVER runs mappers, mutates the user, mints a code or creates a
+  session. The redirect back is fixed and server-derived:
+  `<publicUrl>/account/connected-accounts?linked=<providerId>` or
+  `?linkError=already_linked|link_failed`. Takeover posture: linking an
+  attacker's external identity to a victim requires a state blob carrying
+  the victim's userId, which only the victim's bearer can mint.
+- **Events** — `identityProviderLinked` (recorded in the callback branch)
+  / `identityProviderUnlinked` (recorded in the service delete), IDENTITY
+  scope, `refType: identityProviderAccount`, metadata only (provider
+  id/name — never tokens).
+- **UI** — account console page `/connected-accounts` (realm providers ×
+  own linked rows; Connect = `createLinkRequest` navigation, Disconnect =
+  confirm + delete; reads and strips the `linked`/`linkError` return
+  params) + admin console tab `users/[id]/identity-provider-accounts`
+  (kit collection `AIdentityProviderAccounts`, gated on
+  `IDENTITY_PROVIDER_ACCOUNT_READ` like the sessions tab).
+- **Tests** — service matrix + guardrail
+  (`test/unit/core/entities/identity-provider-account/service.spec.ts`),
+  manager link semantics (`core/identity/provider/account-link.spec.ts`),
+  HTTP surfaces (`http/controllers/entities/identity-provider-account.spec.ts`)
+  and the full link round-trip against a fake external IdP token endpoint
+  (`http/controllers/entities/identity-provider/link.spec.ts` — unsigned
+  three-segment JWT, `extractTokenPayload` decodes without verification).
+
 ## OAuth2 Token Endpoint Authentication
 
 The `/token` endpoint authenticates the calling client according to its
@@ -2780,6 +2880,56 @@ old jti`) then AT (`refreshTokenId = new RT jti`). On consume-failure →
 `sessionId` is present (M2M client-credentials writes only an access row —
 it mints no RT).
 
+**Device identity and issuance provenance are separate fields.** The session
+says which device it belongs to, the `auth_session_tokens` row says where each
+token was issued from. Conflating them into one mutable column is what produced
+the bug below.
+
+**A refresh never re-attributes the session's device.** `auth_sessions`
+`ip_address` / `user_agent` are pinned at creation; the refresh grant slides
+only `refreshedAt` / `seenAt` / `expiresAt`. The refreshing request is NOT
+necessarily the subject's device: a server-side renderer holding the auth
+cookies refreshes from its own process. Concretely, the Nuxt admin console
+reads the kit cookies server-side (`useCookie`) and its routing interceptor
+awaits `store.resolve()` during SSR, which refreshes whenever the 900s access
+token has lapsed while the 3-day refresh token has not. So on roughly every
+full page load after 15 idle minutes, the refresh reaches `/token` from the
+renderer. Stamping that request onto the row rewrote real browser sessions to
+`user_agent: node` (undici's default UA) plus the renderer's pod address,
+which made the sessions UI show a user's own session as an unknown device and
+would have shown a genuinely foreign session as theirs. The issued pair's
+`user_agent` / `remote_address` claims (and the `auth_session_tokens` row
+derived from them) therefore mirror the session, matching every other
+session-backed grant (password, identity, client-credentials, mfa-login);
+only `authorize.ts` reads the request's values, at session CREATION.
+
+**The refreshing request is recorded, one level down.** The grant builds the
+device values (`options.userAgent ?? session.userAgent`, same for the address)
+and passes them as the payload's `user_agent` / `remote_address`; the issuers
+stay dumb and write what they are handed, deriving the inventory row from the
+same payload. So the rotated tokens advertise the request that minted them
+while `auth_sessions` keeps the device, and a caller with no request context
+(nothing to attribute an issuance to) falls back to the session. Note the row
+column is camelCase `userAgent` while the payload claim is frozen snake_case
+`user_agent`: `OAuth2TokenPayload` carries an index signature, so reading the
+wrong one type-checks and silently writes an empty string to every row on every
+grant. Only a test catches that.
+
+A relocated device and a server-side refresher both appear as new rows under
+`/session-tokens?filter[sessionId]=`, which is truthful but does NOT tell the
+two apart: at `/token` they are indistinguishable, both presenting the
+subject's refresh token from an address that is not the session's. Separating
+them needs the renderer to forward the browser's address as `X-Forwarded-For`
+under `trustProxy`. The docs already recommend a bounded hop count
+(`configuration-server-core.md` ships `trustProxy: 1`), but the built-in
+default is `true`, which trusts the whole chain and therefore returns the
+left-most, client-supplied entry. Pinned by *should not re-attribute the
+session device on refresh* + *should fall back to the session device when the
+caller has no request context*
+(`test/unit/core/oauth2/grant-types/refresh-token.spec.ts`) and the end-to-end
+*should keep the session device pinned and record the refresh on the token row*
+(`test/unit/http/controllers/workflows/token/grant-refresh-token.spec.ts`).
+
 ### Family revoke = the `auth_sessions` row, never a wider SSO session
 
 `revokeFamily`: `revokeBySessionId` soft-revokes every row and returns
@@ -2889,11 +3039,19 @@ cases in `user.spec.ts`. When adding a per-row gate to a new
 `getMany`, wire `applyRealmScopeSelect` into its adapter with every column the
 gate reads.
 
-**UI:** two pages backed by the kit `<ASessions>` collection:
-`apps/client-account-console/src/pages/sessions.vue` (the actor's **own**
-sessions, `filter: { userId }`) and
-`apps/client-admin-console/pages/users/[id]/sessions.vue` (a `<VCTable>`
-page for an admin viewing a user's sessions). The account console page
+**UI:** three surfaces backed by the kit `<ASessions>` collection: the top-level admin pages `apps/client-admin-console/pages/sessions/` (list of every session the actor's realm reach permits, subject names via the gated `include=user,client` — the session schema's `relations.allowed` is `['realm', 'user', 'client']`, each include gated by the #3295 relations read gate on the target's read permission — plus a `/sessions/:id` detail page rendering the session's `auth_session_tokens` inventory through the kit `<ASessionTokens>` collection over `GET /session-tokens?filter[sessionId]=…`), `apps/client-account-console/src/pages/sessions.vue` (the actor's **own**
+sessions, `filter: { userId }`, each session card expandable into its own
+`<ASessionTokens>` inventory — application, kind, created/expires, status;
+deliberately no per-token ip/user-agent, since server-side renderer refreshes
+stamp values like `node` that would read as an unknown device to an end
+user), and `apps/client-admin-console/pages/users/[id]/sessions.vue` (a `<VCTable>`
+page for an admin viewing a user's sessions; each row links to the
+`/sessions/:id` detail page). **Session-token reads carry a client SUMMARY
+unconditionally** (id / name / displayName, joined by the repository adapter —
+the consent-list shape): `client` is deliberately absent from the session-token
+schema's `relations.allowed`, so a raw `?include=client` cannot force the
+full-column join, while a self-service reader without `CLIENT_READ` still gets
+application names for its own token rows. The account console page
 carries a **"log out other devices"** button
 (`authupApp` `SESSION_REVOKE_OTHERS*` keys) that confirms via `useAlertDialog`
 then calls `client.session.deleteMany()` (`DELETE /sessions` — revoke-all-but-
@@ -3508,6 +3666,23 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   smuggle a secret; `password`/`client_secret`/`code`/`*token*` are simply never
   allowlisted). A structured logger line fires per event even when persistence
   is disabled (`eventLogEnabled=false`) — the free SIEM/Loki complement.
+- **Session attribution (plan 093):** a row carries the acting or affected
+  `auth_sessions` row in a nullable, indexed `sessionId`
+  (`auth_events.session_id`), deliberately **FK-less**: the log is append-only
+  and must outlive everything it references, so a CASCADE would erase audit
+  history and a SET NULL would destroy the correlation. NULL means the row is
+  not attributable to a session (rows predating the column, plus the
+  genuinely session-less flows: a failed login, registration, password
+  recovery, the unauthenticated external IdP callback). Two mechanisms fill
+  it: the AsyncLocalStorage request context snapshots the bearer's session id
+  (`useRequestSessionId`), so the entity-CRUD bridge and every
+  `useRequestEventContext` consumer inherit it; and the OAuth2 / MFA emit
+  sites stamp the session they created or acted on explicitly (password
+  grant, MFA-ticket completion, `/authorize`, refresh-replay, end-session
+  revoke, authenticator challenge), because those run before or outside a
+  bearer context. `LOGIN` and `LOGOUT` therefore no longer duplicate the id
+  into `data`, and `sessionId` is a queryable filter
+  (`GET /events?filter[sessionId]=…`, the session detail page's event lens).
 - **Emit sites** (explicit `record()` calls via optional `eventService?`
   ctx — security events never ride the CRUD subscriber bus): password grant
   `LOGIN` (core `runWith`, after issuance) and `LOGIN_FAILED` (HTTP adapter
@@ -3767,14 +3942,20 @@ integration:
   is `QueryBuildInput<T, 3>` — needs rapiq ≥ 2.0.0-beta.3, where the
   DEPTH parameter is threaded into the string-key arms; on beta.2 the
   self-recursive entities tripped vue-tsc's TS2590, tada5hi/rapiq#790)
-  and is desugared at the boundary. Per load, fields/relations/sorts/pagination merge via
-  `mergeQueries` (left priority: load input ▷ retained interactive
-  state ▷ meta pagination ▷ base query), while **filters are kept out
-  of `mergeQueries`** and the base (props + context) filters are
-  AND-injected via `Filters.and()` — an injected scope
-  (`realmId`/`clientId` filter) can never be displaced by a search or
-  sort load, and compound trees (`or(...)`) never hit
-  `Filters.merge`'s flat-root-AND restriction. The
+  and is desugared at the boundary. Per load, **every** parameter merges
+  via `mergeQueries` (left priority: load input ▷ retained interactive
+  state ▷ meta pagination ▷ base query). Filters used to be carved out
+  of that call and AND-injected by hand, because the old `Filters.merge`
+  did per-field replace and would have let a search input displace an
+  injected `realmId`/`clientId` scope. Since rapiq **beta.19**
+  (tada5hi/rapiq#890) filter merging is conjunctive, so the carve-out
+  (`stripFilters` + `combineScopedFilters`) was removed and the plain
+  `mergeQueries` result carries the same guarantee: a scope cannot be
+  displaced by a search or sort load, and compound trees (`or(...)`)
+  survive as conjuncts. Pinned by *search input cannot displace the
+  injected scope* and *composes context query and props query, both
+  non-displaceable* in `entity-collection.spec.ts`, which both still
+  assert the pre-refactor filter strings. The
   `queryFilters` context hook may return an `ICondition`
   (`or(contains('name', q), contains('displayName', q))`) or a legacy
   filters record. **`ASearch` passes the raw search text as a bare

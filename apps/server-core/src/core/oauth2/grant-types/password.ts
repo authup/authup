@@ -97,16 +97,14 @@ export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput>
             refType: EventRefType.SESSION,
             refId: session.id,
             clientId: clientId ?? null,
+            sessionId: session.id,
             actorType: IdentityType.USER,
             actorId: user.id,
             actorName: user.name,
             realmId: user.realmId,
             requestIpAddress: options.ipAddress ?? null,
             requestUserAgent: options.userAgent ?? null,
-            data: {
-                grantType: OAuth2TokenGrant.PASSWORD,
-                sessionId: session.id,
-            },
+            data: { grantType: OAuth2TokenGrant.PASSWORD },
         });
         this.metrics?.recordLogin('success');
 

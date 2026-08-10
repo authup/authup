@@ -14,6 +14,7 @@ export const TranslatorTranslationEntityFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationEntityKey.CONSENT]: definePlural({ one: 'Consentement', other: 'Consentements' }),
     [TranslatorTranslationEntityKey.EVENT]: definePlural({ one: 'Événement', other: 'Événements' }),
     [TranslatorTranslationEntityKey.IDENTITY_PROVIDER]: definePlural({ one: 'Fournisseur d\'identité', other: 'Fournisseurs d\'identité' }),
+    [TranslatorTranslationEntityKey.IDENTITY_PROVIDER_ACCOUNT]: definePlural({ one: 'Compte lié', other: 'Comptes liés' }),
     [TranslatorTranslationEntityKey.KEY]: definePlural({ one: 'Clé', other: 'Clés' }),
     [TranslatorTranslationEntityKey.PERMISSION]: definePlural({ one: 'Permission', other: 'Permissions' }),
     [TranslatorTranslationEntityKey.POLICY]: definePlural({ one: 'Politique', other: 'Politiques' }),
@@ -21,6 +22,7 @@ export const TranslatorTranslationEntityFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationEntityKey.ROLE]: definePlural({ one: 'Rôle', other: 'Rôles' }),
     [TranslatorTranslationEntityKey.SCOPE]: definePlural({ one: 'Portée', other: 'Portées' }),
     [TranslatorTranslationEntityKey.SESSION]: definePlural({ one: 'Session', other: 'Sessions' }),
+    [TranslatorTranslationEntityKey.SESSION_TOKEN]: definePlural({ one: 'Jeton de session', other: 'Jetons de session' }),
     [TranslatorTranslationEntityKey.TRUST_ANCHOR]: definePlural({ one: 'Autorité de certification approuvée', other: 'Autorités de certification approuvées' }),
     [TranslatorTranslationEntityKey.USER]: definePlural({ one: 'Utilisateur', other: 'Utilisateurs' }),
 };

@@ -13,7 +13,7 @@ import type {
     ICache,
 } from '@authup/server-kit';
 import type { IRealmCipher } from '../../key/index.ts';
-import type { IEventService } from '../event/index.ts';
+import type { EventRequestContext, IEventService } from '../event/index.ts';
 import type { IMailClient, IMailTemplateRenderer } from '../../mail/index.ts';
 import type { IUserRepository } from '../user/index.ts';
 
@@ -171,6 +171,11 @@ export type UserAuthenticatorVerifyContext = {
     userAgent?: string | null,
     clientId?: string | null,
     /**
+     * The backing auth_sessions row the proof binds to (the bearer session
+     * or the MFA ticket's pending session). Audit attribution only.
+     */
+    sessionId?: string | null,
+    /**
      * Runs inside the verify critical section once the factor matched,
      * BEFORE the consumption (TOTP step / recovery used_at / email code)
      * is persisted. A throw aborts the verify without consuming the factor
@@ -273,6 +278,7 @@ export type UserAuthenticatorServiceContext = {
      */
     cipher: IRealmCipher,
     eventService?: IEventService,
+    requestContext?: () => EventRequestContext | undefined,
     /**
      * Mail dependencies for the email-OTP kind (absent = email OTP
      * enrollment/send is refused).

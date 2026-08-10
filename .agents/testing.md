@@ -13,6 +13,18 @@
   so its own `import 'reflect-metadata'` does not reach test-file
   contexts. Any spec importing `src/core` transitively loads x509 (via the
   client-certificate module), so this must stay — do not remove it.
+- **Per-worker sqlite isolation (server-core, issue #3405)**: spec files run
+  in parallel vitest workers, so a shared database file made the suite flake
+  on a different spec each run. The global setup provisions a template
+  database at `writable/test.sql`; `createTestDatabaseModuleForSuite` gives
+  every worker its own copy (`writable/test-<poolId>.sql`, keyed by
+  `VITEST_POOL_ID`), created on first use in that worker and swept by the
+  next global setup. Files that reuse a pool slot share its copy
+  sequentially, so a spec must never rely on state written by another spec
+  file. The MySQL/Postgres runs have no per-worker copy (one shared server
+  database), so `test/vitest.config.ts` turns `fileParallelism` off for
+  them instead; expect those runs to take several times the sqlite
+  wall-clock.
 
 ## Running Tests
 

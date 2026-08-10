@@ -13,6 +13,8 @@ import {
 } from 'vitest';
 import type { Client } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
+import type { OAuth2TokenPayload } from '@authup/specs';
+import { SessionTokenEntity } from '../../../../../../src/adapters/database/domains/index.ts';
 import {
     createFakeClient,
     createFakeRealm,
@@ -21,6 +23,15 @@ import {
     httpRequest,
 } from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
+
+const BROWSER_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)';
+// what a server-side refresh looks like: undici's default UA
+const RENDERER_USER_AGENT = 'node';
+
+function decodeJwtPayload(token: string): OAuth2TokenPayload {
+    const [, payload] = token.split('.');
+    return JSON.parse(Buffer.from(payload, 'base64url').toString('utf-8'));
+}
 
 describe('refresh-token', () => {
     const suite = createTestApplication();
@@ -471,6 +482,51 @@ describe('refresh-token', () => {
             .token
             .introspect({ token: at2 });
         expect(introspect.active).toBeFalsy();
+    });
+
+    // End-to-end shape of the device split: the session names the device it
+    // belongs to (pinned at creation), the inventory names where each token was
+    // issued from. Without the split, a refresh arriving from anywhere else —
+    // the subject's laptop on a new network, or a server-side renderer holding
+    // the auth cookies — rewrote the session row and the sessions UI stopped
+    // identifying devices at all.
+    it('should keep the session device pinned and record the refresh on the token row', async () => {
+        const login = await httpRequest(suite, 'POST', '/token', {
+            headers: { 'user-agent': BROWSER_USER_AGENT },
+            form: {
+                grant_type: 'password',
+                username: 'admin',
+                password: 'start123',
+            },
+        });
+        expect(login.status).toEqual(200);
+        const grant = await login.json();
+
+        const sessionId = decodeJwtPayload(grant.access_token).session_id!;
+        expect(sessionId).toBeDefined();
+
+        const refreshed = await httpRequest(suite, 'POST', '/token', {
+            headers: { 'user-agent': RENDERER_USER_AGENT },
+            form: {
+                grant_type: 'refresh_token',
+                refresh_token: grant.refresh_token,
+            },
+        });
+        expect(refreshed.status).toEqual(200);
+        const rotated = await refreshed.json();
+
+        // same session, still attributed to the browser it was created from
+        const rotatedPayload = decodeJwtPayload(rotated.access_token);
+        expect(rotatedPayload.session_id).toEqual(sessionId);
+
+        const { data: session } = await suite.client.session.getOne(sessionId);
+        expect(session.userAgent).toEqual(BROWSER_USER_AGENT);
+
+        // the refresh itself is not lost: it is on the issuance
+        const row = await suite.dataSource
+            .getRepository(SessionTokenEntity)
+            .findOne({ where: { id: rotatedPayload.jti! } });
+        expect(row?.userAgent).toEqual(RENDERER_USER_AGENT);
     });
 
     it('should reject a refresh token that was explicitly revoked', async () => {

@@ -12,12 +12,14 @@ import {
     isUserFakeEmail,
 } from '@authup/core-kit';
 import { ValidatorGroup, createNanoID, extendObject } from '@authup/kit';
+import { ValidationError } from '@authup/errors';
 import { isValidupError, stringifyPath } from 'validup';
 import type { IUserIdentityRepository } from '../../entities/index.ts';
 import { IdentityProviderIdentityOperation } from '../constants.ts';
 import type { IIdentityProviderMapper } from '../mapper/index.ts';
 import { IdentityProviderMapperOperation } from '../mapper/index.ts';
 import type { IdentityProviderIdentity } from '../types.ts';
+import { IdentityProviderAccountAlreadyLinkedError } from './error.ts';
 import type { IIdentityProviderAccountManager, IIdentityProviderAccountRepository, IdentityProviderAccountManagerContext } from './types.ts';
 
 export class IdentityProviderAccountManager implements IIdentityProviderAccountManager {
@@ -76,6 +78,60 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
         await this.savePermissions(identity, account.user);
 
         return account;
+    }
+
+    async link(identity: IdentityProviderIdentity, userId: string): Promise<IdentityProviderAccount> {
+        const user = await this.userRepository.findOneById(userId);
+        if (!user) {
+            throw new ValidationError('The linking user does not exist.');
+        }
+
+        if (
+            identity.provider.realmId &&
+            user.realmId !== identity.provider.realmId
+        ) {
+            throw new ValidationError('The provider and user realm do not match.');
+        }
+
+        const providerUserName = this.pickCandidate(identity, 'name', 256) ?? identity.id.slice(0, 256);
+        const providerUserEmail = this.pickCandidate(identity, 'email', 512);
+
+        const existing = await this.repository.findOneByProviderIdentity(identity);
+        if (existing) {
+            if (existing.userId !== userId) {
+                throw new IdentityProviderAccountAlreadyLinkedError();
+            }
+
+            existing.providerUserName = providerUserName ?? existing.providerUserName;
+            existing.providerUserEmail = providerUserEmail ?? existing.providerUserEmail;
+
+            return this.repository.save(existing);
+        }
+
+        return this.repository.save({
+            providerId: identity.provider.id,
+            providerUserId: identity.id,
+            providerUserName,
+            providerUserEmail: providerUserEmail ?? undefined,
+            providerRealmId: identity.provider.realmId,
+            userId,
+            userRealmId: user.realmId ?? null,
+        });
+    }
+
+    protected pickCandidate(
+        identity: IdentityProviderIdentity,
+        key: keyof User,
+        maxLength: number,
+    ): string | null {
+        const candidates = identity.attributeCandidates?.[key] || [];
+        for (const candidate of candidates) {
+            if (typeof candidate === 'string' && candidate.length > 0) {
+                return candidate.slice(0, maxLength);
+            }
+        }
+
+        return null;
     }
 
     async saveUser(

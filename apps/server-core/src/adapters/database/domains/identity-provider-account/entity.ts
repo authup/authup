@@ -34,18 +34,20 @@ export class IdentityProviderAccountEntity implements IdentityProviderAccount {
     id: string;
 
     @Column({
-        name: 'access_token', 
-        type: 'text', 
-        nullable: true, 
-        default: null, 
+        name: 'access_token',
+        type: 'text',
+        nullable: true,
+        default: null,
+        select: false,
     })
     accessToken: string;
 
     @Column({
-        name: 'refresh_token', 
-        type: 'text', 
-        nullable: true, 
-        default: null, 
+        name: 'refresh_token',
+        type: 'text',
+        nullable: true,
+        default: null,
+        select: false,
     })
     refreshToken: string;
 
@@ -75,20 +77,22 @@ export class IdentityProviderAccountEntity implements IdentityProviderAccount {
     providerUserEmail: string;
 
     @Column({
-        name: 'expires_in', 
-        type: 'int', 
-        unsigned: true, 
-        nullable: true, 
-        default: null, 
+        name: 'expires_in',
+        type: 'int',
+        unsigned: true,
+        nullable: true,
+        default: null,
+        select: false,
     })
     expiresIn: number | null;
 
     @Column({
-        name: 'expires_at', 
-        type: 'varchar', 
-        length: 28, 
-        nullable: true, 
-        default: null, 
+        name: 'expires_at',
+        type: 'varchar',
+        length: 28,
+        nullable: true,
+        default: null,
+        select: false,
     })
     expiresAt: string | null;
 

@@ -8,6 +8,7 @@ import type { OAuth2IdentityProvider, OpenIDIdentityProvider } from '@authup/cor
 import type { ObjectLiteral, Result } from '@authup/kit';
 import type { AuthorizeParameters } from '@hapic/oauth2';
 import type { IIdentityProviderAccountManager } from '../../../account/index.ts';
+import type { IdentityProviderIdentity } from '../../../types.ts';
 
 export type OAuth2AuthorizationCodeGrantPayload = {
     code: string
@@ -18,6 +19,13 @@ export interface IOAuth2Authenticator<T extends ObjectLiteral = ObjectLiteral> {
     authenticate(params: OAuth2AuthorizationCodeGrantPayload) : Promise<T>;
 
     safeAuthenticate(params: OAuth2AuthorizationCodeGrantPayload) : Promise<Result<T>>;
+
+    /**
+     * Exchange the code and build the external identity WITHOUT touching
+     * the account store. The account-linking path decides what to do
+     * with the identity.
+     */
+    resolveIdentity(params: OAuth2AuthorizationCodeGrantPayload) : Promise<IdentityProviderIdentity>;
 
     buildRedirectURL(parameters?: Partial<AuthorizeParameters>): string;
 }

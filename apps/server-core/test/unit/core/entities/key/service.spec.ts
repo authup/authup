@@ -464,6 +464,7 @@ describe('core/entities/key/service', () => {
                     actorType: null,
                     actorId: null,
                     actorName: null,
+                    sessionId: 'f3b0dc71-0000-4000-8000-000000000002',
                     requestPath: '/keys',
                     requestMethod: 'POST',
                     requestIpAddress: '203.0.113.7',
@@ -488,6 +489,7 @@ describe('core/entities/key/service', () => {
                 actorType: IdentityType.USER,
                 actorId,
                 actorName: 'admin',
+                sessionId: 'f3b0dc71-0000-4000-8000-000000000002',
                 requestPath: '/keys',
                 requestIpAddress: '203.0.113.7',
             });

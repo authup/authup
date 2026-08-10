@@ -30,6 +30,8 @@ export const TranslatorTranslationErrorGerman : NamespaceTranslations<`${ErrorCo
     [ErrorCode.LOGIN_ATTEMPT_THROTTLED]: 'Zu viele fehlgeschlagene Anmeldeversuche. Bitte versuche es später erneut.',
     [ErrorCode.MFA_ATTEMPT_THROTTLED]: 'Zu viele fehlgeschlagene Bestätigungsversuche. Bitte versuche es später erneut.',
     [ErrorCode.MFA_NOT_CONFIGURABLE]: 'Multi-Faktor-Authentifizierung ist auf diesem Server nicht verfügbar.',
+    [ErrorCode.IDENTITY_PROVIDER_ACCOUNT_ALREADY_LINKED]: 'Dieses externe Konto ist bereits mit einem anderen Benutzer verknüpft.',
+    [ErrorCode.IDENTITY_PROVIDER_ACCOUNT_UNLINK_BLOCKED]: 'Dies ist die letzte Anmeldemöglichkeit für dieses Konto. Lege zuerst ein Passwort fest.',
 
     [ErrorCode.STORAGE_INSUFFICIENT]: 'Es ist nicht genügend Speicherplatz verfügbar, um diese Aktion auszuführen.',
 

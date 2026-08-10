@@ -14,6 +14,7 @@ It covers:
 | Account | `/account` | Edit profile basics (name, display name, email) |
 | Password | `/account/password` | Change the password |
 | Authenticators | `/account/authenticators` | Enroll and remove second factors (TOTP, recovery codes, email, passkeys) |
+| Connected accounts | `/account/connected-accounts` | Link and unlink external identity-provider accounts (e.g. Facebook, Google, any OAuth2/OIDC provider of the realm) |
 | Sessions | `/account/sessions` | See active sessions, revoke one, or log out all other devices |
 | Applications | `/account/applications` | Review and revoke granted application consents |
 
@@ -31,6 +32,24 @@ application: its `client_id` is a subject foreign key and stays null for a
 user's session.
 
 A deep link may pin the realm up front: `<publicUrl>/account?realmId=<id-or-name>`.
+
+## Connected accounts
+
+The connected-accounts page lists the realm's enabled OAuth2/OIDC identity
+providers. Connecting one sends the user through the external provider and
+binds the returned external identity to the CURRENT user, so future logins
+through that provider land on this account instead of creating a new user.
+An external identity that is already linked to another user is rejected.
+
+Disconnecting removes the link. The last linked account of a user without a
+password cannot be disconnected: it may be the only way into the account.
+Set a password first.
+
+Administrators see a user's linked accounts on the user detail page of the
+admin console (permissions `identity_provider_account_read` /
+`identity_provider_account_delete`); the API surface is
+`GET /identity-provider-accounts` and `DELETE /identity-provider-accounts/:id`,
+self-scoped for callers without the read permission.
 
 ## Restricting access
 

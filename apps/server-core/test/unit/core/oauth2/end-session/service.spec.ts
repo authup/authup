@@ -7,6 +7,7 @@
 
 import { randomUUID } from 'node:crypto';
 import type { Client, Realm } from '@authup/core-kit';
+import { EventName } from '@authup/core-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2SubKind, OAuth2TokenKind } from '@authup/specs';
 import {
@@ -21,6 +22,7 @@ import type {
     IOAuth2TokenVerifier,
 } from '../../../../../src/core/index.ts';
 import { FakeSessionManager } from '../../helpers/fake-session-manager.ts';
+import { FakeEventService } from '../../helpers/fake-event-service.ts';
 import { FakeRealmRepository } from '../../entities/realm/fake-repository.ts';
 
 const realmId = randomUUID();
@@ -76,6 +78,7 @@ function buildVerifier(behavior: () => Promise<OAuth2TokenPayload>): IOAuth2Toke
 
 describe('OAuth2EndSessionService', () => {
     let sessionManager: FakeSessionManager;
+    let eventService: FakeEventService;
 
     const sub = randomUUID();
     const sessionId = randomUUID();
@@ -96,11 +99,13 @@ describe('OAuth2EndSessionService', () => {
         sessionManager,
         clientRepository,
         realmRepository,
+        eventService,
         hintGracePeriod,
     });
 
     beforeEach(() => {
         sessionManager = new FakeSessionManager();
+        eventService = new FakeEventService();
     });
 
     it('should verify a valid id_token_hint', async () => {
@@ -437,6 +442,12 @@ describe('OAuth2EndSessionService', () => {
 
         expect(revoked).toBe(true);
         expect(sessionManager.revokeCalls).toContain(sessionId);
+
+        expect(eventService.recordCalls).toHaveLength(1);
+        expect(eventService.recordCalls[0].name).toEqual(EventName.LOGOUT);
+        expect(eventService.recordCalls[0].refId).toEqual(sessionId);
+        expect(eventService.recordCalls[0].sessionId).toEqual(sessionId);
+        expect(eventService.recordCalls[0].data).toBeUndefined();
     });
 
     it('should NOT revoke a session belonging to another subject', async () => {

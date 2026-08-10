@@ -24,6 +24,8 @@ export enum EventName {
     MFA_REMOVED = 'mfaRemoved',
     MFA_VERIFIED = 'mfaVerified',
     MFA_CHALLENGE_FAILED = 'mfaChallengeFailed',
+    IDENTITY_PROVIDER_LINKED = 'identityProviderLinked',
+    IDENTITY_PROVIDER_UNLINKED = 'identityProviderUnlinked',
     CREATED = 'created',
     UPDATED = 'updated',
     DELETED = 'deleted',
@@ -40,4 +42,5 @@ export enum EventRefType {
     USER = 'user',
     CLIENT = 'client',
     USER_AUTHENTICATOR = 'userAuthenticator',
+    IDENTITY_PROVIDER_ACCOUNT = 'identityProviderAccount',
 }

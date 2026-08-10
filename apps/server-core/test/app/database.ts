@@ -14,7 +14,20 @@ import { ConfigInjectionKey, DatabaseModule } from '../../src';
 import type { IContainer } from 'eldin';
 import { PACKAGE_PATH } from '../../src/path.ts';
 
-async function resolveDataSourceOptions(container: IContainer) {
+const DATABASE_DIRECTORY_PATH = path.join(PACKAGE_PATH, 'writable');
+const TEMPLATE_DATABASE_PATH = path.join(DATABASE_DIRECTORY_PATH, 'test.sql');
+const WORKER_DATABASE_REGEX = /^test-\d+\.sql$/;
+
+// Spec files run in parallel worker processes, so every worker gets its own
+// copy of the provisioned template database. VITEST_POOL_ID is stable per
+// pool slot: two concurrently-running files never share it, while files that
+// reuse a slot sequentially share the copy (the pre-existing single-file
+// semantics, minus the cross-worker races).
+function buildWorkerDatabasePath(): string {
+    return path.join(DATABASE_DIRECTORY_PATH, `test-${process.env.VITEST_POOL_ID || '0'}.sql`);
+}
+
+async function resolveDataSourceOptions(container: IContainer, database: string) {
     const config = container.resolve(ConfigInjectionKey);
 
     if (config.env !== EnvironmentName.TEST) {
@@ -27,7 +40,7 @@ async function resolveDataSourceOptions(container: IContainer) {
     } else {
         config.db = {
             type: 'better-sqlite3',
-            database: path.join(PACKAGE_PATH, 'writable', 'test.sql'),
+            database,
         };
     }
 
@@ -36,22 +49,29 @@ async function resolveDataSourceOptions(container: IContainer) {
 
 export function createTestDatabaseModuleForSetup(): DatabaseModule {
     return new DatabaseModule({
-        prepareBuild: resolveDataSourceOptions,
+        prepareBuild: (container) => resolveDataSourceOptions(container, TEMPLATE_DATABASE_PATH),
         async setup(_container, options) {
-            if (typeof options.database === 'string') {
+            if (options.type === 'better-sqlite3' && typeof options.database === 'string') {
                 fs.rmSync(options.database, { force: true });
                 fs.mkdirSync(path.dirname(options.database), { recursive: true });
+
+                const entries = fs.readdirSync(DATABASE_DIRECTORY_PATH);
+                for (const entry of entries) {
+                    if (WORKER_DATABASE_REGEX.test(entry)) {
+                        fs.rmSync(path.join(DATABASE_DIRECTORY_PATH, entry), { force: true });
+                    }
+                }
             } else {
                 await dropDatabase({
                     options,
-                    ifExist: true, 
+                    ifExist: true,
                 });
             }
 
             await createDatabase({
                 options,
                 synchronize: false,
-                ifNotExist: true, 
+                ifNotExist: true,
             });
         },
         async migrate(_container, dataSource) {
@@ -73,10 +93,27 @@ export function createTestDatabaseModuleForSuite(): DatabaseModule {
                 process.env.DB_DATABASE = connection.database;
             }
 
-            await resolveDataSourceOptions(container);
+            await resolveDataSourceOptions(container, buildWorkerDatabasePath());
         },
-        async setup() {
-            // do nothing — DB already exists from global setup
+        async setup(_container, options) {
+            if (options.type !== 'better-sqlite3' || typeof options.database !== 'string') {
+                return;
+            }
+
+            if (fs.existsSync(options.database)) {
+                return;
+            }
+
+            if (!fs.existsSync(TEMPLATE_DATABASE_PATH)) {
+                throw new Error(
+                    `The provisioned template database is missing (${TEMPLATE_DATABASE_PATH}). ` +
+                    'Run the suite via "npm run test --workspace=apps/server-core" ' +
+                    '(or "npx vitest run --config test/vitest.config.ts") so the global setup creates it.',
+                );
+            }
+
+            fs.mkdirSync(path.dirname(options.database), { recursive: true });
+            fs.copyFileSync(TEMPLATE_DATABASE_PATH, options.database);
         },
         async migrate(_container, dataSource) {
             await dataSource.synchronize();

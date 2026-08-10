@@ -20,3 +20,13 @@ export function isDatabaseTypeSupportedForEnvironment(type: DatabaseType, env: s
 
     return true;
 }
+
+/**
+ * Whether the driver supports row-level pessimistic locks (`FOR UPDATE`).
+ * better-sqlite3 does not (and needs none — a write transaction already
+ * serializes writers database-wide), so a `setLock('pessimistic_write')`
+ * would throw `LockNotSupportedOnGivenDriverError` there.
+ */
+export function isDatabaseTypeRowLockable(type: DatabaseType) : boolean {
+    return type === 'mysql' || type === 'postgres';
+}

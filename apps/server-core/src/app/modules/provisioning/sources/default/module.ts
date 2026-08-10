@@ -210,6 +210,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                             PermissionName.IDENTITY_PROVIDER_CREATE,
                             PermissionName.IDENTITY_PROVIDER_UPDATE,
                             PermissionName.IDENTITY_PROVIDER_DELETE,
+                            PermissionName.IDENTITY_PROVIDER_ACCOUNT_DELETE,
                             PermissionName.KEY_CREATE,
                             PermissionName.KEY_UPDATE,
                             PermissionName.KEY_DELETE,

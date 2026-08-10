@@ -18,6 +18,7 @@ import type {
     IEntityAPI,
     IEventAPI,
     IIdentityProviderAPI,
+    IIdentityProviderAccountAPI,
     IIdentityProviderRoleMappingAPI,
     IKeyAPI,
     IOAuth2AuthorizeAPI,
@@ -65,6 +66,8 @@ export interface IClient extends IBaseClient {
     readonly event : IEventAPI;
 
     readonly identityProvider : IIdentityProviderAPI;
+
+    readonly identityProviderAccount : IIdentityProviderAccountAPI;
 
     readonly identityProviderRoleMapping : IIdentityProviderRoleMappingAPI;
 

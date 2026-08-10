@@ -11,7 +11,11 @@ import type { IOAuth2TokenSigner } from '../../signer/index.ts';
 import type { IOAuth2TokenRepository } from '../../repository/index.ts';
 import type { ISessionTokenRepository } from '../../../session-token/index.ts';
 import { OAuth2BaseTokenIssuer } from '../base.ts';
-import type { IOAuth2TokenIssuer, OAuth2TokenIssuerOptions, OAuth2TokenIssuerResponse } from '../types.ts';
+import type {
+    IOAuth2TokenIssuer,
+    OAuth2TokenIssuerOptions,
+    OAuth2TokenIssuerResponse,
+} from '../types.ts';
 
 export class OAuth2RefreshTokenIssuer extends OAuth2BaseTokenIssuer implements IOAuth2TokenIssuer {
     protected repository: IOAuth2TokenRepository;
@@ -33,7 +37,9 @@ export class OAuth2RefreshTokenIssuer extends OAuth2BaseTokenIssuer implements I
         this.sessionTokenRepository = sessionTokenRepository;
     }
 
-    async issue(input: OAuth2TokenPayload = {}) : Promise<OAuth2TokenIssuerResponse> {
+    async issue(
+        input: OAuth2TokenPayload = {},
+    ) : Promise<OAuth2TokenIssuerResponse> {
         const iss = this.buildIss(input);
 
         const data = await this.repository.insert({
@@ -47,7 +53,11 @@ export class OAuth2RefreshTokenIssuer extends OAuth2BaseTokenIssuer implements I
 
         await this.repository.saveWithSignature(data, token);
 
-        if (this.sessionTokenRepository && data.session_id && data.jti && typeof data.exp === 'number') {
+        if (
+            this.sessionTokenRepository &&
+            data.session_id && data.jti &&
+            typeof data.exp === 'number'
+        ) {
             await this.sessionTokenRepository.create({
                 id: data.jti,
                 sessionId: data.session_id,

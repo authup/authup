@@ -179,6 +179,7 @@ export class AuthenticatorChallengeController {
                 ipAddress: getRequestIP(event) ?? null,
                 userAgent: getRequestHeader(event, 'user-agent') ?? null,
                 clientId: identity.clientId,
+                sessionId: sessionId ?? null,
                 ...(session ? {
                     onVerified: async () => {
                         await this.sessionManager.markMfaVerified(session);

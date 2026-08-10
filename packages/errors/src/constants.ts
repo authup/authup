@@ -32,6 +32,8 @@ export enum ErrorCode {
     LOGIN_ATTEMPT_THROTTLED = 'login_attempt_throttled',
     MFA_ATTEMPT_THROTTLED = 'mfa_attempt_throttled',
     MFA_NOT_CONFIGURABLE = 'mfa_not_configurable',
+    IDENTITY_PROVIDER_ACCOUNT_ALREADY_LINKED = 'identity_provider_account_already_linked',
+    IDENTITY_PROVIDER_ACCOUNT_UNLINK_BLOCKED = 'identity_provider_account_unlink_blocked',
 
     // Storage Codes
     STORAGE_INSUFFICIENT = 'storage_insufficient',
