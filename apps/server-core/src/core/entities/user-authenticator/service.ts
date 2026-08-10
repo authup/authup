@@ -44,7 +44,7 @@ import QRCode from 'qrcode';
 import type { AuthenticationResponseJSON, RegistrationResponseJSON } from '@simplewebauthn/server';
 import { isRealmCipherBlobError } from '../../key/index.ts';
 import type { IRealmCipher } from '../../key/index.ts';
-import type { IEventService } from '../event/index.ts';
+import type { EventRequestContext, IEventService } from '../event/index.ts';
 import type { IMailClient, IMailTemplateRenderer } from '../../mail/index.ts';
 import { MailTemplateName } from '../../mail/index.ts';
 import type { IUserRepository } from '../user/index.ts';
@@ -128,6 +128,8 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
     protected eventService?: IEventService;
 
+    protected requestContext?: () => EventRequestContext | undefined;
+
     protected mailClient?: IMailClient;
 
     protected mailTemplateRenderer?: IMailTemplateRenderer;
@@ -144,6 +146,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         this.cache = ctx.cache;
         this.cipher = ctx.cipher;
         this.eventService = ctx.eventService;
+        this.requestContext = ctx.requestContext;
         this.mailClient = ctx.mailClient;
         this.mailTemplateRenderer = ctx.mailTemplateRenderer;
         this.options = ctx.options ?? {};
@@ -1263,6 +1266,8 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         name: `${EventName}`,
         entity: UserAuthenticator,
     ): Promise<void> {
+        const requestContext = this.requestContext ? this.requestContext() : undefined;
+
         await this.eventService?.record({
             scope: EventScope.IDENTITY,
             name,
@@ -1271,6 +1276,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             actorType: IdentityType.USER,
             actorId: entity.userId,
             realmId: entity.realmId,
+            sessionId: requestContext?.sessionId ?? null,
             data: { kind: entity.kind },
         });
     }
@@ -1291,6 +1297,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             actorId: userId,
             clientId: ctx.clientId ?? null,
             realmId: entity?.realmId ?? null,
+            sessionId: ctx.sessionId ?? null,
             requestIpAddress: ctx.ipAddress ?? null,
             requestUserAgent: ctx.userAgent ?? null,
             data: { kind },

@@ -855,6 +855,7 @@ export class HTTPControllerModule {
             cache: container.resolve(CacheInjectionKey),
             cipher: new RealmCipher({ keyStore: container.resolve(OAuth2InjectionToken.KeyStore) }),
             eventService: container.resolve(DatabaseInjectionKey.EventService),
+            requestContext: useRequestEventContext,
             mailClient: container.resolve(MailInjectionKey),
             mailTemplateRenderer: container.resolve(MailTemplateRendererInjectionKey),
             options: {

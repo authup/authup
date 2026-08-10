@@ -7,7 +7,7 @@
 
 import { randomUUID } from 'node:crypto';
 import type { Key, User } from '@authup/core-kit';
-import { IdentityType, UserAuthenticatorKind } from '@authup/core-kit';
+import { EventName, IdentityType, UserAuthenticatorKind } from '@authup/core-kit';
 import {
     ErrorCode,
     isAuthupError,
@@ -39,8 +39,11 @@ import {
     USER_AUTHENTICATOR_WEBAUTHN_AUTH_CACHE_PREFIX,
     USER_AUTHENTICATOR_WEBAUTHN_REG_CACHE_PREFIX,
 } from '../../../../../src/core/entities/user-authenticator/constants.ts';
-import type { UserAuthenticatorServiceOptions } from '../../../../../src/core/entities/user-authenticator/types.ts';
-import { FakeKeyStore, FakeMailClient } from '../../helpers/index.ts';
+import type {
+    UserAuthenticatorServiceContext,
+    UserAuthenticatorServiceOptions,
+} from '../../../../../src/core/entities/user-authenticator/types.ts';
+import { FakeEventService, FakeKeyStore, FakeMailClient } from '../../helpers/index.ts';
 import { FakeUserRepository } from '../user/fake-repository.ts';
 import { FakeUserAuthenticatorRepository } from './fake-repository.ts';
 
@@ -126,7 +129,10 @@ describe('UserAuthenticatorService', () => {
         origin: 'http://localhost:3000',
     };
 
-    function buildService(options: UserAuthenticatorServiceOptions = { enabled: true }) {
+    function buildService(
+        options: UserAuthenticatorServiceOptions = { enabled: true },
+        ctx: Partial<UserAuthenticatorServiceContext> = {},
+    ) {
         return new UserAuthenticatorService({
             repository,
             userRepository,
@@ -134,6 +140,7 @@ describe('UserAuthenticatorService', () => {
             cipher: buildRealmCipher(),
             mailClient,
             mailTemplateRenderer: new MailTemplateRenderer(),
+            ...ctx,
             options: { webauthn: webauthnOptions, ...options },
         });
     }
@@ -302,6 +309,60 @@ describe('UserAuthenticatorService', () => {
 
             expect(await service.verify(userId, { kind: UserAuthenticatorKind.RECOVERY, response: code })).toBeTruthy();
             expect(await service.verify(userId, { kind: UserAuthenticatorKind.RECOVERY, response: code })).toBeFalsy();
+        });
+    });
+
+    describe('audit events', () => {
+        const requestSessionId = 'f3b0dc71-0000-4000-8000-000000000004';
+        const challengeSessionId = 'f3b0dc71-0000-4000-8000-000000000005';
+
+        let eventService: FakeEventService;
+
+        beforeEach(() => {
+            eventService = new FakeEventService();
+            service = buildService({ enabled: true }, {
+                eventService,
+                requestContext: () => ({
+                    actorType: null,
+                    actorId: null,
+                    actorName: null,
+                    sessionId: requestSessionId,
+                    requestPath: null,
+                    requestMethod: null,
+                    requestIpAddress: null,
+                    requestUserAgent: null,
+                }),
+            });
+        });
+
+        it('attributes an enrollment event to the acting session', async () => {
+            await service.enroll({ kind: UserAuthenticatorKind.RECOVERY }, makeActor());
+
+            expect(eventService.recordCalls).toHaveLength(1);
+            const [call] = eventService.recordCalls;
+            expect(call).toMatchObject({
+                name: EventName.MFA_ENROLLED,
+                sessionId: requestSessionId,
+            });
+        });
+
+        it('attributes a challenge event to the verifying session', async () => {
+            const enrolled = await service.enroll({ kind: UserAuthenticatorKind.RECOVERY }, makeActor());
+            eventService.recordCalls = [];
+
+            const verified = await service.verify(
+                userId,
+                { kind: UserAuthenticatorKind.RECOVERY, response: enrolled.meta.codes![0] },
+                { sessionId: challengeSessionId },
+            );
+            expect(verified).toBeTruthy();
+
+            expect(eventService.recordCalls).toHaveLength(1);
+            const [call] = eventService.recordCalls;
+            expect(call).toMatchObject({
+                name: EventName.MFA_VERIFIED,
+                sessionId: challengeSessionId,
+            });
         });
     });
 
