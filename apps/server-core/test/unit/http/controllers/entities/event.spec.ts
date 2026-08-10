@@ -97,6 +97,18 @@ describe('src/http/controllers/entities/event', () => {
         expect(data.every((row) => row.name === EventName.LOGIN)).toBe(true);
     });
 
+    it('filters the collection by session id and projects the column', async () => {
+        const { data } = await suite.client.event.getMany({ filters: { name: EventName.LOGIN, actorId: userId } });
+        expect(data.length).toBeGreaterThanOrEqual(1);
+
+        const [row] = data;
+        expect(row.sessionId).toBeTruthy();
+
+        const { data: filtered } = await suite.client.event.getMany({ filters: { sessionId: row.sessionId! } });
+        expect(filtered.length).toBeGreaterThanOrEqual(1);
+        expect(filtered.every((entry) => entry.sessionId === row.sessionId)).toBe(true);
+    });
+
     it('reads a single audit event', async () => {
         const { data } = await suite.client.event.getMany({ filters: { name: EventName.LOGIN, actorId: userId } });
         expect(data.length).toBeGreaterThanOrEqual(1);
