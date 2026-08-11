@@ -62,3 +62,10 @@ the "upstream candidates" below are improvements hub should adopt back**, tracke
 - Aggregation/statistics endpoints (counts over time, per-action) — both expose only
   list+filter; Authentik-style dashboards would need new query surfaces.
 - Notification rules over the event stream (authup: rejected in plan 062; hub: n/a).
+
+## Migration hygiene (drift gate, 2026-08-10)
+
+| hub | authup | difference |
+|---|---|---|
+| `.github/workflows/main.yml` migration round-trip (run / revert xN / re-run, per server app x dialect) | `tests-migrations` job | hub HAS the empty round-trip but NO drift gate and no populated round-trip on top of it. |
+| `apps/server-core/.../1784000000000-RegistryFkSetNullAndRenameAnalysis` (`RENAME TABLE analysis TO analyses`, "constraint names intact") | `1785871780234-AlignSchemaWithEntityMetadata` (the repair for the same failure class) | The carried-over names are the bug: typeorm derives `IDX_/FK_<hash>` from table+column, so a table rename changes every derived name. hub server-core drifts 14 statements per dialect (4 indexes + 3 FKs on `analyses` under `analysis`-derived hashes); messenger/storage/telemetry probed clean. Filed as PrivateAIM/hub#1823 with the authup fix as the template (`assertSchemaMatchesMetadata` gate from typeorm-extension >= 4.0.0-beta.3 — hub is already on beta.3 — plus `scripts/{assert-schema-drift,verify-latest-migration}.mjs`). |
