@@ -14,6 +14,17 @@ const schemaMapping = { realm: EntityType.REALM };
 
 export const keySchema = defineSchema<Key>({
     name: EntityType.KEY,
+    indexes: [
+        ['id'],
+        ['name', 'realmId'],
+        ['type'],
+        ['use'],
+        ['status'],
+        ['realmId'],
+        ['priority', 'realmId', 'type'],
+        ['createdAt'],
+        ['updatedAt'],
+    ],
     fields: {
         default: [
             'id',
@@ -37,7 +48,8 @@ export const keySchema = defineSchema<Key>({
             'use',
             'status',
             'realmId',
-        ], 
+        ],
+        indexed: true,
     },
     relations: { allowed: ['realm'], validate: createRelationsReadGate(schemaMapping) },
     sort: {
@@ -50,6 +62,7 @@ export const keySchema = defineSchema<Key>({
             'createdAt',
             'updatedAt',
         ],
+        indexed: true,
     },
     pagination: { maxLimit: 50 },
     schemaMapping,

@@ -9,6 +9,7 @@ import {
     Column,
     CreateDateColumn,
     Entity,
+    Index,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
@@ -27,6 +28,7 @@ export class RealmEntity implements Realm {
     })
     name: string;
 
+    @Index()
     @Column({
         name: 'display_name', 
         type: 'varchar', 
@@ -42,6 +44,7 @@ export class RealmEntity implements Realm {
     })
     description: string | null;
 
+    @Index()
     @Column({
         name: 'built_in', 
         type: 'boolean', 
@@ -49,9 +52,11 @@ export class RealmEntity implements Realm {
     })
     builtIn: boolean;
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
+    @Index()
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 }

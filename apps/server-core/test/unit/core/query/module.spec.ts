@@ -393,4 +393,39 @@ describe('core/query', () => {
             expect(findField(parsed, 'secret')).toBeUndefined();
         });
     });
+
+    // Schema index declarations (rapiq 2.0.0-beta.20): filters run in
+    // anchor mode, sort keys must equal a leftmost prefix of one declared
+    // index. Every allowed filter/sort key leads a declared index, so
+    // enforcement never rejects a query the allow-lists permit — the
+    // observable narrowing is multi-key sorts without a matching
+    // composite, which drop whole-parameter (fail-soft).
+    describe('indexed enforcement', () => {
+        it('should keep an allowed single-key filter and sort', async () => {
+            const parsed = await decodeQuery(
+                { filter: { builtIn: 'true' }, sort: '-createdAt' },
+                { schema: roleSchema },
+            );
+
+            expect(collectFieldConditions(parsed.filters)).toEqual([['builtIn', true]]);
+            expect(parsed.sorts.value).toHaveLength(1);
+        });
+
+        it('should drop a multi-key sort no declared composite serves', async () => {
+            const parsed = await decodeQuery(
+                { sort: '-createdAt,name' },
+                { schema: roleSchema },
+            );
+
+            expect(parsed.sorts.value).toHaveLength(0);
+        });
+
+        it('should describe the declared indexes', () => {
+            const description = roleSchema.describe();
+
+            expect(description.indexes).toContainEqual(['name', 'clientId', 'realmId']);
+            expect(description.filters!.indexed).toEqual('anchor');
+            expect(description.sort!.indexed).toBe(true);
+        });
+    });
 });

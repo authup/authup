@@ -14,6 +14,13 @@ const schemaMapping = { client: EntityType.CLIENT, role: EntityType.ROLE };
 
 export const clientRoleSchema = defineSchema<ClientRole>({
     name: EntityType.CLIENT_ROLE,
+    indexes: [
+        ['id'],
+        ['roleId', 'clientId'],
+        ['clientId'],
+        ['createdAt'],
+        ['updatedAt'],
+    ],
     // see user-role schema — explicit root projection for include= decodes
     fields: {
         default: [
@@ -26,9 +33,9 @@ export const clientRoleSchema = defineSchema<ClientRole>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['clientId', 'roleId'] },
+    filters: { allowed: ['clientId', 'roleId'], indexed: true },
     relations: { allowed: ['client', 'role'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
+    sort: { allowed: ['id', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

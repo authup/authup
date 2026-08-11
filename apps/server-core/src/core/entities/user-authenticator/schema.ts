@@ -14,6 +14,16 @@ const schemaMapping = { user: EntityType.USER, realm: EntityType.REALM };
 
 export const userAuthenticatorSchema = defineSchema<UserAuthenticator>({
     name: EntityType.USER_AUTHENTICATOR,
+    indexes: [
+        ['id'],
+        ['kind'],
+        ['confirmed'],
+        ['userId'],
+        ['realmId'],
+        ['createdAt'],
+        ['updatedAt'],
+        ['lastUsedAt'],
+    ],
     fields: {
         allowed: [
             'id',
@@ -27,9 +37,9 @@ export const userAuthenticatorSchema = defineSchema<UserAuthenticator>({
             'realmId',
         ],
     },
-    filters: { allowed: ['id', 'kind', 'confirmed', 'userId', 'realmId'] },
+    filters: { allowed: ['id', 'kind', 'confirmed', 'userId', 'realmId'], indexed: true },
     relations: { allowed: ['user', 'realm'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['createdAt', 'updatedAt', 'lastUsedAt'] },
+    sort: { allowed: ['createdAt', 'updatedAt', 'lastUsedAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

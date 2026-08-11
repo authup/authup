@@ -8,8 +8,9 @@
 import {
     Column,
     CreateDateColumn,
-    Entity, 
-    JoinColumn, 
+    Entity,
+    Index,
+    JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn, 
     Unique,
@@ -52,6 +53,7 @@ export class PolicyAttributeEntity implements PolicyAttribute {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @Column({ name: 'realm_id', nullable: true })
     realmId: Realm['id'] | null;
 
@@ -64,6 +66,7 @@ export class PolicyAttributeEntity implements PolicyAttribute {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @Column({ name: 'policy_id' })
     policyId: Policy['id'];
 

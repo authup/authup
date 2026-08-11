@@ -35,15 +35,18 @@ export class TrustAnchorEntity implements TrustAnchor {
     @Column({ type: 'text' })
     certificate: string;
 
+    @Index()
     @Column({
         type: 'boolean',
         default: true,
     })
     enabled: boolean;
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
+    @Index()
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 

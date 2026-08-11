@@ -9,6 +9,7 @@ import {
     Column,
     CreateDateColumn,
     Entity,
+    Index,
     JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
@@ -32,6 +33,7 @@ export class ClientScopeEntity implements ClientScope {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
+    @Index()
     @Column({
         type: 'boolean',
         default: false, 
@@ -55,6 +57,7 @@ export class ClientScopeEntity implements ClientScope {
     @JoinColumn({ name: 'client_id' })
     client: Client;
 
+    @Index()
     @Column({ name: 'client_realm_id', nullable: true })
     clientRealmId: Realm['id'] | null;
 
@@ -67,6 +70,7 @@ export class ClientScopeEntity implements ClientScope {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @Column({ name: 'scope_id' })
     scopeId: Scope['id'];
 
@@ -74,6 +78,7 @@ export class ClientScopeEntity implements ClientScope {
     @JoinColumn({ name: 'scope_id' })
     scope: Scope;
 
+    @Index()
     @Column({ name: 'scope_realm_id', nullable: true })
     scopeRealmId: Realm['id'] | null;
 

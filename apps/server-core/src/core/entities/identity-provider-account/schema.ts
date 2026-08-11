@@ -17,6 +17,15 @@ const schemaMapping = { provider: EntityType.IDENTITY_PROVIDER };
 
 export const identityProviderAccountSchema = defineSchema<IdentityProviderAccount>({
     name: EntityType.IDENTITY_PROVIDER_ACCOUNT,
+    indexes: [
+        ['id'],
+        ['providerId', 'userId'],
+        ['userId'],
+        ['userRealmId'],
+        ['providerUserId', 'providerId'],
+        ['createdAt'],
+        ['updatedAt'],
+    ],
     fields: {
         // `default` (not just `allowed`) so the adapter's plan-039
         // force-select can dedupe against an explicit projection. The
@@ -38,9 +47,9 @@ export const identityProviderAccountSchema = defineSchema<IdentityProviderAccoun
             'providerRealmId',
         ],
     },
-    filters: { allowed: [...IDENTITY_PROVIDER_ACCOUNT_FILTER_KEYS] },
+    filters: { allowed: [...IDENTITY_PROVIDER_ACCOUNT_FILTER_KEYS], indexed: true },
     relations: { allowed: ['provider'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['createdAt', 'updatedAt'] },
+    sort: { allowed: ['createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

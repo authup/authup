@@ -58,6 +58,7 @@ export class UserEntity implements User {
     })
     lastName: string | null;
 
+    @Index()
     @Column({
         name: 'display_name', 
         type: 'varchar', 
@@ -101,13 +102,14 @@ export class UserEntity implements User {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @Column({
-        name: 'reset_hash', 
-        type: 'varchar', 
-        length: 256, 
-        nullable: true, 
-        default: null, 
-        select: false, 
+        name: 'reset_hash',
+        type: 'varchar',
+        length: 256,
+        nullable: true,
+        default: null,
+        select: false,
     })
     resetHash: string | null;
 
@@ -158,21 +160,24 @@ export class UserEntity implements User {
     })
     active: boolean;
 
+    @Index()
     @Column({
-        name: 'activate_hash', 
-        type: 'varchar', 
-        length: 256, 
-        nullable: true, 
-        default: null, 
-        select: false, 
+        name: 'activate_hash',
+        type: 'varchar',
+        length: 256,
+        nullable: true,
+        default: null,
+        select: false,
     })
     activateHash: string | null;
 
     // ------------------------------------------------------------------
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
+    @Index()
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 

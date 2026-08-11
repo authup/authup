@@ -41,6 +41,7 @@ export class ConsentEntity implements Consent {
     })
     sub: string;
 
+    @Index()
     @Column({
         name: 'sub_kind', 
         type: 'varchar', 
@@ -48,6 +49,7 @@ export class ConsentEntity implements Consent {
     })
     subKind: string;
 
+    @Index()
     @Column({
         type: 'varchar',
         length: CONSENT_SCOPE_MAX_LENGTH,
@@ -65,9 +67,11 @@ export class ConsentEntity implements Consent {
     })
     expiresAt: string | null;
 
+    @Index()
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 

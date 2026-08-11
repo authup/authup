@@ -41,6 +41,7 @@ export class PolicyEntity implements Policy {
     })
     builtIn: boolean;
 
+    @Index()
     @Column({
         type: 'varchar',
         length: 64, 
@@ -76,6 +77,7 @@ export class PolicyEntity implements Policy {
     @TreeChildren({ cascade: true })
     children: PolicyEntity[];
 
+    @Index()
     @Column({ name: 'parent_id', nullable: true })
     parentId: Policy['id'] | null;
 
@@ -94,9 +96,11 @@ export class PolicyEntity implements Policy {
     @JoinColumn({ name: 'realm_id' })
     realm: Realm | null;
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
+    @Index()
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 }

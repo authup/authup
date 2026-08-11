@@ -14,6 +14,13 @@ const schemaMapping = { user: EntityType.USER, role: EntityType.ROLE };
 
 export const userRoleSchema = defineSchema<UserRole>({
     name: EntityType.USER_ROLE,
+    indexes: [
+        ['id'],
+        ['roleId', 'userId'],
+        ['userId'],
+        ['createdAt'],
+        ['updatedAt'],
+    ],
     // `default` pins an explicit root projection: an include= decodes the
     // relation's fields, and the adapter's select-replace would otherwise
     // drop every root column (incl. the id the DISTINCT wrapper needs).
@@ -28,9 +35,9 @@ export const userRoleSchema = defineSchema<UserRole>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['roleId', 'userId'] },
+    filters: { allowed: ['roleId', 'userId'], indexed: true },
     relations: { allowed: ['user', 'role'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
+    sort: { allowed: ['id', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

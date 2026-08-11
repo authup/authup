@@ -41,6 +41,7 @@ export class ClientRoleEntity implements ClientRole {
     @JoinColumn({ name: 'role_id' })
     role: Role;
 
+    @Index()
     @Column({ name: 'role_realm_id', nullable: true })
     roleRealmId: Realm['id'] | null;
 
@@ -51,6 +52,7 @@ export class ClientRoleEntity implements ClientRole {
     @JoinColumn({ name: 'role_realm_id' })
     roleRealm: Realm | null;
 
+    @Index()
     @Column({ name: 'client_id' })
     clientId: string;
 
@@ -58,6 +60,7 @@ export class ClientRoleEntity implements ClientRole {
     @JoinColumn({ name: 'client_id' })
     client: Client;
 
+    @Index()
     @Column({ name: 'client_realm_id', nullable: true })
     clientRealmId: Realm['id'] | null;
 
@@ -70,9 +73,11 @@ export class ClientRoleEntity implements ClientRole {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
+    @Index()
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 }

@@ -29,6 +29,7 @@ import { IdentityProviderEntity } from '../identity-provider/index.ts';
 
 @Entity({ name: 'auth_identity_provider_accounts' })
 @Index(['providerId', 'userId'], { unique: true })
+@Index(['providerUserId', 'providerId'])
 export class IdentityProviderAccountEntity implements IdentityProviderAccount {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -96,14 +97,17 @@ export class IdentityProviderAccountEntity implements IdentityProviderAccount {
     })
     expiresAt: string | null;
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
+    @Index()
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 
     // -----------------------------------------------
 
+    @Index()
     @Column({ name: 'user_id' })
     userId: User['id'];
 
@@ -111,6 +115,7 @@ export class IdentityProviderAccountEntity implements IdentityProviderAccount {
     @JoinColumn({ name: 'user_id' })
     user: UserEntity;
 
+    @Index()
     @Column({ name: 'user_realm_id', nullable: true })
     userRealmId: Realm['id'] | null;
 
@@ -130,6 +135,7 @@ export class IdentityProviderAccountEntity implements IdentityProviderAccount {
     @JoinColumn({ name: 'provider_id' })
     provider: IdentityProviderEntity;
 
+    @Index()
     @Column({ name: 'provider_realm_id', nullable: true })
     providerRealmId: Realm['id'] | null;
 

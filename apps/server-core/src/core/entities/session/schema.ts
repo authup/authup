@@ -19,6 +19,18 @@ const schemaMapping = {
 
 export const sessionSchema = defineSchema<Session>({
     name: EntityType.SESSION,
+    indexes: [
+        ['id'],
+        ['sub'],
+        ['subKind'],
+        ['userId'],
+        ['clientId'],
+        ['realmId'],
+        ['seenAt'],
+        ['expiresAt'],
+        ['createdAt'],
+        ['updatedAt'],
+    ],
     fields: {
         allowed: [
             'id',
@@ -38,9 +50,9 @@ export const sessionSchema = defineSchema<Session>({
             'realmId',
         ],
     },
-    filters: { allowed: [...SESSION_FILTER_KEYS] },
+    filters: { allowed: [...SESSION_FILTER_KEYS], indexed: true },
     relations: { allowed: ['realm', 'user', 'client'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['seenAt', 'expiresAt', 'createdAt', 'updatedAt'] },
+    sort: { allowed: ['seenAt', 'expiresAt', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

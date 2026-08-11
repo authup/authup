@@ -11,6 +11,7 @@ import {
     Column,
     CreateDateColumn,
     Entity,
+    Index,
     JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
@@ -130,10 +131,11 @@ export class ClientEntity implements Client {
     })
     postLogoutRedirectUri: string | null;
 
+    @Index()
     @Column({
-        name: 'access_policy_id', 
-        nullable: true, 
-        type: 'uuid', 
+        name: 'access_policy_id',
+        nullable: true,
+        type: 'uuid',
     })
     accessPolicyId: string | null;
 
@@ -178,14 +180,17 @@ export class ClientEntity implements Client {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
+    @Index()
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 
     // ------------------------------------------------------------------
 
+    @Index()
     @Column({ name: 'realm_id' })
     realmId: Realm['id'];
 

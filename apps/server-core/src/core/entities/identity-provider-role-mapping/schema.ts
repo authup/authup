@@ -14,6 +14,13 @@ const schemaMapping = { role: EntityType.ROLE, provider: EntityType.IDENTITY_PRO
 
 export const identityProviderRoleMappingSchema = defineSchema<IdentityProviderRoleMapping>({
     name: EntityType.IDENTITY_PROVIDER_ROLE_MAPPING,
+    indexes: [
+        ['id'],
+        ['providerId', 'roleId'],
+        ['roleId'],
+        ['createdAt'],
+        ['updatedAt'],
+    ],
     // see user-role schema — explicit root projection for include= decodes
     fields: {
         default: [
@@ -30,9 +37,9 @@ export const identityProviderRoleMappingSchema = defineSchema<IdentityProviderRo
             'updatedAt',
         ],
     },
-    filters: { allowed: ['roleId', 'providerId'] },
+    filters: { allowed: ['roleId', 'providerId'], indexed: true },
     relations: { allowed: ['role', 'provider'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
+    sort: { allowed: ['id', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

@@ -85,6 +85,7 @@ export class IdentityProviderAttributeMappingEntity implements IdentityProviderA
     @JoinColumn({ name: 'provider_id' })
     provider: IdentityProviderEntity;
 
+    @Index()
     @Column({ name: 'provider_realm_id' })
     providerRealmId: Realm['id'];
 

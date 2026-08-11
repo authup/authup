@@ -14,6 +14,14 @@ const schemaMapping = { realm: EntityType.REALM };
 
 export const userSchema = defineSchema<User>({
     name: EntityType.USER,
+    indexes: [
+        ['id'],
+        ['name', 'realmId'],
+        ['displayName'],
+        ['realmId'],
+        ['createdAt'],
+        ['updatedAt'],
+    ],
     fields: {
         default: [
             'id',
@@ -33,9 +41,9 @@ export const userSchema = defineSchema<User>({
         ],
         allowed: ['email'],
     },
-    filters: { allowed: ['id', 'name', 'realmId'] },
+    filters: { allowed: ['id', 'name', 'realmId'], indexed: true },
     relations: { allowed: ['realm'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['id', 'name', 'displayName', 'createdAt', 'updatedAt'] },
+    sort: { allowed: ['id', 'name', 'displayName', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

@@ -45,6 +45,7 @@ export class IdentityProviderEntity implements IdentityProvider {
     })
     displayName: string | null;
 
+    @Index()
     @Column({
         type: 'varchar',
         length: 64,
@@ -59,15 +60,18 @@ export class IdentityProviderEntity implements IdentityProvider {
     })
     preset: `${IdentityProviderPreset}` | null;
 
+    @Index()
     @Column({
         type: 'boolean',
         default: true, 
     })
     enabled: boolean;
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
+    @Index()
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 

@@ -23,6 +23,14 @@ const schemaMapping = { session: EntityType.SESSION };
  */
 export const sessionTokenSchema = defineSchema<SessionToken>({
     name: EntityType.SESSION_TOKEN,
+    indexes: [
+        ['id'],
+        ['sessionId'],
+        ['clientId'],
+        ['kind'],
+        ['expiresAt'],
+        ['createdAt'],
+    ],
     fields: {
         allowed: [
             'id',
@@ -53,13 +61,14 @@ export const sessionTokenSchema = defineSchema<SessionToken>({
             'clientId',
             'kind',
         ],
+        indexed: true,
     },
     // `client` is deliberately absent: the repository always joins a client
     // SUMMARY (id / name / displayName — the consent-list shape), so a raw
     // `?include=client` cannot force the full-column join and a self-service
     // reader still gets application names without CLIENT_READ.
     relations: { allowed: ['session'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['createdAt', 'expiresAt'] },
+    sort: { allowed: ['createdAt', 'expiresAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

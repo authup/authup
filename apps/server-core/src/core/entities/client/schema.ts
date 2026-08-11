@@ -74,6 +74,13 @@ async function secretReadGate(actor: ActorContext) : Promise<KeyValidationVerdic
 
 export const clientSchema = defineSchema<Client>({
     name: EntityType.CLIENT,
+    indexes: [
+        ['id'],
+        ['name', 'realmId'],
+        ['realmId'],
+        ['createdAt'],
+        ['updatedAt'],
+    ],
     fields: {
         default: [
             'id',
@@ -100,9 +107,9 @@ export const clientSchema = defineSchema<Client>({
         allowed: ['secret'],
         validateMany: createFieldsReadGate({ secret: secretReadGate }),
     },
-    filters: { allowed: ['id', 'name', 'realmId'] },
+    filters: { allowed: ['id', 'name', 'realmId'], indexed: true },
     relations: { allowed: ['realm', 'accessPolicy'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
+    sort: { allowed: ['id', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

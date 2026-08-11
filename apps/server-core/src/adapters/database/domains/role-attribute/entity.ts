@@ -9,6 +9,7 @@ import {
     Column,
     CreateDateColumn,
     Entity, 
+    Index,
     JoinColumn, 
     ManyToOne,
     PrimaryGeneratedColumn, 
@@ -52,6 +53,7 @@ export class RoleAttributeEntity implements RoleAttribute {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @Column({ name: 'realm_id', nullable: true })
     realmId: Realm['id'] | null;
 
@@ -62,6 +64,7 @@ export class RoleAttributeEntity implements RoleAttribute {
     @JoinColumn({ name: 'realm_id' })
     realm: RealmEntity | null;
 
+    @Index()
     @Column({ name: 'role_id' })
     roleId: Role['id'];
 
@@ -71,9 +74,11 @@ export class RoleAttributeEntity implements RoleAttribute {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
+    @Index()
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 }
