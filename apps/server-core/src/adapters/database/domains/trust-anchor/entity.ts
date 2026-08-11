@@ -20,7 +20,7 @@ import {
 import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import { RealmEntity } from '../realm/index.ts';
 
-@Unique('UQ_auth_trust_anchors_name_realm_id', ['name', 'realmId'])
+@Unique(['name', 'realmId'])
 @Entity({ name: 'auth_trust_anchors' })
 export class TrustAnchorEntity implements TrustAnchor {
     @PrimaryGeneratedColumn('uuid')
@@ -47,14 +47,11 @@ export class TrustAnchorEntity implements TrustAnchor {
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 
-    @Index('IDX_auth_trust_anchors_realm_id')
+    @Index()
     @Column({ name: 'realm_id' })
     realmId: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
-    @JoinColumn({
-        name: 'realm_id',
-        foreignKeyConstraintName: 'FK_auth_trust_anchors_realm_id',
-    })
+    @JoinColumn({ name: 'realm_id' })
     realm: RealmEntity;
 }

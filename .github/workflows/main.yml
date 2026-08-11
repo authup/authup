@@ -228,6 +228,14 @@ jobs:
                 working-directory: apps/server-core
                 run: node dist/cli/index.mjs migration run
 
+            -   name: Assert the migrated schema matches the entity metadata
+                working-directory: apps/server-core
+                run: npm run test:schema-drift
+
+            -   name: Round-trip the newest migration against populated data
+                working-directory: apps/server-core
+                run: npm run test:migration-latest
+
     tests-launcher:
         name: Test Launcher (smoke)
         needs: [build]

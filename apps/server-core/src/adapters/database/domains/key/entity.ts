@@ -25,7 +25,7 @@ import type {
 } from '@authup/core-kit';
 import { RealmEntity } from '../realm/index.ts';
 
-@Unique('UQ_auth_keys_name_realm_id', ['name', 'realmId'])
+@Unique(['name', 'realmId'])
 @Index([
     'priority',
     'realmId',
