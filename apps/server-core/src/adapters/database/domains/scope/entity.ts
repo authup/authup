@@ -26,6 +26,7 @@ export class ScopeEntity implements Scope {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
+    @Index()
     @Column({
         name: 'built_in', 
         type: 'boolean', 
@@ -55,9 +56,11 @@ export class ScopeEntity implements Scope {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
+    @Index()
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 

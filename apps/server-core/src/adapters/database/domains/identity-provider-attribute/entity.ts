@@ -8,8 +8,9 @@
 import {
     Column,
     CreateDateColumn,
-    Entity, 
-    JoinColumn, 
+    Entity,
+    Index,
+    JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn, 
     Unique,
@@ -52,6 +53,7 @@ export class IdentityProviderAttributeEntity implements IdentityProviderAttribut
 
     // ------------------------------------------------------------------
 
+    @Index()
     @Column({ name: 'provider_id' })
     providerId: IdentityProvider['id'];
 
@@ -60,6 +62,7 @@ export class IdentityProviderAttributeEntity implements IdentityProviderAttribut
     provider: IdentityProviderEntity;
 
     // ------------------------------------------------------------------
+    @Index()
     @Column({ name: 'realm_id', nullable: true })
     realmId: Realm['id'] | null;
 

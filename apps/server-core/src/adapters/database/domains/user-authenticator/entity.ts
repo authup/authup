@@ -67,12 +67,14 @@ export class UserAuthenticatorEntity implements UserAuthenticator {
     })
     codes: string | null;
 
+    @Index()
     @Column({
         type: 'boolean',
         default: false,
     })
     confirmed: boolean;
 
+    @Index()
     @Column({
         name: 'last_used_at', 
         type: 'varchar', 
@@ -84,9 +86,11 @@ export class UserAuthenticatorEntity implements UserAuthenticator {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
+    @Index()
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 
@@ -100,6 +104,7 @@ export class UserAuthenticatorEntity implements UserAuthenticator {
     @JoinColumn({ name: 'user_id' })
     user: UserEntity;
 
+    @Index()
     @Column({ name: 'realm_id', type: 'uuid' })
     realmId: Realm['id'];
 

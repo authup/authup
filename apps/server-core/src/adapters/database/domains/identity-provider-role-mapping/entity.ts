@@ -61,14 +61,17 @@ export class IdentityProviderRoleMappingEntity implements IdentityProviderRoleMa
     })
     valueIsRegex: boolean;
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
+    @Index()
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 
     // -----------------------------------------------
 
+    @Index()
     @Column({ name: 'role_id' })
     roleId: string;
 
@@ -76,6 +79,7 @@ export class IdentityProviderRoleMappingEntity implements IdentityProviderRoleMa
     @JoinColumn({ name: 'role_id' })
     role: Role;
 
+    @Index()
     @Column({ name: 'role_realm_id', nullable: true })
     roleRealmId: Realm['id'] | null;
 
@@ -93,6 +97,7 @@ export class IdentityProviderRoleMappingEntity implements IdentityProviderRoleMa
     @JoinColumn({ name: 'provider_id' })
     provider: IdentityProviderEntity;
 
+    @Index()
     @Column({ name: 'provider_realm_id' })
     providerRealmId: Realm['id'];
 

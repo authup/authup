@@ -11,6 +11,15 @@ import { EntityType } from '@authup/core-kit';
 
 export const permissionSchema = defineSchema<Permission>({
     name: EntityType.PERMISSION,
+    indexes: [
+        ['id'],
+        ['name', 'clientId', 'realmId'],
+        ['displayName'],
+        ['builtIn'],
+        ['realmId'],
+        ['createdAt'],
+        ['updatedAt'],
+    ],
     // explicit root projection so an include=permission decodes columns
     // (a schema without fields selects all as a query root but nothing as
     // an include child — see client-permission/user-role schema comments)
@@ -28,8 +37,8 @@ export const permissionSchema = defineSchema<Permission>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['id', 'displayName', 'name', 'builtIn', 'realmId'] },
+    filters: { allowed: ['id', 'displayName', 'name', 'builtIn', 'realmId'], indexed: true },
     relations: { allowed: [] },
-    sort: { allowed: ['id', 'name', 'createdAt', 'updatedAt'] },
+    sort: { allowed: ['id', 'name', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },
 });

@@ -30,11 +30,13 @@ import { dateToISOStringTransformer } from '../../helpers/index.ts';
 // references. Not cached, not realtime-broadcast: no subscriber.
 @Index(['name', 'scope'])
 @Index(['refType', 'refId'])
+@Index(['actorName', 'requestIpAddress', 'createdAt'])
 @Entity({ name: 'auth_events' })
 export class EventEntity implements Event {
     @PrimaryColumn({ type: 'uuid' })
     id: string;
 
+    @Index()
     @Column({
         type: 'varchar',
         length: 64,
@@ -56,6 +58,7 @@ export class EventEntity implements Event {
     })
     refType: string | null;
 
+    @Index()
     @Column({
         name: 'ref_id', 
         type: 'varchar', 
@@ -83,6 +86,7 @@ export class EventEntity implements Event {
     })
     sessionId: string | null;
 
+    @Index()
     @Column({
         name: 'actor_type', 
         type: 'varchar', 
@@ -101,9 +105,8 @@ export class EventEntity implements Event {
     })
     actorId: string | null;
 
-    @Index()
     @Column({
-        name: 'actor_name', 
+        name: 'actor_name',
         type: 'varchar', 
         length: 128, 
         nullable: true, 

@@ -69,6 +69,7 @@ export class IdentityProviderPermissionMappingEntity implements IdentityProvider
 
     // -----------------------------------------------
 
+    @Index()
     @Column({ name: 'permission_id' })
     permissionId: string;
 
@@ -76,6 +77,7 @@ export class IdentityProviderPermissionMappingEntity implements IdentityProvider
     @JoinColumn({ name: 'permission_id' })
     permission: Role;
 
+    @Index()
     @Column({ name: 'permission_realm_id', nullable: true })
     permissionRealmId: Realm['id'] | null;
 
@@ -93,6 +95,7 @@ export class IdentityProviderPermissionMappingEntity implements IdentityProvider
     @JoinColumn({ name: 'provider_id' })
     provider: IdentityProviderEntity;
 
+    @Index()
     @Column({ name: 'provider_realm_id' })
     providerRealmId: Realm['id'];
 

@@ -14,6 +14,14 @@ const schemaMapping = { realm: EntityType.REALM };
 
 export const scopeSchema = defineSchema<Scope>({
     name: EntityType.SCOPE,
+    indexes: [
+        ['id'],
+        ['name', 'realmId'],
+        ['builtIn'],
+        ['realmId'],
+        ['createdAt'],
+        ['updatedAt'],
+    ],
     fields: {
         allowed: [
             'id',
@@ -26,9 +34,9 @@ export const scopeSchema = defineSchema<Scope>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['id', 'builtIn', 'name', 'realmId'] },
+    filters: { allowed: ['id', 'builtIn', 'name', 'realmId'], indexed: true },
     relations: { allowed: ['realm'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['id', 'name', 'updatedAt', 'createdAt'] },
+    sort: { allowed: ['id', 'name', 'updatedAt', 'createdAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

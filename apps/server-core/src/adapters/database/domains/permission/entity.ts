@@ -28,6 +28,7 @@ export class PermissionEntity {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
+    @Index()
     @Column({
         name: 'built_in', 
         type: 'boolean', 
@@ -41,6 +42,7 @@ export class PermissionEntity {
     })
     name: string;
 
+    @Index()
     @Column({
         name: 'display_name', 
         type: 'varchar', 
@@ -92,9 +94,11 @@ export class PermissionEntity {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
+    @Index()
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 }

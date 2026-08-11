@@ -11,6 +11,14 @@ import { EntityType } from '@authup/core-kit';
 
 export const realmSchema = defineSchema<Realm>({
     name: EntityType.REALM,
+    indexes: [
+        ['id'],
+        ['name'],
+        ['builtIn'],
+        ['displayName'],
+        ['createdAt'],
+        ['updatedAt'],
+    ],
     fields: {
         allowed: [
             'id',
@@ -22,8 +30,8 @@ export const realmSchema = defineSchema<Realm>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['id', 'builtIn', 'displayName', 'name'] },
+    filters: { allowed: ['id', 'builtIn', 'displayName', 'name'], indexed: true },
     relations: { allowed: [] },
-    sort: { allowed: ['id', 'name', 'createdAt', 'updatedAt'] },
+    sort: { allowed: ['id', 'name', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },
 });

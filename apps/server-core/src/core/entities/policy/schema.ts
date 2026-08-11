@@ -14,6 +14,15 @@ const schemaMapping = { children: EntityType.POLICY, realm: EntityType.REALM };
 
 export const policySchema = defineSchema<Policy>({
     name: EntityType.POLICY,
+    indexes: [
+        ['id'],
+        ['name', 'realmId'],
+        ['type'],
+        ['parentId'],
+        ['realmId'],
+        ['createdAt'],
+        ['updatedAt'],
+    ],
     fields: {
         default: [
             'id',
@@ -29,9 +38,9 @@ export const policySchema = defineSchema<Policy>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['id', 'name', 'type', 'parentId', 'realmId'] },
+    filters: { allowed: ['id', 'name', 'type', 'parentId', 'realmId'], indexed: true },
     relations: { allowed: ['children', 'realm'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
+    sort: { allowed: ['id', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

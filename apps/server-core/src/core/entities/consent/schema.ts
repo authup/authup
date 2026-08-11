@@ -15,6 +15,16 @@ const schemaMapping = { realm: EntityType.REALM };
 
 export const consentSchema = defineSchema<Consent>({
     name: EntityType.CONSENT,
+    indexes: [
+        ['id'],
+        ['clientId', 'sub', 'subKind', 'scope'],
+        ['sub'],
+        ['subKind'],
+        ['scope'],
+        ['realmId'],
+        ['createdAt'],
+        ['updatedAt'],
+    ],
     fields: {
         // `default` (not just `allowed`) so the adapter adds an explicit
         // per-column SELECT: it populates expressionMap.selects, which
@@ -35,9 +45,9 @@ export const consentSchema = defineSchema<Consent>({
             'updatedAt',
         ],
     },
-    filters: { allowed: [...CONSENT_FILTER_KEYS] },
+    filters: { allowed: [...CONSENT_FILTER_KEYS], indexed: true },
     relations: { allowed: ['realm'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['createdAt', 'updatedAt', 'scope'] },
+    sort: { allowed: ['createdAt', 'updatedAt', 'scope'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

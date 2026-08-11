@@ -14,6 +14,14 @@ const schemaMapping = { realm: EntityType.REALM };
 
 export const trustAnchorSchema = defineSchema<TrustAnchor>({
     name: EntityType.TRUST_ANCHOR,
+    indexes: [
+        ['id'],
+        ['name', 'realmId'],
+        ['enabled'],
+        ['realmId'],
+        ['createdAt'],
+        ['updatedAt'],
+    ],
     fields: {
         allowed: [
             'id',
@@ -25,9 +33,9 @@ export const trustAnchorSchema = defineSchema<TrustAnchor>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['id', 'name', 'enabled', 'realmId'] },
+    filters: { allowed: ['id', 'name', 'enabled', 'realmId'], indexed: true },
     relations: { allowed: ['realm'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['id', 'name', 'enabled', 'createdAt', 'updatedAt'] },
+    sort: { allowed: ['id', 'name', 'enabled', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

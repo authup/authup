@@ -50,6 +50,7 @@ export class KeyEntity implements Key {
     })
     type: `${JWKType}`;
 
+    @Index()
     @Column({
         type: 'varchar',
         length: 64,
@@ -64,6 +65,7 @@ export class KeyEntity implements Key {
     })
     priority: number;
 
+    @Index()
     @Column({
         type: 'varchar',
         length: 64,
@@ -103,9 +105,11 @@ export class KeyEntity implements Key {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
+    @Index()
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 

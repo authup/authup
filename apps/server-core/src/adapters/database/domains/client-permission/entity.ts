@@ -37,6 +37,7 @@ export class ClientPermissionEntity implements ClientPermission {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @Column({ name: 'policy_id', nullable: true })
     policyId: string | null;
 
@@ -62,6 +63,7 @@ export class ClientPermissionEntity implements ClientPermission {
     @JoinColumn({ name: 'client_id' })
     client: Client;
 
+    @Index()
     @Column({ name: 'client_realm_id', nullable: true })
     clientRealmId: Client['id'] | null;
 
@@ -72,6 +74,7 @@ export class ClientPermissionEntity implements ClientPermission {
     @JoinColumn({ name: 'client_realm_id' })
     clientRealm: Realm | null;
 
+    @Index()
     @Column({ name: 'permission_id', type: 'varchar' })
     permissionId: string;
 
@@ -79,6 +82,7 @@ export class ClientPermissionEntity implements ClientPermission {
     @JoinColumn({ name: 'permission_id' })
     permission: Permission;
 
+    @Index()
     @Column({ name: 'permission_realm_id', nullable: true })
     permissionRealmId: Realm['id'] | null;
 
@@ -91,9 +95,11 @@ export class ClientPermissionEntity implements ClientPermission {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
+    @Index()
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 }

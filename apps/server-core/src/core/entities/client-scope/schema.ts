@@ -14,6 +14,12 @@ const schemaMapping = { client: EntityType.CLIENT, scope: EntityType.SCOPE };
 
 export const clientScopeSchema = defineSchema<ClientScope>({
     name: EntityType.CLIENT_SCOPE,
+    indexes: [
+        ['id'],
+        ['clientId', 'scopeId'],
+        ['scopeId'],
+        ['default'],
+    ],
     // see user-role schema — explicit root projection for include= decodes
     fields: {
         default: [
@@ -27,7 +33,7 @@ export const clientScopeSchema = defineSchema<ClientScope>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['clientId', 'scopeId', 'default'] },
+    filters: { allowed: ['clientId', 'scopeId', 'default'], indexed: true },
     relations: { allowed: ['client', 'scope'], validate: createRelationsReadGate(schemaMapping) },
     pagination: { maxLimit: 50 },
     schemaMapping,

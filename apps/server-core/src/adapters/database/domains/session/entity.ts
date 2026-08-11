@@ -65,6 +65,7 @@ export class SessionEntity implements Session {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @Column({
         name: 'expires_at', 
         type: 'varchar', 
@@ -80,6 +81,7 @@ export class SessionEntity implements Session {
     })
     refreshedAt: string | null;
 
+    @Index()
     @Column({
         name: 'seen_at', 
         type: 'varchar', 
@@ -104,14 +106,17 @@ export class SessionEntity implements Session {
     })
     authMethod: `${SessionAuthMethod}` | null;
 
+    @Index()
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
     // ------------------------------------------------------------------
 
+    @Index()
     @Column({
         name: 'client_id', 
         nullable: true, 
@@ -126,6 +131,7 @@ export class SessionEntity implements Session {
     @JoinColumn({ name: 'client_id' })
     client: ClientEntity | null;
 
+    @Index()
     @Column({
         name: 'user_id', 
         nullable: true, 
@@ -140,6 +146,7 @@ export class SessionEntity implements Session {
     @JoinColumn({ name: 'user_id' })
     user: UserEntity | null;
 
+    @Index()
     @Column({ name: 'realm_id' })
     realmId: Realm['id'];
 

@@ -41,6 +41,7 @@ export class UserRoleEntity implements UserRole {
     @JoinColumn({ name: 'role_id' })
     role: Role;
 
+    @Index()
     @Column({ name: 'role_realm_id', nullable: true })
     roleRealmId: Realm['id'] | null;
 
@@ -51,6 +52,7 @@ export class UserRoleEntity implements UserRole {
     @JoinColumn({ name: 'role_realm_id' })
     roleRealm: Realm | null;
 
+    @Index()
     @Column({ name: 'user_id' })
     userId: string;
 
@@ -58,6 +60,7 @@ export class UserRoleEntity implements UserRole {
     @JoinColumn({ name: 'user_id' })
     user: User;
 
+    @Index()
     @Column({ name: 'user_realm_id', nullable: true })
     userRealmId: Realm['id'] | null;
 
@@ -70,9 +73,11 @@ export class UserRoleEntity implements UserRole {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
+    @Index()
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 }

@@ -27,6 +27,7 @@ export class RoleEntity implements Role {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
+    @Index()
     @Column({
         name: 'built_in', 
         type: 'boolean', 
@@ -54,6 +55,7 @@ export class RoleEntity implements Role {
     })
     description: string | null;
 
+    @Index()
     @Column({
         type: 'varchar',
         length: 16,
@@ -89,9 +91,11 @@ export class RoleEntity implements Role {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
+    @Index()
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 }

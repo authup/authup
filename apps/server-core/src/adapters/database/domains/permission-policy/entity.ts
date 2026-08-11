@@ -32,9 +32,11 @@ export class PermissionPolicyEntity implements PermissionPolicy {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
+    @Index()
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 
@@ -47,6 +49,7 @@ export class PermissionPolicyEntity implements PermissionPolicy {
     @JoinColumn({ name: 'permission_id' })
     permission: Permission;
 
+    @Index()
     @Column({ name: 'permission_realm_id', nullable: true })
     permissionRealmId: Realm['id'] | null;
 
@@ -59,6 +62,7 @@ export class PermissionPolicyEntity implements PermissionPolicy {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @Column({ name: 'policy_id' })
     policyId: string;
 
@@ -66,6 +70,7 @@ export class PermissionPolicyEntity implements PermissionPolicy {
     @JoinColumn({ name: 'policy_id' })
     policy: Policy;
 
+    @Index()
     @Column({ name: 'policy_realm_id', nullable: true })
     policyRealmId: Realm['id'] | null;
 

@@ -14,6 +14,13 @@ const schemaMapping = { role: EntityType.ROLE, permission: EntityType.PERMISSION
 
 export const rolePermissionSchema = defineSchema<RolePermission>({
     name: EntityType.ROLE_PERMISSION,
+    indexes: [
+        ['id'],
+        ['permissionId', 'roleId'],
+        ['roleId'],
+        ['createdAt'],
+        ['updatedAt'],
+    ],
     // see user-role schema — explicit root projection for include= decodes
     fields: {
         default: [
@@ -28,9 +35,9 @@ export const rolePermissionSchema = defineSchema<RolePermission>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['roleId', 'permissionId'] },
+    filters: { allowed: ['roleId', 'permissionId'], indexed: true },
     relations: { allowed: ['role', 'permission'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
+    sort: { allowed: ['id', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

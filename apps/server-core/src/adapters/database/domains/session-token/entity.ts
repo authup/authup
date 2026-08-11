@@ -43,6 +43,7 @@ export class SessionTokenEntity implements SessionToken {
     // ever name one of them. Null when the issuing path knows no client (an
     // MFA-login completion rides a client-less session) and on rows that
     // predate the column.
+    @Index()
     @Column({
         name: 'client_id',
         nullable: true,
@@ -66,11 +67,12 @@ export class SessionTokenEntity implements SessionToken {
 
     // Informational lineage columns (no referential FK — the row is inventory
     // metadata; the replay reaction is session-scoped, not chain-walked).
+    @Index()
     @Column({
-        name: 'parent_id', 
-        type: 'uuid', 
-        nullable: true, 
-        default: null, 
+        name: 'parent_id',
+        type: 'uuid',
+        nullable: true,
+        default: null,
     })
     parentId: string | null;
 
@@ -122,6 +124,7 @@ export class SessionTokenEntity implements SessionToken {
     })
     expiresAt: string;
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 }

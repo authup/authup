@@ -47,7 +47,7 @@ import {
     UserRoleEntity,
 } from '../../../../../src/adapters/database/domains/index.ts';
 import { assertSchemaMatchesEntity } from '@rapiq/adapter-typeorm';
-import { assertSchemaFieldsCoverEntity, validateEntitySchemas } from '../../../../../src/app/modules/database/repositories/schema-validation.ts';
+import { assertSchemaFieldsCoverEntity, assertSchemaIndexesMatchEntity, validateEntitySchemas } from '../../../../../src/app/modules/database/repositories/schema-validation.ts';
 
 describe('app/modules/database/repositories/schema-validation', () => {
     let dataSource : DataSource;
@@ -218,5 +218,29 @@ describe('app/modules/database/repositories/schema-validation', () => {
 
         expect(() => assertSchemaFieldsCoverEntity('fields-hidden-columns', schema, dataSource.getMetadata(UserAuthenticatorEntity)))
             .not.toThrow();
+    });
+
+    it('should accept declared indexes backed by a primary key, unique or index prefix', () => {
+        const schema = defineSchema({
+            name: 'indexes-backed',
+            // [id] = PK; [name, clientId] = leftmost prefix of
+            // UNIQUE(name, clientId, realmId); [realmId] = single index
+            indexes: [['id'], ['name', 'clientId'], ['realmId']],
+        });
+
+        expect(() => assertSchemaIndexesMatchEntity('indexes-backed', schema, dataSource.getMetadata(RoleEntity)))
+            .not.toThrow();
+    });
+
+    it('should reject a declared index the entity does not back', () => {
+        const schema = defineSchema({
+            name: 'indexes-unbacked',
+            // name + realmId skips the unique's middle column (clientId),
+            // so no structure serves the combination as declared
+            indexes: [['name', 'realmId'], ['description']],
+        });
+
+        expect(() => assertSchemaIndexesMatchEntity('indexes-unbacked', schema, dataSource.getMetadata(RoleEntity)))
+            .toThrowError(/name \+ realmId.*description/);
     });
 });

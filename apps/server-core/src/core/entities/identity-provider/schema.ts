@@ -14,6 +14,15 @@ const schemaMapping = { realm: EntityType.REALM };
 
 export const identityProviderSchema = defineSchema<IdentityProvider>({
     name: EntityType.IDENTITY_PROVIDER,
+    indexes: [
+        ['id'],
+        ['name', 'realmId'],
+        ['protocol'],
+        ['enabled'],
+        ['realmId'],
+        ['createdAt'],
+        ['updatedAt'],
+    ],
     fields: {
         default: [
             'id',
@@ -27,9 +36,9 @@ export const identityProviderSchema = defineSchema<IdentityProvider>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['name', 'protocol', 'enabled', 'realmId'] },
+    filters: { allowed: ['name', 'protocol', 'enabled', 'realmId'], indexed: true },
     relations: { allowed: ['realm'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['id', 'createdAt', 'updatedAt'] },
+    sort: { allowed: ['id', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

@@ -14,6 +14,14 @@ const schemaMapping = { role: EntityType.ROLE, realm: EntityType.REALM };
 
 export const roleAttributeSchema = defineSchema<RoleAttribute>({
     name: EntityType.ROLE_ATTRIBUTE,
+    indexes: [
+        ['id'],
+        ['name', 'roleId'],
+        ['roleId'],
+        ['realmId'],
+        ['createdAt'],
+        ['updatedAt'],
+    ],
     // see user-role schema — explicit root projection for include= decodes
     fields: {
         default: [
@@ -26,7 +34,7 @@ export const roleAttributeSchema = defineSchema<RoleAttribute>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['id', 'name', 'roleId', 'realmId'] },
+    filters: { allowed: ['id', 'name', 'roleId', 'realmId'], indexed: true },
     relations: { allowed: ['role', 'realm'], validate: createRelationsReadGate(schemaMapping) },
     sort: {
         allowed: [
@@ -37,6 +45,7 @@ export const roleAttributeSchema = defineSchema<RoleAttribute>({
             'createdAt',
             'updatedAt',
         ],
+        indexed: true,
     },
     pagination: { maxLimit: 50 },
     schemaMapping,

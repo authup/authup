@@ -37,14 +37,17 @@ export class UserPermissionEntity implements UserPermission {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
+    @Index()
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 
     // ------------------------------------------------------------------
 
+    @Index()
     @Column({ name: 'policy_id', nullable: true })
     policyId: string | null;
 
@@ -63,6 +66,7 @@ export class UserPermissionEntity implements UserPermission {
     })
     realmScope: RealmScopeValue;
 
+    @Index()
     @Column({ name: 'user_id' })
     userId: User['id'];
 
@@ -70,6 +74,7 @@ export class UserPermissionEntity implements UserPermission {
     @JoinColumn({ name: 'user_id' })
     user: User;
 
+    @Index()
     @Column({ name: 'user_realm_id', nullable: true })
     userRealmId: Realm['id'] | null;
 
@@ -87,6 +92,7 @@ export class UserPermissionEntity implements UserPermission {
     @JoinColumn({ name: 'permission_id' })
     permission: Permission;
 
+    @Index()
     @Column({ name: 'permission_realm_id', nullable: true })
     permissionRealmId: Realm['id'] | null;
 

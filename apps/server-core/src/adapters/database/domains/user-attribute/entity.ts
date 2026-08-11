@@ -9,6 +9,7 @@ import {
     Column,
     CreateDateColumn,
     Entity, 
+    Index,
     JoinColumn, 
     ManyToOne,
     PrimaryGeneratedColumn, 
@@ -49,6 +50,7 @@ export class UserAttributeEntity implements UserAttribute {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @Column({ name: 'realm_id' })
     realmId: Realm['id'];
 
@@ -56,6 +58,7 @@ export class UserAttributeEntity implements UserAttribute {
     @JoinColumn({ name: 'realm_id' })
     realm: RealmEntity;
 
+    @Index()
     @Column({ name: 'user_id' })
     userId: User['id'];
 
@@ -65,9 +68,11 @@ export class UserAttributeEntity implements UserAttribute {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @CreateDateColumn({ name: 'created_at', transformer: dateToISOStringTransformer })
     createdAt: string;
 
+    @Index()
     @UpdateDateColumn({ name: 'updated_at', transformer: dateToISOStringTransformer })
     updatedAt: string;
 }

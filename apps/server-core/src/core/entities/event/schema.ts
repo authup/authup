@@ -11,6 +11,22 @@ import { EntityType } from '@authup/core-kit';
 
 export const eventSchema = defineSchema<Event>({
     name: EntityType.EVENT,
+    indexes: [
+        ['id'],
+        ['name', 'scope'],
+        ['scope'],
+        ['refType', 'refId'],
+        ['refId'],
+        ['clientId'],
+        ['sessionId'],
+        ['actorType'],
+        ['actorId'],
+        ['actorName', 'requestIpAddress', 'createdAt'],
+        ['requestIpAddress'],
+        ['realmId'],
+        ['expiring'],
+        ['createdAt'],
+    ],
     fields: {
         allowed: [
             'id',
@@ -50,9 +66,10 @@ export const eventSchema = defineSchema<Event>({
             'realmId',
             'expiring',
             'createdAt',
-        ], 
+        ],
+        indexed: true,
     },
     relations: { allowed: [] },
-    sort: { allowed: ['createdAt'] },
+    sort: { allowed: ['createdAt'], indexed: true },
     pagination: { maxLimit: 50 },
 });
