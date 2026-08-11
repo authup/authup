@@ -67,7 +67,7 @@
         "@iconify-json/fa6-solid": "^1.2.0",
         "@ilingo/validup": "^1.1.0",
         "@posva/event-emitter": "^1.0.3",
-        "@rapiq/core": "^2.0.0-beta.19",
+        "@rapiq/core": "^2.0.0-beta.20",
         "@simplewebauthn/browser": "^13.3.0",
         "@validup/zod": "^1.0.0",
         "@vuecs/icons-font-awesome": "^1.3.0",

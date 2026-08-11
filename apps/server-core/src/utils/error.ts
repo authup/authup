@@ -12,6 +12,7 @@ import {
     isAuthupError, 
 } from '@authup/errors';
 import { isHTTPError } from '@ebec/http';
+import { CodecError, ParseError } from '@rapiq/core';
 import { EntityRelationLookupError } from 'typeorm-extension';
 import { buildErrorMessageForAttributes, isValidupError, stringifyPath } from 'validup';
 import { hasOwnProperty, isObject } from '@authup/kit';
@@ -22,9 +23,10 @@ import { hasOwnProperty, isObject } from '@authup/kit';
  * 1. AuthupError instance              → returned as-is
  * 2. EntityRelationLookupError         → BAD_REQUEST AuthupError
  * 3. validup Issue error               → BAD_REQUEST AuthupError carrying issues
- * 4. foreign @ebec/http HTTPError      → AuthupError with the closest semantic code
- * 5. driver error w/ a recognised code → ENTITY_CONFLICT or STORAGE_INSUFFICIENT
- * 6. anything else                     → INTERNAL_ERROR AuthupError
+ * 4. rapiq ParseError / CodecError     → BAD_REQUEST AuthupError (client wire query)
+ * 5. foreign @ebec/http HTTPError      → AuthupError with the closest semantic code
+ * 6. driver error w/ a recognised code → ENTITY_CONFLICT or STORAGE_INSUFFICIENT
+ * 7. anything else                     → INTERNAL_ERROR AuthupError
  *
  * The HTTP-status concern is handled separately by `httpStatusFromCode` in
  * the adapter — this function only assigns a semantic `code`.
@@ -52,6 +54,14 @@ export function sanitizeError(input: unknown): AuthupError {
 
         error.issues.push(...input.issues);
         return error;
+    }
+
+    if (input instanceof ParseError || input instanceof CodecError) {
+        return new AuthupError({
+            code: ErrorCode.BAD_REQUEST,
+            message: input.message,
+            stack: input.stack,
+        });
     }
 
     if (isHTTPError(input)) {
