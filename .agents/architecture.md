@@ -325,6 +325,35 @@ usable at the service level and nothing in core depends on TypeORM:
   must be overridden anyway, and a boot-populated registry breaks
   DataSource-free decode (unit tests) plus `vi.mock` hoisting; metadata
   VALIDATION of the static schemas is the part worth keeping.
+- **Index declarations — indexed filters and sort (rapiq 2.0.0-beta.20,
+  tada5hi/rapiq#895):** every registered schema declares `indexes` (the
+  property-path sequences of the entity structures — PK, uniques,
+  indexes — whose LEADING column sits in the schema's filter/sort
+  vocabulary) and opts into `filters: { indexed: true }` (anchor mode:
+  every AND group of the final parsed tree needs one conjunct whose
+  field leads a declared index) plus `sort: { indexed: true }`
+  (requested key sequence must equal a leftmost prefix of one index).
+  **Design invariant: every allowed filter and sort key leads a
+  declared index**, backed by a real entity index — so enforcement can
+  never reject a query the allow-lists permit. Single-key filters and
+  sorts behave exactly as before; the one observable narrowing is a
+  multi-key sort with no matching composite prefix, which drops
+  whole-parameter (fail-soft — no schema declares a sort default, so
+  the query decodes unsorted). The corollary is a standing rule:
+  **adding a key to a schema's filters/sort allow-list requires a
+  backing entity index** (and its generated migration) — with none, an
+  unanchored filter on that key throws at decode (no schema declares a
+  filters default, so the filters drop path always escalates to a
+  throw), surfacing as 400 via `sanitizeError`'s rapiq
+  ParseError/CodecError → BAD_REQUEST mapping (`utils/error.ts`).
+  `assertSchemaIndexesMatchEntity` (same boot pass as the
+  field-coverage assert) fails the boot when a declared sequence is not
+  a leftmost prefix of a real PK/unique/index — an authup-side assert
+  because `assertSchemaMatchesEntity` does not cover `indexes` yet
+  (tada5hi/rapiq#898 tracks folding it upstream).
+  Structures whose leading column is not queryable (session
+  `ipAddress`/`userAgent`, `user.email`) stay undeclared on purpose:
+  the declaration describes the query surface, not the whole table.
 - **Extension point** — a persistence layer MAY extend the core registry with
   storage-derived schemas (`@rapiq/adapter-typeorm`'s
   `defineSchemaRegistryWithDataSource` with the `registry` option;
