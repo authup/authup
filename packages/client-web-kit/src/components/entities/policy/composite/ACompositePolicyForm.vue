@@ -79,7 +79,7 @@ export default defineComponent({
 
             return defineQuery<Policy & { parentId?: string | null }>({
                 filters,
-                sort: { name: 'ASC' },
+                sorts: { name: 'ASC' },
             });
         });
 

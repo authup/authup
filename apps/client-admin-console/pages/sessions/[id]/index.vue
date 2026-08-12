@@ -158,12 +158,12 @@ export default defineComponent({
 
         const tokensQuery = defineQuery<SessionToken>({
             filters: { sessionId: route.params.id as string },
-            sort: { createdAt: 'DESC' },
+            sorts: { createdAt: 'DESC' },
         });
 
         const eventsQuery = defineQuery<EventEntity>({
             filters: { sessionId: route.params.id as string },
-            sort: { createdAt: 'DESC' },
+            sorts: { createdAt: 'DESC' },
         });
 
         const tokenStatus = (row: SessionToken) : string => {

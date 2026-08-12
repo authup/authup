@@ -54,7 +54,7 @@ export default defineComponent({
         // client summary (id/name/displayName), so no relation is requested.
         const query = computed(() => defineQuery<Consent>({
             filters: { sub: userId.value ?? undefined, subKind: 'user' },
-            sort: { createdAt: 'DESC' },
+            sorts: { createdAt: 'DESC' },
         }));
 
         const translations = useTranslations([

@@ -40,7 +40,7 @@ export const userPermissionSchema = defineSchema<UserPermission>({
     },
     filters: { allowed: ['userId', 'permissionId', 'id', 'userRealmId', 'permissionRealmId', 'policyId'], indexed: true },
     relations: { allowed: ['user', 'permission'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['id', 'createdAt', 'updatedAt'], indexed: true },
+    sorts: { allowed: ['id', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

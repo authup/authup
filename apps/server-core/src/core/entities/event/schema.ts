@@ -71,6 +71,6 @@ export const eventSchema = defineSchema<Event>({
         indexed: true,
     },
     relations: { allowed: [] },
-    sort: { allowed: ['createdAt'], indexed: true },
+    sorts: { allowed: ['createdAt'], indexed: true },
     pagination: { maxLimit: 50 },
 });

@@ -77,7 +77,7 @@ export default defineComponent({
 
             try {
                 const response = await client.realm.getMany({
-                    sort: { name: 'ASC' },
+                    sorts: { name: 'ASC' },
                     pagination: { limit: 100 },
                 });
 

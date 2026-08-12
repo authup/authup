@@ -35,7 +35,7 @@ export const trustAnchorSchema = defineSchema<TrustAnchor>({
     },
     filters: { allowed: ['id', 'name', 'enabled', 'realmId'], indexed: true },
     relations: { allowed: ['realm'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['id', 'name', 'enabled', 'createdAt', 'updatedAt'], indexed: true },
+    sorts: { allowed: ['id', 'name', 'enabled', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

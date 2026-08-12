@@ -40,6 +40,6 @@ export const permissionSchema = defineSchema<Permission>({
     },
     filters: { allowed: ['id', 'displayName', 'name', 'builtIn', 'realmId', 'clientId'], indexed: true },
     relations: { allowed: [] },
-    sort: { allowed: ['id', 'name', 'createdAt', 'updatedAt'], indexed: true },
+    sorts: { allowed: ['id', 'name', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },
 });

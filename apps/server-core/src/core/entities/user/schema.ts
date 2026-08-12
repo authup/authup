@@ -44,7 +44,7 @@ export const userSchema = defineSchema<User>({
     },
     filters: { allowed: ['id', 'name', 'displayName', 'realmId', 'active'], indexed: true },
     relations: { allowed: ['realm'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['id', 'name', 'displayName', 'createdAt', 'updatedAt'], indexed: true },
+    sorts: { allowed: ['id', 'name', 'displayName', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

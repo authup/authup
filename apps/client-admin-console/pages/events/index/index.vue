@@ -40,7 +40,7 @@ export default defineComponent({
             emit('failed', e);
         };
 
-        const query = defineQuery<EventEntity>({ sort: { createdAt: 'DESC' } });
+        const query = defineQuery<EventEntity>({ sorts: { createdAt: 'DESC' } });
 
         const translations = useTranslations([
             {

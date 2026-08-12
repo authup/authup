@@ -36,7 +36,7 @@ export const userAttributeSchema = defineSchema<UserAttribute>({
     },
     filters: { allowed: ['id', 'name', 'userId', 'realmId'], indexed: true },
     relations: { allowed: ['user', 'realm'], validate: createRelationsReadGate(schemaMapping) },
-    sort: {
+    sorts: {
         allowed: [
             'id',
             'name',

@@ -70,7 +70,7 @@ export const sessionTokenSchema = defineSchema<SessionToken>({
     // `?include=client` cannot force the full-column join and a self-service
     // reader still gets application names without CLIENT_READ.
     relations: { allowed: ['session'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['createdAt', 'expiresAt'], indexed: true },
+    sorts: { allowed: ['createdAt', 'expiresAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

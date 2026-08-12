@@ -53,7 +53,7 @@ export const keySchema = defineSchema<Key>({
         indexed: true,
     },
     relations: { allowed: ['realm'], validate: createRelationsReadGate(schemaMapping) },
-    sort: {
+    sorts: {
         allowed: [
             'id',
             'name',

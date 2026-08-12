@@ -41,7 +41,7 @@ export const roleSchema = defineSchema<Role>({
     },
     filters: { allowed: ['id', 'builtIn', 'name', 'displayName', 'target', 'clientId', 'realmId'], indexed: true },
     relations: { allowed: ['realm'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['id', 'name', 'updatedAt', 'createdAt'], indexed: true },
+    sorts: { allowed: ['id', 'name', 'updatedAt', 'createdAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });
