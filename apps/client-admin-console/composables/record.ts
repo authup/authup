@@ -60,7 +60,7 @@ export function buildRecordHeading(entity: RecordNamed) : RecordHeading {
         return { label, subTitle: description };
     }
 
-    if (label !== name) {
+    if (label !== name && name.length > 0) {
         return { label, subTitle: name };
     }
 
