@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Role } from '@authup/core-kit';
+import type { Role, Session } from '@authup/core-kit';
 import type { FakeRequest } from '@authup/core-http-kit/testing';
 import {
     contains,
@@ -71,11 +71,43 @@ function mountCollection(
     }, overrides);
 }
 
-function listRequests(requests: FakeRequest[]) : URL[] {
+/**
+ * A collection over an entity whose schema allows no search field beyond
+ * `name`, so the default condition stays a plain `contains`.
+ */
+function mountSessionCollection() {
+    const component = defineComponent({
+        props: defineEntityCollectionVProps<Session>(),
+        emits: defineEntityCollectionVEmitOptions<Session>(),
+        setup(props, setup) {
+            const manager = defineEntityCollectionManager<'session'>({
+                type: 'session',
+                props,
+                setup,
+                socket: false,
+            });
+
+            return () => manager.render();
+        },
+    });
+
+    return mountKitComponent(component, {}, {
+        'GET /sessions': () => ({
+            data: [],
+            meta: {
+                total: 0, 
+                limit: 10, 
+                offset: 0, 
+            }, 
+        }), 
+    });
+}
+
+function listRequests(requests: FakeRequest[], pathname = '/roles') : URL[] {
     return requests
         .filter((request) => request.method === 'GET')
         .map((request) => new URL(request.url, 'http://fake.test'))
-        .filter((url) => url.pathname === '/roles');
+        .filter((url) => url.pathname === pathname);
 }
 
 describe('defineEntityCollectionManager (rapiq IR composition)', () => {
@@ -115,7 +147,7 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
         const requests = listRequests(httpClient.requests);
         expect(requests).toHaveLength(2);
         expect(requests[1].searchParams.get('filter'))
-            .toEqual("and(contains(name,'foo'),in(realmId,'realm-1',null))");
+            .toEqual("and(or(contains(name,'foo'),contains(displayName,'foo')),in(realmId,'realm-1',null))");
 
         // even an input targeting the scoped field only narrows further
         await (wrapper.vm as any).load({ filters: { realmId: 'other' } });
@@ -138,7 +170,7 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
         const requests = listRequests(httpClient.requests);
         expect(requests).toHaveLength(3);
         expect(requests[2].searchParams.get('filter'))
-            .toEqual("and(contains(name,'foo'),in(realmId,'realm-1',null))");
+            .toEqual("and(or(contains(name,'foo'),contains(displayName,'foo')),in(realmId,'realm-1',null))");
         expect(requests[2].searchParams.get('page[offset]')).toEqual('10');
     });
 
@@ -152,6 +184,17 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
         const requests = listRequests(httpClient.requests);
         expect(requests[2].searchParams.get('filter'))
             .toEqual("in(realmId,'realm-1',null)");
+    });
+
+    it('searches name alone for an entity carrying no extra search field', async () => {
+        const { wrapper, httpClient } = mountSessionCollection();
+        await flushPromises();
+
+        await (wrapper.vm as any).load({ filters: { name: 'foo' } });
+
+        const requests = listRequests(httpClient.requests, '/sessions');
+        expect(requests[1].searchParams.get('filter'))
+            .toEqual("contains(name,'foo')");
     });
 
     it('queryFilters may return a compound condition (OR search)', async () => {

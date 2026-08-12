@@ -24,7 +24,6 @@ import type {
 } from '@rapiq/core';
 import {
     Query,
-    contains,
     defineFilters,
     definePagination,
     isQuery,
@@ -68,6 +67,7 @@ import type {
 } from './types';
 import {
     ListHandlers,
+    buildEntitySearchCondition,
     mergeEntityCollectionRenderOptions,
 } from './utils';
 import { isError } from '@authup/errors';
@@ -190,10 +190,11 @@ function create<
                 // marker (`~text`) is NOT interpreted by the rapiq v2 IR
                 // builder (it becomes eq('name','~text')), so build the
                 // condition explicitly: the queryFilters hook when provided
-                // (richer multi-field search), else a default substring match.
+                // (anything richer), else a substring match over the entity's
+                // searchable fields.
                 const transformed = context.queryFilters ?
                     context.queryFilters(input.filters.name) :
-                    contains('name', input.filters.name);
+                    buildEntitySearchCondition(context.type, input.filters.name);
                 filtersOverride = defineFilters(
                     transformed as FiltersBuildInput | ICondition,
                 );
