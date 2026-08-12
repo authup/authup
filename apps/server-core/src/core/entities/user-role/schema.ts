@@ -37,7 +37,7 @@ export const userRoleSchema = defineSchema<UserRole>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['roleId', 'userId', 'createdAt', 'id', 'updatedAt', 'roleRealmId', 'userRealmId'], indexed: true },
+    filters: { allowed: ['roleId', 'userId', 'id', 'roleRealmId', 'userRealmId'], indexed: true },
     relations: { allowed: ['user', 'role'], validate: createRelationsReadGate(schemaMapping) },
     sort: { allowed: ['id', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },

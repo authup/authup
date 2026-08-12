@@ -383,9 +383,7 @@ usable at the service level and nothing in core depends on TypeORM:
 - **The queryable surface is deliberately wider than the console uses.**
   The consoles are one client; the API is public, so a column that is
   readable, already index-leading and meaningful to an integration is
-  filterable even when no authup page filters by it. That covers
-  `createdAt`/`updatedAt` on every entity (incremental sync and
-  date-range audit queries are the most common integration need), `id`
+  filterable even when no authup page filters by it. That covers `id`
   on the junctions, the junction owner-realm keys and `policyId` (which
   got their indexes with the FK sweep), the sortable-but-not-filterable
   columns (`session.seenAt`/`expiresAt`, `sessionToken.expiresAt`,
@@ -395,7 +393,32 @@ usable at the service level and nothing in core depends on TypeORM:
   on every declared key, so widening was declaration-only. The rule for
   adding more: a column may become filterable when it is already
   readable (never a `select: false` secret, which is why `user.email`
-  and the credential columns stay out) and leads a real index.
+  and the credential columns stay out), leads a real index, and
+  **compares correctly once bound** (see below).
+- **`createdAt`/`updatedAt` are deliberately NOT filterable**, despite
+  being indexed, sortable and the most obvious thing an integration
+  would ask for. They are `@CreateDateColumn`/`@UpdateDateColumn`
+  timestamps carrying `dateToISOStringTransformer`, and a transformer
+  applies on read but NOT to a WHERE bind, so the ISO string a client
+  sends is compared against the driver's native storage format.
+  Measured across all three dialects: on **sqlite** the comparison
+  INVERTS (a row created now does not match `> 1h ago`, and does match
+  `< 1h ago`, because the stored `'2026-08-12 10:16:44'` sorts below
+  any `'...T...Z'` string on the `' '` vs `'T'` byte); on **postgres
+  and mysql** range comparison is correct but equality against the
+  exact value the API returned still matches nothing
+  (precision/format), and a malformed date reaches the driver and
+  surfaces as a **500**. A filter that silently returns the wrong rows
+  is worse than one that does not exist, so the surface stops at the
+  `varchar(28)` ISO columns (`session.expiresAt`/`seenAt`,
+  `sessionToken.expiresAt`, `userAuthenticator.lastUsedAt`), which are
+  written with `toISOString()` and compare as plain strings on every
+  dialect. `event.createdAt` predates this and stays filterable,
+  carrying the same caveat. Sorting is unaffected: it compares the
+  column against itself. Pinned by
+  `test/unit/http/controllers/entities/query-surface.spec.ts`, which
+  EXECUTES the surface (decoding only proves a query is legal, not
+  that it binds correctly) and runs under all three dialects.
 - **`fields` needs no such review — it is complete by construction.**
   `assertSchemaFieldsCoverEntity` fails the boot when any selectable
   column is missing from `fields.default` ∪ `fields.allowed`, so the

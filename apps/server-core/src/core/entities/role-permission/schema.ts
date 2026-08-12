@@ -38,7 +38,7 @@ export const rolePermissionSchema = defineSchema<RolePermission>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['roleId', 'permissionId', 'createdAt', 'id', 'updatedAt', 'roleRealmId', 'permissionRealmId', 'policyId'], indexed: true },
+    filters: { allowed: ['roleId', 'permissionId', 'id', 'roleRealmId', 'permissionRealmId', 'policyId'], indexed: true },
     relations: { allowed: ['role', 'permission'], validate: createRelationsReadGate(schemaMapping) },
     sort: { allowed: ['id', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },

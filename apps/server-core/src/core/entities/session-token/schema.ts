@@ -61,7 +61,6 @@ export const sessionTokenSchema = defineSchema<SessionToken>({
             'sessionId',
             'clientId',
             'kind',
-            'createdAt',
             'expiresAt',
         ],
         indexed: true,

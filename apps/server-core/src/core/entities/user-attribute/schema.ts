@@ -34,7 +34,7 @@ export const userAttributeSchema = defineSchema<UserAttribute>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['id', 'name', 'userId', 'realmId', 'createdAt', 'updatedAt'], indexed: true },
+    filters: { allowed: ['id', 'name', 'userId', 'realmId'], indexed: true },
     relations: { allowed: ['user', 'realm'], validate: createRelationsReadGate(schemaMapping) },
     sort: {
         allowed: [

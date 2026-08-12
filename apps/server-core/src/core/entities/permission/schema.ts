@@ -38,7 +38,7 @@ export const permissionSchema = defineSchema<Permission>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['id', 'displayName', 'name', 'builtIn', 'realmId', 'createdAt', 'updatedAt', 'clientId'], indexed: true },
+    filters: { allowed: ['id', 'displayName', 'name', 'builtIn', 'realmId', 'clientId'], indexed: true },
     relations: { allowed: [] },
     sort: { allowed: ['id', 'name', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },

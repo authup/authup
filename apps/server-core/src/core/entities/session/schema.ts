@@ -52,7 +52,7 @@ export const sessionSchema = defineSchema<Session>({
             'realmId',
         ],
     },
-    filters: { allowed: [...SESSION_FILTER_KEYS, 'createdAt', 'expiresAt', 'seenAt', 'updatedAt'], indexed: true },
+    filters: { allowed: [...SESSION_FILTER_KEYS, 'expiresAt', 'seenAt'], indexed: true },
     relations: { allowed: ['realm', 'user', 'client'], validate: createRelationsReadGate(schemaMapping) },
     sort: { allowed: ['seenAt', 'expiresAt', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },

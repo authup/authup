@@ -48,7 +48,7 @@ export const identityProviderAccountSchema = defineSchema<IdentityProviderAccoun
             'providerRealmId',
         ],
     },
-    filters: { allowed: [...IDENTITY_PROVIDER_ACCOUNT_FILTER_KEYS, 'createdAt', 'updatedAt', 'providerRealmId'], indexed: true },
+    filters: { allowed: [...IDENTITY_PROVIDER_ACCOUNT_FILTER_KEYS, 'providerRealmId'], indexed: true },
     relations: { allowed: ['provider'], validate: createRelationsReadGate(schemaMapping) },
     sort: { allowed: ['createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },

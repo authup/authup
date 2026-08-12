@@ -37,7 +37,7 @@ export const userAuthenticatorSchema = defineSchema<UserAuthenticator>({
             'realmId',
         ],
     },
-    filters: { allowed: ['id', 'kind', 'confirmed', 'userId', 'realmId', 'createdAt', 'lastUsedAt', 'updatedAt'], indexed: true },
+    filters: { allowed: ['id', 'kind', 'confirmed', 'userId', 'realmId', 'lastUsedAt'], indexed: true },
     relations: { allowed: ['user', 'realm'], validate: createRelationsReadGate(schemaMapping) },
     sort: { allowed: ['createdAt', 'updatedAt', 'lastUsedAt'], indexed: true },
     pagination: { maxLimit: 50 },
