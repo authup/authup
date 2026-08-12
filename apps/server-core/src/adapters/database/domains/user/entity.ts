@@ -154,6 +154,7 @@ export class UserEntity implements User {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @Column({
         type: 'boolean',
         default: true,

@@ -29,6 +29,7 @@ export const sessionTokenSchema = defineSchema<SessionToken>({
         ['clientId'],
         ['kind'],
         ['expiresAt'],
+        ['sessionId', 'createdAt'],
         ['createdAt'],
     ],
     fields: {
@@ -60,6 +61,8 @@ export const sessionTokenSchema = defineSchema<SessionToken>({
             'sessionId',
             'clientId',
             'kind',
+            'createdAt',
+            'expiresAt',
         ],
         indexed: true,
     },

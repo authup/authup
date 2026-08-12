@@ -380,6 +380,39 @@ usable at the service level and nothing in core depends on TypeORM:
   registered schema, fails when an allowed filter/sort key leads
   nothing, and decodes both search shapes per schema through the real
   codec.
+- **The queryable surface is deliberately wider than the console uses.**
+  The consoles are one client; the API is public, so a column that is
+  readable, already index-leading and meaningful to an integration is
+  filterable even when no authup page filters by it. That covers
+  `createdAt`/`updatedAt` on every entity (incremental sync and
+  date-range audit queries are the most common integration need), `id`
+  on the junctions, the junction owner-realm keys and `policyId` (which
+  got their indexes with the FK sweep), the sortable-but-not-filterable
+  columns (`session.seenAt`/`expiresAt`, `sessionToken.expiresAt`,
+  `key.priority`, `userAuthenticator.lastUsedAt`), and the state flags
+  `user.active`, `client.active`/`builtIn`, `policy.builtIn`. Most of
+  those cost no DDL at all — the invariant had already forced an index
+  on every declared key, so widening was declaration-only. The rule for
+  adding more: a column may become filterable when it is already
+  readable (never a `select: false` secret, which is why `user.email`
+  and the credential columns stay out) and leads a real index.
+- **`fields` needs no such review — it is complete by construction.**
+  `assertSchemaFieldsCoverEntity` fails the boot when any selectable
+  column is missing from `fields.default` ∪ `fields.allowed`, so the
+  only absences are the automatically-exempt `select: false` columns
+  and the explicit `SCHEMA_FIELD_EXCLUSIONS` entries.
+- **(filter, sort) composites on the growing tables** — `auth_events`
+  `(realm_id, created_at)`, `auth_sessions` `(user_id, seen_at)` and
+  `(realm_id, seen_at)`, `auth_session_tokens` `(session_id,
+  created_at)`. Each mirrors a real list page (filter by realm/owner,
+  order by recency, take a page), turning "match, sort everything,
+  discard" into an ordered index scan that stops at the page size. They
+  are additive: the single-column indexes stay, both because a
+  composite that also served a MySQL foreign key would make dropping
+  the single a constraint-dependency problem (see the `down()` trap in
+  conventions.md), and because the singles still serve un-sorted
+  lookups. Only these three tables grow without bound, so only these
+  three carry the extra write cost.
 - **Extension point** — a persistence layer MAY extend the core registry with
   storage-derived schemas (`@rapiq/adapter-typeorm`'s
   `defineSchemaRegistryWithDataSource` with the `registry` option;

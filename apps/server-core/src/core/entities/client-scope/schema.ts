@@ -19,6 +19,8 @@ export const clientScopeSchema = defineSchema<ClientScope>({
         ['clientId', 'scopeId'],
         ['scopeId'],
         ['default'],
+        ['clientRealmId'],
+        ['scopeRealmId'],
     ],
     // see user-role schema — explicit root projection for include= decodes
     fields: {
@@ -33,7 +35,7 @@ export const clientScopeSchema = defineSchema<ClientScope>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['clientId', 'scopeId', 'default'], indexed: true },
+    filters: { allowed: ['clientId', 'scopeId', 'default', 'id', 'clientRealmId', 'scopeRealmId'], indexed: true },
     relations: { allowed: ['client', 'scope'], validate: createRelationsReadGate(schemaMapping) },
     pagination: { maxLimit: 50 },
     schemaMapping,

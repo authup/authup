@@ -31,6 +31,7 @@ import { dateToISOStringTransformer } from '../../helpers/index.ts';
 @Index(['name', 'scope'])
 @Index(['refType', 'refId'])
 @Index(['actorName', 'requestIpAddress', 'createdAt'])
+@Index(['realmId', 'createdAt'])
 @Entity({ name: 'auth_events' })
 export class EventEntity implements Event {
     @PrimaryColumn({ type: 'uuid' })

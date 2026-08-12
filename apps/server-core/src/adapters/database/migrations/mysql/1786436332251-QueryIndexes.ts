@@ -438,6 +438,30 @@ export class QueryIndexes1786436332251 implements MigrationInterface {
         await queryRunner.query(`
             CREATE INDEX \`IDX_5b1ba660790692f625c7a777d3\` ON \`auth_identity_providers\` (\`display_name\`)
         `);
+        await queryRunner.query(`
+            CREATE INDEX \`IDX_6f92ed4d9d7499b1dff735133c\` ON \`auth_policies\` (\`built_in\`)
+        `);
+        await queryRunner.query(`
+            CREATE INDEX \`IDX_dd5af3e4a6f6157685f64d2c80\` ON \`auth_clients\` (\`active\`)
+        `);
+        await queryRunner.query(`
+            CREATE INDEX \`IDX_b532f2eeaa9eb2b5c3ac65459b\` ON \`auth_clients\` (\`built_in\`)
+        `);
+        await queryRunner.query(`
+            CREATE INDEX \`IDX_61132a880199e367d87d4f51b5\` ON \`auth_users\` (\`active\`)
+        `);
+        await queryRunner.query(`
+            CREATE INDEX \`IDX_50bf2034bc55ce71102900f5ae\` ON \`auth_sessions\` (\`realm_id\`, \`seen_at\`)
+        `);
+        await queryRunner.query(`
+            CREATE INDEX \`IDX_1ab6178864ca0fd7d23efe6abf\` ON \`auth_sessions\` (\`user_id\`, \`seen_at\`)
+        `);
+        await queryRunner.query(`
+            CREATE INDEX \`IDX_6ff3a9ac44beabcc3a9642f0f9\` ON \`auth_events\` (\`realm_id\`, \`created_at\`)
+        `);
+        await queryRunner.query(`
+            CREATE INDEX \`IDX_74d37f543d9f9476b4b232c00b\` ON \`auth_session_tokens\` (\`session_id\`, \`created_at\`)
+        `);
         // Hand-authored: drop the three orphaned legacy tables. Each predates a
         // rework that replaced it and nothing has referenced them since:
         // auth_authorization_codes (codes moved to cache blobs),
@@ -457,6 +481,30 @@ export class QueryIndexes1786436332251 implements MigrationInterface {
         `);
     }
     public async down(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`
+            DROP INDEX \`IDX_74d37f543d9f9476b4b232c00b\` ON \`auth_session_tokens\`
+        `);
+        await queryRunner.query(`
+            DROP INDEX \`IDX_6ff3a9ac44beabcc3a9642f0f9\` ON \`auth_events\`
+        `);
+        await queryRunner.query(`
+            DROP INDEX \`IDX_1ab6178864ca0fd7d23efe6abf\` ON \`auth_sessions\`
+        `);
+        await queryRunner.query(`
+            DROP INDEX \`IDX_50bf2034bc55ce71102900f5ae\` ON \`auth_sessions\`
+        `);
+        await queryRunner.query(`
+            DROP INDEX \`IDX_61132a880199e367d87d4f51b5\` ON \`auth_users\`
+        `);
+        await queryRunner.query(`
+            DROP INDEX \`IDX_b532f2eeaa9eb2b5c3ac65459b\` ON \`auth_clients\`
+        `);
+        await queryRunner.query(`
+            DROP INDEX \`IDX_dd5af3e4a6f6157685f64d2c80\` ON \`auth_clients\`
+        `);
+        await queryRunner.query(`
+            DROP INDEX \`IDX_6f92ed4d9d7499b1dff735133c\` ON \`auth_policies\`
+        `);
         await queryRunner.query(`
             DROP INDEX \`IDX_5b1ba660790692f625c7a777d3\` ON \`auth_identity_providers\`
         `);

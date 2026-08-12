@@ -25,6 +25,7 @@ export const eventSchema = defineSchema<Event>({
         ['requestIpAddress'],
         ['realmId'],
         ['expiring'],
+        ['realmId', 'createdAt'],
         ['createdAt'],
     ],
     fields: {
