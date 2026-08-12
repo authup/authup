@@ -102,30 +102,38 @@ describe('src/http/controllers/entities (widened query surface)', () => {
             username: 'admin',
             password: 'start123',
         });
-        expect(grant.access_token).toBeDefined();
+
+        // pin the exact session, so every assertion below is about a known
+        // row: a bare temporal filter would be satisfied vacuously by an
+        // empty page, which is precisely what a mis-bound comparison returns
+        const meResponse = await httpRequest(suite, 'GET', '/sessions/@me', { headers: { Authorization: `Bearer ${grant.access_token}` } });
+        expect(meResponse.status).toEqual(200);
+        const session = (await meResponse.json()).data;
+        expect(session.expiresAt).toBeDefined();
 
         const past = new Date(Date.now() - 3600_000).toISOString();
+        const beyondExpiry = new Date(Date.parse(session.expiresAt) + 60_000).toISOString();
+        const scope = `/sessions?filter[id]=${session.id}`;
 
-        // expiresAt is populated at creation and lies in the future.
-        // (seenAt is deliberately not used here: it is nullable and only
-        // stamped on ping/refresh, so a fresh session carries NULL.)
-        const seen = await httpRequest(suite, 'GET', `/sessions?filter[expiresAt]=>${encodeURIComponent(past)}`, { headers: { Authorization: basic } });
-        const seenBody = await seen.json();
-        expect(seen.status).toEqual(200);
-        expect(seenBody.meta.total).toBeGreaterThan(0);
+        // lower bound: the session expires in the future, so it is above `past`
+        const above = await httpRequest(suite, 'GET', `${scope}&filter[expiresAt]=>${encodeURIComponent(past)}`, { headers: { Authorization: basic } });
+        const aboveBody = await above.json();
+        expect(above.status).toEqual(200);
+        expect(aboveBody.data).toHaveLength(1);
 
-        // every returned row must satisfy the predicate. Deliberately NOT
-        // asserted as a fixed total: spec files sharing a worker's database
-        // copy run sequentially against it, so another spec's expired
-        // session is legitimately present and a count would flake.
-        expect(seenBody.data.every((entity: any) => entity.expiresAt > past)).toBe(true);
+        // upper bound, POSITIVE: a ceiling past its expiry must match it.
+        // This is what proves `<` can select this row at all, so the empty
+        // result below is the predicate discriminating rather than the
+        // comparison silently failing to bind.
+        const below = await httpRequest(suite, 'GET', `${scope}&filter[expiresAt]=<${encodeURIComponent(beyondExpiry)}`, { headers: { Authorization: basic } });
+        const belowBody = await below.json();
+        expect(below.status).toEqual(200);
+        expect(belowBody.data).toHaveLength(1);
 
-        const expired = await httpRequest(suite, 'GET', `/sessions?filter[expiresAt]=<${encodeURIComponent(past)}`, { headers: { Authorization: basic } });
-        const expiredBody = await expired.json();
-        expect(expired.status).toEqual(200);
-        expect(expiredBody.data.every((entity: any) => entity.expiresAt < past)).toBe(true);
-        // the fresh session must be excluded by the upper bound, which is
-        // what proves the comparison discriminates rather than mis-binding
-        expect(expiredBody.data.some((entity: any) => entity.expiresAt > past)).toBe(false);
+        // upper bound, NEGATIVE: a ceiling in the past must exclude it
+        const excluded = await httpRequest(suite, 'GET', `${scope}&filter[expiresAt]=<${encodeURIComponent(past)}`, { headers: { Authorization: basic } });
+        const excludedBody = await excluded.json();
+        expect(excluded.status).toEqual(200);
+        expect(excludedBody.data).toHaveLength(0);
     });
 });
