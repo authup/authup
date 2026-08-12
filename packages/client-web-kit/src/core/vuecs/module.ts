@@ -73,6 +73,11 @@ export function registerIconCollections() : void {
  * plugin's `setup()`, or `app.runWithContext(...)`) AFTER the kit's
  * `install()` ran — `buildSubmitButtonDefaults()` reads the ilingo locale
  * provider via `inject()`.
+ *
+ * Defaults for components the kit does not depend on stay with their
+ * consumer: a `@vuecs/navigation` key (the breadcrumb landmark label) would
+ * only type-check here if the kit declared that package, and it uses none
+ * of its components.
  */
 export function buildVuecsInstallOptions(input: VuecsInstallOptionsInput = {}) : VuecsInstallOptions {
     return {
