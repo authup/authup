@@ -331,7 +331,7 @@ usable at the service level and nothing in core depends on TypeORM:
   indexes — whose LEADING column sits in the schema's filter/sort
   vocabulary) and opts into `filters: { indexed: true }` (anchor mode:
   every AND group of the final parsed tree needs one conjunct whose
-  field leads a declared index) plus `sort: { indexed: true }`
+  field leads a declared index) plus `sorts: { indexed: true }`
   (requested key sequence must equal a leftmost prefix of one index).
   **Design invariant: every allowed filter and sort key leads a
   declared index**, backed by a real entity index — so enforcement can
@@ -346,11 +346,22 @@ usable at the service level and nothing in core depends on TypeORM:
   filters default, so the filters drop path always escalates to a
   throw), surfacing as 400 via `sanitizeError`'s rapiq
   ParseError/CodecError → BAD_REQUEST mapping (`utils/error.ts`).
-  `assertSchemaIndexesMatchEntity` (same boot pass as the
-  field-coverage assert) fails the boot when a declared sequence is not
-  a leftmost prefix of a real PK/unique/index — an authup-side assert
-  because `assertSchemaMatchesEntity` does not cover `indexes` yet
-  (tada5hi/rapiq#898 tracks folding it upstream).
+  `assertSchemaMatchesEntity` fails the boot when a declared sequence
+  is not a leftmost prefix of a real PK/unique/index. That check was an
+  authup-side `assertSchemaIndexesMatchEntity` until **rapiq 2.1.0
+  folded it upstream** (tada5hi/rapiq#902 closed #898); the local copy
+  is deleted, since upstream applies the same leftmost-prefix rule over
+  the same structures, additionally verifies the index keys are real
+  columns, and reports a typed `SchemaEntityIndexMismatchError`. The
+  behaviour it guarantees is still pinned locally, in
+  `schema-validation.spec.ts`.
+  Note the invariant's own spec reads the schema DESCRIPTION, so it
+  fails open: `indexed-invariant.spec.ts` reported green for the whole
+  2.1.0 bump while checking nothing, because the description key it
+  read (`sort`) had been renamed to `sorts` and the loop simply never
+  ran. It now carries a *should have sort allow-lists to check* guard;
+  keep that guard, and prefer it whenever a spec derives its subject
+  from an upstream shape.
   Structures whose leading column is not queryable (session
   `ipAddress`/`userAgent`, `user.email`) stay undeclared on purpose:
   the declaration describes the query surface, not the whole table.
@@ -3519,7 +3530,20 @@ decrypts, `passive` verify/decrypt-only, `disabled` neither) and an optional
   `enc` → 32 random oct bytes), and **fails loud** when rows exist but none
   is active (an admin who disabled every key meant it — never silently
   re-mint around the kill switch); `resolveById(id)` is a pure read (status
-  enforcement is the consumer's).
+  enforcement is the consumer's). **Minting is check-then-act** (find,
+  count, insert) on hot paths — the signer resolves a key for EVERY
+  issuance — so concurrent mints for one `(realm, use)` share a single
+  in-flight promise, and the guarded section re-reads before inserting
+  (`KeyRepositoryAdapter.mintExclusive`); without it two simultaneous
+  logins into a freshly created realm each minted their own key. The map
+  is per adapter instance, which is why `ProvisionerModule` PREFERS the
+  registered `OAuth2InjectionToken.KeyStore` over a locally constructed
+  adapter (falling back only in minimal module graphs that never
+  registered one) — a second instance carries a second map, so the
+  startup backfill and a concurrent realm-create would each mint. Two
+  separate PROCESSES can still race; the duplicate is tolerable rather
+  than fatal (both keys publish in JWKS and verify, and selection is
+  deterministically ordered), so it is not worth a distributed lock.
 - `IKeyRepository` (`core/entities/key/types.ts`) — the entity CRUD surface
   for the management API (+ `checkUniqueness`, `countBlobReferences(keyId)`
   — counts `v1.<key_id>.%` cipher blobs, today the MFA seeds —
@@ -4055,7 +4079,15 @@ integration:
   self-recursive entities tripped vue-tsc's TS2590, tada5hi/rapiq#790)
   and is desugared at the boundary. Per load, **every** parameter merges
   via `mergeQueries` (left priority: load input ▷ retained interactive
-  state ▷ meta pagination ▷ base query). Filters used to be carved out
+  state ▷ meta pagination ▷ base query). The per-parameter replace that
+  decides whether a load supersedes the retained interactive value tests
+  for the key's PRESENCE on the raw input, so it must recognize every
+  spelling the input type accepts: since rapiq 2.1.0 (#906) that means
+  **both `sorts` (canonical) and `sort` (deprecated)** — checking one
+  alone silently drops a load carrying the other, and supplying both
+  throws `KEY_AMBIGUOUS` at desugaring before the check runs. Pinned by
+  *a load carrying %s replaces the retained sorts* in
+  `entity-collection.spec.ts`, parameterized over the two spellings. Filters used to be carved out
   of that call and AND-injected by hand, because the old `Filters.merge`
   did per-field replace and would have let a search input displace an
   injected `realmId`/`clientId` scope. Since rapiq **beta.19**

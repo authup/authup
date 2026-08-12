@@ -64,6 +64,11 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
 
     protected logger? : Logger;
 
+    /**
+     * In-flight mints keyed `<realmId>:<use>` — see {@link mintExclusive}.
+     */
+    protected mints : Map<string, Promise<Key>> = new Map();
+
     constructor(dataSource: DataSource, options: KeyRepositoryAdapterOptions = {}) {
         this.dataSource = dataSource;
         this.secretsCipher = options.secretsCipher ?? null;
@@ -79,10 +84,8 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
     // IKeyStore — material resolution (signer / verifier / realm cipher)
     // ------------------------------------------------------------------
 
-    async resolveOrCreate(realmId: string, use: `${JWKUse}`): Promise<Key> {
-        const { repository } = this;
-
-        const entity = await repository.findOne({
+    protected findActiveKey(realmId: string, use: `${JWKUse}`) : Promise<KeyEntity | null> {
+        return this.repository.findOne({
             select: {
                 id: true,
                 name: true,
@@ -99,16 +102,65 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
                 use,
                 status: KeyStatus.ACTIVE,
             },
-            // createdAt + id break priority ties deterministically (e.g.
-            // duplicate mints from a concurrent zero-row backstop race —
-            // benign, both keys verify, but selection must be stable).
+            // createdAt + id break priority ties deterministically, so key
+            // selection stays stable whenever a realm holds several active
+            // keys (a rotation in progress, or a cross-process mint race).
             order: {
-                priority: 'DESC', 
-                createdAt: 'DESC', 
-                id: 'ASC', 
+                priority: 'DESC',
+                createdAt: 'DESC',
+                id: 'ASC',
             },
         });
+    }
 
+    async resolveOrCreate(realmId: string, use: `${JWKUse}`): Promise<Key> {
+        const entity = await this.findActiveKey(realmId, use);
+        if (entity) {
+            return this.afterLoad(this.repository, entity);
+        }
+
+        return this.mintExclusive(realmId, use);
+    }
+
+    /**
+     * Minting is check-then-act (read, count, insert), and the callers are
+     * hot paths — the token signer resolves a signature key for EVERY
+     * issuance, the realm cipher an encryption key for every MFA seed — so
+     * a freshly created realm routinely takes several simultaneous calls
+     * and each one would insert its own key. Concurrent mints for one
+     * (realm, use) therefore share a single in-flight promise.
+     *
+     * The map is per adapter instance, and the store is a DI singleton, so
+     * it is scoped to one application: two applications in one process
+     * (the test suite) never share mint state. Separate PROCESSES can still
+     * race, which is why the duplicate stays tolerable rather than fatal —
+     * both keys are published in JWKS and verify, and `findActiveKey`
+     * orders deterministically, so a duplicate costs a redundant row, not
+     * a broken token.
+     */
+    protected mintExclusive(realmId: string, use: `${JWKUse}`) : Promise<Key> {
+        const cacheKey = `${realmId}:${use}`;
+
+        const inFlight = this.mints.get(cacheKey);
+        if (inFlight) {
+            return inFlight;
+        }
+
+        const promise = this.mint(realmId, use);
+        this.mints.set(cacheKey, promise);
+
+        return promise.finally(() => {
+            this.mints.delete(cacheKey);
+        });
+    }
+
+    protected async mint(realmId: string, use: `${JWKUse}`) : Promise<Key> {
+        const { repository } = this;
+
+        // Re-read under the guard: the caller's lookup may predate a mint
+        // that has since completed and left the map, so the in-flight
+        // check alone would not see it.
+        const entity = await this.findActiveKey(realmId, use);
         if (entity) {
             return this.afterLoad(repository, entity);
         }
