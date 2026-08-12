@@ -48,6 +48,7 @@ export const keySchema = defineSchema<Key>({
             'use',
             'status',
             'realmId',
+            'priority',
         ],
         indexed: true,
     },

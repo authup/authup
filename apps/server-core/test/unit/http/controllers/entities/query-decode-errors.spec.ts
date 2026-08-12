@@ -35,11 +35,18 @@ describe('src/http/controllers/entities (query decode errors)', () => {
     });
 
     it('should answer 400 for a disallowed key in the expression dialect', async () => {
-        const response = await httpRequest(suite, 'GET', "/roles?lnln&filter=eq(secret,'x')", { headers: { Authorization: basic } });
+        const response = await httpRequest(suite, 'GET', "/roles?codec=url-expression&filter=eq(secret,'x')", { headers: { Authorization: basic } });
 
         expect(response.status).toEqual(400);
         const body = await response.json();
         expect(body.code).toEqual(ErrorCode.BAD_REQUEST);
+
+        // control: same dialect and request shape, an ALLOWED key. Without
+        // this the 400 above could come from the dialect stamp or the shape
+        // rather than from `secret` being off the allow-list.
+        const allowed = await httpRequest(suite, 'GET', "/roles?codec=url-expression&filter=eq(name,'admin')", { headers: { Authorization: basic } });
+
+        expect(allowed.status).toEqual(200);
     });
 
     it('should answer 400 for a pagination key with a prototype segment', async () => {

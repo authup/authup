@@ -58,7 +58,12 @@ import type { DecodeQueryOptions, QueryDecodeContext } from './types.ts';
  */
 export const schemaRegistry = new SchemaRegistry();
 
-const schemas : Schema<any>[] = [
+/**
+ * Every registered entity schema. Exported so the invariant guard can
+ * enumerate them: `SchemaRegistry` keeps its map protected and exposes
+ * no iterator (tada5hi/rapiq#904).
+ */
+export const schemas : Schema<any>[] = [
     clientSchema,
     clientPermissionSchema,
     clientRoleSchema,

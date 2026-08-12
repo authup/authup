@@ -40,6 +40,7 @@ export class ScopeEntity implements Scope {
     })
     name: string;
 
+    @Index()
     @Column({
         name: 'display_name', 
         type: 'varchar', 

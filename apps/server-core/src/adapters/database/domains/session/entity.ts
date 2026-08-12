@@ -27,6 +27,8 @@ import { ClientEntity } from '../client/index.ts';
 import { RealmEntity } from '../realm/index.ts';
 import { UserEntity } from '../user/index.ts';
 
+@Index(['userId', 'seenAt'])
+@Index(['realmId', 'seenAt'])
 @Entity({ name: 'auth_sessions' })
 export class SessionEntity implements Session {
     @PrimaryGeneratedColumn('uuid')

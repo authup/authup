@@ -354,6 +354,88 @@ usable at the service level and nothing in core depends on TypeORM:
   Structures whose leading column is not queryable (session
   `ipAddress`/`userAgent`, `user.email`) stay undeclared on purpose:
   the declaration describes the query surface, not the whole table.
+  **An `or(...)` anchors only when EVERY branch anchors** (index-merge
+  reality), which makes the console's combined name + display-name
+  search (the kit's `queryFilters` hook returning
+  `or(contains('name', q), contains('displayName', q))`) the shape to
+  reason about. How strict that is depends on what it sits in, because
+  an AND group needs only ONE anchoring conjunct:
+  - **realm-scoped** (`and(realmScope, or(...))`, what the header realm
+    switcher produces on most list pages) anchors on `realmId`, so the
+    OR rides along as residual filtering and survives even a branch
+    that leads no index;
+  - **unscoped** (the bare OR: realm-less pages like `/realms`, or any
+    search without a scope) has no such anchor, so every branch must
+    lead an index and ONE missing index rejects the whole search with
+    a 400 rather than degrading.
+  `displayName` is therefore both filterable and index-leading on every
+  entity carrying the column - uniform, and correct in both shapes. A
+  missing allow-list entry (`keyNotAllowed`) fails both regardless.
+  Note the index makes such a search LEGAL, not fast: `contains` lowers
+  to a leading-wildcard `LIKE`, which no B-tree serves; rapiq
+  deliberately ignores sargability and trusts the declaration, so real
+  substring-search performance would need a trigram/fulltext index,
+  not expressible portably across both dialects. Pinned by
+  `test/unit/core/query/indexed-invariant.spec.ts`, which walks every
+  registered schema, fails when an allowed filter/sort key leads
+  nothing, and decodes both search shapes per schema through the real
+  codec.
+- **The queryable surface is deliberately wider than the console uses.**
+  The consoles are one client; the API is public, so a column that is
+  readable, already index-leading and meaningful to an integration is
+  filterable even when no authup page filters by it. That covers `id`
+  on the junctions, the junction owner-realm keys and `policyId` (which
+  got their indexes with the FK sweep), the sortable-but-not-filterable
+  columns (`session.seenAt`/`expiresAt`, `sessionToken.expiresAt`,
+  `key.priority`, `userAuthenticator.lastUsedAt`), and the state flags
+  `user.active`, `client.active`/`builtIn`, `policy.builtIn`. Most of
+  those cost no DDL at all — the invariant had already forced an index
+  on every declared key, so widening was declaration-only. The rule for
+  adding more: a column may become filterable when it is already
+  readable (never a `select: false` secret, which is why `user.email`
+  and the credential columns stay out), leads a real index, and
+  **compares correctly once bound** (see below).
+- **`createdAt`/`updatedAt` are deliberately NOT filterable**, despite
+  being indexed, sortable and the most obvious thing an integration
+  would ask for. They are `@CreateDateColumn`/`@UpdateDateColumn`
+  timestamps carrying `dateToISOStringTransformer`, and a transformer
+  applies on read but NOT to a WHERE bind, so the ISO string a client
+  sends is compared against the driver's native storage format.
+  Measured across all three dialects: on **sqlite** the comparison
+  INVERTS (a row created now does not match `> 1h ago`, and does match
+  `< 1h ago`, because the stored `'2026-08-12 10:16:44'` sorts below
+  any `'...T...Z'` string on the `' '` vs `'T'` byte); on **postgres
+  and mysql** range comparison is correct but equality against the
+  exact value the API returned still matches nothing
+  (precision/format), and a malformed date reaches the driver and
+  surfaces as a **500**. A filter that silently returns the wrong rows
+  is worse than one that does not exist, so the surface stops at the
+  `varchar(28)` ISO columns (`session.expiresAt`/`seenAt`,
+  `sessionToken.expiresAt`, `userAuthenticator.lastUsedAt`), which are
+  written with `toISOString()` and compare as plain strings on every
+  dialect. `event.createdAt` predates this and stays filterable,
+  carrying the same caveat. Sorting is unaffected: it compares the
+  column against itself. Pinned by
+  `test/unit/http/controllers/entities/query-surface.spec.ts`, which
+  EXECUTES the surface (decoding only proves a query is legal, not
+  that it binds correctly) and runs under all three dialects.
+- **`fields` needs no such review — it is complete by construction.**
+  `assertSchemaFieldsCoverEntity` fails the boot when any selectable
+  column is missing from `fields.default` ∪ `fields.allowed`, so the
+  only absences are the automatically-exempt `select: false` columns
+  and the explicit `SCHEMA_FIELD_EXCLUSIONS` entries.
+- **(filter, sort) composites on the growing tables** — `auth_events`
+  `(realm_id, created_at)`, `auth_sessions` `(user_id, seen_at)` and
+  `(realm_id, seen_at)`, `auth_session_tokens` `(session_id,
+  created_at)`. Each mirrors a real list page (filter by realm/owner,
+  order by recency, take a page), turning "match, sort everything,
+  discard" into an ordered index scan that stops at the page size. They
+  are additive: the single-column indexes stay, both because a
+  composite that also served a MySQL foreign key would make dropping
+  the single a constraint-dependency problem (see the `down()` trap in
+  conventions.md), and because the singles still serve un-sorted
+  lookups. Only these three tables grow without bound, so only these
+  three carry the extra write cost.
 - **Extension point** — a persistence layer MAY extend the core registry with
   storage-derived schemas (`@rapiq/adapter-typeorm`'s
   `defineSchemaRegistryWithDataSource` with the `registry` option;

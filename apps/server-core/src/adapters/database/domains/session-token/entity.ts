@@ -24,6 +24,7 @@ import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import { ClientEntity } from '../client/index.ts';
 import { SessionEntity } from '../session/index.ts';
 
+@Index(['sessionId', 'createdAt'])
 @Entity({ name: 'auth_session_tokens' })
 export class SessionTokenEntity implements SessionToken {
     @PrimaryColumn({ type: 'uuid' })

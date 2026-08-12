@@ -15,6 +15,11 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  * (crypto-shredding) and cascade deletes otherwise full-scan every
  * junction, and EA tree loads sit on the permission-evaluation hot path.
  *
+ * display_name is indexed wherever the column exists, alongside name:
+ * the console searches both at once (`or(contains(name), contains(
+ * display_name))`), and anchor mode passes an OR only when EVERY branch
+ * leads an index, so one missing index would reject the whole search.
+ *
  * Compound access paths: (actor_name, request_ip_address, created_at) on
  * auth_events serves the login-throttle countRecent key and replaces the
  * redundant actor_name single; auth_session_tokens.parent_id serves the
@@ -418,6 +423,45 @@ export class QueryIndexes1786436332251 implements MigrationInterface {
         await queryRunner.query(`
             CREATE INDEX "IDX_b2003e5ab8c075dc0a11f33bca" ON "auth_users" ("activate_hash")
         `);
+        await queryRunner.query(`
+            CREATE INDEX "IDX_9c861f8e8ea9fe35507b57fb88" ON "auth_policies" ("display_name")
+        `);
+        await queryRunner.query(`
+            CREATE INDEX "IDX_9c08d15bfcf413aad26ee3eda8" ON "auth_clients" ("display_name")
+        `);
+        await queryRunner.query(`
+            CREATE INDEX "IDX_5015816deff1b14e7d669ed7cb" ON "auth_roles" ("display_name")
+        `);
+        await queryRunner.query(`
+            CREATE INDEX "IDX_f2835b7434c506b81e48a48229" ON "auth_scopes" ("display_name")
+        `);
+        await queryRunner.query(`
+            CREATE INDEX "IDX_5b1ba660790692f625c7a777d3" ON "auth_identity_providers" ("display_name")
+        `);
+        await queryRunner.query(`
+            CREATE INDEX "IDX_6f92ed4d9d7499b1dff735133c" ON "auth_policies" ("built_in")
+        `);
+        await queryRunner.query(`
+            CREATE INDEX "IDX_dd5af3e4a6f6157685f64d2c80" ON "auth_clients" ("active")
+        `);
+        await queryRunner.query(`
+            CREATE INDEX "IDX_b532f2eeaa9eb2b5c3ac65459b" ON "auth_clients" ("built_in")
+        `);
+        await queryRunner.query(`
+            CREATE INDEX "IDX_61132a880199e367d87d4f51b5" ON "auth_users" ("active")
+        `);
+        await queryRunner.query(`
+            CREATE INDEX "IDX_50bf2034bc55ce71102900f5ae" ON "auth_sessions" ("realm_id", "seen_at")
+        `);
+        await queryRunner.query(`
+            CREATE INDEX "IDX_1ab6178864ca0fd7d23efe6abf" ON "auth_sessions" ("user_id", "seen_at")
+        `);
+        await queryRunner.query(`
+            CREATE INDEX "IDX_6ff3a9ac44beabcc3a9642f0f9" ON "auth_events" ("realm_id", "created_at")
+        `);
+        await queryRunner.query(`
+            CREATE INDEX "IDX_74d37f543d9f9476b4b232c00b" ON "auth_session_tokens" ("session_id", "created_at")
+        `);
         // Hand-authored: drop the three orphaned legacy tables. Each predates a
         // rework that replaced it and nothing has referenced them since:
         // auth_authorization_codes (codes moved to cache blobs),
@@ -437,6 +481,45 @@ export class QueryIndexes1786436332251 implements MigrationInterface {
         `);
     }
     public async down(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`
+            DROP INDEX "public"."IDX_74d37f543d9f9476b4b232c00b"
+        `);
+        await queryRunner.query(`
+            DROP INDEX "public"."IDX_6ff3a9ac44beabcc3a9642f0f9"
+        `);
+        await queryRunner.query(`
+            DROP INDEX "public"."IDX_1ab6178864ca0fd7d23efe6abf"
+        `);
+        await queryRunner.query(`
+            DROP INDEX "public"."IDX_50bf2034bc55ce71102900f5ae"
+        `);
+        await queryRunner.query(`
+            DROP INDEX "public"."IDX_61132a880199e367d87d4f51b5"
+        `);
+        await queryRunner.query(`
+            DROP INDEX "public"."IDX_b532f2eeaa9eb2b5c3ac65459b"
+        `);
+        await queryRunner.query(`
+            DROP INDEX "public"."IDX_dd5af3e4a6f6157685f64d2c80"
+        `);
+        await queryRunner.query(`
+            DROP INDEX "public"."IDX_6f92ed4d9d7499b1dff735133c"
+        `);
+        await queryRunner.query(`
+            DROP INDEX "public"."IDX_5b1ba660790692f625c7a777d3"
+        `);
+        await queryRunner.query(`
+            DROP INDEX "public"."IDX_f2835b7434c506b81e48a48229"
+        `);
+        await queryRunner.query(`
+            DROP INDEX "public"."IDX_5015816deff1b14e7d669ed7cb"
+        `);
+        await queryRunner.query(`
+            DROP INDEX "public"."IDX_9c08d15bfcf413aad26ee3eda8"
+        `);
+        await queryRunner.query(`
+            DROP INDEX "public"."IDX_9c861f8e8ea9fe35507b57fb88"
+        `);
         await queryRunner.query(`
             DROP INDEX "public"."IDX_b2003e5ab8c075dc0a11f33bca"
         `);

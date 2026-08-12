@@ -17,6 +17,7 @@ export const identityProviderSchema = defineSchema<IdentityProvider>({
     indexes: [
         ['id'],
         ['name', 'realmId'],
+        ['displayName'],
         ['protocol'],
         ['enabled'],
         ['realmId'],
@@ -36,7 +37,7 @@ export const identityProviderSchema = defineSchema<IdentityProvider>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['name', 'protocol', 'enabled', 'realmId'], indexed: true },
+    filters: { allowed: ['name', 'displayName', 'protocol', 'enabled', 'realmId', 'id'], indexed: true },
     relations: { allowed: ['realm'], validate: createRelationsReadGate(schemaMapping) },
     sort: { allowed: ['id', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },

@@ -37,12 +37,14 @@ export class ClientEntity implements Client {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @Column({
         type: 'boolean',
         default: true,
     })
     active: boolean;
 
+    @Index()
     @Column({
         name: 'built_in', 
         type: 'boolean', 
@@ -74,6 +76,7 @@ export class ClientEntity implements Client {
     })
     name: string;
 
+    @Index()
     @Column({
         name: 'display_name', 
         type: 'varchar', 

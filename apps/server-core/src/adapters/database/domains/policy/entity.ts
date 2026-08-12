@@ -34,6 +34,7 @@ export class PolicyEntity implements Policy {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
+    @Index()
     @Column({
         name: 'built_in', 
         type: 'boolean', 
@@ -54,6 +55,7 @@ export class PolicyEntity implements Policy {
     })
     name: string;
 
+    @Index()
     @Column({
         name: 'display_name', 
         type: 'varchar', 
