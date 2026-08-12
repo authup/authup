@@ -55,6 +55,7 @@
     "@vuecs/button": "^1.4.1",
     "@vuecs/core": "^3.5.0",
     "@vuecs/design": "^1.2.0",
+    "@vuecs/navigation": "^4.4.1",
     "@vuecs/table": "^1.6.1",
     "@vuecs/theme-tailwind": "^6.4.1",
     "tailwindcss": "^4.3.2"
