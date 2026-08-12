@@ -101,9 +101,32 @@ h5.title:before {
     margin-right: 0;
 }
 
-.title .sub-title {
-    font-size: .65em;
-    color: var(--authup-rose);
+/*
+ * The descriptive line under a page heading. It used to be a one-word
+ * qualifier inside the `<h1>` ("Clients Management"), where `.65em` sized it
+ * against the heading and `--authup-rose` marked it as part of the title.
+ * Standing on its own line as prose it needs an absolute size, since `em`
+ * would now resolve against the body, and it recedes behind the heading
+ * rather than competing with it.
+ */
+.sub-title {
+    max-width: 65ch;
+    margin-top: .25rem;
+    font-size: .875rem;
+    line-height: 1.25rem;
+    color: var(--vc-color-fg-muted);
+
+    /*
+     * Section descriptions are authored short, but a record's sub title is its
+     * own `description`, which is free text a user typed into a textarea. Two
+     * lines keep short copy wrapping naturally on a narrow viewport while
+     * stopping a paragraph from pushing the detail page's tab rail down.
+     */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
 }
 
 .form-horizontal .form-group {

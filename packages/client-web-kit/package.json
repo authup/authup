@@ -102,6 +102,7 @@
         "validup": "^1.0.0",
         "vitest": "^4.0.14",
         "vue": "^3.5.40",
+        "vue-router": "^5.0.7",
         "vue-tsc": "^3.3.9"
     },
     "peerDependencies": {
@@ -124,7 +125,8 @@
         "pinia": "^4.0.2",
         "socket.io-client": "^4.8.3",
         "validup": "^1.0.0",
-        "vue": "^3.5.40"
+        "vue": "^3.5.40",
+        "vue-router": "^5.0.7"
     },
     "peerDependenciesMeta": {
         "@vuecs/locale": {

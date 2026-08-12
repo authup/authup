@@ -63,7 +63,18 @@ export class Navigation {
         return output.filter((item) => !!item);
     }
 
+    /**
+     * Filter one item against the session and localize its label.
+     *
+     * The input is an element of the module-level `LayoutSideDefaultNavigation`
+     * constant, so nothing here may write back onto it: a mutation would prune
+     * the source array permanently, and a later resolve with wider permissions
+     * (a login, a realm switch) could not restore what an earlier one removed.
+     * The localized name and the filtered children therefore go onto a copy.
+     */
     protected async reduceItem(item: NavigationItem<NavigationItemMeta>) : Promise<NavigationItem | undefined> {
+        let { name } = item;
+
         if (item.meta) {
             const authenticated = this.store.status === StoreAuthStatus.AUTHENTICATED;
             let identity: IdentityPolicyData | undefined;
@@ -108,14 +119,24 @@ export class Navigation {
             }
 
             if (this.translate && item.meta.i18n) {
-                item.name = await this.translate(item.meta.i18n);
+                name = await this.translate(item.meta.i18n);
             }
         }
 
+        const output : NavigationItem<NavigationItemMeta> = { ...item, name };
+
         if (item.children) {
-            item.children = await this.reduce(item.children);
+            const children = await this.reduce(item.children);
+
+            // A group whose children were all filtered away renders as a leaf,
+            // so without a url of its own it would sit there as a dead entry.
+            if (children.length === 0 && !item.url) {
+                return undefined;
+            }
+
+            output.children = children;
         }
 
-        return item;
+        return output;
     }
 }

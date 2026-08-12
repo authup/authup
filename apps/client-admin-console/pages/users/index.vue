@@ -1,26 +1,35 @@
 <script lang="ts">
 import type { User } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
-import { 
-    TranslatorTranslationActionKey, 
-    TranslatorTranslationAppKey, 
-    TranslatorTranslationCommonKey, 
-    TranslatorTranslationEntityKey, 
-    TranslatorTranslationNamespace, 
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { useTranslations, useTranslationsForNamespace, useTranslator } from '@authup/client-web-kit';
+import {
+    AContentAction,
+    usePermissionCheck,
+    useTranslations,
+    useTranslationsForNamespace,
+    useTranslator,
+} from '@authup/client-web-kit';
 import { VCIcon } from '@vuecs/icon';
+import { VCBreadcrumb } from '@vuecs/navigation';
 import { defineNuxtComponent } from '#app';
-import { 
-    computed, 
-    definePageMeta, 
-    useErrorToast, 
-    useToast, 
+import {
+    definePageMeta,
+    useErrorToast,
+    useSectionBreadcrumb,
+    useToast,
 } from '#imports';
-import { LayoutKey } from '../../config/layout';
+import { LayoutKey, LayoutSection, buildSectionURLs } from '../../config/layout';
 
 export default defineNuxtComponent({
-    components: { VCIcon },
+    components: {
+        AContentAction,
+        VCBreadcrumb,
+        VCIcon,
+    },
     setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
@@ -32,47 +41,31 @@ export default defineNuxtComponent({
             ],
         });
 
+        const breadcrumbItems = useSectionBreadcrumb(LayoutSection.USERS, { add: true });
+        const sectionUrls = buildSectionURLs(LayoutSection.USERS);
+
         const toast = useToast();
         const errorToast = useErrorToast();
         const handleFailed = (e: Error) => errorToast.show(e);
 
+        const hasAddPermission = usePermissionCheck({ name: PermissionName.USER_CREATE });
+
         const translationsDefault = useTranslations([
             {
-                namespace: TranslatorTranslationNamespace.COMMON, 
-                key: TranslatorTranslationCommonKey.OVERVIEW, 
-            },
-            {
-                namespace: TranslatorTranslationNamespace.ACTION, 
-                key: TranslatorTranslationActionKey.ADD, 
-            },
-            {
-                namespace: TranslatorTranslationNamespace.ENTITY, 
-                key: TranslatorTranslationEntityKey.USER, 
-                count: 2, 
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.USER,
+                count: 2,
             },
         ]);
 
         const translationsApp = useTranslationsForNamespace(
             TranslatorTranslationNamespace.APP,
             [
-                { key: TranslatorTranslationAppKey.MANAGEMENT },
+                { key: TranslatorTranslationAppKey.USER_DESCRIPTION },
             ],
         );
 
         const translate = useTranslator();
-
-        const items = computed(() => [
-            {
-                name: translationsDefault.overview,
-                icon: 'fa6-solid:bars',
-                url: '/users',
-            },
-            {
-                name: translationsDefault.add,
-                icon: 'fa6-solid:plus',
-                url: '/users/add',
-            },
-        ]);
 
         const handleDeleted = async (e: User) => {
             if (toast) {
@@ -83,22 +76,23 @@ export default defineNuxtComponent({
                         key: TranslatorTranslationAppKey.ENTITY_DELETED,
                         data: {
                             entity: await translate({
-                                namespace: TranslatorTranslationNamespace.ENTITY, 
-                                key: TranslatorTranslationEntityKey.USER, 
-                                count: 1, 
+                                namespace: TranslatorTranslationNamespace.ENTITY,
+                                key: TranslatorTranslationEntityKey.USER,
+                                count: 1,
                             }),
-                            name: e.name, 
+                            name: e.name,
                         },
                     }),
                 });
             }
         };
 
-
         return {
-            items,
-            handleFailed,
+            sectionUrls,
+            breadcrumbItems,
             handleDeleted,
+            handleFailed,
+            hasAddPermission,
             translationsDefault,
             translationsApp,
         };
@@ -107,29 +101,31 @@ export default defineNuxtComponent({
 </script>
 <template>
     <div>
-        <h1 class="title no-border mb-3">
-            <VCIcon
-                name="fa6-solid:user"
-                class="me-1"
-            /> {{ translationsDefault.user }}
-            <span class="sub-title ms-1">
-                {{ translationsApp.management }}
-            </span>
-        </h1>
-        <div class="content-wrapper">
-            <div class="content-sidebar flex-col">
-                <VCNavItems
-                    :data="items"
-                    variant="pills"
-                    orientation="vertical"
-                />
+        <VCBreadcrumb
+            :items="breadcrumbItems"
+            class="mb-2"
+        />
+        <div class="mb-3 flex flex-wrap items-start justify-between gap-3">
+            <div>
+                <h1 class="title no-border mb-0">
+                    <VCIcon
+                        name="fa6-solid:user"
+                        class="me-1"
+                    /> {{ translationsDefault.user }}
+                </h1>
+                <p class="sub-title">
+                    {{ translationsApp.userDescription }}
+                </p>
             </div>
-            <div class="content-container">
-                <NuxtPage
-                    @deleted="handleDeleted"
-                    @failed="handleFailed"
-                />
-            </div>
+            <AContentAction
+                :overview-url="sectionUrls.overviewUrl"
+                :add-url="sectionUrls.addUrl"
+                :add-disabled="!hasAddPermission"
+            />
         </div>
+        <NuxtPage
+            @deleted="handleDeleted"
+            @failed="handleFailed"
+        />
     </div>
 </template>

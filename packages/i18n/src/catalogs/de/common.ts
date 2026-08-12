@@ -37,4 +37,5 @@ export const TranslatorTranslationCommonGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationCommonKey.PROCESSING]: 'Wird verarbeitet',
     [TranslatorTranslationCommonKey.REQUEST]: 'Anfrage',
     [TranslatorTranslationCommonKey.DATA]: 'Daten',
+    [TranslatorTranslationCommonKey.BREADCRUMB]: 'Navigationspfad',
 };

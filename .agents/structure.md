@@ -97,7 +97,8 @@ Apps:
 |---|---|---|
 | **Theming** | `@vuecs/core` (3.x) + `@vuecs/theme-tailwind` (6.x) via `@authup/client-web-theme` | Theme manager + Tailwind v4 class strings. `@authup/client-web-theme` composes `tailwindTheme()` and ships a single CSS entry (`@authup/client-web-theme/index.css`) that pulls in `tailwindcss`, `@vuecs/design` (OKLCH semantic tokens), `@vuecs/theme-tailwind` (Tailwind ↔ vc-color rebind). The Bootstrap-compat `@layer components` block (`.btn`, `.row`/`.col`, `.alert`, `.badge`, `.nav`/`.navbar`, `.dropdown*`, `.modal-*`, `.fade`) has been **fully retired** — every call site now renders a `<VC*>` component (`.dropdown*` → `<VCDropdownMenu>`, `.modal-*` → `<VCModal>`); only a thin `.vc-pagination` override of theme-tailwind's button rounding remains. |
 | **Icons** | `@vuecs/icon` + `@vuecs/icons-font-awesome` | Iconify-backed `<VCIcon>` + the FA Solid name preset. **Icon DATA is bundled at build time, per app** (issue #3345): both apps run `@nuxt/icon`'s standalone vite plugin (`NuxtIconBundle` from `@nuxt/icon/vite`, a devDependency; used in `apps/client-auth-console/vite.config.ts` and under `vite.plugins` in `apps/client-admin-console/nuxt.config.ts`) and import `virtual:nuxt-icon-bundle/register` in their bootstrap. The plugin scans source for `<collection>:<name>` literals and registers the found subset through `addIcon` from `@iconify/vue`, the same global store `<VCIcon>` resolves against, so no component changes were needed. This replaced the kit's `registerIconCollections()` (now `@deprecated`, kept for consumers that cannot run a build-time scan), which registered both full FA6 collections: 1,902 icons for the 54 / 74 actually rendered. Measured: server-core's SSR auth UI 804 → 385 KB gzip, client-admin-console 911 → 497 KB gzip. **The glob list is load-bearing and fails silently** (a path that stops matching yields an empty icon slot, not a build error), so it must keep covering `packages/client-web-kit/src` (kit components + the identity-provider preset tables) and `node_modules/@vuecs/icons-font-awesome/dist/*.mjs` (the vuecs behavioral defaults: pagination arrows, submit-button, alert, collapse chevrons, whose names appear in no authup source file), plus `.ts` on top of the plugin's default `.vue`/`.jsx`/`.tsx`. Pinned by `test/unit/http/controllers/workflows/ui-pages-icons.spec.ts`, which asserts against the built client entry (resolved through the package dist's `index.html` via `resolveAuthConsoleDistPath`). Note `@iconify/vue` resolves icons client-side, so SSR'd pages carry empty `<svg>` shells either way; a rendered page cannot verify bundling. Old `fa-solid fa-X` CSS class strings on plain `<i>` are still in use for legacy templates — both paths coexist. **Do not use `<VCButton>`'s `icon-left` / `iconLeft` prop** — render an explicit `<VCIcon>` in the button's `#leading` slot (template) or `{ leading: () => h(VCIcon, { name }) }` (render fn). VCButton renders `iconLeft` through `<VCIcon>` internally anyway, so output is identical; the one exception is `useSubmitButton()`'s composable-derived `iconLeft` (`AFormSubmit` / `LoginForm`), which stays. |
-| **Links** | `@vuecs/link` (2.x) | `<VCLink>` picks `NuxtLink` / `RouterLink` / a plain `<a>` at render time, so kit and app code share one link element. Prefer it over `resolveComponent('NuxtLink')`, which only resolves under Nuxt. A button-styled link is `<VCButton :as="VCLink" :to="...">`. **A bare `:disabled` does not guard such a link:** `VCButton` declares `disabled` as its own prop, so it never reaches `VCLink`, and a non-native `as` target receives only `aria-disabled="true"` (no click guard, and Tailwind's `disabled:` variant never matches an `<a>`, so no visual cue either; tada5hi/vuecs#1699). Permission-guarded row actions therefore **withhold the target**: ``:to="hasEditPermission ? `/users/${row.id}` : undefined"`` makes `VCLink` fall back to an href-less `<a>` whose click is `preventDefault`ed and which cannot be tab-focused. The visual cue comes from the `aria-disabled:*` utilities `clientWebKitTheme()` appends to the button root. Used by all 11 entity index pages (issue #3071). |
+| **Links** | `@vuecs/link` (2.x) | `<VCLink>` picks `NuxtLink` / `RouterLink` / a plain `<a>` at render time, so kit and app code share one link element. Prefer it over `resolveComponent('NuxtLink')`, which only resolves under Nuxt. A button-styled link is `<VCButton :as="VCLink" :to="...">`. **A bare `:disabled` guards such a link from `@vuecs/button` 1.4.1 on:** `VCButton` still declares `disabled` as its own prop, so it never reaches `VCLink`, but a disabled non-native `as` target is now rendered with `aria-disabled="true"`, `tabindex="-1"` and an `onClickCapture` handler running `preventDefault` + `stopPropagation` + `stopImmediatePropagation`, so activation cannot reach the router. Up to and including 1.4.0 it stamped `aria-disabled="true"` alone (no click guard, no focus removal; tada5hi/vuecs#1699), which is the state the two shapes below were written against. `<AContentAction>` binds its `add-disabled` prop straight onto `:disabled` and relies on the guard; `packages/client-web-kit/test/unit/components/utility/content-action.spec.ts` pins it against a real `createMemoryHistory` router, asserting that the enabled action navigates on click while the disabled one leaves `router.currentRoute` on the overview route (an attribute-only assertion would pass either way). The ten entity index pages whose edit link is permission-gated keep **withholding the target** instead: ``:to="hasEditPermission ? `/users/${row.id}` : undefined"`` makes `VCLink` fall back to an href-less `<a>` whose click is `preventDefault`ed and which cannot be tab-focused (issue #3071). They were not swept, and the shape stays sound: an `<a>` with no target is not activatable however `disabled` is handled. Tailwind's `disabled:` variant matches the `:disabled` pseudo-class only and still never an `<a>`, so the visual cue comes from the `aria-disabled:*` utilities `clientWebKitTheme()` appends to the button root. |
+| **Breadcrumbs** | `@vuecs/navigation` (4.4.1) | `<VCBreadcrumb :items>` in driver mode over `BreadcrumbItem[]` (`label` plus optional `to` / `icon`). The driver defaults `current` to the last index and still renders a crumb carrying `to` as a link with `aria-current="page"` (W3C APG), so a route on the final crumb is fine; the leaf crumbs the composables append (`add`, a detail tab) deliberately carry none and render as the page node. The compound parts (`VCBreadcrumbList` / `Item` / `Link` / `Page` / `Separator` / `Ellipsis`), `useBreadcrumbLeaf` and the registry mode are unused. Rendered as the first element of all 12 client-admin-console collection pages and all 12 detail pages, `class="mb-2"`, above the title row. The trail is assembled by the app composable `apps/client-admin-console/composables/breadcrumb.ts`: `useSectionBreadcrumb(section, { add?, children? })` returns a `ComputedRef<BreadcrumbItem[]>` holding `Home > Section` and appends at most ONE leaf, the declared child whose `url` equals the current `route.path` (both normalized for a trailing slash), so `{ add: true }` (passed by the ten sections carrying a `pages/<section>/index/add.vue`) shows the `Add` crumb only while the add route is open. **It must run synchronously in `setup()`, before the first `await`**: the label lookups and `useRoute()` resolve through `inject()`, which no longer sees the component once the setup context is lost. Detail pages therefore call it next to their `useRoute()` and keep the result as `breadcrumbBase`, since their record is only known after the `useAsyncData` await. `buildEntityBreadcrumb({ base, entity, path, tabs })` is a plain function rather than a composable for exactly that reason: the page hands it already-resolved values, and it appends the record crumb plus, when `path` matches one of the page's own tab items, that tab (skipping the label-less back arrow and the tab that IS the record route, since neither adds a level). Section route / icon / label always come from `LayoutSections`, never spelled out per page. **Theme:** `@vuecs/theme-tailwind` 6.4.1 gives the breadcrumb elements colour and typography only (`breadcrumb.classes.list` and `breadcrumbItem.classes.root` are the empty string; link / page / separator carry no display or gap), so `clientWebTheme()` supplies the LAYOUT (`flex flex-wrap items-center gap-1.5 m-0 p-0 list-none` on the list and the matching inline-flex / gap classes on item, link, page, separator and ellipsis, mirroring `@vuecs/navigation`'s own stylesheet). Without that override the `<ol>` renders one crumb per line; drop it once theme-tailwind ships breadcrumb layout classes. `@vuecs/navigation` is a `@authup/client-web-theme` devDependency for the element-key `import type {}` augmentation, the same rule the `@vuecs/button` / `@vuecs/table` imports there follow. |
 | **Form controls** | `@vuecs/forms` (4.x) | `<VCFormGroup>` / `<VCFormInput>` / `<VCFormTextarea>` / `<VCFormCheckbox>` / `<VCFormSelect>`. Authup's entity form SFCs (`components/entities/**/A*Form.vue`) render these components directly, binding each field through `@validup/vue`'s `useValidup` and `@ilingo/validup-vue`'s `<IFieldValidation>` (see `ARoleForm.vue`); the former `buildForm*` render-function shims (`core/form/builders.ts`) were retired in #3139. Entity **name** fields use `<ANameInput>` (`packages/client-web-kit/src/components/utility/ANameInput.vue`) instead of a bare `<VCFormInput>`: it wraps `VCFormInput` with a "regenerate" button rendered in the `#groupAppend` input-group slot that emits a slug-safe `generateName()` (from `@authup/kit`) through the normal `update:modelValue` channel. Drop-in for `v-model` / `:model-value` + `@update:model-value`; pass `:disabled` for built-in / name-locked / master entities (the append button is then omitted). Entity **secret** fields (client) use the sibling `<ASecretInput>` (`packages/client-web-kit/src/components/utility/ASecretInput.vue`), same `#groupAppend` regenerate layout but emitting a crypto-strong `generateSecret()` (from `@authup/kit`). **SSR-safety contract for generated defaults:** `generateName(seed?)` accepts an optional seed — entity forms pass Vue's hydration-stable `useId()` so the prefilled name matches across the SSR and client render passes (no hydration mismatch). `generateSecret()` deliberately takes **no** seed (a secret must not be derived from a predictable value); forms therefore generate the initial secret client-side only, inside `onMounted`, leaving the field empty during SSR. Both are captured once in `setup` (`const nameSeed = useId()`), never inside a function re-invoked later. |
 | **List rendering** | `@vuecs/list` (1.x) | Compound `<VCList>` / `<VCListBody>` / `<VCListItem>` / `<VCListLoading>` / `<VCListEmpty>`. `defineEntityCollectionManager`'s renderer in `client-web-kit/src/components/utility/entity/collection/module.ts` composes these directly. Since #3278 the collection/record managers compose queries in the **rapiq v2 IR** (`defineQuery`/`mergeQueries`; every parameter including filters goes through `mergeQueries`, which is conjunctive since rapiq beta.19, so an injected realm/owner scope cannot be displaced by search or pagination input; `queryFilters` context hooks may return an `ICondition` for compound OR searches; `ListMeta` carries pagination UI state only) — see architecture.md → vuecs 1.x SFC integration → Collections. Pages construct query props via `defineQuery<T>({...})` from `@rapiq/core`. |
 | **Tables** | `@vuecs/table` (≥ 1.3.0) | `<VCTable>` directly. `:data` + `:columns` (`TableColumn<Entity>[]`) drives auto-render; consumer-side `#cell-<key>` / `#header-<key>` slot templates are dispatched onto each cell by `composeTableInner` (tada5hi/vuecs#1592). Since 1.3.0 (tada5hi/vuecs#1601) `<VCTable>` is **generic over Row** — type the columns `TableColumn<Entity>[]` and write cell slots as `#cell-<key>="{ row }"` (no annotation) so `row` infers as the entity (the old `{ row: any }` widening is retired). Keep `VCTable` **globally registered** — the generic component can't be registered in the Options-API `components: {}` (see architecture.md → Table usage). Centered headers use plain `headerClass: 'text-center'` — `clientWebTheme()` overrides `tableHeadCell.classes.root` to drop theme-tailwind's baked `text-left`, so consumer alignment classes win without Tailwind v4's `!important` suffix. Cells follow the same shape via `cellClass`. |
@@ -185,6 +186,95 @@ view). A tab like `users/[id]/sessions` is a parent-scoped *lens* over a
 collection, not its canonical home. Sessions' canonical home is the top-level
 `/sessions` page (subject names via gated includes); the per-user tab remains
 the parent-scoped lens.
+
+**A collection page's action sits in its title row, not in a rail.** Each
+`pages/<section>/index.vue` used to wrap its `<NuxtPage>` in a
+`.content-wrapper` grid whose `.content-sidebar` held a vertical
+`<VCNavItems variant="pills" orientation="vertical">` of two links, "overview"
+and "add". That rail is gone from all 12 sections: a page now renders
+`<VCBreadcrumb>`, then a flex row (`items-start`, so the action aligns to the
+top of a two-line block) carrying a column of `<h1>` plus sub title on the
+left and `<AContentAction>` on the right, then the `<NuxtPage>` at full width.
+The two sections with no add route render the same column without the flex
+row. `<AContentAction>`
+(`packages/client-web-kit/src/components/utility/content-action/`) takes
+`overview-url` + `add-url` and dispatches on `route.path` (trailing slash
+normalized on both sides): the overview route renders a primary `Add` button
+pointing at the add route, the add route renders a neutral outline `Back`
+button pointing back at the overview route, and **any other route renders
+nothing**, so a section that later grows a second list route (an approval
+queue, a nested lens) does not inherit the button. Each page binds
+`:add-disabled` to its own `usePermissionCheck({ name: <ENTITY>_CREATE })`.
+Both urls come from `buildSectionURLs(section)` (`config/layout/sections.ts`),
+never spelled out per page: that helper owns the `/add` suffix for its two
+consumers, the breadcrumb's `Add` leaf and this component's prop pair. The
+coupling is worth the indirection because the failure is silent. A section
+whose `url` moved while a page still carried the literal would leave
+`<AContentAction>` matching neither route, and it renders NOTHING in that
+case, so the create form would lose its last entry point with no error now
+that the rail is gone.
+`/events` and `/sessions` have no add route, so their one-item rail is simply
+dropped: they keep the breadcrumb and a plain title with no action button. A
+detail page's own `<VCNavItems variant="pills">` tab rail is a different
+control and stays. The `.content-wrapper` / `.content-sidebar` /
+`.content-container` rules are still declared in
+`packages/client-web-theme/assets/css/styles/core/body.css` and now have no
+call site left in the console.
+
+**The sub title is a description under the heading, not a qualifier inside
+it.** It used to be a `<span class="sub-title ms-1">` inside the `<h1>`
+holding one word, so a page read "Clients Management" on one line. It is now a
+`<p class="sub-title">` under the heading, and the word was replaced by copy
+that says what the section holds: collection pages take one of the twelve
+`authupApp` `<ENTITY>_DESCRIPTION` keys (authored in all four locales, e.g.
+"Applications that authenticate against Authup").
+
+Detail pages answer the same question about one record, through
+`buildRecordHeading(entity)` (`composables/record.ts`). The heading leads with
+the record's `displayName` where it has one, and the line under it walks a
+ladder whose every rung carries something the heading is not already showing:
+the record's own `description` (only client, role, scope, permission, policy
+and realm have the column), else the `name` the heading gave up when a display
+name took its place, else the `id`. The helper also supplies the record's
+BREADCRUMB crumb, so the crumb and the `<h1>` cannot disagree. The entity type
+deliberately does not appear: it is what the breadcrumb and the sidebar already
+state, so the provisioned `master` realm (no display name, no description) read
+"Realm" under a heading that said "master". Nine detail pages carried `DETAILS`
+as their only `authupApp` key and lost their whole `translationsApp` block when
+that line stopped being a translation. `sessions/[id]` is deliberately not a
+caller: its heading is a subject (`subjectName ?? entity.sub`), not a name.
+`.sub-title` is styled
+in `packages/client-web-theme/assets/css/styles/root.css`: standing on its own
+line it needs an absolute `font-size` (the old `.65em` resolved against the
+`text-4xl` heading, and would now resolve against the body), and it is
+`--vc-color-fg-muted` rather than `--authup-rose` because prose under a
+heading should recede rather than compete with it. It is clamped to two lines:
+a section description is authored short, but a record's is free text from a
+textarea, and an unclamped paragraph would push the detail page's tab rail
+down.
+
+**Sidebar entries and page breadcrumbs read one descriptor map.**
+`LayoutSections` (`apps/client-admin-console/config/layout/sections.ts`) holds
+each top-level section's `name` / `url` / `icon` / `i18n`, keyed by the
+`LayoutSection` enum. `defineSectionNavigationItem` builds the sidebar link
+from it (each entry then declares only its access rules) and
+`useSectionBreadcrumb` reads it for the section crumb, so the two surfaces
+cannot spell a route, icon or label differently. Permissions deliberately stay
+out of the descriptor: which entries a session may see is a nav concern, not
+the identity of the section.
+
+**`Navigation.reduceItem` must never write back onto its input**
+(`apps/client-admin-console/config/layout/module.ts`). The items it receives
+are the elements of the module-level `LayoutSideDefaultNavigation` constant, so
+the localized name and the filtered children go onto a copy
+(`{ ...item, name }`). The previous in-place assignment wrote the reduced list
+back onto the constant, and since the sidebar re-runs `getSideItems()` from its
+`:watch` on every session change, a later resolve under wider permissions (a
+login, a realm switch) could not restore what an earlier one had removed. A
+group whose children were all filtered away is now dropped when it carries no
+`url` of its own, because a childless group renders as a leaf and would
+otherwise sit in the sidebar as a dead entry. No entry in the current constant
+carries `children`, so that branch guards grouped entries added later.
 
 `@vuecs/core` ≥ 3.1.0 (`installThemeManager`) now **merges install
 options into the existing manager** rather than dropping them on second

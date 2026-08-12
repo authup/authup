@@ -1,16 +1,28 @@
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { ref } from 'vue';
 import { APolicyForm, APolicyTypePicker } from '@authup/client-web-kit';
 import type { Policy } from '@authup/core-kit';
-import { navigateTo } from '#app';
+import { PermissionName } from '@authup/core-kit';
+import { defineNuxtComponent, navigateTo } from '#app';
+import { definePageMeta } from '#imports';
+import { LayoutKey } from '../../../config/layout';
 
-export default defineComponent({
+export default defineNuxtComponent({
     components: {
         APolicyForm,
         APolicyTypePicker,
     },
     emits: ['failed'],
     setup(props, { emit }) {
+        // Policies are administered under the permission domain, so the create
+        // gate is PERMISSION_CREATE rather than a POLICY_* permission.
+        definePageMeta({
+            [LayoutKey.REQUIRED_LOGGED_IN]: true,
+            [LayoutKey.REQUIRED_PERMISSIONS]: [
+                PermissionName.PERMISSION_CREATE,
+            ],
+        });
+
         const type = ref<string | null>(null);
         const handlePicked = (value: string) => {
             type.value = value;

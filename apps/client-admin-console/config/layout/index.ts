@@ -7,3 +7,4 @@
 
 export * from './contants';
 export * from './module';
+export * from './sections';

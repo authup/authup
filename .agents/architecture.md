@@ -4065,8 +4065,9 @@ integration:
   displaced by a search or sort load, and compound trees (`or(...)`)
   survive as conjuncts. Pinned by *search input cannot displace the
   injected scope* and *composes context query and props query, both
-  non-displaceable* in `entity-collection.spec.ts`, which both still
-  assert the pre-refactor filter strings. The
+  non-displaceable* in `entity-collection.spec.ts`. The latter still
+  asserts the pre-refactor filter string; the former's search term is now
+  the multi-field OR below, and its AND composition is unchanged. The
   `queryFilters` context hook may return an `ICondition`
   (`or(contains('name', q), contains('displayName', q))`) or a legacy
   filters record. **`ASearch` passes the raw search text as a bare
@@ -4074,8 +4075,30 @@ integration:
   does NOT interpret `~foo`/`!foo`/`<5`; a `~foo` value decodes as
   `eq(name,'~foo')`, a literal exact-match, which silently broke name
   search). The manager turns that bare `name` string into a condition via
-  the `queryFilters` hook when provided, else a default
-  `contains('name', text)`; an empty search (`filters: {}`) resets to the
+  the `queryFilters` hook when provided, else
+  `buildEntitySearchCondition(type, text)` (`collection/utils/search.ts`):
+  `contains('name', text)` OR'd with a `contains` per extra field the
+  entity declares in `ENTITY_SEARCH_FIELDS`. That map is keyed by
+  `EntityType` and lists `displayName` for the eight entities whose
+  schema allows filtering it (client, identity-provider, permission,
+  policy, realm, role, scope, user — #3429); every other entity searches
+  `name` alone. **It mirrors the server `filters.allowed` allow-lists and
+  must be kept in step with them**: rapiq resolves keys strictly and
+  answers an unknown one with `keyNotAllowed` (400) rather than pruning
+  it, so an entry a schema does not allow turns search into a failed
+  request instead of a narrower one. The server half of that contract is
+  pinned by `test/unit/core/query/console-search-surface.spec.ts`, which
+  states the eight entities and their fields outright and fails when one
+  stops being filterable. The sibling `indexed-invariant.spec.ts` cannot
+  serve that role: it DERIVES its search shape from the allow-list
+  (`allowed.includes('displayName') ? or(...) : contains(...)`), so a
+  removal makes it silently stop exercising the compound shape rather
+  than fail. Verified by removing `displayName` from the client schema:
+  the new spec fails, the invariant spec stays green at 17 passed. This is what makes the console
+  search name and display name at once with no per-page wiring: all 24
+  `ASearch` call sites pass no `queryFilters`, so before it they searched
+  `name` only and the server-side half of #3429 was unreachable from the
+  UI. An empty search (`filters: {}`) resets to the
   base scope. Build every filter through the `@rapiq/core` helpers
   (`eq`/`contains`/`inArray`/`and`/`or`/`not`/…), never a raw wire string.
   Interactive state (search filters, sorts) is retained

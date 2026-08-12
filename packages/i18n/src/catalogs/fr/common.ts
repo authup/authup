@@ -37,4 +37,5 @@ export const TranslatorTranslationCommonFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationCommonKey.PROCESSING]: 'Traitement en cours',
     [TranslatorTranslationCommonKey.REQUEST]: 'Requête',
     [TranslatorTranslationCommonKey.DATA]: 'Données',
+    [TranslatorTranslationCommonKey.BREADCRUMB]: 'Fil d\'Ariane',
 };

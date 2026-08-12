@@ -11,6 +11,7 @@ import { defineTheme, extend } from '@vuecs/core';
 // augmentation loads; these imports pull in the declarations for the element
 // keys styled below, so they type-check in every consumer compiling this file.
 import type {} from '@vuecs/button';
+import type {} from '@vuecs/navigation';
 import type {} from '@vuecs/table';
 
 /**
@@ -76,6 +77,41 @@ export default function clientWebTheme() {
              * unspecified case.
              */
             tableHeadCell: { classes: { root: 'px-3 font-medium' } },
+
+            /*
+             * Restore the breadcrumb LAYOUT, which theme-tailwind 6.4.1
+             * does not supply.
+             *
+             * Every other `@vuecs/navigation` element gets its layout from
+             * theme-tailwind as utilities (`navItems` resolves to
+             * `flex list-none flex-col p-0 m-0`, `navLink` to
+             * `flex items-center gap-2`), so no consumer imports
+             * `@vuecs/navigation/dist/style.css`. The breadcrumb entry is
+             * the exception: it declares colour and typography only
+             * (`breadcrumb.classes.list` and `breadcrumbItem.classes.root`
+             * are the empty string, and link/page/separator/ellipsis carry
+             * no display or gap). The component's own class-name defaults
+             * survive the merge, but nothing defines them, so the crumbs
+             * render as a plain `<ol>`: `display: block` on the list,
+             * `list-item` on each crumb, i.e. one crumb per line with a
+             * bullet-less indent instead of `Home > Clients > acme-app`.
+             *
+             * The values mirror `@vuecs/navigation`'s own stylesheet
+             * (.375rem -> gap-1.5 on the list and item, .25rem -> gap-1
+             * inside a crumb), so this reproduces the intended look rather
+             * than inventing one. Drop the whole block once theme-tailwind
+             * ships breadcrumb layout classes.
+             */
+            breadcrumb: {
+                classes: {
+                    list: extend('flex flex-wrap items-center gap-1.5 m-0 p-0 list-none'),
+                    link: extend('inline-flex items-center gap-1'),
+                    page: extend('inline-flex items-center gap-1'),
+                    ellipsis: extend('inline-flex items-center justify-center'),
+                },
+            },
+            breadcrumbItem: { classes: { root: extend('inline-flex items-center gap-1.5') } },
+            breadcrumbSeparator: { classes: { root: extend('inline-flex items-center select-none') } },
         },
     });
 }

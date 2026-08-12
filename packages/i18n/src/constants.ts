@@ -210,6 +210,22 @@ export enum TranslatorTranslationAppKey {
 
     MANAGEMENT = 'management',
     DETAILS = 'details',
+
+    /**
+     * One line under a section heading, saying what the section holds.
+     */
+    REALM_DESCRIPTION = 'realmDescription',
+    CLIENT_DESCRIPTION = 'clientDescription',
+    SCOPE_DESCRIPTION = 'scopeDescription',
+    IDENTITY_PROVIDER_DESCRIPTION = 'identityProviderDescription',
+    KEY_DESCRIPTION = 'keyDescription',
+    TRUST_ANCHOR_DESCRIPTION = 'trustAnchorDescription',
+    USER_DESCRIPTION = 'userDescription',
+    ROLE_DESCRIPTION = 'roleDescription',
+    PERMISSION_DESCRIPTION = 'permissionDescription',
+    POLICY_DESCRIPTION = 'policyDescription',
+    EVENT_DESCRIPTION = 'eventDescription',
+    SESSION_DESCRIPTION = 'sessionDescription',
     SET_MANAGEMENT_REALM = 'setManagementRealm',
     API_DOCS = 'apiDocs',
     MADE_WITH = 'madeWith',
@@ -472,4 +488,5 @@ export enum TranslatorTranslationCommonKey {
     PROCESSING = 'processing',
     REQUEST = 'request',
     DATA = 'data',
+    BREADCRUMB = 'breadcrumb',
 }

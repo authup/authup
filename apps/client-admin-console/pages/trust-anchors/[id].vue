@@ -3,7 +3,6 @@ import {
     ATrustAnchorForm,
     injectHTTPClient,
     useTranslations,
-    useTranslationsForNamespace,
     useTranslator,
 } from '@authup/client-web-kit';
 import type { TrustAnchor } from '@authup/core-kit';
@@ -11,6 +10,7 @@ import { PermissionName } from '@authup/core-kit';
 import { TranslatorTranslationAppKey, TranslatorTranslationEntityKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { extendObject } from '@authup/kit';
 import { VCIcon } from '@vuecs/icon';
+import { VCBreadcrumb } from '@vuecs/navigation';
 import type { Ref } from 'vue';
 import { computed, defineComponent } from 'vue';
 import {
@@ -20,14 +20,21 @@ import {
     useRoute,
 } from '#app';
 import {
+    buildEntityBreadcrumb,
     definePageMeta,
     useErrorToast,
+    useSectionBreadcrumb,
     useToast,
 } from '#imports';
-import { LayoutKey } from '../../config/layout';
+import { buildRecordHeading } from '../../composables/record';
+import { LayoutKey, LayoutSection } from '../../config/layout';
 
 export default defineComponent({
-    components: { ATrustAnchorForm, VCIcon },
+    components: {
+        ATrustAnchorForm,
+        VCBreadcrumb,
+        VCIcon,
+    },
     async setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
@@ -35,6 +42,28 @@ export default defineComponent({
         });
 
         const route = useRoute();
+
+        // Resolves through inject(), so it has to run before the record fetch
+        // below is awaited.
+        const breadcrumbBase = useSectionBreadcrumb(LayoutSection.TRUST_ANCHORS);
+
+        // Same rule, and the reason this page used to answer 500 on a server
+        // render: these sat below the await, where `inject()` no longer
+        // resolves, so `useToast()` threw "No ToastManager available". Every
+        // sibling detail page already resolves them here.
+        const toast = useToast();
+        const errorToast = useErrorToast();
+
+        const translate = useTranslator();
+        const translations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.TRUST_ANCHOR,
+                count: 1,
+            },
+        ]);
+
+
         const httpClient = injectHTTPClient();
 
         const { data, error } = await useAsyncData(
@@ -55,24 +84,6 @@ export default defineComponent({
 
         const entity = data as Ref<TrustAnchor>;
 
-        const toast = useToast();
-        const errorToast = useErrorToast();
-        const translate = useTranslator();
-        const translations = useTranslations([
-            {
-                namespace: TranslatorTranslationNamespace.ENTITY,
-                key: TranslatorTranslationEntityKey.TRUST_ANCHOR,
-                count: 1,
-            },
-        ]);
-
-        const translationsApp = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.APP,
-            [
-                { key: TranslatorTranslationAppKey.DETAILS },
-            ],
-        );
-
         const handleUpdated = async (updated: TrustAnchor) => {
             extendObject(entity.value, updated);
 
@@ -88,16 +99,31 @@ export default defineComponent({
             }
         };
 
+        const items = computed(() => [{
+            name: '',
+            icon: 'fa6-solid:arrow-left',
+            url: '/trust-anchors',
+        }]);
+
+        const heading = computed(() => buildRecordHeading(entity.value));
+
+        const breadcrumbItems = computed(() => buildEntityBreadcrumb({
+            base: breadcrumbBase.value,
+            entity: {
+                label: heading.value.label,
+                url: `/trust-anchors/${entity.value.id}`,
+            },
+            path: route.path,
+            tabs: items.value,
+        }));
+
         return {
+            heading,
+            breadcrumbItems,
             entity,
             handleFailed: (e: Error) => errorToast.show(e),
             handleUpdated,
-            translationsApp,
-            items: computed(() => [{
-                name: '',
-                icon: 'fa6-solid:arrow-left',
-                url: '/trust-anchors',
-            }]),
+            items,
         };
     },
 });
@@ -105,13 +131,24 @@ export default defineComponent({
 
 <template>
     <div>
-        <h1 class="title no-border mb-3">
-            <VCIcon
-                name="fa6-solid:certificate"
-                class="me-1"
-            /> {{ entity.name }}
-            <span class="sub-title ms-1">{{ translationsApp.details }}</span>
-        </h1>
+        <VCBreadcrumb
+            :items="breadcrumbItems"
+            class="mb-2"
+        />
+        <div class="mb-3">
+            <h1 class="title no-border mb-0">
+                <VCIcon
+                    name="fa6-solid:certificate"
+                    class="me-1"
+                /> {{ heading.label }}
+            </h1>
+            <p
+                v-if="heading.subTitle"
+                class="sub-title"
+            >
+                {{ heading.subTitle }}
+            </p>
+        </div>
         <div class="mb-2">
             <VCNavItems
                 :data="items"

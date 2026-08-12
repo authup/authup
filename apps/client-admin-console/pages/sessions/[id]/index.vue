@@ -26,16 +26,22 @@ import {
 import { storeToRefs } from 'pinia';
 import type { TableColumn } from '@vuecs/table';
 import { VCIcon } from '@vuecs/icon';
+import { VCBreadcrumb } from '@vuecs/navigation';
 import type { Ref } from 'vue';
 import { computed, defineComponent } from 'vue';
-import { definePageMeta, useErrorToast } from '#imports';
+import {
+    buildEntityBreadcrumb,
+    definePageMeta,
+    useErrorToast,
+    useSectionBreadcrumb,
+} from '#imports';
 import {
     createError,
     navigateTo,
     useAsyncData,
     useRoute,
 } from '#app';
-import { LayoutKey } from '../../../config/layout';
+import { LayoutKey, LayoutSection } from '../../../config/layout';
 
 export default defineComponent({
     components: {
@@ -43,6 +49,7 @@ export default defineComponent({
         AEvents,
         APagination,
         ASessionTokens,
+        VCBreadcrumb,
         VCIcon,
     },
     async setup() {
@@ -55,6 +62,10 @@ export default defineComponent({
 
         const route = useRoute();
         const httpClient = injectHTTPClient();
+
+        // Resolves through inject(), so it has to run before the record fetch
+        // below is awaited.
+        const breadcrumbBase = useSectionBreadcrumb(LayoutSection.SESSIONS);
 
         const store = injectStore();
         const { sessionId } = storeToRefs(store);
@@ -85,10 +96,15 @@ export default defineComponent({
             { namespace: TranslatorTranslationNamespace.ACTION, key: TranslatorTranslationActionKey.BACK },
         ]);
 
+        const subTitle = useTranslation({
+            namespace: TranslatorTranslationNamespace.ENTITY,
+            key: TranslatorTranslationEntityKey.SESSION,
+            count: 1,
+        });
+
         const translationsApp = useTranslationsForNamespace(
             TranslatorTranslationNamespace.APP,
             [
-                { key: TranslatorTranslationAppKey.DETAILS },
                 { key: TranslatorTranslationAppKey.SESSION_CURRENT },
                 { key: TranslatorTranslationAppKey.SESSION_TOKEN_STATUS_ACTIVE },
                 { key: TranslatorTranslationAppKey.SESSION_TOKEN_STATUS_CONSUMED },
@@ -244,11 +260,23 @@ export default defineComponent({
             },
         ]);
 
+        const breadcrumbItems = computed(() => buildEntityBreadcrumb({
+            base: breadcrumbBase.value,
+            entity: {
+                label: subjectName.value ?? entity.value.sub,
+                url: `/sessions/${entity.value.id}`,
+            },
+            path: route.path,
+            tabs: items.value,
+        }));
+
         const handleDeleted = async () => {
             await navigateTo({ path: '/sessions' });
         };
 
         return {
+            subTitle,
+            breadcrumbItems,
             entity,
             subjectName,
             sessionId,
@@ -272,13 +300,21 @@ export default defineComponent({
 </script>
 <template>
     <div>
-        <h1 class="title no-border mb-3">
-            <VCIcon
-                name="fa6-solid:desktop"
-                class="me-1"
-            /> {{ subjectName ?? entity.sub }}
-            <span class="sub-title ms-1">{{ translationsApp.details }}</span>
-        </h1>
+        <VCBreadcrumb
+            :items="breadcrumbItems"
+            class="mb-2"
+        />
+        <div class="mb-3">
+            <h1 class="title no-border mb-0">
+                <VCIcon
+                    name="fa6-solid:desktop"
+                    class="me-1"
+                /> {{ subjectName ?? entity.sub }}
+            </h1>
+            <p class="sub-title">
+                {{ subTitle }}
+            </p>
+        </div>
         <div class="mb-2 flex items-center justify-between">
             <VCNavItems
                 :data="items"
@@ -346,7 +382,7 @@ export default defineComponent({
             </div>
             <div class="w-full md:w-1/3 px-2 mb-3">
                 <h6 class="title">
-                    {{ translationsApp.details }}
+                    {{ subTitle }}
                 </h6>
                 <div class="flex justify-between gap-2 border-b border-border py-1 text-sm">
                     <span class="text-fg-muted">{{ translations.id }}</span>
