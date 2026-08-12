@@ -354,6 +354,32 @@ usable at the service level and nothing in core depends on TypeORM:
   Structures whose leading column is not queryable (session
   `ipAddress`/`userAgent`, `user.email`) stay undeclared on purpose:
   the declaration describes the query surface, not the whole table.
+  **An `or(...)` anchors only when EVERY branch anchors** (index-merge
+  reality), which makes the console's combined name + display-name
+  search (the kit's `queryFilters` hook returning
+  `or(contains('name', q), contains('displayName', q))`) the shape to
+  reason about. How strict that is depends on what it sits in, because
+  an AND group needs only ONE anchoring conjunct:
+  - **realm-scoped** (`and(realmScope, or(...))`, what the header realm
+    switcher produces on most list pages) anchors on `realmId`, so the
+    OR rides along as residual filtering and survives even a branch
+    that leads no index;
+  - **unscoped** (the bare OR: realm-less pages like `/realms`, or any
+    search without a scope) has no such anchor, so every branch must
+    lead an index and ONE missing index rejects the whole search with
+    a 400 rather than degrading.
+  `displayName` is therefore both filterable and index-leading on every
+  entity carrying the column - uniform, and correct in both shapes. A
+  missing allow-list entry (`keyNotAllowed`) fails both regardless.
+  Note the index makes such a search LEGAL, not fast: `contains` lowers
+  to a leading-wildcard `LIKE`, which no B-tree serves; rapiq
+  deliberately ignores sargability and trusts the declaration, so real
+  substring-search performance would need a trigram/fulltext index,
+  not expressible portably across both dialects. Pinned by
+  `test/unit/core/query/indexed-invariant.spec.ts`, which walks every
+  registered schema, fails when an allowed filter/sort key leads
+  nothing, and decodes both search shapes per schema through the real
+  codec.
 - **Extension point** — a persistence layer MAY extend the core registry with
   storage-derived schemas (`@rapiq/adapter-typeorm`'s
   `defineSchemaRegistryWithDataSource` with the `registry` option;

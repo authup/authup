@@ -41,6 +41,7 @@ export class RoleEntity implements Role {
     })
     name: string;
 
+    @Index()
     @Column({
         name: 'display_name', 
         type: 'varchar', 

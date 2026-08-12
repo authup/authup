@@ -54,6 +54,7 @@ export class PolicyEntity implements Policy {
     })
     name: string;
 
+    @Index()
     @Column({
         name: 'display_name', 
         type: 'varchar', 

@@ -37,6 +37,7 @@ export class IdentityProviderEntity implements IdentityProvider {
     })
     name: string;
 
+    @Index()
     @Column({
         name: 'display_name', 
         type: 'varchar', 

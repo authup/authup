@@ -77,6 +77,7 @@ export const clientSchema = defineSchema<Client>({
     indexes: [
         ['id'],
         ['name', 'realmId'],
+        ['displayName'],
         ['realmId'],
         ['createdAt'],
         ['updatedAt'],
@@ -107,7 +108,7 @@ export const clientSchema = defineSchema<Client>({
         allowed: ['secret'],
         validateMany: createFieldsReadGate({ secret: secretReadGate }),
     },
-    filters: { allowed: ['id', 'name', 'realmId'], indexed: true },
+    filters: { allowed: ['id', 'name', 'displayName', 'realmId'], indexed: true },
     relations: { allowed: ['realm', 'accessPolicy'], validate: createRelationsReadGate(schemaMapping) },
     sort: { allowed: ['id', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },

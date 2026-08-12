@@ -74,6 +74,7 @@ export class ClientEntity implements Client {
     })
     name: string;
 
+    @Index()
     @Column({
         name: 'display_name', 
         type: 'varchar', 

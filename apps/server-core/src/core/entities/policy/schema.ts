@@ -17,6 +17,7 @@ export const policySchema = defineSchema<Policy>({
     indexes: [
         ['id'],
         ['name', 'realmId'],
+        ['displayName'],
         ['type'],
         ['parentId'],
         ['realmId'],
@@ -38,7 +39,7 @@ export const policySchema = defineSchema<Policy>({
             'updatedAt',
         ],
     },
-    filters: { allowed: ['id', 'name', 'type', 'parentId', 'realmId'], indexed: true },
+    filters: { allowed: ['id', 'name', 'displayName', 'type', 'parentId', 'realmId'], indexed: true },
     relations: { allowed: ['children', 'realm'], validate: createRelationsReadGate(schemaMapping) },
     sort: { allowed: ['id', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },
