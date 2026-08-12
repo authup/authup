@@ -3,7 +3,6 @@
 import type { Event as EventEntity } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
-    TranslatorTranslationAppKey,
     TranslatorTranslationCommonKey,
     TranslatorTranslationEntityKey,
     TranslatorTranslationFieldKey,
@@ -13,23 +12,28 @@ import {
     injectHTTPClient,
     useTranslation,
     useTranslations,
-    useTranslationsForNamespace,
 } from '@authup/client-web-kit';
 import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
+import { VCBreadcrumb } from '@vuecs/navigation';
 import type { Ref } from 'vue';
 import { computed, defineComponent } from 'vue';
-import { definePageMeta } from '#imports';
-import { 
-    createError, 
-    navigateTo, 
-    useAsyncData, 
-    useRoute, 
+import { buildEntityBreadcrumb, definePageMeta, useSectionBreadcrumb } from '#imports';
+import {
+    createError,
+    navigateTo,
+    useAsyncData,
+    useRoute,
 } from '#app';
-import { LayoutKey } from '../../../config/layout';
+import { buildRecordHeading } from '../../../composables/record';
+import { LayoutKey, LayoutSection } from '../../../config/layout';
 
 export default defineComponent({
-    components: { VCIcon, VCLink },
+    components: {
+        VCBreadcrumb,
+        VCIcon,
+        VCLink,
+    },
     async setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
@@ -39,6 +43,10 @@ export default defineComponent({
         });
 
         const route = useRoute();
+
+        // Resolves through inject(), so it has to run before the record fetch
+        // below is awaited.
+        const breadcrumbBase = useSectionBreadcrumb(LayoutSection.EVENTS);
 
         const translations = useTranslations([
             {
@@ -103,12 +111,6 @@ export default defineComponent({
             },
         ]);
 
-        const translationsApp = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.APP,
-            [
-                { key: TranslatorTranslationAppKey.DETAILS },
-            ],
-        );
 
         const translationSession = useTranslation({
             namespace: TranslatorTranslationNamespace.ENTITY,
@@ -144,6 +146,18 @@ export default defineComponent({
             },
         ]);
 
+        const heading = computed(() => buildRecordHeading(entity.value));
+
+        const breadcrumbItems = computed(() => buildEntityBreadcrumb({
+            base: breadcrumbBase.value,
+            entity: {
+                label: heading.value.label,
+                url: `/events/${entity.value.id}`,
+            },
+            path: route.path,
+            tabs: items.value,
+        }));
+
         const dataFormatted = computed(() => {
             if (!entity.value.data) {
                 return null;
@@ -153,11 +167,12 @@ export default defineComponent({
         });
 
         return {
+            heading,
+            breadcrumbItems,
             entity,
             items,
             dataFormatted,
             translations,
-            translationsApp,
             translationSession,
         };
     },
@@ -165,13 +180,24 @@ export default defineComponent({
 </script>
 <template>
     <div>
-        <h1 class="title no-border mb-3">
-            <VCIcon
-                name="fa6-solid:clipboard-list"
-                class="me-1"
-            /> {{ entity.name }}
-            <span class="sub-title ms-1">{{ translationsApp.details }}</span>
-        </h1>
+        <VCBreadcrumb
+            :items="breadcrumbItems"
+            class="mb-2"
+        />
+        <div class="mb-3">
+            <h1 class="title no-border mb-0">
+                <VCIcon
+                    name="fa6-solid:clipboard-list"
+                    class="me-1"
+                /> {{ heading.label }}
+            </h1>
+            <p
+                v-if="heading.subTitle"
+                class="sub-title"
+            >
+                {{ heading.subTitle }}
+            </p>
+        </div>
         <div class="mb-2">
             <VCNavItems
                 :data="items"

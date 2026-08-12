@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildVuecsInstallOptions } from '@authup/client-web-kit';
+import { buildVuecsInstallOptions, useTranslation } from '@authup/client-web-kit';
+import { TranslatorTranslationCommonKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { de } from 'date-fns/locale/de';
 import { es } from 'date-fns/locale/es';
 import { fr } from 'date-fns/locale/fr';
@@ -61,14 +62,34 @@ export default defineNuxtPlugin({
         // translator-wired submit-button defaults; it runs after the kit's
         // translator install (`dependsOn: ['authup']`), so `useTranslation`
         // inside the helper sees the live ilingo locale provider.
-        ctx.vueApp.use(vuecs, buildVuecsInstallOptions({
+        const vuecsOptions = buildVuecsInstallOptions({
             // Register both themes side-by-side. The kit theme owns
             // overrides the kit's own components need (e.g. formGroup
             // margin); the app theme layers app-specific concerns
             // (heading scale, Bootstrap-compat shims) on top. Order
             // matters: kit first, app overrides win on conflicts.
             themes: [clientWebKitTheme(), clientWebTheme()],
-        }));
+        });
+
+        ctx.vueApp.use(vuecs, {
+            ...vuecsOptions,
+            defaults: {
+                ...vuecsOptions.defaults,
+                // The breadcrumb `<nav>` landmark's accessible name.
+                // `@vuecs/navigation` pins it to the English literal
+                // "Breadcrumb" and no page passes `:label`, so without this
+                // a screen reader announces it in English on every localized
+                // page. It lives here rather than in the kit helper because
+                // only this app installs `@vuecs/navigation`, whose module
+                // augmentation declares the key.
+                breadcrumb: {
+                    label: useTranslation({
+                        namespace: TranslatorTranslationNamespace.COMMON,
+                        key: TranslatorTranslationCommonKey.BREADCRUMB,
+                    }),
+                },
+            },
+        });
 
         // vuecs's `installThemeManager` is first-install-wins (see
         // `@vuecs/core/dist/index.mjs`); installing per-package plugins

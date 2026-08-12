@@ -7,12 +7,13 @@
 
 import type { NavigationItem } from '@vuecs/navigation';
 import { PermissionName } from '@authup/core-kit';
-import { 
-    TranslatorTranslationActionKey, 
-    TranslatorTranslationAppKey, 
-    TranslatorTranslationEntityKey, 
-    TranslatorTranslationNamespace, 
+import {
+    TranslatorTranslationActionKey,
+    TranslatorTranslationAppKey,
+    TranslatorTranslationNamespace,
 } from '@authup/i18n';
+import type { LayoutSection } from './sections';
+import { LayoutSections } from './sections';
 import type { NavigationItemMeta } from './types';
 
 export enum LayoutKey {
@@ -20,6 +21,29 @@ export enum LayoutKey {
     REQUIRED_LOGGED_OUT = 'requireLoggedOut',
 
     REQUIRED_PERMISSIONS = 'requirePermissions',
+}
+
+/**
+ * Build a sidebar link for one entity section. Route, icon and label come from
+ * the section descriptor, so the sidebar and the page breadcrumbs can never
+ * disagree about them; only the access rules are declared per entry.
+ */
+function defineSectionNavigationItem(
+    section: `${LayoutSection}`,
+    meta: Omit<NavigationItemMeta, 'i18n'>,
+) : NavigationItem<NavigationItemMeta> {
+    const descriptor = LayoutSections[section];
+
+    return {
+        name: descriptor.name,
+        type: 'link',
+        url: descriptor.url,
+        icon: descriptor.icon,
+        meta: {
+            ...meta,
+            i18n: descriptor.i18n,
+        },
+    };
 }
 
 export const LayoutTopNavigation : NavigationItem<NavigationItemMeta>[] = [
@@ -46,243 +70,111 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
             i18n: { namespace: TranslatorTranslationNamespace.APP, key: TranslatorTranslationAppKey.RESOURCES },
         },
     },
-    {
-        name: 'Realms',
-        type: 'link',
-        url: '/realms',
-        icon: 'fa6-solid:building',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: {
-                namespace: TranslatorTranslationNamespace.ENTITY, 
-                key: TranslatorTranslationEntityKey.REALM, 
-                count: 2, 
-            },
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.REALM_READ,
-                PermissionName.REALM_CREATE,
-                PermissionName.REALM_UPDATE,
-                PermissionName.REALM_DELETE,
-            ],
-        },
-    },
-    {
-        name: 'Clients',
-        type: 'link',
-        url: '/clients',
-        icon: 'fa6-solid:cube',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: {
-                namespace: TranslatorTranslationNamespace.ENTITY, 
-                key: TranslatorTranslationEntityKey.CLIENT, 
-                count: 2, 
-            },
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.CLIENT_READ,
-                PermissionName.CLIENT_CREATE,
-                PermissionName.CLIENT_UPDATE,
-                PermissionName.CLIENT_DELETE,
-            ],
-        },
-    },
-    {
-        name: 'Scopes',
-        type: 'link',
-        url: '/scopes',
-        icon: 'fa6-solid:meteor',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: {
-                namespace: TranslatorTranslationNamespace.ENTITY, 
-                key: TranslatorTranslationEntityKey.SCOPE, 
-                count: 2, 
-            },
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.SCOPE_READ,
-                PermissionName.SCOPE_CREATE,
-                PermissionName.SCOPE_UPDATE,
-                PermissionName.SCOPE_DELETE,
-            ],
-        },
-    },
-    {
-        name: 'Identity Providers',
-        type: 'link',
-        url: '/identity-providers',
-        icon: 'fa6-solid:atom',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: {
-                namespace: TranslatorTranslationNamespace.ENTITY,
-                key: TranslatorTranslationEntityKey.IDENTITY_PROVIDER,
-                count: 2,
-            },
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.IDENTITY_PROVIDER_READ,
-                PermissionName.IDENTITY_PROVIDER_CREATE,
-                PermissionName.IDENTITY_PROVIDER_UPDATE,
-                PermissionName.IDENTITY_PROVIDER_DELETE,
-            ],
-        },
-    },
-    {
-        name: 'Keys',
-        type: 'link',
-        url: '/keys',
-        icon: 'fa6-solid:key',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: {
-                namespace: TranslatorTranslationNamespace.ENTITY,
-                key: TranslatorTranslationEntityKey.KEY,
-                count: 2,
-            },
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.KEY_READ,
-                PermissionName.KEY_CREATE,
-                PermissionName.KEY_UPDATE,
-                PermissionName.KEY_DELETE,
-            ],
-        },
-    },
-    {
-        name: 'Trusted CAs',
-        type: 'link',
-        url: '/trust-anchors',
-        icon: 'fa6-solid:certificate',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: {
-                namespace: TranslatorTranslationNamespace.ENTITY,
-                key: TranslatorTranslationEntityKey.TRUST_ANCHOR,
-                count: 2,
-            },
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.KEY_READ,
-                PermissionName.KEY_CREATE,
-                PermissionName.KEY_UPDATE,
-                PermissionName.KEY_DELETE,
-            ],
-        },
-    },
-    {
-        name: 'Users',
-        type: 'link',
-        url: '/users',
-        icon: 'fa6-solid:user',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: {
-                namespace: TranslatorTranslationNamespace.ENTITY, 
-                key: TranslatorTranslationEntityKey.USER, 
-                count: 2, 
-            },
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.USER_READ,
-                PermissionName.USER_CREATE,
-                PermissionName.USER_UPDATE,
-                PermissionName.USER_DELETE,
-            ],
-        },
-    },
-    {
-        name: 'Roles',
-        type: 'link',
-        url: '/roles',
-        icon: 'fa6-solid:masks-theater',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: {
-                namespace: TranslatorTranslationNamespace.ENTITY, 
-                key: TranslatorTranslationEntityKey.ROLE, 
-                count: 2, 
-            },
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.ROLE_READ,
-                PermissionName.ROLE_CREATE,
-                PermissionName.ROLE_UPDATE,
-                PermissionName.ROLE_DELETE,
-                PermissionName.ROLE_PERMISSION_READ,
-                PermissionName.ROLE_PERMISSION_CREATE,
-                PermissionName.ROLE_PERMISSION_DELETE,
-            ],
-        },
-    },
-    {
-        name: 'Policies',
-        type: 'link',
-        url: '/policies',
-        icon: 'fa6-solid:scale-balanced',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: {
-                namespace: TranslatorTranslationNamespace.ENTITY, 
-                key: TranslatorTranslationEntityKey.POLICY, 
-                count: 2, 
-            },
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.PERMISSION_READ,
-                PermissionName.PERMISSION_CREATE,
-                PermissionName.PERMISSION_UPDATE,
-                PermissionName.PERMISSION_DELETE,
-            ],
-        },
-    },
-    {
-        name: 'Permissions',
-        type: 'link',
-        url: '/permissions',
-        icon: 'fa6-solid:key',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: {
-                namespace: TranslatorTranslationNamespace.ENTITY, 
-                key: TranslatorTranslationEntityKey.PERMISSION, 
-                count: 2, 
-            },
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.PERMISSION_READ,
-                PermissionName.PERMISSION_CREATE,
-                PermissionName.PERMISSION_UPDATE,
-                PermissionName.PERMISSION_DELETE,
-            ],
-        },
-    },
-    {
-        name: 'Sessions',
-        type: 'link',
-        url: '/sessions',
-        icon: 'fa6-solid:desktop',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: {
-                namespace: TranslatorTranslationNamespace.ENTITY,
-                key: TranslatorTranslationEntityKey.SESSION,
-                count: 2,
-            },
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.SESSION_READ,
-            ],
-        },
-    },
-    {
-        name: 'Events',
-        type: 'link',
-        url: '/events',
-        icon: 'fa6-solid:clipboard-list',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: {
-                namespace: TranslatorTranslationNamespace.ENTITY,
-                key: TranslatorTranslationEntityKey.EVENT,
-                count: 2,
-            },
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.EVENT_READ,
-            ],
-        },
-    },
+    defineSectionNavigationItem('realms', {
+        [LayoutKey.REQUIRED_LOGGED_IN]: true,
+        [LayoutKey.REQUIRED_PERMISSIONS]: [
+            PermissionName.REALM_READ,
+            PermissionName.REALM_CREATE,
+            PermissionName.REALM_UPDATE,
+            PermissionName.REALM_DELETE,
+        ],
+    }),
+    defineSectionNavigationItem('clients', {
+        [LayoutKey.REQUIRED_LOGGED_IN]: true,
+        [LayoutKey.REQUIRED_PERMISSIONS]: [
+            PermissionName.CLIENT_READ,
+            PermissionName.CLIENT_CREATE,
+            PermissionName.CLIENT_UPDATE,
+            PermissionName.CLIENT_DELETE,
+        ],
+    }),
+    defineSectionNavigationItem('scopes', {
+        [LayoutKey.REQUIRED_LOGGED_IN]: true,
+        [LayoutKey.REQUIRED_PERMISSIONS]: [
+            PermissionName.SCOPE_READ,
+            PermissionName.SCOPE_CREATE,
+            PermissionName.SCOPE_UPDATE,
+            PermissionName.SCOPE_DELETE,
+        ],
+    }),
+    defineSectionNavigationItem('identity-providers', {
+        [LayoutKey.REQUIRED_LOGGED_IN]: true,
+        [LayoutKey.REQUIRED_PERMISSIONS]: [
+            PermissionName.IDENTITY_PROVIDER_READ,
+            PermissionName.IDENTITY_PROVIDER_CREATE,
+            PermissionName.IDENTITY_PROVIDER_UPDATE,
+            PermissionName.IDENTITY_PROVIDER_DELETE,
+        ],
+    }),
+    defineSectionNavigationItem('keys', {
+        [LayoutKey.REQUIRED_LOGGED_IN]: true,
+        [LayoutKey.REQUIRED_PERMISSIONS]: [
+            PermissionName.KEY_READ,
+            PermissionName.KEY_CREATE,
+            PermissionName.KEY_UPDATE,
+            PermissionName.KEY_DELETE,
+        ],
+    }),
+    defineSectionNavigationItem('trust-anchors', {
+        [LayoutKey.REQUIRED_LOGGED_IN]: true,
+        [LayoutKey.REQUIRED_PERMISSIONS]: [
+            PermissionName.KEY_READ,
+            PermissionName.KEY_CREATE,
+            PermissionName.KEY_UPDATE,
+            PermissionName.KEY_DELETE,
+        ],
+    }),
+    defineSectionNavigationItem('users', {
+        [LayoutKey.REQUIRED_LOGGED_IN]: true,
+        [LayoutKey.REQUIRED_PERMISSIONS]: [
+            PermissionName.USER_READ,
+            PermissionName.USER_CREATE,
+            PermissionName.USER_UPDATE,
+            PermissionName.USER_DELETE,
+        ],
+    }),
+    defineSectionNavigationItem('roles', {
+        [LayoutKey.REQUIRED_LOGGED_IN]: true,
+        [LayoutKey.REQUIRED_PERMISSIONS]: [
+            PermissionName.ROLE_READ,
+            PermissionName.ROLE_CREATE,
+            PermissionName.ROLE_UPDATE,
+            PermissionName.ROLE_DELETE,
+            PermissionName.ROLE_PERMISSION_READ,
+            PermissionName.ROLE_PERMISSION_CREATE,
+            PermissionName.ROLE_PERMISSION_DELETE,
+        ],
+    }),
+    defineSectionNavigationItem('policies', {
+        [LayoutKey.REQUIRED_LOGGED_IN]: true,
+        [LayoutKey.REQUIRED_PERMISSIONS]: [
+            PermissionName.PERMISSION_READ,
+            PermissionName.PERMISSION_CREATE,
+            PermissionName.PERMISSION_UPDATE,
+            PermissionName.PERMISSION_DELETE,
+        ],
+    }),
+    defineSectionNavigationItem('permissions', {
+        [LayoutKey.REQUIRED_LOGGED_IN]: true,
+        [LayoutKey.REQUIRED_PERMISSIONS]: [
+            PermissionName.PERMISSION_READ,
+            PermissionName.PERMISSION_CREATE,
+            PermissionName.PERMISSION_UPDATE,
+            PermissionName.PERMISSION_DELETE,
+        ],
+    }),
+    defineSectionNavigationItem('sessions', {
+        [LayoutKey.REQUIRED_LOGGED_IN]: true,
+        [LayoutKey.REQUIRED_PERMISSIONS]: [
+            PermissionName.SESSION_READ,
+        ],
+    }),
+    defineSectionNavigationItem('events', {
+        [LayoutKey.REQUIRED_LOGGED_IN]: true,
+        [LayoutKey.REQUIRED_PERMISSIONS]: [
+            PermissionName.EVENT_READ,
+        ],
+    }),
     {
         name: 'Other',
         type: 'separator',

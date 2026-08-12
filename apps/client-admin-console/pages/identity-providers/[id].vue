@@ -1,36 +1,39 @@
 <script lang="ts">
 
-import { 
-    TranslatorTranslationAppKey, 
-    TranslatorTranslationCommonKey, 
-    TranslatorTranslationEntityKey, 
-    TranslatorTranslationNamespace, 
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { 
-    injectHTTPClient, 
-    useTranslations, 
-    useTranslationsForNamespace, 
-    useTranslator, 
+import {
+    injectHTTPClient,
+    useTranslations,
+    useTranslator,
 } from '@authup/client-web-kit';
 import type { IdentityProvider } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
 import { VCIcon } from '@vuecs/icon';
+import { VCBreadcrumb } from '@vuecs/navigation';
 import type { Ref } from 'vue';
 import { computed, defineComponent } from 'vue';
-import { 
-    createError, 
-    definePageMeta, 
-    navigateTo, 
-    useAsyncData, 
-    useErrorToast, 
-    useRoute, 
-    useToast, 
+import {
+    buildEntityBreadcrumb,
+    createError,
+    definePageMeta,
+    navigateTo,
+    useAsyncData,
+    useErrorToast,
+    useRoute,
+    useSectionBreadcrumb,
+    useToast,
 } from '#imports';
-import { LayoutKey } from '../../config/layout';
+import { buildRecordHeading } from '../../composables/record';
+import { LayoutKey, LayoutSection } from '../../config/layout';
 
 export default defineComponent({
-    components: { VCIcon },
+    components: { VCBreadcrumb, VCIcon },
     async setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
@@ -43,6 +46,10 @@ export default defineComponent({
         const errorToast = useErrorToast();
         const handleFailed = (e: Error) => errorToast.show(e);
         const route = useRoute();
+
+        // Resolves through inject(), so it has to run before the record fetch
+        // below is awaited.
+        const breadcrumbBase = useSectionBreadcrumb(LayoutSection.IDENTITY_PROVIDERS);
 
         const translationsDefault = useTranslations(
             [
@@ -63,12 +70,6 @@ export default defineComponent({
             ],
         );
 
-        const translationsApp = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.APP,
-            [
-                { key: TranslatorTranslationAppKey.DETAILS },
-            ],
-        );
 
         const translate = useTranslator();
 
@@ -110,6 +111,18 @@ export default defineComponent({
             },
         ]);
 
+        const heading = computed(() => buildRecordHeading(entity.value));
+
+        const breadcrumbItems = computed(() => buildEntityBreadcrumb({
+            base: breadcrumbBase.value,
+            entity: {
+                label: heading.value.label,
+                url: `/identity-providers/${entity.value.id}`,
+            },
+            path: route.path,
+            tabs: items.value,
+        }));
+
         const handleUpdated = async (e: IdentityProvider) => {
             toast.show({
                 variant: 'success',
@@ -123,26 +136,37 @@ export default defineComponent({
             extendObject(entity.value, e);
         };
 
-
         return {
+            heading,
+            breadcrumbItems,
             entity,
             items,
             handleUpdated,
             handleFailed,
-            translationsApp,
         };
     },
 });
 </script>
 <template>
     <div>
-        <h1 class="title no-border mb-3">
-            <VCIcon
-                name="fa6-solid:atom"
-                class="me-1"
-            /> {{ entity.name }}
-            <span class="sub-title ms-1">{{ translationsApp.details }}</span>
-        </h1>
+        <VCBreadcrumb
+            :items="breadcrumbItems"
+            class="mb-2"
+        />
+        <div class="mb-3">
+            <h1 class="title no-border mb-0">
+                <VCIcon
+                    name="fa6-solid:atom"
+                    class="me-1"
+                /> {{ heading.label }}
+            </h1>
+            <p
+                v-if="heading.subTitle"
+                class="sub-title"
+            >
+                {{ heading.subTitle }}
+            </p>
+        </div>
         <div class="mb-2">
             <VCNavItems
                 :data="items"
