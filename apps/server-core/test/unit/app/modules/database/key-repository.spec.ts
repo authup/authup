@@ -166,6 +166,31 @@ describe('app/modules/database/repositories/key', () => {
         expect(resolved!.id).toEqual(key!.id);
     });
 
+    /**
+     * A failing mint must not leave its in-flight entry behind: the guard
+     * would then hand every later caller the same rejected promise and the
+     * realm could not mint again until the process restarted.
+     */
+    it('recovers after a failed mint under concurrent resolves', async () => {
+        const repository = new KeyRepositoryAdapter(dataSource);
+        const realm = await dataSource.getRepository(RealmEntity).save(
+            dataSource.getRepository(RealmEntity).create({ name: 'failed-mint-realm' }),
+        );
+
+        const key = await repository.resolveOrCreate(realm.id, JWKUse.SIGNATURE);
+        await dataSource.getRepository(KeyEntity).update(key!.id, { status: KeyStatus.DISABLED });
+
+        const outcomes = await Promise.allSettled([
+            repository.resolveOrCreate(realm.id, JWKUse.SIGNATURE),
+            repository.resolveOrCreate(realm.id, JWKUse.SIGNATURE),
+        ]);
+        expect(outcomes.every((outcome) => outcome.status === 'rejected')).toBe(true);
+
+        await dataSource.getRepository(KeyEntity).update(key!.id, { status: KeyStatus.ACTIVE });
+        const resolved = await repository.resolveOrCreate(realm.id, JWKUse.SIGNATURE);
+        expect(resolved!.id).toEqual(key!.id);
+    });
+
     it('persists material wrapped under a KEK and unwraps transparently on read', async () => {
         const repository = new KeyRepositoryAdapter(dataSource, { secretsCipher: KEK });
 
