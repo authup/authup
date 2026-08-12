@@ -117,53 +117,21 @@ export function assertSchemaFieldsCoverEntity(
 }
 
 /**
- * Every declared schema index must be BACKED by the entity metadata:
- * its property sequence must be a leftmost prefix of the primary key,
- * a unique constraint, or an index. rapiq's indexed filters/sort
- * enforcement is structural and trusts the declaration, so an
- * unbacked declaration silently promises index-served combinations
- * the database cannot serve. (`@rapiq/adapter-typeorm`'s
- * `assertSchemaMatchesEntity` does not cover `indexes` yet —
- * tada5hi/rapiq#898 tracks folding this upstream.)
- */
-export function assertSchemaIndexesMatchEntity(
-    name: string,
-    schema: { indexes?: string[][] },
-    metadata: EntityMetadata,
-) : void {
-    const declared = schema.indexes || [];
-    if (declared.length === 0) {
-        return;
-    }
-
-    const backing : string[][] = [
-        metadata.primaryColumns.map((column) => column.propertyName),
-        ...metadata.uniques.map((unique) => unique.columns.map((column) => column.propertyName)),
-        ...metadata.indices.map((index) => index.columns.map((column) => column.propertyName)),
-    ];
-
-    const unbacked = declared.filter((sequence) => !backing.some(
-        (columns) => sequence.length <= columns.length &&
-            sequence.every((key, position) => columns[position] === key),
-    ));
-
-    if (unbacked.length > 0) {
-        throw new Error(
-            `The schema "${name}" declares index(es) the entity does not back: ${
-                unbacked.map((sequence) => sequence.join(' + ')).join(', ')}.`,
-        );
-    }
-}
-
-/**
  * Validate every registered entity schema against its TypeORM
- * metadata (`@rapiq/adapter-typeorm`'s `assertSchemaMatchesEntity`: allow-lists,
- * fields/sort defaults and the filters default condition tree must
- * reference existing columns/relations), assert its field allow-list
- * covers every selectable column, and assert its declared indexes are
- * backed by real database structures. Called by
- * `DatabaseModule.setup` once the DataSource is initialized —
- * schema/entity drift fails the boot, fail-fast.
+ * metadata (`@rapiq/adapter-typeorm`'s `assertSchemaMatchesEntity`:
+ * allow-lists, fields/sort defaults and the filters default condition
+ * tree must reference existing columns/relations, AND every declared
+ * index must be a leftmost prefix of a real primary key, unique
+ * constraint or index) and assert its field allow-list covers every
+ * selectable column. Called by `DatabaseModule.setup` once the
+ * DataSource is initialized — schema/entity drift fails the boot,
+ * fail-fast.
+ *
+ * The index half was an authup-side assert until rapiq 2.1.0 folded it
+ * upstream (tada5hi/rapiq#902 closed #898); the local copy is gone,
+ * since the upstream check is the same leftmost-prefix rule over the
+ * same structures and additionally verifies the index keys are real
+ * columns.
  */
 export function validateEntitySchemas(dataSource: DataSource) : void {
     for (const [name, target] of Object.entries(SCHEMA_ENTITY_TARGETS)) {
@@ -172,6 +140,5 @@ export function validateEntitySchemas(dataSource: DataSource) : void {
 
         assertSchemaMatchesEntity(schema, metadata);
         assertSchemaFieldsCoverEntity(name, schema, metadata);
-        assertSchemaIndexesMatchEntity(name, schema, metadata);
     }
 }
