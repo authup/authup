@@ -203,12 +203,26 @@ function create<
             // Per-parameter replace: a parameter present on the input
             // supersedes the retained interactive value, an absent one
             // keeps it (a pagination-only load keeps the search).
+            //
+            // Sorts accept both spellings: rapiq 2.1.0 made `sorts` the
+            // canonical build-input key and kept `sort` as a deprecated
+            // alias, so checking only one silently drops a load carrying
+            // the other. They are matched on a DEFINED value rather than
+            // key presence (the `in` the siblings use), because rapiq
+            // documents the spread migration wrapper
+            // `{ sorts: props.sorts, sort: props.sort }` as safe: it
+            // carries both keys as `undefined`, which `in` reads as
+            // "supplied" and would wipe the retained sorts. Supplying
+            // both with values throws KEY_AMBIGUOUS at desugaring above.
+            const sortsSupplied = typeof input.sorts !== 'undefined' ||
+                typeof input.sort !== 'undefined';
+
             interactiveNext = new Query({
                 fields: 'fields' in input ? inputQuery.fields : interactive?.fields,
                 filters: filtersOverride ??
                     ('filters' in input ? inputQuery.filters : interactive?.filters),
                 relations: 'relations' in input ? inputQuery.relations : interactive?.relations,
-                sorts: 'sort' in input ? inputQuery.sorts : interactive?.sorts,
+                sorts: sortsSupplied ? inputQuery.sorts : interactive?.sorts,
             });
         }
 

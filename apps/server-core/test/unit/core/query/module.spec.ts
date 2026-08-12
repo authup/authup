@@ -425,7 +425,7 @@ describe('core/query', () => {
 
             expect(description.indexes).toContainEqual(['name', 'clientId', 'realmId']);
             expect(description.filters!.indexed).toEqual('anchor');
-            expect(description.sort!.indexed).toBe(true);
+            expect(description.sorts!.indexed).toBe(true);
         });
     });
 });

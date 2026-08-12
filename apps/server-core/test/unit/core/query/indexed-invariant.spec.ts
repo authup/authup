@@ -50,6 +50,22 @@ describe('core/query (indexed invariant)', () => {
         expect(offenders).toEqual([]);
     });
 
+    /**
+     * Guards both checks against passing vacuously. Each reads an
+     * allow-list off the schema DESCRIPTION and iterates it, so a
+     * renamed description key yields `undefined`, the loop never runs
+     * and the invariant reports green while checking nothing — which is
+     * exactly what the `sort` to `sorts` rename in rapiq 2.1.0 (#906)
+     * did. The description is upstream's shape, so pin that it still
+     * carries the keys these checks depend on.
+     */
+    it.each(['filters', 'sorts'] as const)('should have %s allow-lists to check', (parameter) => {
+        const keys = schemas
+            .flatMap((schema) => schema.describe()[parameter]?.allowed || []);
+
+        expect(keys.length).toBeGreaterThan(0);
+    });
+
     it('should let every allowed sort key lead an index', () => {
         const offenders : string[] = [];
 
@@ -57,7 +73,7 @@ describe('core/query (indexed invariant)', () => {
             const description = schema.describe();
             const leading = new Set((description.indexes || []).map((index: string[]) => index[0]));
 
-            for (const key of description.sort?.allowed || []) {
+            for (const key of description.sorts?.allowed || []) {
                 if (!leading.has(key)) {
                     offenders.push(`${description.name}.${key}`);
                 }

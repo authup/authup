@@ -115,7 +115,7 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
         const { httpClient } = mountCollection({
             query: {
                 filters: { realmId: ['realm-1', null] },
-                sort: { updatedAt: 'DESC' },
+                sorts: { updatedAt: 'DESC' },
             },
         });
         await flushPromises();
@@ -171,6 +171,46 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
         expect(requests).toHaveLength(3);
         expect(requests[2].searchParams.get('filter'))
             .toEqual("and(or(contains(name,'foo'),contains(displayName,'foo')),in(realmId,'realm-1',null))");
+        expect(requests[2].searchParams.get('page[offset]')).toEqual('10');
+    });
+
+    /**
+     * rapiq 2.1.0 (#906) made `sorts` the canonical build-input key and
+     * kept `sort` as a deprecated alias. The per-parameter replace must
+     * recognize both, or a load carrying the canonical spelling is
+     * silently dropped in favour of the retained interactive sorts.
+     */
+    it.each(['sorts', 'sort'] as const)('a load carrying %s replaces the retained sorts', async (key) => {
+        const { wrapper, httpClient } = mountCollection({ query: { filters: { realmId: ['realm-1', null] } } });
+        await flushPromises();
+
+        await (wrapper.vm as any).load({ [key]: { updatedAt: 'DESC' } });
+        await (wrapper.vm as any).load({ [key]: { name: 'ASC' } });
+
+        const requests = listRequests(httpClient.requests);
+        expect(requests[1].searchParams.get('sort')).toEqual('-updatedAt');
+        expect(requests[2].searchParams.get('sort')).toEqual('name');
+    });
+
+    /**
+     * rapiq documents `{ sorts: props.sorts, sort: props.sort }` as a safe
+     * spread migration wrapper: an undefined side never trips
+     * KEY_AMBIGUOUS. Both keys are then own properties, so a presence
+     * (`in`) test would read that as "sorts supplied" and wipe them.
+     */
+    it('a load carrying only undefined sort spellings keeps the retained sorts', async () => {
+        const { wrapper, httpClient } = mountCollection({ query: { filters: { realmId: ['realm-1', null] } } });
+        await flushPromises();
+
+        await (wrapper.vm as any).load({ sorts: { updatedAt: 'DESC' } });
+        await (wrapper.vm as any).load({
+            sorts: undefined, 
+            sort: undefined, 
+            pagination: { offset: 10 }, 
+        });
+
+        const requests = listRequests(httpClient.requests);
+        expect(requests[2].searchParams.get('sort')).toEqual('-updatedAt');
         expect(requests[2].searchParams.get('page[offset]')).toEqual('10');
     });
 
