@@ -12,7 +12,7 @@ import type { Logger } from '@authup/server-kit';
 import type { IEventService } from '../../entities/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 import { buildOAuth2BearerTokenResponse } from '../response/index.ts';
-import { isSessionTokenSessionMissingError } from '../session-token/index.ts';
+import { isSessionTokenRelationMissingError } from '../session-token/index.ts';
 import type { ISessionTokenRepository } from '../session-token/index.ts';
 import type { IOAuth2TokenIssuer, IOAuth2TokenRepository, IOAuth2TokenVerifier } from '../token/index.ts';
 import { OAuth2BaseGrant } from './base.ts';
@@ -138,13 +138,15 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         // request can revoke it (a replay reaction on this same family, an
         // explicit logout, an admin force-logout, the sweeper) before the
         // issuers write their inventory rows, and the write is then rejected by
-        // the session foreign key. Refusing the request is correct, since it
-        // must not receive tokens for a session that no longer exists, but it
-        // has to read as `invalid_grant` rather than as an internal error: the
-        // presented token is already consumed and cache-blocklisted, so there
-        // is nothing left to retry with and re-authentication is the only way
-        // forward (issue #3435). Anything else is a genuine fault and is
-        // rethrown untouched.
+        // the session foreign key. The client the tokens are attributed to can
+        // disappear in the same window, which the repository reports the same
+        // way: both parents cascade onto `auth_session_tokens`, so either loss
+        // has already deleted the presented token's own row. Refusing is
+        // therefore correct in both cases, but it has to read as
+        // `invalid_grant` rather than as an internal error: the presented token
+        // is already consumed and cache-blocklisted, so there is nothing left
+        // to retry with and re-authentication is the only way forward (issue
+        // #3435). Anything else is a genuine fault and is rethrown untouched.
         try {
             const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue({
                 ...payload,
@@ -171,9 +173,10 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
                 refreshTokenPayload,
             });
         } catch (e) {
-            if (isSessionTokenSessionMissingError(e)) {
-                this.logger?.debug('OAuth2 refresh token rotation lost the session mid-flight', {
+            if (isSessionTokenRelationMissingError(e)) {
+                this.logger?.debug('OAuth2 refresh token rotation lost a referenced row mid-flight', {
                     sessionId: payload.session_id,
+                    clientId: payload.client_id,
                     jti: payload.jti,
                 });
 

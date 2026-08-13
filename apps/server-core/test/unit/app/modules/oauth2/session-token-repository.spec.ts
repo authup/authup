@@ -16,8 +16,8 @@ import {
     it,
 } from 'vitest';
 import { DataSourceOptionsBuilder } from '../../../../../src/adapters/database/data-source/options/module.ts';
-import { RealmEntity, SessionEntity } from '../../../../../src/adapters/database/domains/index.ts';
-import { isSessionTokenSessionMissingError } from '../../../../../src/core/index.ts';
+import { ClientEntity, RealmEntity, SessionEntity } from '../../../../../src/adapters/database/domains/index.ts';
+import { isSessionTokenRelationMissingError } from '../../../../../src/core/index.ts';
 import { SessionTokenRepositoryAdapter } from '../../../../../src/app/modules/oauth2/repositories/session-token/repository.ts';
 
 describe('app/modules/oauth2/repositories/session-token', () => {
@@ -59,10 +59,21 @@ describe('app/modules/oauth2/repositories/session-token', () => {
         return entity.id;
     }
 
-    function buildInput(sessionId: string) {
+    async function createClient() : Promise<string> {
+        const repository = dataSource.getRepository(ClientEntity);
+        const entity = await repository.save(repository.create({
+            name: `client-${randomUUID()}`,
+            realmId,
+        }));
+
+        return entity.id;
+    }
+
+    function buildInput(sessionId: string, clientId?: string) {
         return {
             id: randomUUID(),
             sessionId,
+            clientId: clientId ?? null,
             kind: 'refresh' as const,
             ipAddress: '203.0.113.10',
             userAgent: 'test-agent',
@@ -86,7 +97,7 @@ describe('app/modules/oauth2/repositories/session-token', () => {
     // writing the row (a concurrent replay revoke, an explicit logout, the
     // session sweeper). The foreign key rejects the insert, and the driver
     // error must not escape as an unhandled internal error (issue #3435).
-    it('raises a session-missing domain error when the session is gone', async () => {
+    it('raises a relation-missing domain error when the session is gone', async () => {
         const repository = new SessionTokenRepositoryAdapter(dataSource);
         const sessionId = await createSession();
 
@@ -99,6 +110,39 @@ describe('app/modules/oauth2/repositories/session-token', () => {
             error = e;
         }
 
-        expect(isSessionTokenSessionMissingError(error)).toBe(true);
+        expect(isSessionTokenRelationMissingError(error)).toBe(true);
+    });
+
+    // The client the row is attributed to can vanish in the same window, and it
+    // is reported the same way on purpose. Only postgres names the failing
+    // constraint on the error; sqlite reports "FOREIGN KEY constraint failed"
+    // and nothing else, so a per-relation verdict is not implementable here. It
+    // would also not change any caller: the client cascades onto this table
+    // too, so the token's rows are gone either way.
+    it('raises the same error when the attributed client is gone', async () => {
+        const repository = new SessionTokenRepositoryAdapter(dataSource);
+        const sessionId = await createSession();
+        const clientId = await createClient();
+
+        await dataSource.getRepository(ClientEntity).delete({ id: clientId });
+
+        let error : unknown;
+        try {
+            await repository.create(buildInput(sessionId, clientId));
+        } catch (e) {
+            error = e;
+        }
+
+        expect(isSessionTokenRelationMissingError(error)).toBe(true);
+    });
+
+    it('persists a token row attributed to a live client', async () => {
+        const repository = new SessionTokenRepositoryAdapter(dataSource);
+        const sessionId = await createSession();
+        const clientId = await createClient();
+
+        const row = await repository.create(buildInput(sessionId, clientId));
+
+        expect(row.clientId).toEqual(clientId);
     });
 });

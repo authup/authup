@@ -18,7 +18,7 @@ import {
     it,
 } from 'vitest';
 import { OAuth2RefreshTokenGrant } from '../../../../../src/core/oauth2/grant-types/refresh-token.ts';
-import { SessionTokenSessionMissingError } from '../../../../../src/core/oauth2/session-token/error.ts';
+import { SessionTokenRelationMissingError } from '../../../../../src/core/oauth2/session-token/error.ts';
 import {
     FakeAuthFlowMetrics,
     FakeEventService,
@@ -372,15 +372,16 @@ describe('OAuth2RefreshTokenGrant', () => {
     // Issue #3435. A concurrent revoke (a replay reaction on the same family,
     // an explicit logout, an admin force-logout, the sweeper) can delete the
     // session between the grant resolving it and the issuer writing the
-    // inventory row. The insert then violates the session foreign key. The
-    // client must see `invalid_grant` and re-authenticate, not a 500 it will
-    // treat as retryable with a token that is already consumed.
-    it('should answer invalid_grant when the session is revoked before the refresh token is issued', async () => {
+    // inventory row, and a deleted client takes the same path. The insert then
+    // violates a foreign key. The client must see `invalid_grant` and
+    // re-authenticate, not a 500 it will treat as retryable with a token that
+    // is already consumed.
+    it('should answer invalid_grant when a referenced row is gone before the refresh token is issued', async () => {
         const payload = await seed();
         const grant = build();
 
         refreshTokenIssuer.issue = async () => {
-            throw new SessionTokenSessionMissingError();
+            throw new SessionTokenRelationMissingError();
         };
 
         let error: unknown;
@@ -400,12 +401,12 @@ describe('OAuth2RefreshTokenGrant', () => {
         expect(metrics.refreshReplayCalls).toEqual(0);
     });
 
-    it('should answer invalid_grant when the session is revoked before the access token is issued', async () => {
+    it('should answer invalid_grant when a referenced row is gone before the access token is issued', async () => {
         const payload = await seed();
         const grant = build();
 
         accessTokenIssuer.issue = async () => {
-            throw new SessionTokenSessionMissingError();
+            throw new SessionTokenRelationMissingError();
         };
 
         let error: unknown;
