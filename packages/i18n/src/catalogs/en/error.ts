@@ -11,6 +11,7 @@ import type { NamespaceTranslations } from '../../types';
 export const TranslatorTranslationErrorEnglish : NamespaceTranslations<`${ErrorCode}`> = {
     [ErrorCode.BAD_REQUEST]: 'The request could not be processed.',
     [ErrorCode.INTERNAL_ERROR]: 'An unexpected error occurred. Please try again later.',
+    [ErrorCode.UPSTREAM_ERROR]: 'A required service did not answer correctly. Please try again later.',
 
     [ErrorCode.HTTP_HEADER_AUTH_TYPE_UNSUPPORTED]: 'The authorization header type is not supported.',
     [ErrorCode.HTTP_BEARER_TOKEN_MALFORMED]: 'The bearer token is malformed.',

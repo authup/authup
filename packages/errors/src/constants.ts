@@ -10,6 +10,15 @@ export enum ErrorCode {
     BAD_REQUEST = 'bad_request',
     INTERNAL_ERROR = 'internal_error',
 
+    /**
+     * An outbound call to a service this server depends on failed, either
+     * as a transport failure or as an error answer. Distinct from
+     * INTERNAL_ERROR so a caller can tell "authup is broken" from "authup
+     * could not reach a dependency", and so the upstream status is never
+     * mirrored onto authup's own response.
+     */
+    UPSTREAM_ERROR = 'upstream_error',
+
     // HTTP Codes
     HTTP_HEADER_AUTH_TYPE_UNSUPPORTED = 'unsupported_auth_header_type',
     HTTP_BEARER_TOKEN_MALFORMED = 'bearer_token_malformed',

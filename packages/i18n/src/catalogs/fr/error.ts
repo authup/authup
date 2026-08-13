@@ -11,6 +11,7 @@ import type { NamespaceTranslations } from '../../types';
 export const TranslatorTranslationErrorFrench : NamespaceTranslations<`${ErrorCode}`> = {
     [ErrorCode.BAD_REQUEST]: 'La requête n\'a pas pu être traitée.',
     [ErrorCode.INTERNAL_ERROR]: 'Une erreur inattendue est survenue. Veuillez réessayer plus tard.',
+    [ErrorCode.UPSTREAM_ERROR]: 'Un service requis n\'a pas répondu correctement. Veuillez réessayer plus tard.',
 
     [ErrorCode.HTTP_HEADER_AUTH_TYPE_UNSUPPORTED]: 'Le type d\'en-tête d\'autorisation n\'est pas pris en charge.',
     [ErrorCode.HTTP_BEARER_TOKEN_MALFORMED]: 'Le jeton bearer est mal formé.',

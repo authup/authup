@@ -16,7 +16,10 @@ import {
     it,
 } from 'vitest';
 import type { IdentityProvider, Realm, User } from '@authup/core-kit';
+import type { Logger } from '@authup/server-kit';
+import { createNoopLogger } from '@authup/server-kit';
 import { generateOAuth2CodeVerifier } from '../../../../../../src/core';
+import { LoggerInjectionKey } from '../../../../../../src/app';
 import {
     createFakeOAuth2IdentityProvider,
     createFakeRealm,
@@ -35,11 +38,17 @@ describe('identity-provider link flow', () => {
     let idpServer: Server;
     let idpURL: string;
     let externalUserId = 'external-user-1';
+    let tokenEndpointError: Record<string, string> | undefined;
 
     let realm: Realm;
     let provider: IdentityProvider;
     let user: User;
     let userToken: string;
+
+    // The link callback swallows every failure into a redirect, so the log
+    // is the only place its reason can surface. Recording it here is the
+    // whole point of the assertion below.
+    const logLines: string[] = [];
 
     beforeAll(async () => {
         // A minimal external IdP: the token endpoint answers every code
@@ -49,6 +58,13 @@ describe('identity-provider link flow', () => {
         // three-part shape).
         idpServer = createServer((req, res) => {
             if (req.url && req.url.startsWith('/token')) {
+                if (tokenEndpointError) {
+                    res.statusCode = 400;
+                    res.setHeader('content-type', 'application/json');
+                    res.end(JSON.stringify(tokenEndpointError));
+                    return;
+                }
+
                 const accessToken = `${encode({ alg: 'none', typ: 'JWT' })}.${encode({
                     sub: externalUserId,
                     email: 'linked@example.com',
@@ -65,6 +81,13 @@ describe('identity-provider link flow', () => {
             idpServer.listen(0, '127.0.0.1', resolve);
         });
         idpURL = `http://127.0.0.1:${(idpServer.address() as AddressInfo).port}`;
+
+        const logger = createNoopLogger();
+        logger.error = ((message: unknown) => {
+            logLines.push(typeof message === 'string' ? message : String(message));
+            return logger;
+        }) as Logger['error'];
+        suite.container.register(LoggerInjectionKey, { useValue: logger });
 
         await suite.setup();
 
@@ -234,6 +257,22 @@ describe('identity-provider link flow', () => {
         expect(target.searchParams.get('linkError')).toEqual('link_failed');
 
         externalUserId = 'external-user-1';
+    });
+
+    it('logs the upstream answer when the token exchange is rejected', async () => {
+        tokenEndpointError = { error: 'invalid_request', error_description: 'code is invalid' };
+        logLines.length = 0;
+
+        const { state } = await requestLink(userToken);
+        const target = await completeCallback(state);
+
+        expect(target.searchParams.get('linkError')).toEqual('link_failed');
+
+        const log = logLines.join('\n');
+        expect(log).toContain('upstream status: 400');
+        expect(log).toContain('code is invalid');
+
+        tokenEndpointError = undefined;
     });
 
     it('rejects a link state replayed against a different provider callback', async () => {

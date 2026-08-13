@@ -11,6 +11,7 @@ import type { NamespaceTranslations } from '../../types';
 export const TranslatorTranslationErrorGerman : NamespaceTranslations<`${ErrorCode}`> = {
     [ErrorCode.BAD_REQUEST]: 'Die Anfrage konnte nicht verarbeitet werden.',
     [ErrorCode.INTERNAL_ERROR]: 'Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es später erneut.',
+    [ErrorCode.UPSTREAM_ERROR]: 'Ein benötigter Dienst hat nicht korrekt geantwortet. Bitte versuche es später erneut.',
 
     [ErrorCode.HTTP_HEADER_AUTH_TYPE_UNSUPPORTED]: 'Der Typ des Autorisierungs-Headers wird nicht unterstützt.',
     [ErrorCode.HTTP_BEARER_TOKEN_MALFORMED]: 'Das Bearer-Token ist fehlerhaft.',
