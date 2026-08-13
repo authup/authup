@@ -60,6 +60,15 @@ export interface ISessionTokenRepository {
 
     /**
      * Persist a newly issued session-token row.
+     *
+     * Throws `SessionTokenRelationMissingError` when a row the token references
+     * is gone: `sessionId`, or the `clientId` it is attributed to. Both are
+     * resolved before the write, so a concurrent delete (a replay reaction, a
+     * logout, the sweeper, an application being removed) can land in between
+     * and the write is then rejected. Which of the two it was is deliberately
+     * not reported, since both cascade onto this table and so leave the token
+     * equally unusable. Callers that own an OAuth2 error vocabulary translate
+     * it; the rest let it settle as a plain validation failure.
      */
     create(input: SessionTokenCreateInput): Promise<SessionToken>;
 

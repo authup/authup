@@ -12,6 +12,8 @@ import type { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
 import { In, LessThan } from 'typeorm';
 import { applyQuery, redactFieldConditions } from '../../../database/repositories/query.ts';
 import { SessionTokenEntity } from '../../../../../adapters/database/domains/index.ts';
+import { isForeignKeyConstraintDatabaseError } from '../../../../../adapters/database/errors/index.ts';
+import { SessionTokenRelationMissingError } from '../../../../../core/index.ts';
 import type {
     ISessionTokenRepository,
     SessionTokenCreateInput,
@@ -40,7 +42,23 @@ export class SessionTokenRepositoryAdapter implements ISessionTokenRepository {
             expiresAt: input.expiresAt,
         });
 
-        await this.repository.insert(entity);
+        try {
+            await this.repository.insert(entity);
+        } catch (e) {
+            // A rejection means one of the two parents was deleted between the
+            // caller resolving it and this write: the session (a concurrent
+            // replay reaction, logout, force-logout or sweep) or the client the
+            // token is attributed to. Both cascade onto this table, so either
+            // way the token rows are already gone and the caller's answer is the
+            // same, which is why the error names neither. Report that condition
+            // instead of letting a driver error escape as an unhandled internal
+            // error (issue #3435).
+            if (isForeignKeyConstraintDatabaseError(e)) {
+                throw new SessionTokenRelationMissingError();
+            }
+
+            throw e;
+        }
 
         // insert() does not hydrate @CreateDateColumn back onto the in-memory
         // entity (the DB fills created_at via its DEFAULT). Stamp it so the

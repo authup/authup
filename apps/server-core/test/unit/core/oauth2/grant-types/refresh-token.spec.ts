@@ -10,6 +10,7 @@ import type { Session } from '@authup/core-kit';
 import { EventName, EventRefType, EventScope } from '@authup/core-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2SubKind, OAuth2TokenKind, isOAuth2Error } from '@authup/specs';
+import { ErrorCode } from '@authup/errors';
 import {
     beforeEach,
     describe,
@@ -17,6 +18,7 @@ import {
     it,
 } from 'vitest';
 import { OAuth2RefreshTokenGrant } from '../../../../../src/core/oauth2/grant-types/refresh-token.ts';
+import { SessionTokenRelationMissingError } from '../../../../../src/core/oauth2/session-token/error.ts';
 import {
     FakeAuthFlowMetrics,
     FakeEventService,
@@ -365,6 +367,72 @@ describe('OAuth2RefreshTokenGrant', () => {
 
         expect(isOAuth2Error(error)).toBe(true);
         expect(sessionManager.revokeCalls).toContain(sessionId);
+    });
+
+    // Issue #3435. A concurrent revoke (a replay reaction on the same family,
+    // an explicit logout, an admin force-logout, the sweeper) can delete the
+    // session between the grant resolving it and the issuer writing the
+    // inventory row, and a deleted client takes the same path. The insert then
+    // violates a foreign key. The client must see `invalid_grant` and
+    // re-authenticate, not a 500 it will treat as retryable with a token that
+    // is already consumed.
+    it('should answer invalid_grant when a referenced row is gone before the refresh token is issued', async () => {
+        const payload = await seed();
+        const grant = build();
+
+        refreshTokenIssuer.issue = async () => {
+            throw new SessionTokenRelationMissingError();
+        };
+
+        let error: unknown;
+        try {
+            await grant.runWith(payload);
+        } catch (e) {
+            error = e;
+        }
+
+        expect(isOAuth2Error(error)).toBe(true);
+        expect((error as { code?: string }).code).toEqual(ErrorCode.OAUTH_GRANT_INVALID);
+
+        // This is not a replay, so the family must not be revoked a second time
+        // and no audit event / metric may be recorded for it.
+        expect(sessionManager.revokeCalls).toHaveLength(0);
+        expect(eventService.recordCalls).toHaveLength(0);
+        expect(metrics.refreshReplayCalls).toEqual(0);
+    });
+
+    it('should answer invalid_grant when a referenced row is gone before the access token is issued', async () => {
+        const payload = await seed();
+        const grant = build();
+
+        accessTokenIssuer.issue = async () => {
+            throw new SessionTokenRelationMissingError();
+        };
+
+        let error: unknown;
+        try {
+            await grant.runWith(payload);
+        } catch (e) {
+            error = e;
+        }
+
+        expect(isOAuth2Error(error)).toBe(true);
+        expect((error as { code?: string }).code).toEqual(ErrorCode.OAUTH_GRANT_INVALID);
+    });
+
+    // Only the missing-session condition is translated. Anything else is a
+    // genuine fault and must keep surfacing as one, or the race handling would
+    // hide real breakage behind a routine OAuth2 error.
+    it('should rethrow an unrelated issuer failure untouched', async () => {
+        const payload = await seed();
+        const grant = build();
+
+        const failure = new Error('signing key unavailable');
+        refreshTokenIssuer.issue = async () => {
+            throw failure;
+        };
+
+        await expect(grant.runWith(payload)).rejects.toBe(failure);
     });
 
     it('should throw when the payload has no jti', async () => {
