@@ -46,6 +46,9 @@ export const ERROR_CODE_TO_STATUS: Readonly<Partial<Record<`${ErrorCode}`, numbe
     // 500
     [ErrorCode.INTERNAL_ERROR]: 500,
 
+    // 502
+    [ErrorCode.UPSTREAM_ERROR]: 502,
+
     // 507
     [ErrorCode.STORAGE_INSUFFICIENT]: 507,
 };

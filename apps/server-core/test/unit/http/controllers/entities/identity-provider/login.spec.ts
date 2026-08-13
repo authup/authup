@@ -16,6 +16,7 @@ import {
     it,
 } from 'vitest';
 import type { IdentityProvider, Realm } from '@authup/core-kit';
+import { ErrorCode } from '@authup/errors';
 import {
     createFakeOAuth2IdentityProvider,
     createFakeRealm,
@@ -26,6 +27,10 @@ import { createTestApplication } from '../../../../../app';
 const USER_AGENT = 'login-spec-agent';
 
 const encode = (input: Record<string, any>) => Buffer.from(JSON.stringify(input)).toString('base64url');
+
+// A code the fake provider rejects, so the token exchange fails the way a
+// real provider fails it: an answer, not a transport error.
+const REJECTED_CODE = 'rejected-code';
 
 describe('identity-provider login flow', () => {
     const suite = createTestApplication();
@@ -58,6 +63,15 @@ describe('identity-provider login flow', () => {
                     if (!tokenRequestBody.get('code')) {
                         res.statusCode = 400;
                         res.end(JSON.stringify({ error: 'invalid_request' }));
+                        return;
+                    }
+
+                    if (tokenRequestBody.get('code') === REJECTED_CODE) {
+                        res.statusCode = 400;
+                        res.end(JSON.stringify({
+                            error: 'invalid_grant',
+                            error_description: 'the authorization code expired',
+                        }));
                         return;
                     }
 
@@ -152,5 +166,29 @@ describe('identity-provider login flow', () => {
         // the provider must not be contacted at all — a code-less exchange
         // has nothing to redeem
         expect(tokenRequestBody).toBeUndefined();
+    });
+
+    it('answers a rejected token exchange as a bad gateway', async () => {
+        const state = await authorizeOut();
+
+        const response = await httpRequest(
+            suite,
+            'GET',
+            `identity-providers/${provider.id}/authorize-in?state=${state}&code=${REJECTED_CODE}`,
+            {
+                headers: { 'user-agent': USER_AGENT },
+                redirect: 'manual',
+            },
+        );
+
+        // The caller's request was fine, the provider's answer was not.
+        // Mirroring the upstream 400 would read as "your request was
+        // malformed", so a failed outbound dependency is a 502 instead.
+        expect(response.status).toEqual(502);
+
+        const body = await response.json();
+        expect(body.code).toEqual(ErrorCode.UPSTREAM_ERROR);
+        // the outbound target must not be echoed back to the caller
+        expect(JSON.stringify(body)).not.toContain(idpURL);
     });
 });

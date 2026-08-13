@@ -43,7 +43,8 @@ import {
     isOpenIDIdentityProvider,
 } from '@authup/core-kit';
 import { BadRequestError, EntityNotFoundError } from '@authup/errors';
-import { resolveURL } from '../../../../../utils/index.ts';
+import type { Logger } from '@authup/server-kit';
+import { describeError, resolveURL } from '../../../../../utils/index.ts';
 import { useRequestQuery } from '@routup/basic/query';
 import { readRequestBody } from '@routup/basic/body';
 import { OAuth2ErrorCode, OAuth2RequestError } from '@authup/specs';
@@ -117,6 +118,8 @@ export class IdentityProviderController {
 
     protected eventService? : IEventService;
 
+    protected logger? : Logger;
+
     // ---------------------------------------------------------
 
     constructor(ctx: IdentityProviderControllerContext) {
@@ -131,6 +134,7 @@ export class IdentityProviderController {
         this.stateManager = ctx.stateManager;
         this.accessPolicyEvaluator = ctx.accessPolicyEvaluator;
         this.eventService = ctx.eventService;
+        this.logger = ctx.logger;
     }
 
     // ---------------------------------------------------------
@@ -596,6 +600,11 @@ export class IdentityProviderController {
 
             url.searchParams.set('linked', provider.id);
         } catch (e) {
+            // The failure is swallowed into a redirect marker, so the log is
+            // the only surface it can reach. Without this an unreachable or
+            // rejecting provider is indistinguishable from a stale state.
+            this.logger?.error(describeError(e, 'The identity-provider account link failed.'));
+
             url.searchParams.set(
                 'linkError',
                 isIdentityProviderAccountAlreadyLinkedError(e) ? 'already_linked' : 'link_failed',

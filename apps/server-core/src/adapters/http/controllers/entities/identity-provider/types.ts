@@ -5,6 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
+import type { Logger } from '@authup/server-kit';
 import type {
     IEventService,
     IIdentityProviderAccountManager,
@@ -35,4 +36,5 @@ export type IdentityProviderControllerContext = {
 
     accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,
     eventService?: IEventService,
+    logger?: Logger,
 };

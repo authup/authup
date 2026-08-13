@@ -179,6 +179,24 @@ Caveats:
 - The default unmatched-route fallback returns a collection shape (`{ data: [], meta: { total: 0 } }`); session endpoints need explicit handlers for logged-in renders. Entity-collection loads catch their own errors (they emit `failed` instead of rejecting — SSR crash hardening), but handlers on OTHER fire-and-forget fetch paths must not throw (an unawaited rejection fails vitest).
 - Alias the import (`createFakeHTTPClient`) — `test/utils` already exports a `createFakeClient` entity factory.
 
+### Capturing what the server logs
+
+`LoggerModule.setup` honors a pre-registered `LoggerInjectionKey` (test-fake-wins, the same rule as `MailInjectionKey` and `UIHttpClient`), so a spec asserting on log output registers its own recorder before `suite.setup()`:
+
+```typescript
+const logLines: string[] = [];
+const logger = createNoopLogger();
+logger.error = ((message: unknown) => {
+    logLines.push(String(message));
+    return logger;
+}) as Logger['error'];
+suite.container.register(LoggerInjectionKey, { useValue: logger });
+
+await suite.setup();
+```
+
+Reach for this where the log is the ONLY observable surface, a `catch` that swallows a failure into a redirect for instance. See `test/unit/http/controllers/entities/identity-provider/link.spec.ts`, which asserts the upstream status and body reach the log while the browser only sees `?linkError=link_failed`.
+
 ## Component Tests (packages/client-web-kit)
 
 The kit has a vitest + `@vue/test-utils` + `happy-dom` setup

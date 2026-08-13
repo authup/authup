@@ -9,7 +9,7 @@ import type { App } from 'routup';
 import { defineErrorHandler } from 'routup';
 import type { Logger } from '@authup/server-kit';
 import { httpStatusFromCode, serializeError } from '@authup/errors';
-import { sanitizeError } from '../../../../utils/index.ts';
+import { describeError, sanitizeError } from '../../../../utils/index.ts';
 
 type ErrorMiddlewareOptions = {
     logger?: Logger
@@ -17,14 +17,22 @@ type ErrorMiddlewareOptions = {
 
 export function registerErrorMiddleware(router: App, options: ErrorMiddlewareOptions = {}) {
     router.use(defineErrorHandler((error, event) => {
-        const next = sanitizeError(error.cause ?? error);
+        // routup wraps whatever a handler threw into an AppError carrying it
+        // as `cause`, so this is the error as it was actually raised.
+        const original = error.cause ?? error;
+
+        const next = sanitizeError(original);
         const status = httpStatusFromCode(next.code);
 
         const payload = serializeError(next);
 
         if (status >= 500) {
             if (options.logger) {
-                options.logger.error(next);
+                // The ORIGINAL error, never the sanitized copy. Sanitizing
+                // discards the transport reason and the upstream response
+                // body on purpose, and those are the only things that make
+                // an outbound failure diagnosable.
+                options.logger.error(describeError(original));
             }
             payload.message = 'An internal server error occurred.';
         }

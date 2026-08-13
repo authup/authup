@@ -11,6 +11,7 @@ import type { NamespaceTranslations } from '../../types';
 export const TranslatorTranslationErrorSpanish : NamespaceTranslations<`${ErrorCode}`> = {
     [ErrorCode.BAD_REQUEST]: 'No se pudo procesar la solicitud.',
     [ErrorCode.INTERNAL_ERROR]: 'Se produjo un error inesperado. Inténtelo de nuevo más tarde.',
+    [ErrorCode.UPSTREAM_ERROR]: 'Un servicio necesario no respondió correctamente. Inténtelo de nuevo más tarde.',
 
     [ErrorCode.HTTP_HEADER_AUTH_TYPE_UNSUPPORTED]: 'El tipo de encabezado de autorización no es compatible.',
     [ErrorCode.HTTP_BEARER_TOKEN_MALFORMED]: 'El token bearer tiene un formato incorrecto.',
