@@ -68,8 +68,11 @@ denies new authorization-code admission (and code redemption) for the admin
 console to identities that fail the policy. It is admission control, not
 continuous enforcement: the `refresh_token` grant is not re-evaluated, so
 already-issued refresh tokens keep working until they expire. To evict an
-identity that was admitted before the policy changed, revoke its sessions
-(`DELETE /sessions?filter[clientId]=...` or the sessions UI).
+identity that was admitted before the policy changed, revoke the tokens issued
+for that application (`DELETE /session-tokens?filter[clientId]=...`). This
+leaves the browser session alive, so the other applications riding it stay
+signed in. To sign one identity out everywhere instead, revoke its sessions
+(`DELETE /sessions?filter[userId]=...` or the sessions UI).
 
 One more caveat: the gate evaluates identity data only (realm, identity
 type, time windows, compositions thereof); role-membership conditions are
