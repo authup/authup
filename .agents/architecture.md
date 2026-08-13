@@ -2656,8 +2656,18 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
 
 ## Identity-Provider Account Linking (plan 091)
 
-`auth_identity_provider_accounts` (external identity → `userId`; unique
-`(providerId, userId)` — one link per provider per user) is surfaced as a
+`auth_identity_provider_accounts` (external identity → `userId`) carries TWO
+unique indexes: `(providerId, userId)` — one link per provider per user — and
+`(providerUserId, providerId)` — one external identity belongs to one local
+user (#3442). The second was application-only until then: `link()` and
+`save()` both read then write with no transaction and no row lock, so two
+concurrent completions for the same upstream subject could both insert, after
+which `findOneByProviderIdentity` returned whichever row the database ordered
+first. The column ORDER of that index is load-bearing — `providerUserId`
+leads the sequence the rapiq schema declares, so reversing it would fail
+`assertSchemaMatchesEntity` at boot and turn the migration into a rename.
+`link()` keeps its explicit check for the friendly `already_linked` message;
+the constraint is the backstop. The table is surfaced as a
 read+delete entity API and an explicit self-service link flow. No migration:
 the table predates the feature (federated login has always written it, and
 still auto-creates a NEW user for an unknown external identity — explicit

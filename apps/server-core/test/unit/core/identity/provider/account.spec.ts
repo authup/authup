@@ -23,6 +23,8 @@ import {
     IdentityProviderRoleMapper,
 } from '../../../../../src/core';
 import claims from '../../../../data/jwt.json';
+import { IdentityProviderAccountEntity } from '../../../../../src/adapters/database/domains';
+import { isUniqueConstraintDatabaseError } from '../../../../../src/adapters/database/errors';
 import {
     IdentityProviderAccountRepositoryAdapter,
     IdentityProviderAttributeMappingRepository,
@@ -34,6 +36,7 @@ import {
     PermissionEntity,
     RealmEntity,
     RoleRepository,
+    UserEntity,
     UserIdentityRepository,
     UserPermissionEntity,
     UserRepository,
@@ -113,6 +116,51 @@ describe('core/identity/provider/account', () => {
 
         realm = undefined as unknown as Realm;
         accountManager = undefined as unknown as IdentityProviderAccountManager;
+    });
+
+    /**
+     * The "one external identity belongs to one local user" invariant was
+     * application-only until #3442: `link()` and `save()` both read then
+     * write, with no transaction and no row lock, so two concurrent
+     * completions for the same upstream subject could both insert. The
+     * insert below is what that race would produce.
+     *
+     * The second row deliberately points at a user holding NO account for
+     * this provider. Reusing an already-linked user would violate the
+     * pre-existing `(providerId, userId)` index instead, and the case would
+     * pass with or without the constraint under test.
+     */
+    it('should refuse a second account for the same external identity', async () => {
+        const account = await accountManager.save({
+            data: claims,
+            id: 'duplicate-subject',
+            attributeCandidates: { name: ['duplicate-one'] },
+            provider,
+        });
+
+        const userRepository = suite.dataSource.getRepository(UserEntity);
+        const user = await userRepository.save(userRepository.create({
+            name: 'duplicate-two',
+            email: 'duplicate-two@example.com',
+            realmId: realm.id,
+        }));
+
+        expect(user.id).not.toEqual(account.userId);
+
+        const repository = suite.dataSource.getRepository(IdentityProviderAccountEntity);
+
+        try {
+            await repository.insert({
+                providerId: provider.id,
+                providerRealmId: provider.realmId,
+                providerUserId: account.providerUserId,
+                userId: user.id,
+                userRealmId: user.realmId,
+            });
+            expect.fail('Expected the unique constraint to reject the duplicate');
+        } catch (e) {
+            expect(isUniqueConstraintDatabaseError(e)).toBeTruthy();
+        }
     });
 
     it('should create user', async () => {
