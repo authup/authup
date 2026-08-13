@@ -94,6 +94,7 @@ import {
     getBodyRealmID,
     getRequestParamID,
     getRequestRealmID,
+    useRequestEventContext,
     useRequestIdentityOrFail,
     useRequestParamID,
     useRequestPermissionEvaluator,
@@ -701,6 +702,10 @@ export class IdentityProviderController {
             identity.id,
         );
 
+        // the confirm runs under a bearer, so unlike the callback it CAN be
+        // attributed to a session and a route (the unlink emit's shape)
+        const requestContext = useRequestEventContext();
+
         await this.eventService?.record({
             scope: EventScope.IDENTITY,
             name: EventName.IDENTITY_PROVIDER_LINKED,
@@ -709,8 +714,12 @@ export class IdentityProviderController {
             realmId: account.userRealmId ?? provider.realmId ?? null,
             actorType: IdentityType.USER,
             actorId: account.userId,
-            requestIpAddress: getRequestIP(event) ?? null,
-            requestUserAgent: getRequestHeader(event, 'user-agent') ?? null,
+            actorName: identity.data.name ?? null,
+            sessionId: requestContext?.sessionId ?? null,
+            requestPath: requestContext?.requestPath ?? null,
+            requestMethod: requestContext?.requestMethod ?? null,
+            requestIpAddress: requestContext?.requestIpAddress ?? getRequestIP(event) ?? null,
+            requestUserAgent: requestContext?.requestUserAgent ?? getRequestHeader(event, 'user-agent') ?? null,
             data: { providerId: provider.id, providerName: provider.name },
         });
 

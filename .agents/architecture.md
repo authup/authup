@@ -2771,8 +2771,9 @@ linking is the only way to bind an external identity to an EXISTING user).
   id/name — never tokens).
 - **UI** — account console page `/connected-accounts` (realm providers ×
   own linked rows; Connect = `createLinkRequest` navigation, Disconnect =
-  confirm + delete; reads and strips the `linked`/`linkError` return
-  params) + admin console tab `users/[id]/identity-provider-accounts`
+  confirm + delete; auto-POSTs the `linkHandle` return param to the confirm
+  endpoint, then strips it and `linkError` from the URL)
+  + admin console tab `users/[id]/identity-provider-accounts`
   (kit collection `AIdentityProviderAccounts`, gated on
   `IDENTITY_PROVIDER_ACCOUNT_READ` like the sessions tab).
 - **Tests** — service matrix + guardrail

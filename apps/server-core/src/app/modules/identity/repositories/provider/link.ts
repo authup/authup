@@ -43,14 +43,10 @@ export class IdentityProviderAccountLinkStore implements IIdentityProviderAccoun
             key: handle,
         });
 
-        const payload = await this.cache.get<IdentityProviderAccountLink>(key);
-        if (!payload) {
-            return null;
-        }
-
-        // single use, dropped before the caller can act on it
-        await this.cache.drop(key);
-
-        return payload;
+        // `pop` is the atomic read-and-drop (redis GETDEL, one tick on the
+        // memory adapter). A get followed by a drop is two round-trips, and
+        // two simultaneous redemptions of one handle would both read the
+        // payload before either drop landed.
+        return this.cache.pop<IdentityProviderAccountLink>(key);
     }
 }
