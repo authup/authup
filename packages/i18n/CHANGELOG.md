@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.0.0-beta.60](https://github.com/authup/authup/compare/v1.0.0-beta.59...v1.0.0-beta.60) (2026-08-13)
+
+
+### Features
+
+* admin sessions overview ([#3420](https://github.com/authup/authup/issues/3420)) ([57e8af1](https://github.com/authup/authup/commit/57e8af1202d93d7ee0457bf52d67c5183c5b849c))
+* identity-provider account linking ([#3419](https://github.com/authup/authup/issues/3419)) ([f21d0e3](https://github.com/authup/authup/commit/f21d0e3ae96404ed2aca4215fe97c579f10ad18a))
+* title-row action, breadcrumbs and record sub titles for the admin console ([#3430](https://github.com/authup/authup/issues/3430)) ([a4c590d](https://github.com/authup/authup/commit/a4c590d9035d28be0b8857ce78b6113deb24e7f7))
+
+
+### Bug Fixes
+
+* redo the v1.0.0-beta.60 release with consistent versions ([#3444](https://github.com/authup/authup/issues/3444)) ([5c04dc8](https://github.com/authup/authup/commit/5c04dc8daf28a01037949d8cb17e1de67ba10e6b))
+* retain upstream failure detail for logging ([#3436](https://github.com/authup/authup/issues/3436)) ([#3438](https://github.com/authup/authup/issues/3438)) ([be67917](https://github.com/authup/authup/commit/be6791718671821b64aae689e56f440600d48acc))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
+
 ## [1.0.0-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.58...v1.0.0-beta.59) (2026-08-04)
 
 

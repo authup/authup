@@ -1,5 +1,38 @@
 # Change Log
 
+## [1.0.0-beta.60](https://github.com/authup/authup/compare/v1.0.0-beta.59...v1.0.0-beta.60) (2026-08-13)
+
+
+### Features
+
+* admin sessions overview ([#3420](https://github.com/authup/authup/issues/3420)) ([57e8af1](https://github.com/authup/authup/commit/57e8af1202d93d7ee0457bf52d67c5183c5b849c))
+* audit event session attribution ([#3422](https://github.com/authup/authup/issues/3422)) ([6d7759b](https://github.com/authup/authup/commit/6d7759bd6fa4f773cd3155c6540649f50536593d))
+* identity-provider account linking ([#3419](https://github.com/authup/authup/issues/3419)) ([f21d0e3](https://github.com/authup/authup/commit/f21d0e3ae96404ed2aca4215fe97c579f10ad18a))
+* schema index declarations backed by entity indexes (rapiq 2.0.0-beta.20) ([#3425](https://github.com/authup/authup/issues/3425)) ([d34afb7](https://github.com/authup/authup/commit/d34afb76143f08119e9c449201f975d8ba797788))
+* session token visibility (admin user tab + account console) ([#3421](https://github.com/authup/authup/issues/3421)) ([776239d](https://github.com/authup/authup/commit/776239d468c7db2979c2670d728c9f5cbc619945))
+* title-row action, breadcrumbs and record sub titles for the admin console ([#3430](https://github.com/authup/authup/issues/3430)) ([a4c590d](https://github.com/authup/authup/commit/a4c590d9035d28be0b8857ce78b6113deb24e7f7))
+
+
+### Bug Fixes
+
+* **deps:** bump @rapiq/* to 2.0.0-beta.18 ([a01fabb](https://github.com/authup/authup/commit/a01fabbb6c7bf6671f3ccb757cd0c4c695510679))
+* **deps:** bump @rapiq/* to 2.0.0-beta.19 ([21c92fb](https://github.com/authup/authup/commit/21c92fb67aead43a68c0152ef8d15507c2bf9130))
+* redo the v1.0.0-beta.60 release with consistent versions ([#3444](https://github.com/authup/authup/issues/3444)) ([5c04dc8](https://github.com/authup/authup/commit/5c04dc8daf28a01037949d8cb17e1de67ba10e6b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
+    * @authup/client-web-nuxt bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
+    * @authup/client-web-theme bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
+    * @authup/core-http-kit bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
+    * @authup/core-kit bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
+    * @authup/i18n bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
+    * @authup/kit bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
+
 ## [1.0.0-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.58...v1.0.0-beta.59) (2026-08-04)
 
 
