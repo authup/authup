@@ -130,4 +130,27 @@ describe('identity-provider login flow', () => {
 
         expect(response.status).toEqual(302);
     });
+
+    it('rejects a callback carrying no authorization code', async () => {
+        // a fresh state — the previous one was consumed above
+        const state = await authorizeOut();
+
+        tokenRequestBody = undefined;
+
+        const response = await httpRequest(
+            suite,
+            'GET',
+            `identity-providers/${provider.id}/authorize-in?state=${state}`,
+            {
+                headers: { 'user-agent': USER_AGENT },
+                redirect: 'manual',
+            },
+        );
+
+        expect(response.status).toEqual(400);
+
+        // the provider must not be contacted at all — a code-less exchange
+        // has nothing to redeem
+        expect(tokenRequestBody).toBeUndefined();
+    });
 });
