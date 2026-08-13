@@ -3,35 +3,6 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [1.0.0-beta.60](https://github.com/authup/authup/compare/v1.0.0-beta.59...v1.0.0-beta.60) (2026-08-13)
-
-
-### ⚠ BREAKING CHANGES
-
-* auth_sessions.client_id now names the client that first authorized on a session rather than the most recent one, so GET/DELETE /sessions?filter[clientId] selects on that basis. The two differ only where several applications share one session. Revocation that should reach every session an application served must filter auth_session_tokens.client_id instead.
-
-### Features
-
-* admin sessions overview ([#3420](https://github.com/authup/authup/issues/3420)) ([57e8af1](https://github.com/authup/authup/commit/57e8af1202d93d7ee0457bf52d67c5183c5b849c))
-* audit event session attribution ([#3422](https://github.com/authup/authup/issues/3422)) ([6d7759b](https://github.com/authup/authup/commit/6d7759bd6fa4f773cd3155c6540649f50536593d))
-* identity-provider account linking ([#3419](https://github.com/authup/authup/issues/3419)) ([f21d0e3](https://github.com/authup/authup/commit/f21d0e3ae96404ed2aca4215fe97c579f10ad18a))
-* per-application session token attribution, inventory API and revocation ([#3404](https://github.com/authup/authup/issues/3404)) ([6027f84](https://github.com/authup/authup/commit/6027f849fda7ca1b115787e3ef7b08a750fd0778))
-* schema index declarations backed by entity indexes (rapiq 2.0.0-beta.20) ([#3425](https://github.com/authup/authup/issues/3425)) ([d34afb7](https://github.com/authup/authup/commit/d34afb76143f08119e9c449201f975d8ba797788))
-* session token visibility (admin user tab + account console) ([#3421](https://github.com/authup/authup/issues/3421)) ([776239d](https://github.com/authup/authup/commit/776239d468c7db2979c2670d728c9f5cbc619945))
-* title-row action, breadcrumbs and record sub titles for the admin console ([#3430](https://github.com/authup/authup/issues/3430)) ([a4c590d](https://github.com/authup/authup/commit/a4c590d9035d28be0b8857ce78b6113deb24e7f7))
-
-
-### Bug Fixes
-
-* answer invalid_grant when a session is revoked mid-rotation ([#3437](https://github.com/authup/authup/issues/3437)) ([4375f45](https://github.com/authup/authup/commit/4375f4521a02f7279196e79210774eb6f864f664))
-* **deps:** bump @rapiq/* to 2.0.0-beta.18 ([a01fabb](https://github.com/authup/authup/commit/a01fabbb6c7bf6671f3ccb757cd0c4c695510679))
-* **deps:** bump @rapiq/* to 2.0.0-beta.19 ([21c92fb](https://github.com/authup/authup/commit/21c92fb67aead43a68c0152ef8d15507c2bf9130))
-* **deps:** bump the minorandpatch group across 1 directory with 11 updates ([#3414](https://github.com/authup/authup/issues/3414)) ([f0706f2](https://github.com/authup/authup/commit/f0706f211884be8154766bd24ea45f3f696211ed))
-* retain upstream failure detail for logging ([#3436](https://github.com/authup/authup/issues/3436)) ([#3438](https://github.com/authup/authup/issues/3438)) ([be67917](https://github.com/authup/authup/commit/be6791718671821b64aae689e56f440600d48acc))
-* send the authorization code in the identity-provider token exchange ([#3433](https://github.com/authup/authup/issues/3433)) ([cddae1d](https://github.com/authup/authup/commit/cddae1dea5389d6bba40457e50990e2c01f32c7e))
-* **server-core:** pin migration-authored constraint names on the entities ([#3408](https://github.com/authup/authup/issues/3408)) ([7800966](https://github.com/authup/authup/commit/78009665a8d5fc958dc92904e529e0fcdcee5b00))
-* **server-core:** stop the refresh grant from re-attributing a session's device ([#3415](https://github.com/authup/authup/issues/3415)) ([57f462d](https://github.com/authup/authup/commit/57f462dfed9bbf4203626fa96dd88faf25be69a9))
-
 ## [1.0.0-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.58...v1.0.0-beta.59) (2026-08-04)
 
 

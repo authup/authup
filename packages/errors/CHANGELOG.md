@@ -1,17 +1,5 @@
 # Changelog
 
-## [1.0.0-beta.60](https://github.com/authup/authup/compare/v1.0.0-beta.59...v1.0.0-beta.60) (2026-08-13)
-
-
-### Features
-
-* identity-provider account linking ([#3419](https://github.com/authup/authup/issues/3419)) ([f21d0e3](https://github.com/authup/authup/commit/f21d0e3ae96404ed2aca4215fe97c579f10ad18a))
-
-
-### Bug Fixes
-
-* retain upstream failure detail for logging ([#3436](https://github.com/authup/authup/issues/3436)) ([#3438](https://github.com/authup/authup/issues/3438)) ([be67917](https://github.com/authup/authup/commit/be6791718671821b64aae689e56f440600d48acc))
-
 ## [1.0.0-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.58...v1.0.0-beta.59) (2026-08-04)
 
 

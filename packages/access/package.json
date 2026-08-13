@@ -1,7 +1,7 @@
 {
     "name": "@authup/access",
     "type": "module",
-    "version": "1.0.0-beta.60",
+    "version": "1.0.0-beta.59",
     "description": "A library for evaluating permissions and policies.",
     "license": "Apache-2.0",
     "exports": {
@@ -53,8 +53,8 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/errors": "^1.0.0-beta.60",
-        "@authup/kit": "^1.0.0-beta.60",
+        "@authup/errors": "^1.0.0-beta.59",
+        "@authup/kit": "^1.0.0-beta.59",
         "@rapiq/adapter-memory": "^2.1.0",
         "@rapiq/core": "^2.1.0",
         "@rapiq/parser-mongo": "^2.1.0",
