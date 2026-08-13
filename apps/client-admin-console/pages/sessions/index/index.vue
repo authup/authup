@@ -60,7 +60,7 @@ export default defineNuxtComponent({
         const query = computed(() => defineQuery<Session>({
             filters: { realmId: realmManagementId.value ?? null },
             relations: ['user', 'client'],
-            sort: { seenAt: 'DESC' },
+            sorts: { seenAt: 'DESC' },
         }));
 
         const hasDropPermission = usePermissionCheck({ name: PermissionName.SESSION_DELETE });

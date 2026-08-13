@@ -47,7 +47,7 @@ import {
     UserRoleEntity,
 } from '../../../../../src/adapters/database/domains/index.ts';
 import { assertSchemaMatchesEntity } from '@rapiq/adapter-typeorm';
-import { assertSchemaFieldsCoverEntity, assertSchemaIndexesMatchEntity, validateEntitySchemas } from '../../../../../src/app/modules/database/repositories/schema-validation.ts';
+import { assertSchemaFieldsCoverEntity, validateEntitySchemas } from '../../../../../src/app/modules/database/repositories/schema-validation.ts';
 
 describe('app/modules/database/repositories/schema-validation', () => {
     let dataSource : DataSource;
@@ -115,14 +115,14 @@ describe('app/modules/database/repositories/schema-validation', () => {
     it('should accept dotted keys headed by a relation and reject others', () => {
         const valid = defineSchema({
             name: 'dotted-valid',
-            sort: { allowed: ['realm.name'] },
+            sorts: { allowed: ['realm.name'] },
         });
         expect(() => assertSchemaMatchesEntity(valid, dataSource.getMetadata(RoleEntity)))
             .not.toThrow();
 
         const invalid = defineSchema({
             name: 'dotted-invalid',
-            sort: { allowed: ['unknownRelation.name'] },
+            sorts: { allowed: ['unknownRelation.name'] },
         });
         expect(() => assertSchemaMatchesEntity(invalid, dataSource.getMetadata(RoleEntity)))
             .toThrowError(/unknownRelation.name/);
@@ -147,14 +147,14 @@ describe('app/modules/database/repositories/schema-validation', () => {
     it('should validate sort default keys', () => {
         const valid = defineSchema({
             name: 'sort-default-valid',
-            sort: { default: { updatedAt: 'DESC' } },
+            sorts: { default: { updatedAt: 'DESC' } },
         });
         expect(() => assertSchemaMatchesEntity(valid, dataSource.getMetadata(RoleEntity)))
             .not.toThrow();
 
         const invalid = defineSchema({
             name: 'sort-default-invalid',
-            sort: { default: { renamedAway: 'DESC' } },
+            sorts: { default: { renamedAway: 'DESC' } },
         });
         expect(() => assertSchemaMatchesEntity(invalid, dataSource.getMetadata(RoleEntity)))
             .toThrowError(/renamedAway/);
@@ -220,6 +220,11 @@ describe('app/modules/database/repositories/schema-validation', () => {
             .not.toThrow();
     });
 
+    /**
+     * The index backing rule moved upstream in rapiq 2.1.0 (#902): it is
+     * enforced by `assertSchemaMatchesEntity` itself, so these pin the
+     * behaviour authup depends on rather than a local implementation.
+     */
     it('should accept declared indexes backed by a primary key, unique or index prefix', () => {
         const schema = defineSchema({
             name: 'indexes-backed',
@@ -228,7 +233,7 @@ describe('app/modules/database/repositories/schema-validation', () => {
             indexes: [['id'], ['name', 'clientId'], ['realmId']],
         });
 
-        expect(() => assertSchemaIndexesMatchEntity('indexes-backed', schema, dataSource.getMetadata(RoleEntity)))
+        expect(() => assertSchemaMatchesEntity(schema, dataSource.getMetadata(RoleEntity)))
             .not.toThrow();
     });
 
@@ -240,7 +245,7 @@ describe('app/modules/database/repositories/schema-validation', () => {
             indexes: [['name', 'realmId'], ['description']],
         });
 
-        expect(() => assertSchemaIndexesMatchEntity('indexes-unbacked', schema, dataSource.getMetadata(RoleEntity)))
-            .toThrowError(/name \+ realmId.*description/);
+        expect(() => assertSchemaMatchesEntity(schema, dataSource.getMetadata(RoleEntity)))
+            .toThrowError(/\(name, realmId\), \(description\)/);
     });
 });

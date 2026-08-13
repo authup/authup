@@ -45,7 +45,7 @@ export default defineNuxtComponent({
         const query = computed(() => defineQuery<IdentityProviderAccount>({
             filters: { userId: props.entity.id },
             relations: ['provider'],
-            sort: { createdAt: 'DESC' },
+            sorts: { createdAt: 'DESC' },
         }));
 
         const hasDropPermission = usePermissionCheck({ name: PermissionName.IDENTITY_PROVIDER_ACCOUNT_DELETE });

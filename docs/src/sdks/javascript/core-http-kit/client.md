@@ -127,7 +127,7 @@ console.log(meta.schema);
 //     strict: false,
 //     fields: { default: null, allowed: ['id', 'name', /* ... */] },
 //     filters: { allowed: ['id', 'name', /* ... */] },
-//     sort: { allowed: ['id', 'name', /* ... */], default: null },
+//     sorts: { allowed: ['id', 'name', /* ... */], default: null },
 //     pagination: { maxLimit: 50 },
 //     relations: { allowed: ['realm'], schemas: { realm: 'realm' } },
 // }
@@ -144,6 +144,11 @@ Reading rules:
   on its own endpoints.
 - single-record `GET`s carry the subset a record read processes
   (`fields` + `relations` only).
+- description keys are the **plural** parameter names, which do not all
+  match the URL parameter they describe: `filters` describes `?filter[…]`,
+  `relations` describes `?include`, and `sorts` describes `?sort`. The
+  `sorts` key was named `sort` before rapiq 2.1.0; the URL parameter is
+  unchanged.
 - the description is the **static upper bound** — actor-dependent
   authorization gates may still strip individual keys per request.
 

@@ -47,7 +47,7 @@ export default defineNuxtComponent({
 
         const query = computed(() => defineQuery<Session>({
             filters: { userId: props.entity.id },
-            sort: { seenAt: 'DESC' },
+            sorts: { seenAt: 'DESC' },
         }));
 
         const hasDropPermission = usePermissionCheck({ name: PermissionName.SESSION_DELETE });

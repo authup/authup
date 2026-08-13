@@ -50,6 +50,44 @@ describe('core/query (indexed invariant)', () => {
         expect(offenders).toEqual([]);
     });
 
+    /**
+     * Guards both checks against passing vacuously. Each reads an
+     * allow-list off the schema DESCRIPTION and iterates it, so a
+     * renamed description key yields `undefined`, the loop never runs
+     * and the invariant reports green while checking nothing — which is
+     * exactly what the `sort` to `sorts` rename in rapiq 2.1.0 (#906)
+     * did. The description is upstream's shape, so pin that it still
+     * carries the block each check depends on, PER SCHEMA: asserting it
+     * over the flattened set would let the other schemas keep the count
+     * positive while one schema's block went missing and was silently
+     * skipped by the loops' `|| []`.
+     *
+     * The block is asserted, never a non-empty `allowed`, because an
+     * absent allow-list is legitimate — `clientScope` declares no sort
+     * vocabulary at all, so its `sorts.allowed` is null by design.
+     */
+    it.each(['filters', 'sorts'] as const)('should describe %s for every schema', (parameter) => {
+        const missing = schemas
+            .map((schema) => schema.describe())
+            .filter((description) => typeof description[parameter] === 'undefined')
+            .map((description) => description.name);
+
+        expect(missing).toEqual([]);
+    });
+
+    it('should have allow-listed keys to check at all', () => {
+        const keys = schemas.flatMap((schema) => {
+            const description = schema.describe();
+
+            return [
+                ...description.filters?.allowed || [],
+                ...description.sorts?.allowed || [],
+            ];
+        });
+
+        expect(keys.length).toBeGreaterThan(0);
+    });
+
     it('should let every allowed sort key lead an index', () => {
         const offenders : string[] = [];
 
@@ -57,7 +95,7 @@ describe('core/query (indexed invariant)', () => {
             const description = schema.describe();
             const leading = new Set((description.indexes || []).map((index: string[]) => index[0]));
 
-            for (const key of description.sort?.allowed || []) {
+            for (const key of description.sorts?.allowed || []) {
                 if (!leading.has(key)) {
                     offenders.push(`${description.name}.${key}`);
                 }

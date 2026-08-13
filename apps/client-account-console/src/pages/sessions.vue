@@ -58,7 +58,7 @@ export default defineComponent({
         // are self-scoped by the server regardless.
         const query = computed(() => defineQuery<Session>({
             filters: { userId: userId.value ?? undefined },
-            sort: { seenAt: 'DESC' },
+            sorts: { seenAt: 'DESC' },
         }));
 
         const translations = useTranslations([
@@ -136,7 +136,7 @@ export default defineComponent({
 
         const buildTokensQuery = (id: string) => defineQuery<SessionToken>({
             filters: { sessionId: id },
-            sort: { createdAt: 'DESC' },
+            sorts: { createdAt: 'DESC' },
         });
 
         const tokenState = (row: SessionToken): 'revoked' | 'consumed' | 'expired' | 'active' => {

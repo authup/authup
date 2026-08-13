@@ -36,7 +36,7 @@ export const roleAttributeSchema = defineSchema<RoleAttribute>({
     },
     filters: { allowed: ['id', 'name', 'roleId', 'realmId'], indexed: true },
     relations: { allowed: ['role', 'realm'], validate: createRelationsReadGate(schemaMapping) },
-    sort: {
+    sorts: {
         allowed: [
             'id',
             'name',

@@ -37,7 +37,7 @@ export const scopeSchema = defineSchema<Scope>({
     },
     filters: { allowed: ['id', 'builtIn', 'name', 'displayName', 'realmId'], indexed: true },
     relations: { allowed: ['realm'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['id', 'name', 'updatedAt', 'createdAt'], indexed: true },
+    sorts: { allowed: ['id', 'name', 'updatedAt', 'createdAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

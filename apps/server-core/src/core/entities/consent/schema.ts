@@ -48,7 +48,7 @@ export const consentSchema = defineSchema<Consent>({
     },
     filters: { allowed: [...CONSENT_FILTER_KEYS, 'userId'], indexed: true },
     relations: { allowed: ['realm'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['createdAt', 'updatedAt', 'scope'], indexed: true },
+    sorts: { allowed: ['createdAt', 'updatedAt', 'scope'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

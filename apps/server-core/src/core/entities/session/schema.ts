@@ -54,7 +54,7 @@ export const sessionSchema = defineSchema<Session>({
     },
     filters: { allowed: [...SESSION_FILTER_KEYS, 'expiresAt', 'seenAt'], indexed: true },
     relations: { allowed: ['realm', 'user', 'client'], validate: createRelationsReadGate(schemaMapping) },
-    sort: { allowed: ['seenAt', 'expiresAt', 'createdAt', 'updatedAt'], indexed: true },
+    sorts: { allowed: ['seenAt', 'expiresAt', 'createdAt', 'updatedAt'], indexed: true },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });

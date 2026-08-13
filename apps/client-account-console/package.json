@@ -38,7 +38,7 @@
         "@iconify-json/fa6-solid": "^1.2.0",
         "@iconify/vue": "^5.0.0",
         "@nuxt/icon": "^2.4.1",
-        "@rapiq/core": "^2.0.0",
+        "@rapiq/core": "^2.1.0",
         "@tailwindcss/vite": "^4.3.3",
         "@vitejs/plugin-vue": "^6.0.8",
         "@vuecs/button": "^1.4.1",

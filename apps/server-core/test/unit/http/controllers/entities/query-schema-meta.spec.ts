@@ -38,7 +38,7 @@ describe('src/http/controllers/entities (query schema meta)', () => {
         expect(meta.schema!.name).toEqual('role');
         expect(meta.schema!.fields!.allowed).toContain('name');
         expect(meta.schema!.filters!.allowed).toContain('name');
-        expect(meta.schema!.sort!.allowed).toContain('name');
+        expect(meta.schema!.sorts!.allowed).toContain('name');
         expect(meta.schema!.pagination!.maxLimit).toEqual(50);
         expect(meta.schema!.relations).toEqual({
             allowed: ['realm'],
@@ -56,7 +56,7 @@ describe('src/http/controllers/entities (query schema meta)', () => {
         expect(meta.schema!.fields).toBeDefined();
         expect(meta.schema!.relations).toBeDefined();
         expect(meta.schema!.filters).toBeUndefined();
-        expect(meta.schema!.sort).toBeUndefined();
+        expect(meta.schema!.sorts).toBeUndefined();
         expect(meta.schema!.pagination).toBeUndefined();
     });
 

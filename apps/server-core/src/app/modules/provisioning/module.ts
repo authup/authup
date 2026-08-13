@@ -83,6 +83,8 @@ import { SymmetricCipher } from '@authup/server-kit';
 import { LoggerInjectionKey } from '../logger/index.ts';
 import { SystemClientProvisioner } from '../../../core/entities/client/index.ts';
 import { KeyProvisioner } from '../../../core/key/index.ts';
+import type { IKeyStore } from '../../../core/key/index.ts';
+import { OAuth2InjectionToken } from '../oauth2/constants.ts';
 import { CompositeProvisioningSource, FileProvisioningSource } from './sources/index.ts';
 
 export class ProvisionerModule implements IModule {
@@ -257,16 +259,26 @@ export class ProvisionerModule implements IModule {
 
         // Eager key minting (plan 071 hybrid model): every realm — incl.
         // pre-existing ones — holds sig + enc keys after startup, so the
-        // management API shows them without waiting for first use. The
-        // adapter is constructed locally (NOT resolved from the oauth2
-        // module's registration) so provisioning stays runnable in minimal
-        // module graphs (test setup, CLI); the KEK handling is identical.
-        const keyProvisioner = new KeyProvisioner({
-            keyStore: new KeyRepositoryAdapter(dataSource, {
+        // management API shows them without waiting for first use.
+        //
+        // The oauth2 module's registration is PREFERRED but optional, so
+        // provisioning stays runnable in minimal module graphs (test setup,
+        // CLI) where oauth2 never registered one; the locally constructed
+        // fallback handles the KEK identically. Sharing the instance when
+        // it exists matters because mint de-duplication is per adapter
+        // (see KeyRepositoryAdapter.mintExclusive): a second adapter has
+        // its own in-flight map, so this backfill and a concurrent
+        // realm-create request would each mint their own key.
+        const keyStore = container.has(OAuth2InjectionToken.KeyStore) ?
+            container.resolve<IKeyStore>(OAuth2InjectionToken.KeyStore) :
+            new KeyRepositoryAdapter(dataSource, {
                 secretsCipher: config.secretsEncryptionKey ?
                     new SymmetricCipher(config.secretsEncryptionKey) :
                     null,
-            }),
+            });
+
+        const keyProvisioner = new KeyProvisioner({
+            keyStore,
             logger: container.resolve(LoggerInjectionKey),
         });
 

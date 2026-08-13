@@ -93,6 +93,35 @@ describe('app/modules/database/repositories/key', () => {
         expect(sig!.status).toEqual(KeyStatus.ACTIVE);
     });
 
+    /**
+     * `resolveOrCreate` is the zero-rows backstop on hot paths — the token
+     * signer calls it for every issuance, the realm cipher for every MFA
+     * seed — so a realm that has just been created routinely takes several
+     * simultaneous calls. Minting is check-then-act (find, count, insert),
+     * which without a guard lets every concurrent caller observe zero rows
+     * and insert its own key.
+     */
+    it('mints once per (realm, use) under concurrent resolves', async () => {
+        const repository = new KeyRepositoryAdapter(dataSource);
+        const realm = await dataSource.getRepository(RealmEntity).save(
+            dataSource.getRepository(RealmEntity).create({ name: 'concurrent-mint' }),
+        );
+
+        const resolved = await Promise.all([
+            repository.resolveOrCreate(realm.id, JWKUse.SIGNATURE),
+            repository.resolveOrCreate(realm.id, JWKUse.SIGNATURE),
+            repository.resolveOrCreate(realm.id, JWKUse.SIGNATURE),
+        ]);
+
+        const rows = await dataSource.getRepository(KeyEntity).findBy({
+            realmId: realm.id,
+            use: JWKUse.SIGNATURE,
+        });
+
+        expect(rows).toHaveLength(1);
+        expect(new Set(resolved.map((entity) => entity!.id)).size).toEqual(1);
+    });
+
     it('resolves the highest-priority ACTIVE key — passive keys never sign/encrypt', async () => {
         const repository = new KeyRepositoryAdapter(dataSource);
         const realm = await dataSource.getRepository(RealmEntity).save(
@@ -132,6 +161,31 @@ describe('app/modules/database/repositories/key', () => {
             .rejects.toThrow(/none active/);
 
         // re-enabling restores resolution without a new mint
+        await dataSource.getRepository(KeyEntity).update(key!.id, { status: KeyStatus.ACTIVE });
+        const resolved = await repository.resolveOrCreate(realm.id, JWKUse.SIGNATURE);
+        expect(resolved!.id).toEqual(key!.id);
+    });
+
+    /**
+     * A failing mint must not leave its in-flight entry behind: the guard
+     * would then hand every later caller the same rejected promise and the
+     * realm could not mint again until the process restarted.
+     */
+    it('recovers after a failed mint under concurrent resolves', async () => {
+        const repository = new KeyRepositoryAdapter(dataSource);
+        const realm = await dataSource.getRepository(RealmEntity).save(
+            dataSource.getRepository(RealmEntity).create({ name: 'failed-mint-realm' }),
+        );
+
+        const key = await repository.resolveOrCreate(realm.id, JWKUse.SIGNATURE);
+        await dataSource.getRepository(KeyEntity).update(key!.id, { status: KeyStatus.DISABLED });
+
+        const outcomes = await Promise.allSettled([
+            repository.resolveOrCreate(realm.id, JWKUse.SIGNATURE),
+            repository.resolveOrCreate(realm.id, JWKUse.SIGNATURE),
+        ]);
+        expect(outcomes.every((outcome) => outcome.status === 'rejected')).toBe(true);
+
         await dataSource.getRepository(KeyEntity).update(key!.id, { status: KeyStatus.ACTIVE });
         const resolved = await repository.resolveOrCreate(realm.id, JWKUse.SIGNATURE);
         expect(resolved!.id).toEqual(key!.id);
