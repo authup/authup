@@ -12,6 +12,7 @@ import type { Logger } from '@authup/server-kit';
 import type { IEventService } from '../../entities/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 import { buildOAuth2BearerTokenResponse } from '../response/index.ts';
+import { isSessionTokenSessionMissingError } from '../session-token/index.ts';
 import type { ISessionTokenRepository } from '../session-token/index.ts';
 import type { IOAuth2TokenIssuer, IOAuth2TokenRepository, IOAuth2TokenVerifier } from '../token/index.ts';
 import { OAuth2BaseGrant } from './base.ts';
@@ -133,30 +134,54 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         // expiresAt, so "last active" stays accurate.
         await this.sessionManager.refresh(session);
 
-        const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue({
-            ...payload,
-            ...(options.confirmation ? { cnf: options.confirmation } : {}),
-            user_agent: options.userAgent ?? session.userAgent,
-            remote_address: options.ipAddress ?? session.ipAddress,
-            exp: this.refreshTokenIssuer.buildExp(),
-            parent_id: payload.jti,
-        });
+        // The session was resolved above, but nothing holds it. A concurrent
+        // request can revoke it (a replay reaction on this same family, an
+        // explicit logout, an admin force-logout, the sweeper) before the
+        // issuers write their inventory rows, and the write is then rejected by
+        // the session foreign key. Refusing the request is correct, since it
+        // must not receive tokens for a session that no longer exists, but it
+        // has to read as `invalid_grant` rather than as an internal error: the
+        // presented token is already consumed and cache-blocklisted, so there
+        // is nothing left to retry with and re-authentication is the only way
+        // forward (issue #3435). Anything else is a genuine fault and is
+        // rethrown untouched.
+        try {
+            const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue({
+                ...payload,
+                ...(options.confirmation ? { cnf: options.confirmation } : {}),
+                user_agent: options.userAgent ?? session.userAgent,
+                remote_address: options.ipAddress ?? session.ipAddress,
+                exp: this.refreshTokenIssuer.buildExp(),
+                parent_id: payload.jti,
+            });
 
-        const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
-            ...payload,
-            ...(options.confirmation ? { cnf: options.confirmation } : {}),
-            user_agent: options.userAgent ?? session.userAgent,
-            remote_address: options.ipAddress ?? session.ipAddress,
-            exp: this.accessTokenIssuer.buildExp(),
-            refresh_token_id: refreshTokenPayload.jti,
-        });
+            const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
+                ...payload,
+                ...(options.confirmation ? { cnf: options.confirmation } : {}),
+                user_agent: options.userAgent ?? session.userAgent,
+                remote_address: options.ipAddress ?? session.ipAddress,
+                exp: this.accessTokenIssuer.buildExp(),
+                refresh_token_id: refreshTokenPayload.jti,
+            });
 
-        return buildOAuth2BearerTokenResponse({
-            accessToken,
-            accessTokenPayload,
-            refreshToken,
-            refreshTokenPayload,
-        });
+            return buildOAuth2BearerTokenResponse({
+                accessToken,
+                accessTokenPayload,
+                refreshToken,
+                refreshTokenPayload,
+            });
+        } catch (e) {
+            if (isSessionTokenSessionMissingError(e)) {
+                this.logger?.debug('OAuth2 refresh token rotation lost the session mid-flight', {
+                    sessionId: payload.session_id,
+                    jti: payload.jti,
+                });
+
+                throw OAuth2GrantError.invalid('the session has been revoked');
+            }
+
+            throw e;
+        }
     }
 
     /**

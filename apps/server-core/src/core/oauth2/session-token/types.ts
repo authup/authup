@@ -60,6 +60,13 @@ export interface ISessionTokenRepository {
 
     /**
      * Persist a newly issued session-token row.
+     *
+     * Throws `SessionTokenSessionMissingError` when `sessionId` no longer names
+     * a live session. The row is written after the caller resolved the session,
+     * so a concurrent delete (a replay reaction, a logout, the sweeper) can land
+     * in between and the write is then rejected. Callers that own an OAuth2
+     * error vocabulary translate it; the rest let it settle as a plain
+     * validation failure.
      */
     create(input: SessionTokenCreateInput): Promise<SessionToken>;
 

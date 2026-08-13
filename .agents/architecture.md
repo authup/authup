@@ -3002,6 +3002,30 @@ old jti`) then AT (`refreshTokenId = new RT jti`). On consume-failure →
 `sessionId` is present (M2M client-credentials writes only an access row —
 it mints no RT).
 
+**Nothing holds the session between resolving it and issuing.** A concurrent
+request may delete the `auth_sessions` row after `findOneById` and before an
+issuer writes its inventory row: the replay reaction on this same family (two
+requests presenting one token, the loser calling `revokeFamily` while the winner
+is still issuing), an explicit logout, `DELETE /sessions/:id`, an admin
+force-logout, or the sweeper. The insert then violates
+`FK_auth_session_tokens_session_id`. Refusing is correct, but the refusal has to
+be an OAuth2 answer: the presented token is already consumed and
+cache-blocklisted, so the client has nothing to retry with, and a 500 reads as
+retryable to most OAuth2 clients while hiding a benign-and-expected race among
+real faults (issue #3435). So `SessionTokenRepositoryAdapter.create` translates a
+foreign-key rejection (`isForeignKeyConstraintDatabaseError` in
+`adapters/database/errors/driver.ts`, the sibling of the consent-insert
+uniqueness check) into `SessionTokenSessionMissingError`
+(`core/oauth2/session-token/error.ts`, declared on the `create` port), and the
+refresh grant wraps both issuer calls and re-raises it as `invalid_grant`. Only
+that one condition is translated; every other failure is rethrown untouched, so
+a signing or cache fault still surfaces as one. The window is deliberately not
+narrowed: a pre-issue re-read closes nothing (the delete can still land one
+statement later) and the client-facing outcome is identical either way. The
+other mint sites (password / authorize / identity / client-credentials / MFA
+completion) create their session in the same request, so they keep the error's
+own code, a plain 400, rather than an OAuth2 grant error.
+
 **Device identity and issuance provenance are separate fields.** The session
 says which device it belongs to, the `auth_session_tokens` row says where each
 token was issued from. Conflating them into one mutable column is what produced
