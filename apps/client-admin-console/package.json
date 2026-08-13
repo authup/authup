@@ -44,7 +44,7 @@
         "@ilingo/validup": "^1.1.0",
         "@ilingo/validup-vue": "^1.1.0",
         "@ilingo/vue": "^6.1.0",
-        "@nuxt/icon": "^2.4.1",
+        "@nuxt/icon": "^2.5.0",
         "@nuxtjs/google-fonts": "^3.2.0",
         "@pinia/nuxt": "^1.0.1",
         "@rapiq/core": "^2.1.0",
@@ -70,12 +70,12 @@
         "@vuecs/timeago": "^2.2.0",
         "date-fns": "^4.1.0",
         "ilingo": "^6.1.0",
-        "nuxt": "4.5.1",
+        "nuxt": "4.5.2",
         "pinia": "^4.0.2",
         "tailwindcss": "^4.3.1",
         "universal-cookie": "^8.1.2",
         "validup": "^1.0.0",
-        "vue": "^3.5.40",
+        "vue": "^3.5.41",
         "vue-router": "^5.0.7"
     },
     "publishConfig": {
