@@ -306,6 +306,44 @@ describe('IdentityProviderOAuth2Authenticator (identity build)', () => {
         expect(identity.attributeCandidates.name?.[0]).toEqual('userinfo-user');
     });
 
+    it('should discard a userinfo document whose subject does not match', async () => {
+        // OIDC Core 5.3.2. A mis-routed response (a multi-tenant gateway, a
+        // token mix-up) would otherwise name AND email the local user after
+        // somebody else, and `auth_users.email` carries no unique constraint,
+        // so that third party could then drive password recovery on it.
+        const authenticator = createTestableAuthenticator({ userInfoUrl: 'https://idp.example.com/userinfo' });
+        authenticator.stubUserInfo({
+            sub: 'somebody-else',
+            preferred_username: 'somebody-else',
+            email: 'somebody-else@example.com',
+        });
+
+        const identity = await authenticator.buildIdentity({
+            access_token: ACCESS_TOKEN,
+            id_token: encodeToken({ name: 'id-token-user', email: 'peter@example.com' }),
+        } as TokenGrantResponse);
+
+        expect(identity.attributeCandidates.name).not.toContain('somebody-else');
+        expect(identity.attributeCandidates.email).toEqual(['peter@example.com']);
+    });
+
+    it('should read an id_token whose claims are not ASCII', async () => {
+        // base64URL (`-`/`_`) plus UTF-8, both of which the previous `atob`
+        // decode rejected outright, so the enrichment silently no-opped for
+        // exactly the users most likely to carry a non-ASCII display name
+        const identity = await createTestableAuthenticator().buildIdentity({
+            access_token: ACCESS_TOKEN,
+            id_token: encodeToken({
+                preferred_username: 'Пётр',
+                name: 'Peter 😀',
+                email: 'peter@example.com',
+            }),
+        } as TokenGrantResponse);
+
+        expect(identity.attributeCandidates.name?.[0]).toEqual('Пётр');
+        expect(identity.attributeCandidates.name?.[2]).toEqual('Peter 😀');
+    });
+
     it('should degrade rather than fail the login when userinfo errors', async () => {
         const authenticator = createTestableAuthenticator({ userInfoUrl: 'https://idp.example.com/userinfo' });
         authenticator.failUserInfo(new Error('gateway timeout'));

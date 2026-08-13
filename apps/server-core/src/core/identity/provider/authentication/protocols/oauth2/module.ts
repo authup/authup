@@ -23,6 +23,12 @@ import type {
     OAuth2AuthorizationCodeGrantPayload,
 } from './types.ts';
 
+/**
+ * Bound on the optional userinfo enrichment. Short by design: the caller is
+ * a browser sitting on a redirect, and the login proceeds without it.
+ */
+const USERINFO_TIMEOUT = 5000;
+
 export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator<User> {
     protected client : OAuth2Client;
 
@@ -122,9 +128,15 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
                     ...claims,
                     ...extractTokenPayload(input.id_token),
                 };
-            } catch {
+            } catch (e) {
                 // an encrypted (five-segment JWE) id_token is not decodable
-                // here, and was ignored outright before it was read at all
+                // here, and was ignored outright before it was read at all.
+                // Logged rather than swallowed silently: every other reason
+                // to land here leaves the user provisioned under the remote
+                // subject, which is the defect this method exists to fix.
+                this.logger?.warn(
+                    `The identity provider (${this.provider.id}) id_token could not be read: ${(e as Error).message}`,
+                );
             }
         }
 
@@ -132,12 +144,27 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
             // the guard is load-bearing: the client carries no baseURL, so
             // hapic's `/userinfo` default would be a relative fetch URL
             try {
-                const userInfo = await this.client.userInfo.get({
+                const userInfo = await this.withTimeout(this.client.userInfo.get({
                     type: 'Bearer',
                     token: input.access_token,
-                });
+                }));
 
-                claims = { ...claims, ...userInfo };
+                // OIDC Core 5.3.2: a userinfo response whose `sub` does not
+                // match the token's MUST NOT be used. Without this a
+                // mis-routed response (a multi-tenant gateway, a token
+                // mix-up) would name and, worse, EMAIL the local user after
+                // somebody else.
+                if (
+                    typeof userInfo.sub === 'string' &&
+                    typeof payload.sub === 'string' &&
+                    userInfo.sub !== payload.sub
+                ) {
+                    this.logger?.warn(
+                        `The identity provider (${this.provider.id}) userinfo subject does not match the token subject.`,
+                    );
+                } else {
+                    claims = { ...claims, ...userInfo };
+                }
             } catch (e) {
                 // enrichment, never a login blocker
                 this.logger?.warn(
@@ -147,6 +174,23 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
         }
 
         return claims;
+    }
+
+    /**
+     * hapic passes no `signal` to `fetch`, so an endpoint that accepts the
+     * connection and never answers would hold the login for undici's 300s
+     * headers timeout. Enrichment must not outlast the request it enriches.
+     */
+    protected withTimeout<T>(promise: Promise<T>) : Promise<T> {
+        return Promise.race([
+            promise,
+            new Promise<T>((_resolve, reject) => {
+                setTimeout(
+                    () => reject(new Error(`the request exceeded ${USERINFO_TIMEOUT}ms`)),
+                    USERINFO_TIMEOUT,
+                ).unref();
+            }),
+        ]);
     }
 
     protected async buildIdentityWithTokenGrantResponse(input: TokenGrantResponse) : Promise<IdentityProviderIdentity> {

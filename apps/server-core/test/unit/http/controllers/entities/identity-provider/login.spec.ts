@@ -104,7 +104,11 @@ describe('identity-provider login flow', () => {
                 userInfoRequests += 1;
                 res.setHeader('content-type', 'application/json');
                 res.end(JSON.stringify({
-                    sub: 'external-user-2',
+                    // MUST match the token subject: OIDC Core 5.3.2 requires a
+                    // mismatched document to be discarded, and it is
+                    // (`should discard a userinfo document whose subject does
+                    // not match` in the authenticator spec)
+                    sub: 'external-user-1',
                     preferred_username: 'userinfo-user',
                     email: 'userinfo@example.com',
                 }));
