@@ -2668,10 +2668,12 @@ leads the sequence the rapiq schema declares, so reversing it would fail
 `assertSchemaMatchesEntity` at boot and turn the migration into a rename.
 `link()` keeps its explicit check for the friendly `already_linked` message;
 the constraint is the backstop. The table is surfaced as a
-read+delete entity API and an explicit self-service link flow. No migration:
-the table predates the feature (federated login has always written it, and
-still auto-creates a NEW user for an unknown external identity — explicit
-linking is the only way to bind an external identity to an EXISTING user).
+read+delete entity API and an explicit self-service link flow. The LINKING
+FEATURE itself needed no migration (the table predates it: federated login
+has always written it, and still auto-creates a NEW user for an unknown
+external identity, so explicit linking is the only way to bind an external
+identity to an EXISTING user); the uniqueness flip above does ship one,
+`1786633352004-IdentityProviderAccountUniqueness` on both dialects.
 
 - **Unified repository port** — `IIdentityProviderAccountRepository`
   (`core/entities/identity-provider-account/types.ts`) carries the entity

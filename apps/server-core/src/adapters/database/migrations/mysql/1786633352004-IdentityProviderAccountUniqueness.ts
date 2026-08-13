@@ -13,6 +13,12 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  * The column order matches the pre-existing non-unique index, so this is an
  * in-place uniqueness flip under the same derived name rather than a rename.
  *
+ * MySQL commits DDL implicitly, so `migrationsTransactionMode: 'all'` cannot
+ * roll a partial run back. A DROP followed by a CREATE would leave the table
+ * with no index of that name if the process died between them, and every
+ * later attempt would then fail at the DROP. One ALTER carrying both is
+ * atomic, so the migration either applies or does not.
+ *
  * Pre-existing duplicates abort the boot with an actionable message. They
  * would abort it anyway, since `CREATE UNIQUE INDEX` fails on them; the
  * check only decides whether the operator reads a readable sentence or a
@@ -37,19 +43,17 @@ export class IdentityProviderAccountUniqueness1786633352004 implements Migration
         }
 
         await queryRunner.query(`
-            DROP INDEX \`IDX_ccf3fd36253755bd9a5f43c516\` ON \`auth_identity_provider_accounts\`
-        `);
-        await queryRunner.query(`
-            CREATE UNIQUE INDEX \`IDX_ccf3fd36253755bd9a5f43c516\` ON \`auth_identity_provider_accounts\` (\`provider_user_id\`, \`provider_id\`)
+            ALTER TABLE \`auth_identity_provider_accounts\`
+                DROP INDEX \`IDX_ccf3fd36253755bd9a5f43c516\`,
+                ADD UNIQUE INDEX \`IDX_ccf3fd36253755bd9a5f43c516\` (\`provider_user_id\`, \`provider_id\`)
         `);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
-            DROP INDEX \`IDX_ccf3fd36253755bd9a5f43c516\` ON \`auth_identity_provider_accounts\`
-        `);
-        await queryRunner.query(`
-            CREATE INDEX \`IDX_ccf3fd36253755bd9a5f43c516\` ON \`auth_identity_provider_accounts\` (\`provider_user_id\`, \`provider_id\`)
+            ALTER TABLE \`auth_identity_provider_accounts\`
+                DROP INDEX \`IDX_ccf3fd36253755bd9a5f43c516\`,
+                ADD INDEX \`IDX_ccf3fd36253755bd9a5f43c516\` (\`provider_user_id\`, \`provider_id\`)
         `);
     }
 }
