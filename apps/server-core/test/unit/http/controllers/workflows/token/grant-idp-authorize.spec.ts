@@ -182,6 +182,12 @@ describe('identity-provider authorization code grant', () => {
         expect(authupCode).toBeDefined();
         expect(authupCode!.length).toBeGreaterThan(0);
 
+        // A confidential client takes the same delivery: the code goes to its
+        // own redirect_uri, not to the hosted authorize page. This request
+        // carries no `state`, so none is echoed (never `state=undefined`).
+        expect(`${inURL.origin}${inURL.pathname}`).toEqual('https://example.com/redirect');
+        expect(inURL.searchParams.has('state')).toBe(false);
+
         const tokenResponse = await suite.client
             .token
             .createWithAuthorizationCode({

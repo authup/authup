@@ -2654,6 +2654,57 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   `isUniqueConstraintDatabaseError` (`adapters/database/errors/driver.ts`, the
   reusable driver-error-code unwrapper covering mysql/postgres/sqlite).
 
+## Federated Login Completion (`authorize-in`)
+
+The external-IdP callback completes the RP's **original** authorization
+request. It re-verifies the code request that `authorize-out` stored on the
+state blob, mints an authup code from that whole verified request, and
+redirects to the client's own `redirect_uri` carrying `code` and `state` (RFC
+6749 §4.1.2). Three properties are load-bearing, and each of the first two was
+a shipped bug (issue #3446):
+
+- **The code goes to the RP, never to the hosted `/authorize` page.** It is
+  bound to the RP's `client_id` and `redirect_uri`, so the RP is the only party
+  that can redeem it. The callback used to hand it to the hosted page instead,
+  where the router guard's `store.exchangeAuthorizationCode(code)` answered 401
+  `invalid_client` (`/token` authenticates a client unconditionally, and the
+  auth console deliberately holds no client row). The guard swallows that
+  error, so a federated login died silently on a re-rendered login form.
+- **The WHOLE verified request reaches `codeIssuer.issue`,** never a
+  hand-picked subset. `code_challenge` / `code_challenge_method`, `nonce` and
+  `acr_values` all ride the code. A code that lost its challenge cannot be
+  redeemed by a public client at all (`PKCE is required for public clients`),
+  which is every console client, so dropping those four fields broke the RP leg
+  too.
+- **The re-verification IS the redirect gate.** `redirectUriVerified` is the
+  only thing on this path that knows the `redirect_uri` matched a registered
+  pattern, so the redirect is gated on it. The flag is set from the match
+  itself (never from mere presence), because a consumer now makes a redirect
+  decision on it. Re-verifying also re-resolves the client at completion time
+  (active, grant allowlist, scopes), which fails a login closed when the client
+  was deactivated while the user was away at the provider.
+
+The completion additionally refuses a **disabled provider** and an **inactive
+user**, both checked at the callback rather than only when the login started.
+The first mirrors the link flow, which always re-checked its provider; the
+second mirrors the local login path, which throws `EntityInactiveError`, so a
+federated login cannot become the way around a deactivation. Both run before
+the provider's single-use code is spent, so a refused completion contacts the
+provider not at all and provisions no user.
+
+The hosted page is not part of this completion, so consent, the MFA challenge
+and the prompt ladder do not run for a federated login. Both exclusions are
+deliberate and predate this (see *Intentional enforcement boundaries* and
+`.agents/references/authentik.md`): the upstream provider is the trusted
+authentication. The access-policy denial is the one case that still bounces to
+the hosted page, because the person is at the browser and the denial card is
+the only surface that can say why.
+
+A request carrying no `redirect_uri` keeps the older hosted-page and
+`baseURL` fallbacks. Such a request could never complete anyway
+(`authorizeInner` refuses a code request without one), so the fallbacks carry
+the previous shape rather than inventing a destination.
+
 ## Identity-Provider Account Linking (plan 091)
 
 `auth_identity_provider_accounts` (external identity → `userId`; unique
