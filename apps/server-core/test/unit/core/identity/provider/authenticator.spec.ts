@@ -9,7 +9,8 @@ import type { OAuth2IdentityProvider, OpenIDIdentityProvider, Realm } from '@aut
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
 import { ValidationError, isValidationError } from '@authup/errors';
-import type { IIdentityProviderAccountManager } from '../../../../../src/core';
+import type { TokenGrantResponse } from '@hapic/oauth2';
+import type { IIdentityProviderAccountManager, IdentityProviderIdentity } from '../../../../../src/core';
 import {
     IdentityProviderGoogleAuthenticator,
     IdentityProviderOAuth2Authenticator,
@@ -66,6 +67,36 @@ function createAuthenticator(authorizeURL: string) {
     return new IdentityProviderOAuth2Authenticator(
         createAuthenticatorContext(createProvider({ authorizeUrl: authorizeURL })),
     );
+}
+
+const encodeSegment = (input: Record<string, any>) => Buffer.from(JSON.stringify(input)).toString('base64url');
+
+const encodeToken = (claims: Record<string, any>) => [
+    encodeSegment({ alg: 'none', typ: 'JWT' }),
+    encodeSegment(claims),
+    'x',
+].join('.');
+
+/**
+ * `buildIdentityWithTokenGrantResponse` is protected, and it is the whole
+ * subject of #3434 — the claim-to-candidate mapping had no coverage at all.
+ */
+class TestableAuthenticator extends IdentityProviderOAuth2Authenticator {
+    buildIdentity(input: TokenGrantResponse) : Promise<IdentityProviderIdentity> {
+        return this.buildIdentityWithTokenGrantResponse(input);
+    }
+
+    stubUserInfo(claims: Record<string, any>) {
+        this.client.userInfo.get = () => Promise.resolve(claims);
+    }
+
+    failUserInfo(error: Error) {
+        this.client.userInfo.get = () => Promise.reject(error);
+    }
+}
+
+function createTestableAuthenticator(provider: Partial<OAuth2IdentityProvider> = {}) {
+    return new TestableAuthenticator(createAuthenticatorContext(createProvider(provider)));
 }
 
 describe('IdentityProviderOAuth2Authenticator', () => {
@@ -164,5 +195,126 @@ describe('IdentityProviderGoogleAuthenticator', () => {
         const parsed = new URL(authenticator.buildRedirectURL({ state: 'abc' }));
         expect(parsed.searchParams.get('scope'))
             .toEqual('openid profile email https://www.googleapis.com/auth/calendar.readonly');
+    });
+});
+
+/**
+ * #3434 — a federated user used to be provisioned under the remote subject
+ * UUID, because the identity was derived from the access token alone. An
+ * access token is opaque by contract, and authup's carries `sub`, `kind` and
+ * `realm_name` and no username at all.
+ */
+describe('IdentityProviderOAuth2Authenticator (identity build)', () => {
+    // what an authup access token actually looks like
+    const ACCESS_TOKEN = encodeToken({
+        sub: 'external-user-1',
+        kind: 'access_token',
+        realm_name: 'master',
+    });
+
+    it('should fall back to the subject when nothing richer is offered', async () => {
+        const identity = await createTestableAuthenticator()
+            .buildIdentity({ access_token: ACCESS_TOKEN } as TokenGrantResponse);
+
+        expect(identity.id).toEqual('external-user-1');
+        expect(identity.attributeCandidates.name).toEqual([
+            undefined,
+            undefined,
+            undefined,
+            'external-user-1',
+        ]);
+    });
+
+    it('should read the authup id_token `name` claim ahead of the subject', async () => {
+        // preferred_username / nickname both map to the NULLABLE displayName
+        // in authup's own claims builder, so a ladder without `name` still
+        // lands on the subject — which is the reported bug
+        const identity = await createTestableAuthenticator().buildIdentity({
+            access_token: ACCESS_TOKEN,
+            id_token: encodeToken({
+                sub: 'external-user-1',
+                preferred_username: null,
+                nickname: null,
+                name: 'peter',
+                email: 'peter@example.com',
+            }),
+        } as TokenGrantResponse);
+
+        expect(identity.attributeCandidates.name).toEqual([
+            null,
+            null,
+            'peter',
+            'external-user-1',
+        ]);
+        expect(identity.attributeCandidates.email).toEqual(['peter@example.com']);
+    });
+
+    it('should prefer preferred_username, the keycloak-style username', async () => {
+        const identity = await createTestableAuthenticator().buildIdentity({
+            access_token: ACCESS_TOKEN,
+            id_token: encodeToken({
+                preferred_username: 'kc-user',
+                name: 'Peter Placzek',
+            }),
+        } as TokenGrantResponse);
+
+        expect(identity.attributeCandidates.name?.[0]).toEqual('kc-user');
+    });
+
+    it('should key the account on the access token subject, never the id_token', async () => {
+        // provider_user_id keys findOneByProviderIdentity: sourcing it from a
+        // richer claim set would orphan every existing account row
+        const identity = await createTestableAuthenticator().buildIdentity({
+            access_token: ACCESS_TOKEN,
+            id_token: encodeToken({ sub: 'a-different-subject', name: 'peter' }),
+        } as TokenGrantResponse);
+
+        expect(identity.id).toEqual('external-user-1');
+    });
+
+    it('should ignore an id_token it cannot decode', async () => {
+        // a five-segment JWE was ignored outright before it was read at all
+        const identity = await createTestableAuthenticator().buildIdentity({
+            access_token: ACCESS_TOKEN,
+            id_token: 'a.b.c.d.e',
+        } as TokenGrantResponse);
+
+        expect(identity.id).toEqual('external-user-1');
+        expect(identity.attributeCandidates.name?.[3]).toEqual('external-user-1');
+    });
+
+    it('should not call userinfo when the provider declares no endpoint', async () => {
+        // the guard is load-bearing: the client carries no baseURL, so
+        // hapic's `/userinfo` default would be a relative fetch URL
+        const authenticator = createTestableAuthenticator();
+        authenticator.failUserInfo(new Error('userinfo must not be called'));
+
+        const identity = await authenticator.buildIdentity({ access_token: ACCESS_TOKEN } as TokenGrantResponse);
+
+        expect(identity.id).toEqual('external-user-1');
+    });
+
+    it('should let userinfo claims win over the id_token', async () => {
+        const authenticator = createTestableAuthenticator({ userInfoUrl: 'https://idp.example.com/userinfo' });
+        authenticator.stubUserInfo({ preferred_username: 'userinfo-user' });
+
+        const identity = await authenticator.buildIdentity({
+            access_token: ACCESS_TOKEN,
+            id_token: encodeToken({ name: 'id-token-user' }),
+        } as TokenGrantResponse);
+
+        expect(identity.attributeCandidates.name?.[0]).toEqual('userinfo-user');
+    });
+
+    it('should degrade rather than fail the login when userinfo errors', async () => {
+        const authenticator = createTestableAuthenticator({ userInfoUrl: 'https://idp.example.com/userinfo' });
+        authenticator.failUserInfo(new Error('gateway timeout'));
+
+        const identity = await authenticator.buildIdentity({
+            access_token: ACCESS_TOKEN,
+            id_token: encodeToken({ name: 'id-token-user' }),
+        } as TokenGrantResponse);
+
+        expect(identity.attributeCandidates.name?.[2]).toEqual('id-token-user');
     });
 });

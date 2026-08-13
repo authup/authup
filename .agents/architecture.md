@@ -2654,6 +2654,50 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   `isUniqueConstraintDatabaseError` (`adapters/database/errors/driver.ts`, the
   reusable driver-error-code unwrapper covering mysql/postgres/sqlite).
 
+## Federated Identity Claims
+
+`IdentityProviderOAuth2Authenticator.buildIdentityWithTokenGrantResponse`
+derives the external identity from three sources, richest last:
+**access token, then `id_token`, then userinfo**. The access token is only
+the floor because it is opaque by contract (OIDC Core §2) and authup's own
+carries `sub`, `kind` and `realm_name` and no username at all, so reading
+it alone provisioned every federated user under the remote subject UUID
+plus a `<uuid>@example.com` placeholder (#3434).
+
+- **The name ladder is `preferred_username, nickname, name, sub`.**
+  Keycloak and Authentik put the username in `preferred_username` while
+  their `name` is a display name; authup's own claims builder maps BOTH
+  `preferred_username` and `nickname` onto the **nullable** `displayName`
+  and puts the real username in `name`, so a ladder without `name` still
+  falls through to `sub` for authup-to-authup federation. Candidates are
+  consumed reactively — `validateAttributes` only substitutes one when the
+  validator raises an issue for that exact path — so a first candidate
+  failing `isUserNameValid` degrades to the next rather than failing the
+  login, and adding candidates for OPTIONAL keys (`firstName`/`lastName`)
+  would be dead code.
+- **`identity.id` stays the ACCESS token `sub`, always.** It becomes
+  `provider_user_id` and keys `findOneByProviderIdentity`, so sourcing it
+  from a richer claim set would orphan every existing
+  `auth_identity_provider_accounts` row and silently provision duplicate
+  users on the next login. Pinned by *should key the account on the access
+  token subject, never the id_token*.
+- **userinfo is called only when the provider declares `userInfoUrl`**, and
+  its failure is logged and swallowed. The guard is load-bearing: the hapic
+  client is constructed with no `baseURL`, so the `/userinfo` default would
+  be a relative fetch URL that throws. It is the only fix for a plain
+  `protocol: oauth2` provider whose remote client has no `openid` scope
+  bound (no `openid` scope, no id_token), and it is what stops the
+  admin-editable `userInfoUrl` field being silently inert.
+- **`identity.data` is deliberately still the access-token payload alone.**
+  Mappers (`IIdentityProviderMapper`) pattern-match over it, so merging the
+  richer claims in would change every existing mapper's input.
+- The `IdentityProviderOpenIDAuthenticator` override is gone: the base
+  ladder now covers what it did. The five presets (github, facebook,
+  instagram, paypal, google) still override the builder and are untouched.
+- **Forward-only.** The account manager's UPDATE branch never rewrites
+  `user.name` (it is `nameLocked` at creation), so users already
+  provisioned under a UUID keep it.
+
 ## Identity-Provider Account Linking (plan 091)
 
 `auth_identity_provider_accounts` (external identity → `userId`; unique
