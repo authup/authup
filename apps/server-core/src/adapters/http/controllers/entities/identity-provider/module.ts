@@ -371,9 +371,13 @@ export class IdentityProviderController {
 
         const { code } = useRequestQuery(event);
 
+        if (typeof code !== 'string' || code.length === 0) {
+            throw new BadRequestError('The authorization code is missing.');
+        }
+
         const authenticator = this.buildProviderAuthenticator(entity, { clientId: data.codeRequest?.client_id });
 
-        const user = await authenticator.authenticate(code);
+        const user = await authenticator.authenticate({ code });
 
         const realm = await this.realmRepository.resolve(entity.realmId, true);
 
