@@ -1,5 +1,40 @@
 # Changelog
 
+## [1.0.0-beta.60](https://github.com/authup/authup/compare/v1.0.0-beta.59...v1.0.0-beta.60) (2026-08-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* auth_sessions.client_id now names the client that first authorized on a session rather than the most recent one, so GET/DELETE /sessions?filter[clientId] selects on that basis. The two differ only where several applications share one session. Revocation that should reach every session an application served must filter auth_session_tokens.client_id instead.
+
+### Features
+
+* identity-provider account linking ([#3419](https://github.com/authup/authup/issues/3419)) ([f21d0e3](https://github.com/authup/authup/commit/f21d0e3ae96404ed2aca4215fe97c579f10ad18a))
+* per-application session token attribution, inventory API and revocation ([#3404](https://github.com/authup/authup/issues/3404)) ([6027f84](https://github.com/authup/authup/commit/6027f849fda7ca1b115787e3ef7b08a750fd0778))
+* schema index declarations backed by entity indexes (rapiq 2.0.0-beta.20) ([#3425](https://github.com/authup/authup/issues/3425)) ([d34afb7](https://github.com/authup/authup/commit/d34afb76143f08119e9c449201f975d8ba797788))
+* session token visibility (admin user tab + account console) ([#3421](https://github.com/authup/authup/issues/3421)) ([776239d](https://github.com/authup/authup/commit/776239d468c7db2979c2670d728c9f5cbc619945))
+
+
+### Bug Fixes
+
+* **deps:** bump @rapiq/* to 2.0.0-beta.18 ([a01fabb](https://github.com/authup/authup/commit/a01fabbb6c7bf6671f3ccb757cd0c4c695510679))
+* **deps:** bump @rapiq/* to 2.0.0-beta.19 ([21c92fb](https://github.com/authup/authup/commit/21c92fb67aead43a68c0152ef8d15507c2bf9130))
+* **deps:** bump the minorandpatch group across 1 directory with 11 updates ([#3414](https://github.com/authup/authup/issues/3414)) ([f0706f2](https://github.com/authup/authup/commit/f0706f211884be8154766bd24ea45f3f696211ed))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.59 to ^1.0.1-beta.59
+    * @authup/client-web-theme bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
+    * @authup/core-http-kit bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
+    * @authup/core-kit bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
+    * @authup/i18n bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
+    * @authup/kit bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
+    * @authup/specs bumped from ^1.0.0-beta.59 to ^1.0.1-beta.59
+
 ## [1.0.0-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.58...v1.0.0-beta.59) (2026-08-04)
 
 

@@ -1,5 +1,27 @@
 # Change Log
 
+## [1.0.0-beta.60](https://github.com/authup/authup/compare/v1.0.0-beta.59...v1.0.0-beta.60) (2026-08-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* auth_sessions.client_id now names the client that first authorized on a session rather than the most recent one, so GET/DELETE /sessions?filter[clientId] selects on that basis. The two differ only where several applications share one session. Revocation that should reach every session an application served must filter auth_session_tokens.client_id instead.
+
+### Features
+
+* audit event session attribution ([#3422](https://github.com/authup/authup/issues/3422)) ([6d7759b](https://github.com/authup/authup/commit/6d7759bd6fa4f773cd3155c6540649f50536593d))
+* identity-provider account linking ([#3419](https://github.com/authup/authup/issues/3419)) ([f21d0e3](https://github.com/authup/authup/commit/f21d0e3ae96404ed2aca4215fe97c579f10ad18a))
+* per-application session token attribution, inventory API and revocation ([#3404](https://github.com/authup/authup/issues/3404)) ([6027f84](https://github.com/authup/authup/commit/6027f849fda7ca1b115787e3ef7b08a750fd0778))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
+    * @authup/errors bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
+    * @authup/specs bumped from ^1.0.0-beta.59 to ^1.0.1-beta.59
+
 ## [1.0.0-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.58...v1.0.0-beta.59) (2026-08-04)
 
 
