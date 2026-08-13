@@ -5,7 +5,85 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
-## Next release (after v1.0.0-beta.58)
+## Next release (after v1.0.0-beta.59)
+
+### Fixed: external identity-provider login
+
+The token exchange against an external OAuth2 / OIDC provider never sent the
+`code` parameter, so **every federated login has failed since
+v1.0.0-beta.28** with an `invalid_request` from the provider's token
+endpoint. The callback passed the raw code string where the authenticator
+expected `{ code }`, and the HTTP client spread it into indexed body keys
+(`0=d&1=b&...`). **No action is required** beyond upgrading. A callback that
+arrives without a code is now rejected with a `400` instead of an opaque
+upstream failure.
+
+### `auth_sessions.client_id` is the client-subject foreign key only
+
+One browser session legitimately serves several applications (the hosted auth
+pages and the account console share the IdP origin by design), so a single
+column could never name all of them: it was last-writer-wins and accurate for
+none. Per-application attribution moved one level down, onto
+`auth_session_tokens.client_id`.
+
+`auth_sessions.client_id` now means what its foreign key always implied — the
+subject of a **client** session — and is `NULL` for a user's session. Nothing
+writes the authorizing application there anymore.
+
+- **Runbooks that sign an identity out of one application must change**:
+  `DELETE /sessions?filter[clientId]=...` no longer matches user sessions.
+  Use `DELETE /session-tokens?filter[clientId]=...`, which revokes that
+  application's tokens and leaves the session alive so the others stay signed
+  in. To sign an identity out everywhere, filter by `userId` instead.
+- **Sessions created before the upgrade keep the old value.** No backfill
+  ships, because the column is behind `ON DELETE CASCADE`: until those rows
+  expire (session lifetime, three days by default), deleting a retired client
+  still force-logs-out the users whose sessions recorded it. Either wait out
+  the lifetime before deleting a client, or run
+  `UPDATE auth_sessions SET client_id = NULL WHERE sub_kind <> 'client'`.
+
+### Schema migration: constraint names, MySQL column widths, 140 indexes
+
+Two migrations apply. Both are safe to run on a populated database, and the
+round trip is verified in CI against MySQL and PostgreSQL, but the second one
+is not instant on a large instance. **Run `authup migration run` before the
+rolling restart** rather than letting the first pod apply it under traffic.
+
+- Index, unique and foreign-key names move onto the values TypeORM derives
+  from the entity metadata. Names have no runtime meaning; this only ends a
+  split where two naming regimes coexisted and every generated migration
+  emitted 32 renames before its actual change.
+- **MySQL only**: 15 `uuid` columns widen from `varchar(36)` to the
+  `varchar(255)` TypeORM derives for them. This rewrites those tables, blocks
+  writes for the duration and needs disk headroom for the copy. It runs first
+  and is re-runnable, so an interrupted upgrade retries cleanly.
+- 140 indexes are added, backing the filter and sort vocabulary each entity
+  advertises (see below) and the remaining foreign-key columns. On PostgreSQL
+  the migrations run in one transaction, so the largest tables
+  (`auth_events`, `auth_sessions`, `auth_session_tokens`) are locked for the
+  duration of the build.
+- Three orphaned tables are **dropped with their rows**:
+  `auth_authorization_codes`, `auth_refresh_tokens` and
+  `auth_identity_provider_roles`. Each was superseded years ago (codes moved
+  to cache blobs, refresh tokens to `auth_session_tokens`, provider roles to
+  `auth_identity_provider_role_mappings`) and no entity has described them
+  since. Back them up first if you still read them out of band.
+
+### API: `meta.schema.sort` is now `meta.schema.sorts`
+
+The query-capable `GET` endpoints describe their vocabulary under
+`meta.schema`. Its sort key was renamed `sort` → `sorts` (rapiq 2.1.0, which
+made `sorts` canonical on every developer-authored surface). **A client that
+reads `meta.schema.sort` must follow**; there is no alias. The `?sort=-name`
+URL parameter is unchanged.
+
+Filters and sorts are also index-anchored now: every key an endpoint allows
+is backed by a real index, so single-key filters and sorts behave exactly as
+before. The one narrowing is a **multi-key sort** with no matching composite
+index prefix, which is now dropped whole rather than executed — the request
+still succeeds, unsorted.
+
+## v1.0.0-beta.59
 
 ### Security fix: redirect patterns with a host wildcard
 

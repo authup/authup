@@ -2718,9 +2718,23 @@ linking is the only way to bind an external identity to an EXISTING user).
   and NEVER runs mappers, mutates the user, mints a code or creates a
   session. The redirect back is fixed and server-derived:
   `<publicUrl>/account/connected-accounts?linked=<providerId>` or
-  `?linkError=already_linked|link_failed`. Takeover posture: linking an
-  attacker's external identity to a victim requires a state blob carrying
-  the victim's userId, which only the victim's bearer can mint.
+  `?linkError=already_linked|link_failed`. **Takeover posture — reason about
+  BOTH directions.** Linking an attacker's external identity to a victim
+  requires a state blob carrying the victim's userId, which only the
+  victim's bearer can mint. The reverse direction is the one that bites:
+  the attacker mints a state carrying their OWN userId and gets the victim
+  to follow it, so the victim's callback binds the VICTIM's external
+  identity to the ATTACKER's account, and the victim's next federated login
+  resolves through that row into it. State unguessability does not defend
+  this — the attacker is not guessing a state, they are supplying one — so
+  the ONLY control is the state's ip/user-agent binding, and both values
+  are chosen by whoever minted the state (`verify` skips a check whose
+  STORED value is falsy, and under the shipped `trustProxy: true` the ip is
+  the client-supplied left-most `X-Forwarded-For` entry). `completeLink`
+  therefore refuses a state carrying no binding at all. That is a stopgap
+  for the absent-binding hole only, not for a guessed one; issue #3439
+  moves the write behind a bearer-authenticated confirmation, after which
+  the guard and the state-carried userId both go away.
 - **Events** — `identityProviderLinked` (recorded in the callback branch)
   / `identityProviderUnlinked` (recorded in the service delete), IDENTITY
   scope, `refType: identityProviderAccount`, metadata only (provider

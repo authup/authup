@@ -360,8 +360,9 @@ export class IdentityProviderController {
 
         const data = await this.verifyAuthorizationState(event);
 
-        if (data.link) {
-            return this.completeLink(event, entity, data.link);
+        const { link } = data;
+        if (link) {
+            return this.completeLink(event, entity, data, link);
         }
 
         if (
@@ -559,6 +560,7 @@ export class IdentityProviderController {
     private async completeLink(
         event: IAppEvent,
         provider: OAuth2IdentityProvider | OpenIDIdentityProvider,
+        state: OAuth2AuthorizationState,
         link: OAuth2AuthorizationStateLink,
     ) {
         // Fixed, server-derived return target (the account console page).
@@ -574,6 +576,30 @@ export class IdentityProviderController {
             // complete a link after its provider was disabled.
             if (link.providerId !== provider.id || !provider.enabled) {
                 throw new BadRequestError('The identity provider is not available for account linking.');
+            }
+
+            // The state must be bound to the browser that minted it. Both
+            // bindings come from the minting request itself
+            // (`saveAuthorizationState` stores its ip and user-agent) and
+            // `OAuth2AuthorizationStateManager.verify` skips a check whose
+            // STORED value is falsy, so an absent binding is a choice the
+            // minter made rather than a property of the network — and it
+            // leaves the state completable in any browser.
+            //
+            // On the login path that is a session-fixation nuisance. Here it
+            // is a durable credential binding: an attacker who mints a state
+            // carrying their OWN userId and gets a victim to follow it binds
+            // the VICTIM's external identity to the attacker's account, and
+            // the victim's next federated login then lands in it. Refuse an
+            // unbound state instead of linking on it.
+            //
+            // This closes the absent-binding hole only. ip + user-agent
+            // remain guessable, and with the shipped `trustProxy: true` the
+            // ip is the client-supplied left-most X-Forwarded-For entry, so
+            // this is a stopgap: see issue #3439 for moving the write behind
+            // a bearer-authenticated confirmation.
+            if (!state.ip || !state.userAgent) {
+                throw new BadRequestError('The account link request is not bound to a browser.');
             }
 
             if (typeof code !== 'string' || code.length === 0) {

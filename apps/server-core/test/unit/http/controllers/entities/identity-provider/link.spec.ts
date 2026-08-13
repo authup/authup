@@ -275,6 +275,53 @@ describe('identity-provider link flow', () => {
         tokenEndpointError = undefined;
     });
 
+    it('refuses to link on a state that carries no browser binding', async () => {
+        // `verify` skips a binding check whose STORED value is falsy, and both
+        // stored values come from the request that minted the state. A minter
+        // that sends no user-agent therefore produces a state completable in
+        // ANY browser — and this path performs a durable credential binding,
+        // so an attacker could mint one carrying their own userId and have a
+        // victim's browser bind the VICTIM's external identity to it.
+        //
+        // A fresh external subject AND a fresh user, so nothing else can
+        // refuse this link: without the guard it succeeds outright, which is
+        // what makes the two assertions below discriminate.
+        externalUserId = 'external-user-unbound';
+
+        const password = generateOAuth2CodeVerifier();
+        const { data: victimUser } = await suite.client.user.create(createFakeUser({
+            realmId: realm.id,
+            password,
+        }));
+        const login = await suite.client.token.createWithPassword({
+            username: victimUser.name,
+            password,
+            realm_id: realm.id,
+        });
+
+        // mint with no user-agent, then complete from a different browser
+        const response = await httpRequest(suite, 'POST', `identity-providers/${provider.id}/link-request`, {
+            headers: {
+                Authorization: `Bearer ${login.access_token}`,
+                'user-agent': '',
+            },
+        });
+        expect(response.status).toEqual(200);
+
+        const state = new URL((await response.json()).url).searchParams.get('state');
+        expect(state).toBeTruthy();
+
+        const target = await completeCallback(state as string);
+
+        expect(target.searchParams.get('linked')).toBeNull();
+        expect(target.searchParams.get('linkError')).toEqual('link_failed');
+
+        const rows = await suite.client.get(`identity-provider-accounts?filter[userId]=${victimUser.id}`);
+        expect(rows.data.data).toHaveLength(0);
+
+        externalUserId = 'external-user-1';
+    });
+
     it('rejects a link state replayed against a different provider callback', async () => {
         // a second provider in the same realm; a state minted for `provider`
         // must not complete a link on `otherProvider`'s callback.
