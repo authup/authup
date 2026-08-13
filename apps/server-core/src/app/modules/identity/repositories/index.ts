@@ -7,5 +7,7 @@
 
 export * from './provider/index.ts';
 
+export * from './constants.ts';
+
 export * from './client.ts';
 export * from './user.ts';

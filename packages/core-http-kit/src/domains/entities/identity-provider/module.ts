@@ -7,7 +7,7 @@
 
 import type { EntityQueryInput } from '../../../helpers';
 import { buildQueryString } from '../../../helpers';
-import type { IdentityProvider } from '@authup/core-kit';
+import type { IdentityProvider, IdentityProviderAccount } from '@authup/core-kit';
 import { buildIdentityProviderAuthorizePath } from '@authup/core-kit';
 import { cleanDoubleSlashes, nullifyEmptyObjectProperties } from '../../../utils';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
@@ -15,6 +15,7 @@ import { BaseAPI } from '../../base';
 import type {
     IIdentityProviderAPI,
     IdentityProviderCreatePayload,
+    IdentityProviderLinkConfirmPayload,
     IdentityProviderLinkRequestResponse,
     IdentityProviderSavePayload,
     IdentityProviderUpdatePayload,
@@ -27,6 +28,16 @@ export class IdentityProviderAPI extends BaseAPI implements IIdentityProviderAPI
 
     async createLinkRequest(id: IdentityProvider['id']): Promise<IdentityProviderLinkRequestResponse> {
         const response = await this.client.post(`identity-providers/${id}/link-request`);
+
+        return response.data;
+    }
+
+    async confirmLinkRequest(
+        id: IdentityProvider['id'],
+        handle: string,
+    ): Promise<EntityRecordResponse<IdentityProviderAccount>> {
+        const payload : IdentityProviderLinkConfirmPayload = { handle };
+        const response = await this.client.post(`identity-providers/${id}/link-confirm`, payload);
 
         return response.data;
     }
