@@ -1,5 +1,17 @@
 # Change Log
 
+## [1.0.1-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.59...v1.0.1-beta.59) (2026-08-13)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-admin-console bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
+    * @authup/errors bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
+    * @authup/kit bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
+    * @authup/server-core bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
+
 ## [1.0.0-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.58...v1.0.0-beta.59) (2026-08-04)
 
 
