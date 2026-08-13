@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-test-kit",
     "type": "module",
-    "version": "1.0.0-beta.60",
+    "version": "1.0.0-beta.59",
     "description": "Shared test fakes for server-side packages and apps.",
     "license": "Apache-2.0",
     "exports": {
@@ -49,10 +49,10 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/access": "^1.0.0-beta.60",
-        "@authup/core-kit": "^1.0.0-beta.60",
-        "@authup/kit": "^1.0.0-beta.60",
-        "@authup/server-kit": "^1.0.0-beta.60",
+        "@authup/access": "^1.0.0-beta.59",
+        "@authup/core-kit": "^1.0.0-beta.59",
+        "@authup/kit": "^1.0.0-beta.59",
+        "@authup/server-kit": "^1.0.0-beta.59",
         "@rapiq/core": "^2.1.0"
     },
     "devDependencies": {

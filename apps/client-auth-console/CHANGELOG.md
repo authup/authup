@@ -1,26 +1,5 @@
 # Changelog
 
-## [1.0.0-beta.60](https://github.com/authup/authup/compare/v1.0.0-beta.59...v1.0.0-beta.60) (2026-08-13)
-
-
-### Bug Fixes
-
-* **deps:** bump the minorandpatch group across 1 directory with 11 updates ([#3414](https://github.com/authup/authup/issues/3414)) ([f0706f2](https://github.com/authup/authup/commit/f0706f211884be8154766bd24ea45f3f696211ed))
-
-
-### Dependencies
-
-* The following workspace dependencies were updated
-  * dependencies
-    * @authup/core-http-kit bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
-  * devDependencies
-    * @authup/client-web-kit bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
-    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.59 to ^1.0.1-beta.59
-    * @authup/client-web-theme bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
-    * @authup/core-kit bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
-    * @authup/i18n bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
-    * @authup/kit bumped from ^1.0.0-beta.59 to ^1.0.0-beta.60
-
 ## [1.0.0-beta.59](https://github.com/authup/authup/compare/v1.0.0-beta.58...v1.0.0-beta.59) (2026-08-04)
 
 
