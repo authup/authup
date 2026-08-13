@@ -87,7 +87,9 @@ class TestableAuthenticator extends IdentityProviderOAuth2Authenticator {
     }
 
     stubUserInfo(claims: Record<string, any>) {
-        this.client.userInfo.get = () => Promise.resolve(claims);
+        // `UserInfoAPI.get` is generic over its return, so the stub has to
+        // be too: a concrete Record is not assignable to an arbitrary T
+        this.client.userInfo.get = <T extends Record<string, any>>() => Promise.resolve(claims as T);
     }
 
     failUserInfo(error: Error) {
@@ -217,7 +219,7 @@ describe('IdentityProviderOAuth2Authenticator (identity build)', () => {
             .buildIdentity({ access_token: ACCESS_TOKEN } as TokenGrantResponse);
 
         expect(identity.id).toEqual('external-user-1');
-        expect(identity.attributeCandidates.name).toEqual([
+        expect(identity.attributeCandidates?.name).toEqual([
             undefined,
             undefined,
             undefined,
@@ -240,13 +242,13 @@ describe('IdentityProviderOAuth2Authenticator (identity build)', () => {
             }),
         } as TokenGrantResponse);
 
-        expect(identity.attributeCandidates.name).toEqual([
+        expect(identity.attributeCandidates?.name).toEqual([
             null,
             null,
             'peter',
             'external-user-1',
         ]);
-        expect(identity.attributeCandidates.email).toEqual(['peter@example.com']);
+        expect(identity.attributeCandidates?.email).toEqual(['peter@example.com']);
     });
 
     it('should prefer preferred_username, the keycloak-style username', async () => {
@@ -258,7 +260,7 @@ describe('IdentityProviderOAuth2Authenticator (identity build)', () => {
             }),
         } as TokenGrantResponse);
 
-        expect(identity.attributeCandidates.name?.[0]).toEqual('kc-user');
+        expect(identity.attributeCandidates?.name?.[0]).toEqual('kc-user');
     });
 
     it('should key the account on the access token subject, never the id_token', async () => {
@@ -280,7 +282,7 @@ describe('IdentityProviderOAuth2Authenticator (identity build)', () => {
         } as TokenGrantResponse);
 
         expect(identity.id).toEqual('external-user-1');
-        expect(identity.attributeCandidates.name?.[3]).toEqual('external-user-1');
+        expect(identity.attributeCandidates?.name?.[3]).toEqual('external-user-1');
     });
 
     it('should not call userinfo when the provider declares no endpoint', async () => {
@@ -303,7 +305,7 @@ describe('IdentityProviderOAuth2Authenticator (identity build)', () => {
             id_token: encodeToken({ name: 'id-token-user' }),
         } as TokenGrantResponse);
 
-        expect(identity.attributeCandidates.name?.[0]).toEqual('userinfo-user');
+        expect(identity.attributeCandidates?.name?.[0]).toEqual('userinfo-user');
     });
 
     it('should discard a userinfo document whose subject does not match', async () => {
@@ -323,8 +325,8 @@ describe('IdentityProviderOAuth2Authenticator (identity build)', () => {
             id_token: encodeToken({ name: 'id-token-user', email: 'peter@example.com' }),
         } as TokenGrantResponse);
 
-        expect(identity.attributeCandidates.name).not.toContain('somebody-else');
-        expect(identity.attributeCandidates.email).toEqual(['peter@example.com']);
+        expect(identity.attributeCandidates?.name).not.toContain('somebody-else');
+        expect(identity.attributeCandidates?.email).toEqual(['peter@example.com']);
     });
 
     it('should read an id_token whose claims are not ASCII', async () => {
@@ -340,8 +342,8 @@ describe('IdentityProviderOAuth2Authenticator (identity build)', () => {
             }),
         } as TokenGrantResponse);
 
-        expect(identity.attributeCandidates.name?.[0]).toEqual('Пётр');
-        expect(identity.attributeCandidates.name?.[2]).toEqual('Peter 😀');
+        expect(identity.attributeCandidates?.name?.[0]).toEqual('Пётр');
+        expect(identity.attributeCandidates?.name?.[2]).toEqual('Peter 😀');
     });
 
     it('should degrade rather than fail the login when userinfo errors', async () => {
@@ -353,6 +355,6 @@ describe('IdentityProviderOAuth2Authenticator (identity build)', () => {
             id_token: encodeToken({ name: 'id-token-user' }),
         } as TokenGrantResponse);
 
-        expect(identity.attributeCandidates.name?.[2]).toEqual('id-token-user');
+        expect(identity.attributeCandidates?.name?.[2]).toEqual('id-token-user');
     });
 });
