@@ -15,6 +15,7 @@ import type {
 import type { Repository } from 'typeorm';
 import {
     ClientIdentityRepository,
+    IdentityProviderAccountLinkStore,
     IdentityProviderAttributeMappingRepository,
     IdentityProviderPermissionMappingRepository,
     IdentityProviderRoleMappingRepository,
@@ -51,6 +52,7 @@ import {
     IdentityRoleProvider,
 } from '../../../core/index.ts';
 import { LDAPInjectionKey } from '../ldap/index.ts';
+import { CacheInjectionKey } from '../cache/index.ts';
 
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
@@ -138,6 +140,16 @@ export class IdentityModule implements IModule {
                 roleMapper,
                 permissionMapper,
             }),
+        });
+
+        container.register(IdentityInjectionKey.ProviderAccountLinkStore, {
+            // lazy: the cache module is not a declared dependency of this
+            // one, and a factory only runs once something resolves the store
+            useFactory: (c) => {
+                const cache = c.resolve(CacheInjectionKey);
+
+                return new IdentityProviderAccountLinkStore(cache);
+            },
         });
 
         // ---------------------------------------------

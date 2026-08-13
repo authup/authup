@@ -526,6 +526,7 @@ export class HTTPControllerModule {
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
 
         const accountManager = container.resolve(IdentityInjectionKey.ProviderAccountManager);
+        const linkStore = container.resolve(IdentityInjectionKey.ProviderAccountLinkStore);
 
         const codeIssuer = container.resolve(OAuth2InjectionToken.AuthorizationCodeIssuer);
 
@@ -548,6 +549,7 @@ export class HTTPControllerModule {
             clientRepository: container.resolve(OAuth2InjectionToken.ClientRepository),
 
             accountManager,
+            linkStore,
 
             codeIssuer,
             codeRequestVerifier,

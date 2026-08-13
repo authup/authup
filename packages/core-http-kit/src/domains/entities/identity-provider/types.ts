@@ -7,7 +7,7 @@
 
 import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
 
-import type { IdentityProvider } from '@authup/core-kit';
+import type { IdentityProvider, IdentityProviderAccount } from '@authup/core-kit';
 
 // Mirrors `IdentityProviderValidator` mounts in @authup/core-kit. IdPs carry per-protocol
 // attributes (e.g. clientId/clientSecret for OAuth2) handled by an attributes validator
@@ -31,8 +31,19 @@ export type IdentityProviderLinkRequestResponse = {
     url: string,
 };
 
+/**
+ * Body of `POST /identity-providers/:id/link-confirm` (issue #3439): the
+ * one-time handle the callback returned on the account console URL. The
+ * account row is written for the AUTHENTICATED caller, so the handle names
+ * a pending link rather than authorizing one on its own.
+ */
+export type IdentityProviderLinkConfirmPayload = {
+    handle: string,
+};
+
 export interface IIdentityProviderAPI extends IEntityAPI<IdentityProvider, IdentityProviderCreatePayload, IdentityProviderUpdatePayload> {
     getAuthorizeUri(id: IdentityProvider['id']) : string;
     createOrUpdate(idOrName: string, data: IdentityProviderSavePayload) : Promise<EntityRecordResponse<IdentityProvider>>;
     createLinkRequest(id: IdentityProvider['id']) : Promise<IdentityProviderLinkRequestResponse>;
+    confirmLinkRequest(id: IdentityProvider['id'], handle: string) : Promise<EntityRecordResponse<IdentityProviderAccount>>;
 }

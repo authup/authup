@@ -154,6 +154,25 @@ describe('identity-provider link flow', () => {
         return new URL(location as string);
     }
 
+    function handleOf(target: URL): string {
+        const handle = target.searchParams.get('linkHandle');
+        expect(handle).toBeTruthy();
+        expect(target.searchParams.get('provider')).toEqual(provider.id);
+
+        return handle as string;
+    }
+
+    function confirmLink(handle: string, token: string, providerId: string = provider.id) {
+        return httpRequest(suite, 'POST', `identity-providers/${providerId}/link-confirm`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'user-agent': USER_AGENT,
+                'content-type': 'application/json',
+            },
+            body: JSON.stringify({ handle }),
+        });
+    }
+
     it('links the external identity to the requesting user', async () => {
         const { url, state } = await requestLink(userToken);
 
@@ -164,8 +183,16 @@ describe('identity-provider link flow', () => {
 
         const target = await completeCallback(state);
         expect(target.pathname).toContain('account/connected-accounts');
-        expect(target.searchParams.get('linked')).toEqual(provider.id);
         expect(target.searchParams.get('linkError')).toBeNull();
+
+        const handle = handleOf(target);
+
+        // the callback is unauthenticated, so it writes NOTHING (#3439)
+        const before = await suite.client.get(`identity-provider-accounts?filter[userId]=${user.id}`);
+        expect(before.data.data).toHaveLength(0);
+
+        const confirmed = await confirmLink(handle, userToken);
+        expect(confirmed.status).toEqual(200);
 
         const rows = await suite.client.get(`identity-provider-accounts?filter[userId]=${user.id}`);
         expect(rows.data.data).toHaveLength(1);
@@ -178,7 +205,8 @@ describe('identity-provider link flow', () => {
         const { state } = await requestLink(userToken);
         const target = await completeCallback(state);
 
-        expect(target.searchParams.get('linked')).toEqual(provider.id);
+        const confirmed = await confirmLink(handleOf(target), userToken);
+        expect(confirmed.status).toEqual(200);
 
         const rows = await suite.client.get(`identity-provider-accounts?filter[userId]=${user.id}`);
         expect(rows.data.data).toHaveLength(1);
@@ -199,8 +227,10 @@ describe('identity-provider link flow', () => {
         const { state } = await requestLink(login.access_token);
         const target = await completeCallback(state);
 
-        expect(target.searchParams.get('linked')).toBeNull();
-        expect(target.searchParams.get('linkError')).toEqual('already_linked');
+        // the callback no longer decides this: the conflict surfaces on the
+        // authenticated confirm, where it can carry a real localized error
+        const confirmed = await confirmLink(handleOf(target), login.access_token);
+        expect(confirmed.status).toEqual(400);
 
         // still linked to the FIRST user only
         const rows = await suite.client.get(`identity-provider-accounts?filter[providerId]=${provider.id}`);
@@ -275,18 +305,20 @@ describe('identity-provider link flow', () => {
         tokenEndpointError = undefined;
     });
 
-    it('refuses to link on a state that carries no browser binding', async () => {
-        // `verify` skips a binding check whose STORED value is falsy, and both
-        // stored values come from the request that minted the state. A minter
-        // that sends no user-agent therefore produces a state completable in
-        // ANY browser — and this path performs a durable credential binding,
-        // so an attacker could mint one carrying their own userId and have a
-        // victim's browser bind the VICTIM's external identity to it.
-        //
-        // A fresh external subject AND a fresh user, so nothing else can
-        // refuse this link: without the guard it succeeds outright, which is
-        // what makes the two assertions below discriminate.
-        externalUserId = 'external-user-unbound';
+    /**
+     * The attack the split exists to close (#3439): the attacker mints a link
+     * state carrying their OWN userId and gets a victim to follow it, so the
+     * victim's callback resolves the VICTIM's external identity. Before the
+     * split the callback wrote the row there and then, binding the victim's
+     * external identity to the attacker's account, and only the state's
+     * ip / user-agent binding stood in the way — values chosen by whoever
+     * minted the state.
+     *
+     * Now the write happens on the confirm, under the redeeming browser's
+     * bearer, and the handle is inert for anyone else.
+     */
+    it('refuses a handle minted for another user', async () => {
+        externalUserId = 'external-user-victim';
 
         const password = generateOAuth2CodeVerifier();
         const { data: victimUser } = await suite.client.user.create(createFakeUser({
@@ -299,25 +331,76 @@ describe('identity-provider link flow', () => {
             realm_id: realm.id,
         });
 
-        // mint with no user-agent, then complete from a different browser
-        const response = await httpRequest(suite, 'POST', `identity-providers/${provider.id}/link-request`, {
-            headers: {
-                Authorization: `Bearer ${login.access_token}`,
-                'user-agent': '',
-            },
-        });
-        expect(response.status).toEqual(200);
+        // the ATTACKER mints the state, the VICTIM's browser completes it
+        const { state } = await requestLink(userToken);
+        const target = await completeCallback(state);
 
-        const state = new URL((await response.json()).url).searchParams.get('state');
-        expect(state).toBeTruthy();
+        const response = await confirmLink(handleOf(target), login.access_token);
+        expect(response.status).toEqual(400);
 
-        const target = await completeCallback(state as string);
-
-        expect(target.searchParams.get('linked')).toBeNull();
-        expect(target.searchParams.get('linkError')).toEqual('link_failed');
-
-        const rows = await suite.client.get(`identity-provider-accounts?filter[userId]=${victimUser.id}`);
+        const rows = await suite.client.get(`identity-provider-accounts?filter[providerUserId]=${externalUserId}`);
         expect(rows.data.data).toHaveLength(0);
+
+        externalUserId = 'external-user-1';
+    });
+
+    it('rejects a confirmation without a bearer', async () => {
+        externalUserId = 'external-user-anonymous';
+
+        const { state } = await requestLink(userToken);
+        const target = await completeCallback(state);
+
+        const response = await httpRequest(suite, 'POST', `identity-providers/${provider.id}/link-confirm`, {
+            headers: { 'user-agent': USER_AGENT, 'content-type': 'application/json' },
+            body: JSON.stringify({ handle: handleOf(target) }),
+        });
+        expect(response.status).toEqual(401);
+
+        externalUserId = 'external-user-1';
+    });
+
+    it('rejects a replayed handle', async () => {
+        externalUserId = 'external-user-replay';
+
+        // a fresh user: `(providerId, userId)` is unique, so the user linked
+        // above could not take a second account for this provider
+        const password = generateOAuth2CodeVerifier();
+        const { data: replayUser } = await suite.client.user.create(createFakeUser({
+            realmId: realm.id,
+            password,
+        }));
+        const login = await suite.client.token.createWithPassword({
+            username: replayUser.name,
+            password,
+            realm_id: realm.id,
+        });
+
+        const { state } = await requestLink(login.access_token);
+        const target = await completeCallback(state);
+        const handle = handleOf(target);
+
+        expect((await confirmLink(handle, login.access_token)).status).toEqual(200);
+        // single use: the handle rides a URL parameter, so it reaches browser
+        // history and proxy logs
+        expect((await confirmLink(handle, login.access_token)).status).toEqual(400);
+
+        externalUserId = 'external-user-1';
+    });
+
+    it('rejects a handle redeemed against a different provider', async () => {
+        externalUserId = 'external-user-cross-provider';
+
+        const otherProvider = (await suite.client.identityProvider.create(createFakeOAuth2IdentityProvider({
+            realmId: realm.id,
+            tokenUrl: `${idpURL}/token`,
+            authorizeUrl: `${idpURL}/authorize`,
+        }))).data;
+
+        const { state } = await requestLink(userToken);
+        const target = await completeCallback(state);
+
+        const response = await confirmLink(handleOf(target), userToken, otherProvider.id);
+        expect(response.status).toEqual(400);
 
         externalUserId = 'external-user-1';
     });

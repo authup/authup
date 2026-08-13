@@ -8,6 +8,7 @@
 import { TypedToken } from 'eldin';
 import type {
     IIdentityPermissionProvider,
+    IIdentityProviderAccountLinkStore,
     IIdentityProviderAccountManager,
     IIdentityResolver,
     IIdentityRoleProvider,
@@ -19,5 +20,6 @@ export const IdentityInjectionKey = {
     PermissionProvider: new TypedToken<IIdentityPermissionProvider>('IdentityPermissionProvider'),
     RoleProvider: new TypedToken<IIdentityRoleProvider>('IdentityRoleProvider'),
     ProviderAccountManager: new TypedToken<IIdentityProviderAccountManager>('AccountManager'),
+    ProviderAccountLinkStore: new TypedToken<IIdentityProviderAccountLinkStore>('ProviderAccountLinkStore'),
     ProviderLdapCollectionAuthenticator: new TypedToken<IdentityProviderLdapCollectionAuthenticator>('ProviderLdapCollectionAuthenticator'),
 } as const;
