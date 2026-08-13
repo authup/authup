@@ -4079,15 +4079,21 @@ integration:
   self-recursive entities tripped vue-tsc's TS2590, tada5hi/rapiq#790)
   and is desugared at the boundary. Per load, **every** parameter merges
   via `mergeQueries` (left priority: load input ▷ retained interactive
-  state ▷ meta pagination ▷ base query). The per-parameter replace that
-  decides whether a load supersedes the retained interactive value tests
-  for the key's PRESENCE on the raw input, so it must recognize every
-  spelling the input type accepts: since rapiq 2.1.0 (#906) that means
-  **both `sorts` (canonical) and `sort` (deprecated)** — checking one
-  alone silently drops a load carrying the other, and supplying both
-  throws `KEY_AMBIGUOUS` at desugaring before the check runs. Pinned by
-  *a load carrying %s replaces the retained sorts* in
-  `entity-collection.spec.ts`, parameterized over the two spellings. Filters used to be carved out
+  state ▷ meta pagination ▷ base query). The per-parameter replace decides
+  whether a load supersedes the retained interactive value from the raw
+  input: `fields` / `filters` / `relations` test the key's PRESENCE
+  (`in`), **sorts tests for a DEFINED value** under either accepted
+  spelling. Both halves are load-bearing. Since rapiq 2.1.0 (#906) the
+  input type accepts `sorts` (canonical) and `sort` (deprecated), and
+  checking one alone silently drops a load carrying the other; but rapiq
+  documents `{ sorts: props.sorts, sort: props.sort }` as a safe spread
+  wrapper, so both keys are routinely PRESENT and `undefined`, which an
+  `in` test would read as supplied and use to wipe the retained sorts.
+  Supplying both with values throws `KEY_AMBIGUOUS` at desugaring, before
+  either check runs. Pinned by *a load carrying %s replaces the retained
+  sorts* (parameterized over the two spellings) and *a load carrying only
+  undefined sort spellings keeps the retained sorts* in
+  `entity-collection.spec.ts`. Filters used to be carved out
   of that call and AND-injected by hand, because the old `Filters.merge`
   did per-field replace and would have let a search input displace an
   injected `realmId`/`clientId` scope. Since rapiq **beta.19**

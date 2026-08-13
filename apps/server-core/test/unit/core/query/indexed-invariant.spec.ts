@@ -57,11 +57,33 @@ describe('core/query (indexed invariant)', () => {
      * and the invariant reports green while checking nothing — which is
      * exactly what the `sort` to `sorts` rename in rapiq 2.1.0 (#906)
      * did. The description is upstream's shape, so pin that it still
-     * carries the keys these checks depend on.
+     * carries the block each check depends on, PER SCHEMA: asserting it
+     * over the flattened set would let the other schemas keep the count
+     * positive while one schema's block went missing and was silently
+     * skipped by the loops' `|| []`.
+     *
+     * The block is asserted, never a non-empty `allowed`, because an
+     * absent allow-list is legitimate — `clientScope` declares no sort
+     * vocabulary at all, so its `sorts.allowed` is null by design.
      */
-    it.each(['filters', 'sorts'] as const)('should have %s allow-lists to check', (parameter) => {
-        const keys = schemas
-            .flatMap((schema) => schema.describe()[parameter]?.allowed || []);
+    it.each(['filters', 'sorts'] as const)('should describe %s for every schema', (parameter) => {
+        const missing = schemas
+            .map((schema) => schema.describe())
+            .filter((description) => typeof description[parameter] === 'undefined')
+            .map((description) => description.name);
+
+        expect(missing).toEqual([]);
+    });
+
+    it('should have allow-listed keys to check at all', () => {
+        const keys = schemas.flatMap((schema) => {
+            const description = schema.describe();
+
+            return [
+                ...description.filters?.allowed || [],
+                ...description.sorts?.allowed || [],
+            ];
+        });
 
         expect(keys.length).toBeGreaterThan(0);
     });
