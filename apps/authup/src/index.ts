@@ -15,4 +15,3 @@ Promise.resolve()
         consola.error(normalizeError(error).message);
         process.exit(1);
     });
-

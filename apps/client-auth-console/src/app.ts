@@ -209,4 +209,3 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
         router,
     };
 }
-

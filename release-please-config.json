@@ -1,7 +1,7 @@
 {
     "include-component-in-tag": false,
     "release-type": "node",
-    "release-as": "1.0.0-beta.60",
+    "release-as": "1.0.0-beta.61",
     "packages": {
         ".": {"component": "root", "extra-files": ["CITATION.cff"]},
 
@@ -57,6 +57,7 @@
                 "core-kit",
                 "core-realtime-kit",
                 "errors",
+                "i18n",
                 "kit",
 
                 "server-adapter-kit",
