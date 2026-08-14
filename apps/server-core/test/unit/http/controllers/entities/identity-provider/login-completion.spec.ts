@@ -398,28 +398,34 @@ describe('identity-provider login completion', () => {
 
         await suite.client.user.update((user as { id: string }).id, { active: false });
 
-        const out = await httpRequest(suite, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${buildCodeRequest()}`, {
-            headers: { 'user-agent': USER_AGENT },
-            redirect: 'manual',
-        });
-        const state = new URL(out.headers.get('location') as string).searchParams.get('state');
-
-        // A federated login must not be the way around the deactivation the
-        // local login path enforces.
-        const back = await httpRequest(
-            suite,
-            'GET',
-            `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code`,
-            {
+        // The subject is shared with every other federated login in this file,
+        // so the reactivation belongs in `finally`. Left to the happy path, one
+        // failed assertion here would deactivate the user for the rest of the
+        // run and fail every later test that logs in.
+        try {
+            const out = await httpRequest(suite, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${buildCodeRequest()}`, {
                 headers: { 'user-agent': USER_AGENT },
                 redirect: 'manual',
-            },
-        );
+            });
+            const state = new URL(out.headers.get('location') as string).searchParams.get('state');
 
-        expect(back.headers.get('location')).toBeNull();
-        expect(back.status).toBeGreaterThanOrEqual(400);
+            // A federated login must not be the way around the deactivation the
+            // local login path enforces.
+            const back = await httpRequest(
+                suite,
+                'GET',
+                `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code`,
+                {
+                    headers: { 'user-agent': USER_AGENT },
+                    redirect: 'manual',
+                },
+            );
 
-        await suite.client.user.update((user as { id: string }).id, { active: true });
+            expect(back.headers.get('location')).toBeNull();
+            expect(back.status).toBeGreaterThanOrEqual(400);
+        } finally {
+            await suite.client.user.update((user as { id: string }).id, { active: true });
+        }
     });
 
     it('issues no code when the redirect_uri stopped matching a registered pattern', async () => {

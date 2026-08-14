@@ -2688,9 +2688,12 @@ The completion additionally refuses a **disabled provider** and an **inactive
 user**, both checked at the callback rather than only when the login started.
 The first mirrors the link flow, which always re-checked its provider; the
 second mirrors the local login path, which throws `EntityInactiveError`, so a
-federated login cannot become the way around a deactivation. Both run before
-the provider's single-use code is spent, so a refused completion contacts the
-provider not at all and provisions no user.
+federated login cannot become the way around a deactivation. Only the provider
+check runs before the provider's single-use code is spent, so that refusal
+contacts the provider not at all and provisions no user. The user is not known
+until the exchange has resolved the external identity, so an inactive one is
+refused after the code was spent. It still gets no authup code, which is the
+part that matters.
 
 The hosted page is not part of this completion, so consent, the MFA challenge
 and the prompt ladder do not run for a federated login. Both exclusions are
