@@ -5,8 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
 import {
     afterAll,
     beforeAll,
@@ -19,13 +17,13 @@ import { ScopeName } from '@authup/core-kit';
 import {
     ApplicationBuilder,
     ConfigInjectionKey,
-    ConfigModule, 
-    DatabaseModule, 
+    ConfigModule,
+    DefaultProvisioningSource,
+    ProvisionerModule,
 } from '../../../../../../src';
 import type { Config } from '../../../../../../src';
 import { normalizeConfig } from '../../../../../../src/app/modules/config/normalize.ts';
 import { readConfigRawFromEnv } from '../../../../../../src/app/modules/config/read/index.ts';
-import { PACKAGE_PATH } from '../../../../../../src/path.ts';
 import { TestHTTPApplication } from '../../../../../app/http.ts';
 import {
     createFakeClient,
@@ -33,7 +31,7 @@ import {
     createFakeRealm,
     httpRequest,
 } from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
+import { createTestApplication, createTestDatabaseModuleForSecondaryInstance } from '../../../../../app';
 
 /**
  * Two REAL authup instances, each with its own database: a downstream one that
@@ -41,9 +39,6 @@ import { createTestApplication } from '../../../../../app';
  * token endpoint, so none of them proves that authup can consume authup. This
  * one does the whole round trip against the real endpoints.
  */
-
-const DATABASE_DIRECTORY_PATH = path.join(PACKAGE_PATH, 'writable');
-const TEMPLATE_DATABASE_PATH = path.join(DATABASE_DIRECTORY_PATH, 'test.sql');
 
 const UPSTREAM_CLIENT_NAME = 'downstream-broker';
 const UPSTREAM_CLIENT_SECRET = 'downstream-broker-secret';
@@ -53,18 +48,13 @@ const RP_STATE = 'rp-state-value';
 const CODE_VERIFIER = 'aVeryLongCodeVerifierValueUsedByThePublicClient1234567890';
 
 /**
- * A second application on its own sqlite file. The suite module pins one
- * database per vitest worker, so two instances sharing it would be one logical
- * IdP with two ports, which is exactly what this test must not be.
+ * A second application on its own database, on whatever dialect the run uses.
+ * The suite module pins one database per vitest worker, so two instances
+ * sharing it would be one logical IdP with two ports, which is exactly what
+ * this test must not be. That database starts empty, so this instance
+ * provisions itself rather than inheriting the suite's template.
  */
-const upstreamDatabasePath = path.join(
-    DATABASE_DIRECTORY_PATH,
-    `test-upstream-${process.env.VITEST_POOL_ID || '0'}.sql`,
-);
-
 function createUpstreamApplication(): TestHTTPApplication {
-    const database = upstreamDatabasePath;
-
     const modules = new ApplicationBuilder()
         .withConfig(new ConfigModule(async () => {
             const config = await normalizeConfig(readConfigRawFromEnv()) as Config;
@@ -81,23 +71,10 @@ function createUpstreamApplication(): TestHTTPApplication {
         .withCache()
         .withLdap()
         .withMail()
-        .withDatabase(new DatabaseModule({
-            prepareBuild: async (container) => {
-                const config = container.resolve(ConfigInjectionKey);
-                config.db = {
-                    type: 'better-sqlite3',
-                    database,
-                };
-                container.register(ConfigInjectionKey, { useValue: config });
-            },
-            setup: async () => {
-                fs.rmSync(database, { force: true });
-                fs.copyFileSync(TEMPLATE_DATABASE_PATH, database);
-            },
-            migrate: async (_container, dataSource) => {
-                await dataSource.synchronize();
-            },
-        }))
+        .withDatabase(createTestDatabaseModuleForSecondaryInstance('upstream'))
+        .withProvisioning(new ProvisionerModule([
+            new DefaultProvisioningSource(),
+        ]))
         .withAuthentication()
         .withIdentity()
         .withOAuth2()
@@ -176,10 +153,6 @@ describe('authup federating to authup', () => {
     afterAll(async () => {
         await downstream.teardown();
         await upstream.teardown();
-
-        // The global setup only sweeps the per-worker `test-<n>.sql` files, so
-        // this one cleans up after itself.
-        fs.rmSync(upstreamDatabasePath, { force: true });
     });
 
     it('completes a login brokered from one instance to the other', async () => {

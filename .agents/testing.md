@@ -25,6 +25,20 @@
   database), so `test/vitest.config.ts` turns `fileParallelism` off for
   them instead; expect those runs to take several times the sqlite
   wall-clock.
+- **A second application in one spec (server-core)**: a spec that boots two
+  instances (`federation-e2e.spec.ts`, one authup brokering a login to
+  another) gives the second one
+  `createTestDatabaseModuleForSecondaryInstance('<name>')` plus its own
+  `withProvisioning(...)`. The factory follows the dialect the run itself
+  uses: a `writable/test-<name>-<poolId>.sql` file on sqlite, a
+  `<database>_<name>_<poolId>` database on the server otherwise. Do **not**
+  pin the second instance to sqlite by hand and seed it from
+  `writable/test.sql`: that template only exists on sqlite runs, so the spec
+  dies with `ENOENT` under `test:mysql` / `test:psql`. Its database starts
+  empty rather than as a template copy, which is why the caller provisions
+  it. Booting two applications in one process is otherwise supported, and
+  regressions in that isolation surface here first (see architecture.md →
+  *Policy engine evaluators are per engine*).
 
 ## Running Tests
 
