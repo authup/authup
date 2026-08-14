@@ -64,9 +64,16 @@ export function extractTokenPayload(
     const [, payloadBase64] = parts;
 
     try {
-        const payload = atob(payloadBase64);
+        // A JWT payload is base64URL (RFC 7515 §2), which `atob` rejects on
+        // its `-`/`_` characters, and `atob` yields latin1 while the payload
+        // is UTF-8 (RFC 7519 §3). Any claim outside ASCII produces one or the
+        // other, so a token carrying a name like `Пётр` or an emoji failed to
+        // decode at all.
+        const normalized = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+        const binary = atob(normalized);
+        const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
 
-        return JSON.parse(payload);
+        return JSON.parse(new TextDecoder().decode(bytes));
     } catch {
         throw JWTError.payloadInvalid('The token payload could not be extracted.');
     }

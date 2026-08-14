@@ -780,6 +780,7 @@ export class IdentityProviderController {
         return createIdentityProviderOAuth2Authenticator({
             accountManager: this.accountManager,
             provider,
+            logger: this.logger,
             options: {
                 baseURL: this.options.baseURL,
                 clientId: options.clientId,
