@@ -1,5 +1,23 @@
 # Change Log
 
+## [1.0.0-beta.61](https://github.com/authup/authup/compare/v1.0.0-beta.60...v1.0.0-beta.61) (2026-08-14)
+
+
+### Bug Fixes
+
+* **server-core:** derive the federated identity from id_token and userinfo claims ([#3448](https://github.com/authup/authup/issues/3448)) ([28a89be](https://github.com/authup/authup/commit/28a89beecc290979e5bbcc3164d919212f731cbb))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+    * @authup/core-kit bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+    * @authup/kit bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+    * @authup/specs bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+
 ## [1.0.0-beta.60](https://github.com/authup/authup/compare/v1.0.0-beta.59...v1.0.0-beta.60) (2026-08-13)
 
 

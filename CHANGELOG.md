@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.61](https://github.com/authup/authup/compare/v1.0.0-beta.60...v1.0.0-beta.61) (2026-08-14)
+
+
+### Features
+
+* **server-core:** complete an identity-provider link on an authenticated request ([#3450](https://github.com/authup/authup/issues/3450)) ([78859b0](https://github.com/authup/authup/commit/78859b017d40ac167577973222fe5f9dc4ef98ee))
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([0369d9f](https://github.com/authup/authup/commit/0369d9f2d8fbb0ee7bf1d742af5b31e7a16f55e6))
+* return the federated login code to the relying party ([#3453](https://github.com/authup/authup/issues/3453)) ([2b6d489](https://github.com/authup/authup/commit/2b6d4895661c98f50a5b7a731c0f620b82236f7f))
+* **server-core:** derive the federated identity from id_token and userinfo claims ([#3448](https://github.com/authup/authup/issues/3448)) ([28a89be](https://github.com/authup/authup/commit/28a89beecc290979e5bbcc3164d919212f731cbb))
+
 ## [1.0.0-beta.60](https://github.com/authup/authup/compare/v1.0.0-beta.59...v1.0.0-beta.60) (2026-08-13)
 
 

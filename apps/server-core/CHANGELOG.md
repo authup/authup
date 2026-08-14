@@ -1,5 +1,36 @@
 # Change Log
 
+## [1.0.0-beta.61](https://github.com/authup/authup/compare/v1.0.0-beta.60...v1.0.0-beta.61) (2026-08-14)
+
+
+### Features
+
+* **server-core:** complete an identity-provider link on an authenticated request ([#3450](https://github.com/authup/authup/issues/3450)) ([78859b0](https://github.com/authup/authup/commit/78859b017d40ac167577973222fe5f9dc4ef98ee))
+
+
+### Bug Fixes
+
+* return the federated login code to the relying party ([#3453](https://github.com/authup/authup/issues/3453)) ([2b6d489](https://github.com/authup/authup/commit/2b6d4895661c98f50a5b7a731c0f620b82236f7f))
+* **server-core:** derive the federated identity from id_token and userinfo claims ([#3448](https://github.com/authup/authup/issues/3448)) ([28a89be](https://github.com/authup/authup/commit/28a89beecc290979e5bbcc3164d919212f731cbb))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+    * @authup/client-account-console bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+    * @authup/client-auth-console bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+    * @authup/core-http-kit bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+    * @authup/core-kit bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+    * @authup/errors bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+    * @authup/i18n bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+    * @authup/kit bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+    * @authup/server-kit bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+    * @authup/specs bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+  * devDependencies
+    * @authup/server-test-kit bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+
 ## [1.0.0-beta.60](https://github.com/authup/authup/compare/v1.0.0-beta.59...v1.0.0-beta.60) (2026-08-13)
 
 
