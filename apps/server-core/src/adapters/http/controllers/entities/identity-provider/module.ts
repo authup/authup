@@ -6,7 +6,12 @@
  */
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
-import { ValidatorGroup, base64URLDecode, isUUID } from '@authup/kit';
+import { 
+    ValidatorGroup, 
+    base64URLDecode, 
+    isObject, 
+    isUUID, 
+} from '@authup/kit';
 import {
     DBody,
     DContext,
@@ -26,6 +31,7 @@ import {
 } from 'routup';
 import type {
     IdentityProvider,
+    IdentityProviderAccount,
     OAuth2AuthorizationCodeRequest,
     OAuth2IdentityProvider,
     OpenIDIdentityProvider,
@@ -52,6 +58,7 @@ import type {
     EntityCollectionResponse,
     EntityRecordResponse,
     IdentityProviderCreatePayload,
+    IdentityProviderLinkConfirmPayload,
     IdentityProviderLinkRequestResponse,
     IdentityProviderSavePayload,
     IdentityProviderUpdatePayload,
@@ -59,6 +66,7 @@ import type {
 import { URL } from 'node:url';
 import type {
     IEventService,
+    IIdentityProviderAccountLinkStore,
     IIdentityProviderAccountManager,
     IIdentityProviderRepository,
     IOAuth2AccessPolicyEvaluator,
@@ -66,6 +74,7 @@ import type {
     IOAuth2AuthorizationCodeRequestVerifier,
     IOAuth2AuthorizationStateManager,
     IRealmRepository,
+    IdentityProviderIdentity,
     OAuth2AuthorizationState,
     OAuth2AuthorizationStateLink,
 } from '../../../../../core/index.ts';
@@ -76,7 +85,6 @@ import {
     decodeQuery,
     describeQuerySchema,
     identityProviderSchema,
-    isIdentityProviderAccountAlreadyLinkedError,
     toIdentityPolicyData,
 } from '../../../../../core/index.ts';
 import {
@@ -85,6 +93,7 @@ import {
     getBodyRealmID,
     getRequestParamID,
     getRequestRealmID,
+    useRequestEventContext,
     useRequestIdentityOrFail,
     useRequestParamID,
     useRequestPermissionEvaluator,
@@ -102,6 +111,8 @@ export class IdentityProviderController {
     protected realmRepository: IRealmRepository;
 
     protected accountManager: IIdentityProviderAccountManager;
+
+    protected linkStore: IIdentityProviderAccountLinkStore;
 
     protected codeRequestVerifier : IOAuth2AuthorizationCodeRequestVerifier;
 
@@ -124,6 +135,7 @@ export class IdentityProviderController {
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
         this.accountManager = ctx.accountManager;
+        this.linkStore = ctx.linkStore;
         this.codeIssuer = ctx.codeIssuer;
         this.codeRequestVerifier = ctx.codeRequestVerifier;
         this.codeRequestValidator = new OAuth2AuthorizationCodeRequestValidator();
@@ -638,30 +650,6 @@ export class IdentityProviderController {
                 throw new BadRequestError('The identity provider is not available for account linking.');
             }
 
-            // The state must be bound to the browser that minted it. Both
-            // bindings come from the minting request itself
-            // (`saveAuthorizationState` stores its ip and user-agent) and
-            // `OAuth2AuthorizationStateManager.verify` skips a check whose
-            // STORED value is falsy, so an absent binding is a choice the
-            // minter made rather than a property of the network — and it
-            // leaves the state completable in any browser.
-            //
-            // On the login path that is a session-fixation nuisance. Here it
-            // is a durable credential binding: an attacker who mints a state
-            // carrying their OWN userId and gets a victim to follow it binds
-            // the VICTIM's external identity to the attacker's account, and
-            // the victim's next federated login then lands in it. Refuse an
-            // unbound state instead of linking on it.
-            //
-            // This closes the absent-binding hole only. ip + user-agent
-            // remain guessable, and with the shipped `trustProxy: true` the
-            // ip is the client-supplied left-most X-Forwarded-For entry, so
-            // this is a stopgap: see issue #3439 for moving the write behind
-            // a bearer-authenticated confirmation.
-            if (!state.ip || !state.userAgent) {
-                throw new BadRequestError('The account link request is not bound to a browser.');
-            }
-
             if (typeof code !== 'string' || code.length === 0) {
                 throw new BadRequestError('The authorization code is missing.');
             }
@@ -669,35 +657,147 @@ export class IdentityProviderController {
             const authenticator = this.buildProviderAuthenticator(provider);
 
             const identity = await authenticator.resolveIdentity({ code });
-            const account = await this.accountManager.link(identity, link.userId);
 
-            await this.eventService?.record({
-                scope: EventScope.IDENTITY,
-                name: EventName.IDENTITY_PROVIDER_LINKED,
-                refType: EventRefType.IDENTITY_PROVIDER_ACCOUNT,
-                refId: account.id,
-                realmId: account.userRealmId ?? provider.realmId ?? null,
-                actorType: IdentityType.USER,
-                actorId: account.userId,
-                requestIpAddress: getRequestIP(event) ?? null,
-                requestUserAgent: getRequestHeader(event, 'user-agent') ?? null,
-                data: { providerId: provider.id, providerName: provider.name },
+            // A provider answering without a subject has nothing to bind. The
+            // callback used to reach `link()`, which rejected it; the stash
+            // would otherwise carry an empty providerUserId to the confirm.
+            if (!identity.id) {
+                throw new BadRequestError('The identity provider returned no subject.');
+            }
+
+            // Nothing is written here. This request is unauthenticated — the
+            // browser round-trip cannot carry a bearer — so the only thing
+            // distinguishing the browser that started the link from any other
+            // would be the state's ip / user-agent binding, and both values
+            // are chosen by whoever minted the state. An attacker minting a
+            // state carrying their OWN userId and getting a victim to follow
+            // it would otherwise bind the VICTIM's external identity to the
+            // attacker's account (issue #3439).
+            //
+            // The resolved identity is stashed under a one-time handle
+            // instead, and the account console confirms it with its bearer.
+            // The stash keeps the requesting userId so the confirm can
+            // require it to equal the AUTHENTICATED user: the handle is a
+            // URL parameter, so it reaches browser history and proxy logs,
+            // and on its own it must authorize nothing.
+            const handle = await this.linkStore.save({
+                providerId: provider.id,
+                userId: link.userId,
+                providerUserId: identity.id,
+                providerUserName: this.pickIdentityCandidate(identity, 'name'),
+                providerUserEmail: this.pickIdentityCandidate(identity, 'email'),
             });
 
-            url.searchParams.set('linked', provider.id);
+            url.searchParams.set('linkHandle', handle);
+            url.searchParams.set('provider', provider.id);
         } catch (e) {
             // The failure is swallowed into a redirect marker, so the log is
             // the only surface it can reach. Without this an unreachable or
             // rejecting provider is indistinguishable from a stale state.
             this.logger?.error(describeError(e, 'The identity-provider account link failed.'));
 
-            url.searchParams.set(
-                'linkError',
-                isIdentityProviderAccountAlreadyLinkedError(e) ? 'already_linked' : 'link_failed',
-            );
+            url.searchParams.set('linkError', 'link_failed');
         }
 
         return sendRedirect(event, url.href);
+    }
+
+    /**
+     * The bearer-authenticated half of the link (issue #3439): the account
+     * row is written here, for the AUTHENTICATED user, never in the callback.
+     */
+    @DPost('/:id/link-confirm', [ForceLoggedInMiddleware])
+    async confirmLink(
+        @DPath('id') _id: string,
+        @DBody() _data: IdentityProviderLinkConfirmPayload,
+        @DContext() event: IAppEvent,
+    ) : Promise<EntityRecordResponse<IdentityProviderAccount>> {
+        const id = useRequestParamID(event);
+        const provider = await this.resolve(id);
+
+        if (!isOAuth2IdentityProvider(provider) && !isOpenIDIdentityProvider(provider)) {
+            throw new BadRequestError('Only an identity-provider based on the oauth protocol supports account linking.');
+        }
+
+        if (!provider.enabled) {
+            throw new BadRequestError('The identity provider is not enabled.');
+        }
+
+        const identity = useRequestIdentityOrFail(event);
+        if (identity.type !== IdentityType.USER) {
+            throw new BadRequestError('Only a user can link an identity provider account.');
+        }
+
+        const body = await readRequestBody(event);
+        const handle = isObject(body) ? body.handle : undefined;
+        if (typeof handle !== 'string' || handle.length === 0) {
+            throw new BadRequestError('The account link handle is missing.');
+        }
+
+        const link = await this.linkStore.consume(handle);
+        if (!link) {
+            throw new BadRequestError('The account link request is unknown or expired.');
+        }
+
+        // The two checks that make the handle inert on its own: it may only
+        // be redeemed by the user it was minted for, and only against the
+        // provider it was minted for.
+        if (link.userId !== identity.id || link.providerId !== provider.id) {
+            throw new BadRequestError('The account link request does not belong to the authenticated user.');
+        }
+
+        const account = await this.accountManager.link(
+            {
+                id: link.providerUserId,
+                // deliberately rebuilt from the stashed scalars: the resolved
+                // identity carries the provider secret and the raw external
+                // token payload, neither of which belongs in a cache
+                attributeCandidates: {
+                    name: [link.providerUserName],
+                    email: [link.providerUserEmail],
+                },
+                data: {},
+                provider,
+            },
+            identity.id,
+        );
+
+        // the confirm runs under a bearer, so unlike the callback it CAN be
+        // attributed to a session and a route (the unlink emit's shape)
+        const requestContext = useRequestEventContext();
+
+        await this.eventService?.record({
+            scope: EventScope.IDENTITY,
+            name: EventName.IDENTITY_PROVIDER_LINKED,
+            refType: EventRefType.IDENTITY_PROVIDER_ACCOUNT,
+            refId: account.id,
+            realmId: account.userRealmId ?? provider.realmId ?? null,
+            actorType: IdentityType.USER,
+            actorId: account.userId,
+            actorName: identity.data.name ?? null,
+            sessionId: requestContext?.sessionId ?? null,
+            requestPath: requestContext?.requestPath ?? null,
+            requestMethod: requestContext?.requestMethod ?? null,
+            requestIpAddress: requestContext?.requestIpAddress ?? getRequestIP(event) ?? null,
+            requestUserAgent: requestContext?.requestUserAgent ?? getRequestHeader(event, 'user-agent') ?? null,
+            data: { providerId: provider.id, providerName: provider.name },
+        });
+
+        return { data: account, meta: {} };
+    }
+
+    private pickIdentityCandidate(
+        identity: IdentityProviderIdentity,
+        key: 'name' | 'email',
+    ) : string | null {
+        const candidates = identity.attributeCandidates?.[key] || [];
+        for (const candidate of candidates) {
+            if (typeof candidate === 'string' && candidate.length > 0) {
+                return candidate;
+            }
+        }
+
+        return null;
     }
 
     // ---------------------------------------------------------
@@ -740,6 +840,7 @@ export class IdentityProviderController {
         return createIdentityProviderOAuth2Authenticator({
             accountManager: this.accountManager,
             provider,
+            logger: this.logger,
             options: {
                 baseURL: this.options.baseURL,
                 clientId: options.clientId,

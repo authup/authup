@@ -526,6 +526,7 @@ export class HTTPControllerModule {
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
 
         const accountManager = container.resolve(IdentityInjectionKey.ProviderAccountManager);
+        const linkStore = container.resolve(IdentityInjectionKey.ProviderAccountLinkStore);
 
         const codeIssuer = container.resolve(OAuth2InjectionToken.AuthorizationCodeIssuer);
 
@@ -546,6 +547,7 @@ export class HTTPControllerModule {
             repository,
             realmRepository: new RealmRepositoryAdapter(realmRepository),
             accountManager,
+            linkStore,
 
             codeIssuer,
             codeRequestVerifier,

@@ -2708,6 +2708,50 @@ A request carrying no `redirect_uri` keeps the older hosted-page and
 (`authorizeInner` refuses a code request without one), so the fallbacks carry
 the previous shape rather than inventing a destination.
 
+## Federated Identity Claims
+
+`IdentityProviderOAuth2Authenticator.buildIdentityWithTokenGrantResponse`
+derives the external identity from three sources, richest last:
+**access token, then `id_token`, then userinfo**. The access token is only
+the floor because it is opaque by contract (OIDC Core §2) and authup's own
+carries `sub`, `kind` and `realm_name` and no username at all, so reading
+it alone provisioned every federated user under the remote subject UUID
+plus a `<uuid>@example.com` placeholder (#3434).
+
+- **The name ladder is `preferred_username, nickname, name, sub`.**
+  Keycloak and Authentik put the username in `preferred_username` while
+  their `name` is a display name; authup's own claims builder maps BOTH
+  `preferred_username` and `nickname` onto the **nullable** `displayName`
+  and puts the real username in `name`, so a ladder without `name` still
+  falls through to `sub` for authup-to-authup federation. Candidates are
+  consumed reactively — `validateAttributes` only substitutes one when the
+  validator raises an issue for that exact path — so a first candidate
+  failing `isUserNameValid` degrades to the next rather than failing the
+  login, and adding candidates for OPTIONAL keys (`firstName`/`lastName`)
+  would be dead code.
+- **`identity.id` stays the ACCESS token `sub`, always.** It becomes
+  `provider_user_id` and keys `findOneByProviderIdentity`, so sourcing it
+  from a richer claim set would orphan every existing
+  `auth_identity_provider_accounts` row and silently provision duplicate
+  users on the next login. Pinned by *should key the account on the access
+  token subject, never the id_token*.
+- **userinfo is called only when the provider declares `userInfoUrl`**, and
+  its failure is logged and swallowed. The guard is load-bearing: the hapic
+  client is constructed with no `baseURL`, so the `/userinfo` default would
+  be a relative fetch URL that throws. It is the only fix for a plain
+  `protocol: oauth2` provider whose remote client has no `openid` scope
+  bound (no `openid` scope, no id_token), and it is what stops the
+  admin-editable `userInfoUrl` field being silently inert.
+- **`identity.data` is deliberately still the access-token payload alone.**
+  Mappers (`IIdentityProviderMapper`) pattern-match over it, so merging the
+  richer claims in would change every existing mapper's input.
+- The `IdentityProviderOpenIDAuthenticator` override is gone: the base
+  ladder now covers what it did. The five presets (github, facebook,
+  instagram, paypal, google) still override the builder and are untouched.
+- **Forward-only.** The account manager's UPDATE branch never rewrites
+  `user.name` (it is `nameLocked` at creation), so users already
+  provisioned under a UUID keep it.
+
 ## Identity-Provider Account Linking (plan 091)
 
 `auth_identity_provider_accounts` (external identity → `userId`; unique
@@ -2752,51 +2796,82 @@ linking is the only way to bind an external identity to an EXISTING user).
   has no password (`IdentityProviderAccountUnlinkBlockedError`,
   `ErrorCode.IDENTITY_PROVIDER_ACCOUNT_UNLINK_BLOCKED`, 400): the row may
   be the only way into the account. An admin sets a password first.
-- **Link flow (server-completed)** — server auth is header-only, so the
-  browser round-trip cannot carry a bearer; the link intent rides the
-  one-time, IP+UA-bound `stateManager` blob instead:
-  `POST /identity-providers/:id/link-request` (ForceLoggedIn, user
-  identities only; provider must be OAuth2/OIDC, enabled, and in the
-  actor's realm) saves a state with the new optional
-  `link: { userId }` field (`OAuth2AuthorizationState`; cache blob, no
-  migration) and returns `{ url }` = the external authorize URL
-  (`IdentityProviderLinkRequestResponse` in core-http-kit;
-  `client.identityProvider.createLinkRequest(id)`). The `authorize-in`
-  callback branches on `state.link`: `authenticator.resolveIdentity(code)`
-  (token exchange + identity build, extracted from `authenticate()` —
-  which is now `resolveIdentity` + `accountManager.save`, login path
-  unchanged) then `accountManager.link(identity, userId)`: rejects an
-  identity linked to a DIFFERENT user
-  (`IdentityProviderAccountAlreadyLinkedError`), refreshes idempotently
-  for the same user, verifies user existence + provider/user realm match,
-  and NEVER runs mappers, mutates the user, mints a code or creates a
-  session. The redirect back is fixed and server-derived:
-  `<publicUrl>/account/connected-accounts?linked=<providerId>` or
-  `?linkError=already_linked|link_failed`. **Takeover posture — reason about
-  BOTH directions.** Linking an attacker's external identity to a victim
-  requires a state blob carrying the victim's userId, which only the
-  victim's bearer can mint. The reverse direction is the one that bites:
-  the attacker mints a state carrying their OWN userId and gets the victim
-  to follow it, so the victim's callback binds the VICTIM's external
-  identity to the ATTACKER's account, and the victim's next federated login
-  resolves through that row into it. State unguessability does not defend
-  this — the attacker is not guessing a state, they are supplying one — so
-  the ONLY control is the state's ip/user-agent binding, and both values
-  are chosen by whoever minted the state (`verify` skips a check whose
-  STORED value is falsy, and under the shipped `trustProxy: true` the ip is
-  the client-supplied left-most `X-Forwarded-For` entry). `completeLink`
-  therefore refuses a state carrying no binding at all. That is a stopgap
-  for the absent-binding hole only, not for a guessed one; issue #3439
-  moves the write behind a bearer-authenticated confirmation, after which
-  the guard and the state-carried userId both go away.
-- **Events** — `identityProviderLinked` (recorded in the callback branch)
+- **Link flow (two steps, the write is bearer-authenticated)** — server
+  auth is header-only, so the browser round-trip cannot carry a bearer.
+  The flow is therefore split, and the credential binding happens only on
+  the authenticated half (issue #3439):
+  1. `POST /identity-providers/:id/link-request` (ForceLoggedIn, user
+     identities only; provider must be OAuth2/OIDC, enabled, and in the
+     actor's realm) saves an `OAuth2AuthorizationState` carrying
+     `link: { userId, providerId }` and returns `{ url }` = the external
+     authorize URL (`IdentityProviderLinkRequestResponse` in core-http-kit;
+     `client.identityProvider.createLinkRequest(id)`).
+  2. The `authorize-in` callback branches on `state.link`:
+     `authenticator.resolveIdentity(code)` (token exchange + identity
+     build, extracted from `authenticate()`), then **stashes** a
+     four-scalar projection (`IdentityProviderAccountLink`: providerId,
+     userId, providerUserId, providerUserName/Email) under a one-time
+     handle and redirects to
+     `<publicUrl>/account/connected-accounts?linkHandle=<handle>&provider=<id>`
+     (or `?linkError=link_failed`). It writes NOTHING.
+  3. The account console auto-POSTs the handle to
+     `POST /identity-providers/:id/link-confirm` with its bearer
+     (`client.identityProvider.confirmLinkRequest(id, handle)`), and the
+     server links the stashed identity to the **authenticated** user.
+  **Why the split.** The callback is unauthenticated, so before it the only
+  thing separating "the browser that started this link" from any other was
+  the state's ip / user-agent binding, and both values are chosen by
+  whoever minted the state (`verify` skips a check whose STORED value is
+  falsy, and under the shipped `trustProxy: true` the ip is the
+  client-supplied left-most `X-Forwarded-For` entry). The attack that
+  bites is the reverse of the obvious one: the attacker mints a state
+  carrying their OWN userId and gets the victim to follow it, so the
+  victim's callback binds the VICTIM's external identity to the ATTACKER's
+  account and the victim's next federated login resolves into it
+  (federated account pre-hijacking). State unguessability is no defense —
+  the attacker supplies the state rather than guessing it.
+  **What makes the handle inert.** It is redeemable only by the user the
+  link-request was minted for (`stash.userId === authenticated user id`)
+  and only against that provider, and it is consumed on read. So a handle
+  leaking through browser history, a referer or a proxy log authorizes
+  nothing on its own. Keeping `userId` in the stash is what allows that
+  check: dropping it (as the issue sketched) would make a leaked handle
+  redeemable by anyone, which is the same pre-hijacking in a new shape.
+  The predecessor's stopgap — refusing a state carrying no browser binding
+  at all — is gone with the hole it patched.
+  **Stash contents.** Deliberately four scalars, never the
+  `IdentityProviderIdentity`: that object carries the full provider entity
+  (including the EA-loaded `clientSecret`) and the raw external token
+  payload, and they are exactly what `link()` reads. The confirm rebuilds
+  a minimal identity around the freshly loaded provider. TTL is 5 minutes
+  (`IDENTITY_PROVIDER_ACCOUNT_LINK_TTL`) — it is redeemed by the very next
+  page load, so the state blob's 30 minutes would leave a redeemable
+  binding lying around far longer than the flow that produced it. The
+  store is `IIdentityProviderAccountLinkStore`
+  (`app/modules/identity/repositories/provider/link.ts` over
+  `CacheInjectionKey`, DI key
+  `IdentityInjectionKey.ProviderAccountLinkStore`) rather than a second
+  `OAuth2AuthorizationStateManager` blob, which would inherit that TTL and
+  re-apply the ip check to an XHR from the SPA (a network flip between
+  callback and confirm would break the link).
+  `link()` itself is unchanged: rejects an identity linked to a DIFFERENT
+  user (`IdentityProviderAccountAlreadyLinkedError`), refreshes
+  idempotently for the same user, verifies user existence + provider/user
+  realm match, and NEVER runs mappers, mutates the user, mints a code or
+  creates a session. **Deployment note:** the callback and the confirm must
+  reach the same cache, so a multi-replica deployment without Redis needs
+  sticky routing across one more hop than before.
+- **Events** — `identityProviderLinked` (recorded on the authenticated
+  confirm, so it carries actor and session attribution the callback could
+  not)
   / `identityProviderUnlinked` (recorded in the service delete), IDENTITY
   scope, `refType: identityProviderAccount`, metadata only (provider
   id/name — never tokens).
 - **UI** — account console page `/connected-accounts` (realm providers ×
   own linked rows; Connect = `createLinkRequest` navigation, Disconnect =
-  confirm + delete; reads and strips the `linked`/`linkError` return
-  params) + admin console tab `users/[id]/identity-provider-accounts`
+  confirm + delete; auto-POSTs the `linkHandle` return param to the confirm
+  endpoint, then strips it and `linkError` from the URL)
+  + admin console tab `users/[id]/identity-provider-accounts`
   (kit collection `AIdentityProviderAccounts`, gated on
   `IDENTITY_PROVIDER_ACCOUNT_READ` like the sessions tab).
 - **Tests** — service matrix + guardrail

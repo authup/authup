@@ -15,6 +15,44 @@ import type { IIdentityProviderAccountRepository } from '../../../entities/ident
 
 export type { IIdentityProviderAccountRepository } from '../../../entities/identity-provider-account/types.ts';
 
+/**
+ * A resolved external identity awaiting a bearer-authenticated confirmation
+ * (issue #3439). The callback that resolved it is unauthenticated, so it may
+ * not perform the credential binding itself; it stashes this projection under
+ * a one-time handle and the account console redeems it with its bearer.
+ *
+ * Deliberately four scalars rather than the `IdentityProviderIdentity` it was
+ * projected from: that object carries the full provider entity (including the
+ * EA-loaded `clientSecret`) and the raw external token payload, neither of
+ * which belongs in a cache. They are also exactly what `link()` reads.
+ */
+export type IdentityProviderAccountLink = {
+    providerId: string,
+    /**
+     * The user the link-request was minted for. The confirm endpoint
+     * requires it to equal the AUTHENTICATED user, which is what stops an
+     * attacker-minted handle from binding a victim's external identity to
+     * the attacker's account.
+     */
+    userId: string,
+    providerUserId: string,
+    providerUserName?: string | null,
+    providerUserEmail?: string | null,
+};
+
+export interface IIdentityProviderAccountLinkStore {
+    /**
+     * @returns the one-time handle
+     */
+    save(data: IdentityProviderAccountLink) : Promise<string>;
+
+    /**
+     * Reads and DROPS the stash. Single use: a handle that reaches a log or
+     * a browser history entry must not be redeemable twice.
+     */
+    consume(handle: string) : Promise<IdentityProviderAccountLink | null>;
+}
+
 export type IdentityProviderAccountManagerContext = {
     attributeMapper: IIdentityProviderMapper,
     permissionMapper: IIdentityProviderMapper,

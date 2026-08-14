@@ -6,6 +6,7 @@
  */
 import type { OAuth2IdentityProvider, OpenIDIdentityProvider } from '@authup/core-kit';
 import type { ObjectLiteral, Result } from '@authup/kit';
+import type { Logger } from '@authup/server-kit';
 import type { AuthorizeParameters } from '@hapic/oauth2';
 import type { IIdentityProviderAccountManager } from '../../../account/index.ts';
 import type { IdentityProviderIdentity } from '../../../types.ts';
@@ -39,4 +40,5 @@ export type IdentityProviderOAuth2AuthenticatorContext = {
     options: IdentityProviderOAuth2AuthenticatorOptions,
     accountManager: IIdentityProviderAccountManager
     provider: OAuth2IdentityProvider | OpenIDIdentityProvider,
+    logger?: Logger,
 };

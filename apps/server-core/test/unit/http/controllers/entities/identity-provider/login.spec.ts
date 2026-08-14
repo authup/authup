@@ -42,6 +42,7 @@ describe('identity-provider login flow', () => {
     let provider: IdentityProvider;
 
     let tokenRequestBody: URLSearchParams | undefined;
+    let userInfoRequests = 0;
 
     beforeAll(async () => {
         // A minimal external IdP. Unlike a permissive stub, its token
@@ -75,12 +76,42 @@ describe('identity-provider login flow', () => {
                         return;
                     }
 
+                    // An authup-shaped access token: subject, kind and realm,
+                    // and no username at all. It is the whole reason the
+                    // id_token has to be read (#3434).
                     const accessToken = `${encode({ alg: 'none', typ: 'JWT' })}.${encode({
                         sub: 'external-user-1',
+                        kind: 'access_token',
+                        realm_name: 'master',
+                    })}.x`;
+                    const idToken = `${encode({ alg: 'none', typ: 'JWT' })}.${encode({
+                        sub: 'external-user-1',
+                        // authup carries the username here; preferred_username
+                        // and nickname map to the nullable display name
+                        name: 'external-user',
                         email: 'external@example.com',
                     })}.x`;
-                    res.end(JSON.stringify({ access_token: accessToken, token_type: 'Bearer' }));
+                    res.end(JSON.stringify({
+                        access_token: accessToken,
+                        id_token: idToken,
+                        token_type: 'Bearer',
+                    }));
                 });
+                return;
+            }
+
+            if (req.url && req.url.startsWith('/userinfo')) {
+                userInfoRequests += 1;
+                res.setHeader('content-type', 'application/json');
+                res.end(JSON.stringify({
+                    // MUST match the token subject: OIDC Core 5.3.2 requires a
+                    // mismatched document to be discarded, and it is
+                    // (`should discard a userinfo document whose subject does
+                    // not match` in the authenticator spec)
+                    sub: 'external-user-1',
+                    preferred_username: 'userinfo-user',
+                    email: 'userinfo@example.com',
+                }));
                 return;
             }
 
@@ -190,5 +221,73 @@ describe('identity-provider login flow', () => {
         expect(body.code).toEqual(ErrorCode.UPSTREAM_ERROR);
         // the outbound target must not be echoed back to the caller
         expect(JSON.stringify(body)).not.toContain(idpURL);
+    });
+
+    /**
+     * The reported defect (#3434): federating authup to authup provisioned
+     * the local user under the remote subject UUID, because the identity was
+     * derived from the access token alone and authup's carries no username.
+     */
+    it('provisions the user from the id_token claims rather than the subject', async () => {
+        const state = await authorizeOut();
+
+        const response = await httpRequest(
+            suite,
+            'GET',
+            `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code-2`,
+            {
+                headers: { 'user-agent': USER_AGENT },
+                redirect: 'manual',
+            },
+        );
+        expect(response.status).toEqual(302);
+
+        // and not the remote subject, which is a UUID against another authup
+        const { data: users } = await suite.client.user.getMany({ filters: { realmId: realm.id } });
+        expect(users.map((user) => user.name)).toContain('external-user');
+
+        // `email` is a select:false column, so no read surface returns it and
+        // the placeholder it replaces is not assertable here. The candidate
+        // ladder that feeds it is pinned in the authenticator spec instead.
+    });
+
+    it('enriches the identity from userinfo when the provider declares one', async () => {
+        const userInfoProvider = (await suite.client.identityProvider.create(createFakeOAuth2IdentityProvider({
+            realmId: realm.id,
+            tokenUrl: `${idpURL}/token`,
+            authorizeUrl: `${idpURL}/authorize`,
+            userInfoUrl: `${idpURL}/userinfo`,
+        }))).data;
+
+        userInfoRequests = 0;
+
+        const outResponse = await httpRequest(suite, 'GET', `identity-providers/${userInfoProvider.id}/authorize-out`, {
+            headers: { 'user-agent': USER_AGENT },
+            redirect: 'manual',
+        });
+        const state = new URL(outResponse.headers.get('location') as string).searchParams.get('state');
+
+        const response = await httpRequest(
+            suite,
+            'GET',
+            `identity-providers/${userInfoProvider.id}/authorize-in?state=${state}&code=external-code-3`,
+            {
+                headers: { 'user-agent': USER_AGENT },
+                redirect: 'manual',
+            },
+        );
+        expect(response.status).toEqual(302);
+        expect(userInfoRequests).toEqual(1);
+
+        const { data: users } = await suite.client.user.getMany({ filters: { realmId: realm.id } });
+        // userinfo is the richest source, so its preferred_username wins the
+        // ladder over the id_token's `name`
+        expect(users.map((user) => user.name)).toContain('userinfo-user');
+
+        // the account key stays the ACCESS token subject: deriving it from a
+        // richer claim set would orphan every existing account row
+        const { data: accounts } = await suite.client.identityProviderAccount.getMany({ filters: { providerId: userInfoProvider.id } });
+        expect(accounts).toHaveLength(1);
+        expect(accounts[0].providerUserId).toEqual('external-user-1');
     });
 });

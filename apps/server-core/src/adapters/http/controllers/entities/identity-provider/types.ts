@@ -8,6 +8,7 @@
 import type { Logger } from '@authup/server-kit';
 import type {
     IEventService,
+    IIdentityProviderAccountLinkStore,
     IIdentityProviderAccountManager,
     IIdentityProviderRepository,
     IOAuth2AccessPolicyEvaluator,
@@ -28,6 +29,7 @@ export type IdentityProviderControllerContext = {
     realmRepository: IRealmRepository,
 
     accountManager: IIdentityProviderAccountManager,
+    linkStore: IIdentityProviderAccountLinkStore,
     codeIssuer: IOAuth2AuthorizationCodeIssuer,
     codeRequestVerifier: IOAuth2AuthorizationCodeRequestVerifier,
     stateManager: IOAuth2AuthorizationStateManager,

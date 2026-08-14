@@ -6,3 +6,4 @@
  */
 
 export * from './mapper/index.ts';
+export * from './link.ts';

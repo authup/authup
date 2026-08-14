@@ -7,7 +7,6 @@
 <script lang="ts">
 /* global window */
 import type { IdentityProvider, IdentityProviderAccount } from '@authup/core-kit';
-import { ErrorCode } from '@authup/errors';
 import {
     TranslatorTranslationActionKey,
     TranslatorTranslationAppKey,
@@ -110,39 +109,52 @@ export default defineComponent({
             }
         };
 
-        // Surface the link round-trip outcome, then strip the marker params
-        // from the URL (single use, reload-safe).
+        // Complete the link round-trip, then strip the marker params from
+        // the URL (single use, reload-safe).
+        //
+        // The callback that resolved the external identity is unauthenticated
+        // and deliberately writes nothing (issue #3439). It hands back a
+        // one-time handle, and the account row is created HERE, on a request
+        // carrying this browser's bearer, so the binding is made for whoever
+        // is actually signed in rather than for a userId the callback was
+        // told to trust.
         const consumeReturnParams = async () => {
-            const linked = typeof route.query.linked === 'string' ? route.query.linked : undefined;
+            const handle = typeof route.query.linkHandle === 'string' ? route.query.linkHandle : undefined;
             const linkError = typeof route.query.linkError === 'string' ? route.query.linkError : undefined;
-            if (!linked && !linkError) {
+            const providerId = typeof route.query.provider === 'string' ? route.query.provider : undefined;
+            if (!handle && !linkError) {
                 return;
             }
 
-            if (linked) {
-                toasts.success(await translate({
-                    namespace: TranslatorTranslationNamespace.APP,
-                    key: TranslatorTranslationAppKey.IDENTITY_PROVIDER_LINK_SUCCESS,
-                }));
+            if (handle && providerId) {
+                try {
+                    await httpClient.identityProvider.confirmLinkRequest(providerId, handle);
+
+                    toasts.success(await translate({
+                        namespace: TranslatorTranslationNamespace.APP,
+                        key: TranslatorTranslationAppKey.IDENTITY_PROVIDER_LINK_SUCCESS,
+                    }));
+                } catch (e) {
+                    // carries the server's own message, including the
+                    // localized "already linked to another user"
+                    await toasts.error(e);
+                }
             }
 
             if (linkError) {
-                const description = linkError === 'already_linked' ?
-                    await translate({
-                        namespace: TranslatorTranslationNamespace.ERROR,
-                        key: ErrorCode.IDENTITY_PROVIDER_ACCOUNT_ALREADY_LINKED,
-                    }) :
-                    await translate({
+                toast.add({
+                    description: await translate({
                         namespace: TranslatorTranslationNamespace.APP,
                         key: TranslatorTranslationAppKey.IDENTITY_PROVIDER_LINK_FAILED,
-                    });
-
-                toast.add({ description, color: 'error' });
+                    }),
+                    color: 'error',
+                });
             }
 
             const query = { ...route.query };
-            delete query.linked;
+            delete query.linkHandle;
             delete query.linkError;
+            delete query.provider;
             await router.replace({ path: route.path, query });
         };
 
