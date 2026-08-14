@@ -79,6 +79,44 @@ describe('src/policy', () => {
         expect(outcome.success).toBeFalsy();
     });
 
+    describe('evaluator isolation', () => {
+        // Two applications in one process each build their own engine from the
+        // shared PolicyDefaultEvaluators constant. A registration must stay
+        // inside the engine that made it, or the newest one silently rebinds
+        // the policy type for every other engine in the process.
+        const CUSTOM_TYPE = 'custom-isolation-probe';
+
+        const probeEvaluator = {
+            async evaluate() {
+                return { success: true };
+            },
+        };
+
+        const probePolicy = { type: CUSTOM_TYPE } as BasePolicy;
+
+        it('should not write a registration back onto the supplied evaluators', () => {
+            const engine = new PolicyEngine(PolicyDefaultEvaluators);
+            engine.registerEvaluator(CUSTOM_TYPE, probeEvaluator);
+
+            expect(CUSTOM_TYPE in PolicyDefaultEvaluators).toBeFalsy();
+        });
+
+        it('should keep sibling engines built from the same defaults independent', async () => {
+            const first = new PolicyEngine(PolicyDefaultEvaluators);
+            const second = new PolicyEngine(PolicyDefaultEvaluators);
+
+            second.registerEvaluator(CUSTOM_TYPE, probeEvaluator);
+
+            const registered = await second.evaluate(probePolicy, definePolicyEvaluationContext({ data: new PolicyData({}) }));
+            expect(registered.success).toBeTruthy();
+
+            // The sibling never registered the type, so it must still fail
+            // closed instead of borrowing the other engine's evaluator.
+            const foreign = await first.evaluate(probePolicy, definePolicyEvaluationContext({ data: new PolicyData({}) }));
+            expect(foreign.success).toBeFalsy();
+        });
+    });
+
     describe('data-availability gate (tri-state)', () => {
         const identityData = {
             type: 'user',

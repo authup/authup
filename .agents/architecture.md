@@ -1817,6 +1817,22 @@ baseline `system.realm-match` child and
 the `system.realm-bound` / `system.realm-or-global` policies were **removed** in favour of the
 enum; the `REALM_MATCH` policy *type* is retained for user-defined actor-relative policies.
 
+### Policy engine evaluators are per engine
+
+`PolicyEngine`'s constructor **copies** the evaluator map it is handed
+(`{ ...evaluators }`), and nothing may change that. Every engine is built from
+the one shared `PolicyDefaultEvaluators` constant, and `registerEvaluator`
+writes into the map the engine holds. Holding the caller's object instead made
+each registration reach every engine in the process: server-core's subclass
+registers a `PermissionBindingPolicyEvaluator` bound to ITS
+`identityPermissionProvider`, so the newest application's provider silently
+became every application's, and an older one evaluated its grants against the
+newer one's database. That is invisible in a single-application deployment and
+surfaces only where two applications share a process, which today means the
+federation e2e spec (`.agents/testing.md` → *A second application in one
+spec*). A caller that genuinely wants a shared registry passes the same object
+to `registerEvaluators` on each engine.
+
 ### PermissionBinding & aggregated grants
 
 ```typescript

@@ -42,7 +42,14 @@ export class PolicyEngine implements IPolicyEngine {
     protected evaluators : Record<string, IPolicyEvaluator>;
 
     constructor(evaluators: PolicyEvaluators = {}) {
-        this.evaluators = evaluators;
+        // A COPY, never the caller's object: `registerEvaluator` writes into
+        // this map, and every engine is constructed from the shared
+        // `PolicyDefaultEvaluators` constant. Held by reference, one engine's
+        // registration reached every other engine in the process. Two
+        // applications in one process then shared whichever permission-binding
+        // evaluator was built last, and the older one evaluated its grants
+        // against the newer one's database.
+        this.evaluators = { ...evaluators };
     }
 
     public registerEvaluator(
