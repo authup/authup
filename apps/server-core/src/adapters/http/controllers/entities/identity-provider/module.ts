@@ -48,7 +48,7 @@ import {
     isOAuth2IdentityProvider,
     isOpenIDIdentityProvider,
 } from '@authup/core-kit';
-import { BadRequestError, EntityNotFoundError } from '@authup/errors';
+import { BadRequestError, EntityInactiveError, EntityNotFoundError } from '@authup/errors';
 import type { Logger } from '@authup/server-kit';
 import { describeError, resolveURL } from '../../../../../utils/index.ts';
 import { useRequestQuery } from '@routup/basic/query';
@@ -73,7 +73,6 @@ import type {
     IOAuth2AuthorizationCodeIssuer,
     IOAuth2AuthorizationCodeRequestVerifier,
     IOAuth2AuthorizationStateManager,
-    IOAuth2ClientRepository,
     IRealmRepository,
     IdentityProviderIdentity,
     OAuth2AuthorizationState,
@@ -111,8 +110,6 @@ export class IdentityProviderController {
 
     protected realmRepository: IRealmRepository;
 
-    protected clientRepository: IOAuth2ClientRepository;
-
     protected accountManager: IIdentityProviderAccountManager;
 
     protected linkStore: IIdentityProviderAccountLinkStore;
@@ -137,7 +134,6 @@ export class IdentityProviderController {
         this.options = ctx.options;
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
-        this.clientRepository = ctx.clientRepository;
         this.accountManager = ctx.accountManager;
         this.linkStore = ctx.linkStore;
         this.codeIssuer = ctx.codeIssuer;
@@ -392,57 +388,82 @@ export class IdentityProviderController {
             throw new BadRequestError('The authorization code is missing.');
         }
 
-        const authenticator = this.buildProviderAuthenticator(entity, { clientId: data.codeRequest?.client_id });
+        // Re-verify the code request that authorize-out stored on the state,
+        // BEFORE the provider's single-use code is spent. It re-resolves the
+        // client (active, grant allowlist, scopes) and re-matches the
+        // redirect_uri against the client's registered patterns, so a client
+        // deactivated (or a pattern removed) while the user was away at the
+        // provider cannot still receive a code, and a refused completion
+        // provisions no user. Same fail-closed-at-completion rule the link path
+        // applies to the provider.
+        //
+        // The redirect below rests on the MATCH, which the verifier enforces by
+        // throwing `redirectUriMismatch`; `redirectUriVerified` is the flag
+        // that survives to report it. Nothing else on this path knows whether
+        // the uri was ever matched.
+        const verified = data.codeRequest ?
+            await this.codeRequestVerifier.verify(data.codeRequest) :
+            undefined;
+
+        // The provider must still be enabled, the rule the link path already
+        // applies. Disabling a provider has to stop logins in flight too,
+        // otherwise it only stops new ones.
+        if (!entity.enabled) {
+            throw new BadRequestError('The identity provider is not enabled.');
+        }
+
+        const authenticator = this.buildProviderAuthenticator(entity, { clientId: verified?.data.client_id });
 
         const user = await authenticator.authenticate({ code });
 
+        // The local login path refuses an inactive user (EntityInactiveError),
+        // and a federated login must not be the way around that. Only reachable
+        // for an already-linked user: a first login provisions an active one.
+        if (!user.active) {
+            throw new EntityInactiveError({ entity: 'user' });
+        }
+
         const realm = await this.realmRepository.resolve(entity.realmId, true);
 
-        // Application access policy (plan 052), federated leg: the callback
-        // never redirects to the RP directly — a denial bounces back to the
-        // hosted authorize page with error=access_denied, so no
-        // redirectUriVerified threading through the state blob is needed.
-        // A policy id with no wired evaluator denies (fail closed); a
-        // since-deleted client is skipped (the /token backstop still covers it).
-        if (data.codeRequest?.client_id) {
-            const client = await this.clientRepository.findOneByIdOrName(
-                data.codeRequest.client_id,
-                data.codeRequest.realm_id,
-            );
+        // Application access policy (plan 052), federated leg. The denial
+        // bounces back to the hosted authorize page, which renders it as a
+        // denial card, rather than becoming an error redirect to the RP: the
+        // person is standing in front of the browser and the card is the only
+        // surface that can tell them why. A policy id with no wired evaluator
+        // denies (fail closed).
+        if (verified?.client.accessPolicyId) {
+            let allowed = false;
 
-            if (client?.accessPolicyId) {
-                let allowed = false;
+            const subject = toIdentityPolicyData({
+                type: IdentityType.USER,
+                data: {
+                    ...user,
+                    realm,
+                },
+            });
+            if (this.accessPolicyEvaluator && subject) {
+                allowed = await this.accessPolicyEvaluator.evaluate(
+                    verified.client.accessPolicyId,
+                    subject,
+                );
+            }
 
-                const subject = toIdentityPolicyData({
-                    type: IdentityType.USER,
-                    data: {
-                        ...user,
-                        realm,
-                    },
-                });
-                if (this.accessPolicyEvaluator && subject) {
-                    allowed = await this.accessPolicyEvaluator.evaluate(
-                        client.accessPolicyId,
-                        subject,
-                    );
-                }
+            if (!allowed) {
+                const url = this.buildHostedAuthorizeURL(verified.data);
+                url.searchParams.set('error', OAuth2ErrorCode.ACCESS_DENIED);
 
-                if (!allowed) {
-                    const url = this.buildHostedAuthorizeURL(data.codeRequest);
-                    url.searchParams.set('error', OAuth2ErrorCode.ACCESS_DENIED);
-
-                    return sendRedirect(event, url.href);
-                }
+                return sendRedirect(event, url.href);
             }
         }
 
+        // The WHOLE verified request reaches the issuer, never a hand-picked
+        // subset: it carries code_challenge / code_challenge_method and nonce
+        // (plus acr_values, which no redemption path reads yet). A code that
+        // lost its PKCE challenge cannot be redeemed by a public client at all
+        // (`PKCE is required for public clients`), which is every console
+        // client.
         const authorizationCode = await this.codeIssuer.issue(
-            {
-                response_type: 'code',
-                client_id: data.codeRequest?.client_id,
-                redirect_uri: data.codeRequest?.redirect_uri,
-                scope: data.codeRequest?.scope,
-            },
+            verified?.data ?? { response_type: 'code' },
             {
                 type: IdentityType.USER,
                 data: {
@@ -453,13 +474,52 @@ export class IdentityProviderController {
             { authMethod: SessionAuthMethod.EXTERNAL },
         );
 
-        if (data.codeRequest) {
-            const url = this.buildHostedAuthorizeURL(data.codeRequest);
+        // The interactive path records this in OAuth2Authorization.authorize();
+        // this leg issues its code directly, so without an emit here a
+        // federated authorization leaves no trace in auth_events while every
+        // other one does. `reason: federated` is what tells the two apart:
+        // there was no consent step to report. No session exists yet (the
+        // /token exchange creates it), hence a null sessionId. Metrics stay
+        // uninstrumented on this leg, as they already are.
+        await this.eventService?.record({
+            scope: EventScope.OAUTH2,
+            name: EventName.AUTHORIZE,
+            refType: EventRefType.CLIENT,
+            refId: verified?.data.client_id ?? null,
+            clientId: verified?.data.client_id ?? null,
+            sessionId: null,
+            actorType: IdentityType.USER,
+            actorId: user.id,
+            actorName: user.name,
+            realmId: verified?.data.realm_id ?? realm.id,
+            requestIpAddress: getRequestIP(event) ?? null,
+            requestUserAgent: getRequestHeader(event, 'user-agent') ?? null,
+            data: {
+                reason: 'federated',
+                providerId: entity.id,
+                providerName: entity.name,
+                ...(verified?.data.scope ? { scope: verified.data.scope } : {}),
+            },
+        });
+
+        // RFC 6749 §4.1.2: the code goes back to the client that asked for it.
+        // It is bound to that client_id and that redirect_uri, so the RP is the
+        // only party able to redeem it. Handing it to any other page strands
+        // the login there (issue #3446).
+        if (verified?.redirectUriVerified && verified.data.redirect_uri) {
+            const url = new URL(verified.data.redirect_uri);
             url.searchParams.set('code', authorizationCode.id);
+            if (verified.data.state) {
+                url.searchParams.set('state', verified.data.state);
+            }
 
             return sendRedirect(event, url.href);
         }
 
+        // Only reachable when the state carried no code request at all: a
+        // stored one always has a redirect_uri, because that mount is required
+        // in OAuth2AuthorizationCodeRequestValidator (unlike `state`), so a
+        // verified request is always a verified redirect target.
         const url = new URL(this.options.baseURL);
         url.searchParams.set('code', authorizationCode.id);
 

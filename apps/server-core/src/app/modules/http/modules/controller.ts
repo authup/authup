@@ -546,8 +546,6 @@ export class HTTPControllerModule {
 
             repository,
             realmRepository: new RealmRepositoryAdapter(realmRepository),
-            clientRepository: container.resolve(OAuth2InjectionToken.ClientRepository),
-
             accountManager,
             linkStore,
 

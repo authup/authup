@@ -15,7 +15,6 @@ import type {
     IOAuth2AuthorizationCodeIssuer,
     IOAuth2AuthorizationCodeRequestVerifier,
     IOAuth2AuthorizationStateManager,
-    IOAuth2ClientRepository,
     IRealmRepository,
 } from '../../../../../core/index.ts';
 
@@ -28,7 +27,6 @@ export type IdentityProviderControllerContext = {
 
     repository: IIdentityProviderRepository,
     realmRepository: IRealmRepository,
-    clientRepository: IOAuth2ClientRepository,
 
     accountManager: IIdentityProviderAccountManager,
     linkStore: IIdentityProviderAccountLinkStore,

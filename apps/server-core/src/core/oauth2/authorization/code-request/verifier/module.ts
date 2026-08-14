@@ -113,7 +113,11 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
         // pattern (pattern-less clients were rejected above). A request without
         // a redirect_uri (e.g. the GET page render) stays unverified so
         // consumers never auto-redirect without a match.
-        const redirectUriVerified = !!data.redirect_uri;
+        //
+        // Set from the match itself, never from mere presence: consumers make
+        // redirect decisions on this flag, so it must not survive a refactor
+        // that turns the throw below into a soft branch.
+        let redirectUriVerified = false;
         if (data.redirect_uri) {
             const redirectUris = client.redirectUri.split(',');
 
@@ -125,6 +129,8 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
             if (!isSimpleURLMatch(data.redirect_uri, redirectUris)) {
                 throw OAuth2GrantError.redirectUriMismatch();
             }
+
+            redirectUriVerified = true;
         }
 
         return {
