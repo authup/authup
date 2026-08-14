@@ -54,14 +54,14 @@
     "@vuecs/core": "^3.5.0",
     "@vuecs/design": "^1.2.0",
     "@vuecs/forms": "^5.4.1",
-    "@vuecs/theme-tailwind": "^6.4.1",
+    "@vuecs/theme-tailwind": "^6.4.2",
     "tailwindcss": "^4.3.2"
   },
   "peerDependencies": {
     "@authup/client-web-kit": "^1.0.0-beta.61",
     "@vuecs/core": "^3.5.0",
     "@vuecs/design": "^1.2.0",
-    "@vuecs/theme-tailwind": "^6.4.1",
+    "@vuecs/theme-tailwind": "^6.4.2",
     "tailwindcss": "^4.3.2"
   },
   "peerDependenciesMeta": {
