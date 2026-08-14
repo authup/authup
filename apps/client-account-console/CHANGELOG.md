@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.0.0-beta.61](https://github.com/authup/authup/compare/v1.0.0-beta.60...v1.0.0-beta.61) (2026-08-14)
+
+
+### Features
+
+* **server-core:** complete an identity-provider link on an authenticated request ([#3450](https://github.com/authup/authup/issues/3450)) ([78859b0](https://github.com/authup/authup/commit/78859b017d40ac167577973222fe5f9dc4ef98ee))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+    * @authup/client-web-theme bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+    * @authup/core-http-kit bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+    * @authup/core-kit bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+    * @authup/i18n bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+    * @authup/kit bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+    * @authup/specs bumped from ^1.0.0-beta.60 to ^1.0.0-beta.61
+
 ## [1.0.0-beta.60](https://github.com/authup/authup/compare/v1.0.0-beta.59...v1.0.0-beta.60) (2026-08-13)
 
 
