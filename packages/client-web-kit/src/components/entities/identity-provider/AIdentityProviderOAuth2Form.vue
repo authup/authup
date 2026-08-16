@@ -19,7 +19,7 @@ import type {
     IdentityProvider,
     IdentityProviderPreset,
 } from '@authup/core-kit';
-import { EntityType, IdentityProviderProtocol } from '@authup/core-kit';
+import { EntityType, IdentityProviderProtocol, buildIdentityProviderAuthorizeCallbackPath } from '@authup/core-kit';
 import {
     TranslatorTranslationCommonKey,
     TranslatorTranslationFieldKey,
@@ -105,9 +105,14 @@ export default defineComponent({
                 !!endpoint?.$invalid.value;
         });
 
-        const authorizeUri = computed<string>(() => {
+        // The redirect_uri authup sends to the external provider is the
+        // CALLBACK, the value the operator registers upstream; authorize-out
+        // is what starts a login and needs a code request on top.
+        const redirectUri = computed<string>(() => {
             if (!manager.data.value) return '';
-            return apiClient.identityProvider.getAuthorizeUri(manager.data.value.id);
+            const path = buildIdentityProviderAuthorizeCallbackPath(manager.data.value.id);
+            const baseURL = (apiClient.getBaseURL() ?? '').replace(/\/+$/, '');
+            return `${baseURL}/${path.replace(/^\/+/, '')}`;
         });
 
         const basicFieldsRef = ref<{ assign: (data: Record<string, unknown>) => void } | null>(null);
@@ -196,7 +201,7 @@ export default defineComponent({
             isInvalid,
             protocolEff,
             presetEff,
-            authorizeUri,
+            redirectUri,
             basicFieldsRef,
             oidcEnabled,
             submit,
@@ -252,7 +257,7 @@ export default defineComponent({
                     {{ translations.redirectUrl }}
                 </template>
                 <VCFormInput
-                    :model-value="authorizeUri"
+                    :model-value="redirectUri"
                     :disabled="true"
                 />
             </VCFormGroup>

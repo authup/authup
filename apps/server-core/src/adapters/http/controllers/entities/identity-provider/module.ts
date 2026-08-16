@@ -411,7 +411,8 @@ export class IdentityProviderController {
         // again. Nothing of the provider's answer is echoed: whoever controls
         // the provider's redirect shapes those values.
         if (typeof error === 'string' && error.length > 0) {
-            this.logger?.info(`The identity provider ${entity.id} answered the authorization with: ${error.slice(0, 64)}`);
+            // JSON-quoted: a raw query value must not be able to forge a log line
+            this.logger?.info(`The identity provider ${entity.id} answered the authorization with ${JSON.stringify(error.slice(0, 64))}.`);
 
             return sendRedirect(event, this.buildHostedAuthorizeURL(data.codeRequest).href);
         }

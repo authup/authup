@@ -41,6 +41,15 @@ upstream failure.
   client row holding such a pattern cannot be saved again until the pattern
   is fixed, and a provisioning file declaring one fails the boot with the
   file path and the issue.
+- The pending-login state a federated login or an account link carries
+  moved to its own cache namespace, so a login or link started on the
+  previous version and completed after the upgrade is refused
+  (`invalid_request`, up to the 30 minute state lifetime); the person starts
+  it again. Relevant for a rolling upgrade over a shared Redis only.
+- The identity-provider form's read-only "Redirect URL" now shows the
+  callback (`/identity-providers/<id>/authorize-in`), the value to register
+  at the external provider. It used to show `authorize-out`, which is the
+  URL that starts a login, not the one the provider redirects back to.
 - A substituted auth console package (`AUTH_CONSOLE_PATH`) must be built
   against render contract version 2, which adds the interstitial route
   `/identity-providers/:id/authorize-in` and its `IdentityProviderCallbackPayload`;
