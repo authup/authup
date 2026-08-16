@@ -28,6 +28,8 @@ import {
     ClientEntity,
     ConsentEntity,
     DataSourceOptionsBuilder,
+    IdentityProviderAccountEntity,
+    IdentityProviderEntity,
     RealmEntity,
     TrustAnchorEntity,
     UserAuthenticatorEntity,
@@ -217,8 +219,26 @@ await trustAnchorRepository.save(trustAnchorRepository.create({
     realmId: realm.id,
 }));
 
+const providerRepository = dataSource.getRepository(IdentityProviderEntity);
+const provider = await providerRepository.save(providerRepository.create({
+    name: 'migration-probe-provider',
+    protocol: 'oauth2',
+    realmId: realm.id,
+}));
+
+const accountRepository = dataSource.getRepository(IdentityProviderAccountEntity);
+await accountRepository.save(accountRepository.create({
+    providerId: provider.id,
+    providerRealmId: realm.id,
+    providerUserId: 'migration-probe-external',
+    userId: probeUser.id,
+    userRealmId: realm.id,
+}));
+
 const TABLES = [
     'auth_realms',
+    'auth_identity_providers',
+    'auth_identity_provider_accounts',
     'auth_users',
     'auth_clients',
     'auth_sessions',
@@ -329,6 +349,27 @@ try {
     rejected = true;
 }
 check('foreign keys reject an orphan insert', rejected, true);
+
+// a second user, so the rejection can only come from the
+// (provider_user_id, provider_id) index, not from (provider_id, user_id)
+const duplicateUser = await userRepository.save(userRepository.create({
+    name: 'migration-duplicate-probe',
+    email: 'migration-duplicate-probe@example.com',
+    realmId: realm.id,
+}));
+let duplicateRejected = false;
+try {
+    await accountRepository.insert(accountRepository.create({
+        providerId: provider.id,
+        providerRealmId: realm.id,
+        providerUserId: 'migration-probe-external',
+        userId: duplicateUser.id,
+        userRealmId: realm.id,
+    }));
+} catch {
+    duplicateRejected = true;
+}
+check('one external identity links to one user', duplicateRejected, true);
 
 const cascadeUser = await userRepository.save(userRepository.create({
     name: 'migration-cascade-probe',
