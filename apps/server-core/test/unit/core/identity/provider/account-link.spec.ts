@@ -17,7 +17,7 @@ import {
 } from 'vitest';
 import type { IIdentityProviderMapper, IdentityProviderIdentity } from '../../../../../src/core/index.ts';
 import { IdentityProviderAccountManager } from '../../../../../src/core/identity/provider/account/module.ts';
-import { IdentityProviderAccountAlreadyLinkedError } from '../../../../../src/core/identity/provider/account/error.ts';
+import { IdentityProviderAccountAlreadyLinkedError, isIdentityProviderAccountAlreadyLinkedError } from '../../../../../src/core/identity/provider/account/error.ts';
 import { FakeIdentityProviderAccountRepository } from '../../entities/identity-provider-account/fake-repository.ts';
 import { FakeUserIdentityRepository } from '../../entities/identity-provider-account/fake-user-repository.ts';
 
@@ -96,6 +96,58 @@ describe('IdentityProviderAccountManager.link', () => {
             .rejects.toBeInstanceOf(IdentityProviderAccountAlreadyLinkedError);
         expect(repository.rows()).toHaveLength(1);
         expect(repository.rows()[0].userId).toEqual(otherUserId);
+    });
+
+    it('returns the row a concurrent link of the same user wrote', async () => {
+        userRepository.seed({ id: userId, realmId });
+        const raced = repository.seed({
+            providerId, 
+            providerUserId: 'external-user-1', 
+            userId, 
+            userRealmId: realmId,
+        });
+        // the pre-check misses the row the other request is inserting; only
+        // the unique index (the fake save) sees it
+        vi.spyOn(repository, 'findOneByProviderIdentity').mockResolvedValueOnce(null);
+
+        const account = await manager.link(buildIdentity(), userId);
+
+        expect(account.id).toEqual(raced.id);
+        expect(repository.rows()).toHaveLength(1);
+    });
+
+    it('rejects a concurrent link of another user the pre-check missed', async () => {
+        userRepository.seed({ id: userId, realmId });
+        repository.seed({
+            providerId, 
+            providerUserId: 'external-user-1', 
+            userId: otherUserId, 
+            userRealmId: realmId,
+        });
+        vi.spyOn(repository, 'findOneByProviderIdentity').mockResolvedValueOnce(null);
+
+        await expect(manager.link(buildIdentity(), userId))
+            .rejects.toBeInstanceOf(IdentityProviderAccountAlreadyLinkedError);
+        expect(repository.rows()).toHaveLength(1);
+        expect(repository.rows()[0].userId).toEqual(otherUserId);
+    });
+
+    it('rejects a second external identity for a user already linked at the provider', async () => {
+        userRepository.seed({ id: userId, realmId });
+        repository.seed({
+            providerId, 
+            providerUserId: 'external-user-2', 
+            userId, 
+            userRealmId: realmId,
+        });
+
+        // (providerId, userId) fires, not (providerUserId, providerId): the
+        // message must not claim ANOTHER user holds the identity
+        await expect(manager.link(buildIdentity(), userId))
+            .rejects.toSatisfy((e) => isValidationError(e) &&
+                !isIdentityProviderAccountAlreadyLinkedError(e) &&
+                (e as Error).message === 'The user is already linked to this identity provider through another account.');
+        expect(repository.rows()).toHaveLength(1);
     });
 
     it('rejects a realm mismatch', async () => {

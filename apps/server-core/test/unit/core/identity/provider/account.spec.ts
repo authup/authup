@@ -11,9 +11,11 @@ import {
     describe, 
     expect, 
     it,
+    vi,
 } from 'vitest';
 import type { OAuth2IdentityProvider, Realm } from '@authup/core-kit';
 import { IdentityProviderProtocol, buildUserFakeEmail } from '@authup/core-kit';
+import { EntityConflictError } from '@authup/errors';
 import { createNanoID } from '@authup/kit';
 import type { IdentityProviderIdentity } from '../../../../../src/core';
 import {
@@ -24,6 +26,7 @@ import {
 } from '../../../../../src/core';
 import claims from '../../../../data/jwt.json';
 import {
+    IdentityProviderAccountEntity,
     IdentityProviderAccountRepositoryAdapter,
     IdentityProviderAttributeMappingRepository,
     IdentityProviderPermissionMappingEntity,
@@ -34,6 +37,7 @@ import {
     PermissionEntity,
     RealmEntity,
     RoleRepository,
+    UserEntity,
     UserIdentityRepository,
     UserPermissionEntity,
     UserRepository,
@@ -50,6 +54,8 @@ describe('core/identity/provider/account', () => {
     let provider : OAuth2IdentityProvider;
 
     let accountManager : IdentityProviderAccountManager;
+
+    let accountRepository : IdentityProviderAccountRepositoryAdapter;
 
     let identity : IdentityProviderIdentity;
 
@@ -91,7 +97,7 @@ describe('core/identity/provider/account', () => {
         const permissionMapperRepository = new IdentityProviderPermissionMappingRepository(suite.dataSource);
         const permissionMapper = new IdentityProviderPermissionMapper(permissionMapperRepository);
 
-        const providerAccountRepository = new IdentityProviderAccountRepositoryAdapter(suite.dataSource);
+        accountRepository = new IdentityProviderAccountRepositoryAdapter(suite.dataSource);
 
         const userRepository = new UserIdentityRepository({
             repository: new UserRepository(suite.dataSource),
@@ -104,7 +110,7 @@ describe('core/identity/provider/account', () => {
             roleMapper,
             permissionMapper,
             userRepository,
-            repository: providerAccountRepository,
+            repository: accountRepository,
         });
     });
 
@@ -174,6 +180,57 @@ describe('core/identity/provider/account', () => {
 
         expect(account.id).toEqual(accountId);
         expect(account.user.id).toEqual(userId);
+    });
+
+    it('should keep one external identity on one user', async () => {
+        const account = await accountManager.save(identity);
+        // a user without any link, so only the (providerUserId, providerId)
+        // index can reject
+        const userRepository = suite.dataSource.getRepository(UserEntity);
+        const other = await userRepository.save(userRepository.create({
+            name: 'qux', 
+            email: buildUserFakeEmail('qux'), 
+            realmId: realm.id,
+        }));
+
+        // straight through the adapter, past the manager's own pre-check:
+        // the unique index answers, translated into the domain conflict
+        await expect(accountRepository.save({
+            providerId: provider.id,
+            providerUserId: identity.id,
+            providerRealmId: provider.realmId,
+            userId: other.id,
+            userRealmId: other.realmId,
+        })).rejects.toBeInstanceOf(EntityConflictError);
+
+        const linked = await accountRepository.findOneByProviderIdentity(identity);
+        expect(linked?.id).toEqual(account.id);
+        expect(linked?.userId).toEqual(account.user.id);
+    });
+
+    it('should converge the loser of two concurrent first logins onto the winner', async () => {
+        const buildRacer = () : IdentityProviderIdentity => ({
+            data: claims,
+            id: 'racer',
+            attributeCandidates: { name: ['racer'] },
+            provider,
+        });
+        const winner = await accountManager.save(buildRacer());
+
+        const users = suite.dataSource.getRepository(UserEntity);
+        const accounts = suite.dataSource.getRepository(IdentityProviderAccountEntity);
+        const usersBefore = await users.count();
+
+        // the loser read "not linked" before the winner's insert landed; only
+        // the unique index sees the winner
+        vi.spyOn(accountRepository, 'findOneByProviderIdentity').mockResolvedValueOnce(null);
+        const loser = await accountManager.save(buildRacer());
+
+        expect(loser.id).toEqual(winner.id);
+        expect(loser.user.id).toEqual(winner.user.id);
+        expect(await accounts.countBy({ providerId: provider.id, providerUserId: 'racer' })).toEqual(1);
+        // the user the loser provisioned is gone again
+        expect(await users.count()).toEqual(usersBefore);
     });
 
     it('should synchronize roles', async () => {

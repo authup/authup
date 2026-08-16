@@ -8,6 +8,7 @@
 import { randomUUID } from 'node:crypto';
 import type { IQuery } from '@rapiq/core';
 import type { IdentityProviderAccount } from '@authup/core-kit';
+import { EntityConflictError } from '@authup/errors';
 import type { DeepPartial } from 'typeorm';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
@@ -92,6 +93,18 @@ export class FakeIdentityProviderAccountRepository implements IIdentityProviderA
             } as IdentityProviderAccount;
             this.accounts.set(existing.id, existing);
             return existing;
+        }
+
+        // the two unique indexes, (providerUserId, providerId) and
+        // (providerId, userId), reported the way the adapter reports them
+        const taken = this.rows().some(
+            (account) => account.providerId === entity.providerId && (
+                account.providerUserId === entity.providerUserId ||
+                account.userId === entity.userId
+            ),
+        );
+        if (taken) {
+            throw new EntityConflictError();
         }
 
         return this.seed(entity as Partial<IdentityProviderAccount>);

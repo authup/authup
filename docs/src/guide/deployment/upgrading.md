@@ -5,7 +5,33 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
-## Next release (after v1.0.0-beta.59)
+## Next release (after v1.0.0-beta.61)
+
+### `auth_identity_provider_accounts` gains a unique constraint
+
+`(provider_id, provider_user_id)` becomes unique, so one external identity
+belongs to exactly one local user. Until now that invariant was enforced only
+by a read-then-write in the application, with no transaction and no row lock,
+so two concurrent logins or link completions for the same upstream subject
+could both insert. After that the subject resolved to whichever row the
+database happened to order first.
+
+**Action required only if your deployment already holds such duplicates.**
+The migration checks first and aborts the boot with the number of affected
+groups rather than a hash-named driver error. Find them with:
+
+```sql
+SELECT provider_id, provider_user_id, COUNT(*)
+FROM auth_identity_provider_accounts
+GROUP BY provider_id, provider_user_id
+HAVING COUNT(*) > 1;
+```
+
+Keep the row whose `user_id` names the account the person actually uses, and
+delete the rest. The unique index cannot be created while duplicates exist,
+so the boot would fail either way; the check only makes the reason readable.
+
+## v1.0.0-beta.60
 
 ### Fixed: external identity-provider login
 

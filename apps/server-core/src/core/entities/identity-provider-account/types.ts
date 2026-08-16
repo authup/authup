@@ -65,6 +65,12 @@ export interface IIdentityProviderAccountRepository {
      */
     findOneByProviderIdentity(identity: IdentityProviderIdentity): Promise<IdentityProviderAccount | null>;
 
+    /**
+     * Throws `EntityConflictError` (`@authup/errors`) when the row violates
+     * EITHER unique index, (providerUserId, providerId) or (providerId,
+     * userId): the driver does not tell them apart, so the caller
+     * classifies by re-reading the identity.
+     */
     save(entity: DeepPartial<IdentityProviderAccount>): Promise<IdentityProviderAccount>;
 }
 

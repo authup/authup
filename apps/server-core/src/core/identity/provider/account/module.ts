@@ -12,7 +12,7 @@ import {
     isUserFakeEmail,
 } from '@authup/core-kit';
 import { ValidatorGroup, createNanoID, extendObject } from '@authup/kit';
-import { ValidationError } from '@authup/errors';
+import { ValidationError, isEntityConflictError } from '@authup/errors';
 import { isValidupError, stringifyPath } from 'validup';
 import type { IUserIdentityRepository } from '../../entities/index.ts';
 import { IdentityProviderIdentityOperation } from '../constants.ts';
@@ -48,31 +48,61 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
     async save(identity: IdentityProviderIdentity): Promise<IdentityProviderAccount> {
         let account = await this.repository.findOneByProviderIdentity(identity);
         if (account) {
-            identity.operation = IdentityProviderIdentityOperation.UPDATE;
-
-            account.user = await this.saveUser(identity, account.user);
-
-            await this.repository.save(account);
-
-            await this.saveRoles(identity, account.user);
-            await this.savePermissions(identity, account.user);
-
-            return account;
+            return this.update(identity, account);
         }
 
         identity.operation = IdentityProviderIdentityOperation.CREATE;
 
         const user = await this.saveUser(identity);
 
-        account = await this.repository.save({
-            providerId: identity.provider.id,
-            providerUserId: identity.id,
-            providerUserName: user.name, // todo: parse identity.name
-            providerRealmId: identity.provider.realmId,
-            user,
-            userId: user.id,
-            userRealmId: user.realmId,
-        });
+        try {
+            account = await this.repository.save({
+                providerId: identity.provider.id,
+                providerUserId: identity.id,
+                providerUserName: user.name, // todo: parse identity.name
+                providerRealmId: identity.provider.realmId,
+                user,
+                userId: user.id,
+                userRealmId: user.realmId,
+            });
+        } catch (e) {
+            if (!isEntityConflictError(e)) {
+                throw e;
+            }
+
+            // the loser of two concurrent first logins: the identity is linked
+            // now, so continue with the winner's account and drop the user
+            // this request provisioned moments ago (unreferenced; best effort,
+            // a leftover row must not fail the login).
+            const raced = await this.repository.findOneByProviderIdentity(identity);
+            if (!raced) {
+                throw e;
+            }
+
+            try {
+                await this.userRepository.remove(user);
+            } catch {
+                // best effort
+            }
+
+            return this.update(identity, raced);
+        }
+
+        await this.saveRoles(identity, account.user);
+        await this.savePermissions(identity, account.user);
+
+        return account;
+    }
+
+    protected async update(
+        identity: IdentityProviderIdentity,
+        account: IdentityProviderAccount,
+    ): Promise<IdentityProviderAccount> {
+        identity.operation = IdentityProviderIdentityOperation.UPDATE;
+
+        account.user = await this.saveUser(identity, account.user);
+
+        await this.repository.save(account);
 
         await this.saveRoles(identity, account.user);
         await this.savePermissions(identity, account.user);
@@ -108,15 +138,37 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             return this.repository.save(existing);
         }
 
-        return this.repository.save({
-            providerId: identity.provider.id,
-            providerUserId: identity.id,
-            providerUserName,
-            providerUserEmail: providerUserEmail ?? undefined,
-            providerRealmId: identity.provider.realmId,
-            userId,
-            userRealmId: user.realmId ?? null,
-        });
+        try {
+            return await this.repository.save({
+                providerId: identity.provider.id,
+                providerUserId: identity.id,
+                providerUserName,
+                providerUserEmail: providerUserEmail ?? undefined,
+                providerRealmId: identity.provider.realmId,
+                userId,
+                userRealmId: user.realmId ?? null,
+            });
+        } catch (e) {
+            if (!isEntityConflictError(e)) {
+                throw e;
+            }
+
+            // one of the two unique indexes fired; the re-read tells which:
+            // a row for the identity means (providerUserId, providerId), a
+            // race with the SAME user (two Connect tabs) being a no-op; no
+            // row means (providerId, userId), the user already holds a link
+            // at this provider through another external account.
+            const raced = await this.repository.findOneByProviderIdentity(identity);
+            if (raced) {
+                if (raced.userId === userId) {
+                    return raced;
+                }
+
+                throw new IdentityProviderAccountAlreadyLinkedError();
+            }
+
+            throw new ValidationError('The user is already linked to this identity provider through another account.');
+        }
     }
 
     protected pickCandidate(

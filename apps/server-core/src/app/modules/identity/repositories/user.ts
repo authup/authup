@@ -12,7 +12,7 @@ import type { Repository } from 'typeorm';
 import { In } from 'typeorm';
 import type { IUserIdentityRepository, IdentityProviderMapperElement } from '../../../../core/index.ts';
 import { IdentityProviderMapperOperation } from '../../../../core/index.ts';
-import type { UserRepository } from '../../../../adapters/database/domains/index.ts';
+import type { UserEntity, UserRepository } from '../../../../adapters/database/domains/index.ts';
 import { CachePrefix } from '../../../../adapters/database/domains/index.ts';
 
 export type UserIdentityRepositoryContext = {
@@ -97,6 +97,10 @@ export class UserIdentityRepository implements IUserIdentityRepository {
     async saveOneWithEA(user: Partial<User>, extraAttributes: Record<string, any>): Promise<User> {
         const entity = this.repository.create(user);
         return this.repository.saveOneWithEA(entity, extraAttributes);
+    }
+
+    async remove(user: User): Promise<void> {
+        await this.repository.remove(user as UserEntity);
     }
 
     async savePermissions(user: User, items: IdentityProviderMapperElement[]): Promise<void> {

@@ -29,7 +29,10 @@ import { IdentityProviderEntity } from '../identity-provider/index.ts';
 
 @Entity({ name: 'auth_identity_provider_accounts' })
 @Index(['providerId', 'userId'], { unique: true })
-@Index(['providerUserId', 'providerId'])
+// one external identity belongs to one local user. The column order is
+// load-bearing: `providerUserId` leads the sequence the rapiq schema
+// declares, and reversing it would fail the boot-time index assertion.
+@Index(['providerUserId', 'providerId'], { unique: true })
 export class IdentityProviderAccountEntity implements IdentityProviderAccount {
     @PrimaryGeneratedColumn('uuid')
     id: string;

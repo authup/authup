@@ -6,6 +6,7 @@
  */
 
 import type { IdentityProviderAccount } from '@authup/core-kit';
+import { EntityConflictError } from '@authup/errors';
 import type { IQuery } from '@rapiq/core';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
@@ -15,6 +16,7 @@ import type {
 } from 'typeorm';
 import { applyQuery, redactFieldConditions } from '../query.ts';
 import { IdentityProviderAccountEntity } from '../../../../../adapters/database/domains/index.ts';
+import { isUniqueConstraintDatabaseError } from '../../../../../adapters/database/errors/index.ts';
 import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
 import type {
     IIdentityProviderAccountRepository,
@@ -127,7 +129,20 @@ export class IdentityProviderAccountRepositoryAdapter implements IIdentityProvid
     }
 
     async save(entity: DeepPartial<IdentityProviderAccount>): Promise<IdentityProviderAccount> {
-        return this.repository.save(entity);
+        try {
+            return await this.repository.save(entity);
+        } catch (e) {
+            // one of the two unique indexes rejected the row: the identity
+            // is already linked (issue #3442) or the user already holds a link
+            // at this provider. The driver does not say which, so the manager
+            // classifies after a re-read; here only the driver error is kept
+            // from escaping as a 500.
+            if (isUniqueConstraintDatabaseError(e)) {
+                throw new EntityConflictError({ entity: 'identity provider account' });
+            }
+
+            throw e;
+        }
     }
 
     async remove(entity: IdentityProviderAccount): Promise<void> {
