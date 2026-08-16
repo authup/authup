@@ -2770,12 +2770,24 @@ plus a `<uuid>@example.com` placeholder (#3434).
 
 ## Identity-Provider Account Linking (plan 091)
 
-`auth_identity_provider_accounts` (external identity → `userId`; unique
-`(providerId, userId)` — one link per provider per user) is surfaced as a
-read+delete entity API and an explicit self-service link flow. No migration:
-the table predates the feature (federated login has always written it, and
-still auto-creates a NEW user for an unknown external identity — explicit
-linking is the only way to bind an external identity to an EXISTING user).
+`auth_identity_provider_accounts` (external identity → `userId`) is
+surfaced as a read+delete entity API and an explicit self-service link
+flow. Two unique indexes pin its invariants: `(providerId, userId)`, one
+link per provider per user, and since migration
+`1786633352004-IdentityProviderAccountUniqueness` (issue #3442)
+`(providerUserId, providerId)`, one external identity belongs to one local
+user. The second was application-only until then: `link()` and `save()`
+both read then write with no transaction and no row lock, so two
+concurrent completions for the same upstream subject could both insert,
+after which `findOneByProviderIdentity` returned whichever row the
+database ordered first. The column ORDER of that index is load-bearing:
+`providerUserId` leads the sequence the rapiq schema declares, so
+reversing it would fail `assertSchemaMatchesEntity` at boot and turn the
+migration into a rename. The linking feature itself needed no migration
+(the table predates it: federated login has always written it, and still
+auto-creates a NEW user for an unknown external identity, so explicit
+linking is the only way to bind an external identity to an EXISTING
+user); the uniqueness flip above ships one, on both dialects.
 
 - **Unified repository port** — `IIdentityProviderAccountRepository`
   (`core/entities/identity-provider-account/types.ts`) carries the entity
@@ -2874,7 +2886,21 @@ linking is the only way to bind an external identity to an EXISTING user).
   user (`IdentityProviderAccountAlreadyLinkedError`), refreshes
   idempotently for the same user, verifies user existence + provider/user
   realm match, and NEVER runs mappers, mutates the user, mints a code or
-  creates a session. **Deployment note:** the callback and the confirm must
+  creates a session. Its find-then-save check is the FRIENDLY path only;
+  the invariant is DB-backed (issue #3442): the unique
+  `(providerUserId, providerId)` index is the backstop for two concurrent
+  completions of the same external identity, and
+  `IdentityProviderAccountRepositoryAdapter.save` translates the driver's
+  unique violation (`isUniqueConstraintDatabaseError`, the consent-insert
+  sibling) into `IdentityProviderAccountAlreadyLinkedError`, declared on
+  the port's `save`, so neither the link flow nor the federated-login
+  `save()` ever surfaces a raw `QueryFailedError`. `link()` catches that
+  error once, re-reads, and returns the row when the racing writer was the
+  SAME user (two Connect tabs); any other user keeps the error. The
+  migration pre-checks for pre-existing duplicate pairs and aborts the boot
+  with the offending pairs and the required cleanup (the `1779267068441`
+  canonical-name precedent) rather than a bare unique-violation.
+  **Deployment note:** the callback and the confirm must
   reach the same cache, so a multi-replica deployment without Redis needs
   sticky routing across one more hop than before.
 - **Events** — `identityProviderLinked` (recorded on the authenticated

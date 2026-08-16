@@ -15,12 +15,14 @@ import type {
 } from 'typeorm';
 import { applyQuery, redactFieldConditions } from '../query.ts';
 import { IdentityProviderAccountEntity } from '../../../../../adapters/database/domains/index.ts';
+import { isUniqueConstraintDatabaseError } from '../../../../../adapters/database/errors/index.ts';
 import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
 import type {
     IIdentityProviderAccountRepository,
     IdentityProviderAccountFindManyOptions,
     IdentityProviderIdentity,
 } from '../../../../../core/index.ts';
+import { IdentityProviderAccountAlreadyLinkedError } from '../../../../../core/index.ts';
 
 export class IdentityProviderAccountRepositoryAdapter implements IIdentityProviderAccountRepository {
     protected dataSource: DataSource;
@@ -127,7 +129,19 @@ export class IdentityProviderAccountRepositoryAdapter implements IIdentityProvid
     }
 
     async save(entity: DeepPartial<IdentityProviderAccount>): Promise<IdentityProviderAccount> {
-        return this.repository.save(entity);
+        try {
+            return await this.repository.save(entity);
+        } catch (e) {
+            // the unique index on (provider_user_id, provider_id) is the
+            // backstop of the manager's find-then-save check (issue #3442):
+            // a concurrent writer got there first, so report the linked
+            // state instead of letting the driver error escape as a 500.
+            if (isUniqueConstraintDatabaseError(e)) {
+                throw new IdentityProviderAccountAlreadyLinkedError();
+            }
+
+            throw e;
+        }
     }
 
     async remove(entity: IdentityProviderAccount): Promise<void> {

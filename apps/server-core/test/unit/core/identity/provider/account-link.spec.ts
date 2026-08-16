@@ -98,6 +98,40 @@ describe('IdentityProviderAccountManager.link', () => {
         expect(repository.rows()[0].userId).toEqual(otherUserId);
     });
 
+    it('returns the row a concurrent link of the same user wrote', async () => {
+        userRepository.seed({ id: userId, realmId });
+        const raced = repository.seed({
+            providerId, 
+            providerUserId: 'external-user-1', 
+            userId, 
+            userRealmId: realmId,
+        });
+        // the pre-check misses the row the other request is inserting; only
+        // the unique index (the fake save) sees it
+        vi.spyOn(repository, 'findOneByProviderIdentity').mockResolvedValueOnce(null);
+
+        const account = await manager.link(buildIdentity(), userId);
+
+        expect(account.id).toEqual(raced.id);
+        expect(repository.rows()).toHaveLength(1);
+    });
+
+    it('rejects a concurrent link of another user the pre-check missed', async () => {
+        userRepository.seed({ id: userId, realmId });
+        repository.seed({
+            providerId, 
+            providerUserId: 'external-user-1', 
+            userId: otherUserId, 
+            userRealmId: realmId,
+        });
+        vi.spyOn(repository, 'findOneByProviderIdentity').mockResolvedValueOnce(null);
+
+        await expect(manager.link(buildIdentity(), userId))
+            .rejects.toBeInstanceOf(IdentityProviderAccountAlreadyLinkedError);
+        expect(repository.rows()).toHaveLength(1);
+        expect(repository.rows()[0].userId).toEqual(otherUserId);
+    });
+
     it('rejects a realm mismatch', async () => {
         userRepository.seed({ id: userId, realmId: randomUUID() });
 

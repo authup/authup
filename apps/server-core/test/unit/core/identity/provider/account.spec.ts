@@ -17,6 +17,7 @@ import { IdentityProviderProtocol, buildUserFakeEmail } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
 import type { IdentityProviderIdentity } from '../../../../../src/core';
 import {
+    IdentityProviderAccountAlreadyLinkedError,
     IdentityProviderAccountManager,
     IdentityProviderAttributeMapper,
     IdentityProviderPermissionMapper,
@@ -34,6 +35,7 @@ import {
     PermissionEntity,
     RealmEntity,
     RoleRepository,
+    UserEntity,
     UserIdentityRepository,
     UserPermissionEntity,
     UserRepository,
@@ -50,6 +52,8 @@ describe('core/identity/provider/account', () => {
     let provider : OAuth2IdentityProvider;
 
     let accountManager : IdentityProviderAccountManager;
+
+    let accountRepository : IdentityProviderAccountRepositoryAdapter;
 
     let identity : IdentityProviderIdentity;
 
@@ -91,7 +95,7 @@ describe('core/identity/provider/account', () => {
         const permissionMapperRepository = new IdentityProviderPermissionMappingRepository(suite.dataSource);
         const permissionMapper = new IdentityProviderPermissionMapper(permissionMapperRepository);
 
-        const providerAccountRepository = new IdentityProviderAccountRepositoryAdapter(suite.dataSource);
+        accountRepository = new IdentityProviderAccountRepositoryAdapter(suite.dataSource);
 
         const userRepository = new UserIdentityRepository({
             repository: new UserRepository(suite.dataSource),
@@ -104,7 +108,7 @@ describe('core/identity/provider/account', () => {
             roleMapper,
             permissionMapper,
             userRepository,
-            repository: providerAccountRepository,
+            repository: accountRepository,
         });
     });
 
@@ -174,6 +178,32 @@ describe('core/identity/provider/account', () => {
 
         expect(account.id).toEqual(accountId);
         expect(account.user.id).toEqual(userId);
+    });
+
+    it('should keep one external identity on one user', async () => {
+        const account = await accountManager.save(identity);
+        // a user without any link, so only the (providerUserId, providerId)
+        // index can reject
+        const userRepository = suite.dataSource.getRepository(UserEntity);
+        const other = await userRepository.save(userRepository.create({
+            name: 'qux', 
+            email: buildUserFakeEmail('qux'), 
+            realmId: realm.id,
+        }));
+
+        // straight through the adapter, past the manager's own pre-check:
+        // the unique index answers, translated into the domain error
+        await expect(accountRepository.save({
+            providerId: provider.id,
+            providerUserId: identity.id,
+            providerRealmId: provider.realmId,
+            userId: other.id,
+            userRealmId: other.realmId,
+        })).rejects.toBeInstanceOf(IdentityProviderAccountAlreadyLinkedError);
+
+        const linked = await accountRepository.findOneByProviderIdentity(identity);
+        expect(linked?.id).toEqual(account.id);
+        expect(linked?.userId).toEqual(account.user.id);
     });
 
     it('should synchronize roles', async () => {

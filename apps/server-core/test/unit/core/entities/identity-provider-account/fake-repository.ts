@@ -15,6 +15,7 @@ import type {
     IdentityProviderAccountFindManyOptions,
     IdentityProviderIdentity,
 } from '../../../../../src/core/index.ts';
+import { IdentityProviderAccountAlreadyLinkedError } from '../../../../../src/core/index.ts';
 
 export class FakeIdentityProviderAccountRepository implements IIdentityProviderAccountRepository {
     public removeCalls: IdentityProviderAccount[] = [];
@@ -92,6 +93,15 @@ export class FakeIdentityProviderAccountRepository implements IIdentityProviderA
             } as IdentityProviderAccount;
             this.accounts.set(existing.id, existing);
             return existing;
+        }
+
+        // the unique (providerUserId, providerId) index the adapter translates
+        const taken = this.rows().some(
+            (account) => account.providerId === entity.providerId &&
+                account.providerUserId === entity.providerUserId,
+        );
+        if (taken) {
+            throw new IdentityProviderAccountAlreadyLinkedError();
         }
 
         return this.seed(entity as Partial<IdentityProviderAccount>);

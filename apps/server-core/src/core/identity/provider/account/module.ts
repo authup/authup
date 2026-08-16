@@ -19,7 +19,7 @@ import { IdentityProviderIdentityOperation } from '../constants.ts';
 import type { IIdentityProviderMapper } from '../mapper/index.ts';
 import { IdentityProviderMapperOperation } from '../mapper/index.ts';
 import type { IdentityProviderIdentity } from '../types.ts';
-import { IdentityProviderAccountAlreadyLinkedError } from './error.ts';
+import { IdentityProviderAccountAlreadyLinkedError, isIdentityProviderAccountAlreadyLinkedError } from './error.ts';
 import type { IIdentityProviderAccountManager, IIdentityProviderAccountRepository, IdentityProviderAccountManagerContext } from './types.ts';
 
 export class IdentityProviderAccountManager implements IIdentityProviderAccountManager {
@@ -108,15 +108,29 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             return this.repository.save(existing);
         }
 
-        return this.repository.save({
-            providerId: identity.provider.id,
-            providerUserId: identity.id,
-            providerUserName,
-            providerUserEmail: providerUserEmail ?? undefined,
-            providerRealmId: identity.provider.realmId,
-            userId,
-            userRealmId: user.realmId ?? null,
-        });
+        try {
+            return await this.repository.save({
+                providerId: identity.provider.id,
+                providerUserId: identity.id,
+                providerUserName,
+                providerUserEmail: providerUserEmail ?? undefined,
+                providerRealmId: identity.provider.realmId,
+                userId,
+                userRealmId: user.realmId ?? null,
+            });
+        } catch (e) {
+            // the unique index caught a concurrent link of the same external
+            // identity; a race with the SAME user (two Connect tabs) is a
+            // no-op, any other user keeps the error.
+            if (isIdentityProviderAccountAlreadyLinkedError(e)) {
+                const raced = await this.repository.findOneByProviderIdentity(identity);
+                if (raced && raced.userId === userId) {
+                    return raced;
+                }
+            }
+
+            throw e;
+        }
     }
 
     protected pickCandidate(
