@@ -27,4 +27,11 @@ describe('ClientValidator redirect patterns', () => {
     ])('should reject a %s pattern carrying userinfo', async (key) => {
         await expect(validator.run({ [key]: 'https://app.example.com/**,https://user:secret@app.example.com/**' }, { group: ValidatorGroup.UPDATE })).rejects.toThrow();
     });
+
+    it.each([
+        ['redirectUri'],
+        ['postLogoutRedirectUri'],
+    ])('should reject a %s pattern with a script-capable scheme', async (key) => {
+        await expect(validator.run({ [key]: 'https://app.example.com/**,javascript:alert(document.cookie)//' }, { group: ValidatorGroup.UPDATE })).rejects.toThrow();
+    });
 });

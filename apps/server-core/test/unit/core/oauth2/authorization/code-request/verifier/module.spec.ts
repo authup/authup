@@ -384,6 +384,32 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
             }
         });
 
+        it('should reject a redirect whose scheme is script-capable', async () => {
+            // A non-http(s) target is matched verbatim (RFC 8252 native apps)
+            // and navigated client-side by the federated callback's
+            // interstitial, so it must never be a scheme a browser executes.
+            const client = clientRepository.seed({
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
+                // eslint-disable-next-line no-script-url -- the scheme under test
+                redirectUri: 'javascript:alert(1)//,data:text/html,x',
+            });
+
+            for (const redirectUri of [
+                // eslint-disable-next-line no-script-url -- the scheme under test
+                'javascript:alert(document.cookie)//',
+                'data:text/html,x',
+            ]) {
+                await expect(
+                    verifier.verify({
+                        client_id: client.id,
+                        response_type: OAuth2AuthorizationResponseType.CODE,
+                        redirect_uri: redirectUri,
+                    }),
+                ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_REQUEST_INVALID }));
+            }
+        });
+
         it('should reject a redirect that walks out of a path scoped pattern', async () => {
             // The authorized string has to be the string the browser navigates
             // to: `new URL(...)` collapses the dot segments, so without

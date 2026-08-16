@@ -8,7 +8,7 @@
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
-import { ValidatorGroup, patternHasGlobstarInAuthority } from '@authup/kit';
+import { ValidatorGroup, isSafeRedirectURLScheme, patternHasGlobstarInAuthority } from '@authup/kit';
 import type { Client } from './entity';
 import { isClientNameValid } from './helpers';
 import { ClientAuthMethod, ClientTokenBindingMethod } from './constants';
@@ -16,8 +16,10 @@ import { ClientAuthMethod, ClientTokenBindingMethod } from './constants';
 /**
  * Schema for a comma separated list of redirect patterns.
  *
- * Each element must be a URL, none may place a `**` in its authority, and
- * none may carry userinfo: the matcher canonicalizes a pattern too, dropping
+ * Each element must be a URL with a scheme a redirect may carry
+ * (`isSafeRedirectURLScheme`: no `javascript:` and friends, since a
+ * non-http(s) target is navigated client-side), none may place a `**` in
+ * its authority, and none may carry userinfo: the matcher canonicalizes a pattern too, dropping
  * its userinfo, so `https://u:p@app/**` would silently accept the bare origin
  * while reading as if it required credentials. Refusing it makes the
  * registration say what it matches.
@@ -60,6 +62,14 @@ function buildRedirectPatternSchema(name: string) {
                         input: url,
                         code: 'custom',
                         message: `The ${name} must not carry userinfo.`,
+                    });
+                }
+
+                if (!isSafeRedirectURLScheme(url)) {
+                    ctx.issues.push({
+                        input: url,
+                        code: 'custom',
+                        message: `The ${name} scheme is not allowed.`,
                     });
                 }
             }

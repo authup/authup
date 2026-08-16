@@ -112,6 +112,9 @@ export function applyUIPageHeaders(event: IAppEvent) : void {
     event.response.headers.set('content-security-policy', "frame-ancestors 'none'");
     event.response.headers.set('x-frame-options', 'DENY');
     event.response.headers.set('referrer-policy', 'no-referrer');
+    // Login pages, and the federated callback's interstitial carries a
+    // fresh authorization code in its payload.
+    event.response.headers.set('cache-control', 'no-store');
 }
 
 /**

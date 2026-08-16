@@ -14,6 +14,7 @@ import {
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import type { Client, IdentityProvider, Realm } from '@authup/core-kit';
 import {
@@ -25,6 +26,7 @@ import {
     ScopeName,
 } from '@authup/core-kit';
 import { OAuth2ErrorCode } from '@authup/specs';
+import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants';
 import {
     createFakeClient,
     createFakeOAuth2IdentityProvider,
@@ -494,6 +496,127 @@ describe('identity-provider login completion', () => {
 
         expect(response.status).toEqual(400);
         await expect(response.json()).resolves.toMatchObject({ error: OAuth2ErrorCode.INVALID_GRANT });
+    });
+
+    it('renders an interstitial page for a custom-scheme redirect_uri', async () => {
+        // A native app (RFC 8252). routup's sendRedirect allows http(s) only,
+        // so the callback used to fail here, after the provider's single-use
+        // code was spent. The verified target is navigated client-side instead.
+        const native = (await suite.client.client.create(createFakeClient({
+            realmId: realm.id,
+            authMethod: 'none',
+            redirectUri: 'myapp://cb',
+        }))).data;
+        const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        await suite.client.clientScope.create({ scopeId: scope.id, clientId: native.id });
+
+        const out = await httpRequest(suite, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${buildCodeRequest({
+            client_id: native.id,
+            redirect_uri: 'myapp://cb',
+            scope: ScopeName.GLOBAL,
+        })}`, {
+            headers: { 'user-agent': USER_AGENT },
+            redirect: 'manual',
+        });
+        expect(out.status).toEqual(302);
+        const state = new URL(out.headers.get('location') as string).searchParams.get('state');
+
+        const back = await httpRequest(
+            suite,
+            'GET',
+            `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code`,
+            {
+                headers: { 'user-agent': USER_AGENT },
+                redirect: 'manual',
+            },
+        );
+
+        expect(back.status).toEqual(200);
+        expect(back.headers.get('location')).toBeNull();
+        expect(back.headers.get('content-type')).toContain('text/html');
+        // the page embeds a fresh authorization code
+        expect(back.headers.get('cache-control')).toEqual('no-store');
+
+        const body = await back.text();
+        const match = body.match(/window\.__AUTHUP__ = (.+);/);
+        expect(match).toBeTruthy();
+        const payload = JSON.parse((match as RegExpMatchArray)[1]);
+
+        const target = new URL(payload.data.redirect);
+        expect(target.protocol).toEqual('myapp:');
+        expect(target.host).toEqual('cb');
+        expect(target.searchParams.get('code')).toBeTruthy();
+        expect(target.searchParams.get('state')).toEqual(STATE);
+        expect(payload.data.client).toMatchObject({ id: native.id, name: native.name });
+        expect(payload.data.client.redirectUri).toBeUndefined();
+
+        // the page swaps the consumed callback URL out of the history for the
+        // hosted login of the same request, so a reload does not re-run the
+        // callback against a popped state
+        const authorizeURL = new URL(payload.data.authorizeUrl);
+        expect(authorizeURL.pathname.endsWith('/authorize')).toBe(true);
+        expect(authorizeURL.searchParams.get('client_id')).toEqual(native.id);
+        expect(authorizeURL.searchParams.get('code')).toBeNull();
+
+        // the visible way out, since a browser may need a gesture to launch
+        // an external protocol; the href is the escaped target
+        expect(body).toContain(`Returning to ${native.displayName || native.name}`);
+        expect(body).toContain('Open application');
+        expect(body).toContain(`href="${target.href.replace(/&/g, '&amp;')}"`);
+    });
+
+    it('never renders a script-capable redirect_uri on the interstitial', async () => {
+        // The client validator and the code-request verifier both refuse such
+        // a scheme, so the branch is unreachable over HTTP. The verifier the
+        // controller holds is patched to let one through, which is the gap
+        // the guard exists for: a target the page would `location.assign`
+        // and render as an href must fail closed rather than reach the page.
+        const native = (await suite.client.client.create(createFakeClient({
+            realmId: realm.id,
+            authMethod: 'none',
+            redirectUri: 'myapp://cb',
+        }))).data;
+        const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        await suite.client.clientScope.create({ scopeId: scope.id, clientId: native.id });
+
+        const out = await httpRequest(suite, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${buildCodeRequest({
+            client_id: native.id,
+            redirect_uri: 'myapp://cb',
+            scope: ScopeName.GLOBAL,
+        })}`, {
+            headers: { 'user-agent': USER_AGENT },
+            redirect: 'manual',
+        });
+        const state = new URL(out.headers.get('location') as string).searchParams.get('state');
+
+        const verifier = suite.container.resolve(OAuth2InjectionToken.AuthorizationCodeRequestVerifier);
+        const verify = verifier.verify.bind(verifier);
+        const spy = vi.spyOn(verifier, 'verify').mockImplementation(async (data) => {
+            const result = await verify(data);
+            // eslint-disable-next-line no-script-url -- the scheme under test
+            result.data.redirect_uri = 'javascript:alert(document.cookie)//';
+            return result;
+        });
+
+        try {
+            const back = await httpRequest(
+                suite,
+                'GET',
+                `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code`,
+                {
+                    headers: { 'user-agent': USER_AGENT },
+                    redirect: 'manual',
+                },
+            );
+
+            expect(spy).toHaveBeenCalled();
+            expect(back.status).toBeGreaterThanOrEqual(400);
+            expect(back.headers.get('location')).toBeNull();
+            expect(back.headers.get('content-type')).not.toContain('text/html');
+            expect(await back.text()).not.toContain('alert(document.cookie)');
+        } finally {
+            spy.mockRestore();
+        }
     });
 
     it('issues no code when the client was deactivated while the user was away', async () => {

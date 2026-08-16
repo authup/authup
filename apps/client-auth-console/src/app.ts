@@ -14,7 +14,7 @@ import {
 } from '@authup/client-web-kit';
 import type { IClient } from '@authup/core-http-kit';
 import { matchLocale } from '@authup/i18n';
-import { getURLBasePath, isObject, omitRecord } from '@authup/kit';
+import { getURLBasePath, isObject } from '@authup/kit';
 import { createPinia } from 'pinia';
 import type { App } from 'vue';
 import { createSSRApp, ref } from 'vue';
@@ -40,6 +40,7 @@ import 'virtual:nuxt-icon-bundle/register';
 import type { Router } from 'vue-router';
 import Activate from './pages/activate.vue';
 import Authorize from './pages/authorize.vue';
+import IdentityProviderCallback from './pages/identity-provider-callback.vue';
 import Logout from './pages/logout.vue';
 import PasswordForgot from './pages/password-forgot.vue';
 import PasswordReset from './pages/password-reset.vue';
@@ -97,26 +98,18 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
                 component: Logout,
                 path: '/logout',
             },
+            {
+                // The federated callback renders this page when the verified
+                // redirect_uri is not http(s); the browser URL stays the
+                // callback URL, so the route has to match it.
+                component: IdentityProviderCallback,
+                path: '/identity-providers/:id/authorize-in',
+            },
         ],
     });
 
-    router.beforeEach(async (to) => {
+    router.beforeEach(async () => {
         const store = injectStore(pinia);
-
-        const code = typeof to.query.code === 'string' ? to.query.code : undefined;
-        if (code) {
-            try {
-                await store.exchangeAuthorizationCode(code);
-
-                return {
-                    path: to.path,
-                    query: omitRecord(to.query, ['code']),
-                    hash: to.hash,
-                };
-            } catch {
-                // code exchange failed
-            }
-        }
 
         try {
             await store.resolve();

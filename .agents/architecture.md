@@ -722,12 +722,16 @@ not by client-admin-console:
 
 - **Routes**: `/authorize`, `/register`, `/activate`, `/password-forgot`,
   `/password-reset` — each `GET` serves SSR HTML while `POST` on the same
-  path remains the JSON API. The render plumbing is shared:
+  path remains the JSON API (plus `/logout` and the federated callback's
+  interstitial, `/identity-providers/:id/authorize-in`, see *Federated Login
+  Completion*). The render plumbing is shared:
   `renderAuthConsolePage(event, { url, payload })` in
   `adapters/http/ui/auth-console/module.ts` (JIT vs dist, template,
   manifest, preload links, headers), composing the cross-console helpers
   in `adapters/http/ui/shared/` (cookie-derived html attrs, security
-  headers, asset rebasing). The payload reaches the client as
+  headers incl. `Cache-Control: no-store` on every served console page, since
+  they are login pages and the interstitial carries a fresh authorization
+  code, asset rebasing). The payload reaches the client as
   `window.__AUTHUP__` — the ONE reserved window global every served
   console shares (Nuxt's `__NUXT__` model; each console is its own
   document, so the shapes never coexist — the account console injects its
@@ -1584,7 +1588,10 @@ the consoles ship from this repo with linked versions, so the assert would
 compare a constant against itself, and loading the SSR bundle at boot would
 turn a missing build into a failed start instead of an actionable page
 error. `@authup/client-auth-console` exports `CONTRACT_VERSION` as a
-runtime value alongside `render()` (missing = version 1); the account
+runtime value alongside `render()` (missing = version 1; version 2 added the
+federated callback's interstitial route and payload, so a package built
+against 1 is refused at boot rather than rendering an empty view for a
+custom-scheme completion; the history lives in `src/contract.ts`); the account
 console's contract is the `<!--account-config-->` marker, whose absence
 silently degrades the SPA to same-origin API derivation. **Fail-closed**,
 unlike the theme: a replacement owns the prompt ladder, PKCE/`state`
@@ -2099,7 +2106,9 @@ Include authorization*.
 
 Two runtime services. **server-core is the IdP origin** — the OAuth2/OIDC
 protocol surface plus the hosted SSR auth pages (`/authorize`, `/register`,
-`/activate`, `/password-forgot`, `/password-reset`, `/logout`). Those pages
+`/activate`, `/password-forgot`, `/password-reset`, `/logout`, and the
+federated callback's interstitial at `/identity-providers/:id/authorize-in`).
+Those pages
 are **architectural, not incidental**, and must stay served by server-core
 (since plan 083 their Vue app lives in its own workspace,
 `apps/client-auth-console`, but that is an ownership/packaging split only —
@@ -2698,8 +2707,11 @@ a shipped bug (issue #3446):
   that can redeem it. The callback used to hand it to the hosted page instead,
   where the router guard's `store.exchangeAuthorizationCode(code)` answered 401
   `invalid_client` (`/token` authenticates a client unconditionally, and the
-  auth console deliberately holds no client row). The guard swallows that
-  error, so a federated login died silently on a re-rendered login form.
+  auth console deliberately holds no client row). The guard swallowed that
+  error, so a federated login died silently on a re-rendered login form. No
+  producer sends a `code` to a hosted page anymore, so that guard branch is
+  gone (#3459): the auth console's `router.beforeEach` only resolves the
+  session.
 - **The WHOLE verified request reaches `codeIssuer.issue`,** never a
   hand-picked subset. `code_challenge` / `code_challenge_method`, `nonce` and
   `acr_values` all ride the code. A code that lost its challenge cannot be
@@ -2768,6 +2780,36 @@ deliberate and predate this (see *Intentional enforcement boundaries* and
 authentication. The access-policy denial is the one case that still bounces to
 the hosted page, because the person is at the browser and the denial card is
 the only surface that can say why.
+
+**A custom-scheme `redirect_uri` lands on an interstitial page (#3459).**
+`isSimpleURLMatch` matches a native app's `myapp://cb` (RFC 8252) verbatim,
+so it verifies, but routup's `sendRedirect` allows http(s) only and the
+callback used to fail after the provider's single-use code was spent. Only an
+http(s) target is `sendRedirect`ed; any other verified target is rendered as
+the callback response through `renderAuthConsolePage(event, { url:
+buildIdentityProviderAuthorizeCallbackPath(id), payload })`, the payload
+carrying `{ redirect: <target with code+state>, authorizeUrl: <hosted
+authorize URL for the same code request>, client: <ClientSummary> }`
+(render-contract version 2). The auth console page
+(`src/pages/identity-provider-callback.vue`, route
+`/identity-providers/:id/authorize-in`, since the browser URL stays the
+callback URL) first `history.replaceState`s the consumed callback URL away
+for `authorizeUrl` (a reload or tab restore would otherwise re-run the
+callback against a popped state and show JSON), then calls
+`window.location.assign(redirect)` on mount, and always renders an "Open
+application" button to the target, because a browser may require a user
+gesture before launching an external protocol. The target is the verified
+`redirect_uri` and nothing else, so the page is unreachable with an
+unverified one. **The scheme is denylisted at three layers**
+(`isSafeRedirectURLScheme` in `@authup/kit`: `javascript:`, `data:`,
+`vbscript:`, `blob:`, `file:`, `about:` refused; http(s) and RFC 8252 custom
+schemes pass): `ClientValidator` refuses to register such a pattern, the
+code-request verifier refuses such a `redirect_uri` with `invalid_request`,
+and the interstitial branch fails closed (throws) should either gap, because
+the page `location.assign`s the target and renders it as an href, which on
+a script-capable scheme is script execution on the IdP origin (the kit store
+cookies are JS-readable). Copy: `authupClient` `RETURNING_TO_APP` /
+`OPEN_APP`.
 
 **A federated login without a code request does not exist (#3457).**
 `authorize-out` refuses to start one (`invalid_request`, before any provider

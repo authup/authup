@@ -6,11 +6,12 @@
  */
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
-import { 
-    ValidatorGroup, 
-    base64URLDecode, 
-    isObject, 
-    isUUID, 
+import {
+    ValidatorGroup,
+    base64URLDecode,
+    isObject,
+    isSafeRedirectURLScheme,
+    isUUID,
 } from '@authup/kit';
 import {
     DBody,
@@ -45,10 +46,11 @@ import {
     IdentityType,
     PermissionName,
     SessionAuthMethod,
+    buildIdentityProviderAuthorizeCallbackPath,
     isOAuth2IdentityProvider,
     isOpenIDIdentityProvider,
 } from '@authup/core-kit';
-import { BadRequestError, EntityNotFoundError } from '@authup/errors';
+import { BadRequestError, EntityNotFoundError, InternalError } from '@authup/errors';
 import type { Logger } from '@authup/server-kit';
 import { describeError, resolveURL } from '../../../../../utils/index.ts';
 import { useRequestQuery } from '@routup/basic/query';
@@ -100,6 +102,7 @@ import {
     useRequestPermissionEvaluator,
 } from '../../../request/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
+import { renderAuthConsolePage } from '../../../ui/index.ts';
 import type { IdentityProviderControllerContext, IdentityProviderControllerOptions } from './types.ts';
 
 @DTags('identity')
@@ -558,7 +561,45 @@ export class IdentityProviderController {
             url.searchParams.set('state', verified.data.state);
         }
 
-        return sendRedirect(event, url.href);
+        if (url.protocol === 'http:' || url.protocol === 'https:') {
+            return sendRedirect(event, url.href);
+        }
+
+        // routup's sendRedirect allows http(s) only. A native app's
+        // custom-scheme redirect_uri (RFC 8252, matched verbatim by
+        // isSimpleURLMatch) is navigated client-side from an interstitial
+        // page instead; the target is the verified redirect_uri and nothing
+        // else, so the page never reaches an unverified one (issue #3459).
+        //
+        // The page runs `window.location.assign(target)` and renders it as
+        // an href, so a script-capable scheme would execute on the IdP
+        // origin. The client validator and the code-request verifier both
+        // refuse such a scheme; this guard fails closed should either gap.
+        if (!isSafeRedirectURLScheme(url.href)) {
+            throw new InternalError('The redirect_uri scheme is not allowed.');
+        }
+
+        return renderAuthConsolePage(event, {
+            url: buildIdentityProviderAuthorizeCallbackPath(entity.id),
+            payload: {
+                config: { baseURL: this.options.baseURL },
+                data: {
+                    redirect: url.href,
+                    // The browser stays on the consumed callback URL, so a
+                    // reload would re-run the callback against a popped
+                    // state. The page swaps the history entry for this
+                    // first, so a reload lands on the hosted login instead.
+                    authorizeUrl: this.buildHostedAuthorizeURL(verified.data).href,
+                    client: {
+                        id: verified.client.id,
+                        name: verified.client.name,
+                        displayName: verified.client.displayName,
+                        builtIn: verified.client.builtIn,
+                        createdAt: verified.client.createdAt,
+                    },
+                },
+            },
+        });
     }
 
     // ---------------------------------------------------------

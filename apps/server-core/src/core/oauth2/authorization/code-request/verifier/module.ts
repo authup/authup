@@ -7,7 +7,7 @@
 
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { ScopeName, isClientPublic } from '@authup/core-kit';
-import { isSimpleURLMatch, isUUID } from '@authup/kit';
+import { isSafeRedirectURLScheme, isSimpleURLMatch, isUUID } from '@authup/kit';
 import {
     OAuth2ClientError,
     OAuth2GrantError,
@@ -133,6 +133,13 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
             }
             if (url && (url.username || url.password)) {
                 throw OAuth2RequestError.malformed('The redirect_uri must not carry userinfo.');
+            }
+
+            // A non-http(s) target is matched verbatim and later navigated
+            // client-side (the federated callback's interstitial), so a
+            // script-capable scheme would run on the IdP origin.
+            if (url && !isSafeRedirectURLScheme(data.redirect_uri)) {
+                throw OAuth2RequestError.malformed('The redirect_uri scheme is not allowed.');
             }
 
             const redirectUris = client.redirectUri.split(',');
