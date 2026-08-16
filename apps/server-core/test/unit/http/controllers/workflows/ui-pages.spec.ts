@@ -86,6 +86,8 @@ describe('src/http/controllers/workflows (SSR pages)', () => {
         // be denied for the click-gated auto-consent/sign-out to be a real defense
         expect(response.headers.get('content-security-policy')).toContain("frame-ancestors 'none'");
         expect(response.headers.get('x-frame-options')).toEqual('DENY');
+        // a login page, never served from a cache
+        expect(response.headers.get('cache-control')).toEqual('no-store');
 
         const body = await response.text();
         const payload = extractHydrationPayload(body);
@@ -127,6 +129,15 @@ describe('src/http/controllers/workflows (SSR pages)', () => {
             code: ErrorCode.OAUTH_LOGIN_REQUIRED,
             message: 'The identity provider is not available. Return to the application and start the login again.',
         });
+        expect(payload.data.client.id).toEqual(client.id);
+
+        // The inactive-user and access-policy bounces carry this marker; the
+        // page renders the neutral denial card, never a form.
+        query.set('error', OAuth2ErrorCode.ACCESS_DENIED);
+        response = await httpRequest(suite, 'GET', `/authorize?${query.toString()}`);
+        expect(response.status).toEqual(200);
+        payload = extractHydrationPayload(await response.text());
+        expect(payload.data.error).toMatchObject({ code: ErrorCode.OAUTH_ACCESS_DENIED });
         expect(payload.data.client.id).toEqual(client.id);
 
         // The marker set is closed: an unrecognized value maps onto nothing.

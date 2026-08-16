@@ -10,6 +10,7 @@ import { AAuthShell, useTranslation } from '@authup/client-web-kit';
 import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { VCButton } from '@vuecs/button';
 import { computed, defineComponent, onMounted } from 'vue';
+import type { IdentityProviderCallbackPayload } from '../contract';
 import { injectPayload } from '../di';
 
 /**
@@ -21,15 +22,7 @@ import { injectPayload } from '../di';
 export default defineComponent({
     components: { AAuthShell, VCButton },
     setup() {
-        const payload = injectPayload<{
-            redirect: string,
-            authorizeUrl: string,
-            client: {
-                id: string,
-                name: string,
-                displayName: string | null
-            }
-        }>();
+        const payload = injectPayload<IdentityProviderCallbackPayload>();
 
         const title = useTranslation({
             namespace: TranslatorTranslationNamespace.CLIENT,

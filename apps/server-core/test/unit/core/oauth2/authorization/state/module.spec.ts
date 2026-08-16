@@ -115,6 +115,16 @@ describe('OAuth2AuthorizationStateManager', () => {
             ).rejects.toThrow(OAuth2Error);
         });
 
+        it('should let exactly one of two concurrent verifies obtain the state', async () => {
+            const id = await manager.save({ ip: '10.0.0.1' });
+            const outcomes = await Promise.allSettled([
+                manager.verify(id, { ip: '10.0.0.1' }),
+                manager.verify(id, { ip: '10.0.0.1' }),
+            ]);
+            expect(outcomes.map((outcome) => outcome.status).sort()).toEqual(['fulfilled', 'rejected']);
+            expect(repository.has(id)).toBe(false);
+        });
+
         it('should remove state even when IP mismatch (replay prevention)', async () => {
             const id = await manager.save({ ip: '10.0.0.1' });
             await expect(

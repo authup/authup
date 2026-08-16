@@ -56,6 +56,23 @@ export type HydrationPayload<T extends Record<string, any> = Record<string, any>
     hydration?: Record<string, any>
 };
 
+/**
+ * The payload of `/identity-providers/:id/authorize-in`, the federated
+ * callback's interstitial for a non-http(s) redirect_uri (contract 2): the
+ * verified target carrying the code, the hosted authorize URL of the same
+ * code request (the page swaps the consumed callback URL for it in the
+ * history), and the client's display data.
+ */
+export type IdentityProviderCallbackPayload = {
+    redirect: string,
+    authorizeUrl: string,
+    client: {
+        id: string,
+        name: string,
+        displayName: string | null
+    }
+};
+
 export type RenderContext = {
     url: string,
     manifest: Record<string, string[]>,

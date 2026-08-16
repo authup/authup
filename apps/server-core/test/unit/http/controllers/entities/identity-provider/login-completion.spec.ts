@@ -185,6 +185,12 @@ describe('identity-provider login completion', () => {
         expect(url.pathname.endsWith('/authorize')).toBe(true);
         expect(url.searchParams.get('client_id')).toEqual(clientId);
         expect(url.searchParams.get('redirect_uri')).toEqual(REDIRECT_URI);
+        // the whole request rides along, so the page re-renders it as the
+        // client sent it (a public client needs state + PKCE to render at all)
+        expect(url.searchParams.get('state')).toEqual(STATE);
+        expect(url.searchParams.get('code_challenge')).toEqual(codeChallenge);
+        expect(url.searchParams.get('code_challenge_method')).toEqual('S256');
+        expect(url.searchParams.get('scope')).toContain(ScopeName.GLOBAL);
         expect(url.searchParams.get('code')).toBeNull();
         expect(url.searchParams.get('error')).toEqual(error);
     }
@@ -365,6 +371,31 @@ describe('identity-provider login completion', () => {
             reason: 'federated',
             providerId: provider.id,
         });
+    });
+
+    it('returns the person to the login page when the provider answers with an error', async () => {
+        const out = await httpRequest(suite, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${buildCodeRequest()}`, {
+            headers: { 'user-agent': USER_AGENT },
+            redirect: 'manual',
+        });
+        const state = new URL(out.headers.get('location') as string).searchParams.get('state');
+        const tokenCallsBefore = providerTokenCalls;
+
+        // RFC 6749 section 4.1.2.1: the person cancelled at the provider.
+        const back = await httpRequest(
+            suite,
+            'GET',
+            `identity-providers/${provider.id}/authorize-in?state=${state}&error=access_denied&error_description=${encodeURIComponent('<b>denied</b>')}`,
+            {
+                headers: { 'user-agent': USER_AGENT },
+                redirect: 'manual',
+            },
+        );
+
+        // no marker: back on the login page, and nothing of the answer echoed
+        expectHostedBounce(back, client.id, null);
+        expect(back.headers.get('location')).not.toContain('denied');
+        expect(providerTokenCalls).toEqual(tokenCallsBefore);
     });
 
     it('issues no code once the provider was disabled', async () => {
@@ -589,6 +620,7 @@ describe('identity-provider login completion', () => {
         });
         const state = new URL(out.headers.get('location') as string).searchParams.get('state');
 
+        const tokenCallsBefore = providerTokenCalls;
         const verifier = suite.container.resolve(OAuth2InjectionToken.AuthorizationCodeRequestVerifier);
         const verify = verifier.verify.bind(verifier);
         const spy = vi.spyOn(verifier, 'verify').mockImplementation(async (data) => {
@@ -614,6 +646,8 @@ describe('identity-provider login completion', () => {
             expect(back.headers.get('location')).toBeNull();
             expect(back.headers.get('content-type')).not.toContain('text/html');
             expect(await back.text()).not.toContain('alert(document.cookie)');
+            // refused before the provider's code was spent
+            expect(providerTokenCalls).toEqual(tokenCallsBefore);
         } finally {
             spy.mockRestore();
         }

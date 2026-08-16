@@ -2236,8 +2236,9 @@ parses as a URL carrying userinfo (`https://u:p@app/cb`) is refused with
 `invalid_request` BEFORE the pattern match (#3455): `isSimpleURLMatch`
 canonicalizes the value and drops the userinfo, while all three redirect
 sites (`AuthorizeController.confirm`, the federated callback, and the
-end-session `post_logout_redirect_uri` in `LogoutController`, whose
-`isValidPostLogoutRedirect` now drops such a candidate too) build the
+end-session `post_logout_redirect_uri` behind `LogoutController`, whose
+`OAuth2EndSessionService.isValidPostLogoutRedirect` now drops such a
+candidate too) build the
 `Location` from the raw string, so the credential blob used to ride along.
 The matched value is now the navigated value. `ClientValidator` refuses to
 register a `redirectUri` / `postLogoutRedirectUri` pattern carrying userinfo
@@ -2756,13 +2757,19 @@ page re-renders it), never a redirect carrying `code`:
   `AuthorizeText` card, no form and no links, so the copy must not promise
   one);
 - an inactive user redirects with `error=access_denied` (the existing mapping,
-  the existing neutral text), like the access-policy denial.
+  the existing neutral text), like the access-policy denial;
+- a provider answering with `error` instead of a code (RFC 6749 section
+  4.1.2.1: the person cancelled at the provider, or it failed) redirects with
+  NO marker, so the person is back on the login page; nothing of the
+  provider's `error` / `error_description` is echoed, since whoever controls
+  the provider's redirect shapes those values.
 
 The marker set `serve()` recognizes is CLOSED (`access_denied`,
 `login_required`); any other `error` value is ignored, and the mapped text is
 always server-side, never request-derived. Failures that are not refusals (the
-provider's token endpoint failing, the state invalid, a missing `code`) keep
-their JSON answer: a 502 for the upstream failure, 400 for the rest.
+provider's token endpoint failing, the state invalid, a callback carrying
+neither `code` nor `error`) keep their JSON answer: a 502 for the upstream
+failure, 400 for the rest.
 
 The `state` both callbacks (login and account link) present is consumed by
 an atomic pop (`IOAuth2AuthorizeStateRepository.popOneById`, `cache.pop`, the
@@ -2777,9 +2784,9 @@ The hosted page is not part of this completion, so consent, the MFA challenge
 and the prompt ladder do not run for a federated login. Both exclusions are
 deliberate and predate this (see *Intentional enforcement boundaries* and
 `.agents/references/authentik.md`): the upstream provider is the trusted
-authentication. The access-policy denial is the one case that still bounces to
-the hosted page, because the person is at the browser and the denial card is
-the only surface that can say why.
+authentication. The access-policy denial bounces to the hosted page like every
+other refusal (above), because the person is at the browser and the denial
+card is the only surface that can say why.
 
 **A custom-scheme `redirect_uri` lands on an interstitial page (#3459).**
 `isSimpleURLMatch` matches a native app's `myapp://cb` (RFC 8252) verbatim,
@@ -2805,10 +2812,13 @@ unverified one. **The scheme is denylisted at three layers**
 `vbscript:`, `blob:`, `filesystem:`, `file:`, `about:` refused; http(s) and
 RFC 8252 custom schemes pass): `ClientValidator` refuses to register such a pattern, the
 code-request verifier refuses such a `redirect_uri` with `invalid_request`,
-and the interstitial branch fails closed (throws) should either gap, because
-the page `location.assign`s the target and renders it as an href, which on
-a script-capable scheme is script execution on the IdP origin (the kit store
-cookies are JS-readable). Copy: `authupClient` `RETURNING_TO_APP` /
+and the callback fails closed (throws) should either gap, right after the
+`redirectUriVerified` check and before the provider's code is spent or
+anything is minted, because the page `location.assign`s the target and
+renders it as an href, which on a script-capable scheme is script execution
+on the IdP origin (the kit store cookies are JS-readable). The payload shape
+is the exported `IdentityProviderCallbackPayload` (`src/contract.ts`), which
+server-core type-imports like the rest of the render contract. Copy: `authupClient` `RETURNING_TO_APP` /
 `OPEN_APP`.
 
 **A federated login without a code request does not exist (#3457).**

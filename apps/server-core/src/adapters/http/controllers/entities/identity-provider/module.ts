@@ -102,6 +102,7 @@ import {
     useRequestPermissionEvaluator,
 } from '../../../request/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
+import type { IdentityProviderCallbackPayload } from '@authup/client-auth-console';
 import { renderAuthConsolePage } from '../../../ui/index.ts';
 import type { IdentityProviderControllerContext, IdentityProviderControllerOptions } from './types.ts';
 
@@ -401,7 +402,19 @@ export class IdentityProviderController {
             throw OAuth2RequestError.malformed('The provider and client realm do not match.');
         }
 
-        const { code } = useRequestQuery(event);
+        const { code, error } = useRequestQuery(event);
+
+        // RFC 6749 section 4.1.2.1: a provider answers a refused or failed
+        // authorization (the person cancelled at the provider, the provider
+        // is down) with `error` and no code. A top-level browser navigation
+        // like every other refusal here, so it lands on the hosted login
+        // again. Nothing of the provider's answer is echoed: whoever controls
+        // the provider's redirect shapes those values.
+        if (typeof error === 'string' && error.length > 0) {
+            this.logger?.info(`The identity provider ${entity.id} answered the authorization with: ${error.slice(0, 64)}`);
+
+            return sendRedirect(event, this.buildHostedAuthorizeURL(data.codeRequest).href);
+        }
 
         if (typeof code !== 'string' || code.length === 0) {
             throw new BadRequestError('The authorization code is missing.');
@@ -444,6 +457,17 @@ export class IdentityProviderController {
         const redirectUri = verified.data.redirect_uri;
         if (!verified.redirectUriVerified || !redirectUri) {
             throw OAuth2RequestError.malformed('The redirect_uri was not verified.');
+        }
+
+        // A non-http(s) target is navigated from the interstitial page below,
+        // which `location.assign`s it and renders it as an href, so a
+        // script-capable scheme would execute on the IdP origin. The client
+        // validator and the code-request verifier both refuse such a scheme;
+        // this guard fails closed should either gap, and it runs here, before
+        // the provider's single-use code is spent, a user provisioned or a
+        // code minted.
+        if (!isSafeRedirectURLScheme(redirectUri)) {
+            throw new InternalError('The redirect_uri scheme is not allowed.');
         }
 
         // The provider must still be enabled, the rule the link path already
@@ -569,35 +593,27 @@ export class IdentityProviderController {
         // custom-scheme redirect_uri (RFC 8252, matched verbatim by
         // isSimpleURLMatch) is navigated client-side from an interstitial
         // page instead; the target is the verified redirect_uri and nothing
-        // else, so the page never reaches an unverified one (issue #3459).
-        //
-        // The page runs `window.location.assign(target)` and renders it as
-        // an href, so a script-capable scheme would execute on the IdP
-        // origin. The client validator and the code-request verifier both
-        // refuse such a scheme; this guard fails closed should either gap.
-        if (!isSafeRedirectURLScheme(url.href)) {
-            throw new InternalError('The redirect_uri scheme is not allowed.');
-        }
+        // else (its scheme was checked above), so the page never reaches an
+        // unverified one (issue #3459).
+        const payload : IdentityProviderCallbackPayload = {
+            redirect: url.href,
+            // The browser stays on the consumed callback URL, so a reload
+            // would re-run the callback against a popped state. The page
+            // swaps the history entry for this first, so a reload lands on
+            // the hosted login instead.
+            authorizeUrl: this.buildHostedAuthorizeURL(verified.data).href,
+            client: {
+                id: verified.client.id,
+                name: verified.client.name,
+                displayName: verified.client.displayName,
+            },
+        };
 
         return renderAuthConsolePage(event, {
             url: buildIdentityProviderAuthorizeCallbackPath(entity.id),
             payload: {
                 config: { baseURL: this.options.baseURL },
-                data: {
-                    redirect: url.href,
-                    // The browser stays on the consumed callback URL, so a
-                    // reload would re-run the callback against a popped
-                    // state. The page swaps the history entry for this
-                    // first, so a reload lands on the hosted login instead.
-                    authorizeUrl: this.buildHostedAuthorizeURL(verified.data).href,
-                    client: {
-                        id: verified.client.id,
-                        name: verified.client.name,
-                        displayName: verified.client.displayName,
-                        builtIn: verified.client.builtIn,
-                        createdAt: verified.client.createdAt,
-                    },
-                },
+                data: payload,
             },
         });
     }

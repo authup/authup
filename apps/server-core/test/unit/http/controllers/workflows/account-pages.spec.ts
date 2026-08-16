@@ -38,6 +38,7 @@ describe('src/http/controllers/workflows/account (SPA shell)', () => {
         expect(response.headers.get('content-type')).toContain('text/html');
         expect(response.headers.get('content-security-policy')).toContain("frame-ancestors 'none'");
         expect(response.headers.get('x-frame-options')).toEqual('DENY');
+        expect(response.headers.get('cache-control')).toEqual('no-store');
 
         const body = await response.text();
         const config = extractAccountConfig(body);
