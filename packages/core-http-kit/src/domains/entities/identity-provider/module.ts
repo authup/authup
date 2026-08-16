@@ -9,11 +9,13 @@ import type { EntityQueryInput } from '../../../helpers';
 import { buildQueryString } from '../../../helpers';
 import type { IdentityProvider, IdentityProviderAccount } from '@authup/core-kit';
 import { buildIdentityProviderAuthorizePath } from '@authup/core-kit';
+import { base64URLEncode } from '@authup/kit';
 import { cleanDoubleSlashes, nullifyEmptyObjectProperties } from '../../../utils';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import { BaseAPI } from '../../base';
 import type {
     IIdentityProviderAPI,
+    IdentityProviderAuthorizeUriOptions,
     IdentityProviderCreatePayload,
     IdentityProviderLinkConfirmPayload,
     IdentityProviderLinkRequestResponse,
@@ -22,8 +24,13 @@ import type {
 } from './types';
 
 export class IdentityProviderAPI extends BaseAPI implements IIdentityProviderAPI {
-    getAuthorizeUri(id: IdentityProvider['id']): string {
-        return cleanDoubleSlashes(`${this.client.getBaseURL()}/${buildIdentityProviderAuthorizePath(id)}`);
+    getAuthorizeUri(id: IdentityProvider['id'], options: IdentityProviderAuthorizeUriOptions = {}): string {
+        const url = cleanDoubleSlashes(`${this.client.getBaseURL()}/${buildIdentityProviderAuthorizePath(id)}`);
+        if (options.codeRequest) {
+            return `${url}?codeRequest=${base64URLEncode(JSON.stringify(options.codeRequest))}`;
+        }
+
+        return url;
     }
 
     async createLinkRequest(id: IdentityProvider['id']): Promise<IdentityProviderLinkRequestResponse> {

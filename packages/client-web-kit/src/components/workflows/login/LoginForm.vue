@@ -1,5 +1,4 @@
 <script lang="ts">
-import { base64URLEncode } from '@authup/kit';
 import type { PropType, Ref } from 'vue';
 import {
     computed,
@@ -345,16 +344,8 @@ export default defineComponent({
             }
         };
 
-        const buildIdentityProviderURL = (id: string) => {
-            let authorizeURL = apiClient.identityProvider.getAuthorizeUri(id);
-
-            if (props.codeRequest) {
-                const serialized = base64URLEncode(JSON.stringify(props.codeRequest));
-                authorizeURL += `?codeRequest=${serialized}`;
-            }
-
-            return authorizeURL;
-        };
+        const buildIdentityProviderURL = (id: string) => apiClient.identityProvider
+            .getAuthorizeUri(id, { codeRequest: props.codeRequest });
 
         // useSubmitButton from @vuecs/forms returns a computed binding
         // for VCButton ({ type: 'submit', label, iconLeft, color,
