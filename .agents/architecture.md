@@ -2725,6 +2725,33 @@ until the exchange has resolved the external identity, so an inactive one is
 refused after the code was spent. It still gets no authup code, which is the
 part that matters.
 
+**Refusals bounce to the hosted page, never as JSON (#3458).** The callback is
+a top-level browser navigation at the end of a login, so once the state is
+verified and a code request is known, every refusal is a 302 to
+`buildHostedAuthorizeURL(codeRequest)` (the original request rides along, the
+page re-renders it), never a redirect carrying `code`:
+
+- a code-request re-verification failure (client deactivated / unknown, grant
+  allowlist, scopes, `redirect_uri` mismatch, userinfo) redirects with NO
+  marker. `AuthorizeController.serve()` re-runs the same verifier on the same
+  request and renders the same refusal, so nothing is echoed. Only an
+  `OAuth2Error` from the verifier is bounced; anything else is a server
+  failure and keeps throwing;
+- a disabled provider redirects with `error=login_required`, which `serve()`
+  maps onto `OAuth2LoginRequiredError.providerUnavailable()` ("The identity
+  provider is not available. Return to the application and start the login
+  again."; the kit's `Authorize.vue` renders a payload error as the terminal
+  `AuthorizeText` card, no form and no links, so the copy must not promise
+  one);
+- an inactive user redirects with `error=access_denied` (the existing mapping,
+  the existing neutral text), like the access-policy denial.
+
+The marker set `serve()` recognizes is CLOSED (`access_denied`,
+`login_required`); any other `error` value is ignored, and the mapped text is
+always server-side, never request-derived. Failures that are not refusals (the
+provider's token endpoint failing, the state invalid, a missing `code`) keep
+their JSON answer: a 502 for the upstream failure, 400 for the rest.
+
 The `state` both callbacks (login and account link) present is consumed by
 an atomic pop (`IOAuth2AuthorizeStateRepository.popOneById`, `cache.pop`, the
 same primitive the authorization-code repository uses), so of two callbacks

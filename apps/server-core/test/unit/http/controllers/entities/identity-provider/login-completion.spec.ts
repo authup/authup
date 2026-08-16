@@ -169,6 +169,24 @@ describe('identity-provider login completion', () => {
         return new URL(back.headers.get('location') as string);
     }
 
+    /**
+     * A refused completion is a top-level browser navigation, so it bounces
+     * to the hosted authorize page carrying the original code request (the
+     * page re-renders the refusal), never a code, and at most a marker from
+     * the closed set `serve()` recognizes.
+     */
+    function expectHostedBounce(response: Response, clientId: string, error: string | null) {
+        expect(response.status).toEqual(302);
+
+        // built from publicUrl, like every hosted-page link
+        const url = new URL(response.headers.get('location') as string);
+        expect(url.pathname.endsWith('/authorize')).toBe(true);
+        expect(url.searchParams.get('client_id')).toEqual(clientId);
+        expect(url.searchParams.get('redirect_uri')).toEqual(REDIRECT_URI);
+        expect(url.searchParams.get('code')).toBeNull();
+        expect(url.searchParams.get('error')).toEqual(error);
+    }
+
     const exchange = (form: Record<string, string>) => httpRequest(suite, 'POST', 'token', {
         form: {
             grant_type: 'authorization_code',
@@ -383,8 +401,7 @@ describe('identity-provider login completion', () => {
             },
         );
 
-        expect(back.status).toEqual(400);
-        expect(back.headers.get('location')).toBeNull();
+        expectHostedBounce(back, client.id, OAuth2ErrorCode.LOGIN_REQUIRED);
         expect(providerTokenCalls).toEqual(0);
     });
 
@@ -421,8 +438,7 @@ describe('identity-provider login completion', () => {
                 },
             );
 
-            expect(back.headers.get('location')).toBeNull();
-            expect(back.status).toBeGreaterThanOrEqual(400);
+            expectHostedBounce(back, client.id, OAuth2ErrorCode.ACCESS_DENIED);
         } finally {
             await suite.client.user.update((user as { id: string }).id, { active: true });
         }
@@ -461,9 +477,9 @@ describe('identity-provider login completion', () => {
             },
         );
 
-        expect(back.status).toEqual(400);
-        expect(back.headers.get('location')).toBeNull();
-        await expect(back.json()).resolves.toMatchObject({ error: OAuth2ErrorCode.INVALID_GRANT });
+        // No marker: the hosted page re-runs the verifier on the same request
+        // and renders the mismatch itself.
+        expectHostedBounce(back, moved.id, null);
     });
 
     it('refuses the code to a redirect_uri other than the one it was bound to', async () => {
@@ -516,11 +532,9 @@ describe('identity-provider login completion', () => {
             },
         );
 
-        // An inactive client is refused (401 invalid_client), and crucially the
-        // browser is not redirected anywhere carrying a code.
-        expect(back.status).toEqual(401);
-        expect(back.headers.get('location')).toBeNull();
-        await expect(back.json()).resolves.toMatchObject({ error: OAuth2ErrorCode.INVALID_CLIENT });
+        // An inactive client is refused, and crucially the browser is not
+        // redirected anywhere carrying a code.
+        expectHostedBounce(back, disabled.id, null);
 
         // The refusal happens before the provider is contacted, so a doomed
         // completion spends neither the provider's single-use code nor a local

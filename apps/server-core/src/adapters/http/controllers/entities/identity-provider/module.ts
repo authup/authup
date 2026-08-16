@@ -48,12 +48,12 @@ import {
     isOAuth2IdentityProvider,
     isOpenIDIdentityProvider,
 } from '@authup/core-kit';
-import { BadRequestError, EntityInactiveError, EntityNotFoundError } from '@authup/errors';
+import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import type { Logger } from '@authup/server-kit';
 import { describeError, resolveURL } from '../../../../../utils/index.ts';
 import { useRequestQuery } from '@routup/basic/query';
 import { readRequestBody } from '@routup/basic/body';
-import { OAuth2ErrorCode, OAuth2RequestError } from '@authup/specs';
+import { OAuth2ErrorCode, OAuth2RequestError, isOAuth2Error } from '@authup/specs';
 import type {
     EntityCollectionResponse,
     EntityRecordResponse,
@@ -75,6 +75,7 @@ import type {
     IOAuth2AuthorizationStateManager,
     IRealmRepository,
     IdentityProviderIdentity,
+    OAuth2AuthorizationCodeRequestVerificationResult,
     OAuth2AuthorizationState,
     OAuth2AuthorizationStateLink,
 } from '../../../../../core/index.ts';
@@ -416,7 +417,22 @@ export class IdentityProviderController {
         // throwing `redirectUriMismatch`; `redirectUriVerified` is the flag
         // that survives to report it. Nothing else on this path knows whether
         // the uri was ever matched.
-        const verified = await this.codeRequestVerifier.verify(data.codeRequest);
+        //
+        // This is a top-level browser navigation, so a refusal has to land on
+        // a page rather than a JSON body (issue #3458). The hosted authorize
+        // page re-runs this verifier on the same code request and renders the
+        // same refusal, so the bounce carries no marker and echoes nothing.
+        // A server failure is not a refusal and keeps throwing.
+        let verified : OAuth2AuthorizationCodeRequestVerificationResult;
+        try {
+            verified = await this.codeRequestVerifier.verify(data.codeRequest);
+        } catch (e) {
+            if (!isOAuth2Error(e)) {
+                throw e;
+            }
+
+            return sendRedirect(event, this.buildHostedAuthorizeURL(data.codeRequest).href);
+        }
 
         // A stored code request always carries a redirect_uri (that mount is
         // required in OAuth2AuthorizationCodeRequestValidator, unlike
@@ -429,9 +445,13 @@ export class IdentityProviderController {
 
         // The provider must still be enabled, the rule the link path already
         // applies. Disabling a provider has to stop logins in flight too,
-        // otherwise it only stops new ones.
+        // otherwise it only stops new ones. The hosted page maps the marker
+        // onto a neutral "provider not available" error.
         if (!entity.enabled) {
-            throw new BadRequestError('The identity provider is not enabled.');
+            const url = this.buildHostedAuthorizeURL(verified.data);
+            url.searchParams.set('error', OAuth2ErrorCode.LOGIN_REQUIRED);
+
+            return sendRedirect(event, url.href);
         }
 
         const authenticator = this.buildProviderAuthenticator(entity, { clientId: verified.data.client_id });
@@ -441,8 +461,12 @@ export class IdentityProviderController {
         // The local login path refuses an inactive user (EntityInactiveError),
         // and a federated login must not be the way around that. Only reachable
         // for an already-linked user: a first login provisions an active one.
+        // Bounced as a denial, like the access policy below.
         if (!user.active) {
-            throw new EntityInactiveError({ entity: 'user' });
+            const url = this.buildHostedAuthorizeURL(verified.data);
+            url.searchParams.set('error', OAuth2ErrorCode.ACCESS_DENIED);
+
+            return sendRedirect(event, url.href);
         }
 
         const realm = await this.realmRepository.resolve(entity.realmId, true);

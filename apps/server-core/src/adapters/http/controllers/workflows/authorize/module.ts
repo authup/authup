@@ -21,7 +21,12 @@ import type {
     Realm,
     Scope,
 } from '@authup/core-kit';
-import { OAuth2AccessDeniedError, OAuth2ErrorCode, isOAuth2AccessDeniedError } from '@authup/specs';
+import {
+    OAuth2AccessDeniedError,
+    OAuth2ErrorCode,
+    OAuth2LoginRequiredError,
+    isOAuth2AccessDeniedError,
+} from '@authup/specs';
 import { ForceUserLoggedInMiddleware } from '../../../middleware/index.ts';
 import { HTTPOAuth2Authorizer } from '../../../adapters/index.ts';
 import { renderAuthConsolePage } from '../../../ui/index.ts';
@@ -167,13 +172,21 @@ export class AuthorizeController {
         }
 
         // A recognized `error` query param (the federated-IdP callback
-        // redirects back here with error=access_denied on a policy denial)
-        // is mapped onto the hydration payload's error — neutral message,
-        // never attacker-controlled text.
+        // redirects back here with one when it refuses a completion) is
+        // mapped onto the hydration payload's error. The set stays closed and
+        // the text is server-side and neutral, never attacker-controlled;
+        // any other value is ignored.
         if (!error) {
             const query = useRequestQuery(event);
+            let mapped : Error | undefined;
             if (query.error === OAuth2ErrorCode.ACCESS_DENIED) {
-                const normalized = sanitizeError(OAuth2AccessDeniedError.forClient());
+                mapped = OAuth2AccessDeniedError.forClient();
+            } else if (query.error === OAuth2ErrorCode.LOGIN_REQUIRED) {
+                mapped = OAuth2LoginRequiredError.providerUnavailable();
+            }
+
+            if (mapped) {
+                const normalized = sanitizeError(mapped);
                 error = {
                     ...normalized,
                     message: normalized.message,
