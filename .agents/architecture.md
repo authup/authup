@@ -362,6 +362,20 @@ usable at the service level and nothing in core depends on TypeORM:
   ran. It now carries a *should have sort allow-lists to check* guard;
   keep that guard, and prefer it whenever a spec derives its subject
   from an upstream shape.
+  **A missing `sorts` block is not fail-soft, it is a 500.** With no
+  sort allow-list rapiq falls back to a syntactic name check, so an
+  arbitrary root key survives decode and reaches `ORDER BY` on a column
+  that does not exist; the driver rejects it and `sanitizeError` maps
+  that to `INTERNAL_ERROR`, where every declaring sibling answers with
+  unsorted rows. `clientScope` was the sole schema without the block
+  (#3441, missed by the #3425 sweep). The property is now pinned per
+  schema rather than per endpoint — *should strip an unknown sort key
+  for %s* decodes a bogus key through the real codec for all 26 — so
+  the next schema that forgets the block fails the suite instead of one
+  endpoint. Note the fix direction: the narrow sibling list would have
+  demoted `default`/`clientId`/`scopeId` and the two owner-realm keys
+  from working-and-sorted to silently unsorted, so client-scope
+  allow-lists every column it already indexes.
   Structures whose leading column is not queryable (session
   `ipAddress`/`userAgent`, `user.email`) stay undeclared on purpose:
   the declaration describes the query surface, not the whole table.

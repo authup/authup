@@ -62,9 +62,12 @@ describe('core/query (indexed invariant)', () => {
      * positive while one schema's block went missing and was silently
      * skipped by the loops' `|| []`.
      *
-     * The block is asserted, never a non-empty `allowed`, because an
-     * absent allow-list is legitimate — `clientScope` declares no sort
-     * vocabulary at all, so its `sorts.allowed` is null by design.
+     * The block is asserted rather than a non-empty `allowed`, because
+     * `describe()` reports a block for an undeclared parameter too. What
+     * makes an undeclared sort allow-list unacceptable is a different
+     * property, pinned separately below: rapiq falls back to a syntactic
+     * name check without one, so an arbitrary key survives decode and
+     * reaches `ORDER BY` (#3441).
      */
     it.each(['filters', 'sorts'] as const)('should describe %s for every schema', (parameter) => {
         const missing = schemas
@@ -104,6 +107,26 @@ describe('core/query (indexed invariant)', () => {
 
         expect(offenders).toEqual([]);
     });
+
+    /**
+     * A schema with no `sorts` allow-list falls back to rapiq's syntactic
+     * name check, so an arbitrary root key survives decode and is handed
+     * to the adapter as an `ORDER BY` on a column that does not exist —
+     * the driver rejects it and `sanitizeError` maps that to a 500, where
+     * every declaring sibling fails soft and returns unsorted rows
+     * (#3441, `clientScope` was the sole outlier).
+     *
+     * Asserted per schema rather than per endpoint: a per-endpoint case
+     * would leave the next schema that forgets the block unguarded.
+     */
+    it.each(schemas.map((schema) => [schema.describe().name as string, schema] as const))(
+        'should strip an unknown sort key for %s',
+        async (_name, schema) => {
+            const parsed = await decodeQuery({ sort: 'totallyBogusColumn' }, { schema });
+
+            expect(JSON.stringify(parsed.sorts ?? null)).not.toContain('totallyBogusColumn');
+        },
+    );
 
     /**
      * The console's list search, end to end through the real encoder: the

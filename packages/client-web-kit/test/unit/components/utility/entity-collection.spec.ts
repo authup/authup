@@ -175,6 +175,36 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
     });
 
     /**
+     * The shape every filter control has to use (#3443). A load that omits
+     * `pagination` inherits the retained `meta` offset, so a control that
+     * narrows the result set from page 2 or later requests rows past the end
+     * of the narrower set: an empty list under a non-zero total. `ASearch`
+     * has always reset it by hand; the sessions page's subject-kind select
+     * was the first control that did not.
+     */
+    it('an assembled filter load carrying offset 0 returns to the first page', async () => {
+        const { wrapper, httpClient } = mountCollection({ query: { filters: { realmId: ['realm-1', null] } } });
+        await flushPromises();
+
+        await (wrapper.vm as any).load({ pagination: { limit: 10, offset: 20 } });
+
+        // what the page hands the manager: an assembled Query, no limit
+        await (wrapper.vm as any).load(defineQuery({
+            filters: { name: 'foo' },
+            pagination: { offset: 0 },
+        }));
+
+        const requests = listRequests(httpClient.requests);
+        // the encoder omits an offset of 0, so absent and "0" both mean the
+        // first page. Without the reset this reads "20" and the page renders
+        // empty under a non-zero total.
+        expect(requests[2].searchParams.get('page[offset]') ?? '0').toEqual('0');
+        // the retained page size survives, because `Pagination.merge` is
+        // per-property and the input carries no limit
+        expect(requests[2].searchParams.get('page[limit]')).toEqual('10');
+    });
+
+    /**
      * rapiq 2.1.0 (#906) made `sorts` the canonical build-input key and
      * kept `sort` as a deprecated alias. The per-parameter replace must
      * recognize both, or a load carrying the canonical spelling is

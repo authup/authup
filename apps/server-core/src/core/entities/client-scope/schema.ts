@@ -21,6 +21,8 @@ export const clientScopeSchema = defineSchema<ClientScope>({
         ['default'],
         ['clientRealmId'],
         ['scopeRealmId'],
+        ['createdAt'],
+        ['updatedAt'],
     ],
     // see user-role schema — explicit root projection for include= decodes
     fields: {
@@ -37,6 +39,23 @@ export const clientScopeSchema = defineSchema<ClientScope>({
     },
     filters: { allowed: ['clientId', 'scopeId', 'default', 'id', 'clientRealmId', 'scopeRealmId'], indexed: true },
     relations: { allowed: ['client', 'scope'], validate: createRelationsReadGate(schemaMapping) },
+    // wider than the junction siblings' id/createdAt/updatedAt on purpose:
+    // every column here is already indexed and already sorts today through
+    // the missing-allow-list fallback, so a narrow list would demote the
+    // rest from working-and-sorted to silently unsorted (#3441)
+    sorts: {
+        allowed: [
+            'id',
+            'default',
+            'clientId',
+            'clientRealmId',
+            'scopeId',
+            'scopeRealmId',
+            'createdAt',
+            'updatedAt',
+        ],
+        indexed: true,
+    },
     pagination: { maxLimit: 50 },
     schemaMapping,
 });
