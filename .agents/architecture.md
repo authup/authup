@@ -2222,7 +2222,21 @@ no registered `redirectUri` patterns cannot use `/authorize` at all —
 previously its `data.redirect_uri` went unchecked (any value passed, merely
 flagged `redirectUriVerified=false`), letting a misconfigured client issue
 codes to arbitrary attacker-supplied URIs. `redirectUriVerified` is now `false`
-only when the request itself carries no `redirect_uri`.
+only when the request itself carries no `redirect_uri`. A `redirect_uri` that
+parses as a URL carrying userinfo (`https://u:p@app/cb`) is refused with
+`invalid_request` BEFORE the pattern match (#3455): `isSimpleURLMatch`
+canonicalizes the value and drops the userinfo, while all three redirect
+sites (`AuthorizeController.confirm`, the federated callback, and the
+end-session `post_logout_redirect_uri` in `LogoutController`, whose
+`isValidPostLogoutRedirect` now drops such a candidate too) build the
+`Location` from the raw string, so the credential blob used to ride along.
+The matched value is now the navigated value. `ClientValidator` refuses to
+register a `redirectUri` / `postLogoutRedirectUri` pattern carrying userinfo
+for a different reason: `canonicalizePattern` drops a PATTERN's userinfo as
+well, so `https://u:p@app/**` would silently accept the bare origin while
+reading as if it required credentials; refusing it makes the registration say
+what it matches. Custom-scheme and unparsable values keep their previous
+handling (verbatim match, and mismatch).
 
 ### OIDC prompt surface & id_token claims (plan 041 PR B)
 

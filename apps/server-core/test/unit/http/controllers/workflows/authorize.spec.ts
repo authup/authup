@@ -18,6 +18,7 @@ import {
     REALM_MASTER_NAME,
     ScopeName,
 } from '@authup/core-kit';
+import { ErrorCode } from '@authup/errors';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
 import { generateOAuth2CodeVerifier } from '../../../../../src/core';
 import { createFakeClient, createFakeRealm, expectClientError } from '../../../../utils';
@@ -83,6 +84,18 @@ describe('src/http/controllers/token', () => {
                 response_type: responseType,
             }),
             { status: 400 },
+        );
+    });
+
+    it('should refuse a redirect_uri carrying userinfo rather than match it', async () => {
+        // The pattern would match once the value is canonicalized (userinfo
+        // dropped), but the redirect is built from the raw string.
+        await expectClientError(
+            () => suite.client.authorize.confirm({
+                ...payload,
+                redirect_uri: 'https://user:secret@example.com/redirect',
+            }),
+            { status: 400, code: ErrorCode.OAUTH_REQUEST_INVALID },
         );
     });
 

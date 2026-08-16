@@ -303,7 +303,6 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
 
             const candidates = [
                 'https://app.example.com.evil.test/callback',
-                'https://app.example.com@evil.test/callback',
                 'https://app.example.com:8443/callback',
                 'http://app.example.com/callback',
                 // a path-less URI used to satisfy every pattern sharing its
@@ -340,7 +339,6 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
                 'https://evil.test?.example.com/callback',
                 'https://evil.test#.example.com/callback',
                 'https://evil.test\\.example.com/callback',
-                'https://user@evil.test#.example.com/callback',
                 'https://evil.test:8443#.example.com/callback',
             ];
 
@@ -352,6 +350,37 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
                         redirect_uri: redirectUri,
                     }),
                 ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_REDIRECT_URI_MISMATCH }));
+            }
+        });
+
+        it('should reject a redirect carrying userinfo', async () => {
+            // The matcher canonicalizes the value and drops the userinfo, so
+            // `https://u:p@app.example.com/cb` matched the registered pattern
+            // while the redirect was built from the raw string: the credential
+            // blob rode the Location header. Refused before the match, so the
+            // matched value is the navigated value.
+            const client = clientRepository.seed({
+                authMethod: 'secret',
+                tokenBindingMethod: 'none',
+                redirectUri: 'https://app.example.com/**',
+            });
+
+            for (const redirectUri of [
+                'https://user:secret@app.example.com/callback',
+                'https://user@app.example.com/callback',
+                'https://:secret@app.example.com/callback',
+                // origin confusion attempts: they never matched (the origin
+                // canonicalizes to evil.test), and are now refused up front
+                'https://app.example.com@evil.test/callback',
+                'https://user@evil.test#.example.com/callback',
+            ]) {
+                await expect(
+                    verifier.verify({
+                        client_id: client.id,
+                        response_type: OAuth2AuthorizationResponseType.CODE,
+                        redirect_uri: redirectUri,
+                    }),
+                ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_REQUEST_INVALID }));
             }
         });
 
