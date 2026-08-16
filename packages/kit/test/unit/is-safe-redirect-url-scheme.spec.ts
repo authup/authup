@@ -27,6 +27,7 @@ describe('is-safe-redirect-url-scheme', () => {
         ['data:text/html,<script>alert(1)</script>'],
         ['vbscript:msgbox(1)'],
         ['blob:https://app.example.com/uuid'],
+        ['filesystem:https://app.example.com/temporary/x.html'],
         ['file:///etc/passwd'],
         ['about:blank'],
         ['not a url'],

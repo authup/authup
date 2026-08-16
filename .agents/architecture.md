@@ -2802,8 +2802,8 @@ gesture before launching an external protocol. The target is the verified
 `redirect_uri` and nothing else, so the page is unreachable with an
 unverified one. **The scheme is denylisted at three layers**
 (`isSafeRedirectURLScheme` in `@authup/kit`: `javascript:`, `data:`,
-`vbscript:`, `blob:`, `file:`, `about:` refused; http(s) and RFC 8252 custom
-schemes pass): `ClientValidator` refuses to register such a pattern, the
+`vbscript:`, `blob:`, `filesystem:`, `file:`, `about:` refused; http(s) and
+RFC 8252 custom schemes pass): `ClientValidator` refuses to register such a pattern, the
 code-request verifier refuses such a `redirect_uri` with `invalid_request`,
 and the interstitial branch fails closed (throws) should either gap, because
 the page `location.assign`s the target and renders it as an href, which on

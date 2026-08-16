@@ -8,7 +8,8 @@
 /**
  * Schemes a redirect target must never carry. Every one of them is either
  * script-capable in a browser (`javascript:`, `data:`, `vbscript:`,
- * `blob:`) or addresses the local machine (`file:`, `about:`), so
+ * `blob:`, `filesystem:`) or addresses the local machine (`file:`,
+ * `about:`), so
  * navigating a browser to one from the IdP origin is script execution or
  * worse, never a return to an application. A small, documented denylist:
  * http(s) and any plausible custom scheme of a native app (RFC 8252,
@@ -20,6 +21,7 @@ const UNSAFE_REDIRECT_URL_SCHEMES = new Set([
     'data:',
     'vbscript:',
     'blob:',
+    'filesystem:',
     'file:',
     'about:',
 ]);
