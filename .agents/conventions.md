@@ -173,6 +173,25 @@ Sort each runtime dependency of a **published** package by one question: **would
 
 Do **not** use `peerDependencies` as a blanket "dedup enforcer" on leaves — dedup is free and applies to `dependencies` too; peer's only unique power (forbid a private nested copy, fail loud on conflict) matters solely for singletons. Before deleting or demoting an entry, verify actual usage (`rg "from '<pkg>'" src`, check `dist`, and check whether a *lower* package peers it — e.g. `socket.io-client` is a peer of `@authup/core-realtime-kit` and is statically imported by its `ClientManager`, so `@authup/client-web-kit` must keep declaring it even though its own `src` never imports it).
 
+## Root `vue` override tracks every `@vue/*` bump
+
+The root `package.json` `overrides` block pins `vue` to an exact patch. That pin
+must move whenever ANY dependency bump (dependabot's `minorandpatch` group
+included, not only a `@vuecs/*` bump) pulls the `@vue/*` subpackages to a newer
+patch. With the pin behind, npm nests vue's own runtime deps under
+`node_modules/vue/node_modules/@vue/{reactivity,runtime-core,runtime-dom,server-renderer}`
+at the OLD patch while the compiler packages sit at the top level at the new
+one. Two symptoms, both in the CI `Test Packages` / `Build Packages` jobs and
+both in files nobody touched: `@vue/test-utils` (a top-level package peering
+`@vue/server-renderer`) fails every client-web-kit SSR spec with
+`Cannot find package '@vue/server-renderer'`, and two `@vue/reactivity` copies
+give `vue-tsc` two `RefSymbol` identities (`Property '[RefSymbol]' is missing`).
+It has recurred three times (the July 2026 `@vuecs` bump, #3317, #3461). Fix:
+set `overrides.vue` to the new patch, `npm install --force`, then verify
+`node_modules/vue/node_modules/@vue` is gone and
+`node_modules/@vue/server-renderer` is hoisted. A dependabot PR whose table
+lists `vue` needs this before merge; its own CI already shows the failure.
+
 ## Interfaces & Types
 
 - **Every interface is prefixed with `I`**: `IEntityAPI`, `IClient`, `IRealmAPI`, `IEntityRepository`, `IDomainEventHandler`.

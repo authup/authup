@@ -74,7 +74,7 @@
     },
     "overrides": {
         "typeorm": "1.1.0",
-        "vue": "3.5.40",
+        "vue": "3.5.41",
         "validup": "^1.0.0",
         "@vuecs/core": "3.5.0"
     }
