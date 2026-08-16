@@ -2711,6 +2711,15 @@ until the exchange has resolved the external identity, so an inactive one is
 refused after the code was spent. It still gets no authup code, which is the
 part that matters.
 
+The `state` both callbacks (login and account link) present is consumed by
+an atomic pop (`IOAuth2AuthorizeStateRepository.popOneById`, `cache.pop`, the
+same primitive the authorization-code repository uses), so of two callbacks
+carrying one state only the first obtains the payload; the ip / user-agent
+checks run on the popped payload, and a state failing them is gone as well
+(#3456). The entries live under `CacheOAuth2Prefix.AUTHORIZATION_STATE`; they
+used to share the authorization-code namespace, which let either repository
+pop the other's entries.
+
 The hosted page is not part of this completion, so consent, the MFA challenge
 and the prompt ladder do not run for a federated login. Both exclusions are
 deliberate and predate this (see *Intentional enforcement boundaries* and

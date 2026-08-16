@@ -22,18 +22,16 @@ import type {
 class FakeStateRepository implements IOAuth2AuthorizeStateRepository {
     private store = new Map<string, OAuth2AuthorizationState>();
 
-    async findOneById(id: string): Promise<OAuth2AuthorizationState | null> {
-        return this.store.get(id) ?? null;
-    }
-
     async insert(data: OAuth2AuthorizationState): Promise<string> {
         const id = randomUUID();
         this.store.set(id, data);
         return id;
     }
 
-    async remove(id: string): Promise<void> {
+    async popOneById(id: string): Promise<OAuth2AuthorizationState | null> {
+        const payload = this.store.get(id) ?? null;
         this.store.delete(id);
+        return payload;
     }
 
     has(id: string): boolean {
@@ -107,6 +105,14 @@ describe('OAuth2AuthorizationStateManager', () => {
             const id = await manager.save({ ip: '10.0.0.1' });
             await manager.verify(id, { ip: '10.0.0.1' });
             expect(repository.has(id)).toBe(false);
+        });
+
+        it('should refuse a second verify of the same state', async () => {
+            const id = await manager.save({ ip: '10.0.0.1' });
+            await manager.verify(id, { ip: '10.0.0.1' });
+            await expect(
+                manager.verify(id, { ip: '10.0.0.1' }),
+            ).rejects.toThrow(OAuth2Error);
         });
 
         it('should remove state even when IP mismatch (replay prevention)', async () => {

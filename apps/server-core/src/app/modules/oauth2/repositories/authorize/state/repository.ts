@@ -18,40 +18,25 @@ export class OAuth2AuthorizationStateRepository implements IOAuth2AuthorizeState
         this.cache = cache;
     }
 
-    async findOneById(key: string): Promise<OAuth2AuthorizationState | null> {
-        const id = buildCacheKey({
-            prefix: CacheOAuth2Prefix.AUTHORIZATION_CODE,
-            key, 
-        });
-        const payload = await this.cache.get<OAuth2AuthorizationState>(id);
-        if (payload) {
-            return payload;
-        }
-
-        return null;
-    }
-
-    async remove(key: string): Promise<void> {
-        await this.cache.drop(
-            buildCacheKey({
-                prefix: CacheOAuth2Prefix.AUTHORIZATION_CODE,
-                key, 
-            }),
-        );
-    }
-
     async insert(data: OAuth2AuthorizationState): Promise<string> {
         const state = createNanoID();
 
         await this.cache.set(
             buildCacheKey({
-                prefix: CacheOAuth2Prefix.AUTHORIZATION_CODE,
-                key: state, 
+                prefix: CacheOAuth2Prefix.AUTHORIZATION_STATE,
+                key: state,
             }),
             data,
             { ttl: 1000 * 60 * 30 }, // 30 min
         );
 
         return state;
+    }
+
+    async popOneById(key: string): Promise<OAuth2AuthorizationState | null> {
+        return this.cache.pop<OAuth2AuthorizationState>(buildCacheKey({
+            prefix: CacheOAuth2Prefix.AUTHORIZATION_STATE,
+            key,
+        }));
     }
 }

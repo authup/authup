@@ -30,11 +30,13 @@ export type OAuth2AuthorizationState = {
 };
 
 export interface IOAuth2AuthorizeStateRepository {
-    findOneById(id: string) : Promise<OAuth2AuthorizationState | null>;
-
     insert(data: OAuth2AuthorizationState) : Promise<string>;
 
-    remove(id: string) : Promise<void>;
+    /**
+     * Read and delete in one step, so two callbacks presenting the same
+     * state cannot both obtain the payload.
+     */
+    popOneById(id: string) : Promise<OAuth2AuthorizationState | null>;
 }
 
 export interface IOAuth2AuthorizationStateManager {
