@@ -6,6 +6,7 @@
  */
 
 import {
+    INSTANCEOF_PROPERTY,
     isBaseError,
     isObject,
     isError as isRawError,
@@ -30,25 +31,29 @@ export function isError(input: unknown): input is Error {
 /**
  * Duck-type guard for AuthupError.
  *
- * Fast path: input has the AuthupError marker in its `@instanceof` chain —
- * as the native symbol (in-process) or its serialized string form
- * (JSON-rehydrated). Subclass instances also accumulate this marker, so this
- * guard matches any AuthupError subclass (`OAuth2Error`, `JWTError`, etc.).
+ * Fast path: input carries an `@instanceof` chain. The chain decides, and
+ * only the chain: it matches when the AuthupError marker is in it, as the
+ * native symbol (in-process) or its serialized string form
+ * (JSON-rehydrated). Subclass instances accumulate this marker, so any
+ * AuthupError subclass (`OAuth2Error`, `JWTError`, ...) matches too, while
+ * a foreign `@ebec/core` error (rapiq's ParseError, which since 2.2 also
+ * carries an `issues` array) does not: it announced its ancestry and
+ * AuthupError is not in it.
  *
- * Slow path: input is shape-compatible with AuthupError (BaseError + has
- * `issues: Issue[]`). Catches cases where the marker is missing — plain
- * objects rehydrated from JSON emitted by older builds without the chain.
+ * Slow path, for a chain-less input only: shape-compatible with AuthupError
+ * (BaseError + `issues: Issue[]`). Covers plain objects rehydrated from JSON
+ * emitted by older builds, before the chain rode along.
  */
 export function isAuthupError(input: unknown): input is AuthupError {
-    if (matchesInstanceof(input, AUTHUP_ERROR_INSTANCE)) {
-        return true;
-    }
-
-    if (!isBaseError(input)) {
+    if (!isObject(input)) {
         return false;
     }
 
-    if (!isObject(input)) {
+    if (Array.isArray(input[INSTANCEOF_PROPERTY])) {
+        return matchesInstanceof(input, AUTHUP_ERROR_INSTANCE);
+    }
+
+    if (!isBaseError(input)) {
         return false;
     }
 

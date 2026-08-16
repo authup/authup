@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BaseError, isBaseError, markInstanceof } from '@ebec/core';
 import { describe, expect, it } from 'vitest';
 import {
     AuthHeaderError,
@@ -126,6 +127,29 @@ describe('duck-type guards (JSON-rehydrated)', () => {
         expect(isAuthHeaderError(legacySubclass)).toBe(true);
         // Leaf-only: without the chain, the ancestor match stays unavailable.
         expect(isUnauthorizedError(legacySubclass)).toBe(false);
+    });
+
+    it('rejects a foreign BaseError that merely carries issues', () => {
+        // A library error built on @ebec/core (rapiq 2.2's ParseError is the
+        // live case) has the BaseError shape AND an `issues` array, which is
+        // exactly what the chain-less slow path accepts. Its chain is present
+        // and does not name AuthupError, so the marker check is authoritative
+        // and the shape heuristic must not run.
+        const FOREIGN_MARKER = Symbol.for('@foreign/ForeignError');
+        class ForeignError extends BaseError {
+            issues: unknown[] = [];
+
+            constructor() {
+                super({ message: 'foo', code: 'inputRejected' });
+                markInstanceof(this, FOREIGN_MARKER);
+            }
+        }
+
+        const foreign = new ForeignError();
+
+        expect(isBaseError(foreign)).toBe(true);
+        expect(isAuthupError(foreign)).toBe(false);
+        expect(isAuthupError(roundtrip(foreign))).toBe(false);
     });
 });
 
