@@ -289,34 +289,44 @@ export class IdentityProviderController {
             throw new BadRequestError('Only an identity-provider based on the oauth protocol supports authorize redirect.');
         }
 
-        const authenticator = this.buildProviderAuthenticator(entity);
-
-        let codeRequest: OAuth2AuthorizationCodeRequest | undefined;
-        const query = useRequestQuery(event);
-        if (typeof query.codeRequest === 'string') {
-            let codeRequestDecoded: OAuth2AuthorizationCodeRequest;
-
-            try {
-                codeRequestDecoded = JSON.parse(base64URLDecode(query.codeRequest));
-            } catch {
-                throw OAuth2RequestError.malformed('The code request is malformed and can not be parsed.');
-            }
-
-            const codeRequestValidated = await this.codeRequestValidator.run(codeRequestDecoded);
-            const data = await this.codeRequestVerifier.verify(codeRequestValidated);
-
-            if (
-                data.client.realmId &&
-                entity.realmId &&
-                entity.realmId !== data.client.realmId
-            ) {
-                throw OAuth2RequestError.malformed('The provider and client realm do not match.');
-            }
-
-            codeRequest = data.data;
+        // Refused here as well as at the callback, so a disabled provider
+        // costs no provider round trip.
+        if (!entity.enabled) {
+            throw new BadRequestError('The identity provider is not enabled.');
         }
 
-        const state = await this.saveAuthorizationState(event, { codeRequest });
+        // A federated login completes an RP's authorization request: the
+        // callback mints a code bound to that request and delivers it to the
+        // request's redirect_uri. Without one there is nowhere to deliver a
+        // code (the callback used to mint an unbound one and hand it to the
+        // server root, issue #3457), so the login must not start.
+        const query = useRequestQuery(event);
+        if (typeof query.codeRequest !== 'string') {
+            throw OAuth2RequestError.malformed('A federated login requires an authorization code request.');
+        }
+
+        let codeRequestDecoded: OAuth2AuthorizationCodeRequest;
+
+        try {
+            codeRequestDecoded = JSON.parse(base64URLDecode(query.codeRequest));
+        } catch {
+            throw OAuth2RequestError.malformed('The code request is malformed and can not be parsed.');
+        }
+
+        const codeRequestValidated = await this.codeRequestValidator.run(codeRequestDecoded);
+        const data = await this.codeRequestVerifier.verify(codeRequestValidated);
+
+        if (
+            data.client.realmId &&
+            entity.realmId &&
+            entity.realmId !== data.client.realmId
+        ) {
+            throw OAuth2RequestError.malformed('The provider and client realm do not match.');
+        }
+
+        const authenticator = this.buildProviderAuthenticator(entity);
+
+        const state = await this.saveAuthorizationState(event, { codeRequest: data.data });
 
         return sendRedirect(event, authenticator.buildRedirectURL({ state }));
     }
@@ -373,9 +383,14 @@ export class IdentityProviderController {
             return this.completeLink(event, entity, data, link);
         }
 
+        // authorize-out no longer mints a login state without a code request;
+        // this refuses the ones minted before that (issue #3457).
+        if (!data.codeRequest) {
+            throw OAuth2RequestError.malformed('The state carries no authorization code request.');
+        }
+
         if (
             entity.realmId &&
-            data.codeRequest &&
             data.codeRequest.realm_id &&
             data.codeRequest.realm_id !== entity.realmId
         ) {
@@ -401,9 +416,16 @@ export class IdentityProviderController {
         // throwing `redirectUriMismatch`; `redirectUriVerified` is the flag
         // that survives to report it. Nothing else on this path knows whether
         // the uri was ever matched.
-        const verified = data.codeRequest ?
-            await this.codeRequestVerifier.verify(data.codeRequest) :
-            undefined;
+        const verified = await this.codeRequestVerifier.verify(data.codeRequest);
+
+        // A stored code request always carries a redirect_uri (that mount is
+        // required in OAuth2AuthorizationCodeRequestValidator, unlike
+        // `state`), so a verified request is a verified redirect target. The
+        // guard keeps the redirect decision resting on the match itself.
+        const redirectUri = verified.data.redirect_uri;
+        if (!verified.redirectUriVerified || !redirectUri) {
+            throw OAuth2RequestError.malformed('The redirect_uri was not verified.');
+        }
 
         // The provider must still be enabled, the rule the link path already
         // applies. Disabling a provider has to stop logins in flight too,
@@ -412,7 +434,7 @@ export class IdentityProviderController {
             throw new BadRequestError('The identity provider is not enabled.');
         }
 
-        const authenticator = this.buildProviderAuthenticator(entity, { clientId: verified?.data.client_id });
+        const authenticator = this.buildProviderAuthenticator(entity, { clientId: verified.data.client_id });
 
         const user = await authenticator.authenticate({ code });
 
@@ -431,7 +453,7 @@ export class IdentityProviderController {
         // person is standing in front of the browser and the card is the only
         // surface that can tell them why. A policy id with no wired evaluator
         // denies (fail closed).
-        if (verified?.client.accessPolicyId) {
+        if (verified.client.accessPolicyId) {
             let allowed = false;
 
             const subject = toIdentityPolicyData({
@@ -463,7 +485,7 @@ export class IdentityProviderController {
         // (`PKCE is required for public clients`), which is every console
         // client.
         const authorizationCode = await this.codeIssuer.issue(
-            verified?.data ?? { response_type: 'code' },
+            verified.data,
             {
                 type: IdentityType.USER,
                 data: {
@@ -485,20 +507,20 @@ export class IdentityProviderController {
             scope: EventScope.OAUTH2,
             name: EventName.AUTHORIZE,
             refType: EventRefType.CLIENT,
-            refId: verified?.data.client_id ?? null,
-            clientId: verified?.data.client_id ?? null,
+            refId: verified.data.client_id ?? null,
+            clientId: verified.data.client_id ?? null,
             sessionId: null,
             actorType: IdentityType.USER,
             actorId: user.id,
             actorName: user.name,
-            realmId: verified?.data.realm_id ?? realm.id,
+            realmId: verified.data.realm_id ?? realm.id,
             requestIpAddress: getRequestIP(event) ?? null,
             requestUserAgent: getRequestHeader(event, 'user-agent') ?? null,
             data: {
                 reason: 'federated',
                 providerId: entity.id,
                 providerName: entity.name,
-                ...(verified?.data.scope ? { scope: verified.data.scope } : {}),
+                ...(verified.data.scope ? { scope: verified.data.scope } : {}),
             },
         });
 
@@ -506,22 +528,11 @@ export class IdentityProviderController {
         // It is bound to that client_id and that redirect_uri, so the RP is the
         // only party able to redeem it. Handing it to any other page strands
         // the login there (issue #3446).
-        if (verified?.redirectUriVerified && verified.data.redirect_uri) {
-            const url = new URL(verified.data.redirect_uri);
-            url.searchParams.set('code', authorizationCode.id);
-            if (verified.data.state) {
-                url.searchParams.set('state', verified.data.state);
-            }
-
-            return sendRedirect(event, url.href);
-        }
-
-        // Only reachable when the state carried no code request at all: a
-        // stored one always has a redirect_uri, because that mount is required
-        // in OAuth2AuthorizationCodeRequestValidator (unlike `state`), so a
-        // verified request is always a verified redirect target.
-        const url = new URL(this.options.baseURL);
+        const url = new URL(redirectUri);
         url.searchParams.set('code', authorizationCode.id);
+        if (verified.data.state) {
+            url.searchParams.set('state', verified.data.state);
+        }
 
         return sendRedirect(event, url.href);
     }

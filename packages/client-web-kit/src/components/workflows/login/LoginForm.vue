@@ -532,7 +532,13 @@ export default defineComponent({
                         />
                     </template>
 
+                    <!--
+                      A federated login completes an authorization code request:
+                      authorize-out refuses to start one without it (#3457), so a
+                      provider button is only offered when a request is at hand.
+                    -->
                     <AIdentityProviders
+                        v-if="codeRequest"
                         ref="identityProviderRef"
                         :query="identityProviderQuery"
                         :footer="false"

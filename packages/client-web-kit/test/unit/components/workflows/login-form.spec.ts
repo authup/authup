@@ -296,7 +296,12 @@ describe('components/workflows/login', () => {
     // A failing request must be routed into the `failed` emit and leave
     // the form usable (rendered without the provider list).
     it('should render when identity provider load fails', async () => {
-        const { wrapper } = mountLoginForm({}, {
+        const { wrapper } = mountLoginForm({
+            codeRequest: {
+                response_type: 'code',
+                realm_id: 'realm-a',
+            },
+        }, {
             'GET /identity-providers': () => {
                 throw new Error('unable to get local issuer certificate');
             },
@@ -308,5 +313,15 @@ describe('components/workflows/login', () => {
         const providers = wrapper.findComponent(AIdentityProviders);
         expect(providers.exists()).toBe(true);
         expect(providers.emitted('failed')).toBeTruthy();
+    });
+
+    it('should offer no identity provider without a code request', async () => {
+        // authorize-out refuses a federated login that carries no code
+        // request, so a provider button would lead to a guaranteed 400.
+        const { wrapper } = mountLoginForm();
+        await flushPromises();
+
+        expect(wrapper.find('form').exists()).toBe(true);
+        expect(wrapper.findComponent(AIdentityProviders).exists()).toBe(false);
     });
 });

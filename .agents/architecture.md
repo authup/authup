@@ -2742,10 +2742,20 @@ authentication. The access-policy denial is the one case that still bounces to
 the hosted page, because the person is at the browser and the denial card is
 the only surface that can say why.
 
-A request carrying no `redirect_uri` keeps the older hosted-page and
-`baseURL` fallbacks. Such a request could never complete anyway
-(`authorizeInner` refuses a code request without one), so the fallbacks carry
-the previous shape rather than inventing a destination.
+**A federated login without a code request does not exist (#3457).**
+`authorize-out` refuses to start one (`invalid_request`, before any provider
+round trip; it refuses a disabled provider up front for the same reason), and
+the callback refuses a login state that carries none (the
+backstop for states minted before the change; the account-link branch is
+dispatched before it and is unaffected). The former fallback minted a code from
+`{ response_type: 'code' }` and redirected to the server root: that code was
+bound to no `client_id`, `redirect_uri` or `code_challenge`, so
+`OAuth2AuthorizationCodeVerifier` skipped every binding check for it and any
+confidential client could have redeemed it. The kit's `LoginForm` renders its
+identity-provider list only when it holds a `codeRequest`; a button leading to
+a guaranteed 400 is worse than no button. The hosted `/authorize` page always
+passes one; a host embedding `ALoginForm` without one gets the password login
+alone.
 
 ## Federated Identity Claims
 
