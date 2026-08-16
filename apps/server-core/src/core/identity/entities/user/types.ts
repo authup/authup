@@ -17,4 +17,5 @@ export interface IUserIdentityRepository {
     savePermissions(user: User, items: IdentityProviderMapperElement[]) : Promise<void>;
     saveRoles(user: User, items: IdentityProviderMapperElement[]) : Promise<void>;
     saveOneWithEA(user: Partial<User>, extraAttributes: Record<string, any>) : Promise<User>;
+    remove(user: User) : Promise<void>;
 }

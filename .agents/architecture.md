@@ -2882,27 +2882,54 @@ user); the uniqueness flip above ships one, on both dialects.
   `OAuth2AuthorizationStateManager` blob, which would inherit that TTL and
   re-apply the ip check to an XHR from the SPA (a network flip between
   callback and confirm would break the link).
-  `link()` itself is unchanged: rejects an identity linked to a DIFFERENT
-  user (`IdentityProviderAccountAlreadyLinkedError`), refreshes
-  idempotently for the same user, verifies user existence + provider/user
-  realm match, and NEVER runs mappers, mutates the user, mints a code or
-  creates a session. Its find-then-save check is the FRIENDLY path only;
-  the invariant is DB-backed (issue #3442): the unique
-  `(providerUserId, providerId)` index is the backstop for two concurrent
-  completions of the same external identity, and
-  `IdentityProviderAccountRepositoryAdapter.save` translates the driver's
-  unique violation (`isUniqueConstraintDatabaseError`, the consent-insert
-  sibling) into `IdentityProviderAccountAlreadyLinkedError`, declared on
-  the port's `save`, so neither the link flow nor the federated-login
-  `save()` ever surfaces a raw `QueryFailedError`. `link()` catches that
-  error once, re-reads, and returns the row when the racing writer was the
-  SAME user (two Connect tabs); any other user keeps the error. The
-  migration pre-checks for pre-existing duplicate pairs and aborts the boot
-  with the offending pairs and the required cleanup (the `1779267068441`
-  canonical-name precedent) rather than a bare unique-violation.
-  **Deployment note:** the callback and the confirm must
+  The #3439 split left `link()` itself alone: it rejects an identity linked
+  to a DIFFERENT user (`IdentityProviderAccountAlreadyLinkedError`),
+  refreshes idempotently for the same user, verifies user existence +
+  provider/user realm match, and NEVER runs mappers, mutates the user,
+  mints a code or creates a session. **Deployment note:** the callback and
+  the confirm must
   reach the same cache, so a multi-replica deployment without Redis needs
   sticky routing across one more hop than before.
+- **The invariant is DB-backed (issue #3442).** `link()`'s find-then-save
+  check is the FRIENDLY path only. Two unique indexes back it:
+  `(providerUserId, providerId)` (one external identity, one local user)
+  and `(providerId, userId)` (one link per provider per user).
+  `IdentityProviderAccountRepositoryAdapter.save` translates the driver's
+  unique violation (`isUniqueConstraintDatabaseError`, the consent-insert
+  sibling) into `EntityConflictError` from `@authup/errors`, declared on
+  the port's `save`; it stays generic because the driver does not say
+  WHICH index fired, so neither the link flow nor the federated login ever
+  surfaces a raw `QueryFailedError`. `IdentityProviderAccountManager`
+  classifies after a re-read by identity. In `link()`: a row bound to the
+  SAME user (two Connect tabs) is returned as the no-op it is; a row bound
+  to another user is `IdentityProviderAccountAlreadyLinkedError`; no row
+  means `(providerId, userId)` fired (the user already holds a link at
+  this provider through another external account, reachable via a stale
+  Connect tab since `link-request` does not check for an existing link)
+  and is a plain `ValidationError` saying exactly that, never the false
+  "linked to another user". In the federated-login `save()`: the loser of
+  two concurrent first logins has already provisioned a user by the time
+  its account insert is rejected, so it re-reads, removes that
+  milliseconds-old unreferenced user best effort (a leftover row must not
+  fail the login), and continues through the UPDATE branch on the winner's
+  account (mappers, roles, permissions run for the winner). The
+  `FakeIdentityProviderAccountRepository` mirrors both indexes so the
+  manager specs see what the adapter does; the sqlite adapter spec pins the
+  translation and the convergence against the real table
+  (`test/unit/core/identity/provider/account.spec.ts`). The migration
+  (`1786633352004-IdentityProviderAccountUniqueness`) pre-checks for
+  pre-existing duplicate `(provider_id, provider_user_id)` groups and
+  aborts the boot with their number and the required cleanup (the
+  `1779267068441` canonical-name precedent) rather than a hash-named
+  driver error; the duplicate-finding query is in
+  `docs/src/guide/deployment/upgrading.md`. Its MySQL half swaps the
+  index in ONE `ALTER TABLE ... DROP INDEX, ADD UNIQUE INDEX` (MySQL
+  commits DDL implicitly, so a DROP followed by a CREATE could leave the
+  table without the index if the process died between them), and its
+  postgres `down()` was hand-corrected to `("provider_user_id",
+  "provider_id")` because the generator read the pre-existing index back
+  in swapped column order (see `.agents/references/typeorm.md`); both are
+  documented exceptions to committing generated DDL untouched.
 - **Events** — `identityProviderLinked` (recorded on the authenticated
   confirm, so it carries actor and session attribution the callback could
   not)

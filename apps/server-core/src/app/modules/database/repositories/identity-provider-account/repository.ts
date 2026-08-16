@@ -6,6 +6,7 @@
  */
 
 import type { IdentityProviderAccount } from '@authup/core-kit';
+import { EntityConflictError } from '@authup/errors';
 import type { IQuery } from '@rapiq/core';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
@@ -22,7 +23,6 @@ import type {
     IdentityProviderAccountFindManyOptions,
     IdentityProviderIdentity,
 } from '../../../../../core/index.ts';
-import { IdentityProviderAccountAlreadyLinkedError } from '../../../../../core/index.ts';
 
 export class IdentityProviderAccountRepositoryAdapter implements IIdentityProviderAccountRepository {
     protected dataSource: DataSource;
@@ -132,12 +132,13 @@ export class IdentityProviderAccountRepositoryAdapter implements IIdentityProvid
         try {
             return await this.repository.save(entity);
         } catch (e) {
-            // the unique index on (provider_user_id, provider_id) is the
-            // backstop of the manager's find-then-save check (issue #3442):
-            // a concurrent writer got there first, so report the linked
-            // state instead of letting the driver error escape as a 500.
+            // one of the two unique indexes rejected the row: the identity
+            // is already linked (issue #3442) or the user already holds a link
+            // at this provider. The driver does not say which, so the manager
+            // classifies after a re-read; here only the driver error is kept
+            // from escaping as a 500.
             if (isUniqueConstraintDatabaseError(e)) {
-                throw new IdentityProviderAccountAlreadyLinkedError();
+                throw new EntityConflictError({ entity: 'identity provider account' });
             }
 
             throw e;

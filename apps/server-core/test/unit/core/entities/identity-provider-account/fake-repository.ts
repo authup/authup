@@ -8,6 +8,7 @@
 import { randomUUID } from 'node:crypto';
 import type { IQuery } from '@rapiq/core';
 import type { IdentityProviderAccount } from '@authup/core-kit';
+import { EntityConflictError } from '@authup/errors';
 import type { DeepPartial } from 'typeorm';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
@@ -15,7 +16,6 @@ import type {
     IdentityProviderAccountFindManyOptions,
     IdentityProviderIdentity,
 } from '../../../../../src/core/index.ts';
-import { IdentityProviderAccountAlreadyLinkedError } from '../../../../../src/core/index.ts';
 
 export class FakeIdentityProviderAccountRepository implements IIdentityProviderAccountRepository {
     public removeCalls: IdentityProviderAccount[] = [];
@@ -95,13 +95,16 @@ export class FakeIdentityProviderAccountRepository implements IIdentityProviderA
             return existing;
         }
 
-        // the unique (providerUserId, providerId) index the adapter translates
+        // the two unique indexes, (providerUserId, providerId) and
+        // (providerId, userId), reported the way the adapter reports them
         const taken = this.rows().some(
-            (account) => account.providerId === entity.providerId &&
-                account.providerUserId === entity.providerUserId,
+            (account) => account.providerId === entity.providerId && (
+                account.providerUserId === entity.providerUserId ||
+                account.userId === entity.userId
+            ),
         );
         if (taken) {
-            throw new IdentityProviderAccountAlreadyLinkedError();
+            throw new EntityConflictError();
         }
 
         return this.seed(entity as Partial<IdentityProviderAccount>);

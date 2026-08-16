@@ -48,4 +48,8 @@ export class FakeUserIdentityRepository implements IUserIdentityRepository {
     async saveOneWithEA(): Promise<User> {
         throw new Error('not implemented');
     }
+
+    async remove(user: User): Promise<void> {
+        this.users.delete(user.id);
+    }
 }

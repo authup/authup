@@ -66,10 +66,10 @@ export interface IIdentityProviderAccountRepository {
     findOneByProviderIdentity(identity: IdentityProviderIdentity): Promise<IdentityProviderAccount | null>;
 
     /**
-     * Throws `IdentityProviderAccountAlreadyLinkedError` when the row would
-     * violate the unique (providerUserId, providerId) index: the external
-     * identity is already linked (a concurrent writer beat the caller's
-     * own `findOneByProviderIdentity` check).
+     * Throws `EntityConflictError` (`@authup/errors`) when the row violates
+     * EITHER unique index, (providerUserId, providerId) or (providerId,
+     * userId): the driver does not tell them apart, so the caller
+     * classifies by re-reading the identity.
      */
     save(entity: DeepPartial<IdentityProviderAccount>): Promise<IdentityProviderAccount>;
 }
