@@ -10,6 +10,7 @@ import { PermissionName } from '@authup/core-kit';
 import { TranslatorTranslationAppKey, TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import {
     AEntityDelete,
+    AIdentityProviderIcon,
     AIdentityProviders,
     APagination,
     ASearch,
@@ -27,6 +28,7 @@ export default defineComponent({
         ATitle,
         APagination,
         ASearch,
+        AIdentityProviderIcon,
         AIdentityProviders,
         AEntityDelete,
         VCTimeago,
@@ -58,10 +60,6 @@ export default defineComponent({
             },
             {
                 namespace: TranslatorTranslationNamespace.FIELD,
-                key: TranslatorTranslationFieldKey.PRESET,
-            },
-            {
-                namespace: TranslatorTranslationNamespace.FIELD,
                 key: TranslatorTranslationFieldKey.CREATED_AT,
             },
             {
@@ -84,12 +82,6 @@ export default defineComponent({
             {
                 key: 'protocol',
                 label: translations.protocol,
-                headerClass: 'text-left',
-                cellClass: 'text-left',
-            },
-            {
-                key: 'preset',
-                label: translations.preset,
                 headerClass: 'text-left',
                 cellClass: 'text-left',
             },
@@ -149,6 +141,12 @@ export default defineComponent({
                 :columns="columns"
                 :busy="props.busy"
             >
+                <template #cell-name="{ row }">
+                    <span class="flex items-center gap-2">
+                        <AIdentityProviderIcon :entity="row" />
+                        {{ row.name }}
+                    </span>
+                </template>
                 <template #cell-createdAt="{ row }">
                     <VCTimeago :datetime="row.createdAt" />
                 </template>
