@@ -34,4 +34,8 @@ export class OAuth2LoginRequiredError extends OAuth2Error {
     static reauthenticationRequired() {
         return new OAuth2LoginRequiredError({ message: 'Re-authentication is required to continue.' });
     }
+
+    static providerUnavailable() {
+        return new OAuth2LoginRequiredError({ message: 'The identity provider is not available. Return to the application and start the login again.' });
+    }
 }

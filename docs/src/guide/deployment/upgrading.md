@@ -44,6 +44,43 @@ expected `{ code }`, and the HTTP client spread it into indexed body keys
 arrives without a code is now rejected with a `400` instead of an opaque
 upstream failure.
 
+### Federated login: completion hardening
+
+- A federated login must carry the authorization code request it completes.
+  `GET /identity-providers/:id/authorize-out` refuses a request without
+  `codeRequest` (`invalid_request`). SDK consumers building their own login
+  page pass it through the client:
+  `client.identityProvider.getAuthorizeUri(id, { codeRequest })`; the bare
+  `getAuthorizeUri(id)` URL no longer starts a login on its own.
+- The callback completes the request by redirecting the browser to the
+  client's own `redirect_uri` with `code` and `state` (RFC 6749). A refusal
+  after the callback lands on the hosted login page instead of a JSON body,
+  and a provider answering with `error` (the user cancelled) does the same.
+- A custom-scheme `redirect_uri` (`myapp://cb`, RFC 8252) is served through
+  an interstitial page that launches the app. Script-capable and local
+  schemes (`javascript:`, `data:`, `vbscript:`, `blob:`, `filesystem:`,
+  `file:`, `about:`) are refused everywhere: as a client redirect pattern, at
+  `/authorize`, and at the callback.
+- A `redirectUri` / `postLogoutRedirectUri` pattern carrying userinfo
+  (`https://user:pass@app/**`) is refused by the client validator, as is a
+  `redirect_uri` carrying one at `/authorize` and `/logout`. An existing
+  client row holding such a pattern cannot be saved again until the pattern
+  is fixed, and a provisioning file declaring one fails the boot with the
+  file path and the issue.
+- The pending-login state a federated login or an account link carries
+  moved to its own cache namespace, so a login or link started on the
+  previous version and completed after the upgrade is refused
+  (`invalid_request`, up to the 30 minute state lifetime); the person starts
+  it again. Relevant for a rolling upgrade over a shared Redis only.
+- The identity-provider form's read-only "Redirect URL" now shows the
+  callback (`/identity-providers/<id>/authorize-in`), the value to register
+  at the external provider. It used to show `authorize-out`, which is the
+  URL that starts a login, not the one the provider redirects back to.
+- A substituted auth console package (`AUTH_CONSOLE_PATH`) must be built
+  against render contract version 2, which adds the interstitial route
+  `/identity-providers/:id/authorize-in` and its `IdentityProviderCallbackPayload`;
+  a package exporting an older `CONTRACT_VERSION` is refused at boot.
+
 ### `auth_sessions.client_id` is the client-subject foreign key only
 
 One browser session legitimately serves several applications (the hosted auth

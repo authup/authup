@@ -85,10 +85,12 @@ describe('adapters/http/ui (console package contracts)', () => {
         });
 
         it('should treat a missing export as version 1', async () => {
+            // the shape every package built before the constant existed
+            // implements, and one this authup no longer accepts
             const root = createAuthConsolePackage('export function render() { return [\'\', \'\']; }\n');
 
             await expect(bindConsolePackages({ authConsolePath: root }))
-                .resolves.toBeUndefined();
+                .rejects.toThrow(/version 1, but this authup requires 2/);
         });
 
         it('should reject a mismatched contract version', async () => {
@@ -97,7 +99,7 @@ describe('adapters/http/ui (console package contracts)', () => {
             );
 
             await expect(bindConsolePackages({ authConsolePath: root }))
-                .rejects.toThrow(/version 99, but this authup requires 1/);
+                .rejects.toThrow(/version 99, but this authup requires 2/);
         });
 
         it('should reject a bundle without a render function', async () => {

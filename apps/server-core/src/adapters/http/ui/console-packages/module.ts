@@ -26,7 +26,7 @@ import type { ConsolePackageOptions } from './types.ts';
  * Bump alongside `apps/client-auth-console/src/contract.ts` whenever a
  * change breaks a package built against the previous shape.
  */
-export const AUTH_CONSOLE_CONTRACT_VERSION = 1;
+export const AUTH_CONSOLE_CONTRACT_VERSION = 2;
 
 /**
  * Compile-time link to the value this constant mirrors.

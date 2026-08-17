@@ -1,5 +1,4 @@
 <script lang="ts">
-import { base64URLEncode } from '@authup/kit';
 import type { PropType, Ref } from 'vue';
 import {
     computed,
@@ -345,16 +344,8 @@ export default defineComponent({
             }
         };
 
-        const buildIdentityProviderURL = (id: string) => {
-            let authorizeURL = apiClient.identityProvider.getAuthorizeUri(id);
-
-            if (props.codeRequest) {
-                const serialized = base64URLEncode(JSON.stringify(props.codeRequest));
-                authorizeURL += `?codeRequest=${serialized}`;
-            }
-
-            return authorizeURL;
-        };
+        const buildIdentityProviderURL = (id: string) => apiClient.identityProvider
+            .getAuthorizeUri(id, { codeRequest: props.codeRequest });
 
         // useSubmitButton from @vuecs/forms returns a computed binding
         // for VCButton ({ type: 'submit', label, iconLeft, color,
@@ -532,7 +523,13 @@ export default defineComponent({
                         />
                     </template>
 
+                    <!--
+                      A federated login completes an authorization code request:
+                      authorize-out refuses to start one without it (#3457), so a
+                      provider button is only offered when a request is at hand.
+                    -->
                     <AIdentityProviders
+                        v-if="codeRequest"
                         ref="identityProviderRef"
                         :query="identityProviderQuery"
                         :footer="false"

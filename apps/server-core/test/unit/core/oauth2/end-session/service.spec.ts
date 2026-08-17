@@ -417,6 +417,21 @@ describe('OAuth2EndSessionService', () => {
         expect(result.state).toBeUndefined();
     });
 
+    it('should DROP a post_logout_redirect_uri carrying userinfo', async () => {
+        // it would match once canonicalized (userinfo dropped), but the
+        // Location is built from the raw value
+        const service = buildService(async () => validPayload);
+        const result = await service.verify({
+            id_token_hint: 'valid',
+            client_id: clientId,
+            post_logout_redirect_uri: 'https://user:secret@app.example.com/after-logout',
+            state: 'xyz',
+        });
+
+        expect(result.redirectUri).toBeUndefined();
+        expect(result.state).toBeUndefined();
+    });
+
     it('should DROP a non-http(s) post_logout_redirect_uri', async () => {
         const service = buildService(async () => validPayload);
         const result = await service.verify({

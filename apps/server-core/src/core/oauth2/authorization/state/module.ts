@@ -24,13 +24,13 @@ export class OAuth2AuthorizationStateManager implements IOAuth2AuthorizationStat
     }
 
     async verify(state: string, input: Partial<OAuth2AuthorizationState>): Promise<OAuth2AuthorizationState> {
-        const payload = await this.repository.findOneById(state);
+        // The pop is the replay guard: a state is consumed by whichever
+        // callback presents it first, whether or not it then passes the
+        // binding checks below.
+        const payload = await this.repository.popOneById(state);
         if (!payload) {
             throw OAuth2RequestError.stateInvalid();
         }
-
-        // avoid replay attacks
-        await this.repository.remove(state);
 
         if (
             payload.ip &&

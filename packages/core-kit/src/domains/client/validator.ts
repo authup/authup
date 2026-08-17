@@ -8,7 +8,7 @@
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
-import { ValidatorGroup, patternHasGlobstarInAuthority } from '@authup/kit';
+import { ValidatorGroup, isSafeRedirectURLScheme, patternHasGlobstarInAuthority } from '@authup/kit';
 import type { Client } from './entity';
 import { isClientNameValid } from './helpers';
 import { ClientAuthMethod, ClientTokenBindingMethod } from './constants';
@@ -16,7 +16,13 @@ import { ClientAuthMethod, ClientTokenBindingMethod } from './constants';
 /**
  * Schema for a comma separated list of redirect patterns.
  *
- * Each element must be a URL, and none may place a `**` in its authority.
+ * Each element must be a URL with a scheme a redirect may carry
+ * (`isSafeRedirectURLScheme`: no `javascript:` and friends, since a
+ * non-http(s) target is navigated client-side), none may place a `**` in
+ * its authority, and none may carry userinfo: the matcher canonicalizes a pattern too, dropping
+ * its userinfo, so `https://u:p@app/**` would silently accept the bare origin
+ * while reading as if it required credentials. Refusing it makes the
+ * registration say what it matches.
  * `**` matches the rest of the value outright, so `https://**.example.com/**`
  * reads as "any subdomain of example.com" but accepts every origin, which
  * would make the allowlist meaningless. A single `*` stays supported: the
@@ -47,6 +53,23 @@ function buildRedirectPatternSchema(name: string) {
                         input: url,
                         code: 'custom',
                         message: `The ${name} must not use ** in the host, it would match every origin. Use a single * for a host wildcard.`,
+                    });
+                }
+
+                const parsed = new URL(url);
+                if (parsed.username || parsed.password) {
+                    ctx.issues.push({
+                        input: url,
+                        code: 'custom',
+                        message: `The ${name} must not carry userinfo.`,
+                    });
+                }
+
+                if (!isSafeRedirectURLScheme(url)) {
+                    ctx.issues.push({
+                        input: url,
+                        code: 'custom',
+                        message: `The ${name} scheme is not allowed.`,
                     });
                 }
             }

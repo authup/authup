@@ -6,11 +6,12 @@
  */
 
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
-import { 
-    ValidatorGroup, 
-    base64URLDecode, 
-    isObject, 
-    isUUID, 
+import {
+    ValidatorGroup,
+    base64URLDecode,
+    isObject,
+    isSafeRedirectURLScheme,
+    isUUID,
 } from '@authup/kit';
 import {
     DBody,
@@ -45,15 +46,16 @@ import {
     IdentityType,
     PermissionName,
     SessionAuthMethod,
+    buildIdentityProviderAuthorizeCallbackPath,
     isOAuth2IdentityProvider,
     isOpenIDIdentityProvider,
 } from '@authup/core-kit';
-import { BadRequestError, EntityInactiveError, EntityNotFoundError } from '@authup/errors';
+import { BadRequestError, EntityNotFoundError, InternalError } from '@authup/errors';
 import type { Logger } from '@authup/server-kit';
 import { describeError, resolveURL } from '../../../../../utils/index.ts';
 import { useRequestQuery } from '@routup/basic/query';
 import { readRequestBody } from '@routup/basic/body';
-import { OAuth2ErrorCode, OAuth2RequestError } from '@authup/specs';
+import { OAuth2ErrorCode, OAuth2RequestError, isOAuth2Error } from '@authup/specs';
 import type {
     EntityCollectionResponse,
     EntityRecordResponse,
@@ -75,6 +77,7 @@ import type {
     IOAuth2AuthorizationStateManager,
     IRealmRepository,
     IdentityProviderIdentity,
+    OAuth2AuthorizationCodeRequestVerificationResult,
     OAuth2AuthorizationState,
     OAuth2AuthorizationStateLink,
 } from '../../../../../core/index.ts';
@@ -99,6 +102,8 @@ import {
     useRequestPermissionEvaluator,
 } from '../../../request/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
+import type { IdentityProviderCallbackPayload } from '@authup/client-auth-console';
+import { renderAuthConsolePage } from '../../../ui/index.ts';
 import type { IdentityProviderControllerContext, IdentityProviderControllerOptions } from './types.ts';
 
 @DTags('identity')
@@ -289,34 +294,44 @@ export class IdentityProviderController {
             throw new BadRequestError('Only an identity-provider based on the oauth protocol supports authorize redirect.');
         }
 
-        const authenticator = this.buildProviderAuthenticator(entity);
-
-        let codeRequest: OAuth2AuthorizationCodeRequest | undefined;
-        const query = useRequestQuery(event);
-        if (typeof query.codeRequest === 'string') {
-            let codeRequestDecoded: OAuth2AuthorizationCodeRequest;
-
-            try {
-                codeRequestDecoded = JSON.parse(base64URLDecode(query.codeRequest));
-            } catch {
-                throw OAuth2RequestError.malformed('The code request is malformed and can not be parsed.');
-            }
-
-            const codeRequestValidated = await this.codeRequestValidator.run(codeRequestDecoded);
-            const data = await this.codeRequestVerifier.verify(codeRequestValidated);
-
-            if (
-                data.client.realmId &&
-                entity.realmId &&
-                entity.realmId !== data.client.realmId
-            ) {
-                throw OAuth2RequestError.malformed('The provider and client realm do not match.');
-            }
-
-            codeRequest = data.data;
+        // Refused here as well as at the callback, so a disabled provider
+        // costs no provider round trip.
+        if (!entity.enabled) {
+            throw new BadRequestError('The identity provider is not enabled.');
         }
 
-        const state = await this.saveAuthorizationState(event, { codeRequest });
+        // A federated login completes an RP's authorization request: the
+        // callback mints a code bound to that request and delivers it to the
+        // request's redirect_uri. Without one there is nowhere to deliver a
+        // code (the callback used to mint an unbound one and hand it to the
+        // server root, issue #3457), so the login must not start.
+        const query = useRequestQuery(event);
+        if (typeof query.codeRequest !== 'string') {
+            throw OAuth2RequestError.malformed('A federated login requires an authorization code request.');
+        }
+
+        let codeRequestDecoded: OAuth2AuthorizationCodeRequest;
+
+        try {
+            codeRequestDecoded = JSON.parse(base64URLDecode(query.codeRequest));
+        } catch {
+            throw OAuth2RequestError.malformed('The code request is malformed and can not be parsed.');
+        }
+
+        const codeRequestValidated = await this.codeRequestValidator.run(codeRequestDecoded);
+        const data = await this.codeRequestVerifier.verify(codeRequestValidated);
+
+        if (
+            data.client.realmId &&
+            entity.realmId &&
+            entity.realmId !== data.client.realmId
+        ) {
+            throw OAuth2RequestError.malformed('The provider and client realm do not match.');
+        }
+
+        const authenticator = this.buildProviderAuthenticator(entity);
+
+        const state = await this.saveAuthorizationState(event, { codeRequest: data.data });
 
         return sendRedirect(event, authenticator.buildRedirectURL({ state }));
     }
@@ -373,16 +388,34 @@ export class IdentityProviderController {
             return this.completeLink(event, entity, data, link);
         }
 
+        // authorize-out no longer mints a login state without a code request;
+        // this refuses the ones minted before that (issue #3457).
+        if (!data.codeRequest) {
+            throw OAuth2RequestError.malformed('The state carries no authorization code request.');
+        }
+
         if (
             entity.realmId &&
-            data.codeRequest &&
             data.codeRequest.realm_id &&
             data.codeRequest.realm_id !== entity.realmId
         ) {
             throw OAuth2RequestError.malformed('The provider and client realm do not match.');
         }
 
-        const { code } = useRequestQuery(event);
+        const { code, error } = useRequestQuery(event);
+
+        // RFC 6749 section 4.1.2.1: a provider answers a refused or failed
+        // authorization (the person cancelled at the provider, the provider
+        // is down) with `error` and no code. A top-level browser navigation
+        // like every other refusal here, so it lands on the hosted login
+        // again. Nothing of the provider's answer is echoed: whoever controls
+        // the provider's redirect shapes those values.
+        if (typeof error === 'string' && error.length > 0) {
+            // JSON-quoted: a raw query value must not be able to forge a log line
+            this.logger?.info(`The identity provider ${entity.id} answered the authorization with ${JSON.stringify(error.slice(0, 64))}.`);
+
+            return sendRedirect(event, this.buildHostedAuthorizeURL(data.codeRequest).href);
+        }
 
         if (typeof code !== 'string' || code.length === 0) {
             throw new BadRequestError('The authorization code is missing.');
@@ -401,26 +434,67 @@ export class IdentityProviderController {
         // throwing `redirectUriMismatch`; `redirectUriVerified` is the flag
         // that survives to report it. Nothing else on this path knows whether
         // the uri was ever matched.
-        const verified = data.codeRequest ?
-            await this.codeRequestVerifier.verify(data.codeRequest) :
-            undefined;
+        //
+        // This is a top-level browser navigation, so a refusal has to land on
+        // a page rather than a JSON body (issue #3458). The hosted authorize
+        // page re-runs this verifier on the same code request and renders the
+        // same refusal, so the bounce carries no marker and echoes nothing.
+        // A server failure is not a refusal and keeps throwing.
+        let verified : OAuth2AuthorizationCodeRequestVerificationResult;
+        try {
+            verified = await this.codeRequestVerifier.verify(data.codeRequest);
+        } catch (e) {
+            if (!isOAuth2Error(e)) {
+                throw e;
+            }
+
+            return sendRedirect(event, this.buildHostedAuthorizeURL(data.codeRequest).href);
+        }
+
+        // A stored code request always carries a redirect_uri (that mount is
+        // required in OAuth2AuthorizationCodeRequestValidator, unlike
+        // `state`), so a verified request is a verified redirect target. The
+        // guard keeps the redirect decision resting on the match itself.
+        const redirectUri = verified.data.redirect_uri;
+        if (!verified.redirectUriVerified || !redirectUri) {
+            throw OAuth2RequestError.malformed('The redirect_uri was not verified.');
+        }
+
+        // A non-http(s) target is navigated from the interstitial page below,
+        // which `location.assign`s it and renders it as an href, so a
+        // script-capable scheme would execute on the IdP origin. The client
+        // validator and the code-request verifier both refuse such a scheme;
+        // this guard fails closed should either gap, and it runs here, before
+        // the provider's single-use code is spent, a user provisioned or a
+        // code minted.
+        if (!isSafeRedirectURLScheme(redirectUri)) {
+            throw new InternalError('The redirect_uri scheme is not allowed.');
+        }
 
         // The provider must still be enabled, the rule the link path already
         // applies. Disabling a provider has to stop logins in flight too,
-        // otherwise it only stops new ones.
+        // otherwise it only stops new ones. The hosted page maps the marker
+        // onto a neutral "provider not available" error.
         if (!entity.enabled) {
-            throw new BadRequestError('The identity provider is not enabled.');
+            const url = this.buildHostedAuthorizeURL(verified.data);
+            url.searchParams.set('error', OAuth2ErrorCode.LOGIN_REQUIRED);
+
+            return sendRedirect(event, url.href);
         }
 
-        const authenticator = this.buildProviderAuthenticator(entity, { clientId: verified?.data.client_id });
+        const authenticator = this.buildProviderAuthenticator(entity, { clientId: verified.data.client_id });
 
         const user = await authenticator.authenticate({ code });
 
         // The local login path refuses an inactive user (EntityInactiveError),
         // and a federated login must not be the way around that. Only reachable
         // for an already-linked user: a first login provisions an active one.
+        // Bounced as a denial, like the access policy below.
         if (!user.active) {
-            throw new EntityInactiveError({ entity: 'user' });
+            const url = this.buildHostedAuthorizeURL(verified.data);
+            url.searchParams.set('error', OAuth2ErrorCode.ACCESS_DENIED);
+
+            return sendRedirect(event, url.href);
         }
 
         const realm = await this.realmRepository.resolve(entity.realmId, true);
@@ -431,7 +505,7 @@ export class IdentityProviderController {
         // person is standing in front of the browser and the card is the only
         // surface that can tell them why. A policy id with no wired evaluator
         // denies (fail closed).
-        if (verified?.client.accessPolicyId) {
+        if (verified.client.accessPolicyId) {
             let allowed = false;
 
             const subject = toIdentityPolicyData({
@@ -463,7 +537,7 @@ export class IdentityProviderController {
         // (`PKCE is required for public clients`), which is every console
         // client.
         const authorizationCode = await this.codeIssuer.issue(
-            verified?.data ?? { response_type: 'code' },
+            verified.data,
             {
                 type: IdentityType.USER,
                 data: {
@@ -485,20 +559,20 @@ export class IdentityProviderController {
             scope: EventScope.OAUTH2,
             name: EventName.AUTHORIZE,
             refType: EventRefType.CLIENT,
-            refId: verified?.data.client_id ?? null,
-            clientId: verified?.data.client_id ?? null,
+            refId: verified.data.client_id ?? null,
+            clientId: verified.data.client_id ?? null,
             sessionId: null,
             actorType: IdentityType.USER,
             actorId: user.id,
             actorName: user.name,
-            realmId: verified?.data.realm_id ?? realm.id,
+            realmId: verified.data.realm_id ?? realm.id,
             requestIpAddress: getRequestIP(event) ?? null,
             requestUserAgent: getRequestHeader(event, 'user-agent') ?? null,
             data: {
                 reason: 'federated',
                 providerId: entity.id,
                 providerName: entity.name,
-                ...(verified?.data.scope ? { scope: verified.data.scope } : {}),
+                ...(verified.data.scope ? { scope: verified.data.scope } : {}),
             },
         });
 
@@ -506,24 +580,43 @@ export class IdentityProviderController {
         // It is bound to that client_id and that redirect_uri, so the RP is the
         // only party able to redeem it. Handing it to any other page strands
         // the login there (issue #3446).
-        if (verified?.redirectUriVerified && verified.data.redirect_uri) {
-            const url = new URL(verified.data.redirect_uri);
-            url.searchParams.set('code', authorizationCode.id);
-            if (verified.data.state) {
-                url.searchParams.set('state', verified.data.state);
-            }
+        const url = new URL(redirectUri);
+        url.searchParams.set('code', authorizationCode.id);
+        if (verified.data.state) {
+            url.searchParams.set('state', verified.data.state);
+        }
 
+        if (url.protocol === 'http:' || url.protocol === 'https:') {
             return sendRedirect(event, url.href);
         }
 
-        // Only reachable when the state carried no code request at all: a
-        // stored one always has a redirect_uri, because that mount is required
-        // in OAuth2AuthorizationCodeRequestValidator (unlike `state`), so a
-        // verified request is always a verified redirect target.
-        const url = new URL(this.options.baseURL);
-        url.searchParams.set('code', authorizationCode.id);
+        // routup's sendRedirect allows http(s) only. A native app's
+        // custom-scheme redirect_uri (RFC 8252, matched verbatim by
+        // isSimpleURLMatch) is navigated client-side from an interstitial
+        // page instead; the target is the verified redirect_uri and nothing
+        // else (its scheme was checked above), so the page never reaches an
+        // unverified one (issue #3459).
+        const payload : IdentityProviderCallbackPayload = {
+            redirect: url.href,
+            // The browser stays on the consumed callback URL, so a reload
+            // would re-run the callback against a popped state. The page
+            // swaps the history entry for this first, so a reload lands on
+            // the hosted login instead.
+            authorizeUrl: this.buildHostedAuthorizeURL(verified.data).href,
+            client: {
+                id: verified.client.id,
+                name: verified.client.name,
+                displayName: verified.client.displayName,
+            },
+        };
 
-        return sendRedirect(event, url.href);
+        return renderAuthConsolePage(event, {
+            url: buildIdentityProviderAuthorizeCallbackPath(entity.id),
+            payload: {
+                config: { baseURL: this.options.baseURL },
+                data: payload,
+            },
+        });
     }
 
     // ---------------------------------------------------------

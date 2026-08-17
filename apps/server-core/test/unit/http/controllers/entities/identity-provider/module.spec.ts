@@ -13,10 +13,13 @@ import {
     it,
 } from 'vitest';
 import {
+    ScopeName,
     buildIdentityProviderAuthorizeCallbackPath,
     buildIdentityProviderAuthorizePath,
 } from '@authup/core-kit';
+import { base64URLEncode } from '@authup/kit';
 import {
+    createFakeClient,
     createFakeLdapIdentityProvider,
     createFakeOAuth2IdentityProvider,
     expectPropertiesEqualToSrc,
@@ -115,9 +118,22 @@ describe('src/http/controllers/identity-provider', () => {
     });
 
     it('should build authorize url', async () => {
+        // a federated login completes an RP's authorization request, so
+        // authorize-out requires one (issue #3457)
+        const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        const { data: client } = await suite.client.client.create(createFakeClient());
+        await suite.client.clientScope.create({ scopeId: scope.id, clientId: client.id });
+
+        const codeRequest = base64URLEncode(JSON.stringify({
+            response_type: 'code',
+            client_id: client.id,
+            redirect_uri: 'https://example.com/redirect',
+            scope: ScopeName.GLOBAL,
+        }));
+
         const response = await suite.client
             .get(
-                buildIdentityProviderAuthorizePath(oAuth2IdentityProvider.id!),
+                `${buildIdentityProviderAuthorizePath(oAuth2IdentityProvider.id!)}?codeRequest=${codeRequest}`,
                 { redirect: 'manual' },
             );
 

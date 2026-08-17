@@ -29,7 +29,18 @@ import type { IClient } from '@authup/core-http-kit';
  * against an older contract would otherwise fail per request on
  * `/authorize` rather than at boot with an actionable message.
  */
-export const CONTRACT_VERSION = 1;
+export const CONTRACT_VERSION = 2;
+
+/*
+ * History:
+ *
+ * 2 - the host renders `/identity-providers/:id/authorize-in` (the federated
+ *     callback's interstitial for a non-http(s) redirect_uri) with a payload
+ *     of `{ redirect, authorizeUrl, client }`; a package without that route
+ *     renders an empty view for such a completion.
+ * 1 - the workflow pages (`/authorize`, `/register`, `/activate`,
+ *     `/password-forgot`, `/password-reset`, `/logout`).
+ */
 
 export type HydrationPayload<T extends Record<string, any> = Record<string, any>> = {
     config: {
@@ -43,6 +54,23 @@ export type HydrationPayload<T extends Record<string, any> = Record<string, any>
      * and consumed once by the hydrating client.
      */
     hydration?: Record<string, any>
+};
+
+/**
+ * The payload of `/identity-providers/:id/authorize-in`, the federated
+ * callback's interstitial for a non-http(s) redirect_uri (contract 2): the
+ * verified target carrying the code, the hosted authorize URL of the same
+ * code request (the page swaps the consumed callback URL for it in the
+ * history), and the client's display data.
+ */
+export type IdentityProviderCallbackPayload = {
+    redirect: string,
+    authorizeUrl: string,
+    client: {
+        id: string,
+        name: string,
+        displayName: string | null
+    }
 };
 
 export type RenderContext = {

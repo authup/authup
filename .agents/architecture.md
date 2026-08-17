@@ -736,12 +736,16 @@ not by client-admin-console:
 
 - **Routes**: `/authorize`, `/register`, `/activate`, `/password-forgot`,
   `/password-reset` — each `GET` serves SSR HTML while `POST` on the same
-  path remains the JSON API. The render plumbing is shared:
+  path remains the JSON API (plus `/logout` and the federated callback's
+  interstitial, `/identity-providers/:id/authorize-in`, see *Federated Login
+  Completion*). The render plumbing is shared:
   `renderAuthConsolePage(event, { url, payload })` in
   `adapters/http/ui/auth-console/module.ts` (JIT vs dist, template,
   manifest, preload links, headers), composing the cross-console helpers
   in `adapters/http/ui/shared/` (cookie-derived html attrs, security
-  headers, asset rebasing). The payload reaches the client as
+  headers incl. `Cache-Control: no-store` on every served console page, since
+  they are login pages and the interstitial carries a fresh authorization
+  code, asset rebasing). The payload reaches the client as
   `window.__AUTHUP__` — the ONE reserved window global every served
   console shares (Nuxt's `__NUXT__` model; each console is its own
   document, so the shapes never coexist — the account console injects its
@@ -1598,7 +1602,10 @@ the consoles ship from this repo with linked versions, so the assert would
 compare a constant against itself, and loading the SSR bundle at boot would
 turn a missing build into a failed start instead of an actionable page
 error. `@authup/client-auth-console` exports `CONTRACT_VERSION` as a
-runtime value alongside `render()` (missing = version 1); the account
+runtime value alongside `render()` (missing = version 1; version 2 added the
+federated callback's interstitial route and payload, so a package built
+against 1 is refused at boot rather than rendering an empty view for a
+custom-scheme completion; the history lives in `src/contract.ts`); the account
 console's contract is the `<!--account-config-->` marker, whose absence
 silently degrades the SPA to same-origin API derivation. **Fail-closed**,
 unlike the theme: a replacement owns the prompt ladder, PKCE/`state`
@@ -2113,7 +2120,9 @@ Include authorization*.
 
 Two runtime services. **server-core is the IdP origin** — the OAuth2/OIDC
 protocol surface plus the hosted SSR auth pages (`/authorize`, `/register`,
-`/activate`, `/password-forgot`, `/password-reset`, `/logout`). Those pages
+`/activate`, `/password-forgot`, `/password-reset`, `/logout`, and the
+federated callback's interstitial at `/identity-providers/:id/authorize-in`).
+Those pages
 are **architectural, not incidental**, and must stay served by server-core
 (since plan 083 their Vue app lives in its own workspace,
 `apps/client-auth-console`, but that is an ownership/packaging split only —
@@ -2236,7 +2245,22 @@ no registered `redirectUri` patterns cannot use `/authorize` at all —
 previously its `data.redirect_uri` went unchecked (any value passed, merely
 flagged `redirectUriVerified=false`), letting a misconfigured client issue
 codes to arbitrary attacker-supplied URIs. `redirectUriVerified` is now `false`
-only when the request itself carries no `redirect_uri`.
+only when the request itself carries no `redirect_uri`. A `redirect_uri` that
+parses as a URL carrying userinfo (`https://u:p@app/cb`) is refused with
+`invalid_request` BEFORE the pattern match (#3455): `isSimpleURLMatch`
+canonicalizes the value and drops the userinfo, while all three redirect
+sites (`AuthorizeController.confirm`, the federated callback, and the
+end-session `post_logout_redirect_uri` behind `LogoutController`, whose
+`OAuth2EndSessionService.isValidPostLogoutRedirect` now drops such a
+candidate too) build the
+`Location` from the raw string, so the credential blob used to ride along.
+The matched value is now the navigated value. `ClientValidator` refuses to
+register a `redirectUri` / `postLogoutRedirectUri` pattern carrying userinfo
+for a different reason: `canonicalizePattern` drops a PATTERN's userinfo as
+well, so `https://u:p@app/**` would silently accept the bare origin while
+reading as if it required credentials; refusing it makes the registration say
+what it matches. Custom-scheme and unparsable values keep their previous
+handling (verbatim match, and mismatch).
 
 ### OIDC prompt surface & id_token claims (plan 041 PR B)
 
@@ -2698,8 +2722,11 @@ a shipped bug (issue #3446):
   that can redeem it. The callback used to hand it to the hosted page instead,
   where the router guard's `store.exchangeAuthorizationCode(code)` answered 401
   `invalid_client` (`/token` authenticates a client unconditionally, and the
-  auth console deliberately holds no client row). The guard swallows that
-  error, so a federated login died silently on a re-rendered login form.
+  auth console deliberately holds no client row). The guard swallowed that
+  error, so a federated login died silently on a re-rendered login form. No
+  producer sends a `code` to a hosted page anymore, so that guard branch is
+  gone (#3459): the auth console's `router.beforeEach` only resolves the
+  session.
 - **The WHOLE verified request reaches `codeIssuer.issue`,** never a
   hand-picked subset. `code_challenge` / `code_challenge_method`, `nonce` and
   `acr_values` all ride the code. A code that lost its challenge cannot be
@@ -2725,18 +2752,103 @@ until the exchange has resolved the external identity, so an inactive one is
 refused after the code was spent. It still gets no authup code, which is the
 part that matters.
 
+**Refusals bounce to the hosted page, never as JSON (#3458).** The callback is
+a top-level browser navigation at the end of a login, so once the state is
+verified and a code request is known, every refusal is a 302 to
+`buildHostedAuthorizeURL(codeRequest)` (the original request rides along, the
+page re-renders it), never a redirect carrying `code`:
+
+- a code-request re-verification failure (client deactivated / unknown, grant
+  allowlist, scopes, `redirect_uri` mismatch, userinfo) redirects with NO
+  marker. `AuthorizeController.serve()` re-runs the same verifier on the same
+  request and renders the same refusal, so nothing is echoed. Only an
+  `OAuth2Error` from the verifier is bounced; anything else is a server
+  failure and keeps throwing;
+- a disabled provider redirects with `error=login_required`, which `serve()`
+  maps onto `OAuth2LoginRequiredError.providerUnavailable()` ("The identity
+  provider is not available. Return to the application and start the login
+  again."; the kit's `Authorize.vue` renders a payload error as the terminal
+  `AuthorizeText` card, no form and no links, so the copy must not promise
+  one);
+- an inactive user redirects with `error=access_denied` (the existing mapping,
+  the existing neutral text), like the access-policy denial;
+- a provider answering with `error` instead of a code (RFC 6749 section
+  4.1.2.1: the person cancelled at the provider, or it failed) redirects with
+  NO marker, so the person is back on the login page; nothing of the
+  provider's `error` / `error_description` is echoed, since whoever controls
+  the provider's redirect shapes those values.
+
+The marker set `serve()` recognizes is CLOSED (`access_denied`,
+`login_required`); any other `error` value is ignored, and the mapped text is
+always server-side, never request-derived. Failures that are not refusals (the
+provider's token endpoint failing, the state invalid, a callback carrying
+neither `code` nor `error`) keep their JSON answer: a 502 for the upstream
+failure, 400 for the rest.
+
+The `state` both callbacks (login and account link) present is consumed by
+an atomic pop (`IOAuth2AuthorizeStateRepository.popOneById`, `cache.pop`, the
+same primitive the authorization-code repository uses), so of two callbacks
+carrying one state only the first obtains the payload; the ip / user-agent
+checks run on the popped payload, and a state failing them is gone as well
+(#3456). The entries live under `CacheOAuth2Prefix.AUTHORIZATION_STATE`; they
+used to share the authorization-code namespace, which let either repository
+pop the other's entries.
+
 The hosted page is not part of this completion, so consent, the MFA challenge
 and the prompt ladder do not run for a federated login. Both exclusions are
 deliberate and predate this (see *Intentional enforcement boundaries* and
 `.agents/references/authentik.md`): the upstream provider is the trusted
-authentication. The access-policy denial is the one case that still bounces to
-the hosted page, because the person is at the browser and the denial card is
-the only surface that can say why.
+authentication. The access-policy denial bounces to the hosted page like every
+other refusal (above), because the person is at the browser and the denial
+card is the only surface that can say why.
 
-A request carrying no `redirect_uri` keeps the older hosted-page and
-`baseURL` fallbacks. Such a request could never complete anyway
-(`authorizeInner` refuses a code request without one), so the fallbacks carry
-the previous shape rather than inventing a destination.
+**A custom-scheme `redirect_uri` lands on an interstitial page (#3459).**
+`isSimpleURLMatch` matches a native app's `myapp://cb` (RFC 8252) verbatim,
+so it verifies, but routup's `sendRedirect` allows http(s) only and the
+callback used to fail after the provider's single-use code was spent. Only an
+http(s) target is `sendRedirect`ed; any other verified target is rendered as
+the callback response through `renderAuthConsolePage(event, { url:
+buildIdentityProviderAuthorizeCallbackPath(id), payload })`, the payload
+carrying `{ redirect: <target with code+state>, authorizeUrl: <hosted
+authorize URL for the same code request>, client: <ClientSummary> }`
+(render-contract version 2). The auth console page
+(`src/pages/identity-provider-callback.vue`, route
+`/identity-providers/:id/authorize-in`, since the browser URL stays the
+callback URL) first `history.replaceState`s the consumed callback URL away
+for `authorizeUrl` (a reload or tab restore would otherwise re-run the
+callback against a popped state and show JSON), then calls
+`window.location.assign(redirect)` on mount, and always renders an "Open
+application" button to the target, because a browser may require a user
+gesture before launching an external protocol. The target is the verified
+`redirect_uri` and nothing else, so the page is unreachable with an
+unverified one. **The scheme is denylisted at three layers**
+(`isSafeRedirectURLScheme` in `@authup/kit`: `javascript:`, `data:`,
+`vbscript:`, `blob:`, `filesystem:`, `file:`, `about:` refused; http(s) and
+RFC 8252 custom schemes pass): `ClientValidator` refuses to register such a pattern, the
+code-request verifier refuses such a `redirect_uri` with `invalid_request`,
+and the callback fails closed (throws) should either gap, right after the
+`redirectUriVerified` check and before the provider's code is spent or
+anything is minted, because the page `location.assign`s the target and
+renders it as an href, which on a script-capable scheme is script execution
+on the IdP origin (the kit store cookies are JS-readable). The payload shape
+is the exported `IdentityProviderCallbackPayload` (`src/contract.ts`), which
+server-core type-imports like the rest of the render contract. Copy: `authupClient` `RETURNING_TO_APP` /
+`OPEN_APP`.
+
+**A federated login without a code request does not exist (#3457).**
+`authorize-out` refuses to start one (`invalid_request`, before any provider
+round trip; it refuses a disabled provider up front for the same reason), and
+the callback refuses a login state that carries none (the
+backstop for states minted before the change; the account-link branch is
+dispatched before it and is unaffected). The former fallback minted a code from
+`{ response_type: 'code' }` and redirected to the server root: that code was
+bound to no `client_id`, `redirect_uri` or `code_challenge`, so
+`OAuth2AuthorizationCodeVerifier` skipped every binding check for it and any
+confidential client could have redeemed it. The kit's `LoginForm` renders its
+identity-provider list only when it holds a `codeRequest`; a button leading to
+a guaranteed 400 is worse than no button. The hosted `/authorize` page always
+passes one; a host embedding `ALoginForm` without one gets the password login
+alone.
 
 ## Federated Identity Claims
 

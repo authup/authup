@@ -222,6 +222,13 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
             return false;
         }
 
+        // The matcher canonicalizes the candidate (userinfo dropped) while the
+        // redirect is built from the raw value, so a credential blob would
+        // ride the Location header (#3455).
+        if (parsed.username || parsed.password) {
+            return false;
+        }
+
         if (!registered) {
             return false;
         }

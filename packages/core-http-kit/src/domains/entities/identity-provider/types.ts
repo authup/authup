@@ -7,7 +7,7 @@
 
 import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
 
-import type { IdentityProvider, IdentityProviderAccount } from '@authup/core-kit';
+import type { IdentityProvider, IdentityProviderAccount, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 
 // Mirrors `IdentityProviderValidator` mounts in @authup/core-kit. IdPs carry per-protocol
 // attributes (e.g. clientId/clientSecret for OAuth2) handled by an attributes validator
@@ -41,8 +41,17 @@ export type IdentityProviderLinkConfirmPayload = {
     handle: string,
 };
 
+export type IdentityProviderAuthorizeUriOptions = {
+    codeRequest?: OAuth2AuthorizationCodeRequest
+};
+
 export interface IIdentityProviderAPI extends IEntityAPI<IdentityProvider, IdentityProviderCreatePayload, IdentityProviderUpdatePayload> {
-    getAuthorizeUri(id: IdentityProvider['id']) : string;
+    /**
+     * The URL that starts a federated login through the provider. A login
+     * needs the authorization code request it completes; without one the
+     * server refuses to start it (`invalid_request`).
+     */
+    getAuthorizeUri(id: IdentityProvider['id'], options?: IdentityProviderAuthorizeUriOptions) : string;
     createOrUpdate(idOrName: string, data: IdentityProviderSavePayload) : Promise<EntityRecordResponse<IdentityProvider>>;
     createLinkRequest(id: IdentityProvider['id']) : Promise<IdentityProviderLinkRequestResponse>;
     confirmLinkRequest(id: IdentityProvider['id'], handle: string) : Promise<EntityRecordResponse<IdentityProviderAccount>>;

@@ -22,18 +22,16 @@ import type {
 class FakeStateRepository implements IOAuth2AuthorizeStateRepository {
     private store = new Map<string, OAuth2AuthorizationState>();
 
-    async findOneById(id: string): Promise<OAuth2AuthorizationState | null> {
-        return this.store.get(id) ?? null;
-    }
-
     async insert(data: OAuth2AuthorizationState): Promise<string> {
         const id = randomUUID();
         this.store.set(id, data);
         return id;
     }
 
-    async remove(id: string): Promise<void> {
+    async popOneById(id: string): Promise<OAuth2AuthorizationState | null> {
+        const payload = this.store.get(id) ?? null;
         this.store.delete(id);
+        return payload;
     }
 
     has(id: string): boolean {
@@ -106,6 +104,24 @@ describe('OAuth2AuthorizationStateManager', () => {
         it('should remove state after verify (single-use)', async () => {
             const id = await manager.save({ ip: '10.0.0.1' });
             await manager.verify(id, { ip: '10.0.0.1' });
+            expect(repository.has(id)).toBe(false);
+        });
+
+        it('should refuse a second verify of the same state', async () => {
+            const id = await manager.save({ ip: '10.0.0.1' });
+            await manager.verify(id, { ip: '10.0.0.1' });
+            await expect(
+                manager.verify(id, { ip: '10.0.0.1' }),
+            ).rejects.toThrow(OAuth2Error);
+        });
+
+        it('should let exactly one of two concurrent verifies obtain the state', async () => {
+            const id = await manager.save({ ip: '10.0.0.1' });
+            const outcomes = await Promise.allSettled([
+                manager.verify(id, { ip: '10.0.0.1' }),
+                manager.verify(id, { ip: '10.0.0.1' }),
+            ]);
+            expect(outcomes.map((outcome) => outcome.status).sort()).toEqual(['fulfilled', 'rejected']);
             expect(repository.has(id)).toBe(false);
         });
 

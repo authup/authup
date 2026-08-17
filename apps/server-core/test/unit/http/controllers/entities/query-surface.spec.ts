@@ -11,6 +11,7 @@ import {
     expect,
     it,
 } from 'vitest';
+import { PermissionName } from '@authup/core-kit';
 import { createFakeRole, createFakeUser, httpRequest } from '../../../../utils';
 import { createTestApplication } from '../../../../app';
 
@@ -72,12 +73,14 @@ describe('src/http/controllers/entities (widened query surface)', () => {
 
     it('should filter a junction by id and by its owner realm key', async () => {
         const { data: role } = await suite.client.role.create(createFakeRole());
-        const permissions = await suite.client.permission.getMany();
-        expect(permissions.data.length).toBeGreaterThan(0);
+        // A built-in permission the admin holds. On the shared mysql / postgres
+        // database the first row of an unsorted list is whatever a previous
+        // spec file left behind, which the admin cannot bind.
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.ROLE_READ);
 
         const { data: junction } = await suite.client.rolePermission.create({
             roleId: role.id,
-            permissionId: permissions.data[0].id,
+            permissionId: permission.id,
         });
 
         const byId = await httpRequest(suite, 'GET', `/role-permissions?filter[id]=${junction.id}`, { headers: { Authorization: basic } });

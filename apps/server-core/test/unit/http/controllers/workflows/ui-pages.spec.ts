@@ -14,6 +14,8 @@ import {
 } from 'vitest';
 import { ScopeName } from '@authup/core-kit';
 import { createFakeClient as createFakeHTTPClient } from '@authup/core-http-kit/testing';
+import { ErrorCode } from '@authup/errors';
+import { OAuth2ErrorCode } from '@authup/specs';
 import { HTTPInjectionKey } from '../../../../../src/app';
 import { createFakeClient, httpRequest } from '../../../../utils';
 import { createTestApplication } from '../../../../app';
@@ -84,6 +86,8 @@ describe('src/http/controllers/workflows (SSR pages)', () => {
         // be denied for the click-gated auto-consent/sign-out to be a real defense
         expect(response.headers.get('content-security-policy')).toContain("frame-ancestors 'none'");
         expect(response.headers.get('x-frame-options')).toEqual('DENY');
+        // a login page, never served from a cache
+        expect(response.headers.get('cache-control')).toEqual('no-store');
 
         const body = await response.text();
         const payload = extractHydrationPayload(body);
@@ -98,6 +102,51 @@ describe('src/http/controllers/workflows (SSR pages)', () => {
         expect(payload.data.codeRequest.client_id).toEqual(client.id);
         expect(payload.data.features).toBeDefined();
         expect(payload.data.requestPath).toMatch(/^\/authorize\?/);
+    });
+
+    it('should map a recognized error marker onto a neutral payload error and ignore any other', async () => {
+        const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        const { data: client } = await suite.client.client.create(createFakeClient());
+        await suite.client.clientScope.create({
+            scopeId: scope.id,
+            clientId: client.id,
+        });
+
+        const query = new URLSearchParams({
+            response_type: 'code',
+            client_id: client.id,
+            redirect_uri: 'https://example.com/redirect',
+            scope: ScopeName.GLOBAL,
+        });
+
+        // The federated callback bounces a disabled provider here with this
+        // marker; the text is server-side, never derived from the request.
+        query.set('error', OAuth2ErrorCode.LOGIN_REQUIRED);
+        let response = await httpRequest(suite, 'GET', `/authorize?${query.toString()}`);
+        expect(response.status).toEqual(200);
+        let payload = extractHydrationPayload(await response.text());
+        expect(payload.data.error).toMatchObject({
+            code: ErrorCode.OAUTH_LOGIN_REQUIRED,
+            message: 'The identity provider is not available. Return to the application and start the login again.',
+        });
+        expect(payload.data.client.id).toEqual(client.id);
+
+        // The inactive-user and access-policy bounces carry this marker; the
+        // page renders the neutral denial card, never a form.
+        query.set('error', OAuth2ErrorCode.ACCESS_DENIED);
+        response = await httpRequest(suite, 'GET', `/authorize?${query.toString()}`);
+        expect(response.status).toEqual(200);
+        payload = extractHydrationPayload(await response.text());
+        expect(payload.data.error).toMatchObject({ code: ErrorCode.OAUTH_ACCESS_DENIED });
+        expect(payload.data.client.id).toEqual(client.id);
+
+        // The marker set is closed: an unrecognized value maps onto nothing.
+        query.set('error', 'whatever');
+        response = await httpRequest(suite, 'GET', `/authorize?${query.toString()}`);
+        expect(response.status).toEqual(200);
+        payload = extractHydrationPayload(await response.text());
+        expect(payload.data.error).toBeUndefined();
+        expect(payload.data.client.id).toEqual(client.id);
     });
 
     it('should serve the authorize page with an embedded error for an invalid request', async () => {

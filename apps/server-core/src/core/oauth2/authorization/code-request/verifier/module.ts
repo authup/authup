@@ -7,7 +7,7 @@
 
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { ScopeName, isClientPublic } from '@authup/core-kit';
-import { isSimpleURLMatch, isUUID } from '@authup/kit';
+import { isSafeRedirectURLScheme, isSimpleURLMatch, isUUID } from '@authup/kit';
 import {
     OAuth2ClientError,
     OAuth2GrantError,
@@ -119,6 +119,29 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
         // that turns the throw below into a soft branch.
         let redirectUriVerified = false;
         if (data.redirect_uri) {
+            // The matcher canonicalizes the value, which drops userinfo, while
+            // the redirect is built from the raw string: `https://u:p@app/cb`
+            // matched `https://app/**` and the credential blob then rode the
+            // Location header. Refuse it, so the matched value is the
+            // navigated value. An unparsable value falls through to the
+            // matcher, which rejects it.
+            let url : URL | undefined;
+            try {
+                url = new URL(data.redirect_uri);
+            } catch {
+                // handled by the matcher below
+            }
+            if (url && (url.username || url.password)) {
+                throw OAuth2RequestError.malformed('The redirect_uri must not carry userinfo.');
+            }
+
+            // A non-http(s) target is matched verbatim and later navigated
+            // client-side (the federated callback's interstitial), so a
+            // script-capable scheme would run on the IdP origin.
+            if (url && !isSafeRedirectURLScheme(data.redirect_uri)) {
+                throw OAuth2RequestError.malformed('The redirect_uri scheme is not allowed.');
+            }
+
             const redirectUris = client.redirectUri.split(',');
 
             // isSimpleURLMatch, never isSimpleMatch: the raw matcher treats `/`
