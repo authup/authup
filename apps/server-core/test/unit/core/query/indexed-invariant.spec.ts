@@ -122,6 +122,21 @@ describe('core/query (indexed invariant)', () => {
     it.each(schemas.map((schema) => [schema.describe().name as string, schema] as const))(
         'should strip an unknown sort key for %s',
         async (_name, schema) => {
+            const description = schema.describe();
+            const allowed = description.sorts?.allowed || [];
+
+            // The positive control. The assertion below only proves an
+            // ABSENCE, so it passes vacuously the moment sort keys stop
+            // being decoded at all — the very failure the guard above
+            // exists for, one wire-key rename away (`sort` was renamed to
+            // `sorts` in rapiq 2.1.0). Decoding a key the schema allows
+            // proves the pipeline under test is live for THIS schema.
+            const [permitted] = allowed;
+            expect(permitted, 'schema declares no sort key to control against').toBeDefined();
+
+            const control = await decodeQuery({ sort: permitted }, { schema });
+            expect(JSON.stringify(control.sorts ?? null)).toContain(permitted);
+
             const parsed = await decodeQuery({ sort: 'totallyBogusColumn' }, { schema });
 
             expect(JSON.stringify(parsed.sorts ?? null)).not.toContain('totallyBogusColumn');
