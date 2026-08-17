@@ -2900,7 +2900,7 @@ plus a `<uuid>@example.com` placeholder (#3434).
 surfaced as a read+delete entity API and an explicit self-service link
 flow. Two unique indexes pin its invariants: `(providerId, userId)`, one
 link per provider per user, and since migration
-`1786633352004-IdentityProviderAccountUniqueness` (issue #3442)
+`1786631686318-SortIndexesAndAccountUniqueness` (issue #3442)
 `(providerUserId, providerId)`, one external identity belongs to one local
 user. The second was application-only until then: `link()` and `save()`
 both read then write with no transaction and no row lock, so two
@@ -3043,7 +3043,7 @@ user); the uniqueness flip above ships one, on both dialects.
   manager specs see what the adapter does; the sqlite adapter spec pins the
   translation and the convergence against the real table
   (`test/unit/core/identity/provider/account.spec.ts`). The migration
-  (`1786633352004-IdentityProviderAccountUniqueness`) pre-checks for
+  (`1786631686318-SortIndexesAndAccountUniqueness`) pre-checks for
   pre-existing duplicate `(provider_id, provider_user_id)` groups and
   aborts the boot with their number and the required cleanup (the
   `1779267068441` canonical-name precedent) rather than a hash-named
