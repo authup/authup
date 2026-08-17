@@ -3055,7 +3055,11 @@ user); the uniqueness flip above ships one, on both dialects.
   its account insert is rejected, so it re-reads, removes that
   milliseconds-old unreferenced user best effort (a leftover row must not
   fail the login), and continues through the UPDATE branch on the winner's
-  account (mappers, roles, permissions run for the winner). The
+  account (mappers, roles, permissions run for the winner). That removal is
+  the one thing on the path that may fail silently, so the manager takes an
+  optional `logger` (the `RealmService` shape) and reports it through
+  `describeError`: an orphaned row costs nothing but a squatted user name,
+  and unreported it would be invisible forever. The
   `FakeIdentityProviderAccountRepository` mirrors both indexes so the
   manager specs see what the adapter does; the sqlite adapter spec pins the
   translation and the convergence against the real table

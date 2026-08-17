@@ -14,6 +14,8 @@ import {
 import { ValidatorGroup, createNanoID, extendObject } from '@authup/kit';
 import { ValidationError, isEntityConflictError } from '@authup/errors';
 import { isValidupError, stringifyPath } from 'validup';
+import type { Logger } from '@authup/server-kit';
+import { describeError } from '../../../../utils/index.ts';
 import type { IUserIdentityRepository } from '../../entities/index.ts';
 import { IdentityProviderIdentityOperation } from '../constants.ts';
 import type { IIdentityProviderMapper } from '../mapper/index.ts';
@@ -35,12 +37,15 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
 
     protected userValidator : UserValidator;
 
+    protected logger?: Logger;
+
     constructor(ctx: IdentityProviderAccountManagerContext) {
         this.attributesMapper = ctx.attributeMapper;
         this.permissionMapper = ctx.permissionMapper;
         this.roleMapper = ctx.roleMapper;
         this.repository = ctx.repository;
         this.userRepository = ctx.userRepository;
+        this.logger = ctx.logger;
 
         this.userValidator = new UserValidator();
     }
@@ -81,8 +86,13 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
 
             try {
                 await this.userRepository.remove(user);
-            } catch {
-                // best effort
+            } catch (removeError) {
+                // The row is unreferenced, so it costs nothing but a squatted
+                // user name. Left unreported it would be invisible forever.
+                this.logger?.warn(describeError(
+                    removeError,
+                    `The user provisioned for the external identity "${identity.id}" could not be removed after losing a concurrent first login.`,
+                ));
             }
 
             return this.update(identity, raced);
