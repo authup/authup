@@ -205,6 +205,61 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
     });
 
     /**
+     * The manager owns the retained pagination, so it owns the reset: a
+     * load that CHANGES the filters and carries no pagination of its own
+     * must not inherit the current offset. Before this, every narrowing
+     * control had to reset by hand and the sessions subject-kind select
+     * was the one that forgot (#3443).
+     */
+    it('a filter change drops the retained offset without the caller asking', async () => {
+        const { wrapper, httpClient } = mountCollection({ query: { filters: { realmId: ['realm-1', null] } } });
+        await flushPromises();
+
+        await (wrapper.vm as any).load({ pagination: { limit: 10, offset: 20 } });
+        await (wrapper.vm as any).load(defineQuery({ filters: { name: 'foo' } }));
+
+        const requests = listRequests(httpClient.requests);
+        expect(requests[2].searchParams.get('page[offset]') ?? '0').toEqual('0');
+        // the page size is not a narrowing parameter and survives
+        expect(requests[2].searchParams.get('page[limit]')).toEqual('10');
+    });
+
+    /**
+     * The reset keys on a CHANGE, not on the mere presence of filters: a
+     * load repeating the current filters is a refresh, and paging through
+     * a result set must not snap back to the first page.
+     */
+    it('a load repeating the same filters keeps the current page', async () => {
+        const { wrapper, httpClient } = mountCollection({ query: { filters: { realmId: ['realm-1', null] } } });
+        await flushPromises();
+
+        await (wrapper.vm as any).load({ filters: { name: 'foo' } });
+        await (wrapper.vm as any).load({ pagination: { limit: 10, offset: 20 } });
+        await (wrapper.vm as any).load({ filters: { name: 'foo' } });
+
+        const requests = listRequests(httpClient.requests);
+        expect(requests[3].searchParams.get('page[offset]')).toEqual('20');
+    });
+
+    /**
+     * An input carrying its own pagination still wins: the reset feeds the
+     * retained state, which sits below the input in the merge.
+     */
+    it('an explicit offset survives a filter change', async () => {
+        const { wrapper, httpClient } = mountCollection({ query: { filters: { realmId: ['realm-1', null] } } });
+        await flushPromises();
+
+        await (wrapper.vm as any).load({ pagination: { limit: 10, offset: 20 } });
+        await (wrapper.vm as any).load(defineQuery({
+            filters: { name: 'foo' },
+            pagination: { offset: 30 },
+        }));
+
+        const requests = listRequests(httpClient.requests);
+        expect(requests[2].searchParams.get('page[offset]')).toEqual('30');
+    });
+
+    /**
      * rapiq 2.1.0 (#906) made `sorts` the canonical build-input key and
      * kept `sort` as a deprecated alias. The per-parameter replace must
      * recognize both, or a load carrying the canonical spelling is

@@ -52,6 +52,7 @@ import {
     IdentityRoleProvider,
 } from '../../../core/index.ts';
 import { LDAPInjectionKey } from '../ldap/index.ts';
+import { LoggerInjectionKey } from '../logger/index.ts';
 import { CacheInjectionKey } from '../cache/index.ts';
 
 import type { IModule } from 'orkos';
@@ -133,12 +134,13 @@ export class IdentityModule implements IModule {
         const providerAccountRepository = new IdentityProviderAccountRepositoryAdapter(dataSource);
 
         container.register(IdentityInjectionKey.ProviderAccountManager, {
-            useFactory: () => new IdentityProviderAccountManager({
+            useFactory: (c) => new IdentityProviderAccountManager({
                 repository: providerAccountRepository,
                 userRepository,
                 attributeMapper,
                 roleMapper,
                 permissionMapper,
+                logger: c.resolve(LoggerInjectionKey),
             }),
         });
 

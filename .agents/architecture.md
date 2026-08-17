@@ -2717,6 +2717,23 @@ redirects to the client's own `redirect_uri` carrying `code` and `state` (RFC
 6749 §4.1.2). Three properties are load-bearing, and each of the first two was
 a shipped bug (issue #3446):
 
+The ladder itself is **`OAuth2FederatedLoginService`**
+(`core/oauth2/federated-login/`), not the controller: realm match, code-request
+re-verification, redirect-scheme gate, provider and user state, access policy
+and code issuance all live there, and `complete()` answers with a discriminated
+result (`{ kind: 'refused', refusal, error?, codeRequest }` /
+`{ kind: 'issued', redirectUri, code, state?, codeRequest, client }`). The
+controller only maps that answer onto a transport, because only the adapter
+knows the difference between a `sendRedirect` and the interstitial page a
+custom scheme needs. The provider authenticator is a ctx member
+(`authenticatorFactory`, defaulting to
+`createIdentityProviderOAuth2Authenticator`) so the whole refusal matrix is
+exercised without an external provider — see
+`test/unit/core/oauth2/federated-login/module.spec.ts`. Everything the service
+imports from `core/identity` comes through the FILE, never the barrel: the
+barrel reaches back through the core barrel and the cycle would TDZ-crash,
+the same rule the query schemas follow.
+
 - **The code goes to the RP, never to the hosted `/authorize` page.** It is
   bound to the RP's `client_id` and `redirect_uri`, so the RP is the only party
   that can redeem it. The callback used to hand it to the hosted page instead,
@@ -2900,7 +2917,7 @@ plus a `<uuid>@example.com` placeholder (#3434).
 surfaced as a read+delete entity API and an explicit self-service link
 flow. Two unique indexes pin its invariants: `(providerId, userId)`, one
 link per provider per user, and since migration
-`1786633352004-IdentityProviderAccountUniqueness` (issue #3442)
+`1786631686318-SortIndexesAndAccountUniqueness` (issue #3442)
 `(providerUserId, providerId)`, one external identity belongs to one local
 user. The second was application-only until then: `link()` and `save()`
 both read then write with no transaction and no row lock, so two
@@ -3038,12 +3055,16 @@ user); the uniqueness flip above ships one, on both dialects.
   its account insert is rejected, so it re-reads, removes that
   milliseconds-old unreferenced user best effort (a leftover row must not
   fail the login), and continues through the UPDATE branch on the winner's
-  account (mappers, roles, permissions run for the winner). The
+  account (mappers, roles, permissions run for the winner). That removal is
+  the one thing on the path that may fail silently, so the manager takes an
+  optional `logger` (the `RealmService` shape) and reports it through
+  `describeError`: an orphaned row costs nothing but a squatted user name,
+  and unreported it would be invisible forever. The
   `FakeIdentityProviderAccountRepository` mirrors both indexes so the
   manager specs see what the adapter does; the sqlite adapter spec pins the
   translation and the convergence against the real table
   (`test/unit/core/identity/provider/account.spec.ts`). The migration
-  (`1786633352004-IdentityProviderAccountUniqueness`) pre-checks for
+  (`1786631686318-SortIndexesAndAccountUniqueness`) pre-checks for
   pre-existing duplicate `(provider_id, provider_user_id)` groups and
   aborts the boot with their number and the required cleanup (the
   `1779267068441` canonical-name precedent) rather than a hash-named
@@ -4519,6 +4540,17 @@ integration:
   **inside the manager** across loads: a pagination-only
   `load({ pagination })` keeps the current search; an assembled
   `IQuery` load input replaces the interactive state wholesale.
+  **A load that CHANGES the filters drops the retained offset**
+  (compared by the wire form `buildQueryString` emits, so the manager
+  needs no knowledge of the IR's shape): the narrowed set is shorter, so
+  page 2+ would ask for rows past its end and render empty under a
+  non-zero total (issue #3443). The first load is exempt (nothing changed
+  yet), a load repeating the same filters keeps its page, and an input
+  carrying its own pagination still wins by merge precedence. This is a
+  property of the manager rather than caller discipline: every narrowing
+  control used to reset by hand, and the second one to need it (the
+  sessions subject-kind select) forgot. Neither `ASearch` nor a page
+  passes `pagination: { offset: 0 }` anymore.
   Pinned by
   `test/unit/components/utility/entity-collection.spec.ts`.
   **Initial load & the SSR handoff (issue #2773):** see

@@ -55,8 +55,11 @@ export function buildListSearch(
             // '~text'), not a substring match) — the collection turns this
             // bare `name` string into a condition via the `contains` helper
             // (or a per-entity queryFilters hook).
+            //
+            // No pagination reset here: the collection manager drops the
+            // retained offset whenever a load changes the filters, which
+            // is what a new search term is.
             filters: text.length > 0 ? { name: text } : {},
-            pagination: { offset: 0 },
         });
     });
 

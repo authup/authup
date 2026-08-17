@@ -98,13 +98,10 @@ export default defineNuxtComponent({
             { value: 'client', label: translationClient.value },
         ]);
 
-        // The offset reset is load-bearing (same shape as `ASearch`): a load omitting
-        // `pagination` inherits the current meta offset, so switching the filter from
-        // page 2+ would ask for rows past the end of the freshly filtered set.
-        const applySubjectKind = (load: (input: IQuery) => Promise<unknown>) => load(defineQuery<Session>({
-            filters: subjectKind.value === 'all' ? {} : { subKind: subjectKind.value },
-            pagination: { offset: 0 },
-        }));
+        // Changing the filter returns to the first page: the collection
+        // manager drops the retained offset on a filter change, so this
+        // load carries no pagination of its own.
+        const applySubjectKind = (load: (input: IQuery) => Promise<unknown>) => load(defineQuery<Session>({ filters: subjectKind.value === 'all' ? {} : { subKind: subjectKind.value } }));
 
         const columns = computed<TableColumn<Session>[]>(() => [
             {

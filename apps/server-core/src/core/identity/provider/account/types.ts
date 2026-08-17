@@ -6,6 +6,7 @@
  */
 
 import type { IdentityProviderAccount } from '@authup/core-kit';
+import type { Logger } from '@authup/server-kit';
 import type { IUserIdentityRepository } from '../../entities/index.ts';
 import type { IIdentityProviderMapper } from '../mapper/index.ts';
 import type { IdentityProviderIdentity } from '../types.ts';
@@ -57,6 +58,12 @@ export type IdentityProviderAccountManagerContext = {
     attributeMapper: IIdentityProviderMapper,
     permissionMapper: IIdentityProviderMapper,
     roleMapper: IIdentityProviderMapper,
+    /**
+     * Reports the compensating actions `save()` takes when it loses a
+     * concurrent first login. They must not fail the login, so they are
+     * swallowed. Without a logger they are also invisible.
+     */
+    logger?: Logger,
 
     repository: IIdentityProviderAccountRepository,
     userRepository: IUserIdentityRepository
