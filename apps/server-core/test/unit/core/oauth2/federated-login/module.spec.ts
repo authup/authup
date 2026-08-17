@@ -37,7 +37,11 @@ const codeRequest = {
     state: 'state-1',
 } as OAuth2AuthorizationCodeRequest;
 
-function createProvider(overrides: Partial<OAuth2IdentityProvider> = {}) : OAuth2IdentityProvider {
+// realmId is non-nullable on the domain type, but the column is nullable and
+// a global provider carries null — which is what the guard's falsy branch is for
+function createProvider(
+    overrides: Omit<Partial<OAuth2IdentityProvider>, 'realmId'> & { realmId?: string | null } = {},
+) : OAuth2IdentityProvider {
     return {
         id: randomUUID(),
         name: 'upstream',
@@ -107,13 +111,68 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
     });
 
     it('should refuse a provider and client realm mismatch', async () => {
-        const { service } = buildService();
+        const verifier = new FakeVerifier({
+            client: {
+                id: codeRequest.client_id, 
+                name: 'app', 
+                realmId: randomUUID(), 
+            } as Client, 
+        });
+        const { service, codeIssuer } = buildService({ verifier });
 
         await expect(service.complete({
             provider: createProvider({ realmId: randomUUID() }),
             codeRequest: { ...codeRequest, realm_id: randomUUID() },
             code: 'provider-code',
         })).rejects.toThrow(OAuth2RequestError);
+
+        expect((codeIssuer as FakeCodeIssuer).issued).toHaveLength(0);
+    });
+
+    /**
+     * The guard reads the client the verification resolved, never the
+     * `realm_id` the state blob happens to carry: that value is only present
+     * because `authorize-out` stores the verified request, so a guard resting
+     * on it would disappear for a state that reached here without the stamp.
+     */
+    it('should refuse a realm mismatch even when the state carries no realm', async () => {
+        const providerRealmId = randomUUID();
+        const verifier = new FakeVerifier({
+            client: {
+                id: codeRequest.client_id, 
+                name: 'app', 
+                realmId: randomUUID(), 
+            } as Client, 
+        });
+        const { service } = buildService({ verifier });
+
+        const withoutRealm : Record<string, unknown> = { ...codeRequest };
+        delete withoutRealm.realm_id;
+
+        await expect(service.complete({
+            provider: createProvider({ realmId: providerRealmId }),
+            codeRequest: withoutRealm as OAuth2AuthorizationCodeRequest,
+            code: 'provider-code',
+        })).rejects.toThrow(OAuth2RequestError);
+    });
+
+    it('should let a realm-less provider complete for any client realm', async () => {
+        const verifier = new FakeVerifier({
+            client: {
+                id: codeRequest.client_id, 
+                name: 'app', 
+                realmId: randomUUID(), 
+            } as Client, 
+        });
+        const { service } = buildService({ verifier });
+
+        const result = await service.complete({
+            provider: createProvider({ realmId: null }),
+            codeRequest,
+            code: 'provider-code',
+        });
+
+        expect(result.kind).toEqual('issued');
     });
 
     it('should refuse without a marker when the code request no longer verifies', async () => {

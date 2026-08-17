@@ -85,14 +85,6 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
             provider, 
         } = input;
 
-        if (
-            provider.realmId &&
-            codeRequest.realm_id &&
-            codeRequest.realm_id !== provider.realmId
-        ) {
-            throw OAuth2RequestError.malformed('The provider and client realm do not match.');
-        }
-
         // Re-verify the request BEFORE the provider's single-use code is
         // spent. It re-resolves the client (active, grant allowlist, scopes)
         // and re-matches the redirect_uri against the client's registered
@@ -114,6 +106,17 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
                 refusal: OAuth2FederatedLoginRefusal.CODE_REQUEST,
                 codeRequest,
             };
+        }
+
+        // The provider and the client must share a realm, the completion-side
+        // half of the plan-041 binding. It rests on the client the
+        // verification just resolved rather than the `realm_id` carried on
+        // the state blob: that value is only there because `authorize-out`
+        // stores the VERIFIED request, so a guard reading it would disappear
+        // silently for any state that reached here without the stamp. A
+        // realm-less (global) provider matches every client by design.
+        if (provider.realmId && verified.client.realmId !== provider.realmId) {
+            throw OAuth2RequestError.malformed('The provider and client realm do not match.');
         }
 
         // A stored code request always carries a redirect_uri (that mount is
