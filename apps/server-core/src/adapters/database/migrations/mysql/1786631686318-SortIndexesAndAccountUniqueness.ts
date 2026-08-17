@@ -32,6 +32,13 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  * check only decides whether the operator reads a readable sentence or a
  * hash-named driver error.
  *
+ * It runs BEFORE any DDL for the same implicit-commit reason: an abort
+ * after the two CREATE INDEX statements leaves them committed while the
+ * migration stays unapplied, so the operator's retry — after cleaning the
+ * duplicates — would die on `Duplicate key name` and never reach the flip.
+ * Nothing here writes before the check, so a refusal leaves the schema
+ * exactly as it was.
+ *
  * Generated with `migration generate`; derived IDX_<hash> names, generated
  * DDL untouched (the duplicate pre-check and the single-ALTER flip are
  * hand-authored).
@@ -40,13 +47,6 @@ export class SortIndexesAndAccountUniqueness1786631686318 implements MigrationIn
     name = 'SortIndexesAndAccountUniqueness1786631686318';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
-            CREATE INDEX \`IDX_52f59535945c8cdbd62439bba5\` ON \`auth_client_scopes\` (\`created_at\`)
-        `);
-        await queryRunner.query(`
-            CREATE INDEX \`IDX_04264aebc8b6625b1da88e23df\` ON \`auth_client_scopes\` (\`updated_at\`)
-        `);
-
         const duplicates = await queryRunner.query(`
             SELECT \`provider_id\`, \`provider_user_id\`, COUNT(*) AS \`count\`
             FROM \`auth_identity_provider_accounts\`
@@ -60,6 +60,13 @@ export class SortIndexesAndAccountUniqueness1786631686318 implements MigrationIn
                 'Merge or delete the conflicting rows manually before re-running.',
             );
         }
+
+        await queryRunner.query(`
+            CREATE INDEX \`IDX_52f59535945c8cdbd62439bba5\` ON \`auth_client_scopes\` (\`created_at\`)
+        `);
+        await queryRunner.query(`
+            CREATE INDEX \`IDX_04264aebc8b6625b1da88e23df\` ON \`auth_client_scopes\` (\`updated_at\`)
+        `);
 
         await queryRunner.query(`
             ALTER TABLE \`auth_identity_provider_accounts\`

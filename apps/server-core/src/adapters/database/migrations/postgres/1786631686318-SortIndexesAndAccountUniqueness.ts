@@ -26,6 +26,10 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  * check only decides whether the operator reads a readable sentence or a
  * hash-named driver error.
  *
+ * It runs before any DDL, matching the mysql half: postgres would roll the
+ * whole migration back on the abort, but keeping one order across both
+ * dialects means the refusal never depends on which one is reading it.
+ *
  * Generated with `migration generate`; derived IDX_<hash> names, generated
  * DDL untouched (the duplicate pre-check is hand-authored, and `down()`
  * carries the hand-corrected column order — see
@@ -35,13 +39,6 @@ export class SortIndexesAndAccountUniqueness1786631686318 implements MigrationIn
     name = 'SortIndexesAndAccountUniqueness1786631686318';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
-            CREATE INDEX "IDX_52f59535945c8cdbd62439bba5" ON "auth_client_scopes" ("created_at")
-        `);
-        await queryRunner.query(`
-            CREATE INDEX "IDX_04264aebc8b6625b1da88e23df" ON "auth_client_scopes" ("updated_at")
-        `);
-
         const duplicates = await queryRunner.query(`
             SELECT "provider_id", "provider_user_id", COUNT(*) AS "count"
             FROM "auth_identity_provider_accounts"
@@ -55,6 +52,13 @@ export class SortIndexesAndAccountUniqueness1786631686318 implements MigrationIn
                 'Merge or delete the conflicting rows manually before re-running.',
             );
         }
+
+        await queryRunner.query(`
+            CREATE INDEX "IDX_52f59535945c8cdbd62439bba5" ON "auth_client_scopes" ("created_at")
+        `);
+        await queryRunner.query(`
+            CREATE INDEX "IDX_04264aebc8b6625b1da88e23df" ON "auth_client_scopes" ("updated_at")
+        `);
 
         await queryRunner.query(`
             DROP INDEX "public"."IDX_ccf3fd36253755bd9a5f43c516"
