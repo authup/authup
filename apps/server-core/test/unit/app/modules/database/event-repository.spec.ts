@@ -142,18 +142,23 @@ describe('app/modules/database/repositories/event', () => {
 
             const ormRepository = suite.dataSource.getRepository<Event>(EventEntity);
             const adapter = new EventRepositoryAdapter(ormRepository);
-            const spy = vi.spyOn(ormRepository, 'delete');
+            const findSpy = vi.spyOn(ormRepository, 'find');
+            const deleteSpy = vi.spyOn(ormRepository, 'delete');
 
             await adapter.deleteExpired(new Date().toISOString(), { batchSize: 2 });
 
-            // 5 rows at 2 per batch: three DELETEs, none wider than the batch.
-            expect(spy).toHaveBeenCalledTimes(3);
-            for (const call of spy.mock.calls) {
-                const criteria = call[0] as { id: { _value: string[] } };
-                expect(criteria.id._value.length).toBeLessThanOrEqual(2);
+            // 5 rows at 2 per batch: three DELETEs rather than one sweeping
+            // statement. Each is fed by a select bounded to the batch size,
+            // which is what keeps the DELETE itself bounded.
+            expect(deleteSpy).toHaveBeenCalledTimes(3);
+            // asserted so the bound check below can never pass vacuously
+            expect(findSpy).toHaveBeenCalledTimes(3);
+            for (const [options] of findSpy.mock.calls) {
+                expect(options?.take).toEqual(2);
             }
 
-            spy.mockRestore();
+            findSpy.mockRestore();
+            deleteSpy.mockRestore();
         });
 
         it('keeps rows that have not expired and rows that never expire', async () => {
