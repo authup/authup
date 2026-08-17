@@ -134,6 +134,7 @@ import {
     OAuth2AccessPolicyEvaluator,
     OAuth2ClientAuthenticator,
     OAuth2EndSessionService,
+    OAuth2FederatedLoginService,
     OAuth2MfaLoginService,
     PasswordRecoveryService,
     PermissionCheckerService,
@@ -541,21 +542,35 @@ export class HTTPControllerModule {
             realmRepository,
         });
 
+        const logger = container.resolve(LoggerInjectionKey);
+        const eventService = container.resolve(DatabaseInjectionKey.EventService);
+
+        const loginService = new OAuth2FederatedLoginService({
+            options: { baseURL: config.publicUrl },
+
+            accountManager,
+            realmRepository: new RealmRepositoryAdapter(realmRepository),
+            codeRequestVerifier,
+            codeIssuer,
+
+            accessPolicyEvaluator: this.resolveAccessPolicyEvaluator(container),
+            eventService,
+            logger,
+        });
+
         return new IdentityProviderController({
             options: { baseURL: config.publicUrl },
 
             repository,
-            realmRepository: new RealmRepositoryAdapter(realmRepository),
             accountManager,
             linkStore,
 
-            codeIssuer,
             codeRequestVerifier,
             stateManager,
+            loginService,
 
-            accessPolicyEvaluator: this.resolveAccessPolicyEvaluator(container),
-            eventService: container.resolve(DatabaseInjectionKey.EventService),
-            logger: container.resolve(LoggerInjectionKey),
+            eventService,
+            logger,
         });
     }
 

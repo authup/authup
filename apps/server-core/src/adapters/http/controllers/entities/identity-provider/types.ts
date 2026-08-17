@@ -11,11 +11,9 @@ import type {
     IIdentityProviderAccountLinkStore,
     IIdentityProviderAccountManager,
     IIdentityProviderRepository,
-    IOAuth2AccessPolicyEvaluator,
-    IOAuth2AuthorizationCodeIssuer,
     IOAuth2AuthorizationCodeRequestVerifier,
     IOAuth2AuthorizationStateManager,
-    IRealmRepository,
+    IOAuth2FederatedLoginService,
 } from '../../../../../core/index.ts';
 
 export type IdentityProviderControllerOptions = {
@@ -26,15 +24,17 @@ export type IdentityProviderControllerContext = {
     options: IdentityProviderControllerOptions,
 
     repository: IIdentityProviderRepository,
-    realmRepository: IRealmRepository,
 
     accountManager: IIdentityProviderAccountManager,
     linkStore: IIdentityProviderAccountLinkStore,
-    codeIssuer: IOAuth2AuthorizationCodeIssuer,
     codeRequestVerifier: IOAuth2AuthorizationCodeRequestVerifier,
     stateManager: IOAuth2AuthorizationStateManager,
+    /**
+     * Owns the federated-login completion ladder. The controller only maps
+     * its result onto a transport.
+     */
+    loginService: IOAuth2FederatedLoginService,
 
-    accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,
     eventService?: IEventService,
     logger?: Logger,
 };

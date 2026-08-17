@@ -2717,6 +2717,23 @@ redirects to the client's own `redirect_uri` carrying `code` and `state` (RFC
 6749 §4.1.2). Three properties are load-bearing, and each of the first two was
 a shipped bug (issue #3446):
 
+The ladder itself is **`OAuth2FederatedLoginService`**
+(`core/oauth2/federated-login/`), not the controller: realm match, code-request
+re-verification, redirect-scheme gate, provider and user state, access policy
+and code issuance all live there, and `complete()` answers with a discriminated
+result (`{ kind: 'refused', refusal, error?, codeRequest }` /
+`{ kind: 'issued', redirectUri, code, state?, codeRequest, client }`). The
+controller only maps that answer onto a transport, because only the adapter
+knows the difference between a `sendRedirect` and the interstitial page a
+custom scheme needs. The provider authenticator is a ctx member
+(`authenticatorFactory`, defaulting to
+`createIdentityProviderOAuth2Authenticator`) so the whole refusal matrix is
+exercised without an external provider — see
+`test/unit/core/oauth2/federated-login/module.spec.ts`. Everything the service
+imports from `core/identity` comes through the FILE, never the barrel: the
+barrel reaches back through the core barrel and the cycle would TDZ-crash,
+the same rule the query schemas follow.
+
 - **The code goes to the RP, never to the hosted `/authorize` page.** It is
   bound to the RP's `client_id` and `redirect_uri`, so the RP is the only party
   that can redeem it. The callback used to hand it to the hosted page instead,
