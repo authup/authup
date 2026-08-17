@@ -8,14 +8,16 @@
 import type { Event } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
-import { LessThan } from 'typeorm';
+import { In, LessThan } from 'typeorm';
 import { applyQuery, redactFieldConditions } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
     EventCountRecentFilter,
+    EventDeleteExpiredOptions,
     EventFindManyOptions,
     IEventRepository,
 } from '../../../../../core/index.ts';
+import { EVENT_RETENTION_SWEEP_BATCH_SIZE } from '../../../../../core/index.ts';
 import { applyRealmScopeSelect } from '../helpers.ts';
 
 export class EventRepositoryAdapter implements IEventRepository {
@@ -127,12 +129,42 @@ export class EventRepositoryAdapter implements IEventRepository {
         return qb.getCount();
     }
 
-    async deleteExpired(now: string): Promise<number> {
-        const result = await this.repository.delete({
-            expiring: true,
-            expiresAt: LessThan(now),
-        });
+    async deleteExpired(now: string, options: EventDeleteExpiredOptions = {}): Promise<number> {
+        const batchSize = options.batchSize ?? EVENT_RETENTION_SWEEP_BATCH_SIZE;
 
-        return result.affected ?? 0;
+        let total = 0;
+
+        for (;;) {
+            const rows = await this.repository.find({
+                select: { id: true },
+                where: {
+                    expiring: true,
+                    expiresAt: LessThan(now),
+                },
+                take: batchSize,
+            });
+
+            if (rows.length === 0) {
+                break;
+            }
+
+            const result = await this.repository.delete({ id: In(rows.map((row) => row.id)) });
+
+            // A driver that does not report affected rows still made
+            // progress, so count the batch rather than returning 0.
+            total += result.affected ?? rows.length;
+
+            // Another replica's sweep already owns these rows. Stop rather
+            // than re-selecting them; the next tick picks up whatever is left.
+            if (result.affected === 0) {
+                break;
+            }
+
+            if (rows.length < batchSize) {
+                break;
+            }
+        }
+
+        return total;
     }
 }
