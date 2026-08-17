@@ -4540,6 +4540,17 @@ integration:
   **inside the manager** across loads: a pagination-only
   `load({ pagination })` keeps the current search; an assembled
   `IQuery` load input replaces the interactive state wholesale.
+  **A load that CHANGES the filters drops the retained offset**
+  (compared by the wire form `buildQueryString` emits, so the manager
+  needs no knowledge of the IR's shape): the narrowed set is shorter, so
+  page 2+ would ask for rows past its end and render empty under a
+  non-zero total (issue #3443). The first load is exempt (nothing changed
+  yet), a load repeating the same filters keeps its page, and an input
+  carrying its own pagination still wins by merge precedence. This is a
+  property of the manager rather than caller discipline: every narrowing
+  control used to reset by hand, and the second one to need it (the
+  sessions subject-kind select) forgot. Neither `ASearch` nor a page
+  passes `pagination: { offset: 0 }` anymore.
   Pinned by
   `test/unit/components/utility/entity-collection.spec.ts`.
   **Initial load & the SSR handoff (issue #2773):** see

@@ -166,6 +166,15 @@ function create<
     // interactive state over pagination state over the injected base scope.
     // Pure: the caller decides what to do with the result, so the initial
     // load's query can also be derived up front for the hydration key.
+    /**
+     * Compares two filter trees by the wire form rapiq itself emits, so
+     * structurally equal conditions compare equal without this module
+     * knowing the IR's shape.
+     */
+    function serializeFilters(source: IQuery) : string {
+        return buildQueryString(new Query({ filters: source.filters }));
+    }
+
     function composeQuery(input: EntityListQueryInput<Entity<RECORD>>) : ComposedQuery {
         let inputQuery : IQuery;
         let interactiveNext : Query;
@@ -228,12 +237,24 @@ function create<
 
         const base = resolveBaseQuery();
 
+        // A load that CHANGES the filters must not inherit the retained
+        // offset. The freshly narrowed set is shorter, so page 2+ asks for
+        // rows past its end and renders an empty list (issue #3443). Every
+        // narrowing control used to reset the offset itself, which made
+        // correctness a matter of caller discipline and left the second one
+        // to forget it; the manager owns the retained pagination, so it
+        // owns this. The very first load is exempt (nothing changed yet),
+        // and an input carrying its own pagination still wins by merge
+        // precedence below.
+        const filtersChanged = typeof interactive !== 'undefined' &&
+            serializeFilters(interactiveNext) !== serializeFilters(interactive);
+
         const statePagination : PaginationBuildInput = {};
         if (typeof meta.value.pagination?.limit === 'number') {
             statePagination.limit = meta.value.pagination.limit;
         }
         if (typeof meta.value.pagination?.offset === 'number') {
-            statePagination.offset = meta.value.pagination.offset;
+            statePagination.offset = filtersChanged ? 0 : meta.value.pagination.offset;
         }
 
         return {
