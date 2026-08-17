@@ -76,7 +76,8 @@ export interface IEventRepository {
 export type EventDeleteExpiredOptions = {
     /**
      * Rows removed per statement. Defaults to
-     * EVENT_RETENTION_SWEEP_BATCH_SIZE.
+     * EVENT_RETENTION_SWEEP_BATCH_SIZE, which anything that is not a positive
+     * safe integer also falls back to.
      */
     batchSize?: number,
 };

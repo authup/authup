@@ -17,6 +17,7 @@ import {
     vi,
 } from 'vitest';
 import { EventEntity } from '../../../../../src/adapters/database/domains/index.ts';
+import { EVENT_RETENTION_SWEEP_BATCH_SIZE } from '../../../../../src/core/index.ts';
 import { EventRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/index.ts';
 import { createTestDatabaseApplication } from '../../../../app';
 
@@ -161,6 +162,32 @@ describe('app/modules/database/repositories/event', () => {
             deleteSpy.mockRestore();
         });
 
+        it.each([0, -1, 2.5, Number.POSITIVE_INFINITY, Number.NaN])(
+            'falls back to the default batch size for an unusable batchSize (%s)',
+            async (batchSize) => {
+                // A batchSize of 0 is the one that matters: typeorm ignores a
+                // falsy take, so the sweep would silently revert to the single
+                // unbounded DELETE this batching exists to prevent. The rest
+                // would reach the driver as invalid SQL. Neither is reachable
+                // today, but the option sits on a port, so pin the fallback.
+                const refId = `sweep-guard-${randomUUID()}`;
+                await recordExpiring(refId, new Date(Date.now() - 60_000).toISOString());
+
+                const ormRepository = suite.dataSource.getRepository<Event>(EventEntity);
+                const adapter = new EventRepositoryAdapter(ormRepository);
+                const findSpy = vi.spyOn(ormRepository, 'find');
+
+                await adapter.deleteExpired(new Date().toISOString(), { batchSize });
+
+                expect(findSpy).toHaveBeenCalled();
+                for (const [options] of findSpy.mock.calls) {
+                    expect(options?.take).toEqual(EVENT_RETENTION_SWEEP_BATCH_SIZE);
+                }
+
+                findSpy.mockRestore();
+            },
+        );
+
         it('keeps rows that have not expired and rows that never expire', async () => {
             const refId = `sweep-keep-${randomUUID()}`;
             const future = new Date(Date.now() + 600_000).toISOString();
@@ -174,9 +201,11 @@ describe('app/modules/database/repositories/event', () => {
                 expiring: false,
             }));
 
-            const deleted = await repository.deleteExpired(new Date().toISOString());
+            await repository.deleteExpired(new Date().toISOString());
 
-            expect(deleted).toEqual(0);
+            // scoped to this test's own rows: the sweep is table-wide, so a
+            // global deleted-count assertion would couple this to whatever
+            // other specs happen to leave behind.
             expect(await countByRef(refId)).toEqual(2);
         });
     });

@@ -130,7 +130,16 @@ export class EventRepositoryAdapter implements IEventRepository {
     }
 
     async deleteExpired(now: string, options: EventDeleteExpiredOptions = {}): Promise<number> {
-        const batchSize = options.batchSize ?? EVENT_RETENTION_SWEEP_BATCH_SIZE;
+        // A non-positive or non-integral size must never reach `take`: typeorm
+        // ignores a falsy one, which would silently restore the single
+        // unbounded DELETE this batching exists to prevent, and the rest reach
+        // the driver as invalid SQL. Fall back to the default instead.
+        const requested = options.batchSize;
+        const batchSize = typeof requested === 'number' &&
+            Number.isSafeInteger(requested) &&
+            requested > 0 ?
+            requested :
+            EVENT_RETENTION_SWEEP_BATCH_SIZE;
 
         let total = 0;
 
