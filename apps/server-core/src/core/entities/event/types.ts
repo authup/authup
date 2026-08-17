@@ -67,10 +67,20 @@ export interface IEventRepository {
     /**
      * Retention sweep: drop every expiring row whose expiresAt lies before
      * the given instant (non-expiring rows are kept forever). Returns the
-     * number of removed rows.
+     * number of removed rows. Removal is batched (see
+     * EVENT_RETENTION_SWEEP_BATCH_SIZE).
      */
-    deleteExpired(now: string): Promise<number>;
+    deleteExpired(now: string, options?: EventDeleteExpiredOptions): Promise<number>;
 }
+
+export type EventDeleteExpiredOptions = {
+    /**
+     * Rows removed per statement. Defaults to
+     * EVENT_RETENTION_SWEEP_BATCH_SIZE, which anything that is not a positive
+     * safe integer also falls back to.
+     */
+    batchSize?: number,
+};
 
 export type EventRecordInput = {
     scope: `${EventScope}`,

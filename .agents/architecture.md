@@ -4287,7 +4287,16 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   mirror) deletes `expiring = true AND expiresAt < now` (hub's cleaner shape);
   scheduled only when
   `eventLogEnabled && eventLogRetentionDays > 0`. Per-action retention later is
-  per-action stamping — no schema change.
+  per-action stamping — no schema change. The delete is **batched**
+  (`EVENT_RETENTION_SWEEP_BATCH_SIZE`, 1000): steady state removes a trickle,
+  but the first sweep after lowering `eventLogRetentionDays` (or the day a
+  full retention window first matures) can match millions of rows, and a
+  single unbounded `DELETE` would be one long transaction issued concurrently
+  by every replica. Batching selects ids then deletes by id, because
+  `DELETE ... LIMIT` is MySQL-only; the loop drains, and a batch that removes
+  nothing means another replica's sweep owns those rows, so it stops and the
+  next tick takes the remainder. `SessionTokenRepositoryAdapter.deleteExpired`
+  (the oauth2 cleaner's half) still carries the unbatched shape.
 - **Failed-login throttle (plan 053, default off):** `LoginThrottleService`
   (`core/authentication/login-throttle/`) counts recent `LOGIN_FAILED` rows via
   the indexed `countRecent` — keyed on the **(identifier, ip) pair** (never
