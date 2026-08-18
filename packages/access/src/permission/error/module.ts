@@ -21,14 +21,6 @@ export class PermissionError extends AuthupError {
         markInstanceof(this, PERMISSION_ERROR_INSTANCE);
     }
 
-    addIssue(data: PolicyIssue) {
-        this.issues.push(data);
-    }
-
-    addIssues(data: PolicyIssue[]) {
-        this.issues.push(...data);
-    }
-
     static notFound(name: string) {
         return new PermissionError({
             message: `The permission ${name} was not found.`,
@@ -50,17 +42,19 @@ export class PermissionError extends AuthupError {
         });
     }
 
-    static evaluationFailed(name: string | string[]) {
+    static evaluationFailed(name: string | string[], issues?: PolicyIssue[]) {
         if (Array.isArray(name)) {
             return new PermissionError({
                 message: `The evaluation of permissions ${name.join(', ')} failed`,
                 code: ErrorCode.PERMISSION_EVALUATION_FAILED,
+                issues,
             });
         }
 
         return new PermissionError({
             message: `The evaluation of permission ${name} failed`,
             code: ErrorCode.PERMISSION_EVALUATION_FAILED,
+            issues,
         });
     }
 }

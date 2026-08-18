@@ -8,8 +8,8 @@
 import type { ICondition } from '@rapiq/core';
 import { or } from '@rapiq/core';
 import { ErrorCode } from '@authup/errors';
-import type { Issue } from 'validup';
-import { defineIssueItem } from 'validup';
+import type { Issue } from '@ebec/core';
+import { defineIssueItem } from '@ebec/core';
 import { DecisionStrategy } from '@authup/kit';
 import type { BasePolicy, CompositePolicy, IPolicyEngine } from '../../policy';
 import {
@@ -107,9 +107,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
                 }));
 
                 if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
-                    const error = PermissionError.evaluationFailed(ctx.name);
-                    error.addIssues(issues);
-                    throw error;
+                    throw PermissionError.evaluationFailed(ctx.name, issues);
                 }
 
                 continue;
@@ -175,9 +173,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
                 }));
 
                 if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
-                    const error = PermissionError.evaluationFailed(binding.permission.name);
-                    error.addIssues(issues);
-                    throw error;
+                    throw PermissionError.evaluationFailed(binding.permission.name, issues);
                 }
 
                 count--;
@@ -191,9 +187,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
         if (issues.length === 0) {
             throw PermissionError.deniedAll(ctx.name);
         } else {
-            const error = PermissionError.evaluationFailed(ctx.name);
-            error.addIssues(issues);
-            throw error;
+            throw PermissionError.evaluationFailed(ctx.name, issues);
         }
     }
 

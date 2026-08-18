@@ -7,7 +7,8 @@
 
 import { isUUID } from '@authup/kit';
 import type { IAppEvent } from 'routup';
-import { ValidupError, buildErrorMessageForAttribute, defineIssueItem } from 'validup';
+import { ValidupError, buildErrorMessageForAttribute } from 'validup';
+import { defineIssueItem } from '@ebec/core';
 
 type RequestIDParamOptions = {
     /**

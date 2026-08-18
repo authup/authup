@@ -7,7 +7,7 @@
 
 import type { ICondition } from '@rapiq/core';
 import { and, not, or } from '@rapiq/core';
-import { defineIssueGroup } from 'validup';
+import { defineIssueGroup } from '@ebec/core';
 import { DecisionStrategy } from '@authup/kit';
 import { PolicyEngine } from '../../engine';
 import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';

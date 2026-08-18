@@ -35,12 +35,15 @@ describe('AuthupError.toJSON', () => {
         ]);
     });
 
-    it('keeps code, issues and data alongside the chain', () => {
+    it('keeps code and data alongside the chain, omitting issues when empty', () => {
+        // AuthupError now inherits toJSON's issues handling from BaseError,
+        // which omits the key entirely when there are no issues rather than
+        // emitting an empty array.
         const error = new BadRequestError({ data: { foo: 'bar' } });
         const output = error.toJSON();
 
         expect(output.code).toEqual(ErrorCode.BAD_REQUEST);
-        expect(output.issues).toEqual([]);
+        expect(output.issues).toBeUndefined();
         expect(output).toMatchObject({ foo: 'bar' });
     });
 
@@ -106,7 +109,15 @@ describe('duck-type guards (JSON-rehydrated)', () => {
         expect(isAuthHeaderError(rehydrated)).toBe(true);
     });
 
-    it('falls back to the leaf code match for chain-less legacy payloads', () => {
+    it('rejects chain-less legacy payloads — no reliable way to recognise them any more', () => {
+        // Before @ebec/core made isBaseError chain-only, a chain-less
+        // payload shape-compatible with AuthupError (BaseError + an
+        // issues array) fell back to a leaf-code match. That fallback
+        // could never fire once isBaseError started requiring a chain —
+        // and now that every BaseError carries an issues array, the
+        // shape it checked for would no longer distinguish an AuthupError
+        // from any other ebec-derived error anyway. Chain-less input is
+        // now uniformly rejected (see check.ts's isAuthupError comment).
         const legacy = {
             name: 'BadRequestError',
             message: 'foo',
@@ -114,8 +125,8 @@ describe('duck-type guards (JSON-rehydrated)', () => {
             issues: [],
         };
 
-        expect(isBadRequestError(legacy)).toBe(true);
-        expect(isAuthupError(legacy)).toBe(true);
+        expect(isBadRequestError(legacy)).toBe(false);
+        expect(isAuthupError(legacy)).toBe(false);
 
         const legacySubclass = {
             name: 'AuthHeaderError',
@@ -124,8 +135,7 @@ describe('duck-type guards (JSON-rehydrated)', () => {
             issues: [],
         };
 
-        expect(isAuthHeaderError(legacySubclass)).toBe(true);
-        // Leaf-only: without the chain, the ancestor match stays unavailable.
+        expect(isAuthHeaderError(legacySubclass)).toBe(false);
         expect(isUnauthorizedError(legacySubclass)).toBe(false);
     });
 

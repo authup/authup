@@ -7,7 +7,7 @@
 
 import type { ICondition } from '@rapiq/core';
 import { and, or } from '@rapiq/core';
-import type { Issue } from 'validup';
+import type { Issue } from '@ebec/core';
 import type {
     IPolicyEvaluator,
     PermissionPolicyBindingAggregated,

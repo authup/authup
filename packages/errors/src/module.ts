@@ -12,20 +12,15 @@ import {
     markInstanceof,
     serializeInstanceofChain,
 } from '@ebec/core';
-import type { Issue } from 'validup';
 
 export const AUTHUP_ERROR_INSTANCE = Symbol.for('@authup/errors/AuthupError');
 
 export class AuthupError extends BaseError {
-    public readonly issues: Issue[];
-
     public readonly data?: Record<string, any>;
 
     constructor(input?: AuthupErrorInput) {
         super(input);
         markInstanceof(this, AUTHUP_ERROR_INSTANCE);
-
-        this.issues = [];
 
         if (input && typeof input !== 'string' && input.data) {
             this.data = input.data;
@@ -40,7 +35,6 @@ export class AuthupError extends BaseError {
     override toJSON() {
         return {
             ...super.toJSON(),
-            issues: this.issues,
             ...(this.data ?? {}),
             [INSTANCEOF_PROPERTY]: serializeInstanceofChain(this),
         };

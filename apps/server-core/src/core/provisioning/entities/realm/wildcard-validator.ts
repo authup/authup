@@ -7,8 +7,10 @@
 
 import { CLIENT_RESERVED_NAMES } from '@authup/core-kit';
 import { createValidator } from '@validup/zod';
-import type { ContainerInput, ContainerRunOptions, Issue } from 'validup';
-import { Container, ValidupError, defineIssueItem } from 'validup';
+import type { ContainerInput, ContainerRunOptions } from 'validup';
+import type { Issue } from '@ebec/core';
+import { Container, ValidupError } from 'validup';
+import { defineIssueItem } from '@ebec/core';
 import { z } from 'zod';
 import { REALM_WILDCARD_NAME } from '../../constants.ts';
 import { RealmProvisioningRelationsValidator } from './relations-validator.ts';
