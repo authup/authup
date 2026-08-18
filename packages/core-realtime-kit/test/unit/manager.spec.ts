@@ -106,17 +106,15 @@ describe('src/manager', () => {
             token: () => Promise.resolve('foo-bar-baz'),
         });
 
-        expect.assertions(1);
-
-        const socket = await manager.connect();
-
-        await new Promise<void>((resolve) => {
-            socket.on('token', (token) => {
-                expect(token).toEqual('foo-bar-baz');
-                socket.disconnect();
-
-                resolve();
-            });
+        const socket = manager.inject();
+        const token = new Promise<string>((resolve) => {
+            socket.once('token', resolve);
         });
+
+        await manager.connect();
+
+        expect(await token).toEqual('foo-bar-baz');
+
+        socket.disconnect();
     });
 });
