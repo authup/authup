@@ -63,7 +63,7 @@
         "redis-extension": "^2.0.4"
     },
     "devDependencies": {
-        "@hapic/oauth2": "^4.0.1",
+        "@hapic/oauth2": "^4.0.2",
         "vitest": "^4.0.18"
     },
     "publishConfig": {
