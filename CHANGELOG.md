@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.62](https://github.com/authup/authup/compare/v1.0.0-beta.61...v1.0.0-beta.62) (2026-08-18)
+
+
+### Bug Fixes
+
+* **access:** keep policy evaluator registrations inside their engine ([244080e](https://github.com/authup/authup/commit/244080e7c1f5b026d6377c02518059c8e2f45b39))
+* **client-admin-console:** reset pagination when the sessions subject-kind filter changes ([#3462](https://github.com/authup/authup/issues/3462)) ([86e3af6](https://github.com/authup/authup/commit/86e3af6b724f1ec31a2e90324b54cc484d6199e7)), closes [#3443](https://github.com/authup/authup/issues/3443)
+* **deps:** bump @rapiq/* to ^2.2.0 ([46c660b](https://github.com/authup/authup/commit/46c660b05fa2ad34d7ea233ebbbdd6baa40122c9))
+* **deps:** bump hapic packages and typeorm-extension to their latest versions ([bff4b10](https://github.com/authup/authup/commit/bff4b10f29d57e42afca5e331b775ac1f6900970))
+* **deps:** bump tada5hi/monoship from 2.1.0 to 2.2.0 ([#3410](https://github.com/authup/authup/issues/3410)) ([69c3a2b](https://github.com/authup/authup/commit/69c3a2b749abf11e78b48eeed17c83fb0d912ddc))
+* **deps:** bump the minorandpatch group across 1 directory with 16 updates ([#3461](https://github.com/authup/authup/issues/3461)) ([bb1a33a](https://github.com/authup/authup/commit/bb1a33aa639016f2e0aee54121182cac88b471be))
+* **deps:** bump the minorandpatch group across 1 directory with 9 updates ([#3470](https://github.com/authup/authup/issues/3470)) ([b1f9376](https://github.com/authup/authup/commit/b1f9376157ca2f0cb513f03f9c34b1bbe45ab2f2))
+* **deps:** bump typeorm-extension from 4.0.0-beta.3 to 4.0.0 ([#3468](https://github.com/authup/authup/issues/3468)) ([f349f81](https://github.com/authup/authup/commit/f349f8148d918963d18e8f8a16fa8a26a64103bc))
+* **deps:** realign vue override to 3.5.41 ([da5abc0](https://github.com/authup/authup/commit/da5abc0b6bbf709403ff5d34e65ee124fe293399))
+* ensure consistent version for release ([96fc5fc](https://github.com/authup/authup/commit/96fc5fc851de0cf10436741e38ffdbff4b2c43b1))
+* **errors:** let a present instanceof chain decide isAuthupError ([4fb8662](https://github.com/authup/authup/commit/4fb86621feba601870362a2eeab0099a13d7a607))
+* **server-core:** batch the event retention sweep ([#3466](https://github.com/authup/authup/issues/3466)) ([4a2b351](https://github.com/authup/authup/commit/4a2b3514378899177e0a9f3d65009ca0ae96c9f4))
+* **server-core:** declare a sort allow-list for the client-scope schema ([#3447](https://github.com/authup/authup/issues/3447)) ([8cf2cfe](https://github.com/authup/authup/commit/8cf2cfe9de74861471f73f0d6fe39c3aed9708fe))
+* **server-core:** harden the federated login callback ([#3464](https://github.com/authup/authup/issues/3464)) ([d70de50](https://github.com/authup/authup/commit/d70de50e3121970e7647392c82ab24d44d42a32d))
+* **server-core:** make the external identity unique per identity provider ([#3463](https://github.com/authup/authup/issues/3463)) ([59eab0c](https://github.com/authup/authup/commit/59eab0c612b949694a2e4ae4cb24158172fd0c63)), closes [#3442](https://github.com/authup/authup/issues/3442)
+
 ## [1.0.0-beta.61](https://github.com/authup/authup/compare/v1.0.0-beta.60...v1.0.0-beta.61) (2026-08-14)
 
 

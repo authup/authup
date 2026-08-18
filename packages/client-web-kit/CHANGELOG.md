@@ -1,5 +1,29 @@
 # Change Log
 
+## [1.0.0-beta.62](https://github.com/authup/authup/compare/v1.0.0-beta.61...v1.0.0-beta.62) (2026-08-18)
+
+
+### Bug Fixes
+
+* **deps:** bump @rapiq/* to ^2.2.0 ([46c660b](https://github.com/authup/authup/commit/46c660b05fa2ad34d7ea233ebbbdd6baa40122c9))
+* **deps:** bump the minorandpatch group across 1 directory with 16 updates ([#3461](https://github.com/authup/authup/issues/3461)) ([bb1a33a](https://github.com/authup/authup/commit/bb1a33aa639016f2e0aee54121182cac88b471be))
+* **deps:** bump the minorandpatch group across 1 directory with 9 updates ([#3470](https://github.com/authup/authup/issues/3470)) ([b1f9376](https://github.com/authup/authup/commit/b1f9376157ca2f0cb513f03f9c34b1bbe45ab2f2))
+* **server-core:** declare a sort allow-list for the client-scope schema ([#3447](https://github.com/authup/authup/issues/3447)) ([8cf2cfe](https://github.com/authup/authup/commit/8cf2cfe9de74861471f73f0d6fe39c3aed9708fe))
+* **server-core:** harden the federated login callback ([#3464](https://github.com/authup/authup/issues/3464)) ([d70de50](https://github.com/authup/authup/commit/d70de50e3121970e7647392c82ab24d44d42a32d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+    * @authup/core-http-kit bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+    * @authup/core-kit bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+    * @authup/i18n bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+    * @authup/kit bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+    * @authup/specs bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+
 ## [1.0.0-beta.61](https://github.com/authup/authup/compare/v1.0.0-beta.60...v1.0.0-beta.61) (2026-08-14)
 
 

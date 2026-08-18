@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.0.0-beta.62](https://github.com/authup/authup/compare/v1.0.0-beta.61...v1.0.0-beta.62) (2026-08-18)
+
+
+### Bug Fixes
+
+* **server-core:** harden the federated login callback ([#3464](https://github.com/authup/authup/issues/3464)) ([d70de50](https://github.com/authup/authup/commit/d70de50e3121970e7647392c82ab24d44d42a32d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+    * @authup/kit bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+
 ## [1.0.0-beta.61](https://github.com/authup/authup/compare/v1.0.0-beta.60...v1.0.0-beta.61) (2026-08-14)
 
 

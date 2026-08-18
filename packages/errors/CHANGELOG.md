@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-beta.62](https://github.com/authup/authup/compare/v1.0.0-beta.61...v1.0.0-beta.62) (2026-08-18)
+
+
+### Bug Fixes
+
+* **errors:** let a present instanceof chain decide isAuthupError ([4fb8662](https://github.com/authup/authup/commit/4fb86621feba601870362a2eeab0099a13d7a607))
+
 ## [1.0.0-beta.61](https://github.com/authup/authup/compare/v1.0.0-beta.60...v1.0.0-beta.61) (2026-08-14)
 
 

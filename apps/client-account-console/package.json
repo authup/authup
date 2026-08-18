@@ -1,6 +1,6 @@
 {
     "name": "@authup/client-account-console",
-    "version": "1.0.0-beta.61",
+    "version": "1.0.0-beta.62",
     "type": "module",
     "license": "AGPL-3.0-only",
     "description": "Authup's account console: the end-user self-service SPA, served by server-core at /account and hostable standalone.",
@@ -24,14 +24,14 @@
         "node": "^22.13.0 || ^23.5.0 || >=24.0.0"
     },
     "devDependencies": {
-        "@authup/client-web-kit": "^1.0.0-beta.61",
-        "@authup/client-web-kit-theme": "^1.0.0-beta.61",
-        "@authup/client-web-theme": "^1.0.0-beta.61",
-        "@authup/core-http-kit": "^1.0.0-beta.61",
-        "@authup/core-kit": "^1.0.0-beta.61",
-        "@authup/i18n": "^1.0.0-beta.61",
-        "@authup/kit": "^1.0.0-beta.61",
-        "@authup/specs": "^1.0.0-beta.61",
+        "@authup/client-web-kit": "^1.0.0-beta.62",
+        "@authup/client-web-kit-theme": "^1.0.0-beta.62",
+        "@authup/client-web-theme": "^1.0.0-beta.62",
+        "@authup/core-http-kit": "^1.0.0-beta.62",
+        "@authup/core-kit": "^1.0.0-beta.62",
+        "@authup/i18n": "^1.0.0-beta.62",
+        "@authup/kit": "^1.0.0-beta.62",
+        "@authup/specs": "^1.0.0-beta.62",
         "@fontsource/asap": "^5.3.0",
         "@fontsource/nunito": "^5.3.0",
         "@iconify-json/fa6-brands": "^1.2.0",
@@ -56,13 +56,13 @@
         "cross-env": "^10.1.0",
         "date-fns": "^4.1.0",
         "happy-dom": "^20.11.2",
-        "pinia": "^4.0.3",
+        "pinia": "^4.0.2",
         "tailwindcss": "^4.3.1",
         "vite": "^8.2.1",
         "vitest": "^4.0.14",
         "vue": "^3.5.41",
         "vue-router": "^5.0.7",
-        "vue-tsc": "^3.3.10"
+        "vue-tsc": "^3.3.9"
     },
     "publishConfig": {
         "access": "public"

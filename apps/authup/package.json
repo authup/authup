@@ -1,7 +1,7 @@
 {
     "name": "authup",
     "type": "module",
-    "version": "1.0.0-beta.61",
+    "version": "1.0.0-beta.62",
     "description": "This is the CLI for the authup ecosystem.",
     "license": "AGPL-3.0-only",
     "exports": {
@@ -58,10 +58,10 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/client-admin-console": "^1.0.0-beta.61",
-        "@authup/errors": "^1.0.0-beta.61",
-        "@authup/kit": "^1.0.0-beta.61",
-        "@authup/server-core": "^1.0.0-beta.61",
+        "@authup/client-admin-console": "^1.0.0-beta.62",
+        "@authup/errors": "^1.0.0-beta.62",
+        "@authup/kit": "^1.0.0-beta.62",
+        "@authup/server-core": "^1.0.0-beta.62",
         "citty": "^0.2.2",
         "confinity": "^2.0.1",
         "consola": "^3.4.0",
