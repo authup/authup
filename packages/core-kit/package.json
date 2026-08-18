@@ -1,7 +1,7 @@
 {
     "name": "@authup/core-kit",
     "type": "module",
-    "version": "1.0.0-beta.61",
+    "version": "1.0.0-beta.62",
     "description": "Package containing global constants, types & interfaces.",
     "license": "Apache-2.0",
     "exports": {
@@ -53,9 +53,9 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/errors": "^1.0.0-beta.61",
-        "@authup/kit": "^1.0.0-beta.61",
-        "@authup/specs": "^1.0.0-beta.61",
+        "@authup/errors": "^1.0.0-beta.62",
+        "@authup/kit": "^1.0.0-beta.62",
+        "@authup/specs": "^1.0.0-beta.62",
         "@validup/zod": "^2.0.1",
         "validup": "^2.0.1",
         "zod": "^4.4.3"

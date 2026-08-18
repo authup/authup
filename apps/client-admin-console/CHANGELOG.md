@@ -1,5 +1,29 @@
 # Change Log
 
+## [1.0.0-beta.62](https://github.com/authup/authup/compare/v1.0.0-beta.61...v1.0.0-beta.62) (2026-08-18)
+
+
+### Bug Fixes
+
+* **client-admin-console:** reset pagination when the sessions subject-kind filter changes ([#3462](https://github.com/authup/authup/issues/3462)) ([86e3af6](https://github.com/authup/authup/commit/86e3af6b724f1ec31a2e90324b54cc484d6199e7)), closes [#3443](https://github.com/authup/authup/issues/3443)
+* **deps:** bump @rapiq/* to ^2.2.0 ([46c660b](https://github.com/authup/authup/commit/46c660b05fa2ad34d7ea233ebbbdd6baa40122c9))
+* **deps:** bump the minorandpatch group across 1 directory with 16 updates ([#3461](https://github.com/authup/authup/issues/3461)) ([bb1a33a](https://github.com/authup/authup/commit/bb1a33aa639016f2e0aee54121182cac88b471be))
+* **deps:** bump the minorandpatch group across 1 directory with 9 updates ([#3470](https://github.com/authup/authup/issues/3470)) ([b1f9376](https://github.com/authup/authup/commit/b1f9376157ca2f0cb513f03f9c34b1bbe45ab2f2))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+    * @authup/client-web-nuxt bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+    * @authup/client-web-theme bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+    * @authup/core-http-kit bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+    * @authup/core-kit bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+    * @authup/i18n bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+    * @authup/kit bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+
 ## [1.0.0-beta.61](https://github.com/authup/authup/compare/v1.0.0-beta.60...v1.0.0-beta.61) (2026-08-14)
 
 

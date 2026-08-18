@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.0.0-beta.62](https://github.com/authup/authup/compare/v1.0.0-beta.61...v1.0.0-beta.62) (2026-08-18)
+
+
+### Bug Fixes
+
+* **deps:** bump hapic packages and typeorm-extension to their latest versions ([bff4b10](https://github.com/authup/authup/commit/bff4b10f29d57e42afca5e331b775ac1f6900970))
+* **deps:** bump the minorandpatch group across 1 directory with 9 updates ([#3470](https://github.com/authup/authup/issues/3470)) ([b1f9376](https://github.com/authup/authup/commit/b1f9376157ca2f0cb513f03f9c34b1bbe45ab2f2))
+* ensure consistent version for release ([96fc5fc](https://github.com/authup/authup/commit/96fc5fc851de0cf10436741e38ffdbff4b2c43b1))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-http-kit bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+    * @authup/core-kit bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+    * @authup/errors bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+    * @authup/kit bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+    * @authup/server-kit bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+    * @authup/specs bumped from ^1.0.0-beta.61 to ^1.0.0-beta.62
+
 ## [1.0.0-beta.61](https://github.com/authup/authup/compare/v1.0.0-beta.60...v1.0.0-beta.61) (2026-08-14)
 
 
