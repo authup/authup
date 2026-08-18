@@ -11,9 +11,8 @@ import {
     EventScope,
     PermissionName,
 } from '@authup/core-kit';
-import { Client as HTTPClient } from '@authup/core-http-kit';
+import { Client as HTTPClient, buildQueryString } from '@authup/core-http-kit';
 import { RealmScope } from '@authup/access';
-import { buildQuery } from 'rapiq';
 import {
     afterAll,
     beforeAll,
@@ -277,7 +276,7 @@ describe('event (entity-CRUD bridge)', () => {
         expect(recorded.data[0].refType).toEqual('rolePermission');
         expect(recorded.data[0].realmId).toEqual(realmB.id);
 
-        const query = buildQuery({ filters: { id: recorded.data[0].id } });
+        const query = buildQueryString({ filters: { id: recorded.data[0].id } });
         const ownRouteResponse = await httpRequest(
             suite,
             'GET',
