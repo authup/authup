@@ -20,7 +20,7 @@
  * The catalog is keyed by `@authup/errors`' `ErrorCode` values. The
  * `AuthupErrorData` map below is the typed *producer* contract — the
  * structured data each code may carry on the wire — and the
- * `declare module 'validup'` block augments validup's `IssueDataByCode`
+ * `declare module '@ebec/core'` block augments the issue model's `IssueDataByCode`
  * wherever this package is imported. Today that is the client only
  * (`@authup/client-web-kit` re-exports this module, so `useErrorTranslator()`
  * and any client-side issue construction get the typed `data`). It does
@@ -54,7 +54,7 @@ export type AuthupErrorData = {
     insufficient_scope: { scope?: string },
 };
 
-declare module 'validup' {
+declare module '@ebec/core' {
     interface IssueDataByCode {
         entity_not_found: AuthupErrorData['entity_not_found'];
         entity_conflict: AuthupErrorData['entity_conflict'];

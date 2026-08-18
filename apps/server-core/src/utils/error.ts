@@ -49,14 +49,12 @@ export function sanitizeError(input: unknown): AuthupError {
 
     if (isValidupError(input)) {
         const paths = input.issues.map((issue) => stringifyPath(issue.path));
-        const error = new AuthupError({
+        return new AuthupError({
             code: ErrorCode.BAD_REQUEST,
             stack: input.stack,
             message: input.message || buildErrorMessageForAttributes(paths),
+            issues: input.issues,
         });
-
-        error.issues.push(...input.issues);
-        return error;
     }
 
     if (input instanceof ParseError || input instanceof CodecError) {

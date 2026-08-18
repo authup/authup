@@ -24,9 +24,9 @@ import { createValidator } from '@validup/zod';
 import {
     Container,
     ValidupError,
-    defineIssueItem,
 } from 'validup';
 import type { Validator } from 'validup';
+import { defineIssueItem } from '@ebec/core';
 import { z } from 'zod';
 import { AFormSubmit } from '../../utility';
 import { IFieldValidation } from '@ilingo/validup-vue';

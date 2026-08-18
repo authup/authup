@@ -11,20 +11,13 @@ import type { PolicyIssue } from '../issue';
 export const POLICY_ERROR_INSTANCE = Symbol.for('@authup/access/PolicyError');
 
 export class PolicyError extends AuthupError {
-    constructor(message?: string, code?: string | null) {
+    constructor(message?: string, code?: string | null, issues?: PolicyIssue[]) {
         super({
             message,
             code: code ?? undefined,
+            issues,
         });
         markInstanceof(this, POLICY_ERROR_INSTANCE);
-    }
-
-    addIssue(data: PolicyIssue) {
-        this.issues.push(data);
-    }
-
-    addIssues(data: PolicyIssue[]) {
-        this.issues.push(...data);
     }
 
     static evaluatorNotFound(type: string) {

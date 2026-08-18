@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { defineIssueGroup, defineIssueItem } from 'validup';
+import { defineIssueGroup, defineIssueItem } from '@ebec/core';
 import type { PolicyIssueGroup, PolicyIssueItem } from './types.ts';
 
 export function definePolicyIssueItem(input: Omit<PolicyIssueItem, 'type'>) : PolicyIssueItem {

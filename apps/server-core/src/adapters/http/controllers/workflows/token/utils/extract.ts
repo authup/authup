@@ -7,11 +7,11 @@
 
 import type { IAppEvent } from 'routup';
 import {
-    ValidupError, 
-    buildErrorMessageForAttribute, 
-    defineIssueItem, 
+    ValidupError,
+    buildErrorMessageForAttribute,
     isValidupError,
 } from 'validup';
+import { defineIssueItem } from '@ebec/core';
 import { readFromLocations, useRequestToken } from '../../../../request/index.ts';
 import { TokenRequestValidator } from './validator.ts';
 

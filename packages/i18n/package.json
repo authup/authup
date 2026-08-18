@@ -50,19 +50,24 @@
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
         "@authup/errors": "^1.0.0-beta.61",
-        "ilingo": "^6.1.0"
+        "ilingo": "^6.2.0"
     },
     "devDependencies": {
-        "validup": "^1.0.0",
+        "@ebec/core": "^1.3.2",
+        "validup": "^2.0.1",
         "vitest": "^4.0.14"
     },
     "publishConfig": {
         "access": "public"
     },
     "peerDependencies": {
-        "validup": "^1.0.0"
+        "@ebec/core": "^1.3.2",
+        "validup": "^2.0.1"
     },
     "peerDependenciesMeta": {
+        "@ebec/core": {
+            "optional": true
+        },
         "validup": {
             "optional": true
         }

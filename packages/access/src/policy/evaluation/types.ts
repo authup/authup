@@ -6,7 +6,7 @@
  */
 
 import type { ICondition } from '@rapiq/core';
-import type { Issue } from 'validup';
+import type { Issue } from '@ebec/core';
 import type { PolicyEvaluationContext } from './context';
 
 export type PolicyEvaluators = Record<string, IPolicyEvaluator>;

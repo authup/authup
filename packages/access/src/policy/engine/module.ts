@@ -6,7 +6,7 @@
  */
 
 import { ErrorCode } from '@authup/errors';
-import { defineIssueItem } from 'validup';
+import { defineIssueItem } from '@ebec/core';
 import type {
     IPolicyEvaluator,
     PolicyEvaluationContext,
@@ -213,9 +213,6 @@ export class PolicyEngine implements IPolicyEngine {
             }));
         }
 
-        const error = new PolicyError(`The policy ${policy.type} evaluation failed.`);
-        error.addIssues(issues);
-
-        throw error;
+        throw new PolicyError(`The policy ${policy.type} evaluation failed.`, undefined, issues);
     }
 }

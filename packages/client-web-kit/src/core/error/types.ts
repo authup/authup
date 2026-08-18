@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Issue } from 'validup';
+import type { Issue } from '@ebec/core';
 
 export type ErrorContext = {
     code?: string;

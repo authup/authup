@@ -50,8 +50,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@ebec/core": "^1.2.0",
-        "validup": "^1.0.0"
+        "@ebec/core": "^1.2.0"
     },
     "devDependencies": {
         "vitest": "^4.0.14"
