@@ -65,7 +65,7 @@
         "zod": "^4.4.3"
     },
     "devDependencies": {
-        "unplugin-swc": "^1.5.10",
+        "unplugin-swc": "^1.5.11",
         "vitest": "^4.0.14"
     },
     "publishConfig": {
