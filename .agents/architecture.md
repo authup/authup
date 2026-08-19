@@ -4389,6 +4389,57 @@ The UI sits on the `@vuecs/*` 1.x line — see
 for the package matrix. Two architectural notes specific to authup's
 integration are worth knowing before editing UI code:
 
+### Post-login destination — the `redirect` round-trip
+
+An RP that bounces a visitor to the login flow has to get them back to the page
+they asked for. The destination rides in the OAuth2 **`redirect_uri`'s own
+query**, not in client-side storage:
+
+```text
+/users  ->  /login?redirect=%2Fusers
+        ->  <idp>/authorize?...&redirect_uri=<origin>%2Flogin%2Fcallback%3Fredirect%3D%252Fusers
+        ->  <origin>/login/callback?redirect=%2Fusers&code=...&state=...
+        ->  /users
+```
+
+Three properties make this work, and all three are load-bearing:
+
+- **`redirect_uri` stays the fixed callback path.** The destination is a
+  parameter *on* it, never a replacement for it. The callback is where the code
+  exchange happens, it is the path registered in the client's allowlist, and
+  keeping the code off a content page is what RFC 6749 §10.5 asks for
+  (`Referer` leakage). The provisioned system clients register `<origin>/**`,
+  whose `**` runs to the end of the value, so the query needs no new pattern.
+- **The value is replayed from the stored request, never rebuilt from the
+  URL.** RFC 6749 §4.1.3 requires the `/token` `redirect_uri` to equal the
+  `/authorize` one, and `OAuth2AuthorizationCodeVerifier` compares them with
+  `!==` on the raw stored string. By the time the browser is back, its address
+  bar carries the appended `code`/`state` and a re-serialized query, so
+  reconstructing it from `window.location` would mismatch. `AuthorizationRequest`
+  keeps `redirect_uri` for exactly this, alongside `state` and the PKCE
+  `code_verifier` (which pin the storage hop regardless — a public client
+  cannot redeem without the verifier).
+- **The destination is untrusted on the way back.** It arrives as URL input
+  that a crafted authorize request could have shaped, so `RoutingInterceptor`
+  accepts a site-relative path and nothing else: a value resolving anywhere
+  else is dropped rather than reduced to its path, because an attacker-chosen
+  path is no better than an attacker-chosen host. **The test is the resolved
+  origin, never the leading characters** — the value is resolved against a
+  fixed dummy base and refused unless it lands back on it. A
+  `startsWith('//')` check is not equivalent and was the first attempt: the
+  WHATWG parser reads `\` as `/` under a special scheme, so `/\evil.test/x`
+  declares an authority too and walks straight through it.
+
+Nothing here is authup-specific, which is the point: any RP in any framework
+gets the behaviour by putting the destination in its own callback URI. There is
+deliberately no kit field for it — an `AuthorizationRequest.target` existed and
+was removed, because it made the round-trip a convention each app had to
+remember rather than a mechanism the protocol already carries.
+
+`apps/client-account-console` is the one caller that does not participate: its
+`redirect_uri` is `origin + pathname` (the current path *is* the destination)
+and its back-link uses the separate single-use `authup:account:ref` stash.
+
 ### vuecs 1.x SFC integration
 
 `@vuecs/forms` 4.0, `@vuecs/list` 1.0, and `@vuecs/pagination` 2.0
