@@ -69,6 +69,12 @@ export enum OAuth2FederatedLoginRefusal {
      * The client's access policy denied the identity (plan 052).
      */
     ACCESS_DENIED = 'accessDenied',
+    /**
+     * The upstream did not meet the provider's `requiredAmr` / `requiredAcr`
+     * allow-list (issue #3477). Opt-in: a provider declaring neither cannot
+     * reach this.
+     */
+    ASSURANCE_INSUFFICIENT = 'assuranceInsufficient',
 }
 
 export type OAuth2FederatedLoginRefusedResult = {

@@ -156,6 +156,47 @@ describe('src/http/controllers/identity-provider', () => {
         expect(responseURL.searchParams.get('state')).toBeDefined();
     });
 
+    it('should persist the assurance allow-lists and ask the upstream for them', async () => {
+        // the whole round-trip, because the attributes are EA rows and the
+        // effective allow-list is the validator: a key nobody mounted is
+        // stripped silently, which would leave the gate permanently inert
+        const provider = createFakeOAuth2IdentityProvider({
+            requiredAmr: 'mfa hwk',
+            requiredAcr: 'urn:loa:silver, urn:loa:gold',
+        });
+        const { data: created } = await suite.client.identityProvider.create(provider);
+        const { data: read } = await suite.client.identityProvider.getOne(created.id);
+
+        expect(read.requiredAmr).toEqual('mfa hwk');
+        expect(read.requiredAcr).toEqual('urn:loa:silver, urn:loa:gold');
+
+        const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        const { data: client } = await suite.client.client.create(createFakeClient());
+        await suite.client.clientScope.create({ scopeId: scope.id, clientId: client.id });
+
+        const codeRequest = base64URLEncode(JSON.stringify({
+            response_type: 'code',
+            client_id: client.id,
+            redirect_uri: 'https://example.com/redirect',
+            scope: ScopeName.GLOBAL,
+        }));
+
+        const response = await suite.client
+            .get(
+                `${buildIdentityProviderAuthorizePath(created.id)}?codeRequest=${codeRequest}`,
+                { redirect: 'manual' },
+            );
+
+        const responseURL = new URL(response.headers.get('location') as string);
+
+        // part 2: ask, rather than merely observe. Space-delimited per OIDC
+        // Core 3.1.2.1, whichever separator the operator typed.
+        expect(responseURL.searchParams.get('acr_values'))
+            .toEqual('urn:loa:silver urn:loa:gold');
+
+        await suite.client.identityProvider.delete(created.id);
+    });
+
     it('should delete resource (oauth2)', async () => {
         const { data: response } = await suite.client
             .identityProvider

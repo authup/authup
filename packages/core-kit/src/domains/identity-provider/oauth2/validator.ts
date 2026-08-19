@@ -76,5 +76,22 @@ export class IdentityProviderOAuth2AttributesValidator extends Container<OAuth2I
             createValidator(z.string().min(3).max(2000).optional()
                 .nullable()),
         );
+
+        // Upstream assurance allow-lists (opt-in, both null = trust the
+        // provider unconditionally). A single `acr` value may be as short as
+        // `"1"`, so unlike `scope` these have no lower bound beyond non-empty.
+        this.mount(
+            'requiredAmr',
+            { optional: true },
+            createValidator(z.string().min(1).max(2000).optional()
+                .nullable()),
+        );
+
+        this.mount(
+            'requiredAcr',
+            { optional: true },
+            createValidator(z.string().min(1).max(2000).optional()
+                .nullable()),
+        );
     }
 }

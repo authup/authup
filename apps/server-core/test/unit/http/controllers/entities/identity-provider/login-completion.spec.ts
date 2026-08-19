@@ -652,6 +652,49 @@ describe('identity-provider login completion', () => {
         expect(providerTokenCalls).toEqual(tokenCallsBefore);
     });
 
+    it('issues no code when the upstream misses the provider assurance allow-list', async () => {
+        // The fake provider answers with an access token and no id_token,
+        // which is precisely the "nothing to verify" case the gate must
+        // refuse rather than wave through (issue #3477).
+        const strictProvider = (await suite.client.identityProvider.create(createFakeOAuth2IdentityProvider({
+            realmId: realm.id,
+            tokenUrl: `${idpURL}/token`,
+            authorizeUrl: `${idpURL}/authorize`,
+            requiredAmr: 'mfa',
+        }))).data;
+
+        const out = await httpRequest(suite, 'GET', `identity-providers/${strictProvider.id}/authorize-out?codeRequest=${buildCodeRequest()}`, {
+            headers: { 'user-agent': USER_AGENT },
+            redirect: 'manual',
+        });
+        const state = new URL(out.headers.get('location') as string).searchParams.get('state');
+        const nonce = readPendingLoginCookie(out);
+
+        const usersBefore = (await suite.client.user.getMany({ filters: { realmId: realm.id } })).meta.total;
+        providerTokenCalls = 0;
+
+        const back = await httpRequest(
+            suite,
+            'GET',
+            `identity-providers/${strictProvider.id}/authorize-in?state=${state}&code=external-code`,
+            {
+                headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${nonce}` },
+                redirect: 'manual',
+            },
+        );
+
+        expectHostedBounce(back, client.id, OAuth2ErrorCode.ACCESS_DENIED);
+        // the exchange happened, so the gate is what refused; nothing after it did
+        expect(providerTokenCalls).toEqual(1);
+        // no pending login the browser could trade for a token
+        expect(readPendingLoginCookie(back)).toBeNull();
+        // and the refusal runs before the account manager, so no user was provisioned
+        expect((await suite.client.user.getMany({ filters: { realmId: realm.id } })).meta.total)
+            .toEqual(usersBefore);
+
+        await suite.client.identityProvider.delete(strictProvider.id);
+    });
+
     it('issues no code once the provider was disabled', async () => {
         const payload = createFakeOAuth2IdentityProvider({
             realmId: realm.id,

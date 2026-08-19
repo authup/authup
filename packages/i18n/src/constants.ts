@@ -415,6 +415,8 @@ export enum TranslatorTranslationFieldKey {
     CLIENT_ID = 'clientId',
     CLIENT_SECRET = 'clientSecret',
     SCOPE = 'scope',
+    REQUIRED_AMR = 'requiredAmr',
+    REQUIRED_ACR = 'requiredAcr',
     TOKEN = 'token',
     USER_INFO = 'userInfo',
     DISCOVERY = 'discovery',

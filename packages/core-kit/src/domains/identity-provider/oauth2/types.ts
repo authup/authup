@@ -22,6 +22,19 @@ export interface OAuth2IdentityProviderBase {
     userInfoUrl?: string | null;
 
     scope?: string | null;
+
+    /**
+     * Upstream assurance allow-lists. Comma- or space-separated.
+     *
+     * `requiredAmr` passes on any intersection with the id_token's `amr`,
+     * `requiredAcr` on membership of its `acr`. Both null (the default)
+     * trusts the provider unconditionally, which is what authup did before
+     * these existed. Set either and a login whose id_token does not satisfy
+     * it is refused - including one that carries no id_token at all.
+     */
+    requiredAmr?: string | null;
+
+    requiredAcr?: string | null;
 }
 
 export interface OAuth2IdentityProvider extends IdentityProvider, OAuth2IdentityProviderBase {

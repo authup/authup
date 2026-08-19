@@ -68,6 +68,8 @@ export const TranslatorTranslationFieldSpanish : NamespaceTranslations<`${Transl
     [TranslatorTranslationFieldKey.CLIENT_ID]: 'ID de cliente',
     [TranslatorTranslationFieldKey.CLIENT_SECRET]: 'Secreto del cliente',
     [TranslatorTranslationFieldKey.SCOPE]: 'Ámbito',
+    [TranslatorTranslationFieldKey.REQUIRED_AMR]: 'Claims amr requeridos',
+    [TranslatorTranslationFieldKey.REQUIRED_ACR]: 'Valores acr requeridos',
     [TranslatorTranslationFieldKey.TOKEN]: 'Token',
     [TranslatorTranslationFieldKey.USER_INFO]: 'UserInfo',
     [TranslatorTranslationFieldKey.DISCOVERY]: 'Descubrimiento',
