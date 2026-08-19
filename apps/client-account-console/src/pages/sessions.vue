@@ -31,7 +31,8 @@ import { VCIcon } from '@vuecs/icon';
 import { VCTimeago } from '@vuecs/timeago';
 import { useAlertDialog } from '@vuecs/overlays';
 import { computed, defineComponent, ref } from 'vue';
-import { useAccountToasts } from './utils';
+import PageError from '../components/PageError.vue';
+import { useAccountToasts, usePageError } from './utils';
 
 // One line on purpose: Tailwind's scanner must see the arbitrary-value
 // candidate unbroken to generate the utility.
@@ -45,6 +46,7 @@ export default defineComponent({
         APagination,
         ASessionTokens,
         ASessions,
+        PageError,
         VCButton,
         VCIcon,
         VCTimeago,
@@ -87,6 +89,7 @@ export default defineComponent({
 
         const httpClient = injectHTTPClient();
         const toasts = useAccountToasts();
+        const pageError = usePageError();
         const translate = useTranslator();
         const confirmDialog = useAlertDialog();
         const revoking = ref(false);
@@ -128,6 +131,15 @@ export default defineComponent({
                 revoking.value = false;
             }
         };
+
+        // A failed token load is flagged per row rather than through the
+        // page error: the inventory belongs to one expanded session, so
+        // taking the whole session list down for it would be a worse
+        // report than the one this fixes. Clearing the flag re-mounts that
+        // row's collection, which re-fetches. No 401 branch here: the
+        // outer session list loads first on the same bearer, so a dead
+        // session is already handled before a row can be expanded.
+        const tokensFailed = ref<Record<string, boolean>>({});
 
         const expanded = ref<Record<string, boolean>>({});
         const toggleTokens = (id: string) => {
@@ -182,10 +194,14 @@ export default defineComponent({
             userId,
             sessionId,
             query,
+            error: pageError.error,
+            capture: pageError.capture,
+            reset: pageError.reset,
             translations,
             revoking,
             revokeOthers,
             expanded,
+            tokensFailed,
             toggleTokens,
             buildTokensQuery,
             tokenStatus,
@@ -201,11 +217,16 @@ export default defineComponent({
         <h2 class="text-lg font-semibold mb-2">
             {{ translations.session }}
         </h2>
+        <PageError
+            v-if="error"
+            @retry="reset"
+        />
         <ASessions
-            v-if="userId"
+            v-else-if="userId"
             :query="query"
             :body="{ tag: 'div' }"
             :footer="true"
+            @failed="capture"
         >
             <template #header="props">
                 <div class="flex justify-end mb-2">
@@ -290,10 +311,16 @@ export default defineComponent({
                             v-if="expanded[row.id]"
                             class="border-t border-border p-3"
                         >
+                            <PageError
+                                v-if="tokensFailed[row.id]"
+                                @retry="tokensFailed[row.id] = false"
+                            />
                             <ASessionTokens
+                                v-else
                                 :query="buildTokensQuery(row.id)"
                                 :body="{ tag: 'div' }"
                                 :footer="true"
+                                @failed="tokensFailed[row.id] = true"
                             >
                                 <template #footer="tokenProps">
                                     <APagination

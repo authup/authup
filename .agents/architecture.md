@@ -1366,6 +1366,41 @@ choice"):
   user chip + sign-out are NOT part of the shell — App.vue appends them to
   `AAuthApp`'s single fixed gadget cluster via the `gadgets` slot (one top
   bar; the shell's brand row aligns onto the gadget line from md up).
+- **A failed page load is a state, not a toast** (issue #3482).
+  `usePageError()` (`src/pages/utils.ts`) holds the error and every page
+  renders `src/components/PageError.vue` (a `VCAlert` plus a Retry button)
+  in place of its content, because a toast fades and the page it left
+  behind said nothing: overview's form sits behind `v-if="entity"`, so a
+  failed `/userinfo` load left the page blank, and the two collection
+  pages rendered the kit collection's "no entries" copy, reporting an
+  error as an absence. The collection pages retry by clearing the error,
+  which flips the `v-if` and re-mounts the collection: its initial load
+  runs in setup, so a fresh instance re-fetches, and there is no other
+  reload handle outside the default slot. Action failures (a revoke, a
+  disconnect, a form submit) keep toasting, since they leave the page
+  intact.
+  **A 401 is not offered as retryable**: `capture()` runs
+  `store.logout()`, which drops the shell for the sign-in state, the same
+  place the router guard's failed `resolve()` lands. The kit's auth hook
+  already covers the common case (a failed background refresh unsets the
+  header and the kit answers with a logout); this catches the request
+  that still 401s after it, and the case where the store holds no refresh
+  token to retry with at all.
+  **The panel renders one localized line and never the failure's own
+  message.** A page load here fails for reasons its reader cannot act on,
+  and the messages carry the request line: hapic builds "Failed to fetch
+  (GET <url>)" and "502 Bad Gateway (GET <url>)" from the request itself,
+  so the API url, the subject uuid and the rapiq filter expression ride
+  along. That was tolerable in a toast that faded and is not in a panel
+  that stays, and gating on the error's `code` does not separate the two
+  (hapic stamps `ECONNRESET` on a transport failure and
+  `HTTP_RESPONSE_ERROR` on a status whose body is not JSON). An ACTION
+  failure is the opposite case and the toasts keep translating those:
+  "already linked to another user" is what its reader needs.
+  The one nested collection, the per-session token inventory, flags its
+  failure per row instead: it belongs to one expanded session, so taking
+  the whole list down for it would be a worse report than the one this
+  fixes.
 - **Sign-out** (the gadget-cluster button in App.vue) mirrors the admin
   console's `pages/logout.vue`: capture `idToken`/`realmId`, local
   `store.logout()`, round-trip through `/logout` with `id_token_hint`,
