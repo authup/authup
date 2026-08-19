@@ -27,6 +27,9 @@ const SENSITIVE_QUERY_PARAMS = [
     'token',
     'code',
     'client_secret',
+    // a federated login handle exchanges for a token pair (plan 094)
+    'loginHandle',
+    'loginChallenge',
 ];
 
 export function redactSensitiveURLParams(url: string): string {

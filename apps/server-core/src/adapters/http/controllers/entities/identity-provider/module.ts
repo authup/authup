@@ -44,7 +44,6 @@ import {
     IdentityProviderValidator,
     IdentityType,
     PermissionName,
-    buildIdentityProviderAuthorizeCallbackPath,
     isOAuth2IdentityProvider,
     isOpenIDIdentityProvider,
 } from '@authup/core-kit';
@@ -53,6 +52,7 @@ import type { Logger } from '@authup/server-kit';
 import { describeError, resolveURL } from '../../../../../utils/index.ts';
 import { useRequestQuery } from '@routup/basic/query';
 import { readRequestBody } from '@routup/basic/body';
+import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { OAuth2RequestError } from '@authup/specs';
 import type {
     EntityCollectionResponse,
@@ -60,6 +60,7 @@ import type {
     IdentityProviderCreatePayload,
     IdentityProviderLinkConfirmPayload,
     IdentityProviderLinkRequestResponse,
+    IdentityProviderLoginCompletePayload,
     IdentityProviderSavePayload,
     IdentityProviderUpdatePayload,
 } from '@authup/core-http-kit';
@@ -96,8 +97,6 @@ import {
     useRequestPermissionEvaluator,
 } from '../../../request/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import type { IdentityProviderCallbackPayload } from '@authup/client-auth-console';
-import { renderAuthConsolePage } from '../../../ui/index.ts';
 import type { IdentityProviderControllerContext, IdentityProviderControllerOptions } from './types.ts';
 
 @DTags('identity')
@@ -298,6 +297,14 @@ export class IdentityProviderController {
             throw OAuth2RequestError.malformed('A federated login requires an authorization code request.');
         }
 
+        // Minted by the hosted login form and kept in that origin's session
+        // storage (plan 094). It is the only thing that ties the login handle
+        // the callback returns to the browser that started the login, so a
+        // login without one could only end in a handle nobody may redeem.
+        if (typeof query.loginChallenge !== 'string' || query.loginChallenge.length === 0) {
+            throw OAuth2RequestError.malformed('A federated login requires a login challenge.');
+        }
+
         let codeRequestDecoded: OAuth2AuthorizationCodeRequest;
 
         try {
@@ -319,7 +326,10 @@ export class IdentityProviderController {
 
         const authenticator = this.buildProviderAuthenticator(entity);
 
-        const state = await this.saveAuthorizationState(event, { codeRequest: data.data });
+        const state = await this.saveAuthorizationState(event, {
+            codeRequest: data.data,
+            loginChallenge: query.loginChallenge,
+        });
 
         return sendRedirect(event, authenticator.buildRedirectURL({ state }));
     }
@@ -405,6 +415,7 @@ export class IdentityProviderController {
             provider: entity,
             codeRequest: data.codeRequest,
             code,
+            loginChallenge: data.loginChallenge ?? '',
             request: {
                 ipAddress: getRequestIP(event),
                 userAgent: getRequestHeader(event, 'user-agent'),
@@ -417,8 +428,9 @@ export class IdentityProviderController {
         // only attached when the refusal carries one; without it the page
         // re-runs the same verifier over the same request and states the
         // reason itself, so nothing is echoed.
+        const url = this.buildHostedAuthorizeURL(result.codeRequest);
+
         if (result.kind === 'refused') {
-            const url = this.buildHostedAuthorizeURL(result.codeRequest);
             if (result.error) {
                 url.searchParams.set('error', result.error);
             }
@@ -426,41 +438,42 @@ export class IdentityProviderController {
             return sendRedirect(event, url.href);
         }
 
-        // RFC 6749 §4.1.2: the code goes back to the client that asked for it.
-        // It is bound to that client_id and that redirect_uri, so the RP is the
-        // only party able to redeem it. Handing it to any other page strands
-        // the login there (issue #3446).
-        const url = new URL(result.redirectUri);
-        url.searchParams.set('code', result.code);
-        if (result.state) {
-            url.searchParams.set('state', result.state);
+        // The RP's code is NOT minted here. The browser goes back to the
+        // hosted authorize page carrying the login handle, and that page
+        // redeems it and runs the ladder a password login runs (second
+        // factor, prompt freshness, consent) before any code exists
+        // (plan 094). So a custom-scheme redirect_uri needs no interstitial
+        // on this leg either: it is navigated at the end of the ladder,
+        // exactly as it is for an interactive login.
+        url.searchParams.set('loginHandle', result.loginHandle);
+        url.searchParams.set('provider', entity.id);
+
+        return sendRedirect(event, url.href);
+    }
+
+    @DPost('/:id/login-complete', [])
+    async completeLogin(
+        @DPath('id') _id: string,
+        @DBody() _data: IdentityProviderLoginCompletePayload,
+        @DContext() event: IAppEvent,
+    ) : Promise<OAuth2TokenGrantResponse> {
+        const id = useRequestParamID(event);
+
+        const body = await readRequestBody(event);
+        const handle = isObject(body) ? body.handle : undefined;
+        if (typeof handle !== 'string' || handle.length === 0) {
+            throw new BadRequestError('The login handle is missing.');
         }
 
-        if (url.protocol === 'http:' || url.protocol === 'https:') {
-            return sendRedirect(event, url.href);
-        }
+        const challenge = isObject(body) ? body.challenge : undefined;
 
-        // routup's sendRedirect allows http(s) only. A native app's
-        // custom-scheme redirect_uri (RFC 8252, matched verbatim by
-        // isSimpleURLMatch) is navigated client-side from an interstitial
-        // page instead; the target is the verified redirect_uri and nothing
-        // else (the service refuses a script-capable scheme), so the page
-        // never reaches an unverified one (issue #3459).
-        const payload : IdentityProviderCallbackPayload = {
-            redirect: url.href,
-            // The browser stays on the consumed callback URL, so a reload
-            // would re-run the callback against a popped state. The page
-            // swaps the history entry for this first, so a reload lands on
-            // the hosted login instead.
-            authorizeUrl: this.buildHostedAuthorizeURL(result.codeRequest).href,
-            client: result.client,
-        };
-
-        return renderAuthConsolePage(event, {
-            url: buildIdentityProviderAuthorizeCallbackPath(entity.id),
-            payload: {
-                config: { baseURL: this.options.baseURL },
-                data: payload,
+        return this.loginService.redeem({
+            handle,
+            challenge: typeof challenge === 'string' ? challenge : '',
+            providerId: id,
+            request: {
+                ipAddress: getRequestIP(event),
+                userAgent: getRequestHeader(event, 'user-agent'),
             },
         });
     }
@@ -789,7 +802,7 @@ export class IdentityProviderController {
 
     private async saveAuthorizationState(
         event: IAppEvent,
-        data: Pick<OAuth2AuthorizationState, 'codeRequest' | 'link'> = {},
+        data: Pick<OAuth2AuthorizationState, 'codeRequest' | 'link' | 'loginChallenge'> = {},
     ) : Promise<string> {
         return this.stateManager.save({
             ...data,

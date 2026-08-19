@@ -104,6 +104,36 @@ describe('src/http/controllers/workflows (SSR pages)', () => {
         expect(payload.data.requestPath).toMatch(/^\/authorize\?/);
     });
 
+    it('should hand the federated login handle to the page and keep it out of the workflow links', async () => {
+        const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        const { data: client } = await suite.client.client.create(createFakeClient());
+        await suite.client.clientScope.create({ scopeId: scope.id, clientId: client.id });
+
+        const query = new URLSearchParams({
+            response_type: 'code',
+            client_id: client.id,
+            scope: ScopeName.GLOBAL,
+            loginHandle: 'handle-value',
+            provider: 'provider-id',
+        });
+
+        const response = await httpRequest(suite, 'GET', `/authorize?${query.toString()}`);
+        expect(response.status).toEqual(200);
+
+        const payload = extractHydrationPayload(await response.text());
+
+        expect(payload.data.federatedLogin).toEqual({
+            handle: 'handle-value',
+            providerId: 'provider-id',
+        });
+
+        // requestPath is the `redirect` the register / password links carry, so
+        // a consumed handle must not ride along into them.
+        expect(payload.data.requestPath).not.toContain('handle-value');
+        expect(payload.data.requestPath).not.toContain('loginHandle');
+        expect(payload.data.requestPath).toContain(`client_id=${client.id}`);
+    });
+
     it('should map a recognized error marker onto a neutral payload error and ignore any other', async () => {
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
         const { data: client } = await suite.client.client.create(createFakeClient());

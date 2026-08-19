@@ -1,4 +1,5 @@
 <script lang="ts">
+/* global window */
 import type { PropType, Ref } from 'vue';
 import {
     computed,
@@ -39,6 +40,7 @@ import type { LinkProps } from '@vuecs/link';
 import { VCLink } from '@vuecs/link';
 import type { UserAuthenticatorChallengeVerifyResponse } from '@authup/core-http-kit';
 import { AIdentityProviderIcon, AIdentityProviders, ARealmPicker } from '../../entities';
+import { createFederatedLoginChallenge } from '../../../core/federated-login';
 import { APagination, ATitle } from '../../utility';
 import AMfaChallengeForm from '../mfa/AMfaChallengeForm.vue';
 import { IFieldValidation } from '@ilingo/validup-vue';
@@ -347,6 +349,28 @@ export default defineComponent({
         const buildIdentityProviderURL = (id: string) => apiClient.identityProvider
             .getAuthorizeUri(id, { codeRequest: props.codeRequest });
 
+        /**
+         * Start a federated login (plan 094). The challenge is minted HERE,
+         * kept in this origin's session storage, and presented again when the
+         * hosted page redeems the login handle the callback returns.
+         *
+         * It is what ties the handle to this browser: the callback's request
+         * address and user agent are chosen by whoever makes that request, so
+         * without it an attacker could mint a handle for their own external
+         * account and hand the URL to someone else, whose browser would adopt
+         * that session (login CSRF). Nothing can write this origin's session
+         * storage from another one.
+         *
+         * The href stays plain, so the SSR and client renders agree; the
+         * navigation is performed here instead.
+         */
+        const startIdentityProviderLogin = (id: string) => {
+            const url = new URL(buildIdentityProviderURL(id));
+            url.searchParams.set('loginChallenge', createFederatedLoginChallenge());
+
+            window.location.assign(url.href);
+        };
+
         // useSubmitButton from @vuecs/forms returns a computed binding
         // for VCButton ({ type: 'submit', label, iconLeft, color,
         // loading, disabled }). Defaults flow through the vuecs
@@ -378,6 +402,7 @@ export default defineComponent({
             identityProviderQuery,
             identityProviderRef,
             buildIdentityProviderURL,
+            startIdentityProviderLogin,
             translationsDefault,
         };
     },
@@ -558,6 +583,7 @@ export default defineComponent({
                                         size="sm"
                                         color="neutral"
                                         class="p-2 a-login-provider-box bg-fg"
+                                        @click.prevent="startIdentityProviderLogin(item.id)"
                                     >
                                         <div class="flex flex-col">
                                             <div class="text-center mb-1">

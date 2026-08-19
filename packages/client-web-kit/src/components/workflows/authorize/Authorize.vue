@@ -10,8 +10,13 @@ import type {
     OAuth2AuthorizationCodeRequest,
     Realm,
     Scope,
+    UserAuthenticatorKind,
 } from '@authup/core-kit';
-import type { UserAuthenticatorChallengeResponse } from '@authup/core-http-kit';
+import type {
+    UserAuthenticatorChallengeResponse,
+    UserAuthenticatorChallengeVerifyResponse,
+} from '@authup/core-http-kit';
+import { ErrorCode } from '@authup/errors';
 import { storeToRefs } from 'pinia';
 import type { PropType, VNodeChild } from 'vue';
 import {
@@ -19,6 +24,7 @@ import {
     computed,
     defineComponent,
     h,
+    onMounted,
     ref,
     watch,
 } from 'vue';
@@ -36,6 +42,8 @@ import {
 import type { LinkProps } from '@vuecs/link';
 import {
     StoreAuthOrigin,
+    consumeFederatedLoginChallenge,
+    extractErrorContext,
     injectHTTPClient,
     injectStore,
     useTranslation,
@@ -79,6 +87,15 @@ export default defineComponent({
         passwordForgotLink: { type: Object as PropType<LinkProps> },
         realm: { type: Object as PropType<RealmSummary> },
         redirectUriVerified: { type: Boolean, default: false },
+        /**
+         * The one-time handle a federated callback put on this URL, for the
+         * session it established (plan 094). It is redeemed AFTER mount, so
+         * the resulting lastAuthOrigin change reaches the watch below and
+         * the login counts as fresh: select_account then skips the chooser
+         * (the account was chosen at the provider) and prompt=login does not
+         * demand a second credential entry.
+         */
+        federatedLogin: { type: Object as PropType<{ handle: string, providerId: string }> },
     },
     emits: ['redirect', 'failed'],
     setup(props, { emit }) {
@@ -91,6 +108,10 @@ export default defineComponent({
             realmId,
             user,
         } = storeToRefs(store);
+
+        // Held true from the first render (SSR included) so the login form
+        // never flashes while the handle is in flight.
+        const federatedLoginPending = ref<boolean>(!!props.federatedLogin);
 
         // Local logout — the reactive loggedIn flip re-renders into the
         // realm-pinned login form below.
@@ -192,6 +213,95 @@ export default defineComponent({
                 }
             } finally {
                 mfaResolving.value = false;
+            }
+        };
+
+        // A federated user holding a confirmed factor gets no bearer from the
+        // redemption. The server answers `mfa_required` with the restricted
+        // MFA-pending ticket, and the challenge below completes the login and
+        // returns the grant, exactly as a password login does.
+        const federatedTicket = ref<string | null>(null);
+
+        const loadTicketChallengeMaterial = async (ticket: string) => {
+            try {
+                const status = await httpClient.userAuthenticator.challenge({ authorizationHeader: { type: 'Bearer', token: ticket } });
+
+                mfaStatus.value = {
+                    required: true,
+                    enrollmentRequired: false,
+                    kinds: status.kinds,
+                    challenge: status.challenge,
+                };
+            } catch {
+                // keep the kinds the error carried; only the webauthn material
+                // is lost, and every other kind renders without it
+            }
+        };
+
+        onMounted(async () => {
+            const federated = props.federatedLogin;
+            if (!federated) {
+                return;
+            }
+
+            try {
+                const grant = await httpClient.identityProvider.completeLogin(
+                    federated.providerId,
+                    federated.handle,
+                    // minted by the login form before the hop and kept in this
+                    // origin's session storage: the proof that THIS browser
+                    // started the login the handle belongs to
+                    consumeFederatedLoginChallenge() ?? '',
+                );
+
+                await store.loginWithTokenGrant(grant);
+            } catch (e) {
+                const ctx = extractErrorContext(e);
+                const ticket = ctx.code === ErrorCode.OAUTH_MFA_REQUIRED &&
+                    typeof ctx.data?.mfa_token === 'string' ?
+                    ctx.data.mfa_token :
+                    null;
+
+                if (ticket) {
+                    federatedTicket.value = ticket;
+                    mfaStatus.value = {
+                        required: true,
+                        enrollmentRequired: false,
+                        kinds: Array.isArray(ctx.data?.kinds) ?
+                            ctx.data?.kinds as `${UserAuthenticatorKind}`[] :
+                            [],
+                    };
+
+                    Promise.resolve().then(() => loadTicketChallengeMaterial(ticket));
+                } else {
+                    emit('failed', ctx.message ?? (e instanceof Error ? e.message : String(e)));
+                }
+            } finally {
+                federatedLoginPending.value = false;
+            }
+        });
+
+        const loginFailedText = useTranslation({
+            namespace: TranslatorTranslationNamespace.CLIENT,
+            key: TranslatorTranslationClientKey.LOGIN_FAILED,
+        });
+
+        const completeFederatedTicket = async (
+            response?: UserAuthenticatorChallengeVerifyResponse,
+        ) => {
+            if (!response || !response.token) {
+                emit('failed', loginFailedText.value);
+                return;
+            }
+
+            try {
+                await store.loginWithTokenGrant(response.token);
+
+                federatedTicket.value = null;
+                mfaSatisfiedLocal.value = true;
+            } catch (e) {
+                emit('failed', extractErrorContext(e).message ??
+                    (e instanceof Error ? e.message : String(e)));
             }
         };
 
@@ -400,6 +510,31 @@ export default defineComponent({
                 if (redirect) {
                     return redirect;
                 }
+            }
+
+            // A federated return holds the WHOLE ladder, not just its
+            // logged-out branch: a session already in the cookies (another
+            // tab, a lingering one) would otherwise let the ladder run against
+            // that identity while the redemption is still in flight, and a
+            // builtIn client auto-consents on mount — delivering the
+            // application a code for the wrong account.
+            if (federatedLoginPending.value) {
+                return wrapChild(h(AuthorizeText, { message: loadingText.value }));
+            }
+
+            // The federated login owes a second factor: no bearer exists yet,
+            // so the challenge runs against the restricted ticket and its
+            // verify response carries the grant.
+            if (federatedTicket.value) {
+                return wrapChild(h(AMfaChallengeForm, {
+                    kinds: mfaStatus.value?.kinds ?? [],
+                    challenge: mfaStatus.value?.challenge ?? null,
+                    ticket: federatedTicket.value,
+                    onDone: (response?: UserAuthenticatorChallengeVerifyResponse) => {
+                        completeFederatedTicket(response);
+                    },
+                    onFailed: (message: string) => emit('failed', message),
+                }));
             }
 
             // Force re-authentication: prompt=login (proactive) or a login_required

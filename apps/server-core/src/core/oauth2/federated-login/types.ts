@@ -11,16 +11,17 @@ import type {
     OpenIDIdentityProvider, 
     User, 
 } from '@authup/core-kit';
-import type { OAuth2ErrorCode } from '@authup/specs';
+import type { OAuth2ErrorCode, OAuth2TokenGrantResponse } from '@authup/specs';
 import type { Logger } from '@authup/server-kit';
 import type { IIdentityProviderAccountManager } from '../../identity/provider/account/types.ts';
 import type { IOAuth2Authenticator } from '../../identity/provider/authentication/protocols/index.ts';
 import type { IEventService, IRealmRepository } from '../../entities/index.ts';
+import type { ISessionManager } from '../../authentication/index.ts';
+import type { IUserAuthenticatorChallengeProvider } from '../../entities/user-authenticator/index.ts';
+import type { IAuthFlowMetrics } from '../../metrics/index.ts';
+import type { IOAuth2TokenIssuer } from '../token/index.ts';
 import type { IOAuth2AccessPolicyEvaluator } from '../access-policy/index.ts';
-import type {
-    IOAuth2AuthorizationCodeIssuer,
-    IOAuth2AuthorizationCodeRequestVerifier,
-} from '../authorization/index.ts';
+import type { IOAuth2AuthorizationCodeRequestVerifier } from '../authorization/index.ts';
 
 export type OAuth2FederatedLoginCompleteInput = {
     /**
@@ -37,6 +38,11 @@ export type OAuth2FederatedLoginCompleteInput = {
      * The provider's single-use authorization code.
      */
     code: string,
+    /**
+     * The federated login challenge the state blob carried, minted by the
+     * hosted login form before the hop.
+     */
+    loginChallenge: string,
     request?: {
         ipAddress?: string | null,
         userAgent?: string | null,
@@ -90,24 +96,79 @@ export type OAuth2FederatedLoginRefusedResult = {
 export type OAuth2FederatedLoginIssuedResult = {
     kind: 'issued',
     /**
-     * The verified redirect target of the RP. Its scheme passed
-     * `isSafeRedirectURLScheme`, so a caller may navigate it.
+     * The one-time handle the hosted authorize page redeems for the
+     * session the callback established. No token, no authorization code:
+     * the RP's code is issued at the end of the hosted ladder, once the
+     * second factor, the prompt gates and consent have run.
      */
-    redirectUri: string,
+    loginHandle: string,
     /**
-     * The authorization code id the RP redeems at `/token`.
-     */
-    code: string,
-    state?: string,
-    /**
-     * The verified request, for a caller that has to re-render the hosted
-     * page alongside the redirect (the custom-scheme interstitial).
+     * The verified request, which the caller re-renders on the hosted
+     * page alongside the handle.
      */
     codeRequest: OAuth2AuthorizationCodeRequest,
-    client: {
-        id: string,
-        name: string,
-        displayName: string | null,
+};
+
+/**
+ * The stash behind a login handle. Four scalars, never the identity object
+ * (which carries the provider entity incl. its EA-loaded clientSecret and
+ * the raw external token payload) and never a token.
+ */
+export type OAuth2FederatedLoginHandle = {
+    sessionId: string,
+    /**
+     * The challenge the redeeming browser has to present. Minted by the
+     * hosted login form and kept in that origin's session storage, so an
+     * attacker who mints a handle for their own external account cannot make
+     * another browser redeem it.
+     */
+    loginChallenge: string,
+    /**
+     * The provider the handle was minted for. The redeem endpoint is
+     * provider-scoped, so a handle cannot be presented at another one.
+     */
+    providerId: string,
+    /**
+     * Actor name for the LOGIN security event.
+     */
+    userName?: string | null,
+    /**
+     * The callback request's address and agent. Unlike the account link
+     * handle, redemption carries no bearer, so these are all that ties the
+     * handle to the browser it was minted for. Without them a handed-out
+     * handle URL would log a victim into the attacker's account.
+     */
+    ipAddress?: string | null,
+    userAgent?: string | null,
+};
+
+export interface IOAuth2FederatedLoginHandleStore {
+    /**
+     * @returns the one-time handle
+     */
+    save(data: OAuth2FederatedLoginHandle) : Promise<string>;
+
+    /**
+     * Reads and DROPS the stash. Single use: a handle that reaches a log or
+     * a browser history entry must not be redeemable twice.
+     */
+    consume(handle: string) : Promise<OAuth2FederatedLoginHandle | null>;
+}
+
+export type OAuth2FederatedLoginRedeemInput = {
+    handle: string,
+    /**
+     * The challenge the caller presents, from the hosted origin's session
+     * storage.
+     */
+    challenge: string,
+    /**
+     * The provider the redeem endpoint was addressed at.
+     */
+    providerId: string,
+    request?: {
+        ipAddress?: string | null,
+        userAgent?: string | null,
     },
 };
 
@@ -115,18 +176,37 @@ export type OAuth2FederatedLoginCompleteResult =    OAuth2FederatedLoginRefusedR
     OAuth2FederatedLoginIssuedResult;
 
 /**
- * Completes the RP's original authorization request after an external
- * provider sent the browser back (issue #3446). It owns the refusal ladder
- * — realm match, code-request re-verification, redirect-scheme gate,
- * provider and user state, access policy — and mints the authup code.
+ * Completes the external leg of a federated login after a provider sent
+ * the browser back (issue #3446). It owns the refusal ladder: realm match,
+ * code-request re-verification, redirect-scheme gate, provider and user
+ * state, access policy.
+ *
+ * It does NOT mint the RP's authorization code. It establishes the authup
+ * session and hands back a one-time handle; the hosted authorize page
+ * redeems that handle and runs the same ladder a password login runs
+ * before any code is issued (plan 094).
  *
  * Deliberately transport-free: it decides WHAT the answer is, and returns
  * it as a discriminated result. The adapter decides how that answer
- * reaches the browser (a redirect, or the interstitial page a custom
- * scheme needs), because only the adapter knows the difference.
+ * reaches the browser.
  */
 export interface IOAuth2FederatedLoginService {
     complete(input: OAuth2FederatedLoginCompleteInput) : Promise<OAuth2FederatedLoginCompleteResult>;
+
+    /**
+     * Exchange a login handle for the grant of the session the callback
+     * established. Refuses without detail: the caller is anonymous.
+     *
+     * A user holding a confirmed authenticator gets NO grant here. It
+     * answers `mfa_required` carrying the restricted MFA-pending ticket
+     * (issue #3242) instead, so the upstream credential alone never yields
+     * an API bearer. The challenge routes complete the login from there,
+     * exactly as they do for a password login.
+     *
+     * @throws BadRequestError
+     * @throws OAuth2MfaRequiredError
+     */
+    redeem(input: OAuth2FederatedLoginRedeemInput) : Promise<OAuth2TokenGrantResponse>;
 }
 
 export type OAuth2FederatedLoginServiceOptions = {
@@ -158,10 +238,22 @@ export type OAuth2FederatedLoginServiceContext = {
     accountManager: IIdentityProviderAccountManager,
     realmRepository: IRealmRepository,
     codeRequestVerifier: IOAuth2AuthorizationCodeRequestVerifier,
-    codeIssuer: IOAuth2AuthorizationCodeIssuer,
+
+    sessionManager: ISessionManager,
+    handleStore: IOAuth2FederatedLoginHandleStore,
+    accessTokenIssuer: IOAuth2TokenIssuer,
+    refreshTokenIssuer: IOAuth2TokenIssuer,
+    /**
+     * Mints the MFA-pending ticket a redemption answers with while the
+     * second factor is outstanding. Without it a redemption for a
+     * factor-holding user fails closed rather than handing out a bearer.
+     */
+    mfaTicketIssuer?: IOAuth2TokenIssuer,
+    mfaChallengeProvider?: IUserAuthenticatorChallengeProvider,
 
     accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,
     eventService?: IEventService,
+    metrics?: IAuthFlowMetrics,
     logger?: Logger,
     authenticatorFactory?: OAuth2FederatedLoginAuthenticatorFactory,
 };

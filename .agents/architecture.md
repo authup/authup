@@ -736,8 +736,9 @@ not by client-admin-console:
 
 - **Routes**: `/authorize`, `/register`, `/activate`, `/password-forgot`,
   `/password-reset` — each `GET` serves SSR HTML while `POST` on the same
-  path remains the JSON API (plus `/logout` and the federated callback's
-  interstitial, `/identity-providers/:id/authorize-in`, see *Federated Login
+  path remains the JSON API (plus `/logout`; the federated callback's
+  interstitial at `/identity-providers/:id/authorize-in` still exists in the
+  console package but nothing renders it since plan 094, see *Federated Login
   Completion*). The render plumbing is shared:
   `renderAuthConsolePage(event, { url, payload })` in
   `adapters/http/ui/auth-console/module.ts` (JIT vs dist, template,
@@ -1603,9 +1604,10 @@ compare a constant against itself, and loading the SSR bundle at boot would
 turn a missing build into a failed start instead of an actionable page
 error. `@authup/client-auth-console` exports `CONTRACT_VERSION` as a
 runtime value alongside `render()` (missing = version 1; version 2 added the
-federated callback's interstitial route and payload, so a package built
-against 1 is refused at boot rather than rendering an empty view for a
-custom-scheme completion; the history lives in `src/contract.ts`); the account
+federated callback's interstitial route and payload, version 3 the
+`federatedLogin` payload the page must redeem. Plan 094 stopped server-core
+rendering the interstitial route, but the floor only rises. The history lives
+in `src/contract.ts`); the account
 console's contract is the `<!--account-config-->` marker, whose absence
 silently degrades the SPA to same-origin API derivation. **Fail-closed**,
 unlike the theme: a replacement owns the prompt ladder, PKCE/`state`
@@ -2120,8 +2122,7 @@ Include authorization*.
 
 Two runtime services. **server-core is the IdP origin** — the OAuth2/OIDC
 protocol surface plus the hosted SSR auth pages (`/authorize`, `/register`,
-`/activate`, `/password-forgot`, `/password-reset`, `/logout`, and the
-federated callback's interstitial at `/identity-providers/:id/authorize-in`).
+`/activate`, `/password-forgot`, `/password-reset` and `/logout`).
 Those pages
 are **architectural, not incidental**, and must stay served by server-core
 (since plan 083 their Vue app lives in its own workspace,
@@ -2329,9 +2330,11 @@ back-channel logout). Both are `OAuth2TokenPayload` fields.
 the id_token is minted inside the `authorization_code` grant
 (`OAuth2AuthorizeGrant.runWith`) **after** `resolveSession`, so its `sid` is
 **authoritative** — it references the real backing session in the reuse branch,
-the fallback-create branch, and the session-less **federated IdP** flow alike
-(the last previously produced **no** id_token at all, since only
-`OAuth2Authorization.authorize()` minted one and the IdP callback bypasses it).
+the fallback-create branch, and the **federated IdP** flow alike (the last
+previously produced **no** id_token at all, since only
+`OAuth2Authorization.authorize()` minted one and the IdP callback bypassed it;
+since plan 094 that flow reaches `authorize()` through the hosted page, so it
+also carries a real `session_id` rather than falling back).
 `OAuth2Authorization.authorize()` no longer mints the id_token or holds an
 `openIdTokenIssuer` / `identityResolver`; instead it stamps the authentication
 instant onto the auth-code blob (`OAuth2AuthorizationCode.auth_time`, replacing
@@ -2567,9 +2570,10 @@ neutral message: no identity/policy detail, no enumeration oracle).
   (order: realm → MFA backstop/step-up → prompt/max_age freshness → **access
   policy** → issue), so a denial is only revealed to a fully-authenticated,
   second-factor-complete identity; (2) the **federated-IdP callback** (it
-  mints codes without `authorize()`) — on deny it redirects back to the hosted
-  `/authorize` page with `error=access_denied` (`serve()` maps that recognized
-  query param onto a neutral hydration-payload error); (3) a **`/token`
+  admits an external identity before the hosted ladder runs) — on deny it
+  redirects back to the hosted `/authorize` page with `error=access_denied`
+  (`serve()` maps that recognized query param onto a neutral
+  hydration-payload error), and no session is established; (3) a **`/token`
   code-redemption backstop** — catches codes minted before a policy change or
   by a missed minting site; the subject is built from the code-blob scalars
   (no DB identity load) and denial surfaces as `invalid_grant` (RFC 6749 §5.2
@@ -2640,9 +2644,10 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
   AFTER `authorize()` succeeds (an access-policy denial throws before it —
   a denied identity never writes a row), skipping `builtIn` clients (zero
   rows, parity with auto-consent) and wrapped try/catch (a consent-write
-  failure never fails an issued code). Deliberately NOT recorded at the
-  federated-IdP callback or `/token` — no synthetic consent for flows that
-  never showed a screen.
+  failure never fails an issued code). Deliberately NOT recorded at
+  `/token`: no synthetic consent for a flow that never showed a screen. A
+  federated login stopped being such a flow with plan 094. Its code is issued
+  by this very site now, so it writes its rows here like any other.
 - **Covering read is cached:** `findAllBySubjectClient` rides a 60s query
   cache keyed `CachePrefix.CONSENT_COVERING` `<client_id>:<sub_kind>:<sub>`,
   invalidated by the subscriber (`cache.onInsert: true` — union/keep is
@@ -2710,22 +2715,27 @@ Domain type `Consent` (core-kit) + `EntityType.CONSENT`, TypeORM entity +
 
 ## Federated Login Completion (`authorize-in`)
 
-The external-IdP callback completes the RP's **original** authorization
-request. It re-verifies the code request that `authorize-out` stored on the
-state blob, mints an authup code from that whole verified request, and
-redirects to the client's own `redirect_uri` carrying `code` and `state` (RFC
-6749 §4.1.2). Three properties are load-bearing, and each of the first two was
-a shipped bug (issue #3446):
+The external-IdP callback completes the EXTERNAL leg of the RP's **original**
+authorization request. It re-verifies the code request that `authorize-out`
+stored on the state blob, establishes the authup session, and returns the
+browser to the hosted `/authorize` page carrying a one-time **login handle**
+for that session (plan 094). The RP's code is issued at the end of the hosted
+ladder, by the same `POST /authorize` an interactive login posts, so a
+federated login passes the gates a password login passes: the second factor
+and inline enrollment, `prompt=login` / `max_age` freshness, `select_account`,
+the `acr_values` step-up, consent and its persisted `auth_consents` rows
+(issue #3454). Three properties are load-bearing, and each of the first two
+was a shipped bug (issue #3446):
 
 The ladder itself is **`OAuth2FederatedLoginService`**
 (`core/oauth2/federated-login/`), not the controller: realm match, code-request
 re-verification, redirect-scheme gate, provider and user state, access policy
-and code issuance all live there, and `complete()` answers with a discriminated
+and the session live there, and `complete()` answers with a discriminated
 result (`{ kind: 'refused', refusal, error?, codeRequest }` /
-`{ kind: 'issued', redirectUri, code, state?, codeRequest, client }`). The
-controller only maps that answer onto a transport, because only the adapter
-knows the difference between a `sendRedirect` and the interstitial page a
-custom scheme needs. The provider authenticator is a ctx member
+`{ kind: 'issued', loginHandle, codeRequest }`). Its sibling `redeem()` is the
+other half: it consumes the handle, extends the pending session to the regular
+lifetime and mints the AT+RT pair the hosted page runs the ladder with. The
+controller only maps those answers onto a transport. The provider authenticator is a ctx member
 (`authenticatorFactory`, defaulting to
 `createIdentityProviderOAuth2Authenticator`) so the whole refusal matrix is
 exercised without an external provider — see
@@ -2736,7 +2746,9 @@ the same rule the query schemas follow.
 
 - **The code goes to the RP, never to the hosted `/authorize` page.** It is
   bound to the RP's `client_id` and `redirect_uri`, so the RP is the only party
-  that can redeem it. The callback used to hand it to the hosted page instead,
+  that can redeem it. Since plan 094 the callback mints no code at all, so the
+  property is now carried by `AuthorizeController.confirm`, which every
+  interactive login shares. The callback used to hand a code to the hosted page instead,
   where the router guard's `store.exchangeAuthorizationCode(code)` answered 401
   `invalid_client` (`/token` authenticates a client unconditionally, and the
   auth console deliberately holds no client row). The guard swallowed that
@@ -2744,17 +2756,21 @@ the same rule the query schemas follow.
   producer sends a `code` to a hosted page anymore, so that guard branch is
   gone (#3459): the auth console's `router.beforeEach` only resolves the
   session.
-- **The WHOLE verified request reaches `codeIssuer.issue`,** never a
-  hand-picked subset. `code_challenge` / `code_challenge_method`, `nonce` and
+- **The WHOLE verified request reaches the code issuer,** never a
+  hand-picked subset. The callback re-renders it on the hosted page (every
+  defined key, `buildHostedAuthorizeURL`) and the consent post issues from it. `code_challenge` / `code_challenge_method`, `nonce` and
   `acr_values` all ride the code. A code that lost its challenge cannot be
   redeemed by a public client at all (`PKCE is required for public clients`),
   which is every console client, so dropping those four fields broke the RP leg
   too.
 - **The re-verification IS the redirect gate.** `redirectUriVerified` is the
   only thing on this path that knows the `redirect_uri` matched a registered
-  pattern, so the redirect is gated on it. The flag is set from the match
-  itself (never from mere presence), because a consumer now makes a redirect
-  decision on it. Re-verifying also re-resolves the client at completion time
+  pattern. The callback itself no longer navigates it (its target is the
+  server-derived hosted page), but it still refuses a completion without it, so
+  a login that could never end in a legal redirect fails before a user is
+  provisioned; `serve()` and `confirm` re-derive the flag from the code request
+  in the URL, so the RP redirect at the end obeys the same gate as every
+  interactive request. Re-verifying also re-resolves the client at completion time
   (active, grant allowlist, scopes), which fails a login closed when the client
   was deactivated while the user was away at the provider.
 
@@ -2811,46 +2827,98 @@ checks run on the popped payload, and a state failing them is gone as well
 used to share the authorization-code namespace, which let either repository
 pop the other's entries.
 
-The hosted page is not part of this completion, so consent, the MFA challenge
-and the prompt ladder do not run for a federated login. Both exclusions are
-deliberate and predate this (see *Intentional enforcement boundaries* and
-`.agents/references/authentik.md`): the upstream provider is the trusted
-authentication. The access-policy denial bounces to the hosted page like every
-other refusal (above), because the person is at the browser and the denial
-card is the only surface that can say why.
+**The login handle (plan 094).** Server auth is header-only and the hosted
+page's session lives in the kit store, so the callback has to hand the browser
+something it can turn into a bearer. It is a `createNanoID()` handle over the
+cache (`OAuth2FederatedLoginHandleStore`, the account-link store's shape under
+`CacheOAuth2Prefix.FEDERATED_LOGIN_HANDLE`, 5 min), stashing the session id,
+the provider id, the user name (the LOGIN event's actor name), the login
+challenge below and the callback request's address and agent. Never the
+identity object (it carries the provider entity with its EA-loaded
+`clientSecret` and the raw external token payload) and never a token.
 
-**A custom-scheme `redirect_uri` lands on an interstitial page (#3459).**
-`isSimpleURLMatch` matches a native app's `myapp://cb` (RFC 8252) verbatim,
-so it verifies, but routup's `sendRedirect` allows http(s) only and the
-callback used to fail after the provider's single-use code was spent. Only an
-http(s) target is `sendRedirect`ed; any other verified target is rendered as
-the callback response through `renderAuthConsolePage(event, { url:
-buildIdentityProviderAuthorizeCallbackPath(id), payload })`, the payload
-carrying `{ redirect: <target with code+state>, authorizeUrl: <hosted
-authorize URL for the same code request>, client: <ClientSummary> }`
-(render-contract version 2). The auth console page
-(`src/pages/identity-provider-callback.vue`, route
-`/identity-providers/:id/authorize-in`, since the browser URL stays the
-callback URL) first `history.replaceState`s the consumed callback URL away
-for `authorizeUrl` (a reload or tab restore would otherwise re-run the
-callback against a popped state and show JSON), then calls
-`window.location.assign(redirect)` on mount, and always renders an "Open
-application" button to the target, because a browser may require a user
-gesture before launching an external protocol. The target is the verified
-`redirect_uri` and nothing else, so the page is unreachable with an
-unverified one. **The scheme is denylisted at three layers**
-(`isSafeRedirectURLScheme` in `@authup/kit`: `javascript:`, `data:`,
-`vbscript:`, `blob:`, `filesystem:`, `file:`, `about:` refused; http(s) and
-RFC 8252 custom schemes pass): `ClientValidator` refuses to register such a pattern, the
-code-request verifier refuses such a `redirect_uri` with `invalid_request`,
-and the callback fails closed (throws) should either gap, right after the
-`redirectUriVerified` check and before the provider's code is spent or
-anything is minted, because the page `location.assign`s the target and
-renders it as an href, which on a script-capable scheme is script execution
-on the IdP origin (the kit store cookies are JS-readable). The payload shape
-is the exported `IdentityProviderCallbackPayload` (`src/contract.ts`), which
-server-core type-imports like the rest of the render contract. Copy: `authupClient` `RETURNING_TO_APP` /
-`OPEN_APP`.
+`POST /identity-providers/:id/login-complete` exchanges it, unauthenticated,
+for the grant. **The load-bearing binding is the login challenge, not the
+address and agent.** The kit's `LoginForm` mints it before the hop
+(`createFederatedLoginChallenge`, `core/federated-login.ts`), keeps it in the
+hosted origin's `sessionStorage` and sends it on `authorize-out`, which stores
+it on the state blob; the callback carries it onto the handle, and the hosted
+page presents it back when it redeems. Only the browser that STARTED the login
+holds it, and no other origin can write that storage. Without it an attacker
+could run a federated login for their own external account and hand the
+resulting `/authorize?...&loginHandle=` URL to someone else, whose browser
+would adopt that session and then consent the application into it: login CSRF,
+and NEW to this design, because the code the callback used to mint was bound
+to the attacker's own PKCE challenge and died at the RP. The address and agent
+cannot carry that weight, and the repo already recorded why for issue #3439:
+both are chosen by whoever makes the callback request (under the shipped
+`trustProxy: true` the address is the client-supplied left-most
+`X-Forwarded-For` entry). They stay as a barrier against a leaked URL replayed
+from elsewhere. `authorize-out` therefore REQUIRES `loginChallenge` and
+refuses without it, the same posture #3457 took for the code request: a login
+that cannot end in a redeemable handle must not start. Both parameters are in
+the access log's `SENSITIVE_QUERY_PARAMS`.
+
+The handle is consumed on read (`cache.pop`), so a replay finds nothing and a
+wrong challenge costs the whole handle: there is no repeated guess to time,
+which is why the comparison is a plain one. Every refusal answers with one
+message, since the caller is anonymous.
+
+**A factor-holding user gets no bearer from the redemption.** It answers
+`mfa_required` carrying the restricted MFA-pending ticket (issue #3242) bound
+to the pending session, and the challenge routes complete the login and mint
+the pair, exactly as they do for a password login. Otherwise the upstream
+credential alone would still reach the whole API for a user who enrolled a
+factor on their authup account, which is the hole #3454 is about; the local
+gate would only have covered the application's code. Unlike the password
+grant this covers EVERY factor kind, including totp and recovery: the handle
+is consumed, so there are no credentials left to resubmit with an `otp`. The
+ticket's `exp` is capped to the pending session's own expiry, never extended,
+so an unfinished challenge dies with the login. `OAuth2MfaLoginService.complete`
+labels its LOGIN event from `session.authMethod`, so a federated completion
+reads `reason: 'federated'` rather than a password grant.
+
+The pending session is created with `authMethod: ext`, `mfaAt: null` and an
+`expiresAt` equal to the handle TTL (the `issueTicket` shape: an abandoned
+login self-expires into the regular session sweep), and `redeem()` extends it
+to the full lifetime. It carries no `clientId`: that column is the client
+SUBJECT foreign key, and the application lands on the token rows at the
+`/token` exchange. From the redemption on, the flow is the hosted ladder: the
+MFA challenge stamps `mfaAt` on that very session, `POST /authorize` reads it
+as `sessionId` (so `authTime` is the callback instant), and the exchange
+reuses it (#3191). One `auth_sessions` row per federated login, `amr:
+['ext']`, `+'otp'` and `acr: urn:authup:mfa` once a factor was verified.
+
+The render contract is at **version 3** for this: the `/authorize` payload
+carries `federatedLogin` and the page has to redeem it, so a substituted
+console built against version 2 would strand every federated login on the
+login form. That is exactly the drift `bindConsolePackages` fails closed on.
+
+The access-policy leg stays at the callback rather than moving into
+`authorizeInner` with the rest: it is already implemented and correct there,
+it denies before a session exists, and the issue's list does not include it.
+The trade-off is that a denial is revealed to an identity that has cleared
+only the first factor, and that this leg keeps its own bounce instead of the
+ladder's `AUTHORIZE_FAILED` event and `denied` metric.
+
+**A custom-scheme `redirect_uri` needs no interstitial on this leg any more.**
+`isSimpleURLMatch` matches a native app's `myapp://cb` (RFC 8252) verbatim, and
+routup's `sendRedirect` allows http(s) only, which is why the callback used to
+render the target from an interstitial page (#3459). Since plan 094 the
+callback's own target is always the hosted page, and the custom-scheme target
+is navigated at the end of the ladder by `AuthorizeForm`, exactly as it is for
+an interactive login. The interstitial route and payload stay in
+`@authup/client-auth-console` (render contract version 2) but nothing renders
+them; deleting them is a contract change worth its own issue. **The scheme is
+still denylisted at three layers** (`isSafeRedirectURLScheme` in `@authup/kit`:
+`javascript:`, `data:`, `vbscript:`, `blob:`, `filesystem:`, `file:`, `about:`
+refused; http(s) and RFC 8252 custom schemes pass): `ClientValidator` refuses to
+register such a pattern, the code-request verifier refuses such a
+`redirect_uri` with `invalid_request`, and the completion fails closed (throws)
+should either gap, before the provider's code is spent and before a session
+exists, because the hosted page navigates the target and renders it as an href,
+which on a script-capable scheme is script execution on the IdP origin (the kit
+store cookies are JS-readable).
 
 **A federated login without a code request does not exist (#3457).**
 `authorize-out` refuses to start one (`invalid_request`, before any provider
@@ -3772,10 +3840,11 @@ mirrors this — when `userId !== '@me'` it offers only the email button
    the token endpoint. WebAuthn cannot ride a single POST — interactive kinds
    complete a fresh login through the MFA-pending ticket (below).
 
-**Intentional enforcement boundaries (#3251):** a federated IdP callback trusts
-the upstream provider and establishes its external-auth session without a local
-factor challenge (`mfaRequired` does not force local enrollment there); operators
-must enforce MFA upstream. Setting `mfaEnabled=false` is an explicit policy
+**Intentional enforcement boundaries (#3251):** a federated IdP login is NO
+LONGER one of them. Since plan 094 the callback returns the browser to the
+hosted `/authorize` page, so the local factor is challenged there and
+`mfaRequired` routes a device-less federated user through inline enrollment,
+like any other login (issue #3454). Setting `mfaEnabled=false` is an explicit policy
 downgrade for every user, including already-enrolled users — device rows remain
 stored and reactivate when the feature is enabled again. Finally, the device-less
 direct password-grant pass-through above is the bootstrap the hosted UI needs to
@@ -4130,10 +4199,11 @@ locales. Kit test `test/unit/components/workflows/mfa-challenge.spec.ts`.
 (`auth_sessions.auth_method`, `SessionAuthMethod` enum in core-kit:
 `pwd | ldap | ext | client`; `ldap` is reserved — the password grant
 currently stamps `pwd` for both, the LDAP distinction is the deferred Stage 1b).
-Every session-creation site stamps it: password grant (`pwd`), identity grant +
-the federated IdP callback (`ext` — threaded through the code blob's
-`auth_method`, which the authorization_code grant's fallback-create inherits;
-the reuse branch inherits from the bearer session row), client
+Every session-creation site stamps it: password grant (`pwd`), identity grant
+(`ext` — threaded through the code blob's `auth_method`, which the
+authorization_code grant's fallback-create inherits; the reuse branch inherits
+from the bearer session row) + the federated IdP callback, which since plan 094
+creates the session itself with `ext` and the exchange reuses it, client
 credentials (`client`, session-inventory only). Pre-column sessions
 carry `NULL` → **no amr/acr claims** (authup cannot retroactively know).
 
@@ -4220,7 +4290,13 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   `LOGIN` (core `runWith`, after issuance) and `LOGIN_FAILED` (HTTP adapter
   catch — carries the **canonicalized attempted identifier in `actorName`**
   with `actorId` null; the deliberate PII-posture call, it is the throttle
-  key), `REFRESH_REPLAY_DETECTED` (`revokeFamily`), `AUTHORIZE`
+  key), a federated `LOGIN` (`OAuth2FederatedLoginService.redeem`, when the
+  hosted page exchanges the login handle: `data.reason: 'federated'` plus the
+  provider id, `refType: session`, `sessionId` = the session the callback
+  established. Plan 094 moved it here from the callback's own `AUTHORIZE`
+  emit, which is now the ladder's like every other one; `reason` is reused
+  rather than a new key because `sanitizeEventData`'s allow-list is closed),
+  `REFRESH_REPLAY_DETECTED` (`revokeFamily`), `AUTHORIZE`
   (`OAuth2Authorization.authorize()`, `data.reason: autoConsent|consent` from
   `client.builtIn`), `LOGOUT` (end-session hint revoke), `REGISTER` /
   `ACCOUNT_ACTIVATED`, `PASSWORD_RESET_REQUESTED/COMPLETED`, and the

@@ -23,10 +23,12 @@ import {
     it,
 } from 'vitest';
 import type { App } from 'vue';
+import AMfaChallengeForm from '../../../../src/components/workflows/mfa/AMfaChallengeForm.vue';
 import AAccountPrompt from '../../../../src/components/workflows/authorize/AAccountPrompt.vue';
 import AAuthorize from '../../../../src/components/workflows/authorize/Authorize.vue';
 import AuthorizeForm from '../../../../src/components/workflows/authorize/AuthorizeForm.vue';
 import AuthorizeSilentRedirect from '../../../../src/components/workflows/authorize/AuthorizeSilentRedirect.vue';
+import { ErrorCode } from '@authup/errors';
 import {
     StoreAuthOrigin,
     injectStore,
@@ -113,6 +115,9 @@ type MountOverrides = {
     redirectUriVerified?: boolean,
     consentRows?: Consent[],
     consentHandler?: () => unknown,
+    federatedLogin?: { handle: string, providerId: string },
+    loginCompleteHandler?: () => unknown,
+    userInfoHandler?: () => unknown,
 };
 
 function mountAuthorize(overrides: MountOverrides = {}) {
@@ -125,6 +130,9 @@ function mountAuthorize(overrides: MountOverrides = {}) {
         redirectUriVerified = true,
         consentRows,
         consentHandler,
+        federatedLogin,
+        loginCompleteHandler,
+        userInfoHandler,
     } = overrides;
 
     const pinia = createPinia();
@@ -132,7 +140,11 @@ function mountAuthorize(overrides: MountOverrides = {}) {
         handlers: {
             // a user-less session's re-resolve attempt must settle by failing —
             // the default fallback would otherwise fake a truthy "user".
-            'GET /userinfo': () => { throw new Error('userinfo unavailable'); },
+            'GET /userinfo': userInfoHandler ??
+                (() => { throw new Error('userinfo unavailable'); }),
+            ...(loginCompleteHandler ?
+                { 'POST /identity-providers/provider-1/login-complete': loginCompleteHandler } :
+                {}),
             // covering probe: no override → the fallback's empty collection
             // (no persisted consent → covered=false, today's behavior).
             ...(consentHandler ?
@@ -212,6 +224,7 @@ function mountAuthorize(overrides: MountOverrides = {}) {
             },
             scopes: [],
             redirectUriVerified,
+            federatedLogin,
         },
         global: {
             components: {
@@ -609,5 +622,96 @@ describe('AAuthorize prompt=login (re-auth)', () => {
 
         // re-auth satisfied → the built_in auto-consent form renders
         expect(wrapper.find('.authorize-form-stub').exists()).toBe(true);
+    });
+});
+
+// Plan 094: a federated callback hands this page a one-time handle instead of
+// the RP's code, so the ladder below runs for an external login too.
+describe('AAuthorize federated login handle', () => {
+    const federatedLogin = { handle: 'handle-1', providerId: 'provider-1' };
+
+    const grant = () => ({
+        access_token: 'federated-at',
+        token_type: 'Bearer',
+        expires_in: 3600,
+        refresh_token: 'federated-rt',
+    });
+
+    const userInfo = () => ({
+        id: 'user-1', 
+        name: 'jdoe', 
+        realmId: REALM.id, 
+    });
+
+    it('redeems the handle and counts the login as fresh', async () => {
+        const {
+            wrapper, 
+            store, 
+            httpClient, 
+        } = mountAuthorize({
+            loggedIn: false,
+            federatedLogin,
+            loginCompleteHandler: grant,
+            userInfoHandler: userInfo,
+        });
+        await flushPromises();
+
+        expect(httpClient.requests.some(
+            (request) => request.url.includes('identity-providers/provider-1/login-complete'),
+        )).toBe(true);
+        expect(store().accessToken).toEqual('federated-at');
+        expect(store().lastAuthOrigin).toEqual(StoreAuthOrigin.LOGIN);
+
+        // The account was chosen at the provider, so prompt=select_account must
+        // not ask again. That holds only because the redemption runs AFTER
+        // mount: the lastAuthOrigin CHANGE is what the ladder watches.
+        expect(hasChooser(wrapper)).toBe(false);
+    });
+
+    it('holds the login form back while the handle is in flight', async () => {
+        const { wrapper } = mountAuthorize({
+            loggedIn: false,
+            federatedLogin,
+            loginCompleteHandler: () => new Promise(() => { /* never settles */ }),
+        });
+        await flushPromises();
+
+        expect(wrapper.find('.login-form-stub').exists()).toBe(false);
+        expect(wrapper.find('.authorize-text-stub').exists()).toBe(true);
+    });
+
+    it('challenges the second factor against the ticket instead of taking a bearer', async () => {
+        // The server answers a factor-holding federated user with the
+        // restricted MFA-pending ticket, never a grant (issue #3454).
+        const { wrapper, store } = mountAuthorize({
+            loggedIn: false,
+            federatedLogin,
+            loginCompleteHandler: () => {
+                const error : any = new Error('Complete a second-factor challenge to continue.');
+                error.code = ErrorCode.OAUTH_MFA_REQUIRED;
+                error.kinds = ['totp'];
+                error.mfa_token = 'ticket-token';
+                throw error;
+            },
+        });
+        await flushPromises();
+
+        const challenge = wrapper.findComponent(AMfaChallengeForm);
+        expect(challenge.exists()).toBe(true);
+        expect(challenge.props('ticket')).toEqual('ticket-token');
+        // no session was established off the refusal
+        expect(store().accessToken).toBeFalsy();
+    });
+
+    it('falls through to the login form when the redemption fails', async () => {
+        const { wrapper } = mountAuthorize({
+            loggedIn: false,
+            federatedLogin,
+            loginCompleteHandler: () => { throw new Error('handle is spent'); },
+        });
+        await flushPromises();
+
+        expect(wrapper.find('.login-form-stub').exists()).toBe(true);
+        expect(wrapper.emitted('failed')).toBeTruthy();
     });
 });

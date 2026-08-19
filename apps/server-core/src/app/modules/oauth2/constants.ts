@@ -17,6 +17,7 @@ import type {
     IOAuth2AuthorizationStateManager,
     IOAuth2AuthorizeStateRepository,
     IOAuth2ClientRepository,
+    IOAuth2FederatedLoginHandleStore,
     IOAuth2OpenIDTokenIssuer,
     IOAuth2ScopeRepository,
     IOAuth2TokenIssuer,
@@ -38,6 +39,8 @@ export const OAuth2InjectionToken = {
     AuthorizationCodeRequestVerifier: new TypedToken<IOAuth2AuthorizationCodeRequestVerifier>('AuthorizationCodeRequestVerifier'),
 
     AuthorizationStateRepository: new TypedToken<IOAuth2AuthorizeStateRepository>('AuthorizationStateRepository'),
+
+    FederatedLoginHandleStore: new TypedToken<IOAuth2FederatedLoginHandleStore>('FederatedLoginHandleStore'),
 
     /**
      * One adapter instance serving both key ports: the material-resolving

@@ -5,6 +5,7 @@
   -  view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
+/* global window */
 import { AAuthorize } from '@authup/client-web-kit';
 import type {
     Client,
@@ -15,7 +16,7 @@ import type {
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import type { LinkProps } from '@vuecs/link';
 import { useToast } from '@vuecs/overlays';
-import { computed, defineComponent } from 'vue';
+import { computed, defineComponent, onMounted } from 'vue';
 import { useBasePath } from '../base-path';
 import { injectPayload } from '../di';
 
@@ -31,9 +32,28 @@ export default defineComponent({
             scopes: Scope[] | undefined,
             realm: RealmSummary | undefined,
             redirectUriVerified: boolean | undefined,
+            federatedLogin: { handle: string, providerId: string } | undefined,
             features: StatusResponseFeatures | undefined,
             requestPath: string | undefined
         }>();
+
+        // The handle travels in the payload, not through the router, so the
+        // consumed parameters can leave the browser URL right away: a reload
+        // would otherwise re-attempt a spent handle and surface its refusal.
+        onMounted(() => {
+            if (typeof window === 'undefined') {
+                return;
+            }
+
+            const url = new URL(window.location.href);
+            if (!url.searchParams.has('loginHandle')) {
+                return;
+            }
+
+            url.searchParams.delete('loginHandle');
+            url.searchParams.delete('provider');
+            window.history.replaceState(window.history.state, '', url.href);
+        });
 
         const withBasePath = useBasePath();
 
@@ -87,6 +107,7 @@ export default defineComponent({
         :error="data.error"
         :realm="data.realm"
         :redirect-uri-verified="data.redirectUriVerified"
+        :federated-login="data.federatedLogin"
         :register-link="registerLink"
         :password-forgot-link="passwordForgotLink"
         @failed="handleFailed"

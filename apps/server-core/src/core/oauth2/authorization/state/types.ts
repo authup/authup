@@ -25,6 +25,13 @@ export type OAuth2AuthorizationState = {
      * endpoint, never from client input.
      */
     link?: OAuth2AuthorizationStateLink,
+    /**
+     * The federated login challenge the hosted login form minted before the
+     * hop (plan 094). It is carried onto the login handle and presented
+     * again when the hosted page redeems it, which is what ties that handle
+     * to the browser that started the login.
+     */
+    loginChallenge?: string,
     ip: string,
     userAgent?: string | null
 };

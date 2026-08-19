@@ -197,7 +197,22 @@ export class AuthorizeController {
         // Path + query of the original request — the SSR page uses it as
         // the same-origin `redirect` parameter on register / password links
         // so those pages can lead back into this authorize request.
+        // A federated callback sends the browser back here carrying the
+        // one-time handle for the session it established (plan 094). The
+        // page redeems it and the ladder continues as for any other login.
+        // Both parameters are dropped from `requestPath`, so the register /
+        // password links never lead back into a consumed handle.
+        const query = useRequestQuery(event);
+        const federatedLogin = typeof query.loginHandle === 'string' &&
+            query.loginHandle.length > 0 &&
+            typeof query.provider === 'string' &&
+            query.provider.length > 0 ?
+            { handle: query.loginHandle, providerId: query.provider } :
+            undefined;
+
         const requestURL = new URL(event.request.url);
+        requestURL.searchParams.delete('loginHandle');
+        requestURL.searchParams.delete('provider');
 
         return renderAuthConsolePage(event, {
             url: '/authorize',
@@ -210,6 +225,7 @@ export class AuthorizeController {
                     scopes,
                     realm,
                     redirectUriVerified,
+                    federatedLogin,
                     features: this.options.features,
                     requestPath: `${requestURL.pathname}${requestURL.search}`,
                 },

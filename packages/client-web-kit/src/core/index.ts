@@ -9,6 +9,7 @@ export * from './color-mode';
 export * from './constants';
 export * from './cookie';
 export * from './error';
+export * from './federated-login';
 export * from './http-client';
 export * from './inject';
 export * from './provide';

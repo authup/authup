@@ -11,12 +11,23 @@ import {
     EventRefType,
     EventScope,
     IdentityType,
+    ScopeName,
     SessionAuthMethod,
 } from '@authup/core-kit';
-import { InternalError } from '@authup/errors';
+import { BadRequestError, InternalError } from '@authup/errors';
 import type { Logger } from '@authup/server-kit';
-import { OAuth2ErrorCode, OAuth2RequestError, isOAuth2Error } from '@authup/specs';
+import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
+import {
+    OAuth2ErrorCode,
+    OAuth2MfaRequiredError,
+    OAuth2RequestError,
+    OAuth2SubKind,
+    isOAuth2Error,
+} from '@authup/specs';
 import type { IEventService, IRealmRepository } from '../../entities/index.ts';
+import type { IAuthFlowMetrics } from '../../metrics/index.ts';
+import type { ISessionManager } from '../../authentication/index.ts';
+import type { IUserAuthenticatorChallengeProvider } from '../../entities/user-authenticator/index.ts';
 // Deep imports, never the `core/identity` barrel: it reaches back into
 // this module through the core barrel, and the cycle would TDZ-crash.
 import type { IIdentityProviderAccountManager } from '../../identity/provider/account/types.ts';
@@ -24,15 +35,20 @@ import { createIdentityProviderOAuth2Authenticator } from '../../identity/provid
 import { toIdentityPolicyData } from '../../identity/permission/identity-policy-data.ts';
 import type { IOAuth2AccessPolicyEvaluator } from '../access-policy/index.ts';
 import type {
-    IOAuth2AuthorizationCodeIssuer,
     IOAuth2AuthorizationCodeRequestVerifier,
     OAuth2AuthorizationCodeRequestVerificationResult,
 } from '../authorization/index.ts';
+import { deriveAmrAcr } from '../authorization/helpers.ts';
+import { buildOAuth2BearerTokenResponse } from '../response/index.ts';
+import type { IOAuth2TokenIssuer } from '../token/index.ts';
+import { OAUTH2_FEDERATED_LOGIN_HANDLE_TTL } from './constants.ts';
 import type {
+    IOAuth2FederatedLoginHandleStore,
     IOAuth2FederatedLoginService,
     OAuth2FederatedLoginAuthenticatorFactory,
     OAuth2FederatedLoginCompleteInput,
     OAuth2FederatedLoginCompleteResult,
+    OAuth2FederatedLoginRedeemInput,
     OAuth2FederatedLoginServiceContext,
     OAuth2FederatedLoginServiceOptions,
 } from './types.ts';
@@ -47,11 +63,23 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
 
     protected codeRequestVerifier : IOAuth2AuthorizationCodeRequestVerifier;
 
-    protected codeIssuer : IOAuth2AuthorizationCodeIssuer;
+    protected sessionManager : ISessionManager;
+
+    protected handleStore : IOAuth2FederatedLoginHandleStore;
+
+    protected accessTokenIssuer : IOAuth2TokenIssuer;
+
+    protected refreshTokenIssuer : IOAuth2TokenIssuer;
+
+    protected mfaTicketIssuer? : IOAuth2TokenIssuer;
+
+    protected mfaChallengeProvider? : IUserAuthenticatorChallengeProvider;
 
     protected accessPolicyEvaluator? : IOAuth2AccessPolicyEvaluator;
 
     protected eventService? : IEventService;
+
+    protected metrics? : IAuthFlowMetrics;
 
     protected logger? : Logger;
 
@@ -62,9 +90,15 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
         this.accountManager = ctx.accountManager;
         this.realmRepository = ctx.realmRepository;
         this.codeRequestVerifier = ctx.codeRequestVerifier;
-        this.codeIssuer = ctx.codeIssuer;
+        this.sessionManager = ctx.sessionManager;
+        this.handleStore = ctx.handleStore;
+        this.accessTokenIssuer = ctx.accessTokenIssuer;
+        this.refreshTokenIssuer = ctx.refreshTokenIssuer;
+        this.mfaTicketIssuer = ctx.mfaTicketIssuer;
+        this.mfaChallengeProvider = ctx.mfaChallengeProvider;
         this.accessPolicyEvaluator = ctx.accessPolicyEvaluator;
         this.eventService = ctx.eventService;
+        this.metrics = ctx.metrics;
         this.logger = ctx.logger;
         this.authenticatorFactory = ctx.authenticatorFactory ??
             ((provider, options) => createIdentityProviderOAuth2Authenticator({
@@ -174,11 +208,10 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
             };
         }
 
-        const realm = await this.realmRepository.resolve(provider.realmId, true);
-
         // Application access policy (plan 052), federated leg. A policy id
         // with no wired evaluator denies (fail closed).
         if (verified.client.accessPolicyId) {
+            const realm = await this.realmRepository.resolve(provider.realmId, true);
             let allowed = false;
 
             const subject = toIdentityPolicyData({
@@ -205,63 +238,177 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
             }
         }
 
-        // The WHOLE verified request reaches the issuer, never a hand-picked
-        // subset: it carries code_challenge / code_challenge_method and nonce
-        // (plus acr_values, which no redemption path reads yet). A code that
-        // lost its PKCE challenge cannot be redeemed by a public client at
-        // all (`PKCE is required for public clients`), which is every console
-        // client.
-        const authorizationCode = await this.codeIssuer.issue(
-            verified.data,
-            {
-                type: IdentityType.USER,
-                data: {
-                    ...user,
-                    realm,
-                },
-            },
-            { authMethod: SessionAuthMethod.EXTERNAL },
-        );
+        // The callback establishes the session and stops there. The RP's
+        // code is issued at the end of the hosted authorize ladder, so a
+        // federated login passes the same gates a password login does: the
+        // second factor, inline enrollment, prompt/max_age freshness,
+        // acr_values step-up and consent (plan 094).
+        //
+        // Its lifetime is the handle's: an abandoned login self-expires and
+        // is swept, and redemption extends it to the regular one.
+        const session = await this.sessionManager.create({
+            userAgent: input.request?.userAgent ?? undefined,
+            ipAddress: input.request?.ipAddress ?? undefined,
+            realmId: user.realmId,
+            // no `clientId`: a USER-subject session, and the column is the
+            // client-SUBJECT foreign key. The application lands on the
+            // token rows at the /token exchange.
+            sub: user.id,
+            subKind: IdentityType.USER,
+            mfaAt: null,
+            authMethod: SessionAuthMethod.EXTERNAL,
+            expiresAt: new Date(Date.now() + OAUTH2_FEDERATED_LOGIN_HANDLE_TTL).toISOString(),
+        });
 
-        // The interactive path records this in OAuth2Authorization.authorize();
-        // this leg issues its code directly, so without an emit here a
-        // federated authorization leaves no trace in auth_events while every
-        // other one does. `reason: federated` is what tells the two apart:
-        // there was no consent step to report. No session exists yet (the
-        // /token exchange creates it), hence a null sessionId. Metrics stay
-        // uninstrumented on this leg, as they already are.
-        await this.eventService?.record({
-            scope: EventScope.OAUTH2,
-            name: EventName.AUTHORIZE,
-            refType: EventRefType.CLIENT,
-            refId: verified.data.client_id ?? null,
-            clientId: verified.data.client_id ?? null,
-            sessionId: null,
-            actorType: IdentityType.USER,
-            actorId: user.id,
-            actorName: user.name,
-            realmId: verified.data.realm_id ?? realm.id,
-            requestIpAddress: input.request?.ipAddress ?? null,
-            requestUserAgent: input.request?.userAgent ?? null,
-            data: {
-                reason: 'federated',
-                providerId: provider.id,
-                providerName: provider.name,
-                ...(verified.data.scope ? { scope: verified.data.scope } : {}),
-            },
+        const loginHandle = await this.handleStore.save({
+            sessionId: session.id,
+            loginChallenge: input.loginChallenge,
+            providerId: provider.id,
+            userName: user.name,
+            ipAddress: input.request?.ipAddress ?? null,
+            userAgent: input.request?.userAgent ?? null,
         });
 
         return {
             kind: 'issued',
-            redirectUri,
-            code: authorizationCode.id,
-            state: verified.data.state,
+            loginHandle,
             codeRequest: verified.data,
-            client: {
-                id: verified.client.id,
-                name: verified.client.name,
-                displayName: verified.client.displayName ?? null,
-            },
         };
+    }
+
+    async redeem(input: OAuth2FederatedLoginRedeemInput): Promise<OAuth2TokenGrantResponse> {
+        // One message for every refusal: the caller is anonymous, so an
+        // unknown handle, an expired one and a foreign one must not be
+        // distinguishable.
+        const refuse = () => new BadRequestError('The login request is unknown or expired.');
+
+        const stash = await this.handleStore.consume(input.handle);
+        if (!stash) {
+            throw refuse();
+        }
+
+        // What makes a handed-out handle URL inert. The challenge is the
+        // load-bearing one: it was minted by the login form before the hop
+        // and lives in the hosted origin's session storage, so only the
+        // browser that STARTED this login can present it. Without it an
+        // attacker could run a federated login for their own external
+        // account and hand the resulting URL to someone else, whose browser
+        // would adopt that session and then consent the application into it
+        // (login CSRF). The callback request's address and agent cannot
+        // carry that weight: both are chosen by whoever makes that request
+        // (under the shipped `trustProxy: true` the address is the
+        // client-supplied left-most `X-Forwarded-For` entry), so they are
+        // kept as a barrier against a leaked URL replayed from elsewhere,
+        // never as the browser binding. Same reasoning as issue #3439.
+        //
+        // A plain comparison is enough: the handle is consumed above, so a
+        // wrong challenge costs the whole handle and there is no repeated
+        // guess to time.
+        if (
+            stash.providerId !== input.providerId ||
+            !stash.loginChallenge ||
+            stash.loginChallenge !== input.challenge ||
+            (stash.ipAddress ?? null) !== (input.request?.ipAddress ?? null) ||
+            (stash.userAgent ?? null) !== (input.request?.userAgent ?? null)
+        ) {
+            throw refuse();
+        }
+
+        const existing = await this.sessionManager.findOneById(stash.sessionId);
+        if (!existing) {
+            throw refuse();
+        }
+
+        const realm = await this.realmRepository.resolve(existing.realmId, true);
+
+        // The second factor comes BEFORE any bearer, the same order the
+        // password grant keeps: an upstream credential must not be enough to
+        // reach the API for a user who enrolled a factor on their authup
+        // account (issue #3454). The answer is the restricted MFA-pending
+        // ticket (issue #3242) — accepted only by the challenge routes, which
+        // complete the login and mint the pair once the factor verifies.
+        // Unlike the password grant this covers EVERY kind: the handle is
+        // consumed, so there are no credentials left to resubmit with an
+        // `otp`.
+        if (!existing.mfaAt && this.mfaChallengeProvider && this.mfaTicketIssuer) {
+            const status = await this.mfaChallengeProvider.challenge(
+                existing.sub,
+                { issueMaterial: false },
+            );
+
+            if (status.required) {
+                // Capped to the pending session's own expiry: the ticket is
+                // only usable while that session lives, and a ticket outliving
+                // it would just fail at the challenge route. Never extended,
+                // so an unfinished challenge expires with the login.
+                const sessionExp = Math.floor(new Date(existing.expiresAt).getTime() / 1000);
+                const exp = Math.min(this.mfaTicketIssuer.buildExp(), sessionExp);
+
+                const [token, payload] = await this.mfaTicketIssuer.issue({
+                    exp,
+                    session_id: existing.id,
+                    user_agent: existing.userAgent,
+                    remote_address: existing.ipAddress,
+                    sub: existing.sub,
+                    sub_kind: OAuth2SubKind.USER,
+                    realm_id: existing.realmId,
+                    realm_name: realm.name,
+                });
+
+                throw new OAuth2MfaRequiredError({
+                    message: 'Complete a second-factor challenge to continue.',
+                    data: {
+                        kinds: status.kinds,
+                        mfa_token: token,
+                        mfa_token_expires_in: payload.exp ?
+                            payload.exp - Math.floor(Date.now() / 1000) :
+                            0,
+                    },
+                });
+            }
+        }
+
+        // The login is complete now, so the pending session becomes a
+        // regular one.
+        const session = await this.sessionManager.refresh(existing);
+
+        const payload : Partial<OAuth2TokenPayload> = {
+            session_id: session.id,
+            user_agent: session.userAgent,
+            remote_address: session.ipAddress,
+            scope: ScopeName.GLOBAL,
+            sub: session.sub,
+            sub_kind: OAuth2SubKind.USER,
+            realm_id: session.realmId,
+            realm_name: realm.name,
+            ...deriveAmrAcr(session),
+        };
+
+        const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue(payload);
+        const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue(payload);
+
+        await this.eventService?.record({
+            scope: EventScope.OAUTH2,
+            name: EventName.LOGIN,
+            refType: EventRefType.SESSION,
+            refId: session.id,
+            clientId: null,
+            sessionId: session.id,
+            actorType: IdentityType.USER,
+            actorId: session.sub,
+            actorName: stash.userName ?? null,
+            realmId: session.realmId,
+            requestIpAddress: session.ipAddress ?? null,
+            requestUserAgent: session.userAgent ?? null,
+            data: { reason: 'federated', providerId: stash.providerId },
+        });
+        this.metrics?.recordLogin('success');
+
+        return buildOAuth2BearerTokenResponse({
+            accessToken,
+            accessTokenPayload,
+            refreshToken,
+            refreshTokenPayload,
+        });
     }
 }

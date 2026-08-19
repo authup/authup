@@ -8,6 +8,7 @@
 import type { EntityQueryInput } from '../../../helpers';
 import { buildQueryString } from '../../../helpers';
 import type { IdentityProvider, IdentityProviderAccount } from '@authup/core-kit';
+import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { buildIdentityProviderAuthorizePath } from '@authup/core-kit';
 import { base64URLEncode } from '@authup/kit';
 import { cleanDoubleSlashes, nullifyEmptyObjectProperties } from '../../../utils';
@@ -19,6 +20,7 @@ import type {
     IdentityProviderCreatePayload,
     IdentityProviderLinkConfirmPayload,
     IdentityProviderLinkRequestResponse,
+    IdentityProviderLoginCompletePayload,
     IdentityProviderSavePayload,
     IdentityProviderUpdatePayload,
 } from './types';
@@ -35,6 +37,17 @@ export class IdentityProviderAPI extends BaseAPI implements IIdentityProviderAPI
 
     async createLinkRequest(id: IdentityProvider['id']): Promise<IdentityProviderLinkRequestResponse> {
         const response = await this.client.post(`identity-providers/${id}/link-request`);
+
+        return response.data;
+    }
+
+    async completeLogin(
+        id: IdentityProvider['id'],
+        handle: string,
+        challenge: string,
+    ): Promise<OAuth2TokenGrantResponse> {
+        const payload : IdentityProviderLoginCompletePayload = { handle, challenge };
+        const response = await this.client.post(`identity-providers/${id}/login-complete`, payload);
 
         return response.data;
     }
