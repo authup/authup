@@ -26,10 +26,14 @@ The following boundaries are intentional:
   enrollment on those users. The route is opt-in: a first federated login
   provisions a NEW user, and an external identity reaches an existing account
   only when that account's owner links it while signed in. Configure and
-  enforce MFA at the upstream provider. The one exception is an application
-  that requests `acr_values=urn:authup:mfa`: it asked for a proof, and a local
-  factor the user holds is the only one Authup can produce, so the hosted page
-  challenges it before issuing that application's authorization code.
+  enforce MFA at the upstream provider, and verify that it did with the
+  provider's `requiredAmr` / `requiredAcr` allow-lists, which are unset by
+  default so the trust is otherwise unchecked (see
+  [identity providers](../user/identity-providers.md#verifying-what-the-provider-did)).
+  The one exception is an application that requests
+  `acr_values=urn:authup:mfa`: it asked for a proof, and a local factor the
+  user holds is the only one Authup can produce, so the hosted page challenges
+  it before issuing that application's authorization code.
 
 - Setting `mfaEnabled` to `false` disables both local MFA configuration and
   enforcement, including for users who already have confirmed authenticators.

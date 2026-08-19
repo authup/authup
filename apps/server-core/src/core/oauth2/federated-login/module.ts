@@ -6,6 +6,7 @@
  */
 
 import { isSafeRedirectURLScheme } from '@authup/kit';
+import type { User } from '@authup/core-kit';
 import {
     EventName,
     EventRefType,
@@ -23,6 +24,7 @@ import {
     OAuth2SubKind,
     isOAuth2Error,
 } from '@authup/specs';
+import { describeError } from '../../../utils/index.ts';
 import type { IEventService, IRealmRepository } from '../../entities/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 import type { ISessionManager } from '../../authentication/index.ts';
@@ -30,6 +32,7 @@ import type { ISessionManager } from '../../authentication/index.ts';
 // this module through the core barrel, and the cycle would TDZ-crash.
 import type { IIdentityProviderAccountManager } from '../../identity/provider/account/types.ts';
 import { createIdentityProviderOAuth2Authenticator } from '../../identity/provider/authentication/factory.ts';
+import { isIdentityProviderAssuranceError } from '../../identity/provider/authentication/protocols/oauth2/assurance.ts';
 import { toIdentityPolicyData } from '../../identity/permission/identity-policy-data.ts';
 import type { IOAuth2AccessPolicyEvaluator } from '../access-policy/index.ts';
 import type {
@@ -185,7 +188,33 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
             logger: this.logger,
         });
 
-        const user = await authenticator.authenticate({ code });
+        let user : User;
+        try {
+            user = await authenticator.authenticate({ code });
+        } catch (e) {
+            // The upstream did not meet the provider's assurance allow-list
+            // (issue #3477). No user is provisioned and no account linked
+            // because the gate throws inside `resolveIdentity`, before the
+            // account manager runs - not because of where this catch sits.
+            // The reason only goes to the log: the marker
+            // set the hosted page maps is deliberately closed, so `access_denied`
+            // is what the browser sees.
+            if (!isIdentityProviderAssuranceError(e)) {
+                throw e;
+            }
+
+            this.logger?.warn(describeError(
+                e,
+                `The identity provider (${provider.id}) login was refused.`,
+            ));
+
+            return {
+                kind: 'refused',
+                refusal: OAuth2FederatedLoginRefusal.ASSURANCE_INSUFFICIENT,
+                error: OAuth2ErrorCode.ACCESS_DENIED,
+                codeRequest: verified.data,
+            };
+        }
 
         // The local login path refuses an inactive user (EntityInactiveError),
         // and a federated login must not be the way around that. Only

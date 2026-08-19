@@ -59,6 +59,45 @@ carries `"otp"` with `acr: urn:authup:mfa` when a factor was verified. A
 federated login that verified no local factor carries no `acr` at all, because
 Authup checked no credential of its own.
 
+### Verifying what the provider did
+
+"MFA is enforced at the provider" is a statement you make, and by default
+Authup takes it on faith: an upstream that lets someone in with a password
+alone is accepted, and nothing notices. Two optional fields on an OAuth2/OIDC
+provider turn the assumption into a check on the claims that provider's own
+token carries.
+
+- **Required amr claim(s)** accepts the login when the provider's `id_token`
+  carries any one of the listed values in its `amr` claim.
+- **Required acr value(s)** accepts it when the token's `acr` is one of the
+  listed values. Authup also sends these as `acr_values` on the authorize
+  request, so the provider is asked to step up rather than only observed.
+
+Both take a comma- or space-separated list and are empty by default, which is
+the unchecked behaviour above. The vocabularies belong to the provider, so the
+values do too: Keycloak and Authentik commonly answer `amr: ["mfa"]` or an
+`acr` level of your own configuring, Entra ID answers `amr: ["pwd", "mfa"]`.
+Read the provider's documentation, or sign in once and look at the `amr` and
+`acr` in its token. Another Authup upstream answers `acr: urn:authup:mfa` once
+a second factor was verified, so `urn:authup:mfa` is the value to require
+there.
+
+Set either one and the check fails closed. A login is refused when the claim
+is missing, when it does not match, and when the provider returns no
+`id_token` at all - which is what a provider configured as plain `oauth2`, or
+an OIDC one whose scope no longer asks for `openid`, will do. The person is
+returned to the login page; the reason is in the Authup server log, because
+the login page deliberately says nothing about why a provider was refused.
+
+The check also covers connecting an account from the account console, since
+that admits an external identity to an account that already exists.
+
+One caveat, and it applies to every provider field rather than just these two:
+an update that omits a field clears it. A script that rotates the client secret
+by sending only the fields it cares about will drop the allow-lists with
+everything else it left out, and logins go back to being unchecked. Send the
+whole provider, which is what the admin console does.
+
 See [MFA configuration](../deployment/configuration-server-core-mfa.md) for the
 server settings.
 

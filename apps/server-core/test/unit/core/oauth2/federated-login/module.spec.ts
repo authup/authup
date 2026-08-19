@@ -28,6 +28,7 @@ import { BadRequestError, InternalError } from '@authup/errors';
 import { describe, expect, it } from 'vitest';
 import { OAuth2FederatedLoginService } from '../../../../../src/core/oauth2/federated-login/module.ts';
 import { OAuth2FederatedLoginRefusal } from '../../../../../src/core/oauth2/federated-login/types.ts';
+import { IdentityProviderAssuranceError } from '../../../../../src/core/identity/provider/authentication/protocols/oauth2/assurance.ts';
 import type { IOAuth2AuthorizationCodeRequestVerifier } from '../../../../../src/core/oauth2/authorization/index.ts';
 import type { IOAuth2AccessPolicyEvaluator } from '../../../../../src/core/oauth2/access-policy/index.ts';
 import type { IIdentityProviderAccountManager } from '../../../../../src/core/identity/provider/account/types.ts';
@@ -344,6 +345,50 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
         });
         expect(pendingLoginStore.saved).toHaveLength(0);
         expect(sessionManager.createCalls).toHaveLength(0);
+    });
+
+    it('should refuse when the upstream misses the provider assurance allow-list', async () => {
+        const {
+            service,
+            pendingLoginStore,
+            sessionManager,
+        } = buildService({
+            // what the authenticator raises once `requiredAmr` / `requiredAcr`
+            // is set and the upstream id_token does not satisfy it (issue #3477)
+            authenticate: async () => {
+                throw new IdentityProviderAssuranceError('the amr claim does not satisfy: mfa.');
+            },
+        });
+
+        const result = await service.complete({
+            provider: createProvider({ requiredAmr: 'mfa' }),
+            codeRequest,
+            code: 'provider-code',
+        });
+
+        expect(result).toMatchObject({
+            kind: 'refused',
+            refusal: OAuth2FederatedLoginRefusal.ASSURANCE_INSUFFICIENT,
+            // the marker set the hosted page maps is closed, so the reason
+            // reaches the log and never the browser
+            error: OAuth2ErrorCode.ACCESS_DENIED,
+        });
+        expect(pendingLoginStore.saved).toHaveLength(0);
+        expect(sessionManager.createCalls).toHaveLength(0);
+    });
+
+    it('should let any other authenticator failure keep throwing', async () => {
+        const { service } = buildService({
+            authenticate: async () => {
+                throw new Error('the provider token endpoint is unreachable');
+            },
+        });
+
+        await expect(service.complete({
+            provider: createProvider(),
+            codeRequest,
+            code: 'provider-code',
+        })).rejects.toThrow('the provider token endpoint is unreachable');
     });
 
     it('should refuse when the application access policy denies the identity', async () => {

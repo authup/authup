@@ -2724,7 +2724,9 @@ ladder, by the same `POST /authorize` an interactive login posts, so a
 federated login passes the gates that belong to it: `prompt=login` /
 `max_age` freshness, `select_account`, the `acr_values` step-up, consent and
 its persisted `auth_consents` rows (issue #3454). The local second factor is
-deliberately NOT among them - see *Intentional enforcement boundaries*. Three properties are load-bearing, and each of the first two
+deliberately NOT among them - see *Intentional enforcement boundaries*, which
+also covers the opt-in `requiredAmr` / `requiredAcr` check on what the
+upstream returned. Three properties are load-bearing, and each of the first two
 was a shipped bug (issue #3446):
 
 The ladder itself is **`OAuth2FederatedLoginService`**
@@ -3855,8 +3857,10 @@ mirrors this — when `userId !== '@me'` it offers only the email button
    complete a fresh login through the MFA-pending ticket (below).
 
 **Intentional enforcement boundaries (#3251):** a federated IdP login trusts
-the upstream provider as the authentication authority. Since plan 094 it runs
-the hosted ladder for consent and the prompt gates, but `authorizeInner` skips
+the upstream provider as the authentication authority, and that trust is
+UNCHECKED unless the provider declares `requiredAmr` / `requiredAcr`
+(issue #3477, both null by default). Since plan 094 it runs the hosted
+ladder for consent and the prompt gates, but `authorizeInner` skips
 the local factor and inline enrollment for a session whose `authMethod` is
 `ext`, and the redemption consults no authenticator at all (settled #3454: the
 local factor belongs to a local credential, the upstream is usually the
@@ -3876,6 +3880,56 @@ reach configure-inline enrollment; clients that require enrollment before an
 application token must use the authorization-code flow and exclude `password`
 from their `grantTypes` allowlist. These boundaries are operator-facing in
 `docs/src/guide/deployment/configuration-server-core-mfa.md`.
+
+**Verifying the upstream's own assurance (issue #3477).** "MFA is guaranteed
+by the provider" is a statement the operator makes, so an OAuth2/OIDC provider
+carries two optional allow-lists, `requiredAmr` and `requiredAcr` (EA
+attributes, comma- or space-separated, no migration). `requiredAmr` passes on
+any intersection with the upstream id_token's `amr`, `requiredAcr` on
+membership of its `acr`; both null trusts the provider unconditionally, which
+is what authup did before they existed. Authup cannot normalize either
+vocabulary, so the values are operator-filled.
+
+Three things about where it sits. It is enforced in
+`IdentityProviderOAuth2Authenticator.resolveIdentity`
+(`core/identity/provider/authentication/protocols/oauth2/assurance.ts`), NOT in
+the federated-login ladder: `resolveIdentity` runs before
+`accountManager.save`, so a refused login provisions no user and links no
+account, and it is shared with the account-link flow, which admits an external
+identity to an EXISTING account and needs the same gate. Reading the token
+response there rather than inside `buildIdentityWithTokenGrantResponse` is
+also deliberate - the five presets override the builder, and a preset must not
+be able to skip the gate. It fails CLOSED on every uncertainty: the claims
+come from the `id_token` alone, so a provider that returns none (a plain
+`oauth2` provider, or an OIDC one whose scope lost `openid`), or one whose
+token carries neither claim or cannot be decoded, is refused once an
+allow-list is set. Failing open there would make the feature decorative.
+The refusal is caught around `authenticate()`, whose no-user-provisioned
+guarantee rests on the gate throwing before `accountManager.save` rather than
+on the catch itself. `OAuth2FederatedLoginService.complete` catches
+`IdentityProviderAssuranceError` and bounces to the hosted page with
+`access_denied`, like the inactive-user and access-policy refusals; the reason
+reaches the operator's log through `describeError` and never the browser,
+since the marker set `serve()` maps is deliberately closed. The error adds no
+DEDICATED `ErrorCode` for that reason - it keeps `ValidationError`'s shared
+`BAD_REQUEST`, so `isIdentityProviderAssuranceError` must stay marker-only:
+a code fallback would match every other `ValidationError` in the process.
+That is safe because the error never crosses a wire boundary.
+
+`requiredAmr` is a DISJUNCTION (any listed value satisfies it), which is why
+the field label says *any of* in all four locales. A conjunctive reading is
+the one dangerous misconfiguration: an operator copying `["pwd","mfa"]` off a
+real login and pasting `pwd, mfa` would otherwise believe they required both
+while a password-only login intersects on `pwd` and is admitted - the exact
+downgrade the feature exists to catch.
+
+`requiredAcr` is additionally sent OUTBOUND as `acr_values` on the authorize
+request (defaulted inside `buildRedirectURL`, so the login and the link flow
+both send it), appended by hand because hapic's `buildAuthorizeURL` emits only
+the keys it knows. That asks the upstream to step up rather than merely
+observing it, but `acr_values` is voluntary in OIDC Core 5.5.1.1 - only the
+inbound check turns it into a guarantee. Neither Keycloak nor Authentik
+verifies upstream `amr`/`acr` by default.
 
 **The password grant is the single MFA chokepoint for credential login — the
 hosted `LoginForm` drives the `otp`, NOT a post-login challenge.** `store.login`

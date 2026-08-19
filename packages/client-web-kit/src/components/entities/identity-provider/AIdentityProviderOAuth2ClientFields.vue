@@ -41,8 +41,10 @@ export default defineComponent({
     setup(props) {
         const form = reactive({
             clientId: '', 
-            clientSecret: '', 
-            scope: '', 
+            clientSecret: '',
+            scope: '',
+            requiredAmr: '',
+            requiredAcr: '',
         });
 
         const secretShow = ref(false);
@@ -51,11 +53,12 @@ export default defineComponent({
         // owns via `pathsToInclude` — `clientId` stays required for every
         // OAuth2/OIDC flavor, `clientSecret` optional (a secret-less
         // public-client token exchange is a valid provider config), `scope`
-        // optional (blank = protocol/preset default). The remaining mounts
-        // (`preset`, endpoint URLs) belong to sibling sub-forms and are
-        // filtered out here.
+        // optional (blank = protocol/preset default), and the two assurance
+        // allow-lists optional (blank = trust the provider). The remaining
+        // mounts (`preset`, endpoint URLs) belong to sibling sub-forms and
+        // are filtered out here.
         const v = useValidup(
-            new IdentityProviderOAuth2AttributesValidator({ pathsToInclude: ['clientId', 'clientSecret', 'scope'] }),
+            new IdentityProviderOAuth2AttributesValidator({ pathsToInclude: ['clientId', 'clientSecret', 'scope', 'requiredAmr', 'requiredAcr'] }),
             form,
             { name: 'client' },
         );
@@ -63,8 +66,10 @@ export default defineComponent({
         // `scope` is an optional key on `OAuth2IdentityProvider`, so the
         // typed `fields` accessor yields `FieldState | undefined` under
         // strict consumers — the dynamic `at()` accessor materialises the
-        // state and is never undefined.
+        // state and is never undefined. Same for the assurance allow-lists.
         const scopeField = v.fields.at<string | null>('scope');
+        const requiredAmrField = v.fields.at<string | null>('requiredAmr');
+        const requiredAcrField = v.fields.at<string | null>('requiredAcr');
 
         const scopes = computed(() => splitOAuth2Scope(scopeField.$model.value));
 
@@ -90,6 +95,22 @@ export default defineComponent({
                 key: TranslatorTranslationFieldKey.SCOPE,
             },
             {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.REQUIRED_AMR,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.REQUIRED_AMR_HINT,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.REQUIRED_ACR,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.REQUIRED_ACR_HINT,
+            },
+            {
                 namespace: TranslatorTranslationNamespace.ACTION,
                 key: TranslatorTranslationActionKey.SHOW,
             },
@@ -104,6 +125,8 @@ export default defineComponent({
         return {
             v,
             scopeField,
+            requiredAmrField,
+            requiredAcrField,
             scopes,
             secretShow,
             secretToggleLabel,
@@ -168,5 +191,39 @@ export default defineComponent({
                 {{ translations.scope }}
             </template>
         </AFormInputList>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="requiredAmrField"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    {{ translations.requiredAmr }}
+                </template>
+                <VCFormInput
+                    v-model="requiredAmrField.$model.value"
+                    placeholder="mfa, hwk"
+                />
+                <template #hint>
+                    {{ translations.requiredAmrHint }}
+                </template>
+            </VCFormGroup>
+        </IFieldValidation>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="requiredAcrField"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    {{ translations.requiredAcr }}
+                </template>
+                <VCFormInput
+                    v-model="requiredAcrField.$model.value"
+                    placeholder="urn:mace:incommon:iap:silver"
+                />
+                <template #hint>
+                    {{ translations.requiredAcrHint }}
+                </template>
+            </VCFormGroup>
+        </IFieldValidation>
     </div>
 </template>

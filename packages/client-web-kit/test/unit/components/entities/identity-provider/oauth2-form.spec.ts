@@ -11,6 +11,7 @@ import { createFakeClient } from '@authup/core-http-kit/testing';
 import type { FakeClient, FakeRequest } from '@authup/core-http-kit/testing';
 import { flushPromises, mount } from '@vue/test-utils';
 import vuecs from '@vuecs/core';
+import { VCFormInput } from '@vuecs/forms';
 import { createPinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
 import AIdentityProviderBasicFields from '../../../../../src/components/entities/identity-provider/AIdentityProviderBasicFields.vue';
@@ -146,6 +147,44 @@ describe('AIdentityProviderOAuth2Form', () => {
         const request = findUpdateRequest(httpClient);
         expect(request).toBeDefined();
         expect((request!.body as Record<string, any>).scope ?? null).toBeNull();
+    });
+
+    it('should submit the assurance allow-lists as null while both fields are blank', async () => {
+        // the default posture is "trust the provider", and the mounts reject
+        // an empty string - so a blank field has to leave as null, never ''
+        const entity = createEntity();
+
+        const { wrapper, httpClient } = mountForm(entity);
+
+        await flushPromises();
+
+        await wrapper.find('form').trigger('submit');
+        await flushPromises();
+
+        const body = findUpdateRequest(httpClient)!.body as Record<string, any>;
+        expect(body.requiredAmr ?? null).toBeNull();
+        expect(body.requiredAcr ?? null).toBeNull();
+    });
+
+    it('should hydrate and submit the assurance allow-lists', async () => {
+        const entity = createEntity();
+        (entity as OAuth2IdentityProvider).requiredAmr = 'mfa';
+
+        const { wrapper, httpClient } = mountForm(entity);
+
+        await flushPromises();
+
+        const inputs = wrapper.findAllComponents(VCFormInput);
+        const amrInput = inputs.find((input) => input.props('modelValue') === 'mfa');
+        expect(amrInput).toBeDefined();
+
+        amrInput!.vm.$emit('update:modelValue', 'mfa hwk');
+        await flushPromises();
+
+        await wrapper.find('form').trigger('submit');
+        await flushPromises();
+
+        expect(findUpdateRequest(httpClient)!.body).toMatchObject({ requiredAmr: 'mfa hwk' });
     });
 
     it('should hydrate the scope list and submit a changed scope on update', async () => {

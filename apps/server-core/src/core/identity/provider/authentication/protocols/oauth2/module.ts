@@ -17,6 +17,7 @@ import type { AuthorizeParameters, TokenGrantResponse } from '@hapic/oauth2';
 import { OAuth2Client } from '@hapic/oauth2';
 import type { IIdentityProviderAccountManager } from '../../../account/index.ts';
 import type { IdentityProviderIdentity } from '../../../types.ts';
+import { assertIdentityProviderAssurance, buildIdentityProviderAcrValues } from './assurance.ts';
 import type {
     IOAuth2Authenticator,
     IdentityProviderOAuth2AuthenticatorContext,
@@ -73,7 +74,21 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
 
     buildRedirectURL(parameters: Partial<AuthorizeParameters> = {}) : string {
         try {
-            return this.client.authorize.buildURL(parameters);
+            const url = new URL(this.client.authorize.buildURL(parameters));
+
+            // Ask the upstream to step up rather than merely observing what
+            // it returns. Defaulted here rather than at the call sites, so
+            // the login and the account-link flow both send it.
+            //
+            // Appended by hand because hapic's buildAuthorizeURL only emits
+            // the keys it knows and silently drops the rest (tada5hi/hapic#1071)
+            // - drop this once `acr_values` is part of AuthorizeParameters.
+            const acrValues = buildIdentityProviderAcrValues(this.provider);
+            if (acrValues) {
+                url.searchParams.set('acr_values', acrValues);
+            }
+
+            return url.href;
         } catch {
             throw new ValidationError(
                 'The identity provider is misconfigured and has an invalid or missing authorize URL.',
@@ -85,6 +100,12 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
 
     async resolveIdentity(params: OAuth2AuthorizationCodeGrantPayload): Promise<IdentityProviderIdentity> {
         const token = await this.client.token.createWithAuthorizationCode(params);
+
+        // Before the identity is built, so a refused login provisions no user
+        // and links no account. Reading the token response here rather than
+        // inside the identity builder is deliberate: the five presets override
+        // the builder, and a preset must not be able to skip the gate.
+        assertIdentityProviderAssurance(this.provider, token.id_token);
 
         const identity = await this.buildIdentityWithTokenGrantResponse(token);
         if (this.options.clientId) {
