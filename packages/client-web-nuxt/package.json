@@ -24,7 +24,8 @@
         "build": "nuxt-module-build prepare && nuxt-module-build build",
         "prepack": "nuxt-module-build prepare && nuxt-module-build build",
         "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare playground",
-        "lint": "eslint ."
+        "lint": "eslint .",
+        "test": "cross-env NODE_ENV=test vitest run --config test/vitest.config.ts"
     },
     "engines": {
         "node": "^22.13.0 || ^23.5.0 || >=24.0.0"
@@ -42,12 +43,15 @@
         "@nuxt/module-builder": "^1.0.3",
         "@nuxt/schema": "^4.0.0",
         "@pinia/nuxt": "^1.0.1",
+        "cross-env": "^10.1.0",
         "fix-dts-default-cjs-exports": "^1.0.1",
         "mkdist": "^2.3.0",
         "nuxt": "^4.5.2",
         "pinia": "^4.0.2",
         "rollup-plugin-dts": "^6.5.1",
         "strip-literal": "^3.1.0",
+        "vitest": "^4.0.14",
+        "vue": "^3.5.41",
         "vue-router": "^5.0.7"
     },
     "peerDependencies": {

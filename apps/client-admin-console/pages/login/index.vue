@@ -59,28 +59,18 @@ export default defineNuxtComponent({
                 const pkce = await createPKCE();
                 const state = createState();
 
-                const redirectUri = `${window.location.origin}/login/callback`;
-
-                // Preserve the post-login destination AND any sibling query
-                // params on the login URL (e.g. /login?redirect=/users&invite=x
-                // → /users?invite=x), matching the pre-realm-picker behaviour.
-                const { redirect, ...rest } = route.query;
-                let target: string | undefined;
-                if (typeof redirect === 'string') {
-                    const url = new URL(redirect, window.location.origin);
-                    for (const [key, value] of Object.entries(rest)) {
-                        if (Array.isArray(value)) {
-                            for (const entry of value) {
-                                if (entry != null) {
-                                    url.searchParams.append(key, entry);
-                                }
-                            }
-                        } else if (value != null) {
-                            url.searchParams.set(key, value);
-                        }
-                    }
-                    target = `${url.pathname}${url.search}${url.hash}`;
+                // The post-login destination rides in the callback URI's own
+                // query, so the authorization server carries it back to us
+                // (it appends `code`/`state` to whatever query is already
+                // there). Nothing about it is authup-specific, which is the
+                // point: any client can do the same with its own callback.
+                const callback = new URL('/login/callback', window.location.origin);
+                const { redirect } = route.query;
+                if (typeof redirect === 'string' && redirect) {
+                    callback.searchParams.set('redirect', redirect);
                 }
+
+                const redirectUri = callback.href;
 
                 const clientId = runtimeConfig.public.clientId as string;
 
@@ -90,7 +80,6 @@ export default defineNuxtComponent({
                     redirect_uri: redirectUri,
                     client_id: clientId,
                     realm_id: realm.id,
-                    target,
                 });
 
                 window.location.href = buildAuthorizeURL({

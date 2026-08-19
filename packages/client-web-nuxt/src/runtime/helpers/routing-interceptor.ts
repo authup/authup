@@ -58,6 +58,9 @@ export class RoutingInterceptor {
             }
 
             const request = loadAuthorizationRequest();
+            const destination = typeof to.query.redirect === 'string' ?
+                to.query.redirect :
+                undefined;
 
             try {
                 if (request) {
@@ -78,13 +81,15 @@ export class RoutingInterceptor {
 
                 clearAuthorizationRequest();
 
-                // `target` is a full path (it originates from `to.fullPath`)
-                // and may carry its own query/hash. Parse it so vue-router
-                // doesn't URL-encode the `?`/`#` into the pathname. Only the
-                // path/query/hash are used — any host is discarded, so an
-                // absolute URL can't turn this into an open redirect.
-                if (request?.target) {
-                    const url = new URL(request.target, 'http://localhost');
+                // The post-login destination rides in the callback URI's own
+                // query, so the authorization server carried it back next to
+                // `code` and `state`. That makes it URL input rather than
+                // same-origin state, so only path/query/hash are used and any
+                // host is discarded — otherwise a crafted authorize request
+                // could turn this into an open redirect. Parsing it also stops
+                // vue-router URL-encoding a `?`/`#` into the pathname.
+                if (destination) {
+                    const url = new URL(destination, 'http://localhost');
                     return {
                         path: url.pathname,
                         query: Object.fromEntries(url.searchParams.entries()),
@@ -92,21 +97,14 @@ export class RoutingInterceptor {
                     };
                 }
 
-                return {
-                    path: to.path,
-                    query: omitRecord(to.query, ['code', 'state']),
-                    hash: to.hash,
-                };
+                return this.withoutAuthorizationParams(to);
             } catch {
                 clearAuthorizationRequest();
 
-                // Code exchange failed — strip `code`/`state` from the URL so a
-                // reload can't re-attempt the (already consumed) code and loop.
-                return {
-                    path: to.path,
-                    query: omitRecord(to.query, ['code', 'state']),
-                    hash: to.hash,
-                };
+                // Code exchange failed — strip the authorization params from
+                // the URL so a reload can't re-attempt the (already consumed)
+                // code and loop.
+                return this.withoutAuthorizationParams(to);
             }
         }
 
@@ -156,6 +154,9 @@ export class RoutingInterceptor {
         isValid = await this.validatePermissionCondition(to);
         if (!isValid) {
             if (from.path === to.path) {
+                // Deliberately no `redirect`: the user was denied the route
+                // they are already on, so carrying it into the login would
+                // send them straight back into the same denial.
                 await this.store.logout();
 
                 return { path: this.loginRoute };
@@ -164,13 +165,50 @@ export class RoutingInterceptor {
             if (this.hasLoggedOutCondition(from)) {
                 await this.store.logout();
 
-                return { path: from.fullPath };
+                return this.backTo(from);
             }
 
-            return { path: from.fullPath };
+            // A just-completed login arrives here from the callback route, and
+            // sending the user back there lands them on a page whose only job
+            // is to bounce onward to the home route — so the denial reads as
+            // "you were dropped somewhere random" instead of "you may not open
+            // that page". Name the home route directly. (The spent `code` is
+            // not the hazard it looks like: vue-router drops the query when a
+            // fullPath is passed as `path`, so it never gets re-exchanged.)
+            if (typeof from.query.code === 'string') {
+                return { path: this.homeRoute };
+            }
+
+            return this.backTo(from);
         }
 
         return undefined;
+    }
+
+    protected withoutAuthorizationParams(
+        route: RouteLocationNormalized,
+    ) : RouteLocationAsPathGeneric {
+        return {
+            path: route.path,
+            query: omitRecord(route.query, ['code', 'state', 'redirect']),
+            hash: route.hash,
+        };
+    }
+
+    /**
+     * Return to a route the user already had.
+     *
+     * Passing `fullPath` as `path` looks equivalent and is not: vue-router
+     * runs it through `parseURL`, which keeps the path and silently discards
+     * the query and hash, so a bounce off `/users?page=2#row-7` used to land
+     * on a bare `/users`.
+     */
+    protected backTo(route: RouteLocationNormalized) : RouteLocationAsPathGeneric {
+        return {
+            path: route.path,
+            query: route.query,
+            hash: route.hash,
+        };
     }
 
     protected hasLoggedInCondition(route: RouteLocationNormalized) {

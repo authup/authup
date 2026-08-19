@@ -11,17 +11,24 @@ const STORAGE_KEY = 'authup.authorization-request';
 
 /**
  * The state persisted between the `/authorize` redirect and the callback.
- * `state` guards against CSRF, `code_verifier` is the PKCE secret, and
- * `redirect_uri` must be replayed verbatim at the `/token` exchange
- * (RFC 6749 §4.1.3). `target` is the in-app path to land on after login.
+ * `state` guards against CSRF and `code_verifier` is the PKCE secret, so both
+ * have to stay in the browser that started the flow. `redirect_uri` is here
+ * because it must be replayed byte-for-byte at the `/token` exchange
+ * (RFC 6749 §4.1.3) — take it from here, never rebuild it from
+ * `window.location`, which by then carries the appended `code` and `state`
+ * and a re-serialized query.
+ *
+ * The post-login destination is deliberately NOT stored here. It rides in the
+ * `redirect_uri`'s own query (`<origin>/login/callback?redirect=%2Fusers`), so
+ * the authorization server carries it back and any client can use the same
+ * mechanism without agreeing on a storage convention.
  */
 export type AuthorizationRequest = {
     state: string,
     code_verifier: string,
     redirect_uri: string,
     client_id: string,
-    realm_id?: string,
-    target?: string
+    realm_id?: string
 };
 
 export function saveAuthorizationRequest(request: AuthorizationRequest): void {
