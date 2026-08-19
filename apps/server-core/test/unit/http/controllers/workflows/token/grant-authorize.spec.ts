@@ -142,6 +142,46 @@ describe('grant-authorize', () => {
         expect(tokenResponse.refresh_token).toBeDefined();
     });
 
+    // An RP may carry state of its own in the redirect_uri query (the console
+    // puts the post-login destination there). That has to survive three
+    // separate places: the registered-pattern match, the `code`/`state`
+    // append, and the byte-exact replay at /token (RFC 6749 4.1.3).
+    it('should preserve a query string on the redirect uri', async () => {
+        const state = generateOAuth2CodeVerifier();
+        const redirectUri = 'https://example.com/redirect?redirect=%2Fusers';
+
+        const response = await suite.client
+            .authorize
+            .confirm({
+                response_type: OAuth2AuthorizationResponseType.CODE,
+                client_id: confidentialClient.id,
+                redirect_uri: redirectUri,
+                scope: `${ScopeName.GLOBAL}`,
+                state,
+            });
+
+        const url = new URL(response.url);
+
+        // Appended, not overwritten: the RP's own parameter is still there
+        // alongside the ones the authorization response adds.
+        expect(url.searchParams.get('redirect')).toEqual('/users');
+        expect(url.searchParams.get('state')).toEqual(state);
+
+        const code = url.searchParams.get('code');
+        expect(code).toBeTruthy();
+
+        const tokenResponse = await suite.client
+            .token
+            .createWithAuthorizationCode({
+                client_id: confidentialClient.id,
+                client_secret: confidentialSecret,
+                redirect_uri: redirectUri,
+                code: code!,
+            });
+
+        expect(tokenResponse.access_token).toBeDefined();
+    });
+
     it('should work with authorize grant and PKCE for confidential client', async () => {
         const state = generateOAuth2CodeVerifier();
         const codeVerifier = generateOAuth2CodeVerifier();
