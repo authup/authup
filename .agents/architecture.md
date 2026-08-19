@@ -2570,7 +2570,7 @@ neutral message: no identity/policy detail, no enumeration oracle).
   (order: realm → MFA backstop/step-up → prompt/max_age freshness → **access
   policy** → issue), so a denial is only revealed to a fully-authenticated,
   second-factor-complete identity; (2) the **federated-IdP callback** (it
-  admits an external identity before the hosted ladder runs) — on deny it
+  admits an external identity before the hosted ladder runs): on deny it
   redirects back to the hosted `/authorize` page with `error=access_denied`
   (`serve()` maps that recognized query param onto a neutral
   hydration-payload error), and no session is established; (3) a **`/token`
@@ -4224,7 +4224,7 @@ locales. Kit test `test/unit/components/workflows/mfa-challenge.spec.ts`.
 `pwd | ldap | ext | client`; `ldap` is reserved — the password grant
 currently stamps `pwd` for both, the LDAP distinction is the deferred Stage 1b).
 Every session-creation site stamps it: password grant (`pwd`), identity grant
-(`ext` — threaded through the code blob's `auth_method`, which the
+(`ext`, threaded through the code blob's `auth_method`, which the
 authorization_code grant's fallback-create inherits; the reuse branch inherits
 from the bearer session row) + the federated IdP callback, which since plan 094
 creates the session itself with `ext` and the exchange reuses it, client
