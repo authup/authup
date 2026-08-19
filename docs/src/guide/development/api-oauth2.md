@@ -162,7 +162,39 @@ The resulting `id_token` includes the OIDC `auth_time` (the real authentication 
 
 Each realm exposes an OpenID Provider metadata document at `GET /realms/<realm>/.well-known/openid-configuration`, advertising the `authorization_endpoint`, `token_endpoint`, `revocation_endpoint` (`/token/revoke`), `end_session_endpoint` (`/logout`), `jwks_uri`, and `prompt_values_supported`.
 
-### 5. RP-Initiated Logout
+### 5. Federated login (external identity providers)
+
+Nothing changes for a relying party when the person signs in through an
+external identity provider. The application sends the same authorization
+request, the person picks a provider on the hosted `/authorize` page instead of
+typing a password, and the `code` arrives at the application's `redirect_uri`
+exactly as it does for any other login. The provider round-trip happens between
+Authup and that provider; the application never sees it.
+
+Two things are worth knowing when reading the resulting tokens:
+
+- `amr` is `["ext"]`: the subject authenticated at an external provider. It
+  carries `"otp"` in addition when a second factor was verified.
+- `acr` is absent for a federated login that verified no local factor. Authup
+  checked no credential of its own, so it asserts no authentication context
+  class. A password login reports `urn:authup:pwd`, and any login that verified
+  a factor reports `urn:authup:mfa`.
+
+Authup does not require its own second factor on top of a federated login,
+because the provider is the authentication authority (see
+[Identity Providers](../user/identity-providers.md)). An application that needs
+a proof regardless can request one:
+
+```
+GET /authorize?...&acr_values=urn:authup:mfa
+```
+
+Per [OpenID Connect Core §5.5.1.1](https://openid.net/specs/openid-connect-core-1_0.html#acrSemantics)
+this is voluntary, so read the `acr` you get back rather than assuming the
+request was satisfiable: a person who holds no factor at all cannot produce
+one, and the token then reports what was actually achieved.
+
+### 6. RP-Initiated Logout
 
 To end the Authup session when the user logs out of your application, redirect the browser to the `end_session_endpoint` ([OpenID Connect RP-Initiated Logout 1.0](https://openid.net/specs/openid-connect-rpinitiated-1_0.html)):
 

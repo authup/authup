@@ -2827,63 +2827,52 @@ checks run on the popped payload, and a state failing them is gone as well
 used to share the authorization-code namespace, which let either repository
 pop the other's entries.
 
-**The login handle (plan 094).** Server auth is header-only and the hosted
-page's session lives in the kit store, so the callback has to hand the browser
-something it can turn into a bearer. It is a `createNanoID()` handle over the
-cache (`OAuth2FederatedLoginHandleStore`, the account-link store's shape under
-`CacheOAuth2Prefix.FEDERATED_LOGIN_HANDLE`, 5 min), stashing the session id,
-the provider id, the user name (the LOGIN event's actor name), the login
-challenge below and the callback request's address and agent. Never the
-identity object (it carries the provider entity with its EA-loaded
-`clientSecret` and the raw external token payload) and never a token.
+**The pending login (plan 094).** Server auth is header-only and the hosted
+page's session lives in the browser, so the callback has to hand the browser
+something it can turn into a bearer. It is a cache entry
+(`OAuth2FederatedLoginStore`, `createNanoID` id under
+`CacheOAuth2Prefix.FEDERATED_LOGIN`, 5 min, consumed on read) holding three
+scalars: the session id, the provider id and the user name for the LOGIN
+event. Never the identity object (it carries the provider entity with its
+EA-loaded `clientSecret` and the raw external token payload) and never a
+token.
 
-`POST /identity-providers/:id/login-complete` exchanges it, unauthenticated,
-for the grant. **The binding is the login challenge, and nothing else.** The
-kit's `LoginForm` mints it after mount (`createFederatedLoginChallenge`,
-`core/federated-login.ts`), keeps it in the hosted origin's `sessionStorage`
-and carries it on the identity-provider tile's own `href`, so a middle click
-or "open in new tab" starts the same login a left click does. `authorize-out`
-stores it on the state blob; the callback carries it onto the handle; the
-hosted page presents it back when it redeems. Only the browser that STARTED
-the login holds it, and no other origin can read or write that storage.
-Without it an attacker could run a federated login for their own external
-account and hand the resulting `/authorize?...&loginHandle=` URL to someone
-else, whose browser would adopt that session and then consent the application
-into it: login CSRF, and NEW to this design, because the code the callback
-used to mint was bound to the attacker's own PKCE challenge and died at the
-RP.
+**The browser binding is a cookie, which is what the cohort does.** The
+callback sets `authup_federated_login` (HttpOnly, `SameSite=Lax`, `Secure`
+under an https publicUrl, path-scoped to `<basePath>/identity-providers` so it
+never rides an ordinary API request) and redirects with only a `provider` hint
+in the URL; `POST /identity-providers/:id/login-complete` reads it, clears it,
+and answers with the grant. Only the browser the callback answered carries it
+and no other origin can set it, so the login CSRF an earlier draft had to
+defend against is structurally absent: an attacker who starts a federated
+login for their own account has the cookie in THEIR browser, and a crafted
+`/authorize?...&provider=` URL handed to someone else completes nothing. The
+`SameSite=Lax` attribute is what keeps it off cross-site requests, which
+matters because the CORS default reflects every origin with credentials.
 
-The callback request's address and user agent are deliberately NOT compared.
-They cannot carry that weight (both are chosen by whoever makes that request,
-and under the shipped `trustProxy: true` the address is the client-supplied
-left-most `X-Forwarded-For` entry), and comparing them across a top-level
-navigation and the page's own XHR is the shape issue #3439 rejected: a proxy
-pool or a re-homed mobile connection would break a legitimate login for no
-security gain.
+Verified against both cohort products (2026-08-19): Keycloak keeps the pending
+login in an auth session identified by `AUTH_SESSION_ID` and its
+`session_code` is a secret INSIDE that cookie-reachable session
+(`CodeGenerateUtil.parseSession` looks the session up by cookie and only then
+compares the code), while Authentik stores the `FlowPlan` in the Django
+session behind `authentik_session` and its OAuth source callback redirects to
+the flow SPA with an empty-handed URL. Neither hands a front end a one-time
+value to trade for a session. Authentik is the closer analogue, since its
+login UI is a browser SPA (`<ak-flow-executor>`) whose
+`/api/v3/flows/executor/...` calls authenticate with that cookie rather than a
+bearer.
 
-A start without a challenge cannot end in a redeemable handle, so
-`authorize-out` answers it with a redirect back to the hosted page rather than
-an error: the tile carries the challenge from the moment the page hydrates, so
-such a start is a click that raced it, and the person just clicks again. The
-callback refuses a challenge-less state the same way (a `codeRequest` refusal,
-bounced to the hosted page) BEFORE the provider's single-use code is spent,
-which is what a state minted by an older instance during a rolling deploy
-meets. Both parameters are in the access log's `SENSITIVE_QUERY_PARAMS`, and
-`serve()` accepts `provider` only as an id, since the page interpolates it
-into the redemption request path.
-
-The handle is consumed on read (`cache.pop`), so a replay finds nothing and a
-wrong challenge costs the whole handle: there is no repeated guess to time,
-which is why the comparison is a plain one. Every refusal answers with one
-message, since the caller is anonymous.
+This is authup's FIRST cookie-read endpoint, and the CORS comment
+(`origin: true` with `credentials: true`) rests on there being none. The
+combination is safe here only because `SameSite=Lax` keeps the cookie off the
+cross-site POST that a reflected origin would otherwise be able to read the
+response of. A second cookie-read endpoint must re-examine that pairing rather
+than assume it.
 
 The pending session is created with `authMethod: ext`, `mfaAt: null` and an
-`expiresAt` covering the handle AND the MFA ticket window when a ticket can be
-issued, because the second factor follows the redemption and an emailed code
-alone is valid for ten minutes (the `issueTicket` shape: one instant for the
-ticket and its pending session, so the two cannot drift; an abandoned login
-still self-expires into the regular session sweep). `redeem()` extends it to
-the full lifetime only on the branch that mints the pair. It carries no `clientId`: that column is the client
+`expiresAt` equal to the pending login's own TTL, so an abandoned login
+self-expires into the regular session sweep; `completeHandoff()` extends it to
+the full lifetime. It carries no `clientId`: that column is the client
 SUBJECT foreign key, and the application lands on the token rows at the
 `/token` exchange. From the redemption on, the flow is the hosted ladder: the
 MFA challenge stamps `mfaAt` on that very session, `POST /authorize` reads it
@@ -2892,9 +2881,9 @@ reuses it (#3191). One `auth_sessions` row per federated login, `amr:
 ['ext']`, `+'otp'` and `acr: urn:authup:mfa` once a factor was verified.
 
 The render contract is at **version 3** for this: the `/authorize` payload
-carries `federatedLogin` and the page has to redeem it, so a substituted
-console built against version 2 would strand every federated login on the
-login form. That is exactly the drift `bindConsolePackages` fails closed on.
+carries `federatedLogin: { providerId }` and the page has to complete it, so a
+substituted console built against version 2 would strand every federated login
+on the login form. That is exactly the drift `bindConsolePackages` fails closed on.
 
 The access-policy leg stays at the callback rather than moving into
 `authorizeInner` with the rest: it is already implemented and correct there,
