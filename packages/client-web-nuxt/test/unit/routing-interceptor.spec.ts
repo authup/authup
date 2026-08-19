@@ -98,13 +98,31 @@ describe('RoutingInterceptor', () => {
             expect(result?.hash).toEqual('#row-7');
         });
 
+        it('should keep repeated destination query keys as a list', async () => {
+            const { interceptor } = createInterceptor();
+
+            const result = await interceptor.execute(
+                createRoute({
+                    path: '/login/callback',
+                    query: { code: 'the-code', redirect: '/users?tag=a&tag=b' },
+                }),
+                createRoute({ path: '/' }),
+            );
+
+            expect(result?.query).toEqual({ tag: ['a', 'b'] });
+        });
+
         // The destination now arrives as URL input rather than from
-        // same-origin storage, so a crafted authorize request could put a
-        // foreign host in it. Only path/query/hash may survive.
+        // same-origin storage, so a crafted authorize request could shape it.
+        // Anything that is not a site-relative path is dropped rather than
+        // reduced to its path: an attacker-chosen path is no better than an
+        // attacker-chosen host.
         it.each([
-            ['https://evil.test/steal', '/steal'],
-            ['//evil.test/steal', '/steal'],
-        ])('should discard the host in %s', async (redirect, expected) => {
+            'https://evil.test/steal',
+            '//evil.test/steal',
+            // eslint-disable-next-line no-script-url
+            'javascript:alert(1)',
+        ])('should ignore the destination %s', async (redirect) => {
             const { interceptor } = createInterceptor();
 
             const result = await interceptor.execute(
@@ -115,8 +133,8 @@ describe('RoutingInterceptor', () => {
                 createRoute({ path: '/' }),
             );
 
-            expect(result?.path).toEqual(expected);
-            expect(JSON.stringify(result)).not.toContain('evil.test');
+            expect(result?.path).toEqual('/login/callback');
+            expect(result?.query).toEqual({});
         });
 
         it('should strip the oauth2 params when no destination was carried', async () => {

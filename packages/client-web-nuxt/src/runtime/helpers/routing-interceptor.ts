@@ -58,8 +58,19 @@ export class RoutingInterceptor {
             }
 
             const request = loadAuthorizationRequest();
-            const destination = typeof to.query.redirect === 'string' ?
-                to.query.redirect :
+
+            // A destination is a site-relative path and nothing else. It
+            // reaches us as URL input now rather than as same-origin state,
+            // so an absolute `https://evil.test/x`, a protocol-relative
+            // `//evil.test/x` and a `javascript:` scheme are all dropped
+            // outright instead of being coerced into something that merely
+            // looks local — an attacker-chosen path is not an improvement
+            // over an attacker-chosen host.
+            const { redirect } = to.query;
+            const destination = typeof redirect === 'string' &&
+                redirect.startsWith('/') &&
+                !redirect.startsWith('//') ?
+                redirect :
                 undefined;
 
             try {
@@ -90,9 +101,21 @@ export class RoutingInterceptor {
                 // vue-router URL-encoding a `?`/`#` into the pathname.
                 if (destination) {
                     const url = new URL(destination, 'http://localhost');
+
+                    // A repeated key is a list, not a last-one-wins scalar.
+                    // `Object.fromEntries(searchParams.entries())` collapses
+                    // `?tag=a&tag=b` to `{ tag: 'b' }`, silently narrowing
+                    // what a destination can carry; vue-router's own
+                    // parseQuery keeps both.
+                    const query : Record<string, string | string[]> = {};
+                    for (const key of new Set(url.searchParams.keys())) {
+                        const values = url.searchParams.getAll(key);
+                        query[key] = values.length > 1 ? values : values[0];
+                    }
+
                     return {
                         path: url.pathname,
-                        query: Object.fromEntries(url.searchParams.entries()),
+                        query,
                         hash: url.hash,
                     };
                 }
