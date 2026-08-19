@@ -5,7 +5,7 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
-## Next release (after v1.0.0-beta.61)
+## v1.0.0-beta.62
 
 ### `auth_identity_provider_accounts` gains a unique constraint
 
@@ -30,19 +30,6 @@ HAVING COUNT(*) > 1;
 Keep the row whose `user_id` names the account the person actually uses, and
 delete the rest. The unique index cannot be created while duplicates exist,
 so the boot would fail either way; the check only makes the reason readable.
-
-## v1.0.0-beta.60
-
-### Fixed: external identity-provider login
-
-The token exchange against an external OAuth2 / OIDC provider never sent the
-`code` parameter, so **every federated login has failed since
-v1.0.0-beta.28** with an `invalid_request` from the provider's token
-endpoint. The callback passed the raw code string where the authenticator
-expected `{ code }`, and the HTTP client spread it into indexed body keys
-(`0=d&1=b&...`). **No action is required** beyond upgrading. A callback that
-arrives without a code is now rejected with a `400` instead of an opaque
-upstream failure.
 
 ### Federated login: completion hardening
 
@@ -80,6 +67,19 @@ upstream failure.
   against render contract version 2, which adds the interstitial route
   `/identity-providers/:id/authorize-in` and its `IdentityProviderCallbackPayload`;
   a package exporting an older `CONTRACT_VERSION` is refused at boot.
+
+## v1.0.0-beta.60
+
+### Fixed: external identity-provider login
+
+The token exchange against an external OAuth2 / OIDC provider never sent the
+`code` parameter, so **every federated login has failed since
+v1.0.0-beta.28** with an `invalid_request` from the provider's token
+endpoint. The callback passed the raw code string where the authenticator
+expected `{ code }`, and the HTTP client spread it into indexed body keys
+(`0=d&1=b&...`). **No action is required** beyond upgrading. A callback that
+arrives without a code is now rejected with a `400` instead of an opaque
+upstream failure.
 
 ### `auth_sessions.client_id` is the client-subject foreign key only
 
