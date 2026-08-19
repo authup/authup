@@ -4395,7 +4395,7 @@ An RP that bounces a visitor to the login flow has to get them back to the page
 they asked for. The destination rides in the OAuth2 **`redirect_uri`'s own
 query**, not in client-side storage:
 
-```
+```text
 /users  ->  /login?redirect=%2Fusers
         ->  <idp>/authorize?...&redirect_uri=<origin>%2Flogin%2Fcallback%3Fredirect%3D%252Fusers
         ->  <origin>/login/callback?redirect=%2Fusers&code=...&state=...

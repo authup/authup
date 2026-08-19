@@ -182,6 +182,41 @@ describe('grant-authorize', () => {
         expect(tokenResponse.access_token).toBeDefined();
     });
 
+    // The positive case above only shows the original value is accepted; a
+    // verifier that normalized the query would pass it too. RFC 6749 4.1.3
+    // asks for the exact value back, and the console relies on that by
+    // replaying the string it stored rather than rebuilding it from the
+    // browser URL, so prove the strictness rather than assume it.
+    it('should bind the code to the redirect uri byte for byte', async () => {
+        const state = generateOAuth2CodeVerifier();
+
+        const response = await suite.client
+            .authorize
+            .confirm({
+                response_type: OAuth2AuthorizationResponseType.CODE,
+                client_id: confidentialClient.id,
+                redirect_uri: 'https://example.com/redirect?redirect=%2Fusers',
+                scope: `${ScopeName.GLOBAL}`,
+                state,
+            });
+
+        const code = new URL(response.url).searchParams.get('code') as string;
+
+        // The same URL by every normalizing measure: `/` needs no escaping
+        // inside a query value. Different bytes, so it must be refused.
+        await expectClientError(
+            () => suite.client
+                .token
+                .createWithAuthorizationCode({
+                    client_id: confidentialClient.id,
+                    client_secret: confidentialSecret,
+                    redirect_uri: 'https://example.com/redirect?redirect=/users',
+                    code,
+                }),
+            { status: 400, data: { error: OAuth2ErrorCode.INVALID_GRANT } },
+        );
+    });
+
     it('should work with authorize grant and PKCE for confidential client', async () => {
         const state = generateOAuth2CodeVerifier();
         const codeVerifier = generateOAuth2CodeVerifier();
