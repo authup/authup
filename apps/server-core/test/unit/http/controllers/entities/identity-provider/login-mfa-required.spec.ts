@@ -32,11 +32,12 @@ const REDIRECT_URI = 'https://example.com/login/callback';
 const encode = (input: Record<string, any>) => Buffer.from(JSON.stringify(input)).toString('base64url');
 
 /**
- * `mfaRequired` says every user must hold a local factor. A federated user
- * holds none and cannot be challenged for one, so the two rules meet here:
- * the login completes (enrollment needs a real bearer, which the restricted
- * paths cannot give it), the page is told to enroll nothing, and the
- * application's code is withheld until a factor exists.
+ * `mfaRequired` says every user must hold a local factor, and the rule
+ * governs the local credential. A federated user has none, so its login
+ * completes, the page is told to enroll nothing, and the application's code
+ * is issued. A password login in the same realm still owes a factor, which
+ * is the half that would break first if the suppression reached further
+ * than the external session.
  */
 describe('identity-provider login (mfaRequired)', () => {
     const suite = createTestApplication({
