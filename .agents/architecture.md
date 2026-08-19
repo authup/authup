@@ -4421,12 +4421,14 @@ Three properties make this work, and all three are load-bearing:
   cannot redeem without the verifier).
 - **The destination is untrusted on the way back.** It arrives as URL input
   that a crafted authorize request could have shaped, so `RoutingInterceptor`
-  accepts a site-relative path and nothing else: a value that does not start
-  with a single `/` is dropped rather than reduced to its path, because an
-  attacker-chosen path is no better than an attacker-chosen host. That covers
-  `https://evil.test/x`, the protocol-relative `//evil.test/x`, and schemes
-  like `javascript:`. What survives is then parsed against a dummy base to
-  split its own query and hash.
+  accepts a site-relative path and nothing else: a value resolving anywhere
+  else is dropped rather than reduced to its path, because an attacker-chosen
+  path is no better than an attacker-chosen host. **The test is the resolved
+  origin, never the leading characters** — the value is resolved against a
+  fixed dummy base and refused unless it lands back on it. A
+  `startsWith('//')` check is not equivalent and was the first attempt: the
+  WHATWG parser reads `\` as `/` under a special scheme, so `/\evil.test/x`
+  declares an authority too and walks straight through it.
 
 Nothing here is authup-specific, which is the point: any RP in any framework
 gets the behaviour by putting the destination in its own callback URI. There is

@@ -120,6 +120,12 @@ describe('RoutingInterceptor', () => {
         it.each([
             'https://evil.test/steal',
             '//evil.test/steal',
+            // The WHATWG parser reads `\` as `/` under a special scheme, so
+            // these declare an authority just as `//` does and a
+            // startsWith('//') guard lets them through.
+            '/\\evil.test/steal',
+            '/\\\\evil.test/steal',
+            '//\\evil.test/steal',
             // eslint-disable-next-line no-script-url
             'javascript:alert(1)',
         ])('should ignore the destination %s', async (redirect) => {

@@ -21,6 +21,12 @@ import type { NuxtApp } from '#app';
 import { RouteMetaKey } from '../constants';
 import type { RuntimeOptions } from '../types';
 
+/**
+ * Base for resolving a post-login destination. Any origin works; it exists
+ * only so a relative path resolves and an absolute one is visibly not this.
+ */
+const DESTINATION_BASE = 'http://localhost';
+
 export class RoutingInterceptor {
     protected store : Store;
 
@@ -61,16 +67,19 @@ export class RoutingInterceptor {
 
             // A destination is a site-relative path and nothing else. It
             // reaches us as URL input now rather than as same-origin state,
-            // so an absolute `https://evil.test/x`, a protocol-relative
-            // `//evil.test/x` and a `javascript:` scheme are all dropped
-            // outright instead of being coerced into something that merely
-            // looks local — an attacker-chosen path is not an improvement
-            // over an attacker-chosen host.
+            // so anything that resolves somewhere else is dropped outright
+            // rather than coerced into something that merely looks local: an
+            // attacker-chosen path is no improvement over an attacker-chosen
+            // host.
+            //
+            // The test is the resolved origin, never the leading characters.
+            // `//evil.test/x` and `https://evil.test/x` are the obvious
+            // cases, but the WHATWG parser also reads `\` as `/` under a
+            // special scheme, so `/\evil.test/x` is an authority too and a
+            // `startsWith('//')` check waves it through.
             const { redirect } = to.query;
-            const destination = typeof redirect === 'string' &&
-                redirect.startsWith('/') &&
-                !redirect.startsWith('//') ?
-                redirect :
+            const destination = typeof redirect === 'string' ?
+                this.resolveDestination(redirect) :
                 undefined;
 
             try {
@@ -92,31 +101,26 @@ export class RoutingInterceptor {
 
                 clearAuthorizationRequest();
 
-                // The post-login destination rides in the callback URI's own
-                // query, so the authorization server carried it back next to
-                // `code` and `state`. That makes it URL input rather than
-                // same-origin state, so only path/query/hash are used and any
-                // host is discarded — otherwise a crafted authorize request
-                // could turn this into an open redirect. Parsing it also stops
-                // vue-router URL-encoding a `?`/`#` into the pathname.
+                // The destination was carried back by the authorization server
+                // next to `code` and `state`. Handing vue-router the raw
+                // string would URL-encode its `?`/`#` into the pathname, so
+                // pass the parsed parts.
                 if (destination) {
-                    const url = new URL(destination, 'http://localhost');
-
                     // A repeated key is a list, not a last-one-wins scalar.
                     // `Object.fromEntries(searchParams.entries())` collapses
                     // `?tag=a&tag=b` to `{ tag: 'b' }`, silently narrowing
                     // what a destination can carry; vue-router's own
                     // parseQuery keeps both.
                     const query : Record<string, string | string[]> = {};
-                    for (const key of new Set(url.searchParams.keys())) {
-                        const values = url.searchParams.getAll(key);
+                    for (const key of new Set(destination.searchParams.keys())) {
+                        const values = destination.searchParams.getAll(key);
                         query[key] = values.length > 1 ? values : values[0];
                     }
 
                     return {
-                        path: url.pathname,
+                        path: destination.pathname,
                         query,
-                        hash: url.hash,
+                        hash: destination.hash,
                     };
                 }
 
@@ -206,6 +210,31 @@ export class RoutingInterceptor {
         }
 
         return undefined;
+    }
+
+    /**
+     * Resolve a post-login destination, or undefined when the value is not a
+     * site-relative path.
+     *
+     * The base is a fixed dummy origin, so a value that lands anywhere else
+     * declared an authority of its own and is refused. That covers the whole
+     * family in one comparison — `//host`, `https://host`, the `\`-for-`/`
+     * variants a prefix check misses, and non-special schemes, which resolve
+     * to the opaque `"null"` origin.
+     */
+    protected resolveDestination(value: string) : URL | undefined {
+        if (!value) {
+            return undefined;
+        }
+
+        let url : URL;
+        try {
+            url = new URL(value, DESTINATION_BASE);
+        } catch {
+            return undefined;
+        }
+
+        return url.origin === DESTINATION_BASE ? url : undefined;
     }
 
     protected withoutAuthorizationParams(
