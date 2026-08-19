@@ -111,6 +111,7 @@ type MountOverrides = {
     withUser?: boolean,
     realmId?: string,
     redirectUriVerified?: boolean,
+    acrValues?: string,
     consentRows?: Consent[],
     consentHandler?: () => unknown,
     federatedLogin?: { handle: string, providerId: string },
@@ -126,6 +127,7 @@ function mountAuthorize(overrides: MountOverrides = {}) {
         withUser = true,
         realmId = REALM.id,
         redirectUriVerified = true,
+        acrValues,
         consentRows,
         consentHandler,
         federatedLogin,
@@ -174,6 +176,7 @@ function mountAuthorize(overrides: MountOverrides = {}) {
         code_challenge: 'challenge',
         code_challenge_method: 'S256',
         prompt,
+        ...(acrValues ? { acr_values: acrValues } : {}),
     };
 
     const clientTimestamp = new Date(0).toISOString();
@@ -625,8 +628,8 @@ describe('AAuthorize prompt=login (re-auth)', () => {
 
 // Plan 094: a federated callback hands this page a one-time handle instead of
 // the RP's code, so the ladder below runs for an external login too.
-describe('AAuthorize federated login handle', () => {
-    const federatedLogin = { handle: 'handle-1', providerId: 'provider-1' };
+describe('AAuthorize federated login', () => {
+    const federatedLogin = { providerId: 'provider-1' };
 
     const grant = () => ({
         access_token: 'federated-at',
@@ -641,7 +644,7 @@ describe('AAuthorize federated login handle', () => {
         realmId: REALM.id, 
     });
 
-    it('redeems the handle and counts the login as fresh', async () => {
+    it('completes the pending login and counts it as fresh', async () => {
         const {
             wrapper, 
             store, 
@@ -666,7 +669,7 @@ describe('AAuthorize federated login handle', () => {
         expect(hasChooser(wrapper)).toBe(false);
     });
 
-    it('holds the login form back while the handle is in flight', async () => {
+    it('holds the login form back while the completion is in flight', async () => {
         const { wrapper } = mountAuthorize({
             loggedIn: false,
             federatedLogin,
@@ -709,5 +712,37 @@ describe('AAuthorize federated login handle', () => {
         expect(wrapper.findComponent(AuthorizeForm).exists()).toBe(false);
         expect(wrapper.find('.login-form-stub').exists()).toBe(false);
         expect(wrapper.find('.authorize-text-stub').text()).toContain('the login request is unknown');
+    });
+});
+
+/**
+ * The server owns the rule about whether a session still owes a local factor,
+ * and it can only answer for the request being satisfied. So the page has to
+ * state that request: this parameter is the only thing that makes a federated
+ * session step up at all.
+ */
+describe('AAuthorize challenge request', () => {
+    it('asks the challenge endpoint about the acr_values it is satisfying', async () => {
+        const { httpClient } = mountAuthorize({ acrValues: 'urn:authup:mfa' });
+        await flushPromises();
+
+        const challengeRequest = httpClient.requests.find(
+            (request) => request.url.includes('authenticators/challenge'),
+        );
+
+        expect(challengeRequest).toBeDefined();
+        expect(challengeRequest?.url).toContain('acrValues=urn%3Aauthup%3Amfa');
+    });
+
+    it('leaves the query bare when the request asks for nothing', async () => {
+        const { httpClient } = mountAuthorize();
+        await flushPromises();
+
+        const challengeRequest = httpClient.requests.find(
+            (request) => request.url.includes('authenticators/challenge'),
+        );
+
+        expect(challengeRequest).toBeDefined();
+        expect(challengeRequest?.url).not.toContain('acrValues');
     });
 });

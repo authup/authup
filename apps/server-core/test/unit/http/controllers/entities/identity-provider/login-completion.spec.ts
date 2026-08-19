@@ -27,6 +27,7 @@ import {
     UserAuthenticatorKind,
 } from '@authup/core-kit';
 import { OAuth2ErrorCode } from '@authup/specs';
+import { ConfigInjectionKey } from '../../../../../../src/app/modules/config/constants';
 import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants';
 import {
     createFakeClient,
@@ -368,6 +369,44 @@ describe('identity-provider login completion', () => {
         expect(back.headers.get('set-cookie')).toBeNull();
         // refused before the provider's single-use code is spent
         expect(providerTokenCalls).toEqual(tokenCallsBefore);
+    });
+
+    it('completes from the hosted page origin, and turns the pending session into a full one', async () => {
+        await runFederatedLogin();
+
+        const response = await httpRequest(
+            suite,
+            'POST',
+            `identity-providers/${provider.id}/login-complete`,
+            {
+                headers: {
+                    'user-agent': USER_AGENT,
+                    // what a browser actually sends: the origin of the page
+                    // it is on, which is publicUrl's
+                    origin: new URL(suite.container.resolve(ConfigInjectionKey).publicUrl).origin,
+                    cookie: `authup_federated_login=${pendingLoginCookie}`,
+                },
+            },
+        );
+
+        expect(response.status).toEqual(200);
+
+        // the cookie is spent whichever way the completion goes
+        expect(response.headers.get('set-cookie') ?? '').toContain('authup_federated_login=');
+
+        // the session was created for the pending login's short window and
+        // has to outlive it once the login completed
+        const { data: sessions } = await suite.client.session.getMany({
+            filters: { subKind: 'user' },
+            pagination: { limit: 50 },
+        });
+        const session = sessions
+            .filter((row) => row.authMethod === 'ext')
+            .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))[0];
+
+        expect(session).toBeDefined();
+        expect(new Date(session.expiresAt).getTime())
+            .toBeGreaterThan(Date.now() + (10 * 60 * 1000));
     });
 
     /**
