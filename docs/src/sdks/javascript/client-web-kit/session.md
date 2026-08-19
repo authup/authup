@@ -80,7 +80,7 @@ export default defineComponent({
         console.log(store.userId); // xxxx-xxxx-...
         console.log(store.realmId); // xxxx-xxxx-...
         console.log(store.realmName); // xxx
-        console.log(store.user); // { id: 'xxxx-xxxx-...', name: 'xxx', displayName: 'xxx' | null }
+        console.log(store.user); // null | { id: 'xxxx-xxxx-...', name: 'xxx', displayName: 'xxx' | null }
     }
 })
 ```
