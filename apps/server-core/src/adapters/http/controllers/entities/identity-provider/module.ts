@@ -9,6 +9,7 @@ import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import {
     ValidatorGroup,
     base64URLDecode,
+    getURLBasePath,
     isObject,
     isUUID,
 } from '@authup/kit';
@@ -51,6 +52,7 @@ import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import type { Logger } from '@authup/server-kit';
 import { describeError, resolveURL } from '../../../../../utils/index.ts';
 import { useRequestQuery } from '@routup/basic/query';
+import { setResponseCookie, unsetResponseCookie, useRequestCookie } from '@routup/basic/cookie';
 import { readRequestBody } from '@routup/basic/body';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { OAuth2RequestError } from '@authup/specs';
@@ -60,7 +62,6 @@ import type {
     IdentityProviderCreatePayload,
     IdentityProviderLinkConfirmPayload,
     IdentityProviderLinkRequestResponse,
-    IdentityProviderLoginCompletePayload,
     IdentityProviderSavePayload,
     IdentityProviderUpdatePayload,
 } from '@authup/core-http-kit';
@@ -78,6 +79,8 @@ import type {
     OAuth2AuthorizationStateLink,
 } from '../../../../../core/index.ts';
 import {
+    OAUTH2_FEDERATED_LOGIN_COOKIE,
+    OAUTH2_FEDERATED_LOGIN_TTL,
     OAuth2AuthorizationCodeRequestValidator,
     RECORD_QUERY_PARAMETERS,
     createIdentityProviderOAuth2Authenticator,
@@ -318,24 +321,7 @@ export class IdentityProviderController {
 
         const authenticator = this.buildProviderAuthenticator(entity);
 
-        // Minted by the hosted login form and kept in that origin's session
-        // storage (plan 094). It is what ties the login handle the callback
-        // returns to the browser that started the login, so a login without
-        // one could only end in a handle nobody may redeem.
-        //
-        // The answer is the hosted page rather than an error: the form
-        // carries the challenge on the tile's href from the moment it
-        // hydrates, so a start without one is a click that raced the page,
-        // and the person just clicks again. This is a top-level navigation in
-        // the middle of a login either way, never a place for a JSON body.
-        if (typeof query.loginChallenge !== 'string' || query.loginChallenge.length === 0) {
-            return sendRedirect(event, this.buildHostedAuthorizeURL(data.data).href);
-        }
-
-        const state = await this.saveAuthorizationState(event, {
-            codeRequest: data.data,
-            loginChallenge: query.loginChallenge,
-        });
+        const state = await this.saveAuthorizationState(event, { codeRequest: data.data });
 
         return sendRedirect(event, authenticator.buildRedirectURL({ state }));
     }
@@ -421,7 +407,6 @@ export class IdentityProviderController {
             provider: entity,
             codeRequest: data.codeRequest,
             code,
-            loginChallenge: data.loginChallenge ?? '',
             request: {
                 ipAddress: getRequestIP(event),
                 userAgent: getRequestHeader(event, 'user-agent'),
@@ -444,14 +429,28 @@ export class IdentityProviderController {
             return sendRedirect(event, url.href);
         }
 
-        // The RP's code is NOT minted here. The browser goes back to the
-        // hosted authorize page carrying the login handle, and that page
-        // redeems it and runs the ladder a password login runs (second
-        // factor, prompt freshness, consent) before any code exists
-        // (plan 094). So a custom-scheme redirect_uri needs no interstitial
-        // on this leg either: it is navigated at the end of the ladder,
-        // exactly as it is for an interactive login.
-        url.searchParams.set('loginHandle', result.loginHandle);
+        // The application's code is NOT minted here. The browser goes back to
+        // the hosted authorize page, which completes the login and runs the
+        // ladder an interactive login runs (prompt freshness, consent) before
+        // any code exists (plan 094). So a custom-scheme redirect_uri needs no
+        // interstitial on this leg either: it is navigated at the end of the
+        // ladder, exactly as it is for an interactive login.
+        //
+        // The pending login rides a cookie rather than the URL, which is what
+        // Keycloak and Authentik both do: only the browser that started the
+        // login carries it, no other origin can set it, and nothing redeemable
+        // reaches history, a log or a referrer. `SameSite=Lax` keeps it off
+        // cross-site requests, so a page on another origin cannot drive the
+        // completion. `provider` stays in the URL as a routing hint, and is no
+        // secret.
+        setResponseCookie(event, OAUTH2_FEDERATED_LOGIN_COOKIE, result.pendingLoginId, {
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: this.options.baseURL.startsWith('https://'),
+            path: this.buildFederatedLoginCookiePath(),
+            maxAge: OAUTH2_FEDERATED_LOGIN_TTL / 1000,
+        });
+
         url.searchParams.set('provider', entity.id);
 
         return sendRedirect(event, url.href);
@@ -460,27 +459,23 @@ export class IdentityProviderController {
     @DPost('/:id/login-complete', [])
     async completeLogin(
         @DPath('id') _id: string,
-        @DBody() _data: IdentityProviderLoginCompletePayload,
         @DContext() event: IAppEvent,
     ) : Promise<OAuth2TokenGrantResponse> {
         const id = useRequestParamID(event);
 
-        const body = await readRequestBody(event);
-        const handle = isObject(body) ? body.handle : undefined;
-        if (typeof handle !== 'string' || handle.length === 0) {
-            throw new BadRequestError('The login handle is missing.');
+        const pendingLoginId = useRequestCookie(event, OAUTH2_FEDERATED_LOGIN_COOKIE);
+        if (typeof pendingLoginId !== 'string' || pendingLoginId.length === 0) {
+            throw new BadRequestError('The login request is unknown or expired.');
         }
 
-        const challenge = isObject(body) ? body.challenge : undefined;
+        // Cleared whichever way the completion goes: it is single use, and a
+        // cookie outliving its pending login only produces a confusing
+        // refusal on some later page load.
+        unsetResponseCookie(event, OAUTH2_FEDERATED_LOGIN_COOKIE, { path: this.buildFederatedLoginCookiePath() });
 
-        return this.loginService.redeem({
-            handle,
-            challenge: typeof challenge === 'string' ? challenge : '',
+        return this.loginService.completeHandoff({
+            pendingLoginId,
             providerId: id,
-            request: {
-                ipAddress: getRequestIP(event),
-                userAgent: getRequestHeader(event, 'user-agent'),
-            },
         });
     }
 
@@ -804,6 +799,15 @@ export class IdentityProviderController {
                 clientId: options.clientId,
             },
         });
+    }
+
+    /**
+     * Scoped to the routes that read it, so the cookie never rides an
+     * ordinary API request, and to publicUrl's base path, since a sub-path
+     * deployment mounts every route under it.
+     */
+    private buildFederatedLoginCookiePath() : string {
+        return `${getURLBasePath(this.options.baseURL)}/identity-providers`;
     }
 
     private async saveAuthorizationState(

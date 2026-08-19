@@ -37,11 +37,6 @@ export type OAuth2FederatedLoginCompleteInput = {
      * The provider's single-use authorization code.
      */
     code: string,
-    /**
-     * The federated login challenge the state blob carried, minted by the
-     * hosted login form before the hop.
-     */
-    loginChallenge: string,
     request?: {
         ipAddress?: string | null,
         userAgent?: string | null,
@@ -95,36 +90,29 @@ export type OAuth2FederatedLoginRefusedResult = {
 export type OAuth2FederatedLoginIssuedResult = {
     kind: 'issued',
     /**
-     * The one-time handle the hosted authorize page redeems for the
-     * session the callback established. No token, no authorization code:
-     * the RP's code is issued at the end of the hosted ladder, once the
-     * second factor, the prompt gates and consent have run.
+     * Identifies the pending login the hosted authorize page completes. The
+     * caller puts it in a cookie; it is never a URL parameter. No token and no
+     * authorization code: the application's code is issued at the end of the
+     * hosted ladder, once the prompt gates and consent have run.
      */
-    loginHandle: string,
+    pendingLoginId: string,
     /**
      * The verified request, which the caller re-renders on the hosted
-     * page alongside the handle.
+     * page alongside it.
      */
     codeRequest: OAuth2AuthorizationCodeRequest,
 };
 
 /**
- * The stash behind a login handle. Four scalars, never the identity object
- * (which carries the provider entity incl. its EA-loaded clientSecret and
- * the raw external token payload) and never a token.
+ * What a pending login holds. Three scalars, never the identity object (which
+ * carries the provider entity incl. its EA-loaded clientSecret and the raw
+ * external token payload) and never a token.
  */
-export type OAuth2FederatedLoginHandle = {
+export type OAuth2FederatedLoginPending = {
     sessionId: string,
     /**
-     * The challenge the redeeming browser has to present. Minted by the
-     * hosted login form and kept in that origin's session storage, so an
-     * attacker who mints a handle for their own external account cannot make
-     * another browser redeem it.
-     */
-    loginChallenge: string,
-    /**
-     * The provider the handle was minted for. The redeem endpoint is
-     * provider-scoped, so a handle cannot be presented at another one.
+     * The provider the login was started at. The completion endpoint is
+     * provider-scoped, so a pending login cannot be completed at another.
      */
     providerId: string,
     /**
@@ -133,34 +121,27 @@ export type OAuth2FederatedLoginHandle = {
     userName?: string | null,
 };
 
-export interface IOAuth2FederatedLoginHandleStore {
+export interface IOAuth2FederatedLoginStore {
     /**
-     * @returns the one-time handle
+     * @returns the id of the pending login
      */
-    save(data: OAuth2FederatedLoginHandle) : Promise<string>;
+    save(data: OAuth2FederatedLoginPending) : Promise<string>;
 
     /**
-     * Reads and DROPS the stash. Single use: a handle that reaches a log or
-     * a browser history entry must not be redeemable twice.
+     * Reads and DROPS it. Single use: one pending login completes once.
      */
-    consume(handle: string) : Promise<OAuth2FederatedLoginHandle | null>;
+    consume(id: string) : Promise<OAuth2FederatedLoginPending | null>;
 }
 
-export type OAuth2FederatedLoginRedeemInput = {
-    handle: string,
+export type OAuth2FederatedLoginCompleteHandoffInput = {
     /**
-     * The challenge the caller presents, from the hosted origin's session
-     * storage.
+     * From the cookie the callback set on this browser.
      */
-    challenge: string,
+    pendingLoginId: string,
     /**
-     * The provider the redeem endpoint was addressed at.
+     * The provider the completion endpoint was addressed at.
      */
     providerId: string,
-    request?: {
-        ipAddress?: string | null,
-        userAgent?: string | null,
-    },
 };
 
 export type OAuth2FederatedLoginCompleteResult =    OAuth2FederatedLoginRefusedResult |
@@ -173,9 +154,9 @@ export type OAuth2FederatedLoginCompleteResult =    OAuth2FederatedLoginRefusedR
  * state, access policy.
  *
  * It does NOT mint the RP's authorization code. It establishes the authup
- * session and hands back a one-time handle; the hosted authorize page
- * redeems that handle and runs the same ladder a password login runs
- * before any code is issued (plan 094).
+ * session and hands the browser a cookie naming it; the hosted authorize
+ * page completes it and runs the same ladder a password login runs before
+ * any code is issued (plan 094).
  *
  * Deliberately transport-free: it decides WHAT the answer is, and returns
  * it as a discriminated result. The adapter decides how that answer
@@ -185,7 +166,7 @@ export interface IOAuth2FederatedLoginService {
     complete(input: OAuth2FederatedLoginCompleteInput) : Promise<OAuth2FederatedLoginCompleteResult>;
 
     /**
-     * Exchange a login handle for the grant of the session the callback
+     * Exchange the pending login for the grant of the session the callback
      * established. Refuses without detail: the caller is anonymous.
      *
      * The local second factor is deliberately NOT gated here: an external
@@ -195,7 +176,7 @@ export interface IOAuth2FederatedLoginService {
      *
      * @throws BadRequestError
      */
-    redeem(input: OAuth2FederatedLoginRedeemInput) : Promise<OAuth2TokenGrantResponse>;
+    completeHandoff(input: OAuth2FederatedLoginCompleteHandoffInput) : Promise<OAuth2TokenGrantResponse>;
 }
 
 export type OAuth2FederatedLoginServiceOptions = {
@@ -229,7 +210,7 @@ export type OAuth2FederatedLoginServiceContext = {
     codeRequestVerifier: IOAuth2AuthorizationCodeRequestVerifier,
 
     sessionManager: ISessionManager,
-    handleStore: IOAuth2FederatedLoginHandleStore,
+    pendingLoginStore: IOAuth2FederatedLoginStore,
     accessTokenIssuer: IOAuth2TokenIssuer,
     refreshTokenIssuer: IOAuth2TokenIssuer,
 

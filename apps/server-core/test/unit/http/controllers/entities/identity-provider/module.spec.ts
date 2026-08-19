@@ -134,7 +134,7 @@ describe('src/http/controllers/identity-provider', () => {
 
         const response = await suite.client
             .get(
-                `${buildIdentityProviderAuthorizePath(oAuth2IdentityProvider.id!)}?codeRequest=${codeRequest}&loginChallenge=challenge-value`,
+                `${buildIdentityProviderAuthorizePath(oAuth2IdentityProvider.id!)}?codeRequest=${codeRequest}`,
                 { redirect: 'manual' },
             );
 

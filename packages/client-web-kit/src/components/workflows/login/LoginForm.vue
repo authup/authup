@@ -4,7 +4,6 @@ import {
     computed,
     defineComponent,
     nextTick,
-    onMounted,
     reactive,
     ref,
     shallowRef,
@@ -40,7 +39,6 @@ import type { LinkProps } from '@vuecs/link';
 import { VCLink } from '@vuecs/link';
 import type { UserAuthenticatorChallengeVerifyResponse } from '@authup/core-http-kit';
 import { AIdentityProviderIcon, AIdentityProviders, ARealmPicker } from '../../entities';
-import { createFederatedLoginChallenge } from '../../../core/federated-login';
 import { APagination, ATitle } from '../../utility';
 import AMfaChallengeForm from '../mfa/AMfaChallengeForm.vue';
 import { IFieldValidation } from '@ilingo/validup-vue';
@@ -346,36 +344,8 @@ export default defineComponent({
             }
         };
 
-        /**
-         * The federated login challenge (plan 094). It is minted HERE, kept
-         * in this origin's session storage, and presented again when the
-         * hosted page redeems the login handle the callback returns. That is
-         * what ties the handle to this browser: the callback's request
-         * address and user agent are chosen by whoever makes that request, so
-         * without it an attacker could mint a handle for their own external
-         * account and hand the URL to someone else, whose browser would adopt
-         * that session. Nothing can write this origin's session storage from
-         * another one.
-         *
-         * Minted after mount, so the server and client renders agree, and
-         * carried by the href itself rather than a click handler: a tile that
-         * only works on a plain left click would dead-end a middle click or
-         * "open in new tab" on the server's refusal.
-         */
-        const loginChallenge = ref<string | null>(null);
-
-        onMounted(() => {
-            loginChallenge.value = createFederatedLoginChallenge();
-        });
-
-        const buildIdentityProviderURL = (id: string) => {
-            const url = apiClient.identityProvider
-                .getAuthorizeUri(id, { codeRequest: props.codeRequest });
-
-            return loginChallenge.value ?
-                `${url}${url.includes('?') ? '&' : '?'}loginChallenge=${encodeURIComponent(loginChallenge.value)}` :
-                url;
-        };
+        const buildIdentityProviderURL = (id: string) => apiClient.identityProvider
+            .getAuthorizeUri(id, { codeRequest: props.codeRequest });
 
         // useSubmitButton from @vuecs/forms returns a computed binding
         // for VCButton ({ type: 'submit', label, iconLeft, color,

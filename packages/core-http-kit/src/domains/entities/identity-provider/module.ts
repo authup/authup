@@ -20,7 +20,6 @@ import type {
     IdentityProviderCreatePayload,
     IdentityProviderLinkConfirmPayload,
     IdentityProviderLinkRequestResponse,
-    IdentityProviderLoginCompletePayload,
     IdentityProviderSavePayload,
     IdentityProviderUpdatePayload,
 } from './types';
@@ -41,13 +40,10 @@ export class IdentityProviderAPI extends BaseAPI implements IIdentityProviderAPI
         return response.data;
     }
 
-    async completeLogin(
-        id: IdentityProvider['id'],
-        handle: string,
-        challenge: string,
-    ): Promise<OAuth2TokenGrantResponse> {
-        const payload : IdentityProviderLoginCompletePayload = { handle, challenge };
-        const response = await this.client.post(`identity-providers/${id}/login-complete`, payload);
+    async completeLogin(id: IdentityProvider['id']): Promise<OAuth2TokenGrantResponse> {
+        // No payload: the pending login rides a cookie the callback set, which
+        // the browser sends with this same-origin request.
+        const response = await this.client.post(`identity-providers/${id}/login-complete`);
 
         return response.data;
     }

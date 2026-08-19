@@ -82,8 +82,6 @@ function createFakeIdpServer(): {
     };
 }
 
-const CHALLENGE = 'login-challenge-value';
-
 describe('identity-provider authorization code grant', () => {
     const suite = createTestApplication();
     const fakeIdp = createFakeIdpServer();
@@ -138,6 +136,19 @@ describe('identity-provider authorization code grant', () => {
         await suite.teardown();
     });
 
+    let pendingLoginCookie : string | null = null;
+
+    function readPendingLoginCookie(response: Response) : string | null {
+        const header = response.headers.get('set-cookie');
+        if (!header) {
+            return null;
+        }
+
+        const match = header.match(/authup_federated_login=([^;]*)/);
+
+        return match && match[1].length > 0 ? match[1] : null;
+    }
+
     /**
      * The browser half a federated login now takes (plan 094): the callback
      * hands the hosted authorize page a one-time handle, the page redeems it
@@ -149,10 +160,7 @@ describe('identity-provider authorization code grant', () => {
             suite,
             'POST',
             `identity-providers/${hosted.searchParams.get('provider')}/login-complete`,
-            {
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ handle: hosted.searchParams.get('loginHandle'), challenge: CHALLENGE }),
-            },
+            { headers: { cookie: `authup_federated_login=${pendingLoginCookie}` } },
         );
         expect(redeem.status).toEqual(200);
 
@@ -175,7 +183,7 @@ describe('identity-provider authorization code grant', () => {
     it('should redirect to external IDP with state on authorize-out', async () => {
         const response = await suite.client
             .get(
-                `${buildIdentityProviderAuthorizePath(providerId)}?codeRequest=${encodedCodeRequest}&loginChallenge=${CHALLENGE}`,
+                `${buildIdentityProviderAuthorizePath(providerId)}?codeRequest=${encodedCodeRequest}`,
                 { redirect: 'manual' },
             );
 
@@ -192,7 +200,7 @@ describe('identity-provider authorization code grant', () => {
     it('should exchange IDP code for authup authorization code via authorize-in, then for tokens', async () => {
         const authorizeOutResponse = await suite.client
             .get(
-                `${buildIdentityProviderAuthorizePath(providerId)}?codeRequest=${encodedCodeRequest}&loginChallenge=${CHALLENGE}`,
+                `${buildIdentityProviderAuthorizePath(providerId)}?codeRequest=${encodedCodeRequest}`,
                 { redirect: 'manual' },
             );
 
@@ -209,9 +217,11 @@ describe('identity-provider authorization code grant', () => {
             );
 
         expect(authorizeInResponse.status).toEqual(302);
+        pendingLoginCookie = readPendingLoginCookie(authorizeInResponse);
 
         const inLocation = authorizeInResponse.headers.get('location') as string;
         expect(inLocation).toBeDefined();
+        pendingLoginCookie = readPendingLoginCookie(authorizeInResponse);
 
         // The callback returns to the hosted page, never to the RP.
         const hostedURL = new URL(inLocation);
@@ -247,7 +257,7 @@ describe('identity-provider authorization code grant', () => {
     it('should reject reuse of authorization code (single-use)', async () => {
         const authorizeOutResponse = await suite.client
             .get(
-                `${buildIdentityProviderAuthorizePath(providerId)}?codeRequest=${encodedCodeRequest}&loginChallenge=${CHALLENGE}`,
+                `${buildIdentityProviderAuthorizePath(providerId)}?codeRequest=${encodedCodeRequest}`,
                 { redirect: 'manual' },
             );
 
@@ -261,6 +271,7 @@ describe('identity-provider authorization code grant', () => {
             );
 
         const inLocation = authorizeInResponse.headers.get('location') as string;
+        pendingLoginCookie = readPendingLoginCookie(authorizeInResponse);
         const authupCode = (await completeThroughLadder(new URL(inLocation))).searchParams.get('code');
 
         await suite.client
@@ -303,7 +314,7 @@ describe('identity-provider authorization code grant', () => {
 
         const authorizeOutResponse = await suite.client
             .get(
-                `${buildIdentityProviderAuthorizePath(providerId)}?codeRequest=${openidCodeRequest}&loginChallenge=${CHALLENGE}`,
+                `${buildIdentityProviderAuthorizePath(providerId)}?codeRequest=${openidCodeRequest}`,
                 { redirect: 'manual' },
             );
 
@@ -316,6 +327,7 @@ describe('identity-provider authorization code grant', () => {
                 { redirect: 'manual' },
             );
 
+        pendingLoginCookie = readPendingLoginCookie(authorizeInResponse);
         const authupCode = (await completeThroughLadder(
             new URL(authorizeInResponse.headers.get('location') as string),
             openidCodeRequest,
@@ -359,7 +371,7 @@ describe('identity-provider authorization code grant', () => {
 
         const authorizeOutResponse = await suite.client
             .get(
-                `${buildIdentityProviderAuthorizePath(providerId)}?codeRequest=${encodedCodeRequest}&loginChallenge=${CHALLENGE}`,
+                `${buildIdentityProviderAuthorizePath(providerId)}?codeRequest=${encodedCodeRequest}`,
                 { redirect: 'manual' },
             );
 
@@ -373,6 +385,7 @@ describe('identity-provider authorization code grant', () => {
             );
 
         expect(authorizeInResponse.status).toEqual(302);
+        pendingLoginCookie = readPendingLoginCookie(authorizeInResponse);
 
         const inURL = new URL(authorizeInResponse.headers.get('location') as string);
         expect(inURL.pathname.endsWith('/authorize')).toBe(true);
@@ -387,7 +400,7 @@ describe('identity-provider authorization code grant', () => {
 
         const authorizeOutResponse = await suite.client
             .get(
-                `${buildIdentityProviderAuthorizePath(providerId)}?codeRequest=${encodedCodeRequest}&loginChallenge=${CHALLENGE}`,
+                `${buildIdentityProviderAuthorizePath(providerId)}?codeRequest=${encodedCodeRequest}`,
                 { redirect: 'manual' },
             );
 
@@ -401,10 +414,11 @@ describe('identity-provider authorization code grant', () => {
             );
 
         expect(authorizeInResponse.status).toEqual(302);
+        pendingLoginCookie = readPendingLoginCookie(authorizeInResponse);
 
         const hostedURL = new URL(authorizeInResponse.headers.get('location') as string);
         expect(hostedURL.searchParams.get('error')).toBeNull();
-        expect(hostedURL.searchParams.get('loginHandle')).toBeTruthy();
+        expect(pendingLoginCookie).toBeTruthy();
 
         const inURL = await completeThroughLadder(hostedURL);
         expect(inURL.searchParams.get('code')).toBeTruthy();

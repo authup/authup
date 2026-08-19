@@ -30,7 +30,6 @@ import {
 } from '@authup/i18n';
 import {
     OAuth2AuthenticationContextClass,
-    OAuth2AuthenticationMethodReference,
     OAuth2AuthorizationPrompt,
     OAuth2ErrorCode,
     unwrapOAuth2Scope,
@@ -38,7 +37,6 @@ import {
 import type { LinkProps } from '@vuecs/link';
 import {
     StoreAuthOrigin,
-    consumeFederatedLoginChallenge,
     extractErrorContext,
     injectHTTPClient,
     injectStore,
@@ -91,7 +89,7 @@ export default defineComponent({
          * (the account was chosen at the provider) and prompt=login does not
          * demand a second credential entry.
          */
-        federatedLogin: { type: Object as PropType<{ handle: string, providerId: string }> },
+        federatedLogin: { type: Object as PropType<{ providerId: string }> },
     },
     emits: ['redirect', 'failed'],
     setup(props, { emit }) {
@@ -99,7 +97,6 @@ export default defineComponent({
         const store = injectStore();
         const {
             acr,
-            amr,
             loggedIn,
             lastAuthOrigin,
             realmId,
@@ -181,30 +178,6 @@ export default defineComponent({
 
         const accountConfirmed = computed<boolean>(() => accountConfirmedLocal.value);
 
-        /**
-         * Whether authup's OWN second factor applies to this session. It does
-         * not for a session an external identity provider established: that
-         * provider authenticated the login and is where MFA is enforced for
-         * it, so authup stacks nothing on top. The one exception is an
-         * application that asks for MFA explicitly through `acr_values` — it
-         * asked, and a local factor is the only way authup can answer.
-         *
-         * The server keeps its own copy of this rule in `authorizeInner`;
-         * this only decides what the page renders.
-         */
-        const localFactorApplies = computed<boolean>(() => {
-            const externallyAuthenticated = amr.value.includes(
-                OAuth2AuthenticationMethodReference.EXTERNAL,
-            );
-            if (!externallyAuthenticated) {
-                return true;
-            }
-
-            return (props.codeRequest?.acr_values ?? '')
-                .split(' ')
-                .includes(OAuth2AuthenticationContextClass.MFA);
-        });
-
         // MFA gate (plan 049). The server POST /authorize backstop is
         // authoritative; this renders the interactive challenge / inline
         // enrollment so the code request can succeed. The proof is
@@ -213,16 +186,23 @@ export default defineComponent({
         const mfaStatus = ref<UserAuthenticatorChallengeResponse | null>(null);
         const mfaResolving = ref<boolean>(false);
 
+        // The endpoint answers what THIS session still owes, which depends on
+        // the authorization request being satisfied: a session an external
+        // provider established owes a local factor only when an application
+        // asked for one. It is the server's rule; the page just states the
+        // request it is running.
+        const challengeOptions = () => ({ acrValues: props.codeRequest?.acr_values });
+
         const refreshMfaStatus = async () => {
             mfaResolving.value = true;
             try {
-                mfaStatus.value = await httpClient.userAuthenticator.challenge();
+                mfaStatus.value = await httpClient.userAuthenticator.challenge(challengeOptions());
             } catch {
                 try {
                     // one retry before failing open — absorbs a transient blip
                     // without permanently disabling the client-side gate for the
                     // rest of this render lifecycle.
-                    mfaStatus.value = await httpClient.userAuthenticator.challenge();
+                    mfaStatus.value = await httpClient.userAuthenticator.challenge(challengeOptions());
                 } catch {
                     // an errored challenge lookup must not brick the ladder —
                     // the server backstop still gates the code issuance.
@@ -254,11 +234,6 @@ export default defineComponent({
             try {
                 const grant = await httpClient.identityProvider.completeLogin(
                     federated.providerId,
-                    federated.handle,
-                    // minted by the login form before the hop and kept in this
-                    // origin's session storage: the proof that THIS browser
-                    // started the login the handle belongs to
-                    consumeFederatedLoginChallenge() ?? '',
                 );
 
                 await store.loginWithTokenGrant(grant);
@@ -600,7 +575,7 @@ export default defineComponent({
             // request can't render a challenge form; its AuthorizeForm
             // auto-consent hits the server backstop and redirects the OIDC
             // error (interaction_required), so skip the form here for silent.
-            if (!isSilent && !mfaSatisfiedLocal.value && localFactorApplies.value) {
+            if (!isSilent && !mfaSatisfiedLocal.value) {
                 // Block consent until the status is known — AuthorizeForm
                 // auto-submits for built_in clients, so it must not render
                 // before we know whether a factor is required.

@@ -42,24 +42,6 @@ export type IdentityProviderLinkConfirmPayload = {
     handle: string,
 };
 
-/**
- * Body of `POST /identity-providers/:id/login-complete` (plan 094): the
- * one-time handle the federated callback put on the hosted authorize URL.
- * It is exchanged for the grant of the session the callback established,
- * so the hosted ladder can run MFA, the prompt gates and consent before
- * the RP's authorization code is issued.
- */
-export type IdentityProviderLoginCompletePayload = {
-    handle: string,
-    /**
-     * The challenge the login form minted before the hop to the external
-     * provider and kept in the hosted origin's session storage. The callback
-     * request's address and agent are chosen by whoever makes it, so this is
-     * what ties the handle to the browser that started the login.
-     */
-    challenge: string,
-};
-
 export type IdentityProviderAuthorizeUriOptions = {
     codeRequest?: OAuth2AuthorizationCodeRequest
 };
@@ -74,5 +56,10 @@ export interface IIdentityProviderAPI extends IEntityAPI<IdentityProvider, Ident
     createOrUpdate(idOrName: string, data: IdentityProviderSavePayload) : Promise<EntityRecordResponse<IdentityProvider>>;
     createLinkRequest(id: IdentityProvider['id']) : Promise<IdentityProviderLinkRequestResponse>;
     confirmLinkRequest(id: IdentityProvider['id'], handle: string) : Promise<EntityRecordResponse<IdentityProviderAccount>>;
-    completeLogin(id: IdentityProvider['id'], handle: string, challenge: string) : Promise<OAuth2TokenGrantResponse>;
+    /**
+     * Completes a federated login the provider callback established. The
+     * pending login rides a cookie, so this carries no payload and only works
+     * from the browser that started it.
+     */
+    completeLogin(id: IdentityProvider['id']) : Promise<OAuth2TokenGrantResponse>;
 }

@@ -32,25 +32,24 @@ export default defineComponent({
             scopes: Scope[] | undefined,
             realm: RealmSummary | undefined,
             redirectUriVerified: boolean | undefined,
-            federatedLogin: { handle: string, providerId: string } | undefined,
+            federatedLogin: { providerId: string } | undefined,
             features: StatusResponseFeatures | undefined,
             requestPath: string | undefined
         }>();
 
-        // The handle travels in the payload, not through the router, so the
-        // consumed parameters can leave the browser URL right away: a reload
-        // would otherwise re-attempt a spent handle and surface its refusal.
+        // The provider hint has done its job once the page has read it from
+        // the payload, and a reload should not re-attempt a completion whose
+        // cookie is already spent.
         onMounted(() => {
             if (typeof window === 'undefined') {
                 return;
             }
 
             const url = new URL(window.location.href);
-            if (!url.searchParams.has('loginHandle')) {
+            if (!url.searchParams.has('provider')) {
                 return;
             }
 
-            url.searchParams.delete('loginHandle');
             url.searchParams.delete('provider');
             window.history.replaceState(window.history.state, '', url.href);
         });

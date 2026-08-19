@@ -70,8 +70,12 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
     async challenge(
         options?: UserAuthenticatorChallengeRequestOptions,
     ): Promise<UserAuthenticatorChallengeResponse> {
+        const url = options && options.acrValues ?
+            `authenticators/challenge?acrValues=${encodeURIComponent(options.acrValues)}` :
+            'authenticators/challenge';
+
         const response = await this.client.get(
-            'authenticators/challenge',
+            url,
             buildUserAuthenticatorChallengeRequestConfig(options),
         );
         return response.data;

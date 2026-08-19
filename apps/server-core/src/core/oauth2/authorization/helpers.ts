@@ -51,12 +51,21 @@ export function deriveAmrAcr(
         amr.push(OAuth2AuthenticationMethodReference.OTP);
     }
 
-    return {
-        amr,
-        acr: session.mfaAt ?
-            OAuth2AuthenticationContextClass.MFA :
-            OAuth2AuthenticationContextClass.PASSWORD,
-    };
+    if (session.mfaAt) {
+        return { amr, acr: OAuth2AuthenticationContextClass.MFA };
+    }
+
+    // No `acr` for a session an external provider authenticated: authup
+    // verified no credential of its own, so it asserts no assurance level.
+    // `urn:authup:pwd` would say the subject authenticated with a password,
+    // which is exactly what did NOT happen (issue #3478). Per OIDC Core
+    // §2 the claim is voluntary, so the absence is the honest answer, and
+    // `amr: ['ext']` still says how the login happened.
+    if (session.authMethod === SessionAuthMethod.EXTERNAL) {
+        return { amr };
+    }
+
+    return { amr, acr: OAuth2AuthenticationContextClass.PASSWORD };
 }
 
 export function generateOAuth2CodeVerifier() {

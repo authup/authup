@@ -38,8 +38,6 @@ const encode = (input: Record<string, any>) => Buffer.from(JSON.stringify(input)
 // real provider fails it: an answer, not a transport error.
 const REJECTED_CODE = 'rejected-code';
 
-const CHALLENGE = 'login-challenge-value';
-
 describe('identity-provider login flow', () => {
     const suite = createTestApplication();
 
@@ -177,7 +175,7 @@ describe('identity-provider login flow', () => {
     }
 
     async function authorizeOut(providerId = provider.id): Promise<string> {
-        const response = await httpRequest(suite, 'GET', `identity-providers/${providerId}/authorize-out?codeRequest=${buildCodeRequest()}&loginChallenge=${CHALLENGE}`, {
+        const response = await httpRequest(suite, 'GET', `identity-providers/${providerId}/authorize-out?codeRequest=${buildCodeRequest()}`, {
             headers: { 'user-agent': USER_AGENT },
             redirect: 'manual',
         });
@@ -218,7 +216,7 @@ describe('identity-provider login flow', () => {
             enabled: false,
         });
 
-        const response = await httpRequest(suite, 'GET', `identity-providers/${disabled.id}/authorize-out?codeRequest=${buildCodeRequest()}&loginChallenge=${CHALLENGE}`, {
+        const response = await httpRequest(suite, 'GET', `identity-providers/${disabled.id}/authorize-out?codeRequest=${buildCodeRequest()}`, {
             headers: { 'user-agent': USER_AGENT },
             redirect: 'manual',
         });

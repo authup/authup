@@ -40,7 +40,6 @@ const USER_AGENT = 'login-completion-spec-agent';
 
 const REDIRECT_URI = 'https://example.com/login/callback';
 const STATE = 'rp-state-value';
-const CHALLENGE = 'login-challenge-value';
 const NONCE = 'rp-nonce-value';
 
 // PKCE pair, exactly as a public client sends it: every provisioned console
@@ -153,12 +152,30 @@ describe('identity-provider login completion', () => {
     }
 
     /**
+     * A browser's cookie jar, which `fetch` does not keep for us. The pending
+     * login rides one, so the specs have to carry it from the callback to the
+     * completion the way a browser would.
+     */
+    let pendingLoginCookie : string | null = null;
+
+    function readPendingLoginCookie(response: Response) : string | null {
+        const header = response.headers.get('set-cookie');
+        if (!header) {
+            return null;
+        }
+
+        const match = header.match(/authup_federated_login=([^;]*)/);
+
+        return match && match[1].length > 0 ? match[1] : null;
+    }
+
+    /**
      * The federated round trip: /authorize -> provider -> the callback.
      * Returns the Location the browser is sent to afterwards, which since
      * plan 094 is always the hosted authorize page.
      */
     async function runFederatedLogin(codeRequest = buildCodeRequest()): Promise<URL> {
-        const out = await httpRequest(suite, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${codeRequest}&loginChallenge=${CHALLENGE}`, {
+        const out = await httpRequest(suite, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${codeRequest}`, {
             headers: { 'user-agent': USER_AGENT },
             redirect: 'manual',
         });
@@ -178,25 +195,32 @@ describe('identity-provider login completion', () => {
         );
         expect(back.status).toEqual(302);
 
+        pendingLoginCookie = readPendingLoginCookie(back);
+
         return new URL(back.headers.get('location') as string);
     }
 
-    /**
-     * The browser half of plan 094: the hosted page redeems the handle for
-     * the session the callback established, then posts the consent that
-     * issues the RP's code. Everything the interactive ladder enforces sits
-     * between these two calls.
-     */
-    async function redeemLoginHandle(hosted: URL): Promise<string> {
-        const response = await httpRequest(
+    function completeRequest(hosted: URL, cookie = pendingLoginCookie) {
+        return httpRequest(
             suite,
             'POST',
             `identity-providers/${hosted.searchParams.get('provider')}/login-complete`,
             {
-                headers: { 'user-agent': USER_AGENT, 'content-type': 'application/json' },
-                body: JSON.stringify({ handle: hosted.searchParams.get('loginHandle'), challenge: CHALLENGE }),
+                headers: {
+                    'user-agent': USER_AGENT,
+                    ...(cookie ? { cookie: `authup_federated_login=${cookie}` } : {}),
+                },
             },
         );
+    }
+
+    /**
+     * The browser half of plan 094: the hosted page completes the login the
+     * callback established, then posts the consent that issues the RP's code.
+     * Everything the interactive ladder enforces sits between these two calls.
+     */
+    async function completePendingLogin(hosted: URL): Promise<string> {
+        const response = await completeRequest(hosted);
         expect(response.status).toEqual(200);
 
         const grant = await response.json();
@@ -207,7 +231,7 @@ describe('identity-provider login completion', () => {
 
     async function completeFederatedLogin(codeRequest = buildCodeRequest()): Promise<URL> {
         const hosted = await runFederatedLogin(codeRequest);
-        const accessToken = await redeemLoginHandle(hosted);
+        const accessToken = await completePendingLogin(hosted);
 
         const approve = await httpRequest(suite, 'POST', 'authorize', {
             headers: {
@@ -255,15 +279,17 @@ describe('identity-provider login completion', () => {
         },
     });
 
-    it('returns the browser to the hosted authorize page with a login handle', async () => {
+    it('returns the browser to the hosted authorize page carrying no secret', async () => {
         const location = await runFederatedLogin();
 
         // No code is minted here (plan 094). The person goes back to the
-        // hosted page, which redeems the handle and then runs the gates a
-        // password login runs before the RP's code exists.
+        // hosted page, which completes the login and then runs the gates an
+        // interactive login runs before the RP's code exists. The pending
+        // login rides a cookie, so the URL carries nothing redeemable.
         expect(location.pathname.endsWith('/authorize')).toBe(true);
         expect(location.searchParams.get('code')).toBeNull();
-        expect(location.searchParams.get('loginHandle')).toBeTruthy();
+        expect(pendingLoginCookie).toBeTruthy();
+        expect(location.search).not.toContain(pendingLoginCookie as string);
         expect(location.searchParams.get('provider')).toEqual(provider.id);
         // the whole request rides along, so the page renders it unchanged
         expect(location.searchParams.get('client_id')).toEqual(client.id);
@@ -282,53 +308,27 @@ describe('identity-provider login completion', () => {
         expect(location.searchParams.get('state')).toEqual(STATE);
     });
 
-    it('refuses a replayed login handle', async () => {
+    it('refuses a replayed completion', async () => {
         const hosted = await runFederatedLogin();
-        await redeemLoginHandle(hosted);
+        const cookie = pendingLoginCookie;
 
-        const response = await httpRequest(
-            suite,
-            'POST',
-            `identity-providers/${provider.id}/login-complete`,
-            {
-                headers: { 'user-agent': USER_AGENT, 'content-type': 'application/json' },
-                body: JSON.stringify({ handle: hosted.searchParams.get('loginHandle'), challenge: CHALLENGE }),
-            },
-        );
+        await completePendingLogin(hosted);
 
+        const response = await completeRequest(hosted, cookie);
         expect(response.status).toEqual(400);
     });
 
-    it('refuses a login handle presented without the challenge that started the login', async () => {
+    /**
+     * The browser binding. Only the browser the callback answered carries the
+     * cookie, and no other origin can set it, so an attacker who starts a
+     * federated login for their own account cannot hand the resulting URL to
+     * someone else and have their browser adopt that session.
+     */
+    it('refuses a completion from a browser that did not start the login', async () => {
         const hosted = await runFederatedLogin();
 
-        const response = await httpRequest(
-            suite,
-            'POST',
-            `identity-providers/${provider.id}/login-complete`,
-            {
-                headers: { 'user-agent': USER_AGENT, 'content-type': 'application/json' },
-                body: JSON.stringify({
-                    handle: hosted.searchParams.get('loginHandle'),
-                    challenge: 'a-challenge-this-browser-never-minted',
-                }),
-            },
-        );
-
+        const response = await completeRequest(hosted, null);
         expect(response.status).toEqual(400);
-    });
-
-    it('returns the person to the login page when the start carried no challenge', async () => {
-        // the tile carries the challenge on its href from the moment the page
-        // hydrates, so a start without one is a click that raced it
-        const response = await httpRequest(
-            suite,
-            'GET',
-            `identity-providers/${provider.id}/authorize-out?codeRequest=${buildCodeRequest()}`,
-            { headers: { 'user-agent': USER_AGENT }, redirect: 'manual' },
-        );
-
-        expectHostedBounce(response, client.id, null);
     });
 
     it('mints a code the public client redeems with its PKCE verifier', async () => {
@@ -463,7 +463,7 @@ describe('identity-provider login completion', () => {
 
     it('records the login in the audit log', async () => {
         const hosted = await runFederatedLogin();
-        await redeemLoginHandle(hosted);
+        await completePendingLogin(hosted);
 
         // The authorization itself is recorded by the hosted ladder now, like
         // any interactive one. What is unique to this leg is the login, and it
@@ -491,7 +491,7 @@ describe('identity-provider login completion', () => {
     });
 
     it('returns the person to the login page when the provider answers with an error', async () => {
-        const out = await httpRequest(suite, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${buildCodeRequest()}&loginChallenge=${CHALLENGE}`, {
+        const out = await httpRequest(suite, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${buildCodeRequest()}`, {
             headers: { 'user-agent': USER_AGENT },
             redirect: 'manual',
         });
@@ -523,7 +523,7 @@ describe('identity-provider login completion', () => {
         });
         const disabledProvider = (await suite.client.identityProvider.create(payload)).data;
 
-        const out = await httpRequest(suite, 'GET', `identity-providers/${disabledProvider.id}/authorize-out?codeRequest=${buildCodeRequest()}&loginChallenge=${CHALLENGE}`, {
+        const out = await httpRequest(suite, 'GET', `identity-providers/${disabledProvider.id}/authorize-out?codeRequest=${buildCodeRequest()}`, {
             headers: { 'user-agent': USER_AGENT },
             redirect: 'manual',
         });
@@ -570,7 +570,7 @@ describe('identity-provider login completion', () => {
         // failed assertion here would deactivate the user for the rest of the
         // run and fail every later test that logs in.
         try {
-            const out = await httpRequest(suite, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${buildCodeRequest()}&loginChallenge=${CHALLENGE}`, {
+            const out = await httpRequest(suite, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${buildCodeRequest()}`, {
                 headers: { 'user-agent': USER_AGENT },
                 redirect: 'manual',
             });
@@ -606,7 +606,7 @@ describe('identity-provider login completion', () => {
 
         const codeRequest = buildCodeRequest({ client_id: moved.id, scope: ScopeName.GLOBAL });
 
-        const out = await httpRequest(suite, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${codeRequest}&loginChallenge=${CHALLENGE}`, {
+        const out = await httpRequest(suite, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${codeRequest}`, {
             headers: { 'user-agent': USER_AGENT },
             redirect: 'manual',
         });
@@ -667,7 +667,7 @@ describe('identity-provider login completion', () => {
 
         const hosted = await runFederatedLogin(codeRequest);
         expect(hosted.pathname.endsWith('/authorize')).toBe(true);
-        expect(hosted.searchParams.get('loginHandle')).toBeTruthy();
+        expect(pendingLoginCookie).toBeTruthy();
 
         const target = await completeFederatedLogin(codeRequest);
         expect(target.protocol).toEqual('myapp:');
@@ -694,7 +694,7 @@ describe('identity-provider login completion', () => {
             client_id: native.id,
             redirect_uri: 'myapp://cb',
             scope: ScopeName.GLOBAL,
-        })}&loginChallenge=${CHALLENGE}`, {
+        })}`, {
             headers: { 'user-agent': USER_AGENT },
             redirect: 'manual',
         });
@@ -747,7 +747,7 @@ describe('identity-provider login completion', () => {
 
         const codeRequest = buildCodeRequest({ client_id: disabled.id, scope: ScopeName.GLOBAL });
 
-        const out = await httpRequest(suite, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${codeRequest}&loginChallenge=${CHALLENGE}`, {
+        const out = await httpRequest(suite, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${codeRequest}`, {
             headers: { 'user-agent': USER_AGENT },
             redirect: 'manual',
         });
@@ -825,7 +825,7 @@ describe('identity-provider login completion', () => {
         try {
             const codeRequest = buildCodeRequest({ acr_values: 'urn:authup:mfa' });
             const hosted = await runFederatedLogin(codeRequest);
-            const accessToken = await redeemLoginHandle(hosted);
+            const accessToken = await completePendingLogin(hosted);
 
             const approve = await httpRequest(suite, 'POST', 'authorize', {
                 headers: {

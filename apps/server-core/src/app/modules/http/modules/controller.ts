@@ -551,7 +551,7 @@ export class HTTPControllerModule {
             codeRequestVerifier,
 
             sessionManager: container.resolve(AuthenticationInjectionKey.SessionManager),
-            handleStore: container.resolve(OAuth2InjectionToken.FederatedLoginHandleStore),
+            pendingLoginStore: container.resolve(OAuth2InjectionToken.FederatedLoginStore),
             accessTokenIssuer: container.resolve(OAuth2InjectionToken.AccessTokenIssuer),
             refreshTokenIssuer: container.resolve(OAuth2InjectionToken.RefreshTokenIssuer),
 

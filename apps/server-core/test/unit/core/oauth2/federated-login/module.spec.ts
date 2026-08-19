@@ -33,11 +33,10 @@ import type { IOAuth2AccessPolicyEvaluator } from '../../../../../src/core/oauth
 import type { IIdentityProviderAccountManager } from '../../../../../src/core/identity/provider/account/types.ts';
 import { FakeRealmRepository } from '../../entities/realm/fake-repository.ts';
 import { FakeOAuth2TokenIssuer, FakeSessionManager } from '../../helpers/index.ts';
-import { FakeHandleStore } from './fake-handle-store.ts';
+import { FakePendingLoginStore } from './fake-pending-login-store.ts';
 import { FakeVerifier } from './fake-verifier.ts';
 
 const REDIRECT_URI = 'https://app.example.com/callback';
-const CHALLENGE = 'login-challenge-value';
 
 const codeRequest = {
     response_type: 'code',
@@ -77,7 +76,7 @@ function buildService(options: {
     accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,
     authenticate?: () => Promise<User>,
 } = {}) {
-    const handleStore = new FakeHandleStore();
+    const pendingLoginStore = new FakePendingLoginStore();
     const sessionManager = new FakeSessionManager();
     const accessTokenIssuer = new FakeOAuth2TokenIssuer();
     const refreshTokenIssuer = new FakeOAuth2TokenIssuer();
@@ -88,7 +87,7 @@ function buildService(options: {
         realmRepository: new FakeRealmRepository(),
         codeRequestVerifier: options.verifier ?? new FakeVerifier({}),
         sessionManager,
-        handleStore,
+        pendingLoginStore,
         accessTokenIssuer,
         refreshTokenIssuer,
         accessPolicyEvaluator: options.accessPolicyEvaluator,
@@ -102,7 +101,7 @@ function buildService(options: {
 
     return {
         service, 
-        handleStore, 
+        pendingLoginStore, 
         sessionManager, 
         accessTokenIssuer,
         refreshTokenIssuer,
@@ -110,12 +109,12 @@ function buildService(options: {
 }
 
 describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
-    it('should establish a pending session and hand back a handle', async () => {
+    it('should establish a pending session the browser can complete', async () => {
         const user = createUser();
         const provider = createProvider();
         const {
             service, 
-            handleStore, 
+            pendingLoginStore, 
             sessionManager, 
         } = buildService({ user });
 
@@ -123,7 +122,6 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
             provider,
             codeRequest,
             code: 'provider-code',
-            loginChallenge: CHALLENGE,
             request: { ipAddress: '203.0.113.7', userAgent: 'agent' },
         });
 
@@ -134,8 +132,8 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
 
         // no authorization code: the RP's code is issued at the end of the
         // hosted ladder, once the second factor and consent have run
-        expect(typeof result.loginHandle).toEqual('string');
-        expect(handleStore.saved).toHaveLength(1);
+        expect(typeof result.pendingLoginId).toEqual('string');
+        expect(pendingLoginStore.saved).toHaveLength(1);
         expect(result.codeRequest).toEqual(codeRequest);
 
         const [session] = sessionManager.createCalls;
@@ -148,15 +146,12 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
             ipAddress: '203.0.113.7',
             userAgent: 'agent',
         });
-        // the pending session covers at least the handle, and the second
-        // factor that may follow it
         expect(new Date(session.expiresAt as string).getTime())
             .toBeGreaterThan(Date.now());
 
-        expect(handleStore.saved[0]).toMatchObject({
+        expect(pendingLoginStore.saved[0]).toMatchObject({
             providerId: provider.id,
             userName: user.name,
-            loginChallenge: CHALLENGE,
         });
     });
 
@@ -170,18 +165,17 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
         });
         const {
             service, 
-            handleStore, 
+            pendingLoginStore, 
             sessionManager, 
         } = buildService({ verifier });
 
         await expect(service.complete({
-            loginChallenge: CHALLENGE,
             provider: createProvider({ realmId: randomUUID() }),
             codeRequest: { ...codeRequest, realm_id: randomUUID() },
             code: 'provider-code',
         })).rejects.toThrow(OAuth2RequestError);
 
-        expect(handleStore.saved).toHaveLength(0);
+        expect(pendingLoginStore.saved).toHaveLength(0);
         expect(sessionManager.createCalls).toHaveLength(0);
     });
 
@@ -206,7 +200,6 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
         delete withoutRealm.realm_id;
 
         await expect(service.complete({
-            loginChallenge: CHALLENGE,
             provider: createProvider({ realmId: providerRealmId }),
             codeRequest: withoutRealm as OAuth2AuthorizationCodeRequest,
             code: 'provider-code',
@@ -224,7 +217,6 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
         const { service } = buildService({ verifier });
 
         const result = await service.complete({
-            loginChallenge: CHALLENGE,
             provider: createProvider({ realmId: null }),
             codeRequest,
             code: 'provider-code',
@@ -237,12 +229,11 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
         const verifier = new FakeVerifier(OAuth2RequestError.malformed('client is gone'));
         const {
             service, 
-            handleStore, 
+            pendingLoginStore, 
             sessionManager, 
         } = buildService({ verifier });
 
         const result = await service.complete({
-            loginChallenge: CHALLENGE,
             provider: createProvider(),
             codeRequest,
             code: 'provider-code',
@@ -255,7 +246,7 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
         });
         // the hosted page re-runs the same verifier, so nothing is echoed
         expect(result.kind === 'refused' && result.error).toBeFalsy();
-        expect(handleStore.saved).toHaveLength(0);
+        expect(pendingLoginStore.saved).toHaveLength(0);
         expect(sessionManager.createCalls).toHaveLength(0);
     });
 
@@ -264,7 +255,6 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
         const { service } = buildService({ verifier });
 
         await expect(service.complete({
-            loginChallenge: CHALLENGE,
             provider: createProvider(),
             codeRequest,
             code: 'provider-code',
@@ -276,7 +266,6 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
         const { service } = buildService({ verifier });
 
         await expect(service.complete({
-            loginChallenge: CHALLENGE,
             provider: createProvider(),
             codeRequest,
             code: 'provider-code',
@@ -291,18 +280,17 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
         const request = { ...codeRequest, redirect_uri: 'javascript:alert(1)' } as OAuth2AuthorizationCodeRequest;
         const {
             service, 
-            handleStore, 
+            pendingLoginStore, 
             sessionManager, 
         } = buildService();
 
         await expect(service.complete({
-            loginChallenge: CHALLENGE,
             provider: createProvider(),
             codeRequest: request,
             code: 'provider-code',
         })).rejects.toThrow(InternalError);
 
-        expect(handleStore.saved).toHaveLength(0);
+        expect(pendingLoginStore.saved).toHaveLength(0);
         expect(sessionManager.createCalls).toHaveLength(0);
     });
 
@@ -310,7 +298,7 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
         let authenticated = false;
         const {
             service, 
-            handleStore, 
+            pendingLoginStore, 
             sessionManager, 
         } = buildService({
             authenticate: async () => {
@@ -320,7 +308,6 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
         });
 
         const result = await service.complete({
-            loginChallenge: CHALLENGE,
             provider: createProvider({ enabled: false }),
             codeRequest,
             code: 'provider-code',
@@ -333,19 +320,18 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
         });
         // refused before the provider's single-use code is spent
         expect(authenticated).toBe(false);
-        expect(handleStore.saved).toHaveLength(0);
+        expect(pendingLoginStore.saved).toHaveLength(0);
         expect(sessionManager.createCalls).toHaveLength(0);
     });
 
     it('should refuse an inactive user', async () => {
         const {
             service, 
-            handleStore, 
+            pendingLoginStore, 
             sessionManager, 
         } = buildService({ user: createUser({ active: false }) });
 
         const result = await service.complete({
-            loginChallenge: CHALLENGE,
             provider: createProvider(),
             codeRequest,
             code: 'provider-code',
@@ -356,7 +342,7 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
             refusal: OAuth2FederatedLoginRefusal.USER_INACTIVE,
             error: OAuth2ErrorCode.ACCESS_DENIED,
         });
-        expect(handleStore.saved).toHaveLength(0);
+        expect(pendingLoginStore.saved).toHaveLength(0);
         expect(sessionManager.createCalls).toHaveLength(0);
     });
 
@@ -371,7 +357,7 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
         });
         const {
             service, 
-            handleStore, 
+            pendingLoginStore, 
             sessionManager, 
         } = buildService({
             verifier,
@@ -379,7 +365,6 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
         });
 
         const result = await service.complete({
-            loginChallenge: CHALLENGE,
             provider: createProvider(),
             codeRequest,
             code: 'provider-code',
@@ -390,7 +375,7 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
             refusal: OAuth2FederatedLoginRefusal.ACCESS_DENIED,
             error: OAuth2ErrorCode.ACCESS_DENIED,
         });
-        expect(handleStore.saved).toHaveLength(0);
+        expect(pendingLoginStore.saved).toHaveLength(0);
         expect(sessionManager.createCalls).toHaveLength(0);
     });
 
@@ -405,7 +390,6 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
         const { service } = buildService({ verifier });
 
         const result = await service.complete({
-            loginChallenge: CHALLENGE,
             provider: createProvider(),
             codeRequest,
             code: 'provider-code',
@@ -418,19 +402,16 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
     });
 });
 
-describe('core/oauth2/federated-login redeem', () => {
-    const request = { ipAddress: '203.0.113.7', userAgent: 'agent' };
-
-    async function begin(overrides: { provider?: OAuth2IdentityProvider } = {}) {
-        const provider = overrides.provider ?? createProvider();
+describe('core/oauth2/federated-login — completing the handoff', () => {
+    async function begin() {
+        const provider = createProvider();
         const parts = buildService();
 
         const result = await parts.service.complete({
             provider,
             codeRequest,
             code: 'provider-code',
-            loginChallenge: CHALLENGE,
-            request,
+            request: { ipAddress: '203.0.113.7', userAgent: 'agent' },
         });
 
         if (result.kind !== 'issued') {
@@ -440,60 +421,52 @@ describe('core/oauth2/federated-login redeem', () => {
         return {
             ...parts,
             provider,
-            handle: result.loginHandle,
-            sessionId: parts.handleStore.saved[0].sessionId,
+            pendingLoginId: result.pendingLoginId,
+            sessionId: parts.pendingLoginStore.saved[0].sessionId,
         };
     }
 
-    it('should exchange a handle for the grant of the established session', async () => {
+    it('should exchange the pending login for the grant of its session', async () => {
         const {
             service, 
             provider, 
-            handle, 
+            pendingLoginId, 
             sessionId, 
             sessionManager, 
             accessTokenIssuer,
         } = await begin();
 
-        const grant = await service.redeem({
-            challenge: CHALLENGE,
-            handle, 
-            providerId: provider.id, 
-            request, 
-        });
+        const grant = await service.completeHandoff({ pendingLoginId, providerId: provider.id });
 
         expect(grant.access_token).toBeTruthy();
         expect(grant.refresh_token).toBeTruthy();
         // the pending session becomes a regular one
         expect(sessionManager.refreshCalls).toHaveLength(1);
-        // the claims say the authentication was external
+        // the claims say the authentication was external, and assert no
+        // assurance level authup did not verify
         expect(accessTokenIssuer.issueCalls[0]).toMatchObject({
             amr: [OAuth2AuthenticationMethodReference.EXTERNAL],
-            acr: OAuth2AuthenticationContextClass.PASSWORD,
             session_id: sessionId,
         });
+        expect(accessTokenIssuer.issueCalls[0].acr).toBeUndefined();
     });
 
-    it('should carry the completed factor into the claims', async () => {
+    it('should carry a completed factor into the claims', async () => {
         const {
             service, 
             provider, 
-            handle, 
+            pendingLoginId, 
             sessionId, 
             sessionManager, 
             accessTokenIssuer,
         } = await begin();
 
-        // the hosted ladder challenges the factor against this very session
+        // an application asking for MFA explicitly is the one case that still
+        // challenges an externally authenticated session
         const session = await sessionManager.findOneById(sessionId) as Session;
         await sessionManager.markMfaVerified(session);
 
-        await service.redeem({
-            challenge: CHALLENGE,
-            handle, 
-            providerId: provider.id, 
-            request, 
-        });
+        await service.completeHandoff({ pendingLoginId, providerId: provider.id });
 
         expect(accessTokenIssuer.issueCalls[0]).toMatchObject({
             amr: [
@@ -504,60 +477,40 @@ describe('core/oauth2/federated-login redeem', () => {
         });
     });
 
-    it('should refuse a replayed handle', async () => {
+    it('should refuse a replayed completion', async () => {
         const {
             service, 
             provider, 
-            handle, 
+            pendingLoginId, 
         } = await begin();
 
-        await service.redeem({
-            challenge: CHALLENGE,
-            handle, 
-            providerId: provider.id, 
-            request, 
-        });
+        await service.completeHandoff({ pendingLoginId, providerId: provider.id });
 
-        await expect(service.redeem({
-            challenge: CHALLENGE,
-            handle, 
-            providerId: provider.id, 
-            request, 
-        }))
+        await expect(service.completeHandoff({ pendingLoginId, providerId: provider.id }))
             .rejects.toThrow(BadRequestError);
     });
 
-    it('should refuse an unknown handle', async () => {
+    it('should refuse an unknown pending login', async () => {
         const {
             service, 
             provider, 
             accessTokenIssuer, 
         } = await begin();
 
-        await expect(service.redeem({
-            challenge: CHALLENGE,
-            handle: 'nope', 
-            providerId: provider.id, 
-            request, 
-        }))
+        await expect(service.completeHandoff({ pendingLoginId: 'nope', providerId: provider.id }))
             .rejects.toThrow(BadRequestError);
 
         expect(accessTokenIssuer.issueCalls).toHaveLength(0);
     });
 
-    it('should refuse a handle presented at another provider', async () => {
+    it('should refuse a pending login completed at another provider', async () => {
         const {
             service, 
-            handle, 
+            pendingLoginId, 
             accessTokenIssuer, 
         } = await begin();
 
-        await expect(service.redeem({
-            challenge: CHALLENGE,
-            handle, 
-            providerId: randomUUID(), 
-            request, 
-        }))
+        await expect(service.completeHandoff({ pendingLoginId, providerId: randomUUID() }))
             .rejects.toThrow(BadRequestError);
 
         expect(accessTokenIssuer.issueCalls).toHaveLength(0);
@@ -567,7 +520,7 @@ describe('core/oauth2/federated-login redeem', () => {
         const {
             service, 
             provider, 
-            handle, 
+            pendingLoginId, 
             sessionId, 
             sessionManager, 
             accessTokenIssuer,
@@ -575,58 +528,8 @@ describe('core/oauth2/federated-login redeem', () => {
 
         await sessionManager.revoke(sessionId);
 
-        await expect(service.redeem({
-            challenge: CHALLENGE,
-            handle, 
-            providerId: provider.id, 
-            request, 
-        }))
+        await expect(service.completeHandoff({ pendingLoginId, providerId: provider.id }))
             .rejects.toThrow(BadRequestError);
-
-        expect(accessTokenIssuer.issueCalls).toHaveLength(0);
-    });
-
-    /**
-     * The load-bearing binding: the challenge lives in the session storage of
-     * the origin that started the login, so a handle handed to another
-     * browser cannot be redeemed there.
-     */
-    it('should refuse a completion whose state carries no challenge', async () => {
-        const {
-            service, 
-            handleStore, 
-            sessionManager, 
-        } = buildService();
-
-        const result = await service.complete({
-            loginChallenge: '',
-            provider: createProvider(),
-            codeRequest,
-            code: 'provider-code',
-            request,
-        });
-
-        // refused before a user is provisioned and a handle nobody could
-        // redeem is minted
-        expect(result.kind).toEqual('refused');
-        expect(handleStore.saved).toHaveLength(0);
-        expect(sessionManager.createCalls).toHaveLength(0);
-    });
-
-    it('should refuse a handle presented without the challenge that started the login', async () => {
-        const {
-            service, 
-            provider, 
-            handle, 
-            accessTokenIssuer, 
-        } = await begin();
-
-        await expect(service.redeem({
-            challenge: 'a-different-challenge',
-            handle,
-            providerId: provider.id,
-            request,
-        })).rejects.toThrow(BadRequestError);
 
         expect(accessTokenIssuer.issueCalls).toHaveLength(0);
     });
@@ -634,23 +537,18 @@ describe('core/oauth2/federated-login redeem', () => {
     /**
      * The local second factor belongs to a local credential: an external
      * provider authenticated this login and is where MFA is enforced for it.
-     * The redemption therefore consults no authenticator at all.
+     * The completion therefore consults no authenticator at all.
      */
     it('should not consult the local second factor', async () => {
         const {
             service, 
             provider, 
-            handle, 
+            pendingLoginId, 
             accessTokenIssuer, 
             refreshTokenIssuer,
         } = await begin();
 
-        const grant = await service.redeem({
-            challenge: CHALLENGE,
-            handle,
-            providerId: provider.id,
-            request,
-        });
+        const grant = await service.completeHandoff({ pendingLoginId, providerId: provider.id });
 
         expect(grant.access_token).toBeTruthy();
         expect(accessTokenIssuer.issueCalls).toHaveLength(1);

@@ -39,14 +39,14 @@ import type {
 import { deriveAmrAcr } from '../authorization/helpers.ts';
 import { buildOAuth2BearerTokenResponse } from '../response/index.ts';
 import type { IOAuth2TokenIssuer } from '../token/index.ts';
-import { OAUTH2_FEDERATED_LOGIN_HANDLE_TTL } from './constants.ts';
+import { OAUTH2_FEDERATED_LOGIN_TTL } from './constants.ts';
 import type {
-    IOAuth2FederatedLoginHandleStore,
     IOAuth2FederatedLoginService,
+    IOAuth2FederatedLoginStore,
     OAuth2FederatedLoginAuthenticatorFactory,
+    OAuth2FederatedLoginCompleteHandoffInput,
     OAuth2FederatedLoginCompleteInput,
     OAuth2FederatedLoginCompleteResult,
-    OAuth2FederatedLoginRedeemInput,
     OAuth2FederatedLoginServiceContext,
     OAuth2FederatedLoginServiceOptions,
 } from './types.ts';
@@ -63,7 +63,7 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
 
     protected sessionManager : ISessionManager;
 
-    protected handleStore : IOAuth2FederatedLoginHandleStore;
+    protected pendingLoginStore : IOAuth2FederatedLoginStore;
 
     protected accessTokenIssuer : IOAuth2TokenIssuer;
 
@@ -85,7 +85,7 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
         this.realmRepository = ctx.realmRepository;
         this.codeRequestVerifier = ctx.codeRequestVerifier;
         this.sessionManager = ctx.sessionManager;
-        this.handleStore = ctx.handleStore;
+        this.pendingLoginStore = ctx.pendingLoginStore;
         this.accessTokenIssuer = ctx.accessTokenIssuer;
         this.refreshTokenIssuer = ctx.refreshTokenIssuer;
         this.accessPolicyEvaluator = ctx.accessPolicyEvaluator;
@@ -170,19 +170,6 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
         // applies. Disabling a provider has to stop logins in flight too,
         // otherwise it only stops new ones. Checked before the exchange, so
         // the refusal contacts the provider not at all.
-        // A login whose state carries no challenge can only end in a handle
-        // nobody may redeem, so it is refused here rather than after the
-        // provider's single-use code is spent and a user provisioned. Reached
-        // by a state minted before this shipped; the hosted page re-renders
-        // the request and the next attempt carries one.
-        if (!input.loginChallenge) {
-            return {
-                kind: 'refused',
-                refusal: OAuth2FederatedLoginRefusal.CODE_REQUEST,
-                codeRequest: verified.data,
-            };
-        }
-
         if (!provider.enabled) {
             return {
                 kind: 'refused',
@@ -249,7 +236,7 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
         // second factor, inline enrollment, prompt/max_age freshness,
         // acr_values step-up and consent (plan 094).
         //
-        // Its lifetime is the handle's: an abandoned login self-expires and
+        // Its lifetime is the pending login's: an abandoned one self-expires and
         // is swept with the regular session sweep, and redemption extends it
         // to the regular one.
         const session = await this.sessionManager.create({
@@ -263,65 +250,49 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
             subKind: IdentityType.USER,
             mfaAt: null,
             authMethod: SessionAuthMethod.EXTERNAL,
-            expiresAt: new Date(Date.now() + OAUTH2_FEDERATED_LOGIN_HANDLE_TTL).toISOString(),
+            expiresAt: new Date(Date.now() + OAUTH2_FEDERATED_LOGIN_TTL).toISOString(),
         });
 
-        const loginHandle = await this.handleStore.save({
+        const pendingLoginId = await this.pendingLoginStore.save({
             sessionId: session.id,
-            loginChallenge: input.loginChallenge,
             providerId: provider.id,
             userName: user.name,
         });
 
         return {
             kind: 'issued',
-            loginHandle,
+            pendingLoginId,
             codeRequest: verified.data,
         };
     }
 
-    async redeem(input: OAuth2FederatedLoginRedeemInput): Promise<OAuth2TokenGrantResponse> {
+    async completeHandoff(input: OAuth2FederatedLoginCompleteHandoffInput): Promise<OAuth2TokenGrantResponse> {
         // One message for every refusal: the caller is anonymous, so an
-        // unknown handle, an expired one and a foreign one must not be
-        // distinguishable.
+        // unknown pending login, an expired one and a foreign one must not
+        // be distinguishable.
         const refuse = () => new BadRequestError('The login request is unknown or expired.');
 
-        const stash = await this.handleStore.consume(input.handle);
-        if (!stash) {
+        const pending = await this.pendingLoginStore.consume(input.pendingLoginId);
+        if (!pending) {
             throw refuse();
         }
 
-        // What makes a handed-out handle URL inert: it may only be redeemed
-        // against the provider it was minted for, and only by the browser
-        // that STARTED the login, which is what the challenge proves. That
-        // challenge was minted by the login form and lives in the hosted
-        // origin's session storage, where no other origin can read or write
-        // it. Without it an attacker could run a federated login for their
-        // own external account and hand the resulting URL to someone else,
-        // whose browser would adopt that session and then consent the
-        // application into it (login CSRF).
+        // The browser binding is the cookie the callback set, which only the
+        // browser that started this login carries and no other origin can
+        // write. So there is nothing here to prove beyond the provider the
+        // completion was addressed at.
         //
-        // The callback request's address and agent are deliberately NOT
-        // compared. They cannot carry that weight, since both are chosen by
-        // whoever makes that request (under the shipped `trustProxy: true`
-        // the address is the client-supplied left-most `X-Forwarded-For`
-        // entry), and comparing them across a top-level navigation and the
-        // page's own XHR is the shape issue #3439 rejected: a proxy pool or
-        // a re-homed mobile connection would break a legitimate login for no
-        // security gain.
-        //
-        // A plain comparison is enough: the handle is consumed above, so a
-        // wrong challenge costs the whole handle and there is no repeated
-        // guess to time.
-        if (
-            stash.providerId !== input.providerId ||
-            !stash.loginChallenge ||
-            stash.loginChallenge !== input.challenge
-        ) {
+        // The callback request's address and agent are deliberately not
+        // compared: both are chosen by whoever makes that request (under the
+        // shipped `trustProxy: true` the address is the client-supplied
+        // left-most `X-Forwarded-For` entry), and comparing them across a
+        // top-level navigation and the page's own request is the shape issue
+        // #3439 rejected.
+        if (pending.providerId !== input.providerId) {
             throw refuse();
         }
 
-        const existing = await this.sessionManager.findOneById(stash.sessionId);
+        const existing = await this.sessionManager.findOneById(pending.sessionId);
         if (!existing) {
             throw refuse();
         }
@@ -356,11 +327,11 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
             sessionId: session.id,
             actorType: IdentityType.USER,
             actorId: session.sub,
-            actorName: stash.userName ?? null,
+            actorName: pending.userName ?? null,
             realmId: session.realmId,
             requestIpAddress: session.ipAddress ?? null,
             requestUserAgent: session.userAgent ?? null,
-            data: { reason: 'federated', providerId: stash.providerId },
+            data: { reason: 'federated', providerId: pending.providerId },
         });
         this.metrics?.recordLogin('success');
 

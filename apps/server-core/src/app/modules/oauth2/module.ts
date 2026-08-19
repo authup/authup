@@ -18,7 +18,7 @@ import {
     OAuth2AuthorizationCodeRepository,
     OAuth2AuthorizationStateRepository,
     OAuth2ClientRepository,
-    OAuth2FederatedLoginHandleStore,
+    OAuth2FederatedLoginStore,
     OAuth2ScopeRepository,
     OAuth2TokenRepository,
     SessionTokenRepositoryAdapter,
@@ -175,11 +175,11 @@ export class OAuth2Module implements IModule {
             },
         });
 
-        container.register(OAuth2InjectionToken.FederatedLoginHandleStore, {
+        container.register(OAuth2InjectionToken.FederatedLoginStore, {
             useFactory: (c) => {
                 const cache = c.resolve(CacheInjectionKey);
 
-                return new OAuth2FederatedLoginHandleStore(cache);
+                return new OAuth2FederatedLoginStore(cache);
             },
         });
 

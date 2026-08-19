@@ -84,8 +84,6 @@ function createUpstreamApplication(): TestHTTPApplication {
     return new TestHTTPApplication({ modules });
 }
 
-const CHALLENGE = 'login-challenge-value';
-
 describe('authup federating to authup', () => {
     const downstream = createTestApplication();
     const upstream = createUpstreamApplication();
@@ -171,7 +169,7 @@ describe('authup federating to authup', () => {
 
         // 1. The relying party's request reaches the downstream instance, which
         //    sends the browser to the upstream instance.
-        const out = await httpRequest(downstream, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${codeRequest}&loginChallenge=${CHALLENGE}`, { redirect: 'manual' });
+        const out = await httpRequest(downstream, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${codeRequest}`, { redirect: 'manual' });
         expect(out.status).toEqual(302);
 
         const upstreamURL = new URL(out.headers.get('location') as string);
@@ -223,14 +221,15 @@ describe('authup federating to authup', () => {
         expect(hostedURL.pathname.endsWith('/authorize')).toBe(true);
         expect(hostedURL.searchParams.get('code')).toBeNull();
 
+        const pendingLoginCookie = (back.headers.get('set-cookie') ?? '')
+            .match(/authup_federated_login=([^;]*)/);
+        expect(pendingLoginCookie).toBeTruthy();
+
         const redeem = await httpRequest(
             downstream,
             'POST',
             `identity-providers/${hostedURL.searchParams.get('provider')}/login-complete`,
-            {
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ handle: hostedURL.searchParams.get('loginHandle'), challenge: CHALLENGE }),
-            },
+            { headers: { cookie: `authup_federated_login=${(pendingLoginCookie as RegExpMatchArray)[1]}` } },
         );
         expect(redeem.status).toEqual(200);
         const grant = await redeem.json();
