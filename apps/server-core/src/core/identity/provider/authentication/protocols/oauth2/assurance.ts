@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2IdentityProvider } from '@authup/core-kit';
+import type { OAuth2IdentityProviderBase } from '@authup/core-kit';
 import { ValidationError, markInstanceof, matchesInstanceof } from '@authup/errors';
 import { extractTokenPayload } from '@authup/server-kit';
 
@@ -14,12 +14,14 @@ export const IDENTITY_PROVIDER_ASSURANCE_ERROR_INSTANCE = Symbol.for('@authup/se
 /**
  * The upstream did not meet the provider's `requiredAmr` / `requiredAcr`.
  *
- * It carries no dedicated `ErrorCode`: both callers swallow it into a
- * redirect (the login bounces to the hosted page with `access_denied`, the
- * link callback with `linkError`), so it never reaches a wire body and the
- * marker is the only discriminator anyone reads. The reason lands in the
- * operator's log instead, which is where a misconfigured allow-list is
- * debugged.
+ * It adds no dedicated `ErrorCode` and keeps `ValidationError`'s shared
+ * `BAD_REQUEST`, so the marker is the ONLY thing the guard may read - a
+ * code fallback would match every other `ValidationError` in the process.
+ * That is sound here because both callers swallow it into a redirect (the
+ * login bounces to the hosted page with `access_denied`, the link callback
+ * with `linkError`), so it never crosses a wire boundary. The reason lands
+ * in the operator's log instead, which is where a misconfigured allow-list
+ * is debugged.
  */
 export class IdentityProviderAssuranceError extends ValidationError {
     constructor(message: string) {
@@ -32,12 +34,19 @@ export function isIdentityProviderAssuranceError(input: unknown): input is Ident
     return matchesInstanceof(input, IDENTITY_PROVIDER_ASSURANCE_ERROR_INSTANCE);
 }
 
-function splitList(input?: string | null): string[] {
-    if (!input) {
+/**
+ * `unknown`, not `string | null`, because these are extra-attribute rows and
+ * the EA value column round-trips through `destr`: a stored `"1"` - the
+ * canonical PAPE / ISO-29115 acr level, and the shortest value the validator
+ * deliberately allows - is read back as the NUMBER `1`. Calling a string
+ * method on that threw, and `"0"` (falsy) silently disabled the whole check.
+ */
+function splitList(input?: unknown): string[] {
+    if (input === null || typeof input === 'undefined') {
         return [];
     }
 
-    return input.split(/[\s,]+/).filter(Boolean);
+    return String(input).split(/[\s,]+/).filter(Boolean);
 }
 
 /**
@@ -46,7 +55,7 @@ function splitList(input?: string | null): string[] {
  * 5.5.1.1 - a provider may ignore it and answer anyway, which is exactly what
  * {@see assertIdentityProviderAssurance} is for.
  */
-export function buildIdentityProviderAcrValues(provider: Partial<OAuth2IdentityProvider>): string | undefined {
+export function buildIdentityProviderAcrValues(provider: Partial<OAuth2IdentityProviderBase>): string | undefined {
     const values = splitList(provider.requiredAcr);
     return values.length > 0 ? values.join(' ') : undefined;
 }
@@ -61,7 +70,7 @@ export function buildIdentityProviderAcrValues(provider: Partial<OAuth2IdentityP
  * open there would make the feature decorative.
  */
 export function assertIdentityProviderAssurance(
-    provider: Partial<OAuth2IdentityProvider>,
+    provider: Partial<OAuth2IdentityProviderBase>,
     idToken?: string,
 ): void {
     const requiredAmr = splitList(provider.requiredAmr);
@@ -77,7 +86,10 @@ export function assertIdentityProviderAssurance(
 
     let claims : Record<string, any>;
     try {
-        claims = extractTokenPayload(idToken);
+        // `?? {}` against the declared return type on purpose: a payload of
+        // literal `null` parses, so the claim reads below would throw a
+        // TypeError out of a callback that has to answer with a refusal.
+        claims = extractTokenPayload(idToken) ?? {};
     } catch {
         throw new IdentityProviderAssuranceError('The identity provider id_token could not be read.');
     }

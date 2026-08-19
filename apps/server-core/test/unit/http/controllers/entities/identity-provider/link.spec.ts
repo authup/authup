@@ -289,6 +289,55 @@ describe('identity-provider link flow', () => {
         externalUserId = 'external-user-1';
     });
 
+    it('refuses a link when the upstream misses the provider assurance allow-list', async () => {
+        // The link flow admits an external identity to an account that
+        // already exists, so it needs the same gate the login does. It gets
+        // it by construction: both go through `resolveIdentity` (#3477).
+        const strictProvider = (await suite.client.identityProvider.create(createFakeOAuth2IdentityProvider({
+            realmId: realm.id,
+            tokenUrl: `${idpURL}/token`,
+            authorizeUrl: `${idpURL}/authorize`,
+            requiredAcr: 'urn:loa:silver',
+        }))).data;
+        logLines.length = 0;
+
+        // the outbound request asks for it as well
+        const requested = await httpRequest(suite, 'POST', `identity-providers/${strictProvider.id}/link-request`, {
+            headers: {
+                Authorization: `Bearer ${userToken}`,
+                'user-agent': USER_AGENT,
+            },
+        });
+        expect(requested.status).toEqual(200);
+
+        const url = new URL((await requested.json()).url);
+        expect(url.searchParams.get('acr_values')).toEqual('urn:loa:silver');
+
+        // the fake provider answers with no id_token at all, so there is
+        // nothing to satisfy the allow-list with
+        const response = await httpRequest(
+            suite,
+            'GET',
+            `identity-providers/${strictProvider.id}/authorize-in?state=${url.searchParams.get('state')}&code=any-code`,
+            {
+                headers: { 'user-agent': USER_AGENT },
+                redirect: 'manual',
+            },
+        );
+        const target = new URL(response.headers.get('location') as string);
+
+        expect(target.searchParams.get('linkError')).toEqual('link_failed');
+        expect(target.searchParams.get('linkHandle')).toBeNull();
+
+        // the browser is told nothing, so the reason has to be in the log
+        expect(logLines.join('\n')).toContain('id_token');
+
+        const rows = await suite.client.get(`identity-provider-accounts?filter[providerId]=${strictProvider.id}`);
+        expect(rows.data.data).toHaveLength(0);
+
+        await suite.client.identityProvider.delete(strictProvider.id);
+    });
+
     it('logs the upstream answer when the token exchange is rejected', async () => {
         tokenEndpointError = { error: 'invalid_request', error_description: 'code is invalid' };
         logLines.length = 0;

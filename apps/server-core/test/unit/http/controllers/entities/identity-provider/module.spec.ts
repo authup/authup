@@ -12,7 +12,10 @@ import {
     expect, 
     it,
 } from 'vitest';
+import type { OAuth2IdentityProvider } from '@authup/core-kit';
 import {
+    IdentityProviderPreset,
+    IdentityProviderProtocol,
     ScopeName,
     buildIdentityProviderAuthorizeCallbackPath,
     buildIdentityProviderAuthorizePath,
@@ -154,6 +157,9 @@ describe('src/http/controllers/identity-provider', () => {
         ).toBeTruthy();
 
         expect(responseURL.searchParams.get('state')).toBeDefined();
+
+        // this provider declares no requiredAcr, so nothing is asked for
+        expect(responseURL.searchParams.get('acr_values')).toBeNull();
     });
 
     it('should persist the assurance allow-lists and ask the upstream for them', async () => {
@@ -167,8 +173,11 @@ describe('src/http/controllers/identity-provider', () => {
         const { data: created } = await suite.client.identityProvider.create(provider);
         const { data: read } = await suite.client.identityProvider.getOne(created.id);
 
-        expect(read.requiredAmr).toEqual('mfa hwk');
-        expect(read.requiredAcr).toEqual('urn:loa:silver, urn:loa:gold');
+        // the typed client answers the base entity; the OAuth2 attributes ride
+        // it as EA rows, which is what the narrower type describes
+        const attributes = read as OAuth2IdentityProvider;
+        expect(attributes.requiredAmr).toEqual('mfa hwk');
+        expect(attributes.requiredAcr).toEqual('urn:loa:silver, urn:loa:gold');
 
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
         const { data: client } = await suite.client.client.create(createFakeClient());
@@ -193,6 +202,60 @@ describe('src/http/controllers/identity-provider', () => {
         // Core 3.1.2.1, whichever separator the operator typed.
         expect(responseURL.searchParams.get('acr_values'))
             .toEqual('urn:loa:silver urn:loa:gold');
+
+        await suite.client.identityProvider.delete(created.id);
+    });
+
+    it('should survive an acr value the extra-attribute column parses as a number', async () => {
+        // "1" is the canonical PAPE / ISO-29115 level and the shortest value
+        // the validator allows - and the EA value column round-trips through
+        // destr, so it comes back as the NUMBER 1. Asserting the behaviour
+        // rather than the read-back value, because the laundering is at the
+        // persistence layer and the API response carries the number.
+        const { data: created } = await suite.client.identityProvider.create(createFakeOAuth2IdentityProvider({ requiredAcr: '1' }));
+
+        const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        const { data: client } = await suite.client.client.create(createFakeClient());
+        await suite.client.clientScope.create({ scopeId: scope.id, clientId: client.id });
+
+        const codeRequest = base64URLEncode(JSON.stringify({
+            response_type: 'code',
+            client_id: client.id,
+            redirect_uri: 'https://example.com/redirect',
+            scope: ScopeName.GLOBAL,
+        }));
+
+        const response = await suite.client
+            .get(
+                `${buildIdentityProviderAuthorizePath(created.id)}?codeRequest=${codeRequest}`,
+                { redirect: 'manual' },
+            );
+
+        // not a 400 blaming the authorize URL, which is what the raw
+        // `.split()` on a number produced
+        expect(response.status).toEqual(302);
+
+        const responseURL = new URL(response.headers.get('location') as string);
+        expect(responseURL.searchParams.get('acr_values')).toEqual('1');
+
+        await suite.client.identityProvider.delete(created.id);
+    });
+
+    it('should persist the assurance allow-lists on a preset provider', async () => {
+        // a preset is validated by its own attribute validator, so a key
+        // mounted on only one of the two is stripped for half the providers
+        const { data: created } = await suite.client.identityProvider.create({
+            name: 'assurance-preset',
+            protocol: IdentityProviderProtocol.OIDC,
+            preset: IdentityProviderPreset.GOOGLE,
+            enabled: true,
+            clientId: 'preset-client-id',
+            clientSecret: 'preset-client-secret',
+            requiredAmr: 'mfa',
+        } as any);
+        const { data: read } = await suite.client.identityProvider.getOne(created.id);
+
+        expect((read as OAuth2IdentityProvider).requiredAmr).toEqual('mfa');
 
         await suite.client.identityProvider.delete(created.id);
     });

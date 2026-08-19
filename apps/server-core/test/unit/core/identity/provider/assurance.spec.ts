@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2IdentityProvider } from '@authup/core-kit';
+import type { OAuth2IdentityProviderBase } from '@authup/core-kit';
 import { describe, expect, it } from 'vitest';
 import {
     assertIdentityProviderAssurance,
@@ -18,7 +18,7 @@ const encode = (input: Record<string, any>) => Buffer.from(JSON.stringify(input)
 // unsigned three-segment JWT — the gate decodes, it never verifies
 const idToken = (claims: Record<string, any>) => `${encode({ alg: 'none', typ: 'JWT' })}.${encode(claims)}.x`;
 
-function provider(overrides: Partial<OAuth2IdentityProvider> = {}) : Partial<OAuth2IdentityProvider> {
+function provider(overrides: Partial<OAuth2IdentityProviderBase> = {}) : Partial<OAuth2IdentityProviderBase> {
     return overrides;
 }
 
@@ -51,17 +51,26 @@ describe('core/identity/provider — assertIdentityProviderAssurance', () => {
         ['mfa', null, { amr: ['pwd', 'mfa'] }, true],
         ['mfa', null, { amr: ['pwd'] }, false],
         ['mfa', null, {}, false],
-        // a list is a disjunction: any intersection passes
+        // a list is a disjunction: any intersection passes, whichever
+        // separator the operator typed
         ['mfa, hwk', null, { amr: ['hwk'] }, true],
+        ['mfa hwk', null, { amr: ['hwk'] }, true],
         ['mfa hwk', null, { amr: ['otp'] }, false],
         // a non-array amr claim never satisfies anything
         ['mfa', null, { amr: 'mfa' }, false],
         [null, 'urn:loa:silver', { acr: 'urn:loa:silver' }, true],
         [null, 'urn:loa:silver', { acr: 'urn:loa:bronze' }, false],
         [null, 'urn:loa:silver', {}, false],
-        // acr is a single value matched by membership, never by prefix
+        // acr is matched by membership: never by prefix, never by
+        // containment, and never after a coercion the operator did not ask
+        // for - a Keycloak-style numeric level `10` is not level `1`
         [null, 'urn:loa:silver,urn:loa:gold', { acr: 'urn:loa:gold' }, true],
         [null, '1', { acr: '1' }, true],
+        [null, '1', { acr: '10' }, false],
+        [null, 'urn:loa:gold', { acr: 'gold' }, false],
+        // fail closed on a claim that is not the string OIDC says it is
+        [null, '1', { acr: 1 }, false],
+        [null, 'urn:loa:gold', { acr: ['urn:loa:gold'] }, false],
         // both set = both must hold
         ['mfa', '1', { amr: ['mfa'], acr: '1' }, true],
         ['mfa', '1', { amr: ['mfa'], acr: '2' }, false],
@@ -81,6 +90,10 @@ describe('core/identity/provider — assertIdentityProviderAssurance', () => {
     it.each([
         ['no id_token at all', undefined],
         ['an undecodable id_token', 'not-a-jwt'],
+        // a JWE is five segments, and extractTokenPayload refuses those
+        ['an encrypted id_token', 'a.b.c.d.e'],
+        // parses fine, so the claim reads have to survive it
+        ['an id_token whose payload is null', idToken(null as any)],
     ])('should refuse %s once an allow-list is set', (_label, token) => {
         // failing open here would make the feature decorative — an upstream
         // that answers without the claim is exactly what it exists to catch

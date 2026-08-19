@@ -3904,13 +3904,24 @@ come from the `id_token` alone, so a provider that returns none (a plain
 `oauth2` provider, or an OIDC one whose scope lost `openid`), or one whose
 token carries neither claim or cannot be decoded, is refused once an
 allow-list is set. Failing open there would make the feature decorative.
-`OAuth2FederatedLoginService.complete` catches
+The refusal is caught around `authenticate()`, whose no-user-provisioned
+guarantee rests on the gate throwing before `accountManager.save` rather than
+on the catch itself. `OAuth2FederatedLoginService.complete` catches
 `IdentityProviderAssuranceError` and bounces to the hosted page with
 `access_denied`, like the inactive-user and access-policy refusals; the reason
 reaches the operator's log through `describeError` and never the browser,
-since the marker set `serve()` maps is deliberately closed. The error carries
-no `ErrorCode` for that reason - both callers swallow it into a redirect, so
-the `markInstanceof` symbol is the only discriminator anyone reads.
+since the marker set `serve()` maps is deliberately closed. The error adds no
+DEDICATED `ErrorCode` for that reason - it keeps `ValidationError`'s shared
+`BAD_REQUEST`, so `isIdentityProviderAssuranceError` must stay marker-only:
+a code fallback would match every other `ValidationError` in the process.
+That is safe because the error never crosses a wire boundary.
+
+`requiredAmr` is a DISJUNCTION (any listed value satisfies it), which is why
+the field label says *any of* in all four locales. A conjunctive reading is
+the one dangerous misconfiguration: an operator copying `["pwd","mfa"]` off a
+real login and pasting `pwd, mfa` would otherwise believe they required both
+while a password-only login intersects on `pwd` and is admitted - the exact
+downgrade the feature exists to catch.
 
 `requiredAcr` is additionally sent OUTBOUND as `acr_values` on the authorize
 request (defaulted inside `buildRedirectURL`, so the login and the link flow

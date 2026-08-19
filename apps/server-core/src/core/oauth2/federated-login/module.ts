@@ -193,8 +193,10 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
             user = await authenticator.authenticate({ code });
         } catch (e) {
             // The upstream did not meet the provider's assurance allow-list
-            // (issue #3477). Refused before a user is provisioned or an
-            // account linked, and the reason only goes to the log: the marker
+            // (issue #3477). No user is provisioned and no account linked
+            // because the gate throws inside `resolveIdentity`, before the
+            // account manager runs - not because of where this catch sits.
+            // The reason only goes to the log: the marker
             // set the hosted page maps is deliberately closed, so `access_denied`
             // is what the browser sees.
             if (!isIdentityProviderAssuranceError(e)) {

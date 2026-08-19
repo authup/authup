@@ -71,6 +71,9 @@ describe('identity-provider login completion', () => {
     let client: Client;
     let codeChallenge: string;
     let providerTokenCalls = 0;
+    // off by default: every other case in this file was written against the
+    // access-token-only answer, and the claims ladder would start reading this
+    let providerIdTokenClaims: Record<string, any> | undefined;
 
     beforeAll(async () => {
         const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(CODE_VERIFIER));
@@ -92,6 +95,7 @@ describe('identity-provider login completion', () => {
                             sub: 'external-user-completion',
                             email: 'external-completion@example.com',
                         })}.x`,
+                        ...(providerIdTokenClaims ? { id_token: `${encode({ alg: 'none', typ: 'JWT' })}.${encode(providerIdTokenClaims)}.x` } : {}),
                         token_type: 'Bearer',
                     }));
                 });
@@ -673,26 +677,85 @@ describe('identity-provider login completion', () => {
         const usersBefore = (await suite.client.user.getMany({ filters: { realmId: realm.id } })).meta.total;
         providerTokenCalls = 0;
 
-        const back = await httpRequest(
-            suite,
-            'GET',
-            `identity-providers/${strictProvider.id}/authorize-in?state=${state}&code=external-code`,
-            {
-                headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${nonce}` },
+        try {
+            const back = await httpRequest(
+                suite,
+                'GET',
+                `identity-providers/${strictProvider.id}/authorize-in?state=${state}&code=external-code`,
+                {
+                    headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${nonce}` },
+                    redirect: 'manual',
+                },
+            );
+
+            expectHostedBounce(back, client.id, OAuth2ErrorCode.ACCESS_DENIED);
+            // the exchange happened, so the gate is what refused; nothing after it did
+            expect(providerTokenCalls).toEqual(1);
+            // no pending login the browser could trade for a token
+            expect(readPendingLoginCookie(back)).toBeNull();
+            // and the refusal runs before the account manager, so no user was
+            // provisioned - a stray one would be picked up by the inactive-user
+            // case below, which takes the first non-admin row
+            expect((await suite.client.user.getMany({ filters: { realmId: realm.id } })).meta.total)
+                .toEqual(usersBefore);
+        } finally {
+            await suite.client.identityProvider.delete(strictProvider.id);
+        }
+    });
+
+    it('completes a login whose upstream satisfies the provider assurance allow-list', async () => {
+        // the refusal case below proves the gate fires; this one proves it
+        // reads the id_token rather than jamming shut on every login
+        const strictProvider = (await suite.client.identityProvider.create(createFakeOAuth2IdentityProvider({
+            realmId: realm.id,
+            tokenUrl: `${idpURL}/token`,
+            authorizeUrl: `${idpURL}/authorize`,
+            requiredAmr: 'mfa',
+        }))).data;
+        providerIdTokenClaims = {
+            sub: 'external-user-completion',
+            email: 'external-completion@example.com',
+            amr: ['pwd', 'mfa'],
+        };
+
+        // The account row is keyed by (providerUserId, providerId), so this
+        // second provider provisions a SECOND user for the same external
+        // subject. Later cases in this file address the federated subject as
+        // "the first non-admin user", so the stray one has to go back out.
+        const usersBefore = (await suite.client.user.getMany({ filters: { realmId: realm.id } })).data.map((row) => row.id);
+
+        try {
+            const out = await httpRequest(suite, 'GET', `identity-providers/${strictProvider.id}/authorize-out?codeRequest=${buildCodeRequest()}`, {
+                headers: { 'user-agent': USER_AGENT },
                 redirect: 'manual',
-            },
-        );
+            });
+            const state = new URL(out.headers.get('location') as string).searchParams.get('state');
+            const nonce = readPendingLoginCookie(out);
 
-        expectHostedBounce(back, client.id, OAuth2ErrorCode.ACCESS_DENIED);
-        // the exchange happened, so the gate is what refused; nothing after it did
-        expect(providerTokenCalls).toEqual(1);
-        // no pending login the browser could trade for a token
-        expect(readPendingLoginCookie(back)).toBeNull();
-        // and the refusal runs before the account manager, so no user was provisioned
-        expect((await suite.client.user.getMany({ filters: { realmId: realm.id } })).meta.total)
-            .toEqual(usersBefore);
+            const back = await httpRequest(
+                suite,
+                'GET',
+                `identity-providers/${strictProvider.id}/authorize-in?state=${state}&code=external-code`,
+                {
+                    headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${nonce}` },
+                    redirect: 'manual',
+                },
+            );
 
-        await suite.client.identityProvider.delete(strictProvider.id);
+            // no marker, and a pending login the browser can trade for a token
+            expectHostedBounce(back, client.id, null);
+            expect(readPendingLoginCookie(back)).toBeTruthy();
+        } finally {
+            providerIdTokenClaims = undefined;
+            await suite.client.identityProvider.delete(strictProvider.id);
+
+            const { data: users } = await suite.client.user.getMany({ filters: { realmId: realm.id } });
+            for (const row of users) {
+                if (!usersBefore.includes(row.id)) {
+                    await suite.client.user.delete(row.id);
+                }
+            }
+        }
     });
 
     it('issues no code once the provider was disabled', async () => {

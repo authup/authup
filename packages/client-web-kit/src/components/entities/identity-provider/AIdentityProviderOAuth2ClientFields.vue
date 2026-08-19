@@ -100,7 +100,15 @@ export default defineComponent({
             },
             {
                 namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.REQUIRED_AMR_HINT,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
                 key: TranslatorTranslationFieldKey.REQUIRED_ACR,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.REQUIRED_ACR_HINT,
             },
             {
                 namespace: TranslatorTranslationNamespace.ACTION,
@@ -195,6 +203,9 @@ export default defineComponent({
                     v-model="requiredAmrField.$model.value"
                     placeholder="mfa, hwk"
                 />
+                <template #hint>
+                    {{ translations.requiredAmrHint }}
+                </template>
             </VCFormGroup>
         </IFieldValidation>
         <IFieldValidation
@@ -209,6 +220,9 @@ export default defineComponent({
                     v-model="requiredAcrField.$model.value"
                     placeholder="urn:mace:incommon:iap:silver"
                 />
+                <template #hint>
+                    {{ translations.requiredAcrHint }}
+                </template>
             </VCFormGroup>
         </IFieldValidation>
     </div>

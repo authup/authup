@@ -78,7 +78,9 @@ the unchecked behaviour above. The vocabularies belong to the provider, so the
 values do too: Keycloak and Authentik commonly answer `amr: ["mfa"]` or an
 `acr` level of your own configuring, Entra ID answers `amr: ["pwd", "mfa"]`.
 Read the provider's documentation, or sign in once and look at the `amr` and
-`acr` in its token.
+`acr` in its token. Another Authup upstream answers `acr: urn:authup:mfa` once
+a second factor was verified, so `urn:authup:mfa` is the value to require
+there.
 
 Set either one and the check fails closed. A login is refused when the claim
 is missing, when it does not match, and when the provider returns no
@@ -89,6 +91,12 @@ the login page deliberately says nothing about why a provider was refused.
 
 The check also covers connecting an account from the account console, since
 that admits an external identity to an account that already exists.
+
+One caveat, and it applies to every provider field rather than just these two:
+an update that omits a field clears it. A script that rotates the client secret
+by sending only the fields it cares about will drop the allow-lists with
+everything else it left out, and logins go back to being unchecked. Send the
+whole provider, which is what the admin console does.
 
 See [MFA configuration](../deployment/configuration-server-core-mfa.md) for the
 server settings.
