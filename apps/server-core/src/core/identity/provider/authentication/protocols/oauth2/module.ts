@@ -7,6 +7,7 @@
 
 import type { OAuth2IdentityProvider, OpenIDIdentityProvider, User } from '@authup/core-kit';
 import { buildIdentityProviderAuthorizeCallbackPath } from '@authup/core-kit';
+import { resolveURL } from '../../../../../../utils/index.ts';
 import { ValidationError } from '@authup/errors';
 import type { Result } from '@authup/kit';
 import type { JWTClaims } from '@authup/specs';
@@ -52,7 +53,14 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
             options: {
                 clientId: ctx.provider.clientId,
                 clientSecret: ctx.provider.clientSecret,
-                redirectUri: `${ctx.options.baseURL}${buildIdentityProviderAuthorizeCallbackPath(ctx.provider.id)}`,
+                // resolveURL, never a template literal: a publicUrl with a
+                // trailing slash produced `//identity-providers/...`, which
+                // the router does not match, so the provider sent the person
+                // back to a 404 and every federated login died there.
+                redirectUri: resolveURL(
+                    ctx.options.baseURL,
+                    buildIdentityProviderAuthorizeCallbackPath(ctx.provider.id),
+                ),
                 scope: ctx.provider.scope || undefined,
                 authorizationEndpoint: ctx.provider.authorizeUrl,
                 tokenEndpoint: ctx.provider.tokenUrl,
