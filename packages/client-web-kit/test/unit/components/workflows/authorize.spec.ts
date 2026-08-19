@@ -23,6 +23,8 @@ import {
     it,
 } from 'vitest';
 import type { App } from 'vue';
+import AMfaChallengeForm from '../../../../src/components/workflows/mfa/AMfaChallengeForm.vue';
+import AUserAuthenticatorEnroll from '../../../../src/components/entities/user-authenticator/AUserAuthenticatorEnroll.vue';
 import AAccountPrompt from '../../../../src/components/workflows/authorize/AAccountPrompt.vue';
 import AAuthorize from '../../../../src/components/workflows/authorize/Authorize.vue';
 import AuthorizeForm from '../../../../src/components/workflows/authorize/AuthorizeForm.vue';
@@ -114,7 +116,8 @@ type MountOverrides = {
     acrValues?: string,
     consentRows?: Consent[],
     consentHandler?: () => unknown,
-    federatedLogin?: { handle: string, providerId: string },
+    federatedLogin?: { providerId: string },
+    challengeHandler?: () => unknown,
     loginCompleteHandler?: () => unknown,
     userInfoHandler?: () => unknown,
 };
@@ -131,6 +134,7 @@ function mountAuthorize(overrides: MountOverrides = {}) {
         consentRows,
         consentHandler,
         federatedLogin,
+        challengeHandler,
         loginCompleteHandler,
         userInfoHandler,
     } = overrides;
@@ -147,6 +151,9 @@ function mountAuthorize(overrides: MountOverrides = {}) {
                 {}),
             // covering probe: no override → the fallback's empty collection
             // (no persisted consent → covered=false, today's behavior).
+            ...(challengeHandler ?
+                { 'GET /authenticators/challenge': challengeHandler } :
+                {}),
             ...(consentHandler ?
                 { 'GET /consents': consentHandler } :
                 {}),
@@ -744,5 +751,105 @@ describe('AAuthorize challenge request', () => {
 
         expect(challengeRequest).toBeDefined();
         expect(challengeRequest?.url).not.toContain('acrValues');
+    });
+});
+
+/**
+ * The gate the whole ladder exists for. The server decides whether a session
+ * owes a factor; these pin what the page renders for each answer, and that it
+ * does not let consent through before it knows.
+ */
+describe('AAuthorize MFA gate', () => {
+    it('holds consent back until the challenge status is known', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: '',
+            challengeHandler: () => new Promise(() => { /* never settles */ }),
+        });
+        await flushPromises();
+
+        // a builtIn client auto-submits on mount, so the form must not render
+        // before the requirement is known
+        expect(wrapper.findComponent(AuthorizeForm).exists()).toBe(false);
+        expect(wrapper.find('.authorize-text-stub').exists()).toBe(true);
+    });
+
+    it('renders the challenge when the session owes a factor', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: '',
+            challengeHandler: () => ({
+                required: true,
+                enrollmentRequired: false,
+                kinds: ['totp'],
+            }),
+        });
+        await flushPromises();
+
+        const challenge = wrapper.findComponent(AMfaChallengeForm);
+        expect(challenge.exists()).toBe(true);
+        expect(challenge.props('kinds')).toEqual(['totp']);
+        // no session-less ticket on this path: the bearer already exists
+        expect(challenge.props('ticket')).toBeNull();
+        expect(wrapper.findComponent(AuthorizeForm).exists()).toBe(false);
+    });
+
+    it('proceeds to consent once the challenge is done', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: '',
+            challengeHandler: () => ({
+                required: true,
+                enrollmentRequired: false,
+                kinds: ['totp'],
+            }),
+        });
+        await flushPromises();
+
+        wrapper.findComponent(AMfaChallengeForm).vm.$emit('done');
+        await flushPromises();
+
+        expect(wrapper.findComponent(AuthorizeForm).exists()).toBe(true);
+    });
+
+    it('renders inline enrollment when the session owes a device', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: '',
+            challengeHandler: () => ({
+                required: false,
+                enrollmentRequired: true,
+                kinds: [],
+            }),
+        });
+        await flushPromises();
+
+        expect(wrapper.findComponent(AUserAuthenticatorEnroll).exists()).toBe(true);
+        expect(wrapper.findComponent(AuthorizeForm).exists()).toBe(false);
+    });
+
+    it('goes straight to consent when the session owes nothing', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: '',
+            challengeHandler: () => ({
+                required: false,
+                enrollmentRequired: false,
+                kinds: [],
+            }),
+        });
+        await flushPromises();
+
+        expect(wrapper.findComponent(AMfaChallengeForm).exists()).toBe(false);
+        expect(wrapper.findComponent(AuthorizeForm).exists()).toBe(true);
+    });
+
+    /**
+     * The server backstop stays authoritative, so a status lookup that keeps
+     * failing must not brick the page.
+     */
+    it('fails open to consent when the status cannot be fetched', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: '',
+            challengeHandler: () => { throw new Error('challenge unavailable'); },
+        });
+        await flushPromises();
+
+        expect(wrapper.findComponent(AuthorizeForm).exists()).toBe(true);
     });
 });

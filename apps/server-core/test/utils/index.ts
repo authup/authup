@@ -6,6 +6,7 @@
  */
 
 export * from './assertions';
+export * from './cookie-jar';
 export * from './domains';
 export * from './http';
 export * from './properties';
