@@ -64,6 +64,13 @@ export default defineNuxtComponent({
                 // (it appends `code`/`state` to whatever query is already
                 // there). Nothing about it is authup-specific, which is the
                 // point: any client can do the same with its own callback.
+                //
+                // Only `redirect` is forwarded. The predecessor also folded
+                // every sibling param on the login URL into the destination
+                // (`/login?redirect=/users&invite=x` -> `/users?invite=x`),
+                // which nothing in the app has ever produced: the routing
+                // interceptor and the session-expiry plugin each emit a lone
+                // `redirect`. Put it in the `redirect` value if you need it.
                 const callback = new URL('/login/callback', window.location.origin);
                 const { redirect } = route.query;
                 if (typeof redirect === 'string' && redirect) {

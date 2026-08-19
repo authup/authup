@@ -192,12 +192,12 @@ export class RoutingInterceptor {
             }
 
             // A just-completed login arrives here from the callback route, and
-            // sending the user back there lands them on a page whose only job
-            // is to bounce onward to the home route — so the denial reads as
-            // "you were dropped somewhere random" instead of "you may not open
-            // that page". Name the home route directly. (The spent `code` is
-            // not the hazard it looks like: vue-router drops the query when a
-            // fullPath is passed as `path`, so it never gets re-exchanged.)
+            // sending the user back there is wrong twice over. That page's
+            // only job is to bounce onward to the home route, so the denial
+            // reads as "you were dropped somewhere random" rather than "you
+            // may not open that page" — and `backTo` carries the query, so
+            // the spent `code` would ride along and be re-exchanged. Name the
+            // home route directly.
             if (typeof from.query.code === 'string') {
                 return { path: this.homeRoute };
             }
