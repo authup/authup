@@ -20,6 +20,11 @@ const GRANT_RESPONSE = {
 
 const INTROSPECTION_RESPONSE = {
     exp: 9999999999,
+    // the endpoint resolves the subject and answers with its OpenID claims —
+    // the store builds `user` out of these three
+    sub: 'user-1',
+    sub_kind: 'user',
+    name: 'admin',
     session_id: 'sess-1',
     realm_id: 'realm-1',
     realm_name: 'master',
@@ -407,28 +412,30 @@ describe('core/store/lifecycle', () => {
         await Promise.all([store.resolve(), store.resolve()]);
 
         expect(requestsTo(httpClient, 'POST', '/token/introspect')).toHaveLength(1);
-        expect(requestsTo(httpClient, 'GET', '/userinfo')).toHaveLength(1);
+
+        // the subject rides the introspection response — the store never calls
+        // the userinfo endpoint
+        expect(requestsTo(httpClient, 'GET', '/userinfo')).toHaveLength(0);
     });
 
     it('stages the login: no token or user is observable before the commit', async () => {
         const observed : unknown[] = [];
         const { store } = buildStore({
             'POST /token/introspect': () => {
-                observed.push(store.accessToken.value, store.loggedIn.value);
+                observed.push(
+                    store.accessToken.value,
+                    store.loggedIn.value,
+                    store.user.value,
+                );
 
                 return { ...INTROSPECTION_RESPONSE };
-            },
-            'GET /userinfo': () => {
-                observed.push(store.accessToken.value, store.user.value);
-
-                return { ...USER_RESPONSE };
             },
         });
 
         await store.login({ name: 'admin', password: 'start123' });
 
-        // both staged round-trips ran against an untouched store
-        expect(observed).toEqual([null, false, null, null]);
+        // the staged round-trip ran against an untouched store
+        expect(observed).toEqual([null, false, null]);
         expect(store.accessToken.value).toEqual('at-1');
         expect(store.user.value).toMatchObject({ id: 'user-1' });
     });

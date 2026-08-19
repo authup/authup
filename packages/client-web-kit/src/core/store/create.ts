@@ -63,6 +63,20 @@ function createPromiseShareWrapperFn<F extends InputFn>(
 }
 
 type RealmMinimal = Pick<Realm, 'id' | 'name'>;
+type UserMinimal = Pick<User, 'id' | 'name' | 'displayName'>;
+
+/**
+ * The subject claims the introspection endpoint answers with, alongside the
+ * token payload it echoes. Declared here rather than on
+ * `OAuth2TokenIntrospectionResponse`, because the endpoint maps entity columns
+ * onto claim names and passes a nullable column through as `null` (a display
+ * name arrives as `nickname: null`), where the OIDC claim types model an absent
+ * claim as an omitted string.
+ */
+type SubjectClaims = {
+    name?: string | null,
+    nickname?: string | null,
+};
 
 export function createStore(context: StoreCreateContext) {
     const client : IClient = context.httpClient ?? new Client({ baseURL: context.baseURL });
@@ -155,13 +169,27 @@ export function createStore(context: StoreCreateContext) {
 
     // --------------------------------------------------------------------
 
-    const user = ref<User | null>(null);
+    /**
+     * The token's subject, narrowed to what is actually rendered: the id every
+     * owner-scoped query filters on, and the name / display name the account
+     * chip and the authorize page's "continue as" label read. A full `User` was
+     * held here once, at the cost of a `/userinfo` round-trip per restore, and
+     * no consumer ever read a field outside these three.
+     */
+    const user = ref<UserMinimal | null>(null);
     const userId = computed<string | null>(() => (user.value ? user.value.id : null));
 
-    const setUser = (input: User | null) => {
-        user.value = input;
+    // Narrowed at the sink like `setRealmManagement`: callers hand over whole
+    // entity rows (the account console re-seeds it from the profile form's
+    // response), and the ref is what the SSR payload carries.
+    const setUser = (input: UserMinimal | null) => {
+        user.value = input ? {
+            id: input.id,
+            name: input.name,
+            displayName: input.displayName,
+        } : null;
 
-        context.dispatcher.emit(StoreDispatcherEventName.USER_UPDATED, input);
+        context.dispatcher.emit(StoreDispatcherEventName.USER_UPDATED, user.value);
     };
 
     // --------------------------------------------------------------------
@@ -207,9 +235,16 @@ export function createStore(context: StoreCreateContext) {
     const realmManagementName = computed<string | undefined>(() => (realmManagement.value ? realmManagement.value.name : realmName.value));
 
     const setRealmManagement = (input: RealmMinimal | null) => {
-        realmManagement.value = input;
+        // Narrowed at the sink, not at the call sites: the value is
+        // cookie-persisted, and callers hand over whole entity rows (the realm
+        // switcher passes the table row straight through), so the free-text
+        // `description` column would ride the header of every request.
+        realmManagement.value = input ? { id: input.id, name: input.name } : null;
 
-        context.dispatcher.emit(StoreDispatcherEventName.REALM_MANAGEMENT_UPDATED, input);
+        context.dispatcher.emit(
+            StoreDispatcherEventName.REALM_MANAGEMENT_UPDATED,
+            realmManagement.value,
+        );
     };
 
     // --------------------------------------------------------------------
@@ -342,23 +377,38 @@ export function createStore(context: StoreCreateContext) {
         },
     );
 
-    const fetchUserInfo = async (token: string) : Promise<User> => client.userInfo.get<User>(`Bearer ${token}`);
-
     /**
-     * Whether the currently held user IS the subject of the introspected
-     * token. A user that came from anywhere but this token (cookie
-     * hydration, a raw seed) is only as trustworthy as the pairing, and the
-     * two can drift apart (a sibling login on the same origin, an id from a
-     * previous provisioning run). Revalidation re-fetches on a mismatch
-     * instead of carrying the stale identity for the app's lifetime: it is
-     * what the UI renders and what its forms write against.
+     * The introspected token's subject, built from the response itself: the
+     * introspection endpoint resolves the identity server-side and answers
+     * with its OpenID claims (`name`, and `displayName` under `nickname`), so
+     * a second `/userinfo` round-trip fetched a whole entity to restate three
+     * fields the store already had in hand.
+     *
+     * Deriving it also settles the identity question the predecessor had to ask
+     * separately: the held user cannot drift from the token, because it IS the
+     * token's subject on every commit. A non-user subject yields null rather
+     * than a failed lookup — `/userinfo` resolves `@me` through the user
+     * service, which throws for a client actor and took the whole `resolve()`
+     * down with it.
      */
-    const isTokenSubject = (
-        value: User | null,
+    const buildUser = (
         introspection: OAuth2TokenIntrospectionResponse,
-    ) : boolean => !!value &&
-        introspection.sub_kind === OAuth2SubKind.USER &&
-        introspection.sub === value.id;
+    ) : UserMinimal | null => {
+        if (
+            introspection.sub_kind !== OAuth2SubKind.USER ||
+            !introspection.sub
+        ) {
+            return null;
+        }
+
+        const { name, nickname } = introspection as SubjectClaims;
+
+        return {
+            id: introspection.sub,
+            name: name || '',
+            displayName: nickname || null,
+        };
+    };
 
     type SessionCommitContext = {
         // tokenGeneration captured when staging started
@@ -368,8 +418,6 @@ export function createStore(context: StoreCreateContext) {
         // tokens to apply — absent for a revalidation of the current token
         grant?: OAuth2TokenGrantResponse,
         introspection: OAuth2TokenIntrospectionResponse,
-        // absent when the current user is kept (revalidation)
-        user?: User,
         // login/exchange stamp explicitly; a restore stamps only when unset
         origin?: StoreAuthOrigin.LOGIN | StoreAuthOrigin.EXCHANGE,
     };
@@ -419,8 +467,15 @@ export function createStore(context: StoreCreateContext) {
             }
         }
 
-        if (ctx.user) {
-            setUser(ctx.user);
+        // Only the subject IDENTITY is authoritative here. A held user with the
+        // same id is at least as fresh as these claims — the account console
+        // re-seeds it from its own profile-form response — and a commit staged
+        // before such a save would otherwise revert the name it just wrote. The
+        // predecessor kept it for the same reason: `isTokenSubject` skipped the
+        // fetch on an id match.
+        const subject = buildUser(ctx.introspection);
+        if (!user.value || user.value.id !== subject?.id) {
+            setUser(subject);
         }
 
         if (ctx.introspection.permissions) {
@@ -541,8 +596,8 @@ export function createStore(context: StoreCreateContext) {
 
     // --------------------------------------------------------------------
 
-    // Stage introspection (+ userinfo when no user is present yet) for the
-    // current token and commit. Returns silently when the commit was aborted
+    // Stage the introspection for the current token and commit. Returns
+    // silently when the commit was aborted
     // by an interleaved cleanup() — the caller's post-state (unauthenticated) is
     // already what the user asked for.
     const revalidate = async () : Promise<void> => {
@@ -553,15 +608,11 @@ export function createStore(context: StoreCreateContext) {
         }
 
         const introspection = await fetchTokenIntrospection(token);
-        const userInfo = isTokenSubject(user.value, introspection) ?
-            undefined :
-            await fetchUserInfo(token);
 
         commitSession({
             generation,
             token,
             introspection,
-            user: userInfo,
         });
     };
 
@@ -610,7 +661,7 @@ export function createStore(context: StoreCreateContext) {
      * (AUTHENTICATED additionally implies realm + user are present).
      */
     const loggedIn = computed<boolean>(() => !!accessToken.value);
-    // Stage introspection + userinfo for a fresh grant, then commit
+    // Stage the introspection for a fresh grant, then commit
     // atomically. On failure or an aborted commit the staged tokens are
     // revoked best-effort — nothing was written, so nothing else could.
     // `generation` is captured by the caller BEFORE its first round-trip, so
@@ -624,14 +675,12 @@ export function createStore(context: StoreCreateContext) {
 
         try {
             const introspection = await fetchTokenIntrospection(response.access_token);
-            const userInfo = await fetchUserInfo(response.access_token);
 
             committed = commitSession({
                 generation,
                 token: response.access_token,
                 grant: response,
                 introspection,
-                user: userInfo,
                 origin,
             });
         } finally {

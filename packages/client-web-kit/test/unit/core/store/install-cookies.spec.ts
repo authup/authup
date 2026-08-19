@@ -28,6 +28,11 @@ const GRANT_RESPONSE = {
 
 const INTROSPECTION_RESPONSE = {
     exp: 9999999999,
+    // the endpoint resolves the subject and answers with its OpenID claims —
+    // the store builds `user` out of these three
+    sub: 'user-1',
+    sub_kind: 'user',
+    name: 'admin',
     session_id: 'sess-1',
     realm_id: 'realm-1',
     realm_name: 'master',
@@ -97,7 +102,11 @@ function buildApp(seed: Record<string, unknown> = {}, cookiePath?: string) {
 describe('core/store/install-cookies', () => {
     it('hydrates the store from cookies synchronously at install time', () => {
         const expireDate = '2099-01-01T00:00:00.000Z';
-        const { store, setCalls } = buildApp({
+        const {
+            store,
+            setCalls,
+            unsetCalls,
+        } = buildApp({
             [CookieName.ACCESS_TOKEN]: 'cookie-at',
             [CookieName.ACCESS_TOKEN_EXPIRE_DATE]: expireDate,
             [CookieName.REFRESH_TOKEN]: 'cookie-rt',
@@ -113,9 +122,15 @@ describe('core/store/install-cookies', () => {
         expect((store.accessTokenExpireDate as Date).getTime()).toEqual(new Date(expireDate).getTime());
         expect(store.refreshToken).toEqual('cookie-rt');
         expect(store.idToken).toEqual('cookie-idt');
-        expect(store.user).toMatchObject({ id: 'user-1' });
         expect(store.realm).toMatchObject({ id: 'realm-1' });
         expect(store.realmManagement).toMatchObject({ id: 'realm-2' });
+
+        // the user record is not hydrated from the jar anymore, and the copy an
+        // earlier version left behind is swept at install
+        expect(store.user).toBeNull();
+        expect(unsetCalls).toContainEqual(
+            expect.objectContaining({ key: CookieName.USER, options: { path: '/' } }),
+        );
 
         // hydration flips loggedIn before any network validation ran
         expect(store.loggedIn).toBe(true);
@@ -134,7 +149,7 @@ describe('core/store/install-cookies', () => {
         expect(accessTokenEcho!.options.maxAge!).toBeGreaterThan(0);
     });
 
-    it('persists cookies on login — except the realm cookie (introspection bypasses setRealm)', async () => {
+    it('persists cookies on login — except the realm cookie (introspection bypasses setRealm) and the user record', async () => {
         const { store, setCalls } = buildApp();
 
         await store.login({ name: 'admin', password: 'start123' });
@@ -144,8 +159,11 @@ describe('core/store/install-cookies', () => {
         expect(keys).toContain(CookieName.ACCESS_TOKEN_EXPIRE_DATE);
         expect(keys).toContain(CookieName.REFRESH_TOKEN);
         expect(keys).toContain(CookieName.ID_TOKEN);
-        expect(keys).toContain(CookieName.USER);
         expect(keys).toContain(CookieName.REALM_MANAGEMENT);
+
+        // the user record never reaches the jar, but the store still holds it
+        expect(keys).not.toContain(CookieName.USER);
+        expect(store.user).toMatchObject({ id: 'user-1' });
 
         // realm.value is written directly during introspection — REALM_UPDATED
         // never fires, so the realm cookie is never persisted
@@ -178,7 +196,6 @@ describe('core/store/install-cookies', () => {
             CookieName.ACCESS_TOKEN_EXPIRE_DATE,
             CookieName.REFRESH_TOKEN,
             CookieName.ID_TOKEN,
-            CookieName.USER,
             CookieName.REALM,
             CookieName.REALM_MANAGEMENT,
         ]);
@@ -198,6 +215,12 @@ describe('core/store/install-cookies path', () => {
     afterEach(() => {
         setPathname('/');
     });
+
+    // Every install also sweeps the legacy `user` copy at the pinned path
+    // (asserted in the suite above). The shadowing sweep never touches that
+    // path, so it is dropped here to keep these cases about paths alone.
+    const shadowingUnsets = <T extends { key: string, options: { path?: string } }>(calls: T[]) => calls
+        .filter((call) => !(call.key === CookieName.USER && call.options.path === '/'));
 
     // A cookie stored without an explicit `Path` inherits the browser's
     // default-path, the directory of the writing document. The account
@@ -240,7 +263,7 @@ describe('core/store/install-cookies path', () => {
 
         const { unsetCalls } = buildApp();
 
-        const paths = new Set(unsetCalls.map((call) => call.options.path));
+        const paths = new Set(shadowingUnsets(unsetCalls).map((call) => call.options.path));
         expect(paths).toEqual(new Set(['/account', '/account/password']));
 
         for (const path of paths) {
@@ -261,7 +284,7 @@ describe('core/store/install-cookies path', () => {
 
         const { unsetCalls } = buildApp();
 
-        const paths = new Set(unsetCalls.map((call) => call.options.path));
+        const paths = new Set(shadowingUnsets(unsetCalls).map((call) => call.options.path));
         expect(paths).toEqual(new Set(['/account']));
     });
 
@@ -270,7 +293,7 @@ describe('core/store/install-cookies path', () => {
 
         const { unsetCalls } = buildApp();
 
-        expect(unsetCalls).toHaveLength(0);
+        expect(shadowingUnsets(unsetCalls)).toHaveLength(0);
     });
 
     it('writes and clears every cookie at a host-declared path', async () => {

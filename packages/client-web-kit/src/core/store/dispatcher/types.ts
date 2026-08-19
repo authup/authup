@@ -10,6 +10,7 @@ import type { EventEmitter } from '@posva/event-emitter';
 import type { StoreDispatcherEventName } from './constants';
 
 type RealmMinimal = Pick<Realm, 'id' | 'name'>;
+type UserMinimal = Pick<User, 'id' | 'name' | 'displayName'>;
 
 export type StoreDispatcherEvents = {
     [StoreDispatcherEventName.LOGGING_IN]: [],
@@ -25,7 +26,7 @@ export type StoreDispatcherEvents = {
 
     [StoreDispatcherEventName.REFRESH_TOKEN_UPDATED]: string | null,
     [StoreDispatcherEventName.ID_TOKEN_UPDATED]: string | null,
-    [StoreDispatcherEventName.USER_UPDATED]: User | null,
+    [StoreDispatcherEventName.USER_UPDATED]: UserMinimal | null,
     [StoreDispatcherEventName.REALM_UPDATED]: RealmMinimal | null,
     [StoreDispatcherEventName.REALM_MANAGEMENT_UPDATED]: RealmMinimal | null,
 };

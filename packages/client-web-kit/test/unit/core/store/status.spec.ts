@@ -61,6 +61,11 @@ const GRANT_RESPONSE = {
 
 const INTROSPECTION_RESPONSE = {
     exp: 9999999999,
+    // the endpoint resolves the subject and answers with its OpenID claims —
+    // the store builds `user` out of these three
+    sub: 'user-1',
+    sub_kind: 'user',
+    name: 'admin',
     session_id: 'sess-1',
     realm_id: 'realm-1',
     realm_name: 'master',
@@ -107,10 +112,6 @@ describe('core/store/status', () => {
                 observed.push(store.status.value);
                 return { ...INTROSPECTION_RESPONSE };
             },
-            'GET /userinfo': () => {
-                observed.push(store.status.value);
-                return { ...USER_RESPONSE };
-            },
         });
 
         await store.login({ name: 'admin', password: 'start123' });
@@ -118,7 +119,6 @@ describe('core/store/status', () => {
         // every intermediate network step saw AUTHENTICATING — never a
         // half-built RESTORING/AUTHENTICATED
         expect(observed).toEqual([
-            StoreAuthStatus.AUTHENTICATING,
             StoreAuthStatus.AUTHENTICATING,
             StoreAuthStatus.AUTHENTICATING,
         ]);

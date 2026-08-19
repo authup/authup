@@ -20,6 +20,7 @@ function buildStore() {
                 exp: 9999999999,
                 sub: TOKEN_SUBJECT,
                 sub_kind: 'user',
+                name: 'admin',
                 session_id: 'sess-1',
                 realm_id: 'realm-1',
                 realm_name: 'master',
@@ -41,6 +42,28 @@ function buildStore() {
     return { store, httpClient };
 }
 
+function buildStoreWithSubjectKind(subKind: string) {
+    const httpClient = createFakeClient({
+        handlers: {
+            'POST /token/introspect': () => ({
+                exp: 9999999999,
+                sub: TOKEN_SUBJECT,
+                sub_kind: subKind,
+                realm_id: 'realm-1',
+                realm_name: 'master',
+                permissions: [],
+            }),
+        },
+    });
+
+    const store = createStore({
+        httpClient,
+        dispatcher: createStoreDispatcher(),
+    });
+
+    return { store, httpClient };
+}
+
 function countUserInfoRequests(httpClient: FakeClient) : number {
     return httpClient.requests.filter(
         (request) => request.method === 'GET' &&
@@ -49,26 +72,28 @@ function countUserInfoRequests(httpClient: FakeClient) : number {
 }
 
 describe('core/store/revalidate', () => {
-    it('keeps a seeded user that is the token subject', async () => {
+    it('builds the user from the introspection response', async () => {
         const { store, httpClient } = buildStore();
 
         store.setAccessToken('at-1');
-        store.setUser({
-            id: TOKEN_SUBJECT,
-            name: 'admin',
-        } as User);
 
         await store.resolve();
 
+        // the endpoint resolves the subject server-side and answers with its
+        // OpenID claims, so the dedicated userinfo round-trip is not made
         expect(countUserInfoRequests(httpClient)).toEqual(0);
-        expect(store.user.value).toMatchObject({ id: TOKEN_SUBJECT });
+        expect(store.user.value).toMatchObject({
+            id: TOKEN_SUBJECT,
+            name: 'admin',
+        });
     });
 
-    // A seeded user (cookie hydration, raw seeding) is only as trustworthy as
-    // its pairing with the token, and the two drift apart: a sibling login on
-    // the same origin, an id left over from a previous provisioning run. It is
-    // what the UI renders and what its forms write against, so a mismatch must
-    // re-resolve instead of being carried for the app's lifetime.
+    // A seeded user (raw seeding, the account console re-seeding from its
+    // profile form) is only as trustworthy as its pairing with the token, and
+    // the two drift apart: a sibling login on the same origin, an id left over
+    // from a previous provisioning run. It is what the UI renders and what its
+    // forms write against, so the commit overwrites it with the token's own
+    // subject rather than carrying it for the app's lifetime.
     it('replaces a seeded user that is not the token subject', async () => {
         const { store, httpClient } = buildStore();
 
@@ -80,21 +105,28 @@ describe('core/store/revalidate', () => {
 
         await store.resolve();
 
-        expect(countUserInfoRequests(httpClient)).toEqual(1);
+        expect(countUserInfoRequests(httpClient)).toEqual(0);
         expect(store.user.value).toMatchObject({
             id: TOKEN_SUBJECT,
             name: 'admin',
         });
     });
 
-    it('resolves the user when none is present', async () => {
-        const { store, httpClient } = buildStore();
+    // `/userinfo` resolves `@me` through the user service, which throws for a
+    // client actor: fetching it took the whole resolve() down, and the guards
+    // catch a rejected resolve() into a logout.
+    it('holds no user for a non-user subject', async () => {
+        const { store, httpClient } = buildStoreWithSubjectKind('client');
 
         store.setAccessToken('at-1');
+        store.setUser({
+            id: TOKEN_SUBJECT,
+            name: 'admin',
+        } as User);
 
         await store.resolve();
 
-        expect(countUserInfoRequests(httpClient)).toEqual(1);
-        expect(store.user.value).toMatchObject({ id: TOKEN_SUBJECT });
+        expect(countUserInfoRequests(httpClient)).toEqual(0);
+        expect(store.user.value).toBeNull();
     });
 });

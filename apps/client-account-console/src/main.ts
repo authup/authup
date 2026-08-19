@@ -6,6 +6,7 @@
  */
 
 import {
+    StoreAuthStatus,
     buildVuecsInstallOptions,
     clearAuthorizationRequest,
     createCookieRef,
@@ -180,6 +181,17 @@ router.beforeEach(async (to) => {
 
     try {
         await store.resolve();
+
+        // A settled resolve leaves the session either complete or absent, so
+        // anything else is a session this console cannot render: a subject that
+        // is not a user (a client token seeded into the origin's shared cookie
+        // set) keeps `user` null, and the shell, the realm chooser and the
+        // sign-out control are all gated on the status it therefore never
+        // reaches. Without this it would hold its loading state with no way
+        // out. Treat it like a failed resolve.
+        if (store.status === StoreAuthStatus.RESTORING) {
+            await store.logout();
+        }
     } catch {
         await store.logout();
     }

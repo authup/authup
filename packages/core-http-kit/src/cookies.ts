@@ -11,6 +11,12 @@ export enum CookieName {
     REFRESH_TOKEN = 'refresh_token',
     ID_TOKEN = 'id_token',
 
+    /**
+     * @deprecated No longer written by the client-web-kit store: the record is
+     * unbounded (extra attributes are flattened onto the `/userinfo` response)
+     * and is re-derived by `resolve()`. The name is kept so the store can sweep
+     * copies written by earlier versions.
+     */
     USER = 'user',
     REALM = 'realm',
     REALM_MANAGEMENT = 'realm_management',

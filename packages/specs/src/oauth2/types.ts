@@ -77,11 +77,6 @@ export type OAuth2TokenPayload = JWTClaims & {
     sub_kind?: `${OAuth2SubKind}`,
 
     /**
-     * Subject name
-     */
-    sub_name?: string,
-
-    /**
      * Scopes (e.g. "scope1 scope2")
      */
     scope?: string,

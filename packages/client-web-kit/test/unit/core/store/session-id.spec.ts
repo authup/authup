@@ -14,6 +14,9 @@ function buildStore(sessionId?: string) {
         handlers: {
             'POST /token/introspect': () => ({
                 exp: 9999999999,
+                sub: 'user-1',
+                sub_kind: 'user',
+                name: 'admin',
                 ...(sessionId ? { session_id: sessionId } : {}),
                 realm_id: 'realm-1',
                 realm_name: 'master',
