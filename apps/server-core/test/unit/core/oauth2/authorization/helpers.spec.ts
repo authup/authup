@@ -88,7 +88,8 @@ describe('deriveAmrAcr', () => {
         [SessionAuthMethod.PASSWORD, null, { amr: ['pwd'], acr: 'urn:authup:pwd' }],
         [SessionAuthMethod.PASSWORD, at, { amr: ['pwd', 'otp'], acr: 'urn:authup:mfa' }],
         [SessionAuthMethod.LDAP, null, { amr: ['pwd'], acr: 'urn:authup:pwd' }],
-        [SessionAuthMethod.EXTERNAL, null, { amr: ['ext'], acr: 'urn:authup:pwd' }],
+        // no acr: authup verified no credential of its own (issue #3478)
+        [SessionAuthMethod.EXTERNAL, null, { amr: ['ext'] }],
         [SessionAuthMethod.EXTERNAL, at, { amr: ['ext', 'otp'], acr: 'urn:authup:mfa' }],
     ] as const)('should derive claims for auth_method=%s (mfa_at=%s)', (authMethod, mfaAt, expected) => {
         expect(deriveAmrAcr({ authMethod, mfaAt })).toEqual(expected);

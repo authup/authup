@@ -14,6 +14,7 @@ import {
 import { URL } from 'node:url';
 
 import type { IAppEvent } from 'routup';
+import { isUUID } from '@authup/kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     Client,
@@ -197,7 +198,19 @@ export class AuthorizeController {
         // Path + query of the original request — the SSR page uses it as
         // the same-origin `redirect` parameter on register / password links
         // so those pages can lead back into this authorize request.
+        // A federated callback sends the browser back here to complete the
+        // login it established (plan 094). Only the provider is named: the
+        // pending login itself rides a cookie, so nothing here is a secret.
+        // It is interpolated into the completion request path by the page, so
+        // it is accepted as an id and nothing else, and dropped from
+        // `requestPath` so the register / password links do not carry it.
+        const query = useRequestQuery(event);
+        const federatedLogin = typeof query.provider === 'string' && isUUID(query.provider) ?
+            { providerId: query.provider } :
+            undefined;
+
         const requestURL = new URL(event.request.url);
+        requestURL.searchParams.delete('provider');
 
         return renderAuthConsolePage(event, {
             url: '/authorize',
@@ -210,6 +223,7 @@ export class AuthorizeController {
                     scopes,
                     realm,
                     redirectUriVerified,
+                    federatedLogin,
                     features: this.options.features,
                     requestPath: `${requestURL.pathname}${requestURL.search}`,
                 },

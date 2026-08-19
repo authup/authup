@@ -13,7 +13,10 @@ import {
     DPost,
     DTags,
 } from '@routup/decorators';
-import { IdentityType, UserAuthenticatorKind } from '@authup/core-kit';
+import type { Session } from '@authup/core-kit';
+import { IdentityType, SessionAuthMethod, UserAuthenticatorKind } from '@authup/core-kit';
+import { OAuth2AuthenticationContextClass } from '@authup/specs';
+import { useRequestQuery } from '@routup/basic/query';
 import { BadRequestError, EntityCredentialsInvalidError, UnauthorizedError } from '@authup/errors';
 import type { IAppEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
@@ -95,7 +98,7 @@ export class AuthenticatorChallengeController {
     async status(
         @DContext() event: IAppEvent,
     ): Promise<UserAuthenticatorChallengeResponse> {
-        const { identity } = this.resolveActor(event);
+        const { identity, ticket } = this.resolveActor(event);
         if (identity.type !== IdentityType.USER) {
             return {
                 required: false,
@@ -104,7 +107,48 @@ export class AuthenticatorChallengeController {
             };
         }
 
-        return this.service.challenge(identity.id);
+        const status = await this.service.challenge(identity.id);
+
+        // What this SESSION still owes, not merely what the user holds. A
+        // session an external identity provider established was authenticated
+        // there, which is where MFA is enforced for it, so authup asks for no
+        // local factor on top and `mfaRequired` forces no local enrollment.
+        //
+        // The rule lives here rather than in the page, so the hosted ladder
+        // and any other consumer read one answer; `authorizeInner` keeps its
+        // own copy as the backstop, which is the point of a backstop.
+        //
+        // The exception is an application that requested MFA explicitly. The
+        // caller passes the `acr_values` it is being asked to satisfy, since
+        // only it knows the authorization request.
+        const session = ticket ? null : await this.resolveSession(event);
+        if (session && session.authMethod === SessionAuthMethod.EXTERNAL) {
+            const { acrValues } = useRequestQuery(event);
+            const stepUpRequested = typeof acrValues === 'string' &&
+                acrValues.split(' ').includes(OAuth2AuthenticationContextClass.MFA);
+
+            // Enrollment stays suppressed either way: `authorizeInner` never
+            // forces it on an external session, so offering it here would
+            // route the person into a step the server does not ask for. A
+            // step-up can only ADD the challenge, and only for a factor the
+            // person already holds.
+            return {
+                ...status,
+                required: stepUpRequested && status.required,
+                enrollmentRequired: false,
+            };
+        }
+
+        return status;
+    }
+
+    protected async resolveSession(event: IAppEvent) : Promise<Session | null> {
+        const sessionId = useRequestSessionId(event);
+        if (!sessionId) {
+            return null;
+        }
+
+        return this.sessionManager.findOneById(sessionId);
     }
 
     @DPost('/send')

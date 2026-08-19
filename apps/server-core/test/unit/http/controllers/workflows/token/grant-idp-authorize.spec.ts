@@ -24,7 +24,7 @@ import {
 } from '@authup/core-kit';
 import { base64URLEncode } from '@authup/kit';
 import { OAuth2ErrorCode } from '@authup/specs';
-import { createFakeClient, createFakeOAuth2IdentityProvider } from '../../../../../utils';
+import { createFakeClient, createFakeOAuth2IdentityProvider, httpRequest } from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
 
 function buildFakeAccessToken(claims: Record<string, unknown>): string {
@@ -136,6 +136,52 @@ describe('identity-provider authorization code grant', () => {
         await suite.teardown();
     });
 
+    let pendingLoginCookie : string | null = null;
+
+    let federatedCookie : string | null = null;
+
+    function readPendingLoginCookie(response: Response) : string | null {
+        const header = response.headers.get('set-cookie');
+        if (!header) {
+            return null;
+        }
+
+        const match = header.match(/authup_federated_login=([^;]*)/);
+
+        return match && match[1].length > 0 ? match[1] : null;
+    }
+
+    /**
+     * The browser half a federated login now takes (plan 094): the callback
+     * hands the hosted authorize page a one-time handle, the page redeems it
+     * for the session the callback established, and the RP's code is issued
+     * by the consent post, after MFA and the prompt gates.
+     */
+    async function completeThroughLadder(hosted: URL, codeRequest = encodedCodeRequest): Promise<URL> {
+        const redeem = await httpRequest(
+            suite,
+            'POST',
+            `identity-providers/${hosted.searchParams.get('provider')}/login-complete`,
+            { headers: { cookie: `authup_federated_login=${pendingLoginCookie}` } },
+        );
+        expect(redeem.status).toEqual(200);
+
+        const grant = await redeem.json();
+
+        const approve = await httpRequest(suite, 'POST', 'authorize', {
+            headers: {
+                authorization: `Bearer ${grant.access_token}`,
+                'content-type': 'application/json',
+            },
+            body: Buffer.from(codeRequest, 'base64url').toString('utf-8'),
+        });
+        expect(approve.status).toEqual(200);
+
+        const { url } = await approve.json();
+
+        return new URL(url);
+    }
+
     it('should redirect to external IDP with state on authorize-out', async () => {
         const response = await suite.client
             .get(
@@ -160,6 +206,7 @@ describe('identity-provider authorization code grant', () => {
                 { redirect: 'manual' },
             );
 
+        federatedCookie = readPendingLoginCookie(authorizeOutResponse);
         const outLocation = authorizeOutResponse.headers.get('location') as string;
         const outURL = new URL(outLocation);
         const state = outURL.searchParams.get('state');
@@ -169,22 +216,29 @@ describe('identity-provider authorization code grant', () => {
         const authorizeInResponse = await suite.client
             .get(
                 `${buildIdentityProviderAuthorizeCallbackPath(providerId)}?code=fake-idp-code&state=${state}`,
-                { redirect: 'manual' },
+                { redirect: 'manual', headers: { cookie: `authup_federated_login=${federatedCookie}` } },
             );
 
         expect(authorizeInResponse.status).toEqual(302);
+        pendingLoginCookie = readPendingLoginCookie(authorizeInResponse);
 
         const inLocation = authorizeInResponse.headers.get('location') as string;
         expect(inLocation).toBeDefined();
+        pendingLoginCookie = readPendingLoginCookie(authorizeInResponse);
 
-        const inURL = new URL(inLocation);
+        // The callback returns to the hosted page, never to the RP.
+        const hostedURL = new URL(inLocation);
+        expect(hostedURL.pathname.endsWith('/authorize')).toBe(true);
+        expect(hostedURL.searchParams.get('code')).toBeNull();
+
+        const inURL = await completeThroughLadder(hostedURL);
         const authupCode = inURL.searchParams.get('code');
         expect(authupCode).toBeDefined();
         expect(authupCode!.length).toBeGreaterThan(0);
 
         // A confidential client takes the same delivery: the code goes to its
-        // own redirect_uri, not to the hosted authorize page. This request
-        // carries no `state`, so none is echoed (never `state=undefined`).
+        // own redirect_uri. This request carries no `state`, so none is echoed
+        // (never `state=undefined`).
         expect(`${inURL.origin}${inURL.pathname}`).toEqual('https://example.com/redirect');
         expect(inURL.searchParams.has('state')).toBe(false);
 
@@ -210,17 +264,19 @@ describe('identity-provider authorization code grant', () => {
                 { redirect: 'manual' },
             );
 
+        federatedCookie = readPendingLoginCookie(authorizeOutResponse);
         const outLocation = authorizeOutResponse.headers.get('location') as string;
         const state = new URL(outLocation).searchParams.get('state');
 
         const authorizeInResponse = await suite.client
             .get(
                 `${buildIdentityProviderAuthorizeCallbackPath(providerId)}?code=fake-idp-code&state=${state}`,
-                { redirect: 'manual' },
+                { redirect: 'manual', headers: { cookie: `authup_federated_login=${federatedCookie}` } },
             );
 
         const inLocation = authorizeInResponse.headers.get('location') as string;
-        const authupCode = new URL(inLocation).searchParams.get('code');
+        pendingLoginCookie = readPendingLoginCookie(authorizeInResponse);
+        const authupCode = (await completeThroughLadder(new URL(inLocation))).searchParams.get('code');
 
         await suite.client
             .token
@@ -266,17 +322,21 @@ describe('identity-provider authorization code grant', () => {
                 { redirect: 'manual' },
             );
 
+        federatedCookie = readPendingLoginCookie(authorizeOutResponse);
         const state = new URL(authorizeOutResponse.headers.get('location') as string)
             .searchParams.get('state');
 
         const authorizeInResponse = await suite.client
             .get(
                 `${buildIdentityProviderAuthorizeCallbackPath(providerId)}?code=fake-idp-code&state=${state}`,
-                { redirect: 'manual' },
+                { redirect: 'manual', headers: { cookie: `authup_federated_login=${federatedCookie}` } },
             );
 
-        const authupCode = new URL(authorizeInResponse.headers.get('location') as string)
-            .searchParams.get('code');
+        pendingLoginCookie = readPendingLoginCookie(authorizeInResponse);
+        const authupCode = (await completeThroughLadder(
+            new URL(authorizeInResponse.headers.get('location') as string),
+            openidCodeRequest,
+        )).searchParams.get('code');
 
         const tokenResponse = await suite.client
             .token
@@ -320,16 +380,18 @@ describe('identity-provider authorization code grant', () => {
                 { redirect: 'manual' },
             );
 
+        federatedCookie = readPendingLoginCookie(authorizeOutResponse);
         const state = new URL(authorizeOutResponse.headers.get('location') as string)
             .searchParams.get('state');
 
         const authorizeInResponse = await suite.client
             .get(
                 `${buildIdentityProviderAuthorizeCallbackPath(providerId)}?code=fake-idp-code&state=${state}`,
-                { redirect: 'manual' },
+                { redirect: 'manual', headers: { cookie: `authup_federated_login=${federatedCookie}` } },
             );
 
         expect(authorizeInResponse.status).toEqual(302);
+        pendingLoginCookie = readPendingLoginCookie(authorizeInResponse);
 
         const inURL = new URL(authorizeInResponse.headers.get('location') as string);
         expect(inURL.pathname.endsWith('/authorize')).toBe(true);
@@ -348,19 +410,24 @@ describe('identity-provider authorization code grant', () => {
                 { redirect: 'manual' },
             );
 
+        federatedCookie = readPendingLoginCookie(authorizeOutResponse);
         const state = new URL(authorizeOutResponse.headers.get('location') as string)
             .searchParams.get('state');
 
         const authorizeInResponse = await suite.client
             .get(
                 `${buildIdentityProviderAuthorizeCallbackPath(providerId)}?code=fake-idp-code&state=${state}`,
-                { redirect: 'manual' },
+                { redirect: 'manual', headers: { cookie: `authup_federated_login=${federatedCookie}` } },
             );
 
         expect(authorizeInResponse.status).toEqual(302);
+        pendingLoginCookie = readPendingLoginCookie(authorizeInResponse);
 
-        const inURL = new URL(authorizeInResponse.headers.get('location') as string);
-        expect(inURL.searchParams.get('error')).toBeNull();
+        const hostedURL = new URL(authorizeInResponse.headers.get('location') as string);
+        expect(hostedURL.searchParams.get('error')).toBeNull();
+        expect(pendingLoginCookie).toBeTruthy();
+
+        const inURL = await completeThroughLadder(hostedURL);
         expect(inURL.searchParams.get('code')).toBeTruthy();
     });
 });

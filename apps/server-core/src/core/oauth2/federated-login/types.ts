@@ -11,16 +11,16 @@ import type {
     OpenIDIdentityProvider, 
     User, 
 } from '@authup/core-kit';
-import type { OAuth2ErrorCode } from '@authup/specs';
+import type { OAuth2ErrorCode, OAuth2TokenGrantResponse } from '@authup/specs';
 import type { Logger } from '@authup/server-kit';
 import type { IIdentityProviderAccountManager } from '../../identity/provider/account/types.ts';
 import type { IOAuth2Authenticator } from '../../identity/provider/authentication/protocols/index.ts';
 import type { IEventService, IRealmRepository } from '../../entities/index.ts';
+import type { ISessionManager } from '../../authentication/index.ts';
+import type { IAuthFlowMetrics } from '../../metrics/index.ts';
+import type { IOAuth2TokenIssuer } from '../token/index.ts';
 import type { IOAuth2AccessPolicyEvaluator } from '../access-policy/index.ts';
-import type {
-    IOAuth2AuthorizationCodeIssuer,
-    IOAuth2AuthorizationCodeRequestVerifier,
-} from '../authorization/index.ts';
+import type { IOAuth2AuthorizationCodeRequestVerifier } from '../authorization/index.ts';
 
 export type OAuth2FederatedLoginCompleteInput = {
     /**
@@ -90,43 +90,93 @@ export type OAuth2FederatedLoginRefusedResult = {
 export type OAuth2FederatedLoginIssuedResult = {
     kind: 'issued',
     /**
-     * The verified redirect target of the RP. Its scheme passed
-     * `isSafeRedirectURLScheme`, so a caller may navigate it.
+     * Identifies the pending login the hosted authorize page completes. The
+     * caller puts it in a cookie; it is never a URL parameter. No token and no
+     * authorization code: the application's code is issued at the end of the
+     * hosted ladder, once the prompt gates and consent have run.
      */
-    redirectUri: string,
+    pendingLoginId: string,
     /**
-     * The authorization code id the RP redeems at `/token`.
-     */
-    code: string,
-    state?: string,
-    /**
-     * The verified request, for a caller that has to re-render the hosted
-     * page alongside the redirect (the custom-scheme interstitial).
+     * The verified request, which the caller re-renders on the hosted
+     * page alongside it.
      */
     codeRequest: OAuth2AuthorizationCodeRequest,
-    client: {
-        id: string,
-        name: string,
-        displayName: string | null,
-    },
+};
+
+/**
+ * What a pending login holds. Three scalars, never the identity object (which
+ * carries the provider entity incl. its EA-loaded clientSecret and the raw
+ * external token payload) and never a token.
+ */
+export type OAuth2FederatedLoginPending = {
+    sessionId: string,
+    /**
+     * The provider the login was started at. The completion endpoint is
+     * provider-scoped, so a pending login cannot be completed at another.
+     */
+    providerId: string,
+    /**
+     * Actor name for the LOGIN security event.
+     */
+    userName?: string | null,
+};
+
+export interface IOAuth2FederatedLoginStore {
+    /**
+     * @returns the id of the pending login
+     */
+    save(data: OAuth2FederatedLoginPending) : Promise<string>;
+
+    /**
+     * Reads and DROPS it. Single use: one pending login completes once.
+     */
+    consume(id: string) : Promise<OAuth2FederatedLoginPending | null>;
+}
+
+export type OAuth2FederatedLoginCompleteHandoffInput = {
+    /**
+     * From the cookie the callback set on this browser.
+     */
+    pendingLoginId: string,
+    /**
+     * The provider the completion endpoint was addressed at.
+     */
+    providerId: string,
 };
 
 export type OAuth2FederatedLoginCompleteResult =    OAuth2FederatedLoginRefusedResult |
     OAuth2FederatedLoginIssuedResult;
 
 /**
- * Completes the RP's original authorization request after an external
- * provider sent the browser back (issue #3446). It owns the refusal ladder
- * — realm match, code-request re-verification, redirect-scheme gate,
- * provider and user state, access policy — and mints the authup code.
+ * Completes the external leg of a federated login after a provider sent
+ * the browser back (issue #3446). It owns the refusal ladder: realm match,
+ * code-request re-verification, redirect-scheme gate, provider and user
+ * state, access policy.
+ *
+ * It does NOT mint the RP's authorization code. It establishes the authup
+ * session and hands the browser a cookie naming it; the hosted authorize
+ * page completes it and runs the same ladder a password login runs before
+ * any code is issued (plan 094).
  *
  * Deliberately transport-free: it decides WHAT the answer is, and returns
  * it as a discriminated result. The adapter decides how that answer
- * reaches the browser (a redirect, or the interstitial page a custom
- * scheme needs), because only the adapter knows the difference.
+ * reaches the browser.
  */
 export interface IOAuth2FederatedLoginService {
     complete(input: OAuth2FederatedLoginCompleteInput) : Promise<OAuth2FederatedLoginCompleteResult>;
+
+    /**
+     * Exchange the pending login for the grant of the session the callback
+     * established. Refuses without detail: the caller is anonymous.
+     *
+     * The local second factor is deliberately NOT gated here: an external
+     * provider authenticated this login and is where MFA is enforced for it.
+     * An application that asks for one explicitly (`acr_values`) still steps
+     * up at `POST /authorize`.
+     *
+     * @throws BadRequestError
+     */
+    completeHandoff(input: OAuth2FederatedLoginCompleteHandoffInput) : Promise<OAuth2TokenGrantResponse>;
 }
 
 export type OAuth2FederatedLoginServiceOptions = {
@@ -158,10 +208,15 @@ export type OAuth2FederatedLoginServiceContext = {
     accountManager: IIdentityProviderAccountManager,
     realmRepository: IRealmRepository,
     codeRequestVerifier: IOAuth2AuthorizationCodeRequestVerifier,
-    codeIssuer: IOAuth2AuthorizationCodeIssuer,
+
+    sessionManager: ISessionManager,
+    pendingLoginStore: IOAuth2FederatedLoginStore,
+    accessTokenIssuer: IOAuth2TokenIssuer,
+    refreshTokenIssuer: IOAuth2TokenIssuer,
 
     accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,
     eventService?: IEventService,
+    metrics?: IAuthFlowMetrics,
     logger?: Logger,
     authenticatorFactory?: OAuth2FederatedLoginAuthenticatorFactory,
 };

@@ -87,6 +87,14 @@ export type UserAuthenticatorChallengeVerifyResponse = {
  */
 export type UserAuthenticatorChallengeRequestOptions = {
     authorizationHeader?: string | AuthorizationHeader,
+    /**
+     * The `acr_values` of the authorization request being satisfied. Only the
+     * caller knows it, and it is what decides whether an externally
+     * authenticated session still owes a local factor: the provider
+     * authenticated that session, so authup asks for one only when an
+     * application requested it explicitly.
+     */
+    acrValues?: string,
 };
 
 export interface IUserAuthenticatorAPI {

@@ -11,12 +11,21 @@ import {
     EventRefType,
     EventScope,
     IdentityType,
+    ScopeName,
     SessionAuthMethod,
 } from '@authup/core-kit';
-import { InternalError } from '@authup/errors';
+import { BadRequestError, InternalError } from '@authup/errors';
 import type { Logger } from '@authup/server-kit';
-import { OAuth2ErrorCode, OAuth2RequestError, isOAuth2Error } from '@authup/specs';
+import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
+import {
+    OAuth2ErrorCode,
+    OAuth2RequestError,
+    OAuth2SubKind,
+    isOAuth2Error,
+} from '@authup/specs';
 import type { IEventService, IRealmRepository } from '../../entities/index.ts';
+import type { IAuthFlowMetrics } from '../../metrics/index.ts';
+import type { ISessionManager } from '../../authentication/index.ts';
 // Deep imports, never the `core/identity` barrel: it reaches back into
 // this module through the core barrel, and the cycle would TDZ-crash.
 import type { IIdentityProviderAccountManager } from '../../identity/provider/account/types.ts';
@@ -24,13 +33,18 @@ import { createIdentityProviderOAuth2Authenticator } from '../../identity/provid
 import { toIdentityPolicyData } from '../../identity/permission/identity-policy-data.ts';
 import type { IOAuth2AccessPolicyEvaluator } from '../access-policy/index.ts';
 import type {
-    IOAuth2AuthorizationCodeIssuer,
     IOAuth2AuthorizationCodeRequestVerifier,
     OAuth2AuthorizationCodeRequestVerificationResult,
 } from '../authorization/index.ts';
+import { deriveAmrAcr } from '../authorization/helpers.ts';
+import { buildOAuth2BearerTokenResponse } from '../response/index.ts';
+import type { IOAuth2TokenIssuer } from '../token/index.ts';
+import { OAUTH2_FEDERATED_LOGIN_TTL } from './constants.ts';
 import type {
     IOAuth2FederatedLoginService,
+    IOAuth2FederatedLoginStore,
     OAuth2FederatedLoginAuthenticatorFactory,
+    OAuth2FederatedLoginCompleteHandoffInput,
     OAuth2FederatedLoginCompleteInput,
     OAuth2FederatedLoginCompleteResult,
     OAuth2FederatedLoginServiceContext,
@@ -47,11 +61,19 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
 
     protected codeRequestVerifier : IOAuth2AuthorizationCodeRequestVerifier;
 
-    protected codeIssuer : IOAuth2AuthorizationCodeIssuer;
+    protected sessionManager : ISessionManager;
+
+    protected pendingLoginStore : IOAuth2FederatedLoginStore;
+
+    protected accessTokenIssuer : IOAuth2TokenIssuer;
+
+    protected refreshTokenIssuer : IOAuth2TokenIssuer;
 
     protected accessPolicyEvaluator? : IOAuth2AccessPolicyEvaluator;
 
     protected eventService? : IEventService;
+
+    protected metrics? : IAuthFlowMetrics;
 
     protected logger? : Logger;
 
@@ -62,9 +84,13 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
         this.accountManager = ctx.accountManager;
         this.realmRepository = ctx.realmRepository;
         this.codeRequestVerifier = ctx.codeRequestVerifier;
-        this.codeIssuer = ctx.codeIssuer;
+        this.sessionManager = ctx.sessionManager;
+        this.pendingLoginStore = ctx.pendingLoginStore;
+        this.accessTokenIssuer = ctx.accessTokenIssuer;
+        this.refreshTokenIssuer = ctx.refreshTokenIssuer;
         this.accessPolicyEvaluator = ctx.accessPolicyEvaluator;
         this.eventService = ctx.eventService;
+        this.metrics = ctx.metrics;
         this.logger = ctx.logger;
         this.authenticatorFactory = ctx.authenticatorFactory ??
             ((provider, options) => createIdentityProviderOAuth2Authenticator({
@@ -174,11 +200,10 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
             };
         }
 
-        const realm = await this.realmRepository.resolve(provider.realmId, true);
-
         // Application access policy (plan 052), federated leg. A policy id
         // with no wired evaluator denies (fail closed).
         if (verified.client.accessPolicyId) {
+            const realm = await this.realmRepository.resolve(provider.realmId, true);
             let allowed = false;
 
             const subject = toIdentityPolicyData({
@@ -205,63 +230,125 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
             }
         }
 
-        // The WHOLE verified request reaches the issuer, never a hand-picked
-        // subset: it carries code_challenge / code_challenge_method and nonce
-        // (plus acr_values, which no redemption path reads yet). A code that
-        // lost its PKCE challenge cannot be redeemed by a public client at
-        // all (`PKCE is required for public clients`), which is every console
-        // client.
-        const authorizationCode = await this.codeIssuer.issue(
-            verified.data,
-            {
-                type: IdentityType.USER,
-                data: {
-                    ...user,
-                    realm,
-                },
-            },
-            { authMethod: SessionAuthMethod.EXTERNAL },
-        );
+        // The callback establishes the session and stops there. The RP's
+        // code is issued at the end of the hosted authorize ladder, so a
+        // federated login passes the same gates a password login does: the
+        // second factor, inline enrollment, prompt/max_age freshness,
+        // acr_values step-up and consent (plan 094).
+        //
+        // Its lifetime is the pending login's: an abandoned one self-expires and
+        // is swept with the regular session sweep, and redemption extends it
+        // to the regular one.
+        const session = await this.sessionManager.create({
+            userAgent: input.request?.userAgent ?? undefined,
+            ipAddress: input.request?.ipAddress ?? undefined,
+            realmId: user.realmId,
+            // no `clientId`: a USER-subject session, and the column is the
+            // client-SUBJECT foreign key. The application lands on the
+            // token rows at the /token exchange.
+            sub: user.id,
+            subKind: IdentityType.USER,
+            mfaAt: null,
+            authMethod: SessionAuthMethod.EXTERNAL,
+            expiresAt: new Date(Date.now() + OAUTH2_FEDERATED_LOGIN_TTL).toISOString(),
+        });
 
-        // The interactive path records this in OAuth2Authorization.authorize();
-        // this leg issues its code directly, so without an emit here a
-        // federated authorization leaves no trace in auth_events while every
-        // other one does. `reason: federated` is what tells the two apart:
-        // there was no consent step to report. No session exists yet (the
-        // /token exchange creates it), hence a null sessionId. Metrics stay
-        // uninstrumented on this leg, as they already are.
-        await this.eventService?.record({
-            scope: EventScope.OAUTH2,
-            name: EventName.AUTHORIZE,
-            refType: EventRefType.CLIENT,
-            refId: verified.data.client_id ?? null,
-            clientId: verified.data.client_id ?? null,
-            sessionId: null,
-            actorType: IdentityType.USER,
-            actorId: user.id,
-            actorName: user.name,
-            realmId: verified.data.realm_id ?? realm.id,
-            requestIpAddress: input.request?.ipAddress ?? null,
-            requestUserAgent: input.request?.userAgent ?? null,
-            data: {
-                reason: 'federated',
-                providerId: provider.id,
-                providerName: provider.name,
-                ...(verified.data.scope ? { scope: verified.data.scope } : {}),
-            },
+        const pendingLoginId = await this.pendingLoginStore.save({
+            sessionId: session.id,
+            providerId: provider.id,
+            userName: user.name,
         });
 
         return {
             kind: 'issued',
-            redirectUri,
-            code: authorizationCode.id,
-            state: verified.data.state,
+            pendingLoginId,
             codeRequest: verified.data,
-            client: {
-                id: verified.client.id,
-                name: verified.client.name,
-                displayName: verified.client.displayName ?? null,
-            },
         };
+    }
+
+    async completeHandoff(input: OAuth2FederatedLoginCompleteHandoffInput): Promise<OAuth2TokenGrantResponse> {
+        // One message for every refusal: the caller is anonymous, so an
+        // unknown pending login, an expired one and a foreign one must not
+        // be distinguishable.
+        const refuse = () => new BadRequestError('The login request is unknown or expired.');
+
+        const pending = await this.pendingLoginStore.consume(input.pendingLoginId);
+        if (!pending) {
+            throw refuse();
+        }
+
+        // The browser binding is the cookie the callback set, which only the
+        // browser that started this login carries and no other origin can
+        // write. So there is nothing here to prove beyond the provider the
+        // completion was addressed at.
+        //
+        // The callback request's address and agent are deliberately not
+        // compared: both are chosen by whoever makes that request (under the
+        // shipped `trustProxy: true` the address is the client-supplied
+        // left-most `X-Forwarded-For` entry), and comparing them across a
+        // top-level navigation and the page's own request is the shape issue
+        // #3439 rejected.
+        if (pending.providerId !== input.providerId) {
+            throw refuse();
+        }
+
+        const existing = await this.sessionManager.findOneById(pending.sessionId);
+        if (!existing) {
+            throw refuse();
+        }
+
+        // The pending session carries the pending login's own deadline, and
+        // the lookup is by id alone. Today the cache entry above expires with
+        // it, so this only fires on clock skew between the two stores, but the
+        // expiry must be enforced where it is written: `refresh` would extend
+        // an abandoned login into a regular session.
+        if (Date.parse(existing.expiresAt) <= Date.now()) {
+            throw refuse();
+        }
+
+        const realm = await this.realmRepository.resolve(existing.realmId, true);
+
+        // The login is complete now, so the pending session becomes a
+        // regular one.
+        const session = await this.sessionManager.refresh(existing);
+
+        const payload : Partial<OAuth2TokenPayload> = {
+            session_id: session.id,
+            user_agent: session.userAgent,
+            remote_address: session.ipAddress,
+            scope: ScopeName.GLOBAL,
+            sub: session.sub,
+            sub_kind: OAuth2SubKind.USER,
+            realm_id: session.realmId,
+            realm_name: realm.name,
+            ...deriveAmrAcr(session),
+        };
+
+        const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue(payload);
+        const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue(payload);
+
+        await this.eventService?.record({
+            scope: EventScope.OAUTH2,
+            name: EventName.LOGIN,
+            refType: EventRefType.SESSION,
+            refId: session.id,
+            clientId: null,
+            sessionId: session.id,
+            actorType: IdentityType.USER,
+            actorId: session.sub,
+            actorName: pending.userName ?? null,
+            realmId: session.realmId,
+            requestIpAddress: session.ipAddress ?? null,
+            requestUserAgent: session.userAgent ?? null,
+            data: { reason: 'federated', providerId: pending.providerId },
+        });
+        this.metrics?.recordLogin('success');
+
+        return buildOAuth2BearerTokenResponse({
+            accessToken,
+            accessTokenPayload,
+            refreshToken,
+            refreshTokenPayload,
+        });
     }
 }

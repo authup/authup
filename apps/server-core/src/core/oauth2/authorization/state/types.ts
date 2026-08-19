@@ -25,6 +25,14 @@ export type OAuth2AuthorizationState = {
      * endpoint, never from client input.
      */
     link?: OAuth2AuthorizationStateLink,
+    /**
+     * Ties a federated login to the browser that started it (plan 094). The
+     * value is set as a cookie when the login starts and required to match
+     * when the provider sends the browser back, so a crafted callback URL
+     * opened elsewhere establishes nothing. The state's own ip / user agent
+     * cannot do this: both are chosen by whoever mints the state (#3439).
+     */
+    browserNonce?: string,
     ip: string,
     userAgent?: string | null
 };

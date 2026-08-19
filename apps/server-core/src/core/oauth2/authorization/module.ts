@@ -16,6 +16,7 @@ import {
     EventRefType, 
     EventScope, 
     IdentityType,
+    SessionAuthMethod,
 } from '@authup/core-kit';
 import { hasInstanceof } from '@authup/errors';
 import {
@@ -222,12 +223,26 @@ export class OAuth2Authorization {
                 identity.data.id,
                 { issueMaterial: false },
             );
-            if (challenge.required && !session?.mfaAt) {
-                throw OAuth2MfaRequiredError.challengeRequired();
-            }
+            // The local second factor belongs to a local credential. A
+            // session established by an external identity provider was
+            // authenticated THERE, which is where MFA is configured and
+            // enforced for it, so authup does not stack a factor of its own
+            // on top and `mfaRequired` does not force local enrollment on
+            // those users. The route is opt-in either way: an external
+            // identity reaches an existing account only through the
+            // bearer-authenticated link flow, since a first login provisions
+            // a NEW user (plan 091). A session-less authorize (HTTP Basic) is
+            // not external and keeps the gate.
+            const externallyAuthenticated = session?.authMethod === SessionAuthMethod.EXTERNAL;
 
-            if (challenge.enrollmentRequired) {
-                throw OAuth2MfaRequiredError.enrollmentRequired();
+            if (!externallyAuthenticated) {
+                if (challenge.required && !session?.mfaAt) {
+                    throw OAuth2MfaRequiredError.challengeRequired();
+                }
+
+                if (challenge.enrollmentRequired) {
+                    throw OAuth2MfaRequiredError.enrollmentRequired();
+                }
             }
 
             // Step-up (plan 050 stage 3): a requested `acr_values` containing
@@ -237,6 +252,11 @@ export class OAuth2Authorization {
             // only while the user actually holds a factor — per OIDC Core
             // §5.5.1.1 acr is voluntary, so an unsatisfiable request degrades
             // to the achieved acr instead of bricking the RP.
+            //
+            // This one DOES apply to an externally authenticated session: the
+            // application asked for MFA explicitly, and a local factor the
+            // user holds is the only way authup can answer that. Trusting the
+            // upstream is the default, not a refusal to prove anything.
             if (challenge.required && data.acr_values) {
                 const acrValues = data.acr_values.split(' ');
                 if (acrValues.includes(OAuth2AuthenticationContextClass.MFA)) {

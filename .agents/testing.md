@@ -211,6 +211,51 @@ await suite.setup();
 
 Reach for this where the log is the ONLY observable surface, a `catch` that swallows a failure into a redirect for instance. See `test/unit/http/controllers/entities/identity-provider/link.spec.ts`, which asserts the upstream status and body reach the log while the browser only sees `?linkError=link_failed`.
 
+### Cookies a browser would actually send
+
+A spec that echoes `set-cookie` straight back proves the server SENT a cookie,
+not that a browser would send it BACK: a cookie scoped to the wrong `Path`
+passes it and breaks every real request. `TestCookieJar` (`test/utils/`) is the
+smallest thing that closes that gap. It stores `set-cookie` from a response
+(honouring `Path`, `Max-Age=0` and a past `Expires`) and yields a `cookie`
+header per request path, RFC 6265 §5.1.4 path matching included. Use it for any
+flow whose contract is a cookie:
+
+```typescript
+function request(method: string, path: string, options: Record<string, any> = {}) {
+    const cookie = jar.header(`/${path.replace(/^\//, '')}`);
+
+    return httpRequest(suite, method, path, {
+        ...options,
+        headers: { ...(options.headers ?? {}), ...(cookie ? { cookie } : {}) },
+    }).then((response) => {
+        jar.store(response);
+        return response;
+    });
+}
+```
+
+Note the harness binds its port AFTER the config is normalized, so `publicUrl`
+is NOT `suite.baseURL`. A spec asserting an `Origin` check (the federated
+login's completion endpoint) must read the config
+(`suite.container.resolve(ConfigInjectionKey).publicUrl`), not the base URL. See
+`test/unit/http/controllers/entities/identity-provider/login-cookie-flow.spec.ts`.
+
+## Page Tests (apps/client-auth-console)
+
+The auth console carries the same vitest + `@vue/test-utils` + `happy-dom`
+setup as the kit (`test/vitest.config.ts`, run with `npm run test -w
+apps/client-auth-console`; `nx run-many -t test` picks the target up on its
+own). Its pages are thin: they read the hydration payload and hand it to a kit
+component, so a page test provides the payload and stubs that component rather
+than installing the kit.
+
+- The payload symbol is `Symbol.for('HYDRATION_PAYLOAD')` (`src/di.ts`), so it
+  is provided by description, no import needed.
+- A page calling `useToast()` needs a manager under
+  `Symbol.for('VCToastManager')` — `{ entries: ref([]), generateId: () => '…' }`
+  is enough; the full `@vuecs/overlays` install is not.
+
 ## Component Tests (packages/client-web-kit)
 
 The kit has a vitest + `@vue/test-utils` + `happy-dom` setup

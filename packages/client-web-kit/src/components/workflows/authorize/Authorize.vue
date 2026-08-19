@@ -19,6 +19,7 @@ import {
     computed,
     defineComponent,
     h,
+    onMounted,
     ref,
     watch,
 } from 'vue';
@@ -36,6 +37,7 @@ import {
 import type { LinkProps } from '@vuecs/link';
 import {
     StoreAuthOrigin,
+    extractErrorContext,
     injectHTTPClient,
     injectStore,
     useTranslation,
@@ -79,6 +81,15 @@ export default defineComponent({
         passwordForgotLink: { type: Object as PropType<LinkProps> },
         realm: { type: Object as PropType<RealmSummary> },
         redirectUriVerified: { type: Boolean, default: false },
+        /**
+         * The one-time handle a federated callback put on this URL, for the
+         * session it established (plan 094). It is redeemed AFTER mount, so
+         * the resulting lastAuthOrigin change reaches the watch below and
+         * the login counts as fresh: select_account then skips the chooser
+         * (the account was chosen at the provider) and prompt=login does not
+         * demand a second credential entry.
+         */
+        federatedLogin: { type: Object as PropType<{ providerId: string }> },
     },
     emits: ['redirect', 'failed'],
     setup(props, { emit }) {
@@ -91,6 +102,10 @@ export default defineComponent({
             realmId,
             user,
         } = storeToRefs(store);
+
+        // Held true from the first render (SSR included) so the login form
+        // never flashes while the handle is in flight.
+        const federatedLoginPending = ref<boolean>(!!props.federatedLogin);
 
         // Local logout — the reactive loggedIn flip re-renders into the
         // realm-pinned login form below.
@@ -171,16 +186,23 @@ export default defineComponent({
         const mfaStatus = ref<UserAuthenticatorChallengeResponse | null>(null);
         const mfaResolving = ref<boolean>(false);
 
+        // The endpoint answers what THIS session still owes, which depends on
+        // the authorization request being satisfied: a session an external
+        // provider established owes a local factor only when an application
+        // asked for one. It is the server's rule; the page just states the
+        // request it is running.
+        const challengeOptions = () => ({ acrValues: props.codeRequest?.acr_values });
+
         const refreshMfaStatus = async () => {
             mfaResolving.value = true;
             try {
-                mfaStatus.value = await httpClient.userAuthenticator.challenge();
+                mfaStatus.value = await httpClient.userAuthenticator.challenge(challengeOptions());
             } catch {
                 try {
                     // one retry before failing open — absorbs a transient blip
                     // without permanently disabling the client-side gate for the
                     // rest of this render lifecycle.
-                    mfaStatus.value = await httpClient.userAuthenticator.challenge();
+                    mfaStatus.value = await httpClient.userAuthenticator.challenge(challengeOptions());
                 } catch {
                     // an errored challenge lookup must not brick the ladder —
                     // the server backstop still gates the code issuance.
@@ -194,6 +216,38 @@ export default defineComponent({
                 mfaResolving.value = false;
             }
         };
+
+        /**
+         * A redemption that failed is terminal for this render. The person
+         * came back from an external provider, so continuing the ladder
+         * against whatever session the cookies already hold would consent an
+         * application into the WRONG account, silently for a builtIn client.
+         */
+        const federatedError = ref<string | null>(null);
+
+        onMounted(async () => {
+            const federated = props.federatedLogin;
+            if (!federated) {
+                return;
+            }
+
+            try {
+                const grant = await httpClient.identityProvider.completeLogin(
+                    federated.providerId,
+                );
+
+                await store.loginWithTokenGrant(grant);
+            } catch (e) {
+                const ctx = extractErrorContext(e);
+                const message = ctx.message ??
+                    (e instanceof Error ? e.message : String(e));
+
+                federatedError.value = message;
+                emit('failed', message);
+            } finally {
+                federatedLoginPending.value = false;
+            }
+        });
 
         // Persisted-consent covering probe (plan 055). The subject's
         // per-scope consent rows for this client decide whether the manual
@@ -402,6 +456,28 @@ export default defineComponent({
                 }
             }
 
+            // A federated return holds the WHOLE ladder, not just its
+            // logged-out branch: a session already in the cookies (another
+            // tab, a lingering one) would otherwise let the ladder run against
+            // that identity while the redemption is still in flight, and a
+            // builtIn client auto-consents on mount — delivering the
+            // application a code for the wrong account.
+            if (federatedLoginPending.value) {
+                return wrapChild(h(AuthorizeText, { message: loadingText.value }));
+            }
+
+            // A failed completion must not let the ladder continue against a
+            // session the cookies already hold: that would consent an
+            // application into the wrong account, silently for a built-in
+            // client. With no such session there is nothing to protect, so
+            // the person gets the reason AND a way to carry on.
+            if (federatedError.value && loggedIn.value) {
+                return wrapChild(h(AuthorizeText, {
+                    message: federatedError.value,
+                    isError: true,
+                }));
+            }
+
             // Force re-authentication: prompt=login (proactive) or a login_required
             // surfaced mid-flow. Show the login form (with a banner) until a fresh
             // login on THIS page stamps lastAuthOrigin (accountConfirmed).
@@ -430,6 +506,16 @@ export default defineComponent({
                     }),
                     fallback: () => h(AuthorizeText, { message: loadingText.value }),
                 });
+
+                // A failed federated completion states its reason above the
+                // form rather than replacing the page: with no session to
+                // protect, the person can simply carry on.
+                if (federatedError.value) {
+                    return wrapChild([
+                        h(AuthorizeText, { message: federatedError.value, isError: true }),
+                        loginNode,
+                    ]);
+                }
 
                 // prompt=login / mid-flow re-auth: a banner above the form
                 // explaining why credentials are requested again.

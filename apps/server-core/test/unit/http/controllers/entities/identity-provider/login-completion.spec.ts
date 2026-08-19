@@ -24,8 +24,10 @@ import {
     IdentityProviderProtocol,
     IdentityType,
     ScopeName,
+    UserAuthenticatorKind,
 } from '@authup/core-kit';
 import { OAuth2ErrorCode } from '@authup/specs';
+import { ConfigInjectionKey } from '../../../../../../src/app/modules/config/constants';
 import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants';
 import {
     createFakeClient,
@@ -52,7 +54,14 @@ const decodeJWTPayload = (token: string) => JSON.parse(
 );
 
 describe('identity-provider login completion', () => {
-    const suite = createTestApplication();
+    // MFA on for the whole file: no user here holds a factor unless a test
+    // enrolls one, so every other case is unaffected, and the gate below is
+    // the point of plan 094.
+    const suite = createTestApplication({
+        config: (config) => {
+            config.mfaEnabled = true;
+        },
+    });
 
     let idpServer: Server;
     let idpURL: string;
@@ -144,8 +153,28 @@ describe('identity-provider login completion', () => {
     }
 
     /**
+     * A browser's cookie jar, which `fetch` does not keep for us. The pending
+     * login rides one, so the specs have to carry it from the callback to the
+     * completion the way a browser would.
+     */
+    let pendingLoginCookie : string | null = null;
+    let lastCallbackResponse : Response | null = null;
+
+    function readPendingLoginCookie(response: Response) : string | null {
+        const header = response.headers.get('set-cookie');
+        if (!header) {
+            return null;
+        }
+
+        const match = header.match(/authup_federated_login=([^;]*)/);
+
+        return match && match[1].length > 0 ? match[1] : null;
+    }
+
+    /**
      * The federated round trip: /authorize -> provider -> the callback.
-     * Returns the Location the browser is sent to afterwards.
+     * Returns the Location the browser is sent to afterwards, which since
+     * plan 094 is always the hosted authorize page.
      */
     async function runFederatedLogin(codeRequest = buildCodeRequest()): Promise<URL> {
         const out = await httpRequest(suite, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${codeRequest}`, {
@@ -157,18 +186,77 @@ describe('identity-provider login completion', () => {
         const state = new URL(out.headers.get('location') as string).searchParams.get('state');
         expect(state).toBeTruthy();
 
+        // the browser carries the nonce the start set, which is what stops a
+        // crafted callback URL establishing a session somewhere else
+        const nonce = readPendingLoginCookie(out);
+        expect(nonce).toBeTruthy();
+
         const back = await httpRequest(
             suite,
             'GET',
             `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code`,
             {
-                headers: { 'user-agent': USER_AGENT },
+                headers: {
+                    'user-agent': USER_AGENT,
+                    cookie: `authup_federated_login=${nonce}`,
+                },
                 redirect: 'manual',
             },
         );
         expect(back.status).toEqual(302);
 
+        lastCallbackResponse = back;
+        pendingLoginCookie = readPendingLoginCookie(back);
+
         return new URL(back.headers.get('location') as string);
+    }
+
+    function completeRequest(hosted: URL, cookie = pendingLoginCookie) {
+        return httpRequest(
+            suite,
+            'POST',
+            `identity-providers/${hosted.searchParams.get('provider')}/login-complete`,
+            {
+                headers: {
+                    'user-agent': USER_AGENT,
+                    ...(cookie ? { cookie: `authup_federated_login=${cookie}` } : {}),
+                },
+            },
+        );
+    }
+
+    /**
+     * The browser half of plan 094: the hosted page completes the login the
+     * callback established, then posts the consent that issues the RP's code.
+     * Everything the interactive ladder enforces sits between these two calls.
+     */
+    async function completePendingLogin(hosted: URL): Promise<string> {
+        const response = await completeRequest(hosted);
+        expect(response.status).toEqual(200);
+
+        const grant = await response.json();
+        expect(grant.access_token).toBeTruthy();
+
+        return grant.access_token;
+    }
+
+    async function completeFederatedLogin(codeRequest = buildCodeRequest()): Promise<URL> {
+        const hosted = await runFederatedLogin(codeRequest);
+        const accessToken = await completePendingLogin(hosted);
+
+        const approve = await httpRequest(suite, 'POST', 'authorize', {
+            headers: {
+                authorization: `Bearer ${accessToken}`,
+                'content-type': 'application/json',
+                'user-agent': USER_AGENT,
+            },
+            body: Buffer.from(codeRequest, 'base64url').toString('utf-8'),
+        });
+        expect(approve.status).toEqual(200);
+
+        const { url } = await approve.json();
+
+        return new URL(url);
     }
 
     /**
@@ -202,8 +290,33 @@ describe('identity-provider login completion', () => {
         },
     });
 
-    it('returns the browser to the relying party, not to the hosted authorize page', async () => {
+    it('returns the browser to the hosted authorize page carrying no secret', async () => {
         const location = await runFederatedLogin();
+
+        // No code is minted here (plan 094). The person goes back to the
+        // hosted page, which completes the login and then runs the gates an
+        // interactive login runs before the RP's code exists. The pending
+        // login rides a cookie, so the URL carries nothing redeemable.
+        expect(location.pathname.endsWith('/authorize')).toBe(true);
+        expect(location.searchParams.get('code')).toBeNull();
+        expect(pendingLoginCookie).toBeTruthy();
+        expect(location.search).not.toContain(pendingLoginCookie as string);
+        expect(location.searchParams.get('provider')).toEqual(provider.id);
+
+        // the attributes are the binding: another origin cannot set it, a
+        // cross-site request does not send it, and script cannot read it
+        const setCookie = lastCallbackResponse?.headers.get('set-cookie') ?? '';
+        expect(setCookie).toContain('HttpOnly');
+        expect(setCookie.toLowerCase()).toContain('samesite=lax');
+        expect(setCookie).toContain('Path=/identity-providers');
+        // the whole request rides along, so the page renders it unchanged
+        expect(location.searchParams.get('client_id')).toEqual(client.id);
+        expect(location.searchParams.get('state')).toEqual(STATE);
+        expect(location.searchParams.get('code_challenge')).toEqual(codeChallenge);
+    });
+
+    it('delivers the code to the relying party at the end of the ladder', async () => {
+        const location = await completeFederatedLogin();
 
         // The code is bound to this client_id and this redirect_uri, so the RP
         // is the only party that can redeem it. Sending the browser anywhere
@@ -213,13 +326,128 @@ describe('identity-provider login completion', () => {
         expect(location.searchParams.get('state')).toEqual(STATE);
     });
 
+    it('refuses a replayed completion', async () => {
+        const hosted = await runFederatedLogin();
+        const cookie = pendingLoginCookie;
+
+        await completePendingLogin(hosted);
+
+        const response = await completeRequest(hosted, cookie);
+        expect(response.status).toEqual(400);
+    });
+
+    /**
+     * The browser binding. Only the browser the callback answered carries the
+     * cookie, and no other origin can set it, so an attacker who starts a
+     * federated login for their own account cannot hand the resulting URL to
+     * someone else and have their browser adopt that session.
+     */
+    /**
+     * The callback establishes a session, so a crafted callback URL opened in
+     * someone else's browser would otherwise plant the attacker's session
+     * there. The state's own ip / user agent cannot stop that: both are
+     * chosen by whoever mints the state (#3439).
+     */
+    it('refuses a callback from a browser that did not start the login', async () => {
+        const out = await httpRequest(suite, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${buildCodeRequest()}`, {
+            headers: { 'user-agent': USER_AGENT },
+            redirect: 'manual',
+        });
+        const state = new URL(out.headers.get('location') as string).searchParams.get('state');
+
+        const tokenCallsBefore = providerTokenCalls;
+
+        // same state, no cookie: another browser following the same URL
+        const back = await httpRequest(
+            suite,
+            'GET',
+            `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code`,
+            { headers: { 'user-agent': USER_AGENT }, redirect: 'manual' },
+        );
+
+        expectHostedBounce(back, client.id, null);
+        expect(back.headers.get('set-cookie')).toBeNull();
+        // refused before the provider's single-use code is spent
+        expect(providerTokenCalls).toEqual(tokenCallsBefore);
+    });
+
+    it('completes from the hosted page origin, and turns the pending session into a full one', async () => {
+        await runFederatedLogin();
+
+        const response = await httpRequest(
+            suite,
+            'POST',
+            `identity-providers/${provider.id}/login-complete`,
+            {
+                headers: {
+                    'user-agent': USER_AGENT,
+                    // what a browser actually sends: the origin of the page
+                    // it is on, which is publicUrl's
+                    origin: new URL(suite.container.resolve(ConfigInjectionKey).publicUrl).origin,
+                    cookie: `authup_federated_login=${pendingLoginCookie}`,
+                },
+            },
+        );
+
+        expect(response.status).toEqual(200);
+
+        // the cookie is spent whichever way the completion goes
+        expect(response.headers.get('set-cookie') ?? '').toContain('authup_federated_login=');
+
+        // the session was created for the pending login's short window and
+        // has to outlive it once the login completed
+        const { data: sessions } = await suite.client.session.getMany({
+            filters: { subKind: 'user' },
+            pagination: { limit: 50 },
+        });
+        const session = sessions
+            .filter((row) => row.authMethod === 'ext')
+            .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))[0];
+
+        expect(session).toBeDefined();
+        expect(new Date(session.expiresAt).getTime())
+            .toBeGreaterThan(Date.now() + (10 * 60 * 1000));
+    });
+
+    /**
+     * The completion answers with a token pair on a cookie alone, and
+     * `SameSite` is scoped to the registrable domain rather than the origin,
+     * so a sibling subdomain would otherwise both send the cookie and be
+     * allowed to read the response by the reflected-origin CORS default.
+     */
+    it('refuses a completion from another origin', async () => {
+        await runFederatedLogin();
+
+        const response = await httpRequest(
+            suite,
+            'POST',
+            `identity-providers/${provider.id}/login-complete`,
+            {
+                headers: {
+                    'user-agent': USER_AGENT,
+                    origin: 'https://app.example.com',
+                    cookie: `authup_federated_login=${pendingLoginCookie}`,
+                },
+            },
+        );
+
+        expect(response.status).toEqual(400);
+    });
+
+    it('refuses a completion from a browser that did not start the login', async () => {
+        const hosted = await runFederatedLogin();
+
+        const response = await completeRequest(hosted, null);
+        expect(response.status).toEqual(400);
+    });
+
     // The console carries its post-login destination in the callback URI's
     // own query. This leg re-serializes the whole code request into the
     // hosted authorize URL and back, so it has more places to mangle that
     // query than the direct login does.
     it('preserves a query on the redirect uri', async () => {
         const redirectUri = `${REDIRECT_URI}?redirect=%2Fusers`;
-        const location = await runFederatedLogin(
+        const location = await completeFederatedLogin(
             buildCodeRequest({ redirect_uri: redirectUri }),
         );
 
@@ -240,7 +468,7 @@ describe('identity-provider login completion', () => {
     });
 
     it('mints a code the public client redeems with its PKCE verifier', async () => {
-        const location = await runFederatedLogin();
+        const location = await completeFederatedLogin();
 
         const response = await exchange({
             code: location.searchParams.get('code') as string,
@@ -257,7 +485,7 @@ describe('identity-provider login completion', () => {
     });
 
     it('carries the PKCE challenge onto the code rather than dropping it', async () => {
-        const location = await runFederatedLogin();
+        const location = await completeFederatedLogin();
 
         // The complement of the test above: a code minted WITHOUT the
         // challenge would accept any verifier (nothing to compare against),
@@ -277,7 +505,7 @@ describe('identity-provider login completion', () => {
     });
 
     it('carries the nonce onto the id_token of an openid login', async () => {
-        const location = await runFederatedLogin();
+        const location = await completeFederatedLogin();
 
         const response = await exchange({
             code: location.searchParams.get('code') as string,
@@ -306,7 +534,7 @@ describe('identity-provider login completion', () => {
     it('refuses the code to anyone but the client it was issued to', async () => {
         // No client at all - the shape the hosted page's router guard sends,
         // and the reason handing it that code stranded the login.
-        const anonymousCode = (await runFederatedLogin()).searchParams.get('code') as string;
+        const anonymousCode = (await completeFederatedLogin()).searchParams.get('code') as string;
 
         const anonymous = await exchange({
             code: anonymousCode,
@@ -340,7 +568,7 @@ describe('identity-provider login completion', () => {
         }))).data;
 
         const foreign = await exchange({
-            code: (await runFederatedLogin()).searchParams.get('code') as string,
+            code: (await completeFederatedLogin()).searchParams.get('code') as string,
             client_id: other.id,
             client_secret: secret,
             redirect_uri: REDIRECT_URI,
@@ -351,7 +579,7 @@ describe('identity-provider login completion', () => {
     });
 
     it('lets the code be redeemed once only', async () => {
-        const location = await runFederatedLogin();
+        const location = await completeFederatedLogin();
         const form = {
             code: location.searchParams.get('code') as string,
             client_id: client.id,
@@ -369,31 +597,30 @@ describe('identity-provider login completion', () => {
         await expect(replay.json()).resolves.toMatchObject({ error: OAuth2ErrorCode.INVALID_GRANT });
     });
 
-    it('records the authorization in the audit log', async () => {
-        await runFederatedLogin();
+    it('records the login in the audit log', async () => {
+        const hosted = await runFederatedLogin();
+        await completePendingLogin(hosted);
 
-        // The interactive path records this inside OAuth2Authorization; this
-        // leg issues its code directly, so a federated login would otherwise be
-        // the one authorization that leaves no trace.
+        // The authorization itself is recorded by the hosted ladder now, like
+        // any interactive one. What is unique to this leg is the login, and it
+        // names the session the callback established so the trail can be
+        // followed from it.
         const { data: events } = await suite.client.event.getMany({
-            filters: {
-                name: EventName.AUTHORIZE,
-                clientId: client.id,
-            },
+            filters: { name: EventName.LOGIN },
             sort: { createdAt: 'DESC' },
             pagination: { limit: 5 },
         });
 
-        expect(events.length).toBeGreaterThan(0);
-        expect(events[0]).toMatchObject({
+        const event = events.find((row) => (row.data as Record<string, any>)?.reason === 'federated');
+        expect(event).toBeDefined();
+        expect(event).toMatchObject({
             scope: EventScope.OAUTH2,
-            name: EventName.AUTHORIZE,
-            refType: EventRefType.CLIENT,
-            refId: client.id,
-            clientId: client.id,
+            name: EventName.LOGIN,
+            refType: EventRefType.SESSION,
             actorType: IdentityType.USER,
         });
-        expect(events[0].data).toMatchObject({
+        expect((event as { sessionId?: string }).sessionId).toBeTruthy();
+        expect(event?.data).toMatchObject({
             reason: 'federated',
             providerId: provider.id,
         });
@@ -405,6 +632,7 @@ describe('identity-provider login completion', () => {
             redirect: 'manual',
         });
         const state = new URL(out.headers.get('location') as string).searchParams.get('state');
+        const nonce = readPendingLoginCookie(out);
         const tokenCallsBefore = providerTokenCalls;
 
         // RFC 6749 section 4.1.2.1: the person cancelled at the provider.
@@ -413,7 +641,7 @@ describe('identity-provider login completion', () => {
             'GET',
             `identity-providers/${provider.id}/authorize-in?state=${state}&error=access_denied&error_description=${encodeURIComponent('<b>denied</b>')}`,
             {
-                headers: { 'user-agent': USER_AGENT },
+                headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${nonce}` },
                 redirect: 'manual',
             },
         );
@@ -437,6 +665,7 @@ describe('identity-provider login completion', () => {
             redirect: 'manual',
         });
         const state = new URL(out.headers.get('location') as string).searchParams.get('state');
+        const nonce = readPendingLoginCookie(out);
 
         // Disabling a provider has to stop the logins already in flight, not
         // only the ones that have yet to start.
@@ -455,7 +684,7 @@ describe('identity-provider login completion', () => {
             'GET',
             `identity-providers/${disabledProvider.id}/authorize-in?state=${state}&code=external-code`,
             {
-                headers: { 'user-agent': USER_AGENT },
+                headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${nonce}` },
                 redirect: 'manual',
             },
         );
@@ -484,6 +713,7 @@ describe('identity-provider login completion', () => {
                 redirect: 'manual',
             });
             const state = new URL(out.headers.get('location') as string).searchParams.get('state');
+            const nonce = readPendingLoginCookie(out);
 
             // A federated login must not be the way around the deactivation the
             // local login path enforces.
@@ -492,7 +722,7 @@ describe('identity-provider login completion', () => {
                 'GET',
                 `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code`,
                 {
-                    headers: { 'user-agent': USER_AGENT },
+                    headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${nonce}` },
                     redirect: 'manual',
                 },
             );
@@ -520,6 +750,7 @@ describe('identity-provider login completion', () => {
             redirect: 'manual',
         });
         const state = new URL(out.headers.get('location') as string).searchParams.get('state');
+        const nonce = readPendingLoginCookie(out);
 
         // The redirect below is only safe because the verifier throws on a
         // pattern mismatch. Nothing else on the callback path re-checks it, so
@@ -531,7 +762,7 @@ describe('identity-provider login completion', () => {
             'GET',
             `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code`,
             {
-                headers: { 'user-agent': USER_AGENT },
+                headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${nonce}` },
                 redirect: 'manual',
             },
         );
@@ -542,7 +773,7 @@ describe('identity-provider login completion', () => {
     });
 
     it('refuses the code to a redirect_uri other than the one it was bound to', async () => {
-        const location = await runFederatedLogin();
+        const location = await completeFederatedLogin();
 
         const response = await exchange({
             code: location.searchParams.get('code') as string,
@@ -555,10 +786,11 @@ describe('identity-provider login completion', () => {
         await expect(response.json()).resolves.toMatchObject({ error: OAuth2ErrorCode.INVALID_GRANT });
     });
 
-    it('renders an interstitial page for a custom-scheme redirect_uri', async () => {
-        // A native app (RFC 8252). routup's sendRedirect allows http(s) only,
-        // so the callback used to fail here, after the provider's single-use
-        // code was spent. The verified target is navigated client-side instead.
+    it('delivers a custom-scheme redirect_uri through the hosted page', async () => {
+        // A native app (RFC 8252). The callback bounces to the hosted page
+        // like every other login, so the custom-scheme target is navigated at
+        // the end of the ladder, the same place an interactive login
+        // navigates it, and no interstitial of its own (plan 094).
         const native = (await suite.client.client.create(createFakeClient({
             realmId: realm.id,
             authMethod: 'none',
@@ -567,67 +799,29 @@ describe('identity-provider login completion', () => {
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
         await suite.client.clientScope.create({ scopeId: scope.id, clientId: native.id });
 
-        const out = await httpRequest(suite, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${buildCodeRequest({
+        const codeRequest = buildCodeRequest({
             client_id: native.id,
             redirect_uri: 'myapp://cb',
             scope: ScopeName.GLOBAL,
-        })}`, {
-            headers: { 'user-agent': USER_AGENT },
-            redirect: 'manual',
         });
-        expect(out.status).toEqual(302);
-        const state = new URL(out.headers.get('location') as string).searchParams.get('state');
 
-        const back = await httpRequest(
-            suite,
-            'GET',
-            `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code`,
-            {
-                headers: { 'user-agent': USER_AGENT },
-                redirect: 'manual',
-            },
-        );
+        const hosted = await runFederatedLogin(codeRequest);
+        expect(hosted.pathname.endsWith('/authorize')).toBe(true);
+        expect(pendingLoginCookie).toBeTruthy();
 
-        expect(back.status).toEqual(200);
-        expect(back.headers.get('location')).toBeNull();
-        expect(back.headers.get('content-type')).toContain('text/html');
-        // the page embeds a fresh authorization code
-        expect(back.headers.get('cache-control')).toEqual('no-store');
-
-        const body = await back.text();
-        const match = body.match(/window\.__AUTHUP__ = (.+);/);
-        expect(match).toBeTruthy();
-        const payload = JSON.parse((match as RegExpMatchArray)[1]);
-
-        const target = new URL(payload.data.redirect);
+        const target = await completeFederatedLogin(codeRequest);
         expect(target.protocol).toEqual('myapp:');
         expect(target.host).toEqual('cb');
         expect(target.searchParams.get('code')).toBeTruthy();
         expect(target.searchParams.get('state')).toEqual(STATE);
-        expect(payload.data.client).toMatchObject({ id: native.id, name: native.name });
-        expect(payload.data.client.redirectUri).toBeUndefined();
-
-        // the page swaps the consumed callback URL out of the history for the
-        // hosted login of the same request, so a reload does not re-run the
-        // callback against a popped state
-        const authorizeURL = new URL(payload.data.authorizeUrl);
-        expect(authorizeURL.pathname.endsWith('/authorize')).toBe(true);
-        expect(authorizeURL.searchParams.get('client_id')).toEqual(native.id);
-        expect(authorizeURL.searchParams.get('code')).toBeNull();
-
-        // the visible way out, since a browser may need a gesture to launch
-        // an external protocol; the href is the escaped target
-        expect(body).toContain(`Returning to ${native.displayName || native.name}`);
-        expect(body).toContain('Open application');
-        expect(body).toContain(`href="${target.href.replace(/&/g, '&amp;')}"`);
     });
 
-    it('never renders a script-capable redirect_uri on the interstitial', async () => {
+    it('never completes a login for a script-capable redirect_uri', async () => {
         // The client validator and the code-request verifier both refuse such
         // a scheme, so the branch is unreachable over HTTP. The verifier the
         // controller holds is patched to let one through, which is the gap
-        // the guard exists for: a target the page would `location.assign`
-        // and render as an href must fail closed rather than reach the page.
+        // the guard exists for: a target the hosted page would navigate and
+        // render as an href must fail closed before a session exists.
         const native = (await suite.client.client.create(createFakeClient({
             realmId: realm.id,
             authMethod: 'none',
@@ -645,6 +839,7 @@ describe('identity-provider login completion', () => {
             redirect: 'manual',
         });
         const state = new URL(out.headers.get('location') as string).searchParams.get('state');
+        const nonce = readPendingLoginCookie(out);
 
         const tokenCallsBefore = providerTokenCalls;
         const verifier = suite.container.resolve(OAuth2InjectionToken.AuthorizationCodeRequestVerifier);
@@ -662,7 +857,7 @@ describe('identity-provider login completion', () => {
                 'GET',
                 `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code`,
                 {
-                    headers: { 'user-agent': USER_AGENT },
+                    headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${nonce}` },
                     redirect: 'manual',
                 },
             );
@@ -698,6 +893,7 @@ describe('identity-provider login completion', () => {
             redirect: 'manual',
         });
         const state = new URL(out.headers.get('location') as string).searchParams.get('state');
+        const nonce = readPendingLoginCookie(out);
 
         // The client is verified again at completion, so a deactivation that
         // lands while the user is at the provider still takes effect.
@@ -710,7 +906,7 @@ describe('identity-provider login completion', () => {
             'GET',
             `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code`,
             {
-                headers: { 'user-agent': USER_AGENT },
+                headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${nonce}` },
                 redirect: 'manual',
             },
         );
@@ -723,5 +919,108 @@ describe('identity-provider login completion', () => {
         // completion spends neither the provider's single-use code nor a local
         // user row. This is what pins the verify-then-authenticate order.
         expect(providerTokenCalls).toEqual(0);
+    });
+
+    /**
+     * The local second factor belongs to a local credential. An external
+     * provider authenticated this login and is where MFA is enforced for it,
+     * so authup stacks nothing on top. The password grant for the SAME user
+     * still demands the factor, which is the half of the rule that would
+     * break first if someone widened the skip.
+     */
+    it('does not challenge a local factor for a federated login', async () => {
+        // Provision the external user through a first login, then give it a
+        // confirmed factor. An email authenticator is the only kind an admin
+        // may enroll for someone else, and it is confirmed on create.
+        await runFederatedLogin();
+
+        const { data: users } = await suite.client.user.getMany({ filters: { realmId: realm.id } });
+        const user = users.find((row) => row.name !== 'admin');
+        expect(user).toBeDefined();
+
+        const { data: authenticator } = await suite.client.userAuthenticator.enroll(
+            (user as { id: string }).id,
+            { kind: UserAuthenticatorKind.EMAIL },
+        );
+
+        try {
+            const location = await completeFederatedLogin();
+
+            expect(`${location.origin}${location.pathname}`).toEqual(REDIRECT_URI);
+            expect(location.searchParams.get('code')).toBeTruthy();
+        } finally {
+            await suite.client.userAuthenticator.delete((user as { id: string }).id, authenticator.id);
+        }
+    });
+
+    it('tells the page a federated session owes nothing, and owes a factor when asked', async () => {
+        await runFederatedLogin();
+
+        const { data: users } = await suite.client.user.getMany({ filters: { realmId: realm.id } });
+        const user = users.find((row) => row.name !== 'admin');
+
+        const { data: authenticator } = await suite.client.userAuthenticator.enroll(
+            (user as { id: string }).id,
+            { kind: UserAuthenticatorKind.EMAIL },
+        );
+
+        try {
+            const hosted = await runFederatedLogin();
+            const accessToken = await completePendingLogin(hosted);
+
+            // the page renders from this answer, so it has to say what the
+            // SESSION owes rather than what the user holds
+            const plain = await httpRequest(suite, 'GET', 'authenticators/challenge', { headers: { authorization: `Bearer ${accessToken}` } });
+            await expect(plain.json()).resolves.toMatchObject({
+                required: false,
+                enrollmentRequired: false,
+            });
+
+            // an application that asked for a proof is the exception, and it
+            // can only ADD the requirement
+            const stepUp = await httpRequest(
+                suite,
+                'GET',
+                'authenticators/challenge?acrValues=urn%3Aauthup%3Amfa',
+                { headers: { authorization: `Bearer ${accessToken}` } },
+            );
+            await expect(stepUp.json()).resolves.toMatchObject({ required: true });
+        } finally {
+            await suite.client.userAuthenticator.delete((user as { id: string }).id, authenticator.id);
+        }
+    });
+
+    it('still steps up when the application asks for MFA explicitly', async () => {
+        await runFederatedLogin();
+
+        const { data: users } = await suite.client.user.getMany({ filters: { realmId: realm.id } });
+        const user = users.find((row) => row.name !== 'admin');
+
+        const { data: authenticator } = await suite.client.userAuthenticator.enroll(
+            (user as { id: string }).id,
+            { kind: UserAuthenticatorKind.EMAIL },
+        );
+
+        try {
+            const codeRequest = buildCodeRequest({ acr_values: 'urn:authup:mfa' });
+            const hosted = await runFederatedLogin(codeRequest);
+            const accessToken = await completePendingLogin(hosted);
+
+            const approve = await httpRequest(suite, 'POST', 'authorize', {
+                headers: {
+                    authorization: `Bearer ${accessToken}`,
+                    'content-type': 'application/json',
+                    'user-agent': USER_AGENT,
+                },
+                body: Buffer.from(codeRequest, 'base64url').toString('utf-8'),
+            });
+
+            // the application asked, and a local factor is the only way authup
+            // can answer it
+            expect(approve.status).toEqual(400);
+            await expect(approve.json()).resolves.toMatchObject({ error: OAuth2ErrorCode.MFA_REQUIRED });
+        } finally {
+            await suite.client.userAuthenticator.delete((user as { id: string }).id, authenticator.id);
+        }
     });
 });

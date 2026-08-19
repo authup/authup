@@ -20,13 +20,17 @@ enrollment on the hosted `/authorize` page.
 
 The following boundaries are intentional:
 
-- A federated identity-provider login trusts the upstream provider as the
-  authentication authority. The external callback establishes a session
-  without challenging the user's local Authup authenticators, and
-  `mfaRequired` does not force local enrollment on that callback. Configure and
-  enforce MFA at the upstream provider. The bootstrap tokens report the
-  external authentication method and no local OTP proof unless a later local
-  challenge stamps the session.
+- A federated identity-provider login is authenticated by the external
+  provider, which is where MFA is configured and enforced for it. Authup does
+  not stack a local factor on top, and `mfaRequired` does not force local
+  enrollment on those users. The route is opt-in: a first federated login
+  provisions a NEW user, and an external identity reaches an existing account
+  only when that account's owner links it while signed in. Configure and
+  enforce MFA at the upstream provider. The one exception is an application
+  that requests `acr_values=urn:authup:mfa`: it asked for a proof, and a local
+  factor the user holds is the only one Authup can produce, so the hosted page
+  challenges it before issuing that application's authorization code.
+
 - Setting `mfaEnabled` to `false` disables both local MFA configuration and
   enforcement, including for users who already have confirmed authenticators.
   Authenticator rows are retained and become active again when MFA is
@@ -39,11 +43,6 @@ The following boundaries are intentional:
   grant with each client's `grantTypes` allowlist and use the authorization
   code flow when enrollment must be enforced before issuing an application
   token.
-
-An external login that continues through the hosted authorization flow can
-still encounter the normal `/authorize` MFA backstop before a later client
-authorization code is issued. The bootstrap session created by the external
-callback itself is not locally MFA-gated.
 
 ## Cache availability
 

@@ -23,6 +23,8 @@ import {
     it,
 } from 'vitest';
 import type { App } from 'vue';
+import AMfaChallengeForm from '../../../../src/components/workflows/mfa/AMfaChallengeForm.vue';
+import AUserAuthenticatorEnroll from '../../../../src/components/entities/user-authenticator/AUserAuthenticatorEnroll.vue';
 import AAccountPrompt from '../../../../src/components/workflows/authorize/AAccountPrompt.vue';
 import AAuthorize from '../../../../src/components/workflows/authorize/Authorize.vue';
 import AuthorizeForm from '../../../../src/components/workflows/authorize/AuthorizeForm.vue';
@@ -111,8 +113,13 @@ type MountOverrides = {
     withUser?: boolean,
     realmId?: string,
     redirectUriVerified?: boolean,
+    acrValues?: string,
     consentRows?: Consent[],
     consentHandler?: () => unknown,
+    federatedLogin?: { providerId: string },
+    challengeHandler?: () => unknown,
+    loginCompleteHandler?: () => unknown,
+    userInfoHandler?: () => unknown,
 };
 
 function mountAuthorize(overrides: MountOverrides = {}) {
@@ -123,8 +130,13 @@ function mountAuthorize(overrides: MountOverrides = {}) {
         withUser = true,
         realmId = REALM.id,
         redirectUriVerified = true,
+        acrValues,
         consentRows,
         consentHandler,
+        federatedLogin,
+        challengeHandler,
+        loginCompleteHandler,
+        userInfoHandler,
     } = overrides;
 
     const pinia = createPinia();
@@ -132,9 +144,16 @@ function mountAuthorize(overrides: MountOverrides = {}) {
         handlers: {
             // a user-less session's re-resolve attempt must settle by failing —
             // the default fallback would otherwise fake a truthy "user".
-            'GET /userinfo': () => { throw new Error('userinfo unavailable'); },
+            'GET /userinfo': userInfoHandler ??
+                (() => { throw new Error('userinfo unavailable'); }),
+            ...(loginCompleteHandler ?
+                { 'POST /identity-providers/provider-1/login-complete': loginCompleteHandler } :
+                {}),
             // covering probe: no override → the fallback's empty collection
             // (no persisted consent → covered=false, today's behavior).
+            ...(challengeHandler ?
+                { 'GET /authenticators/challenge': challengeHandler } :
+                {}),
             ...(consentHandler ?
                 { 'GET /consents': consentHandler } :
                 {}),
@@ -164,6 +183,7 @@ function mountAuthorize(overrides: MountOverrides = {}) {
         code_challenge: 'challenge',
         code_challenge_method: 'S256',
         prompt,
+        ...(acrValues ? { acr_values: acrValues } : {}),
     };
 
     const clientTimestamp = new Date(0).toISOString();
@@ -212,6 +232,7 @@ function mountAuthorize(overrides: MountOverrides = {}) {
             },
             scopes: [],
             redirectUriVerified,
+            federatedLogin,
         },
         global: {
             components: {
@@ -609,5 +630,226 @@ describe('AAuthorize prompt=login (re-auth)', () => {
 
         // re-auth satisfied → the built_in auto-consent form renders
         expect(wrapper.find('.authorize-form-stub').exists()).toBe(true);
+    });
+});
+
+// Plan 094: a federated callback hands this page a one-time handle instead of
+// the RP's code, so the ladder below runs for an external login too.
+describe('AAuthorize federated login', () => {
+    const federatedLogin = { providerId: 'provider-1' };
+
+    const grant = () => ({
+        access_token: 'federated-at',
+        token_type: 'Bearer',
+        expires_in: 3600,
+        refresh_token: 'federated-rt',
+    });
+
+    const userInfo = () => ({
+        id: 'user-1', 
+        name: 'jdoe', 
+        realmId: REALM.id, 
+    });
+
+    it('completes the pending login and counts it as fresh', async () => {
+        const {
+            wrapper, 
+            store, 
+            httpClient, 
+        } = mountAuthorize({
+            loggedIn: false,
+            federatedLogin,
+            loginCompleteHandler: grant,
+            userInfoHandler: userInfo,
+        });
+        await flushPromises();
+
+        expect(httpClient.requests.some(
+            (request) => request.url.includes('identity-providers/provider-1/login-complete'),
+        )).toBe(true);
+        expect(store().accessToken).toEqual('federated-at');
+        expect(store().lastAuthOrigin).toEqual(StoreAuthOrigin.LOGIN);
+
+        // The account was chosen at the provider, so prompt=select_account must
+        // not ask again. That holds only because the redemption runs AFTER
+        // mount: the lastAuthOrigin CHANGE is what the ladder watches.
+        expect(hasChooser(wrapper)).toBe(false);
+    });
+
+    it('holds the login form back while the completion is in flight', async () => {
+        const { wrapper } = mountAuthorize({
+            loggedIn: false,
+            federatedLogin,
+            loginCompleteHandler: () => new Promise(() => { /* never settles */ }),
+        });
+        await flushPromises();
+
+        expect(wrapper.find('.login-form-stub').exists()).toBe(false);
+        expect(wrapper.find('.authorize-text-stub').exists()).toBe(true);
+    });
+
+    it('states the reason and keeps the login form when there is no session to protect', async () => {
+        const { wrapper } = mountAuthorize({
+            loggedIn: false,
+            federatedLogin,
+            loginCompleteHandler: () => { throw new Error('the login request is unknown'); },
+        });
+        await flushPromises();
+
+        expect(wrapper.emitted('failed')).toBeTruthy();
+        expect(wrapper.find('.login-form-stub').exists()).toBe(true);
+        expect(wrapper.find('.authorize-text-stub').text()).toContain('the login request is unknown');
+    });
+
+    /**
+     * The person came back from an external provider: consenting the
+     * application into whatever account the cookies already held would be
+     * silent for a builtIn client.
+     */
+    it('does not consent a pre-existing session when the redemption fails', async () => {
+        const { wrapper } = mountAuthorize({
+            loggedIn: true,
+            clientBuiltIn: true,
+            prompt: '',
+            federatedLogin,
+            loginCompleteHandler: () => { throw new Error('the login request is unknown'); },
+        });
+        await flushPromises();
+
+        expect(wrapper.findComponent(AuthorizeForm).exists()).toBe(false);
+        expect(wrapper.find('.login-form-stub').exists()).toBe(false);
+        expect(wrapper.find('.authorize-text-stub').text()).toContain('the login request is unknown');
+    });
+});
+
+/**
+ * The server owns the rule about whether a session still owes a local factor,
+ * and it can only answer for the request being satisfied. So the page has to
+ * state that request: this parameter is the only thing that makes a federated
+ * session step up at all.
+ */
+describe('AAuthorize challenge request', () => {
+    it('asks the challenge endpoint about the acr_values it is satisfying', async () => {
+        const { httpClient } = mountAuthorize({ acrValues: 'urn:authup:mfa' });
+        await flushPromises();
+
+        const challengeRequest = httpClient.requests.find(
+            (request) => request.url.includes('authenticators/challenge'),
+        );
+
+        expect(challengeRequest).toBeDefined();
+        expect(challengeRequest?.url).toContain('acrValues=urn%3Aauthup%3Amfa');
+    });
+
+    it('leaves the query bare when the request asks for nothing', async () => {
+        const { httpClient } = mountAuthorize();
+        await flushPromises();
+
+        const challengeRequest = httpClient.requests.find(
+            (request) => request.url.includes('authenticators/challenge'),
+        );
+
+        expect(challengeRequest).toBeDefined();
+        expect(challengeRequest?.url).not.toContain('acrValues');
+    });
+});
+
+/**
+ * The gate the whole ladder exists for. The server decides whether a session
+ * owes a factor; these pin what the page renders for each answer, and that it
+ * does not let consent through before it knows.
+ */
+describe('AAuthorize MFA gate', () => {
+    it('holds consent back until the challenge status is known', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: '',
+            challengeHandler: () => new Promise(() => { /* never settles */ }),
+        });
+        await flushPromises();
+
+        // a builtIn client auto-submits on mount, so the form must not render
+        // before the requirement is known
+        expect(wrapper.findComponent(AuthorizeForm).exists()).toBe(false);
+        expect(wrapper.find('.authorize-text-stub').exists()).toBe(true);
+    });
+
+    it('renders the challenge when the session owes a factor', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: '',
+            challengeHandler: () => ({
+                required: true,
+                enrollmentRequired: false,
+                kinds: ['totp'],
+            }),
+        });
+        await flushPromises();
+
+        const challenge = wrapper.findComponent(AMfaChallengeForm);
+        expect(challenge.exists()).toBe(true);
+        expect(challenge.props('kinds')).toEqual(['totp']);
+        // no session-less ticket on this path: the bearer already exists
+        expect(challenge.props('ticket')).toBeNull();
+        expect(wrapper.findComponent(AuthorizeForm).exists()).toBe(false);
+    });
+
+    it('proceeds to consent once the challenge is done', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: '',
+            challengeHandler: () => ({
+                required: true,
+                enrollmentRequired: false,
+                kinds: ['totp'],
+            }),
+        });
+        await flushPromises();
+
+        wrapper.findComponent(AMfaChallengeForm).vm.$emit('done');
+        await flushPromises();
+
+        expect(wrapper.findComponent(AuthorizeForm).exists()).toBe(true);
+    });
+
+    it('renders inline enrollment when the session owes a device', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: '',
+            challengeHandler: () => ({
+                required: false,
+                enrollmentRequired: true,
+                kinds: [],
+            }),
+        });
+        await flushPromises();
+
+        expect(wrapper.findComponent(AUserAuthenticatorEnroll).exists()).toBe(true);
+        expect(wrapper.findComponent(AuthorizeForm).exists()).toBe(false);
+    });
+
+    it('goes straight to consent when the session owes nothing', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: '',
+            challengeHandler: () => ({
+                required: false,
+                enrollmentRequired: false,
+                kinds: [],
+            }),
+        });
+        await flushPromises();
+
+        expect(wrapper.findComponent(AMfaChallengeForm).exists()).toBe(false);
+        expect(wrapper.findComponent(AuthorizeForm).exists()).toBe(true);
+    });
+
+    /**
+     * The server backstop stays authoritative, so a status lookup that keeps
+     * failing must not brick the page.
+     */
+    it('fails open to consent when the status cannot be fetched', async () => {
+        const { wrapper } = mountAuthorize({
+            prompt: '',
+            challengeHandler: () => { throw new Error('challenge unavailable'); },
+        });
+        await flushPromises();
+
+        expect(wrapper.findComponent(AuthorizeForm).exists()).toBe(true);
     });
 });

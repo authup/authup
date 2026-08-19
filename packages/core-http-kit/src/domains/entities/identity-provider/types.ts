@@ -8,6 +8,7 @@
 import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
 
 import type { IdentityProvider, IdentityProviderAccount, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import type { OAuth2TokenGrantResponse } from '@authup/specs';
 
 // Mirrors `IdentityProviderValidator` mounts in @authup/core-kit. IdPs carry per-protocol
 // attributes (e.g. clientId/clientSecret for OAuth2) handled by an attributes validator
@@ -55,4 +56,10 @@ export interface IIdentityProviderAPI extends IEntityAPI<IdentityProvider, Ident
     createOrUpdate(idOrName: string, data: IdentityProviderSavePayload) : Promise<EntityRecordResponse<IdentityProvider>>;
     createLinkRequest(id: IdentityProvider['id']) : Promise<IdentityProviderLinkRequestResponse>;
     confirmLinkRequest(id: IdentityProvider['id'], handle: string) : Promise<EntityRecordResponse<IdentityProviderAccount>>;
+    /**
+     * Completes a federated login the provider callback established. The
+     * pending login rides a cookie, so this carries no payload and only works
+     * from the browser that started it.
+     */
+    completeLogin(id: IdentityProvider['id']) : Promise<OAuth2TokenGrantResponse>;
 }

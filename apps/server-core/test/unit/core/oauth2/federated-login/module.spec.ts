@@ -10,22 +10,30 @@ import type {
     Client,
     OAuth2AuthorizationCodeRequest,
     OAuth2IdentityProvider,
+    Session,
     User,
 } from '@authup/core-kit';
-import { IdentityProviderProtocol } from '@authup/core-kit';
-import { OAuth2ErrorCode, OAuth2RequestError } from '@authup/specs';
-import { InternalError } from '@authup/errors';
+import {
+    IdentityProviderProtocol,
+    IdentityType,
+    SessionAuthMethod,
+} from '@authup/core-kit';
+import {
+    OAuth2AuthenticationContextClass,
+    OAuth2AuthenticationMethodReference,
+    OAuth2ErrorCode,
+    OAuth2RequestError,
+} from '@authup/specs';
+import { BadRequestError, InternalError } from '@authup/errors';
 import { describe, expect, it } from 'vitest';
 import { OAuth2FederatedLoginService } from '../../../../../src/core/oauth2/federated-login/module.ts';
 import { OAuth2FederatedLoginRefusal } from '../../../../../src/core/oauth2/federated-login/types.ts';
-import type {
-    IOAuth2AuthorizationCodeIssuer,
-    IOAuth2AuthorizationCodeRequestVerifier,
-} from '../../../../../src/core/oauth2/authorization/index.ts';
+import type { IOAuth2AuthorizationCodeRequestVerifier } from '../../../../../src/core/oauth2/authorization/index.ts';
 import type { IOAuth2AccessPolicyEvaluator } from '../../../../../src/core/oauth2/access-policy/index.ts';
 import type { IIdentityProviderAccountManager } from '../../../../../src/core/identity/provider/account/types.ts';
 import { FakeRealmRepository } from '../../entities/realm/fake-repository.ts';
-import { FakeCodeIssuer } from './fake-code-issuer.ts';
+import { FakeOAuth2TokenIssuer, FakeSessionManager } from '../../helpers/index.ts';
+import { FakePendingLoginStore } from './fake-pending-login-store.ts';
 import { FakeVerifier } from './fake-verifier.ts';
 
 const REDIRECT_URI = 'https://app.example.com/callback';
@@ -64,18 +72,24 @@ function createUser(overrides: Partial<User> = {}) : User {
 
 function buildService(options: {
     verifier?: IOAuth2AuthorizationCodeRequestVerifier,
-    codeIssuer?: IOAuth2AuthorizationCodeIssuer,
     user?: User,
     accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,
     authenticate?: () => Promise<User>,
 } = {}) {
-    const codeIssuer = options.codeIssuer ?? new FakeCodeIssuer();
+    const pendingLoginStore = new FakePendingLoginStore();
+    const sessionManager = new FakeSessionManager();
+    const accessTokenIssuer = new FakeOAuth2TokenIssuer();
+    const refreshTokenIssuer = new FakeOAuth2TokenIssuer();
+
     const service = new OAuth2FederatedLoginService({
         options: { baseURL: 'https://idp.example.com/' },
         accountManager: {} as IIdentityProviderAccountManager,
         realmRepository: new FakeRealmRepository(),
         codeRequestVerifier: options.verifier ?? new FakeVerifier({}),
-        codeIssuer,
+        sessionManager,
+        pendingLoginStore,
+        accessTokenIssuer,
+        refreshTokenIssuer,
         accessPolicyEvaluator: options.accessPolicyEvaluator,
         // the seam that keeps the ladder testable: no external provider is
         // contacted, so every branch below runs without a network stub
@@ -85,17 +99,30 @@ function buildService(options: {
         } as any),
     });
 
-    return { service, codeIssuer };
+    return {
+        service, 
+        pendingLoginStore, 
+        sessionManager, 
+        accessTokenIssuer,
+        refreshTokenIssuer,
+    };
 }
 
 describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
-    it('should issue a code bound to the relying party', async () => {
-        const { service, codeIssuer } = buildService();
+    it('should establish a pending session the browser can complete', async () => {
+        const user = createUser();
+        const provider = createProvider();
+        const {
+            service, 
+            pendingLoginStore, 
+            sessionManager, 
+        } = buildService({ user });
 
         const result = await service.complete({
-            provider: createProvider(),
+            provider,
             codeRequest,
             code: 'provider-code',
+            request: { ipAddress: '203.0.113.7', userAgent: 'agent' },
         });
 
         expect(result.kind).toEqual('issued');
@@ -103,11 +130,29 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
             return;
         }
 
-        expect(result.redirectUri).toEqual(REDIRECT_URI);
-        expect(result.code).toEqual('authorization-code-1');
-        expect(result.state).toEqual('state-1');
-        // the WHOLE verified request reaches the issuer, never a subset
-        expect((codeIssuer as FakeCodeIssuer).issued[0]).toEqual(codeRequest);
+        // no authorization code: the RP's code is issued at the end of the
+        // hosted ladder, once the second factor and consent have run
+        expect(typeof result.pendingLoginId).toEqual('string');
+        expect(pendingLoginStore.saved).toHaveLength(1);
+        expect(result.codeRequest).toEqual(codeRequest);
+
+        const [session] = sessionManager.createCalls;
+        expect(session).toMatchObject({
+            sub: user.id,
+            subKind: IdentityType.USER,
+            realmId: user.realmId,
+            authMethod: SessionAuthMethod.EXTERNAL,
+            mfaAt: null,
+            ipAddress: '203.0.113.7',
+            userAgent: 'agent',
+        });
+        expect(new Date(session.expiresAt as string).getTime())
+            .toBeGreaterThan(Date.now());
+
+        expect(pendingLoginStore.saved[0]).toMatchObject({
+            providerId: provider.id,
+            userName: user.name,
+        });
     });
 
     it('should refuse a provider and client realm mismatch', async () => {
@@ -118,7 +163,11 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
                 realmId: randomUUID(), 
             } as Client, 
         });
-        const { service, codeIssuer } = buildService({ verifier });
+        const {
+            service, 
+            pendingLoginStore, 
+            sessionManager, 
+        } = buildService({ verifier });
 
         await expect(service.complete({
             provider: createProvider({ realmId: randomUUID() }),
@@ -126,7 +175,8 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
             code: 'provider-code',
         })).rejects.toThrow(OAuth2RequestError);
 
-        expect((codeIssuer as FakeCodeIssuer).issued).toHaveLength(0);
+        expect(pendingLoginStore.saved).toHaveLength(0);
+        expect(sessionManager.createCalls).toHaveLength(0);
     });
 
     /**
@@ -177,7 +227,11 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
 
     it('should refuse without a marker when the code request no longer verifies', async () => {
         const verifier = new FakeVerifier(OAuth2RequestError.malformed('client is gone'));
-        const { service, codeIssuer } = buildService({ verifier });
+        const {
+            service, 
+            pendingLoginStore, 
+            sessionManager, 
+        } = buildService({ verifier });
 
         const result = await service.complete({
             provider: createProvider(),
@@ -192,7 +246,8 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
         });
         // the hosted page re-runs the same verifier, so nothing is echoed
         expect(result.kind === 'refused' && result.error).toBeFalsy();
-        expect((codeIssuer as FakeCodeIssuer).issued).toHaveLength(0);
+        expect(pendingLoginStore.saved).toHaveLength(0);
+        expect(sessionManager.createCalls).toHaveLength(0);
     });
 
     it('should rethrow a server failure rather than reporting it as a refusal', async () => {
@@ -219,10 +274,15 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
 
     it('should refuse a script-capable redirect_uri scheme', async () => {
         // fails closed should the client validator and the code-request
-        // verifier both gap: the interstitial renders the target as an href
+        // verifier both gap: the hosted page navigates the target at the end
+        // of the ladder
         // eslint-disable-next-line no-script-url -- the scheme under test
         const request = { ...codeRequest, redirect_uri: 'javascript:alert(1)' } as OAuth2AuthorizationCodeRequest;
-        const { service, codeIssuer } = buildService();
+        const {
+            service, 
+            pendingLoginStore, 
+            sessionManager, 
+        } = buildService();
 
         await expect(service.complete({
             provider: createProvider(),
@@ -230,12 +290,17 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
             code: 'provider-code',
         })).rejects.toThrow(InternalError);
 
-        expect((codeIssuer as FakeCodeIssuer).issued).toHaveLength(0);
+        expect(pendingLoginStore.saved).toHaveLength(0);
+        expect(sessionManager.createCalls).toHaveLength(0);
     });
 
     it('should refuse a login once the provider was disabled', async () => {
         let authenticated = false;
-        const { service, codeIssuer } = buildService({
+        const {
+            service, 
+            pendingLoginStore, 
+            sessionManager, 
+        } = buildService({
             authenticate: async () => {
                 authenticated = true;
                 return createUser();
@@ -255,11 +320,16 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
         });
         // refused before the provider's single-use code is spent
         expect(authenticated).toBe(false);
-        expect((codeIssuer as FakeCodeIssuer).issued).toHaveLength(0);
+        expect(pendingLoginStore.saved).toHaveLength(0);
+        expect(sessionManager.createCalls).toHaveLength(0);
     });
 
     it('should refuse an inactive user', async () => {
-        const { service, codeIssuer } = buildService({ user: createUser({ active: false }) });
+        const {
+            service, 
+            pendingLoginStore, 
+            sessionManager, 
+        } = buildService({ user: createUser({ active: false }) });
 
         const result = await service.complete({
             provider: createProvider(),
@@ -272,7 +342,8 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
             refusal: OAuth2FederatedLoginRefusal.USER_INACTIVE,
             error: OAuth2ErrorCode.ACCESS_DENIED,
         });
-        expect((codeIssuer as FakeCodeIssuer).issued).toHaveLength(0);
+        expect(pendingLoginStore.saved).toHaveLength(0);
+        expect(sessionManager.createCalls).toHaveLength(0);
     });
 
     it('should refuse when the application access policy denies the identity', async () => {
@@ -284,7 +355,11 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
                 accessPolicyId, 
             } as Client, 
         });
-        const { service, codeIssuer } = buildService({
+        const {
+            service, 
+            pendingLoginStore, 
+            sessionManager, 
+        } = buildService({
             verifier,
             accessPolicyEvaluator: { evaluate: async () => false },
         });
@@ -300,7 +375,8 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
             refusal: OAuth2FederatedLoginRefusal.ACCESS_DENIED,
             error: OAuth2ErrorCode.ACCESS_DENIED,
         });
-        expect((codeIssuer as FakeCodeIssuer).issued).toHaveLength(0);
+        expect(pendingLoginStore.saved).toHaveLength(0);
+        expect(sessionManager.createCalls).toHaveLength(0);
     });
 
     it('should fail closed when a client carries an access policy but no evaluator is wired', async () => {
@@ -323,5 +399,179 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
             kind: 'refused',
             refusal: OAuth2FederatedLoginRefusal.ACCESS_DENIED,
         });
+    });
+});
+
+describe('core/oauth2/federated-login — completing the handoff', () => {
+    async function begin() {
+        const provider = createProvider();
+        const parts = buildService();
+
+        const result = await parts.service.complete({
+            provider,
+            codeRequest,
+            code: 'provider-code',
+            request: { ipAddress: '203.0.113.7', userAgent: 'agent' },
+        });
+
+        if (result.kind !== 'issued') {
+            throw new Error('the completion was refused');
+        }
+
+        return {
+            ...parts,
+            provider,
+            pendingLoginId: result.pendingLoginId,
+            sessionId: parts.pendingLoginStore.saved[0].sessionId,
+        };
+    }
+
+    it('should exchange the pending login for the grant of its session', async () => {
+        const {
+            service, 
+            provider, 
+            pendingLoginId, 
+            sessionId, 
+            sessionManager, 
+            accessTokenIssuer,
+        } = await begin();
+
+        const grant = await service.completeHandoff({ pendingLoginId, providerId: provider.id });
+
+        expect(grant.access_token).toBeTruthy();
+        expect(grant.refresh_token).toBeTruthy();
+        // the pending session becomes a regular one
+        expect(sessionManager.refreshCalls).toHaveLength(1);
+        // the claims say the authentication was external, and assert no
+        // assurance level authup did not verify
+        expect(accessTokenIssuer.issueCalls[0]).toMatchObject({
+            amr: [OAuth2AuthenticationMethodReference.EXTERNAL],
+            session_id: sessionId,
+        });
+        expect(accessTokenIssuer.issueCalls[0].acr).toBeUndefined();
+    });
+
+    it('should refuse a pending login whose session has expired', async () => {
+        const {
+            service, 
+            provider, 
+            pendingLoginId, 
+            sessionId, 
+            sessionManager, 
+        } = await begin();
+
+        // the pending session carries the login's own deadline; the cache
+        // entry normally expires with it, so this is the clock-skew case
+        const session = await sessionManager.findOneById(sessionId) as Session;
+        session.expiresAt = new Date(Date.now() - 1_000).toISOString();
+
+        await expect(service.completeHandoff({ pendingLoginId, providerId: provider.id }))
+            .rejects.toThrow(/unknown or expired/);
+
+        expect(sessionManager.refreshCalls).toHaveLength(0);
+    });
+
+    it('should carry a completed factor into the claims', async () => {
+        const {
+            service, 
+            provider, 
+            pendingLoginId, 
+            sessionId, 
+            sessionManager, 
+            accessTokenIssuer,
+        } = await begin();
+
+        // an application asking for MFA explicitly is the one case that still
+        // challenges an externally authenticated session
+        const session = await sessionManager.findOneById(sessionId) as Session;
+        await sessionManager.markMfaVerified(session);
+
+        await service.completeHandoff({ pendingLoginId, providerId: provider.id });
+
+        expect(accessTokenIssuer.issueCalls[0]).toMatchObject({
+            amr: [
+                OAuth2AuthenticationMethodReference.EXTERNAL,
+                OAuth2AuthenticationMethodReference.OTP,
+            ],
+            acr: OAuth2AuthenticationContextClass.MFA,
+        });
+    });
+
+    it('should refuse a replayed completion', async () => {
+        const {
+            service, 
+            provider, 
+            pendingLoginId, 
+        } = await begin();
+
+        await service.completeHandoff({ pendingLoginId, providerId: provider.id });
+
+        await expect(service.completeHandoff({ pendingLoginId, providerId: provider.id }))
+            .rejects.toThrow(BadRequestError);
+    });
+
+    it('should refuse an unknown pending login', async () => {
+        const {
+            service, 
+            provider, 
+            accessTokenIssuer, 
+        } = await begin();
+
+        await expect(service.completeHandoff({ pendingLoginId: 'nope', providerId: provider.id }))
+            .rejects.toThrow(BadRequestError);
+
+        expect(accessTokenIssuer.issueCalls).toHaveLength(0);
+    });
+
+    it('should refuse a pending login completed at another provider', async () => {
+        const {
+            service, 
+            pendingLoginId, 
+            accessTokenIssuer, 
+        } = await begin();
+
+        await expect(service.completeHandoff({ pendingLoginId, providerId: randomUUID() }))
+            .rejects.toThrow(BadRequestError);
+
+        expect(accessTokenIssuer.issueCalls).toHaveLength(0);
+    });
+
+    it('should refuse once the session is gone', async () => {
+        const {
+            service, 
+            provider, 
+            pendingLoginId, 
+            sessionId, 
+            sessionManager, 
+            accessTokenIssuer,
+        } = await begin();
+
+        await sessionManager.revoke(sessionId);
+
+        await expect(service.completeHandoff({ pendingLoginId, providerId: provider.id }))
+            .rejects.toThrow(BadRequestError);
+
+        expect(accessTokenIssuer.issueCalls).toHaveLength(0);
+    });
+
+    /**
+     * The local second factor belongs to a local credential: an external
+     * provider authenticated this login and is where MFA is enforced for it.
+     * The completion therefore consults no authenticator at all.
+     */
+    it('should not consult the local second factor', async () => {
+        const {
+            service, 
+            provider, 
+            pendingLoginId, 
+            accessTokenIssuer, 
+            refreshTokenIssuer,
+        } = await begin();
+
+        const grant = await service.completeHandoff({ pendingLoginId, providerId: provider.id });
+
+        expect(grant.access_token).toBeTruthy();
+        expect(accessTokenIssuer.issueCalls).toHaveLength(1);
+        expect(refreshTokenIssuer.issueCalls).toHaveLength(1);
     });
 });

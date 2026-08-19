@@ -529,8 +529,6 @@ export class HTTPControllerModule {
         const accountManager = container.resolve(IdentityInjectionKey.ProviderAccountManager);
         const linkStore = container.resolve(IdentityInjectionKey.ProviderAccountLinkStore);
 
-        const codeIssuer = container.resolve(OAuth2InjectionToken.AuthorizationCodeIssuer);
-
         const codeRequestVerifier = container.resolve(OAuth2InjectionToken.AuthorizationCodeRequestVerifier);
 
         const stateManager = container.resolve(OAuth2InjectionToken.AuthorizationStateManager);
@@ -551,10 +549,15 @@ export class HTTPControllerModule {
             accountManager,
             realmRepository: new RealmRepositoryAdapter(realmRepository),
             codeRequestVerifier,
-            codeIssuer,
+
+            sessionManager: container.resolve(AuthenticationInjectionKey.SessionManager),
+            pendingLoginStore: container.resolve(OAuth2InjectionToken.FederatedLoginStore),
+            accessTokenIssuer: container.resolve(OAuth2InjectionToken.AccessTokenIssuer),
+            refreshTokenIssuer: container.resolve(OAuth2InjectionToken.RefreshTokenIssuer),
 
             accessPolicyEvaluator: this.resolveAccessPolicyEvaluator(container),
             eventService,
+            metrics: container.resolve(MetricsInjectionKey),
             logger,
         });
 

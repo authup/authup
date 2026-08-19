@@ -29,10 +29,19 @@ import type { IClient } from '@authup/core-http-kit';
  * against an older contract would otherwise fail per request on
  * `/authorize` rather than at boot with an actionable message.
  */
-export const CONTRACT_VERSION = 2;
+export const CONTRACT_VERSION = 3;
 
 /*
  * History:
+ *
+ * 3 - the `/authorize` payload carries `federatedLogin: { providerId }` and
+ *     the page has to complete it with a payload-less, same-origin
+ *     `POST /identity-providers/:id/login-complete`. The pending login rides
+ *     the HttpOnly `authup_federated_login` cookie the callback set, so the
+ *     page presents nothing itself (plan 094). The federated callback no
+ *     longer mints the application's code, so a package that ignores the
+ *     field strands every federated login on the login form. The interstitial
+ *     route from version 2 stays exported but the host no longer renders it.
  *
  * 2 - the host renders `/identity-providers/:id/authorize-in` (the federated
  *     callback's interstitial for a non-http(s) redirect_uri) with a payload

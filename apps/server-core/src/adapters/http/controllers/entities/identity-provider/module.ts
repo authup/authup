@@ -9,6 +9,8 @@ import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import {
     ValidatorGroup,
     base64URLDecode,
+    createNanoID,
+    getURLBasePath,
     isObject,
     isUUID,
 } from '@authup/kit';
@@ -44,7 +46,6 @@ import {
     IdentityProviderValidator,
     IdentityType,
     PermissionName,
-    buildIdentityProviderAuthorizeCallbackPath,
     isOAuth2IdentityProvider,
     isOpenIDIdentityProvider,
 } from '@authup/core-kit';
@@ -52,7 +53,9 @@ import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import type { Logger } from '@authup/server-kit';
 import { describeError, resolveURL } from '../../../../../utils/index.ts';
 import { useRequestQuery } from '@routup/basic/query';
+import { setResponseCookie, unsetResponseCookie, useRequestCookie } from '@routup/basic/cookie';
 import { readRequestBody } from '@routup/basic/body';
+import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { OAuth2RequestError } from '@authup/specs';
 import type {
     EntityCollectionResponse,
@@ -77,6 +80,8 @@ import type {
     OAuth2AuthorizationStateLink,
 } from '../../../../../core/index.ts';
 import {
+    OAUTH2_FEDERATED_LOGIN_COOKIE,
+    OAUTH2_FEDERATED_LOGIN_TTL,
     OAuth2AuthorizationCodeRequestValidator,
     RECORD_QUERY_PARAMETERS,
     createIdentityProviderOAuth2Authenticator,
@@ -96,8 +101,6 @@ import {
     useRequestPermissionEvaluator,
 } from '../../../request/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import type { IdentityProviderCallbackPayload } from '@authup/client-auth-console';
-import { renderAuthConsolePage } from '../../../ui/index.ts';
 import type { IdentityProviderControllerContext, IdentityProviderControllerOptions } from './types.ts';
 
 @DTags('identity')
@@ -319,7 +322,19 @@ export class IdentityProviderController {
 
         const authenticator = this.buildProviderAuthenticator(entity);
 
-        const state = await this.saveAuthorizationState(event, { codeRequest: data.data });
+        // Ties this login to THIS browser. The callback requires the cookie
+        // to match, so a crafted callback URL opened in someone else's
+        // browser cannot make authup establish a session there (login CSRF).
+        // The state's ip / user agent cannot carry that: both are chosen by
+        // whoever mints the state (#3439). Keycloak and Authentik bind the
+        // same hop to a cookie for the same reason.
+        const browserNonce = createNanoID();
+        this.setFederatedLoginCookie(event, browserNonce);
+
+        const state = await this.saveAuthorizationState(event, {
+            codeRequest: data.data,
+            browserNonce,
+        });
 
         return sendRedirect(event, authenticator.buildRedirectURL({ state }));
     }
@@ -382,6 +397,20 @@ export class IdentityProviderController {
             throw OAuth2RequestError.malformed('The state carries no authorization code request.');
         }
 
+        // The browser that started this login is the only one that may
+        // finish it. Refused before the provider's single-use code is spent
+        // and before any session exists. A state minted before this shipped
+        // carries no nonce and is refused the same way; the hosted page
+        // re-renders the request and the next attempt carries one.
+        const browserNonce = useRequestCookie(event, OAUTH2_FEDERATED_LOGIN_COOKIE);
+        if (
+            !data.browserNonce ||
+            typeof browserNonce !== 'string' ||
+            browserNonce !== data.browserNonce
+        ) {
+            return sendRedirect(event, this.buildHostedAuthorizeURL(data.codeRequest).href);
+        }
+
         const { code, error } = useRequestQuery(event);
 
         // RFC 6749 section 4.1.2.1: a provider answers a refused or failed
@@ -417,8 +446,9 @@ export class IdentityProviderController {
         // only attached when the refusal carries one; without it the page
         // re-runs the same verifier over the same request and states the
         // reason itself, so nothing is echoed.
+        const url = this.buildHostedAuthorizeURL(result.codeRequest);
+
         if (result.kind === 'refused') {
-            const url = this.buildHostedAuthorizeURL(result.codeRequest);
             if (result.error) {
                 url.searchParams.set('error', result.error);
             }
@@ -426,42 +456,49 @@ export class IdentityProviderController {
             return sendRedirect(event, url.href);
         }
 
-        // RFC 6749 §4.1.2: the code goes back to the client that asked for it.
-        // It is bound to that client_id and that redirect_uri, so the RP is the
-        // only party able to redeem it. Handing it to any other page strands
-        // the login there (issue #3446).
-        const url = new URL(result.redirectUri);
-        url.searchParams.set('code', result.code);
-        if (result.state) {
-            url.searchParams.set('state', result.state);
+        // The application's code is NOT minted here. The browser goes back to
+        // the hosted authorize page, which completes the login and runs the
+        // ladder an interactive login runs (prompt freshness, consent) before
+        // any code exists (plan 094). So a custom-scheme redirect_uri needs no
+        // interstitial on this leg either: it is navigated at the end of the
+        // ladder, exactly as it is for an interactive login.
+        //
+        // The pending login rides a cookie rather than the URL, which is what
+        // Keycloak and Authentik both do: only the browser that started the
+        // login carries it, no other origin can set it, and nothing redeemable
+        // reaches history, a log or a referrer. `SameSite=Lax` keeps it off
+        // cross-site requests, so a page on another origin cannot drive the
+        // completion. `provider` stays in the URL as a routing hint, and is no
+        // secret.
+        this.setFederatedLoginCookie(event, result.pendingLoginId);
+
+        url.searchParams.set('provider', entity.id);
+
+        return sendRedirect(event, url.href);
+    }
+
+    @DPost('/:id/login-complete', [])
+    async completeLogin(
+        @DPath('id') _id: string,
+        @DContext() event: IAppEvent,
+    ) : Promise<OAuth2TokenGrantResponse> {
+        const id = useRequestParamID(event);
+
+        this.assertSameOrigin(event);
+
+        const pendingLoginId = useRequestCookie(event, OAUTH2_FEDERATED_LOGIN_COOKIE);
+        if (typeof pendingLoginId !== 'string' || pendingLoginId.length === 0) {
+            throw new BadRequestError('The login request is unknown or expired.');
         }
 
-        if (url.protocol === 'http:' || url.protocol === 'https:') {
-            return sendRedirect(event, url.href);
-        }
+        // Cleared whichever way the completion goes: it is single use, and a
+        // cookie outliving its pending login only produces a confusing
+        // refusal on some later page load.
+        unsetResponseCookie(event, OAUTH2_FEDERATED_LOGIN_COOKIE, { path: this.buildFederatedLoginCookiePath() });
 
-        // routup's sendRedirect allows http(s) only. A native app's
-        // custom-scheme redirect_uri (RFC 8252, matched verbatim by
-        // isSimpleURLMatch) is navigated client-side from an interstitial
-        // page instead; the target is the verified redirect_uri and nothing
-        // else (the service refuses a script-capable scheme), so the page
-        // never reaches an unverified one (issue #3459).
-        const payload : IdentityProviderCallbackPayload = {
-            redirect: url.href,
-            // The browser stays on the consumed callback URL, so a reload
-            // would re-run the callback against a popped state. The page
-            // swaps the history entry for this first, so a reload lands on
-            // the hosted login instead.
-            authorizeUrl: this.buildHostedAuthorizeURL(result.codeRequest).href,
-            client: result.client,
-        };
-
-        return renderAuthConsolePage(event, {
-            url: buildIdentityProviderAuthorizeCallbackPath(entity.id),
-            payload: {
-                config: { baseURL: this.options.baseURL },
-                data: payload,
-            },
+        return this.loginService.completeHandoff({
+            pendingLoginId,
+            providerId: id,
         });
     }
 
@@ -787,9 +824,55 @@ export class IdentityProviderController {
         });
     }
 
+    /**
+     * Scoped to the routes that read it, so the cookie never rides an
+     * ordinary API request, and to publicUrl's base path, since a sub-path
+     * deployment mounts every route under it.
+     */
+    private buildFederatedLoginCookiePath() : string {
+        return `${getURLBasePath(this.options.baseURL)}/identity-providers`;
+    }
+
+    private setFederatedLoginCookie(event: IAppEvent, value: string) : void {
+        setResponseCookie(event, OAUTH2_FEDERATED_LOGIN_COOKIE, value, {
+            httpOnly: true,
+            sameSite: 'lax',
+            // The scheme is read from the parsed URL rather than the raw
+            // string: `publicUrl` is validated but never canonicalized, so a
+            // configured `HTTPS://...` would leave a prefix test false and
+            // drop the flag from the one cookie the login is bound to.
+            secure: new URL(this.options.baseURL).protocol === 'https:',
+            path: this.buildFederatedLoginCookiePath(),
+            maxAge: OAUTH2_FEDERATED_LOGIN_TTL / 1000,
+        });
+    }
+
+    /**
+     * The completion answers with a token pair and authenticates on a cookie
+     * alone, so it must be reachable only from the hosted page's own origin.
+     *
+     * CORS cannot carry that here: the default reflects every origin WITH
+     * credentials, and `SameSite` is scoped to the registrable domain rather
+     * than the origin, so a sibling subdomain's script is same-site and would
+     * both send the cookie and be allowed to read the response. A browser
+     * sends `Origin` on every POST, so requiring it to be publicUrl's own is
+     * what closes that. A request without the header is not a browser and
+     * carries no cookie of ours to begin with.
+     */
+    private assertSameOrigin(event: IAppEvent) : void {
+        const origin = getRequestHeader(event, 'origin');
+        if (typeof origin !== 'string' || origin.length === 0) {
+            return;
+        }
+
+        if (origin !== new URL(this.options.baseURL).origin) {
+            throw new BadRequestError('The login request is unknown or expired.');
+        }
+    }
+
     private async saveAuthorizationState(
         event: IAppEvent,
-        data: Pick<OAuth2AuthorizationState, 'codeRequest' | 'link'> = {},
+        data: Pick<OAuth2AuthorizationState, 'codeRequest' | 'link' | 'browserNonce'> = {},
     ) : Promise<string> {
         return this.stateManager.save({
             ...data,
