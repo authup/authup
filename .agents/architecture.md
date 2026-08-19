@@ -4543,6 +4543,81 @@ The UI sits on the `@vuecs/*` 1.x line — see
 for the package matrix. Two architectural notes specific to authup's
 integration are worth knowing before editing UI code:
 
+### What the kit store persists (and what it deliberately does not)
+
+The store's cookies are the SSR transport, not a storage preference: the admin
+console is the one surface that reads them server-side
+(`client-web-nuxt`'s kit plugin wires `cookieGet` to Nuxt's `useCookie`, which
+parses the request header), so its routing interceptor can await
+`store.resolve()` during the render. The auth console passes no cookie
+functions, so its server-side `useCookies()` fallback finds no `document` and
+reads nothing; the account console never server-renders. `localStorage` cannot
+replace any of this, because the server never sees it.
+
+Persisted: the three tokens, the access-token expire date, and
+`realm_management`. Everything else is derived by `resolve()`, which
+introspects on every store instantiation regardless.
+
+**The user is derived from the introspection, not fetched.** `postIntrospect`
+resolves the token's subject server-side and spreads its OpenID claims into the
+response (`OAuth2OpenIDClaimsBuilder`: `name`, and `displayName` under
+`nickname` / `preferred_username`), so `store.user` is built from a response the
+store already awaits. It is typed to what is rendered,
+`Pick<User, 'id' | 'name' | 'displayName'>` — the id every owner-scoped query
+filters on, plus the account chip's and the authorize page's "continue as"
+label. No consumer ever read a field outside those three; the one surface that
+needs the whole record, the account console's profile form, loads it itself —
+from `/userinfo` rather than `/users/@me`, because `email` is `select: false`
+and therefore absent from the entity endpoint's default projection.
+
+The claims are read through a local `SubjectClaims` shape rather than off
+`OAuth2TokenIntrospectionResponse`. Typing the response as an
+`OpenIDTokenPayload` was tried and reverted: the endpoint maps entity columns
+onto claim names and passes a nullable column straight through, so a user
+without a display name answers `nickname: null`, where the OIDC claim types
+model an absent claim as an omitted string. That mismatch is not theoretical —
+`packages/server-adapter-kit/test/data/token.ts` is a captured response and
+carries `family_name: null`.
+
+A commit does not overwrite a held user whose id already matches: the account
+console re-seeds the store from its own profile-form response, and a commit
+staged before that save would otherwise revert the name it just wrote. The
+predecessor had the same property for a different reason (`isTokenSubject`
+skipped the fetch on an id match).
+
+Two things fall out of that. The subject identity cannot drift from the token,
+because it IS the token's subject on every commit, so the `isTokenSubject`
+re-fetch this replaced is gone. And a **client** subject now yields `null`
+instead of a failed lookup: `/userinfo` resolves `@me` through the user service,
+which throws for a client actor, and the guards catch a rejected `resolve()`
+into a logout. That rejection was load-bearing, though, because `status`
+requires a user: a settled client-subject session reads `RESTORING` forever, and
+the account console gates its shell, its realm chooser AND its sign-out control
+on the status it never reaches. Its router guard therefore treats a settled
+`RESTORING` as a failed resolve. The auth console needs no such guard — its
+account chooser is written for exactly this state (a settled non-user session
+renders the "use another account" escape hatch).
+
+**The user record is deliberately NOT persisted** either. It was the verbatim
+`/userinfo` body, and `extendOneWithEA` flattens every user attribute onto that
+response AFTER the query projection, so the value was bounded by nothing: one
+operator-defined attribute is enough to push the cookie past the 4096-byte
+limit, where the browser drops it silently. It also carried the email and both
+names into the header of every request on the origin, static assets included.
+`install()` sweeps copies written by earlier versions at the pinned path, since
+they carry no `maxAge` and an open browser would keep sending one until it
+closes. `CookieName.USER` survives as a `@deprecated` name for that sweep.
+
+The same rule governs `realm_management`, which is narrowed to `{ id, name }`
+in `setRealmManagement` rather than at its call sites: the realm switcher hands
+over the whole table row, and `RealmMinimal` is a structural `Pick`, so the
+free-text `description` column rode along.
+
+Status is unaffected by any of this. `AUTHENTICATED` requires realm AND user,
+and the realm has not been cookie-persisted since #3218 (`commitSession`
+assigns `realm.value` directly, so `REALM_UPDATED` never fires), so a cookie
+restore has always reported `RESTORING` until `resolve()` settles.
+
 ### Post-login destination — the `redirect` round-trip
 
 An RP that bounces a visitor to the login flow has to get them back to the page

@@ -7,6 +7,7 @@
 <script lang="ts">
 import {
     AUserForm,
+    injectHTTPClient,
     injectStore,
     useTranslations,
     useTranslator,
@@ -18,14 +19,24 @@ import {
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import { storeToRefs } from 'pinia';
-import { defineComponent } from 'vue';
+import { defineComponent, onMounted, ref } from 'vue';
 import { useAccountToasts } from './utils';
 
 export default defineComponent({
     components: { AUserForm },
     setup() {
         const store = injectStore();
-        const { user, realmId } = storeToRefs(store);
+        const httpClient = injectHTTPClient();
+        const { realmId } = storeToRefs(store);
+
+        // The store carries only the identity the token asserts (id, name,
+        // display name), so the page loads the record whose every column this
+        // form writes. It is the one surface that needs the whole user, and it
+        // reads `/userinfo` rather than `/users/@me`: `email` is `select:false`,
+        // so it is absent from the entity endpoint's default projection, and
+        // the form would render an empty email box and submit a null over the
+        // user's address.
+        const entity = ref<User | null>(null);
 
         const toasts = useAccountToasts();
         const translate = useTranslator();
@@ -37,8 +48,9 @@ export default defineComponent({
             },
         ]);
 
-        const handleUpdated = async (entity: User) => {
-            store.setUser(entity);
+        const handleUpdated = async (updated: User) => {
+            entity.value = updated;
+            store.setUser(updated);
 
             toasts.success(await translate({
                 namespace: TranslatorTranslationNamespace.APP,
@@ -48,8 +60,16 @@ export default defineComponent({
 
         const handleFailed = (e: Error) => toasts.error(e);
 
+        onMounted(async () => {
+            try {
+                entity.value = await httpClient.userInfo.get<User>();
+            } catch (e) {
+                handleFailed(e as Error);
+            }
+        });
+
         return {
-            user,
+            entity,
             realmId,
             translations,
             handleUpdated,
@@ -64,10 +84,10 @@ export default defineComponent({
             {{ translations.general }}
         </h2>
         <AUserForm
-            v-if="user"
+            v-if="entity"
             :can-manage="false"
             :realm-id="realmId"
-            :entity="user"
+            :entity="entity"
             @updated="handleUpdated"
             @failed="handleFailed"
         />

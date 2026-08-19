@@ -1,6 +1,10 @@
 # Session
 
-Session management is handled via `pinia`, and session-related data is stored as cookies in the browser.
+Session management is handled via `pinia`. The tokens and the active management
+realm are stored as cookies in the browser, so a server-side render can read
+them from the request. The user is not stored: `resolve()` derives it from the
+token introspection that validates the session anyway, and carries the id, name
+and display name that identify the subject.
 
 
 ## Login
@@ -76,13 +80,16 @@ export default defineComponent({
         console.log(store.userId); // xxxx-xxxx-...
         console.log(store.realmId); // xxxx-xxxx-...
         console.log(store.realmName); // xxx
-        console.log(store.user); // { name: 'xxx', id: 'xxx', ... }
+        console.log(store.user); // null | { id: 'xxxx-xxxx-...', name: 'xxx', displayName: 'xxx' | null }
     }
 })
 ```
 
 `status` is presence-derived: `authenticated` means access token, realm and user
 are all present (server-side validation stays `resolve()`'s job), while a
-refresh-token-only session reads `restoring` until `resolve()` settles it.
+refresh-token-only session reads `restoring` until `resolve()` settles it. The
+realm and the user are derived from the token introspection, so a restored
+session reads `restoring` until `resolve()` has completed that round-trip, and a
+session whose subject is not a user never reaches `authenticated`.
 The former `loggedIn` flag (a coarse "an access token exists" boolean) is
 deprecated — compare `status` against `StoreAuthStatus.AUTHENTICATED` instead.

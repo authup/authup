@@ -167,11 +167,6 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
                         store.setIdToken(value);
                     }
                     break;
-                case CookieName.USER:
-                    if (!store.user) {
-                        store.setUser(value);
-                    }
-                    break;
                 case CookieName.REALM:
                     if (!store.realm) {
                         store.setRealm(value);
@@ -249,17 +244,6 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
     );
 
     storeDispatcher.on(
-        StoreDispatcherEventName.USER_UPDATED,
-        (input) => {
-            if (input) {
-                cookieSet(CookieName.USER, input, { path: cookiePath });
-            } else {
-                cookieUnset(CookieName.USER, { path: cookiePath });
-            }
-        },
-    );
-
-    storeDispatcher.on(
         StoreDispatcherEventName.REALM_UPDATED,
         (input) => {
             if (input) {
@@ -282,6 +266,30 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
     );
 
     dropShadowingCookies();
+
+    /**
+     * The user record is deliberately NOT persisted.
+     *
+     * Its value was the verbatim `/userinfo` body, and extra attributes are
+     * flattened onto that response AFTER the query projection, so nothing
+     * bounded its size: one operator-defined attribute is enough to push the
+     * cookie past the 4096 byte limit, where the browser drops it silently.
+     * It also carried the email and both names into the header of every
+     * request on the origin, static assets included. The store now builds the
+     * subject from the introspection response `resolve()` already awaits, so
+     * there is nothing to persist and nothing to restore.
+     *
+     * Copies written by earlier versions are swept here rather than left to
+     * expire: they carry no `maxAge`, so an open browser would keep sending one
+     * until it closes. The sweep is conditional because the name is a bare
+     * `user` on the pinned path — an unconditional delete would reach a
+     * same-named cookie belonging to another app on the origin on every single
+     * install, rather than once for a browser carrying the kit's own leftover.
+     */
+    if (cookieGet(CookieName.USER)) {
+        cookieUnset(CookieName.USER, { path: cookiePath });
+    }
+
     readCookies();
 
     provideStoreFactory(storeFactory, app);
