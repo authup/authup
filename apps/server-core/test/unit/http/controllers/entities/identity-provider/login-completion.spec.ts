@@ -331,6 +331,32 @@ describe('identity-provider login completion', () => {
         expect(response.status).toEqual(400);
     });
 
+    // The console carries its post-login destination in the callback URI's
+    // own query. This leg re-serializes the whole code request into the
+    // hosted authorize URL and back, so it has more places to mangle that
+    // query than the direct login does.
+    it('preserves a query on the redirect uri', async () => {
+        const redirectUri = `${REDIRECT_URI}?redirect=%2Fusers`;
+        const location = await completeFederatedLogin(
+            buildCodeRequest({ redirect_uri: redirectUri }),
+        );
+
+        expect(`${location.origin}${location.pathname}`).toEqual(REDIRECT_URI);
+        expect(location.searchParams.get('redirect')).toEqual('/users');
+        expect(location.searchParams.get('state')).toEqual(STATE);
+
+        // The code is bound to the redirect_uri including its query, so the
+        // exchange only succeeds if the string survived byte-for-byte.
+        const response = await exchange({
+            code: location.searchParams.get('code') as string,
+            client_id: client.id,
+            redirect_uri: redirectUri,
+            code_verifier: CODE_VERIFIER,
+        });
+
+        expect(response.status).toEqual(200);
+    });
+
     it('mints a code the public client redeems with its PKCE verifier', async () => {
         const location = await completeFederatedLogin();
 
