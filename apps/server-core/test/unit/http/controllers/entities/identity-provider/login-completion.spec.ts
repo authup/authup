@@ -779,7 +779,14 @@ describe('identity-provider login completion', () => {
         expect(providerTokenCalls).toEqual(0);
     });
 
-    it('refuses the authorization until the second factor is verified', async () => {
+    /**
+     * The local second factor belongs to a local credential. An external
+     * provider authenticated this login and is where MFA is enforced for it,
+     * so authup stacks nothing on top. The password grant for the SAME user
+     * still demands the factor, which is the half of the rule that would
+     * break first if someone widened the skip.
+     */
+    it('does not challenge a local factor for a federated login', async () => {
         // Provision the external user through a first login, then give it a
         // confirmed factor. An email authenticator is the only kind an admin
         // may enroll for someone else, and it is confirmed on create.
@@ -795,33 +802,44 @@ describe('identity-provider login completion', () => {
         );
 
         try {
-            const hosted = await runFederatedLogin();
+            const location = await completeFederatedLogin();
 
-            const response = await httpRequest(
-                suite,
-                'POST',
-                `identity-providers/${provider.id}/login-complete`,
-                {
-                    headers: { 'user-agent': USER_AGENT, 'content-type': 'application/json' },
-                    body: JSON.stringify({
-                        handle: hosted.searchParams.get('loginHandle'),
-                        challenge: CHALLENGE,
-                    }),
+            expect(`${location.origin}${location.pathname}`).toEqual(REDIRECT_URI);
+            expect(location.searchParams.get('code')).toBeTruthy();
+        } finally {
+            await suite.client.userAuthenticator.delete((user as { id: string }).id, authenticator.id);
+        }
+    });
+
+    it('still steps up when the application asks for MFA explicitly', async () => {
+        await runFederatedLogin();
+
+        const { data: users } = await suite.client.user.getMany({ filters: { realmId: realm.id } });
+        const user = users.find((row) => row.name !== 'admin');
+
+        const { data: authenticator } = await suite.client.userAuthenticator.enroll(
+            (user as { id: string }).id,
+            { kind: UserAuthenticatorKind.EMAIL },
+        );
+
+        try {
+            const codeRequest = buildCodeRequest({ acr_values: 'urn:authup:mfa' });
+            const hosted = await runFederatedLogin(codeRequest);
+            const accessToken = await redeemLoginHandle(hosted);
+
+            const approve = await httpRequest(suite, 'POST', 'authorize', {
+                headers: {
+                    authorization: `Bearer ${accessToken}`,
+                    'content-type': 'application/json',
+                    'user-agent': USER_AGENT,
                 },
-            );
+                body: Buffer.from(codeRequest, 'base64url').toString('utf-8'),
+            });
 
-            // The upstream credential alone yields NO bearer for a user who
-            // enrolled a factor on their authup account (issue #3454): the
-            // redemption answers with the restricted MFA-pending ticket, the
-            // same thing a password login gets, and the challenge routes
-            // complete the login from there.
-            expect(response.status).toEqual(400);
-
-            const body = await response.json();
-            expect(body.error).toEqual(OAuth2ErrorCode.MFA_REQUIRED);
-            expect(body.mfa_token).toBeTruthy();
-            expect(body.kinds).toContain(UserAuthenticatorKind.EMAIL);
-            expect(body.access_token).toBeUndefined();
+            // the application asked, and a local factor is the only way authup
+            // can answer it
+            expect(approve.status).toEqual(400);
+            await expect(approve.json()).resolves.toMatchObject({ error: OAuth2ErrorCode.MFA_REQUIRED });
         } finally {
             await suite.client.userAuthenticator.delete((user as { id: string }).id, authenticator.id);
         }

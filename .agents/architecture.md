@@ -2721,10 +2721,10 @@ stored on the state blob, establishes the authup session, and returns the
 browser to the hosted `/authorize` page carrying a one-time **login handle**
 for that session (plan 094). The RP's code is issued at the end of the hosted
 ladder, by the same `POST /authorize` an interactive login posts, so a
-federated login passes the gates a password login passes: the second factor
-and inline enrollment, `prompt=login` / `max_age` freshness, `select_account`,
-the `acr_values` step-up, consent and its persisted `auth_consents` rows
-(issue #3454). Three properties are load-bearing, and each of the first two
+federated login passes the gates that belong to it: `prompt=login` /
+`max_age` freshness, `select_account`, the `acr_values` step-up, consent and
+its persisted `auth_consents` rows (issue #3454). The local second factor is
+deliberately NOT among them - see *Intentional enforcement boundaries*. Three properties are load-bearing, and each of the first two
 was a shipped bug (issue #3446):
 
 The ladder itself is **`OAuth2FederatedLoginService`**
@@ -2876,20 +2876,6 @@ The handle is consumed on read (`cache.pop`), so a replay finds nothing and a
 wrong challenge costs the whole handle: there is no repeated guess to time,
 which is why the comparison is a plain one. Every refusal answers with one
 message, since the caller is anonymous.
-
-**A factor-holding user gets no bearer from the redemption.** It answers
-`mfa_required` carrying the restricted MFA-pending ticket (issue #3242) bound
-to the pending session, and the challenge routes complete the login and mint
-the pair, exactly as they do for a password login. Otherwise the upstream
-credential alone would still reach the whole API for a user who enrolled a
-factor on their authup account, which is the hole #3454 is about; the local
-gate would only have covered the application's code. Unlike the password
-grant this covers EVERY factor kind, including totp and recovery: the handle
-is consumed, so there are no credentials left to resubmit with an `otp`. The
-ticket's `exp` is capped to the pending session's own expiry, never extended,
-so an unfinished challenge dies with the login. `OAuth2MfaLoginService.complete`
-labels its LOGIN event from `session.authMethod`, so a federated completion
-reads `reason: 'federated'` rather than a password grant.
 
 The pending session is created with `authMethod: ext`, `mfaAt: null` and an
 `expiresAt` covering the handle AND the MFA ticket window when a ticket can be
@@ -3856,11 +3842,21 @@ mirrors this — when `userId !== '@me'` it offers only the email button
    the token endpoint. WebAuthn cannot ride a single POST — interactive kinds
    complete a fresh login through the MFA-pending ticket (below).
 
-**Intentional enforcement boundaries (#3251):** a federated IdP login is NO
-LONGER one of them. Since plan 094 the callback returns the browser to the
-hosted `/authorize` page, so the local factor is challenged there and
-`mfaRequired` routes a device-less federated user through inline enrollment,
-like any other login (issue #3454). Setting `mfaEnabled=false` is an explicit policy
+**Intentional enforcement boundaries (#3251):** a federated IdP login trusts
+the upstream provider as the authentication authority. Since plan 094 it runs
+the hosted ladder for consent and the prompt gates, but `authorizeInner` skips
+the local factor and inline enrollment for a session whose `authMethod` is
+`ext`, and the redemption consults no authenticator at all (settled #3454: the
+local factor belongs to a local credential, the upstream is usually the
+stronger authenticator, and the route is opt-in because an external identity
+reaches an existing account only through the bearer-authenticated link flow).
+The kit mirrors the rule with `localFactorApplies` so the page renders no
+challenge either. **The exception is an explicit `acr_values=urn:authup:mfa`**:
+the application asked, and a local factor is the only proof authup can
+produce, so the step-up branch applies to an `ext` session too. Keycloak and
+Authentik default the same way (a per-IdP post-login flow / a per-source
+Authenticator Validation stage is how an operator opts in). Setting
+`mfaEnabled=false` is an explicit policy
 downgrade for every user, including already-enrolled users — device rows remain
 stored and reactivate when the feature is enabled again. Finally, the device-less
 direct password-grant pass-through above is the bootstrap the hosted UI needs to

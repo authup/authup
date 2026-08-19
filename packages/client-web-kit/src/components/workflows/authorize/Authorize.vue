@@ -10,13 +10,8 @@ import type {
     OAuth2AuthorizationCodeRequest,
     Realm,
     Scope,
-    UserAuthenticatorKind,
 } from '@authup/core-kit';
-import type {
-    UserAuthenticatorChallengeResponse,
-    UserAuthenticatorChallengeVerifyResponse,
-} from '@authup/core-http-kit';
-import { ErrorCode } from '@authup/errors';
+import type { UserAuthenticatorChallengeResponse } from '@authup/core-http-kit';
 import { storeToRefs } from 'pinia';
 import type { PropType, VNodeChild } from 'vue';
 import {
@@ -35,6 +30,7 @@ import {
 } from '@authup/i18n';
 import {
     OAuth2AuthenticationContextClass,
+    OAuth2AuthenticationMethodReference,
     OAuth2AuthorizationPrompt,
     OAuth2ErrorCode,
     unwrapOAuth2Scope,
@@ -103,6 +99,7 @@ export default defineComponent({
         const store = injectStore();
         const {
             acr,
+            amr,
             loggedIn,
             lastAuthOrigin,
             realmId,
@@ -184,6 +181,30 @@ export default defineComponent({
 
         const accountConfirmed = computed<boolean>(() => accountConfirmedLocal.value);
 
+        /**
+         * Whether authup's OWN second factor applies to this session. It does
+         * not for a session an external identity provider established: that
+         * provider authenticated the login and is where MFA is enforced for
+         * it, so authup stacks nothing on top. The one exception is an
+         * application that asks for MFA explicitly through `acr_values` — it
+         * asked, and a local factor is the only way authup can answer.
+         *
+         * The server keeps its own copy of this rule in `authorizeInner`;
+         * this only decides what the page renders.
+         */
+        const localFactorApplies = computed<boolean>(() => {
+            const externallyAuthenticated = amr.value.includes(
+                OAuth2AuthenticationMethodReference.EXTERNAL,
+            );
+            if (!externallyAuthenticated) {
+                return true;
+            }
+
+            return (props.codeRequest?.acr_values ?? '')
+                .split(' ')
+                .includes(OAuth2AuthenticationContextClass.MFA);
+        });
+
         // MFA gate (plan 049). The server POST /authorize backstop is
         // authoritative; this renders the interactive challenge / inline
         // enrollment so the code request can succeed. The proof is
@@ -216,12 +237,6 @@ export default defineComponent({
             }
         };
 
-        // A federated user holding a confirmed factor gets no bearer from the
-        // redemption. The server answers `mfa_required` with the restricted
-        // MFA-pending ticket, and the challenge below completes the login and
-        // returns the grant, exactly as a password login does.
-        const federatedTicket = ref<string | null>(null);
-
         /**
          * A redemption that failed is terminal for this render. The person
          * came back from an external provider, so continuing the ladder
@@ -229,27 +244,6 @@ export default defineComponent({
          * application into the WRONG account, silently for a builtIn client.
          */
         const federatedError = ref<string | null>(null);
-
-        const loadTicketChallengeMaterial = async (ticket: string) => {
-            try {
-                const status = await httpClient.userAuthenticator.challenge({ authorizationHeader: { type: 'Bearer', token: ticket } });
-
-                mfaStatus.value = {
-                    required: true,
-                    enrollmentRequired: false,
-                    // the error's kinds stand unless this answer carries its
-                    // own: an empty list would leave the form with nothing to
-                    // render
-                    kinds: status.kinds.length > 0 ?
-                        status.kinds :
-                        (mfaStatus.value?.kinds ?? []),
-                    challenge: status.challenge,
-                };
-            } catch {
-                // keep the kinds the error carried; only the webauthn material
-                // is lost, and every other kind renders without it
-            }
-        };
 
         onMounted(async () => {
             const federated = props.federatedLogin;
@@ -270,57 +264,15 @@ export default defineComponent({
                 await store.loginWithTokenGrant(grant);
             } catch (e) {
                 const ctx = extractErrorContext(e);
-                const ticket = ctx.code === ErrorCode.OAUTH_MFA_REQUIRED &&
-                    typeof ctx.data?.mfa_token === 'string' ?
-                    ctx.data.mfa_token :
-                    null;
+                const message = ctx.message ??
+                    (e instanceof Error ? e.message : String(e));
 
-                if (ticket) {
-                    federatedTicket.value = ticket;
-                    mfaStatus.value = {
-                        required: true,
-                        enrollmentRequired: false,
-                        kinds: Array.isArray(ctx.data?.kinds) ?
-                            ctx.data?.kinds as `${UserAuthenticatorKind}`[] :
-                            [],
-                    };
-
-                    Promise.resolve().then(() => loadTicketChallengeMaterial(ticket));
-                } else {
-                    const message = ctx.message ??
-                        (e instanceof Error ? e.message : String(e));
-
-                    federatedError.value = message;
-                    emit('failed', message);
-                }
+                federatedError.value = message;
+                emit('failed', message);
             } finally {
                 federatedLoginPending.value = false;
             }
         });
-
-        const loginFailedText = useTranslation({
-            namespace: TranslatorTranslationNamespace.CLIENT,
-            key: TranslatorTranslationClientKey.LOGIN_FAILED,
-        });
-
-        const completeFederatedTicket = async (
-            response?: UserAuthenticatorChallengeVerifyResponse,
-        ) => {
-            if (!response || !response.token) {
-                emit('failed', loginFailedText.value);
-                return;
-            }
-
-            try {
-                await store.loginWithTokenGrant(response.token);
-
-                federatedTicket.value = null;
-                mfaSatisfiedLocal.value = true;
-            } catch (e) {
-                emit('failed', extractErrorContext(e).message ??
-                    (e instanceof Error ? e.message : String(e)));
-            }
-        };
 
         // Persisted-consent covering probe (plan 055). The subject's
         // per-scope consent rows for this client decide whether the manual
@@ -546,21 +498,6 @@ export default defineComponent({
                 }));
             }
 
-            // The federated login owes a second factor: no bearer exists yet,
-            // so the challenge runs against the restricted ticket and its
-            // verify response carries the grant.
-            if (federatedTicket.value) {
-                return wrapChild(h(AMfaChallengeForm, {
-                    kinds: mfaStatus.value?.kinds ?? [],
-                    challenge: mfaStatus.value?.challenge ?? null,
-                    ticket: federatedTicket.value,
-                    onDone: (response?: UserAuthenticatorChallengeVerifyResponse) => {
-                        completeFederatedTicket(response);
-                    },
-                    onFailed: (message: string) => emit('failed', message),
-                }));
-            }
-
             // Force re-authentication: prompt=login (proactive) or a login_required
             // surfaced mid-flow. Show the login form (with a banner) until a fresh
             // login on THIS page stamps lastAuthOrigin (accountConfirmed).
@@ -663,7 +600,7 @@ export default defineComponent({
             // request can't render a challenge form; its AuthorizeForm
             // auto-consent hits the server backstop and redirects the OIDC
             // error (interaction_required), so skip the form here for silent.
-            if (!isSilent && !mfaSatisfiedLocal.value) {
+            if (!isSilent && !mfaSatisfiedLocal.value && localFactorApplies.value) {
                 // Block consent until the status is known — AuthorizeForm
                 // auto-submits for built_in clients, so it must not render
                 // before we know whether a factor is required.

@@ -23,12 +23,10 @@ import {
     it,
 } from 'vitest';
 import type { App } from 'vue';
-import AMfaChallengeForm from '../../../../src/components/workflows/mfa/AMfaChallengeForm.vue';
 import AAccountPrompt from '../../../../src/components/workflows/authorize/AAccountPrompt.vue';
 import AAuthorize from '../../../../src/components/workflows/authorize/Authorize.vue';
 import AuthorizeForm from '../../../../src/components/workflows/authorize/AuthorizeForm.vue';
 import AuthorizeSilentRedirect from '../../../../src/components/workflows/authorize/AuthorizeSilentRedirect.vue';
-import { ErrorCode } from '@authup/errors';
 import {
     StoreAuthOrigin,
     injectStore,
@@ -678,29 +676,6 @@ describe('AAuthorize federated login handle', () => {
 
         expect(wrapper.find('.login-form-stub').exists()).toBe(false);
         expect(wrapper.find('.authorize-text-stub').exists()).toBe(true);
-    });
-
-    it('challenges the second factor against the ticket instead of taking a bearer', async () => {
-        // The server answers a factor-holding federated user with the
-        // restricted MFA-pending ticket, never a grant (issue #3454).
-        const { wrapper, store } = mountAuthorize({
-            loggedIn: false,
-            federatedLogin,
-            loginCompleteHandler: () => {
-                const error : any = new Error('Complete a second-factor challenge to continue.');
-                error.code = ErrorCode.OAUTH_MFA_REQUIRED;
-                error.kinds = ['totp'];
-                error.mfa_token = 'ticket-token';
-                throw error;
-            },
-        });
-        await flushPromises();
-
-        const challenge = wrapper.findComponent(AMfaChallengeForm);
-        expect(challenge.exists()).toBe(true);
-        expect(challenge.props('ticket')).toEqual('ticket-token');
-        // no session was established off the refusal
-        expect(store().accessToken).toBeFalsy();
     });
 
     it('stops on a failed redemption instead of continuing the ladder', async () => {

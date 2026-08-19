@@ -17,14 +17,12 @@ import {
     IdentityProviderProtocol,
     IdentityType,
     SessionAuthMethod,
-    UserAuthenticatorKind,
 } from '@authup/core-kit';
 import {
     OAuth2AuthenticationContextClass,
     OAuth2AuthenticationMethodReference,
     OAuth2ErrorCode,
     OAuth2RequestError,
-    isOAuth2Error,
 } from '@authup/specs';
 import { BadRequestError, InternalError } from '@authup/errors';
 import { describe, expect, it } from 'vitest';
@@ -73,46 +71,6 @@ function createUser(overrides: Partial<User> = {}) : User {
     } as User;
 }
 
-// A user holding a confirmed factor: the redemption must answer with the
-// restricted ticket instead of a grant.
-function buildServiceWithMfa(options: { ticketIssuer?: boolean } = {}) {
-    const handleStore = new FakeHandleStore();
-    const sessionManager = new FakeSessionManager();
-    const accessTokenIssuer = new FakeOAuth2TokenIssuer();
-    const refreshTokenIssuer = new FakeOAuth2TokenIssuer();
-    const mfaTicketIssuer = new FakeOAuth2TokenIssuer();
-    const providerId = randomUUID();
-
-    const service = new OAuth2FederatedLoginService({
-        options: { baseURL: 'https://idp.example.com/' },
-        accountManager: {} as IIdentityProviderAccountManager,
-        realmRepository: new FakeRealmRepository(),
-        codeRequestVerifier: new FakeVerifier({}),
-        sessionManager,
-        handleStore,
-        accessTokenIssuer,
-        refreshTokenIssuer,
-        mfaTicketIssuer: options.ticketIssuer === false ? undefined : mfaTicketIssuer,
-        mfaChallengeProvider: {
-            challenge: async () => ({
-                required: true,
-                enrollmentRequired: false,
-                kinds: [UserAuthenticatorKind.TOTP],
-            }),
-        },
-        authenticatorFactory: () => ({ authenticate: async () => createUser() } as any),
-    });
-
-    return {
-        service,
-        handleStore,
-        sessionManager,
-        accessTokenIssuer,
-        refreshTokenIssuer,
-        providerId,
-    };
-}
-
 function buildService(options: {
     verifier?: IOAuth2AuthorizationCodeRequestVerifier,
     user?: User,
@@ -147,6 +105,7 @@ function buildService(options: {
         handleStore, 
         sessionManager, 
         accessTokenIssuer,
+        refreshTokenIssuer,
     };
 }
 
@@ -672,78 +631,29 @@ describe('core/oauth2/federated-login redeem', () => {
         expect(accessTokenIssuer.issueCalls).toHaveLength(0);
     });
 
-    it('should answer a factor-holding user with a ticket rather than a bearer', async () => {
-        const parts = buildServiceWithMfa();
-
-        const provider = createProvider({ id: parts.providerId });
-        const result = await parts.service.complete({
-            provider,
-            codeRequest,
-            code: 'provider-code',
-            loginChallenge: CHALLENGE,
-            request,
-        });
-        if (result.kind !== 'issued') {
-            throw new Error('the completion was refused');
-        }
-
-        let raised : any;
-        try {
-            await parts.service.redeem({
-                challenge: CHALLENGE,
-                handle: result.loginHandle,
-                providerId: provider.id,
-                request,
-            });
-        } catch (e) {
-            raised = e;
-        }
-
-        // the upstream credential alone must not reach the API
-        expect(isOAuth2Error(raised)).toBe(true);
-        expect(raised.data.mfa_token).toBeTruthy();
-        expect(raised.data.kinds).toEqual([UserAuthenticatorKind.TOTP]);
-        expect(parts.accessTokenIssuer.issueCalls).toHaveLength(0);
-        expect(parts.refreshTokenIssuer.issueCalls).toHaveLength(0);
-        // the session stays pending until the factor verifies
-        expect(parts.sessionManager.refreshCalls).toHaveLength(0);
-    });
-
     /**
-     * The gate rests on the challenge provider alone. Were it to rest on the
-     * ticket issuer as well, an unwired issuer would drop the whole check and
-     * hand a factor-holding user the bearer it exists to withhold.
+     * The local second factor belongs to a local credential: an external
+     * provider authenticated this login and is where MFA is enforced for it.
+     * The redemption therefore consults no authenticator at all.
      */
-    it('should refuse rather than fall through when no ticket issuer is wired', async () => {
-        const parts = buildServiceWithMfa({ ticketIssuer: false });
+    it('should not consult the local second factor', async () => {
+        const {
+            service, 
+            provider, 
+            handle, 
+            accessTokenIssuer, 
+            refreshTokenIssuer,
+        } = await begin();
 
-        const provider = createProvider({ id: parts.providerId });
-        const result = await parts.service.complete({
-            loginChallenge: CHALLENGE,
-            provider,
-            codeRequest,
-            code: 'provider-code',
+        const grant = await service.redeem({
+            challenge: CHALLENGE,
+            handle,
+            providerId: provider.id,
             request,
         });
-        if (result.kind !== 'issued') {
-            throw new Error('the completion was refused');
-        }
 
-        let raised : any;
-        try {
-            await parts.service.redeem({
-                challenge: CHALLENGE,
-                handle: result.loginHandle,
-                providerId: provider.id,
-                request,
-            });
-        } catch (e) {
-            raised = e;
-        }
-
-        expect(isOAuth2Error(raised)).toBe(true);
-        expect(raised.data.mfa_token).toBeUndefined();
-        expect(parts.accessTokenIssuer.issueCalls).toHaveLength(0);
-        expect(parts.refreshTokenIssuer.issueCalls).toHaveLength(0);
+        expect(grant.access_token).toBeTruthy();
+        expect(accessTokenIssuer.issueCalls).toHaveLength(1);
+        expect(refreshTokenIssuer.issueCalls).toHaveLength(1);
     });
 });

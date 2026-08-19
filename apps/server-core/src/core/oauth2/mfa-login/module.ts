@@ -160,12 +160,7 @@ export class OAuth2MfaLoginService implements IOAuth2MfaLoginService {
             realmId: session.realmId,
             requestIpAddress: session.ipAddress ?? null,
             requestUserAgent: session.userAgent ?? null,
-            // A federated login completes through this same route (plan
-            // 094), and its session says so — the trail must not label it a
-            // password grant.
-            data: session.authMethod === SessionAuthMethod.EXTERNAL ?
-                { reason: 'federated' } :
-                { grantType: OAuth2TokenGrant.PASSWORD },
+            data: { grantType: OAuth2TokenGrant.PASSWORD },
         });
         this.metrics?.recordLogin('success');
 

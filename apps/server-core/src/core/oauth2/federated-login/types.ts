@@ -17,7 +17,6 @@ import type { IIdentityProviderAccountManager } from '../../identity/provider/ac
 import type { IOAuth2Authenticator } from '../../identity/provider/authentication/protocols/index.ts';
 import type { IEventService, IRealmRepository } from '../../entities/index.ts';
 import type { ISessionManager } from '../../authentication/index.ts';
-import type { IUserAuthenticatorChallengeProvider } from '../../entities/user-authenticator/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 import type { IOAuth2TokenIssuer } from '../token/index.ts';
 import type { IOAuth2AccessPolicyEvaluator } from '../access-policy/index.ts';
@@ -189,14 +188,12 @@ export interface IOAuth2FederatedLoginService {
      * Exchange a login handle for the grant of the session the callback
      * established. Refuses without detail: the caller is anonymous.
      *
-     * A user holding a confirmed authenticator gets NO grant here. It
-     * answers `mfa_required` carrying the restricted MFA-pending ticket
-     * (issue #3242) instead, so the upstream credential alone never yields
-     * an API bearer. The challenge routes complete the login from there,
-     * exactly as they do for a password login.
+     * The local second factor is deliberately NOT gated here: an external
+     * provider authenticated this login and is where MFA is enforced for it.
+     * An application that asks for one explicitly (`acr_values`) still steps
+     * up at `POST /authorize`.
      *
      * @throws BadRequestError
-     * @throws OAuth2MfaRequiredError
      */
     redeem(input: OAuth2FederatedLoginRedeemInput) : Promise<OAuth2TokenGrantResponse>;
 }
@@ -235,14 +232,6 @@ export type OAuth2FederatedLoginServiceContext = {
     handleStore: IOAuth2FederatedLoginHandleStore,
     accessTokenIssuer: IOAuth2TokenIssuer,
     refreshTokenIssuer: IOAuth2TokenIssuer,
-    /**
-     * Mints the MFA-pending ticket a redemption answers with while the
-     * second factor is outstanding. Without it a redemption for a
-     * factor-holding user is refused outright: the gate itself rests on
-     * `mfaChallengeProvider`, never on this being wired.
-     */
-    mfaTicketIssuer?: IOAuth2TokenIssuer,
-    mfaChallengeProvider?: IUserAuthenticatorChallengeProvider,
 
     accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,
     eventService?: IEventService,

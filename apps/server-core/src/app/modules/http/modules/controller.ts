@@ -554,8 +554,6 @@ export class HTTPControllerModule {
             handleStore: container.resolve(OAuth2InjectionToken.FederatedLoginHandleStore),
             accessTokenIssuer: container.resolve(OAuth2InjectionToken.AccessTokenIssuer),
             refreshTokenIssuer: container.resolve(OAuth2InjectionToken.RefreshTokenIssuer),
-            mfaTicketIssuer: container.resolve(OAuth2InjectionToken.MfaTokenIssuer),
-            mfaChallengeProvider: this.resolveUserAuthenticatorService(container),
 
             accessPolicyEvaluator: this.resolveAccessPolicyEvaluator(container),
             eventService,

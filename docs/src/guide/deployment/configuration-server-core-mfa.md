@@ -18,15 +18,18 @@ a second-factor challenge during password login and before authorization-code
 issuance. `mfaRequired` additionally routes a device-less user through inline
 enrollment on the hosted `/authorize` page.
 
-A federated identity-provider login is held to the same rule. The external
-callback establishes the session and returns the browser to the hosted
-`/authorize` page, which challenges the user's confirmed authenticators (and
-routes a device-less user through inline enrollment under `mfaRequired`) before
-the application's authorization code is issued. The upstream credential alone
-does not clear a factor enrolled on the Authup account, and the issued tokens
-report both the external authentication and the local OTP proof.
-
 The following boundaries are intentional:
+
+- A federated identity-provider login is authenticated by the external
+  provider, which is where MFA is configured and enforced for it. Authup does
+  not stack a local factor on top, and `mfaRequired` does not force local
+  enrollment on those users. The route is opt-in: a first federated login
+  provisions a NEW user, and an external identity reaches an existing account
+  only when that account's owner links it while signed in. Configure and
+  enforce MFA at the upstream provider. The one exception is an application
+  that requests `acr_values=urn:authup:mfa`: it asked for a proof, and a local
+  factor the user holds is the only one Authup can produce, so the hosted page
+  challenges it before issuing that application's authorization code.
 
 - Setting `mfaEnabled` to `false` disables both local MFA configuration and
   enforcement, including for users who already have confirmed authenticators.

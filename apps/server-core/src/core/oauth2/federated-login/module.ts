@@ -19,7 +19,6 @@ import type { Logger } from '@authup/server-kit';
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
 import {
     OAuth2ErrorCode,
-    OAuth2MfaRequiredError,
     OAuth2RequestError,
     OAuth2SubKind,
     isOAuth2Error,
@@ -27,7 +26,6 @@ import {
 import type { IEventService, IRealmRepository } from '../../entities/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 import type { ISessionManager } from '../../authentication/index.ts';
-import type { IUserAuthenticatorChallengeProvider } from '../../entities/user-authenticator/index.ts';
 // Deep imports, never the `core/identity` barrel: it reaches back into
 // this module through the core barrel, and the cycle would TDZ-crash.
 import type { IIdentityProviderAccountManager } from '../../identity/provider/account/types.ts';
@@ -71,10 +69,6 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
 
     protected refreshTokenIssuer : IOAuth2TokenIssuer;
 
-    protected mfaTicketIssuer? : IOAuth2TokenIssuer;
-
-    protected mfaChallengeProvider? : IUserAuthenticatorChallengeProvider;
-
     protected accessPolicyEvaluator? : IOAuth2AccessPolicyEvaluator;
 
     protected eventService? : IEventService;
@@ -94,8 +88,6 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
         this.handleStore = ctx.handleStore;
         this.accessTokenIssuer = ctx.accessTokenIssuer;
         this.refreshTokenIssuer = ctx.refreshTokenIssuer;
-        this.mfaTicketIssuer = ctx.mfaTicketIssuer;
-        this.mfaChallengeProvider = ctx.mfaChallengeProvider;
         this.accessPolicyEvaluator = ctx.accessPolicyEvaluator;
         this.eventService = ctx.eventService;
         this.metrics = ctx.metrics;
@@ -257,19 +249,9 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
         // second factor, inline enrollment, prompt/max_age freshness,
         // acr_values step-up and consent (plan 094).
         //
-        // The session has to outlive the handle: a factor-holding user
-        // answers the redemption with a challenge, and the emailed code alone
-        // is valid for ten minutes. So it is sized for the MFA ticket window
-        // when one can be issued (the shape `OAuth2MfaLoginService.issueTicket`
-        // keeps: one instant for the ticket and its pending session, so the
-        // two cannot drift), and for the handle otherwise. An abandoned login
-        // still self-expires and is swept; redemption extends it to the
-        // regular lifetime.
-        const expiresAt = Math.max(
-            Math.floor((Date.now() + OAUTH2_FEDERATED_LOGIN_HANDLE_TTL) / 1000),
-            this.mfaTicketIssuer ? this.mfaTicketIssuer.buildExp() : 0,
-        );
-
+        // Its lifetime is the handle's: an abandoned login self-expires and
+        // is swept with the regular session sweep, and redemption extends it
+        // to the regular one.
         const session = await this.sessionManager.create({
             userAgent: input.request?.userAgent ?? undefined,
             ipAddress: input.request?.ipAddress ?? undefined,
@@ -281,7 +263,7 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
             subKind: IdentityType.USER,
             mfaAt: null,
             authMethod: SessionAuthMethod.EXTERNAL,
-            expiresAt: new Date(expiresAt * 1000).toISOString(),
+            expiresAt: new Date(Date.now() + OAUTH2_FEDERATED_LOGIN_HANDLE_TTL).toISOString(),
         });
 
         const loginHandle = await this.handleStore.save({
@@ -345,60 +327,6 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
         }
 
         const realm = await this.realmRepository.resolve(existing.realmId, true);
-
-        // The second factor comes BEFORE any bearer, the same order the
-        // password grant keeps: an upstream credential must not be enough to
-        // reach the API for a user who enrolled a factor on their authup
-        // account (issue #3454). The answer is the restricted MFA-pending
-        // ticket (issue #3242) — accepted only by the challenge routes, which
-        // complete the login and mint the pair once the factor verifies.
-        // Unlike the password grant this covers EVERY kind: the handle is
-        // consumed, so there are no credentials left to resubmit with an
-        // `otp`.
-        if (!existing.mfaAt && this.mfaChallengeProvider) {
-            const status = await this.mfaChallengeProvider.challenge(
-                existing.sub,
-                { issueMaterial: false },
-            );
-
-            if (status.required) {
-                // The gate never depends on the ticket issuer being wired: a
-                // missing one refuses the login rather than falling through
-                // to the bearer below, which is the whole point of the gate.
-                // The person can still complete a fresh login elsewhere.
-                if (!this.mfaTicketIssuer) {
-                    throw new OAuth2MfaRequiredError({
-                        message: 'Complete a second-factor challenge to continue.',
-                        data: { kinds: status.kinds },
-                    });
-                }
-
-                // The pending session was created with room for this window,
-                // so the ticket takes its own full one. It is never extended:
-                // an unfinished challenge expires with the login.
-                const [token, payload] = await this.mfaTicketIssuer.issue({
-                    exp: this.mfaTicketIssuer.buildExp(),
-                    session_id: existing.id,
-                    user_agent: existing.userAgent,
-                    remote_address: existing.ipAddress,
-                    sub: existing.sub,
-                    sub_kind: OAuth2SubKind.USER,
-                    realm_id: existing.realmId,
-                    realm_name: realm.name,
-                });
-
-                throw new OAuth2MfaRequiredError({
-                    message: 'Complete a second-factor challenge to continue.',
-                    data: {
-                        kinds: status.kinds,
-                        mfa_token: token,
-                        mfa_token_expires_in: payload.exp ?
-                            payload.exp - Math.floor(Date.now() / 1000) :
-                            0,
-                    },
-                });
-            }
-        }
 
         // The login is complete now, so the pending session becomes a
         // regular one.

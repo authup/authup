@@ -177,6 +177,12 @@ export function createStore(context: StoreCreateContext) {
     // grant already verified the factor (otp param / MFA-pending ticket).
     const acr = ref<string | null>(null);
 
+    // How the current session authenticated (RFC 8176), sourced from the same
+    // introspection. `ext` marks a session an external identity provider
+    // established, which is where MFA is configured and enforced for it, so
+    // the hosted ladder asks for no local factor on top.
+    const amr = ref<string[]>([]);
+
     // --------------------------------------------------------------------
 
     const realm = ref<RealmMinimal | null>(null);
@@ -292,6 +298,7 @@ export function createStore(context: StoreCreateContext) {
         setUser(null);
         sessionId.value = null;
         acr.value = null;
+        amr.value = [];
         setRealm(null);
         setRealmManagement(null);
 
@@ -400,6 +407,7 @@ export function createStore(context: StoreCreateContext) {
         }
 
         acr.value = ctx.introspection.acr ?? null;
+        amr.value = ctx.introspection.amr ?? [];
 
         if (
             ctx.introspection.realm_id &&
@@ -772,5 +780,6 @@ export function createStore(context: StoreCreateContext) {
 
         sessionId,
         acr,
+        amr,
     };
 }
