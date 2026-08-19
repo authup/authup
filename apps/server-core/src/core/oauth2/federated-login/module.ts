@@ -297,6 +297,15 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
             throw refuse();
         }
 
+        // The pending session carries the pending login's own deadline, and
+        // the lookup is by id alone. Today the cache entry above expires with
+        // it, so this only fires on clock skew between the two stores, but the
+        // expiry must be enforced where it is written: `refresh` would extend
+        // an abandoned login into a regular session.
+        if (Date.parse(existing.expiresAt) <= Date.now()) {
+            throw refuse();
+        }
+
         const realm = await this.realmRepository.resolve(existing.realmId, true);
 
         // The login is complete now, so the pending session becomes a

@@ -451,6 +451,26 @@ describe('core/oauth2/federated-login — completing the handoff', () => {
         expect(accessTokenIssuer.issueCalls[0].acr).toBeUndefined();
     });
 
+    it('should refuse a pending login whose session has expired', async () => {
+        const {
+            service, 
+            provider, 
+            pendingLoginId, 
+            sessionId, 
+            sessionManager, 
+        } = await begin();
+
+        // the pending session carries the login's own deadline; the cache
+        // entry normally expires with it, so this is the clock-skew case
+        const session = await sessionManager.findOneById(sessionId) as Session;
+        session.expiresAt = new Date(Date.now() - 1_000).toISOString();
+
+        await expect(service.completeHandoff({ pendingLoginId, providerId: provider.id }))
+            .rejects.toThrow(/unknown or expired/);
+
+        expect(sessionManager.refreshCalls).toHaveLength(0);
+    });
+
     it('should carry a completed factor into the claims', async () => {
         const {
             service, 

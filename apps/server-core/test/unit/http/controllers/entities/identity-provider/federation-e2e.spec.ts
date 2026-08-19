@@ -212,7 +212,7 @@ describe('authup federating to authup', () => {
         //    redeems it at the upstream token endpoint for real.
         // httpRequest passes an absolute url straight through.
         const startCookie = (out.headers.get('set-cookie') ?? '').match(/authup_federated_login=([^;]*)/);
-        expect(startCookie).toBeTruthy();
+        expect(startCookie?.[1]).toBeTruthy();
 
         const back = await httpRequest(downstream, 'GET', callbackTarget, {
             redirect: 'manual',
@@ -229,7 +229,7 @@ describe('authup federating to authup', () => {
 
         const pendingLoginCookie = (back.headers.get('set-cookie') ?? '')
             .match(/authup_federated_login=([^;]*)/);
-        expect(pendingLoginCookie).toBeTruthy();
+        expect(pendingLoginCookie?.[1]).toBeTruthy();
 
         const redeem = await httpRequest(
             downstream,

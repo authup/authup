@@ -837,7 +837,11 @@ export class IdentityProviderController {
         setResponseCookie(event, OAUTH2_FEDERATED_LOGIN_COOKIE, value, {
             httpOnly: true,
             sameSite: 'lax',
-            secure: this.options.baseURL.startsWith('https://'),
+            // The scheme is read from the parsed URL rather than the raw
+            // string: `publicUrl` is validated but never canonicalized, so a
+            // configured `HTTPS://...` would leave a prefix test false and
+            // drop the flag from the one cookie the login is bound to.
+            secure: new URL(this.options.baseURL).protocol === 'https:',
             path: this.buildFederatedLoginCookiePath(),
             maxAge: OAUTH2_FEDERATED_LOGIN_TTL / 1000,
         });

@@ -185,7 +185,7 @@ because the provider is the authentication authority (see
 [Identity Providers](../user/identity-providers.md)). An application that needs
 a proof regardless can request one:
 
-```
+```http
 GET /authorize?...&acr_values=urn:authup:mfa
 ```
 

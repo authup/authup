@@ -74,7 +74,7 @@ For an OAuth2 or OpenID Connect provider you need, from that provider:
 And at the provider, Authup's callback URL must be registered as a valid
 redirect URI:
 
-```
+```text
 <publicUrl>/identity-providers/<provider-id>/authorize-in
 ```
 
