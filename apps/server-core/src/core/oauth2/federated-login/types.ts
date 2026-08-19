@@ -132,14 +132,6 @@ export type OAuth2FederatedLoginHandle = {
      * Actor name for the LOGIN security event.
      */
     userName?: string | null,
-    /**
-     * The callback request's address and agent. Unlike the account link
-     * handle, redemption carries no bearer, so these are all that ties the
-     * handle to the browser it was minted for. Without them a handed-out
-     * handle URL would log a victim into the attacker's account.
-     */
-    ipAddress?: string | null,
-    userAgent?: string | null,
 };
 
 export interface IOAuth2FederatedLoginHandleStore {
@@ -246,7 +238,8 @@ export type OAuth2FederatedLoginServiceContext = {
     /**
      * Mints the MFA-pending ticket a redemption answers with while the
      * second factor is outstanding. Without it a redemption for a
-     * factor-holding user fails closed rather than handing out a bearer.
+     * factor-holding user is refused outright: the gate itself rests on
+     * `mfaChallengeProvider`, never on this being wired.
      */
     mfaTicketIssuer?: IOAuth2TokenIssuer,
     mfaChallengeProvider?: IUserAuthenticatorChallengeProvider,

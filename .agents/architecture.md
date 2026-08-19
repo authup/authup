@@ -2838,26 +2838,39 @@ identity object (it carries the provider entity with its EA-loaded
 `clientSecret` and the raw external token payload) and never a token.
 
 `POST /identity-providers/:id/login-complete` exchanges it, unauthenticated,
-for the grant. **The load-bearing binding is the login challenge, not the
-address and agent.** The kit's `LoginForm` mints it before the hop
-(`createFederatedLoginChallenge`, `core/federated-login.ts`), keeps it in the
-hosted origin's `sessionStorage` and sends it on `authorize-out`, which stores
-it on the state blob; the callback carries it onto the handle, and the hosted
-page presents it back when it redeems. Only the browser that STARTED the login
-holds it, and no other origin can write that storage. Without it an attacker
-could run a federated login for their own external account and hand the
-resulting `/authorize?...&loginHandle=` URL to someone else, whose browser
-would adopt that session and then consent the application into it: login CSRF,
-and NEW to this design, because the code the callback used to mint was bound
-to the attacker's own PKCE challenge and died at the RP. The address and agent
-cannot carry that weight, and the repo already recorded why for issue #3439:
-both are chosen by whoever makes the callback request (under the shipped
-`trustProxy: true` the address is the client-supplied left-most
-`X-Forwarded-For` entry). They stay as a barrier against a leaked URL replayed
-from elsewhere. `authorize-out` therefore REQUIRES `loginChallenge` and
-refuses without it, the same posture #3457 took for the code request: a login
-that cannot end in a redeemable handle must not start. Both parameters are in
-the access log's `SENSITIVE_QUERY_PARAMS`.
+for the grant. **The binding is the login challenge, and nothing else.** The
+kit's `LoginForm` mints it after mount (`createFederatedLoginChallenge`,
+`core/federated-login.ts`), keeps it in the hosted origin's `sessionStorage`
+and carries it on the identity-provider tile's own `href`, so a middle click
+or "open in new tab" starts the same login a left click does. `authorize-out`
+stores it on the state blob; the callback carries it onto the handle; the
+hosted page presents it back when it redeems. Only the browser that STARTED
+the login holds it, and no other origin can read or write that storage.
+Without it an attacker could run a federated login for their own external
+account and hand the resulting `/authorize?...&loginHandle=` URL to someone
+else, whose browser would adopt that session and then consent the application
+into it: login CSRF, and NEW to this design, because the code the callback
+used to mint was bound to the attacker's own PKCE challenge and died at the
+RP.
+
+The callback request's address and user agent are deliberately NOT compared.
+They cannot carry that weight (both are chosen by whoever makes that request,
+and under the shipped `trustProxy: true` the address is the client-supplied
+left-most `X-Forwarded-For` entry), and comparing them across a top-level
+navigation and the page's own XHR is the shape issue #3439 rejected: a proxy
+pool or a re-homed mobile connection would break a legitimate login for no
+security gain.
+
+A start without a challenge cannot end in a redeemable handle, so
+`authorize-out` answers it with a redirect back to the hosted page rather than
+an error: the tile carries the challenge from the moment the page hydrates, so
+such a start is a click that raced it, and the person just clicks again. The
+callback refuses a challenge-less state the same way (a `codeRequest` refusal,
+bounced to the hosted page) BEFORE the provider's single-use code is spent,
+which is what a state minted by an older instance during a rolling deploy
+meets. Both parameters are in the access log's `SENSITIVE_QUERY_PARAMS`, and
+`serve()` accepts `provider` only as an id, since the page interpolates it
+into the redemption request path.
 
 The handle is consumed on read (`cache.pop`), so a replay finds nothing and a
 wrong challenge costs the whole handle: there is no repeated guess to time,
@@ -2879,9 +2892,12 @@ labels its LOGIN event from `session.authMethod`, so a federated completion
 reads `reason: 'federated'` rather than a password grant.
 
 The pending session is created with `authMethod: ext`, `mfaAt: null` and an
-`expiresAt` equal to the handle TTL (the `issueTicket` shape: an abandoned
-login self-expires into the regular session sweep), and `redeem()` extends it
-to the full lifetime. It carries no `clientId`: that column is the client
+`expiresAt` covering the handle AND the MFA ticket window when a ticket can be
+issued, because the second factor follows the redemption and an emailed code
+alone is valid for ten minutes (the `issueTicket` shape: one instant for the
+ticket and its pending session, so the two cannot drift; an abandoned login
+still self-expires into the regular session sweep). `redeem()` extends it to
+the full lifetime only on the branch that mints the pair. It carries no `clientId`: that column is the client
 SUBJECT foreign key, and the application lands on the token rows at the
 `/token` exchange. From the redemption on, the flow is the hosted ladder: the
 MFA challenge stamps `mfaAt` on that very session, `POST /authorize` reads it

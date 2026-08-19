@@ -297,14 +297,6 @@ export class IdentityProviderController {
             throw OAuth2RequestError.malformed('A federated login requires an authorization code request.');
         }
 
-        // Minted by the hosted login form and kept in that origin's session
-        // storage (plan 094). It is the only thing that ties the login handle
-        // the callback returns to the browser that started the login, so a
-        // login without one could only end in a handle nobody may redeem.
-        if (typeof query.loginChallenge !== 'string' || query.loginChallenge.length === 0) {
-            throw OAuth2RequestError.malformed('A federated login requires a login challenge.');
-        }
-
         let codeRequestDecoded: OAuth2AuthorizationCodeRequest;
 
         try {
@@ -325,6 +317,20 @@ export class IdentityProviderController {
         }
 
         const authenticator = this.buildProviderAuthenticator(entity);
+
+        // Minted by the hosted login form and kept in that origin's session
+        // storage (plan 094). It is what ties the login handle the callback
+        // returns to the browser that started the login, so a login without
+        // one could only end in a handle nobody may redeem.
+        //
+        // The answer is the hosted page rather than an error: the form
+        // carries the challenge on the tile's href from the moment it
+        // hydrates, so a start without one is a click that raced the page,
+        // and the person just clicks again. This is a top-level navigation in
+        // the middle of a login either way, never a place for a JSON body.
+        if (typeof query.loginChallenge !== 'string' || query.loginChallenge.length === 0) {
+            return sendRedirect(event, this.buildHostedAuthorizeURL(data.data).href);
+        }
 
         const state = await this.saveAuthorizationState(event, {
             codeRequest: data.data,

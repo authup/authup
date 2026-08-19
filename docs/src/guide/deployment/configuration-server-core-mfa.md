@@ -41,11 +41,6 @@ The following boundaries are intentional:
   code flow when enrollment must be enforced before issuing an application
   token.
 
-An external login that continues through the hosted authorization flow can
-still encounter the normal `/authorize` MFA backstop before a later client
-authorization code is issued. The bootstrap session created by the external
-callback itself is not locally MFA-gated.
-
 ## Cache availability
 
 MFA verification uses a per-user cache lock to serialize factor consumption.

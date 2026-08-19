@@ -178,6 +178,19 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
         // applies. Disabling a provider has to stop logins in flight too,
         // otherwise it only stops new ones. Checked before the exchange, so
         // the refusal contacts the provider not at all.
+        // A login whose state carries no challenge can only end in a handle
+        // nobody may redeem, so it is refused here rather than after the
+        // provider's single-use code is spent and a user provisioned. Reached
+        // by a state minted before this shipped; the hosted page re-renders
+        // the request and the next attempt carries one.
+        if (!input.loginChallenge) {
+            return {
+                kind: 'refused',
+                refusal: OAuth2FederatedLoginRefusal.CODE_REQUEST,
+                codeRequest: verified.data,
+            };
+        }
+
         if (!provider.enabled) {
             return {
                 kind: 'refused',
@@ -244,8 +257,19 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
         // second factor, inline enrollment, prompt/max_age freshness,
         // acr_values step-up and consent (plan 094).
         //
-        // Its lifetime is the handle's: an abandoned login self-expires and
-        // is swept, and redemption extends it to the regular one.
+        // The session has to outlive the handle: a factor-holding user
+        // answers the redemption with a challenge, and the emailed code alone
+        // is valid for ten minutes. So it is sized for the MFA ticket window
+        // when one can be issued (the shape `OAuth2MfaLoginService.issueTicket`
+        // keeps: one instant for the ticket and its pending session, so the
+        // two cannot drift), and for the handle otherwise. An abandoned login
+        // still self-expires and is swept; redemption extends it to the
+        // regular lifetime.
+        const expiresAt = Math.max(
+            Math.floor((Date.now() + OAUTH2_FEDERATED_LOGIN_HANDLE_TTL) / 1000),
+            this.mfaTicketIssuer ? this.mfaTicketIssuer.buildExp() : 0,
+        );
+
         const session = await this.sessionManager.create({
             userAgent: input.request?.userAgent ?? undefined,
             ipAddress: input.request?.ipAddress ?? undefined,
@@ -257,7 +281,7 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
             subKind: IdentityType.USER,
             mfaAt: null,
             authMethod: SessionAuthMethod.EXTERNAL,
-            expiresAt: new Date(Date.now() + OAUTH2_FEDERATED_LOGIN_HANDLE_TTL).toISOString(),
+            expiresAt: new Date(expiresAt * 1000).toISOString(),
         });
 
         const loginHandle = await this.handleStore.save({
@@ -265,8 +289,6 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
             loginChallenge: input.loginChallenge,
             providerId: provider.id,
             userName: user.name,
-            ipAddress: input.request?.ipAddress ?? null,
-            userAgent: input.request?.userAgent ?? null,
         });
 
         return {
@@ -287,19 +309,24 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
             throw refuse();
         }
 
-        // What makes a handed-out handle URL inert. The challenge is the
-        // load-bearing one: it was minted by the login form before the hop
-        // and lives in the hosted origin's session storage, so only the
-        // browser that STARTED this login can present it. Without it an
-        // attacker could run a federated login for their own external
-        // account and hand the resulting URL to someone else, whose browser
-        // would adopt that session and then consent the application into it
-        // (login CSRF). The callback request's address and agent cannot
-        // carry that weight: both are chosen by whoever makes that request
-        // (under the shipped `trustProxy: true` the address is the
-        // client-supplied left-most `X-Forwarded-For` entry), so they are
-        // kept as a barrier against a leaked URL replayed from elsewhere,
-        // never as the browser binding. Same reasoning as issue #3439.
+        // What makes a handed-out handle URL inert: it may only be redeemed
+        // against the provider it was minted for, and only by the browser
+        // that STARTED the login, which is what the challenge proves. That
+        // challenge was minted by the login form and lives in the hosted
+        // origin's session storage, where no other origin can read or write
+        // it. Without it an attacker could run a federated login for their
+        // own external account and hand the resulting URL to someone else,
+        // whose browser would adopt that session and then consent the
+        // application into it (login CSRF).
+        //
+        // The callback request's address and agent are deliberately NOT
+        // compared. They cannot carry that weight, since both are chosen by
+        // whoever makes that request (under the shipped `trustProxy: true`
+        // the address is the client-supplied left-most `X-Forwarded-For`
+        // entry), and comparing them across a top-level navigation and the
+        // page's own XHR is the shape issue #3439 rejected: a proxy pool or
+        // a re-homed mobile connection would break a legitimate login for no
+        // security gain.
         //
         // A plain comparison is enough: the handle is consumed above, so a
         // wrong challenge costs the whole handle and there is no repeated
@@ -307,9 +334,7 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
         if (
             stash.providerId !== input.providerId ||
             !stash.loginChallenge ||
-            stash.loginChallenge !== input.challenge ||
-            (stash.ipAddress ?? null) !== (input.request?.ipAddress ?? null) ||
-            (stash.userAgent ?? null) !== (input.request?.userAgent ?? null)
+            stash.loginChallenge !== input.challenge
         ) {
             throw refuse();
         }
@@ -330,22 +355,29 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
         // Unlike the password grant this covers EVERY kind: the handle is
         // consumed, so there are no credentials left to resubmit with an
         // `otp`.
-        if (!existing.mfaAt && this.mfaChallengeProvider && this.mfaTicketIssuer) {
+        if (!existing.mfaAt && this.mfaChallengeProvider) {
             const status = await this.mfaChallengeProvider.challenge(
                 existing.sub,
                 { issueMaterial: false },
             );
 
             if (status.required) {
-                // Capped to the pending session's own expiry: the ticket is
-                // only usable while that session lives, and a ticket outliving
-                // it would just fail at the challenge route. Never extended,
-                // so an unfinished challenge expires with the login.
-                const sessionExp = Math.floor(new Date(existing.expiresAt).getTime() / 1000);
-                const exp = Math.min(this.mfaTicketIssuer.buildExp(), sessionExp);
+                // The gate never depends on the ticket issuer being wired: a
+                // missing one refuses the login rather than falling through
+                // to the bearer below, which is the whole point of the gate.
+                // The person can still complete a fresh login elsewhere.
+                if (!this.mfaTicketIssuer) {
+                    throw new OAuth2MfaRequiredError({
+                        message: 'Complete a second-factor challenge to continue.',
+                        data: { kinds: status.kinds },
+                    });
+                }
 
+                // The pending session was created with room for this window,
+                // so the ticket takes its own full one. It is never extended:
+                // an unfinished challenge expires with the login.
                 const [token, payload] = await this.mfaTicketIssuer.issue({
-                    exp,
+                    exp: this.mfaTicketIssuer.buildExp(),
                     session_id: existing.id,
                     user_agent: existing.userAgent,
                     remote_address: existing.ipAddress,

@@ -30,7 +30,6 @@ import { BadRequestError, InternalError } from '@authup/errors';
 import { describe, expect, it } from 'vitest';
 import { OAuth2FederatedLoginService } from '../../../../../src/core/oauth2/federated-login/module.ts';
 import { OAuth2FederatedLoginRefusal } from '../../../../../src/core/oauth2/federated-login/types.ts';
-import { OAUTH2_FEDERATED_LOGIN_HANDLE_TTL } from '../../../../../src/core/oauth2/federated-login/constants.ts';
 import type { IOAuth2AuthorizationCodeRequestVerifier } from '../../../../../src/core/oauth2/authorization/index.ts';
 import type { IOAuth2AccessPolicyEvaluator } from '../../../../../src/core/oauth2/access-policy/index.ts';
 import type { IIdentityProviderAccountManager } from '../../../../../src/core/identity/provider/account/types.ts';
@@ -76,7 +75,7 @@ function createUser(overrides: Partial<User> = {}) : User {
 
 // A user holding a confirmed factor: the redemption must answer with the
 // restricted ticket instead of a grant.
-function buildServiceWithMfa() {
+function buildServiceWithMfa(options: { ticketIssuer?: boolean } = {}) {
     const handleStore = new FakeHandleStore();
     const sessionManager = new FakeSessionManager();
     const accessTokenIssuer = new FakeOAuth2TokenIssuer();
@@ -93,7 +92,7 @@ function buildServiceWithMfa() {
         handleStore,
         accessTokenIssuer,
         refreshTokenIssuer,
-        mfaTicketIssuer,
+        mfaTicketIssuer: options.ticketIssuer === false ? undefined : mfaTicketIssuer,
         mfaChallengeProvider: {
             challenge: async () => ({
                 required: true,
@@ -190,15 +189,15 @@ describe('core/oauth2/federated-login — OAuth2FederatedLoginService', () => {
             ipAddress: '203.0.113.7',
             userAgent: 'agent',
         });
-        // the pending session lives exactly as long as the handle
+        // the pending session covers at least the handle, and the second
+        // factor that may follow it
         expect(new Date(session.expiresAt as string).getTime())
-            .toBeLessThanOrEqual(Date.now() + OAUTH2_FEDERATED_LOGIN_HANDLE_TTL);
+            .toBeGreaterThan(Date.now());
 
         expect(handleStore.saved[0]).toMatchObject({
             providerId: provider.id,
             userName: user.name,
-            ipAddress: '203.0.113.7',
-            userAgent: 'agent',
+            loginChallenge: CHALLENGE,
         });
     });
 
@@ -605,33 +604,6 @@ describe('core/oauth2/federated-login redeem', () => {
         expect(accessTokenIssuer.issueCalls).toHaveLength(0);
     });
 
-    /**
-     * Redemption carries no bearer, so the browser binding is what stops a
-     * handed-out handle URL from logging a victim into the account the
-     * attacker authenticated as.
-     */
-    it.each([
-        ['address', { ipAddress: '198.51.100.9', userAgent: 'agent' }],
-        ['agent', { ipAddress: '203.0.113.7', userAgent: 'other-agent' }],
-    ])('should refuse a handle redeemed from another %s', async (_name, other) => {
-        const {
-            service, 
-            provider, 
-            handle, 
-            accessTokenIssuer, 
-        } = await begin();
-
-        await expect(service.redeem({
-            challenge: CHALLENGE,
-            handle, 
-            providerId: provider.id, 
-            request: other, 
-        }))
-            .rejects.toThrow(BadRequestError);
-
-        expect(accessTokenIssuer.issueCalls).toHaveLength(0);
-    });
-
     it('should refuse once the session is gone', async () => {
         const {
             service, 
@@ -660,6 +632,28 @@ describe('core/oauth2/federated-login redeem', () => {
      * the origin that started the login, so a handle handed to another
      * browser cannot be redeemed there.
      */
+    it('should refuse a completion whose state carries no challenge', async () => {
+        const {
+            service, 
+            handleStore, 
+            sessionManager, 
+        } = buildService();
+
+        const result = await service.complete({
+            loginChallenge: '',
+            provider: createProvider(),
+            codeRequest,
+            code: 'provider-code',
+            request,
+        });
+
+        // refused before a user is provisioned and a handle nobody could
+        // redeem is minted
+        expect(result.kind).toEqual('refused');
+        expect(handleStore.saved).toHaveLength(0);
+        expect(sessionManager.createCalls).toHaveLength(0);
+    });
+
     it('should refuse a handle presented without the challenge that started the login', async () => {
         const {
             service, 
@@ -713,5 +707,43 @@ describe('core/oauth2/federated-login redeem', () => {
         expect(parts.refreshTokenIssuer.issueCalls).toHaveLength(0);
         // the session stays pending until the factor verifies
         expect(parts.sessionManager.refreshCalls).toHaveLength(0);
+    });
+
+    /**
+     * The gate rests on the challenge provider alone. Were it to rest on the
+     * ticket issuer as well, an unwired issuer would drop the whole check and
+     * hand a factor-holding user the bearer it exists to withhold.
+     */
+    it('should refuse rather than fall through when no ticket issuer is wired', async () => {
+        const parts = buildServiceWithMfa({ ticketIssuer: false });
+
+        const provider = createProvider({ id: parts.providerId });
+        const result = await parts.service.complete({
+            loginChallenge: CHALLENGE,
+            provider,
+            codeRequest,
+            code: 'provider-code',
+            request,
+        });
+        if (result.kind !== 'issued') {
+            throw new Error('the completion was refused');
+        }
+
+        let raised : any;
+        try {
+            await parts.service.redeem({
+                challenge: CHALLENGE,
+                handle: result.loginHandle,
+                providerId: provider.id,
+                request,
+            });
+        } catch (e) {
+            raised = e;
+        }
+
+        expect(isOAuth2Error(raised)).toBe(true);
+        expect(raised.data.mfa_token).toBeUndefined();
+        expect(parts.accessTokenIssuer.issueCalls).toHaveLength(0);
+        expect(parts.refreshTokenIssuer.issueCalls).toHaveLength(0);
     });
 });

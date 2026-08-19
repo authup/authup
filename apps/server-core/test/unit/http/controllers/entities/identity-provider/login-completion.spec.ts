@@ -299,7 +299,7 @@ describe('identity-provider login completion', () => {
         expect(response.status).toEqual(400);
     });
 
-    it('refuses a login handle redeemed from another browser', async () => {
+    it('refuses a login handle presented without the challenge that started the login', async () => {
         const hosted = await runFederatedLogin();
 
         const response = await httpRequest(
@@ -307,12 +307,28 @@ describe('identity-provider login completion', () => {
             'POST',
             `identity-providers/${provider.id}/login-complete`,
             {
-                headers: { 'user-agent': 'a-different-agent', 'content-type': 'application/json' },
-                body: JSON.stringify({ handle: hosted.searchParams.get('loginHandle'), challenge: CHALLENGE }),
+                headers: { 'user-agent': USER_AGENT, 'content-type': 'application/json' },
+                body: JSON.stringify({
+                    handle: hosted.searchParams.get('loginHandle'),
+                    challenge: 'a-challenge-this-browser-never-minted',
+                }),
             },
         );
 
         expect(response.status).toEqual(400);
+    });
+
+    it('returns the person to the login page when the start carried no challenge', async () => {
+        // the tile carries the challenge on its href from the moment the page
+        // hydrates, so a start without one is a click that raced it
+        const response = await httpRequest(
+            suite,
+            'GET',
+            `identity-providers/${provider.id}/authorize-out?codeRequest=${buildCodeRequest()}`,
+            { headers: { 'user-agent': USER_AGENT }, redirect: 'manual' },
+        );
+
+        expectHostedBounce(response, client.id, null);
     });
 
     it('mints a code the public client redeems with its PKCE verifier', async () => {

@@ -1,10 +1,10 @@
 <script lang="ts">
-/* global window */
 import type { PropType, Ref } from 'vue';
 import {
     computed,
     defineComponent,
     nextTick,
+    onMounted,
     reactive,
     ref,
     shallowRef,
@@ -346,29 +346,35 @@ export default defineComponent({
             }
         };
 
-        const buildIdentityProviderURL = (id: string) => apiClient.identityProvider
-            .getAuthorizeUri(id, { codeRequest: props.codeRequest });
-
         /**
-         * Start a federated login (plan 094). The challenge is minted HERE,
-         * kept in this origin's session storage, and presented again when the
-         * hosted page redeems the login handle the callback returns.
-         *
-         * It is what ties the handle to this browser: the callback's request
+         * The federated login challenge (plan 094). It is minted HERE, kept
+         * in this origin's session storage, and presented again when the
+         * hosted page redeems the login handle the callback returns. That is
+         * what ties the handle to this browser: the callback's request
          * address and user agent are chosen by whoever makes that request, so
          * without it an attacker could mint a handle for their own external
          * account and hand the URL to someone else, whose browser would adopt
-         * that session (login CSRF). Nothing can write this origin's session
-         * storage from another one.
+         * that session. Nothing can write this origin's session storage from
+         * another one.
          *
-         * The href stays plain, so the SSR and client renders agree; the
-         * navigation is performed here instead.
+         * Minted after mount, so the server and client renders agree, and
+         * carried by the href itself rather than a click handler: a tile that
+         * only works on a plain left click would dead-end a middle click or
+         * "open in new tab" on the server's refusal.
          */
-        const startIdentityProviderLogin = (id: string) => {
-            const url = new URL(buildIdentityProviderURL(id));
-            url.searchParams.set('loginChallenge', createFederatedLoginChallenge());
+        const loginChallenge = ref<string | null>(null);
 
-            window.location.assign(url.href);
+        onMounted(() => {
+            loginChallenge.value = createFederatedLoginChallenge();
+        });
+
+        const buildIdentityProviderURL = (id: string) => {
+            const url = apiClient.identityProvider
+                .getAuthorizeUri(id, { codeRequest: props.codeRequest });
+
+            return loginChallenge.value ?
+                `${url}${url.includes('?') ? '&' : '?'}loginChallenge=${encodeURIComponent(loginChallenge.value)}` :
+                url;
         };
 
         // useSubmitButton from @vuecs/forms returns a computed binding
@@ -402,7 +408,6 @@ export default defineComponent({
             identityProviderQuery,
             identityProviderRef,
             buildIdentityProviderURL,
-            startIdentityProviderLogin,
             translationsDefault,
         };
     },
@@ -583,7 +588,6 @@ export default defineComponent({
                                         size="sm"
                                         color="neutral"
                                         class="p-2 a-login-provider-box bg-fg"
-                                        @click.prevent="startIdentityProviderLogin(item.id)"
                                     >
                                         <div class="flex flex-col">
                                             <div class="text-center mb-1">

@@ -222,6 +222,14 @@ export default defineComponent({
         // returns the grant, exactly as a password login does.
         const federatedTicket = ref<string | null>(null);
 
+        /**
+         * A redemption that failed is terminal for this render. The person
+         * came back from an external provider, so continuing the ladder
+         * against whatever session the cookies already hold would consent an
+         * application into the WRONG account, silently for a builtIn client.
+         */
+        const federatedError = ref<string | null>(null);
+
         const loadTicketChallengeMaterial = async (ticket: string) => {
             try {
                 const status = await httpClient.userAuthenticator.challenge({ authorizationHeader: { type: 'Bearer', token: ticket } });
@@ -229,7 +237,12 @@ export default defineComponent({
                 mfaStatus.value = {
                     required: true,
                     enrollmentRequired: false,
-                    kinds: status.kinds,
+                    // the error's kinds stand unless this answer carries its
+                    // own: an empty list would leave the form with nothing to
+                    // render
+                    kinds: status.kinds.length > 0 ?
+                        status.kinds :
+                        (mfaStatus.value?.kinds ?? []),
                     challenge: status.challenge,
                 };
             } catch {
@@ -274,7 +287,11 @@ export default defineComponent({
 
                     Promise.resolve().then(() => loadTicketChallengeMaterial(ticket));
                 } else {
-                    emit('failed', ctx.message ?? (e instanceof Error ? e.message : String(e)));
+                    const message = ctx.message ??
+                        (e instanceof Error ? e.message : String(e));
+
+                    federatedError.value = message;
+                    emit('failed', message);
                 }
             } finally {
                 federatedLoginPending.value = false;
@@ -520,6 +537,13 @@ export default defineComponent({
             // application a code for the wrong account.
             if (federatedLoginPending.value) {
                 return wrapChild(h(AuthorizeText, { message: loadingText.value }));
+            }
+
+            if (federatedError.value) {
+                return wrapChild(h(AuthorizeText, {
+                    message: federatedError.value,
+                    isError: true,
+                }));
             }
 
             // The federated login owes a second factor: no bearer exists yet,

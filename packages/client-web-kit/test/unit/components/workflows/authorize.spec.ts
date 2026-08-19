@@ -703,7 +703,7 @@ describe('AAuthorize federated login handle', () => {
         expect(store().accessToken).toBeFalsy();
     });
 
-    it('falls through to the login form when the redemption fails', async () => {
+    it('stops on a failed redemption instead of continuing the ladder', async () => {
         const { wrapper } = mountAuthorize({
             loggedIn: false,
             federatedLogin,
@@ -711,7 +711,27 @@ describe('AAuthorize federated login handle', () => {
         });
         await flushPromises();
 
-        expect(wrapper.find('.login-form-stub').exists()).toBe(true);
         expect(wrapper.emitted('failed')).toBeTruthy();
+        expect(wrapper.find('.login-form-stub').exists()).toBe(false);
+        expect(wrapper.find('.authorize-text-stub').text()).toContain('handle is spent');
+    });
+
+    /**
+     * The person came back from an external provider: consenting the
+     * application into whatever account the cookies already held would be
+     * silent for a builtIn client.
+     */
+    it('does not consent a pre-existing session when the redemption fails', async () => {
+        const { wrapper } = mountAuthorize({
+            loggedIn: true,
+            clientBuiltIn: true,
+            prompt: '',
+            federatedLogin,
+            loginCompleteHandler: () => { throw new Error('handle is spent'); },
+        });
+        await flushPromises();
+
+        expect(wrapper.findComponent(AuthorizeForm).exists()).toBe(false);
+        expect(wrapper.find('.authorize-text-stub').text()).toContain('handle is spent');
     });
 });

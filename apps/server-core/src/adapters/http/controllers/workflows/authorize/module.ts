@@ -14,6 +14,7 @@ import {
 import { URL } from 'node:url';
 
 import type { IAppEvent } from 'routup';
+import { isUUID } from '@authup/kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     Client,
@@ -203,10 +204,12 @@ export class AuthorizeController {
         // Both parameters are dropped from `requestPath`, so the register /
         // password links never lead back into a consumed handle.
         const query = useRequestQuery(event);
+        // `provider` is interpolated into the redemption request path by the
+        // page, so it is accepted as an id and nothing else.
         const federatedLogin = typeof query.loginHandle === 'string' &&
             query.loginHandle.length > 0 &&
             typeof query.provider === 'string' &&
-            query.provider.length > 0 ?
+            isUUID(query.provider) ?
             { handle: query.loginHandle, providerId: query.provider } :
             undefined;
 

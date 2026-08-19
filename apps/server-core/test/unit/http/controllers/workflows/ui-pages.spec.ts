@@ -105,6 +105,9 @@ describe('src/http/controllers/workflows (SSR pages)', () => {
     });
 
     it('should hand the federated login handle to the page and keep it out of the workflow links', async () => {
+        // the page interpolates it into the redemption request path, so the
+        // payload takes an id and nothing else
+        const PROVIDER_ID = '3f1d2c4e-7a4b-4c2e-9c8d-0b1a2c3d4e5f';
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
         const { data: client } = await suite.client.client.create(createFakeClient());
         await suite.client.clientScope.create({ scopeId: scope.id, clientId: client.id });
@@ -114,7 +117,7 @@ describe('src/http/controllers/workflows (SSR pages)', () => {
             client_id: client.id,
             scope: ScopeName.GLOBAL,
             loginHandle: 'handle-value',
-            provider: 'provider-id',
+            provider: PROVIDER_ID,
         });
 
         const response = await httpRequest(suite, 'GET', `/authorize?${query.toString()}`);
@@ -124,7 +127,7 @@ describe('src/http/controllers/workflows (SSR pages)', () => {
 
         expect(payload.data.federatedLogin).toEqual({
             handle: 'handle-value',
-            providerId: 'provider-id',
+            providerId: PROVIDER_ID,
         });
 
         // requestPath is the `redirect` the register / password links carry, so
@@ -132,6 +135,17 @@ describe('src/http/controllers/workflows (SSR pages)', () => {
         expect(payload.data.requestPath).not.toContain('handle-value');
         expect(payload.data.requestPath).not.toContain('loginHandle');
         expect(payload.data.requestPath).toContain(`client_id=${client.id}`);
+
+        // a value that is not an id never reaches the page
+        const injected = await httpRequest(suite, 'GET', `/authorize?${new URLSearchParams({
+            response_type: 'code',
+            client_id: client.id,
+            scope: ScopeName.GLOBAL,
+            loginHandle: 'handle-value',
+            provider: '../token?',
+        }).toString()}`);
+
+        expect(extractHydrationPayload(await injected.text()).data.federatedLogin).toBeUndefined();
     });
 
     it('should map a recognized error marker onto a neutral payload error and ignore any other', async () => {
