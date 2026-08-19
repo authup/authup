@@ -5,6 +5,49 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
+## Next release (after v1.0.0-beta.62)
+
+### Docker: the writable directory moved to `/var/lib/authup`
+
+The image wrote its runtime files to `/usr/src/app/writable`, inside the
+application install directory. It now uses `/var/lib/authup`, which is where
+the filesystem hierarchy standard puts mutable application state and which is
+a cleaner mount point than a path nested in the install tree.
+
+**Action required if you mount a volume at the old path.** Update the mount
+target; the volume itself is unchanged.
+
+```diff
+ volumes:
+-  - authup:/usr/src/app/writable
++  - authup:/var/lib/authup
+```
+
+The same applies to a bind-mounted provisioning directory:
+`-v /path/to/provisioning:/var/lib/authup/provisioning`.
+
+Miss this and nothing fails loudly: the container starts, writes its
+production log files inside the container layer instead of the volume, and
+finds no provisioning files, so file-based provisioning silently stops being
+applied. Set `WRITABLE_DIRECTORY_PATH=/usr/src/app/writable` to keep the old
+location instead.
+
+Only the image default changed. Running outside Docker still defaults to
+`writable` relative to the application root, so an unprivileged `npx` or
+bare-metal start is unaffected.
+
+### A relative `writableDirectoryPath` now resolves against `rootPath`
+
+The documented behavior - a relative path is resolved against `rootPath` -
+was implemented for `themeDirectoryPath`, `authConsolePath` and
+`accountConsolePath` but not for `writableDirectoryPath`, which stayed
+relative to the process working directory and ignored `rootPath` entirely.
+It now resolves like its siblings.
+
+This only changes behavior for a deployment that sets `rootPath` to something
+other than the working directory **and** gives `writableDirectoryPath` a
+relative value. Absolute values, and the default, are unaffected.
+
 ## v1.0.0-beta.62
 
 ### `auth_identity_provider_accounts` gains a unique constraint

@@ -36,9 +36,9 @@ services:
       restart: unless-stopped
       volumes:
         # Docker managed volume
-        - authup:/usr/src/app/writable
+        - authup:/var/lib/authup
         # storage in mounted volume
-        #- ./writable:/usr/src/app/writable
+        #- ./writable:/var/lib/authup
       ports:
         - "3001:3000"
       command: server/core start
@@ -110,7 +110,7 @@ services:
     container_name: authup
     restart: unless-stopped
     volumes:
-      - authup:/usr/src/app/writable
+      - authup:/var/lib/authup
     ports:
       - "3001:3000"
     environment:
@@ -173,7 +173,7 @@ services:
         container_name: server-core
         restart: unless-stopped
         volumes:
-            - authup_data:/usr/src/app/writable
+            - authup_data:/var/lib/authup
         ports:
             - "3001:3000"
         depends_on:
