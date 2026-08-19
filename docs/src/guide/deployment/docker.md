@@ -40,7 +40,7 @@ To start each service, the following command should be executed depending on the
 **`API`**
 ```shell
 docker run \
-  -v authup:/usr/src/app/writable \
+  -v authup:/var/lib/authup \
   -p 3001:3000 \
   authup/authup:latest server/core start
 

@@ -235,7 +235,7 @@ immediately.
 
 Place one or more provisioning files in the `provisioning/` subdirectory of the writable directory.
 The writable directory defaults to `./writable` (relative to the application root) and can be configured
-via the `WRITABLE_DIRECTORY_PATH` environment variable.
+via the `WRITABLE_DIRECTORY_PATH` environment variable. The Docker image sets it to `/var/lib/authup`.
 
 Supported formats: `.json`, `.yaml`, `.yml`, `.ts`, `.mts`, `.mjs`, `.js`.
 
@@ -261,7 +261,7 @@ dropped. Write provisioning files in camelCase.
 Mount your provisioning files into the container's writable directory:
 
 ```bash
-docker run -v /path/to/provisioning:/usr/src/app/writable/provisioning authup/authup
+docker run -v /path/to/provisioning:/var/lib/authup/provisioning authup/authup
 ```
 
 Or set the writable directory explicitly:

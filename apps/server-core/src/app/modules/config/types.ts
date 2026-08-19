@@ -29,6 +29,14 @@ export type Config = {
      */
     rootPath: string,
     /**
+     * Directory the application writes to at runtime (log files in
+     * production) and reads file-based provisioning from
+     * (`<writableDirectoryPath>/provisioning`).
+     *
+     * The SQLite database is NOT placed here - its path comes from the
+     * database configuration (`db.database` / `DB_DATABASE`), resolved
+     * against the process working directory by typeorm-extension.
+     *
      * Relative or absolute path.
      * If the path is relative, the rootPath will be appended.
      *

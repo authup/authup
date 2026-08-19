@@ -150,6 +150,37 @@ describe('src/config/*.ts', () => {
             expect(config.port).toEqual(0);
         });
 
+        it('should default the root path to the working directory', async () => {
+            const config = await normalizeConfig();
+
+            expect(config.rootPath).toEqual(process.cwd());
+            expect(config.writableDirectoryPath).toEqual(path.join(process.cwd(), 'writable'));
+        });
+
+        it('should honor a configured root path', async () => {
+            const config = await normalizeConfig({ rootPath: path.join(path.sep, 'srv', 'authup') });
+
+            expect(config.rootPath).toEqual(path.join(path.sep, 'srv', 'authup'));
+        });
+
+        it('should resolve a relative writableDirectoryPath against the root path', async () => {
+            const config = await normalizeConfig({
+                rootPath: path.join(path.sep, 'srv', 'authup'),
+                writableDirectoryPath: 'writable',
+            });
+
+            expect(config.writableDirectoryPath).toEqual(path.join(path.sep, 'srv', 'authup', 'writable'));
+        });
+
+        it('should keep an absolute writableDirectoryPath', async () => {
+            const config = await normalizeConfig({
+                rootPath: path.join(path.sep, 'srv', 'authup'),
+                writableDirectoryPath: path.join(path.sep, 'var', 'lib', 'authup'),
+            });
+
+            expect(config.writableDirectoryPath).toEqual(path.join(path.sep, 'var', 'lib', 'authup'));
+        });
+
         it('should default passwordMinLength to 10', async () => {
             const config = await normalizeConfig();
 

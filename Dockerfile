@@ -15,11 +15,11 @@ COPY ./entrypoint.sh ./entrypoint.sh
 
 RUN chmod +x ./entrypoint.sh
 
-RUN mkdir -p ./writable
+RUN mkdir -p /var/lib/authup
 
 ENV PORT=3000
 ENV NODE_ENV=production
-ENV WRITABLE_DIRECTORY_PATH=/usr/src/app/writable
+ENV WRITABLE_DIRECTORY_PATH=/var/lib/authup
 
 EXPOSE 3000
 
