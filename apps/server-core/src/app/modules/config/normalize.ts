@@ -21,9 +21,6 @@ import type { Config, ConfigInput } from './types.ts';
 export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> {
     const parsed = await parseConfig(input);
 
-    const writableDirectoryPath = parsed.writableDirectoryPath ||
-        path.join(process.cwd(), 'writable');
-
     const port = parsed.port ?? 3001;
     let host = parsed.host || '0.0.0.0';
 
@@ -73,7 +70,7 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
     const config : Config = {
         env,
         rootPath: process.cwd(),
-        writableDirectoryPath,
+        writableDirectoryPath: 'writable',
         // '' = theming disabled. Deliberately NOT defaulted under
         // writableDirectoryPath: that directory is process-writable, and
         // pairing "process-writable" with "content injected into the login
@@ -150,6 +147,11 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
     // After the spread, so a relative value supplied by any config surface
     // is resolved. Every consumer then receives an absolute path and none
     // of them has to care what the process cwd was.
+    config.writableDirectoryPath = path.resolve(
+        config.rootPath,
+        config.writableDirectoryPath || 'writable',
+    );
+
     if (config.themeDirectoryPath) {
         config.themeDirectoryPath = path.resolve(config.rootPath, config.themeDirectoryPath);
     }

@@ -205,6 +205,22 @@ lists `vue` needs this before merge; its own CI already shows the failure.
 - Config keys in `app/modules/config/types.ts` match the service option names
 - Environment variable names use `SCREAMING_SNAKE_CASE` with `_ENABLED` suffix: `REGISTRATION_ENABLED`, `PASSWORD_RECOVERY_ENABLED`, `EMAIL_VERIFICATION_ENABLED`
 - Config file keys (`.conf`) use `camelCase` matching the TypeScript property name
+- **Every path key is resolved against `rootPath` after the `...parsed` spread**
+  in `normalizeConfig`, so consumers receive an absolute path and none of them
+  has to know what the process cwd was: `writableDirectoryPath`,
+  `themeDirectoryPath`, `authConsolePath`, `accountConsolePath`. A new path key
+  joins that block; computing it *before* the spread reads a default `rootPath`
+  rather than the configured one (the `writableDirectoryPath` bug, fixed after
+  v1.0.0-beta.62 — it silently ignored `rootPath` and stayed relative).
+- **`writableDirectoryPath` does not hold the database.** It holds the
+  production log files and is where `<dir>/provisioning` is read from; that is
+  the whole of it. The sqlite file comes from `db.database` / `DB_DATABASE`,
+  which typeorm-extension resolves against the process cwd
+  (`resolveSQLiteDatabasePath`), so pointing `WRITABLE_DIRECTORY_PATH` at a
+  volume does NOT move the database onto it. The Docker image defaults the key
+  to `/var/lib/authup`; everything else defaults to `<rootPath>/writable`,
+  which is what keeps an unprivileged `npx` start working (any absolute system
+  path needs root or a pre-chowned directory).
 
 ## Upstream (Own) Libraries
 

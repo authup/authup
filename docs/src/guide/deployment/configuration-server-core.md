@@ -45,8 +45,11 @@ export default {
     rootPath: '/usr/src/app',
 
     /**
-     * Directory for runtime-generated files (SQLite database, generated
-     * artifacts, ...). Relative paths are resolved against rootPath.
+     * Directory the application writes to at runtime (log files in
+     * production) and reads file-based provisioning from
+     * (<writableDirectoryPath>/provisioning). Relative paths are resolved
+     * against rootPath. The SQLite database is NOT placed here - its path
+     * comes from the database configuration (db.database / DB_DATABASE).
      * env: WRITABLE_DIRECTORY_PATH
      * default: writable
      */
