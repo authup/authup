@@ -3858,9 +3858,9 @@ mirrors this — when `userId !== '@me'` it offers only the email button
 
 **Intentional enforcement boundaries (#3251):** a federated IdP login trusts
 the upstream provider as the authentication authority, and that trust is
-UNCHECKED unless the provider declares `requiredAmr` / `requiredAcr` (issue
-#3477, both null by default). Since plan 094 it runs
-the hosted ladder for consent and the prompt gates, but `authorizeInner` skips
+UNCHECKED unless the provider declares `requiredAmr` / `requiredAcr`
+(issue #3477, both null by default). Since plan 094 it runs the hosted
+ladder for consent and the prompt gates, but `authorizeInner` skips
 the local factor and inline enrollment for a session whose `authMethod` is
 `ext`, and the redemption consults no authenticator at all (settled #3454: the
 local factor belongs to a local credential, the upstream is usually the

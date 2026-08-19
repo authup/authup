@@ -71,7 +71,7 @@ export const TranslatorTranslationFieldFrench : NamespaceTranslations<`${Transla
     [TranslatorTranslationFieldKey.REQUIRED_AMR]: 'Claim amr requis (au choix)',
     [TranslatorTranslationFieldKey.REQUIRED_ACR]: 'Valeur acr requise (au choix)',
     [TranslatorTranslationFieldKey.REQUIRED_AMR_HINT]: 'Accepter la connexion si le jeton du fournisseur porte l\'une de ces valeurs. Vide fait confiance au fournisseur.',
-    [TranslatorTranslationFieldKey.REQUIRED_ACR_HINT]: 'Egalement envoye comme acr_values dans la requete d\'autorisation. Vide fait confiance au fournisseur.',
+    [TranslatorTranslationFieldKey.REQUIRED_ACR_HINT]: 'Également envoyé comme acr_values dans la requête d\'autorisation. Vide fait confiance au fournisseur.',
     [TranslatorTranslationFieldKey.TOKEN]: 'Jeton',
     [TranslatorTranslationFieldKey.USER_INFO]: 'UserInfo',
     [TranslatorTranslationFieldKey.DISCOVERY]: 'Découverte',

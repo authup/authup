@@ -70,7 +70,7 @@ export const TranslatorTranslationFieldGerman : NamespaceTranslations<`${Transla
     [TranslatorTranslationFieldKey.SCOPE]: 'Scope',
     [TranslatorTranslationFieldKey.REQUIRED_AMR]: 'Erforderlicher amr-Claim (eines davon)',
     [TranslatorTranslationFieldKey.REQUIRED_ACR]: 'Erforderlicher acr-Wert (einer davon)',
-    [TranslatorTranslationFieldKey.REQUIRED_AMR_HINT]: 'Login akzeptieren, wenn das Provider-Token einen dieser Werte tragt. Leer vertraut dem Provider.',
+    [TranslatorTranslationFieldKey.REQUIRED_AMR_HINT]: 'Login akzeptieren, wenn das Provider-Token einen dieser Werte trägt. Leer vertraut dem Provider.',
     [TranslatorTranslationFieldKey.REQUIRED_ACR_HINT]: 'Wird auch als acr_values mit der Authorize-Anfrage gesendet. Leer vertraut dem Provider.',
     [TranslatorTranslationFieldKey.TOKEN]: 'Token',
     [TranslatorTranslationFieldKey.USER_INFO]: 'UserInfo',
