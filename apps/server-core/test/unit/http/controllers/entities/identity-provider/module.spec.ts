@@ -26,6 +26,7 @@ import {
     createFakeLdapIdentityProvider,
     createFakeOAuth2IdentityProvider,
     expectPropertiesEqualToSrc,
+    httpRequest,
 } from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
 
@@ -104,6 +105,16 @@ describe('src/http/controllers/identity-provider', () => {
         expect(response).toBeDefined();
 
         expectPropertiesEqualToSrc(oAuth2IdentityProvider, response);
+    });
+
+    it('should not read resource without authentication', async () => {
+        const response = await httpRequest(suite, 'GET', `/identity-providers/${oAuth2IdentityProvider.id!}`);
+
+        expect(response.status).toEqual(401);
+
+        // the record read carries the EA-extended entity, so an ungated
+        // response hands out the provider's client secret (issue #3480)
+        expect(await response.text()).not.toContain(oAuth2IdentityProvider.clientSecret);
     });
 
     it('should update resource', async () => {

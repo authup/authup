@@ -143,6 +143,11 @@ export class IdentityProviderController {
 
     // ---------------------------------------------------------
 
+    // Deliberately anonymous and ungated: the hosted login page lists a
+    // realm's providers before anyone signs in. Safe only because findMany
+    // does not extend with extra attributes, so the response is the schema's
+    // fields.default projection. The record read below carries them and is
+    // gated for exactly that reason.
     @DGet('', [])
     async getProviders(
         @DContext() event: IAppEvent,
@@ -157,24 +162,6 @@ export class IdentityProviderController {
             }),
         );
 
-        try {
-            const permissionEvaluator = useRequestPermissionEvaluator(event);
-            await permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_READ });
-
-            for (const datum of data) {
-                try {
-                    await permissionEvaluator.evaluate({
-                        name: PermissionName.IDENTITY_PROVIDER_READ,
-                        data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: datum, [BuiltInPolicyType.REALM_MATCH]: datum.realmId ?? null }),
-                    });
-                } catch {
-                    // do nothing
-                }
-            }
-        } catch {
-            // do nothing
-        }
-
         return {
             data,
             meta: {
@@ -184,7 +171,7 @@ export class IdentityProviderController {
         };
     }
 
-    @DGet('/:id', [])
+    @DGet('/:id', [ForceLoggedInMiddleware])
     async getProvider(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
@@ -200,15 +187,14 @@ export class IdentityProviderController {
             throw new EntityNotFoundError();
         }
 
-        try {
-            const permissionEvaluator = useRequestPermissionEvaluator(event);
-            await permissionEvaluator.evaluate({
-                name: PermissionName.IDENTITY_PROVIDER_READ,
-                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, [BuiltInPolicyType.REALM_MATCH]: entity.realmId ?? null }),
-            });
-        } catch {
-            // do nothing
-        }
+        await useRequestPermissionEvaluator(event).evaluateOneOf({
+            name: [
+                PermissionName.IDENTITY_PROVIDER_READ,
+                PermissionName.IDENTITY_PROVIDER_UPDATE,
+                PermissionName.IDENTITY_PROVIDER_DELETE,
+            ],
+            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity, [BuiltInPolicyType.REALM_MATCH]: entity.realmId ?? null }),
+        });
 
         return { data: entity, meta: { schema: describeQuerySchema(identityProviderSchema, RECORD_QUERY_PARAMETERS) } };
     }

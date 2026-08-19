@@ -32,6 +32,21 @@ const ENTITY_EVENT_NAME_MAP : Record<string, `${EventName}`> = {
     [EntityDefaultEventName.DELETED]: EventName.DELETED,
 };
 
+/**
+ * Entity types whose rows are generic (name, value) pairs. Their payload
+ * column is always called `value`, so {@link buildEntityDiff}'s key-name
+ * denylist cannot see what it holds - and for an identity provider it holds
+ * the OAuth2 `clientSecret` or the LDAP bind password. The diff is dropped
+ * wholesale rather than the denylist widened, because no regex over the
+ * column name can ever decide this.
+ */
+const ENTITY_OPAQUE_VALUE_TYPES = new Set<string>([
+    EntityType.IDENTITY_PROVIDER_ATTRIBUTE,
+    EntityType.POLICY_ATTRIBUTE,
+    EntityType.ROLE_ATTRIBUTE,
+    EntityType.USER_ATTRIBUTE,
+]);
+
 const ENTITY_REALM_KEY_MAP : Record<`${EntityType}`, string> = {
     [EntityType.CLIENT]: 'realmId',
     [EntityType.CLIENT_PERMISSION]: 'clientRealmId',
@@ -110,7 +125,12 @@ export class EntityEventHandler implements IDomainEventHandler {
                 undefined;
 
             let data : Record<string, any> | null = null;
-            if (name === EventName.UPDATED && isObject(ctx.content.data) && isObject(ctx.dataPrevious)) {
+            if (
+                name === EventName.UPDATED &&
+                !ENTITY_OPAQUE_VALUE_TYPES.has(ctx.content.type) &&
+                isObject(ctx.content.data) &&
+                isObject(ctx.dataPrevious)
+            ) {
                 const diff = buildEntityDiff(ctx.content.data, ctx.dataPrevious);
                 if (Object.keys(diff).length > 0) {
                     data = { diff };

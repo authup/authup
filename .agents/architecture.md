@@ -2951,6 +2951,18 @@ a guaranteed 400 is worse than no button. The hosted `/authorize` page always
 passes one; a host embedding `ALoginForm` without one gets the password login
 alone.
 
+**The provider LIST is the anonymous surface, the provider RECORD is not
+(#3480).** `GET /identity-providers` stays ungated: the hosted login page
+renders its provider buttons before anyone has authenticated, and `findMany`
+ships the schema's `fields.default` projection alone.
+`GET /identity-providers/:id` requires an identity and one of
+`IDENTITY_PROVIDER_READ`/`UPDATE`/`DELETE` with a realm match, because the
+record read resolves through `findOneById` and splices the extra attributes on
+after the query (`extendOneWithEA`), so the OAuth2 `clientSecret` and the LDAP
+bind password sit outside every rapiq field gate. An anonymous caller wanting
+one provider reads it from the collection (`?filter[id]=<uuid>`), which is the
+same projection.
+
 ## Federated Identity Claims
 
 `IdentityProviderOAuth2Authenticator.buildIdentityWithTokenGrantResponse`
@@ -4406,7 +4418,14 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   any key matching the secret denylist
   `/(password|secret|hash|token|credential)/i` are dropped fail-closed,
   strings truncated to 512; `sanitizeEventData`'s dedicated `diff` branch
-  re-checks the same regex at the write boundary. Created/deleted rows carry
+  re-checks the same regex at the write boundary. **A generic `(name, value)` row
+  gets no diff at all** (`ENTITY_OPAQUE_VALUE_TYPES`: the four `*_attributes`
+  types): their payload column is literally called `value`, so a key-name
+  denylist cannot see that it holds an identity provider's `clientSecret` or
+  LDAP bind password. The same reasoning applies one layer out, on the
+  realtime bus: `IdentityProviderAttributeSubscriber` overrides `publish` to
+  null the `value` on both the current and previous payload, since the
+  domain-event content is shipped verbatim to redis and socket consumers. Created/deleted rows carry
   `data: null` (no column dumps). Rows self-prune on a short per-row TTL via
   `EventRecordInput.retentionDays` (config `eventLogEntityEnabled` default
   `true` / `eventLogEntityRetentionDays` default `7` days, env
