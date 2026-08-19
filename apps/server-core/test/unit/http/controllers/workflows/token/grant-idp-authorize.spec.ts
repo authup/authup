@@ -138,6 +138,8 @@ describe('identity-provider authorization code grant', () => {
 
     let pendingLoginCookie : string | null = null;
 
+    let federatedCookie : string | null = null;
+
     function readPendingLoginCookie(response: Response) : string | null {
         const header = response.headers.get('set-cookie');
         if (!header) {
@@ -204,6 +206,7 @@ describe('identity-provider authorization code grant', () => {
                 { redirect: 'manual' },
             );
 
+        federatedCookie = readPendingLoginCookie(authorizeOutResponse);
         const outLocation = authorizeOutResponse.headers.get('location') as string;
         const outURL = new URL(outLocation);
         const state = outURL.searchParams.get('state');
@@ -213,7 +216,7 @@ describe('identity-provider authorization code grant', () => {
         const authorizeInResponse = await suite.client
             .get(
                 `${buildIdentityProviderAuthorizeCallbackPath(providerId)}?code=fake-idp-code&state=${state}`,
-                { redirect: 'manual' },
+                { redirect: 'manual', headers: { cookie: `authup_federated_login=${federatedCookie}` } },
             );
 
         expect(authorizeInResponse.status).toEqual(302);
@@ -261,13 +264,14 @@ describe('identity-provider authorization code grant', () => {
                 { redirect: 'manual' },
             );
 
+        federatedCookie = readPendingLoginCookie(authorizeOutResponse);
         const outLocation = authorizeOutResponse.headers.get('location') as string;
         const state = new URL(outLocation).searchParams.get('state');
 
         const authorizeInResponse = await suite.client
             .get(
                 `${buildIdentityProviderAuthorizeCallbackPath(providerId)}?code=fake-idp-code&state=${state}`,
-                { redirect: 'manual' },
+                { redirect: 'manual', headers: { cookie: `authup_federated_login=${federatedCookie}` } },
             );
 
         const inLocation = authorizeInResponse.headers.get('location') as string;
@@ -318,13 +322,14 @@ describe('identity-provider authorization code grant', () => {
                 { redirect: 'manual' },
             );
 
+        federatedCookie = readPendingLoginCookie(authorizeOutResponse);
         const state = new URL(authorizeOutResponse.headers.get('location') as string)
             .searchParams.get('state');
 
         const authorizeInResponse = await suite.client
             .get(
                 `${buildIdentityProviderAuthorizeCallbackPath(providerId)}?code=fake-idp-code&state=${state}`,
-                { redirect: 'manual' },
+                { redirect: 'manual', headers: { cookie: `authup_federated_login=${federatedCookie}` } },
             );
 
         pendingLoginCookie = readPendingLoginCookie(authorizeInResponse);
@@ -375,13 +380,14 @@ describe('identity-provider authorization code grant', () => {
                 { redirect: 'manual' },
             );
 
+        federatedCookie = readPendingLoginCookie(authorizeOutResponse);
         const state = new URL(authorizeOutResponse.headers.get('location') as string)
             .searchParams.get('state');
 
         const authorizeInResponse = await suite.client
             .get(
                 `${buildIdentityProviderAuthorizeCallbackPath(providerId)}?code=fake-idp-code&state=${state}`,
-                { redirect: 'manual' },
+                { redirect: 'manual', headers: { cookie: `authup_federated_login=${federatedCookie}` } },
             );
 
         expect(authorizeInResponse.status).toEqual(302);
@@ -404,13 +410,14 @@ describe('identity-provider authorization code grant', () => {
                 { redirect: 'manual' },
             );
 
+        federatedCookie = readPendingLoginCookie(authorizeOutResponse);
         const state = new URL(authorizeOutResponse.headers.get('location') as string)
             .searchParams.get('state');
 
         const authorizeInResponse = await suite.client
             .get(
                 `${buildIdentityProviderAuthorizeCallbackPath(providerId)}?code=fake-idp-code&state=${state}`,
-                { redirect: 'manual' },
+                { redirect: 'manual', headers: { cookie: `authup_federated_login=${federatedCookie}` } },
             );
 
         expect(authorizeInResponse.status).toEqual(302);

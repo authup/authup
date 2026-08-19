@@ -2732,10 +2732,11 @@ The ladder itself is **`OAuth2FederatedLoginService`**
 re-verification, redirect-scheme gate, provider and user state, access policy
 and the session live there, and `complete()` answers with a discriminated
 result (`{ kind: 'refused', refusal, error?, codeRequest }` /
-`{ kind: 'issued', loginHandle, codeRequest }`). Its sibling `redeem()` is the
-other half: it consumes the handle, extends the pending session to the regular
-lifetime and mints the AT+RT pair the hosted page runs the ladder with. The
-controller only maps those answers onto a transport. The provider authenticator is a ctx member
+`{ kind: 'issued', pendingLoginId, codeRequest }`). Its sibling
+`completeHandoff()` is the other half: it consumes the pending login, extends
+its session to the regular lifetime and mints the AT+RT pair the hosted page
+runs the ladder with. The controller only maps those answers onto a transport,
+and owns the cookie the id travels in. The provider authenticator is a ctx member
 (`authenticatorFactory`, defaulting to
 `createIdentityProviderOAuth2Authenticator`) so the whole refusal matrix is
 exercised without an external provider — see
@@ -2862,12 +2863,34 @@ login UI is a browser SPA (`<ak-flow-executor>`) whose
 `/api/v3/flows/executor/...` calls authenticate with that cookie rather than a
 bearer.
 
-This is authup's FIRST cookie-read endpoint, and the CORS comment
-(`origin: true` with `credentials: true`) rests on there being none. The
-combination is safe here only because `SameSite=Lax` keeps the cookie off the
-cross-site POST that a reflected origin would otherwise be able to read the
-response of. A second cookie-read endpoint must re-examine that pairing rather
-than assume it.
+**The completion additionally requires the request's `Origin` to be
+publicUrl's own**, and that is load-bearing rather than belt-and-braces. This
+is authup's first cookie-authenticated endpoint, and the CORS default reflects
+every origin WITH credentials on the stated premise that none exists.
+`SameSite` does not save it: the attribute is scoped to the registrable
+domain, not the origin, so a sibling subdomain (`app.example.com` against an
+authup on `auth.example.com`) is SAME-site, its `fetch(…, { credentials:
+'include' })` carries the cookie, and the reflected origin would let it read
+the token pair. `Strict` would not help either, for the same reason. A browser
+sends `Origin` on every POST, so comparing it is what closes that; a request
+without the header is not a browser and carries no cookie of ours. A second
+cookie-authenticated endpoint must repeat the check, or the CORS default has
+to change.
+
+**The state itself is bound to the browser too.** `authorize-out` mints a
+nonce, sets it as the same cookie and stores it on the state blob; the
+callback refuses unless the two match, before the provider's single-use code
+is spent. Without it the callback would establish a session for whatever
+browser presented a crafted callback URL, which is the login CSRF one layer
+earlier: the state's own ip / user agent cannot stop it, since both are chosen
+by whoever mints the state (#3439). This is the same shape Keycloak and
+Authentik use, where the pending login is only reachable through the browser's
+own session cookie.
+
+One cookie serves both phases, so two federated logins in flight in one
+browser share a slot and the older one is refused rather than silently
+completing as the newer. Keycloak solves that with a per-tab id; authup
+accepts the retry.
 
 The pending session is created with `authMethod: ext`, `mfaAt: null` and an
 `expiresAt` equal to the pending login's own TTL, so an abandoned login

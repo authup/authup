@@ -211,7 +211,13 @@ describe('authup federating to authup', () => {
         // 3. The upstream code comes back to the downstream callback, which
         //    redeems it at the upstream token endpoint for real.
         // httpRequest passes an absolute url straight through.
-        const back = await httpRequest(downstream, 'GET', callbackTarget, { redirect: 'manual' });
+        const startCookie = (out.headers.get('set-cookie') ?? '').match(/authup_federated_login=([^;]*)/);
+        expect(startCookie).toBeTruthy();
+
+        const back = await httpRequest(downstream, 'GET', callbackTarget, {
+            redirect: 'manual',
+            headers: { cookie: `authup_federated_login=${(startCookie as RegExpMatchArray)[1]}` },
+        });
         expect(back.status).toEqual(302);
 
         // 4. The downstream instance sends the browser to its own hosted

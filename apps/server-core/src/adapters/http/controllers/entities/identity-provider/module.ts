@@ -9,6 +9,7 @@ import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import {
     ValidatorGroup,
     base64URLDecode,
+    createNanoID,
     getURLBasePath,
     isObject,
     isUUID,
@@ -321,7 +322,19 @@ export class IdentityProviderController {
 
         const authenticator = this.buildProviderAuthenticator(entity);
 
-        const state = await this.saveAuthorizationState(event, { codeRequest: data.data });
+        // Ties this login to THIS browser. The callback requires the cookie
+        // to match, so a crafted callback URL opened in someone else's
+        // browser cannot make authup establish a session there (login CSRF).
+        // The state's ip / user agent cannot carry that: both are chosen by
+        // whoever mints the state (#3439). Keycloak and Authentik bind the
+        // same hop to a cookie for the same reason.
+        const browserNonce = createNanoID();
+        this.setFederatedLoginCookie(event, browserNonce);
+
+        const state = await this.saveAuthorizationState(event, {
+            codeRequest: data.data,
+            browserNonce,
+        });
 
         return sendRedirect(event, authenticator.buildRedirectURL({ state }));
     }
@@ -384,6 +397,20 @@ export class IdentityProviderController {
             throw OAuth2RequestError.malformed('The state carries no authorization code request.');
         }
 
+        // The browser that started this login is the only one that may
+        // finish it. Refused before the provider's single-use code is spent
+        // and before any session exists. A state minted before this shipped
+        // carries no nonce and is refused the same way; the hosted page
+        // re-renders the request and the next attempt carries one.
+        const browserNonce = useRequestCookie(event, OAUTH2_FEDERATED_LOGIN_COOKIE);
+        if (
+            !data.browserNonce ||
+            typeof browserNonce !== 'string' ||
+            browserNonce !== data.browserNonce
+        ) {
+            return sendRedirect(event, this.buildHostedAuthorizeURL(data.codeRequest).href);
+        }
+
         const { code, error } = useRequestQuery(event);
 
         // RFC 6749 section 4.1.2.1: a provider answers a refused or failed
@@ -443,13 +470,7 @@ export class IdentityProviderController {
         // cross-site requests, so a page on another origin cannot drive the
         // completion. `provider` stays in the URL as a routing hint, and is no
         // secret.
-        setResponseCookie(event, OAUTH2_FEDERATED_LOGIN_COOKIE, result.pendingLoginId, {
-            httpOnly: true,
-            sameSite: 'lax',
-            secure: this.options.baseURL.startsWith('https://'),
-            path: this.buildFederatedLoginCookiePath(),
-            maxAge: OAUTH2_FEDERATED_LOGIN_TTL / 1000,
-        });
+        this.setFederatedLoginCookie(event, result.pendingLoginId);
 
         url.searchParams.set('provider', entity.id);
 
@@ -462,6 +483,8 @@ export class IdentityProviderController {
         @DContext() event: IAppEvent,
     ) : Promise<OAuth2TokenGrantResponse> {
         const id = useRequestParamID(event);
+
+        this.assertSameOrigin(event);
 
         const pendingLoginId = useRequestCookie(event, OAUTH2_FEDERATED_LOGIN_COOKIE);
         if (typeof pendingLoginId !== 'string' || pendingLoginId.length === 0) {
@@ -810,9 +833,42 @@ export class IdentityProviderController {
         return `${getURLBasePath(this.options.baseURL)}/identity-providers`;
     }
 
+    private setFederatedLoginCookie(event: IAppEvent, value: string) : void {
+        setResponseCookie(event, OAUTH2_FEDERATED_LOGIN_COOKIE, value, {
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: this.options.baseURL.startsWith('https://'),
+            path: this.buildFederatedLoginCookiePath(),
+            maxAge: OAUTH2_FEDERATED_LOGIN_TTL / 1000,
+        });
+    }
+
+    /**
+     * The completion answers with a token pair and authenticates on a cookie
+     * alone, so it must be reachable only from the hosted page's own origin.
+     *
+     * CORS cannot carry that here: the default reflects every origin WITH
+     * credentials, and `SameSite` is scoped to the registrable domain rather
+     * than the origin, so a sibling subdomain's script is same-site and would
+     * both send the cookie and be allowed to read the response. A browser
+     * sends `Origin` on every POST, so requiring it to be publicUrl's own is
+     * what closes that. A request without the header is not a browser and
+     * carries no cookie of ours to begin with.
+     */
+    private assertSameOrigin(event: IAppEvent) : void {
+        const origin = getRequestHeader(event, 'origin');
+        if (typeof origin !== 'string' || origin.length === 0) {
+            return;
+        }
+
+        if (origin !== new URL(this.options.baseURL).origin) {
+            throw new BadRequestError('The login request is unknown or expired.');
+        }
+    }
+
     private async saveAuthorizationState(
         event: IAppEvent,
-        data: Pick<OAuth2AuthorizationState, 'codeRequest' | 'link' | 'loginChallenge'> = {},
+        data: Pick<OAuth2AuthorizationState, 'codeRequest' | 'link' | 'browserNonce'> = {},
     ) : Promise<string> {
         return this.stateManager.save({
             ...data,

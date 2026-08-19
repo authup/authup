@@ -13,11 +13,19 @@ export function registerCorsMiddleware(router: App, input?: CorsOptions) {
     router.use(cors({
         // Reflect any origin by default: OAuth2 clients (and their UIs) are
         // registered at runtime on arbitrary domains, so a startup-time
-        // allowlist cannot know them. All authentication is header-based
-        // (Bearer/Basic) — no cookie-authenticated endpoint exists — so an
-        // origin allowlist would add no security, only break dynamically
-        // registered browser clients. Operators can still pass an explicit
-        // `origin` via the middlewareCors config options.
+        // allowlist cannot know them. Authentication is header-based
+        // (Bearer/Basic), so an origin allowlist would add no security here,
+        // only break dynamically registered browser clients. Operators can
+        // still pass an explicit `origin` via the middlewareCors config
+        // options.
+        //
+        // ONE endpoint authenticates on a cookie: the federated login's
+        // `POST /identity-providers/:id/login-complete` (plan 094). Reflecting
+        // an origin WITH credentials would let any same-site origin read the
+        // token pair it answers with, since `SameSite` is scoped to the
+        // registrable domain rather than the origin, so that route checks
+        // `Origin` against publicUrl itself. A second cookie-authenticated
+        // endpoint must do the same, or this default has to change.
         origin: true,
         credentials: true,
         // `credentials: true` is incompatible with the `*` wildcard for

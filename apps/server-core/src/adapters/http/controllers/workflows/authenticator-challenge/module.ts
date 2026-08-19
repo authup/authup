@@ -127,13 +127,16 @@ export class AuthenticatorChallengeController {
             const stepUpRequested = typeof acrValues === 'string' &&
                 acrValues.split(' ').includes(OAuth2AuthenticationContextClass.MFA);
 
-            if (!stepUpRequested) {
-                return {
-                    ...status,
-                    required: false,
-                    enrollmentRequired: false,
-                };
-            }
+            // Enrollment stays suppressed either way: `authorizeInner` never
+            // forces it on an external session, so offering it here would
+            // route the person into a step the server does not ask for. A
+            // step-up can only ADD the challenge, and only for a factor the
+            // person already holds.
+            return {
+                ...status,
+                required: stepUpRequested && status.required,
+                enrollmentRequired: false,
+            };
         }
 
         return status;

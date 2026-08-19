@@ -174,6 +174,8 @@ describe('identity-provider login flow', () => {
         });
     }
 
+    let federatedCookie : string | null = null;
+
     async function authorizeOut(providerId = provider.id): Promise<string> {
         const response = await httpRequest(suite, 'GET', `identity-providers/${providerId}/authorize-out?codeRequest=${buildCodeRequest()}`, {
             headers: { 'user-agent': USER_AGENT },
@@ -187,7 +189,20 @@ describe('identity-provider login flow', () => {
         const state = new URL(location as string).searchParams.get('state');
         expect(state).toBeTruthy();
 
+        federatedCookie = readFederatedCookie(response);
+
         return state as string;
+    }
+
+    function readFederatedCookie(response: Response) : string | null {
+        const header = response.headers.get('set-cookie');
+        if (!header) {
+            return null;
+        }
+
+        const match = header.match(/authup_federated_login=([^;]*)/);
+
+        return match && match[1].length > 0 ? match[1] : null;
     }
 
     it('refuses to start a federated login without a code request', async () => {
@@ -238,7 +253,7 @@ describe('identity-provider login flow', () => {
             'GET',
             `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code-0`,
             {
-                headers: { 'user-agent': USER_AGENT },
+                headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${federatedCookie}` },
                 redirect: 'manual',
             },
         );
@@ -256,7 +271,7 @@ describe('identity-provider login flow', () => {
             'GET',
             `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code-1`,
             {
-                headers: { 'user-agent': USER_AGENT },
+                headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${federatedCookie}` },
                 redirect: 'manual',
             },
         );
@@ -279,7 +294,7 @@ describe('identity-provider login flow', () => {
             'GET',
             `identity-providers/${provider.id}/authorize-in?state=${state}`,
             {
-                headers: { 'user-agent': USER_AGENT },
+                headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${federatedCookie}` },
                 redirect: 'manual',
             },
         );
@@ -299,7 +314,7 @@ describe('identity-provider login flow', () => {
             'GET',
             `identity-providers/${provider.id}/authorize-in?state=${state}&code=${REJECTED_CODE}`,
             {
-                headers: { 'user-agent': USER_AGENT },
+                headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${federatedCookie}` },
                 redirect: 'manual',
             },
         );
@@ -328,7 +343,7 @@ describe('identity-provider login flow', () => {
             'GET',
             `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code-2`,
             {
-                headers: { 'user-agent': USER_AGENT },
+                headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${federatedCookie}` },
                 redirect: 'manual',
             },
         );
@@ -360,7 +375,7 @@ describe('identity-provider login flow', () => {
             'GET',
             `identity-providers/${userInfoProvider.id}/authorize-in?state=${state}&code=external-code-3`,
             {
-                headers: { 'user-agent': USER_AGENT },
+                headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${federatedCookie}` },
                 redirect: 'manual',
             },
         );

@@ -678,17 +678,17 @@ describe('AAuthorize federated login handle', () => {
         expect(wrapper.find('.authorize-text-stub').exists()).toBe(true);
     });
 
-    it('stops on a failed redemption instead of continuing the ladder', async () => {
+    it('states the reason and keeps the login form when there is no session to protect', async () => {
         const { wrapper } = mountAuthorize({
             loggedIn: false,
             federatedLogin,
-            loginCompleteHandler: () => { throw new Error('handle is spent'); },
+            loginCompleteHandler: () => { throw new Error('the login request is unknown'); },
         });
         await flushPromises();
 
         expect(wrapper.emitted('failed')).toBeTruthy();
-        expect(wrapper.find('.login-form-stub').exists()).toBe(false);
-        expect(wrapper.find('.authorize-text-stub').text()).toContain('handle is spent');
+        expect(wrapper.find('.login-form-stub').exists()).toBe(true);
+        expect(wrapper.find('.authorize-text-stub').text()).toContain('the login request is unknown');
     });
 
     /**
@@ -702,11 +702,12 @@ describe('AAuthorize federated login handle', () => {
             clientBuiltIn: true,
             prompt: '',
             federatedLogin,
-            loginCompleteHandler: () => { throw new Error('handle is spent'); },
+            loginCompleteHandler: () => { throw new Error('the login request is unknown'); },
         });
         await flushPromises();
 
         expect(wrapper.findComponent(AuthorizeForm).exists()).toBe(false);
-        expect(wrapper.find('.authorize-text-stub').text()).toContain('handle is spent');
+        expect(wrapper.find('.login-form-stub').exists()).toBe(false);
+        expect(wrapper.find('.authorize-text-stub').text()).toContain('the login request is unknown');
     });
 });

@@ -26,12 +26,13 @@ export type OAuth2AuthorizationState = {
      */
     link?: OAuth2AuthorizationStateLink,
     /**
-     * The federated login challenge the hosted login form minted before the
-     * hop (plan 094). It is carried onto the login handle and presented
-     * again when the hosted page redeems it, which is what ties that handle
-     * to the browser that started the login.
+     * Ties a federated login to the browser that started it (plan 094). The
+     * value is set as a cookie when the login starts and required to match
+     * when the provider sends the browser back, so a crafted callback URL
+     * opened elsewhere establishes nothing. The state's own ip / user agent
+     * cannot do this: both are chosen by whoever mints the state (#3439).
      */
-    loginChallenge?: string,
+    browserNonce?: string,
     ip: string,
     userAgent?: string | null
 };

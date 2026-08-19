@@ -157,6 +157,7 @@ describe('identity-provider login completion', () => {
      * completion the way a browser would.
      */
     let pendingLoginCookie : string | null = null;
+    let lastCallbackResponse : Response | null = null;
 
     function readPendingLoginCookie(response: Response) : string | null {
         const header = response.headers.get('set-cookie');
@@ -184,17 +185,26 @@ describe('identity-provider login completion', () => {
         const state = new URL(out.headers.get('location') as string).searchParams.get('state');
         expect(state).toBeTruthy();
 
+        // the browser carries the nonce the start set, which is what stops a
+        // crafted callback URL establishing a session somewhere else
+        const nonce = readPendingLoginCookie(out);
+        expect(nonce).toBeTruthy();
+
         const back = await httpRequest(
             suite,
             'GET',
             `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code`,
             {
-                headers: { 'user-agent': USER_AGENT },
+                headers: {
+                    'user-agent': USER_AGENT,
+                    cookie: `authup_federated_login=${nonce}`,
+                },
                 redirect: 'manual',
             },
         );
         expect(back.status).toEqual(302);
 
+        lastCallbackResponse = back;
         pendingLoginCookie = readPendingLoginCookie(back);
 
         return new URL(back.headers.get('location') as string);
@@ -291,6 +301,13 @@ describe('identity-provider login completion', () => {
         expect(pendingLoginCookie).toBeTruthy();
         expect(location.search).not.toContain(pendingLoginCookie as string);
         expect(location.searchParams.get('provider')).toEqual(provider.id);
+
+        // the attributes are the binding: another origin cannot set it, a
+        // cross-site request does not send it, and script cannot read it
+        const setCookie = lastCallbackResponse?.headers.get('set-cookie') ?? '';
+        expect(setCookie).toContain('HttpOnly');
+        expect(setCookie.toLowerCase()).toContain('samesite=lax');
+        expect(setCookie).toContain('Path=/identity-providers');
         // the whole request rides along, so the page renders it unchanged
         expect(location.searchParams.get('client_id')).toEqual(client.id);
         expect(location.searchParams.get('state')).toEqual(STATE);
@@ -324,6 +341,60 @@ describe('identity-provider login completion', () => {
      * federated login for their own account cannot hand the resulting URL to
      * someone else and have their browser adopt that session.
      */
+    /**
+     * The callback establishes a session, so a crafted callback URL opened in
+     * someone else's browser would otherwise plant the attacker's session
+     * there. The state's own ip / user agent cannot stop that: both are
+     * chosen by whoever mints the state (#3439).
+     */
+    it('refuses a callback from a browser that did not start the login', async () => {
+        const out = await httpRequest(suite, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${buildCodeRequest()}`, {
+            headers: { 'user-agent': USER_AGENT },
+            redirect: 'manual',
+        });
+        const state = new URL(out.headers.get('location') as string).searchParams.get('state');
+
+        const tokenCallsBefore = providerTokenCalls;
+
+        // same state, no cookie: another browser following the same URL
+        const back = await httpRequest(
+            suite,
+            'GET',
+            `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code`,
+            { headers: { 'user-agent': USER_AGENT }, redirect: 'manual' },
+        );
+
+        expectHostedBounce(back, client.id, null);
+        expect(back.headers.get('set-cookie')).toBeNull();
+        // refused before the provider's single-use code is spent
+        expect(providerTokenCalls).toEqual(tokenCallsBefore);
+    });
+
+    /**
+     * The completion answers with a token pair on a cookie alone, and
+     * `SameSite` is scoped to the registrable domain rather than the origin,
+     * so a sibling subdomain would otherwise both send the cookie and be
+     * allowed to read the response by the reflected-origin CORS default.
+     */
+    it('refuses a completion from another origin', async () => {
+        await runFederatedLogin();
+
+        const response = await httpRequest(
+            suite,
+            'POST',
+            `identity-providers/${provider.id}/login-complete`,
+            {
+                headers: {
+                    'user-agent': USER_AGENT,
+                    origin: 'https://app.example.com',
+                    cookie: `authup_federated_login=${pendingLoginCookie}`,
+                },
+            },
+        );
+
+        expect(response.status).toEqual(400);
+    });
+
     it('refuses a completion from a browser that did not start the login', async () => {
         const hosted = await runFederatedLogin();
 
@@ -522,6 +593,7 @@ describe('identity-provider login completion', () => {
             redirect: 'manual',
         });
         const state = new URL(out.headers.get('location') as string).searchParams.get('state');
+        const nonce = readPendingLoginCookie(out);
         const tokenCallsBefore = providerTokenCalls;
 
         // RFC 6749 section 4.1.2.1: the person cancelled at the provider.
@@ -530,7 +602,7 @@ describe('identity-provider login completion', () => {
             'GET',
             `identity-providers/${provider.id}/authorize-in?state=${state}&error=access_denied&error_description=${encodeURIComponent('<b>denied</b>')}`,
             {
-                headers: { 'user-agent': USER_AGENT },
+                headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${nonce}` },
                 redirect: 'manual',
             },
         );
@@ -554,6 +626,7 @@ describe('identity-provider login completion', () => {
             redirect: 'manual',
         });
         const state = new URL(out.headers.get('location') as string).searchParams.get('state');
+        const nonce = readPendingLoginCookie(out);
 
         // Disabling a provider has to stop the logins already in flight, not
         // only the ones that have yet to start.
@@ -572,7 +645,7 @@ describe('identity-provider login completion', () => {
             'GET',
             `identity-providers/${disabledProvider.id}/authorize-in?state=${state}&code=external-code`,
             {
-                headers: { 'user-agent': USER_AGENT },
+                headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${nonce}` },
                 redirect: 'manual',
             },
         );
@@ -601,6 +674,7 @@ describe('identity-provider login completion', () => {
                 redirect: 'manual',
             });
             const state = new URL(out.headers.get('location') as string).searchParams.get('state');
+            const nonce = readPendingLoginCookie(out);
 
             // A federated login must not be the way around the deactivation the
             // local login path enforces.
@@ -609,7 +683,7 @@ describe('identity-provider login completion', () => {
                 'GET',
                 `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code`,
                 {
-                    headers: { 'user-agent': USER_AGENT },
+                    headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${nonce}` },
                     redirect: 'manual',
                 },
             );
@@ -637,6 +711,7 @@ describe('identity-provider login completion', () => {
             redirect: 'manual',
         });
         const state = new URL(out.headers.get('location') as string).searchParams.get('state');
+        const nonce = readPendingLoginCookie(out);
 
         // The redirect below is only safe because the verifier throws on a
         // pattern mismatch. Nothing else on the callback path re-checks it, so
@@ -648,7 +723,7 @@ describe('identity-provider login completion', () => {
             'GET',
             `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code`,
             {
-                headers: { 'user-agent': USER_AGENT },
+                headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${nonce}` },
                 redirect: 'manual',
             },
         );
@@ -725,6 +800,7 @@ describe('identity-provider login completion', () => {
             redirect: 'manual',
         });
         const state = new URL(out.headers.get('location') as string).searchParams.get('state');
+        const nonce = readPendingLoginCookie(out);
 
         const tokenCallsBefore = providerTokenCalls;
         const verifier = suite.container.resolve(OAuth2InjectionToken.AuthorizationCodeRequestVerifier);
@@ -742,7 +818,7 @@ describe('identity-provider login completion', () => {
                 'GET',
                 `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code`,
                 {
-                    headers: { 'user-agent': USER_AGENT },
+                    headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${nonce}` },
                     redirect: 'manual',
                 },
             );
@@ -778,6 +854,7 @@ describe('identity-provider login completion', () => {
             redirect: 'manual',
         });
         const state = new URL(out.headers.get('location') as string).searchParams.get('state');
+        const nonce = readPendingLoginCookie(out);
 
         // The client is verified again at completion, so a deactivation that
         // lands while the user is at the provider still takes effect.
@@ -790,7 +867,7 @@ describe('identity-provider login completion', () => {
             'GET',
             `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code`,
             {
-                headers: { 'user-agent': USER_AGENT },
+                headers: { 'user-agent': USER_AGENT, cookie: `authup_federated_login=${nonce}` },
                 redirect: 'manual',
             },
         );
@@ -832,6 +909,43 @@ describe('identity-provider login completion', () => {
 
             expect(`${location.origin}${location.pathname}`).toEqual(REDIRECT_URI);
             expect(location.searchParams.get('code')).toBeTruthy();
+        } finally {
+            await suite.client.userAuthenticator.delete((user as { id: string }).id, authenticator.id);
+        }
+    });
+
+    it('tells the page a federated session owes nothing, and owes a factor when asked', async () => {
+        await runFederatedLogin();
+
+        const { data: users } = await suite.client.user.getMany({ filters: { realmId: realm.id } });
+        const user = users.find((row) => row.name !== 'admin');
+
+        const { data: authenticator } = await suite.client.userAuthenticator.enroll(
+            (user as { id: string }).id,
+            { kind: UserAuthenticatorKind.EMAIL },
+        );
+
+        try {
+            const hosted = await runFederatedLogin();
+            const accessToken = await completePendingLogin(hosted);
+
+            // the page renders from this answer, so it has to say what the
+            // SESSION owes rather than what the user holds
+            const plain = await httpRequest(suite, 'GET', 'authenticators/challenge', { headers: { authorization: `Bearer ${accessToken}` } });
+            await expect(plain.json()).resolves.toMatchObject({
+                required: false,
+                enrollmentRequired: false,
+            });
+
+            // an application that asked for a proof is the exception, and it
+            // can only ADD the requirement
+            const stepUp = await httpRequest(
+                suite,
+                'GET',
+                'authenticators/challenge?acrValues=urn%3Aauthup%3Amfa',
+                { headers: { authorization: `Bearer ${accessToken}` } },
+            );
+            await expect(stepUp.json()).resolves.toMatchObject({ required: true });
         } finally {
             await suite.client.userAuthenticator.delete((user as { id: string }).id, authenticator.id);
         }

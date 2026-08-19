@@ -466,7 +466,12 @@ export default defineComponent({
                 return wrapChild(h(AuthorizeText, { message: loadingText.value }));
             }
 
-            if (federatedError.value) {
+            // A failed completion must not let the ladder continue against a
+            // session the cookies already hold: that would consent an
+            // application into the wrong account, silently for a built-in
+            // client. With no such session there is nothing to protect, so
+            // the person gets the reason AND a way to carry on.
+            if (federatedError.value && loggedIn.value) {
                 return wrapChild(h(AuthorizeText, {
                     message: federatedError.value,
                     isError: true,
@@ -501,6 +506,16 @@ export default defineComponent({
                     }),
                     fallback: () => h(AuthorizeText, { message: loadingText.value }),
                 });
+
+                // A failed federated completion states its reason above the
+                // form rather than replacing the page: with no session to
+                // protect, the person can simply carry on.
+                if (federatedError.value) {
+                    return wrapChild([
+                        h(AuthorizeText, { message: federatedError.value, isError: true }),
+                        loginNode,
+                    ]);
+                }
 
                 // prompt=login / mid-flow re-auth: a banner above the form
                 // explaining why credentials are requested again.

@@ -83,9 +83,15 @@ The provider id is shown on the provider's detail page in the admin console.
 ## Troubleshooting
 
 **"The login request is unknown or expired."** The browser did not present the
-cookie the callback set, or it did and the login had already been completed or
-had expired (five minutes). A browser that blocks all cookies cannot complete a
-federated login. Starting the login again is the fix.
+cookie that was set when the login started, or it did and the login had already
+been completed or had expired (five minutes). A browser that blocks all cookies
+cannot sign in through a provider at all: the cookie is what ties the login to
+the browser that began it, so that a link someone else opens cannot sign them
+into the wrong account. Starting the login again is the fix.
+
+**Two federated logins started in the same browser at once.** Only the most
+recent one can be completed; the other returns to the login page and has to be
+started again. The pending login is held in a single cookie per browser.
 
 **The person lands back on the login page with no message.** The application's
 authorization request no longer verifies: the client was deactivated or
