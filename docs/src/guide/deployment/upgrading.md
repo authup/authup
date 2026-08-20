@@ -65,7 +65,7 @@ collection stays anonymous, because the hosted login page lists providers
 before anyone signs in, and it never carries the extra attributes. Read the
 one provider from it instead:
 
-```
+```http
 GET /identity-providers?filter[id]=<provider-id>
 GET /identity-providers?filter[name]=<provider-name>
 ```

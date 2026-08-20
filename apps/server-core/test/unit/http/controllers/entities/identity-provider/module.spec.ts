@@ -12,10 +12,12 @@ import {
     expect, 
     it,
 } from 'vitest';
+import { Client as HTTPClient } from '@authup/core-http-kit';
 import type { OAuth2IdentityProvider } from '@authup/core-kit';
 import {
     IdentityProviderPreset,
     IdentityProviderProtocol,
+    PermissionName,
     ScopeName,
     buildIdentityProviderAuthorizeCallbackPath,
     buildIdentityProviderAuthorizePath,
@@ -25,6 +27,8 @@ import {
     createFakeClient,
     createFakeLdapIdentityProvider,
     createFakeOAuth2IdentityProvider,
+    createFakeRealm,
+    expectClientError,
     expectPropertiesEqualToSrc,
     httpRequest,
 } from '../../../../../utils';
@@ -43,6 +47,41 @@ describe('src/http/controllers/identity-provider', () => {
 
     const oAuth2IdentityProvider = createFakeOAuth2IdentityProvider();
     const ldapIdentityProvider = createFakeLdapIdentityProvider();
+
+    const createIdentity = async (options: {
+        realmId?: string,
+        permissionNames?: PermissionName[],
+    } = {}) => {
+        const secret = 'identity-provider-gate-secret';
+
+        const { data: client } = await suite.client.client.create({
+            ...createFakeClient(),
+            ...(options.realmId ? { realmId: options.realmId } : {}),
+            authMethod: 'secret',
+            tokenBindingMethod: 'none',
+            secret,
+            secretHashed: false,
+            secretEncrypted: false,
+        });
+
+        for (const permissionName of options.permissionNames ?? []) {
+            const { data: permission } = await suite.client.permission.getOne(permissionName);
+            await suite.client.clientPermission.create({
+                clientId: client.id,
+                permissionId: permission.id,
+            });
+        }
+
+        const token = await suite.client.token.createWithClientCredentials({
+            client_id: client.id,
+            client_secret: secret,
+        });
+
+        const httpClient = new HTTPClient({ baseURL: suite.baseURL });
+        httpClient.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
+
+        return httpClient;
+    };
 
     it('should create resource (oauth2)', async () => {
         const { data: response } = await suite.client
@@ -115,6 +154,49 @@ describe('src/http/controllers/identity-provider', () => {
         // the record read carries the EA-extended entity, so an ungated
         // response hands out the provider's client secret (issue #3480)
         expect(await response.text()).not.toContain(oAuth2IdentityProvider.clientSecret);
+    });
+
+    it('should not read resource without a provider permission', async () => {
+        const client = await createIdentity();
+
+        // the record read is the surface that carries the provider's extra
+        // attributes, so the permission check must decide it - the middleware
+        // alone only answers the anonymous case (issue #3480)
+        await expectClientError(
+            () => client.identityProvider.getOne(oAuth2IdentityProvider.id!),
+            { status: 403 },
+        );
+    });
+
+    it('should not read a resource of another realm', async () => {
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+        const client = await createIdentity({
+            realmId: realm.id,
+            permissionNames: [PermissionName.IDENTITY_PROVIDER_READ],
+        });
+
+        // holds the permission, but its default `own` realm reach cannot
+        // reach the master-realm provider
+        await expectClientError(
+            () => client.identityProvider.getOne(oAuth2IdentityProvider.id!),
+            { status: 403 },
+        );
+    });
+
+    it('should not carry extra attributes on the anonymous collection', async () => {
+        const response = await httpRequest(
+            suite,
+            'GET',
+            `/identity-providers?filter[id]=${oAuth2IdentityProvider.id!}`,
+        );
+
+        expect(response.status).toEqual(200);
+
+        // the documented anonymous substitute for the gated record read: it
+        // stays safe only while findMany does not extend with extra attributes
+        const body = await response.text();
+        expect(body).toContain(oAuth2IdentityProvider.id!);
+        expect(body).not.toContain(oAuth2IdentityProvider.clientSecret);
     });
 
     it('should update resource', async () => {
