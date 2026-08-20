@@ -66,6 +66,7 @@ import type {
     IdentityProviderSavePayload,
     IdentityProviderUpdatePayload,
 } from '@authup/core-http-kit';
+import { IDENTITY_PROVIDER_LOGIN_NOT_PENDING } from '@authup/core-http-kit';
 import { URL } from 'node:url';
 import type {
     IEventService,
@@ -474,7 +475,14 @@ export class IdentityProviderController {
 
         const pendingLoginId = useRequestCookie(event, OAUTH2_FEDERATED_LOGIN_COOKIE);
         if (typeof pendingLoginId !== 'string' || pendingLoginId.length === 0) {
-            throw new BadRequestError('The login request is unknown or expired.');
+            // Marked, because this refusal alone means the completion never
+            // began: the caller was not in a federated login at all. The
+            // hosted page reads it to skip the session teardown it performs
+            // for a redemption that genuinely failed.
+            throw new BadRequestError({
+                message: 'The login request is unknown or expired.',
+                data: { reason: IDENTITY_PROVIDER_LOGIN_NOT_PENDING },
+            });
         }
 
         // Cleared whichever way the completion goes: it is single use, and a

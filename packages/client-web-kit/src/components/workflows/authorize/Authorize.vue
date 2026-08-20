@@ -12,6 +12,7 @@ import type {
     Scope,
 } from '@authup/core-kit';
 import type { UserAuthenticatorChallengeResponse } from '@authup/core-http-kit';
+import { IDENTITY_PROVIDER_LOGIN_NOT_PENDING } from '@authup/core-http-kit';
 import { storeToRefs } from 'pinia';
 import type { PropType, VNodeChild } from 'vue';
 import {
@@ -241,6 +242,22 @@ export default defineComponent({
                 const ctx = extractErrorContext(e);
                 const message = ctx.message ??
                     (e instanceof Error ? e.message : String(e));
+
+                // The visitor's intent was the provider account, so a failed
+                // redemption must leave no session for the ladder to run
+                // against. The block below lasts only for this render, and the
+                // page has already dropped the `provider` hint from the URL, so
+                // a reload would otherwise consent the application into
+                // whatever account the cookies still hold - silently, for a
+                // builtIn client.
+                //
+                // Skipped when the server says no completion was pending: the
+                // hint is a plain query parameter anyone can put in a link, and
+                // logging out on that answer would turn every authorize URL
+                // into a one-click logout for whoever opens it.
+                if (ctx.data?.reason !== IDENTITY_PROVIDER_LOGIN_NOT_PENDING) {
+                    store.logout();
+                }
 
                 federatedError.value = message;
                 emit('failed', message);
