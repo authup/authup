@@ -7,29 +7,31 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.62)
 
-### Token introspection and revocation stopped answering errors for dead tokens
+### Introspecting an expired token now returns its payload
 
-`POST /token/introspect` reports an expired, malformed or unverifiable token as
-`200 {"active": false}` instead of raising `401` (or `404`, when the token's
-`kid` named no known key). This is what RFC 7662 section 2.2 asks for: a token
-that is not active, does not exist, or cannot be verified is *reported*, not
-raised. The same now goes for a token whose subject no longer resolves, which
-answered `400`.
+`POST /token/introspect` answers `200` with `"active": false` **and the token's
+payload and subject claims** for an expired token, where it previously raised
+`401`. A relying party can now tell the person whose session ended who they
+were - "your session expired, Alice" - instead of only that something failed.
+
+A token the server cannot read at all still raises: malformed, a bad signature,
+or a `kid` naming no known key. Reporting one as inactive would claim authup
+issued it and let it lapse. A missing `token` **parameter** is still a malformed
+request and still answers `400`.
 
 `POST /token/revoke` answers its ordinary `202` for a malformed or unverifiable
 token, per RFC 7009 section 2.2 - "invalid tokens do not cause an error response
 since the client cannot handle such an error in a reasonable way". Expired
 tokens already behaved this way.
 
-**Action required only if you branch on the failure.** A client that treated a
-`401` from introspection as "the token is dead" now has to read `active`, which
-is the field the RFC defines for it. A missing `token` **parameter** is still a
-malformed request and still answers `400`.
+**Action required if you branch on the failure.** A client that treated a `401`
+from introspection as "the token is dead" now has to read `active`, which is the
+field RFC 7662 defines for it.
 
 `@authup/client-web-kit` is updated in step: its store refuses to commit a
 session for a response reporting `active: false`, which it previously ignored -
-a revoked token restored from cookies rendered as authenticated until the next
-protected request failed. Upgrade the kit alongside the server.
+so a revoked or expired token restored from cookies rendered as authenticated
+until the next protected request failed. Upgrade the kit alongside the server.
 
 ### A bearer token whose key is unknown answers 401, not 404
 

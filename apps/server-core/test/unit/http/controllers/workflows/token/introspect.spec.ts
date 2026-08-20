@@ -17,11 +17,13 @@ import { createTestApplication } from '../../../../../app';
 import { expectClientError, httpRequest } from '../../../../../utils';
 
 /**
- * RFC 7662 §2.2: a token that is not active, does not exist, or cannot be
- * verified is REPORTED as `active: false`, never raised as an error. Expired,
- * malformed and unknown-`kid` tokens took the global JWT status mapping to 401
- * (404 for the last), so a caller could not tell a dead token from a rejected
- * introspection request.
+ * An EXPIRED token is read and reported rather than raised: the caller gets
+ * `active: false` alongside the payload and the subject's claims, so a
+ * third-party app can say "your session ended, <name>" instead of only "no".
+ * It answered 401 before, which said nothing about whose token it was.
+ *
+ * A token that cannot be read at all keeps raising. Reporting one as inactive
+ * would claim this server issued it and let it lapse.
  */
 describe('token-introspect', () => {
     const suite = createTestApplication();
@@ -34,7 +36,7 @@ describe('token-introspect', () => {
         await suite.teardown();
     });
 
-    it('should report an expired token as inactive', async () => {
+    it('should report an expired token as inactive and still name its subject', async () => {
         const response = await suite.client
             .token
             .createWithPassword({
@@ -67,17 +69,56 @@ describe('token-introspect', () => {
             .introspect({ token: expiredToken });
 
         expect(introspection.active).toBe(false);
+
+        // the point of reading it rather than refusing it: the caller can name
+        // the account whose session ended
+        expect(introspection.sub).toEqual(payload.sub);
+        expect(introspection.sub_kind).toEqual(payload.sub_kind);
+        expect((introspection as Record<string, any>).name).toEqual('admin');
     });
 
-    it('should report a malformed token as inactive', async () => {
-        const introspection = await suite.client
+    // Without the controller deriving `active` from `exp`, this is the
+    // regression that bites: `ignoreExpiry` makes the verify accept the token,
+    // and the signature-keyed cache returns a hit without re-checking `exp`
+    // either, so the report would say the token is live.
+    it('should not report an expired token as active', async () => {
+        const grant = await suite.client
             .token
-            .introspect({ token: 'not-a-json-web-token' });
+            .createWithPassword({
+                username: 'admin',
+                password: 'start123',
+            });
 
-        expect(introspection.active).toBe(false);
+        const current = await suite.client
+            .token
+            .introspect({ token: grant.access_token });
+
+        const signer = suite.container.resolve(OAuth2InjectionToken.TokenSigner);
+        const now = Math.floor(Date.now() / 1000);
+        const justExpired = await signer.sign({
+            jti: current.jti,
+            sub: current.sub,
+            sub_kind: current.sub_kind,
+            realm_id: current.realm_id,
+            client_id: current.client_id,
+            kind: current.kind,
+            session_id: current.session_id,
+            iat: now - 60,
+            exp: now - 1,
+        });
+
+        expect((await suite.client.token.introspect({ token: justExpired })).active).toBe(false);
     });
 
-    it('should report a token signed under an unknown key as inactive', async () => {
+    it('should refuse a malformed token', async () => {
+        // not a report about a token this server issued
+        await expectClientError(
+            () => suite.client.token.introspect({ token: 'not-a-json-web-token' }),
+            { status: 401 },
+        );
+    });
+
+    it('should refuse a token signed under an unknown key', async () => {
         // A `kid` naming no resolvable key answered 404 (`JWK_NOT_FOUND`)
         // before it became a JWTError.
         const header = Buffer
@@ -91,11 +132,10 @@ describe('token-introspect', () => {
             .from(JSON.stringify({ sub: 'someone', exp: Math.floor(Date.now() / 1000) + 3600 }))
             .toString('base64url');
 
-        const introspection = await suite.client
-            .token
-            .introspect({ token: `${header}.${body}.signature` });
-
-        expect(introspection.active).toBe(false);
+        await expectClientError(
+            () => suite.client.token.introspect({ token: `${header}.${body}.signature` }),
+            { status: 401 },
+        );
     });
 
     // The token PARAMETER is still part of the request contract: a body without
@@ -107,9 +147,34 @@ describe('token-introspect', () => {
         );
     });
 
-    it('should not answer a 401 with a bearer challenge for a dead token', async () => {
-        // the whole point of the change: nothing about a dead token is a 401
-        const response = await httpRequest(suite, 'POST', '/token/introspect', { form: { token: 'not-a-json-web-token' } });
+    it('should not challenge the caller when reporting an expired token', async () => {
+        const grant = await suite.client
+            .token
+            .createWithPassword({
+                username: 'admin',
+                password: 'start123',
+            });
+
+        const current = await suite.client
+            .token
+            .introspect({ token: grant.access_token });
+
+        const signer = suite.container.resolve(OAuth2InjectionToken.TokenSigner);
+        const now = Math.floor(Date.now() / 1000);
+        const expiredToken = await signer.sign({
+            jti: current.jti,
+            sub: current.sub,
+            sub_kind: current.sub_kind,
+            realm_id: current.realm_id,
+            client_id: current.client_id,
+            kind: current.kind,
+            session_id: current.session_id,
+            iat: now - 7200,
+            exp: now - 3600,
+        });
+
+        // the report is a 200 about the TOKEN, not a 401 about the caller
+        const response = await httpRequest(suite, 'POST', '/token/introspect', { form: { token: expiredToken } });
 
         expect(response.status).toEqual(200);
         expect(response.headers.get('www-authenticate')).toBeNull();

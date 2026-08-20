@@ -4709,8 +4709,8 @@ server keeps answering with the claims, because the store SOURCES the whole
 session from them (RFC 7662 §2.2 recommends - SHOULD NOT, not MUST NOT -
 trimming an inactive response, and trimming would cost the store its realm,
 subject, permissions, session_id and acr on every restore). This is coupled to
-the introspection endpoint's own RFC 7662 fix (conventions.md -> *The token
-endpoint's other two verifying handlers*): that made an EXPIRED token answer
+the introspection endpoint's own change (conventions.md -> *`POST
+/token/introspect` READS an expired token*): that made an EXPIRED token answer
 200 `{active: false}` where it used to throw, and the throw was what reached
 the refresh fallback. The two must not be separated.
 

@@ -6,7 +6,12 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenIntrospectionResponse, OAuth2TokenPermission } from '@authup/specs';
-import { OAuth2GrantTypeError, OAuth2TokenGrant, isJWTError } from '@authup/specs';
+import { 
+    OAuth2GrantTypeError, 
+    OAuth2RequestError, 
+    OAuth2TokenGrant, 
+    isJWTError, 
+} from '@authup/specs';
 import {
     DContext,
     DController,
@@ -132,9 +137,28 @@ export class TokenController {
     ): Promise<OAuth2TokenIntrospectionResponse> {
         try {
             const token = await extractTokenFromRequest(event);
-            const payload = await this.tokenVerifier.verify(token, { skipActiveCheck: true });
+
+            // `ignoreExpiry`, so an expired token still reports WHOSE it was:
+            // a third-party app can say "your session ended, <name>" instead
+            // of only "no". Everything the caller could act on - the subject,
+            // its claims - is in a token we did issue and can still read.
+            //
+            // `active` is derived below and NEVER from this call. The
+            // signature-keyed cache returns a hit without re-checking `exp`
+            // (verifier/module.ts), so relying on the verify to reject an
+            // expired token would report one as active for as long as its
+            // entry survives. The verifier deliberately skips WRITING the
+            // cache on this path, so no expired payload can enter it here.
+            const payload = await this.tokenVerifier.verify(token, {
+                ignoreExpiry: true,
+                skipActiveCheck: true,
+            });
             if (!payload.sub || !payload.sub_kind) {
-                return { active: false };
+                // Not a report about a token this server ever issued: authup
+                // mints every one with a subject, so a verifying token without
+                // one was never valid. `active: false` would claim we knew it
+                // and let it lapse.
+                throw OAuth2RequestError.identityInvalid();
             }
 
             // todo: only receive client specific permissions
@@ -147,19 +171,21 @@ export class TokenController {
 
             const identity = await this.identityResolver.resolve(payload.sub_kind, payload.sub);
             if (!identity) {
-                // A subject that no longer resolves is a token this server will
-                // not honour, which RFC 7662 §2.2 reports as `active: false`
-                // like any other. It answered 400 before.
-                return { active: false };
+                // todo: differentiate between client & user
+                throw OAuth2RequestError.identityInvalid();
             }
 
             const claimsBuilder = new OAuth2OpenIDClaimsBuilder();
             const claims = claimsBuilder.fromIdentity(identity);
 
+            // Both halves, fail-closed on a missing claim: a token carrying no
+            // `jti` cannot be checked against the revocation list, and one
+            // carrying no `exp` cannot be shown to be current. Authup mints
+            // every token with both.
             let active : boolean;
-            if (payload.jti) {
+            if (payload.jti && typeof payload.exp === 'number') {
                 const isInactive = await this.tokenVerifier.isInactive(payload.jti);
-                active = !isInactive;
+                active = !isInactive && payload.exp * 1000 > Date.now();
             } else {
                 active = false;
             }
@@ -184,16 +210,12 @@ export class TokenController {
                 ...claims,
             };
         } catch (e) {
-            // RFC 7662 §2.2: a token that is not active, does not exist, or
-            // cannot be verified is REPORTED as `active: false`, not raised as
-            // an error. Expired, malformed and unknown-`kid` tokens took the
-            // global JWT mapping to 401 (404 for the last), so a caller could
-            // not tell a dead token from a rejected introspection request. A
-            // malformed REQUEST - no `token` parameter - stays 400.
-            if (isJWTError(e)) {
-                return { active: false };
-            }
-
+            // Deliberately no `active: false` fallback here. What reaches this
+            // point is a token that could not be read at all - malformed, a
+            // bad signature, a `kid` naming no key - and reporting one as
+            // inactive would claim this server issued it and let it lapse.
+            // The expired case, the one a caller can act on, never gets here:
+            // it is verified above and reported with its payload.
             throw toOAuth2Error(e);
         }
     }
