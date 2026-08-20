@@ -125,9 +125,12 @@ describe('OAuth2 TLS client authentication and certificate-bound tokens', () => 
                 .digest('base64url'),
         );
 
+        // A bound token presented without its certificate is an unusable
+        // bearer on a resource route, so it answers 401 (RFC 6750 3.1) like
+        // every other JWT failure.
         const protectedByAuthorizationMiddleware = `/realms/${realm.id}/.well-known/openid-configuration`;
         const withoutBoundCertificate = await httpRequest(suite, 'GET', protectedByAuthorizationMiddleware, { headers: { Authorization: `Bearer ${tokens.access_token}` } });
-        expect(withoutBoundCertificate.status).toBe(400);
+        expect(withoutBoundCertificate.status).toBe(401);
 
         const withWrongCertificate = await httpRequest(suite, 'GET', protectedByAuthorizationMiddleware, {
             headers: {
@@ -135,7 +138,7 @@ describe('OAuth2 TLS client authentication and certificate-bound tokens', () => 
                 ...certificateHeaders(WRONG_LEAF_PEM),
             },
         });
-        expect(withWrongCertificate.status).toBe(400);
+        expect(withWrongCertificate.status).toBe(401);
 
         const withBoundCertificate = await httpRequest(suite, 'GET', protectedByAuthorizationMiddleware, {
             headers: {

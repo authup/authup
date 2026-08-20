@@ -177,10 +177,10 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
         const completedExpiresIn = (new Date(completed.expiresAt).getTime() - Date.now()) / 1_000;
         expect(completedExpiresIn).toBeGreaterThan(MFA_TICKET_MAX_AGE + 60);
 
-        // 8) the ticket is single use — consumed by the completion (same
-        // 400 + inactive_token shape as any revoked bearer on this API)
+        // 8) the ticket is single use, consumed by the completion (the same
+        // 401 + inactive_token shape as any revoked bearer on this API)
         const replay = await httpRequest(suite, 'GET', '/authenticators/challenge', { headers: { Authorization: `Bearer ${ticket}` } });
-        expect(replay.status).toEqual(400);
+        expect(replay.status).toEqual(401);
         const replayBody = await replay.json();
         expect(replayBody.code).toEqual(ErrorCode.JWT_INACTIVE);
     });

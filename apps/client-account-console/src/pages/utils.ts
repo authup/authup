@@ -37,14 +37,19 @@ export function useAccountToasts() {
  * behind a toast that fades. Action failures (a revoke, a disconnect)
  * keep using the toasts above; they leave the page intact.
  *
- * A 401 is deliberately not retryable: the session is gone, so it goes
- * through the logout flow the router guard would run on the next
- * navigation anyway, which drops the shell for the sign-in state. The
- * kit's auth hook already covers the common case (a failed background
- * refresh unsets the header, which the kit answers with a logout); this
- * catches the request that still 401s after it, and the case where the
- * store holds no refresh token to retry with at all. Without it a retry
- * against a dead session just 401s again, forever.
+ * An authentication failure is only NOT retryable once the session can no
+ * longer be renewed, which is why the branch tests both. Token renewal
+ * belongs to the kit's auth hook: it refreshes on an authentication
+ * failure and logs out when that fails. An expired access token is
+ * therefore not a dead session on its own, since a live refresh token is
+ * exactly what answers it, and this must not pre-empt that call.
+ *
+ * The one thing the hook cannot answer is a store with no refresh token
+ * to renew with: `refreshSession` throws before anything is emitted, so
+ * no logout follows and a retry would fail again on every press. That is
+ * what this catches, and it defers to the same logout the router guard
+ * would run on the next navigation, dropping the shell for the sign-in
+ * state.
  *
  * `capture` takes an optional sink for a failure that must not take the
  * whole page with it (a nested collection inside one row). The 401 rule
@@ -61,7 +66,7 @@ export function usePageError() {
     };
 
     const capture = async (e: unknown, sink?: (value: Error) => void) => {
-        if (extractErrorContext(e).status === 401) {
+        if (extractErrorContext(e).status === 401 && !store.refreshToken) {
             await store.logout();
             return;
         }

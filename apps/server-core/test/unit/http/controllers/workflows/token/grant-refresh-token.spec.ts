@@ -545,4 +545,21 @@ describe('refresh-token', () => {
             { status: 400, code: ErrorCode.OAUTH_GRANT_INVALID },
         );
     });
+
+    // RFC 6749 5.2: the token endpoint answers `invalid_grant` (400) for a
+    // refresh token it cannot accept, whatever is wrong with it. The three
+    // JWT codes answer 401 on a RESOURCE route (RFC 6750 3.1), so letting a
+    // verification failure through unmapped would report a bad grant as if
+    // the CLIENT had failed to authenticate, and would answer an
+    // unverifiable token differently from a wrong-kind one.
+    it.each([
+        ['an unparsable token', 'garbage'],
+        ['a forged three-segment token', 'aaa.bbb.ccc'],
+    ])('should reject %s as an invalid grant', async (_label, refreshToken) => {
+        await expectClientError(
+            () => suite.client.token.createWithRefreshToken({ refresh_token: refreshToken }),
+            { status: 400, code: ErrorCode.OAUTH_GRANT_INVALID },
+        );
+    });
 });
+

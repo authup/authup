@@ -19,6 +19,16 @@ import { ErrorCode } from './constants.ts';
  * - `OAUTH_CLIENT_INVALID`: 400 → **401**, per RFC 6749 §5.2 (`invalid_client`
  *   responses should use 401). Surfaces as a behavior change in HTTP-level
  *   tests asserting `status: 400, code: OAUTH_CLIENT_INVALID`.
+ * - The three `JWT_*` codes: 400 (the unlisted fallback) → **401**, per
+ *   RFC 6750 §3.1, which is the status for a resource request carrying an
+ *   expired or otherwise unusable bearer. They had never been listed, so a
+ *   dead bearer answered 400 while a MISSING one answered 401, and no
+ *   client could tell "your credential died" from "your request was
+ *   malformed" by status alone. The token endpoint is the one place where
+ *   RFC 6749 §5.2 wants 400 instead, and it does not surface these codes:
+ *   the refresh grant verifies with `skipActiveCheck` so a replayed token
+ *   reaches family revocation as `invalid_grant`, and revoke/introspect
+ *   verify with `ignoreExpiry`.
  */
 export const ERROR_CODE_TO_STATUS: Readonly<Partial<Record<`${ErrorCode}`, number>>> = {
     // 401
@@ -26,6 +36,9 @@ export const ERROR_CODE_TO_STATUS: Readonly<Partial<Record<`${ErrorCode}`, numbe
     [ErrorCode.HTTP_BEARER_TOKEN_MALFORMED]: 401,
     [ErrorCode.HTTP_HEADER_AUTH_TYPE_UNSUPPORTED]: 401,
     [ErrorCode.IDENTITY_UNAUTHORIZED]: 401,
+    [ErrorCode.JWT_EXPIRED]: 401,
+    [ErrorCode.JWT_INACTIVE]: 401,
+    [ErrorCode.JWT_INVALID]: 401,
 
     // 403
     [ErrorCode.PERMISSION_NOT_FOUND]: 403,

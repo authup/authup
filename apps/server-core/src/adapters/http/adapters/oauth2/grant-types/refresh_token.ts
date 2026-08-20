@@ -7,7 +7,12 @@
 
 import { type Client, isClientPublic } from '@authup/core-kit';
 import type { OAuth2TokenConfirmation, OAuth2TokenGrantResponse } from '@authup/specs';
-import { OAuth2GrantError, OAuth2RequestError, OAuth2TokenGrant } from '@authup/specs';
+import {
+    OAuth2GrantError,
+    OAuth2RequestError,
+    OAuth2TokenGrant,
+    isJWTError,
+} from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
 import type { IAppEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
@@ -62,7 +67,23 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
         // blocklist) is the refresh-token authority, so a replayed/consumed
         // token must reach runWith() to trigger family revocation instead of
         // being rejected here with JWT_INACTIVE.
-        const payload = await this.refreshTokenVerifier.verify(refreshToken, { skipActiveCheck: true });
+        let payload : Awaited<ReturnType<typeof this.refreshTokenVerifier.verify>>;
+        try {
+            payload = await this.refreshTokenVerifier.verify(refreshToken, { skipActiveCheck: true });
+        } catch (e) {
+            // RFC 6749 §5.2: a refresh token the endpoint cannot accept is
+            // `invalid_grant` (400). A verification failure raises a JWT
+            // error, which answers 401 on a resource route (RFC 6750 §3.1),
+            // and letting that status escape here would report a bad GRANT
+            // as if the CLIENT had failed to authenticate. The branches
+            // below already answer `invalid_grant` for a token bound to
+            // another client, so this keeps one shape for the parameter.
+            if (isJWTError(e)) {
+                throw OAuth2GrantError.invalid();
+            }
+
+            throw e;
+        }
 
         let client: Client | undefined;
 

@@ -14,21 +14,30 @@ import {
 } from 'vitest';
 
 const logout = vi.fn();
+const store: { logout: typeof logout, refreshToken: string | null } = {
+    logout,
+    refreshToken: null,
+};
 
 vi.mock('@authup/client-web-kit', async () => {
     const actual = await vi.importActual<Record<string, any>>('@authup/client-web-kit');
 
     return {
         ...actual,
-        injectStore: () => ({ logout }),
+        injectStore: () => store,
     };
 });
+
+function unauthorized() {
+    return Object.assign(new Error('Request failed'), { response: { status: 401, data: { code: 'identity_unauthorized' } } });
+}
 
 const { usePageError } = await import('../../src/pages/utils');
 
 describe('usePageError', () => {
     beforeEach(() => {
         logout.mockReset();
+        store.refreshToken = null;
     });
 
     it('should hold a failure as a retryable error state', async () => {
@@ -49,13 +58,27 @@ describe('usePageError', () => {
         expect(error.value).toBeNull();
     });
 
-    it('should log out on an authentication failure instead of offering a retry', async () => {
+    it('should log out on an authentication failure it cannot renew', async () => {
         const { error, capture } = usePageError();
 
-        await capture(Object.assign(new Error('Request failed'), { response: { status: 401, data: { code: 'identity_unauthorized' } } }));
+        await capture(unauthorized());
 
         expect(logout).toHaveBeenCalledOnce();
         expect(error.value).toBeNull();
+    });
+
+    // Renewal belongs to the kit's auth hook. An expired access token is not
+    // a dead session while a refresh token answers for it, so the page must
+    // not pre-empt that call by tearing the session down.
+    it('should keep a renewable authentication failure retryable', async () => {
+        store.refreshToken = 'refresh-token';
+
+        const { error, capture } = usePageError();
+
+        await capture(unauthorized());
+
+        expect(logout).not.toHaveBeenCalled();
+        expect(error.value).toBeInstanceOf(Error);
     });
 
     it('should coerce a thrown non-error', async () => {
