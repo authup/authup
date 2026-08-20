@@ -136,11 +136,14 @@ describe('OAuth2TokenVerifier', () => {
             await expect(verifier.verify('raw-token')).rejects.toThrow(JWTError);
         });
 
-        it('should throw JWKError when key not found by kid', async () => {
+        // A `kid` naming no usable key is a property of the TOKEN: JWK_NOT_FOUND
+        // maps to 404, which made a dead bearer 404 on every resource route and
+        // escaped the refresh grant's isJWTError catch.
+        it('should throw JWTError when key not found by kid', async () => {
             extractTokenHeader.mockReturnValue({ kid: 'unknown-key-id' });
             const verifier = new OAuth2TokenVerifier(new FakeKeyStore(), new FakeOAuth2TokenRepository());
 
-            await expect(verifier.verify('raw-token')).rejects.toThrow(JWKError);
+            await expect(verifier.verify('raw-token')).rejects.toThrow(JWTError);
         });
 
         it('should reject a token whose kid references an enc key (realm key store)', async () => {
@@ -151,7 +154,7 @@ describe('OAuth2TokenVerifier', () => {
 
             const verifier = new OAuth2TokenVerifier(new FakeKeyStore(key), new FakeOAuth2TokenRepository());
 
-            await expect(verifier.verify('raw-token')).rejects.toThrow(JWKError);
+            await expect(verifier.verify('raw-token')).rejects.toThrow(JWTError);
         });
 
         it('should reject a token whose kid references a DISABLED key (plan 071 lifecycle)', async () => {
@@ -161,7 +164,7 @@ describe('OAuth2TokenVerifier', () => {
 
             const verifier = new OAuth2TokenVerifier(new FakeKeyStore(key), new FakeOAuth2TokenRepository());
 
-            await expect(verifier.verify('raw-token')).rejects.toThrow(JWKError);
+            await expect(verifier.verify('raw-token')).rejects.toThrow(JWTError);
         });
 
         it('should verify a token whose kid references a PASSIVE key', async () => {

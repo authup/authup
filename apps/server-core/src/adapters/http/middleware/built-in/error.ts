@@ -8,7 +8,8 @@
 import type { App } from 'routup';
 import { defineErrorHandler } from 'routup';
 import type { Logger } from '@authup/server-kit';
-import { httpStatusFromCode, serializeError } from '@authup/errors';
+import { ErrorCode, httpStatusFromCode, serializeError } from '@authup/errors';
+import { isJWTErrorCode } from '@authup/specs';
 import { describeError, sanitizeError } from '../../../../utils/index.ts';
 
 type ErrorMiddlewareOptions = {
@@ -35,6 +36,38 @@ export function registerErrorMiddleware(router: App, options: ErrorMiddlewareOpt
                 options.logger.error(describeError(original));
             }
             payload.message = 'An internal server error occurred.';
+        }
+
+        // RFC 6750 §3: a 401 from a protected resource carries the Bearer
+        // challenge, which nothing here emitted. Gated on the request actually
+        // being one - the token endpoint answers 401 for a bad client secret
+        // (RFC 6749 §5.2) and that is not a bearer failure, so it must not be
+        // stamped.
+        if (status === 401) {
+            const authorization = event.headers.get('authorization');
+
+            if (typeof authorization === 'string' && authorization.toLowerCase().startsWith('bearer ')) {
+                // RFC 6750 §3 defines the value as a quoted-string over
+                // `%x20-21 / %x23-5B / %x5D-7E`, so everything outside that set
+                // goes: a quote or a backslash would break out of the
+                // quoting, and a control character (a CR or LF in a
+                // third-party JWT library's
+                // message, which `JWTError.payloadInvalid` forwards verbatim)
+                // makes the header assignment itself throw, turning a 401
+                // into a 500.
+                const description = String(payload.message ?? '')
+                    .replace(/[^\x20-\x21\x23-\x5B\x5D-\x7E]/g, '');
+                const code = isJWTErrorCode(next.code) ? 'invalid_token' : 'invalid_request';
+
+                event.response.headers.set(
+                    'www-authenticate',
+                    `Bearer error="${code}", error_description="${description}"`,
+                );
+            } else if (!authorization && next.code === ErrorCode.IDENTITY_UNAUTHORIZED) {
+                // §3 again: a request that presented no credentials at all gets
+                // the bare challenge, with no error code to report.
+                event.response.headers.set('www-authenticate', 'Bearer');
+            }
         }
 
         event.response.status = status;

@@ -365,17 +365,37 @@ export function createStore(context: StoreCreateContext) {
     // session can be STAGED across multiple round-trips and committed in one
     // synchronous block (no consumer ever observes a half-built store).
 
+    /**
+     * The `active` check is the point of the wrapper. The endpoint answers 200
+     * with the full payload for a token it will not honour - revoked, or past
+     * its expiry - so reading the claims alone commits a dead token as a live
+     * session: identity set, permissions set, validated true, right up until
+     * the next protected call 401s.
+     *
+     * Rejecting instead of returning a flag hands both staging sites the path
+     * they already have for an introspection that failed outright: a stale
+     * restore falls through to `refreshSession()`, and a fresh grant reverts
+     * and revokes what it staged.
+     */
     const fetchTokenIntrospection = async (
         token: string,
-    ) : Promise<OAuth2TokenIntrospectionResponse> => client.token.introspect<OAuth2TokenIntrospectionResponse>(
-        { token },
-        {
-            authorizationHeader: {
-                type: 'Bearer',
-                token,
+    ) : Promise<OAuth2TokenIntrospectionResponse> => {
+        const response = await client.token.introspect<OAuth2TokenIntrospectionResponse>(
+            { token },
+            {
+                authorizationHeader: {
+                    type: 'Bearer',
+                    token,
+                },
             },
-        },
-    );
+        );
+
+        if (!response.active) {
+            throw new OAuth2Error('The access token is not active.');
+        }
+
+        return response;
+    };
 
     /**
      * The introspected token's subject, built from the response itself: the

@@ -24,11 +24,13 @@ import { ErrorCode } from './constants.ts';
  *   expired or otherwise unusable bearer. They had never been listed, so a
  *   dead bearer answered 400 while a MISSING one answered 401, and no
  *   client could tell "your credential died" from "your request was
- *   malformed" by status alone. The token endpoint is the one place where
- *   RFC 6749 §5.2 wants 400 instead, and it does not surface these codes:
- *   the refresh grant verifies with `skipActiveCheck` so a replayed token
- *   reaches family revocation as `invalid_grant`, and revoke/introspect
- *   verify with `ignoreExpiry`.
+ *   malformed" by status alone. The token endpoint is where RFC 6749 §5.2
+ *   and RFC 7662/7009 want something else, and each of its handlers says so
+ *   at its own call site rather than here: the refresh grant re-throws a
+ *   verification failure as `invalid_grant`, introspection reports one as
+ *   `active: false`, and revocation answers its ordinary success. A new
+ *   token-endpoint path that verifies a JWT has to do the same - this map
+ *   cannot know which surface it is on.
  */
 export const ERROR_CODE_TO_STATUS: Readonly<Partial<Record<`${ErrorCode}`, number>>> = {
     // 401

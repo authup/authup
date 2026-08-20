@@ -6,7 +6,12 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenIntrospectionResponse, OAuth2TokenPermission } from '@authup/specs';
-import { OAuth2GrantTypeError, OAuth2RequestError, OAuth2TokenGrant } from '@authup/specs';
+import { 
+    OAuth2GrantTypeError, 
+    OAuth2RequestError, 
+    OAuth2TokenGrant, 
+    isJWTError, 
+} from '@authup/specs';
 import {
     DContext,
     DController,
@@ -132,18 +137,42 @@ export class TokenController {
     ): Promise<OAuth2TokenIntrospectionResponse> {
         try {
             const token = await extractTokenFromRequest(event);
-            const payload = await this.tokenVerifier.verify(token, { skipActiveCheck: true });
+
+            // `ignoreExpiry`, so an expired token still reports WHOSE it was:
+            // a third-party app can say "your session ended, <name>" instead
+            // of only "no". Everything the caller could act on - the subject,
+            // its claims - is in a token we did issue and can still read.
+            //
+            // `active` is derived below and NEVER from this call. The
+            // signature-keyed cache returns a hit without re-checking `exp`
+            // (verifier/module.ts), so relying on the verify to reject an
+            // expired token would report one as active for as long as its
+            // entry survives. The verifier deliberately skips WRITING the
+            // cache on this path, so no expired payload can enter it here.
+            const payload = await this.tokenVerifier.verify(token, {
+                ignoreExpiry: true,
+                skipActiveCheck: true,
+            });
             if (!payload.sub || !payload.sub_kind) {
+                // Not a report about a token this server ever issued: authup
+                // mints every one with a subject, so a verifying token without
+                // one was never valid. `active: false` would claim we knew it
+                // and let it lapse.
                 throw OAuth2RequestError.identityInvalid();
             }
 
-            // todo: only receive client specific permissions
-            const permissions = await this.identityPermissionProvider.getFor({
-                id: payload.sub,
-                type: payload.sub_kind,
-                clientId: payload.client_id,
-                realmId: payload.realm_id,
-            });
+            // Both halves, fail-closed on a missing claim: a token carrying no
+            // `jti` cannot be checked against the revocation list, and one
+            // carrying no `exp` cannot be shown to be current. Authup mints
+            // every token with both. Derived BEFORE the permission read so a
+            // dead token never pays for one.
+            let active : boolean;
+            if (payload.jti && typeof payload.exp === 'number') {
+                const isInactive = await this.tokenVerifier.isInactive(payload.jti);
+                active = !isInactive && payload.exp * 1000 > Date.now();
+            } else {
+                active = false;
+            }
 
             const identity = await this.identityResolver.resolve(payload.sub_kind, payload.sub);
             if (!identity) {
@@ -154,13 +183,28 @@ export class TokenController {
             const claimsBuilder = new OAuth2OpenIDClaimsBuilder();
             const claims = claimsBuilder.fromIdentity(identity);
 
-            let active : boolean;
-            if (payload.jti) {
-                const isInactive = await this.tokenVerifier.isInactive(payload.jti);
-                active = !isInactive;
-            } else {
-                active = false;
+            // An inactive token reports WHO it belonged to and nothing about
+            // what they may do. The endpoint requires no authorization (#3489),
+            // so anyone holding a lapsed token string - out of a log, browser
+            // history, a proxy trace - reaches this answer; naming the subject
+            // is the point of reading an expired token at all, handing over
+            // their authorization set is not. It also skips resolving that set
+            // for a token nobody can use.
+            if (!active) {
+                return {
+                    active,
+                    ...payload,
+                    ...claims,
+                };
             }
+
+            // todo: only receive client specific permissions
+            const permissions = await this.identityPermissionProvider.getFor({
+                id: payload.sub,
+                type: payload.sub_kind,
+                clientId: payload.client_id,
+                realmId: payload.realm_id,
+            });
 
             return {
                 active,
@@ -182,6 +226,23 @@ export class TokenController {
                 ...claims,
             };
         } catch (e) {
+            // RFC 7662 §2.2: a token that "is not active, does not exist on
+            // this server, or the protected resource is not allowed to
+            // introspect" MUST be answered with `active: false`. A token this
+            // server cannot read does not exist on it, so it is reported like
+            // any other rather than raised - which is what §2.2 asks for and
+            // what keeps this endpoint from telling a caller whether a string
+            // was signed by a key we hold.
+            //
+            // The report is BARE, no payload: §2.2 and §4 both say not to
+            // disclose more about an inactive token, and there is nothing to
+            // disclose here anyway. The expired case is the deliberate
+            // exception, and it never reaches this catch - it is verified
+            // above and reported with its claims.
+            if (isJWTError(e)) {
+                return { active: false };
+            }
+
             throw toOAuth2Error(e);
         }
     }
@@ -212,9 +273,23 @@ export class TokenController {
 
             await this.tokenRevoker.revoke(payload);
 
-            event.response.status = 202;
+            // RFC 7009 §2.2 names 200 for a successful revocation. This was a
+            // 202 - within the 2xx family, so a client reading the class was
+            // unaffected, but not the status the spec asks for.
+            event.response.status = 200;
             return null;
         } catch (e) {
+            // Same clause, the other half: "invalid tokens do not cause an
+            // error response since the client cannot handle such an error in a
+            // reasonable way". Expiry is already bypassed above, so this covers
+            // a malformed or unverifiable token, which answered 401/404. The
+            // answer is the one a valid token gets - the point is that the two
+            // are indistinguishable.
+            if (isJWTError(e)) {
+                event.response.status = 200;
+                return null;
+            }
+
             throw toOAuth2Error(e);
         }
     }

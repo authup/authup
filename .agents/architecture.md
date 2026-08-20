@@ -999,6 +999,26 @@ Entities like user, policy, and identity-provider store dynamic key-value pairs 
 - `findMany()`: Call `extendManyWithEA()` after loading
 - `saveWithEA()`: Do NOT call `extendOneWithEA()` after save
 
+**`saveEA` REPLACES the attribute set, which a partial update must opt out
+of.** Every existing attribute row whose name is not an own-property of the
+input is deleted, so an update that simply says nothing about a key removes it.
+That is right for the policy PROVISIONING synchronizer (reasserting a built-in
+policy's full set on every boot is how a dropped key disappears) and wrong for
+an HTTP update, whose payload is partial by contract: automation written before
+`requiredAmr` / `requiredAcr` existed silently turned the upstream assurance
+gate off just by updating an OAuth2 provider (issue #3487 finding 4). The
+adapter already carries `keepAll` for exactly this; the identity-provider port
+now forwards it and the controller sets it on the UPDATE branch only (create has
+no rows to keep). A caller CLEARS an attribute by sending it as `null`, which
+survives validation (`null` is not "optional" under validup's default
+`optionalValue: 'undefined'`) and is what the console submits for a blank field.
+A protocol switch is the one exception and still replaces: the old protocol's
+rows are dead configuration no code reads any more, and one of them is a secret
+(the LDAP bind password). `PolicyService.save` has the identical defect and is
+deliberately untouched - its per-type validators mount their config as
+REQUIRED, so a partial update fails validation instead of silently disabling a
+control.
+
 ## Provisioning Architecture
 
 The provisioning system declaratively synchronizes entities (permissions, roles, users, etc.) into the database on startup. It follows the same hexagonal pattern: core logic in `core/provisioning/`, wiring in `app/modules/provisioning/`.
@@ -1379,18 +1399,22 @@ choice"):
   reload handle outside the default slot. Action failures (a revoke, a
   disconnect, a form submit) keep toasting, since they leave the page
   intact.
-  **An authentication failure stops being retryable once the session
-  cannot be renewed**, which is why `capture()` runs `store.logout()`
-  only for a 401 the store holds no refresh token to answer (it drops the
-  shell for the sign-in state, the same place the router guard's failed
-  `resolve()` lands). Renewal belongs to the kit's auth hook, which
-  refreshes on an authentication failure and logs out when that fails, so
-  an expired access token is NOT a dead session on its own and the page
-  must not pre-empt that call: with a refresh token present a 401 renders
-  the panel like any other failure. The one thing the hook cannot answer
-  is a store with no refresh token, since `refreshSession` throws before
-  anything is emitted and no logout follows. Note the 401 only reaches
-  here at all because the `JWT_*` codes map to 401 (conventions.md ->
+  **An authentication failure is never retryable**, so `capture()` runs
+  `store.logout()` for every 401 (it drops the shell for the sign-in
+  state, the same place the router guard's failed `resolve()` lands). The
+  page still does not pre-empt the kit's auth hook, it acts on what the
+  hook handed back: the hook intercepts every 401 on an attached client
+  and either fixes it (refresh, replay, invisible to the caller) or has
+  already given up, rejecting the replay's own 401 and, on its JWK and
+  failed-refresh branches, unsetting the header, which logs the store out.
+  A 401 arriving at `capture()` is therefore one renewal could not
+  answer. **A refresh token in the store says nothing about that**, which
+  is what the branch used to test: a SUCCESSFUL refresh whose replay still
+  401s leaves a freshly ROTATED refresh token behind, so the page read a
+  request that had already failed twice as renewable and offered Retry,
+  and every press bought another refresh, another replay and another
+  rotation (issue #3487 finding 5). Note the 401 only reaches here at all
+  because the `JWT_*` codes map to 401 (conventions.md ->
   *A dead bearer is 401 on a resource route*); they took the 400 fallback
   before, so this branch could never see the case it is written for.
   **The panel renders one localized line and never the failure's own
@@ -2866,6 +2890,28 @@ provider's token endpoint failing, the state invalid, a callback carrying
 neither `code` nor `error`) keep their JSON answer: a 502 for the upstream
 failure, 400 for the rest.
 
+**A failed REDEMPTION on the hosted page clears the lingering session
+(#3487 finding 3).** The refusals above happen at the callback, before the
+browser reaches `/authorize`; this is the other end, where the page trades the
+login handle for a grant and the trade fails. The visitor's intent was the
+provider account, so continuing the ladder against whatever session the cookies
+still hold would consent the application into the WRONG account, silently for a
+`builtIn` client. Blocking the ladder for the current render is not enough: the
+page strips `provider` from the URL on mount (correctly - a reload after a
+SUCCESSFUL completion would otherwise re-POST a spent cookie), so a reload
+restores the old session with no error and no hint, and resumes. `Authorize.vue`
+therefore runs the local `store.logout()` in the completion catch, which flips
+`loggedIn` synchronously before its first await and drops the render through to
+the login form carrying the reason, so the person can retry as the account they
+came for. **One refusal is exempt**: `provider` is a plain query parameter
+anyone can put in a link, so tearing the session down on every failure would
+make any authorize URL a one-click logout for whoever opens it. The no-cookie
+refusal - the only one meaning the completion never began - carries
+`reason: IDENTITY_PROVIDER_LOGIN_NOT_PENDING` (`@authup/core-http-kit`, shared
+by both sides so the two spellings cannot drift), and the page skips the logout
+for it. Every other refusal comes from `completeHandoff`, i.e. a redemption that
+genuinely started.
+
 The `state` both callbacks (login and account link) present is consumed by
 an atomic pop (`IOAuth2AuthorizeStateRepository.popOneById`, `cache.pop`, the
 same primitive the authorization-code repository uses), so of two callbacks
@@ -3973,6 +4019,37 @@ DEDICATED `ErrorCode` for that reason - it keeps `ValidationError`'s shared
 a code fallback would match every other `ValidationError` in the process.
 That is safe because the error never crosses a wire boundary.
 
+**The id_token is DECODED, not verified, and that is deliberate.** It is the
+return value of the server's own back-channel POST to the operator-configured
+`tokenUrl`, so OIDC Core 3.1.3.7 item 6 accepts TLS server validation in place
+of checking the signature - no browser-supplied token ever reaches the gate,
+and a provider the operator configured is the authentication authority for
+these users anyway: one that lies about `amr` could equally mint any subject.
+Building a JWKS fetch/cache/rotation subsystem to satisfy a clause that does
+not apply to this code path was rejected on that basis (issue #3487 finding 1).
+What item 6 does NOT waive is items 3-5, the audience. Item 3 rejects a token
+listing any audience the client does not trust, and authup has no
+trusted-audience configuration, so the ONLY trusted audience is the provider's
+own `clientId`: `aud` must be exactly that one value, and an `azp`, if present,
+must name it too (item 5). A membership test would have accepted
+`["someone-else", <us>]`, an assertion the provider minted for several parties
+at once. That costs no configuration and no schema, since `clientId` is already
+on the provider the gate receives, and it is guarded on `clientId` being present
+- inventing a refusal over a value the caller never supplied would fail a login
+for a reason nobody configured. An upstream that genuinely mints multi-audience
+id_tokens would need a trusted-audience field on the provider; nothing declares
+one today, and adding one is the extension point rather than loosening the
+check. `iss` is deliberately NOT checked: no issuer
+field exists on the entity, so it would need a column, a migration and
+operator config, and being optional for backwards compatibility it would fail
+open on every existing provider. `exp` is not checked either - it trades an
+unreachable threat for a real clock-skew refusal on a token that is seconds
+old. `nonce` is redundant twice over: it defends front-channel id_token replay,
+which authup does not use, and the browser-bound state cookie is a strictly
+stronger binding. Note the whole block only runs once an allow-list is set, so
+the blast radius of the audience check is exactly the operators who opted into
+fail-closed assurance.
+
 `requiredAmr` is a DISJUNCTION (any listed value satisfies it), which is why
 the field label says *any of* in all four locales. A conjunctive reading is
 the one dangerous misconfiguration: an operator copying `["pwd","mfa"]` off a
@@ -4621,6 +4698,28 @@ replace any of this, because the server never sees it.
 Persisted: the three tokens, the access-token expire date, and
 `realm_management`. Everything else is derived by `resolve()`, which
 introspects on every store instantiation regardless.
+
+**A session is only committed for a token the endpoint reports as
+`active`.** The introspection answers 200 with the full payload for a token it
+will not honour - revoked, or past its expiry - so reading the claims alone
+committed a dead token as a live session: identity set, permissions set,
+`validated` true, right up until the next protected call 401'd (issue #3487
+finding 2). The check lives in the single fetcher, `fetchTokenIntrospection`,
+and REJECTS rather than returning a flag, so both staging sites take the path
+they already have for an introspection that failed outright: a stale restore
+falls through to `refreshSession()` (an access token revoked on its own is
+legitimately recoverable), and a fresh grant reverts and revokes what it
+staged. Deliberately NOT a `commitSession()` guard - that is the synchronous
+write path whose boolean drives the generation check, and a `false` there would
+leave a live-looking token with a null user. The wire shape is unchanged: the
+server keeps answering with the claims, because the store SOURCES the whole
+session from them (RFC 7662 §2.2 recommends - SHOULD NOT, not MUST NOT -
+trimming an inactive response, and trimming would cost the store its realm,
+subject, permissions, session_id and acr on every restore). This is coupled to
+the introspection endpoint's own change (conventions.md -> *`POST
+/token/introspect` READS an expired token*): that made an EXPIRED token answer
+200 `{active: false}` where it used to throw, and the throw was what reached
+the refresh fallback. The two must not be separated.
 
 **The user is derived from the introspection, not fetched.** `postIntrospect`
 resolves the token's subject server-side and spreads its OpenID claims into the

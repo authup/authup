@@ -369,6 +369,77 @@ describe('src/http/controllers/identity-provider', () => {
         expect(response.id).toBeDefined();
     });
 
+    // The update payload is partial by contract, and the EA save replaces the
+    // whole attribute set, so automation written before `requiredAmr` existed
+    // silently turned the upstream assurance gate off by saying nothing about
+    // it.
+    it('should keep an assurance allow-list an update never mentioned', async () => {
+        const entity = createFakeOAuth2IdentityProvider({ requiredAmr: 'mfa' });
+        const { data: created } = await suite.client.identityProvider.create(entity);
+
+        expect((created as OAuth2IdentityProvider).requiredAmr).toEqual('mfa');
+
+        // exactly what automation predating the field sends: the whole OAuth2
+        // configuration it knows about, and nothing about `requiredAmr`
+        const unaware : Record<string, any> = { ...entity };
+        delete unaware.requiredAmr;
+
+        await suite.client.identityProvider.update(created.id, {
+            ...unaware,
+            protocol: entity.protocol,
+            displayName: 'renamed',
+        });
+
+        const { data: read } = await suite.client.identityProvider.getOne(created.id);
+
+        expect(read.displayName).toEqual('renamed');
+        expect((read as OAuth2IdentityProvider).requiredAmr).toEqual('mfa');
+
+        await suite.client.identityProvider.delete(created.id);
+    });
+
+    // The documented clear path, and what the console submits for a blank
+    // field: `null` is not "optional", so it survives validation and reaches
+    // the save as a present key.
+    it('should clear an assurance allow-list sent as null', async () => {
+        const entity = createFakeOAuth2IdentityProvider({ requiredAmr: 'mfa' });
+        const { data: created } = await suite.client.identityProvider.create(entity);
+
+        await suite.client.identityProvider.update(created.id, {
+            ...entity,
+            requiredAmr: null,
+        });
+
+        const { data: read } = await suite.client.identityProvider.getOne(created.id);
+
+        expect((read as OAuth2IdentityProvider).requiredAmr).toBeFalsy();
+
+        await suite.client.identityProvider.delete(created.id);
+    });
+
+    // The exception to keeping omitted attributes: the old protocol's rows are
+    // dead configuration no code reads any more, and one of them is a secret.
+    it('should replace the attributes when the protocol changes', async () => {
+        const entity = createFakeLdapIdentityProvider();
+        const { data: created } = await suite.client.identityProvider.create(entity);
+
+        const oauth2 = createFakeOAuth2IdentityProvider();
+        await suite.client.identityProvider.update(created.id, {
+            protocol: IdentityProviderProtocol.OAUTH2,
+            clientId: oauth2.clientId,
+            clientSecret: oauth2.clientSecret,
+            tokenUrl: oauth2.tokenUrl,
+            authorizeUrl: oauth2.authorizeUrl,
+        });
+
+        const { data: read } = await suite.client.identityProvider.getOne(created.id);
+
+        expect(read.protocol).toEqual(IdentityProviderProtocol.OAUTH2);
+        expect((read as Record<string, any>).password).toBeUndefined();
+
+        await suite.client.identityProvider.delete(created.id);
+    });
+
     it('should create and update resource with put', async () => {
         const entity = createFakeOAuth2IdentityProvider();
         let { data: response } = await suite.client

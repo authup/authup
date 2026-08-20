@@ -11,6 +11,7 @@ import type {
     OAuth2AuthorizationCodeRequest, 
     User,
 } from '@authup/core-kit';
+import { IDENTITY_PROVIDER_LOGIN_NOT_PENDING } from '@authup/core-http-kit';
 import { createFakeClient } from '@authup/core-http-kit/testing';
 import { OAuth2AuthorizationPrompt } from '@authup/specs';
 import { flushPromises, mount } from '@vue/test-utils';
@@ -146,6 +147,10 @@ function mountAuthorize(overrides: MountOverrides = {}) {
             // the default fallback would otherwise fake a truthy "user".
             'GET /userinfo': userInfoHandler ??
                 (() => { throw new Error('userinfo unavailable'); }),
+            // The store refuses to commit a session reported as inactive.
+            // Subject-less on purpose: the unmatched-route fallback carried
+            // none either, so the user-less cases above keep their shape.
+            'POST /token/introspect': () => ({ active: true }),
             ...(loginCompleteHandler ?
                 { 'POST /identity-providers/provider-1/login-complete': loginCompleteHandler } :
                 {}),
@@ -712,13 +717,59 @@ describe('AAuthorize federated login', () => {
             clientBuiltIn: true,
             prompt: '',
             federatedLogin,
-            loginCompleteHandler: () => { throw new Error('the login request is unknown'); },
+            loginCompleteHandler: () => { throw new Error('the redemption failed'); },
         });
         await flushPromises();
 
         expect(wrapper.findComponent(AuthorizeForm).exists()).toBe(false);
-        expect(wrapper.find('.login-form-stub').exists()).toBe(false);
-        expect(wrapper.find('.authorize-text-stub').text()).toContain('the login request is unknown');
+        expect(wrapper.find('.authorize-text-stub').text()).toContain('the redemption failed');
+        // The session is gone, so the page falls through to the login form
+        // rather than dead-ending: the person can start again as the account
+        // they actually came for.
+        expect(wrapper.find('.login-form-stub').exists()).toBe(true);
+    });
+
+    /**
+     * The render-scoped block above lasts one render, and the page has already
+     * stripped `provider` from the URL, so a reload would restore the cookies
+     * and resume the ladder for the WRONG account.
+     */
+    it('clears the lingering session so a reload cannot resume it', async () => {
+        const { wrapper, store } = mountAuthorize({
+            loggedIn: true,
+            clientBuiltIn: true,
+            prompt: '',
+            federatedLogin,
+            loginCompleteHandler: () => { throw new Error('the redemption failed'); },
+        });
+        await flushPromises();
+
+        expect(wrapper.emitted('failed')).toBeTruthy();
+        expect(store().accessToken).toBeNull();
+        expect(store().refreshToken).toBeNull();
+    });
+
+    /**
+     * `provider` is a plain query parameter anyone can put in a link, so a
+     * completion that never began must not tear the visitor's session down -
+     * that would make every authorize URL a one-click logout.
+     */
+    it('keeps the session when the server says no completion was pending', async () => {
+        const { store } = mountAuthorize({
+            loggedIn: true,
+            clientBuiltIn: true,
+            prompt: '',
+            federatedLogin,
+            loginCompleteHandler: () => {
+                throw Object.assign(
+                    new Error('The login request is unknown or expired.'),
+                    { reason: IDENTITY_PROVIDER_LOGIN_NOT_PENDING },
+                );
+            },
+        });
+        await flushPromises();
+
+        expect(store().accessToken).not.toBeNull();
     });
 });
 

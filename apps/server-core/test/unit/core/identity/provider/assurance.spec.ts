@@ -102,6 +102,47 @@ describe('core/identity/provider — assertIdentityProviderAssurance', () => {
             token,
         ))).not.toBeNull();
     });
+
+    // OIDC Core 3.1.3.7 items 3-5. Item 6 excuses the SIGNATURE for a token
+    // fetched back-channel from the operator-configured endpoint; it does not
+    // excuse the audience, and `clientId` is already in hand.
+    it.each([
+        // [label, claims, accepted]
+        ['aud is the client id', { amr: ['mfa'], aud: 'client-1' }, true],
+        ['aud is a one-element array holding it', { amr: ['mfa'], aud: ['client-1'] }, true],
+        // item 3 rejects an audience the client does not trust, and there is no
+        // trusted-audience configuration - so one assertion minted for several
+        // parties is refused however the extra party is spelled
+        ['aud carries an untrusted extra audience', { amr: ['mfa'], aud: ['other', 'client-1'] }, false],
+        ['azp cannot rescue an untrusted extra audience', {
+            amr: ['mfa'], 
+            aud: ['client-1', 'other'], 
+            azp: 'client-1', 
+        }, false],
+        ['aud names another client', { amr: ['mfa'], aud: 'client-2' }, false],
+        ['aud is absent', { amr: ['mfa'] }, false],
+        ['azp names another party', {
+            amr: ['mfa'], 
+            aud: ['client-1'], 
+            azp: 'client-2', 
+        }, false],
+    ] as const)('should decide the audience when %s', (_label, claims, accepted) => {
+        const refusal = refusalOf(() => assertIdentityProviderAssurance(
+            provider({ requiredAmr: 'mfa', clientId: 'client-1' }),
+            idToken(claims),
+        ));
+
+        expect(refusal === null).toBe(accepted);
+    });
+
+    // The gate takes a partial provider. Inventing a refusal over a value the
+    // caller never supplied would fail a login for a reason nobody configured.
+    it('should skip the audience check when the provider carries no client id', () => {
+        expect(refusalOf(() => assertIdentityProviderAssurance(
+            provider({ requiredAmr: 'mfa' }),
+            idToken({ amr: ['mfa'], aud: 'someone-else' }),
+        ))).toBeNull();
+    });
 });
 
 describe('core/identity/provider — buildIdentityProviderAcrValues', () => {

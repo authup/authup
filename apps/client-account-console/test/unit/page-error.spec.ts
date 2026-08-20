@@ -67,18 +67,20 @@ describe('usePageError', () => {
         expect(error.value).toBeNull();
     });
 
-    // Renewal belongs to the kit's auth hook. An expired access token is not
-    // a dead session while a refresh token answers for it, so the page must
-    // not pre-empt that call by tearing the session down.
-    it('should keep a renewable authentication failure retryable', async () => {
+    // Renewal belongs to the kit's auth hook, and by the time a 401 reaches
+    // here the hook has already tried: a SUCCESSFUL refresh whose replay still
+    // 401s leaves a freshly rotated refresh token behind, which the page used
+    // to read as "renewable". Every Retry press then bought another refresh,
+    // another replay and another rotation.
+    it('should log out on a 401 the hook already failed to renew', async () => {
         store.refreshToken = 'refresh-token';
 
         const { error, capture } = usePageError();
 
         await capture(unauthorized());
 
-        expect(logout).not.toHaveBeenCalled();
-        expect(error.value).toBeInstanceOf(Error);
+        expect(logout).toHaveBeenCalledOnce();
+        expect(error.value).toBeNull();
     });
 
     it('should coerce a thrown non-error', async () => {
@@ -106,6 +108,8 @@ describe('usePageError', () => {
     });
 
     it('should log out on an authentication failure rather than fill the sink', async () => {
+        store.refreshToken = 'refresh-token';
+
         const { error, capture } = usePageError();
         const sink = vi.fn();
 

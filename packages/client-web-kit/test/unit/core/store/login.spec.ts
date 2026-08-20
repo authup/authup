@@ -19,6 +19,7 @@ function buildStore() {
                 expires_in: 3600,
                 refresh_token: 'abc',
             }),
+            'POST /token/introspect': () => ({ active: true }),
         },
     });
 

@@ -60,6 +60,7 @@ const GRANT_RESPONSE = {
 };
 
 const INTROSPECTION_RESPONSE = {
+    active: true,
     exp: 9999999999,
     // the endpoint resolves the subject and answers with its OpenID claims —
     // the store builds `user` out of these three

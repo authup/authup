@@ -7,6 +7,85 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.62)
 
+### Introspecting an expired token now returns its payload
+
+`POST /token/introspect` answers `200` with `"active": false` **and the token's
+payload and subject claims** for an expired token, where it previously raised
+`401`. A relying party can now tell the person whose session ended who they
+were - "your session expired, Alice" - instead of only that something failed.
+
+A token the server cannot read at all - malformed, a bad signature, a `kid`
+naming no known key - is also reported now, as a bare `{"active": false}`. It
+answered `401` (or `404`) before. RFC 7662 section 2.2 requires this: a token
+that "does not exist on this server" is reported, not raised. A missing `token`
+**parameter** is still a malformed request and still answers `400`.
+
+**`permissions` is no longer returned for an inactive token**, expired ones
+included. It names who the token belonged to, not what they were allowed to do.
+A caller that read `permissions` off an introspection response must check
+`active` first - which it should have been doing regardless.
+
+### Token revocation answers 200, and answers it for invalid tokens too
+
+`POST /token/revoke` returned `202`. It now returns **`200`**, the status RFC
+7009 section 2.2 names. Both are 2xx, so a client checking the status class is
+unaffected; a client comparing against `202` exactly is not.
+
+The same `200` is now returned for a malformed or unverifiable token, per the
+same section - "invalid tokens do not cause an error response since the client
+cannot handle such an error in a reasonable way". Expired tokens already
+behaved this way. The point of the rule is that an invalid token is
+indistinguishable from a revoked one, so do not expect to detect a bad token
+from the response.
+
+**Action required if you branch on the failure.** A client that treated a `401`
+from introspection as "the token is dead" now has to read `active`, which is the
+field RFC 7662 defines for it.
+
+`@authup/client-web-kit` is updated in step: its store refuses to commit a
+session for a response reporting `active: false`, which it previously ignored -
+so a revoked or expired token restored from cookies rendered as authenticated
+until the next protected request failed. Upgrade the kit alongside the server.
+
+### A bearer token whose key is unknown answers 401, not 404
+
+An access token whose `kid` names no key, an encryption key, or a disabled key
+was reported as `404 jwk_not_found` on every route. It is now `401` with the
+`invalid_token` code, which is what a resource server expects from a credential
+it cannot verify. The practical effect is that clients recover from a key
+rotation instead of treating it as a missing resource.
+
+### 401 responses from protected routes carry `WWW-Authenticate`
+
+Per RFC 6750 section 3, a `401` from a protected resource now carries
+`WWW-Authenticate: Bearer error="invalid_token", error_description="..."`, or a
+bare `Bearer` when the request presented no credentials at all. The token
+endpoint's own `401` (`invalid_client`, RFC 6749 section 5.2) deliberately does
+not carry the header, since it is not a bearer failure. Purely additive.
+
+### Identity provider updates keep attributes they do not mention
+
+`POST /identity-providers/:id` replaced the provider's whole extra-attribute
+set, so an update that said nothing about a key deleted it. Automation written
+before `requiredAmr` / `requiredAcr` existed therefore turned the upstream
+assurance gate off just by updating an OAuth2 provider. A partial update now
+keeps attributes it never mentioned. Send an attribute as `null` to clear it.
+Changing a provider's `protocol` still replaces the set, so the old protocol's
+configuration (including its secret) does not linger.
+
+### The identity provider assurance gate checks the id_token audience
+
+With `requiredAmr` or `requiredAcr` set, the upstream `id_token` must now carry
+the provider's `clientId` as its **only** audience, and an `azp`, if present,
+must name it too. OIDC Core section 3.1.3.7 item 3 rejects a token listing any
+audience the client does not trust, and authup has no trusted-audience setting,
+so the client's own id is the only trusted one.
+
+Providers with neither allow-list set are unaffected, and a conformant OIDC
+provider issuing a token for one relying party satisfies this already. An
+upstream that mints one id_token for several audiences at once will start
+failing logins when you opt into assurance.
+
 ### Docker: the writable directory moved to `/var/lib/authup`
 
 The image wrote its runtime files to `/usr/src/app/writable`, inside the

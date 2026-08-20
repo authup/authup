@@ -62,20 +62,27 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
             throw JWTError.headerPropertyInvalid('kid');
         }
 
+        // A `kid` that resolves to no usable verification key is a property of
+        // the TOKEN, not a missing JWK resource: `JWKError.notFound` is the
+        // right answer at `GET /jwks/:id`, and here it made a dead bearer 404
+        // on every resource route, escape the refresh grant's `isJWTError`
+        // catch as a 404 from `/token`, and drive the kit's http hook into its
+        // terminal branch instead of a refresh - so a key rotation ended every
+        // live browser session. It also stopped echoing the supplied `kid`.
         const key = await this.keyStore.resolveById(header.kid);
         if (!key) {
-            throw JWKError.notFound(header.kid);
+            throw JWTError.headerPropertyInvalid('kid');
         }
 
         // the key store also holds at-rest encryption keys (use: enc) —
         // those must never verify a token.
         if (key.use !== JWKUse.SIGNATURE) {
-            throw JWKError.notFound(header.kid);
+            throw JWTError.headerPropertyInvalid('kid');
         }
 
         // disabled = neither signs nor verifies (passive still verifies).
         if (key.status === KeyStatus.DISABLED) {
-            throw JWKError.notFound(header.kid);
+            throw JWTError.headerPropertyInvalid('kid');
         }
 
         switch (key.type) {

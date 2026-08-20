@@ -66,6 +66,7 @@ import type {
     IdentityProviderSavePayload,
     IdentityProviderUpdatePayload,
 } from '@authup/core-http-kit';
+import { IDENTITY_PROVIDER_LOGIN_NOT_PENDING } from '@authup/core-http-kit';
 import { URL } from 'node:url';
 import type {
     IEventService,
@@ -474,7 +475,14 @@ export class IdentityProviderController {
 
         const pendingLoginId = useRequestCookie(event, OAUTH2_FEDERATED_LOGIN_COOKIE);
         if (typeof pendingLoginId !== 'string' || pendingLoginId.length === 0) {
-            throw new BadRequestError('The login request is unknown or expired.');
+            // Marked, because this refusal alone means the completion never
+            // began: the caller was not in a federated login at all. The
+            // hosted page reads it to skip the session teardown it performs
+            // for a redemption that genuinely failed.
+            throw new BadRequestError({
+                message: 'The login request is unknown or expired.',
+                data: { reason: IDENTITY_PROVIDER_LOGIN_NOT_PENDING },
+            });
         }
 
         // Cleared whichever way the completion goes: it is single use, and a
@@ -567,8 +575,20 @@ export class IdentityProviderController {
         await this.repository.checkUniqueness(data, entity || undefined);
 
         if (entity) {
+            // A partial update must not delete attributes it never mentioned.
+            // The payload is partial by contract, so automation written before
+            // `requiredAmr` / `requiredAcr` existed would otherwise turn the
+            // upstream assurance gate off by saying nothing about it. A caller
+            // clears an attribute by sending it as `null`, which is what the
+            // console submits for a blank field.
+            //
+            // A protocol switch is the exception and still replaces: the old
+            // protocol's rows (an LDAP bind password) are dead configuration
+            // no code reads any more, and keeping them leaves a secret behind.
+            const keepAll = entity.protocol === data.protocol;
+
             entity = this.repository.merge(entity, data);
-            await this.repository.saveWithEA(entity, attributes);
+            await this.repository.saveWithEA(entity, attributes, { keepAll });
 
             event.response.status = 202;
 

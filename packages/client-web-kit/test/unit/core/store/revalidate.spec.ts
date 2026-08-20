@@ -17,6 +17,7 @@ function buildStore() {
     const httpClient = createFakeClient({
         handlers: {
             'POST /token/introspect': () => ({
+                active: true,
                 exp: 9999999999,
                 sub: TOKEN_SUBJECT,
                 sub_kind: 'user',
@@ -46,6 +47,7 @@ function buildStoreWithSubjectKind(subKind: string) {
     const httpClient = createFakeClient({
         handlers: {
             'POST /token/introspect': () => ({
+                active: true,
                 exp: 9999999999,
                 sub: TOKEN_SUBJECT,
                 sub_kind: subKind,
@@ -128,5 +130,75 @@ describe('core/store/revalidate', () => {
 
         expect(countUserInfoRequests(httpClient)).toEqual(0);
         expect(store.user.value).toBeNull();
+    });
+
+    // The endpoint answers 200 with the full payload for a token it will not
+    // honour, so reading the claims alone committed a revoked token as a live
+    // session - identity set, permissions set, validated - until the next
+    // protected call 401'd.
+    it('commits nothing for a token the endpoint reports as inactive', async () => {
+        const httpClient = createFakeClient({
+            handlers: {
+                'POST /token/introspect': () => ({
+                    active: false,
+                    exp: 9999999999,
+                    sub: TOKEN_SUBJECT,
+                    sub_kind: 'user',
+                    name: 'admin',
+                    realm_id: 'realm-1',
+                    realm_name: 'master',
+                    permissions: [],
+                }),
+            },
+        });
+
+        const store = createStore({ httpClient, dispatcher: createStoreDispatcher() });
+
+        store.setAccessToken('at-1');
+
+        await expect(store.resolve()).rejects.toThrow();
+
+        expect(store.user.value).toBeNull();
+        expect(store.realm.value).toBeNull();
+    });
+
+    // Only the ACCESS token was revoked, which a live refresh token answers:
+    // the rejection lands in the same fallback a failed introspection takes.
+    it('recovers an inactive access token through the refresh fallback', async () => {
+        let introspectCalls = 0;
+        const httpClient = createFakeClient({
+            handlers: {
+                'POST /token': () => ({
+                    access_token: 'at-2',
+                    token_type: 'Bearer',
+                    expires_in: 3600,
+                    refresh_token: 'rt-2',
+                }),
+                'POST /token/introspect': () => {
+                    introspectCalls += 1;
+
+                    return {
+                        active: introspectCalls > 1,
+                        exp: 9999999999,
+                        sub: TOKEN_SUBJECT,
+                        sub_kind: 'user',
+                        name: 'admin',
+                        realm_id: 'realm-1',
+                        realm_name: 'master',
+                        permissions: [],
+                    };
+                },
+            },
+        });
+
+        const store = createStore({ httpClient, dispatcher: createStoreDispatcher() });
+
+        store.setAccessToken('at-1');
+        store.setRefreshToken('rt-1');
+
+        await store.resolve();
+
+        expect(store.accessToken.value).toEqual('at-2');
+        expect(store.user.value).toMatchObject({ id: TOKEN_SUBJECT });
     });
 });
