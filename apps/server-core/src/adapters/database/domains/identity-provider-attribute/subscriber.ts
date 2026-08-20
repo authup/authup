@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProviderAttribute } from '@authup/core-kit';
+import type { EntityDefaultEventName, IdentityProviderAttribute } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import { EventSubscriber } from 'typeorm';
@@ -29,5 +29,23 @@ export class IdentityProviderAttributeSubscriber extends EntitySubscriber<Identi
                 ],
             },
         });
+    }
+
+    /**
+     * The row's `value` holds the provider's OAuth2 clientSecret or LDAP bind
+     * password, so it must never reach the realtime bus. Stripped on both
+     * sides: the previous payload is what an update would otherwise carry the
+     * OLD secret in.
+     */
+    protected override async publish(
+        event: `${EntityDefaultEventName}`,
+        data: IdentityProviderAttribute,
+        dataPrevious?: IdentityProviderAttribute,
+    ): Promise<void> {
+        await super.publish(
+            event,
+            { ...data, value: null },
+            dataPrevious ? { ...dataPrevious, value: null } : undefined,
+        );
     }
 }

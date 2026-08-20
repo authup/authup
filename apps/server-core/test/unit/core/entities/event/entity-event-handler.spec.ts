@@ -224,6 +224,36 @@ describe('EntityEventHandler', () => {
         expect(call.data).toEqual({ diff: { description: { next: 'after', previous: 'before' } } });
     });
 
+    it.each([
+        EntityType.IDENTITY_PROVIDER_ATTRIBUTE,
+        EntityType.POLICY_ATTRIBUTE,
+        EntityType.ROLE_ATTRIBUTE,
+        EntityType.USER_ATTRIBUTE,
+    ])('records no diff for %s, whose value column is opaque', async (type) => {
+        await buildHandler().handle(buildPublishContext({
+            content: {
+                type,
+                event: 'updated',
+                data: {
+                    id: entityId,
+                    realmId,
+                    name: 'clientSecret',
+                    value: 'rotated-secret',
+                },
+            },
+            dataPrevious: {
+                id: entityId,
+                realmId,
+                name: 'clientSecret',
+                value: 'previous-secret',
+            },
+        }));
+
+        const [call] = eventService.recordCalls;
+        expect(call.name).toEqual(EventName.UPDATED);
+        expect(call.data).toBeNull();
+    });
+
     it('records null data for an updated event without a previous snapshot', async () => {
         await buildHandler().handle(buildPublishContext({ content: { event: 'updated' } }));
 

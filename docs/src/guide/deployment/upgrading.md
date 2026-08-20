@@ -48,6 +48,31 @@ This only changes behavior for a deployment that sets `rootPath` to something
 other than the working directory **and** gives `writableDirectoryPath` a
 relative value. Absolute values, and the default, are unaffected.
 
+### `GET /identity-providers/:id` now requires authentication
+
+The endpoint was anonymous. It now requires an identity holding one of
+`IDENTITY_PROVIDER_READ`, `IDENTITY_PROVIDER_UPDATE` or
+`IDENTITY_PROVIDER_DELETE` for that provider's realm. A request without a
+token answers `401`; an authenticated caller lacking the permission answers
+`403` with code `permission_evaluation_failed`.
+
+The record read carries the provider's extra attributes, which for an OAuth2
+provider include `clientSecret` and for an LDAP provider the bind password.
+The previous behavior handed those to anyone who knew a provider id.
+
+**Action required only if you read a single provider without a token.** The
+collection stays anonymous, because the hosted login page lists providers
+before anyone signs in, and it never carries the extra attributes. Read the
+one provider from it instead:
+
+```http
+GET /identity-providers?filter[id]=<provider-id>
+GET /identity-providers?filter[name]=<provider-name>
+```
+
+Both key forms the record route accepted are filterable, so a caller
+addressing a provider by name has a substitute too.
+
 ## v1.0.0-beta.62
 
 ### `auth_identity_provider_accounts` gains a unique constraint
