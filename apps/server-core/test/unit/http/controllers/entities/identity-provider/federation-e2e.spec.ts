@@ -97,6 +97,16 @@ describe('authup federating to authup', () => {
     // callback has to be delivered back to the port the instance listens on.
     let downstreamPublicURL: string;
 
+    // This is the only spec that boots TWO applications, and each `setup()` is
+    // a schema synchronize plus a full provisioning pass before it listens -
+    // then the body below adds ten API round-trips on top. Vitest's default
+    // hook budget is 10s, which the sqlite runs clear easily and the mysql one
+    // does not: it shares one server with every other spec file and runs with
+    // file parallelism off, so the two boots serialize behind whatever else is
+    // in flight. The work is real, so the budget is raised rather than the
+    // hook trimmed.
+    const TWO_INSTANCE_HOOK_TIMEOUT = 60_000;
+
     beforeAll(async () => {
         const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(CODE_VERIFIER));
         codeChallenge = Buffer.from(new Uint8Array(digest)).toString('base64url');
@@ -148,12 +158,12 @@ describe('authup federating to authup', () => {
             const { data: scope } = await upstream.client.scope.getOne(scopeName);
             await upstream.client.clientScope.create({ scopeId: scope.id, clientId: upstreamClient.id });
         }
-    });
+    }, TWO_INSTANCE_HOOK_TIMEOUT);
 
     afterAll(async () => {
         await downstream.teardown();
         await upstream.teardown();
-    });
+    }, TWO_INSTANCE_HOOK_TIMEOUT);
 
     it('completes a login brokered from one instance to the other', async () => {
         const codeRequest = Buffer.from(JSON.stringify({
