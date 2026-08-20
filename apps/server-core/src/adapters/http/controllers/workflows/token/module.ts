@@ -257,17 +257,20 @@ export class TokenController {
 
             await this.tokenRevoker.revoke(payload);
 
-            event.response.status = 202;
+            // RFC 7009 §2.2 names 200 for a successful revocation. This was a
+            // 202 - within the 2xx family, so a client reading the class was
+            // unaffected, but not the status the spec asks for.
+            event.response.status = 200;
             return null;
         } catch (e) {
             // Same clause, the other half: "invalid tokens do not cause an
             // error response since the client cannot handle such an error in a
             // reasonable way". Expiry is already bypassed above, so this covers
             // a malformed or unverifiable token, which answered 401/404. The
-            // status stays the 202 a valid token gets - the point is that the
-            // two are indistinguishable.
+            // answer is the one a valid token gets - the point is that the two
+            // are indistinguishable.
             if (isJWTError(e)) {
-                event.response.status = 202;
+                event.response.status = 200;
                 return null;
             }
 

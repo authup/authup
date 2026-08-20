@@ -20,10 +20,18 @@ answered `401` (or `404`) before. RFC 7662 section 2.2 requires this: a token
 that "does not exist on this server" is reported, not raised. A missing `token`
 **parameter** is still a malformed request and still answers `400`.
 
-`POST /token/revoke` answers its ordinary `202` for a malformed or unverifiable
-token, per RFC 7009 section 2.2 - "invalid tokens do not cause an error response
-since the client cannot handle such an error in a reasonable way". Expired
-tokens already behaved this way.
+### Token revocation answers 200, and answers it for invalid tokens too
+
+`POST /token/revoke` returned `202`. It now returns **`200`**, the status RFC
+7009 section 2.2 names. Both are 2xx, so a client checking the status class is
+unaffected; a client comparing against `202` exactly is not.
+
+The same `200` is now returned for a malformed or unverifiable token, per the
+same section - "invalid tokens do not cause an error response since the client
+cannot handle such an error in a reasonable way". Expired tokens already
+behaved this way. The point of the rule is that an invalid token is
+indistinguishable from a revoked one, so do not expect to detect a bad token
+from the response.
 
 **Action required if you branch on the failure.** A client that treated a `401`
 from introspection as "the token is dead" now has to read `active`, which is the

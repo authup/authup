@@ -13,6 +13,7 @@ import {
 } from 'vitest';
 import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants';
 import { createTestApplication } from '../../../../../app';
+import { httpRequest } from '../../../../../utils';
 
 describe('token-revoke', () => {
     const suite = createTestApplication();
@@ -120,6 +121,24 @@ describe('token-revoke', () => {
         await expect(
             suite.client.token.revoke({ token: 'not-a-json-web-token' }),
         ).resolves.not.toThrow();
+    });
+
+    // RFC 7009 §2.2 names 200, and names it for BOTH cases. The property that
+    // matters is that they are indistinguishable, so this pins them together:
+    // changing one without the other reintroduces the oracle.
+    it('should answer 200 for a revoked and an unreadable token alike', async () => {
+        const grant = await suite.client
+            .token
+            .createWithPassword({
+                username: 'admin',
+                password: 'start123',
+            });
+
+        const revoked = await httpRequest(suite, 'POST', '/token/revoke', { form: { token: grant.access_token } });
+        const unreadable = await httpRequest(suite, 'POST', '/token/revoke', { form: { token: 'not-a-json-web-token' } });
+
+        expect(revoked.status).toEqual(200);
+        expect(unreadable.status).toEqual(revoked.status);
     });
 
     it('should answer its ordinary success for a token signed under an unknown key', async () => {
