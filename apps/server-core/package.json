@@ -77,7 +77,7 @@
         "@authup/kit": "^1.0.0-beta.63",
         "@authup/server-kit": "^1.0.0-beta.63",
         "@authup/specs": "^1.0.0-beta.63",
-        "@ebec/http": "^4.2.0",
+        "@ebec/http": "^4.3.1",
         "@hapic/oauth2": "^4.0.2",
         "@peculiar/x509": "^2.0.0",
         "@rapiq/adapter-memory": "^2.2.0",
