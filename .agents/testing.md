@@ -38,7 +38,15 @@
   empty rather than as a template copy, which is why the caller provisions
   it. Booting two applications in one process is otherwise supported, and
   regressions in that isolation surface here first (see architecture.md →
-  *Policy engine evaluators are per engine*).
+  *Policy engine evaluators are per engine*). **Both of its hooks take an
+  explicit timeout.** Each `setup()` is a schema synchronize plus a full
+  provisioning pass before the instance listens, and the hook adds ten API
+  round-trips on top; vitest's default budget is 10s, which the sqlite runs
+  clear and the mysql one does not, since it shares one server with every other
+  spec file and runs with file parallelism off. A second two-instance spec
+  needs the same treatment — the symptom is a `Hook timed out in 10000ms` with
+  every test in the file reported as PASSING, because it is the hook and not an
+  assertion that ran out of clock.
 
 ## Running Tests
 
