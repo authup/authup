@@ -25,7 +25,8 @@ import { VCIcon } from '@vuecs/icon';
 import { VCTimeago } from '@vuecs/timeago';
 import { useAlertDialog } from '@vuecs/overlays';
 import { computed, defineComponent, ref } from 'vue';
-import { useAccountToasts } from './utils';
+import PageError from '../components/PageError.vue';
+import { useAccountToasts, usePageError } from './utils';
 
 type ConsentGroup = {
     clientId: string,
@@ -40,6 +41,7 @@ export default defineComponent({
     components: {
         AConsents,
         APagination,
+        PageError,
         VCButton,
         VCIcon,
         VCTimeago,
@@ -97,6 +99,7 @@ export default defineComponent({
 
         const httpClient = injectHTTPClient();
         const toasts = useAccountToasts();
+        const pageError = usePageError();
         const confirmDialog = useAlertDialog();
         const revoking = ref(false);
 
@@ -244,6 +247,9 @@ export default defineComponent({
         return {
             userId,
             query,
+            error: pageError.error,
+            capture: pageError.capture,
+            reset: pageError.reset,
             translations,
             groupByClient,
             revoking,
@@ -259,12 +265,17 @@ export default defineComponent({
         <h2 class="text-lg font-semibold mb-2">
             {{ translations.applications }}
         </h2>
+        <PageError
+            v-if="error"
+            @retry="reset"
+        />
         <AConsents
-            v-if="userId"
+            v-else-if="userId"
             :query="query"
             :body="{ tag: 'div' }"
             :footer="true"
             :no-more="{ content: translations.consentEmpty }"
+            @failed="capture"
         >
             <template #footer="props">
                 <APagination

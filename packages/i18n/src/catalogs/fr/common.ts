@@ -38,4 +38,5 @@ export const TranslatorTranslationCommonFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationCommonKey.REQUEST]: 'Requête',
     [TranslatorTranslationCommonKey.DATA]: 'Données',
     [TranslatorTranslationCommonKey.BREADCRUMB]: 'Fil d\'Ariane',
+    [TranslatorTranslationCommonKey.LOAD_FAILED]: "Le contenu n'a pas pu être chargé.",
 };

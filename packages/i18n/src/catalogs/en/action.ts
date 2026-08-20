@@ -28,4 +28,5 @@ export const TranslatorTranslationActionEnglish : NamespaceTranslations<`${Trans
     [TranslatorTranslationActionKey.SHOW]: 'Show',
     [TranslatorTranslationActionKey.HIDE]: 'Hide',
     [TranslatorTranslationActionKey.REMOVE]: 'Remove',
+    [TranslatorTranslationActionKey.RETRY]: 'Retry',
 };

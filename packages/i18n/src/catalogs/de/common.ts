@@ -38,4 +38,5 @@ export const TranslatorTranslationCommonGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationCommonKey.REQUEST]: 'Anfrage',
     [TranslatorTranslationCommonKey.DATA]: 'Daten',
     [TranslatorTranslationCommonKey.BREADCRUMB]: 'Navigationspfad',
+    [TranslatorTranslationCommonKey.LOAD_FAILED]: 'Der Inhalt konnte nicht geladen werden.',
 };

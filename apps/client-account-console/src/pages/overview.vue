@@ -20,10 +20,11 @@ import {
 } from '@authup/i18n';
 import { storeToRefs } from 'pinia';
 import { defineComponent, onMounted, ref } from 'vue';
-import { useAccountToasts } from './utils';
+import PageError from '../components/PageError.vue';
+import { useAccountToasts, usePageError } from './utils';
 
 export default defineComponent({
-    components: { AUserForm },
+    components: { AUserForm, PageError },
     setup() {
         const store = injectStore();
         const httpClient = injectHTTPClient();
@@ -39,6 +40,7 @@ export default defineComponent({
         const entity = ref<User | null>(null);
 
         const toasts = useAccountToasts();
+        const pageError = usePageError();
         const translate = useTranslator();
 
         const translations = useTranslations([
@@ -60,18 +62,25 @@ export default defineComponent({
 
         const handleFailed = (e: Error) => toasts.error(e);
 
-        onMounted(async () => {
+        // The load is the page's only content, so a failure renders the
+        // error state rather than a toast over an empty surface.
+        const load = async () => {
             try {
                 entity.value = await httpClient.userInfo.get<User>();
+                pageError.reset();
             } catch (e) {
-                handleFailed(e as Error);
+                await pageError.capture(e);
             }
-        });
+        };
+
+        onMounted(load);
 
         return {
             entity,
             realmId,
             translations,
+            error: pageError.error,
+            load,
             handleUpdated,
             handleFailed,
         };
@@ -83,8 +92,12 @@ export default defineComponent({
         <h2 class="text-lg font-semibold mb-2">
             {{ translations.general }}
         </h2>
+        <PageError
+            v-if="error"
+            @retry="load"
+        />
         <AUserForm
-            v-if="entity"
+            v-else-if="entity"
             :can-manage="false"
             :realm-id="realmId"
             :entity="entity"

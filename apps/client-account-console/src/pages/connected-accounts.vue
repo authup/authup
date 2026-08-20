@@ -29,11 +29,13 @@ import {
     ref,
 } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useAccountToasts } from './utils';
+import PageError from '../components/PageError.vue';
+import { useAccountToasts, usePageError } from './utils';
 
 export default defineComponent({
     components: {
         AIdentityProviderIcon,
+        PageError,
         VCButton,
     },
     setup() {
@@ -43,6 +45,7 @@ export default defineComponent({
         const httpClient = injectHTTPClient();
         const toast = useToast();
         const toasts = useAccountToasts();
+        const pageError = usePageError();
         const translate = useTranslator();
         const confirmDialog = useAlertDialog();
         const route = useRoute();
@@ -62,7 +65,6 @@ export default defineComponent({
         const accounts = ref<IdentityProviderAccount[]>([]);
         const busy = ref(false);
         const loaded = ref(false);
-        const errored = ref(false);
 
         const accountByProvider = computed(() => {
             const map = new Map<string, IdentityProviderAccount>();
@@ -75,7 +77,6 @@ export default defineComponent({
                 return;
             }
 
-            errored.value = false;
             try {
                 const [providerResponse, accountResponse] = await Promise.all([
                     httpClient.identityProvider.getMany({
@@ -97,13 +98,18 @@ export default defineComponent({
 
                 providers.value = providerResponse.data;
                 accounts.value = accountResponse.data;
+
+                // Cleared on success rather than before the attempt: a
+                // retry would otherwise drop back to the empty state
+                // ("no providers configured") for its whole duration,
+                // which is the misreport this replaced.
+                pageError.reset();
             } catch (e) {
                 // A load failure must not fall through to the empty state
                 // ("no providers configured") — it would misreport an error
-                // as an absence. The toast carries the failure; the empty
-                // state is suppressed by `errored`.
-                errored.value = true;
-                await toasts.error(e);
+                // as an absence. The error state replaces the list entirely
+                // and carries the way back.
+                await pageError.capture(e);
             } finally {
                 loaded.value = true;
             }
@@ -213,7 +219,8 @@ export default defineComponent({
             translations,
             busy,
             loaded,
-            errored,
+            error: pageError.error,
+            load,
             connect,
             disconnect,
         };
@@ -225,54 +232,60 @@ export default defineComponent({
         <h2 class="text-lg font-semibold mb-2">
             {{ translations.connectedAccounts }}
         </h2>
-        <div
-            v-if="loaded && !errored && providers.length === 0"
-            class="text-fg-muted"
-        >
-            {{ translations.connectedAccountsNone }}
-        </div>
-        <div class="flex flex-col gap-2">
+        <PageError
+            v-if="error"
+            @retry="load"
+        />
+        <template v-else>
             <div
-                v-for="provider in providers"
-                :key="provider.id"
-                class="rounded border border-border p-3 flex items-center gap-3"
+                v-if="loaded && providers.length === 0"
+                class="text-fg-muted"
             >
-                <AIdentityProviderIcon
-                    :entity="provider"
-                    class="text-fg-muted"
-                />
-                <div class="flex-1 min-w-0">
-                    <div class="font-bold">
-                        {{ provider.displayName || provider.name }}
-                    </div>
-                    <small
-                        v-if="accountByProvider.has(provider.id)"
-                        class="text-fg-muted"
-                    >
-                        {{ accountByProvider.get(provider.id)?.providerUserName }}
-                    </small>
-                </div>
-                <VCButton
-                    v-if="accountByProvider.has(provider.id)"
-                    size="sm"
-                    color="error"
-                    variant="outline"
-                    :disabled="busy"
-                    @click="disconnect(accountByProvider.get(provider.id)!)"
-                >
-                    {{ translations.identityProviderDisconnect }}
-                </VCButton>
-                <VCButton
-                    v-else
-                    size="sm"
-                    color="primary"
-                    variant="outline"
-                    :disabled="busy"
-                    @click="connect(provider)"
-                >
-                    {{ translations.identityProviderConnect }}
-                </VCButton>
+                {{ translations.connectedAccountsNone }}
             </div>
-        </div>
+            <div class="flex flex-col gap-2">
+                <div
+                    v-for="provider in providers"
+                    :key="provider.id"
+                    class="rounded border border-border p-3 flex items-center gap-3"
+                >
+                    <AIdentityProviderIcon
+                        :entity="provider"
+                        class="text-fg-muted"
+                    />
+                    <div class="flex-1 min-w-0">
+                        <div class="font-bold">
+                            {{ provider.displayName || provider.name }}
+                        </div>
+                        <small
+                            v-if="accountByProvider.has(provider.id)"
+                            class="text-fg-muted"
+                        >
+                            {{ accountByProvider.get(provider.id)?.providerUserName }}
+                        </small>
+                    </div>
+                    <VCButton
+                        v-if="accountByProvider.has(provider.id)"
+                        size="sm"
+                        color="error"
+                        variant="outline"
+                        :disabled="busy"
+                        @click="disconnect(accountByProvider.get(provider.id)!)"
+                    >
+                        {{ translations.identityProviderDisconnect }}
+                    </VCButton>
+                    <VCButton
+                        v-else
+                        size="sm"
+                        color="primary"
+                        variant="outline"
+                        :disabled="busy"
+                        @click="connect(provider)"
+                    >
+                        {{ translations.identityProviderConnect }}
+                    </VCButton>
+                </div>
+            </div>
+        </template>
     </div>
 </template>

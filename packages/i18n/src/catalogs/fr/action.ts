@@ -28,4 +28,5 @@ export const TranslatorTranslationActionFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationActionKey.SHOW]: 'Afficher',
     [TranslatorTranslationActionKey.HIDE]: 'Masquer',
     [TranslatorTranslationActionKey.REMOVE]: 'Retirer',
+    [TranslatorTranslationActionKey.RETRY]: 'Réessayer',
 };

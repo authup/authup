@@ -458,6 +458,7 @@ export enum TranslatorTranslationActionKey {
     SHOW = 'show',
     HIDE = 'hide',
     REMOVE = 'remove',
+    RETRY = 'retry',
 }
 
 /**
@@ -495,4 +496,5 @@ export enum TranslatorTranslationCommonKey {
     REQUEST = 'request',
     DATA = 'data',
     BREADCRUMB = 'breadcrumb',
+    LOAD_FAILED = 'loadFailed',
 }
