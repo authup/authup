@@ -104,8 +104,12 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
         return this.repository.save(entity);
     }
 
-    async saveWithEA(entity: IdentityProvider, attributes?: Record<string, any>): Promise<IdentityProvider> {
-        await this.repository.saveOneWithEA(entity, attributes);
+    async saveWithEA(
+        entity: IdentityProvider,
+        attributes?: Record<string, any>,
+        options?: { keepAll?: boolean },
+    ): Promise<IdentityProvider> {
+        await this.repository.saveOneWithEA(entity, attributes, options);
         return entity;
     }
 
