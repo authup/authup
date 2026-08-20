@@ -79,6 +79,28 @@ describe('token-introspect', () => {
         expect(introspection.sub).toEqual(payload.sub);
         expect(introspection.sub_kind).toEqual(payload.sub_kind);
         expect((introspection as Record<string, any>).name).toEqual('admin');
+
+        // ...and nothing about what that account may do. The endpoint takes no
+        // authorization (#3489), so this answer is reachable by anyone holding
+        // a lapsed token string.
+        expect(introspection.permissions).toBeUndefined();
+    });
+
+    it('should still report permissions for a live token', async () => {
+        const grant = await suite.client
+            .token
+            .createWithPassword({
+                username: 'admin',
+                password: 'start123',
+            });
+
+        const introspection = await suite.client
+            .token
+            .introspect({ token: grant.access_token });
+
+        expect(introspection.active).toBe(true);
+        expect(Array.isArray(introspection.permissions)).toBe(true);
+        expect(introspection.permissions!.length).toBeGreaterThan(0);
     });
 
     // Without the controller deriving `active` from `exp`, this is the

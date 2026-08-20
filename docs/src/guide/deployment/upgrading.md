@@ -20,6 +20,11 @@ answered `401` (or `404`) before. RFC 7662 section 2.2 requires this: a token
 that "does not exist on this server" is reported, not raised. A missing `token`
 **parameter** is still a malformed request and still answers `400`.
 
+**`permissions` is no longer returned for an inactive token**, expired ones
+included. It names who the token belonged to, not what they were allowed to do.
+A caller that read `permissions` off an introspection response must check
+`active` first - which it should have been doing regardless.
+
 ### Token revocation answers 200, and answers it for invalid tokens too
 
 `POST /token/revoke` returned `202`. It now returns **`200`**, the status RFC

@@ -161,13 +161,18 @@ export class TokenController {
                 throw OAuth2RequestError.identityInvalid();
             }
 
-            // todo: only receive client specific permissions
-            const permissions = await this.identityPermissionProvider.getFor({
-                id: payload.sub,
-                type: payload.sub_kind,
-                clientId: payload.client_id,
-                realmId: payload.realm_id,
-            });
+            // Both halves, fail-closed on a missing claim: a token carrying no
+            // `jti` cannot be checked against the revocation list, and one
+            // carrying no `exp` cannot be shown to be current. Authup mints
+            // every token with both. Derived BEFORE the permission read so a
+            // dead token never pays for one.
+            let active : boolean;
+            if (payload.jti && typeof payload.exp === 'number') {
+                const isInactive = await this.tokenVerifier.isInactive(payload.jti);
+                active = !isInactive && payload.exp * 1000 > Date.now();
+            } else {
+                active = false;
+            }
 
             const identity = await this.identityResolver.resolve(payload.sub_kind, payload.sub);
             if (!identity) {
@@ -178,17 +183,28 @@ export class TokenController {
             const claimsBuilder = new OAuth2OpenIDClaimsBuilder();
             const claims = claimsBuilder.fromIdentity(identity);
 
-            // Both halves, fail-closed on a missing claim: a token carrying no
-            // `jti` cannot be checked against the revocation list, and one
-            // carrying no `exp` cannot be shown to be current. Authup mints
-            // every token with both.
-            let active : boolean;
-            if (payload.jti && typeof payload.exp === 'number') {
-                const isInactive = await this.tokenVerifier.isInactive(payload.jti);
-                active = !isInactive && payload.exp * 1000 > Date.now();
-            } else {
-                active = false;
+            // An inactive token reports WHO it belonged to and nothing about
+            // what they may do. The endpoint requires no authorization (#3489),
+            // so anyone holding a lapsed token string - out of a log, browser
+            // history, a proxy trace - reaches this answer; naming the subject
+            // is the point of reading an expired token at all, handing over
+            // their authorization set is not. It also skips resolving that set
+            // for a token nobody can use.
+            if (!active) {
+                return {
+                    active,
+                    ...payload,
+                    ...claims,
+                };
             }
+
+            // todo: only receive client specific permissions
+            const permissions = await this.identityPermissionProvider.getFor({
+                id: payload.sub,
+                type: payload.sub_kind,
+                clientId: payload.client_id,
+                realmId: payload.realm_id,
+            });
 
             return {
                 active,
