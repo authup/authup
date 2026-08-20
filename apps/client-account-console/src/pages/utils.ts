@@ -37,19 +37,21 @@ export function useAccountToasts() {
  * behind a toast that fades. Action failures (a revoke, a disconnect)
  * keep using the toasts above; they leave the page intact.
  *
- * An authentication failure is only NOT retryable once the session can no
- * longer be renewed, which is why the branch tests both. Token renewal
- * belongs to the kit's auth hook: it refreshes on an authentication
- * failure and logs out when that fails. An expired access token is
- * therefore not a dead session on its own, since a live refresh token is
- * exactly what answers it, and this must not pre-empt that call.
+ * An authentication failure is never retryable here, and the page still
+ * does not pre-empt the kit's auth hook: it acts only on what the hook
+ * handed back. The hook intercepts every 401 on an attached client and
+ * either fixes it - refresh, replay, invisible to this caller - or has
+ * already given up, rejecting the replay's own 401 and, on its JWK and
+ * failed-refresh branches, unsetting the header, which logs the store
+ * out. So a 401 arriving here is by construction one renewal could not
+ * answer, and it defers to the same logout the router guard would run on
+ * the next navigation, dropping the shell for the sign-in state.
  *
- * The one thing the hook cannot answer is a store with no refresh token
- * to renew with: `refreshSession` throws before anything is emitted, so
- * no logout follows and a retry would fail again on every press. That is
- * what this catches, and it defers to the same logout the router guard
- * would run on the next navigation, dropping the shell for the sign-in
- * state.
+ * A refresh token in the store says nothing about that, which is what
+ * this branch used to test: a SUCCESSFUL refresh whose replay still 401s
+ * leaves a freshly rotated one behind, so the page read a request that
+ * had already failed twice as renewable and offered Retry. Every press
+ * then bought another refresh, another replay, another rotation.
  *
  * `capture` takes an optional sink for a failure that must not take the
  * whole page with it (a nested collection inside one row). The 401 rule
@@ -66,7 +68,7 @@ export function usePageError() {
     };
 
     const capture = async (e: unknown, sink?: (value: Error) => void) => {
-        if (extractErrorContext(e).status === 401 && !store.refreshToken) {
+        if (extractErrorContext(e).status === 401) {
             await store.logout();
             return;
         }
