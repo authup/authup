@@ -43,7 +43,12 @@ export function useAccountToasts() {
  * kit's auth hook already covers the common case (a failed background
  * refresh unsets the header, which the kit answers with a logout); this
  * catches the request that still 401s after it, and the case where the
- * store holds no refresh token to retry with at all.
+ * store holds no refresh token to retry with at all. Without it a retry
+ * against a dead session just 401s again, forever.
+ *
+ * `capture` takes an optional sink for a failure that must not take the
+ * whole page with it (a nested collection inside one row). The 401 rule
+ * has to reach those too, so it lives here rather than at the call site.
  *
  * Must be called synchronously during `setup()`: `injectStore()` injects.
  */
@@ -55,16 +60,23 @@ export function usePageError() {
         error.value = null;
     };
 
-    const capture = async (e: unknown) => {
+    const capture = async (e: unknown, sink?: (value: Error) => void) => {
         if (extractErrorContext(e).status === 401) {
             await store.logout();
             return;
         }
 
-        // A thrown non-Error is not a shape the component can read, and
-        // `hasServerErrorBody` answers false for it, so it renders the
-        // generic line. Coercing keeps the ref's type honest.
-        error.value = e instanceof Error ? e : new Error(String(e));
+        // Coercing keeps the ref's type honest: nothing renders the value,
+        // so a thrown non-Error would otherwise sit behind an `Error` type
+        // it does not satisfy.
+        const value = e instanceof Error ? e : new Error(String(e));
+
+        if (sink) {
+            sink(value);
+            return;
+        }
+
+        error.value = value;
     };
 
     return {

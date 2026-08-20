@@ -136,10 +136,17 @@ export default defineComponent({
         // page error: the inventory belongs to one expanded session, so
         // taking the whole session list down for it would be a worse
         // report than the one this fixes. Clearing the flag re-mounts that
-        // row's collection, which re-fetches. No 401 branch here: the
-        // outer session list loads first on the same bearer, so a dead
-        // session is already handled before a row can be expanded.
+        // row's collection, which re-fetches.
+        //
+        // It still runs the 401 rule, through the same `capture`. The list
+        // having loaded says nothing about the session being alive NOW: it
+        // can die between the page load and a row being expanded, and a
+        // retry against a dead session would 401 again on every press.
         const tokensFailed = ref<Record<string, boolean>>({});
+
+        const failTokens = (id: string, error: Error) => pageError.capture(error, () => {
+            tokensFailed.value[id] = true;
+        });
 
         const expanded = ref<Record<string, boolean>>({});
         const toggleTokens = (id: string) => {
@@ -202,6 +209,7 @@ export default defineComponent({
             revokeOthers,
             expanded,
             tokensFailed,
+            failTokens,
             toggleTokens,
             buildTokensQuery,
             tokenStatus,
@@ -320,7 +328,7 @@ export default defineComponent({
                                 :query="buildTokensQuery(row.id)"
                                 :body="{ tag: 'div' }"
                                 :footer="true"
-                                @failed="tokensFailed[row.id] = true"
+                                @failed="failTokens(row.id, $event)"
                             >
                                 <template #footer="tokenProps">
                                     <APagination

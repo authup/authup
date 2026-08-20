@@ -1400,7 +1400,10 @@ choice"):
   The one nested collection, the per-session token inventory, flags its
   failure per row instead: it belongs to one expanded session, so taking
   the whole list down for it would be a worse report than the one this
-  fixes.
+  fixes. It still runs the 401 rule, through the same `capture` (which
+  takes an optional sink for exactly this): the list having loaded says
+  nothing about the session being alive when a row is expanded, and a
+  retry against a dead one would 401 on every press.
 - **Sign-out** (the gadget-cluster button in App.vue) mirrors the admin
   console's `pages/logout.vue`: capture `idToken`/`realmId`, local
   `store.logout()`, round-trip through `/logout` with `id_token_hint`,

@@ -66,4 +66,31 @@ describe('usePageError', () => {
         expect(error.value).toBeInstanceOf(Error);
         expect(logout).not.toHaveBeenCalled();
     });
+
+    // A nested collection (the per-session token inventory) must not take
+    // the whole page down, but a dead session still has to reach the
+    // logout: a retry against one would 401 on every press.
+    it('should hand a failure to a sink instead of the page error', async () => {
+        const { error, capture } = usePageError();
+        const sink = vi.fn();
+
+        await capture(Object.assign(new Error('Request failed'), { response: { status: 503, data: { code: 'internal_error' } } }), sink);
+
+        expect(sink).toHaveBeenCalledOnce();
+        expect(sink.mock.calls[0][0]).toBeInstanceOf(Error);
+        expect(error.value).toBeNull();
+        expect(logout).not.toHaveBeenCalled();
+    });
+
+    it('should log out on an authentication failure rather than fill the sink', async () => {
+        const { error, capture } = usePageError();
+        const sink = vi.fn();
+
+        await capture(Object.assign(new Error('Request failed'), { response: { status: 401, data: { code: 'identity_unauthorized' } } }), sink);
+
+        expect(logout).toHaveBeenCalledOnce();
+        expect(sink).not.toHaveBeenCalled();
+        expect(error.value).toBeNull();
+    });
 });
+
