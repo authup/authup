@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenIntrospectionResponse, OAuth2TokenPermission } from '@authup/specs';
-import { OAuth2GrantTypeError, OAuth2RequestError, OAuth2TokenGrant } from '@authup/specs';
+import { OAuth2GrantTypeError, OAuth2TokenGrant, isJWTError } from '@authup/specs';
 import {
     DContext,
     DController,
@@ -134,7 +134,7 @@ export class TokenController {
             const token = await extractTokenFromRequest(event);
             const payload = await this.tokenVerifier.verify(token, { skipActiveCheck: true });
             if (!payload.sub || !payload.sub_kind) {
-                throw OAuth2RequestError.identityInvalid();
+                return { active: false };
             }
 
             // todo: only receive client specific permissions
@@ -147,8 +147,10 @@ export class TokenController {
 
             const identity = await this.identityResolver.resolve(payload.sub_kind, payload.sub);
             if (!identity) {
-                // todo: differentiate between client & user
-                throw OAuth2RequestError.identityInvalid();
+                // A subject that no longer resolves is a token this server will
+                // not honour, which RFC 7662 §2.2 reports as `active: false`
+                // like any other. It answered 400 before.
+                return { active: false };
             }
 
             const claimsBuilder = new OAuth2OpenIDClaimsBuilder();
@@ -182,6 +184,16 @@ export class TokenController {
                 ...claims,
             };
         } catch (e) {
+            // RFC 7662 §2.2: a token that is not active, does not exist, or
+            // cannot be verified is REPORTED as `active: false`, not raised as
+            // an error. Expired, malformed and unknown-`kid` tokens took the
+            // global JWT mapping to 401 (404 for the last), so a caller could
+            // not tell a dead token from a rejected introspection request. A
+            // malformed REQUEST - no `token` parameter - stays 400.
+            if (isJWTError(e)) {
+                return { active: false };
+            }
+
             throw toOAuth2Error(e);
         }
     }
@@ -215,6 +227,17 @@ export class TokenController {
             event.response.status = 202;
             return null;
         } catch (e) {
+            // Same clause, the other half: "invalid tokens do not cause an
+            // error response since the client cannot handle such an error in a
+            // reasonable way". Expiry is already bypassed above, so this covers
+            // a malformed or unverifiable token, which answered 401/404. The
+            // status stays the 202 a valid token gets - the point is that the
+            // two are indistinguishable.
+            if (isJWTError(e)) {
+                event.response.status = 202;
+                return null;
+            }
+
             throw toOAuth2Error(e);
         }
     }

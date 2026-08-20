@@ -8,7 +8,8 @@
 import type { App } from 'routup';
 import { defineErrorHandler } from 'routup';
 import type { Logger } from '@authup/server-kit';
-import { httpStatusFromCode, serializeError } from '@authup/errors';
+import { ErrorCode, httpStatusFromCode, serializeError } from '@authup/errors';
+import { isJWTErrorCode } from '@authup/specs';
 import { describeError, sanitizeError } from '../../../../utils/index.ts';
 
 type ErrorMiddlewareOptions = {
@@ -35,6 +36,32 @@ export function registerErrorMiddleware(router: App, options: ErrorMiddlewareOpt
                 options.logger.error(describeError(original));
             }
             payload.message = 'An internal server error occurred.';
+        }
+
+        // RFC 6750 §3: a 401 from a protected resource carries the Bearer
+        // challenge, which nothing here emitted. Gated on the request actually
+        // being one - the token endpoint answers 401 for a bad client secret
+        // (RFC 6749 §5.2) and that is not a bearer failure, so it must not be
+        // stamped.
+        if (status === 401) {
+            const authorization = event.headers.get('authorization');
+
+            if (typeof authorization === 'string' && authorization.toLowerCase().startsWith('bearer ')) {
+                // Quoted-string, and `message` can carry a third-party string
+                // (a JWT library's own words), so the two characters that could
+                // break out of it go.
+                const description = String(payload.message ?? '').replace(/["\\]/g, '');
+                const code = isJWTErrorCode(next.code) ? 'invalid_token' : 'invalid_request';
+
+                event.response.headers.set(
+                    'www-authenticate',
+                    `Bearer error="${code}", error_description="${description}"`,
+                );
+            } else if (!authorization && next.code === ErrorCode.IDENTITY_UNAUTHORIZED) {
+                // §3 again: a request that presented no credentials at all gets
+                // the bare challenge, with no error code to report.
+                event.response.headers.set('www-authenticate', 'Bearer');
+            }
         }
 
         event.response.status = status;
