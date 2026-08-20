@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.0-beta.63](https://github.com/authup/authup/compare/v1.0.0-beta.62...v1.0.0-beta.63) (2026-08-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-core:** align the token endpoint with RFC 7662/7009 ([#3488](https://github.com/authup/authup/issues/3488))
+* **client-account-console:** a resource request carrying an expired, revoked or otherwise unverifiable bearer now answers 401 instead of 400. The error code is unchanged. The token endpoint keeps answering 400, but an unparsable refresh token now carries `invalid_grant` rather than `invalid_token`.
+
+### Bug Fixes
+
+* **client-account-console:** render a retryable error state on a failed page load ([#3484](https://github.com/authup/authup/issues/3484)) ([11326f2](https://github.com/authup/authup/commit/11326f25a0d433137481ee6a482271a734518244))
+* ensure consistent version for release ([9295774](https://github.com/authup/authup/commit/92957749e5cb41accd20afe345491f3548f1a71a))
+* **server-core:** align the token endpoint with RFC 7662/7009 ([#3488](https://github.com/authup/authup/issues/3488)) ([50cb0f4](https://github.com/authup/authup/commit/50cb0f46749a59bec2abeca23edda64ae8378f89))
+
 ## [1.0.0-beta.62](https://github.com/authup/authup/compare/v1.0.0-beta.61...v1.0.0-beta.62) (2026-08-18)
 
 

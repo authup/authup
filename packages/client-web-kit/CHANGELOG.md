@@ -1,5 +1,39 @@
 # Change Log
 
+## [1.0.0-beta.63](https://github.com/authup/authup/compare/v1.0.0-beta.62...v1.0.0-beta.63) (2026-08-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-core:** align the token endpoint with RFC 7662/7009 ([#3488](https://github.com/authup/authup/issues/3488))
+* **client-web-kit:** `store.user` and the `USER_UPDATED` dispatcher payload narrow from `User` to `Pick<User, 'id' | 'name' | 'displayName'>`; a consumer reading any other field gets a compile error. The `user` cookie is no longer written, and a same-named cookie on the origin is deleted once per browser. The never-populated `OAuth2TokenPayload.sub_name` is removed.
+* AuthorizationRequest.target is removed. Set the destination as a `redirect` parameter on the redirect_uri instead. A client whose registered redirect pattern is the exact callback URL with no wildcard must widen it to match the query.
+
+### Features
+
+* **server-core:** complete a federated login through the hosted authorize ladder ([#3475](https://github.com/authup/authup/issues/3475)) ([31ad488](https://github.com/authup/authup/commit/31ad488ded840bf09ebd089e5619f32fbdb75589))
+* **server-core:** verify the upstream provider's amr/acr per identity provider ([#3479](https://github.com/authup/authup/issues/3479)) ([3bfdcd5](https://github.com/authup/authup/commit/3bfdcd5deb674415832692c13014cbf608e99e76))
+
+
+### Bug Fixes
+
+* carry the post-login destination through the authorize flow ([#3476](https://github.com/authup/authup/issues/3476)) ([9d89a21](https://github.com/authup/authup/commit/9d89a21c180bd67612c1d640bdecab562dfb2f1e))
+* **client-web-kit:** derive the session user from the token introspection ([#3481](https://github.com/authup/authup/issues/3481)) ([2a7bbb9](https://github.com/authup/authup/commit/2a7bbb97aac40a05a3e45afc009ea73f56f42735))
+* **server-core:** align the token endpoint with RFC 7662/7009 ([#3488](https://github.com/authup/authup/issues/3488)) ([50cb0f4](https://github.com/authup/authup/commit/50cb0f46749a59bec2abeca23edda64ae8378f89))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/core-http-kit bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/core-kit bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/i18n bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/kit bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/specs bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+
 ## [1.0.0-beta.62](https://github.com/authup/authup/compare/v1.0.0-beta.61...v1.0.0-beta.62) (2026-08-18)
 
 

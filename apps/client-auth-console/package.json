@@ -1,6 +1,6 @@
 {
     "name": "@authup/client-auth-console",
-    "version": "1.0.0-beta.62",
+    "version": "1.0.0-beta.63",
     "type": "module",
     "license": "AGPL-3.0-only",
     "description": "Authup's auth console: the SSR auth workflow UI (authorize, register, activate, password recovery, logout) rendered by server-core on the IdP origin.",
@@ -25,15 +25,15 @@
         "node": "^22.13.0 || ^23.5.0 || >=24.0.0"
     },
     "dependencies": {
-        "@authup/core-http-kit": "^1.0.0-beta.62"
+        "@authup/core-http-kit": "^1.0.0-beta.63"
     },
     "devDependencies": {
-        "@authup/client-web-kit": "^1.0.0-beta.62",
-        "@authup/client-web-kit-theme": "^1.0.0-beta.62",
-        "@authup/client-web-theme": "^1.0.0-beta.62",
-        "@authup/core-kit": "^1.0.0-beta.62",
-        "@authup/i18n": "^1.0.0-beta.62",
-        "@authup/kit": "^1.0.0-beta.62",
+        "@authup/client-web-kit": "^1.0.0-beta.63",
+        "@authup/client-web-kit-theme": "^1.0.0-beta.63",
+        "@authup/client-web-theme": "^1.0.0-beta.63",
+        "@authup/core-kit": "^1.0.0-beta.63",
+        "@authup/i18n": "^1.0.0-beta.63",
+        "@authup/kit": "^1.0.0-beta.63",
         "@fontsource/asap": "^5.3.0",
         "@fontsource/nunito": "^5.3.0",
         "@iconify-json/fa6-brands": "^1.2.0",

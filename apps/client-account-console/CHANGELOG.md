@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.0.0-beta.63](https://github.com/authup/authup/compare/v1.0.0-beta.62...v1.0.0-beta.63) (2026-08-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-core:** align the token endpoint with RFC 7662/7009 ([#3488](https://github.com/authup/authup/issues/3488))
+* **client-account-console:** a resource request carrying an expired, revoked or otherwise unverifiable bearer now answers 401 instead of 400. The error code is unchanged. The token endpoint keeps answering 400, but an unparsable refresh token now carries `invalid_grant` rather than `invalid_token`.
+* **client-web-kit:** `store.user` and the `USER_UPDATED` dispatcher payload narrow from `User` to `Pick<User, 'id' | 'name' | 'displayName'>`; a consumer reading any other field gets a compile error. The `user` cookie is no longer written, and a same-named cookie on the origin is deleted once per browser. The never-populated `OAuth2TokenPayload.sub_name` is removed.
+
+### Bug Fixes
+
+* **client-account-console:** render a retryable error state on a failed page load ([#3484](https://github.com/authup/authup/issues/3484)) ([11326f2](https://github.com/authup/authup/commit/11326f25a0d433137481ee6a482271a734518244))
+* **client-web-kit:** derive the session user from the token introspection ([#3481](https://github.com/authup/authup/issues/3481)) ([2a7bbb9](https://github.com/authup/authup/commit/2a7bbb97aac40a05a3e45afc009ea73f56f42735))
+* **server-core:** align the token endpoint with RFC 7662/7009 ([#3488](https://github.com/authup/authup/issues/3488)) ([50cb0f4](https://github.com/authup/authup/commit/50cb0f46749a59bec2abeca23edda64ae8378f89))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/client-web-theme bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/core-http-kit bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/core-kit bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/i18n bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/kit bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/specs bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+
 ## [1.0.0-beta.62](https://github.com/authup/authup/compare/v1.0.0-beta.61...v1.0.0-beta.62) (2026-08-18)
 
 
