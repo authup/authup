@@ -1379,13 +1379,20 @@ choice"):
   reload handle outside the default slot. Action failures (a revoke, a
   disconnect, a form submit) keep toasting, since they leave the page
   intact.
-  **A 401 is not offered as retryable**: `capture()` runs
-  `store.logout()`, which drops the shell for the sign-in state, the same
-  place the router guard's failed `resolve()` lands. The kit's auth hook
-  already covers the common case (a failed background refresh unsets the
-  header and the kit answers with a logout); this catches the request
-  that still 401s after it, and the case where the store holds no refresh
-  token to retry with at all.
+  **An authentication failure stops being retryable once the session
+  cannot be renewed**, which is why `capture()` runs `store.logout()`
+  only for a 401 the store holds no refresh token to answer (it drops the
+  shell for the sign-in state, the same place the router guard's failed
+  `resolve()` lands). Renewal belongs to the kit's auth hook, which
+  refreshes on an authentication failure and logs out when that fails, so
+  an expired access token is NOT a dead session on its own and the page
+  must not pre-empt that call: with a refresh token present a 401 renders
+  the panel like any other failure. The one thing the hook cannot answer
+  is a store with no refresh token, since `refreshSession` throws before
+  anything is emitted and no logout follows. Note the 401 only reaches
+  here at all because the `JWT_*` codes map to 401 (conventions.md ->
+  *A dead bearer is 401 on a resource route*); they took the 400 fallback
+  before, so this branch could never see the case it is written for.
   **The panel renders one localized line and never the failure's own
   message.** A page load here fails for reasons its reader cannot act on,
   and the messages carry the request line: hapic builds "Failed to fetch
