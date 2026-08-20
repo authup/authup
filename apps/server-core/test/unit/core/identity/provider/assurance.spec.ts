@@ -109,12 +109,16 @@ describe('core/identity/provider — assertIdentityProviderAssurance', () => {
     it.each([
         // [label, claims, accepted]
         ['aud is the client id', { amr: ['mfa'], aud: 'client-1' }, true],
-        ['aud is an array containing it', { amr: ['mfa'], aud: ['other', 'client-1'] }, true],
-        ['azp names it alongside a shared aud', {
+        ['aud is a one-element array holding it', { amr: ['mfa'], aud: ['client-1'] }, true],
+        // item 3 rejects an audience the client does not trust, and there is no
+        // trusted-audience configuration - so one assertion minted for several
+        // parties is refused however the extra party is spelled
+        ['aud carries an untrusted extra audience', { amr: ['mfa'], aud: ['other', 'client-1'] }, false],
+        ['azp cannot rescue an untrusted extra audience', {
             amr: ['mfa'], 
             aud: ['client-1', 'other'], 
             azp: 'client-1', 
-        }, true],
+        }, false],
         ['aud names another client', { amr: ['mfa'], aud: 'client-2' }, false],
         ['aud is absent', { amr: ['mfa'] }, false],
         ['azp names another party', {

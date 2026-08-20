@@ -17,13 +17,17 @@ import { createTestApplication } from '../../../../../app';
 import { expectClientError, httpRequest } from '../../../../../utils';
 
 /**
- * An EXPIRED token is read and reported rather than raised: the caller gets
- * `active: false` alongside the payload and the subject's claims, so a
- * third-party app can say "your session ended, <name>" instead of only "no".
- * It answered 401 before, which said nothing about whose token it was.
+ * RFC 7662 §2.2: a token that is not active or does not exist on this server
+ * MUST be answered with `active: false`, never raised. That covers a token
+ * this server cannot read at all, which used to answer 401 (404 when its
+ * `kid` named no key) - and reporting it uniformly also stops the endpoint
+ * telling a caller whether a string was signed by a key we hold.
  *
- * A token that cannot be read at all keeps raising. Reporting one as inactive
- * would claim this server issued it and let it lapse.
+ * An EXPIRED token is the one case that carries more than the bare flag: it
+ * is verified with `ignoreExpiry` and reported with its payload and the
+ * subject's claims, so a relying party can say "your session ended, <name>"
+ * instead of only "no". That is a deliberate departure from the §2.2 / §4
+ * SHOULD NOT, taken for a token this server did issue and can still read.
  */
 describe('token-introspect', () => {
     const suite = createTestApplication();
@@ -110,15 +114,19 @@ describe('token-introspect', () => {
         expect((await suite.client.token.introspect({ token: justExpired })).active).toBe(false);
     });
 
-    it('should refuse a malformed token', async () => {
-        // not a report about a token this server issued
-        await expectClientError(
-            () => suite.client.token.introspect({ token: 'not-a-json-web-token' }),
-            { status: 401 },
-        );
+    // RFC 7662 §2.2: a token that "does not exist on this server" is reported,
+    // not raised. Bare, per the same section and §4 - and there is nothing to
+    // report about it anyway.
+    it('should report a malformed token as inactive, and nothing else', async () => {
+        const introspection = await suite.client
+            .token
+            .introspect({ token: 'not-a-json-web-token' });
+
+        expect(introspection.active).toBe(false);
+        expect(Object.keys(introspection)).toEqual(['active']);
     });
 
-    it('should refuse a token signed under an unknown key', async () => {
+    it('should report a token signed under an unknown key as inactive', async () => {
         // A `kid` naming no resolvable key answered 404 (`JWK_NOT_FOUND`)
         // before it became a JWTError.
         const header = Buffer
@@ -132,10 +140,12 @@ describe('token-introspect', () => {
             .from(JSON.stringify({ sub: 'someone', exp: Math.floor(Date.now() / 1000) + 3600 }))
             .toString('base64url');
 
-        await expectClientError(
-            () => suite.client.token.introspect({ token: `${header}.${body}.signature` }),
-            { status: 401 },
-        );
+        const introspection = await suite.client
+            .token
+            .introspect({ token: `${header}.${body}.signature` });
+
+        expect(introspection.active).toBe(false);
+        expect(Object.keys(introspection)).toEqual(['active']);
     });
 
     // The token PARAMETER is still part of the request contract: a body without

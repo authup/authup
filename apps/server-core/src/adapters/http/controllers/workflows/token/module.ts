@@ -210,12 +210,23 @@ export class TokenController {
                 ...claims,
             };
         } catch (e) {
-            // Deliberately no `active: false` fallback here. What reaches this
-            // point is a token that could not be read at all - malformed, a
-            // bad signature, a `kid` naming no key - and reporting one as
-            // inactive would claim this server issued it and let it lapse.
-            // The expired case, the one a caller can act on, never gets here:
-            // it is verified above and reported with its payload.
+            // RFC 7662 §2.2: a token that "is not active, does not exist on
+            // this server, or the protected resource is not allowed to
+            // introspect" MUST be answered with `active: false`. A token this
+            // server cannot read does not exist on it, so it is reported like
+            // any other rather than raised - which is what §2.2 asks for and
+            // what keeps this endpoint from telling a caller whether a string
+            // was signed by a key we hold.
+            //
+            // The report is BARE, no payload: §2.2 and §4 both say not to
+            // disclose more about an inactive token, and there is nothing to
+            // disclose here anyway. The expired case is the deliberate
+            // exception, and it never reaches this catch - it is verified
+            // above and reported with its claims.
+            if (isJWTError(e)) {
+                return { active: false };
+            }
+
             throw toOAuth2Error(e);
         }
     }

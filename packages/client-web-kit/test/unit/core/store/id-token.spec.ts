@@ -20,7 +20,6 @@ function buildStore() {
                 id_token: 'the-id-token',
             }),
             'POST /token/introspect': () => ({ active: true }),
-            'POST /token/introspect': () => ({ active: true }),
             'POST /token/revoke': () => ({}),
         },
     });

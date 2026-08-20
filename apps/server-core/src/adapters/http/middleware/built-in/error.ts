@@ -47,10 +47,16 @@ export function registerErrorMiddleware(router: App, options: ErrorMiddlewareOpt
             const authorization = event.headers.get('authorization');
 
             if (typeof authorization === 'string' && authorization.toLowerCase().startsWith('bearer ')) {
-                // Quoted-string, and `message` can carry a third-party string
-                // (a JWT library's own words), so the two characters that could
-                // break out of it go.
-                const description = String(payload.message ?? '').replace(/["\\]/g, '');
+                // RFC 6750 §3 defines the value as a quoted-string over
+                // `%x20-21 / %x23-5B / %x5D-7E`, so everything outside that set
+                // goes: a quote or a backslash would break out of the
+                // quoting, and a control character (a CR or LF in a
+                // third-party JWT library's
+                // message, which `JWTError.payloadInvalid` forwards verbatim)
+                // makes the header assignment itself throw, turning a 401
+                // into a 500.
+                const description = String(payload.message ?? '')
+                    .replace(/[^\x20-\x21\x23-\x5B\x5D-\x7E]/g, '');
                 const code = isJWTErrorCode(next.code) ? 'invalid_token' : 'invalid_request';
 
                 event.response.headers.set(

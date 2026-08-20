@@ -14,10 +14,11 @@ payload and subject claims** for an expired token, where it previously raised
 `401`. A relying party can now tell the person whose session ended who they
 were - "your session expired, Alice" - instead of only that something failed.
 
-A token the server cannot read at all still raises: malformed, a bad signature,
-or a `kid` naming no known key. Reporting one as inactive would claim authup
-issued it and let it lapse. A missing `token` **parameter** is still a malformed
-request and still answers `400`.
+A token the server cannot read at all - malformed, a bad signature, a `kid`
+naming no known key - is also reported now, as a bare `{"active": false}`. It
+answered `401` (or `404`) before. RFC 7662 section 2.2 requires this: a token
+that "does not exist on this server" is reported, not raised. A missing `token`
+**parameter** is still a malformed request and still answers `400`.
 
 `POST /token/revoke` answers its ordinary `202` for a malformed or unverifiable
 token, per RFC 7009 section 2.2 - "invalid tokens do not cause an error response
@@ -61,11 +62,16 @@ configuration (including its secret) does not linger.
 
 ### The identity provider assurance gate checks the id_token audience
 
-With `requiredAmr` or `requiredAcr` set, the upstream `id_token` must now also
-carry the provider's `clientId` in `aud` (and, when present, in `azp`), per OIDC
-Core section 3.1.3.7. Providers with neither allow-list set are unaffected, and
-a conformant OIDC provider satisfies this already. A provider that mints tokens
-for a different audience will start failing logins once you opt into assurance.
+With `requiredAmr` or `requiredAcr` set, the upstream `id_token` must now carry
+the provider's `clientId` as its **only** audience, and an `azp`, if present,
+must name it too. OIDC Core section 3.1.3.7 item 3 rejects a token listing any
+audience the client does not trust, and authup has no trusted-audience setting,
+so the client's own id is the only trusted one.
+
+Providers with neither allow-list set are unaffected, and a conformant OIDC
+provider issuing a token for one relying party satisfies this already. An
+upstream that mints one id_token for several audiences at once will start
+failing logins when you opt into assurance.
 
 ### Docker: the writable directory moved to `/var/lib/authup`
 

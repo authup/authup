@@ -109,12 +109,21 @@ export function assertIdentityProviderAssurance(
     // a login over a value the caller never supplied.
     if (provider.clientId) {
         const audiences = Array.isArray(claims.aud) ? claims.aud : [claims.aud];
-        if (!audiences.includes(provider.clientId)) {
+
+        // Item 3 rejects a token that lists an audience the client does not
+        // trust, and authup has no trusted-audience configuration, so the only
+        // trusted audience is this provider's own client id. A membership test
+        // would have accepted `["someone-else", <us>]`, where the provider
+        // minted one assertion for several parties.
+        if (audiences.length !== 1 || audiences[0] !== provider.clientId) {
             throw new IdentityProviderAssuranceError(
-                'The identity provider id_token was not issued for this client.',
+                'The identity provider id_token was not issued for this client alone.',
             );
         }
 
+        // Item 5. Redundant against the single audience above for a conformant
+        // provider, and not against one that names a different authorized
+        // party.
         if (typeof claims.azp === 'string' && claims.azp !== provider.clientId) {
             throw new IdentityProviderAssuranceError(
                 'The identity provider id_token was issued for another party.',

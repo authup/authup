@@ -4027,12 +4027,19 @@ and a provider the operator configured is the authentication authority for
 these users anyway: one that lies about `amr` could equally mint any subject.
 Building a JWKS fetch/cache/rotation subsystem to satisfy a clause that does
 not apply to this code path was rejected on that basis (issue #3487 finding 1).
-What item 6 does NOT waive is items 3-5, the audience, so the gate checks that
-`aud` contains the provider's `clientId` and that any `azp` names it. That
-costs no configuration and no schema, since `clientId` is already on the
-provider the gate receives, and it is guarded on `clientId` being present -
-inventing a refusal over a value the caller never supplied would fail a login
-for a reason nobody configured. `iss` is deliberately NOT checked: no issuer
+What item 6 does NOT waive is items 3-5, the audience. Item 3 rejects a token
+listing any audience the client does not trust, and authup has no
+trusted-audience configuration, so the ONLY trusted audience is the provider's
+own `clientId`: `aud` must be exactly that one value, and an `azp`, if present,
+must name it too (item 5). A membership test would have accepted
+`["someone-else", <us>]`, an assertion the provider minted for several parties
+at once. That costs no configuration and no schema, since `clientId` is already
+on the provider the gate receives, and it is guarded on `clientId` being present
+- inventing a refusal over a value the caller never supplied would fail a login
+for a reason nobody configured. An upstream that genuinely mints multi-audience
+id_tokens would need a trusted-audience field on the provider; nothing declares
+one today, and adding one is the extension point rather than loosening the
+check. `iss` is deliberately NOT checked: no issuer
 field exists on the entity, so it would need a column, a migration and
 operator config, and being optional for backwards compatibility it would fail
 open on every existing provider. `exp` is not checked either - it trades an
