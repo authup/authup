@@ -1,5 +1,30 @@
 # Change Log
 
+## [1.0.0-beta.63](https://github.com/authup/authup/compare/v1.0.0-beta.62...v1.0.0-beta.63) (2026-08-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* AuthorizationRequest.target is removed. Set the destination as a `redirect` parameter on the redirect_uri instead. A client whose registered redirect pattern is the exact callback URL with no wildcard must widen it to match the query.
+
+### Bug Fixes
+
+* carry the post-login destination through the authorize flow ([#3476](https://github.com/authup/authup/issues/3476)) ([9d89a21](https://github.com/authup/authup/commit/9d89a21c180bd67612c1d640bdecab562dfb2f1e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/client-web-nuxt bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/client-web-theme bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/core-http-kit bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/core-kit bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/i18n bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/kit bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+
 ## [1.0.0-beta.62](https://github.com/authup/authup/compare/v1.0.0-beta.61...v1.0.0-beta.62) (2026-08-18)
 
 

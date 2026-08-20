@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.0.0-beta.63](https://github.com/authup/authup/compare/v1.0.0-beta.62...v1.0.0-beta.63) (2026-08-20)
+
+
+### Features
+
+* **server-core:** verify the upstream provider's amr/acr per identity provider ([#3479](https://github.com/authup/authup/issues/3479)) ([3bfdcd5](https://github.com/authup/authup/commit/3bfdcd5deb674415832692c13014cbf608e99e76))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/kit bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/specs bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+
 ## [1.0.0-beta.62](https://github.com/authup/authup/compare/v1.0.0-beta.61...v1.0.0-beta.62) (2026-08-18)
 
 

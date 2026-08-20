@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.0.0-beta.63](https://github.com/authup/authup/compare/v1.0.0-beta.62...v1.0.0-beta.63) (2026-08-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* **client-account-console:** a resource request carrying an expired, revoked or otherwise unverifiable bearer now answers 401 instead of 400. The error code is unchanged. The token endpoint keeps answering 400, but an unparsable refresh token now carries `invalid_grant` rather than `invalid_token`.
+
+### Features
+
+* **server-core:** verify the upstream provider's amr/acr per identity provider ([#3479](https://github.com/authup/authup/issues/3479)) ([3bfdcd5](https://github.com/authup/authup/commit/3bfdcd5deb674415832692c13014cbf608e99e76))
+
+
+### Bug Fixes
+
+* **client-account-console:** render a retryable error state on a failed page load ([#3484](https://github.com/authup/authup/issues/3484)) ([11326f2](https://github.com/authup/authup/commit/11326f25a0d433137481ee6a482271a734518244))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+
 ## [1.0.0-beta.62](https://github.com/authup/authup/compare/v1.0.0-beta.61...v1.0.0-beta.62) (2026-08-18)
 
 

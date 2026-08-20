@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.0.0-beta.63](https://github.com/authup/authup/compare/v1.0.0-beta.62...v1.0.0-beta.63) (2026-08-20)
+
+
+### Features
+
+* **server-core:** complete a federated login through the hosted authorize ladder ([#3475](https://github.com/authup/authup/issues/3475)) ([31ad488](https://github.com/authup/authup/commit/31ad488ded840bf09ebd089e5619f32fbdb75589))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-http-kit bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/client-web-theme bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/core-kit bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/i18n bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/kit bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+
 ## [1.0.0-beta.62](https://github.com/authup/authup/compare/v1.0.0-beta.61...v1.0.0-beta.62) (2026-08-18)
 
 

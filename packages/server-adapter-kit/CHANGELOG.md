@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.0.0-beta.63](https://github.com/authup/authup/compare/v1.0.0-beta.62...v1.0.0-beta.63) (2026-08-20)
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group with 4 updates ([#3472](https://github.com/authup/authup/issues/3472)) ([f10db10](https://github.com/authup/authup/commit/f10db108572b4382f6643780eae7a59a68c729d8))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-http-kit bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/core-kit bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/errors bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/kit bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/server-kit bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+    * @authup/specs bumped from ^1.0.0-beta.62 to ^1.0.0-beta.63
+
 ## [1.0.0-beta.62](https://github.com/authup/authup/compare/v1.0.0-beta.61...v1.0.0-beta.62) (2026-08-18)
 
 
