@@ -19,6 +19,7 @@ const GRANT_RESPONSE = {
 };
 
 const INTROSPECTION_RESPONSE = {
+    active: true,
     exp: 9999999999,
     // the endpoint resolves the subject and answers with its OpenID claims —
     // the store builds `user` out of these three
@@ -175,6 +176,26 @@ describe('core/store/lifecycle', () => {
         expect(introspectCalls).toEqual(2);
         expect(store.realmId.value).toEqual('realm-1');
         expect(store.user.value).toMatchObject({ id: 'user-1' });
+    });
+
+    // Same revert, reached the other way: the introspection SUCCEEDS and reports
+    // the freshly granted token as one the server will not honour.
+    it('reverts a login whose grant introspects inactive', async () => {
+        const {
+            store, 
+            httpClient, 
+            events, 
+        } = buildStore({ 'POST /token/introspect': () => ({ ...INTROSPECTION_RESPONSE, active: false }) });
+
+        await expect(store.login({ name: 'admin', password: 'start123' })).rejects.toThrow();
+
+        expect(store.loggedIn.value).toBe(false);
+        expect(store.accessToken.value).toBeNull();
+        expect(store.user.value).toBeNull();
+        expect(events).not.toContain(StoreDispatcherEventName.LOGGED_IN);
+
+        const revokeRequests = requestsTo(httpClient, 'POST', '/token/revoke');
+        expect(revokeRequests).toHaveLength(2);
     });
 
     it('logout is local-only: revokes both tokens, never touches the sessions API', async () => {

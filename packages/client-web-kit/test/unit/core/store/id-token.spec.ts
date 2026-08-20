@@ -19,6 +19,8 @@ function buildStore() {
                 refresh_token: 'rt',
                 id_token: 'the-id-token',
             }),
+            'POST /token/introspect': () => ({ active: true }),
+            'POST /token/introspect': () => ({ active: true }),
             'POST /token/revoke': () => ({}),
         },
     });
@@ -80,6 +82,7 @@ describe('core/store/id-token', () => {
                     expires_in: 3600,
                     refresh_token: 'rt',
                 }),
+                'POST /token/introspect': () => ({ active: true }),
                 'POST /token/revoke': () => ({}),
             },
         });

@@ -34,6 +34,12 @@ export function mountKitComponent(
                 expires_in: 3600,
                 refresh_token: 'abc',
             }),
+            // The store refuses to commit a session the endpoint reports as
+            // inactive, so `active` has to be answered even where the spec
+            // cares about nothing else. Deliberately carries no subject: the
+            // unmatched-route fallback carried none either, and specs that
+            // want a resolved user say so themselves.
+            'POST /token/introspect': () => ({ active: true }),
             ...handlers,
         },
     });

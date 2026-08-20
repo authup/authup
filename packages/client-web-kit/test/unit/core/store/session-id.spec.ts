@@ -13,6 +13,7 @@ function buildStore(sessionId?: string) {
     const httpClient = createFakeClient({
         handlers: {
             'POST /token/introspect': () => ({
+                active: true,
                 exp: 9999999999,
                 sub: 'user-1',
                 sub_kind: 'user',
