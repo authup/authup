@@ -7,6 +7,64 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.62)
 
+### Token introspection and revocation stopped answering errors for dead tokens
+
+`POST /token/introspect` reports an expired, malformed or unverifiable token as
+`200 {"active": false}` instead of raising `401` (or `404`, when the token's
+`kid` named no known key). This is what RFC 7662 section 2.2 asks for: a token
+that is not active, does not exist, or cannot be verified is *reported*, not
+raised. The same now goes for a token whose subject no longer resolves, which
+answered `400`.
+
+`POST /token/revoke` answers its ordinary `202` for a malformed or unverifiable
+token, per RFC 7009 section 2.2 - "invalid tokens do not cause an error response
+since the client cannot handle such an error in a reasonable way". Expired
+tokens already behaved this way.
+
+**Action required only if you branch on the failure.** A client that treated a
+`401` from introspection as "the token is dead" now has to read `active`, which
+is the field the RFC defines for it. A missing `token` **parameter** is still a
+malformed request and still answers `400`.
+
+`@authup/client-web-kit` is updated in step: its store refuses to commit a
+session for a response reporting `active: false`, which it previously ignored -
+a revoked token restored from cookies rendered as authenticated until the next
+protected request failed. Upgrade the kit alongside the server.
+
+### A bearer token whose key is unknown answers 401, not 404
+
+An access token whose `kid` names no key, an encryption key, or a disabled key
+was reported as `404 jwk_not_found` on every route. It is now `401` with the
+`invalid_token` code, which is what a resource server expects from a credential
+it cannot verify. The practical effect is that clients recover from a key
+rotation instead of treating it as a missing resource.
+
+### 401 responses from protected routes carry `WWW-Authenticate`
+
+Per RFC 6750 section 3, a `401` from a protected resource now carries
+`WWW-Authenticate: Bearer error="invalid_token", error_description="..."`, or a
+bare `Bearer` when the request presented no credentials at all. The token
+endpoint's own `401` (`invalid_client`, RFC 6749 section 5.2) deliberately does
+not carry the header, since it is not a bearer failure. Purely additive.
+
+### Identity provider updates keep attributes they do not mention
+
+`POST /identity-providers/:id` replaced the provider's whole extra-attribute
+set, so an update that said nothing about a key deleted it. Automation written
+before `requiredAmr` / `requiredAcr` existed therefore turned the upstream
+assurance gate off just by updating an OAuth2 provider. A partial update now
+keeps attributes it never mentioned. Send an attribute as `null` to clear it.
+Changing a provider's `protocol` still replaces the set, so the old protocol's
+configuration (including its secret) does not linger.
+
+### The identity provider assurance gate checks the id_token audience
+
+With `requiredAmr` or `requiredAcr` set, the upstream `id_token` must now also
+carry the provider's `clientId` in `aud` (and, when present, in `azp`), per OIDC
+Core section 3.1.3.7. Providers with neither allow-list set are unaffected, and
+a conformant OIDC provider satisfies this already. A provider that mints tokens
+for a different audience will start failing logins once you opt into assurance.
+
 ### Docker: the writable directory moved to `/var/lib/authup`
 
 The image wrote its runtime files to `/usr/src/app/writable`, inside the
