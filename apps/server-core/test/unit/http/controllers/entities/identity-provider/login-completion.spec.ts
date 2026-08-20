@@ -706,16 +706,21 @@ describe('identity-provider login completion', () => {
     it('completes a login whose upstream satisfies the provider assurance allow-list', async () => {
         // the refusal case below proves the gate fires; this one proves it
         // reads the id_token rather than jamming shut on every login
-        const strictProvider = (await suite.client.identityProvider.create(createFakeOAuth2IdentityProvider({
+        const strictPayload = createFakeOAuth2IdentityProvider({
             realmId: realm.id,
             tokenUrl: `${idpURL}/token`,
             authorizeUrl: `${idpURL}/authorize`,
             requiredAmr: 'mfa',
-        }))).data;
+        });
+        const strictProvider = (await suite.client.identityProvider.create(strictPayload)).data;
         providerIdTokenClaims = {
             sub: 'external-user-completion',
             email: 'external-completion@example.com',
             amr: ['pwd', 'mfa'],
+            // OIDC Core 3.1.3.7 items 3-5: the gate checks the audience, which
+            // item 6 does not excuse. A real provider mints the id_token for
+            // the client that asked for it.
+            aud: strictPayload.clientId,
         };
 
         // The account row is keyed by (providerUserId, providerId), so this

@@ -68,6 +68,15 @@ export function buildIdentityProviderAcrValues(provider: Partial<OAuth2IdentityP
  * alone, so a provider that returns none - or one whose token carries neither
  * claim, or cannot be decoded - is refused once an allow-list is set. Failing
  * open there would make the feature decorative.
+ *
+ * The token is DECODED, not verified, and that is not an oversight. It is the
+ * return value of the server's own back-channel POST to the operator-configured
+ * `tokenUrl`, so OIDC Core 3.1.3.7 item 6 accepts TLS server validation in
+ * place of checking the signature. No browser-supplied token reaches here, and
+ * a provider the operator configured is the authentication authority for these
+ * users anyway: one that lies about `amr` could equally mint any subject. What
+ * item 6 does NOT waive is the audience, which is checked below because
+ * `clientId` is already in hand.
  */
 export function assertIdentityProviderAssurance(
     provider: Partial<OAuth2IdentityProviderBase>,
@@ -92,6 +101,25 @@ export function assertIdentityProviderAssurance(
         claims = extractTokenPayload(idToken) ?? {};
     } catch {
         throw new IdentityProviderAssuranceError('The identity provider id_token could not be read.');
+    }
+
+    // OIDC Core 3.1.3.7 items 3-5, the part item 6 does not excuse. Guarded on
+    // `clientId` because the gate takes a partial provider: an absent client id
+    // has nothing to compare against, and inventing a refusal there would fail
+    // a login over a value the caller never supplied.
+    if (provider.clientId) {
+        const audiences = Array.isArray(claims.aud) ? claims.aud : [claims.aud];
+        if (!audiences.includes(provider.clientId)) {
+            throw new IdentityProviderAssuranceError(
+                'The identity provider id_token was not issued for this client.',
+            );
+        }
+
+        if (typeof claims.azp === 'string' && claims.azp !== provider.clientId) {
+            throw new IdentityProviderAssuranceError(
+                'The identity provider id_token was issued for another party.',
+            );
+        }
     }
 
     if (requiredAmr.length > 0) {
