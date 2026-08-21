@@ -57,13 +57,13 @@
         "cross-env": "^10.1.0",
         "date-fns": "^4.1.0",
         "happy-dom": "^20.11.2",
-        "pinia": "^4.0.2",
+        "pinia": "^4.0.3",
         "tailwindcss": "^4.3.1",
         "vite": "^8.2.1",
         "vitest": "^4.0.14",
         "vue": "^3.5.41",
         "vue-router": "^5.0.7",
-        "vue-tsc": "^3.3.9"
+        "vue-tsc": "^3.3.10"
     },
     "publishConfig": {
         "access": "public"
