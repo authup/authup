@@ -795,12 +795,56 @@ not by client-admin-console:
   also cover every `@authup/*` package it pulls in transitively, so dev
   resolution reaches package source instead of a possibly unbuilt dist
   (and so the bundle agrees with the root tsconfig paths `vue-tsc`
-  checks). Note the gate itself, `isCodeTransformation(JUST_IN_TIME)`, is
-  only true under ts-node/tsx, and no server-core script runs that way.
-  The branch is therefore unreachable in practice, which is why its
-  breakage went unnoticed. The vite dev server is created once in
+  checks). The vite dev server is created once in
   `registerAssetsMiddleware` and closed by `HTTPMiddlewareModule.teardown`
-  (it owns a file watcher plus an HMR websocket).
+  (it owns a file watcher plus an HMR websocket; vite binds the websocket
+  itself on `*:24678`, so two dev instances on one machine collide there).
+- **The JIT gate and its entry point (#3382).** The gate,
+  `isCodeTransformation(JUST_IN_TIME)` from typeorm-extension, is a
+  two-line wrapper over locter's `isTsNodeRuntimeEnvironment() ||
+  isTsxRuntimeEnvironment()`: a loader heuristic, not a config key. It is
+  reached by exactly one script, `cli-dev` in `apps/server-core`
+  (`node --loader ts-node/esm --require ts-node/register src/cli/index.ts`),
+  the command `docs/src/guide/development/quick-start.md` documents. Both
+  halves of that line are load-bearing. `--loader ts-node/esm` is what
+  transpiles the ESM graph (ts-node is the only runner of the three tried
+  that can: tsx is esbuild and emits no `design:type`, so it dies with
+  `ColumnTypeUndefinedError` on the first of the 219 type-less `@Column`s
+  before `--help` even prints; `@swc-node/register` boots but needs a
+  scratch shim and nothing detects it; the bare `ts-node src/cli/index.ts`
+  form hub ships installs only the CJS hook, so Node's native strip-only
+  type stripping takes the `.ts` files and dies on the first legacy
+  decorator). `--require ts-node/register` does nothing but set
+  `process[Symbol.for('ts-node.register.instance')]` on the MAIN thread:
+  since Node 20 loader hooks run on their own thread, so the `--loader`
+  form alone leaves locter's check false and the gate dark, serving the
+  consoles from the package dist while server-core runs from source.
+  That is a locter gap (tada5hi/locter#884, the `--require`'s removal
+  trigger), not a reason for a third home for two regexes. Because the
+  gate is implicit, `registerAssetsMiddleware` logs which branch serves the
+  auth console at boot; a dark gate is otherwise indistinguishable from a
+  working one, which is how the branch stayed broken through #3380. Under
+  vitest the gate is always false (no marker, no `tsx` in `execArgv`), so
+  the suite exercises the dist branch only and the JIT branch has no
+  automated coverage. Deriving the gate from `CODE_PATH` (src vs dist)
+  instead was rejected: under vitest `CODE_PATH` IS `<pkg>/src`, so every
+  `createTestApplication` suite would spawn a polling vite dev server and
+  `assets.spec.ts`'s dist assertions fail outright. An explicit config key
+  was rejected as ~40 lines across ten files for a switch that is
+  monorepo-only by construction (`vite` is a devDependency and a published
+  install carries no auth console source). Known shape differences of the
+  dev render: no `<link rel="stylesheet">` (CSS rides the module graph, so
+  expect a flash of unstyled content), two benign `[Vue warn]
+  onScopeDispose()` lines per render, and a ~12s type-checked boot
+  (transpile-only is blocked by TS 6's `baseUrl` deprecation until the
+  root tsconfig carries `ignoreDeprecations`). The `--loader` flag prints
+  an `ExperimentalWarning`; the `--import` + `module.register` form avoids
+  it and behaves identically, but needs the same `--require`. Under the
+  gate the mysql/postgres migrations glob also switches to
+  `src/.../*.{ts,js,mjs}`, which typeorm `import()`s through the loader
+  (verified: `cli-dev -- migration run` applies all 17 postgres migrations
+  from `src/`); every documented migration workflow still runs from the
+  built CLI and CI pre-flights `dist/` for that reason.
 - **Feature flags** ride the hydration payload (`data.features`,
   `StatusResponseFeatures` shape) — pages render the form when the
   workflow is enabled, otherwise a localized "disabled" notice (no 404:

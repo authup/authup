@@ -1,0 +1,14 @@
+# locter — reference mapping
+
+Upstream: `github.com/tada5hi/locter`. File location + module loading
+(`locate`, `locateUpSync`, `read`) and the runtime-environment probes that
+typeorm-extension's `CodeTransformation` gate is built from. Pinned to
+locter 4.1.0 unless stated.
+
+| locter (source) | authup (consumer) | Notes |
+|---|---|---|
+| `isTsNodeRuntimeEnvironment()` (`src/utils/runtime.ts:18`) — reads `process[Symbol.for('ts-node.register.instance')]` | the four `isCodeTransformation(JUST_IN_TIME)` sites in `apps/server-core/src` (migrations glob in `adapters/database/data-source/options/module.ts`, vite dev server in `adapters/http/middleware/built-in/assets.ts`, the auth console render in `adapters/http/ui/auth-console/module.ts`, the account console re-read in `adapters/http/ui/account-console/module.ts`), via typeorm-extension's `detectCodeTransformation()` = `isTsNodeRuntimeEnvironment() \|\| isTsxRuntimeEnvironment()` | FALSE under `node --loader ts-node/esm` (and the `--import` + `module.register('ts-node/esm')` form): since Node 20 the hooks run on a loader thread, so ts-node sets the marker on that thread's `process`, not the main one. authup's `cli-dev` therefore adds `--require ts-node/register`, whose only job is setting the symbol on the main thread. tada5hi/locter#884 asks for an `execArgv` / `_preload_modules` marker test like the tsx one; when it ships, drop the `--require`. |
+| `isTsxRuntimeEnvironment()` (`src/utils/runtime.ts:27-44`) — `TSX_MARKER_REGEX` over `process.execArgv` + `process._preload_modules` | same gate | Fires for tsx on the main thread, but tsx is esbuild and emits no `design:type`, so server-core cannot run under it at all (219 type-less `@Column`s, `ColumnTypeUndefinedError` on the first entity). A true gate with an unloadable graph. |
+| `isVitestRuntimeEnvironment()` (`process.env.VITEST === 'true'`) | not consumed by authup | Would be the guard a `CODE_PATH`-derived gate needed (under vitest `CODE_PATH` is `<pkg>/src`); rejected in favour of keeping the locter detection, see architecture.md -> *The JIT gate and its entry point*. |
+| `locateUpSync` (`src/locate`) | `adapters/http/ui/auth-console/resolve.ts`, `adapters/http/ui/account-console/module.ts` | The `node_modules/@authup/client-*-console/package.json` ancestor walk from `PACKAGE_PATH`; works for the workspace symlink and a published install alike. Only positive resolution is cached. |
+| `read` (`src/read`) | `adapters/http/middleware/built-in/assets.ts` (`read('vite')`), `adapters/http/ui/auth-console/module.ts` (`read(dist/server/server.js)`), `adapters/http/controllers/workflows/status/module.ts` (`package.json`) | Dynamic import by path or bare specifier; the vite import is deliberately dynamic so the devDependency is only resolved on the JIT branch. |

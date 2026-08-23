@@ -273,6 +273,7 @@ Current references:
   borrows server-kit layout, the domain-event publisher and the telemetry `Event` shape from.
 - [routup.md](references/routup.md) — routup: dispatch walk, decorator flattening, `event.store`
   contract, `trustProxy` resolution.
+- [locter.md](references/locter.md) — locter: the runtime-environment probes behind typeorm-extension's `CodeTransformation` gate (the ts-node loader-thread gap, tsx ruled out), `locateUpSync` and `read` call sites.
 - [typeorm.md](references/typeorm.md) — typeorm + typeorm-extension: uuid column widths per dialect,
   the postgres `createFullType` length quirk, `synchronizeDatabaseSchema` boot behaviour, and the
   `migration generate` / schema-drift tooling.

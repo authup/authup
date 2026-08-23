@@ -54,7 +54,13 @@ export async function registerAssetsMiddleware(
         ));
     }
 
-    if (!isCodeTransformation(CodeTransformation.JUST_IN_TIME)) {
+    // Logged because the gate is implicit (a TypeScript loader on the main
+    // thread, see `cli-dev`) and a dark gate is otherwise indistinguishable
+    // from a working one (#3382).
+    const isJIT = isCodeTransformation(CodeTransformation.JUST_IN_TIME);
+    options.logger?.info(`Serving the auth console from ${isJIT ? 'source (vite dev server)' : 'the package dist'}.`);
+
+    if (!isJIT) {
         router.use('public', createHandler(
             path.posix.join(PACKAGE_PATH, 'public'),
             {
