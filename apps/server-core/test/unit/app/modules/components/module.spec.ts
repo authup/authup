@@ -16,6 +16,7 @@ import {
     vi,
 } from 'vitest';
 import { ComponentsModule } from '../../../../../src/app/modules/components';
+import type { Config } from '../../../../../src/app/modules/config';
 import { ConfigInjectionKey } from '../../../../../src/app/modules/config';
 import { normalizeConfig } from '../../../../../src/app/modules/config/normalize';
 import { DatabaseInjectionKey } from '../../../../../src/app/modules/database';
@@ -27,6 +28,36 @@ const flushMicrotasks = async () => {
     }
 };
 
+type ComponentsTestContext = {
+    container: Container,
+    deleteMock: ReturnType<typeof vi.fn>
+};
+
+const createContext = (config: Config) : ComponentsTestContext => {
+    const deleteMock = vi.fn().mockResolvedValue({ affected: 0 });
+    const queryBuilder = {
+        orderBy() {
+            return this;
+        },
+        async getMany() {
+            return [];
+        },
+    };
+    const dataSource = {
+        getRepository: () => ({
+            delete: deleteMock,
+            createQueryBuilder: () => queryBuilder,
+        }),
+    } as unknown as DataSource;
+
+    const container = new Container();
+    container.register(ConfigInjectionKey, { useValue: config });
+    container.register(DatabaseInjectionKey.DataSource, { useValue: dataSource });
+    container.register(LoggerInjectionKey, { useValue: createNoopLogger() });
+
+    return { container, deleteMock };
+};
+
 describe('app/modules/components', () => {
     afterEach(() => {
         vi.useRealTimers();
@@ -35,29 +66,10 @@ describe('app/modules/components', () => {
     it('should stop started cron components on teardown', async () => {
         const config = await normalizeConfig({ eventLogEnabled: false });
 
-        const deleteMock = vi.fn().mockResolvedValue({ affected: 0 });
-        const queryBuilder = {
-            orderBy() {
-                return this;
-            },
-            async getMany() {
-                return [];
-            },
-        };
-        const dataSource = {
-            getRepository: () => ({
-                delete: deleteMock,
-                createQueryBuilder: () => queryBuilder,
-            }),
-        } as unknown as DataSource;
-
         vi.useFakeTimers();
         vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
 
-        const container = new Container();
-        container.register(ConfigInjectionKey, { useValue: config });
-        container.register(DatabaseInjectionKey.DataSource, { useValue: dataSource });
-        container.register(LoggerInjectionKey, { useValue: createNoopLogger() });
+        const { container, deleteMock } = createContext(config);
 
         const module = new ComponentsModule();
 
@@ -73,5 +85,48 @@ describe('app/modules/components', () => {
 
         await vi.advanceTimersByTimeAsync(180_000);
         expect(deleteMock).toHaveBeenCalledTimes(4);
+    });
+
+    it('should register no components when they are disabled by config', async () => {
+        const config = await normalizeConfig({ componentsEnabled: false });
+
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
+
+        const { container, deleteMock } = createContext(config);
+
+        const module = new ComponentsModule();
+
+        await module.setup(container);
+        await flushMicrotasks();
+
+        expect(deleteMock).not.toHaveBeenCalled();
+
+        await vi.advanceTimersByTimeAsync(180_000);
+        expect(deleteMock).not.toHaveBeenCalled();
+
+        // teardown must stay safe with nothing registered
+        await expect(module.teardown(container)).resolves.toBeUndefined();
+    });
+
+    it('should register components regardless of the flag when forced', async () => {
+        const config = await normalizeConfig({
+            componentsEnabled: false,
+            eventLogEnabled: false,
+        });
+
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
+
+        const { container, deleteMock } = createContext(config);
+
+        const module = new ComponentsModule({ force: true });
+
+        await module.setup(container);
+        await flushMicrotasks();
+
+        expect(deleteMock).toHaveBeenCalledTimes(2);
+
+        await module.teardown(container);
     });
 });

@@ -16,17 +16,21 @@ import { LoggerInjectionKey } from '../logger/index.ts';
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import type { IContainer } from 'eldin';
+import type { ComponentsModuleOptions } from './types.ts';
 
 export class ComponentsModule implements IModule {
     readonly name: string;
 
     readonly dependencies: string[];
 
+    protected options: ComponentsModuleOptions;
+
     protected components: Component[];
 
-    constructor() {
+    constructor(options: ComponentsModuleOptions = {}) {
         this.name = ModuleName.COMPONENTS;
         this.dependencies = [ModuleName.CONFIG, ModuleName.LOGGER, ModuleName.DATABASE];
+        this.options = options;
         this.components = [];
     }
 
@@ -34,6 +38,13 @@ export class ComponentsModule implements IModule {
         const config = container.resolve(ConfigInjectionKey);
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const logger = container.resolve(LoggerInjectionKey);
+
+        // the worker role forces them on; every other role follows the
+        // config, so an API replica can hand the sweeps to that worker.
+        if (!this.options.force && !config.componentsEnabled) {
+            logger.info('Background components are disabled by configuration.');
+            return;
+        }
 
         const components: Component[] = [
             createOAuth2CleanerComponent(dataSource, logger),
