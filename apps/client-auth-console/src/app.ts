@@ -156,6 +156,14 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
         pinia,
         translatorLocale: matchLocale(localeHandles.resolved.value),
         isServer: !isClient,
+        // Scope the session cookies to the sub-path authup is served under.
+        // On a shared origin (a host application at `/` embedding authup at
+        // e.g. `/auth`), the default root path would put them into the same
+        // cookie records a host app using the kit reads and writes: each side
+        // then hydrates, rotates and revokes the other's tokens, and the
+        // strict refresh rotation escalates the shared refresh token into
+        // family revocation. A path-less baseURL keeps the root path.
+        cookiePath: basePath || '/',
         hydrationStore: {
             get: <T>(key: string) => hydration[key] as T | undefined,
             set: (key: string, value: unknown) => {

@@ -217,6 +217,11 @@ install(app, {
     baseURL: config.apiUrl,
     pinia,
     translatorLocale: matchLocale(localeHandles.resolved.value),
+    // Scope the session cookies to the sub-path authup is served under
+    // (shared with the hosted auth pages — one session per deployment).
+    // Root-scoped cookies collide with a same-origin host application that
+    // uses the kit's cookie names; see resolveCookiePath in ./config.ts.
+    cookiePath: config.cookiePath,
 });
 
 // One-way: ilingo (authup catalogs) follows vuecs's resolved locale.
