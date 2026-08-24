@@ -7,7 +7,7 @@ and provide details on fully configuring your development environment.
 
 Ensure the following software is installed on your system:
 - [Git](https://git-scm.com/)
-- [Node.js](https://nodejs.org/) (version 22 or higher)
+- [Node.js](https://nodejs.org/) (`^22.13.0 || ^23.5.0 || >=24.0.0`)
 
 
 ## Steps

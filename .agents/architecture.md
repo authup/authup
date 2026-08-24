@@ -812,7 +812,7 @@ not by client-admin-console:
   `ColumnTypeUndefinedError` on the first of the 219 type-less `@Column`s
   before `--help` even prints; `@swc-node/register` boots but needs a
   scratch shim and nothing detects it; the bare `ts-node src/cli/index.ts`
-  form hub ships installs only the CJS hook, so Node's native strip-only
+  form (the one hub ships) installs only the CJS hook, so Node's native strip-only
   type stripping takes the `.ts` files and dies on the first legacy
   decorator). `--require ts-node/register` does nothing but set
   `process[Symbol.for('ts-node.register.instance')]` on the MAIN thread:
