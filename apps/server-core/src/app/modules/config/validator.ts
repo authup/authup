@@ -57,6 +57,9 @@ export class ConfigValidator extends Container<Config> {
             redis: serviceValidator,
             smtp: serviceValidator,
 
+            componentsEnabled: booleanValidator,
+            migrationEnabled: booleanValidator,
+
             port: nonNegativeNumberValidator,
             host: stringValidator,
             publicUrl: createValidator(z.url()),

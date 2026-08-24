@@ -21,6 +21,9 @@ export enum ConfigEnvironmentVariableName {
     REDIS = 'REDIS',
     SMTP = 'SMTP',
 
+    COMPONENTS_ENABLED = 'COMPONENTS_ENABLED',
+    MIGRATION_ENABLED = 'MIGRATION_ENABLED',
+
     HOST = 'HOST',
     PORT = 'PORT',
     PUBLIC_URL = 'PUBLIC_URL',

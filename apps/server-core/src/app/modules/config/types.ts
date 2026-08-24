@@ -126,6 +126,24 @@ export type Config = {
     // ----------------------------------------------------
 
     /**
+     * Background components (the cron sweeps) run in this process. Set
+     * false on API replicas when a dedicated worker process runs them.
+     * default: true
+     */
+    componentsEnabled: boolean,
+
+    /**
+     * Apply pending schema migrations at startup. When false, startup runs
+     * no DDL: it verifies no migrations are pending and fails loud
+     * otherwise. The `migration` CLI command is unaffected. Ignored on
+     * sqlite, which has no migrations and always synchronizes.
+     * default: true
+     */
+    migrationEnabled: boolean,
+
+    // ----------------------------------------------------
+
+    /**
      * Application port number.
      * default: 3001
      */

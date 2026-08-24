@@ -85,6 +85,9 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         redis: false,
         smtp: false,
 
+        componentsEnabled: true,
+        migrationEnabled: true,
+
         port,
         host,
         publicUrl,
