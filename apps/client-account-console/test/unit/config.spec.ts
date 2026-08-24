@@ -21,6 +21,44 @@ describe('src/config', () => {
         expect(config.enabled).toBeFalsy();
     });
 
+    // Cookie mode needs BOTH: the server vouching for the routes (injected)
+    // and this document being able to present the credential (same-origin).
+    // Either alone is wrong — see the field's doc comment in ../src/config.ts.
+    it('should enable cookie mode only when vouched for AND same-origin', () => {
+        // neither
+        expect(resolveAccountConsoleConfig({}, { origin: 'https://auth.example.com' }).cookieSession)
+            .toBe(false);
+
+        // capability only: a foreign API, so the credential could never be
+        // presented — every request from here would be cross-site
+        expect(resolveAccountConsoleConfig({
+            cookieSession: true,
+            apiUrl: 'https://auth.example.com',
+        }, { origin: 'https://console.example.net' }).cookieSession)
+            .toBe(false);
+
+        // applicability only: same origin, but nothing vouched for the routes,
+        // so a dist newer than its server would navigate into a 404
+        expect(resolveAccountConsoleConfig({ apiUrl: 'https://auth.example.com' }, { origin: 'https://auth.example.com' }).cookieSession)
+            .toBe(false);
+
+        // both, including a same-origin sub-path deployment
+        const served = resolveAccountConsoleConfig({
+            cookieSession: true,
+            apiUrl: 'https://auth.example.com/auth',
+        }, { origin: 'https://auth.example.com' });
+
+        expect(served.cookieSession).toBe(true);
+        expect(served.cookiePath).toEqual('/auth');
+
+        // no origin to compare against (SSR, a test harness): fail closed
+        expect(resolveAccountConsoleConfig({
+            cookieSession: true,
+            apiUrl: 'https://auth.example.com',
+        }, { origin: '' }).cookieSession)
+            .toBe(false);
+    });
+
     it('should derive the api url from the base path (embedded serving)', () => {
         const config = resolveAccountConsoleConfig({}, { origin: 'https://auth.example.com' });
 

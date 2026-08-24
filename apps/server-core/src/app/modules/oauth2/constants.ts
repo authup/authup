@@ -8,6 +8,7 @@
 import { TypedToken } from 'eldin';
 import type {
     IConsentRepository,
+    IConsoleLoginStore,
     IKeyRepository,
     IKeyStore,
     IOAuth2AuthorizationCodeIssuer,
@@ -40,6 +41,7 @@ export const OAuth2InjectionToken = {
 
     AuthorizationStateRepository: new TypedToken<IOAuth2AuthorizeStateRepository>('AuthorizationStateRepository'),
 
+    ConsoleLoginStore: new TypedToken<IConsoleLoginStore>('ConsoleLoginStore'),
     FederatedLoginStore: new TypedToken<IOAuth2FederatedLoginStore>('FederatedLoginStore'),
 
     /**

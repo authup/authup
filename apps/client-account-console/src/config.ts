@@ -26,6 +26,21 @@ export type AccountConsoleConfigInput = {
      * Feature switches injected by the serving side. A standalone host
      * omits them (the surface is enabled by virtue of being deployed).
      */
+    /**
+     * The server asserting that it implements cookie mode — NOT an operator
+     * choice, and not sufficient on its own.
+     *
+     * Two different facts gate cookie mode and only one of them is knowable
+     * here. Whether the credential can be PRESENTED is a client-side question
+     * (is the API this document's own origin?) and is derived below. Whether
+     * the server implements `/account/login|callback|session` at all is a
+     * server-side question, and a console dist newer than the server it talks
+     * to cannot answer it: it would navigate to `/account/login` and get a 404
+     * on a top-level navigation, which is unrecoverable. `serveAccountConsolePage`
+     * sets this, so a server that serves the bundle vouches for the routes.
+     */
+    cookieSession?: boolean,
+
     features?: {
         accountConsole?: boolean,
     },
@@ -37,6 +52,7 @@ export type AccountConsoleConfigInput = {
      * its own already-validated value.
      */
     ref?: string,
+
 };
 
 export type AccountConsoleConfig = {
@@ -51,6 +67,7 @@ export type AccountConsoleConfig = {
     cookiePath: string,
     enabled: boolean,
     ref?: string,
+    cookieSession: boolean,
 };
 
 declare global {
@@ -102,6 +119,23 @@ export function resolveAccountConsoleConfig(
         cookiePath: resolveCookiePath(apiUrl, origin),
         enabled: injected.features?.accountConsole !== false,
         ref: injected.ref,
+        // Capability AND applicability, because they are different facts and
+        // each alone is wrong.
+        //
+        // The injected half is the server vouching for the routes (see the
+        // input field): without it a console dist newer than its server would
+        // navigate to a `/account/login` that does not exist. The derived half
+        // is this document checking it could present the credential at all:
+        // it is `SameSite=Strict` and the server also demands
+        // `Sec-Fetch-Site: same-origin`, so a foreign API means every request
+        // is cross-site and refused. Injected alone made that broken pairing
+        // representable and silently fatal — the kick redirects, the cookie
+        // lands on the API's origin, and the console loops back to sign-in
+        // with no diagnostic. Together they are exactly the condition under
+        // which `${apiUrl}/account/login` is both a real route and a usable
+        // one, which is what makes the kick in `pages/index.vue` sound.
+        cookieSession: injected.cookieSession === true &&
+            isSameOriginApiUrl(apiUrl, origin),
     };
 }
 
@@ -120,16 +154,27 @@ export function resolveAccountConsoleConfig(
  * A cross-origin `apiUrl` (standalone hosting) says nothing about this
  * origin's layout, so it keeps the root path — the pre-existing behavior.
  */
-function resolveCookiePath(apiUrl: string, origin: string) : string {
+/**
+ * Whether the API this console talks to is its OWN origin.
+ *
+ * Two things hang off it, and both break silently when it is false: the kit's
+ * cookie scope (a foreign API means the console's own origin owns nothing
+ * worth scoping) and cookie mode itself (see below).
+ */
+function isSameOriginApiUrl(apiUrl: string, origin: string) : boolean {
     if (!origin) {
-        return '/';
+        return false;
     }
 
     try {
-        if (new URL(apiUrl).origin !== origin) {
-            return '/';
-        }
+        return new URL(apiUrl).origin === origin;
     } catch {
+        return false;
+    }
+}
+
+function resolveCookiePath(apiUrl: string, origin: string) : string {
+    if (!isSameOriginApiUrl(apiUrl, origin)) {
         return '/';
     }
 

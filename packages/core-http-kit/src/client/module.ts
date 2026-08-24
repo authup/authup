@@ -9,6 +9,7 @@ import { Client as BaseClient, HookName, isClientError } from 'hapic';
 import { buildURL } from '@authup/kit';
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
 import {
+    AccountAPI,
     ClientAPI,
     ClientPermissionAPI,
     ClientRoleAPI,
@@ -44,6 +45,8 @@ import type { OAuth2APIOptions } from '../domains';
 import type { ClientOptions, IClient } from './type';
 
 export class Client extends BaseClient implements IClient {
+    public readonly account : AccountAPI;
+
     public readonly token : OAuth2TokenAPI;
 
     public readonly authorize : OAuth2AuthorizeAPI;
@@ -134,6 +137,8 @@ export class Client extends BaseClient implements IClient {
             client: this,
             options, 
         });
+
+        this.account = new AccountAPI({ client: this });
 
         this.client = new ClientAPI({ client: this });
         this.clientPermission = new ClientPermissionAPI({ client: this });

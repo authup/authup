@@ -307,8 +307,8 @@ usable at the service level and nothing in core depends on TypeORM:
   a dead filter. The same pass runs
   `assertSchemaFieldsCoverEntity`: every **selectable** column
   (`isSelect`, so `select: false` secrets — `user.password`,
-  `key.decryptionKey`, `userAuthenticator.secret`/`codes` — are exempt
-  automatically) must appear in the schema's `fields.default` ∪
+  `key.decryptionKey`, `session.secret`, `userAuthenticator.secret`/`codes`
+  — are exempt automatically) must appear in the schema's `fields.default` ∪
   `fields.allowed`, because rapiq derives the root projection from that
   allow-list: an undeclared column is silently absent from every
   collection response (`role.builtIn`/`clientId`, `user.status`/
@@ -1418,7 +1418,12 @@ choice"):
   the shell renders `AWorkflowDisabledNotice` client-side (no 404).
 - **Login = full auth-code + PKCE against the per-realm `account-console`
   client** (Keycloak model — per-app attribution + access-policy
-  enforceability), NOT bare reuse of the lingering kit-store session. The
+  enforceability), NOT bare reuse of the lingering kit-store session.
+  **Everything in this bullet and the sign-out bullet below describes the
+  BROWSER-side flow, which a server-served console no longer takes**. See
+  *Console session credential* after this list. It is what a standalone
+  cross-origin host still runs, and the code stays behind the resolved
+  `cookieSession` decision for exactly that reason. The
   shell page's kick saves the kit `AuthorizationRequest` (sessionStorage)
   and redirects to `/authorize`; the app's router guard consumes it on
   return — state check, PKCE params on `exchangeAuthorizationCode`, strip
@@ -1513,6 +1518,193 @@ choice"):
 - **Link surface:** `<publicUrl>/account` is the stable "Manage account"
   target; the admin console header links the user name to it.
 
+#### Console session credential (cookie mode, plan 088 Stage 1)
+
+A console served from the API's own origin holds **no OAuth2 token in
+JavaScript at all**. It presents an opaque, `HttpOnly` credential naming its
+`auth_sessions` row, and every token the login produced dies inside the
+request that redeemed it. This is the BFF / token-handler pattern and the
+shape Authentik uses (its browser session is an opaque Django cookie; OAuth2
+tokens exist for downstream applications, not for its own UI). It buys three
+things a JS-held JWT cannot: an XSS cannot walk off with a portable bearer
+(qualified below), the request grows by a few dozen bytes instead of three
+JWTs, and revocation is immediate because the row is read on every request
+rather than trusted until `exp`.
+
+- **The cookie carries `auth_sessions.secret`, NEVER `auth_sessions.id`.**
+  The id is the row's PUBLIC identifier: it is published as `sid` in every
+  id_token and on every `/sessions` row, so it is not a secret and cannot be
+  a credential. `secret` is the secret half: a nullable, unique-indexed,
+  `select: false` column (`@Column({ name: 'secret' })`, `varchar(64)`), in
+  the same class as `user.password` and `key.decryptionKey`: re-selected only
+  by the dedicated `ISessionRepository.findOneBySecret`, absent from every
+  ordinary session read, and auto-exempt from the boot field-coverage
+  assertion. It is written at callback time, nulled on sign-out (so the
+  cookie stops resolving in the same request), and null on every bearer-mode
+  session. Deliberately a durable column rather than a cache blob: a
+  multi-day credential in a cache is steady-state breakage on a
+  multi-replica deployment without Redis, where a replica that never saw the
+  handle answers anonymous. The 5-minute PENDING LOGIN is the opposite case
+  and is a cache blob (`IConsoleLoginStore`, single-use `cache.pop`),
+  mirroring `OAuth2FederatedLoginStore`.
+- **Three conditions gate it, all required, and "consoles only" is
+  structural because of them.** (1) `SameSite=Strict`, so a cross-site
+  context never holds it. (2) `Origin` must equal publicUrl's own origin on
+  every state-changing method. (3) `Sec-Fetch-Site: same-origin`, **failing
+  closed when the header is absent**. Condition 3 is what `SameSite` cannot
+  carry: the attribute is scoped to the registrable domain, so a hostile
+  sibling subdomain is *same-site* and its requests do carry the cookie,
+  while a same-origin GET carries no `Origin` to catch it with. A sibling
+  sends `same-site`, never `same-origin`. All three live in one predicate,
+  `isSameOriginRequest(event, baseURL)` (`adapters/http/request/helpers/`),
+  which the middleware treats as a filter (a failing cookie leaves the
+  request anonymous) and the callback / sign-out routes treat as an
+  assertion. It logs an origin mismatch once, naming both values: a
+  deployment whose browser-facing host differs from `publicUrl` otherwise
+  presents as a console that loads and then silently 401s every write.
+  Only a surface on the API's own origin can satisfy this, so a third-party
+  RP cannot reach cookie mode even deliberately, and **`trustedOrigins` is
+  deliberately not consulted and must not be**. Honoring it would require
+  `SameSite=None`, and it is a different, larger trust ("act on this
+  origin's requests with the user's live session" versus "send a code here
+  after the user consented").
+- **The header always wins, and the cookie is never even read when one is
+  present.** The middleware's cookie branch replaces the existing
+  `if (!headerValue) return`; nothing between the header parse and the Basic
+  branch changed. So bearer mode is untouched for every other consumer, and
+  a bearer request pays no extra query.
+- **INVARIANT: cookie authentication must never reach the OAuth2 issuance
+  surface** (`/authorize`, `/token` and its sub-paths, `/logout`, i.e.
+  `isOAuth2IssuancePath`). Without it, one script execution anywhere on the
+  IdP origin POSTs `/authorize` with its own PKCE challenge against
+  `account-console` (public, `builtIn` so auto-consenting, `global openid`),
+  carries the code to `/token`, and holds a full token pair: the cookie
+  would have converted itself back into a portable bearer and `HttpOnly`
+  would have bought exactly one hop. The match runs on `event.path` BEFORE
+  routing, so it normalizes the way routup's matcher does (case-insensitive,
+  one tolerated trailing slash, repeated slashes collapsed) or a `/token/`
+  would route to the handler while missing an equality check. Nothing
+  legitimate is excluded: the hosted auth console posts consent with its own
+  bearer. The account-link routes are deliberately NOT denied (completing
+  one requires an interactive login at an external provider inside the
+  victim's browser, which same-origin script cannot drive).
+  `HTTPOAuth2IdentityGrantType` is unregistered today but mints a grant
+  straight from the request identity, so the deny-list is what keeps wiring
+  it from being a silent escalation. Do not narrow it.
+- **The residual, stated accurately.** An ambient origin cookie means an XSS
+  on the IdP origin can act as the user against the API for as long as the
+  page lives. For a user who cannot mint credentials through the API, no
+  PORTABLE credential can be exfiltrated. For a privileged one it still can:
+  a user holding `CLIENT_CREATE` can be driven, through ordinary same-origin
+  CRUD the console legitimately needs, to `POST /clients` with a
+  caller-chosen `secret`, have roles bound to it, and obtain a
+  `client_credentials` grant, which authenticates the client from the
+  request BODY, so no cookie and no denied route is involved at any point.
+  No deny-list can close that, because the console needs entity CRUD to
+  function. Do not restate the wider claim in docs or release notes. The
+  revocation and header-weight benefits are unaffected and unqualified.
+- **Four routes, all declared before `@DGet('/:page')`** (which matches any
+  single segment and would swallow them), on `AccountController`:
+  `GET /account/login` mints PKCE + `state`, parks them behind a 5-minute
+  `SameSite=Lax` login cookie (Lax, not Strict: the return leg may traverse
+  an external IdP chain) and 302s to `/authorize`; `GET /account/callback`
+  redeems the code and hands back the session cookie;
+  `GET /sessions/@me/introspect` is what the console hydrates from and
+  `DELETE /sessions/@me` is what it signs out with. The callback **requires `Sec-Fetch-Site: same-origin`**.
+  Without it an attacker who plants their own login cookie in the victim's
+  browser from a sibling subdomain and navigates them here logs the victim
+  into the ATTACKER's account. It validates `state` BEFORE consuming the
+  pending entry (a second tab's callback must not burn the first tab's
+  login), maps a returned `error` through a closed set, verifies the access
+  token for `session_id`/`client_id`/`scope`, and **revokes both tokens**,
+  not just the refresh: an access token stays a live bearer for ~15 minutes
+  otherwise. The session cookie's `maxAge` is the session's remaining
+  lifetime in SECONDS (the row's expiry is milliseconds; taken literally it
+  would emit an ~8-year cookie) and its path is
+  `getURLBasePath(publicUrl) || '/'`, never a hard-coded `/`, which under a
+  sub-path deployment would hand the credential to every other app on that
+  host.
+- **`GET /sessions/@me/introspect` is the same projection `POST /token/introspect`
+  answers with**, minus everything token-shaped, so the kit's `commitSession`
+  needs no new shape. Both share one owner, `resolveIntrospectionSubject`
+  (`core/oauth2/introspection/`), so the two cannot drift. Its `clientId` is
+  the console's own client NAME constant and **never
+  `RequestIdentity.clientId`**, which for a user identity is the user row's
+  unrelated `clientId` column and would silently mis-scope the permission
+  projection. Both routes set `Cache-Control: no-store` and `Vary: Cookie`:
+  the GET is a per-user document whose only discriminator is an opaque
+  cookie, exactly what an intermediary would otherwise cross-serve.
+- **Sign-out replaces the `id_token_hint` round-trip.** The browser-side
+  flow captured `idToken`/`realmId` and bounced through `/logout`; in cookie
+  mode there is no id_token in JavaScript to hint with, and none is needed.
+  `DELETE /sessions/@me` drops the handle and revokes the session
+  server-side, which is what the round-trip was asking `/logout` to do.
+  `store.logout()` issues it before its local `cleanup()`. The kit
+  deliberately does NOT clear the path-`/` token cookies in this mode: those
+  are the hosted auth console's lingering SSO session, which `prompt=none`
+  and `prompt=select_account` depend on for every other RP on the origin.
+  The console ignores them; it does not destroy them.
+- **Session lifetime still slides.** The refresh grant is what calls
+  `SessionManager.refresh()`, and cookie mode has no refresh grant, so the
+  cookie branch calls `refresh()` on a throttle rather than `ping()` (which
+  moves only `seenAt`). Otherwise an active user would be signed out
+  mid-task once the session reached its lifetime. It costs no extra write
+  (`ping` already saved the row) and it re-reads the row first: `save`
+  upserts by primary key, so writing the row read at the top of the request
+  would RESURRECT a session a concurrent sign-out deleted.
+- **`Allow-Credentials` narrowed to publicUrl's origin** in the same change
+  (`cors.ts`). `Allow-Origin` keeps reflecting, so non-credentialed
+  cross-origin callers are unaffected; no authup consumer sets
+  `credentials: 'include'`.
+- **Wiring.** `cookieSession` needs TWO conditions, because they are different
+  facts and each alone is wrong. `serveAccountConsolePage` injects it as a
+  **capability** assertion — this server implements
+  `/account/login|callback|session` — which a console dist cannot determine for
+  itself: newer than its server, it would navigate to a `/account/login` that
+  does not exist, and a 404 on a top-level navigation is unrecoverable.
+  `resolveAccountConsoleConfig` then ANDs it with **applicability**,
+  `isSameOriginApiUrl(apiUrl, origin)`: the credential is `SameSite=Strict` and
+  the server also demands `Sec-Fetch-Site: same-origin`, so against a foreign
+  API every request is cross-site and refused. The injected flag alone made
+  that pairing representable and silently fatal (the kick redirects, the cookie
+  lands on the API's origin, the console loops back to sign-in with no
+  diagnostic); the derivation alone dropped the capability signal. Together
+  they are exactly the condition under which `${apiUrl}/account/login` is both
+  a real route and a usable one, which is what makes the kick in
+  `pages/index.vue` sound rather than conventional. It is never an operator
+  choice: there is no config key behind the injection. The resolved value
+  reaches BOTH the kit's `installStore` and its store factory. In `installStore` it skips the `readCookies()` seeding of
+  the four token cookies, and **seeding nothing is the whole fix**: the
+  hosted login writes them at path `/` on this same origin, so a seeded
+  store would attach a `Bearer` header and header-wins precedence would mean
+  the server's cookie branch never ran. The authentication hook is still
+  INSTALLED (`installHTTPClient` injects it unconditionally and that inject
+  throws when it was never provided); with no access token it disables
+  itself at install time, so it is inert rather than absent.
+- **The column stores a DIGEST, not the credential.** `auth_sessions.secret`
+  holds `sha256(cookie value)`; `findOneBySecret` hashes the presented value
+  and compares. `select: false` governs what the ORM projects and nothing about
+  what the table contains, so storing it verbatim would make any read of that
+  table — a leaked backup, a read replica, a SELECT-only injection — a source
+  of replayable session cookies. Plain SHA-256 rather than a keyed HMAC on
+  purpose: keying defends a LOW-entropy input against offline guessing, and
+  this input is ~248 bits of nanoid, so there is no guessing attack to
+  frustrate. A key would also have to be global, since the lookup resolves a
+  session BY this value and the realm is unknown at that point. Hex SHA-256 is
+  exactly the column's 64 characters.
+- **Stage-1 boundary.** `loggedIn`, `usePermissionCheck` and the socket
+  manager all read `accessToken` and stay false / disconnected in cookie
+  mode. The account console reads none of them; Stage 2 (the admin console
+  BFF) cannot proceed without re-deriving all three. The authentication hook
+  being inert means there is no automatic 401 teardown: the console's own
+  `capture()` 401 rule and the router guard's failed-resolve logout cover
+  it. A cache flush signs every console user out of a login in flight (the
+  session handle itself is durable). A browser that does not send Fetch
+  Metadata can never authenticate: the intended fail-closed posture, and a
+  support-visible cliff. Standalone cross-origin hosting stays on the
+  JS-token path (cross-origin, so applicability fails there), so the two modes
+  coexist behind one resolved condition.
+
 ### File Structure
 
 ```text
@@ -1528,6 +1720,16 @@ apps/server-core/src/core/entities/
   {entity}/service.ts               — {Entity}Service implements I{Entity}Service (business logic)
   {entity}/index.ts                 — barrel export
   index.ts                          — barrel re-exports all entities
+
+core/oauth2/
+  introspection/module.ts           — resolveIntrospectionSubject: the ONE subject projection shared by
+                                      POST /token/introspect and GET /sessions/@me/introspect
+  console-login/types.ts            — IConsoleLoginStore + ConsoleLoginPending (state, PKCE verifier,
+                                      redirect_uri, realm). The adapter is
+                                      app/modules/oauth2/repositories/console-login/ (a cache blob)
+  console-login/module.ts           — createSessionSecret (the opaque auth_sessions.secret)
+  console-login/constants.ts        — the two cookie names, the pending-login TTL, the secret length and
+                                      the session-refresh throttle
 
 core/identity/
   registration/types.ts             — IRegistrationService interface
@@ -1557,6 +1759,9 @@ adapters/http/controllers/workflows/
   password-forgot/module.ts         — PasswordForgotController → IPasswordRecoveryService (POST API + GET serves SSR page)
   password-reset/module.ts          — PasswordResetController → IPasswordRecoveryService (POST API + GET serves SSR page)
   status/module.ts                  — StatusController (GET / → version + feature flags)
+  account/module.ts                 — AccountController: serves the account console SPA shell AND owns its
+                                      server-side login (plan 088): GET /account/login (kick), /callback
+                                      (redemption + session cookie), GET+DELETE /sessions/@me
 
 adapters/http/ui/                   — one folder per served console + shared serving helpers
   shared/html.ts                    — readUIClientPreferences (locale/color-mode cookies), stampHtmlAttributes,
@@ -1591,10 +1796,15 @@ adapters/http/ui/                   — one folder per served console + shared s
 adapters/http/request/helpers/
   actor.ts                          — buildActorContext(req) bridge function
   realm-id.ts                       — getRequestRealmID / applyRouteRealmIDToBody / setRequestRealmID
+  same-origin.ts                    — isSameOriginRequest(event, baseURL): the three-condition gate every
+                                      cookie-authenticated surface rides on (plan 088)
 
 adapters/http/middleware/built-in/
   realm-resolver/module.ts          — RealmResolverMiddleware resolves :realmId (UUID or name) → UUID
   realm-resolver/factory.ts         — createRealmResolverMiddleware(ctx)
+  authorization/module.ts           — AuthorizationMiddleware (bearer / Basic, plus the console session
+                                      cookie branch; the header always wins)
+  authorization/issuance.ts         — isOAuth2IssuancePath: the routes a cookie credential may NEVER reach
 
 app/modules/http/modules/
   controller.ts                     — Factory methods: creates repositories, services, and controllers
@@ -2265,10 +2475,12 @@ standalone-hosting question stays rejected):
   hosted login means every RP's second factor runs on the one IdP origin with
   no per-RP plumbing.
 - **The `prompt=none` / `select_account` ladder rides first-party kit-store
-  cookies on the `/authorize` origin** — server auth is header-only (no
-  cookie-authenticated endpoint exists), so silent-auth / account-choice
-  decisions can only be taken client-side where the session cookie lives: on
-  the IdP origin itself.
+  cookies on the `/authorize` origin**. The server cannot take the decision
+  itself, so silent-auth / account-choice decisions can only be taken
+  client-side where the session cookie lives: on the IdP origin itself. That
+  still holds now that a console session cookie exists (plan 088): the
+  OAuth2 issuance surface, `/authorize` included, is exactly what that
+  credential is denied on.
 - **Same-path GET-HTML / POST-JSON workflow routes** — each workflow path
   serves SSR HTML on GET while POST on the same path is the JSON API; the
   pages are the render half of the API surface.
@@ -2496,10 +2708,10 @@ an RFC 7009 POST to `/token` never worked). An empty `max_age=` is treated as
 
 **`prompt=none` (silent auth) + `prompt=login` (re-auth) are handled in the
 hosted SSR kit `Authorize.vue`, NOT server-side (plan 042 item 10).** The
-server GET cannot silently authenticate: auth is header-only (the
-authorization middleware reads the identity only from `Authorization`; cors.ts
-relies on "no cookie-authenticated endpoint exists"), and a top-level
-`GET /authorize` browser navigation carries no bearer. The session lives
+server GET cannot silently authenticate: a top-level `GET /authorize` browser
+navigation carries no bearer, and the one cookie credential that exists (plan
+088's console session) is denied on the OAuth2 issuance surface by design, so
+`/authorize` sees no identity either way. The session lives
 client-side (the kit store's cookie), so the SSR page — which every RP (kit or
 not) is redirected to — owns the decision. The kit ladder, evaluated after the
 SSR app's router guard `await store.resolve()` settles the session:
@@ -3009,7 +3221,8 @@ defend against is structurally absent: an attacker who starts a federated
 login for their own account has the cookie in THEIR browser, and a crafted
 `/authorize?...&provider=` URL handed to someone else completes nothing. The
 `SameSite=Lax` attribute is what keeps it off cross-site requests, which
-matters because the CORS default reflects every origin with credentials.
+mattered doubly while the CORS default answered every reflected origin with
+credentials (narrowed to publicUrl's own origin by plan 088).
 
 Verified against both cohort products (2026-08-19): Keycloak keeps the pending
 login in an auth session identified by `AUTH_SESSION_ID` and its
@@ -3025,17 +3238,26 @@ bearer.
 
 **The completion additionally requires the request's `Origin` to be
 publicUrl's own**, and that is load-bearing rather than belt-and-braces. This
-is authup's first cookie-authenticated endpoint, and the CORS default reflects
-every origin WITH credentials on the stated premise that none exists.
-`SameSite` does not save it: the attribute is scoped to the registrable
-domain, not the origin, so a sibling subdomain (`app.example.com` against an
-authup on `auth.example.com`) is SAME-site, its `fetch(…, { credentials:
-'include' })` carries the cookie, and the reflected origin would let it read
-the token pair. `Strict` would not help either, for the same reason. A browser
-sends `Origin` on every POST, so comparing it is what closes that; a request
-without the header is not a browser and carries no cookie of ours. A second
-cookie-authenticated endpoint must repeat the check, or the CORS default has
-to change.
+was authup's first cookie-authenticated endpoint, and the CORS default
+reflected every origin WITH credentials on the stated premise that none
+existed. `SameSite` does not save it: the attribute is scoped to the
+registrable domain, not the origin, so a sibling subdomain
+(`app.example.com` against an authup on `auth.example.com`) is SAME-site, its
+`fetch(…, { credentials: 'include' })` carries the cookie, and the reflected
+origin would let it read the token pair. `Strict` would not help either, for
+the same reason. A browser sends `Origin` on every POST, so comparing it is
+what closes that; a request without the header is not a browser and carries no
+cookie of ours.
+
+That premise is now gone: plan 088 made every `ForceLoggedIn` route reachable
+with the console session cookie, and in the same change `cors.ts` narrowed
+`Allow-Credentials` to publicUrl's own origin (`Allow-Origin` keeps
+reflecting). **The per-endpoint check stays mandatory regardless**, and a
+third cookie-authenticated surface must repeat it: CORS governs what a
+browser lets a foreign page READ, not what the server ACTS on, so a
+credentialed request the browser will never show the reply to still arrives
+and still carries the cookie. `isSameOriginRequest` is the shared predicate
+for exactly this; see *Account Console → Console session credential*.
 
 **The state itself is bound to the browser too.** `authorize-out` mints a
 nonce, sets it as the same cookie and stores it on the state blob; the

@@ -25,7 +25,7 @@ import { REALM_MASTER_NAME } from '@authup/core-kit';
 import { Client } from '@authup/core-http-kit';
 import { StoreAuthOrigin, StoreAuthStatus } from './constants';
 import { StoreDispatcherEventName } from './dispatcher';
-import type { StoreCreateContext, StoreLoginContext } from './types';
+import type { StoreCreateContext, StoreLoginContext, StoreLogoutOptions } from './types';
 
 type InputFn = (...args: any[]) => Promise<any>;
 type OutputFn<F extends InputFn> = (...args: Parameters<F>) => Promise<Awaited<ReturnType<F>>>;
@@ -277,6 +277,18 @@ export function createStore(context: StoreCreateContext) {
             return StoreAuthStatus.AUTHENTICATING;
         }
 
+        if (context.cookieSession) {
+            // There is no token to derive presence from — the credential is an
+            // opaque `HttpOnly` cookie this code cannot read, so the session is
+            // exactly what the last resolve() brought back. RESTORING is
+            // therefore unreachable, which is load-bearing: a consumer that
+            // treats a settled RESTORING as a failed resolve (the account
+            // console's router guard does) would sign every cookie session out.
+            return realm.value && user.value ?
+                StoreAuthStatus.AUTHENTICATED :
+                StoreAuthStatus.UNAUTHENTICATED;
+        }
+
         if (!accessToken.value) {
             // A surviving refresh token is session presence too: the
             // access-token cookie expires via maxAge while the refresh-token
@@ -430,17 +442,34 @@ export function createStore(context: StoreCreateContext) {
         };
     };
 
-    type SessionCommitContext = {
+    type SessionCommitContextBase = {
         // tokenGeneration captured when staging started
         generation: number,
-        // the token introspection/userinfo ran against
-        token: string,
         // tokens to apply — absent for a revalidation of the current token
         grant?: OAuth2TokenGrantResponse,
         introspection: OAuth2TokenIntrospectionResponse,
         // login/exchange stamp explicitly; a restore stamps only when unset
         origin?: StoreAuthOrigin.LOGIN | StoreAuthOrigin.EXCHANGE,
     };
+
+    /**
+     * `tokenless` is an EXPLICIT discriminator, not a derived one. Cookie mode
+     * commits a session that has no token at all, and the guards below ask
+     * "is this still the current token" — left to `ctx.token ===
+     * accessToken.value` that comparison would be decided by an
+     * `undefined === null` accident and answer false forever, permanently
+     * skipping the `resolutionStale` clear.
+     */
+    type SessionCommitContext = SessionCommitContextBase & (
+        {
+            tokenless?: false,
+            // the token introspection ran against
+            token: string,
+        } | {
+            tokenless: true,
+            token?: undefined,
+        }
+    );
 
     // The single synchronous write path for a staged session. The write order
     // is load-bearing (expire date before access token — the cookie listener
@@ -457,10 +486,18 @@ export function createStore(context: StoreCreateContext) {
             applyTokenGrantResponse(ctx.grant);
         }
 
+        // A tokenless commit is always current: nothing can rotate a token
+        // that does not exist.
+        const tokenIsCurrent = ctx.tokenless ?
+            true :
+            ctx.token === accessToken.value;
+
         // A background hook refresh may have rotated the token while a
         // revalidation's introspection was in flight — never re-arm the
         // expire date (and thus the refresh timer) from a superseded token.
-        if (ctx.introspection.exp && ctx.token === accessToken.value) {
+        // Cookie mode never arms it at all: an expire date would start a
+        // refresh timer with no refresh token behind it.
+        if (!ctx.tokenless && ctx.introspection.exp && tokenIsCurrent) {
             setAccessTokenExpireDate(new Date(ctx.introspection.exp * 1000));
         }
 
@@ -513,7 +550,7 @@ export function createStore(context: StoreCreateContext) {
         // A background hook refresh that rotated the token mid-staging set the
         // flag for the NEW token — clearing it for a superseded commit would
         // skip the promised awaited revalidation on the next resolve().
-        if (ctx.token === accessToken.value) {
+        if (tokenIsCurrent) {
             resolutionStale.value = false;
         }
 
@@ -636,9 +673,56 @@ export function createStore(context: StoreCreateContext) {
         });
     };
 
+    /**
+     * Cookie mode's counterpart to `revalidate()`. The session context comes
+     * from `GET /sessions/@me/introspect`, which answers the same projection the
+     * introspection endpoint builds for a bearer — so `commitSession` needs no
+     * shape of its own.
+     *
+     * There is nothing to renew here: the credential either still names a live
+     * session or it does not, and a failure propagates to the caller exactly
+     * like a failed introspection does.
+     */
+    const revalidateCookieSession = async () : Promise<void> => {
+        const generation = tokenGeneration.value;
+
+        const introspection = await client.account.getSession();
+
+        if (!introspection.active) {
+            // The credential is gone, or its session ended server-side. Drop
+            // whatever this instance still holds so the app renders signed out
+            // rather than a stale identity.
+            if (user.value || realm.value) {
+                await cleanup();
+            }
+
+            return;
+        }
+
+        commitSession({
+            generation,
+            tokenless: true,
+            introspection,
+        });
+    };
+
     // todo: rename to reload() ?
     const resolveInternal = async () : Promise<void> => {
         context.dispatcher.emit(StoreDispatcherEventName.RESOLVING);
+
+        if (context.cookieSession) {
+            if (!validated.value || resolutionStale.value) {
+                await revalidateCookieSession();
+            }
+
+            if (user.value && !lastAuthOrigin.value) {
+                lastAuthOrigin.value = StoreAuthOrigin.RESTORE;
+            }
+
+            context.dispatcher.emit(StoreDispatcherEventName.RESOLVED);
+
+            return;
+        }
 
         if (
             !accessToken.value &&
@@ -791,8 +875,36 @@ export function createStore(context: StoreCreateContext) {
         }
     };
 
-    const logout = async () => {
+    /**
+     * `revoke` (default true) decides whether a cookie-mode logout ENDS the
+     * server-side session or merely tears down this instance.
+     *
+     * It exists because the two are no longer the same act. With a bearer the
+     * teardown was always local, so a caller that logged out on a failed
+     * `resolve()` — the account console's router guard does — lost nothing a
+     * reload could not restore. In cookie mode the same call revokes the
+     * `auth_sessions` row, so a transient failure (a 5xx, an aborted request,
+     * a proxy hiccup) would DESTROY a healthy session rather than re-read it.
+     * A failed resolve is not an intent to sign out; pass `revoke: false`
+     * there and keep the default for a real sign-out.
+     */
+    const logout = async (options: StoreLogoutOptions = {}) => {
+        const revoke = options.revoke ?? true;
+
         context.dispatcher.emit(StoreDispatcherEventName.LOGGING_OUT);
+
+        if (context.cookieSession && revoke) {
+            // The credential lives server-side, so the local teardown below
+            // cannot reach it: the session has to be ended over the wire.
+            // Best effort — a failed call must still leave this instance
+            // signed out, and the cookie stops resolving the moment the
+            // server drops the handle.
+            try {
+                await client.account.deleteSession();
+            } catch {
+                // ...
+            }
+        }
 
         await cleanup();
 

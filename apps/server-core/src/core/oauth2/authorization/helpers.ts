@@ -128,6 +128,30 @@ export async function buildOAuth2TokenHash(
     return base64URLEncode(halfHash);
 }
 
+/**
+ * A PKCE pair for a server-side authorization request (plan 088: the console
+ * login kick mints one, keeps the verifier in the pending login and sends the
+ * challenge to `/authorize`).
+ *
+ * Snake_case because these are wire parameters, not domain properties, and it
+ * mirrors the kit's browser-side `createPKCE()` so the two paths read alike.
+ */
+export type OAuth2PKCE = {
+    code_verifier: string,
+    code_challenge: string,
+    code_challenge_method: 'S256',
+};
+
+export async function createOAuth2PKCE() : Promise<OAuth2PKCE> {
+    const codeVerifier = generateOAuth2CodeVerifier();
+
+    return {
+        code_verifier: codeVerifier,
+        code_challenge: await buildOAuth2CodeChallenge(codeVerifier),
+        code_challenge_method: 'S256',
+    };
+}
+
 export async function buildOAuth2CodeChallenge(codeVerifier: string) {
     const encoder = new TextEncoder();
     const data = encoder.encode(codeVerifier);

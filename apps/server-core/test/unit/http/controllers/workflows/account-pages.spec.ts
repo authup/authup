@@ -81,7 +81,16 @@ describe('src/http/controllers/workflows/account (SPA shell)', () => {
         // ... and the injected config itself carries EXACTLY the documented
         // operator-level fields — an actor-scoped addition fails here.
         const config = extractAccountConfig(body);
-        expect(Object.keys(config).sort()).toEqual(['apiUrl', 'basePath', 'features']);
+        // `cookieSession` is among them as a CAPABILITY assertion — this
+        // server implements the cookie-mode routes — not as per-user state:
+        // it is the same constant for every request, and the console pairs it
+        // with its own same-origin check before acting on it.
+        expect(Object.keys(config).sort()).toEqual([
+            'apiUrl',
+            'basePath',
+            'cookieSession',
+            'features',
+        ]);
         expect(Object.keys(config.features).sort()).toEqual([
             'accountConsole',
             'emailVerification',

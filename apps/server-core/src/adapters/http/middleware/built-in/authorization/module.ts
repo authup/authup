@@ -7,12 +7,14 @@
 
 import type { IPermissionEvaluator } from '@authup/access';
 import { PermissionEvaluator } from '@authup/access';
-import type { Client, User } from '@authup/core-kit';
+import type { Client, Session, User } from '@authup/core-kit';
 import {
     IdentityType,
     ScopeName,
 } from '@authup/core-kit';
 import { AuthHeaderError } from '@authup/errors';
+import type { Logger } from '@authup/server-kit';
+import { useRequestCookie } from '@routup/basic/cookie';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import {
     JWTError,
@@ -27,9 +29,13 @@ import {
     type BearerAuthorizationHeader,
     parseAuthorizationHeader,
 } from 'hapic';
+import { setSessionCookie } from '../../../cookie/index.ts';
 import {
     ClientAuthenticator,
     PolicyEngine,
+    SESSION_COOKIE,
+    SESSION_REFRESH_THROTTLE,
+    SYSTEM_CLIENT_SCOPE_NAMES,
     UserAuthenticator,
     assertClientCertificateEvidenceValidForBinding,
 } from '../../../../../core/index.ts';
@@ -38,11 +44,13 @@ import type {
     IIdentityResolver,
     IOAuth2TokenVerifier,
     ISessionManager,
+    ISessionRepository,
 } from '../../../../../core/index.ts';
 import {
     RequestIdentity,
     RequestPermissionEvaluator,
     extractClientCertificateEvidence,
+    isSameOriginRequest,
     setRequestIdentity,
     setRequestMfaLoginTicket,
     setRequestPermissionEvaluator,
@@ -50,6 +58,7 @@ import {
     setRequestSessionId,
     setRequestToken,
 } from '../../../request/index.ts';
+import { isOAuth2IssuancePath } from './issuance.ts';
 import type { HTTPAuthorizationMiddlewareContext, HTTPAuthorizationMiddlewareOptions } from './types.ts';
 
 const runSymbol = Symbol('RAuthorizationMiddlewareRun');
@@ -69,6 +78,10 @@ export class AuthorizationMiddleware {
 
     protected sessionManager : ISessionManager;
 
+    protected sessionRepository : ISessionRepository;
+
+    protected logger? : Logger;
+
     // --------------------------------------
 
     protected clientAuthenticator : ICredentialsAuthenticator<Client>;
@@ -82,6 +95,8 @@ export class AuthorizationMiddleware {
 
         this.identityResolver = ctx.identityResolver;
         this.sessionManager = ctx.sessionManager;
+        this.sessionRepository = ctx.sessionRepository;
+        this.logger = ctx.logger;
 
         this.clientAuthenticator = new ClientAuthenticator(ctx.identityResolver);
         this.userAuthenticator = new UserAuthenticator(ctx.identityResolver);
@@ -126,6 +141,10 @@ export class AuthorizationMiddleware {
 
         const headerValue = event.headers.get('authorization');
         if (!headerValue) {
+            // The bearer/Basic path is untouched, and the header keeps
+            // winning: the cookie is only consulted when the request presents
+            // no credential of its own.
+            await this.runCookieSession(event);
             return;
         }
 
@@ -142,6 +161,133 @@ export class AuthorizationMiddleware {
         }
 
         throw AuthHeaderError.unsupportedType(header.type);
+    }
+
+    /**
+     * The console session cookie (plan 088): an opaque credential naming an
+     * `auth_sessions` row, presented instead of a bearer token by a console
+     * served from the API's own origin.
+     *
+     * It NEVER throws and never rejects a request. Anything missing, stale or
+     * refused simply leaves the request anonymous, which the route's own
+     * `ForceLoggedIn` guard then answers — the same outcome as sending no
+     * credential at all. A cookie is ambient, so a request that merely carries
+     * a bad one is not necessarily a request that meant to use it.
+     */
+    protected async runCookieSession(event: IAppEvent): Promise<void> {
+        try {
+            const { baseURL } = this.options;
+            if (!baseURL) {
+                // The origin gate cannot be evaluated without publicUrl, so
+                // the cookie is not honoured at all.
+                return;
+            }
+
+            const secret = useRequestCookie(event, SESSION_COOKIE);
+            if (typeof secret !== 'string' || secret.length === 0) {
+                return;
+            }
+
+            // Finding 2 of plan 088, and an invariant rather than a detail:
+            // an ambient cookie must never reach the OAuth2 issuance surface,
+            // or one script execution on this origin turns it back into a
+            // portable token pair.
+            if (isOAuth2IssuancePath(event.path)) {
+                return;
+            }
+
+            if (!isSameOriginRequest(event, baseURL, { logger: this.logger })) {
+                return;
+            }
+
+            const session = await this.sessionRepository.findOneBySecret(secret);
+            if (!session) {
+                return;
+            }
+
+            // The consoles are user surfaces. A client-subject session would
+            // otherwise authenticate here and then produce a sign-in loop in a
+            // console that can only render a user.
+            if (session.subKind !== IdentityType.USER) {
+                return;
+            }
+
+            try {
+                // Same expiry contract as the bearer path (it also drops the
+                // expired row), minus the rejection.
+                await this.sessionManager.verify(session);
+            } catch {
+                return;
+            }
+
+            const identity = await this.identityResolver.resolve(
+                IdentityType.USER,
+                session.sub,
+            );
+            if (!identity) {
+                return;
+            }
+
+            setRequestIdentity(event, identity);
+            // Named explicitly: createRequestEventContextMiddleware reads it
+            // for audit attribution, so omitting it would regress plan 093's
+            // session attribution to null on every cookie-mode write.
+            setRequestSessionId(event, session.id);
+            // The console's granted scope set is a constant — the cookie
+            // belongs to a console session, and the console client is
+            // provisioned with exactly these (SYSTEM_CLIENT_SCOPE_NAMES).
+            setRequestScopes(event, [...SYSTEM_CLIENT_SCOPE_NAMES]);
+
+            await this.refreshCookieSession(event, session, secret);
+        } catch {
+            // Defense in depth around everything above: an anonymous request
+            // is always a valid outcome here, an error page never is.
+        }
+    }
+
+    /**
+     * Slide the session's expiry, throttled.
+     *
+     * Cookie mode has no refresh grant, so without this an active console user
+     * would be signed out once the session reached its lifetime, mid-task
+     * (plan 088: a credential change must not become a session-policy change
+     * by omission).
+     */
+    protected async refreshCookieSession(
+        event: IAppEvent,
+        session: Session,
+        secret: string,
+    ): Promise<void> {
+        const refreshedAt = session.refreshedAt || session.createdAt;
+        if (refreshedAt) {
+            const threshold = new Date(refreshedAt).getTime() + SESSION_REFRESH_THROTTLE;
+            if (threshold > Date.now()) {
+                return;
+            }
+        }
+
+        // `repository.save` upserts by primary key, so writing the row read at
+        // the top of this request would RESURRECT a session a concurrent
+        // sign-out deleted in between. Re-read first: the sign-out drops both
+        // the row and its cache entry, so a miss here means the session is
+        // gone and there is nothing to slide.
+        const current = await this.sessionManager.findOneById(session.id);
+        if (!current) {
+            return;
+        }
+
+        const refreshed = await this.sessionManager.refresh(current);
+
+        // Re-arm the cookie, or the slide is invisible to the browser. A
+        // cookie's `Max-Age` is fixed by the response that set it, so leaving
+        // it at the value the callback computed would have the browser discard
+        // the credential at login + one lifetime no matter how recently the
+        // session was used — the hard cap the sliding decision rejected, with
+        // the server-side slide happening and never being observable.
+        const ttl = new Date(refreshed.expiresAt).getTime() - Date.now();
+        if (ttl > 0 && this.options.baseURL) {
+            setSessionCookie(event, this.options.baseURL, secret, ttl);
+        }
     }
 
     /**

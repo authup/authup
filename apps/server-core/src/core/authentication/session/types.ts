@@ -39,6 +39,28 @@ export type SessionFindManyOptions = {
 export interface ISessionRepository {
     findOneById(id: string): Promise<Session | null> | null;
 
+    /**
+     * Resolve a session by the opaque credential a console browser presents
+     * (plan 088). The ONLY read that touches the `select: false` `secret`
+     * column, and it does so in the WHERE clause: the returned session carries
+     * no secret, like every other read.
+     *
+     * Never cached: the id-keyed session cache cannot answer it, and a
+     * multi-day credential must resolve against the row rather than against a
+     * blob a replica may never have seen.
+     */
+    findOneBySecret(secret: string): Promise<Session | null>;
+
+    /**
+     * Write or clear the opaque credential on one session row.
+     *
+     * A dedicated write rather than a `save()` of the whole session: `save()`
+     * round-trips every column, so a session read back without its
+     * `select: false` secret would silently clear it, and one read back with
+     * only an id would evict the cached row.
+     */
+    updateSecret(id: string, secret: string | null): Promise<void>;
+
     findMany(query: IQuery, options?: SessionFindManyOptions): Promise<EntityRepositoryFindManyResult<Session>>;
 
     findAllByOwner(owner: SessionOwner): Promise<Session[]>;

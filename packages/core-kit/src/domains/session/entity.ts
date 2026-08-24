@@ -27,6 +27,18 @@ export interface Session {
     subKind: string,
 
     /**
+     * The opaque credential a console browser presents in place of a bearer
+     * token (plan 088). The secret half of the row: `id` is the public
+     * identifier (published as `sid` in every id_token and on every
+     * `/sessions` row), this is what a holder must prove.
+     *
+     * Null on every bearer-mode session. The column is `select: false`, so it
+     * is ABSENT from every ordinary read and present only on the dedicated
+     * lookup. That is why it is optional here rather than always a value.
+     */
+    secret?: string | null,
+
+    /**
      * Last used ip address.
      */
     ipAddress: string,

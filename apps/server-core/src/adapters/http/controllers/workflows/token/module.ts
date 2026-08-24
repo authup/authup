@@ -9,7 +9,6 @@ import type {
     OAuth2TokenGrantResponse,
     OAuth2TokenIntrospectionResponse,
     OAuth2TokenPayload,
-    OAuth2TokenPermission,
 } from '@authup/specs';
 import {
     OAuth2ClientError,
@@ -24,7 +23,7 @@ import {
     PermissionName, 
     ScopeName, 
 } from '@authup/core-kit';
-import { BuiltInPolicyType, PolicyData, buildPermissionKey } from '@authup/access';
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { readRequestBody } from '@routup/basic/body';
 import {
     DContext,
@@ -46,7 +45,7 @@ import type {
     IOAuth2TokenVerifier,
     OAuth2ClientAuthenticator,
 } from '../../../../../core/index.ts';
-import { OAuth2OpenIDClaimsBuilder } from '../../../../../core/index.ts';
+import { resolveIntrospectionSubject } from '../../../../../core/index.ts';
 import type { IHTTPOAuth2Grant } from '../../../adapters/index.ts';
 import {
     HTTPClientCredentialsGrant,
@@ -219,54 +218,37 @@ export class TokenController {
                 active = false;
             }
 
-            const identity = await this.identityResolver.resolve(payload.sub_kind, payload.sub);
-            if (!identity) {
-                // todo: differentiate between client & user
-                throw OAuth2RequestError.identityInvalid();
-            }
-
-            const claimsBuilder = new OAuth2OpenIDClaimsBuilder();
-            const claims = claimsBuilder.fromIdentity(identity);
-
             // An inactive token reports WHO it belonged to and nothing about
             // what they may do (RFC 7662 §2.2 / §4): naming the subject is the
             // point of reading an expired token at all, handing over their
             // authorization set is not. It also skips resolving that set for
-            // a token nobody can use.
+            // a token nobody can use - which is why `active` is passed in
+            // rather than the permissions being dropped afterwards.
+            const subject = await resolveIntrospectionSubject({
+                identityResolver: this.identityResolver,
+                identityPermissionProvider: this.identityPermissionProvider,
+            }, {
+                sub: payload.sub,
+                subKind: payload.sub_kind,
+                clientId: payload.client_id,
+                realmId: payload.realm_id,
+                active,
+            });
+
             if (!active) {
                 return {
                     active,
                     ...payload,
-                    ...claims,
+                    ...subject.claims,
                 };
             }
-
-            // todo: only receive client specific permissions
-            const permissions = await this.identityPermissionProvider.getFor({
-                id: payload.sub,
-                type: payload.sub_kind,
-                clientId: payload.client_id,
-                realmId: payload.realm_id,
-            });
 
             return {
                 active,
                 // todo: permissions property should be removed.
-                permissions: Object.values(
-                    permissions.reduce((acc, binding) => {
-                        const key = buildPermissionKey(binding.permission);
-                        if (!acc[key]) {
-                            acc[key] = {
-                                name: binding.permission.name,
-                                client_id: binding.permission.clientId,
-                                realm_id: binding.permission.realmId,
-                            } as OAuth2TokenPermission;
-                        }
-                        return acc;
-                    }, {} as Record<string, OAuth2TokenPermission>),
-                ),
+                permissions: subject.permissions,
                 ...payload,
-                ...claims,
+                ...subject.claims,
             };
         } catch (e) {
             // RFC 7662 §2.2: a token that "is not active, does not exist on

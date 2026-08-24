@@ -65,6 +65,7 @@ export function install(app: App, options: Options): void {
         cookieGet: options.cookieGet,
         cookieUnset: options.cookieUnset,
         cookiePath: options.cookiePath,
+        cookieSession: options.cookieSession,
     });
 
     installHTTPClientAuthenticationHook(app, {

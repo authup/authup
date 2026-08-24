@@ -10,6 +10,7 @@ import type { ObjectLiteral } from '@authup/kit';
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
 import type { ClientOptionsInput, IClient as IBaseClient } from 'hapic';
 import type {
+    IAccountAPI,
     IClientAPI,
     IClientPermissionAPI,
     IClientRoleAPI,
@@ -51,6 +52,13 @@ export type ClientOptions = ClientOptionsInput;
  * `Client`; any test double satisfying it can substitute.
  */
 export interface IClient extends IBaseClient {
+    /**
+     * The caller's own session, over whichever credential the request carries
+     * (plan 088): `GET /sessions/@me/introspect` for the context a console
+     * hydrates from, `DELETE /sessions/@me` to end it.
+     */
+    readonly account : IAccountAPI;
+
     readonly authorize : IOAuth2AuthorizeAPI;
 
     readonly client : IClientAPI;
