@@ -39,15 +39,18 @@ verifier's `creator`, or foreign tokens will verify as inactive. A
 downstream application introspecting tokens issued to its own client needs
 no grant.
 
-The expired-token report (next section) is unchanged, and now reachable
-only by a caller that proved who it is and may introspect that token. An
-expired token is NOT a credential: the authorization middleware rejects an
-expired bearer before the endpoint runs, so a request whose only token is
-the lapsed one answers `401`.
+The expired-token report (next section) is gated the same way: it is
+reachable only by a caller that proved who it is and may introspect that
+token. An expired token is NOT a credential: the authorization middleware
+rejects an expired bearer before the endpoint runs, so a request whose
+only token is the lapsed one answers `401`.
 
 **Action required** for an integration that called the endpoint anonymously:
 send one of the two credentials. Nothing changes for `@authup/client-web-kit`
-or the server adapters. `POST /token/revoke` stays open as a deliberate
+(it introspects its own token). For the `@authup/server-adapter-*` packages
+the credential replay flow is preserved, but verifying foreign tokens now
+additionally requires the `token_introspect` grant described above.
+`POST /token/revoke` stays open as a deliberate
 authup choice: RFC 7009 asks a public client to identify itself by
 `client_id` and the server to verify token ownership, but a public
 `client_id` proves nothing, and possession of the token already lets its
