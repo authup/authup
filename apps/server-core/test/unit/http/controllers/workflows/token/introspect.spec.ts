@@ -11,7 +11,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { CLIENT_ADMIN_CONSOLE_NAME, REALM_MASTER_NAME } from '@authup/core-kit';
+import { CLIENT_ADMIN_CONSOLE_NAME, PermissionName, REALM_MASTER_NAME } from '@authup/core-kit';
 import { ClientAuthenticationHook, Client as HTTPClient } from '@authup/core-http-kit';
 import { ErrorCode } from '@authup/errors';
 import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants';
@@ -244,6 +244,15 @@ describe('token-introspect authorization', () => {
         });
         confidentialClientId = client.id;
         confidentialClientName = client.name;
+
+        // the shared confidential client plays the authorized resource
+        // server: introspecting FOREIGN tokens takes the TOKEN_INTROSPECT
+        // grant (its default `own` reach covers same-realm tokens)
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.TOKEN_INTROSPECT);
+        await suite.client.clientPermission.create({
+            clientId: client.id,
+            permissionId: permission.id,
+        });
     });
 
     afterAll(async () => {
@@ -378,8 +387,8 @@ describe('token-introspect authorization', () => {
     });
 
     it('should accept a live bearer introspecting another token', async () => {
-        // a resource server introspects a third party's token with its own
-        // bearer (the server adapters' remote mode)
+        // a foreign token takes the TOKEN_INTROSPECT grant (or the
+        // issued-for client); the admin bearer holds it at `any` reach
         const client = new HTTPClient({ baseURL: suite.baseURL });
         const introspection = await client.token.introspect(
             { token: expiredToken },
@@ -394,7 +403,9 @@ describe('token-introspect authorization', () => {
         // the server adapters' remote mode (server-adapter-kit TokenVerifier):
         // the first introspection goes out anonymous, the hook answers the
         // 401 by running its creator and replaying with that bearer, and
-        // `authorizationHeaderInherit` keeps it through hapic's transformer
+        // `authorizationHeaderInherit` keeps it through hapic's transformer.
+        // The client holds TOKEN_INTROSPECT, which a resource server
+        // verifying foreign tokens needs
         const client = new HTTPClient({ baseURL: suite.baseURL });
         const hook = new ClientAuthenticationHook({
             baseURL: suite.baseURL,
@@ -412,6 +423,91 @@ describe('token-introspect authorization', () => {
 
         expect(introspection.active).toBe(true);
         expect(introspection.sub_kind).toEqual('user');
+    });
+
+    it('should report a foreign token as inactive to a caller without the grant', async () => {
+        // authenticated, but neither the subject, nor the issued-for client,
+        // nor granted TOKEN_INTROSPECT: RFC 7662 §2.2's "not allowed to
+        // introspect", answered bare and indistinguishable from a dead token
+        const { data: bystander } = await suite.client.client.create({
+            ...createFakeClient(),
+            active: true,
+            secret: 'bystander-secret-1',
+            secretHashed: false,
+            secretEncrypted: false,
+        });
+
+        const response = await httpRequest(suite, 'POST', '/token/introspect', {
+            form: {
+                token: accessToken,
+                client_id: bystander.id,
+                client_secret: 'bystander-secret-1',
+            },
+        });
+
+        expect(response.status).toEqual(200);
+        expect(await response.json()).toEqual({ active: false });
+    });
+
+    it('should let the issued-for client introspect without the grant', async () => {
+        const { data: rp } = await suite.client.client.create({
+            ...createFakeClient(),
+            active: true,
+            secret: 'issued-for-secret-1',
+            secretHashed: false,
+            secretEncrypted: false,
+        });
+
+        // a token ISSUED FOR that client (password grant with client auth)
+        const grant = await suite.client.token.createWithPassword({
+            username: 'admin',
+            password: 'start123',
+            client_id: rp.id,
+            client_secret: 'issued-for-secret-1',
+        });
+
+        const response = await httpRequest(suite, 'POST', '/token/introspect', {
+            form: {
+                token: grant.access_token,
+                client_id: rp.id,
+                client_secret: 'issued-for-secret-1',
+            },
+        });
+
+        expect(response.status).toEqual(200);
+        const body = await response.json();
+        expect(body.active).toBe(true);
+        expect(body.client_id).toEqual(rp.id);
+        expect(body.sub_kind).toEqual('user');
+    });
+
+    it('should bound the grant by its realm reach', async () => {
+        // an `own`-reach grant in another realm does not cover a master token
+        const { data: realm } = await suite.client.realm.create({ name: 'introspect-reach' });
+        const { data: foreign } = await suite.client.client.create({
+            ...createFakeClient(),
+            active: true,
+            realmId: realm.id,
+            secret: 'foreign-secret-1',
+            secretHashed: false,
+            secretEncrypted: false,
+        });
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.TOKEN_INTROSPECT);
+        await suite.client.clientPermission.create({
+            clientId: foreign.id,
+            permissionId: permission.id,
+        });
+
+        const response = await httpRequest(suite, 'POST', '/token/introspect', {
+            form: {
+                token: accessToken,
+                client_id: foreign.id,
+                client_secret: 'foreign-secret-1',
+            },
+        });
+
+        expect(response.status).toEqual(200);
+        expect(await response.json()).toEqual({ active: false });
     });
 
     it('should still report an unreadable token bare once authorized', async () => {

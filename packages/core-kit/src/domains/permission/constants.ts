@@ -91,6 +91,8 @@ export enum PermissionName {
     SESSION_READ = 'session_read',
     SESSION_DELETE = 'session_delete',
 
+    TOKEN_INTROSPECT = 'token_introspect',
+
     USER_CREATE = 'user_create',
     USER_DELETE = 'user_delete',
     USER_UPDATE = 'user_update',

@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse, OAuth2TokenIntrospectionResponse, OAuth2TokenPermission } from '@authup/specs';
+import type {
+    OAuth2TokenGrantResponse,
+    OAuth2TokenIntrospectionResponse,
+    OAuth2TokenPayload,
+    OAuth2TokenPermission,
+} from '@authup/specs';
 import {
     OAuth2ClientError,
     OAuth2GrantTypeError,
@@ -13,7 +18,13 @@ import {
     OAuth2TokenGrant,
     isJWTError,
 } from '@authup/specs';
-import { ClientAuthMethod } from '@authup/core-kit';
+import { 
+    ClientAuthMethod, 
+    IdentityType, 
+    PermissionName, 
+    ScopeName, 
+} from '@authup/core-kit';
+import { BuiltInPolicyType, PolicyData, buildPermissionKey } from '@authup/access';
 import { readRequestBody } from '@routup/basic/body';
 import {
     DContext,
@@ -23,7 +34,7 @@ import {
     DTags,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
-import { buildPermissionKey } from '@authup/access';
+import type { Logger } from '@authup/server-kit';
 import { toOAuth2Error } from '../../../../../core/oauth2/helpers/index.ts';
 import type { TokenControllerContext } from './types.ts';
 import type {
@@ -48,7 +59,13 @@ import {
     readRealmHint,
 } from '../../../adapters/index.ts';
 import type { CertificateSource } from '../../../request/index.ts';
-import { useRequestIdentity, useRequestIdentityOrFail } from '../../../request/index.ts';
+import {
+    buildActorContext,
+    setRequestIdentity,
+    setRequestScopes,
+    useRequestIdentity,
+    useRequestIdentityOrFail,
+} from '../../../request/index.ts';
 import { extractTokenFromRequest } from './utils/index.ts';
 
 @DTags('auth')
@@ -72,6 +89,8 @@ export class TokenController {
 
     protected certificateSource : CertificateSource;
 
+    protected logger? : Logger;
+
     protected tokenGrants : Record<`${OAuth2TokenGrant}`, IHTTPOAuth2Grant>;
 
     // -------------------------------------------
@@ -86,6 +105,7 @@ export class TokenController {
         this.metrics = ctx.metrics;
         this.clientAuthenticator = ctx.oauth2ClientAuthenticator;
         this.certificateSource = ctx.certificateSource;
+        this.logger = ctx.logger;
 
         this.tokenGrants = {
             [OAuth2TokenGrant.AUTHORIZATION_CODE]: new HTTPOAuth2AuthorizeGrant({
@@ -170,6 +190,14 @@ export class TokenController {
                 ignoreExpiry: true,
                 skipActiveCheck: true,
             });
+
+            if (!await this.isIntrospectionAllowed(event, payload)) {
+                // RFC 7662 §2.2's third clause: a caller "not allowed to
+                // introspect" the token is answered like a dead one,
+                // indistinguishable and bare.
+                return { active: false };
+            }
+
             if (!payload.sub || !payload.sub_kind) {
                 // Not a report about a token this server ever issued: authup
                 // mints every one with a subject, so a verifying token without
@@ -299,6 +327,65 @@ export class TokenController {
         );
         if (client.authMethod === ClientAuthMethod.NONE) {
             throw OAuth2ClientError.invalid();
+        }
+
+        // the authorization layer below reads the request identity, so the
+        // credential-authenticated client becomes one, exactly as the
+        // middleware's `clientAuthBasic` branch would have set it.
+        setRequestScopes(event, [ScopeName.GLOBAL]);
+        setRequestIdentity(event, {
+            type: IdentityType.CLIENT,
+            data: client,
+        });
+    }
+
+    /**
+     * WHOSE tokens the authenticated caller may introspect (#3489, second
+     * layer): its own subject's, those issued for its own client, or any its
+     * TOKEN_INTROSPECT grant reaches (the grant's realm scope is matched
+     * against the token's realm claim, so an `admin` reaches everything and
+     * a `realm_admin` its own realm). A resource server verifying foreign
+     * tokens through the server adapters' remote mode needs that grant. The
+     * deny is reported per RFC 7662 §2.2 as a bare `active: false`, which
+     * gives the caller nothing to diagnose with, hence the log line.
+     */
+    protected async isIntrospectionAllowed(
+        event: IAppEvent,
+        payload: OAuth2TokenPayload,
+    ) : Promise<boolean> {
+        const identity = useRequestIdentity(event);
+        if (!identity) {
+            return false;
+        }
+
+        if (
+            payload.sub &&
+            identity.type === payload.sub_kind &&
+            identity.id === payload.sub
+        ) {
+            return true;
+        }
+
+        if (
+            identity.type === IdentityType.CLIENT &&
+            payload.client_id &&
+            identity.id === payload.client_id
+        ) {
+            return true;
+        }
+
+        const actor = buildActorContext(event);
+        try {
+            await actor.permissionEvaluator.evaluate({
+                name: PermissionName.TOKEN_INTROSPECT,
+                data: new PolicyData({ ...(payload.realm_id ? { [BuiltInPolicyType.REALM_MATCH]: payload.realm_id } : {}) }),
+            });
+            return true;
+        } catch {
+            this.logger?.info(
+                `introspection denied: ${identity.type} ${identity.id} may not introspect the presented token`,
+            );
+            return false;
         }
     }
 

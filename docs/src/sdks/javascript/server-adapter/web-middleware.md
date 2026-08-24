@@ -30,6 +30,13 @@ const tokenVerifier = new TokenVerifier({
 });
 ```
 
+::: warning Foreign-token introspection needs a grant
+Remote verification introspects tokens that were issued to other clients.
+The identity behind `creator` must hold the `token_introspect` permission,
+or every foreign token is reported as inactive. Tokens issued to the
+creator's own client need no grant.
+:::
+
 Contract:
 
 | Header / fallback state              | Result                                         |

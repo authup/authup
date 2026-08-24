@@ -81,6 +81,13 @@ router.use(createMiddleware({
 router.listen(3000);
 ```
 
+::: warning Foreign-token introspection needs a grant
+Remote verification introspects tokens that were issued to other clients.
+The identity behind `creator` must hold the `token_introspect` permission,
+or every foreign token is reported as inactive. Tokens issued to the
+creator's own client need no grant.
+:::
+
 ## verifyRequest primitive
 
 If you need direct control over the response — for example to short-circuit unauthenticated requests with a custom
