@@ -9,9 +9,6 @@ import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import type { Logger } from '@authup/server-kit';
 import type {
     IConsoleLoginStore,
-    IIdentityPermissionProvider,
-    IIdentityResolver,
-    IOAuth2ClientRepository,
     IOAuth2TokenRevoker,
     IOAuth2TokenVerifier,
     ISessionManager,
@@ -43,12 +40,5 @@ export type AccountControllerContext = {
      */
     tokenVerifier: IOAuth2TokenVerifier,
     tokenRevoker: IOAuth2TokenRevoker,
-    identityResolver: IIdentityResolver,
-    identityPermissionProvider: IIdentityPermissionProvider,
-    /**
-     * Resolves the console's own client row, so the permission projection can
-     * be scoped by its UUID rather than its name (see `getSession`).
-     */
-    clientRepository: IOAuth2ClientRepository,
     logger?: Logger,
 };

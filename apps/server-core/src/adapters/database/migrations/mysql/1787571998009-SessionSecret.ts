@@ -9,7 +9,7 @@
  * Plan 088 Stage 1: the console session credential.
  *
  * `auth_sessions.secret` is the opaque value a console browser presents in the
- * `authup_console_session` cookie. It is NOT the session id: that id is
+ * `authup_session` cookie. It is NOT the session id: that id is
  * published as the `sid` claim in every id_token and in every `/sessions` row,
  * so it is a public identifier and cannot double as a credential. This column
  * is the secret half.
@@ -21,8 +21,8 @@
  */
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class ConsoleSessionSecret1787571998009 implements MigrationInterface {
-    name = 'ConsoleSessionSecret1787571998009';
+export class SessionSecret1787571998009 implements MigrationInterface {
+    name = 'SessionSecret1787571998009';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`

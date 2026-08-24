@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { CLIENT_ACCOUNT_CONSOLE_NAME, IdentityType } from '@authup/core-kit';
+import { CLIENT_ACCOUNT_CONSOLE_NAME } from '@authup/core-kit';
 import type { Session } from '@authup/core-kit';
 import type { IClient } from '@authup/core-http-kit';
 import { BadRequestError, InternalError } from '@authup/errors';
 import { createNanoID, getURLBasePath } from '@authup/kit';
 import type { Logger } from '@authup/server-kit';
-import type { OAuth2TokenIntrospectionResponse, OAuth2TokenPayload } from '@authup/specs';
+import type { OAuth2TokenPayload } from '@authup/specs';
 import {
     OAuth2ErrorCode,
     OAuth2SubKind,
@@ -19,12 +19,11 @@ import {
     serializeOAuth2Scope,
 } from '@authup/specs';
 import { setResponseCookie, unsetResponseCookie, useRequestCookie } from '@routup/basic/cookie';
-import { setConsoleSessionCookie, unsetConsoleSessionCookie } from '../../../cookie/index.ts';
+import { setSessionCookie } from '../../../cookie/index.ts';
 import { useRequestQuery } from '@routup/basic/query';
 import {
     DContext,
     DController,
-    DDelete,
     DGet,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
@@ -33,16 +32,11 @@ import {
     CONSOLE_LOGIN_COOKIE,
     CONSOLE_LOGIN_TTL,
     SYSTEM_CLIENT_SCOPE_NAMES,
-    createConsoleSessionSecret,
     createOAuth2PKCE,
-    deriveAmrAcr,
-    resolveIntrospectionSubject,
+    createSessionSecret,
 } from '../../../../../core/index.ts';
 import type {
     IConsoleLoginStore,
-    IIdentityPermissionProvider,
-    IIdentityResolver,
-    IOAuth2ClientRepository,
     IOAuth2TokenRevoker,
     IOAuth2TokenVerifier,
     ISessionManager,
@@ -51,8 +45,6 @@ import type {
 import { UI_HTTP_CLIENT_FACTORY_STORE_KEY } from '../../../middleware/index.ts';
 import {
     isSameOriginRequest,
-    useRequestIdentity,
-    useRequestSessionId,
 } from '../../../request/index.ts';
 import { serveAccountConsolePage } from '../../../ui/index.ts';
 import type { AccountControllerContext, AccountControllerOptions } from './types.ts';
@@ -98,12 +90,6 @@ export class AccountController {
 
     protected tokenRevoker: IOAuth2TokenRevoker;
 
-    protected identityResolver: IIdentityResolver;
-
-    protected identityPermissionProvider: IIdentityPermissionProvider;
-
-    protected clientRepository: IOAuth2ClientRepository;
-
     protected logger?: Logger;
 
     constructor(ctx: AccountControllerContext) {
@@ -113,9 +99,6 @@ export class AccountController {
         this.sessionManager = ctx.sessionManager;
         this.tokenVerifier = ctx.tokenVerifier;
         this.tokenRevoker = ctx.tokenRevoker;
-        this.identityResolver = ctx.identityResolver;
-        this.identityPermissionProvider = ctx.identityPermissionProvider;
-        this.clientRepository = ctx.clientRepository;
         this.logger = ctx.logger;
     }
 
@@ -289,116 +272,15 @@ export class AccountController {
             return this.refuse(event, OAuth2ErrorCode.INVALID_GRANT);
         }
 
-        const secret = createConsoleSessionSecret();
+        const secret = createSessionSecret();
         await this.sessionRepository.updateSecret(session.id, secret);
 
-        this.setSessionCookie(event, secret, ttl);
+        setSessionCookie(event, this.options.baseURL, secret, ttl);
 
         event.response.headers.set('cache-control', 'no-store');
 
         return sendRedirect(event, this.buildConsoleURL());
     }
-
-    /**
-     * What the console hydrates its session from: the same projection
-     * `POST /token/introspect` answers with, minus everything token-shaped
-     * (there is no token here to describe).
-     */
-    @DGet('/session', [])
-    async getSession(@DContext() event: IAppEvent): Promise<OAuth2TokenIntrospectionResponse> {
-        this.applySessionHeaders(event);
-
-        const identity = useRequestIdentity(event);
-        const sessionId = useRequestSessionId(event);
-
-        if (
-            !identity ||
-            identity.type !== IdentityType.USER ||
-            !sessionId
-        ) {
-            return { active: false };
-        }
-
-        const session = await this.sessionManager.findOneById(sessionId);
-        if (!session) {
-            return { active: false };
-        }
-
-        const consoleClient = await this.clientRepository.findOneByIdOrName(
-            CLIENT_ACCOUNT_CONSOLE_NAME,
-            identity.realmId,
-        );
-
-        const subject = await resolveIntrospectionSubject({
-            identityResolver: this.identityResolver,
-            identityPermissionProvider: this.identityPermissionProvider,
-        }, {
-            sub: identity.id,
-            subKind: identity.type,
-            // The console's own client, NEVER `RequestIdentity.clientId`,
-            // which for a user identity is the user row's unrelated `clientId`
-            // column and would silently mis-scope the permission projection.
-            //
-            // Its UUID, never its NAME: `reduceBindingsByIdentityClient`
-            // compares against `permission.clientId`, which holds a uuid or
-            // null, so a name matches NOTHING and the projection collapses to
-            // an empty array. The bearer path passes the token's `client_id`,
-            // a uuid, and this is the cookie-mode equivalent. The fallback
-            // keeps the name only so an unresolvable client fails CLOSED
-            // (empty) rather than widening to the unfiltered set; the row is
-            // auto-provisioned per realm, so it should never be reached.
-            clientId: consoleClient?.id ?? CLIENT_ACCOUNT_CONSOLE_NAME,
-            realmId: identity.realmId,
-            active: true,
-        });
-
-        return {
-            active: true,
-            // todo: permissions property should be removed.
-            permissions: subject.permissions,
-            sub: identity.id,
-            sub_kind: OAuth2SubKind.USER,
-            session_id: session.id,
-            realm_id: identity.realmId,
-            realm_name: identity.realmName,
-            scope: serializeOAuth2Scope(SYSTEM_CLIENT_SCOPE_NAMES),
-            ...deriveAmrAcr(session),
-            ...subject.claims,
-        };
-    }
-
-    /**
-     * Sign out: drop the credential, end the session, clear the cookie.
-     */
-    @DDelete('/session', [])
-    async deleteSession(@DContext() event: IAppEvent): Promise<null> {
-        this.applySessionHeaders(event);
-
-        // A state-changing request on an ambient credential: it must be
-        // demonstrably this origin's, or any page anywhere could sign the
-        // visitor out.
-        if (!isSameOriginRequest(event, this.options.baseURL, { logger: this.logger })) {
-            throw new BadRequestError('The request did not originate from this origin.');
-        }
-
-        const sessionId = useRequestSessionId(event);
-        if (sessionId) {
-            // Dropped first so the credential stops resolving even if the
-            // revoke below fails.
-            await this.sessionRepository.updateSecret(sessionId, null);
-            await this.sessionManager.revoke(sessionId);
-        }
-
-        // Cleared unconditionally: a cookie naming a session that is already
-        // gone would otherwise keep being presented on every request.
-        this.unsetSessionCookie(event);
-
-        event.response.status = 200;
-
-        return null;
-    }
-
-    // ---------------------------------------------------------
 
     @DGet('', [])
     async serve(@DContext() event: IAppEvent): Promise<string> {
@@ -472,19 +354,6 @@ export class AccountController {
 
     // ---------------------------------------------------------
 
-    protected applySessionHeaders(event: IAppEvent) : void {
-        // A per-user document whose only discriminator is an opaque cookie,
-        // exactly what an intermediary would otherwise cross-serve. The SPA
-        // shell already sets no-store; these JSON routes do not inherit it.
-        event.response.headers.set('cache-control', 'no-store');
-        // APPEND, never set: @routup/cors appends `vary: origin` earlier in
-        // the chain precisely because the reflected `access-control-allow-origin`
-        // (and now the origin-dependent `allow-credentials`) make the response
-        // origin-varying. Replacing it would advertise those under a `Vary`
-        // that no longer names Origin. `no-store` masks it today; the correct
-        // header costs one word.
-        event.response.headers.append('vary', 'cookie');
-    }
 
     protected trimmedBaseURL() : string {
         return this.options.baseURL.replace(/\/+$/, '');
@@ -539,23 +408,5 @@ export class AccountController {
 
     protected unsetLoginCookie(event: IAppEvent) : void {
         unsetResponseCookie(event, CONSOLE_LOGIN_COOKIE, { path: this.buildLoginCookiePath() });
-    }
-
-    /**
-     * The session credential's own path: publicUrl's base path, NOT a
-     * hard-coded `/`. Under a sub-path deployment a `/` cookie is handed to
-     * every other app co-hosted on that host, which is the shared-cookie
-     * footgun architecture.md records as unsupported.
-     */
-    protected buildSessionCookiePath() : string {
-        return this.basePath() || '/';
-    }
-
-    protected setSessionCookie(event: IAppEvent, value: string, ttl: number) : void {
-        setConsoleSessionCookie(event, this.options.baseURL, value, ttl);
-    }
-
-    protected unsetSessionCookie(event: IAppEvent) : void {
-        unsetConsoleSessionCookie(event, this.options.baseURL);
     }
 }

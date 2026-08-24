@@ -1609,7 +1609,7 @@ rather than trusted until `exp`.
   `SameSite=Lax` login cookie (Lax, not Strict: the return leg may traverse
   an external IdP chain) and 302s to `/authorize`; `GET /account/callback`
   redeems the code and hands back the session cookie;
-  `GET`/`DELETE /account/session` are what the console hydrates from and
+  `GET`/`DELETE /sessions/@me` are what the console hydrates from and
   signs out with. The callback **requires `Sec-Fetch-Site: same-origin`**.
   Without it an attacker who plants their own login cookie in the victim's
   browser from a sibling subdomain and navigates them here logs the victim
@@ -1624,7 +1624,7 @@ rather than trusted until `exp`.
   `getURLBasePath(publicUrl) || '/'`, never a hard-coded `/`, which under a
   sub-path deployment would hand the credential to every other app on that
   host.
-- **`GET /account/session` is the same projection `POST /token/introspect`
+- **`GET /sessions/@me/introspect` is the same projection `POST /token/introspect`
   answers with**, minus everything token-shaped, so the kit's `commitSession`
   needs no new shape. Both share one owner, `resolveIntrospectionSubject`
   (`core/oauth2/introspection/`), so the two cannot drift. Its `clientId` is
@@ -1637,7 +1637,7 @@ rather than trusted until `exp`.
 - **Sign-out replaces the `id_token_hint` round-trip.** The browser-side
   flow captured `idToken`/`realmId` and bounced through `/logout`; in cookie
   mode there is no id_token in JavaScript to hint with, and none is needed.
-  `DELETE /account/session` drops the handle and revokes the session
+  `DELETE /sessions/@me` drops the handle and revokes the session
   server-side, which is what the round-trip was asking `/logout` to do.
   `store.logout()` issues it before its local `cleanup()`. The kit
   deliberately does NOT clear the path-`/` token cookies in this mode: those
@@ -1723,11 +1723,11 @@ apps/server-core/src/core/entities/
 
 core/oauth2/
   introspection/module.ts           — resolveIntrospectionSubject: the ONE subject projection shared by
-                                      POST /token/introspect and GET /account/session
+                                      POST /token/introspect and GET /sessions/@me/introspect
   console-login/types.ts            — IConsoleLoginStore + ConsoleLoginPending (state, PKCE verifier,
                                       redirect_uri, realm). The adapter is
                                       app/modules/oauth2/repositories/console-login/ (a cache blob)
-  console-login/module.ts           — createConsoleSessionSecret (the opaque auth_sessions.secret)
+  console-login/module.ts           — createSessionSecret (the opaque auth_sessions.secret)
   console-login/constants.ts        — the two cookie names, the pending-login TTL, the secret length and
                                       the session-refresh throttle
 
@@ -1761,7 +1761,7 @@ adapters/http/controllers/workflows/
   status/module.ts                  — StatusController (GET / → version + feature flags)
   account/module.ts                 — AccountController: serves the account console SPA shell AND owns its
                                       server-side login (plan 088): GET /account/login (kick), /callback
-                                      (redemption + session cookie), GET+DELETE /account/session
+                                      (redemption + session cookie), GET+DELETE /sessions/@me
 
 adapters/http/ui/                   — one folder per served console + shared serving helpers
   shared/html.ts                    — readUIClientPreferences (locale/color-mode cookies), stampHtmlAttributes,

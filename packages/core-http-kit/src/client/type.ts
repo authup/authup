@@ -53,7 +53,9 @@ export type ClientOptions = ClientOptionsInput;
  */
 export interface IClient extends IBaseClient {
     /**
-     * The account console's cookie-authenticated session surface (plan 088).
+     * The caller's own session, over whichever credential the request carries
+     * (plan 088): `GET /sessions/@me/introspect` for the context a console
+     * hydrates from, `DELETE /sessions/@me` to end it.
      */
     readonly account : IAccountAPI;
 

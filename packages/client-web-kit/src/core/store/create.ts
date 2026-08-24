@@ -675,7 +675,7 @@ export function createStore(context: StoreCreateContext) {
 
     /**
      * Cookie mode's counterpart to `revalidate()`. The session context comes
-     * from `GET /account/session`, which answers the same projection the
+     * from `GET /sessions/@me/introspect`, which answers the same projection the
      * introspection endpoint builds for a bearer — so `commitSession` needs no
      * shape of its own.
      *

@@ -7,7 +7,7 @@
 
 import { createHash } from 'node:crypto';
 import { createNanoID } from '@authup/kit';
-import { CONSOLE_SESSION_SECRET_LENGTH } from './constants.ts';
+import { SESSION_SECRET_LENGTH } from './constants.ts';
 
 /**
  * Mint the opaque credential a console browser presents (plan 088). It is
@@ -15,8 +15,8 @@ import { CONSOLE_SESSION_SECRET_LENGTH } from './constants.ts';
  * `ISessionRepository.findOneBySecret`) and handed to the browser in the
  * console session cookie.
  */
-export function createConsoleSessionSecret() : string {
-    return createNanoID(CONSOLE_SESSION_SECRET_LENGTH);
+export function createSessionSecret() : string {
+    return createNanoID(SESSION_SECRET_LENGTH);
 }
 
 /**
@@ -25,7 +25,7 @@ export function createConsoleSessionSecret() : string {
  * `select: false` limits what the ORM projects; it does nothing about what the
  * database CONTAINS, so storing the credential verbatim would make any read of
  * that table — a leaked backup, a read replica, a SQL injection that only
- * SELECTs — a source of replayable `authup_console_session` cookies. The
+ * SELECTs — a source of replayable `authup_session` cookies. The
  * column holds a digest instead, and the cookie value never lands anywhere it
  * can be read back.
  *
@@ -41,6 +41,6 @@ export function createConsoleSessionSecret() : string {
  * Deterministic, so the lookup stays a single indexed equality. Hex SHA-256 is
  * exactly 64 characters, which is the column's width.
  */
-export function hashConsoleSessionSecret(secret: string) : string {
+export function hashSessionSecret(secret: string) : string {
     return createHash('sha256').update(secret).digest('hex');
 }

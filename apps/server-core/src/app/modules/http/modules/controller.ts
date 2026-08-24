@@ -489,12 +489,10 @@ export class HTTPControllerModule {
             sessionManager: container.resolve(AuthenticationInjectionKey.SessionManager),
             tokenVerifier: container.resolve(OAuth2InjectionToken.TokenVerifier),
             tokenRevoker: container.resolve(OAuth2InjectionToken.TokenRevoker),
-            identityResolver: container.resolve(IdentityInjectionKey.Resolver),
-            identityPermissionProvider: container.resolve(IdentityInjectionKey.PermissionProvider),
-            clientRepository: container.resolve(OAuth2InjectionToken.ClientRepository),
             logger: container.resolve(LoggerInjectionKey),
         });
     }
+
 
     buildUIFeatures(config: Config) : StatusResponseFeatures {
         return {
@@ -795,7 +793,18 @@ export class HTTPControllerModule {
     createSessionController(container: IContainer) {
         const repository = container.resolve(AuthenticationInjectionKey.SessionRepository);
         const service = new SessionService({ repository });
-        return new SessionController({ service });
+        const config = container.resolve(ConfigInjectionKey);
+
+        return new SessionController({
+            service,
+            // Only `GET /sessions/@me/introspect` and the cookie-clearing half
+            // of the `@me` delete use these (plan 088). Optional, so a minimal
+            // graph still constructs the entity routes.
+            baseURL: config.publicUrl,
+            identityResolver: container.resolve(IdentityInjectionKey.Resolver),
+            identityPermissionProvider: container.resolve(IdentityInjectionKey.PermissionProvider),
+            sessionRepository: repository,
+        });
     }
 
     protected createConsentService(container: IContainer) : ConsentService {

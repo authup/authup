@@ -11,12 +11,12 @@ import type { IAccountAPI } from './types';
 
 export class AccountAPI extends BaseAPI implements IAccountAPI {
     async getSession(): Promise<OAuth2TokenIntrospectionResponse> {
-        const response = await this.client.get('account/session');
+        const response = await this.client.get('sessions/@me/introspect');
 
         return response.data;
     }
 
     async deleteSession(): Promise<void> {
-        await this.client.delete('account/session');
+        await this.client.delete('sessions/@me');
     }
 }

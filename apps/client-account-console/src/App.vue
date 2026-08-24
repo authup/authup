@@ -59,7 +59,7 @@ export default defineComponent({
         const signOut = async () => {
             if (config.cookieSession) {
                 // `logout()` ends the session over the wire (DELETE
-                // /account/session): the server drops the credential, revokes
+                // /sessions/@me/introspect): the server drops the credential, revokes
                 // the session and clears the cookie. There is no id_token in
                 // this app's JavaScript to hint an RP-initiated logout with,
                 // and after the delete there is no session left to end — so

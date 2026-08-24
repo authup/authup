@@ -42,8 +42,8 @@ function buildApp(options: {
 
     const httpClient = createFakeClient({
         handlers: {
-            'GET /account/session': () => ({ ...SESSION_RESPONSE }),
-            'DELETE /account/session': () => null,
+            'GET /sessions/@me/introspect': () => ({ ...SESSION_RESPONSE }),
+            'DELETE /sessions/@me': () => null,
             'POST /token/revoke': () => ({}),
             ...options.handlers,
         },
@@ -139,7 +139,7 @@ describe('core/store/cookie-session', () => {
         const paths = httpClient.requests.map(
             (request) => new URL(request.url, 'http://localhost').pathname,
         );
-        expect(paths).toContain('/account/session');
+        expect(paths).toContain('/sessions/@me/introspect');
         expect(paths).not.toContain('/token/introspect');
         expect(paths).not.toContain('/token');
     });
@@ -149,7 +149,7 @@ describe('core/store/cookie-session', () => {
     it('settles an absent session as unauthenticated', async () => {
         const { store } = buildApp({
             cookieSession: true,
-            handlers: { 'GET /account/session': () => ({ active: false }) },
+            handlers: { 'GET /sessions/@me/introspect': () => ({ active: false }) },
         });
 
         await store.resolve();
@@ -172,7 +172,7 @@ describe('core/store/cookie-session', () => {
 
         expect(httpClient.requests.some(
             (request) => request.method === 'DELETE' &&
-                new URL(request.url, 'http://localhost').pathname === '/account/session',
+                new URL(request.url, 'http://localhost').pathname === '/sessions/@me',
         )).toBe(true);
         expect(store.status).toEqual(StoreAuthStatus.UNAUTHENTICATED);
 

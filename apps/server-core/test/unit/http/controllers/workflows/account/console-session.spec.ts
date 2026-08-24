@@ -20,8 +20,8 @@ import { DatabaseInjectionKey } from '../../../../../../src/app/modules/database
 import { SessionEntity } from '../../../../../../src/adapters/database/domains/session/entity.ts';
 import {
     CONSOLE_LOGIN_COOKIE,
-    CONSOLE_SESSION_COOKIE,
-    hashConsoleSessionSecret,
+    SESSION_COOKIE,
+    hashSessionSecret,
 } from '../../../../../../src/core';
 import { createTestApplication } from '../../../../../app';
 import { TestCookieJar, createFakeUser, httpRequest } from '../../../../../utils';
@@ -129,7 +129,7 @@ describe('account console session', () => {
         // `toContain` over the joined string would be satisfied by either.
         const setCookie = callback.headers
             .getSetCookie()
-            .find((value) => value.startsWith(`${CONSOLE_SESSION_COOKIE}=`)) as string;
+            .find((value) => value.startsWith(`${SESSION_COOKIE}=`)) as string;
         expect(setCookie).toBeDefined();
         expect(setCookie).toContain('HttpOnly');
         expect(setCookie).toContain('SameSite=Strict');
@@ -144,9 +144,9 @@ describe('account console session', () => {
         expect(maxAge).toBeGreaterThan(0);
         expect(maxAge).toBeLessThanOrEqual(30 * 24 * 60 * 60);
 
-        const secret = setCookie.split(';')[0].slice(`${CONSOLE_SESSION_COOKIE}=`.length);
+        const secret = setCookie.split(';')[0].slice(`${SESSION_COOKIE}=`.length);
         expect(secret.length).toBeGreaterThan(0);
-        expect(jar.get(CONSOLE_SESSION_COOKIE)).toEqual(secret);
+        expect(jar.get(SESSION_COOKIE)).toEqual(secret);
 
         // The database stores a DIGEST, never the credential. `select: false`
         // governs what the ORM projects and nothing about what the table
@@ -160,7 +160,7 @@ describe('account console session', () => {
             .getRepository(SessionEntity)
             .createQueryBuilder('session')
             .addSelect('session.secret')
-            .where('session.secret = :secret', { secret: hashConsoleSessionSecret(secret) })
+            .where('session.secret = :secret', { secret: hashSessionSecret(secret) })
             .getOne();
 
         // `not.toBeNull()`, never `toBeDefined()`: getOne() answers null on a
@@ -172,7 +172,7 @@ describe('account console session', () => {
         expect(jar.get(CONSOLE_LOGIN_COOKIE)).toBeUndefined();
 
         // 4) the console hydrates from the session endpoint
-        const sessionResponse = await request('GET', '/account/session', { headers: { 'sec-fetch-site': 'same-origin' } });
+        const sessionResponse = await request('GET', '/sessions/@me/introspect', { headers: { 'sec-fetch-site': 'same-origin' } });
         expect(sessionResponse.status).toEqual(200);
         expect(sessionResponse.headers.get('cache-control')).toEqual('no-store');
         expect(sessionResponse.headers.get('vary')).toEqual('cookie');
@@ -215,30 +215,36 @@ describe('account console session', () => {
 
         // 7) sign out: the credential is dropped, the session revoked and the
         //    cookie cleared.
-        const signOut = await request('DELETE', '/account/session', {
+        // Sign-out IS the entity delete now: it revokes the row and, because a
+        // console cookie was presented, clears it too (plan 088).
+        const signOut = await request('DELETE', '/sessions/@me', {
             headers: {
                 'sec-fetch-site': 'same-origin',
                 origin: publicOrigin,
             },
         });
-        expect(signOut.status).toEqual(200);
-        expect(jar.get(CONSOLE_SESSION_COOKIE)).toBeUndefined();
+        expect(signOut.status).toEqual(202);
+        expect(jar.get(SESSION_COOKIE)).toBeUndefined();
 
         // The credential itself is dead, not merely forgotten by the browser:
         // the handle was dropped and the session revoked, so replaying the
         // exact value resolves nothing.
-        const replayed = await httpRequest(suite, 'GET', '/account/session', {
+        const replayed = await httpRequest(suite, 'GET', '/sessions/@me/introspect', {
             headers: {
                 'sec-fetch-site': 'same-origin',
-                cookie: `${CONSOLE_SESSION_COOKIE}=${secret}`,
+                cookie: `${SESSION_COOKIE}=${secret}`,
             },
         });
-        expect((await replayed.json()).active).toEqual(false);
+        // 401, not `{active: false}`: the route carries ForceLoggedIn like its
+        // siblings on this controller, and an unauthenticated caller never
+        // reaches the handler. The kit store already reads a 401 here as the
+        // no-session answer.
+        expect(replayed.status).toEqual(401);
 
         const replayedOnAPI = await httpRequest(suite, 'GET', '/users/@me', {
             headers: {
                 'sec-fetch-site': 'same-origin',
-                cookie: `${CONSOLE_SESSION_COOKIE}=${secret}`,
+                cookie: `${SESSION_COOKIE}=${secret}`,
             },
         });
         expect(replayedOnAPI.status).toEqual(401);

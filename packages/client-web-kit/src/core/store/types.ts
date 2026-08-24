@@ -84,8 +84,8 @@ export type StoreInstallOptions = {
      * own origin: the credential is `SameSite=Strict`, so a cross-origin host
      * never carries it and must stay on the default bearer path. In this mode
      * the store neither reads nor writes the token cookies — the session is
-     * resolved from `GET /account/session` and ended through
-     * `DELETE /account/session`.
+     * resolved from `GET /sessions/@me/introspect` and ended through
+     * `DELETE /sessions/@me`.
      */
     cookieSession?: boolean,
     pinia?: Pinia

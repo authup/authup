@@ -8,7 +8,7 @@
 import { getURLBasePath } from '@authup/kit';
 import { setResponseCookie, unsetResponseCookie } from '@routup/basic/cookie';
 import type { IAppEvent } from 'routup';
-import { CONSOLE_SESSION_COOKIE } from '../../../core/index.ts';
+import { SESSION_COOKIE } from '../../../core/index.ts';
 
 /**
  * The console session cookie's flags live here, in ONE place, because every
@@ -25,7 +25,7 @@ import { CONSOLE_SESSION_COOKIE } from '../../../core/index.ts';
  * Both writers go through here: the callback that mints the credential, and
  * the authorization middleware, which re-arms the expiry (see below).
  */
-export function buildConsoleSessionCookiePath(baseURL: string) : string {
+export function buildSessionCookiePath(baseURL: string) : string {
     return getURLBasePath(baseURL) || '/';
 }
 
@@ -52,21 +52,21 @@ function isSecureBaseURL(baseURL: string) : boolean {
  * server-side slide would still be happening and would simply never be
  * observable.
  */
-export function setConsoleSessionCookie(
+export function setSessionCookie(
     event: IAppEvent,
     baseURL: string,
     value: string,
     ttl: number,
 ) : void {
-    setResponseCookie(event, CONSOLE_SESSION_COOKIE, value, {
+    setResponseCookie(event, SESSION_COOKIE, value, {
         httpOnly: true,
         sameSite: 'strict',
         secure: isSecureBaseURL(baseURL),
-        path: buildConsoleSessionCookiePath(baseURL),
+        path: buildSessionCookiePath(baseURL),
         maxAge: Math.floor(ttl / 1000),
     });
 }
 
-export function unsetConsoleSessionCookie(event: IAppEvent, baseURL: string) : void {
-    unsetResponseCookie(event, CONSOLE_SESSION_COOKIE, { path: buildConsoleSessionCookiePath(baseURL) });
+export function unsetSessionCookie(event: IAppEvent, baseURL: string) : void {
+    unsetResponseCookie(event, SESSION_COOKIE, { path: buildSessionCookiePath(baseURL) });
 }

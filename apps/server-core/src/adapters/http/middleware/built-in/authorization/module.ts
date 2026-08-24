@@ -29,12 +29,12 @@ import {
     type BearerAuthorizationHeader,
     parseAuthorizationHeader,
 } from 'hapic';
-import { setConsoleSessionCookie } from '../../../cookie/index.ts';
+import { setSessionCookie } from '../../../cookie/index.ts';
 import {
-    CONSOLE_SESSION_COOKIE,
-    CONSOLE_SESSION_REFRESH_THROTTLE,
     ClientAuthenticator,
     PolicyEngine,
+    SESSION_COOKIE,
+    SESSION_REFRESH_THROTTLE,
     SYSTEM_CLIENT_SCOPE_NAMES,
     UserAuthenticator,
     assertClientCertificateEvidenceValidForBinding,
@@ -183,7 +183,7 @@ export class AuthorizationMiddleware {
                 return;
             }
 
-            const secret = useRequestCookie(event, CONSOLE_SESSION_COOKIE);
+            const secret = useRequestCookie(event, SESSION_COOKIE);
             if (typeof secret !== 'string' || secret.length === 0) {
                 return;
             }
@@ -260,7 +260,7 @@ export class AuthorizationMiddleware {
     ): Promise<void> {
         const refreshedAt = session.refreshedAt || session.createdAt;
         if (refreshedAt) {
-            const threshold = new Date(refreshedAt).getTime() + CONSOLE_SESSION_REFRESH_THROTTLE;
+            const threshold = new Date(refreshedAt).getTime() + SESSION_REFRESH_THROTTLE;
             if (threshold > Date.now()) {
                 return;
             }
@@ -286,7 +286,7 @@ export class AuthorizationMiddleware {
         // the server-side slide happening and never being observable.
         const ttl = new Date(refreshed.expiresAt).getTime() - Date.now();
         if (ttl > 0 && this.options.baseURL) {
-            setConsoleSessionCookie(event, this.options.baseURL, secret, ttl);
+            setSessionCookie(event, this.options.baseURL, secret, ttl);
         }
     }
 

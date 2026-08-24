@@ -11,7 +11,7 @@ import type { EntityRepositoryFindManyResult, ICache } from '@authup/server-kit'
 import { buildCacheKey } from '@authup/server-kit';
 import type { Repository } from 'typeorm';
 import { applyQuery, redactFieldConditions } from '../../database/repositories/query.ts';
-import { hashConsoleSessionSecret } from '../../../../core/index.ts';
+import { hashSessionSecret } from '../../../../core/index.ts';
 import type {
     ISessionRepository,
     SessionFindManyOptions,
@@ -66,11 +66,11 @@ export class SessionRepository implements ISessionRepository {
         // credential is a multi-day one, so the row is the authority (a cache
         // a replica never saw would answer anonymous in steady state).
         // The column holds a digest, never the credential itself.
-        return this.repository.findOneBy({ secret: hashConsoleSessionSecret(secret) });
+        return this.repository.findOneBy({ secret: hashSessionSecret(secret) });
     }
 
     async updateSecret(id: string, secret: string | null): Promise<void> {
-        await this.repository.update({ id }, { secret: secret === null ? null : hashConsoleSessionSecret(secret) });
+        await this.repository.update({ id }, { secret: secret === null ? null : hashSessionSecret(secret) });
 
         // The cached copy never carries the secret (see `save`), so nothing
         // cached goes stale here. `auth_sessions` has no entity subscriber, so

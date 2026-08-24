@@ -9,6 +9,7 @@ export * from './access-policy/index.ts';
 export * from './authorization/index.ts';
 export * from './client/index.ts';
 export * from './console-login/index.ts';
+export * from './session-credential/index.ts';
 export * from './end-session/index.ts';
 export * from './federated-login/index.ts';
 export * from './grant-types/index.ts';
