@@ -13,6 +13,7 @@ import {
     AWorkflowDisabledNotice,
     StoreAuthStatus,
     buildAuthorizeURL,
+    buildConsoleLoginURL,
     createPKCE,
     createState,
     injectStore,
@@ -179,10 +180,10 @@ export default defineComponent({
                 saveAccountConsoleRef(backRef.value);
 
                 if (config.cookieSession) {
-                    const url = new URL(`${config.apiUrl}/account/login`);
-                    url.searchParams.set('realmId', realmKey);
-
-                    window.location.href = url.href;
+                    window.location.href = buildConsoleLoginURL({
+                        baseURL: config.apiUrl,
+                        realmId: realmKey,
+                    });
 
                     return;
                 }

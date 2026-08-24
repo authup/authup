@@ -147,3 +147,36 @@ export function buildEndSessionURL(ctx: BuildEndSessionURLContext): string {
     const qs = params.toString();
     return `${base}/logout${qs ? `?${qs}` : ''}`;
 }
+
+export type BuildConsoleLoginURLContext = {
+    baseURL: string,
+    /**
+     * The console whose login is being started. Its OAuth2 client and its
+     * return target are what differ per console, which is why this half of the
+     * flow is per-console while the session it produces is not (plan 088).
+     */
+    console?: string,
+    realmId?: string
+};
+
+/**
+ * Build the URL of a console's server-side login kick.
+ *
+ * A NAVIGATION target rather than a request, like `buildAuthorizeURL` and
+ * `buildEndSessionURL` beside it: the whole point of the server-side flow is
+ * that the PKCE verifier is minted where JavaScript cannot see it, so the
+ * browser is handed to the server rather than calling it. Hand-assembling the
+ * string at the call site is what this replaces.
+ */
+export function buildConsoleLoginURL(ctx: BuildConsoleLoginURLContext): string {
+    const base = ctx.baseURL.replace(/\/+$/, '');
+    const target = ctx.console || 'account';
+
+    const params = new URLSearchParams();
+    if (ctx.realmId) {
+        params.set('realmId', ctx.realmId);
+    }
+
+    const qs = params.toString();
+    return `${base}/${target}/login${qs ? `?${qs}` : ''}`;
+}
