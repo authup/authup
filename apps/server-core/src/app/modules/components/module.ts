@@ -10,6 +10,7 @@ import {
     createEventCleanerComponent,
     createOAuth2CleanerComponent,
 } from '../../../components/index.ts';
+import { CacheInjectionKey } from '../cache/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 import { DatabaseInjectionKey } from '../database/index.ts';
 import { LoggerInjectionKey } from '../logger/index.ts';
@@ -29,7 +30,12 @@ export class ComponentsModule implements IModule {
 
     constructor(options: ComponentsModuleOptions = {}) {
         this.name = ModuleName.COMPONENTS;
-        this.dependencies = [ModuleName.CONFIG, ModuleName.LOGGER, ModuleName.DATABASE];
+        this.dependencies = [
+            ModuleName.CONFIG,
+            ModuleName.LOGGER,
+            ModuleName.CACHE,
+            ModuleName.DATABASE,
+        ];
         this.options = options;
         this.components = [];
     }
@@ -46,8 +52,10 @@ export class ComponentsModule implements IModule {
             return;
         }
 
+        const cache = container.resolve(CacheInjectionKey);
+
         const components: Component[] = [
-            createOAuth2CleanerComponent(dataSource, logger),
+            createOAuth2CleanerComponent(dataSource, cache, logger),
         ];
 
         // The sweep only exists when rows are written AND at least one row

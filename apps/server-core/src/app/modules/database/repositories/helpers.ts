@@ -6,9 +6,12 @@
  */
 
 import type {
-    DataSource, 
-    EntityTarget, 
-    ObjectLiteral, 
+    DataSource,
+    EntityTarget,
+    FindOptionsSelect,
+    FindOptionsWhere,
+    ObjectLiteral,
+    Repository,
     SelectQueryBuilder,
 } from 'typeorm';
 import { Brackets, In, IsNull } from 'typeorm';
@@ -37,6 +40,73 @@ export function applyRealmScopeSelect<T extends ObjectLiteral>(
     if (selections.length > 0) {
         qb.addSelect(selections);
     }
+}
+
+/**
+ * Resolve a caller-supplied sweep batch size against its default. A
+ * non-positive or non-integral size must never reach `take`: typeorm ignores
+ * a falsy one, which silently restores the single unbounded DELETE the
+ * batching exists to prevent, and the rest reach the driver as invalid SQL.
+ */
+export function resolveSweepBatchSize(requested: number | undefined, fallback: number): number {
+    if (
+        typeof requested === 'number' &&
+        Number.isSafeInteger(requested) &&
+        requested > 0
+    ) {
+        return requested;
+    }
+
+    return fallback;
+}
+
+/**
+ * Delete every row matching `where`, one bounded statement at a time, looping
+ * until the match is drained. The retention and expiry sweeps run every
+ * minute on every replica, and the first one after a retention change (or the
+ * day a full window first matures) can match millions of rows: a single
+ * unbounded DELETE would then be one long transaction, issued concurrently by
+ * every replica.
+ *
+ * Ids are selected first and deleted by id, because `DELETE ... LIMIT` is
+ * MySQL-only. A batch that removes nothing means another replica's sweep owns
+ * those rows, so the loop stops rather than re-selecting them; the next tick
+ * picks up whatever is left.
+ */
+export async function deleteInBatches<T extends ObjectLiteral & { id: string }>(
+    repository: Repository<T>,
+    where: FindOptionsWhere<T>,
+    batchSize: number,
+): Promise<number> {
+    let total = 0;
+
+    for (;;) {
+        const rows = await repository.find({
+            select: { id: true } as FindOptionsSelect<T>,
+            where,
+            take: batchSize,
+        });
+
+        if (rows.length === 0) {
+            break;
+        }
+
+        const result = await repository.delete({ id: In(rows.map((row) => row.id)) } as FindOptionsWhere<T>);
+
+        // A driver that does not report affected rows still made progress, so
+        // count the batch rather than returning 0.
+        total += result.affected ?? rows.length;
+
+        if (result.affected === 0) {
+            break;
+        }
+
+        if (rows.length < batchSize) {
+            break;
+        }
+    }
+
+    return total;
 }
 
 /**

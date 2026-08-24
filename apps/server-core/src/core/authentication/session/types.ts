@@ -36,6 +36,15 @@ export type SessionFindManyOptions = {
     owner?: SessionOwner,
 };
 
+export type SessionDeleteExpiredOptions = {
+    /**
+     * Rows removed per statement. Defaults to
+     * SESSION_EXPIRY_SWEEP_BATCH_SIZE, which anything that is not a positive
+     * safe integer also falls back to.
+     */
+    batchSize?: number,
+};
+
 export interface ISessionRepository {
     findOneById(id: string): Promise<Session | null> | null;
 
@@ -56,6 +65,16 @@ export interface ISessionRepository {
     removeById(id: string): Promise<void>;
 
     remove(session: Session) : Promise<void>;
+
+    /**
+     * Expiry sweep: delete every session whose `expiresAt` is before the given
+     * timestamp. Returns the number of removed rows. Removal is batched (see
+     * SESSION_EXPIRY_SWEEP_BATCH_SIZE).
+     *
+     * @param before iso timestamp
+     * @param options
+     */
+    deleteExpired(before: string, options?: SessionDeleteExpiredOptions): Promise<number>;
 }
 
 export type SessionManagerOptions = {

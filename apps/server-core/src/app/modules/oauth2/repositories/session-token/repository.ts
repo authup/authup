@@ -11,12 +11,14 @@ import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
 import { In, LessThan } from 'typeorm';
 import { applyQuery, redactFieldConditions } from '../../../database/repositories/query.ts';
+import { deleteInBatches, resolveSweepBatchSize } from '../../../database/repositories/helpers.ts';
 import { SessionTokenEntity } from '../../../../../adapters/database/domains/index.ts';
 import { isForeignKeyConstraintDatabaseError } from '../../../../../adapters/database/errors/index.ts';
-import { SessionTokenRelationMissingError } from '../../../../../core/index.ts';
+import { SESSION_TOKEN_EXPIRY_SWEEP_BATCH_SIZE, SessionTokenRelationMissingError } from '../../../../../core/index.ts';
 import type {
     ISessionTokenRepository,
     SessionTokenCreateInput,
+    SessionTokenDeleteExpiredOptions,
     SessionTokenRef,
 } from '../../../../../core/index.ts';
 
@@ -208,9 +210,14 @@ export class SessionTokenRepositoryAdapter implements ISessionTokenRepository {
         return qb.getMany();
     }
 
-    async deleteExpired(before: string): Promise<number> {
-        const result = await this.repository.delete({ expiresAt: LessThan(before) });
-
-        return result.affected ?? 0;
+    async deleteExpired(
+        before: string,
+        options: SessionTokenDeleteExpiredOptions = {},
+    ): Promise<number> {
+        return deleteInBatches(
+            this.repository,
+            { expiresAt: LessThan(before) },
+            resolveSweepBatchSize(options.batchSize, SESSION_TOKEN_EXPIRY_SWEEP_BATCH_SIZE),
+        );
     }
 }

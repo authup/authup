@@ -102,6 +102,15 @@ export class FakeSessionRepository implements ISessionRepository {
         }
     }
 
+    async deleteExpired(before: string): Promise<number> {
+        const expired = [...this.sessions.values()]
+            .filter((session) => session.expiresAt < before);
+
+        expired.forEach((session) => this.sessions.delete(session.id));
+
+        return expired.length;
+    }
+
     private ownedBy(session: Session, owner: SessionOwner): boolean {
         return session.sub === owner.sub && session.subKind === owner.subKind;
     }

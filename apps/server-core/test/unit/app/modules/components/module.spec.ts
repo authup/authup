@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ICache } from '@authup/server-kit';
 import { createNoopLogger } from '@authup/server-kit';
 import { Container } from 'eldin';
 import type { DataSource } from 'typeorm';
@@ -15,6 +16,7 @@ import {
     it, 
     vi,
 } from 'vitest';
+import { CacheInjectionKey } from '../../../../../src/app/modules/cache';
 import { ComponentsModule } from '../../../../../src/app/modules/components';
 import type { Config } from '../../../../../src/app/modules/config';
 import { ConfigInjectionKey } from '../../../../../src/app/modules/config';
@@ -30,11 +32,13 @@ const flushMicrotasks = async () => {
 
 type ComponentsTestContext = {
     container: Container,
-    deleteMock: ReturnType<typeof vi.fn>
+    findMock: ReturnType<typeof vi.fn>
 };
 
+// The sweeps select expiring ids first and delete them by id, so `find` is
+// the call every sweep makes; a `delete` only follows a non-empty batch.
 const createContext = (config: Config) : ComponentsTestContext => {
-    const deleteMock = vi.fn().mockResolvedValue({ affected: 0 });
+    const findMock = vi.fn().mockResolvedValue([]);
     const queryBuilder = {
         orderBy() {
             return this;
@@ -45,17 +49,19 @@ const createContext = (config: Config) : ComponentsTestContext => {
     };
     const dataSource = {
         getRepository: () => ({
-            delete: deleteMock,
+            find: findMock,
+            delete: vi.fn().mockResolvedValue({ affected: 0 }),
             createQueryBuilder: () => queryBuilder,
         }),
     } as unknown as DataSource;
 
     const container = new Container();
     container.register(ConfigInjectionKey, { useValue: config });
+    container.register(CacheInjectionKey, { useValue: {} as ICache });
     container.register(DatabaseInjectionKey.DataSource, { useValue: dataSource });
     container.register(LoggerInjectionKey, { useValue: createNoopLogger() });
 
-    return { container, deleteMock };
+    return { container, findMock };
 };
 
 describe('app/modules/components', () => {
@@ -69,22 +75,22 @@ describe('app/modules/components', () => {
         vi.useFakeTimers();
         vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
 
-        const { container, deleteMock } = createContext(config);
+        const { container, findMock } = createContext(config);
 
         const module = new ComponentsModule();
 
         await module.setup(container);
         await flushMicrotasks();
 
-        expect(deleteMock).toHaveBeenCalledTimes(2);
+        expect(findMock).toHaveBeenCalledTimes(2);
 
         await vi.advanceTimersByTimeAsync(60_000);
-        expect(deleteMock).toHaveBeenCalledTimes(4);
+        expect(findMock).toHaveBeenCalledTimes(4);
 
         await module.teardown(container);
 
         await vi.advanceTimersByTimeAsync(180_000);
-        expect(deleteMock).toHaveBeenCalledTimes(4);
+        expect(findMock).toHaveBeenCalledTimes(4);
     });
 
     it('should register no components when they are disabled by config', async () => {
@@ -93,17 +99,17 @@ describe('app/modules/components', () => {
         vi.useFakeTimers();
         vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
 
-        const { container, deleteMock } = createContext(config);
+        const { container, findMock } = createContext(config);
 
         const module = new ComponentsModule();
 
         await module.setup(container);
         await flushMicrotasks();
 
-        expect(deleteMock).not.toHaveBeenCalled();
+        expect(findMock).not.toHaveBeenCalled();
 
         await vi.advanceTimersByTimeAsync(180_000);
-        expect(deleteMock).not.toHaveBeenCalled();
+        expect(findMock).not.toHaveBeenCalled();
 
         // teardown must stay safe with nothing registered
         await expect(module.teardown(container)).resolves.toBeUndefined();
@@ -118,14 +124,14 @@ describe('app/modules/components', () => {
         vi.useFakeTimers();
         vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
 
-        const { container, deleteMock } = createContext(config);
+        const { container, findMock } = createContext(config);
 
         const module = new ComponentsModule({ force: true });
 
         await module.setup(container);
         await flushMicrotasks();
 
-        expect(deleteMock).toHaveBeenCalledTimes(2);
+        expect(findMock).toHaveBeenCalledTimes(2);
 
         await module.teardown(container);
     });
