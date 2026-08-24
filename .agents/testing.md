@@ -197,7 +197,7 @@ Wiring: `HTTPModule.setup` registers a DEFAULT client under `HTTPInjectionKey.UI
 
 Caveats:
 - Register the fake **before** `suite.setup()` — the middleware mount is decided at boot.
-- The SSR renders from the **built** `@authup/client-auth-console` bundle (`apps/client-auth-console/dist/server/server.js`, resolved through node_modules) — rebuild `apps/client-auth-console` after changing that app or `client-web-kit`, or the tests exercise a stale bundle. server-core itself no longer embeds any UI build.
+- The SSR renders from the **built** `@authup/client-auth-console` bundle (`apps/client-auth-console/dist/server/server.js`, resolved through node_modules) — rebuild `apps/client-auth-console` after changing that app or `client-web-kit`, or the tests exercise a stale bundle. server-core itself no longer embeds any UI build. The suite always takes the dist branch: the JIT gate (architecture.md -> *The JIT gate and its entry point*) is false under vitest, so the vite-served dev path has no automated coverage.
 - The default unmatched-route fallback returns a collection shape (`{ data: [], meta: { total: 0 } }`); session endpoints need explicit handlers for logged-in renders. Entity-collection loads catch their own errors (they emit `failed` instead of rejecting — SSR crash hardening), but handlers on OTHER fire-and-forget fetch paths must not throw (an unawaited rejection fails vitest).
 - Alias the import (`createFakeHTTPClient`) — `test/utils` already exports a `createFakeClient` entity factory.
 
