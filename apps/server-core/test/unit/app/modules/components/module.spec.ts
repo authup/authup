@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ICache } from '@authup/server-kit';
+import type { ICache, Logger } from '@authup/server-kit';
 import { createNoopLogger } from '@authup/server-kit';
 import { Container } from 'eldin';
 import type { DataSource } from 'typeorm';
@@ -32,7 +32,8 @@ const flushMicrotasks = async () => {
 
 type ComponentsTestContext = {
     container: Container,
-    findMock: ReturnType<typeof vi.fn>
+    findMock: ReturnType<typeof vi.fn>,
+    infoLines: string[]
 };
 
 // The sweeps select expiring ids first and delete them by id, so `find` is
@@ -55,13 +56,27 @@ const createContext = (config: Config) : ComponentsTestContext => {
         }),
     } as unknown as DataSource;
 
+    // the boot log is the only surface a healthy process writes about the
+    // components, so it is asserted rather than discarded.
+    const infoLines : string[] = [];
+    const logger = createNoopLogger();
+    logger.info = ((message: unknown) => {
+        infoLines.push(String(message));
+
+        return logger;
+    }) as Logger['info'];
+
     const container = new Container();
     container.register(ConfigInjectionKey, { useValue: config });
     container.register(CacheInjectionKey, { useValue: {} as ICache });
     container.register(DatabaseInjectionKey.DataSource, { useValue: dataSource });
-    container.register(LoggerInjectionKey, { useValue: createNoopLogger() });
+    container.register(LoggerInjectionKey, { useValue: logger });
 
-    return { container, findMock };
+    return {
+        container, 
+        findMock, 
+        infoLines, 
+    };
 };
 
 describe('app/modules/components', () => {
@@ -75,12 +90,20 @@ describe('app/modules/components', () => {
         vi.useFakeTimers();
         vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
 
-        const { container, findMock } = createContext(config);
+        const {
+            container, 
+            findMock, 
+            infoLines, 
+        } = createContext(config);
 
         const module = new ComponentsModule();
 
         await module.setup(container);
         await flushMicrotasks();
+
+        // the audit log is off, so the event cleaner is not registered and
+        // must not be named
+        expect(infoLines).toContain('Background components started: oauth2-cleaner.');
 
         expect(findMock).toHaveBeenCalledTimes(2);
 
@@ -99,12 +122,19 @@ describe('app/modules/components', () => {
         vi.useFakeTimers();
         vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
 
-        const { container, findMock } = createContext(config);
+        const {
+            container, 
+            findMock, 
+            infoLines, 
+        } = createContext(config);
 
         const module = new ComponentsModule();
 
         await module.setup(container);
         await flushMicrotasks();
+
+        expect(infoLines).toContain('Background components are disabled by configuration.');
+        expect(infoLines.some((line) => line.startsWith('Background components started'))).toBeFalsy();
 
         expect(findMock).not.toHaveBeenCalled();
 
@@ -124,14 +154,41 @@ describe('app/modules/components', () => {
         vi.useFakeTimers();
         vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
 
-        const { container, findMock } = createContext(config);
+        const {
+            container, 
+            findMock, 
+            infoLines, 
+        } = createContext(config);
 
         const module = new ComponentsModule({ force: true });
 
         await module.setup(container);
         await flushMicrotasks();
 
+        expect(infoLines).toContain('Background components started: oauth2-cleaner.');
         expect(findMock).toHaveBeenCalledTimes(2);
+
+        await module.teardown(container);
+    });
+
+    it('should name every registered component in the boot log', async () => {
+        // The sweeps write nothing per tick and the production console
+        // transport is info level, so this line is all an operator gets to
+        // tell a working worker from a silent one. It must name what was
+        // actually registered, which is why the audit log stays on here.
+        const config = await normalizeConfig({});
+
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
+
+        const { container, infoLines } = createContext(config);
+
+        const module = new ComponentsModule();
+
+        await module.setup(container);
+        await flushMicrotasks();
+
+        expect(infoLines).toContain('Background components started: oauth2-cleaner, event-cleaner.');
 
         await module.teardown(container);
     });

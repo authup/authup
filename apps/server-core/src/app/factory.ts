@@ -7,7 +7,6 @@
 
 import type { IContainer } from 'eldin';
 import type { DataSource } from 'typeorm';
-import { synchronizeDatabaseSchema } from 'typeorm-extension';
 import { ApplicationBuilder } from './builder.ts';
 import {
     ComponentsModule,
@@ -15,7 +14,7 @@ import {
     DefaultProvisioningSource,
     LoggerInjectionKey,
     ProvisionerModule,
-    assertNoPendingMigrations,
+    verifySchemaOrSynchronize,
 } from './modules/index.ts';
 import type { CreateApplicationContext } from './types.ts';
 
@@ -40,28 +39,13 @@ export function createApplication(context: CreateApplicationContext = {}) {
 }
 
 /**
- * The worker never applies schema changes, whatever `migrationEnabled` says:
- * a deployment lets one process own the DDL, and it is not this one.
- *
- * `assertNoPendingMigrations` resolves false when the resolved data-source
- * options carry no migrations at all (the sqlite shape). Nothing can be
- * pending there and the schema still has to exist, so the caller falls
- * through to a schema synchronize. Dropping that branch would leave a sqlite
- * worker with no schema.
+ * The worker never applies migrations, whatever `migrationEnabled` says: a
+ * deployment lets one process own that DDL, and it is not this one. It does
+ * still create a schema nobody migrates, which is the sqlite shape the shared
+ * helper falls through to.
  */
 async function migrateWorkerSchema(container: IContainer, dataSource: DataSource): Promise<void> {
-    const logger = container.resolve(LoggerInjectionKey);
-
-    logger.debug('Verifying database schema...');
-    const verified = await assertNoPendingMigrations(dataSource);
-    if (verified) {
-        logger.debug('Verified database schema.');
-        return;
-    }
-
-    logger.debug('Migrating database...');
-    await synchronizeDatabaseSchema(dataSource);
-    logger.debug('Migrated database');
+    await verifySchemaOrSynchronize(container.resolve(LoggerInjectionKey), dataSource);
 }
 
 /**

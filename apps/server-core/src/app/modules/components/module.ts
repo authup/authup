@@ -54,8 +54,13 @@ export class ComponentsModule implements IModule {
 
         const cache = container.resolve(CacheInjectionKey);
 
-        const components: Component[] = [
-            createOAuth2CleanerComponent(dataSource, cache, logger),
+        // Name and component travel together so the boot log can never drift
+        // from what was actually registered.
+        const registry: { name: string, component: Component }[] = [
+            {
+                name: 'oauth2-cleaner',
+                component: createOAuth2CleanerComponent(dataSource, cache, logger),
+            },
         ];
 
         // The sweep only exists when rows are written AND at least one row
@@ -65,9 +70,13 @@ export class ComponentsModule implements IModule {
         const securitySweep = config.eventLogRetentionDays > 0;
         const entitySweep = config.eventLogEntityEnabled && config.eventLogEntityRetentionDays > 0;
         if (config.eventLogEnabled && (securitySweep || entitySweep)) {
-            components.push(createEventCleanerComponent(dataSource, logger));
+            registry.push({
+                name: 'event-cleaner',
+                component: createEventCleanerComponent(dataSource, logger),
+            });
         }
 
+        const components = registry.map((entry) => entry.component);
         this.components = components;
 
         // start() is deliberately fire-and-forget, so a rejection must be
@@ -78,6 +87,12 @@ export class ComponentsModule implements IModule {
                 logger.error(e);
             });
         });
+
+        // Info level, and the only line a healthy process writes about this:
+        // the sweeps log nothing per tick, the production console transport
+        // is info, and a worker whose whole job is these components would
+        // otherwise boot silent.
+        logger.info(`Background components started: ${registry.map((entry) => entry.name).join(', ')}.`);
     }
 
     async teardown(container: IContainer): Promise<void> {

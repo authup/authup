@@ -6,7 +6,9 @@
  */
 
 import { AuthupError } from '@authup/errors';
+import type { Logger } from '@authup/server-kit';
 import type { DataSource } from 'typeorm';
+import { synchronizeDatabaseSchema } from 'typeorm-extension';
 
 /**
  * Verify the database schema is current without running any DDL.
@@ -39,4 +41,36 @@ export async function assertNoPendingMigrations(dataSource: DataSource) : Promis
     }
 
     return true;
+}
+
+/**
+ * Bring a process up against a schema another process owns: verify it, and
+ * create it only where there is nothing to verify.
+ *
+ * `assertNoPendingMigrations` throws when the chain is behind, so a verified
+ * return is the only way past it. Its `false` return means the data source
+ * carries no migrations at all (the sqlite shape), where nothing can be
+ * pending and the schema still has to be created, so that branch falls
+ * through to a synchronize. Dropping the fall-through would leave a sqlite
+ * process with no schema.
+ *
+ * Both callers that must not migrate share this: `DatabaseModule.migrate`
+ * under `migrationEnabled: false`, and the worker preset, which never
+ * migrates whatever the flag says.
+ */
+export async function verifySchemaOrSynchronize(
+    logger: Logger,
+    dataSource: DataSource,
+): Promise<void> {
+    logger.debug('Verifying database schema...');
+
+    const verified = await assertNoPendingMigrations(dataSource);
+    if (verified) {
+        logger.debug('Verified database schema.');
+        return;
+    }
+
+    logger.debug('Migrating database...');
+    await synchronizeDatabaseSchema(dataSource);
+    logger.debug('Migrated database');
 }

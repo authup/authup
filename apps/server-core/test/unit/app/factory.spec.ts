@@ -116,8 +116,9 @@ describe('app/factory', () => {
                 await queryRunner.release();
             }
 
-            // the components are forced on, so they must not report
-            // themselves off despite componentsEnabled: false.
+            // the components are forced on, so they must report themselves
+            // started despite componentsEnabled: false, and never off.
+            expect(lines.some((line) => line.startsWith('Background components started: oauth2-cleaner'))).toBeTruthy();
             expect(lines).not.toContain('Background components are disabled by configuration.');
         } finally {
             await app.teardown();
