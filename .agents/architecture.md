@@ -804,23 +804,26 @@ not by client-admin-console:
   two-line wrapper over locter's `isTsNodeRuntimeEnvironment() ||
   isTsxRuntimeEnvironment()`: a loader heuristic, not a config key. It is
   reached by exactly one script, `cli-dev` in `apps/server-core`
-  (`node --loader ts-node/esm --require ts-node/register src/cli/index.ts`),
-  the command `docs/src/guide/development/quick-start.md` documents. Both
-  halves of that line are load-bearing. `--loader ts-node/esm` is what
-  transpiles the ESM graph (ts-node is the only runner of the three tried
-  that can: tsx is esbuild and emits no `design:type`, so it dies with
+  (`node --loader ts-node/esm src/cli/index.ts`), the command
+  `docs/src/guide/development/quick-start.md` documents. ts-node is the
+  only runner of the three tried that can transpile the ESM graph: tsx is
+  esbuild and emits no `design:type`, so it dies with
   `ColumnTypeUndefinedError` on the first of the 219 type-less `@Column`s
   before `--help` even prints; `@swc-node/register` boots but needs a
   scratch shim and nothing detects it; the bare `ts-node src/cli/index.ts`
-  form (the one hub ships) installs only the CJS hook, so Node's native strip-only
-  type stripping takes the `.ts` files and dies on the first legacy
-  decorator). `--require ts-node/register` does nothing but set
-  `process[Symbol.for('ts-node.register.instance')]` on the MAIN thread:
-  since Node 20 loader hooks run on their own thread, so the `--loader`
-  form alone leaves locter's check false and the gate dark, serving the
-  consoles from the package dist while server-core runs from source.
-  That is a locter gap (tada5hi/locter#884, the `--require`'s removal
-  trigger), not a reason for a third home for two regexes. Because the
+  form (the one hub ships) installs only the CJS hook, so Node's native
+  strip-only type stripping takes the `.ts` files and dies on the first
+  legacy decorator. Detection needs locter >= 4.1.1, which is why
+  server-core's `locter` floor is `^4.1.1` and load-bearing: the marker
+  symbol (`process[Symbol.for('ts-node.register.instance')]`) is only set
+  by main-thread forms (the bare bin, `--require ts-node/register`), and
+  since Node 20 the ESM hooks run on their own loader thread, so before
+  tada5hi/locter#885 (issue #884) the `--loader` form left the gate dark
+  and `cli-dev` carried a `--require ts-node/register` whose only job was
+  setting that symbol. locter now also consults the module-loading options
+  in `process.execArgv` (values of `--require`/`-r`, `--import`,
+  `--loader`, `--experimental-loader` only, so a custom export condition
+  like `--conditions=ts-node` does not count). Because the
   gate is implicit, `registerAssetsMiddleware` logs which branch serves the
   auth console at boot; a dark gate is otherwise indistinguishable from a
   working one, which is how the branch stayed broken through #3380. Under
@@ -839,7 +842,7 @@ not by client-admin-console:
   (transpile-only is blocked by TS 6's `baseUrl` deprecation until the
   root tsconfig carries `ignoreDeprecations`). The `--loader` flag prints
   an `ExperimentalWarning`; the `--import` + `module.register` form avoids
-  it and behaves identically, but needs the same `--require`. Under the
+  it and behaves identically. Under the
   gate the mysql/postgres migrations glob also switches to
   `src/.../*.{ts,js,mjs}`, which typeorm `import()`s through the loader
   (verified: `cli-dev -- migration run` applies all 17 postgres migrations

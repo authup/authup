@@ -54,9 +54,9 @@ export async function registerAssetsMiddleware(
         ));
     }
 
-    // Logged because the gate is implicit (a TypeScript loader on the main
-    // thread, see `cli-dev`) and a dark gate is otherwise indistinguishable
-    // from a working one (#3382).
+    // Logged because the gate is implicit (a ts-node/tsx loader detected from
+    // the process arguments, see `cli-dev`) and a dark gate is otherwise
+    // indistinguishable from a working one (#3382).
     const isJIT = isCodeTransformation(CodeTransformation.JUST_IN_TIME);
     options.logger?.info(`Serving the auth console from ${isJIT ? 'source (vite dev server)' : 'the package dist'}.`);
 
