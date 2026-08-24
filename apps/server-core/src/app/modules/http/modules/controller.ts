@@ -484,6 +484,15 @@ export class HTTPControllerModule {
                 features: this.buildUIFeatures(config),
                 trustedOrigins: getAppOrigins(config),
             },
+            loginStore: container.resolve(OAuth2InjectionToken.ConsoleLoginStore),
+            sessionRepository: container.resolve(AuthenticationInjectionKey.SessionRepository),
+            sessionManager: container.resolve(AuthenticationInjectionKey.SessionManager),
+            tokenVerifier: container.resolve(OAuth2InjectionToken.TokenVerifier),
+            tokenRevoker: container.resolve(OAuth2InjectionToken.TokenRevoker),
+            identityResolver: container.resolve(IdentityInjectionKey.Resolver),
+            identityPermissionProvider: container.resolve(IdentityInjectionKey.PermissionProvider),
+            clientRepository: container.resolve(OAuth2InjectionToken.ClientRepository),
+            logger: container.resolve(LoggerInjectionKey),
         });
     }
 

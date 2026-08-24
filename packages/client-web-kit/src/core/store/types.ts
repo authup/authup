@@ -36,7 +36,12 @@ export type StoreDefinition = BaseStoreDefinition<
 export type StoreCreateContext = {
     baseURL?: string,
     httpClient?: IClient,
-    dispatcher: StoreDispatcher
+    dispatcher: StoreDispatcher,
+    /**
+     * Authenticate on the server-issued session cookie instead of a token
+     * pair (plan 088). See the install option of the same name.
+     */
+    cookieSession?: boolean
 };
 
 export type StoreLoginContext = {
@@ -71,5 +76,32 @@ export type StoreInstallOptions = {
      * reads any path through an iframe.
      */
     cookiePath?: string,
+    /**
+     * Authenticate on an opaque, `HttpOnly` session cookie the server issues
+     * instead of on a token pair held in JavaScript (plan 088).
+     *
+     * Opt-in per consumer and only usable by a surface served from the API's
+     * own origin: the credential is `SameSite=Strict`, so a cross-origin host
+     * never carries it and must stay on the default bearer path. In this mode
+     * the store neither reads nor writes the token cookies — the session is
+     * resolved from `GET /account/session` and ended through
+     * `DELETE /account/session`.
+     */
+    cookieSession?: boolean,
     pinia?: Pinia
+};
+
+/**
+ * Options for {@see Store.logout}.
+ */
+export type StoreLogoutOptions = {
+    /**
+     * Whether to END the server-side session, not merely this instance.
+     *
+     * Defaults to true, which is what a real sign-out means. Pass false where
+     * the teardown is a reaction to a failure rather than an intent: in cookie
+     * mode the revoke deletes the `auth_sessions` row, so a transient error
+     * would otherwise destroy a session that is still perfectly good.
+     */
+    revoke?: boolean
 };

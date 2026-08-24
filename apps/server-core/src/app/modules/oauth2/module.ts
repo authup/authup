@@ -15,6 +15,7 @@ import { LoggerInjectionKey } from '../logger/index.ts';
 
 import {
     ConsentRepositoryAdapter,
+    ConsoleLoginStore,
     OAuth2AuthorizationCodeRepository,
     OAuth2AuthorizationStateRepository,
     OAuth2ClientRepository,
@@ -172,6 +173,14 @@ export class OAuth2Module implements IModule {
                 const stateRepository = c.resolve(OAuth2InjectionToken.AuthorizationStateRepository);
 
                 return new OAuth2AuthorizationStateManager(stateRepository);
+            },
+        });
+
+        container.register(OAuth2InjectionToken.ConsoleLoginStore, {
+            useFactory: (c) => {
+                const cache = c.resolve(CacheInjectionKey);
+
+                return new ConsoleLoginStore(cache);
             },
         });
 

@@ -19,6 +19,7 @@ import { VCIcon } from '@vuecs/icon';
 import { VCAlertDialogProvider } from '@vuecs/overlays';
 import { storeToRefs } from 'pinia';
 import { computed, defineComponent } from 'vue';
+import { useRouter } from 'vue-router';
 import { injectAccountConsoleConfig } from './di';
 
 export default defineComponent({
@@ -29,6 +30,7 @@ export default defineComponent({
     },
     setup() {
         const config = injectAccountConsoleConfig();
+        const router = useRouter();
         const { isDark } = createColorMode();
 
         const store = injectStore();
@@ -55,6 +57,19 @@ export default defineComponent({
         // pattern), landing back on the account root — which then shows the
         // sign-in state.
         const signOut = async () => {
+            if (config.cookieSession) {
+                // `logout()` ends the session over the wire (DELETE
+                // /account/session): the server drops the credential, revokes
+                // the session and clears the cookie. There is no id_token in
+                // this app's JavaScript to hint an RP-initiated logout with,
+                // and after the delete there is no session left to end — so
+                // the sign-in state is one client-side navigation away.
+                await store.logout();
+                await router.replace('/');
+
+                return;
+            }
+
             const idTokenHint = store.idToken ?? undefined;
             const { realmId } = store;
 

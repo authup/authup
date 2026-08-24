@@ -75,7 +75,7 @@ export class HTTPMiddlewareModule {
 
         const options = this.transformBoolToEmptyObject(config.middlewareCors) ?? {};
 
-        registerCorsMiddleware(router, options);
+        registerCorsMiddleware(router, options, { baseURL: config.publicUrl });
     }
 
     async mountLogger(router: App, container: IContainer): Promise<void> {
@@ -178,6 +178,7 @@ export class HTTPMiddlewareModule {
 
         const identityResolver = container.resolve(IdentityInjectionKey.Resolver);
         const sessionManager = container.resolve(AuthenticationInjectionKey.SessionManager);
+        const sessionRepository = container.resolve(AuthenticationInjectionKey.SessionRepository);
         const oauth2TokenVerifier = container.resolve(OAuth2InjectionToken.TokenVerifier);
         const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
 
@@ -189,10 +190,13 @@ export class HTTPMiddlewareModule {
             permissionProvider,
             oauth2TokenVerifier,
             sessionManager,
+            sessionRepository,
+            logger: container.resolve(LoggerInjectionKey),
             options: {
                 clientAuthBasic: config.clientAuthBasic,
                 userAuthBasic: config.userAuthBasic,
                 certificateSource: config.certificateSource,
+                baseURL: config.publicUrl,
             },
         });
 

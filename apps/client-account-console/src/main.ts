@@ -119,7 +119,13 @@ router.beforeEach(async (to) => {
         setAccountConsoleRef(recoveredRef);
     }
 
-    const code = typeof to.query.code === 'string' ? to.query.code : undefined;
+    // Cookie mode redeems the code SERVER-side (`GET /account/callback`), so
+    // no code ever lands on this path and nothing here has a PKCE verifier to
+    // present. The branch below is what keeps the same dist hostable on a
+    // foreign origin, where the cookie can never be presented.
+    const code = !config.cookieSession && typeof to.query.code === 'string' ?
+        to.query.code :
+        undefined;
     if (code) {
         // The login kick saved an authorization request carrying the PKCE
         // verifier + client/realm binding — the exchange must present them.
@@ -190,10 +196,17 @@ router.beforeEach(async (to) => {
         // reaches. Without this it would hold its loading state with no way
         // out. Treat it like a failed resolve.
         if (store.status === StoreAuthStatus.RESTORING) {
-            await store.logout();
+            await store.logout({ revoke: false });
         }
     } catch {
-        await store.logout();
+        // `revoke: false` is load-bearing in cookie mode. A plain logout()
+        // ends the server-side session, and this catch fires on ANY failed
+        // resolve — a 5xx, an aborted request, a proxy hiccup — none of which
+        // is an intent to sign out. Revoking here would turn a transient
+        // error into a destroyed session and a forced /authorize round-trip,
+        // where the bearer-mode behaviour was a local teardown a reload
+        // recovered from. A session that is genuinely gone needs no revoke.
+        await store.logout({ revoke: false });
     }
 
     return undefined;
@@ -216,6 +229,7 @@ const localeHandles = installLocale(app, {
 install(app, {
     baseURL: config.apiUrl,
     pinia,
+    cookieSession: config.cookieSession,
     translatorLocale: matchLocale(localeHandles.resolved.value),
 });
 

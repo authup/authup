@@ -24,6 +24,12 @@ export class FakeSessionManager implements ISessionManager {
 
     public revokeCalls: string[] = [];
 
+    /**
+     * Set to make `verify` reject, i.e. model an expired or already-swept
+     * session. The real manager throws (and drops the row) there.
+     */
+    public verifyError?: Error;
+
     private sessions = new Map<string, Session>();
 
     async create(session: Partial<Session>): Promise<Session> {
@@ -53,6 +59,10 @@ export class FakeSessionManager implements ISessionManager {
 
     async verify(session: Session): Promise<void> {
         this.verifyCalls.push(session);
+
+        if (this.verifyError) {
+            throw this.verifyError;
+        }
     }
 
     async findOneById(id: string): Promise<Session | null> {

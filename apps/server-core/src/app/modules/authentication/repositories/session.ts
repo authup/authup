@@ -53,6 +53,28 @@ export class SessionRepository implements ISessionRepository {
         return this.repository.findOneBy({ id });
     }
 
+    async findOneBySecret(secret: string): Promise<Session | null> {
+        if (!secret) {
+            // A blank handle must never become a query: the column is
+            // nullable, so an empty match is meaningless, and refusing it here
+            // keeps a missing cookie from reaching the database at all.
+            return null;
+        }
+
+        // Deliberately not cached: the session cache is id-keyed, and the
+        // credential is a multi-day one, so the row is the authority (a cache
+        // a replica never saw would answer anonymous in steady state).
+        return this.repository.findOneBy({ secret });
+    }
+
+    async updateSecret(id: string, secret: string | null): Promise<void> {
+        await this.repository.update({ id }, { secret });
+
+        // The cached copy never carries the secret (see `save`), so nothing
+        // cached goes stale here. `auth_sessions` has no entity subscriber, so
+        // a targeted update publishes nothing either.
+    }
+
     // -----------------------------------------------------
 
     async findMany(
@@ -113,12 +135,23 @@ export class SessionRepository implements ISessionRepository {
         const session = this.repository.create(input);
         await this.repository.save(session);
 
+        // The cookie handle must never enter the cache. `findOneById` serves
+        // the cached object verbatim, and an owner reads its own session
+        // through `GET /sessions/:id` with no permission at all, so a cached
+        // secret would be published where a `select: false` column is
+        // otherwise absent by construction. Omitted rather than nulled: a
+        // cached `secret: null` fed back through `save()` (ping / refresh both
+        // do exactly that) would clear the column and kill a live console
+        // session on its first request.
+        const cacheable : Session = { ...session };
+        delete cacheable.secret;
+
         await this.cache.set(
             buildCacheKey({
                 prefix: AuthenticationCachePrefix.SESSION,
-                key: session.id, 
+                key: session.id,
             }),
-            session,
+            cacheable,
             { ttl: new Date(session.expiresAt).getTime() - Date.now() },
         );
 

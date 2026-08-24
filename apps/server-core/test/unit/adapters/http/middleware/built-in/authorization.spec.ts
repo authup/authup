@@ -23,6 +23,7 @@ import {
     FakeOAuth2TokenVerifier,
     FakeSessionManager,
 } from '../../../../core/helpers/index.ts';
+import { FakeSessionRepository } from '../../../../core/entities/session/fake-repository.ts';
 import { createFakeEvent } from '../../request/fake-event.ts';
 
 const TOKEN = 'token-under-test';
@@ -30,20 +31,24 @@ const TOKEN = 'token-under-test';
 function createSuite() {
     const tokenVerifier = new FakeOAuth2TokenVerifier();
     const sessionManager = new FakeSessionManager();
+    const sessionRepository = new FakeSessionRepository();
     const identityResolver = new FakeIdentityResolver();
 
     const middleware = new AuthorizationMiddleware({
         identityResolver,
         identityPermissionProvider: new FakeIdentityPermissionProvider(),
         sessionManager,
+        sessionRepository,
         oauth2TokenVerifier: tokenVerifier,
         permissionProvider: new PermissionMemoryProvider(),
+        options: { baseURL: 'https://authup.test' },
     });
 
     return {
-        middleware, 
-        tokenVerifier, 
-        sessionManager, 
+        middleware,
+        tokenVerifier,
+        sessionManager,
+        sessionRepository,
         identityResolver,
     };
 }

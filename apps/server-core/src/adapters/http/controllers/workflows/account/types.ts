@@ -1,0 +1,54 @@
+/*
+ * Copyright (c) 2026.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+import type { StatusResponseFeatures } from '@authup/core-http-kit';
+import type { Logger } from '@authup/server-kit';
+import type {
+    IConsoleLoginStore,
+    IIdentityPermissionProvider,
+    IIdentityResolver,
+    IOAuth2ClientRepository,
+    IOAuth2TokenRevoker,
+    IOAuth2TokenVerifier,
+    ISessionManager,
+    ISessionRepository,
+} from '../../../../../core/index.ts';
+
+export type AccountControllerOptions = {
+    baseURL: string,
+    features: StatusResponseFeatures,
+    trustedOrigins: string[],
+};
+
+export type AccountControllerContext = {
+    options: AccountControllerOptions,
+    /**
+     * Holds the PKCE verifier and `state` while the browser is away at
+     * `/authorize` (plan 088).
+     */
+    loginStore: IConsoleLoginStore,
+    /**
+     * Writes and clears the opaque credential on the session row. The session
+     * MANAGER cannot: the column is `select: false` and has a dedicated write.
+     */
+    sessionRepository: ISessionRepository,
+    sessionManager: ISessionManager,
+    /**
+     * Reads the exchanged access token (session, subject) and the refresh
+     * token, so both can be revoked before either leaves the process.
+     */
+    tokenVerifier: IOAuth2TokenVerifier,
+    tokenRevoker: IOAuth2TokenRevoker,
+    identityResolver: IIdentityResolver,
+    identityPermissionProvider: IIdentityPermissionProvider,
+    /**
+     * Resolves the console's own client row, so the permission projection can
+     * be scoped by its UUID rather than its name (see `getSession`).
+     */
+    clientRepository: IOAuth2ClientRepository,
+    logger?: Logger,
+};

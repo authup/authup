@@ -10,6 +10,7 @@ import type { ObjectLiteral } from '@authup/kit';
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
 import type { ClientOptionsInput, IClient as IBaseClient } from 'hapic';
 import type {
+    IAccountAPI,
     IClientAPI,
     IClientPermissionAPI,
     IClientRoleAPI,
@@ -51,6 +52,11 @@ export type ClientOptions = ClientOptionsInput;
  * `Client`; any test double satisfying it can substitute.
  */
 export interface IClient extends IBaseClient {
+    /**
+     * The account console's cookie-authenticated session surface (plan 088).
+     */
+    readonly account : IAccountAPI;
+
     readonly authorize : IOAuth2AuthorizeAPI;
 
     readonly client : IClientAPI;

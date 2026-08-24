@@ -21,6 +21,17 @@ describe('src/config', () => {
         expect(config.enabled).toBeFalsy();
     });
 
+    // Cookie mode is a property of how the bundle is served (server-core
+    // injects it), never an operator choice — and never a default: a
+    // standalone host on a foreign origin could not present the
+    // SameSite=Strict credential and must stay on the client-side code flow.
+    it('should keep the token flow unless cookie mode is injected', () => {
+        expect(resolveAccountConsoleConfig({}, { origin: 'https://auth.example.com' }).cookieSession)
+            .toBe(false);
+        expect(resolveAccountConsoleConfig({ cookieSession: true }, { origin: 'https://auth.example.com' }).cookieSession)
+            .toBe(true);
+    });
+
     it('should derive the api url from the base path (embedded serving)', () => {
         const config = resolveAccountConsoleConfig({}, { origin: 'https://auth.example.com' });
 

@@ -15,6 +15,8 @@ const QUERY_SYMBOL = Symbol.for('@routup/query:ReqQuery');
 const BODY_SYMBOL = Symbol.for('@routup/body:ReqBody');
 
 export type FakeEventInit = {
+    path?: string,
+    method?: string,
     params?: Record<string, string | undefined>,
     headers?: Record<string, string>,
     cookies?: Record<string, string>,
@@ -41,11 +43,17 @@ export function createFakeEvent(init: FakeEventInit = {}): IAppEvent {
     return {
         request: new Request('http://localhost/'),
         params: init.params || {},
-        path: '/',
-        method: 'GET',
+        path: init.path || '/',
+        method: init.method || 'GET',
         mountPath: '',
         headers,
         searchParams: new URLSearchParams(),
         store,
+        // A response envelope, so a helper that WRITES (a cookie, a header) can
+        // be asserted rather than silently throwing into a caller's catch.
+        response: {
+            headers: new Headers(),
+            status: 200,
+        },
     } as unknown as IAppEvent;
 }

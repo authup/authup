@@ -20,6 +20,14 @@ import { SESSION_FILTER_KEYS } from '../../../../../src/core/index.ts';
 export class FakeSessionRepository implements ISessionRepository {
     public removeCalls: Session[] = [];
 
+    /**
+     * Every credential this repository was asked to resolve. Recorded so a
+     * spec can assert the store was never consulted at all — "the bearer path
+     * wins" is a statement about what did NOT happen, and an assertion on the
+     * resulting session id alone would also pass if both lookups ran.
+     */
+    public findOneBySecretCalls: string[] = [];
+
     private sessions = new Map<string, Session>();
 
     seed(session: Partial<Session>): Session {
@@ -33,6 +41,24 @@ export class FakeSessionRepository implements ISessionRepository {
 
     async findOneById(id: string): Promise<Session | null> {
         return this.sessions.get(id) ?? null;
+    }
+
+    async findOneBySecret(secret: string): Promise<Session | null> {
+        this.findOneBySecretCalls.push(secret);
+
+        if (!secret) {
+            return null;
+        }
+
+        return [...this.sessions.values()]
+            .find((session) => session.secret === secret) ?? null;
+    }
+
+    async updateSecret(id: string, secret: string | null): Promise<void> {
+        const session = this.sessions.get(id);
+        if (session) {
+            session.secret = secret;
+        }
     }
 
     async findMany(

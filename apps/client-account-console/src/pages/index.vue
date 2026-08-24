@@ -164,8 +164,29 @@ export default defineComponent({
         // client (plan 080): per-app session attribution + access-policy
         // enforcement. The code lands back on this path; the router guard
         // exchanges it with the saved PKCE parameters.
+        //
+        // In cookie mode the whole flow is server-side instead (plan 088):
+        // `GET /account/login` mints the PKCE pair and the state where only
+        // the callback can read them, so no verifier and no token ever
+        // reaches this JavaScript. The client-side path below stays for a
+        // standalone host on a foreign origin, which can never present the
+        // `SameSite=Strict` session cookie.
         const kick = async (realmKey: string) => {
             try {
+                // The redirect_uri carries no query string either way, so the
+                // back link rides the stash on both paths. Untouched by the
+                // mode: it never depended on the exchange happening here.
+                saveAccountConsoleRef(backRef.value);
+
+                if (config.cookieSession) {
+                    const url = new URL(`${config.apiUrl}/account/login`);
+                    url.searchParams.set('realmId', realmKey);
+
+                    window.location.href = url.href;
+
+                    return;
+                }
+
                 const pkce = await createPKCE();
                 const state = createState();
 
@@ -178,8 +199,6 @@ export default defineComponent({
                     client_id: CLIENT_ACCOUNT_CONSOLE_NAME,
                     realm_id: realmKey,
                 });
-
-                saveAccountConsoleRef(backRef.value);
 
                 window.location.href = buildAuthorizeURL({
                     baseURL: config.apiUrl,

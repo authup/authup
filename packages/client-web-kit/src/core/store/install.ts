@@ -35,6 +35,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
             baseURL: options.baseURL,
             httpClient: options.httpClient,
             dispatcher: storeDispatcher,
+            cookieSession: options.cookieSession,
         }),
     );
     const store = storeFactory(options.pinia);
@@ -120,6 +121,46 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         }
     };
 
+    /**
+     * The cookies holding a token pair. Cookie mode (plan 088) neither reads
+     * nor writes them.
+     *
+     * NOT reading them is the whole of finding 1: the hosted auth pages write
+     * these names at the same path on the same origin, so seeding them gave
+     * the console a bearer, and header-wins precedence meant the session
+     * cookie was never consulted — the cookie path would have been unreachable
+     * on its own happy path. The authentication hook stays installed (it is
+     * inert without an access token, and `installHTTPClient` throws when it
+     * was never provided).
+     *
+     * NOT writing them matters just as much: those cookies are the hosted auth
+     * console's lingering SSO session, which `prompt=none` and
+     * `prompt=select_account` depend on for every other RP on the origin. A
+     * console `logout()` clears every token ref, so with the listeners
+     * attached it would clear those cookies as a side effect. The console does
+     * not write them.
+     *
+     * Scoped precisely, because the wider claim would be wrong: this is about
+     * the COOKIES, not the session behind them. A deliberate sign-out does end
+     * the session row, and since the authorize flow reuses the bearer session
+     * (#3191 session continuity) that row IS the hosted page's session, so
+     * signing out of the account console signs the browser out of the IdP.
+     * That is the intended semantic on the IdP's own origin. What it leaves
+     * behind is stale token cookies naming a deleted row: they fail at the API
+     * (the middleware checks the session), so the state self-heals, and
+     * `/token/introspect` reporting them `active` in the meantime is its
+     * documented jti+exp contract rather than a session check.
+     */
+    const TOKEN_COOKIE_NAMES : string[] = [
+        CookieName.ACCESS_TOKEN,
+        CookieName.ACCESS_TOKEN_EXPIRE_DATE,
+        CookieName.REFRESH_TOKEN,
+        CookieName.ID_TOKEN,
+    ];
+
+    const isTokenCookie = (key: string) => options.cookieSession &&
+        TOKEN_COOKIE_NAMES.includes(key);
+
     const readCookies = () => {
         if (store.cookiesRead) {
             return;
@@ -141,6 +182,10 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
 
         let value : any;
         for (const key of keys) {
+            if (isTokenCookie(key)) {
+                continue;
+            }
+
             value = cookieGet(key);
             if (!value) {
                 continue;
@@ -192,56 +237,59 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         );
     };
 
-    storeDispatcher.on(
-        StoreDispatcherEventName.ACCESS_TOKEN_EXPIRE_DATE_UPDATED,
-        (input) => {
-            if (input) {
-                cookieSet(CookieName.ACCESS_TOKEN_EXPIRE_DATE, input, {
-                    maxAge: maxAgeFn(),
-                    path: cookiePath,
-                });
-            } else {
-                cookieUnset(CookieName.ACCESS_TOKEN_EXPIRE_DATE, { path: cookiePath });
-            }
-        },
-    );
+    // Skipped entirely in cookie mode — see TOKEN_COOKIE_NAMES above.
+    if (!options.cookieSession) {
+        storeDispatcher.on(
+            StoreDispatcherEventName.ACCESS_TOKEN_EXPIRE_DATE_UPDATED,
+            (input) => {
+                if (input) {
+                    cookieSet(CookieName.ACCESS_TOKEN_EXPIRE_DATE, input, {
+                        maxAge: maxAgeFn(),
+                        path: cookiePath,
+                    });
+                } else {
+                    cookieUnset(CookieName.ACCESS_TOKEN_EXPIRE_DATE, { path: cookiePath });
+                }
+            },
+        );
 
-    storeDispatcher.on(
-        StoreDispatcherEventName.ACCESS_TOKEN_UPDATED,
-        (input) => {
-            if (input) {
-                const maxAge = maxAgeFn();
-                cookieSet(CookieName.ACCESS_TOKEN, input, {
-                    maxAge,
-                    path: cookiePath,
-                });
-            } else {
-                cookieUnset(CookieName.ACCESS_TOKEN, { path: cookiePath });
-            }
-        },
-    );
+        storeDispatcher.on(
+            StoreDispatcherEventName.ACCESS_TOKEN_UPDATED,
+            (input) => {
+                if (input) {
+                    const maxAge = maxAgeFn();
+                    cookieSet(CookieName.ACCESS_TOKEN, input, {
+                        maxAge,
+                        path: cookiePath,
+                    });
+                } else {
+                    cookieUnset(CookieName.ACCESS_TOKEN, { path: cookiePath });
+                }
+            },
+        );
 
-    storeDispatcher.on(
-        StoreDispatcherEventName.REFRESH_TOKEN_UPDATED,
-        (input) => {
-            if (input) {
-                cookieSet(CookieName.REFRESH_TOKEN, input, { path: cookiePath });
-            } else {
-                cookieUnset(CookieName.REFRESH_TOKEN, { path: cookiePath });
-            }
-        },
-    );
+        storeDispatcher.on(
+            StoreDispatcherEventName.REFRESH_TOKEN_UPDATED,
+            (input) => {
+                if (input) {
+                    cookieSet(CookieName.REFRESH_TOKEN, input, { path: cookiePath });
+                } else {
+                    cookieUnset(CookieName.REFRESH_TOKEN, { path: cookiePath });
+                }
+            },
+        );
 
-    storeDispatcher.on(
-        StoreDispatcherEventName.ID_TOKEN_UPDATED,
-        (input) => {
-            if (input) {
-                cookieSet(CookieName.ID_TOKEN, input, { path: cookiePath });
-            } else {
-                cookieUnset(CookieName.ID_TOKEN, { path: cookiePath });
-            }
-        },
-    );
+        storeDispatcher.on(
+            StoreDispatcherEventName.ID_TOKEN_UPDATED,
+            (input) => {
+                if (input) {
+                    cookieSet(CookieName.ID_TOKEN, input, { path: cookiePath });
+                } else {
+                    cookieUnset(CookieName.ID_TOKEN, { path: cookiePath });
+                }
+            },
+        );
+    }
 
     storeDispatcher.on(
         StoreDispatcherEventName.REALM_UPDATED,

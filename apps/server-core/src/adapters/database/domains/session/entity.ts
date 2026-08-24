@@ -49,9 +49,27 @@ export class SessionEntity implements Session {
     })
     subKind: string;
 
+    /**
+     * The opaque credential a console browser presents (plan 088). Unique so
+     * one handle resolves at most one session, nullable because every
+     * bearer-mode session has none, and `select: false` so it stays in the
+     * same class as `user.password` / `key.decryptionKey`: re-selected only by
+     * `ISessionRepository.findOneBySecret`, never on an ordinary session read.
+     */
+    @Index({ unique: true })
+    @Column({
+        name: 'secret',
+        type: 'varchar',
+        length: 64,
+        nullable: true,
+        default: null,
+        select: false,
+    })
+    secret: string | null;
+
     @Index()
     @Column({
-        name: 'ip_address', 
+        name: 'ip_address',
         type: 'varchar', 
         length: 45, 
     })

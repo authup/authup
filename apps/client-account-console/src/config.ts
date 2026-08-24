@@ -35,6 +35,18 @@ export type AccountConsoleConfigInput = {
      * its own already-validated value.
      */
     ref?: string,
+
+    /**
+     * Authenticate on the server-issued session cookie instead of a token
+     * pair held in JavaScript (plan 088). Injected as `true` by server-core,
+     * which only ever serves this app from the API's own origin — the
+     * credential is `SameSite=Strict`, so a standalone host on a foreign
+     * origin could never present it and stays on the bearer path.
+     *
+     * There is deliberately no config key behind it: it is a property of how
+     * the bundle is served, not an operator choice.
+     */
+    cookieSession?: boolean,
 };
 
 export type AccountConsoleConfig = {
@@ -42,6 +54,7 @@ export type AccountConsoleConfig = {
     basePath: string,
     enabled: boolean,
     ref?: string,
+    cookieSession: boolean,
 };
 
 declare global {
@@ -90,6 +103,9 @@ export function resolveAccountConsoleConfig(
         basePath,
         enabled: injected.features?.accountConsole !== false,
         ref: injected.ref,
+        // Opt-in, never a default: anything but an explicit injected `true`
+        // (a standalone host, a dev server) keeps the client-side code flow.
+        cookieSession: injected.cookieSession === true,
     };
 }
 
