@@ -294,6 +294,32 @@ user-facing copy such as the `@authup/i18n` catalogs.
 - Keep i18n copy short and declarative. A hint should say what the field does
   and what an empty value means, in as few clauses as possible.
 
+## Consolidating shallow modules
+
+A refactor that gathers several one-purpose modules behind one object relocates
+logic rather than deepening it. It was tried here once and reverted (plan 029,
+2026-07-04): `apps/server-core/src/adapters/http/request/helpers/`, eleven files
+answering "what do we know about this request", became a single `RequestContext`
+under one `event.store` symbol, and then went back.
+
+Three things went wrong, and all three generalize:
+
+- **The headline goal was not reached.** "Build order enforced by construction"
+  failed because the getter lazily created a blank context, so every reader
+  still degraded to `undefined` / `[]` exactly as the free functions did. The
+  coupling was centralized, not enforced.
+- **The diagnosis was weak.** `grep getRequestRealmID` landing in a 30-line file
+  is more discoverable than a method on a 180-line class.
+- **It grew the call surface.** Avoiding churn across ~115 call sites required a
+  facade, so `ctx.realmId` and `getRequestRealmID` both ended up existing.
+
+The value in the attempt was the boundary tests written to make the move safe
+(`test/unit/adapters/http/request/`), and those needed no restructure at all.
+So when a consolidation is proposed, offer the tests and the restructure as
+separate pieces of work. Do not re-attempt this one without a concrete need for
+a single request-scoped state object, and then commit fully instead of keeping
+both surfaces.
+
 ## Best Practices
 
 - Use **ESM** and modern TypeScript/JavaScript.
