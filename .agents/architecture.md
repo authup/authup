@@ -1422,7 +1422,7 @@ choice"):
   **Everything in this bullet and the sign-out bullet below describes the
   BROWSER-side flow, which a server-served console no longer takes**. See
   *Console session credential* after this list. It is what a standalone
-  cross-origin host still runs, and the code stays behind the derived
+  cross-origin host still runs, and the code stays behind the resolved
   `cookieSession` decision for exactly that reason. The
   shell page's kick saves the kit `AuthorizationRequest` (sessionStorage)
   and redirects to `/authorize`; the app's router guard consumes it on
@@ -1656,16 +1656,23 @@ rather than trusted until `exp`.
   (`cors.ts`). `Allow-Origin` keeps reflecting, so non-credentialed
   cross-origin callers are unaffected; no authup consumer sets
   `credentials: 'include'`.
-- **Wiring.** `cookieSession` is DERIVED by `resolveAccountConsoleConfig`, not
-  injected and not configurable: it is true exactly when `apiUrl` is the
-  document's own origin (`isSameOriginApiUrl`). The credential is
-  `SameSite=Strict` and the server additionally demands `Sec-Fetch-Site:
-  same-origin`, so that condition is precisely when cookie mode can work — and
-  it is the same condition that makes `${apiUrl}/account/login` a real route,
-  which is what makes the kick in `pages/index.vue` sound rather than
-  conventional. It was an injected boolean first; that made the broken
-  combination (cookie mode against a foreign API) representable and silently
-  fatal, so there is deliberately no flag left to set wrong. The derived value
+- **Wiring.** `cookieSession` needs TWO conditions, because they are different
+  facts and each alone is wrong. `serveAccountConsolePage` injects it as a
+  **capability** assertion — this server implements
+  `/account/login|callback|session` — which a console dist cannot determine for
+  itself: newer than its server, it would navigate to a `/account/login` that
+  does not exist, and a 404 on a top-level navigation is unrecoverable.
+  `resolveAccountConsoleConfig` then ANDs it with **applicability**,
+  `isSameOriginApiUrl(apiUrl, origin)`: the credential is `SameSite=Strict` and
+  the server also demands `Sec-Fetch-Site: same-origin`, so against a foreign
+  API every request is cross-site and refused. The injected flag alone made
+  that pairing representable and silently fatal (the kick redirects, the cookie
+  lands on the API's origin, the console loops back to sign-in with no
+  diagnostic); the derivation alone dropped the capability signal. Together
+  they are exactly the condition under which `${apiUrl}/account/login` is both
+  a real route and a usable one, which is what makes the kick in
+  `pages/index.vue` sound rather than conventional. It is never an operator
+  choice: there is no config key behind the injection. The resolved value
   reaches BOTH the kit's `installStore` and its store factory. In `installStore` it skips the `readCookies()` seeding of
   the four token cookies, and **seeding nothing is the whole fix**: the
   hosted login writes them at path `/` on this same origin, so a seeded
@@ -1695,8 +1702,8 @@ rather than trusted until `exp`.
   session handle itself is durable). A browser that does not send Fetch
   Metadata can never authenticate: the intended fail-closed posture, and a
   support-visible cliff. Standalone cross-origin hosting stays on the
-  JS-token path (it is cross-origin, so the derivation yields false there), so
-  the two modes coexist behind one derived condition.
+  JS-token path (cross-origin, so applicability fails there), so the two modes
+  coexist behind one resolved condition.
 
 ### File Structure
 

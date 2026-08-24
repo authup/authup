@@ -119,6 +119,10 @@ export async function serveAccountConsolePage(
         apiUrl: options.baseURL,
         basePath: `${basePath}/account`,
         features: options.features,
+        // This server implements the cookie-mode routes. It is a capability
+        // assertion, not a setting: the console pairs it with its own
+        // same-origin check before taking that path.
+        cookieSession: true,
         ref: resolveAccountConsoleRef(
             useRequestQuery(event, 'ref'),
             options.trustedOrigins,

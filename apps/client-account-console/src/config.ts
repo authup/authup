@@ -26,6 +26,21 @@ export type AccountConsoleConfigInput = {
      * Feature switches injected by the serving side. A standalone host
      * omits them (the surface is enabled by virtue of being deployed).
      */
+    /**
+     * The server asserting that it implements cookie mode — NOT an operator
+     * choice, and not sufficient on its own.
+     *
+     * Two different facts gate cookie mode and only one of them is knowable
+     * here. Whether the credential can be PRESENTED is a client-side question
+     * (is the API this document's own origin?) and is derived below. Whether
+     * the server implements `/account/login|callback|session` at all is a
+     * server-side question, and a console dist newer than the server it talks
+     * to cannot answer it: it would navigate to `/account/login` and get a 404
+     * on a top-level navigation, which is unrecoverable. `serveAccountConsolePage`
+     * sets this, so a server that serves the bundle vouches for the routes.
+     */
+    cookieSession?: boolean,
+
     features?: {
         accountConsole?: boolean,
     },
@@ -104,20 +119,23 @@ export function resolveAccountConsoleConfig(
         cookiePath: resolveCookiePath(apiUrl, origin),
         enabled: injected.features?.accountConsole !== false,
         ref: injected.ref,
-        // DERIVED, never injected. Cookie mode is a fact about the
-        // deployment, not a choice: the credential is `SameSite=Strict` and
-        // the server additionally demands `Sec-Fetch-Site: same-origin`, so it
-        // is usable exactly when the API is this console's own origin — and
-        // when it is, `${apiUrl}/account/login` is a real route, which is what
-        // makes the kick in `pages/index.vue` sound rather than conventional.
+        // Capability AND applicability, because they are different facts and
+        // each alone is wrong.
         //
-        // It was an injected boolean first, which made the broken combination
-        // (cookie mode + a foreign API) representable, and it failed silently:
-        // the kick redirects, the callback sets the cookie on the API's
-        // origin, every later request is cross-site and refused, and the
-        // console loops back to sign-in with no diagnostic. Deriving it means
-        // there is no such state to guard against.
-        cookieSession: isSameOriginApiUrl(apiUrl, origin),
+        // The injected half is the server vouching for the routes (see the
+        // input field): without it a console dist newer than its server would
+        // navigate to a `/account/login` that does not exist. The derived half
+        // is this document checking it could present the credential at all:
+        // it is `SameSite=Strict` and the server also demands
+        // `Sec-Fetch-Site: same-origin`, so a foreign API means every request
+        // is cross-site and refused. Injected alone made that broken pairing
+        // representable and silently fatal — the kick redirects, the cookie
+        // lands on the API's origin, and the console loops back to sign-in
+        // with no diagnostic. Together they are exactly the condition under
+        // which `${apiUrl}/account/login` is both a real route and a usable
+        // one, which is what makes the kick in `pages/index.vue` sound.
+        cookieSession: injected.cookieSession === true &&
+            isSameOriginApiUrl(apiUrl, origin),
     };
 }
 
