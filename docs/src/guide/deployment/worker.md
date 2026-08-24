@@ -29,8 +29,9 @@ Two sweeps run today, both once a minute:
 | Event cleaner | Expired rows from `auth_events`, per the retention settings |
 
 The event cleaner is only scheduled while the audit log is on and at least one
-of its retention windows is finite, so a deployment with `EVENT_LOG_ENABLED=false`
-runs the OAuth2 cleaner alone.
+applicable retention window is greater than zero; the entity-event window only
+counts when `EVENT_LOG_ENTITY_ENABLED` is true as well. A deployment with
+`EVENT_LOG_ENABLED=false` runs the OAuth2 cleaner alone.
 
 Both delete in bounded batches and stop when another process already removed
 the rows they selected, so running the sweeps in more than one process is
@@ -152,7 +153,12 @@ services:
 
 The worker needs no volume and no published port. It does need the same
 database as the API, since the sweeps are plain deletes against the shared
-schema.
+schema. This split is for the server databases (MySQL and Postgres): a SQLite
+worker container would open its own database file inside the container and
+sweep nothing of the API's data, so a SQLite deployment keeps the components
+in the API process instead. Note the worker's rotating file logs under
+`WRITABLE_DIRECTORY_PATH` are ephemeral without a volume; the console output
+for `docker logs` remains.
 
 ## Kubernetes
 
