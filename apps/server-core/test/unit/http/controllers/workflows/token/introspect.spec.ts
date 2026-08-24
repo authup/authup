@@ -202,6 +202,8 @@ describe('token-introspect authorization', () => {
 
     let confidentialClientId : string;
 
+    let confidentialClientName : string;
+
     let masterRealmId : string;
 
     beforeAll(async () => {
@@ -241,6 +243,7 @@ describe('token-introspect authorization', () => {
             secretEncrypted: false,
         });
         confidentialClientId = client.id;
+        confidentialClientName = client.name;
     });
 
     afterAll(async () => {
@@ -285,8 +288,8 @@ describe('token-introspect authorization', () => {
 
     it('should refuse a bare public client_id as authorization', async () => {
         // identification is not authentication: anyone knows `admin-console`
-        // (the realm hint is `realm_id` only, the client-credentials grant's
-        // shape; a name-form client_id is scoped by it)
+        // (the realm hint rides `readRealmHint`: `realm_id` or `realm_name`,
+        // canonicalized; a name-form client_id is scoped by it)
         const response = await httpRequest(suite, 'POST', '/token/introspect', {
             form: {
                 token: accessToken,
@@ -326,6 +329,24 @@ describe('token-introspect authorization', () => {
         const body = await response.json();
         expect(body.active).toBe(true);
         expect(body.sub_kind).toEqual('user');
+    });
+
+    it('should ignore a non-string realm hint instead of failing', async () => {
+        // a JSON body can carry anything under realm_id; readRealmHint reads
+        // string values only, so the resolve stays unscoped. The client is
+        // NAME-identified here, since a UUID skips the realm predicate anyway
+        const response = await httpRequest(suite, 'POST', '/token/introspect', {
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                token: accessToken,
+                client_id: confidentialClientName,
+                client_secret: clientSecret,
+                realm_id: { nested: true },
+            }),
+        });
+
+        expect(response.status).toEqual(200);
+        expect((await response.json()).active).toBe(true);
     });
 
     it('should accept confidential client credentials as Basic', async () => {

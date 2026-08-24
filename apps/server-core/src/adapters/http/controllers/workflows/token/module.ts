@@ -45,6 +45,7 @@ import {
     extractClientCredentialsFromRequest,
     extractOAuth2ClientCertificateEvidence,
     guessOauth2GrantTypeByRequest,
+    readRealmHint,
 } from '../../../adapters/index.ts';
 import type { CertificateSource } from '../../../request/index.ts';
 import { useRequestIdentity, useRequestIdentityOrFail } from '../../../request/index.ts';
@@ -293,7 +294,7 @@ export class TokenController {
         const client = await this.clientAuthenticator.authenticate(
             clientId,
             clientSecret,
-            body?.realm_id,
+            readRealmHint(body),
             certificateEvidence,
         );
         if (client.authMethod === ClientAuthMethod.NONE) {
@@ -304,13 +305,14 @@ export class TokenController {
     // ----------------------------------------------------------
 
     /**
-     * Deliberately ungated, unlike introspection (#3489). RFC 7009 §2.1 only
-     * validates credentials "in case of a confidential client"; a public
-     * client sends its `client_id`, which identifies and proves nothing. The
-     * consoles are public clients and the kit revokes anonymously on logout
-     * teardown, so possession of the token is the only credential there is,
-     * revoking is the benign thing to do with it, and the uniform 200 below
-     * leaves a scanner nothing to learn.
+     * Deliberately ungated, unlike introspection (#3489). RFC 7009 §2.1 asks
+     * the client to send its credentials (a bare `client_id` for a public
+     * client) and the server to verify the token was issued to that client;
+     * authup knowingly skips both. A public `client_id` identifies and
+     * proves nothing, so an ownership check built on it would be advisory,
+     * the consoles are public clients whose kit revokes anonymously on
+     * logout teardown, revoking a token one possesses is the benign action,
+     * and the uniform 200 below leaves a scanner nothing to learn.
      */
     @DPost('/revoke', [])
     async revokeToken(

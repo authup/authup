@@ -30,9 +30,11 @@ runs, so a request whose only token is the lapsed one answers `401`.
 
 **Action required** for an integration that called the endpoint anonymously:
 send one of the two credentials. Nothing changes for `@authup/client-web-kit`
-or the server adapters. `POST /token/revoke` stays open: RFC 7009 only asks
-a confidential client to authenticate, and possession of a token is the
-credential a public client has.
+or the server adapters. `POST /token/revoke` stays open as a deliberate
+authup choice: RFC 7009 asks a public client to identify itself by
+`client_id` and the server to verify token ownership, but a public
+`client_id` proves nothing, and possession of the token already lets its
+holder use it. Revoking is the benign action.
 
 ### Introspecting an expired token now returns its payload
 
