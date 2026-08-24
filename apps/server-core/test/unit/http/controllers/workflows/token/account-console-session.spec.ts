@@ -138,7 +138,7 @@ describe('account-console session continuity (plan 080 work item 0)', () => {
 
         const userClient = bearerFor(login.access_token);
 
-        const loginIntrospect = await userClient.token.introspect({ token: login.access_token });
+        const loginIntrospect = await userClient.token.introspect({ token: login.access_token }, { authorizationHeaderInherit: true });
         const userId = loginIntrospect.sub!;
         const loginSessionId = loginIntrospect.session_id!;
         expect(loginSessionId).toBeDefined();
@@ -151,7 +151,7 @@ describe('account-console session continuity (plan 080 work item 0)', () => {
         expect(tokenResponse.access_token).toBeDefined();
 
         const exchangeClient = bearerFor(tokenResponse.access_token);
-        const exchangeIntrospect = await exchangeClient.token.introspect({ token: tokenResponse.access_token });
+        const exchangeIntrospect = await exchangeClient.token.introspect({ token: tokenResponse.access_token }, { authorizationHeaderInherit: true });
 
         // the exchanged token rides the very same session as the login ...
         expect(exchangeIntrospect.session_id).toEqual(loginSessionId);

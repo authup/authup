@@ -35,7 +35,7 @@ describe('session-include', () => {
 
     it('hydrates user & realm relations for an admin reader', async () => {
         const login = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
-        const introspect = await bearer(login.access_token).token.introspect({ token: login.access_token });
+        const introspect = await bearer(login.access_token).token.introspect({ token: login.access_token }, { authorizationHeaderInherit: true });
 
         const list = await suite.client.session.getMany({
             filters: { userId: introspect.sub as string },

@@ -96,6 +96,14 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
         const denied = await httpRequest(suite, 'GET', '/users/@me', { headers: { Authorization: `Bearer ${ticket}` } });
         expect(denied.status).toEqual(401);
 
+        // ...and it is no introspection credential either (#3489): the
+        // middleware stashes it on its dedicated slot, never the identity slot
+        const deniedIntrospect = await httpRequest(suite, 'POST', '/token/introspect', {
+            headers: { Authorization: `Bearer ${ticket}` },
+            form: { token: ticket },
+        });
+        expect(deniedIntrospect.status).toEqual(401);
+
         // 3) the pending session is ticket-scoped: it self-expires with the
         // ticket instead of lingering for the full session lifetime. The user
         // holds two sessions here (the enrollment bearer + the pending one) —
@@ -139,7 +147,10 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
         expect(me.id).toEqual(user.id);
 
         // ... whose claims advertise the completed factor
-        const introspection = await httpRequest(suite, 'POST', '/token/introspect', { form: { token: verified.token!.access_token } });
+        const introspection = await httpRequest(suite, 'POST', '/token/introspect', {
+            headers: { Authorization: `Bearer ${verified.token!.access_token}` },
+            form: { token: verified.token!.access_token },
+        });
         expect(introspection.status).toEqual(200);
         const claims = await introspection.json();
         expect(claims.kind).toEqual(OAuth2TokenKind.ACCESS);

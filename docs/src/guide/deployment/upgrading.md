@@ -7,6 +7,33 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.62)
 
+### Token introspection requires authorization
+
+`POST /token/introspect` (and its `GET` form) now answers `401` to a request
+carrying no credentials, as RFC 7662 section 2.1 requires ("the endpoint MUST
+also require some form of authorization"). Two forms are accepted:
+
+- a **live bearer**: `Authorization: Bearer <access token>`. The token may be
+  the one being introspected (what `@authup/client-web-kit` sends) or the
+  caller's own, for instance a resource server's client-credentials token
+  (what the `@authup/server-adapter-*` packages send, minted on the first
+  `401` and replayed);
+- **confidential client credentials**: `client_id` + `client_secret` in the
+  form body or as `Authorization: Basic`, or a `tls` client's certificate. A
+  public client (`authMethod: none`) is refused with `invalid_client`; its
+  bare `client_id` identifies it but proves nothing.
+
+The expired-token report (next section) is unchanged, and now reachable
+only by a caller that proved who it is. An expired token is NOT a credential:
+the authorization middleware rejects an expired bearer before the endpoint
+runs, so a request whose only token is the lapsed one answers `401`.
+
+**Action required** for an integration that called the endpoint anonymously:
+send one of the two credentials. Nothing changes for `@authup/client-web-kit`
+or the server adapters. `POST /token/revoke` stays open: RFC 7009 only asks
+a confidential client to authenticate, and possession of a token is the
+credential a public client has.
+
 ### Introspecting an expired token now returns its payload
 
 `POST /token/introspect` answers `200` with `"active": false` **and the token's

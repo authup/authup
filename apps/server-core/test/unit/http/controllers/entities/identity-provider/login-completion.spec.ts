@@ -527,7 +527,7 @@ describe('identity-provider login completion', () => {
 
         // The id_token is minted at this exchange, so its `sid` must name the
         // session this exchange created rather than anything the callback held.
-        const introspection = await suite.client.token.introspect({ token: body.access_token });
+        const introspection = await suite.client.token.introspect({ token: body.access_token }, { authorizationHeaderInherit: true });
         expect(decodeJWTPayload(body.id_token).sid).toEqual(introspection.session_id);
     });
 

@@ -6,12 +6,15 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenIntrospectionResponse, OAuth2TokenPermission } from '@authup/specs';
-import { 
-    OAuth2GrantTypeError, 
-    OAuth2RequestError, 
-    OAuth2TokenGrant, 
-    isJWTError, 
+import {
+    OAuth2ClientError,
+    OAuth2GrantTypeError,
+    OAuth2RequestError,
+    OAuth2TokenGrant,
+    isJWTError,
 } from '@authup/specs';
+import { ClientAuthMethod } from '@authup/core-kit';
+import { readRequestBody } from '@routup/basic/body';
 import {
     DContext,
     DController,
@@ -30,6 +33,7 @@ import type {
     IOAuth2TokenIssuer,
     IOAuth2TokenRevoker,
     IOAuth2TokenVerifier,
+    OAuth2ClientAuthenticator,
 } from '../../../../../core/index.ts';
 import { OAuth2OpenIDClaimsBuilder } from '../../../../../core/index.ts';
 import type { IHTTPOAuth2Grant } from '../../../adapters/index.ts';
@@ -38,8 +42,12 @@ import {
     HTTPOAuth2AuthorizeGrant,
     HTTPOAuth2RefreshTokenGrant,
     HTTPPasswordGrant,
+    extractClientCredentialsFromRequest,
+    extractOAuth2ClientCertificateEvidence,
     guessOauth2GrantTypeByRequest,
 } from '../../../adapters/index.ts';
+import type { CertificateSource } from '../../../request/index.ts';
+import { useRequestIdentity, useRequestIdentityOrFail } from '../../../request/index.ts';
 import { extractTokenFromRequest } from './utils/index.ts';
 
 @DTags('auth')
@@ -59,6 +67,10 @@ export class TokenController {
 
     protected metrics? : IAuthFlowMetrics;
 
+    protected clientAuthenticator : OAuth2ClientAuthenticator;
+
+    protected certificateSource : CertificateSource;
+
     protected tokenGrants : Record<`${OAuth2TokenGrant}`, IHTTPOAuth2Grant>;
 
     // -------------------------------------------
@@ -71,6 +83,8 @@ export class TokenController {
         this.identityResolver = ctx.identityResolver;
         this.identityPermissionProvider = ctx.identityPermissionProvider;
         this.metrics = ctx.metrics;
+        this.clientAuthenticator = ctx.oauth2ClientAuthenticator;
+        this.certificateSource = ctx.certificateSource;
 
         this.tokenGrants = {
             [OAuth2TokenGrant.AUTHORIZATION_CODE]: new HTTPOAuth2AuthorizeGrant({
@@ -135,6 +149,8 @@ export class TokenController {
     async postIntrospect(
         @DContext() event: IAppEvent,
     ): Promise<OAuth2TokenIntrospectionResponse> {
+        await this.assertIntrospectionAuthorized(event);
+
         try {
             const token = await extractTokenFromRequest(event);
 
@@ -184,12 +200,10 @@ export class TokenController {
             const claims = claimsBuilder.fromIdentity(identity);
 
             // An inactive token reports WHO it belonged to and nothing about
-            // what they may do. The endpoint requires no authorization (#3489),
-            // so anyone holding a lapsed token string - out of a log, browser
-            // history, a proxy trace - reaches this answer; naming the subject
-            // is the point of reading an expired token at all, handing over
-            // their authorization set is not. It also skips resolving that set
-            // for a token nobody can use.
+            // what they may do (RFC 7662 §2.2 / §4): naming the subject is the
+            // point of reading an expired token at all, handing over their
+            // authorization set is not. It also skips resolving that set for
+            // a token nobody can use.
             if (!active) {
                 return {
                     active,
@@ -247,8 +261,57 @@ export class TokenController {
         }
     }
 
+    /**
+     * RFC 7662 §2.1: the endpoint MUST require authorization, "such as client
+     * authentication [...] or a separate OAuth 2.0 access token". The
+     * credential has to be INDEPENDENT of the token being introspected, since
+     * possession of that string is exactly what a finder has too (#3489): a
+     * request identity the authorization middleware resolved (the kit's own
+     * live bearer, a resource server's client-credentials bearer, Basic), or
+     * confidential client credentials as the grants read them. A bare public
+     * `client_id` identifies and authenticates nothing, so it is refused like
+     * the client-credentials grant refuses it.
+     *
+     * An expired bearer never reaches this point: the middleware answers 401
+     * before the route runs. So the expired report in `postIntrospect` is only
+     * ever handed to a caller that proved who it is, which is what makes it
+     * safe to give.
+     */
+    protected async assertIntrospectionAuthorized(event: IAppEvent) : Promise<void> {
+        if (useRequestIdentity(event)) {
+            return;
+        }
+
+        const { clientId, clientSecret } = await extractClientCredentialsFromRequest(event);
+        if (!clientId) {
+            useRequestIdentityOrFail(event);
+            return;
+        }
+
+        const body = await readRequestBody(event);
+        const certificateEvidence = await extractOAuth2ClientCertificateEvidence(event, this.certificateSource);
+        const client = await this.clientAuthenticator.authenticate(
+            clientId,
+            clientSecret,
+            body?.realm_id,
+            certificateEvidence,
+        );
+        if (client.authMethod === ClientAuthMethod.NONE) {
+            throw OAuth2ClientError.invalid();
+        }
+    }
+
     // ----------------------------------------------------------
 
+    /**
+     * Deliberately ungated, unlike introspection (#3489). RFC 7009 §2.1 only
+     * validates credentials "in case of a confidential client"; a public
+     * client sends its `client_id`, which identifies and proves nothing. The
+     * consoles are public clients and the kit revokes anonymously on logout
+     * teardown, so possession of the token is the only credential there is,
+     * revoking is the benign thing to do with it, and the uniform 200 below
+     * leaves a scanner nothing to learn.
+     */
     @DPost('/revoke', [])
     async revokeToken(
         @DContext() event: IAppEvent,

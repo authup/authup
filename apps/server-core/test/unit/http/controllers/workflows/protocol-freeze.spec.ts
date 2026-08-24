@@ -91,7 +91,10 @@ describe('protocol-surface freeze (plan 073)', () => {
     });
 
     it('keeps the /token/introspect response snake_case', async () => {
-        const response = await httpRequest(suite, 'POST', '/token/introspect', { form: { token: grant.access_token } });
+        const response = await httpRequest(suite, 'POST', '/token/introspect', {
+            headers: { Authorization: `Bearer ${grant.access_token}` },
+            form: { token: grant.access_token },
+        });
         expect(response.status).toEqual(200);
         const claims = await response.json();
 

@@ -11,10 +11,12 @@ import {
     expect,
     it,
 } from 'vitest';
+import { CLIENT_ADMIN_CONSOLE_NAME, REALM_MASTER_NAME } from '@authup/core-kit';
+import { ClientAuthenticationHook, Client as HTTPClient } from '@authup/core-http-kit';
 import { ErrorCode } from '@authup/errors';
 import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants';
 import { createTestApplication } from '../../../../../app';
-import { expectClientError, httpRequest } from '../../../../../utils';
+import { createFakeClient, expectClientError, httpRequest } from '../../../../../utils';
 
 /**
  * RFC 7662 §2.2: a token that is not active or does not exist on this server
@@ -50,7 +52,7 @@ describe('token-introspect', () => {
 
         const payload = await suite.client
             .token
-            .introspect({ token: response.access_token });
+            .introspect({ token: response.access_token }, { authorizationHeaderInherit: true });
 
         expect(payload.active).toBeTruthy();
 
@@ -70,7 +72,7 @@ describe('token-introspect', () => {
 
         const introspection = await suite.client
             .token
-            .introspect({ token: expiredToken });
+            .introspect({ token: expiredToken }, { authorizationHeaderInherit: true });
 
         expect(introspection.active).toBe(false);
 
@@ -80,9 +82,8 @@ describe('token-introspect', () => {
         expect(introspection.sub_kind).toEqual(payload.sub_kind);
         expect((introspection as Record<string, any>).name).toEqual('admin');
 
-        // ...and nothing about what that account may do. The endpoint takes no
-        // authorization (#3489), so this answer is reachable by anyone holding
-        // a lapsed token string.
+        // ...and nothing about what that account may do (RFC 7662 §2.2 / §4:
+        // no more than needed about an inactive token).
         expect(introspection.permissions).toBeUndefined();
     });
 
@@ -96,7 +97,7 @@ describe('token-introspect', () => {
 
         const introspection = await suite.client
             .token
-            .introspect({ token: grant.access_token });
+            .introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
 
         expect(introspection.active).toBe(true);
         expect(Array.isArray(introspection.permissions)).toBe(true);
@@ -117,7 +118,7 @@ describe('token-introspect', () => {
 
         const current = await suite.client
             .token
-            .introspect({ token: grant.access_token });
+            .introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
 
         const signer = suite.container.resolve(OAuth2InjectionToken.TokenSigner);
         const now = Math.floor(Date.now() / 1000);
@@ -133,7 +134,7 @@ describe('token-introspect', () => {
             exp: now - 1,
         });
 
-        expect((await suite.client.token.introspect({ token: justExpired })).active).toBe(false);
+        expect((await suite.client.token.introspect({ token: justExpired }, { authorizationHeaderInherit: true })).active).toBe(false);
     });
 
     // RFC 7662 §2.2: a token that "does not exist on this server" is reported,
@@ -142,7 +143,7 @@ describe('token-introspect', () => {
     it('should report a malformed token as inactive, and nothing else', async () => {
         const introspection = await suite.client
             .token
-            .introspect({ token: 'not-a-json-web-token' });
+            .introspect({ token: 'not-a-json-web-token' }, { authorizationHeaderInherit: true });
 
         expect(introspection.active).toBe(false);
         expect(Object.keys(introspection)).toEqual(['active']);
@@ -164,7 +165,7 @@ describe('token-introspect', () => {
 
         const introspection = await suite.client
             .token
-            .introspect({ token: `${header}.${body}.signature` });
+            .introspect({ token: `${header}.${body}.signature` }, { authorizationHeaderInherit: true });
 
         expect(introspection.active).toBe(false);
         expect(Object.keys(introspection)).toEqual(['active']);
@@ -174,26 +175,53 @@ describe('token-introspect', () => {
     // one is malformed, not a report about a token.
     it('should reject a request carrying no token', async () => {
         await expectClientError(
-            () => suite.client.token.introspect({ token: '' } as any),
+            () => suite.client.token.introspect({ token: '' } as any, { authorizationHeaderInherit: true }),
             { status: 400 },
         );
     });
+});
 
-    it('should not challenge the caller when reporting an expired token', async () => {
-        const grant = await suite.client
-            .token
-            .createWithPassword({
-                username: 'admin',
-                password: 'start123',
-            });
+/**
+ * RFC 7662 §2.1: "To prevent token scanning attacks, the endpoint MUST also
+ * require some form of authorization to access this endpoint, such as client
+ * authentication as described in OAuth 2.0 [RFC6749] or a separate OAuth 2.0
+ * access token". The credential has to be INDEPENDENT of the token being
+ * introspected: the kit presents its live access token as the bearer, a
+ * resource server its own client-credentials bearer, a confidential relying
+ * party its client secret. Possession of the introspected string alone proves
+ * nothing, which is why the expired report is reachable only this way (#3489).
+ */
+describe('token-introspect authorization', () => {
+    const suite = createTestApplication();
+
+    let accessToken : string;
+
+    let expiredToken : string;
+
+    const clientSecret = 'introspect-secret-123';
+
+    let confidentialClientId : string;
+
+    let masterRealmId : string;
+
+    beforeAll(async () => {
+        await suite.setup();
+
+        masterRealmId = (await suite.client.realm.getOne(REALM_MASTER_NAME)).data.id;
+
+        const grant = await suite.client.token.createWithPassword({
+            username: 'admin',
+            password: 'start123',
+        });
+        accessToken = grant.access_token;
 
         const current = await suite.client
             .token
-            .introspect({ token: grant.access_token });
+            .introspect({ token: accessToken }, { authorizationHeaderInherit: true });
 
         const signer = suite.container.resolve(OAuth2InjectionToken.TokenSigner);
         const now = Math.floor(Date.now() / 1000);
-        const expiredToken = await signer.sign({
+        expiredToken = await signer.sign({
             jti: current.jti,
             sub: current.sub,
             sub_kind: current.sub_kind,
@@ -205,12 +233,172 @@ describe('token-introspect', () => {
             exp: now - 3600,
         });
 
-        // the report is a 200 about the TOKEN, not a 401 about the caller
+        const { data: client } = await suite.client.client.create({
+            ...createFakeClient(),
+            active: true,
+            secret: clientSecret,
+            secretHashed: false,
+            secretEncrypted: false,
+        });
+        confidentialClientId = client.id;
+    });
+
+    afterAll(async () => {
+        await suite.teardown();
+    });
+
+    it('should challenge an anonymous caller', async () => {
+        const response = await httpRequest(suite, 'POST', '/token/introspect', { form: { token: accessToken } });
+
+        expect(response.status).toEqual(401);
+        expect(response.headers.get('www-authenticate')).toEqual('Bearer');
+        expect((await response.json()).code).toEqual(ErrorCode.IDENTITY_UNAUTHORIZED);
+    });
+
+    it('should challenge an anonymous caller reporting an expired token', async () => {
+        // the expired report names the subject; that is exactly what must not
+        // be reachable by whoever finds a lapsed token string
         const response = await httpRequest(suite, 'POST', '/token/introspect', { form: { token: expiredToken } });
 
-        expect(response.status).toEqual(200);
+        expect(response.status).toEqual(401);
+        expect(response.headers.get('www-authenticate')).toEqual('Bearer');
+    });
+
+    it('should not take the expired token itself as the credential', async () => {
+        // the issue's "self-introspection exemption" cannot exist: possession
+        // of the string is what a finder has too, and the middleware answers
+        // the expired bearer before the route runs
+        const response = await httpRequest(suite, 'POST', '/token/introspect', {
+            headers: { Authorization: `Bearer ${expiredToken}` },
+            form: { token: expiredToken },
+        });
+
+        expect(response.status).toEqual(401);
+        expect(response.headers.get('www-authenticate')).toContain('error="invalid_token"');
+    });
+
+    it('should gate the GET variant identically', async () => {
+        const response = await httpRequest(suite, 'GET', `/token/introspect?token=${encodeURIComponent(accessToken)}`);
+
+        expect(response.status).toEqual(401);
+    });
+
+    it('should refuse a bare public client_id as authorization', async () => {
+        // identification is not authentication: anyone knows `admin-console`
+        // (the realm hint is `realm_id` only, the client-credentials grant's
+        // shape; a name-form client_id is scoped by it)
+        const response = await httpRequest(suite, 'POST', '/token/introspect', {
+            form: {
+                token: accessToken,
+                client_id: CLIENT_ADMIN_CONSOLE_NAME,
+                realm_id: masterRealmId,
+            },
+        });
+
+        expect(response.status).toEqual(401);
+        expect((await response.json()).code).toEqual(ErrorCode.OAUTH_CLIENT_INVALID);
+    });
+
+    it('should refuse a wrong client secret', async () => {
+        const response = await httpRequest(suite, 'POST', '/token/introspect', {
+            form: {
+                token: accessToken,
+                client_id: confidentialClientId,
+                client_secret: 'definitely-wrong',
+            },
+        });
+
+        expect(response.status).toEqual(401);
         expect(response.headers.get('www-authenticate')).toBeNull();
-        expect((await response.json()).active).toBe(false);
+        expect((await response.json()).code).toEqual(ErrorCode.OAUTH_CLIENT_INVALID);
+    });
+
+    it('should accept confidential client credentials in the body', async () => {
+        const response = await httpRequest(suite, 'POST', '/token/introspect', {
+            form: {
+                token: accessToken,
+                client_id: confidentialClientId,
+                client_secret: clientSecret,
+            },
+        });
+
+        expect(response.status).toEqual(200);
+        const body = await response.json();
+        expect(body.active).toBe(true);
+        expect(body.sub_kind).toEqual('user');
+    });
+
+    it('should accept confidential client credentials as Basic', async () => {
+        const basic = Buffer.from(`${confidentialClientId}:${clientSecret}`).toString('base64');
+        const response = await httpRequest(suite, 'POST', '/token/introspect', {
+            headers: { Authorization: `Basic ${basic}` },
+            form: { token: expiredToken },
+        });
+
+        expect(response.status).toEqual(200);
+        const body = await response.json();
+        // the point of the gate: the expired report stays, for a caller that
+        // proved who it is
+        expect(body.active).toBe(false);
+        expect(body.name).toEqual('admin');
+        expect(body.permissions).toBeUndefined();
+    });
+
+    it('should accept a live bearer introspecting itself', async () => {
+        // the kit's shape: the token is both the credential and the subject
+        const client = new HTTPClient({ baseURL: suite.baseURL });
+        const introspection = await client.token.introspect(
+            { token: accessToken },
+            { authorizationHeader: { type: 'Bearer', token: accessToken } },
+        );
+
+        expect(introspection.active).toBe(true);
+        expect(Array.isArray(introspection.permissions)).toBe(true);
+    });
+
+    it('should accept a live bearer introspecting another token', async () => {
+        // a resource server introspects a third party's token with its own
+        // bearer (the server adapters' remote mode)
+        const client = new HTTPClient({ baseURL: suite.baseURL });
+        const introspection = await client.token.introspect(
+            { token: expiredToken },
+            { authorizationHeader: { type: 'Bearer', token: accessToken } },
+        );
+
+        expect(introspection.active).toBe(false);
+        expect(introspection.sub).toBeDefined();
+    });
+
+    it('should let a resource server authenticate through the hook on the first 401', async () => {
+        // the server adapters' remote mode (server-adapter-kit TokenVerifier):
+        // the first introspection goes out anonymous, the hook answers the
+        // 401 by running its creator and replaying with that bearer, and
+        // `authorizationHeaderInherit` keeps it through hapic's transformer
+        const client = new HTTPClient({ baseURL: suite.baseURL });
+        const hook = new ClientAuthenticationHook({
+            baseURL: suite.baseURL,
+            tokenCreator: () => client.token.createWithClientCredentials({
+                client_id: confidentialClientId,
+                client_secret: clientSecret,
+            }),
+        });
+        hook.attach(client);
+
+        const introspection = await client.token.introspect(
+            { token: accessToken },
+            { authorizationHeaderInherit: true },
+        );
+
+        expect(introspection.active).toBe(true);
+        expect(introspection.sub_kind).toEqual('user');
+    });
+
+    it('should still report an unreadable token bare once authorized', async () => {
+        const introspection = await suite.client
+            .token
+            .introspect({ token: 'not-a-json-web-token' }, { authorizationHeaderInherit: true });
+
+        expect(Object.keys(introspection)).toEqual(['active']);
     });
 });
 
