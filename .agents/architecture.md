@@ -1350,6 +1350,21 @@ choice"):
   `hydrationStore` — nothing to hand off), `vc-locale`/`vc-color-mode`
   cookie continuity with the auth pages, own `NuxtIconBundle` scan
   (app src + kit src + vuecs icon preset).
+- **Session cookies are scoped to the deployment base path** (issue
+  #3495): both authup surfaces on the IdP origin — this console and the
+  hosted auth pages — pass the kit `cookiePath` derived from the sub-path
+  authup is served under (`resolveCookiePath` in `src/config.ts` over a
+  same-origin `apiUrl`; the auth console derives the same value from its
+  payload baseURL). Root-scoped cookies collided with a host application
+  that embeds authup under its own origin (e.g. hub at `/` with authup at
+  `/auth`) and itself uses the kit's cookie names: each side hydrated,
+  rotated, cleanup-revoked and clobbered the other's tokens, and two apps
+  presenting one shared refresh token tripped the strict rotation's replay
+  detection — family revocation killed every session on the origin within
+  seconds of an account-console login. A path-less `publicUrl` and a
+  cross-origin (standalone) `apiUrl` keep `/`, so nothing changes for
+  root deployments; the two consoles still share one session because both
+  scope to the same base path.
 - **Feature flag `accountConsoleEnabled`** (env `ACCOUNT_CONSOLE_ENABLED`,
   default `true`): rides `StatusResponseFeatures.accountConsole`
   (`buildUIFeatures` → status endpoint + the injected config); disabled →
@@ -2247,7 +2262,12 @@ variables always beat file values.
 **Unsupported:** sharing one `COOKIE_DOMAIN` between client-admin-console and the
 hosted auth pages — both surfaces embed the kit store under identical cookie
 names, so a widened cookie domain has the two apps clobbering each other's
-session cookies.
+session cookies. The same-ORIGIN variant of this collision — a host
+application at `/` embedding authup under a sub-path — is defused by the
+consoles scoping their cookies to the base path (see *Account Console →
+Session cookies are scoped to the deployment base path*); the residual
+corner is a console visit finding no own cookies while the host app's
+root-path records exist, which the console still hydrates.
 
 ## Authorize Realm Binding (plan 041)
 
