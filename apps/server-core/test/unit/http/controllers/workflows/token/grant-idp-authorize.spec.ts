@@ -356,7 +356,7 @@ describe('identity-provider authorization code grant', () => {
         expect(typeof payload.sid).toEqual('string');
         expect((payload.sid as string).length).toBeGreaterThan(0);
 
-        const introspection = await suite.client.token.introspect({ token: tokenResponse.access_token });
+        const introspection = await suite.client.token.introspect({ token: tokenResponse.access_token }, { authorizationHeaderInherit: true });
         expect(payload.sid).toEqual(introspection.session_id);
     });
 

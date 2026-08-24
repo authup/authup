@@ -3364,8 +3364,9 @@ at both chokepoints:
    `refresh_token` (including the bound-client-from-token path, so public-client
    refreshes that never send `client_id` are covered), `client_credentials`, and
    `password` when a client authenticates. `/token/introspect` and
-   `/token/revoke` are deliberately NOT gated — RFC 7662/7009 operations are
-   not grants.
+   `/token/revoke` are deliberately NOT gated by the allowlist: RFC 7662/7009
+   operations are not grants (introspection requires an independent
+   credential since #3489, which is a different gate; see conventions.md).
 2. **`/authorize` code-request verifier** — a non-null list must include
    `authorization_code`; denied before the consent UI renders (an RP
    misconfiguration fails at the front door, not at code redemption).

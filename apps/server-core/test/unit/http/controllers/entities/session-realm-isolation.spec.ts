@@ -44,7 +44,7 @@ describe('session (realm isolation)', () => {
             password: passwordB,
             realm_id: realmB.id,
         });
-        foreignSessionId = (await suite.client.token.introspect({ token: loginB.access_token })).session_id!;
+        foreignSessionId = (await suite.client.token.introspect({ token: loginB.access_token }, { authorizationHeaderInherit: true })).session_id!;
 
         // a session in the actor's own realm (master)
         const passwordM = 'session-iso-own-pw';
@@ -54,7 +54,7 @@ describe('session (realm isolation)', () => {
             username: userM.name,
             password: passwordM,
         });
-        ownSessionId = (await suite.client.token.introspect({ token: loginM.access_token })).session_id!;
+        ownSessionId = (await suite.client.token.introspect({ token: loginM.access_token }, { authorizationHeaderInherit: true })).session_id!;
 
         // a restricted actor in master holding SESSION_READ at the default `own` scope
         const { data: cA } = await suite.client.client.create({

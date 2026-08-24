@@ -5,13 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse, OAuth2TokenIntrospectionResponse, OAuth2TokenPermission } from '@authup/specs';
-import { 
-    OAuth2GrantTypeError, 
-    OAuth2RequestError, 
-    OAuth2TokenGrant, 
-    isJWTError, 
+import type {
+    OAuth2TokenGrantResponse,
+    OAuth2TokenIntrospectionResponse,
+    OAuth2TokenPayload,
+    OAuth2TokenPermission,
 } from '@authup/specs';
+import {
+    OAuth2ClientError,
+    OAuth2GrantTypeError,
+    OAuth2RequestError,
+    OAuth2TokenGrant,
+    isJWTError,
+} from '@authup/specs';
+import { 
+    ClientAuthMethod, 
+    IdentityType, 
+    PermissionName, 
+    ScopeName, 
+} from '@authup/core-kit';
+import { BuiltInPolicyType, PolicyData, buildPermissionKey } from '@authup/access';
+import { readRequestBody } from '@routup/basic/body';
 import {
     DContext,
     DController,
@@ -20,7 +34,7 @@ import {
     DTags,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
-import { buildPermissionKey } from '@authup/access';
+import type { Logger } from '@authup/server-kit';
 import { toOAuth2Error } from '../../../../../core/oauth2/helpers/index.ts';
 import type { TokenControllerContext } from './types.ts';
 import type {
@@ -30,6 +44,7 @@ import type {
     IOAuth2TokenIssuer,
     IOAuth2TokenRevoker,
     IOAuth2TokenVerifier,
+    OAuth2ClientAuthenticator,
 } from '../../../../../core/index.ts';
 import { OAuth2OpenIDClaimsBuilder } from '../../../../../core/index.ts';
 import type { IHTTPOAuth2Grant } from '../../../adapters/index.ts';
@@ -38,8 +53,19 @@ import {
     HTTPOAuth2AuthorizeGrant,
     HTTPOAuth2RefreshTokenGrant,
     HTTPPasswordGrant,
+    extractClientCredentialsFromRequest,
+    extractOAuth2ClientCertificateEvidence,
     guessOauth2GrantTypeByRequest,
+    readRealmHint,
 } from '../../../adapters/index.ts';
+import type { CertificateSource } from '../../../request/index.ts';
+import {
+    buildActorContext,
+    setRequestIdentity,
+    setRequestScopes,
+    useRequestIdentity,
+    useRequestIdentityOrFail,
+} from '../../../request/index.ts';
 import { extractTokenFromRequest } from './utils/index.ts';
 
 @DTags('auth')
@@ -59,6 +85,12 @@ export class TokenController {
 
     protected metrics? : IAuthFlowMetrics;
 
+    protected clientAuthenticator : OAuth2ClientAuthenticator;
+
+    protected certificateSource : CertificateSource;
+
+    protected logger? : Logger;
+
     protected tokenGrants : Record<`${OAuth2TokenGrant}`, IHTTPOAuth2Grant>;
 
     // -------------------------------------------
@@ -71,6 +103,9 @@ export class TokenController {
         this.identityResolver = ctx.identityResolver;
         this.identityPermissionProvider = ctx.identityPermissionProvider;
         this.metrics = ctx.metrics;
+        this.clientAuthenticator = ctx.oauth2ClientAuthenticator;
+        this.certificateSource = ctx.certificateSource;
+        this.logger = ctx.logger;
 
         this.tokenGrants = {
             [OAuth2TokenGrant.AUTHORIZATION_CODE]: new HTTPOAuth2AuthorizeGrant({
@@ -135,6 +170,8 @@ export class TokenController {
     async postIntrospect(
         @DContext() event: IAppEvent,
     ): Promise<OAuth2TokenIntrospectionResponse> {
+        await this.assertIntrospectionAuthorized(event);
+
         try {
             const token = await extractTokenFromRequest(event);
 
@@ -153,6 +190,14 @@ export class TokenController {
                 ignoreExpiry: true,
                 skipActiveCheck: true,
             });
+
+            if (!await this.isIntrospectionAllowed(event, payload)) {
+                // RFC 7662 §2.2's third clause: a caller "not allowed to
+                // introspect" the token is answered like a dead one,
+                // indistinguishable and bare.
+                return { active: false };
+            }
+
             if (!payload.sub || !payload.sub_kind) {
                 // Not a report about a token this server ever issued: authup
                 // mints every one with a subject, so a verifying token without
@@ -184,12 +229,10 @@ export class TokenController {
             const claims = claimsBuilder.fromIdentity(identity);
 
             // An inactive token reports WHO it belonged to and nothing about
-            // what they may do. The endpoint requires no authorization (#3489),
-            // so anyone holding a lapsed token string - out of a log, browser
-            // history, a proxy trace - reaches this answer; naming the subject
-            // is the point of reading an expired token at all, handing over
-            // their authorization set is not. It also skips resolving that set
-            // for a token nobody can use.
+            // what they may do (RFC 7662 §2.2 / §4): naming the subject is the
+            // point of reading an expired token at all, handing over their
+            // authorization set is not. It also skips resolving that set for
+            // a token nobody can use.
             if (!active) {
                 return {
                     active,
@@ -247,8 +290,117 @@ export class TokenController {
         }
     }
 
+    /**
+     * RFC 7662 §2.1: the endpoint MUST require authorization, "such as client
+     * authentication [...] or a separate OAuth 2.0 access token". The
+     * credential has to be INDEPENDENT of the token being introspected, since
+     * possession of that string is exactly what a finder has too (#3489): a
+     * request identity the authorization middleware resolved (the kit's own
+     * live bearer, a resource server's client-credentials bearer, Basic), or
+     * confidential client credentials as the grants read them. A bare public
+     * `client_id` identifies and authenticates nothing, so it is refused like
+     * the client-credentials grant refuses it.
+     *
+     * An expired bearer never reaches this point: the middleware answers 401
+     * before the route runs. So the expired report in `postIntrospect` is only
+     * ever handed to a caller that proved who it is, which is what makes it
+     * safe to give.
+     */
+    protected async assertIntrospectionAuthorized(event: IAppEvent) : Promise<void> {
+        if (useRequestIdentity(event)) {
+            return;
+        }
+
+        const { clientId, clientSecret } = await extractClientCredentialsFromRequest(event);
+        if (!clientId) {
+            useRequestIdentityOrFail(event);
+            return;
+        }
+
+        const body = await readRequestBody(event);
+        const certificateEvidence = await extractOAuth2ClientCertificateEvidence(event, this.certificateSource);
+        const client = await this.clientAuthenticator.authenticate(
+            clientId,
+            clientSecret,
+            readRealmHint(body),
+            certificateEvidence,
+        );
+        if (client.authMethod === ClientAuthMethod.NONE) {
+            throw OAuth2ClientError.invalid();
+        }
+
+        // the authorization layer below reads the request identity, so the
+        // credential-authenticated client becomes one, exactly as the
+        // middleware's `clientAuthBasic` branch would have set it.
+        setRequestScopes(event, [ScopeName.GLOBAL]);
+        setRequestIdentity(event, {
+            type: IdentityType.CLIENT,
+            data: client,
+        });
+    }
+
+    /**
+     * WHOSE tokens the authenticated caller may introspect (#3489, second
+     * layer): its own subject's, those issued for its own client, or any its
+     * TOKEN_INTROSPECT grant reaches (the grant's realm scope is matched
+     * against the token's realm claim, so an `admin` reaches everything and
+     * a `realm_admin` its own realm). A resource server verifying foreign
+     * tokens through the server adapters' remote mode needs that grant. The
+     * deny is reported per RFC 7662 §2.2 as a bare `active: false`, which
+     * gives the caller nothing to diagnose with, hence the log line.
+     */
+    protected async isIntrospectionAllowed(
+        event: IAppEvent,
+        payload: OAuth2TokenPayload,
+    ) : Promise<boolean> {
+        const identity = useRequestIdentity(event);
+        if (!identity) {
+            return false;
+        }
+
+        if (
+            payload.sub &&
+            identity.type === payload.sub_kind &&
+            identity.id === payload.sub
+        ) {
+            return true;
+        }
+
+        if (
+            identity.type === IdentityType.CLIENT &&
+            payload.client_id &&
+            identity.id === payload.client_id
+        ) {
+            return true;
+        }
+
+        const actor = buildActorContext(event);
+        try {
+            await actor.permissionEvaluator.evaluate({
+                name: PermissionName.TOKEN_INTROSPECT,
+                data: new PolicyData({ ...(payload.realm_id ? { [BuiltInPolicyType.REALM_MATCH]: payload.realm_id } : {}) }),
+            });
+            return true;
+        } catch {
+            this.logger?.info(
+                `introspection denied: ${identity.type} ${identity.id} may not introspect the presented token`,
+            );
+            return false;
+        }
+    }
+
     // ----------------------------------------------------------
 
+    /**
+     * Deliberately ungated, unlike introspection (#3489). RFC 7009 §2.1 asks
+     * the client to send its credentials (a bare `client_id` for a public
+     * client) and the server to verify the token was issued to that client;
+     * authup knowingly skips both. A public `client_id` identifies and
+     * proves nothing, so an ownership check built on it would be advisory,
+     * the consoles are public clients whose kit revokes anonymously on
+     * logout teardown, revoking a token one possesses is the benign action,
+     * and the uniform 200 below leaves a scanner nothing to learn.
+     */
     @DPost('/revoke', [])
     async revokeToken(
         @DContext() event: IAppEvent,

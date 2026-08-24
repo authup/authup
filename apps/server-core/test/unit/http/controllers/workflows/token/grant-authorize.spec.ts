@@ -679,7 +679,7 @@ describe('grant-authorize', () => {
 
         // plan 042 item 6: the id_token is minted at the exchange, so its `sid`
         // is the REAL backing session — the same one the access token carries.
-        const introspection = await suite.client.token.introspect({ token: tokenResponse.access_token });
+        const introspection = await suite.client.token.introspect({ token: tokenResponse.access_token }, { authorizationHeaderInherit: true });
         expect(payload.sid).toEqual(introspection.session_id);
     });
 
