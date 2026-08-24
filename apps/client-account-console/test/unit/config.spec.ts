@@ -32,6 +32,39 @@ describe('src/config', () => {
             .toBe(true);
     });
 
+    it('should refuse cookie mode when the api is on another origin', () => {
+        // The comment above states the rule; this is the case that enforces
+        // it. `cookieSession` is a public field of the injected config, so a
+        // standalone host CAN set it while pointing `apiUrl` elsewhere. That
+        // combination cannot work and does not announce itself: the kick
+        // redirects, the callback sets a SameSite=Strict cookie on the API's
+        // origin, and every request from this console is then cross-site and
+        // refused, so the console loops back to sign-in with no diagnostic.
+        expect(resolveAccountConsoleConfig({
+            cookieSession: true,
+            apiUrl: 'https://auth.example.com',
+        }, { origin: 'https://console.example.net' }).cookieSession)
+            .toBe(false);
+
+        // ... and the same deployment keeps a root cookie scope, since the
+        // console's own origin owns nothing worth scoping.
+        expect(resolveAccountConsoleConfig({
+            cookieSession: true,
+            apiUrl: 'https://auth.example.com/auth',
+        }, { origin: 'https://console.example.net' }).cookiePath)
+            .toEqual('/');
+
+        // A same-origin sub-path deployment is the case that must still work:
+        // it is what server-core serves.
+        const served = resolveAccountConsoleConfig({
+            cookieSession: true,
+            apiUrl: 'https://auth.example.com/auth',
+        }, { origin: 'https://auth.example.com' });
+
+        expect(served.cookieSession).toBe(true);
+        expect(served.cookiePath).toEqual('/auth');
+    });
+
     it('should derive the api url from the base path (embedded serving)', () => {
         const config = resolveAccountConsoleConfig({}, { origin: 'https://auth.example.com' });
 

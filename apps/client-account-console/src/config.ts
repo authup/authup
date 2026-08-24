@@ -117,7 +117,20 @@ export function resolveAccountConsoleConfig(
         ref: injected.ref,
         // Opt-in, never a default: anything but an explicit injected `true`
         // (a standalone host, a dev server) keeps the client-side code flow.
-        cookieSession: injected.cookieSession === true,
+        //
+        // AND same-origin, which is not belt-and-braces. `cookieSession` is a
+        // public field of the injected config, so a standalone host on a
+        // foreign origin can set it, and the result would be a login that
+        // cannot work and does not say so: the kick to `${apiUrl}/account/login`
+        // redirects fine, the callback sets a `SameSite=Strict` cookie on the
+        // API's origin, and every request this console then makes is
+        // cross-site, so the server refuses the cookie and the console loops
+        // back to sign-in forever. Cookie mode is only ever reachable from a
+        // surface the API itself serves; refusing it here is what makes
+        // `${config.apiUrl}/account/login` a safe assumption in `kick()`
+        // rather than a convention.
+        cookieSession: injected.cookieSession === true &&
+            isSameOriginApiUrl(apiUrl, origin),
     };
 }
 
@@ -136,16 +149,27 @@ export function resolveAccountConsoleConfig(
  * A cross-origin `apiUrl` (standalone hosting) says nothing about this
  * origin's layout, so it keeps the root path — the pre-existing behavior.
  */
-function resolveCookiePath(apiUrl: string, origin: string) : string {
+/**
+ * Whether the API this console talks to is its OWN origin.
+ *
+ * Two things hang off it, and both break silently when it is false: the kit's
+ * cookie scope (a foreign API means the console's own origin owns nothing
+ * worth scoping) and cookie mode itself (see below).
+ */
+function isSameOriginApiUrl(apiUrl: string, origin: string) : boolean {
     if (!origin) {
-        return '/';
+        return false;
     }
 
     try {
-        if (new URL(apiUrl).origin !== origin) {
-            return '/';
-        }
+        return new URL(apiUrl).origin === origin;
     } catch {
+        return false;
+    }
+}
+
+function resolveCookiePath(apiUrl: string, origin: string) : string {
+    if (!isSameOriginApiUrl(apiUrl, origin)) {
         return '/';
     }
 
