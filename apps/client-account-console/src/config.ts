@@ -38,17 +38,6 @@ export type AccountConsoleConfigInput = {
      */
     ref?: string,
 
-    /**
-     * Authenticate on the server-issued session cookie instead of a token
-     * pair held in JavaScript (plan 088). Injected as `true` by server-core,
-     * which only ever serves this app from the API's own origin — the
-     * credential is `SameSite=Strict`, so a standalone host on a foreign
-     * origin could never present it and stays on the bearer path.
-     *
-     * There is deliberately no config key behind it: it is a property of how
-     * the bundle is served, not an operator choice.
-     */
-    cookieSession?: boolean,
 };
 
 export type AccountConsoleConfig = {
@@ -115,22 +104,20 @@ export function resolveAccountConsoleConfig(
         cookiePath: resolveCookiePath(apiUrl, origin),
         enabled: injected.features?.accountConsole !== false,
         ref: injected.ref,
-        // Opt-in, never a default: anything but an explicit injected `true`
-        // (a standalone host, a dev server) keeps the client-side code flow.
+        // DERIVED, never injected. Cookie mode is a fact about the
+        // deployment, not a choice: the credential is `SameSite=Strict` and
+        // the server additionally demands `Sec-Fetch-Site: same-origin`, so it
+        // is usable exactly when the API is this console's own origin — and
+        // when it is, `${apiUrl}/account/login` is a real route, which is what
+        // makes the kick in `pages/index.vue` sound rather than conventional.
         //
-        // AND same-origin, which is not belt-and-braces. `cookieSession` is a
-        // public field of the injected config, so a standalone host on a
-        // foreign origin can set it, and the result would be a login that
-        // cannot work and does not say so: the kick to `${apiUrl}/account/login`
-        // redirects fine, the callback sets a `SameSite=Strict` cookie on the
-        // API's origin, and every request this console then makes is
-        // cross-site, so the server refuses the cookie and the console loops
-        // back to sign-in forever. Cookie mode is only ever reachable from a
-        // surface the API itself serves; refusing it here is what makes
-        // `${config.apiUrl}/account/login` a safe assumption in `kick()`
-        // rather than a convention.
-        cookieSession: injected.cookieSession === true &&
-            isSameOriginApiUrl(apiUrl, origin),
+        // It was an injected boolean first, which made the broken combination
+        // (cookie mode + a foreign API) representable, and it failed silently:
+        // the kick redirects, the callback sets the cookie on the API's
+        // origin, every later request is cross-site and refused, and the
+        // console loops back to sign-in with no diagnostic. Deriving it means
+        // there is no such state to guard against.
+        cookieSession: isSameOriginApiUrl(apiUrl, origin),
     };
 }
 

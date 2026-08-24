@@ -81,13 +81,13 @@ describe('src/http/controllers/workflows/account (SPA shell)', () => {
         // ... and the injected config itself carries EXACTLY the documented
         // operator-level fields — an actor-scoped addition fails here.
         const config = extractAccountConfig(body);
-        // `cookieSession` joins the list as a property of HOW the bundle is
-        // served (server-core always serves it same-origin), not of who is
-        // asking — it is the same constant for every request.
+        // Cookie mode is deliberately NOT among them: the console derives it
+        // from whether `apiUrl` is its own origin, so the broken combination
+        // (cookie mode against a foreign API) is not representable and there
+        // is no flag here to get wrong.
         expect(Object.keys(config).sort()).toEqual([
             'apiUrl',
             'basePath',
-            'cookieSession',
             'features',
         ]);
         expect(Object.keys(config.features).sort()).toEqual([

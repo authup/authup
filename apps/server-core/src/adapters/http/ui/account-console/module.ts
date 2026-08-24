@@ -123,12 +123,6 @@ export async function serveAccountConsolePage(
             useRequestQuery(event, 'ref'),
             options.trustedOrigins,
         ),
-        // Hard-coded rather than read from a config key: this function only
-        // ever serves the bundle from the API's own origin, which is the one
-        // condition under which the `SameSite=Strict` session cookie can be
-        // presented at all (plan 088). The same dist hosted standalone never
-        // passes through here and keeps the client-side code flow.
-        cookieSession: true,
     };
 
     let body = replaceTemplateMarker(
