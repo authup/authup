@@ -4611,7 +4611,7 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   loop: `deleteInBatches` + `resolveSweepBatchSize`
   (`app/modules/database/repositories/helpers.ts`), one named batch-size
   constant per table. The falsy-`take` trap is why the loop is shared rather
-  than re-typed per table — typeorm ignores a falsy `take`, so a re-typed
+  than re-typed per table: typeorm ignores a falsy `take`, so a re-typed
   guard that drifts silently restores the unbounded `DELETE`. The session
   sweep deliberately bypasses `SessionRepository`'s cache: an entry is
   written with `ttl = expiresAt - now` on every save, so it has lapsed by the

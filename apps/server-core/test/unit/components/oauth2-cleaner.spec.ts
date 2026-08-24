@@ -25,7 +25,7 @@ const flushMicrotasks = async () => {
 
 describe('components/oauth2-cleaner', () => {
     // The sweep selects expiring ids first and deletes them by id, so `find`
-    // is the call every sweep makes — a `delete` only follows a non-empty
+    // is the call every sweep makes; a `delete` only follows a non-empty
     // batch. Counting finds therefore counts sweeps on an empty table too.
     const findMock = vi.fn();
     const deleteMock = vi.fn();
