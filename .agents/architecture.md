@@ -2237,7 +2237,7 @@ multi-section config file, forwards SIGINT/SIGTERM to the children, and exits
 with the first-failing child's exit code; `migration` / `healthcheck` forward
 to server-core only. The launcher knows nothing about the worker role below.
 
-**The worker role (plans 095/096)** is the same binary and the same image,
+**The worker role (plans 095/096/097)** is the same binary and the same image,
 started as `authup-server worker` (container: `server/core worker`). It is
 `createWorkerApplication()` in `app/factory.ts`: config, logger, cache,
 database and components, and nothing else, so it opens no port and serves no
@@ -2245,12 +2245,18 @@ request. Two config keys move the work: `componentsEnabled`
 (`COMPONENTS_ENABLED`) turns the cron sweeps off on the API replicas, and
 `migrationEnabled` (`MIGRATION_ENABLED`) turns boot-time DDL off so one
 process owns the schema. The worker forces its components on regardless of
-the first key, and **never** applies schema changes regardless of the second:
-its `DatabaseModule` migrate override runs `assertNoPendingMigrations` and
-fails the boot when the chain is behind. That helper returns a boolean, and
-the `false` (no migrations configured at all, i.e. sqlite) branch must fall
-through to `synchronizeDatabaseSchema` or a sqlite worker boots against no
-schema. The `migration` CLI command is unaffected by either key.
+the first key, and **never** applies migrations regardless of the second: its
+`DatabaseModule` migrate override is `verifySchemaOrSynchronize` (shared with
+the flag-off boot, `app/modules/database/migration.ts`), which runs
+`assertNoPendingMigrations` and fails the boot when the chain is behind. That
+helper returns a boolean, and the `false` (no migrations configured at all,
+i.e. sqlite) branch must fall through to `synchronizeDatabaseSchema` or a
+sqlite worker boots against no schema. So "never migrates" is exact and
+"never applies schema changes" is not: the sqlite branch does create one. The
+`migration` CLI command is unaffected by either key. `ComponentsModule` logs
+one info line naming what it registered, which on a worker is the only line a
+healthy boot writes (the sweeps log nothing per tick and the schema-verify
+lines are debug).
 
 **Configuration is layered:** server-core honors the confinity file family
 (`authup.conf` with a `server.core` section, or the per-component

@@ -186,7 +186,7 @@ services:
             - DB_USERNAME=postgres
             - DB_PASSWORD=postgres
             - DB_DATABASE=postgres
-            - REDIS_URL=redis://redis:6379
+            - REDIS=redis://redis:6379
         command: server/core start
     client-admin-console:
         image: authup/authup:latest

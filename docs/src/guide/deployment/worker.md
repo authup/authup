@@ -126,7 +126,7 @@ services:
             - DB_USERNAME=postgres
             - DB_PASSWORD=postgres
             - DB_DATABASE=postgres
-            - REDIS_URL=redis://redis:6379
+            - REDIS=redis://redis:6379
             # the sweeps run in the worker below
             - COMPONENTS_ENABLED=false
         command: server/core start
@@ -143,7 +143,7 @@ services:
             - DB_USERNAME=postgres
             - DB_PASSWORD=postgres
             - DB_DATABASE=postgres
-            - REDIS_URL=redis://redis:6379
+            - REDIS=redis://redis:6379
         # the image healthcheck probes an HTTP port this process never opens
         healthcheck:
             disable: true
