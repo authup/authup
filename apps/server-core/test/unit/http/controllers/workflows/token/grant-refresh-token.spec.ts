@@ -159,7 +159,7 @@ describe('refresh-token', () => {
         // silently pass through the legacy no-client flow.
         const introspected = await suite.client
             .token
-            .introspect({ token: login.refresh_token! });
+            .introspect({ token: login.refresh_token! }, { authorizationHeaderInherit: true });
         expect(introspected.client_id).toEqual(publicClient.id);
 
         const refreshed = await suite.client
@@ -480,7 +480,7 @@ describe('refresh-token', () => {
         // and the access token minted alongside it introspects as inactive
         const introspect = await suite.client
             .token
-            .introspect({ token: at2 });
+            .introspect({ token: at2 }, { authorizationHeaderInherit: true });
         expect(introspect.active).toBeFalsy();
     });
 

@@ -40,7 +40,7 @@ describe('session', () => {
 
         const client = bearer(first.access_token);
 
-        const introspect = await client.token.introspect({ token: first.access_token });
+        const introspect = await client.token.introspect({ token: first.access_token }, { authorizationHeaderInherit: true });
         const adminId = introspect.sub!;
         const currentId = introspect.session_id!;
 
@@ -66,7 +66,7 @@ describe('session', () => {
         const current = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
 
         const client = bearer(current.access_token);
-        const introspect = await client.token.introspect({ token: current.access_token });
+        const introspect = await client.token.introspect({ token: current.access_token }, { authorizationHeaderInherit: true });
         const adminId = introspect.sub!;
         const currentId = introspect.session_id!;
 
@@ -90,7 +90,7 @@ describe('session', () => {
         });
 
         const client = bearer(login.access_token);
-        const introspect = await client.token.introspect({ token: login.access_token });
+        const introspect = await client.token.introspect({ token: login.access_token }, { authorizationHeaderInherit: true });
 
         const list = await client.session.getMany();
         // self-service: only the user's own sessions, never anyone else's

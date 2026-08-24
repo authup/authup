@@ -43,7 +43,7 @@ describe('token-revoke', () => {
 
         const introspectResponse = await suite.client
             .token
-            .introspect({ token: response.access_token });
+            .introspect({ token: response.access_token }, { authorizationHeaderInherit: true });
 
         expect(introspectResponse).toBeDefined();
         expect(introspectResponse.active).toBeFalsy();
@@ -66,7 +66,7 @@ describe('token-revoke', () => {
 
         const introspectResponse = await suite.client
             .token
-            .introspect({ token: response.refresh_token });
+            .introspect({ token: response.refresh_token }, { authorizationHeaderInherit: true });
 
         expect(introspectResponse).toBeDefined();
         expect(introspectResponse.active).toBeFalsy();
@@ -86,7 +86,7 @@ describe('token-revoke', () => {
 
         const payload = await suite.client
             .token
-            .introspect({ token: response.refresh_token });
+            .introspect({ token: response.refresh_token }, { authorizationHeaderInherit: true });
 
         const signer = suite.container.resolve(OAuth2InjectionToken.TokenSigner);
         const now = Math.floor(Date.now() / 1000);
@@ -109,7 +109,7 @@ describe('token-revoke', () => {
 
         const introspectResponse = await suite.client
             .token
-            .introspect({ token: response.refresh_token });
+            .introspect({ token: response.refresh_token }, { authorizationHeaderInherit: true });
 
         expect(introspectResponse.active).toBeFalsy();
     });

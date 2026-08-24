@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { getURLBasePath } from '@authup/kit';
+
 export type AccountConsoleConfigInput = {
     /**
      * Public URL of the authup server (server-core). Optional: when absent,
@@ -52,6 +54,13 @@ export type AccountConsoleConfigInput = {
 export type AccountConsoleConfig = {
     apiUrl: string,
     basePath: string,
+    /**
+     * Path the kit store scopes its session cookies to. The authup surfaces
+     * on an origin (the hosted auth pages and this console) share one
+     * session, so the scope is the sub-path authup is served under — derived
+     * from a same-origin `apiUrl`. See {@link resolveCookiePath}.
+     */
+    cookiePath: string,
     enabled: boolean,
     ref?: string,
     cookieSession: boolean,
@@ -83,14 +92,14 @@ export function resolveAccountConsoleConfig(
         {};
 
     const basePath = normalizeBasePath(injected.basePath ?? '/account');
+    const origin = location?.origin ??
+        (typeof window !== 'undefined' ? window.location.origin : '');
 
     let { apiUrl } = injected;
     if (!apiUrl && typeof import.meta.env !== 'undefined') {
         apiUrl = import.meta.env.VITE_API_URL;
     }
     if (!apiUrl) {
-        const origin = location?.origin ??
-            (typeof window !== 'undefined' ? window.location.origin : '');
         const prefix = basePath.endsWith('/account') ?
             basePath.slice(0, -'/account'.length) :
             '';
@@ -98,15 +107,49 @@ export function resolveAccountConsoleConfig(
         apiUrl = `${origin}${prefix}`;
     }
 
+    apiUrl = apiUrl.replace(/\/+$/, '');
+
     return {
-        apiUrl: apiUrl.replace(/\/+$/, ''),
+        apiUrl,
         basePath,
+        cookiePath: resolveCookiePath(apiUrl, origin),
         enabled: injected.features?.accountConsole !== false,
         ref: injected.ref,
         // Opt-in, never a default: anything but an explicit injected `true`
         // (a standalone host, a dev server) keeps the client-side code flow.
         cookieSession: injected.cookieSession === true,
     };
+}
+
+/**
+ * The path the kit store's session cookies are scoped to.
+ *
+ * The hosted auth pages and the account console share one session on the
+ * IdP origin, so the scope is the sub-path authup is publicly served under
+ * (the pathname of a same-origin `apiUrl`) — the same value the auth
+ * console derives from its payload's baseURL. Root-scoped cookies would
+ * share their records with a host application at `/` that embeds authup
+ * under a sub-path and itself uses the kit's cookie names: each side then
+ * hydrates, rotates and revokes the other's tokens, and the strict refresh
+ * rotation escalates the shared refresh token into family revocation.
+ *
+ * A cross-origin `apiUrl` (standalone hosting) says nothing about this
+ * origin's layout, so it keeps the root path — the pre-existing behavior.
+ */
+function resolveCookiePath(apiUrl: string, origin: string) : string {
+    if (!origin) {
+        return '/';
+    }
+
+    try {
+        if (new URL(apiUrl).origin !== origin) {
+            return '/';
+        }
+    } catch {
+        return '/';
+    }
+
+    return getURLBasePath(apiUrl) || '/';
 }
 
 function normalizeBasePath(input: string) : string {

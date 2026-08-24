@@ -60,7 +60,7 @@ describe('grant-authorize session reuse', () => {
         const userClient = new HTTPClient({ baseURL: suite.baseURL });
         userClient.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
 
-        const loginIntrospect = await userClient.token.introspect({ token: login.access_token });
+        const loginIntrospect = await userClient.token.introspect({ token: login.access_token }, { authorizationHeaderInherit: true });
         const userId = loginIntrospect.sub!;
         const loginSessionId = loginIntrospect.session_id!;
         expect(loginSessionId).toBeDefined();
@@ -92,7 +92,7 @@ describe('grant-authorize session reuse', () => {
 
         const exchangeClient = new HTTPClient({ baseURL: suite.baseURL });
         exchangeClient.setAuthorizationHeader({ type: 'Bearer', token: tokenResponse.access_token });
-        const exchangeIntrospect = await exchangeClient.token.introspect({ token: tokenResponse.access_token });
+        const exchangeIntrospect = await exchangeClient.token.introspect({ token: tokenResponse.access_token }, { authorizationHeaderInherit: true });
 
         // the exchanged token rides the very same session as the login
         expect(exchangeIntrospect.session_id).toEqual(loginSessionId);

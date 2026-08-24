@@ -7,6 +7,55 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.62)
 
+### Token introspection requires authorization
+
+`POST /token/introspect` (and its `GET` form) now answers `401` to a request
+carrying no credentials, as RFC 7662 section 2.1 requires ("the endpoint MUST
+also require some form of authorization"). Two forms are accepted:
+
+- a **live bearer**: `Authorization: Bearer <access token>`. The token may be
+  the one being introspected (what `@authup/client-web-kit` sends) or the
+  caller's own, for instance a resource server's client-credentials token
+  (what the `@authup/server-adapter-*` packages send, minted on the first
+  `401` and replayed);
+- **confidential client credentials**: `client_id` + `client_secret` in the
+  form body or as `Authorization: Basic`, or a `tls` client's certificate. A
+  public client (`authMethod: none`) is refused with `invalid_client`; its
+  bare `client_id` identifies it but proves nothing.
+
+Authentication is the first layer. The second is WHOSE tokens the caller
+may introspect: the caller's own (the subject matches), tokens issued for
+the caller's own client (the token's `client_id`), or any token reached by
+the new `token_introspect` permission (realm-scoped: an `admin` reaches
+everything, a default grant covers the client's own realm). A caller
+failing all three receives a bare `{"active": false}`, as RFC 7662
+section 2.2 prescribes for a resource "not allowed to introspect". The
+server logs the denial, since the response is indistinguishable from a
+dead token by design.
+
+**Action required for resource servers** using `@authup/server-adapter-*`
+remote verification: grant `token_introspect` to the client behind the
+verifier's `creator`, or foreign tokens will verify as inactive. A
+downstream application introspecting tokens issued to its own client needs
+no grant.
+
+The expired-token report (next section) is gated the same way: it is
+reachable only by a caller that proved who it is and may introspect that
+token. An expired token is NOT a credential: the authorization middleware
+rejects an expired bearer before the endpoint runs, so a request whose
+only token is the lapsed one answers `401`.
+
+**Action required** for an integration that called the endpoint anonymously:
+send one of the two credentials. Nothing changes for `@authup/client-web-kit`
+(it introspects its own token). For the `@authup/server-adapter-*` packages
+the credential replay flow is preserved, but verifying foreign tokens now
+additionally requires the `token_introspect` grant described above.
+`POST /token/revoke` stays open as a deliberate
+authup choice: RFC 7009 asks a public client to identify itself by
+`client_id` and the server to verify token ownership, but a public
+`client_id` proves nothing, and possession of the token already lets its
+holder use it. Revoking is the benign action.
+
 ### Introspecting an expired token now returns its payload
 
 `POST /token/introspect` answers `200` with `"active": false` **and the token's

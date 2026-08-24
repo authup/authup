@@ -50,6 +50,13 @@ server.use(createMiddleware({
 // ...
 ```
 
+::: warning Foreign-token introspection needs a grant
+Remote verification introspects tokens that were issued to other clients.
+The identity behind `creator` must hold the `token_introspect` permission,
+or every foreign token is reported as inactive. Tokens issued to the
+creator's own client need no grant.
+:::
+
 The middleware also tolerates `Bearer <token>` formatted values (the prefix is stripped via
 `extractBearerToken`); bare tokens are passed through unchanged.
 

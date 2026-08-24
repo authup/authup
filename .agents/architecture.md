@@ -795,12 +795,59 @@ not by client-admin-console:
   also cover every `@authup/*` package it pulls in transitively, so dev
   resolution reaches package source instead of a possibly unbuilt dist
   (and so the bundle agrees with the root tsconfig paths `vue-tsc`
-  checks). Note the gate itself, `isCodeTransformation(JUST_IN_TIME)`, is
-  only true under ts-node/tsx, and no server-core script runs that way.
-  The branch is therefore unreachable in practice, which is why its
-  breakage went unnoticed. The vite dev server is created once in
+  checks). The vite dev server is created once in
   `registerAssetsMiddleware` and closed by `HTTPMiddlewareModule.teardown`
-  (it owns a file watcher plus an HMR websocket).
+  (it owns a file watcher plus an HMR websocket; vite binds the websocket
+  itself on `*:24678`, so two dev instances on one machine collide there).
+- **The JIT gate and its entry point (#3382).** The gate,
+  `isCodeTransformation(JUST_IN_TIME)` from typeorm-extension, is a
+  two-line wrapper over locter's `isTsNodeRuntimeEnvironment() ||
+  isTsxRuntimeEnvironment()`: a loader heuristic, not a config key. It is
+  reached by exactly one script, `cli-dev` in `apps/server-core`
+  (`node --loader ts-node/esm src/cli/index.ts`), the command
+  `docs/src/guide/development/quick-start.md` documents. ts-node is the
+  only runner of the three tried that can transpile the ESM graph: tsx is
+  esbuild and emits no `design:type`, so it dies with
+  `ColumnTypeUndefinedError` on the first of the 219 type-less `@Column`s
+  before `--help` even prints; `@swc-node/register` boots but needs a
+  scratch shim and nothing detects it; the bare `ts-node src/cli/index.ts`
+  form (the one hub ships) installs only the CJS hook, so Node's native
+  strip-only type stripping takes the `.ts` files and dies on the first
+  legacy decorator. Detection needs locter >= 4.1.1, which is why
+  server-core's `locter` floor is `^4.1.1` and load-bearing: the marker
+  symbol (`process[Symbol.for('ts-node.register.instance')]`) is only set
+  by main-thread forms (the bare bin, `--require ts-node/register`), and
+  since Node 20 the ESM hooks run on their own loader thread, so before
+  tada5hi/locter#885 (issue #884) the `--loader` form left the gate dark
+  and `cli-dev` carried a `--require ts-node/register` whose only job was
+  setting that symbol. locter now also consults the module-loading options
+  in `process.execArgv` (values of `--require`/`-r`, `--import`,
+  `--loader`, `--experimental-loader` only, so a custom export condition
+  like `--conditions=ts-node` does not count). Because the
+  gate is implicit, `registerAssetsMiddleware` logs which branch serves the
+  auth console at boot; a dark gate is otherwise indistinguishable from a
+  working one, which is how the branch stayed broken through #3380. Under
+  vitest the gate is always false (no marker, no `tsx` in `execArgv`), so
+  the suite exercises the dist branch only and the JIT branch has no
+  automated coverage. Deriving the gate from `CODE_PATH` (src vs dist)
+  instead was rejected: under vitest `CODE_PATH` IS `<pkg>/src`, so every
+  `createTestApplication` suite would spawn a polling vite dev server and
+  `assets.spec.ts`'s dist assertions fail outright. An explicit config key
+  was rejected as ~40 lines across ten files for a switch that is
+  monorepo-only by construction (`vite` is a devDependency and a published
+  install carries no auth console source). Known shape differences of the
+  dev render: no `<link rel="stylesheet">` (CSS rides the module graph, so
+  expect a flash of unstyled content), two benign `[Vue warn]
+  onScopeDispose()` lines per render, and a ~12s type-checked boot
+  (transpile-only is blocked by TS 6's `baseUrl` deprecation until the
+  root tsconfig carries `ignoreDeprecations`). The `--loader` flag prints
+  an `ExperimentalWarning`; the `--import` + `module.register` form avoids
+  it and behaves identically. Under the
+  gate the mysql/postgres migrations glob also switches to
+  `src/.../*.{ts,js,mjs}`, which typeorm `import()`s through the loader
+  (verified: `cli-dev -- migration run` applies all 17 postgres migrations
+  from `src/`); every documented migration workflow still runs from the
+  built CLI and CI pre-flights `dist/` for that reason.
 - **Feature flags** ride the hydration payload (`data.features`,
   `StatusResponseFeatures` shape) — pages render the form when the
   workflow is enabled, otherwise a localized "disabled" notice (no 404:
@@ -1350,6 +1397,21 @@ choice"):
   `hydrationStore` — nothing to hand off), `vc-locale`/`vc-color-mode`
   cookie continuity with the auth pages, own `NuxtIconBundle` scan
   (app src + kit src + vuecs icon preset).
+- **Session cookies are scoped to the deployment base path** (issue
+  #3495): both authup surfaces on the IdP origin — this console and the
+  hosted auth pages — pass the kit `cookiePath` derived from the sub-path
+  authup is served under (`resolveCookiePath` in `src/config.ts` over a
+  same-origin `apiUrl`; the auth console derives the same value from its
+  payload baseURL). Root-scoped cookies collided with a host application
+  that embeds authup under its own origin (e.g. hub at `/` with authup at
+  `/auth`) and itself uses the kit's cookie names: each side hydrated,
+  rotated, cleanup-revoked and clobbered the other's tokens, and two apps
+  presenting one shared refresh token tripped the strict rotation's replay
+  detection — family revocation killed every session on the origin within
+  seconds of an account-console login. A path-less `publicUrl` and a
+  cross-origin (standalone) `apiUrl` keep `/`, so nothing changes for
+  root deployments; the two consoles still share one session because both
+  scope to the same base path.
 - **Feature flag `accountConsoleEnabled`** (env `ACCOUNT_CONSOLE_ENABLED`,
   default `true`): rides `StatusResponseFeatures.accountConsole`
   (`buildUIFeatures` → status endpoint + the injected config); disabled →
@@ -2433,7 +2495,12 @@ variables always beat file values.
 **Unsupported:** sharing one `COOKIE_DOMAIN` between client-admin-console and the
 hosted auth pages — both surfaces embed the kit store under identical cookie
 names, so a widened cookie domain has the two apps clobbering each other's
-session cookies.
+session cookies. The same-ORIGIN variant of this collision — a host
+application at `/` embedding authup under a sub-path — is defused by the
+consoles scoping their cookies to the base path (see *Account Console →
+Session cookies are scoped to the deployment base path*); the residual
+corner is a console visit finding no own cookies while the host app's
+root-path records exist, which the console still hydrates.
 
 ## Authorize Realm Binding (plan 041)
 
@@ -3513,8 +3580,9 @@ at both chokepoints:
    `refresh_token` (including the bound-client-from-token path, so public-client
    refreshes that never send `client_id` are covered), `client_credentials`, and
    `password` when a client authenticates. `/token/introspect` and
-   `/token/revoke` are deliberately NOT gated — RFC 7662/7009 operations are
-   not grants.
+   `/token/revoke` are deliberately NOT gated by the allowlist: RFC 7662/7009
+   operations are not grants (introspection requires an independent
+   credential since #3489, which is a different gate; see conventions.md).
 2. **`/authorize` code-request verifier** — a non-null list must include
    `authorization_code`; denied before the consent UI renders (an RP
    misconfiguration fails at the front door, not at code redemption).
