@@ -16,9 +16,12 @@ import {
     it,
 } from 'vitest';
 import { ConfigInjectionKey } from '../../../../../../src/app';
+import { DatabaseInjectionKey } from '../../../../../../src/app/modules/database';
+import { SessionEntity } from '../../../../../../src/adapters/database/domains/session/entity.ts';
 import {
     CONSOLE_LOGIN_COOKIE,
     CONSOLE_SESSION_COOKIE,
+    hashConsoleSessionSecret,
 } from '../../../../../../src/core';
 import { createTestApplication } from '../../../../../app';
 import { TestCookieJar, createFakeUser, httpRequest } from '../../../../../utils';
@@ -144,6 +147,27 @@ describe('account console session', () => {
         const secret = setCookie.split(';')[0].slice(`${CONSOLE_SESSION_COOKIE}=`.length);
         expect(secret.length).toBeGreaterThan(0);
         expect(jar.get(CONSOLE_SESSION_COOKIE)).toEqual(secret);
+
+        // The database stores a DIGEST, never the credential. `select: false`
+        // governs what the ORM projects and nothing about what the table
+        // contains, so without this a leaked backup, a read replica or a
+        // SELECT-only injection would hand over replayable session cookies.
+        // Asserted against the row itself, because every other assertion here
+        // goes through the lookup, which hashes on the way in and would pass
+        // either way.
+        const dataSource = suite.container.resolve(DatabaseInjectionKey.DataSource);
+        const row = await dataSource
+            .getRepository(SessionEntity)
+            .createQueryBuilder('session')
+            .addSelect('session.secret')
+            .where('session.secret = :secret', { secret: hashConsoleSessionSecret(secret) })
+            .getOne();
+
+        // `not.toBeNull()`, never `toBeDefined()`: getOne() answers null on a
+        // miss and null IS defined, which made this assertion vacuous.
+        expect(row).not.toBeNull();
+        expect(row?.secret).not.toEqual(secret);
+        expect(row?.secret).toMatch(/^[0-9a-f]{64}$/);
         // single use: the pending login is spent and its cookie cleared
         expect(jar.get(CONSOLE_LOGIN_COOKIE)).toBeUndefined();
 

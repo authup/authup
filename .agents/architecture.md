@@ -1422,8 +1422,8 @@ choice"):
   **Everything in this bullet and the sign-out bullet below describes the
   BROWSER-side flow, which a server-served console no longer takes**. See
   *Console session credential* after this list. It is what a standalone
-  cross-origin host still runs, and the code stays behind the
-  `cookieSession` flag for exactly that reason. The
+  cross-origin host still runs, and the code stays behind the derived
+  `cookieSession` decision for exactly that reason. The
   shell page's kick saves the kit `AuthorizationRequest` (sessionStorage)
   and redirects to `/authorize`; the app's router guard consumes it on
   return — state check, PKCE params on `exchangeAuthorizationCode`, strip
@@ -1656,10 +1656,17 @@ rather than trusted until `exp`.
   (`cors.ts`). `Allow-Origin` keeps reflecting, so non-credentialed
   cross-origin callers are unaffected; no authup consumer sets
   `credentials: 'include'`.
-- **Wiring.** `cookieSession` rides the injected runtime config, hard-coded
-  `true` by `serveAccountConsolePage` (server-served implies same-origin, so
-  there is no config key), and reaches BOTH the kit's `installStore` and its
-  store factory. In `installStore` it skips the `readCookies()` seeding of
+- **Wiring.** `cookieSession` is DERIVED by `resolveAccountConsoleConfig`, not
+  injected and not configurable: it is true exactly when `apiUrl` is the
+  document's own origin (`isSameOriginApiUrl`). The credential is
+  `SameSite=Strict` and the server additionally demands `Sec-Fetch-Site:
+  same-origin`, so that condition is precisely when cookie mode can work — and
+  it is the same condition that makes `${apiUrl}/account/login` a real route,
+  which is what makes the kick in `pages/index.vue` sound rather than
+  conventional. It was an injected boolean first; that made the broken
+  combination (cookie mode against a foreign API) representable and silently
+  fatal, so there is deliberately no flag left to set wrong. The derived value
+  reaches BOTH the kit's `installStore` and its store factory. In `installStore` it skips the `readCookies()` seeding of
   the four token cookies, and **seeding nothing is the whole fix**: the
   hosted login writes them at path `/` on this same origin, so a seeded
   store would attach a `Bearer` header and header-wins precedence would mean
@@ -1667,6 +1674,17 @@ rather than trusted until `exp`.
   INSTALLED (`installHTTPClient` injects it unconditionally and that inject
   throws when it was never provided); with no access token it disables
   itself at install time, so it is inert rather than absent.
+- **The column stores a DIGEST, not the credential.** `auth_sessions.secret`
+  holds `sha256(cookie value)`; `findOneBySecret` hashes the presented value
+  and compares. `select: false` governs what the ORM projects and nothing about
+  what the table contains, so storing it verbatim would make any read of that
+  table — a leaked backup, a read replica, a SELECT-only injection — a source
+  of replayable session cookies. Plain SHA-256 rather than a keyed HMAC on
+  purpose: keying defends a LOW-entropy input against offline guessing, and
+  this input is ~248 bits of nanoid, so there is no guessing attack to
+  frustrate. A key would also have to be global, since the lookup resolves a
+  session BY this value and the realm is unknown at that point. Hex SHA-256 is
+  exactly the column's 64 characters.
 - **Stage-1 boundary.** `loggedIn`, `usePermissionCheck` and the socket
   manager all read `accessToken` and stay false / disconnected in cookie
   mode. The account console reads none of them; Stage 2 (the admin console
@@ -1677,7 +1695,8 @@ rather than trusted until `exp`.
   session handle itself is durable). A browser that does not send Fetch
   Metadata can never authenticate: the intended fail-closed posture, and a
   support-visible cliff. Standalone cross-origin hosting stays on the
-  JS-token path, so the two modes coexist behind one flag.
+  JS-token path (it is cross-origin, so the derivation yields false there), so
+  the two modes coexist behind one derived condition.
 
 ### File Structure
 
