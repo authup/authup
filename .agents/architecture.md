@@ -1609,8 +1609,8 @@ rather than trusted until `exp`.
   `SameSite=Lax` login cookie (Lax, not Strict: the return leg may traverse
   an external IdP chain) and 302s to `/authorize`; `GET /account/callback`
   redeems the code and hands back the session cookie;
-  `GET`/`DELETE /sessions/@me` are what the console hydrates from and
-  signs out with. The callback **requires `Sec-Fetch-Site: same-origin`**.
+  `GET /sessions/@me/introspect` is what the console hydrates from and
+  `DELETE /sessions/@me` is what it signs out with. The callback **requires `Sec-Fetch-Site: same-origin`**.
   Without it an attacker who plants their own login cookie in the victim's
   browser from a sibling subdomain and navigates them here logs the victim
   into the ATTACKER's account. It validates `state` BEFORE consuming the
