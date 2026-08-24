@@ -244,6 +244,15 @@ export default defineConfig({
                     ],
                 },
                 {
+                    text: 'Worker',
+                    items: [
+                        {
+                            text: 'Overview',
+                            link: '/guide/deployment/worker',
+                        },
+                    ],
+                },
+                {
                     text: 'Provisioning',
                     items: [
                         {

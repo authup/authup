@@ -2235,7 +2235,22 @@ as child processes with full environment passthrough plus per-child
 `PORT`/`HOST` and `NUXT_PUBLIC_API_URL` overrides derived from the
 multi-section config file, forwards SIGINT/SIGTERM to the children, and exits
 with the first-failing child's exit code; `migration` / `healthcheck` forward
-to server-core only.
+to server-core only. The launcher knows nothing about the worker role below.
+
+**The worker role (plans 095/096)** is the same binary and the same image,
+started as `authup-server worker` (container: `server/core worker`). It is
+`createWorkerApplication()` in `app/factory.ts`: config, logger, cache,
+database and components, and nothing else, so it opens no port and serves no
+request. Two config keys move the work: `componentsEnabled`
+(`COMPONENTS_ENABLED`) turns the cron sweeps off on the API replicas, and
+`migrationEnabled` (`MIGRATION_ENABLED`) turns boot-time DDL off so one
+process owns the schema. The worker forces its components on regardless of
+the first key, and **never** applies schema changes regardless of the second:
+its `DatabaseModule` migrate override runs `assertNoPendingMigrations` and
+fails the boot when the chain is behind. That helper returns a boolean, and
+the `false` (no migrations configured at all, i.e. sqlite) branch must fall
+through to `synchronizeDatabaseSchema` or a sqlite worker boots against no
+schema. The `migration` CLI command is unaffected by either key.
 
 **Configuration is layered:** server-core honors the confinity file family
 (`authup.conf` with a `server.core` section, or the per-component
@@ -4590,8 +4605,18 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   by every replica. Batching selects ids then deletes by id, because
   `DELETE ... LIMIT` is MySQL-only; the loop drains, and a batch that removes
   nothing means another replica's sweep owns those rows, so it stops and the
-  next tick takes the remainder. `SessionTokenRepositoryAdapter.deleteExpired`
-  (the oauth2 cleaner's half) still carries the unbatched shape.
+  next tick takes the remainder. The oauth2 cleaner's two sweeps
+  (`SessionTokenRepositoryAdapter.deleteExpired`,
+  `SessionRepository.deleteExpired`) carry the same shape behind the same
+  loop: `deleteInBatches` + `resolveSweepBatchSize`
+  (`app/modules/database/repositories/helpers.ts`), one named batch-size
+  constant per table. The falsy-`take` trap is why the loop is shared rather
+  than re-typed per table — typeorm ignores a falsy `take`, so a re-typed
+  guard that drifts silently restores the unbounded `DELETE`. The session
+  sweep deliberately bypasses `SessionRepository`'s cache: an entry is
+  written with `ttl = expiresAt - now` on every save, so it has lapsed by the
+  time its row matches the predicate. `ComponentsModule` therefore declares
+  a CACHE dependency (it constructs that repository).
 - **Failed-login throttle (plan 053, default off):** `LoginThrottleService`
   (`core/authentication/login-throttle/`) counts recent `LOGIN_FAILED` rows via
   the indexed `countRecent` — keyed on the **(identifier, ip) pair** (never
