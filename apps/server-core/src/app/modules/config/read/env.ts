@@ -106,6 +106,18 @@ export function readConfigRawFromEnv() : ConfigInput {
 
     // -------------------------------------------------------------
 
+    const componentsEnabled = readBoolStrict(ConfigEnvironmentVariableName.COMPONENTS_ENABLED);
+    if (typeof componentsEnabled !== 'undefined') {
+        options.componentsEnabled = componentsEnabled;
+    }
+
+    const migrationEnabled = readBoolStrict(ConfigEnvironmentVariableName.MIGRATION_ENABLED);
+    if (typeof migrationEnabled !== 'undefined') {
+        options.migrationEnabled = migrationEnabled;
+    }
+
+    // -------------------------------------------------------------
+
     const host = read(ConfigEnvironmentVariableName.HOST);
     if (host) {
         options.host = host;

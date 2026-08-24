@@ -92,6 +92,29 @@ export default {
     logger: true,
 
     /**
+     * Run the background components (the session, token and audit-event
+     * sweeps) in this process. Set false on API replicas once a dedicated
+     * worker process runs them, and only then: with it false everywhere,
+     * nothing sweeps. A worker started with `authup-server worker` forces
+     * them on regardless of this option. See the Worker guide.
+     * env: COMPONENTS_ENABLED
+     * default: true
+     */
+    componentsEnabled: true,
+
+    /**
+     * Apply pending schema migrations at startup. When false, startup runs
+     * no DDL: it verifies that no migration is pending and fails loud
+     * otherwise, so a replica never races a sibling for the same DDL. Run
+     * `authup-server migration run` as a separate step instead; that command
+     * is unaffected by this option. Ignored on SQLite, which ships no
+     * migrations and always synchronizes its schema. See the Worker guide.
+     * env: MIGRATION_ENABLED
+     * default: true
+     */
+    migrationEnabled: true,
+
+    /**
      * Application port number.
      * env: PORT
      * default: 3001
@@ -493,6 +516,8 @@ env=production
 writableDirectoryPath=writable
 themeDirectoryPath=/etc/authup/theme
 themeFragmentsEnabled=false
+componentsEnabled=true
+migrationEnabled=true
 port=3001
 host=0.0.0.0
 publicUrl=http://localhost:3001
@@ -539,6 +564,8 @@ NODE_ENV=production
 WRITABLE_DIRECTORY_PATH=writable
 THEME_DIRECTORY_PATH=/etc/authup/theme
 THEME_FRAGMENTS_ENABLED=false
+COMPONENTS_ENABLED=true
+MIGRATION_ENABLED=true
 PORT=3001
 HOST=0.0.0.0
 PUBLIC_URL=http://localhost:3001

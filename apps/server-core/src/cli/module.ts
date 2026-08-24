@@ -15,6 +15,7 @@ import {
     defineCLIHealthCheckCommand,
     defineCLIMigrationCommand,
     defineCLIStartCommand,
+    defineCLIWorkerCommand,
 } from './commands/index.ts';
 
 export async function createCLIEntryPointCommand() {
@@ -36,6 +37,7 @@ export async function createCLIEntryPointCommand() {
             healthcheck: defineCLIHealthCheckCommand(configFs),
             migration: defineCLIMigrationCommand(configFs),
             start: defineCLIStartCommand(configFs),
+            worker: defineCLIWorkerCommand(configFs),
         },
         args: CLI_CONFIG_ARGS,
         setup(context) {

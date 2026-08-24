@@ -67,7 +67,7 @@ const check = (label, actual, expected) => {
 
 const sleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
 
-async function bootApplication() {
+async function bootApplication(env = {}) {
     const child = spawn('node', ['dist/cli/index.mjs', 'start'], {
         cwd: process.cwd(),
         env: {
@@ -76,6 +76,7 @@ async function bootApplication() {
             HOST: '127.0.0.1',
             USER_ADMIN_PASSWORD: adminPassword,
             PUBLIC_URL: `http://127.0.0.1:${port}`,
+            ...env,
         },
         stdio: ['ignore', 'pipe', 'pipe'],
     });
@@ -392,6 +393,20 @@ console.log(`[${dialect}] rebooting the application against the migrated schema`
 child = await bootApplication();
 const grantAfter = await login();
 check('login after migration round-trip', typeof grantAfter.access_token === 'string', true);
+await stopApplication(child);
+
+/**
+ * MIGRATION_ENABLED=false is what an api replica or a worker runs once a
+ * separate process owns the schema. The boot then verifies instead of
+ * migrating, and this is the only place that verification meets a genuinely
+ * migrated database: the unit suite builds its schemas with synchronize(),
+ * which records no migrations table, so every migration would read as
+ * pending there.
+ */
+console.log(`[${dialect}] rebooting with boot-time migration disabled`);
+child = await bootApplication({ MIGRATION_ENABLED: 'false' });
+const grantWithoutMigration = await login();
+check('login with boot-time migration disabled', typeof grantWithoutMigration.access_token === 'string', true);
 await stopApplication(child);
 
 const failed = results.filter((result) => !result.ok);

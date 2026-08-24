@@ -11,13 +11,20 @@ import { DataSource } from 'typeorm';
 import {
     afterAll,
     beforeAll,
+    beforeEach,
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import { DataSourceOptionsBuilder } from '../../../../../src/adapters/database/data-source/options/module.ts';
-import { ClientEntity, RealmEntity, SessionEntity } from '../../../../../src/adapters/database/domains/index.ts';
-import { isSessionTokenRelationMissingError } from '../../../../../src/core/index.ts';
+import {
+    ClientEntity,
+    RealmEntity,
+    SessionEntity,
+    SessionTokenEntity,
+} from '../../../../../src/adapters/database/domains/index.ts';
+import { SESSION_TOKEN_EXPIRY_SWEEP_BATCH_SIZE, isSessionTokenRelationMissingError } from '../../../../../src/core/index.ts';
 import { SessionTokenRepositoryAdapter } from '../../../../../src/app/modules/oauth2/repositories/session-token/repository.ts';
 
 describe('app/modules/oauth2/repositories/session-token', () => {
@@ -144,5 +151,103 @@ describe('app/modules/oauth2/repositories/session-token', () => {
         const row = await repository.create(buildInput(sessionId, clientId));
 
         expect(row.clientId).toEqual(clientId);
+    });
+
+    describe('deleteExpired', () => {
+        const seedExpired = async (sessionId: string, expiresAt: string) => {
+            const repository = dataSource.getRepository(SessionTokenEntity);
+
+            await repository.save(repository.create({
+                id: randomUUID(),
+                sessionId,
+                kind: 'access',
+                ipAddress: '203.0.113.10',
+                userAgent: 'test-agent',
+                expiresAt,
+            }));
+        };
+
+        const count = async () => dataSource.getRepository(SessionTokenEntity).count();
+
+        beforeEach(async () => {
+            await dataSource.getRepository(SessionTokenEntity).clear();
+        });
+
+        it('drains every expired row across several batches', async () => {
+            // auth_session_tokens is the highest-volume table in the schema
+            // (one row per access token, ~15min TTL), so the sweep must both
+            // bound each statement AND drain. A single bounded statement
+            // would leave a permanent backlog behind.
+            const sessionId = await createSession();
+            const past = new Date(Date.now() - 60_000).toISOString();
+            for (let i = 0; i < 5; i++) {
+                await seedExpired(sessionId, past);
+            }
+
+            const repository = new SessionTokenRepositoryAdapter(dataSource);
+            const deleted = await repository.deleteExpired(
+                new Date().toISOString(),
+                { batchSize: 2 },
+            );
+
+            expect(deleted).toEqual(5);
+            expect(await count()).toEqual(0);
+        });
+
+        it('bounds each statement to the batch size', async () => {
+            const sessionId = await createSession();
+            const past = new Date(Date.now() - 60_000).toISOString();
+            for (let i = 0; i < 5; i++) {
+                await seedExpired(sessionId, past);
+            }
+
+            const ormRepository = dataSource.getRepository(SessionTokenEntity);
+            const findSpy = vi.spyOn(ormRepository, 'find');
+            const deleteSpy = vi.spyOn(ormRepository, 'delete');
+
+            const repository = new SessionTokenRepositoryAdapter(dataSource);
+            await repository.deleteExpired(new Date().toISOString(), { batchSize: 2 });
+
+            expect(deleteSpy).toHaveBeenCalledTimes(3);
+            expect(findSpy).toHaveBeenCalledTimes(3);
+            for (const [options] of findSpy.mock.calls) {
+                expect(options?.take).toEqual(2);
+            }
+
+            findSpy.mockRestore();
+            deleteSpy.mockRestore();
+        });
+
+        it('falls back to the default batch size for an unusable batchSize', async () => {
+            // typeorm ignores a falsy take, which would silently restore the
+            // single unbounded DELETE the batching exists to prevent.
+            const sessionId = await createSession();
+            await seedExpired(sessionId, new Date(Date.now() - 60_000).toISOString());
+
+            const ormRepository = dataSource.getRepository(SessionTokenEntity);
+            const findSpy = vi.spyOn(ormRepository, 'find');
+
+            const repository = new SessionTokenRepositoryAdapter(dataSource);
+            await repository.deleteExpired(new Date().toISOString(), { batchSize: 0 });
+
+            expect(findSpy).toHaveBeenCalled();
+            for (const [options] of findSpy.mock.calls) {
+                expect(options?.take).toEqual(SESSION_TOKEN_EXPIRY_SWEEP_BATCH_SIZE);
+            }
+
+            findSpy.mockRestore();
+        });
+
+        it('keeps rows that have not expired', async () => {
+            const sessionId = await createSession();
+            await seedExpired(sessionId, new Date(Date.now() + 600_000).toISOString());
+            await seedExpired(sessionId, new Date(Date.now() - 60_000).toISOString());
+
+            const repository = new SessionTokenRepositoryAdapter(dataSource);
+            const deleted = await repository.deleteExpired(new Date().toISOString());
+
+            expect(deleted).toEqual(1);
+            expect(await count()).toEqual(1);
+        });
     });
 });

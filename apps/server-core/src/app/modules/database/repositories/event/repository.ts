@@ -8,7 +8,7 @@
 import type { Event } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import type { Repository } from 'typeorm';
-import { In, LessThan } from 'typeorm';
+import { LessThan } from 'typeorm';
 import { applyQuery, redactFieldConditions } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
@@ -18,7 +18,7 @@ import type {
     IEventRepository,
 } from '../../../../../core/index.ts';
 import { EVENT_RETENTION_SWEEP_BATCH_SIZE } from '../../../../../core/index.ts';
-import { applyRealmScopeSelect } from '../helpers.ts';
+import { applyRealmScopeSelect, deleteInBatches, resolveSweepBatchSize } from '../helpers.ts';
 
 export class EventRepositoryAdapter implements IEventRepository {
     private readonly repository: Repository<Event>;
@@ -130,50 +130,13 @@ export class EventRepositoryAdapter implements IEventRepository {
     }
 
     async deleteExpired(now: string, options: EventDeleteExpiredOptions = {}): Promise<number> {
-        // A non-positive or non-integral size must never reach `take`: typeorm
-        // ignores a falsy one, which would silently restore the single
-        // unbounded DELETE this batching exists to prevent, and the rest reach
-        // the driver as invalid SQL. Fall back to the default instead.
-        const requested = options.batchSize;
-        const batchSize = typeof requested === 'number' &&
-            Number.isSafeInteger(requested) &&
-            requested > 0 ?
-            requested :
-            EVENT_RETENTION_SWEEP_BATCH_SIZE;
-
-        let total = 0;
-
-        for (;;) {
-            const rows = await this.repository.find({
-                select: { id: true },
-                where: {
-                    expiring: true,
-                    expiresAt: LessThan(now),
-                },
-                take: batchSize,
-            });
-
-            if (rows.length === 0) {
-                break;
-            }
-
-            const result = await this.repository.delete({ id: In(rows.map((row) => row.id)) });
-
-            // A driver that does not report affected rows still made
-            // progress, so count the batch rather than returning 0.
-            total += result.affected ?? rows.length;
-
-            // Another replica's sweep already owns these rows. Stop rather
-            // than re-selecting them; the next tick picks up whatever is left.
-            if (result.affected === 0) {
-                break;
-            }
-
-            if (rows.length < batchSize) {
-                break;
-            }
-        }
-
-        return total;
+        return deleteInBatches(
+            this.repository,
+            {
+                expiring: true,
+                expiresAt: LessThan(now),
+            },
+            resolveSweepBatchSize(options.batchSize, EVENT_RETENTION_SWEEP_BATCH_SIZE),
+        );
     }
 }

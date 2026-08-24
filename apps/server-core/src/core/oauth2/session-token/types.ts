@@ -121,9 +121,21 @@ export interface ISessionTokenRepository {
     revokeBySessionId(sessionId: string, at: string): Promise<SessionTokenRef[]>;
 
     /**
-     * Delete every token row whose `expiresAt` is before the given timestamp.
+     * Expiry sweep: delete every token row whose `expiresAt` is before the
+     * given timestamp. Returns the number of removed rows. Removal is batched
+     * (see SESSION_TOKEN_EXPIRY_SWEEP_BATCH_SIZE).
      *
      * @param before iso timestamp
+     * @param options
      */
-    deleteExpired(before: string): Promise<number>;
+    deleteExpired(before: string, options?: SessionTokenDeleteExpiredOptions): Promise<number>;
 }
+
+export type SessionTokenDeleteExpiredOptions = {
+    /**
+     * Rows removed per statement. Defaults to
+     * SESSION_TOKEN_EXPIRY_SWEEP_BATCH_SIZE, which anything that is not a
+     * positive safe integer also falls back to.
+     */
+    batchSize?: number,
+};

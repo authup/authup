@@ -33,6 +33,7 @@ import { EntityEventHandler, EventService } from '../../../core/index.ts';
 import { useRequestEventContext } from '../../../adapters/http/request/index.ts';
 import { EventRepositoryAdapter } from './repositories/index.ts';
 import { validateEntitySchemas } from './repositories/schema-validation.ts';
+import { verifySchemaOrSynchronize } from './migration.ts';
 import { CacheInjectionKey } from '../cache/index.ts';
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
@@ -170,7 +171,13 @@ export class DatabaseModule implements IModule {
     }
 
     protected async migrate(container: IContainer, dataSource: DataSource): Promise<void> {
+        const config = container.resolve(ConfigInjectionKey);
         const logger = container.resolve(LoggerInjectionKey);
+
+        if (!config.migrationEnabled) {
+            await verifySchemaOrSynchronize(logger, dataSource);
+            return;
+        }
 
         logger.debug('Migrating database...');
         await synchronizeDatabaseSchema(dataSource);

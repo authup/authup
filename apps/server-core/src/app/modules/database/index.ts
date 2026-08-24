@@ -6,5 +6,6 @@
  */
 
 export * from './constants.ts';
+export * from './migration.ts';
 export * from './module.ts';
 export * from './repositories/index.ts';

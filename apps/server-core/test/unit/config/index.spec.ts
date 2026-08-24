@@ -106,6 +106,19 @@ describe('src/config/*.ts', () => {
             await expect(parseConfig({ passwordMinLength: 513 })).rejects.toThrow();
             await expect(parseConfig({ passwordMinLength: 10.5 })).rejects.toThrow();
         });
+
+        it('should accept boolean process role keys and reject non-boolean values', async () => {
+            const config = await parseConfig({
+                componentsEnabled: false,
+                migrationEnabled: false,
+            });
+
+            expect(config.componentsEnabled).toEqual(false);
+            expect(config.migrationEnabled).toEqual(false);
+
+            await expect(parseConfig({ componentsEnabled: 'nope' })).rejects.toThrow();
+            await expect(parseConfig({ migrationEnabled: 'nope' })).rejects.toThrow();
+        });
     });
 
     describe('normalizeConfig', () => {
@@ -284,6 +297,55 @@ describe('src/config/*.ts', () => {
             expect(config.loginAttemptThrottleEnabled).toEqual(false);
             expect(config.loginAttemptThreshold).toEqual(5);
             expect(config.loginAttemptWindow).toEqual(900);
+        });
+
+        it('should default the process role keys to true', async () => {
+            const config = await normalizeConfig();
+
+            expect(config.componentsEnabled).toEqual(true);
+            expect(config.migrationEnabled).toEqual(true);
+        });
+
+        it('should accept the process role keys', async () => {
+            const config = await normalizeConfig({
+                componentsEnabled: false,
+                migrationEnabled: false,
+            });
+
+            expect(config.componentsEnabled).toEqual(false);
+            expect(config.migrationEnabled).toEqual(false);
+        });
+
+        it('should read COMPONENTS_ENABLED and MIGRATION_ENABLED from the environment', () => {
+            const previousComponents = process.env.COMPONENTS_ENABLED;
+            const previousMigration = process.env.MIGRATION_ENABLED;
+
+            process.env.COMPONENTS_ENABLED = 'false';
+            process.env.MIGRATION_ENABLED = 'false';
+
+            try {
+                const raw = readConfigRawFromEnv();
+
+                expect(raw.componentsEnabled).toEqual(false);
+                expect(raw.migrationEnabled).toEqual(false);
+
+                // both are strict readers: a set-but-unrecognized value must
+                // fail loud instead of silently defaulting to true.
+                process.env.COMPONENTS_ENABLED = 'maybe';
+                expect(() => readConfigRawFromEnv()).toThrow(/COMPONENTS_ENABLED/);
+            } finally {
+                if (typeof previousComponents === 'undefined') {
+                    delete process.env.COMPONENTS_ENABLED;
+                } else {
+                    process.env.COMPONENTS_ENABLED = previousComponents;
+                }
+
+                if (typeof previousMigration === 'undefined') {
+                    delete process.env.MIGRATION_ENABLED;
+                } else {
+                    process.env.MIGRATION_ENABLED = previousMigration;
+                }
+            }
         });
 
         it('should enable MFA with zero key configuration', async () => {

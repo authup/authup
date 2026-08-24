@@ -10,14 +10,21 @@ import type { IQuery } from '@rapiq/core';
 import type { EntityRepositoryFindManyResult, ICache } from '@authup/server-kit';
 import { buildCacheKey } from '@authup/server-kit';
 import type { Repository } from 'typeorm';
+import { LessThan } from 'typeorm';
 import { applyQuery, redactFieldConditions } from '../../database/repositories/query.ts';
 import { hashSessionSecret } from '../../../../core/index.ts';
 import type {
     ISessionRepository,
+    SessionDeleteExpiredOptions,
     SessionFindManyOptions,
     SessionOwner,
 } from '../../../../core/index.ts';
-import { applyRealmScopeSelect } from '../../database/repositories/helpers.ts';
+import { SESSION_EXPIRY_SWEEP_BATCH_SIZE } from '../../../../core/index.ts';
+import {
+    applyRealmScopeSelect,
+    deleteInBatches,
+    resolveSweepBatchSize,
+} from '../../database/repositories/helpers.ts';
 import { AuthenticationCachePrefix } from './constants.ts';
 
 type SessionRepositoryContext = {
@@ -178,5 +185,21 @@ export class SessionRepository implements ISessionRepository {
         if (session) {
             await this.remove(session);
         }
+    }
+
+    async deleteExpired(
+        before: string,
+        options: SessionDeleteExpiredOptions = {},
+    ): Promise<number> {
+        // Deliberately bypasses the cache, unlike `remove`. A cached session
+        // is written with `ttl = expiresAt - now` on every save (creation and
+        // every refresh alike), so an entry has always lapsed by the time its
+        // row matches this predicate. Dropping the keys would mean reading
+        // each row back only to evict something that is already gone.
+        return deleteInBatches(
+            this.repository,
+            { expiresAt: LessThan(before) },
+            resolveSweepBatchSize(options.batchSize, SESSION_EXPIRY_SWEEP_BATCH_SIZE),
+        );
     }
 }
