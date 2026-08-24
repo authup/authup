@@ -23,6 +23,7 @@ if [[ -z "${COMMAND}" || -z "${SERVICE}" ]]; then
     printf '  <service> <command>\n    Run a specific service cli/script command.\n'
     printf 'Examples:\n'
     printf '  server/core start\n    Start the server core service.\n'
+    printf '  server/core worker\n    Start the server core background worker (no http listener).\n'
     printf '  client/admin-console start\n    Start the admin console service.\n'
     exit 0
 fi
