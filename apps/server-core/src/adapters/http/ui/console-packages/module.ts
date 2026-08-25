@@ -9,14 +9,12 @@ import { AuthupError, normalizeError } from '@authup/errors';
 import { read } from 'locter';
 import fs from 'node:fs';
 import path from 'node:path';
-import {
-    resolveAccountConsoleDistPath,
-    setAccountConsolePackagePath,
-} from '../account-console/index.ts';
+import { accountConsole } from '../account-console/index.ts';
 import { resolveAuthConsoleDistPath, setAuthConsolePackagePath } from '../auth-console/index.ts';
 // Type position only (see AUTH_CONSOLE_CONTRACT_VERSION_IN_SYNC below), so
 // the runtime stays a dist-file read and the layering rule holds.
 import type { CONTRACT_VERSION as AuthConsoleContractVersion } from '@authup/client-auth-console';
+import type { StaticConsole } from '../static-console/index.ts';
 import type { ConsolePackageOptions } from './types.ts';
 
 /**
@@ -47,9 +45,10 @@ const AUTH_CONSOLE_CONTRACT_VERSION_IN_SYNC : AuthConsoleContractVersionInSync =
  * The marker the account console's index.html must carry. It is that
  * console's entire runtime contract: without it the injected
  * `window.__AUTHUP__` never lands and the SPA silently falls back to
- * deriving its API URL from the origin.
+ * deriving its API URL from the origin. Read off the console definition, so
+ * the serving side and this assert cannot drift.
  */
-export const ACCOUNT_CONSOLE_CONFIG_MARKER = '<!--account-config-->';
+export const ACCOUNT_CONSOLE_CONFIG_MARKER = accountConsole.marker;
 
 /**
  * Bind the substituted console packages and verify they still fulfill the
@@ -68,14 +67,14 @@ export const ACCOUNT_CONSOLE_CONFIG_MARKER = '<!--account-config-->';
  */
 export async function bindConsolePackages(options: ConsolePackageOptions = {}) : Promise<void> {
     setAuthConsolePackagePath(options.authConsolePath);
-    setAccountConsolePackagePath(options.accountConsolePath);
+    accountConsole.setPackagePath(options.accountConsolePath);
 
     if (options.authConsolePath) {
         await assertAuthConsoleContract(options.authConsolePath);
     }
 
     if (options.accountConsolePath) {
-        assertAccountConsoleContract(options.accountConsolePath);
+        assertStaticConsoleContract(accountConsole, options.accountConsolePath);
     }
 }
 
@@ -115,20 +114,25 @@ async function assertAuthConsoleContract(packagePath: string) : Promise<void> {
     }
 }
 
-function assertAccountConsoleContract(packagePath: string) : void {
-    const distPath = resolveAccountConsoleDistPath();
+/**
+ * A static console's contract is its config marker: without it the injected
+ * `window.__AUTHUP__` never lands and the SPA silently degrades to deriving
+ * its API URL from the origin.
+ */
+function assertStaticConsoleContract(console: StaticConsole, packagePath: string) : void {
+    const distPath = console.resolveDistPath();
     if (!distPath) {
         throw new AuthupError(
-            `The account console package at "${packagePath}" carries no built bundle (expected dist/index.html).`,
+            `The console package (${console.packageName}) at "${packagePath}" carries no built bundle (expected dist/index.html).`,
         );
     }
 
     const entry = path.join(distPath, 'index.html');
     const html = fs.readFileSync(entry, 'utf-8');
 
-    if (!html.includes(ACCOUNT_CONSOLE_CONFIG_MARKER)) {
+    if (!html.includes(console.marker)) {
         throw new AuthupError(
-            `The account console shell "${entry}" carries no ${ACCOUNT_CONSOLE_CONFIG_MARKER} marker, so its runtime configuration cannot be injected.`,
+            `The console shell "${entry}" carries no ${console.marker} marker, so its runtime configuration cannot be injected.`,
         );
     }
 }
