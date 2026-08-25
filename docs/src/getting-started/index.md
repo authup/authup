@@ -1,8 +1,8 @@
 # What is Authup?
 
-Authup is an easy to use yet powerful authentication & authorization system. It's modular design allow you to only
-deploy the parts you need for your application and scale the system precisely as demands grow. You could for example run 
-multiple instances of the REST API along a single instance of the UI and use a load balancer to distribute the load.
+Authup is an easy to use yet powerful authentication & authorization system. Its modular design allows you to only
+deploy the parts you need for your application and scale the system precisely as demands grow. You could for example run
+multiple instances of the REST API behind a load balancer; each instance serves the admin and account consoles itself.
 
 It comes with a fully featured admin panel giving you access to it's powerful REST API for user and permission
 management via a beautiful UI.

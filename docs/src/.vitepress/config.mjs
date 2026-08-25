@@ -221,8 +221,8 @@ export default defineConfig({
                             ],
                         },
                         {
-                            text: 'client:admin-console',
-                            link: '/guide/deployment/configuration-client-admin-console', 
+                            text: 'Admin Console',
+                            link: '/guide/deployment/configuration-client-admin-console',
                         },
                     ],
                 },

@@ -13,7 +13,7 @@ Every realm automatically gets two built-in, public OAuth2 clients:
 
 | Name              | Used by                                                          |
 |-------------------|------------------------------------------------------------------|
-| `admin-console`   | Authup's admin console: selecting a realm on its login screen redirects the browser to `/authorize?client_id=admin-console&realm_id=<id>` |
+| `admin-console`   | Authup's [admin console](./configuration-client-admin-console.md), the administration surface served at `<publicUrl>/admin`: selecting a realm on its login screen redirects the browser to `/authorize?client_id=admin-console&realm_id=<id>` |
 | `account-console` | Authup's [account console](./account-console.md), the self-service surface served at `<publicUrl>/account`: its sign-in redirects the browser to `/authorize?client_id=account-console&realm_id=<id>` |
 
 Both authenticate end users via the authorization-code flow with PKCE.
@@ -132,11 +132,12 @@ options.)
 ::: danger Security
 The system clients are built-in with the `global` scope, so **any** allowlisted
 origin can complete a login and obtain a full-permission token. Only add
-origins you fully control to `trustedOrigins`. In non-production, the
-client-admin-console dev origin (`http://localhost:3000`) is seeded automatically so
-the realm-selection login works out of the box; in production nothing is
-seeded — set `trustedOrigins` explicitly for any UI origin other than
-`publicUrl`.
+origins you fully control to `trustedOrigins`. The consoles authup serves need
+no entry: they live on the `publicUrl` origin. In non-production, the admin
+console's vite dev server origin (`http://localhost:3000`) is seeded
+automatically so the realm-selection login works out of the box; in production
+nothing is seeded. Set `trustedOrigins` explicitly for any application origin
+other than `publicUrl`.
 :::
 
 ## Realm Wildcard (`name: "*"`) {#realm-wildcard-name}

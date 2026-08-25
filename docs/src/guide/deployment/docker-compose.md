@@ -8,7 +8,7 @@ The following guide is based on some shared assumptions:
 - Min. `2` cores
 - Min. `5G` hard disk
 - Docker `v20.x` is [installed](https://docs.docker.com/get-docker/)
-- Up to two available ports on the host system if you want to map the services to your local machine (default: `3000` and `3001`)
+- One available port on the host system if you want to map the service to your local machine (default: `3001`)
 - This guide assumes [Compose v2](https://docs.docker.com/compose/compose-file/)
 
 
@@ -19,8 +19,9 @@ This section contains multiple examples for how to deploy and configure authup u
 examples show how to configure authup using the options described in the [configuration](./configuration) section. Simply
 paste and modify the example you want to use into a `docker-compose.yml` file.
 
-The following example shows a sensible default configuration for getting started with Authup. 
-This will start the server- & client-services.
+The following example shows a sensible default configuration for getting started with Authup.
+This starts the one service a deployment needs: `server/core` serves the API and both consoles
+(the admin console at `/admin`, the account console at `/account`).
 
 ```yaml
 version: '3.8'
@@ -44,22 +45,6 @@ services:
       command: server/core start
       networks:
           authup:
-              
-  client-admin-console:
-      image: authup/authup:latest
-      pull_policy: always
-      container_name: client-admin-console
-      restart: unless-stopped
-      depends_on:
-          - server-core
-      environment:
-        - NUXT_PUBLIC_API_URL=http://localhost:3001 #optional
-        - NUXT_PUBLIC_PUBLIC_URL=http://localhost:3000 #optional
-      ports:
-          - "3000:3000"
-      command: client/admin-console start
-      networks:
-        authup:
 
 networks:
     authup:
@@ -84,6 +69,13 @@ and check the logs using:
 docker compose logs -f
 ```
 
+::: warning The `client/admin-console` service was retired
+Earlier versions of this example ran a second container for the admin
+console. That service no longer exists: remove it, and remove its
+`NUXT_PUBLIC_*` environment variables. See
+[Upgrading](./upgrading.md#the-admin-console-is-served-by-server-core).
+:::
+
 ## Configuration
 
 The following examples show different ways to configure and use the Authup service using docker-compose. For more general
@@ -91,7 +83,7 @@ information about how to configure Authup, see the [configuration](./configurati
 
 ## Reverse Proxy
 
-It is recommended to operate the services behind a reverse proxy. For example [nginx](./nginx.md).
+It is recommended to operate the service behind a reverse proxy. For example [nginx](./nginx.md).
 
 ### Environment variables
 
@@ -156,8 +148,7 @@ services:
 
 ### Multiple services
 
-This shows an example of how to run authup alongside other services (postgres & redis) and connect to them. It also shows how to split 
-Authup into multiple services running the client- & server-services in separate containers.
+This shows an example of how to run authup alongside other services (postgres & redis) and connect to them.
 
 ```yaml
 version: '3.8'
@@ -188,19 +179,7 @@ services:
             - DB_DATABASE=postgres
             - REDIS=redis://redis:6379
         command: server/core start
-    client-admin-console:
-        image: authup/authup:latest
-        container_name: client-admin-console
-        restart: unless-stopped
-        environment:
-          - NUXT_PUBLIC_API_URL=http://localhost:3001 #optional
-          - NUXT_PUBLIC_PUBLIC_URL=http://localhost:3000 #optional
-        depends_on:
-          - server-core
-        ports:
-            - "3000:3000"
-        command: client/admin-console start
-    
+
     postgres:
         image: postgres:14
         container_name: postgres

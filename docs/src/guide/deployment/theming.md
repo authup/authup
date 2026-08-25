@@ -1,9 +1,10 @@
 # Theming
 
-Authup serves two consoles from the identity provider origin: the **auth
+Authup serves three consoles from the identity provider origin: the **auth
 console** (the login, consent, registration, activation, password and logout
-pages) and the **account console** at `/account`. Both can be rebranded from a
-directory you mount into the container. No image build, no rebuild of authup.
+pages), the **admin console** at `/admin` and the **account console** at
+`/account`. All three can be rebranded from a directory you mount into the
+container. No image build, no rebuild of authup.
 
 ::: warning Experimental
 Theming is experimental and may change in a minor release. Per-realm themes
@@ -24,7 +25,7 @@ promotes it to stable.
 
 ## What you can and cannot change
 
-Both consoles are compiled Vue bundles, so there is no request-time template
+The consoles are compiled Vue bundles, so there is no request-time template
 engine. That draws a hard line through what theming can do.
 
 | | Reachable |
@@ -294,10 +295,10 @@ Rule of thumb: accents go in `tokens`; anything named `--authup-surface-*` or
 applies to any colour you set in `theme.css`.
 :::
 
-`logo` replaces the built-in mark on both consoles. It must be an image
-(`.svg`, `.png`, `.jpg`, `.gif`, `.webp`, `.avif`, `.ico`) and is painted into
-the existing mark's box, so it needs no size and changes no layout. Square
-artwork works best.
+`logo` replaces the built-in mark on the auth and account consoles. It must be
+an image (`.svg`, `.png`, `.jpg`, `.gif`, `.webp`, `.avif`, `.ico`) and is
+painted into the existing mark's box, so it needs no size and changes no
+layout. Square artwork works best.
 
 `logoDark` is the dark-mode variant. Without it dark mode reuses `logo`, which
 is wrong for a mark drawn dark-on-light: it disappears against the dark card.
@@ -328,8 +329,9 @@ hover borders and the login backdrop.
 | `--font-sans`, `--spacing`, `--radius-*`, `--text-*` | the underlying Tailwind scales |
 
 The `--authup-chrome-*`, `--authup-slate-*`, `--authup-salmon` and
-`--authup-green` tokens style the separately-deployed admin console and have
-no effect on the two consoles authup serves.
+`--authup-green` tokens style the admin console's chrome (header, sidebar,
+footer). They have no effect on the auth and account consoles, which carry no
+such chrome.
 
 ## `assets/theme.css`
 
@@ -387,9 +389,9 @@ For things neither tokens nor CSS can express (a `<meta>` tag, a
 -e THEME_FRAGMENTS_ENABLED=true
 ```
 
-It is spliced immediately before `</head>` on both consoles, after everything
-the manifest emitted, so it can override the token block and the stylesheet.
-The file is capped at 64 KB.
+It is spliced immediately before `</head>` on every served console, after
+everything the manifest emitted, so it can override the token block and the
+stylesheet. The file is capped at 64 KB.
 
 The flag defaults to off and the file is not read at all while it is off.
 Dropping `fragments/head.html` into the directory does nothing by itself.
@@ -439,6 +441,7 @@ or different copy, you replace the console package instead:
 |---|---|
 | `authConsolePath` / `AUTH_CONSOLE_PATH` | package directory replacing `@authup/client-auth-console` |
 | `accountConsolePath` / `ACCOUNT_CONSOLE_PATH` | package directory replacing `@authup/client-account-console` |
+| `adminConsolePath` / `ADMIN_CONSOLE_PATH` | package directory replacing `@authup/client-admin-console` |
 
 Each points at a directory containing the built `dist/`. When set, it is used
 instead of resolving the packaged console from `node_modules`.
@@ -471,9 +474,17 @@ as version 1.
 The types are published in the package's `src/contract.ts`
 (`HydrationPayload`, `RenderContext`, `RenderResult`, `RenderFunction`).
 
-**The account console contract** is smaller: `dist/index.html` carrying the
-`<!--account-config-->` marker, plus `dist/assets/`. The marker is checked at
-boot; without it the injected `window.__AUTHUP__` never lands and the SPA would
-silently fall back to deriving its API URL from the origin.
+**The static console contracts** are smaller. Each of the two SPA bundles
+must ship `dist/index.html` carrying its configuration marker, plus
+`dist/assets/`:
 
-Both checks only run for a package you actually substituted.
+| Console | Marker |
+|---|---|
+| account console | `<!--account-config-->` |
+| admin console | `<!--admin-config-->` |
+
+The marker is checked at boot; without it the injected `window.__AUTHUP__`
+never lands and the SPA would silently fall back to deriving its API URL from
+the origin.
+
+Every check only runs for a package you actually substituted.

@@ -3,10 +3,10 @@
 This section will help you to spin up Authup directly on the **host** system.
 
 ::: tip Production
-For production, the recommended topology is **containers with one service per
-container** — see [Docker](./docker) and [Docker Compose](./docker-compose).
-The `authup` CLI described here is the quickstart / bare-metal path: a small
-supervisor that runs both services from one command.
+For production, the recommended topology is a **container** running the
+`server/core` service. See [Docker](./docker) and
+[Docker Compose](./docker-compose). The `authup` CLI described here is the
+quickstart / bare-metal path: a small supervisor around the same service.
 :::
 
 ## Requirements
@@ -15,7 +15,7 @@ The following guide is based on some shared assumptions:
 - Node.js `v22.13` (minimum)
 - Min. `2` cores
 - Min. `5G` hard disk
-- Up to two available ports (default: `3000` and `3001`)
+- One available port (default: `3001`)
 
 ## Step. 1: Create a new project
 
@@ -44,11 +44,11 @@ $ npm install authup --save
 Follow the instructions for [configuring](./configuration.md) Authup using a
 configuration file or via environment variables.
 
-A configuration file is looked up in the directory the CLI is started from —
-place it in the project root, or point the CLI elsewhere with
-`--configDirectory <path>` / `--configFile <path>`. With a single
-multi-section `authup.conf` (sections `server.core` and `client.admin-console`) one file
-configures both services; environment variables always override file values.
+A configuration file is looked up in the directory the CLI is started from.
+Place it in the project root, or point the CLI elsewhere with
+`--configDirectory <path>` / `--configFile <path>`. A multi-section
+`authup.conf` carries the settings under `server.core`; environment variables
+always override file values.
 
 ## Step. 4: Boot up
 
@@ -73,14 +73,10 @@ The output should be similar to the following:
 ```shell
 i Server: Starting... 
 √ Server: Started
-i UI: Starting...
-√ UI: Started
-i UI: Listening http://127.0.0.1:3000
 i Server: Environment: production
 i Server: WritableDirectoryPath: xxx
 i Server: URL: http://127.0.0.1:3001
 i Server: Docs-URL: http://127.0.0.1:3001/docs/
-i Server: UI-URL: http://127.0.0.1:3000
 i Server: Generating documentation...
 i Server: Generated documentation.
 i Server: Establishing database connection...
@@ -93,47 +89,47 @@ i Server: Started http server.
 
 Now all should be set up, and you are ready to go :tada:
 
-This will launch the following applications with default settings:
-- Frontend (client/admin-console): `http://127.0.0.1:3000/`
+This will launch one service with default settings:
 - Backend (server/core): `http://127.0.0.1:3001/`
+
+The consoles are served by that same process:
+- Admin console: `http://127.0.0.1:3001/admin`
+- Account console: `http://127.0.0.1:3001/account`
 
 ## Supervisor behavior
 
-`authup start` runs both services as **child processes** and supervises them:
+`authup start` runs `server/core` as a **child process** and supervises it:
 
-- **Environment passthrough** — the supervisor's environment reaches both
-  children in full, so [server](./configuration-server-core) or
-  [UI](./configuration-client-admin-console) environment variables can be set on the
-  `authup` process itself. The exception is the per-child overrides below,
-  which the supervisor always sets and which therefore win over an inherited
-  value.
-- **Per-child overrides** — `PORT` and `HOST` are always set per child, from
-  the `server.core` / `client.admin-console` sections of the configuration file or, when
-  a section names none, from the per-service defaults (`3001` for the server,
-  `3000` for the UI). A single `PORT` in the supervisor's own environment can
-  therefore not reach both children and make the second one fail to bind — set
-  per-service ports in the config file instead. The UI additionally receives
-  `NUXT_PUBLIC_API_URL` (from `client.admin-console.apiUrl`, else derived from
-  `server.core.publicUrl`) and `NUXT_PUBLIC_COOKIE_DOMAIN`, each only when the
-  configuration names one.
-- **Signal forwarding** — `SIGINT`/`SIGTERM` are forwarded to the children,
-  so `Ctrl+C` and service managers (systemd, PM2, ...) shut both services
-  down cleanly.
-- **Exit code contract** — if a child exits with a failure, the supervisor
-  stops the sibling and exits with the first-failing child's exit code, so a
-  process manager can restart the stack.
+- **Environment passthrough**: the supervisor's environment reaches the child
+  in full, so [server](./configuration-server-core) environment variables can
+  be set on the `authup` process itself. The exception is the overrides
+  below, which the supervisor always sets and which therefore win over an
+  inherited value.
+- **Overrides**: `PORT` and `HOST` are always set for the child, from the
+  `server.core` section of the configuration file or, when it names none,
+  from the defaults (`3001` and `0.0.0.0`).
+- **Signal forwarding**: `SIGINT`/`SIGTERM` are forwarded to the child, so
+  `Ctrl+C` and service managers (systemd, PM2, ...) shut the service down
+  cleanly.
+- **Exit code contract**: the supervisor exits with the child's exit code, so
+  a process manager can restart it.
 
-A single service can also be targeted directly:
+The service can also be named explicitly:
 
 ```shell
 $ authup start server/core
-$ authup start client/admin-console
 ```
+
+::: warning `client.admin-console` no longer starts anything
+The admin console is served by `server/core` at `<publicUrl>/admin`. The CLI
+still accepts `authup start client.admin-console` and a `client.admin-console`
+section in the configuration file, but both only print a deprecation warning.
+See [Upgrading](./upgrading.md#the-admin-console-is-served-by-server-core).
+:::
 
 ## Other commands
 
-The `migration` and `healthcheck` commands are forwarded to **server/core
-only** (the UI has no database):
+The `migration` and `healthcheck` commands are forwarded to `server/core`:
 
 ```shell
 # apply / inspect / undo database migrations

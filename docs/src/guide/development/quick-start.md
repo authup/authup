@@ -41,16 +41,34 @@ are still resolved from their built `dist/`, so run `npm run build` once after p
 `--experimental-loader` warning on start; it is harmless. To run the built server instead, use
 `npm run build --workspace=apps/server-core` followed by `npm run cli --workspace=apps/server-core -- start`.
 
-Start the frontend in development mode using the CLI.
+The backend also serves the admin console at `http://localhost:3001/admin` and
+the account console at `http://localhost:3001/account`, from the built bundle
+of each package. Build the admin console once (and again after changing it) to
+have that path work:
 
 ```shell
-$ npm run dev --workspace=apps/client-admin-console
+$ npm run build --workspace=apps/client-admin-console
 ```
 
-Now you should have both the backend and frontend running locally.
-- **Frontend** `http://localhost:3000/`
+To work on the admin console itself, run its vite dev server instead. It gives
+you hot module replacement and talks to the backend across origins:
+
+```shell
+$ VITE_API_URL=http://localhost:3001 npm run dev --workspace=apps/client-admin-console
+```
+
+Now you should have the backend and the console dev server running locally.
+- **Admin console (dev server)** `http://localhost:3000/admin/`
+- **Admin console (served)** `http://localhost:3001/admin`
+- **Account console** `http://localhost:3001/account`
 - **Backend** `http://localhost:3001/`
 - **Swagger-Docs** `http://localhost:3001/docs`
 - **Prometheus-Metrics** `http://localhost:3001/metrics`
+
+The dev server's origin (`http://localhost:3000`) is trusted automatically
+outside production, so its login redirect works without any configuration.
+Because it is a different origin than the API, it signs in with the
+browser-side authorization-code flow rather than the server session cookie the
+served console uses.
 
 You can start working with the application or begin making contributions to the project!

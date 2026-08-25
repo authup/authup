@@ -79,11 +79,12 @@ export default {
      * EXPERIMENTAL. Package directories replacing the served consoles. Each points at
      * a directory holding the built dist/. Empty resolves the packaged
      * console from node_modules. See the Theming guide.
-     * env: AUTH_CONSOLE_PATH / ACCOUNT_CONSOLE_PATH
-     * default: '' (both)
+     * env: AUTH_CONSOLE_PATH / ACCOUNT_CONSOLE_PATH / ADMIN_CONSOLE_PATH
+     * default: '' (all three)
      */
     authConsolePath: '',
     accountConsolePath: '',
+    adminConsolePath: '',
 
     /**
      * Enable logging. File-only (no environment variable).
@@ -131,8 +132,8 @@ export default {
     /**
      * API base URL.
      * May include a path prefix (e.g. https://example.com/auth) when the
-     * server runs behind a reverse proxy that strips the prefix — asset
-     * URLs and links of the built-in auth pages are rebased onto it
+     * server runs behind a reverse proxy that strips the prefix. Asset
+     * URLs and links of the served consoles are rebased onto it
      * automatically.
      * env: PUBLIC_URL
      * default: derived from host & port — http://localhost:3001
@@ -201,8 +202,9 @@ export default {
      * allowlisted origin can complete a login and obtain a full-permission
      * token — only add origins you control. A wildcard host trusts every
      * subdomain, so use one only where you control the whole domain.
-     * In non-production, the
-     * client-admin-console dev origin (http://localhost:3000) is seeded automatically.
+     * The consoles authup serves need no entry: they are on the
+     * publicUrl origin. In non-production, the admin console's vite dev
+     * server origin (http://localhost:3000) is seeded automatically.
      * env: TRUSTED_ORIGINS (comma-separated)
      * default: []
      */
@@ -309,6 +311,15 @@ export default {
      * default: true
      */
     accountConsoleEnabled: true,
+
+    /**
+     * Serve the admin console at `<publicUrl>/admin` (realms, clients,
+     * users, roles, permissions, policies, keys, sessions, events).
+     * Disable it to administer the instance through the API alone.
+     * env: ADMIN_CONSOLE_ENABLED
+     * default: true
+     */
+    adminConsoleEnabled: true,
 
     /**
      * Persist security events (login, loginFailed, authorize,
@@ -535,6 +546,7 @@ emailVerificationEnabled=false
 passwordRecoveryEnabled=false
 passwordMinLength=10
 accountConsoleEnabled=true
+adminConsoleEnabled=true
 eventLogEnabled=true
 eventLogRetentionDays=90
 eventLogEntityEnabled=true
@@ -583,6 +595,7 @@ EMAIL_VERIFICATION_ENABLED=false
 PASSWORD_RECOVERY_ENABLED=false
 PASSWORD_MIN_LENGTH=10
 ACCOUNT_CONSOLE_ENABLED=true
+ADMIN_CONSOLE_ENABLED=true
 EVENT_LOG_ENABLED=true
 EVENT_LOG_RETENTION_DAYS=90
 EVENT_LOG_ENTITY_ENABLED=true

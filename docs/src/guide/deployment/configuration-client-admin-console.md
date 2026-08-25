@@ -1,78 +1,126 @@
-# Configuration
+# Admin Console
 
-The UI is distributed as a **prebuilt** Nuxt/Nitro server bundle (npm package and
-docker image alike). That distinction matters for environment variables:
+The admin console is the administration surface: realms, clients, users,
+roles, permissions, policies, keys, sessions and the audit event log. It is a
+client-side single-page application (the `@authup/client-admin-console`
+package) that `server-core` serves on the IdP origin at `<publicUrl>/admin`
+by default, the same way it serves the
+[account console](./account-console.md) at `<publicUrl>/account`.
 
-- Plain names like `API_URL`, `PUBLIC_URL` or `COOKIE_DOMAIN` are read **at build
-  time** only — they are compiled into the bundle when building the app from source
-  and have **no effect** on the published bundle.
-- At **runtime**, the prebuilt bundle honors Nuxt's runtime-config names
-  (`NUXT_PUBLIC_*`) plus Nitro's server binding variables.
+It is no longer a service of its own. Earlier releases shipped it as a
+separate Nuxt server with its own port and its own environment variables; a
+deployment now runs `server/core` alone. See
+[Upgrading](./upgrading.md#the-admin-console-is-served-by-server-core) for what
+to remove from an existing setup.
 
-## Runtime environment variables
+## Sign-in
 
-::: code-group
-````dotenv [env]
-# The application port (NITRO_PORT also works).
-PORT=3000
-# The bind address (NITRO_HOST also works).
-HOST=0.0.0.0
-# The address where the API can be reached.
-NUXT_PUBLIC_API_URL=http://localhost:3001
-# The public url of the user interface.
-NUXT_PUBLIC_PUBLIC_URL=http://localhost:3000
-# Optional: widen the session cookie domain (e.g. .example.com).
-NUXT_PUBLIC_COOKIE_DOMAIN=
-# The OAuth2 client the console authenticates against. Defaults to the
-# per-realm built-in admin-console client; override only for a fork that
-# registers its own client.
-NUXT_PUBLIC_CLIENT_ID=admin-console
-````
-:::
+The console shares an origin with the API, so it signs in through the server.
+`GET /admin/login` starts an authorization-code flow with PKCE against the
+per-realm `admin-console` system client (see
+[Provisioning](./provisioning.md#per-realm-system-clients)) and
+`GET /admin/callback` redeems the code. The browser keeps an opaque,
+`HttpOnly` session cookie; no OAuth2 token is handed to the page's
+JavaScript. The account console authenticates the same way, and both surfaces
+share the single session on that origin.
 
-If `NUXT_PUBLIC_API_URL` is not set, the UI falls back to `http://localhost:3001`
-(the API's default address).
+Binding an access policy to a realm's `admin-console` client
+(`accessPolicyId`) restricts who may newly sign in to the console. It gates
+admission (the authorization-code flow and code redemption), not tokens that
+were already issued. See the tip in
+[Provisioning](./provisioning.md#per-realm-system-clients).
 
-::: warning Cookie domain
-Do **not** point `NUXT_PUBLIC_COOKIE_DOMAIN` at a domain shared with the API's
-hosted auth pages (the `/authorize` login/consent UI): both surfaces use identical
-session cookie names, so a shared cookie domain has them overwriting each other's
-session state. Leave the cookie host-scoped unless you share it between your *own*
-applications only.
-:::
+## Configuration
 
-## Configuration file (via the `authup` CLI)
-
-When the UI is launched through the [`authup` quickstart CLI](./bare-metal) instead
-of directly, it can also be configured through the shared multi-section
-configuration file — the CLI reads the `client.admin-console` section and passes the values
-to the UI process as the appropriate runtime environment variables:
+The console reads no configuration of its own. Two `server-core` options
+control it:
 
 ::: code-group
-````dotenv [authup.conf]
-client.admin-console.port=3000
-client.admin-console.host=0.0.0.0
-client.admin-console.apiUrl=http://localhost:3001
-client.admin-console.publicUrl=http://localhost:3000
+````dotenv [.env]
+# Serve the console at <publicUrl>/admin.
+ADMIN_CONSOLE_ENABLED=true
+# Package directory of a substituted console.
+ADMIN_CONSOLE_PATH=
 ````
 
-````dotenv [authup.client.admin-console.conf]
-port=3000
-host=0.0.0.0
-apiUrl=http://localhost:3001
-publicUrl=http://localhost:3000
+````dotenv [authup.server.core.conf]
+adminConsoleEnabled=true
+adminConsolePath=
 ````
 :::
 
-When `apiUrl` is not set, the CLI derives it from the `server.core` section's
-`publicUrl`, so a single multi-section file keeps both services aligned.
-Environment variables override file values.
+`adminConsoleEnabled` (default `true`) turns the surface off. The routes then
+serve a localized "not enabled" notice instead of the console, so stale links
+do not dead-end. The flag is also reported in the `features` block of the
+public status endpoint (`GET /`).
 
-::: tip Login redirect allowlist
-The login screen redirects through the API's authorization-code flow and back
-to this UI's origin. In production, that origin must be trusted by the API —
-add the UI origin (`NUXT_PUBLIC_PUBLIC_URL`) to the server's
-[`TRUSTED_ORIGINS`](./configuration-server-core) unless it is already the
-API's `PUBLIC_URL` origin. In development, `http://localhost:3000` is trusted
-automatically.
-:::
+`adminConsolePath` replaces the served package. It points at a directory
+holding a built `dist/`, whose `index.html` must carry the
+`<!--admin-config-->` marker; the marker is checked at boot for a package you
+actually substituted. Empty resolves `@authup/client-admin-console` from
+`node_modules`. See
+[Replacing a console](./theming.md#replacing-a-console). For branding alone,
+use the [theme directory](./theming.md) instead: it needs no build.
+
+## Standalone hosting
+
+The console is an ordinary OAuth2 relying party, so the same built bundle can
+be hosted on any static host or another origin instead of (or in addition to)
+the embedded serving. The npm package ships `dist/` only: there is no binary
+and no process to run.
+
+1. Take the `dist/` directory of the `@authup/client-admin-console` package
+   and serve it under the `/admin` path of your host. Routing happens in the
+   browser, so every path below `/admin` has to serve the same `index.html`.
+2. Inject the runtime configuration by replacing the `<!--admin-config-->`
+   marker in `index.html` (or by any script that runs before the app bundle):
+
+   ```html
+   <script>
+   window.__AUTHUP__ = {
+       "apiUrl": "https://auth.example.com",
+       "basePath": "/admin"
+   };
+   </script>
+   ```
+
+   `apiUrl` is the authup server's public URL. Without injected
+   configuration the app assumes it is served by (or proxied to) the authup
+   origin itself and derives the API URL from its own location. When you
+   build the bundle from source, `VITE_API_URL` bakes the value in at build
+   time instead. The optional `clientId` defaults to `admin-console`; set it
+   only for a fork that registers its own OAuth2 client.
+3. Register the host's origin in the authup server's
+   [`TRUSTED_ORIGINS`](./configuration-server-core). The per-realm
+   `admin-console` client's redirect and post-logout allowlists derive from
+   that origin set, so the sign-in and sign-out round-trips are permitted on
+   the next start.
+
+On a foreign origin the server-side session cookie does not apply: it is
+`SameSite=Strict` and scoped to the API's own origin. The console then uses
+the browser-side authorization-code flow with PKCE and keeps its tokens in
+JavaScript. That is decided at runtime from the injected configuration, not
+configured.
+
+## Retired environment variables
+
+The console had its own runtime configuration while it ran as a server. None
+of the following is read any more, and none has a successor:
+
+| Variable | Why it is gone |
+|---|---|
+| `NUXT_PUBLIC_API_URL`, `API_URL`, `API_URL_SERVER` | The API is the serving origin, or `window.__AUTHUP__.apiUrl` when hosted standalone. |
+| `NUXT_PUBLIC_PUBLIC_URL` | The console has no public URL of its own. It lives at `<publicUrl>/admin`. |
+| `NUXT_PUBLIC_COOKIE_DOMAIN` | The console is same-origin with the API, so there is no cookie domain to widen. |
+| `NUXT_PUBLIC_CLIENT_ID` | The client is `admin-console`. A fork injects `clientId` in `window.__AUTHUP__`. |
+| `NUXT_HOST`, `NUXT_PORT` | There is no second process to bind. |
+
+The plain build-time names `PUBLIC_URL`, `COOKIE_DOMAIN` and `CLIENT_ID` are
+gone with them. Note that `PUBLIC_URL` is unrelated to the console and stays a
+[`server/core` option](./configuration-server-core): it is the public URL of
+the server, and the console's own address derives from it.
+
+The `client.admin-console` section of a configuration file and the
+`authup.client.admin-console.conf` file are no longer read either. The
+`authup` CLI still accepts `authup start client.admin-console`, prints a
+deprecation warning, and starts `server/core` alone.
