@@ -12,12 +12,12 @@ describe('src/config', () => {
     it('should apply injected configuration', () => {
         const config = resolveAccountConsoleConfig({
             apiUrl: 'https://auth.example.com/',
-            basePath: '/account/',
+            basePath: '/console/account/',
             features: { accountConsole: false },
         });
 
         expect(config.apiUrl).toEqual('https://auth.example.com');
-        expect(config.basePath).toEqual('/account');
+        expect(config.basePath).toEqual('/console/account');
         expect(config.enabled).toBeFalsy();
     });
 
@@ -63,17 +63,30 @@ describe('src/config', () => {
         const config = resolveAccountConsoleConfig({}, { origin: 'https://auth.example.com' });
 
         expect(config.apiUrl).toEqual('https://auth.example.com');
-        expect(config.basePath).toEqual('/account');
+        expect(config.basePath).toEqual('/console/account');
         expect(config.enabled).toBeTruthy();
     });
 
     it('should keep a sub-path prefix in the derived api url', () => {
         const config = resolveAccountConsoleConfig(
-            { basePath: '/auth/account' },
+            { basePath: '/auth/console/account' },
             { origin: 'https://example.com' },
         );
 
         expect(config.apiUrl).toEqual('https://example.com/auth');
+        expect(config.basePath).toEqual('/auth/console/account');
+    });
+
+    // The whole two-segment mount is the suffix. Stripping the last segment of
+    // a base path that merely ends in `/account` would derive `<origin>/auth`
+    // as the API for a layout that is not authup's.
+    it('should not derive a prefix from a base path ending in the last segment alone', () => {
+        const config = resolveAccountConsoleConfig(
+            { basePath: '/auth/account' },
+            { origin: 'https://example.com' },
+        );
+
+        expect(config.apiUrl).toEqual('https://example.com');
         expect(config.basePath).toEqual('/auth/account');
     });
 
@@ -94,7 +107,7 @@ describe('src/config', () => {
         const config = resolveAccountConsoleConfig(
             {
                 apiUrl: 'https://app.example.com/auth',
-                basePath: '/auth/account',
+                basePath: '/auth/console/account',
             },
             { origin: 'https://app.example.com' },
         );
@@ -122,7 +135,7 @@ describe('src/config', () => {
 
     it('should derive the cookie path alongside a derived api url', () => {
         const config = resolveAccountConsoleConfig(
-            { basePath: '/auth/account' },
+            { basePath: '/auth/console/account' },
             { origin: 'https://app.example.com' },
         );
 

@@ -225,7 +225,7 @@ describe('core/store/install-cookies path', () => {
 
     // A cookie stored without an explicit `Path` inherits the browser's
     // default-path, the directory of the writing document. The account
-    // console at `/account` and the hosted auth pages at `/` are one origin
+    // console at `/console/account` and the hosted auth pages at `/` are one origin
     // sharing one session under one set of cookie names, so the implicit
     // paths gave them two shadowing sets that expire independently: a `user`
     // from one login then pairs up with an `access_token` from another and
@@ -258,14 +258,17 @@ describe('core/store/install-cookies path', () => {
     // Copies written before the path was pinned sit on the browser's
     // default-path and WIN the read, so hydration would persist their
     // contents onto the pinned path: a stale refresh token replacing a live
-    // one, replayed into family revocation on the next refresh.
+    // one, replayed into family revocation on the next refresh. Every
+    // `/`-boundary prefix of the document path is a candidate (a copy
+    // written from `/console/account` sits on `/console`), plus the path
+    // itself; only the pinned path (`/` here) is left alone.
     it('clears the pre-pinning copies that can reach the document', () => {
-        setPathname('/account/password');
+        setPathname('/console/account/password');
 
         const { unsetCalls } = buildApp();
 
         const paths = new Set(shadowingUnsets(unsetCalls).map((call) => call.options.path));
-        expect(paths).toEqual(new Set(['/account', '/account/password']));
+        expect(paths).toEqual(new Set(['/console', '/console/account', '/console/account/password']));
 
         for (const path of paths) {
             expect(unsetCalls
@@ -276,17 +279,17 @@ describe('core/store/install-cookies path', () => {
         }
     });
 
-    // `/account` serves the console as well, and a copy written from
-    // `/account/password` sits on exactly `/account` — which path-matches it.
-    // Clearing only the document's default-path (`/` here) would leave it to
-    // win hydration.
+    // `/console/account` serves the console as well, and a copy written from
+    // `/console/account/password` sits on exactly `/console/account`, which
+    // path-matches it. Clearing only the document's default-path (`/console`
+    // here) would leave it to win hydration.
     it('clears the mount path itself on a trailing-slash-less route', () => {
-        setPathname('/account');
+        setPathname('/console/account');
 
         const { unsetCalls } = buildApp();
 
         const paths = new Set(shadowingUnsets(unsetCalls).map((call) => call.options.path));
-        expect(paths).toEqual(new Set(['/account']));
+        expect(paths).toEqual(new Set(['/console', '/console/account']));
     });
 
     it('clears nothing when the document sits on the cookie path', () => {
@@ -298,7 +301,7 @@ describe('core/store/install-cookies path', () => {
     });
 
     it('writes and clears every cookie at a host-declared path', async () => {
-        setPathname('/auth/account/');
+        setPathname('/auth/console/account/');
 
         const {
             store,

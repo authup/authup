@@ -125,7 +125,7 @@ implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
 - **Apps are role-named** after the prefix: `server-core` (the IdP),
   `client-admin-console` (the admin console), `client-account-console` (the
   account console: a static SPA whose dist server-core serves at
-  `/account`), `client-auth-console` (the auth console: the SSR auth
+  `/console/account`), `client-auth-console` (the auth console: the SSR auth
   workflow UI whose dist server-core renders on the IdP origin, plan 083),
   and the planned `server-core-worker` (optional background processor). The
   `authup` CLI supervisor is the eponymous exception. The admin app carries

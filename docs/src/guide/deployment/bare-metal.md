@@ -93,8 +93,8 @@ This will launch one service with default settings:
 - Backend (server/core): `http://127.0.0.1:3001/`
 
 The consoles are served by that same process:
-- Admin console: `http://127.0.0.1:3001/admin`
-- Account console: `http://127.0.0.1:3001/account`
+- Admin console: `http://127.0.0.1:3001/console/admin`
+- Account console: `http://127.0.0.1:3001/console/account`
 
 ## Supervisor behavior
 
@@ -121,7 +121,7 @@ $ authup start server/core
 ```
 
 ::: warning `client.admin-console` no longer starts anything
-The admin console is served by `server/core` at `<publicUrl>/admin`. The CLI
+The admin console is served by `server/core` at `<publicUrl>/console/admin`. The CLI
 still accepts `authup start client.admin-console` and a `client.admin-console`
 section in the configuration file, but both only print a deprecation warning;
 a selector naming the console alone exits without starting anything. Remove them.

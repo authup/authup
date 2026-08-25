@@ -9,7 +9,7 @@ This is the account console for Authup: the end-user self-service surface
 
 It is a client-only single-page application. The authup server
 (`@authup/server-core`) depends on this package and serves the built
-bundle at `<publicUrl>/account`; the same bundle can be hosted standalone
+bundle at `<publicUrl>/console/account`; the same bundle can be hosted standalone
 on any static host. See the deployment guide for details, including the
 runtime configuration contract (`window.__AUTHUP__` via the
 `<!--account-config-->` marker in `index.html`).
@@ -43,8 +43,8 @@ The dev server needs a running authup server to talk to.
    API URL from its own location, which is wrong under the vite dev
    server.)
 
-3. Open <http://localhost:5173/account> — the app is mounted under its
-   canonical `/account` base path in dev too.
+3. Open <http://localhost:5173/console/account> — the app is mounted under its
+   canonical `/console/account` base path in dev too.
 
 Sign-in leaves the dev origin for the server's hosted login and returns
 with an authorization code, so the full flow works against the real API.

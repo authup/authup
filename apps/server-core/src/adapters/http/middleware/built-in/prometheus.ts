@@ -97,8 +97,9 @@ function buildRouteTemplates(router: App): RouteTemplates {
  * labeled by the registered route template (`/users/:id`), read from the
  * router's own route table (child apps are flattened into the root with full
  * patterns, and all routes are registered before `listen`, so a snapshot at
- * first request is complete). Method-agnostic mounts (`/docs`, `/public`)
- * label as `<mount>/**`; anything else collapses into one unmatched bucket.
+ * first request is complete). Method-agnostic mounts (`/docs`,
+ * `/console/auth/assets`) label as `<mount>/**`; anything else collapses into
+ * one unmatched bucket.
  */
 export function createRouteTemplateNormalizePath(
     router: App,

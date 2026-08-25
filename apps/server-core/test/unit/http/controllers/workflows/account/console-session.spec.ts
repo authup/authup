@@ -15,6 +15,7 @@ import {
     expect,
     it,
 } from 'vitest';
+import type { Config } from '../../../../../../src';
 import { ConfigInjectionKey } from '../../../../../../src/app';
 import { DatabaseInjectionKey } from '../../../../../../src/app/modules/database';
 import { SessionEntity } from '../../../../../../src/adapters/database/domains/session/entity.ts';
@@ -36,20 +37,31 @@ import { TestCookieJar, createFakeUser, httpRequest } from '../../../../../utils
  * Both consoles ride the same ConsoleLogin, bound to their own client and
  * path segment (plan 081), so the matrix runs once per console. They differ
  * in where a refusal lands: the admin console's root is a logged-in page
- * whose guard would drop the error marker, so it lands on /admin/login.
+ * whose guard would drop the error marker, so it lands on
+ * /console/admin/login.
+ *
+ * The segments are literals on purpose: they ARE the public URL surface
+ * (plan 099), and a spec reading them off the constants would follow a
+ * rename instead of catching it.
  */
 const CONSOLES = [
     {
         name: 'account',
-        segment: 'account',
+        segment: 'console/account',
         clientName: CLIENT_ACCOUNT_CONSOLE_NAME,
-        refusal: '/account',
+        refusal: '/console/account',
+        disable: (config: Config) => {
+            config.accountConsoleEnabled = false;
+        },
     },
     {
         name: 'admin',
-        segment: 'admin',
+        segment: 'console/admin',
         clientName: CLIENT_ADMIN_CONSOLE_NAME,
-        refusal: '/admin/login',
+        refusal: '/console/admin/login',
+        disable: (config: Config) => {
+            config.adminConsoleEnabled = false;
+        },
     },
 ];
 
@@ -104,6 +116,13 @@ describe.each(CONSOLES)('$name console session', ({
         const kick = await request('GET', `/${segment}/login?realmId=${realm.id}`, { redirect: 'manual' });
         expect(kick.status).toEqual(302);
         expect(jar.get(CONSOLE_LOGIN_COOKIE)).toBeDefined();
+
+        // The login cookie is scoped to THIS console: both consoles share the
+        // /console prefix, and RFC 6265 path matching is what keeps their
+        // pending logins apart. `/console` alone must not carry it either.
+        expect(jar.header(`/${segment}/callback`)).toContain(`${CONSOLE_LOGIN_COOKIE}=`);
+        expect(jar.header('/console')).toBeUndefined();
+        expect(jar.header('/console/auth/assets/x.js')).toBeUndefined();
 
         const authorizeURL = new URL(kick.headers.get('location') as string);
         expect(authorizeURL.pathname).toEqual('/authorize');
@@ -328,5 +347,42 @@ describe.each(CONSOLES)('$name console session', ({
         // missing pending login
         expect(matched.status).toEqual(302);
         expect(matched.headers.get('location')).toEqual(`${refusal}?error=invalid_grant`);
+    });
+});
+
+/**
+ * Disabled means disabled on the server too (plan 099): the kick must not
+ * mint a pending login, and the callback must not redeem a code, for a
+ * surface that renders nothing but the notice. Both answer with the shell.
+ */
+describe.each(CONSOLES)('$name console session (disabled)', ({ segment, disable }) => {
+    const suite = createTestApplication({ config: disable });
+
+    beforeAll(async () => {
+        await suite.setup();
+    });
+
+    afterAll(async () => {
+        await suite.teardown();
+    });
+
+    it('does not start a console login', async () => {
+        const { data: realm } = await suite.client.realm.getOne('master');
+
+        const kick = await httpRequest(suite, 'GET', `/${segment}/login?realmId=${realm.id}`, { redirect: 'manual' });
+        expect(kick.status).toEqual(200);
+        expect(kick.headers.get('content-type')).toContain('text/html');
+        expect(kick.headers.get('set-cookie')).toBeNull();
+        expect(await kick.text()).toContain('window.__AUTHUP__');
+    });
+
+    it('does not redeem a callback', async () => {
+        const callback = await httpRequest(suite, 'GET', `/${segment}/callback?code=x&state=y`, {
+            redirect: 'manual',
+            headers: { 'sec-fetch-site': 'same-origin' },
+        });
+        expect(callback.status).toEqual(200);
+        expect(callback.headers.get('content-type')).toContain('text/html');
+        expect(callback.headers.get('set-cookie')).toBeNull();
     });
 });

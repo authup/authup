@@ -69,7 +69,7 @@ $ docker run \
   authup/authup:latest server/core start
 ```
 
-That service also serves the admin console at http://localhost:3001/admin and the account console at http://localhost:3001/account.
+That service also serves the admin console at http://localhost:3001/console/admin and the account console at http://localhost:3001/console/account.
 
 #### Bare Metal
 
@@ -84,8 +84,8 @@ To find out how to configure and set up the bare metal variant in detail, click 
 
 This will launch the following with default settings:
 - Backend Application: `http://localhost:3001/`
-- Admin Console: `http://localhost:3001/admin`
-- Account Console: `http://localhost:3001/account`
+- Admin Console: `http://localhost:3001/console/admin`
+- Account Console: `http://localhost:3001/console/account`
 
 ### Development
 
@@ -105,7 +105,7 @@ $ npm run build
 $ npm run cli-dev --workspace=apps/server-core -- start
 ```
 
-It serves the admin console at `http://localhost:3001/admin` from that package's built `dist/`.
+It serves the admin console at `http://localhost:3001/console/admin` from that package's built `dist/`.
 
 **4**. To work on the admin console itself, start its dev server in a second terminal
 
@@ -113,7 +113,7 @@ It serves the admin console at `http://localhost:3001/admin` from that package's
 $ VITE_API_URL=http://localhost:3001 npm run dev --workspace=apps/client-admin-console
 ```
 
-It listens on `http://localhost:3000/admin/`.
+It listens on `http://localhost:3000/console/admin/`.
 
 ## Applications
 The repository contains the following runnable applications:
@@ -121,7 +121,7 @@ The repository contains the following runnable applications:
 | Name                              | Type        | Description                                                                                           |
 |-----------------------------------|-------------|-------------------------------------------------------------------------------------------------------|
 | [authup](apps/authup)             | CLI         | A command line interface for interacting with various applications and services within the ecosystem. |
-| [client-admin-console](apps/client-admin-console)     | Application | The admin console: a single-page application served by server-core at `/admin`. |
+| [client-admin-console](apps/client-admin-console)     | Application | The admin console: a single-page application served by server-core at `/console/admin`. |
 | [server-core](apps/server-core)   | Service     | A service that forms the backbone of the server-side ecosystem.                                       |
 
 ## Packages

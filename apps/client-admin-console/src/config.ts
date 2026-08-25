@@ -19,7 +19,7 @@ export type AdminConsoleConfigInput = {
 
     /**
      * Path the app is served under (the vue-router history base).
-     * default: /admin
+     * default: /console/admin
      */
     basePath?: string,
 
@@ -27,7 +27,7 @@ export type AdminConsoleConfigInput = {
      * The OAuth2 client the console authenticates against: the per-realm
      * built-in `admin-console` client (plan 079). A fork registering its own
      * client injects its name here. In cookie mode the server picks the
-     * client itself (`GET /admin/login`), so this only drives the
+     * client itself (`GET /console/admin/login`), so this only drives the
      * standalone, JS-token path.
      */
     clientId?: string,
@@ -37,7 +37,7 @@ export type AdminConsoleConfigInput = {
      * choice, and not sufficient on its own. Whether the credential can be
      * PRESENTED is a client-side question (is the API this document's own
      * origin?) and is derived below; whether the server implements
-     * `/admin/login|callback` and `/sessions/@me` at all is a server-side
+     * `/console/admin/login|callback` and `/sessions/@me` at all is a server-side
      * question a console dist newer than its server cannot answer. The
      * serving side sets this, so a server that serves the bundle vouches for
      * the routes.
@@ -74,6 +74,14 @@ declare global {
 }
 
 /**
+ * The mount server-core serves the console under. The API-prefix derivation
+ * strips this whole two-segment suffix: a base path ending in `/admin` alone
+ * is a foreign layout, and stripping one segment of it would derive
+ * `<origin>/console` as the API.
+ */
+const BASE_PATH_DEFAULT = '/console/admin';
+
+/**
  * Resolve the runtime configuration.
  *
  * The serving side injects `window.__AUTHUP__` by replacing the
@@ -81,7 +89,7 @@ declare global {
  * request; a standalone host can inject its own script or rely on the
  * defaults). `VITE_API_URL` bakes an API URL in at build/dev time (the
  * dev-server affordance). Everything degrades to same-origin derivation:
- * with a base path of `<prefix>/admin`, the API URL defaults to
+ * with a base path of `<prefix>/console/admin`, the API URL defaults to
  * `<origin><prefix>`.
  */
 export function resolveAdminConsoleConfig(
@@ -92,7 +100,7 @@ export function resolveAdminConsoleConfig(
         (typeof window !== 'undefined' ? window.__AUTHUP__ : undefined) ??
         {};
 
-    const basePath = normalizeBasePath(injected.basePath ?? '/admin');
+    const basePath = normalizeBasePath(injected.basePath ?? BASE_PATH_DEFAULT);
     const origin = location?.origin ??
         (typeof window !== 'undefined' ? window.location.origin : '');
 
@@ -101,8 +109,8 @@ export function resolveAdminConsoleConfig(
         apiUrl = import.meta.env.VITE_API_URL;
     }
     if (!apiUrl) {
-        const prefix = basePath.endsWith('/admin') ?
-            basePath.slice(0, -'/admin'.length) :
+        const prefix = basePath.endsWith(BASE_PATH_DEFAULT) ?
+            basePath.slice(0, -BASE_PATH_DEFAULT.length) :
             '';
 
         apiUrl = `${origin}${prefix}`;
@@ -119,7 +127,7 @@ export function resolveAdminConsoleConfig(
         // each alone is wrong: injected alone would let a console loop back
         // to sign-in against a foreign API with no diagnostic, derived alone
         // would navigate a dist newer than its server into a 404. Together
-        // they are exactly the condition under which `${apiUrl}/admin/login`
+        // they are exactly the condition under which `${apiUrl}/console/admin/login`
         // is both a real route and a usable one.
         cookieSession: injected.cookieSession === true &&
             isSameOriginApiUrl(apiUrl, origin),

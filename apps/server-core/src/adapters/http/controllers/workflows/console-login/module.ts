@@ -62,8 +62,9 @@ const CALLBACK_ERROR_CODES : string[] = [
  * row instead.
  *
  * One instance per console, parameterized by the client it authenticates
- * against and the path segment it is served under; the account and the admin
- * console differ in nothing else here.
+ * against and the path it is served under (`console/account`,
+ * `console/admin`: the two pending-login cookies stay apart by RFC 6265 path
+ * matching); the account and the admin console differ in nothing else here.
  */
 export class ConsoleLogin {
     protected definition : ConsoleLoginDefinition;

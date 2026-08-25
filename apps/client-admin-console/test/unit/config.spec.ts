@@ -13,13 +13,13 @@ describe('src/config', () => {
     it('should apply injected configuration', () => {
         const config = resolveAdminConsoleConfig({
             apiUrl: 'https://auth.example.com/',
-            basePath: '/admin/',
+            basePath: '/console/admin/',
             clientId: 'my-admin-client',
             features: { adminConsole: false },
         });
 
         expect(config.apiUrl).toEqual('https://auth.example.com');
-        expect(config.basePath).toEqual('/admin');
+        expect(config.basePath).toEqual('/console/admin');
         expect(config.clientId).toEqual('my-admin-client');
         expect(config.enabled).toBeFalsy();
     });
@@ -32,12 +32,23 @@ describe('src/config', () => {
     });
 
     it('should derive the api url from the base path when nothing is injected', () => {
-        expect(resolveAdminConsoleConfig({}, { origin: 'https://auth.example.com' }).apiUrl)
-            .toEqual('https://auth.example.com');
+        const config = resolveAdminConsoleConfig({}, { origin: 'https://auth.example.com' });
+        expect(config.apiUrl).toEqual('https://auth.example.com');
+        expect(config.basePath).toEqual('/console/admin');
 
         // served under a sub-path: the api sits at the prefix
-        expect(resolveAdminConsoleConfig({ basePath: '/auth/admin' }, { origin: 'https://example.com' }).apiUrl)
+        expect(resolveAdminConsoleConfig({ basePath: '/auth/console/admin' }, { origin: 'https://example.com' }).apiUrl)
             .toEqual('https://example.com/auth');
+    });
+
+    // The whole two-segment mount is the suffix. Stripping the last segment of
+    // a base path that merely ends in `/admin` would derive `<origin>/auth` as
+    // the API for a layout that is not authup's.
+    it('should not derive a prefix from a base path ending in the last segment alone', () => {
+        const config = resolveAdminConsoleConfig({ basePath: '/auth/admin' }, { origin: 'https://example.com' });
+
+        expect(config.apiUrl).toEqual('https://example.com');
+        expect(config.basePath).toEqual('/auth/admin');
     });
 
     // Cookie mode needs BOTH: the server vouching for the routes (injected)

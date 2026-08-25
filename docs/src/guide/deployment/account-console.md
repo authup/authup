@@ -3,7 +3,7 @@
 The account console is the end-user self-service surface. It is a
 client-side single-page application (the `@authup/client-account-console`
 package) that `server-core` serves on the IdP origin at
-`<publicUrl>/account` by default. It works in every deployment, including
+`<publicUrl>/console/account` by default. It works in every deployment, including
 ones that run with the admin console disabled, and gives each of your
 applications a stable "Manage account" link target.
 
@@ -11,19 +11,19 @@ It covers:
 
 | Page | Path | What a user can do |
 |------|------|--------------------|
-| Account | `/account` | Edit profile basics (name, display name, email) |
-| Password | `/account/password` | Change the password |
-| Authenticators | `/account/authenticators` | Enroll and remove second factors (TOTP, recovery codes, email, passkeys) |
-| Connected accounts | `/account/connected-accounts` | Link and unlink external identity-provider accounts (e.g. Facebook, Google, any OAuth2/OIDC provider of the realm) |
-| Sessions | `/account/sessions` | See active sessions, revoke one, or log out all other devices |
-| Applications | `/account/applications` | Review and revoke granted application consents |
+| Account | `/console/account` | Edit profile basics (name, display name, email) |
+| Password | `/console/account/password` | Change the password |
+| Authenticators | `/console/account/authenticators` | Enroll and remove second factors (TOTP, recovery codes, email, passkeys) |
+| Connected accounts | `/console/account/connected-accounts` | Link and unlink external identity-provider accounts (e.g. Facebook, Google, any OAuth2/OIDC provider of the realm) |
+| Sessions | `/console/account/sessions` | See active sessions, revoke one, or log out all other devices |
+| Applications | `/console/account/applications` | Review and revoke granted application consents |
 
 ## Sign-in
 
 The surface authenticates through a regular authorization-code + PKCE flow
 against the per-realm `account-console` system client (see
 [Provisioning](./provisioning.md#per-realm-system-clients)). A user visiting
-`/account` without a session picks a realm (a single-realm deployment skips
+`/console/account` without a session picks a realm (a single-realm deployment skips
 the picker) and is redirected to the hosted login. An existing session on the
 IdP origin is reused, so no second session row is created. Attribution is per
 token (`auth_session_tokens.client_id`), so the tokens the account console
@@ -31,7 +31,7 @@ obtains name the `account-console` client. The session row itself records no
 application: its `client_id` is a subject foreign key and stays null for a
 user's session.
 
-A deep link may pin the realm up front: `<publicUrl>/account?realmId=<id-or-name>`.
+A deep link may pin the realm up front: `<publicUrl>/console/account?realmId=<id-or-name>`.
 
 ## Connected accounts
 
@@ -80,7 +80,7 @@ can be hosted on any static host or another origin instead of (or in
 addition to) the embedded serving:
 
 1. Take the `dist/` directory of the `@authup/client-account-console`
-   package and serve it under the `/account` path of your host.
+   package and serve it under a path of your host, `/console/account` by default.
 2. Inject the runtime configuration by replacing the
    `<!--account-config-->` marker in `index.html` (or by any script that
    runs before the app bundle):
@@ -89,7 +89,7 @@ addition to) the embedded serving:
    <script>
    window.__AUTHUP__ = {
        "apiUrl": "https://auth.example.com",
-       "basePath": "/account"
+       "basePath": "/console/account"
    };
    </script>
    ```

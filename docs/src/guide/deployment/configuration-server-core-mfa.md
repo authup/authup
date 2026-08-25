@@ -6,7 +6,7 @@ interactive enrollment for every local user with `mfaRequired`
 (`MFA_REQUIRED`). `mfaRequired` can only be enabled together with `mfaEnabled`.
 
 Users enroll and remove their authenticators themselves on the
-[account console](./account-console.md) (`<publicUrl>/account/authenticators`),
+[account console](./account-console.md) (`<publicUrl>/console/account/authenticators`),
 which is served by `server-core` and therefore also available in headless
 deployments. Inline enrollment during login rides the hosted `/authorize` page
 (below).

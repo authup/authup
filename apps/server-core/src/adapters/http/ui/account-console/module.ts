@@ -8,20 +8,21 @@
 import { getURLBasePath } from '@authup/kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IAppEvent } from 'routup';
+import { ACCOUNT_CONSOLE_SEGMENT } from '../constants.ts';
 import { defineStaticConsole } from '../static-console/index.ts';
 import { resolveAccountConsoleRef } from './ref.ts';
 import type { AccountConsoleServeOptions } from './types.ts';
 
 /**
  * The account console SPA (`@authup/client-account-console`), served at
- * `<publicUrl>/account`. Its runtime contract is the config marker in the
- * built `index.html`; the bundle's static assets ride the assets middleware
- * (`/account/assets`).
+ * `<publicUrl>/console/account`. Its runtime contract is the config marker
+ * in the built `index.html`; the bundle's static assets ride the assets
+ * middleware (`/console/account/assets`).
  */
 export const accountConsole = defineStaticConsole({
     packageName: '@authup/client-account-console',
     marker: '<!--account-config-->',
-    viteBase: '/account/',
+    viteBase: `/${ACCOUNT_CONSOLE_SEGMENT}/`,
 });
 
 /**
@@ -54,7 +55,7 @@ export function serveAccountConsolePage(
         baseURL: options.baseURL,
         config: {
             apiUrl: options.baseURL,
-            basePath: `${basePath}/account`,
+            basePath: `${basePath}/${ACCOUNT_CONSOLE_SEGMENT}`,
             features: options.features,
             // This server implements the cookie-mode routes. It is a
             // capability assertion, not a setting: the console pairs it with

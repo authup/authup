@@ -3,7 +3,7 @@
     "version": "1.0.0-beta.63",
     "type": "module",
     "license": "AGPL-3.0-only",
-    "description": "Authup's admin console: the administration SPA, served by server-core at /admin and hostable standalone.",
+    "description": "Authup's admin console: the administration SPA, served by server-core at /console/admin and hostable standalone.",
     "files": [
         "dist"
     ],

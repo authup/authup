@@ -17,7 +17,15 @@ const packagesRoot = path.resolve(__dirname, '..', '..', 'packages');
 const repositoryRoot = path.resolve(__dirname, '..', '..');
 
 export default defineConfig(({ command }) => ({
-    base: '/public/',
+    // The auth console's namespace, mirroring the two static consoles
+    // (`/console/admin/`, `/console/account/`). Only the client assets live
+    // under it: vite emits them into `assets/` (its default assetsDir), so
+    // the hrefs read `/console/auth/assets/<hash>.js` and server-core mounts
+    // exactly that directory (rebasing the hrefs per request when publicUrl
+    // carries a sub-path). The page routes (/authorize, /logout, /register,
+    // ...) stay where discovery and the mail deep links point, and
+    // `/console/auth` itself serves nothing.
+    base: '/console/auth/',
     plugins: [
         vuePlugin(),
         tailwindcss(),

@@ -52,6 +52,7 @@ import {
 import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import type { Logger } from '@authup/server-kit';
 import { describeError, resolveURL } from '../../../../../utils/index.ts';
+import { ACCOUNT_CONSOLE_SEGMENT } from '../../../ui/index.ts';
 import { useRequestQuery } from '@routup/basic/query';
 import { setResponseCookie, unsetResponseCookie, useRequestCookie } from '@routup/basic/cookie';
 import { readRequestBody } from '@routup/basic/body';
@@ -619,7 +620,7 @@ export class IdentityProviderController {
     ) {
         // Fixed, server-derived return target (the account console page).
         // No client-supplied redirect exists on this path.
-        const url = new URL(resolveURL(this.options.baseURL, 'account/connected-accounts'));
+        const url = new URL(resolveURL(this.options.baseURL, `${ACCOUNT_CONSOLE_SEGMENT}/connected-accounts`));
 
         const { code } = useRequestQuery(event);
 

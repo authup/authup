@@ -143,7 +143,7 @@ describe('http/controllers/workflows/ui-pages-theme', () => {
             const response = await httpRequest(suite, 'GET', '/register');
             const body = await response.text();
 
-            const bundle = /<link[^>]+rel="stylesheet"[^>]+href="\/public\/[^"]+"/.exec(body);
+            const bundle = /<link[^>]+rel="stylesheet"[^>]+href="\/console\/auth\/assets\/[^"]+"/.exec(body);
             expect(bundle, 'the bundle stylesheet link was not found').not.toBeNull();
 
             expect(body.indexOf(bundle![0]))
@@ -175,7 +175,7 @@ describe('http/controllers/workflows/ui-pages-theme', () => {
 
     describe('account console (SPA)', () => {
         it('should inject the same theme', async () => {
-            const response = await httpRequest(suite, 'GET', '/account');
+            const response = await httpRequest(suite, 'GET', '/console/account');
             expect(response.status).toEqual(200);
 
             const body = await response.text();
@@ -186,7 +186,7 @@ describe('http/controllers/workflows/ui-pages-theme', () => {
         });
 
         it('should emit the account logo tokens', async () => {
-            const response = await httpRequest(suite, 'GET', '/account');
+            const response = await httpRequest(suite, 'GET', '/console/account');
             const body = await response.text();
 
             expect(body).toContain('--authup-account-logo-image:url("/theme/logo.svg")');
@@ -194,7 +194,7 @@ describe('http/controllers/workflows/ui-pages-theme', () => {
         });
 
         it('should keep the runtime config marker intact', async () => {
-            const response = await httpRequest(suite, 'GET', '/account');
+            const response = await httpRequest(suite, 'GET', '/console/account');
             const body = await response.text();
 
             expect(body).toContain('window.__AUTHUP__');

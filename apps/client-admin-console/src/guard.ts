@@ -123,7 +123,7 @@ export function createRoutingGuard(ctx: RoutingGuardContext) : RoutingGuard {
     };
 
     return async (to, from) => {
-        // Cookie mode redeems the code SERVER-side (`GET /admin/callback`), so
+        // Cookie mode redeems the code SERVER-side (`GET /console/admin/callback`), so
         // no code ever lands on a client route and nothing here has a PKCE
         // verifier to present. The branch stays for a standalone host on a
         // foreign origin, where the cookie can never be presented.

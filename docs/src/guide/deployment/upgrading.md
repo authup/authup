@@ -7,12 +7,71 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.62)
 
+### The consoles moved under `/console`
+
+Every console `server-core` serves now lives under one `/console` prefix on
+the IdP origin:
+
+| Surface | Was | Is |
+|---|---|---|
+| Admin console | `<publicUrl>/admin` (unreleased, see the next entry) | `<publicUrl>/console/admin` |
+| Account console | `<publicUrl>/account` | `<publicUrl>/console/account` |
+| Auth console assets (the scripts and styles behind `/authorize`, `/logout`, `/register`, ...) | `<publicUrl>/public/` | `<publicUrl>/console/auth/assets/` |
+
+The auth pages themselves (`/authorize`, `/logout`, `/register`, `/activate`,
+`/password-forgot`, `/password-reset`) and every API route are unchanged.
+They are the protocol surface (`authorization_endpoint`,
+`end_session_endpoint`, the mail deep links) and stay at the root. `/console`
+and `/console/auth` themselves serve nothing.
+
+**Action required.**
+
+- **Rebuild and redeploy every console together with the server.** The base
+  path is baked into each bundle's `index.html`, and the server mounts the
+  assets under the new path only. A `@authup/client-admin-console` or
+  `@authup/client-account-console` dist built for the old base is served
+  without any error and renders a blank console: the shell keeps its old
+  `src="/admin/assets/..."` hrefs, which nothing answers any more. The
+  published packages and the Docker image of this release carry matching
+  bundles; a package you substitute (`ADMIN_CONSOLE_PATH`,
+  `ACCOUNT_CONSOLE_PATH`, `AUTH_CONSOLE_PATH`) has to be rebuilt with the new
+  vite base (`/console/admin/`, `/console/account/`, `/console/auth/`).
+- **Links, bookmarks and proxy rules** naming `/account`, `/admin` or
+  `/public` must name the new paths. That includes the sign-in routes
+  (`/console/account/login`, `/console/account/callback` and the admin pair)
+  and every page below a console (`/console/account/authenticators`, ...).
+  Update the "Manage account" link your own applications render.
+- **No redirect is served for the old paths.** `/account/**`, `/admin/**` and
+  `/public/**` answer `404`.
+- **`@authup/client-web-kit` and the server must be on the same release.** The
+  kit's `buildConsoleLoginURL` now emits `<baseURL>/console/<console>/login`.
+  A newer kit against an older server kicks to a route that does not exist,
+  and an older kit (or an older standalone-hosted console bundle) against
+  this server does the same the other way round; a `404` on a top-level
+  navigation is unrecoverable.
+- **Standalone hosting**: the default `basePath` a console assumes is now
+  `/console/admin` and `/console/account`. A host may serve the bundle under
+  any other base by injecting `basePath` (see [Admin
+  Console](./configuration-client-admin-console.md#standalone-hosting) and
+  [Account Console](./account-console.md#standalone-hosting)); the
+  same-origin API derivation strips the full two-segment default.
+
+One prefix is what makes serving the consoles from their own replica set a
+single proxy rule; see [Console Replicas](./console-replicas.md).
+
+Also in this release, `ACCOUNT_CONSOLE_ENABLED=false` applies to the account
+console's sign-in routes as well: `GET /console/account/login` and
+`GET /console/account/callback` answer the "not enabled" notice instead of
+starting a login, the way the admin console's routes did already. Before, a
+disabled account console still minted a pending login and a session cookie
+on a direct hit. No action needed.
+
 ### The admin console is served by server-core
 
 The admin console is no longer a separate Nuxt server. It is a static
-single-page bundle that `server-core` serves at `<publicUrl>/admin`, the way
-it already serves the account console at `<publicUrl>/account`. A deployment
-runs one process.
+single-page bundle that `server-core` serves at `<publicUrl>/console/admin`,
+the way it serves the account console at `<publicUrl>/console/account` (the
+`/console` prefix is the entry above). A deployment runs one process.
 
 **Action required.**
 
@@ -38,7 +97,7 @@ runs one process.
   console port and `/api/` to the server port routes `/` to the server port
   now. See [Nginx](./nginx).
 - **Links and bookmarks**: the console moved from the root of its own origin
-  to `<publicUrl>/admin`.
+  to `<publicUrl>/console/admin`.
 
 **Retired environment variables**, none with a successor:
 `NUXT_PUBLIC_API_URL`, `NUXT_PUBLIC_PUBLIC_URL`, `NUXT_PUBLIC_COOKIE_DOMAIN`,
@@ -65,7 +124,7 @@ bundle stays hostable on a static host of your own, on its own origin; see
 
 Sign-in changed as well and needs no action. Served from the API's origin, the
 console authenticates with the same opaque `HttpOnly` session cookie the
-account console uses (`GET /admin/login` and `GET /admin/callback` against the
+account console uses (`GET /console/admin/login` and `GET /console/admin/callback` against the
 per-realm `admin-console` client), so no OAuth2 token reaches the browser's
 JavaScript. Hosted standalone on a foreign origin it keeps the browser-side
 authorization-code flow with PKCE.

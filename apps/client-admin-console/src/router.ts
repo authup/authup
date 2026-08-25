@@ -370,7 +370,7 @@ export const routes : RouteRecordRaw[] = [
 
 export function createAdminConsoleRouter(basePath: string) : Router {
     return createRouter({
-        // The base path is the mount point (default /admin): route paths
+        // The base path is the mount point (default /console/admin): route paths
         // above are relative to it, so the app works embedded under a
         // publicUrl sub-path and on a standalone host alike.
         history: createWebHistory(basePath),

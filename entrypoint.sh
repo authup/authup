@@ -33,11 +33,11 @@ case "${SERVICE}" in
         export PORT=3000
         exec npm run cli --workspace=apps/server-core -- "${COMMAND}" "$@"
         ;;
-    # Retired: the admin console is served by server/core at <publicUrl>/admin
+    # Retired: the admin console is served by server/core at <publicUrl>/console/admin
     # (plan 081). Exit non-zero on purpose: a container that terminates
     # SUCCESSFULLY having started nothing reads as a healthy run.
     client/admin-console)
-        echo "The client/admin-console service no longer exists: server/core serves the admin console at <publicUrl>/admin." >&2
+        echo "The client/admin-console service no longer exists: server/core serves the admin console at <publicUrl>/console/admin." >&2
         echo "Remove this service from your deployment and start server/core alone." >&2
         exit 1
         ;;

@@ -52,7 +52,7 @@ describe('http/controllers/workflows/ui-pages-icons', () => {
 
         const root = path.join(distPath!, 'client');
         const html = await readFile(path.join(root, 'index.html'), 'utf-8');
-        const entry = /(?:src|href)="[^"]*?(assets\/[^"]+\.js)"/.exec(html);
+        const entry = /(?:src|href)="[^"]*\/(assets\/[^"/]+\.js)"/.exec(html);
 
         expect(entry, 'no entry script found in dist/client/index.html').not.toBeNull();
 

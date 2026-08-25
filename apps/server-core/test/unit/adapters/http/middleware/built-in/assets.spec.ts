@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'node:path';
 import {
     beforeEach,
     describe,
@@ -16,7 +15,6 @@ import {
 
 import { createHandler } from '@routup/assets';
 import { registerAssetsMiddleware } from '../../../../../../src/adapters/http/middleware/built-in/assets.ts';
-import { PACKAGE_PATH } from '../../../../../../src/path.ts';
 
 vi.mock('@routup/assets', () => ({ createHandler: vi.fn(() => ({ __handler: true })) }));
 
@@ -32,48 +30,59 @@ function servedPaths() : string[] {
     return vi.mocked(createHandler).mock.calls.map((call) => call[0] as string);
 }
 
+function mountsOf(router: RouterStub, mount: string) {
+    return router.use.mock.calls.filter((call) => call[0] === mount);
+}
+
+/**
+ * Every console asset mount lives under the /console prefix (plan 099), all
+ * three in the same <segment>/assets shape: the auth console's bundle at
+ * console/auth/assets (its pages stay on their protocol routes), the two
+ * static consoles at console/admin/assets and console/account/assets. The
+ * mount names are spelled out here rather than read off the constants, so
+ * a renamed segment fails this spec instead of silently moving the surface.
+ */
 describe('registerAssetsMiddleware', () => {
     beforeEach(() => {
         vi.mocked(createHandler).mockClear();
     });
 
-    it('registers a static handler mounted under "public" for server-core public directory', async () => {
-        const router = createRouterStub();
-
-        await registerAssetsMiddleware(router as any);
-
-        expect(router.use).toHaveBeenCalled();
-        expect(servedPaths()).toContain(path.posix.join(PACKAGE_PATH, 'public'));
-    });
-
-    it('registers a static handler that serves the auth console client assets (dist/client)', async () => {
+    it('serves the auth console client assets (dist/client/assets) under "console/auth/assets"', async () => {
         const router = createRouterStub();
 
         await registerAssetsMiddleware(router as any);
 
         // The workspace resolves @authup/client-auth-console (built before
         // server-core via the nx dependency), so the bundle mount must be
-        // present — it is skipped only when the dist is missing entirely.
+        // present. It is skipped only when the dist is missing entirely.
+        // The served directory is dist/client/ASSETS, never dist/client: the
+        // template and the ssr manifest are render inputs, not files to
+        // serve over HTTP.
         const servedPath = servedPaths().find(
-            (entry) => /client-auth-console[\\/]+dist[\\/]+client$/.test(entry),
+            (entry) => /client-auth-console[\\/]+dist[\\/]+client[\\/]+assets$/.test(entry),
         );
         expect(servedPath).toBeDefined();
+        expect(servedPaths().some((entry) => /client-auth-console[\\/]+dist[\\/]+client$/.test(entry))).toBe(false);
 
         // Regression guard: the UI must come from the resolved package, never
         // from a server-core dist subtree (the pre-083 embedded layout).
         expect(servedPath).not.toMatch(/server-core[\\/]+dist/);
+
+        expect(mountsOf(router, 'console/auth/assets')).toHaveLength(1);
     });
 
-    it('mounts both public static handlers on the "public" route prefix', async () => {
+    it('mounts nothing else under the retired "public" prefix', async () => {
+        // server-core's own `public/` directory (always empty) rode a second
+        // mount on the same prefix; both are gone with the move.
         const router = createRouterStub();
 
         await registerAssetsMiddleware(router as any);
 
-        const publicMounts = router.use.mock.calls.filter((call) => call[0] === 'public');
-        expect(publicMounts.length).toBeGreaterThanOrEqual(2);
+        expect(mountsOf(router, 'public')).toHaveLength(0);
+        expect(servedPaths().some((entry) => /server-core[\\/]+public$/.test(entry))).toBe(false);
     });
 
-    it('mounts the account console bundle assets under "account/assets"', async () => {
+    it('mounts the account console bundle assets under "console/account/assets"', async () => {
         const router = createRouterStub();
 
         await registerAssetsMiddleware(router as any);
@@ -81,10 +90,20 @@ describe('registerAssetsMiddleware', () => {
         // The workspace resolves @authup/client-account-console, so the
         // bundle mount must be present (it is skipped only when the package
         // is missing entirely).
-        const accountMounts = router.use.mock.calls.filter((call) => call[0] === 'account/assets');
-        expect(accountMounts).toHaveLength(1);
+        expect(mountsOf(router, 'console/account/assets')).toHaveLength(1);
 
         const servedPath = servedPaths().find((entry) => /client-account-console[\\/]+dist[\\/]+assets$/.test(entry));
+        expect(servedPath).toBeDefined();
+    });
+
+    it('mounts the admin console bundle assets under "console/admin/assets"', async () => {
+        const router = createRouterStub();
+
+        await registerAssetsMiddleware(router as any);
+
+        expect(mountsOf(router, 'console/admin/assets')).toHaveLength(1);
+
+        const servedPath = servedPaths().find((entry) => /client-admin-console[\\/]+dist[\\/]+assets$/.test(entry));
         expect(servedPath).toBeDefined();
     });
 });

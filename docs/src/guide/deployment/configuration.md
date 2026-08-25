@@ -68,5 +68,5 @@ expressed as flat strings — use the `.js`/`.ts` file variant for those.
 ## Component-Wise
 
 - [server/core](./configuration-server-core) This page describes the configuration of the main backend service.
-- [Admin Console](./configuration-client-admin-console) This page describes the surface `server/core` serves at `/admin`, and how to host it standalone.
-- [Account Console](./account-console) This page describes the self-service surface `server/core` serves at `/account`.
+- [Admin Console](./configuration-client-admin-console) This page describes the surface `server/core` serves at `/console/admin`, and how to host it standalone.
+- [Account Console](./account-console) This page describes the self-service surface `server/core` serves at `/console/account`.

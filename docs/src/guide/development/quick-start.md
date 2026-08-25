@@ -41,8 +41,8 @@ are still resolved from their built `dist/`, so run `npm run build` once after p
 `--experimental-loader` warning on start; it is harmless. To run the built server instead, use
 `npm run build --workspace=apps/server-core` followed by `npm run cli --workspace=apps/server-core -- start`.
 
-The backend also serves the admin console at `http://localhost:3001/admin` and
-the account console at `http://localhost:3001/account`, from the built bundle
+The backend also serves the admin console at `http://localhost:3001/console/admin` and
+the account console at `http://localhost:3001/console/account`, from the built bundle
 of each package. Build the admin console BEFORE starting the backend (and
 restart the backend after rebuilding it): the asset mount is decided at boot,
 so a bundle built afterwards is not served until the next start.
@@ -59,9 +59,9 @@ $ VITE_API_URL=http://localhost:3001 npm run dev --workspace=apps/client-admin-c
 ```
 
 Now you should have the backend and the console dev server running locally.
-- **Admin console (dev server)** `http://localhost:3000/admin/`
-- **Admin console (served)** `http://localhost:3001/admin`
-- **Account console** `http://localhost:3001/account`
+- **Admin console (dev server)** `http://localhost:3000/console/admin/`
+- **Admin console (served)** `http://localhost:3001/console/admin`
+- **Account console** `http://localhost:3001/console/account`
 - **Backend** `http://localhost:3001/`
 - **Swagger-Docs** `http://localhost:3001/docs`
 - **Prometheus-Metrics** `http://localhost:3001/metrics`

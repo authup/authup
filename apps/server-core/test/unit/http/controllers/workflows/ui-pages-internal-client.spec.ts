@@ -119,7 +119,7 @@ describe('src/http/controllers/workflows (SSR pages, internal client, sub-path p
     it('should serve the authorize page with prefixed asset urls', async () => {
         const body = await renderAuthorizePage(suite);
 
-        expect(body).toContain('/auth/public/');
+        expect(body).toContain('/auth/console/auth/assets/');
         expect(body).not.toContain(suite.baseURL);
     });
 });

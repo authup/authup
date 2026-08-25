@@ -774,8 +774,12 @@ into it):
   (`adapters/http/ui/auth-console/resolve.ts`, the same locter `locateUpSync`
   walk as the account console). Production reads the built dist
   (`dist/client/index.html` + `.vite/ssr-manifest.json`,
-  `dist/server/server.js` for `render()`; client assets mounted at
-  `/public`); JIT dev mode roots the embedded vite dev server at the
+  `dist/server/server.js` for `render()`; the `dist/client/assets` directory
+  alone is mounted at `/console/auth/assets`, i.e. `<AUTH_CONSOLE_SEGMENT>/assets`
+  with `AUTH_CONSOLE_SEGMENT = 'console/auth'` in `adapters/http/ui/constants.ts`,
+  the same `<segment>/assets` shape as the two static consoles; `/console/auth`
+  itself serves nothing, and neither `index.html` nor `.vite/` is reachable
+  over HTTP); JIT dev mode roots the embedded vite dev server at the
   package SOURCE dir (the workspace symlink — vite auto-loads the
   package's own `vite.config.ts`; a published install has no JIT). The
   boundary is typed by the package's `src/contract.ts`
@@ -888,7 +892,9 @@ into it):
   reverse proxy (e.g. `https://example.com/auth/* → authup /*`) with no
   extra config — the prefix is derived from `publicUrl`'s pathname
   (`getURLBasePath` in `@authup/kit`). The vite build keeps its fixed
-  `base: '/public/'`; `renderAuthConsolePage` rebases emitted asset URLs onto the
+  `base: '/console/auth/'` (assets under `assets/`, vite's default
+  `assetsDir`, so an href reads `/console/auth/assets/<hash>.js`);
+  `renderAuthConsolePage` rebases emitted asset URLs onto the
   prefix per request (`rebaseAssetURLs` in
   `adapters/http/ui/shared/html.ts`, so the prebuilt dist stays
   deployment-agnostic). Inside the UI app the same prefix feeds the
@@ -1197,11 +1203,11 @@ name constants in `@authup/core-kit`):
 
 - **`admin-console`** (`CLIENT_ADMIN_CONSOLE_NAME`) — authup's own admin
   console (`apps/client-admin-console`, served by server-core at
-  `<publicUrl>/admin` since plan 081; its server-side login kick sends
+  `<publicUrl>/console/admin`, served since plan 081 and under `/console` since plan 099; its server-side login kick sends
   `client_id=admin-console`, and a standalone-hosted dist can inject another
   client name through `window.__AUTHUP__.clientId`).
 - **`account-console`** (`CLIENT_ACCOUNT_CONSOLE_NAME`) — the account
-  self-service surface served by server-core at `<publicUrl>/account`
+  self-service surface served by server-core at `<publicUrl>/console/account`
   (plan 080; see *Account Console* below).
 
 The former third definition — `web`, a shared auto-consenting client for
@@ -1289,7 +1295,7 @@ no new endpoint — the `/authorize` verifier already resolves clients via
   `middlewareCors` config options). In non-production,
   `http://localhost:3000` is dev-seeded so the admin console's standalone
   dev server (`npm run dev -w apps/client-admin-console`, vite on :3000)
-  works on first run; the served console at `<publicUrl>/admin` needs no
+  works on first run; the served console at `<publicUrl>/console/admin` needs no
   entry, since publicUrl's own origin is always in the set.
 - **Provisioning (`SystemClientProvisioner.ensureForRealm`)** is the single
   upsert mechanism — it loops `SYSTEM_CLIENT_DEFINITIONS` — run two ways and
@@ -1333,7 +1339,7 @@ no new endpoint — the `/authorize` verifier already resolves clients via
   auto-submits consent for `builtIn` clients (skips the Allow/Deny step); user-
   created clients are never `builtIn` and still show consent.
 
-### Account Console (`/account`, plan 080)
+### Account Console (`/console/account`, plan 080)
 
 End-user self-service, shipped as its own app workspace
 `apps/client-account-console` (`@authup/client-account-console`): a
@@ -1346,7 +1352,7 @@ choice"):
 - **Serving seam** (`adapters/http/ui/account-console/module.ts`, one
   `defineStaticConsole` instance — the factory in
   `adapters/http/ui/static-console/` that the admin console shares, see
-  *Admin Console* below): `AccountController` (`@DController('/account')`, `''` +
+  *Admin Console* below): `AccountController` (`@DController('/console/account')`, the `ACCOUNT_CONSOLE_SEGMENT` constant, `''` +
   `'/:page'` — client-side routing owns sub-paths, every route returns the
   same shell) calls
   `serveAccountConsolePage(event, { baseURL, features, trustedOrigins })`,
@@ -1361,14 +1367,14 @@ choice"):
   authup window global, escaped
   like every inline script payload; `ref` is the server-validated back-link
   origin, see below), stamps lang/color-mode html attrs from
-  the shared cookies (no FOUC), rebases the fixed `/account/` vite-base
+  the shared cookies (no FOUC), rebases the fixed `/console/account/` vite-base
   asset hrefs when publicUrl carries a sub-path, and sets the same security
   headers as `renderAuthConsolePage`. Static assets ride the assets middleware
-  (`/account/assets` → `<pkg>/dist/assets`, registered in dev mode too — the
+  (`/console/account/assets` → `<pkg>/dist/assets`, registered in dev mode too — the
   bundle is prebuilt, not vite-transformed). A missing bundle 500s with an
   actionable message (build `apps/client-account-console` first).
 - **Runtime config contract** (`src/config.ts`): a standalone host serves
-  the same dist under `/account` on its own origin and injects
+  the same dist under a base of its choice (`/console/account` by default) on its own origin and injects
   `window.__AUTHUP__` (or replaces the marker) with `apiUrl` (+ optional
   `basePath` and an already-validated `ref` of its own, since only
   server-core's serving path runs the trusted-origin check below); with
@@ -1423,7 +1429,13 @@ choice"):
 - **Feature flag `accountConsoleEnabled`** (env `ACCOUNT_CONSOLE_ENABLED`,
   default `true`): rides `StatusResponseFeatures.accountConsole`
   (`buildUIFeatures` → status endpoint + the injected config); disabled →
-  the shell renders `AWorkflowDisabledNotice` client-side (no 404).
+  the shell renders `AWorkflowDisabledNotice` client-side (no 404). Since
+  plan 099 the flag gates the sign-in routes too: `GET /console/account/login`
+  and `/callback` answer the shell with the notice instead of minting a
+  pending login and a session secret, the rule `AdminController` already
+  followed. Before, a disabled account console still did both on a direct
+  hit, and once the flags carve replica sets (below) a flag-off API replica
+  must not answer a console's login at all.
 - **Login = full auth-code + PKCE against the per-realm `account-console`
   client** (Keycloak model — per-app attribution + access-policy
   enforceability), NOT bare reuse of the lingering kit-store session.
@@ -1523,7 +1535,7 @@ choice"):
 - **Packaging:** the package ships `dist/` only (`prepublishOnly` builds);
   it is packed in the launcher's `test:smoke:packed` workspace list so the
   packed server-core install resolves it from the tarball.
-- **Link surface:** `<publicUrl>/account` is the stable "Manage account"
+- **Link surface:** `<publicUrl>/console/account` is the stable "Manage account"
   target; the admin console header links the user name to it.
 
 #### Console session credential (cookie mode, plan 088 Stage 1)
@@ -1613,9 +1625,9 @@ rather than trusted until `exp`.
   revocation and header-weight benefits are unaffected and unqualified.
 - **Four routes, all declared before `@DGet('/:page')`** (which matches any
   single segment and would swallow them), on `AccountController`:
-  `GET /account/login` mints PKCE + `state`, parks them behind a 5-minute
+  `GET /console/account/login` mints PKCE + `state`, parks them behind a 5-minute
   `SameSite=Lax` login cookie (Lax, not Strict: the return leg may traverse
-  an external IdP chain) and 302s to `/authorize`; `GET /account/callback`
+  an external IdP chain) and 302s to `/authorize`; `GET /console/account/callback`
   redeems the code and hands back the session cookie;
   `GET /sessions/@me/introspect` is what the console hydrates from and
   `DELETE /sessions/@me` is what it signs out with. The callback **requires `Sec-Fetch-Site: same-origin`**.
@@ -1667,8 +1679,8 @@ rather than trusted until `exp`.
 - **Wiring.** `cookieSession` needs TWO conditions, because they are different
   facts and each alone is wrong. `serveAccountConsolePage` injects it as a
   **capability** assertion — this server implements
-  `/account/login|callback|session` — which a console dist cannot determine for
-  itself: newer than its server, it would navigate to a `/account/login` that
+  `/console/account/login|callback|session` — which a console dist cannot determine for
+  itself: newer than its server, it would navigate to a `/console/account/login` that
   does not exist, and a 404 on a top-level navigation is unrecoverable.
   `resolveAccountConsoleConfig` then ANDs it with **applicability**,
   `isSameOriginApiUrl(apiUrl, origin)`: the credential is `SameSite=Strict` and
@@ -1677,7 +1689,7 @@ rather than trusted until `exp`.
   that pairing representable and silently fatal (the kick redirects, the cookie
   lands on the API's origin, the console loops back to sign-in with no
   diagnostic); the derivation alone dropped the capability signal. Together
-  they are exactly the condition under which `${apiUrl}/account/login` is both
+  they are exactly the condition under which `${apiUrl}/console/account/login` is both
   a real route and a usable one, which is what makes the kick in
   `pages/index.vue` sound rather than conventional. It is never an operator
   choice: there is no config key behind the injection. The resolved value
@@ -1722,12 +1734,12 @@ rather than trusted until `exp`.
   JS-token path (cross-origin, so applicability fails there), so the two modes
   coexist behind one resolved condition.
 
-### Admin Console (`/admin`, plan 081)
+### Admin Console (`/console/admin`, plan 081)
 
 The admin console (`apps/client-admin-console`, `@authup/client-admin-console`)
 left Nuxt on 2026-08-25 and is the second static console server-core serves,
 in the account-console shape: a dist-only Vite/Vue SPA, `src/config.ts`
-resolving `window.__AUTHUP__` (`apiUrl`, `basePath` default `/admin`,
+resolving `window.__AUTHUP__` (`apiUrl`, `basePath` default `/console/admin`,
 `clientId` default `admin-console`, `cookieSession`, `features`) with the
 same capability-AND-applicability rule for cookie mode, `src/main.ts` the
 same bootstrap. What differs from the account console, and why:
@@ -1755,19 +1767,19 @@ same bootstrap. What differs from the account console, and why:
   refusal lands on `refusalPath` relative to the console root. The admin
   console sets `refusalPath: 'login'`: its root is a logged-in page whose
   guard would bounce to `/login` and drop the `?error=` marker on the way,
-  so `/admin/login?error=access_denied` is where the notice renders.
-  `AccountController` and `AdminController` (`@DController('/admin')`)
+  so `/console/admin/login?error=access_denied` is where the notice renders.
+  `AccountController` and `AdminController` (`@DController('/console/admin')`)
   both delegate; the `console-session.spec.ts` matrix runs over both.
 - **The shell route is a wildcard.** The console's routes nest
   (`/users/<id>/roles`), so `AdminController` declares `''` + `'/*page'`
   (path-to-regexp v8 syntax; routup compiles it) where the account
-  controller's `/:page` matches one segment. `GET /admin/login` does double
+  controller's `/:page` matches one segment. `GET /console/admin/login` does double
   duty on purpose: with a `realmId` it is the server-side kick, without one
   it is the SPA's own login page (where the guard sends a signed-out visitor
   and where a refused callback lands with its `?error=` marker; answering
   that with the kick's "a realm is required" made every refusal a raw 400).
   The segment is spelled ONCE, `ADMIN_CONSOLE_SEGMENT`
-  (`adapters/http/ui/admin-console/constants.ts`): the controller mount, the
+  (`adapters/http/ui/constants.ts`, next to `ACCOUNT_CONSOLE_SEGMENT` and `AUTH_CONSOLE_SEGMENT`; the three mounts share the `/console` prefix by spelling, there is deliberately no prefix constant, plan 099): the controller mount, the
   login cookie scope, the callback URL, the asset mount and the vite base
   all derive from it. Assets are served `immutable` for a year (every name
   carries a content hash; a new build means new names), for both static
@@ -1777,7 +1789,7 @@ same bootstrap. What differs from the account console, and why:
   with the disabled notice instead of minting a pending login) and
   `adminConsolePath` (`ADMIN_CONSOLE_PATH`, marker `<!--admin-config-->`,
   and `bindConsolePackages` additionally requires the shell to reference
-  `/admin/assets/`, since a package built for another vite base serves and
+  `/console/admin/assets/`, since a package built for another vite base serves and
   then 404s every asset with no error anywhere).
 - **Route meta replaces `definePageMeta`.** `src/router.ts` is an explicit
   table (one lazy import per page, the `pages/` tree unchanged under
@@ -1815,7 +1827,7 @@ same bootstrap. What differs from the account console, and why:
   bundle's runtime asset URLs (a lazy chunk's stylesheet, the fonts a
   stylesheet references) are chunk-relative via vite's `renderBuiltUrl` for
   the `js` and `css` host types, because server-core rebases hrefs in
-  `index.html` only; `admin-pages.spec.ts` refuses the `/admin/` literal
+  `index.html` only; `admin-pages.spec.ts` refuses the `/console/admin/` literal
   in every built js/css file. Their record fetch is a
   plain `ref(await ...)` in a try/catch that `router.replace`s back to the
   collection on failure, with `v-if="entity"` on the page root; nested
@@ -1888,13 +1900,17 @@ adapters/http/controllers/workflows/
   password-reset/module.ts          — PasswordResetController → IPasswordRecoveryService (POST API + GET serves SSR page)
   status/module.ts                  — StatusController (GET / → version + feature flags)
   account/module.ts                 — AccountController: serves the account console SPA shell and declares
-                                      its login routes, GET /account/login (kick) + /callback (redemption)
-  admin/module.ts                   — AdminController: the same for the admin console at /admin (plan 081),
+                                      its login routes, GET /console/account/login (kick) + /callback (redemption)
+  admin/module.ts                   — AdminController: the same for the admin console at /console/admin (plan 081),
                                       with a wildcard shell route for the console's nested routes
   console-login/module.ts           — ConsoleLogin: the plan-088 kick + redemption both controllers delegate
                                       to, parameterized by client name, path segment and refusal path
 
 adapters/http/ui/                   — one folder per served console + shared serving helpers
+  constants.ts                      - ADMIN_CONSOLE_SEGMENT (console/admin), ACCOUNT_CONSOLE_SEGMENT (console/account) and
+                                      AUTH_CONSOLE_SEGMENT (console/auth, under which only <segment>/assets is mounted):
+                                      every console mount, the login cookie scopes, the callback URLs and the asset
+                                      mounts read these (plan 099)
   shared/html.ts                    — readUIClientPreferences (locale/color-mode cookies), stampHtmlAttributes,
                                       applyUIPageHeaders (content-type + CSP frame-ancestors + XFO + referrer),
                                       rebaseAssetURLs(html, basePath, viteBase), serializeInlineScriptJSON,
@@ -2633,7 +2649,7 @@ all serve login/consent from the IdP origin.
 authenticates against the per-realm public `admin-console` client (plan 079;
 downstream kit apps register their own clients — plan 082 removed the shared
 `web` client) with no privileged channel into server-core, and since plan 081
-server-core SERVES it as a static SPA at `<publicUrl>/admin` (see *Admin
+server-core SERVES it as a static SPA at `<publicUrl>/console/admin` (see *Admin
 Console*), the endpoint plan 078 recorded. Same-origin is what let plan 088
 Stage 2 apply the account console's cookie credential to it with no BFF.
 
@@ -2668,6 +2684,34 @@ sqlite worker boots against no schema. So "never migrates" is exact and
 one info line naming what it registered, which on a worker is the only line a
 healthy boot writes (the sweeps log nothing per tick and the schema-verify
 lines are debug).
+
+**Console replica sets (plan 099 PR 1).** Every served console lives under
+the one `/console` prefix (`adapters/http/ui/constants.ts`), so the consoles
+can be served from their own replica set on the ONE origin with no code: an
+API set started with `ADMIN_CONSOLE_ENABLED=false
+ACCOUNT_CONSOLE_ENABLED=false`, a console set with them on, BOTH with
+`COMPONENTS_ENABLED=false MIGRATION_ENABLED=false` plus the one-off
+`migration run` (a console replica is a plain `start` process and would
+otherwise run the sweeps and race the DDL), and the proxy routing
+`/console/**` (plus `/theme/**` when themed) to the console set. Cookie mode
+holds because `isSameOriginRequest` compares against `publicUrl` and the
+session cookie path is the deployment base path, both identical across
+processes behind one origin. **Redis is a hard requirement for the split,
+and sticky routing is no substitute**: the authorization code is a cache
+entry minted at `POST /authorize` on whichever replica the API rule picked
+and popped by `/token` on the console replica that answered the callback
+(the redemption goes through the loopback client bound to its own listen
+address), so no path-scoped affinity can keep the two on one process; the
+pending-login entry and the token blocklist ride the same cache. A sqlite
+deployment cannot split (one database file per container, the worker's
+caveat). Two things the flags do NOT do: the console asset mounts are
+unconditional (a flag-off replica holding the dist still serves
+`/console/admin/assets/*`), and the auth pages plus `/console/auth/assets/*`
+are served by every replica, since no `authConsoleEnabled` exists by design
+(they are the issuance surface). `GET /` reports `features` per replica.
+The operator recipe is `docs/src/guide/deployment/console-replicas.md`; the
+`authup-server console [admin|account]` role (PR 1b) is sugar over the same
+two flags and additionally leaves the management API unmounted.
 
 **Configuration is layered:** server-core honors the confinity file family
 (`authup.conf` with a `server.core` section, or the per-component
@@ -3622,7 +3666,7 @@ user); the uniqueness flip above ships one, on both dialects.
      four-scalar projection (`IdentityProviderAccountLink`: providerId,
      userId, providerUserId, providerUserName/Email) under a one-time
      handle and redirects to
-     `<publicUrl>/account/connected-accounts?linkHandle=<handle>&provider=<id>`
+     `<publicUrl>/console/account/connected-accounts?linkHandle=<handle>&provider=<id>`
      (or `?linkError=link_failed`). It writes NOTHING.
   3. The account console auto-POSTs the handle to
      `POST /identity-providers/:id/link-confirm` with its bearer
@@ -5083,7 +5127,7 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   request by its registered route template (`/users/:id`,
   `/realms/:realmId/users/:id`), read from the router's own route table
   (routup flattens controller child-apps into the root with full patterns);
-  method-agnostic mounts label as `<mount>/**` (`/docs/**`, `/public/**`)
+  method-agnostic mounts label as `<mount>/**` (`/docs/**`, `/console/auth/assets/**`)
   and anything unregistered collapses into a single `/{unmatched}` bucket —
   raw ids/names never become label values, even on 401/404 probes.
 

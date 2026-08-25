@@ -182,7 +182,7 @@ describe('identity-provider link flow', () => {
         expect(url.searchParams.get('redirect_uri')).toContain(`identity-providers/${provider.id}/authorize-in`);
 
         const target = await completeCallback(state);
-        expect(target.pathname).toContain('account/connected-accounts');
+        expect(target.pathname).toEqual('/console/account/connected-accounts');
         expect(target.searchParams.get('linkError')).toBeNull();
 
         const handle = handleOf(target);

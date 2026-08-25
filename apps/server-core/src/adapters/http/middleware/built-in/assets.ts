@@ -16,10 +16,14 @@ import { defineCoreHandler } from 'routup';
 import { fromNodeMiddleware } from 'routup/node';
 import type * as Vite from 'vite';
 import type { ViteDevServer } from 'vite';
-import { PACKAGE_PATH } from '../../../../path.ts';
 import { resolveAccountConsoleDistPath } from '../../ui/account-console/index.ts';
-import { ADMIN_CONSOLE_SEGMENT, resolveAdminConsoleDistPath } from '../../ui/admin-console/index.ts';
+import { resolveAdminConsoleDistPath } from '../../ui/admin-console/index.ts';
 import { resolveAuthConsoleDistPath, resolveAuthConsolePackagePath } from '../../ui/auth-console/index.ts';
+import {
+    ACCOUNT_CONSOLE_SEGMENT,
+    ADMIN_CONSOLE_SEGMENT,
+    AUTH_CONSOLE_SEGMENT,
+} from '../../ui/constants.ts';
 import { THEME_ASSET_MOUNT_PATH, ThemeProvider, createThemeAssetsHandler } from '../../ui/theme/index.ts';
 import { registerThemeMiddleware } from './theme.ts';
 import type { AssetsMiddlewareOptions } from './types.ts';
@@ -41,7 +45,7 @@ export async function registerAssetsMiddleware(
     await registerThemeAssets(router, options);
 
     // Static assets of the account console SPA (its fixed vite base is
-    // /account/). Served in dev mode too — the bundle is prebuilt, not
+    // /console/account/). Served in dev mode too: the bundle is prebuilt, not
     // vite-transformed. A missing bundle only disables the mount; the page
     // route reports the actionable error.
     // Every file under a vite `assets/` output carries a content hash in its
@@ -57,7 +61,7 @@ export async function registerAssetsMiddleware(
 
     const accountDistPath = resolveAccountConsoleDistPath();
     if (accountDistPath) {
-        router.use('account/assets', createHandler(
+        router.use(`${ACCOUNT_CONSOLE_SEGMENT}/assets`, createHandler(
             path.posix.join(accountDistPath, 'assets'),
             immutable,
         ));
@@ -79,21 +83,17 @@ export async function registerAssetsMiddleware(
     options.logger?.info(`Serving the auth console from ${isJIT ? 'source (vite dev server)' : 'the package dist'}.`);
 
     if (!isJIT) {
-        router.use('public', createHandler(
-            path.posix.join(PACKAGE_PATH, 'public'),
-            {
-                fallthrough: true,
-                scan: false,
-            },
-        ));
-
         // Static assets of the auth console SSR bundle (its fixed vite base
-        // is /public/). A missing bundle only disables the mount; the page
+        // is /console/auth/, so the same <segment>/assets shape as the two
+        // static consoles; the pages stay on their protocol routes). Only
+        // the assets directory is mounted, never dist/client itself: the
+        // template and the ssr manifest are inputs of the render, not files
+        // to serve. A missing bundle only disables the mount; the page
         // routes report the actionable error.
         const authConsoleDistPath = resolveAuthConsoleDistPath();
         if (authConsoleDistPath) {
-            router.use('public', createHandler(
-                path.posix.join(authConsoleDistPath, 'client'),
+            router.use(`${AUTH_CONSOLE_SEGMENT}/assets`, createHandler(
+                path.posix.join(authConsoleDistPath, 'client', 'assets'),
                 {
                     fallthrough: false,
                     scan: false,
@@ -106,7 +106,10 @@ export async function registerAssetsMiddleware(
     // JIT (dev) mode serves the auth console straight from the package
     // SOURCE directory (the workspace symlink carries index.html + src/ +
     // vite.config.ts; a published install has no JIT). Vite auto-loads the
-    // package's own vite.config.ts from the root.
+    // package's own vite.config.ts from the root. The dev server is mounted
+    // on the whole console segment rather than its assets/ sub-path: in dev
+    // vite serves its client (`/console/auth/@vite/client`) and the source
+    // modules under the BASE, and none of them lives under assets/.
     const authConsolePackagePath = resolveAuthConsolePackagePath();
     if (!authConsolePackagePath) {
         throw new InternalError(
@@ -118,7 +121,7 @@ export async function registerAssetsMiddleware(
 
     const server: ViteDevServer = await vite.createServer({
         root: authConsolePackagePath,
-        base: '/public/',
+        base: `/${AUTH_CONSOLE_SEGMENT}/`,
         logLevel: 'error',
         server: {
             middlewareMode: true,
@@ -130,7 +133,7 @@ export async function registerAssetsMiddleware(
         appType: 'custom',
     });
 
-    router.use('public', fromNodeMiddleware(server.middlewares));
+    router.use(AUTH_CONSOLE_SEGMENT, fromNodeMiddleware(server.middlewares));
     router.use(defineCoreHandler((event) => {
         event.store[VITE_SERVER_STORE_KEY] = server;
         return event.next();

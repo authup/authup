@@ -16,6 +16,7 @@ import type { ViteDevServer } from 'vite';
 import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
 import type { IClient } from '@authup/core-http-kit';
 import { UI_HTTP_CLIENT_FACTORY_STORE_KEY, VITE_SERVER_STORE_KEY, useRequestTheme } from '../../middleware/index.ts';
+import { AUTH_CONSOLE_SEGMENT } from '../constants.ts';
 import {
     applyUIPageHeaders,
     readUIClientPreferences,
@@ -119,10 +120,11 @@ export async function renderAuthConsolePage(event: IAppEvent, ctx: AuthConsoleRe
     body = stampHtmlAttributes(body, preferences);
 
     // When authup is publicly served under a sub-path (publicUrl carries a
-    // pathname, e.g. https://example.com/auth), the fixed /public/ vite base
-    // would bypass the proxy mapping — rebase asset URLs onto the prefix.
+    // pathname, e.g. https://example.com/auth), the fixed /console/auth/
+    // vite base would bypass the proxy mapping: rebase asset URLs onto the
+    // prefix.
     const basePath = getURLBasePath(ctx.payload.config.baseURL);
-    body = rebaseAssetURLs(body, basePath, '/public/');
+    body = rebaseAssetURLs(body, basePath, `/${AUTH_CONSOLE_SEGMENT}/`);
 
     body = await applyTheme(body, useRequestTheme(event), basePath);
 

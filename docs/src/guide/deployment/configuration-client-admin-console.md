@@ -3,9 +3,9 @@
 The admin console is the administration surface: realms, clients, users,
 roles, permissions, policies, keys, sessions and the audit event log. It is a
 client-side single-page application (the `@authup/client-admin-console`
-package) that `server-core` serves on the IdP origin at `<publicUrl>/admin`
+package) that `server-core` serves on the IdP origin at `<publicUrl>/console/admin`
 by default, the same way it serves the
-[account console](./account-console.md) at `<publicUrl>/account`.
+[account console](./account-console.md) at `<publicUrl>/console/account`.
 
 It is no longer a service of its own. Earlier releases shipped it as a
 separate Nuxt server with its own port and its own environment variables; a
@@ -16,10 +16,10 @@ to remove from an existing setup.
 ## Sign-in
 
 The console shares an origin with the API, so it signs in through the server.
-`GET /admin/login` starts an authorization-code flow with PKCE against the
+`GET /console/admin/login` starts an authorization-code flow with PKCE against the
 per-realm `admin-console` system client (see
 [Provisioning](./provisioning.md#per-realm-system-clients)) and
-`GET /admin/callback` redeems the code. The browser keeps an opaque,
+`GET /console/admin/callback` redeems the code. The browser keeps an opaque,
 `HttpOnly` session cookie; no OAuth2 token is handed to the page's
 JavaScript. The account console authenticates the same way, and both surfaces
 share the single session on that origin.
@@ -37,7 +37,7 @@ control it:
 
 ::: code-group
 ````dotenv [.env]
-# Serve the console at <publicUrl>/admin.
+# Serve the console at <publicUrl>/console/admin.
 ADMIN_CONSOLE_ENABLED=true
 # Package directory of a substituted console.
 ADMIN_CONSOLE_PATH=
@@ -51,7 +51,7 @@ adminConsolePath=
 
 `adminConsoleEnabled` (default `true`) turns the surface off. The routes then
 serve a localized "not enabled" notice instead of the console, so stale links
-do not dead-end, and the sign-in routes (`/admin/login`, `/admin/callback`)
+do not dead-end, and the sign-in routes (`/console/admin/login`, `/console/admin/callback`)
 answer the same notice instead of starting a login. The flag is also reported
 in the `features` block of the public status endpoint (`GET /`).
 
@@ -71,8 +71,8 @@ the embedded serving. The npm package ships `dist/` only: there is no binary
 and no process to run.
 
 1. Take the `dist/` directory of the `@authup/client-admin-console` package
-   and serve it under the `/admin` path of your host. Routing happens in the
-   browser, so every path below `/admin` has to serve the same `index.html`.
+   and serve it under a path of your host, `/console/admin` by default. Routing happens in the
+   browser, so every path below that base has to serve the same `index.html`.
 2. Inject the runtime configuration by replacing the `<!--admin-config-->`
    marker in `index.html` (or by any script that runs before the app bundle):
 
@@ -80,7 +80,7 @@ and no process to run.
    <script>
    window.__AUTHUP__ = {
        "apiUrl": "https://auth.example.com",
-       "basePath": "/admin"
+       "basePath": "/console/admin"
    };
    </script>
    ```
@@ -111,7 +111,7 @@ of the following is read any more, and none has a successor:
 | Variable | Why it is gone |
 |---|---|
 | `NUXT_PUBLIC_API_URL`, `API_URL`, `API_URL_SERVER` | The API is the serving origin, or `window.__AUTHUP__.apiUrl` when hosted standalone. |
-| `NUXT_PUBLIC_PUBLIC_URL` | The console has no public URL of its own. It lives at `<publicUrl>/admin`. |
+| `NUXT_PUBLIC_PUBLIC_URL` | The console has no public URL of its own. It lives at `<publicUrl>/console/admin`. |
 | `NUXT_PUBLIC_COOKIE_DOMAIN` | The console is same-origin with the API, so there is no cookie domain to widen. |
 | `NUXT_PUBLIC_CLIENT_ID` | The client is `admin-console`. A fork injects `clientId` in `window.__AUTHUP__`. |
 | `NUXT_HOST`, `NUXT_PORT` | There is no second process to bind. |

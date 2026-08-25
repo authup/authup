@@ -21,7 +21,7 @@ paste and modify the example you want to use into a `docker-compose.yml` file.
 
 The following example shows a sensible default configuration for getting started with Authup.
 This starts the one service a deployment needs: `server/core` serves the API and both consoles
-(the admin console at `/admin`, the account console at `/account`).
+(the admin console at `/console/admin`, the account console at `/console/account`).
 
 ```yaml
 version: '3.8'

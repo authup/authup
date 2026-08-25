@@ -35,8 +35,8 @@ $ npx authup start
 
 This launches the server with default settings:
 - API: `http://localhost:3001/`
-- Admin console: `http://localhost:3001/admin`
-- Account console: `http://localhost:3001/account`
+- Admin console: `http://localhost:3001/console/admin`
+- Account console: `http://localhost:3001/console/account`
 
 The server always receives its `PORT`/`HOST` from the CLI (see
 [Configuration](#configuration)), so an ambient `PORT` in the environment
@@ -68,7 +68,7 @@ server.core.publicUrl=http://localhost:3001
 The `server.core` section is passed through to the server process
 (`--configFile`/`--configDirectory` are forwarded as well). A
 `client.admin-console` section is read and answered with a warning: the admin
-console is served by server-core at `<publicUrl>/admin` and no longer runs as
+console is served by server-core at `<publicUrl>/console/admin` and no longer runs as
 its own process.
 
 The application otherwise inherits the CLI's environment, with one deliberate
