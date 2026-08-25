@@ -101,6 +101,14 @@ export type Config = {
      */
     accountConsolePath: string,
 
+    /**
+     * Package directory of a substituted
+     * `@authup/client-admin-console`. Same contract as accountConsolePath.
+     *
+     * default: '' (resolve @authup/client-admin-console from node_modules)
+     */
+    adminConsolePath: string,
+
     // ----------------------------------------------------
 
     /**
@@ -337,6 +345,13 @@ export type Config = {
      * default: true
      */
     accountConsoleEnabled: boolean,
+
+    /**
+     * Serve the admin console at `<publicUrl>/admin`. Off, the route answers
+     * with the disabled notice; a standalone-hosted console is unaffected.
+     * default: true
+     */
+    adminConsoleEnabled: boolean,
 
     // ----------------------------------------------------
 

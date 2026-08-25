@@ -16,4 +16,9 @@ export type ConsolePackageOptions = {
      * Package directory of a substituted @authup/client-account-console.
      */
     accountConsolePath?: string,
+
+    /**
+     * Package directory of a substituted @authup/client-admin-console.
+     */
+    adminConsolePath?: string,
 };

@@ -7,13 +7,9 @@
 
 import { isObject } from '@authup/kit';
 import { FSStore } from 'confinity';
-import {
-    CLIENT_ADMIN_CONSOLE_PORT_DEFAULT,
-    LISTEN_HOST_DEFAULT,
-    SERVER_CORE_PORT_DEFAULT,
-} from './constants';
+import { ADMIN_CONSOLE_SECTION_WARNING } from '../packages/constants';
+import { LISTEN_HOST_DEFAULT, SERVER_CORE_PORT_DEFAULT } from './constants';
 import type {
-    ClientAdminConsoleSectionConfig,
     LauncherConfig,
     LauncherConfigReadOptions,
     ServerCoreSectionConfig,
@@ -67,17 +63,6 @@ export function normalizeServerCoreSection(input: unknown) : ServerCoreSectionCo
     };
 }
 
-export function normalizeClientAdminConsoleSection(input: unknown) : ClientAdminConsoleSectionConfig {
-    const record = toRecord(input);
-
-    return {
-        port: readPort(record),
-        host: readString(record, 'host'),
-        apiUrl: readString(record, 'apiUrl'),
-        cookieDomain: readString(record, 'cookieDomain'),
-    };
-}
-
 export async function readLauncherConfig(
     options: LauncherConfigReadOptions = {},
 ) : Promise<LauncherConfig> {
@@ -96,9 +81,17 @@ export async function readLauncherConfig(
     // asynchronous, and both normalizers take `unknown` — so a missing `await`
     // would compile cleanly, hand them a Promise, and silently start every
     // service on its defaults.
+    const warnings : string[] = [];
+
+    // Read but not honoured (plan 081): a stale section must be parsed and
+    // warned about, never silently defaulted, the `client.web` lesson.
+    if (Object.keys(toRecord(store.getSync('client.admin-console'))).length > 0) {
+        warnings.push(ADMIN_CONSOLE_SECTION_WARNING);
+    }
+
     return {
         serverCore: normalizeServerCoreSection(store.getSync('server.core')),
-        clientAdminConsole: normalizeClientAdminConsoleSection(store.getSync('client.admin-console')),
+        warnings,
     };
 }
 
@@ -109,22 +102,3 @@ export function buildServerCoreEnv(config: LauncherConfig) : Record<string, stri
     };
 }
 
-export function buildClientAdminConsoleEnv(config: LauncherConfig) : Record<string, string> {
-    const env : Record<string, string> = {
-        PORT: `${config.clientAdminConsole.port ?? CLIENT_ADMIN_CONSOLE_PORT_DEFAULT}`,
-        HOST: config.clientAdminConsole.host ?? LISTEN_HOST_DEFAULT,
-    };
-
-    // Only override what the config actually names — with neither key set the
-    // web application applies its own default.
-    const apiUrl = config.clientAdminConsole.apiUrl ?? config.serverCore.publicUrl;
-    if (apiUrl) {
-        env.NUXT_PUBLIC_API_URL = apiUrl;
-    }
-
-    if (config.clientAdminConsole.cookieDomain) {
-        env.NUXT_PUBLIC_COOKIE_DOMAIN = config.clientAdminConsole.cookieDomain;
-    }
-
-    return env;
-}

@@ -9,23 +9,22 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
-    afterAll, 
-    beforeAll, 
-    describe, 
-    expect, 
+    afterAll,
+    beforeAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import {
-    CLIENT_ADMIN_CONSOLE_PORT_DEFAULT,
     LISTEN_HOST_DEFAULT,
     SERVER_CORE_PORT_DEFAULT,
-    buildClientAdminConsoleEnv,
     buildServerCoreEnv,
     readLauncherConfig,
 } from '../../../src/config';
 import type { LauncherConfig } from '../../../src/config';
 
 let configDirectory : string;
+let staleConfigDirectory : string;
 
 beforeAll(() => {
     configDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'authup-config-'));
@@ -34,6 +33,12 @@ beforeAll(() => {
         'server.core.port=4310',
         'server.core.host=127.0.0.1',
         'server.core.publicUrl=http://127.0.0.1:4310',
+    ].join('\n'));
+
+    staleConfigDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'authup-config-stale-'));
+
+    fs.writeFileSync(path.join(staleConfigDirectory, 'authup.conf'), [
+        'server.core.port=4310',
         'client.admin-console.port=4311',
         'client.admin-console.cookieDomain=example.com',
     ].join('\n'));
@@ -41,12 +46,13 @@ beforeAll(() => {
 
 afterAll(() => {
     fs.rmSync(configDirectory, { recursive: true, force: true });
+    fs.rmSync(staleConfigDirectory, { recursive: true, force: true });
 });
 
 function buildLauncherConfig(input?: Partial<LauncherConfig>) : LauncherConfig {
     return {
         serverCore: {},
-        clientAdminConsole: {},
+        warnings: [],
         ...input,
     };
 }
@@ -60,94 +66,30 @@ describe('src/config', () => {
             host: '127.0.0.1',
             publicUrl: 'http://127.0.0.1:4310',
         });
-
-        expect(config.clientAdminConsole).toEqual({
-            port: 4311,
-            host: undefined,
-            apiUrl: undefined,
-            cookieDomain: 'example.com',
-        });
+        expect(config.warnings).toEqual([]);
     });
 
-    it('should read empty sections when no config file exists', async () => {
-        const emptyDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'authup-config-empty-'));
+    // The admin console is served by server-core (plan 081). A section left
+    // over from the two-process layout must be answered with a warning, never
+    // silently defaulted: the `client.web` rename taught that lesson.
+    it('should warn about a stale client.admin-console section', async () => {
+        const config = await readLauncherConfig({ directory: staleConfigDirectory });
 
-        try {
-            const config = await readLauncherConfig({ directory: emptyDirectory });
-
-            expect(config.serverCore.port).toBeUndefined();
-            expect(config.clientAdminConsole.port).toBeUndefined();
-        } finally {
-            fs.rmSync(emptyDirectory, { recursive: true, force: true });
-        }
+        expect(config.serverCore.port).toEqual(4310);
+        expect(config.warnings).toHaveLength(1);
+        expect(config.warnings[0]).toMatch(/client\.admin-console/);
     });
 
-    it('should map the server-core section onto PORT/HOST', () => {
-        const env = buildServerCoreEnv(buildLauncherConfig({ serverCore: { port: 4310, host: '127.0.0.1' } }));
-
-        expect(env).toEqual({
-            PORT: '4310',
-            HOST: '127.0.0.1',
-        });
-    });
-
-    it('should pin the server-core listen defaults when the section is empty', () => {
+    it('should always pin PORT/HOST so an ambient PORT cannot decide the listen address', () => {
         const env = buildServerCoreEnv(buildLauncherConfig());
 
-        expect(env).toEqual({
-            PORT: `${SERVER_CORE_PORT_DEFAULT}`,
-            HOST: LISTEN_HOST_DEFAULT,
-        });
+        expect(env.PORT).toEqual(`${SERVER_CORE_PORT_DEFAULT}`);
+        expect(env.HOST).toEqual(LISTEN_HOST_DEFAULT);
     });
 
-    it('should pin distinct listen defaults per child so an ambient PORT cannot collide', () => {
-        const config = buildLauncherConfig();
+    it('should map the server.core section onto PORT/HOST', () => {
+        const env = buildServerCoreEnv(buildLauncherConfig({ serverCore: { port: 4310, host: '127.0.0.1' } }));
 
-        const serverCore = buildServerCoreEnv(config);
-        const clientAdminConsole = buildClientAdminConsoleEnv(config);
-
-        expect(serverCore.PORT).not.toEqual(clientAdminConsole.PORT);
-        expect(clientAdminConsole.PORT).toEqual(`${CLIENT_ADMIN_CONSOLE_PORT_DEFAULT}`);
-        expect(clientAdminConsole.HOST).toEqual(LISTEN_HOST_DEFAULT);
-    });
-
-    it('should map the client-admin-console section onto PORT/HOST and nuxt runtime overrides', () => {
-        const env = buildClientAdminConsoleEnv(buildLauncherConfig({
-            clientAdminConsole: {
-                port: 4311,
-                host: '127.0.0.1',
-                apiUrl: 'https://api.example.com',
-                cookieDomain: 'example.com',
-            },
-        }));
-
-        expect(env).toEqual({
-            PORT: '4311',
-            HOST: '127.0.0.1',
-            NUXT_PUBLIC_API_URL: 'https://api.example.com',
-            NUXT_PUBLIC_COOKIE_DOMAIN: 'example.com',
-        });
-    });
-
-    it('should derive the api url from the server-core public url', () => {
-        const env = buildClientAdminConsoleEnv(buildLauncherConfig({ serverCore: { publicUrl: 'http://127.0.0.1:4310' } }));
-
-        expect(env.NUXT_PUBLIC_API_URL).toEqual('http://127.0.0.1:4310');
-    });
-
-    it('should prefer the client-admin-console api url over the derived one', () => {
-        const env = buildClientAdminConsoleEnv(buildLauncherConfig({
-            serverCore: { publicUrl: 'http://127.0.0.1:4310' },
-            clientAdminConsole: { apiUrl: 'https://api.example.com' },
-        }));
-
-        expect(env.NUXT_PUBLIC_API_URL).toEqual('https://api.example.com');
-    });
-
-    it('should leave the api url to the application when no section names one', () => {
-        const env = buildClientAdminConsoleEnv(buildLauncherConfig());
-
-        expect(env.NUXT_PUBLIC_API_URL).toBeUndefined();
-        expect(env.NUXT_PUBLIC_COOKIE_DOMAIN).toBeUndefined();
+        expect(env).toEqual({ PORT: '4310', HOST: '127.0.0.1' });
     });
 });

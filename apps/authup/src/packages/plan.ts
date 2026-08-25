@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { LauncherCommand, PackageID } from './constants';
+import { ADMIN_CONSOLE_SELECTOR_WARNING, LauncherCommand, PackageID } from './constants';
 import { normalizePackageID } from './normalize';
 import type { LaunchPlan } from './types';
 
@@ -15,9 +15,10 @@ export function resolveLaunchPlan(command: string, rest: string[] = []) : Launch
         .map((token) => token.trim())
         .filter((token) => token.length > 0);
 
+    const warnings : string[] = [];
+
     switch (command) {
         case LauncherCommand.START: {
-            const packages : `${PackageID}`[] = [];
             for (const token of tokens) {
                 const packageId = normalizePackageID(token);
                 if (!packageId) {
@@ -27,18 +28,24 @@ export function resolveLaunchPlan(command: string, rest: string[] = []) : Launch
                     );
                 }
 
-                if (!packages.includes(packageId)) {
-                    packages.push(packageId);
+                // Accepted for an existing invocation's sake, launches
+                // nothing (plan 081).
+                if (packageId === PackageID.CLIENT_ADMIN_CONSOLE && !warnings.includes(ADMIN_CONSOLE_SELECTOR_WARNING)) {
+                    warnings.push(ADMIN_CONSOLE_SELECTOR_WARNING);
                 }
             }
 
-            if (packages.length === 0) {
-                packages.push(PackageID.SERVER_CORE, PackageID.CLIENT_ADMIN_CONSOLE);
-            }
+            // Selectors named ONLY the retired package: launch nothing. The
+            // old console unit of a two-unit deployment must not turn into a
+            // second server (its own sqlite, its own master realm, default
+            // admin credentials) just because it kept running `authup start`.
+            const retiredOnly = tokens.length > 0 && warnings.length > 0 &&
+                !tokens.some((token) => normalizePackageID(token) === PackageID.SERVER_CORE);
 
             return {
-                packages,
+                packages: retiredOnly ? [] : [PackageID.SERVER_CORE],
                 commandArgs: [LauncherCommand.START],
+                warnings,
             };
         }
         case LauncherCommand.MIGRATION:
@@ -47,9 +54,11 @@ export function resolveLaunchPlan(command: string, rest: string[] = []) : Launch
             for (const token of tokens) {
                 const packageId = normalizePackageID(token);
                 if (packageId === PackageID.CLIENT_ADMIN_CONSOLE) {
-                    throw new Error(
-                        `The command "${command}" is not supported by the ${PackageID.CLIENT_ADMIN_CONSOLE} package.`,
-                    );
+                    if (!warnings.includes(ADMIN_CONSOLE_SELECTOR_WARNING)) {
+                        warnings.push(ADMIN_CONSOLE_SELECTOR_WARNING);
+                    }
+
+                    continue;
                 }
 
                 if (packageId === PackageID.SERVER_CORE) {
@@ -62,6 +71,7 @@ export function resolveLaunchPlan(command: string, rest: string[] = []) : Launch
             return {
                 packages: [PackageID.SERVER_CORE],
                 commandArgs,
+                warnings,
             };
         }
         default: {

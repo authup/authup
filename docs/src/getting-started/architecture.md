@@ -9,10 +9,12 @@ These endpoints can be inspected after starting the application under the `/docs
 Also, client libraries for [JavaScript](../sdks/javascript/access/)
 and [Python](../sdks/python/index) provide a way to interact with the architecture in a more secure way.
 
-## Client UI
+## Consoles
 
-The client application can be used in addition to the server component and provides easy
-management and interaction with API endpoints of the backend.
-It is based on vue3 and uses the frontend components provided by the vue package, 
-which can also be used in a custom user interface.
+The server serves three web surfaces on its own origin: the hosted auth pages
+(login, consent, registration, password recovery), the account console at
+`/account` (end-user self-service) and the admin console at `/admin`
+(management of realms, users, clients, roles and everything else the API
+holds). All three are Vue 3 applications built on the frontend components of
+the client package, which can also be used in a custom user interface.
 Read more [here](../sdks/javascript/client-web-kit/). 

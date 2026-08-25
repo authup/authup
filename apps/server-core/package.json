@@ -69,6 +69,7 @@
     "dependencies": {
         "@authup/access": "^1.0.0-beta.63",
         "@authup/client-account-console": "^1.0.0-beta.63",
+        "@authup/client-admin-console": "^1.0.0-beta.63",
         "@authup/client-auth-console": "^1.0.0-beta.63",
         "@authup/core-http-kit": "^1.0.0-beta.63",
         "@authup/core-kit": "^1.0.0-beta.63",

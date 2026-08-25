@@ -80,6 +80,7 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         themeFragmentsEnabled: false,
         authConsolePath: '',
         accountConsolePath: '',
+        adminConsolePath: '',
 
         logger: true,
         redis: false,
@@ -112,6 +113,7 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         passwordRecoveryEnabled: false,
         passwordMinLength: USER_PASSWORD_MIN_LENGTH,
         accountConsoleEnabled: true,
+        adminConsoleEnabled: true,
 
         eventLogEnabled: true,
         eventLogRetentionDays: EVENT_LOG_RETENTION_DAYS_DEFAULT,
@@ -165,6 +167,10 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
 
     if (config.accountConsolePath) {
         config.accountConsolePath = path.resolve(config.rootPath, config.accountConsolePath);
+    }
+
+    if (config.adminConsolePath) {
+        config.adminConsolePath = path.resolve(config.rootPath, config.adminConsolePath);
     }
 
     // Canonicalize the string form on EVERY config surface (env, .conf,

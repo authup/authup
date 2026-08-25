@@ -11,9 +11,9 @@
  *
  * Default (workspace) variant: runs the built dist entry of apps/authup against
  * the built workspace artifacts of apps/server-core (dist/cli/index.mjs) and
- * apps/client-admin-console (.output/server/index.mjs), boots both on unusual ports with
- * a sqlite database, waits until both answer HTTP 200, then terminates the CLI
- * with SIGTERM and asserts a clean exit.
+ * boots it on an unusual port with a sqlite database, waits until it answers
+ * HTTP 200 and serves all three consoles, then terminates the CLI with SIGTERM
+ * and asserts a clean exit.
  *
  * --packed variant: npm-packs the workspaces into tarballs, installs them into
  * a fresh temp project, and runs the installed `authup` bin the same way. This
@@ -29,12 +29,10 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 const SERVER_PORT = 4310;
-const WEB_PORT = 4311;
-// Deliberately neither of the two above: seeded into the children's inherited
-// environment to prove the supervisor overrides PORT per child.
+// Deliberately not the one above: seeded into the child's inherited
+// environment to prove the supervisor overrides PORT.
 const AMBIENT_PORT = 4312;
 const SERVER_URL = `http://127.0.0.1:${SERVER_PORT}/`;
-const WEB_URL = `http://127.0.0.1:${WEB_PORT}/`;
 
 const READY_TIMEOUT_MS = 180_000;
 const EXIT_TIMEOUT_MS = 30_000;
@@ -85,11 +83,11 @@ function buildChildEnv(writableDirectory) {
     env.DB_TYPE = 'better-sqlite3';
     env.DB_DATABASE = path.join(writableDirectory, 'authup.sql');
 
-    // Children inherit this environment, so an ambient PORT/HOST must not be
-    // able to reach both of them (a PaaS injects one; the project Dockerfile
-    // sets PORT=3000). The supervisor is expected to override it per child —
-    // verified: reverting that override makes client-admin-console bind AMBIENT_PORT and
-    // this scenario fails on the readiness probe.
+    // The child inherits this environment, so an ambient PORT/HOST must not
+    // decide where it listens (a PaaS injects one; the project Dockerfile
+    // sets PORT=3000). The supervisor is expected to override it: reverting
+    // that override makes server-core bind AMBIENT_PORT and this scenario
+    // fails on the readiness probe.
     env.PORT = `${AMBIENT_PORT}`;
     env.HOST = '0.0.0.0';
 
@@ -101,8 +99,6 @@ function writeLauncherConfig(directory) {
         `server.core.port=${SERVER_PORT}`,
         'server.core.host=127.0.0.1',
         `server.core.publicUrl=http://127.0.0.1:${SERVER_PORT}`,
-        `client.admin-console.port=${WEB_PORT}`,
-        'client.admin-console.host=127.0.0.1',
     ].join('\n'));
 }
 
@@ -243,11 +239,10 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
 
     try {
         await waitUntilReady(`${name}/server-core`, SERVER_URL, child);
-        await waitUntilReady(`${name}/client-admin-console`, WEB_URL, child);
 
-        // Both consoles are RUNTIME dependencies of server-core, resolved out
-        // of node_modules and served from their built dist. Probing the root
-        // URLs alone leaves that resolution untested.
+        // All three consoles are RUNTIME dependencies of server-core, resolved
+        // out of node_modules and served from their built dist. Probing the
+        // root URL alone leaves that resolution untested.
         await assertConsoleServed(
             `${name}/client-auth-console`,
             'logout',
@@ -262,6 +257,12 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
             'account',
             'window.__AUTHUP__',
         );
+        // The admin console (plan 081), same contract: `<!--admin-config-->`.
+        await assertConsoleServed(
+            `${name}/client-admin-console`,
+            'admin',
+            'window.__AUTHUP__',
+        );
 
         log(`${name}: sending SIGTERM.`);
         child.kill('SIGTERM');
@@ -274,12 +275,11 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
         await sleep(500);
 
         const serverStatus = await probe(SERVER_URL);
-        const webStatus = await probe(WEB_URL);
-        if (typeof serverStatus !== 'undefined' || typeof webStatus !== 'undefined') {
-            throw fail(`${name}: a child is still listening after shutdown (server: ${serverStatus}, web: ${webStatus}).`);
+        if (typeof serverStatus !== 'undefined') {
+            throw fail(`${name}: the child is still listening after shutdown (server: ${serverStatus}).`);
         }
 
-        log(`${name}: launcher exited cleanly, both children stopped.`);
+        log(`${name}: launcher exited cleanly, the child stopped.`);
     } finally {
         if (child.exitCode === null) {
             child.kill('SIGTERM');
@@ -301,7 +301,7 @@ async function executeWorkspaceScenario() {
         'run: npm run build -w apps/server-core',
     );
     assertFileExists(
-        path.join(repositoryDirectory, 'apps', 'client-admin-console', '.output', 'server', 'index.mjs'),
+        path.join(repositoryDirectory, 'apps', 'client-admin-console', 'dist', 'index.html'),
         'run: npm run build -w apps/client-admin-console',
     );
 

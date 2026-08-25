@@ -1,0 +1,22 @@
+/*
+ * Copyright (c) 2026.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+// Declares the `virtual:nuxt-icon-bundle*` modules emitted by the
+// `NuxtIconBundle` vite plugin (see ../vite.config.ts).
+/// <reference types="@nuxt/icon/client" />
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+    readonly VITE_API_URL?: string;
+}
+
+declare module '*.svg' {
+    // It's really a string, precisely a resolved path pointing to the image file
+    const filePath: string;
+
+    export default filePath;
+}

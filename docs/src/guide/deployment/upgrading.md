@@ -7,6 +7,69 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.62)
 
+### The admin console is served by server-core
+
+The admin console is no longer a separate Nuxt server. It is a static
+single-page bundle that `server-core` serves at `<publicUrl>/admin`, the way
+it already serves the account console at `<publicUrl>/account`. A deployment
+runs one process.
+
+**Action required.**
+
+- **Docker / Compose**: remove the `client/admin-console` service. The
+  entrypoint no longer starts it: `client/admin-console start` prints the
+  replacement and exits `1`, so a stale service fails loudly instead of
+  reporting a healthy run having started nothing. The remaining `server/core`
+  container serves the console.
+- **Helm**: the chart in the `authup/helm` repository still deploys an admin
+  console workload, whose pods now crash-loop for the reason above. Remove or
+  scale that workload to zero. A follow-up chart release drops it.
+- **Bare metal**: the command does not change. `authup start` starts
+  `server/core` alone. `authup start client.admin-console` and a
+  `client.admin-console` section in `authup.conf` are still parsed, print a
+  deprecation warning; `authup start client.admin-console` on its own exits
+  `0` having started nothing, so a leftover console unit stays harmless.
+  Remove them.
+- **`TRUSTED_ORIGINS`**: drop the console's former origin. It serves nothing
+  now, but the provisioner keeps re-asserting every listed origin into the
+  system clients' redirect allowlists on each boot.
+- **Reverse proxy**: collapse the two upstreams into one. The API and both
+  consoles are served by the same listener, so a rule that routed `/` to the
+  console port and `/api/` to the server port routes `/` to the server port
+  now. See [Nginx](./nginx).
+- **Links and bookmarks**: the console moved from the root of its own origin
+  to `<publicUrl>/admin`.
+
+**Retired environment variables**, none with a successor:
+`NUXT_PUBLIC_API_URL`, `NUXT_PUBLIC_PUBLIC_URL`, `NUXT_PUBLIC_COOKIE_DOMAIN`,
+`NUXT_PUBLIC_CLIENT_ID`, `NUXT_HOST`, `NUXT_PORT`, and the console's
+build-time names `API_URL`, `API_URL_SERVER`, `PUBLIC_URL`, `COOKIE_DOMAIN`
+and `CLIENT_ID`. The cookie domain is moot: the console is same-origin with
+the API, so there is nothing to widen. Note that `PUBLIC_URL` is unaffected as
+a [`server/core` option](./configuration-server-core); it is the server's own
+public URL, and the console's address derives from it.
+
+**New `server/core` options.** `ADMIN_CONSOLE_ENABLED` / `adminConsoleEnabled`
+(default `true`) serves the console; with it off the routes render a "not
+enabled" notice (and the sign-in routes start no login), so stale links do
+not dead-end. `ADMIN_CONSOLE_PATH` /
+`adminConsolePath` substitutes the console package, the same contract as
+`ACCOUNT_CONSOLE_PATH`: a directory holding a built `dist/` whose
+`index.html` carries the `<!--admin-config-->` marker. The `features` block of
+the public status endpoint (`GET /`) gains `adminConsole`.
+
+**Deliberately gone**: the `authup-admin-console` binary and the published
+Nuxt server bundle. `@authup/client-admin-console` ships `dist/` only. The
+bundle stays hostable on a static host of your own, on its own origin; see
+[Admin Console](./configuration-client-admin-console.md#standalone-hosting).
+
+Sign-in changed as well and needs no action. Served from the API's origin, the
+console authenticates with the same opaque `HttpOnly` session cookie the
+account console uses (`GET /admin/login` and `GET /admin/callback` against the
+per-realm `admin-console` client), so no OAuth2 token reaches the browser's
+JavaScript. Hosted standalone on a foreign origin it keeps the browser-side
+authorization-code flow with PKCE.
+
 ### Token introspection requires authorization
 
 `POST /token/introspect` (and its `GET` form) now answers `401` to a request

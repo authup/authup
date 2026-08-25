@@ -93,6 +93,7 @@ describe('src/http/controllers/workflows/account (SPA shell)', () => {
         ]);
         expect(Object.keys(config.features).sort()).toEqual([
             'accountConsole',
+            'adminConsole',
             'emailVerification',
             'passwordRecovery',
             'registration',

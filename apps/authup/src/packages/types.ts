@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PackageID } from './constants';
+import type { LaunchablePackageID } from './constants';
 
 export type PackageEntrypoint = {
     type: 'node',
@@ -27,6 +27,10 @@ export type PackageProcessArgv = {
 };
 
 export type LaunchPlan = {
-    packages: `${PackageID}`[],
+    packages: LaunchablePackageID[],
+    /**
+     * Deprecation notices for selectors that are accepted but launch nothing.
+     */
+    warnings: string[],
     commandArgs: string[],
 };

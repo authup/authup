@@ -6,7 +6,7 @@
  */
 
 import { Client as HTTPClient } from '@authup/core-http-kit';
-import { CLIENT_ACCOUNT_CONSOLE_NAME } from '@authup/core-kit';
+import { CLIENT_ACCOUNT_CONSOLE_NAME, CLIENT_ADMIN_CONSOLE_NAME } from '@authup/core-kit';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
 import {
     afterAll,
@@ -32,8 +32,32 @@ import { TestCookieJar, createFakeUser, httpRequest } from '../../../../../utils
  *
  * It runs through a real cookie jar rather than echoing `set-cookie` back by
  * hand, so a wrongly scoped cookie fails here instead of in a browser.
+ *
+ * Both consoles ride the same ConsoleLogin, bound to their own client and
+ * path segment (plan 081), so the matrix runs once per console. They differ
+ * in where a refusal lands: the admin console's root is a logged-in page
+ * whose guard would drop the error marker, so it lands on /admin/login.
  */
-describe('account console session', () => {
+const CONSOLES = [
+    {
+        name: 'account',
+        segment: 'account',
+        clientName: CLIENT_ACCOUNT_CONSOLE_NAME,
+        refusal: '/account',
+    },
+    {
+        name: 'admin',
+        segment: 'admin',
+        clientName: CLIENT_ADMIN_CONSOLE_NAME,
+        refusal: '/admin/login',
+    },
+];
+
+describe.each(CONSOLES)('$name console session', ({
+    segment, 
+    clientName, 
+    refusal, 
+}) => {
     const suite = createTestApplication();
 
     const jar = new TestCookieJar();
@@ -77,16 +101,16 @@ describe('account console session', () => {
 
         // 1) the kick: PKCE + state are minted server-side and parked behind
         //    a short-lived login cookie.
-        const kick = await request('GET', `/account/login?realmId=${realm.id}`, { redirect: 'manual' });
+        const kick = await request('GET', `/${segment}/login?realmId=${realm.id}`, { redirect: 'manual' });
         expect(kick.status).toEqual(302);
         expect(jar.get(CONSOLE_LOGIN_COOKIE)).toBeDefined();
 
         const authorizeURL = new URL(kick.headers.get('location') as string);
         expect(authorizeURL.pathname).toEqual('/authorize');
-        expect(authorizeURL.searchParams.get('client_id')).toEqual(CLIENT_ACCOUNT_CONSOLE_NAME);
+        expect(authorizeURL.searchParams.get('client_id')).toEqual(clientName);
         expect(authorizeURL.searchParams.get('realm_id')).toEqual(realm.id);
         expect(authorizeURL.searchParams.get('code_challenge_method')).toEqual('S256');
-        expect(authorizeURL.searchParams.get('redirect_uri')).toEqual(`${publicOrigin}/account/callback`);
+        expect(authorizeURL.searchParams.get('redirect_uri')).toEqual(`${publicOrigin}/${segment}/callback`);
 
         const state = authorizeURL.searchParams.get('state') as string;
 
@@ -101,7 +125,7 @@ describe('account console session', () => {
 
         const authorized = await userClient.authorize.confirm({
             response_type: OAuth2AuthorizationResponseType.CODE,
-            client_id: CLIENT_ACCOUNT_CONSOLE_NAME,
+            client_id: clientName,
             realm_id: realm.id,
             redirect_uri: authorizeURL.searchParams.get('redirect_uri') as string,
             scope: authorizeURL.searchParams.get('scope') as string,
@@ -115,13 +139,13 @@ describe('account console session', () => {
 
         // 3) the redemption. Nothing token-shaped reaches the browser: the
         //    pair is exchanged, verified and revoked inside the request.
-        const callback = await request('GET', `/account/callback?code=${code}&state=${state}`, {
+        const callback = await request('GET', `/${segment}/callback?code=${code}&state=${state}`, {
             redirect: 'manual',
             headers: { 'sec-fetch-site': 'same-origin' },
         });
 
         expect(callback.status).toEqual(302);
-        expect(callback.headers.get('location')).toEqual('/account');
+        expect(callback.headers.get('location')).toEqual(`/${segment}`);
 
         // The response carries TWO set-cookie headers (the spent login cookie
         // is cleared alongside), so the flags are read off the session
@@ -206,9 +230,9 @@ describe('account console session', () => {
             },
             body: JSON.stringify({
                 response_type: OAuth2AuthorizationResponseType.CODE,
-                client_id: CLIENT_ACCOUNT_CONSOLE_NAME,
+                client_id: clientName,
                 realm_id: realm.id,
-                redirect_uri: `${publicOrigin}/account/callback`,
+                redirect_uri: `${publicOrigin}/${segment}/callback`,
             }),
         });
         expect(issuance.status).toEqual(401);
@@ -255,17 +279,17 @@ describe('account console session', () => {
 
         const { data: realm } = await suite.client.realm.getOne('master');
 
-        const kick = await httpRequest(suite, 'GET', `/account/login?realmId=${realm.id}`, { redirect: 'manual' });
+        const kick = await httpRequest(suite, 'GET', `/${segment}/login?realmId=${realm.id}`, { redirect: 'manual' });
         foreign.store(kick);
 
         const state = new URL(kick.headers.get('location') as string).searchParams.get('state') as string;
 
-        const callback = await httpRequest(suite, 'GET', `/account/callback?code=whatever&state=${state}`, {
+        const callback = await httpRequest(suite, 'GET', `/${segment}/callback?code=whatever&state=${state}`, {
             redirect: 'manual',
             headers: {
                 // what a sibling subdomain sends, never `same-origin`
                 'sec-fetch-site': 'same-site',
-                cookie: foreign.header('/account/callback') as string,
+                cookie: foreign.header(`/${segment}/callback`) as string,
             },
         });
 
@@ -276,33 +300,33 @@ describe('account console session', () => {
         const { data: realm } = await suite.client.realm.getOne('master');
 
         const local = new TestCookieJar();
-        const kick = await httpRequest(suite, 'GET', `/account/login?realmId=${realm.id}`, { redirect: 'manual' });
+        const kick = await httpRequest(suite, 'GET', `/${segment}/login?realmId=${realm.id}`, { redirect: 'manual' });
         local.store(kick);
 
-        const mismatched = await httpRequest(suite, 'GET', '/account/callback?code=whatever&state=not-the-state', {
+        const mismatched = await httpRequest(suite, 'GET', `/${segment}/callback?code=whatever&state=not-the-state`, {
             redirect: 'manual',
             headers: {
                 'sec-fetch-site': 'same-origin',
-                cookie: local.header('/account/callback') as string,
+                cookie: local.header(`/${segment}/callback`) as string,
             },
         });
 
         expect(mismatched.status).toEqual(302);
-        expect(mismatched.headers.get('location')).toEqual('/account?error=invalid_request');
+        expect(mismatched.headers.get('location')).toEqual(`${refusal}?error=invalid_request`);
 
         // the pending login survived: a second tab's callback must not burn it
         const state = new URL(kick.headers.get('location') as string).searchParams.get('state') as string;
-        const matched = await httpRequest(suite, 'GET', `/account/callback?code=whatever&state=${state}`, {
+        const matched = await httpRequest(suite, 'GET', `/${segment}/callback?code=whatever&state=${state}`, {
             redirect: 'manual',
             headers: {
                 'sec-fetch-site': 'same-origin',
-                cookie: local.header('/account/callback') as string,
+                cookie: local.header(`/${segment}/callback`) as string,
             },
         });
 
         // consumed now, and refused for the bogus code rather than for a
         // missing pending login
         expect(matched.status).toEqual(302);
-        expect(matched.headers.get('location')).toEqual('/account?error=invalid_grant');
+        expect(matched.headers.get('location')).toEqual(`${refusal}?error=invalid_grant`);
     });
 });

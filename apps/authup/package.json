@@ -58,7 +58,6 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/client-admin-console": "^1.0.0-beta.63",
         "@authup/errors": "^1.0.0-beta.63",
         "@authup/kit": "^1.0.0-beta.63",
         "@authup/server-core": "^1.0.0-beta.63",

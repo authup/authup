@@ -11,16 +11,13 @@ export type ServerCoreSectionConfig = {
     publicUrl?: string,
 };
 
-export type ClientAdminConsoleSectionConfig = {
-    port?: number,
-    host?: string,
-    apiUrl?: string,
-    cookieDomain?: string,
-};
-
 export type LauncherConfig = {
     serverCore: ServerCoreSectionConfig,
-    clientAdminConsole: ClientAdminConsoleSectionConfig,
+    /**
+     * Deprecation notices for sections that are read but have no effect
+     * (`client.admin-console`, see plan 081).
+     */
+    warnings: string[],
 };
 
 export type LauncherConfigReadOptions = {

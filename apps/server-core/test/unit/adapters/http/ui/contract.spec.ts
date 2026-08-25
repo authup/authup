@@ -120,11 +120,37 @@ describe('adapters/http/ui (console package contracts)', () => {
     describe('account console', () => {
         it('should accept a shell carrying the config marker', async () => {
             const root = createAccountConsolePackage(
-                `<html><head>${ACCOUNT_CONSOLE_CONFIG_MARKER}</head><body></body></html>`,
+                `<html><head>${ACCOUNT_CONSOLE_CONFIG_MARKER}</head><body><script src="/account/assets/index.js"></script></body></html>`,
             );
 
             await expect(bindConsolePackages({ accountConsolePath: root }))
                 .resolves.toBeUndefined();
+        });
+
+        it('should reject a shell built with another vite base', async () => {
+            // The serving side rebases hrefs from, and mounts assets under,
+            // the fixed base; a bundle built for `/` serves and then 404s
+            // every asset: a blank console with no error anywhere.
+            const root = createAccountConsolePackage(
+                `<html><head>${ACCOUNT_CONSOLE_CONFIG_MARKER}</head><body><script src="/assets/index.js"></script></body></html>`,
+            );
+
+            await expect(bindConsolePackages({ accountConsolePath: root }))
+                .rejects.toThrow(/not built with the vite base "\/account\/"/);
+        });
+
+        it('should apply the same contract to the admin console', async () => {
+            const root = createAccountConsolePackage(
+                '<html><head><!--admin-config--></head><body><script src="/admin/assets/index.js"></script></body></html>',
+            );
+
+            await expect(bindConsolePackages({ adminConsolePath: root }))
+                .resolves.toBeUndefined();
+
+            const wrong = createAccountConsolePackage('<html><head></head><body></body></html>');
+
+            await expect(bindConsolePackages({ adminConsolePath: wrong }))
+                .rejects.toThrow(/carries no <!--admin-config--> marker/);
         });
 
         it('should reject a shell without the config marker', async () => {

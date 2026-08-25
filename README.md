@@ -59,22 +59,17 @@ How Authup can be configured and set up in detail, you can find out [here](https
 
 The **recommended** and optimal way to set up authup is using docker.
 
-To run the backend application with default settings on http://localhost:3001/, execute the following command:
+One container runs the whole deployment. To start it with default settings on http://localhost:3001/, execute the following command:
 
 ```shell
 $ docker run \
   -v authup:/var/lib/authup \
   -p 3001:3000 \
+  -e PUBLIC_URL=http://localhost:3001 \
   authup/authup:latest server/core start
 ```
 
-To run the frontend application with default settings on http://localhost:3000/, execute the following command:
-
-```shell
-$ docker run \
-  -p 3000:3000 \
-  authup/authup:latest client/admin-console start
-```
+That service also serves the admin console at http://localhost:3001/admin and the account console at http://localhost:3001/account.
 
 #### Bare Metal
 
@@ -87,9 +82,10 @@ $ npx authup@latest start
 
 To find out how to configure and set up the bare metal variant in detail, click here.
 
-This will launch the following application with default settings:
-- Frontend Application: `http://localhost:3000/`
+This will launch the following with default settings:
 - Backend Application: `http://localhost:3001/`
+- Admin Console: `http://localhost:3001/admin`
+- Account Console: `http://localhost:3001/account`
 
 ### Development
 
@@ -103,17 +99,21 @@ $ npm i
 $ npm run build
 ```
 
-**3**. Start frontend & backend in separate terminals
+**3**. Start the backend
 
-**Backend**
 ```shell
 $ npm run cli-dev --workspace=apps/server-core -- start
 ```
 
-**Frontend**
+It serves the admin console at `http://localhost:3001/admin` from that package's built `dist/`.
+
+**4**. To work on the admin console itself, start its dev server in a second terminal
+
 ```shell
-$ npm run dev --workspace=apps/client-admin-console
+$ VITE_API_URL=http://localhost:3001 npm run dev --workspace=apps/client-admin-console
 ```
+
+It listens on `http://localhost:3000/admin/`.
 
 ## Applications
 The repository contains the following runnable applications:
@@ -121,7 +121,7 @@ The repository contains the following runnable applications:
 | Name                              | Type        | Description                                                                                           |
 |-----------------------------------|-------------|-------------------------------------------------------------------------------------------------------|
 | [authup](apps/authup)             | CLI         | A command line interface for interacting with various applications and services within the ecosystem. |
-| [client-admin-console](apps/client-admin-console)     | Application | A Nuxt-based admin console web application.                |
+| [client-admin-console](apps/client-admin-console)     | Application | The admin console: a single-page application served by server-core at `/admin`. |
 | [server-core](apps/server-core)   | Service     | A service that forms the backbone of the server-side ecosystem.                                       |
 
 ## Packages

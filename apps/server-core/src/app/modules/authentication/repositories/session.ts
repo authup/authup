@@ -12,14 +12,13 @@ import { buildCacheKey } from '@authup/server-kit';
 import type { Repository } from 'typeorm';
 import { LessThan } from 'typeorm';
 import { applyQuery, redactFieldConditions } from '../../database/repositories/query.ts';
-import { hashSessionSecret } from '../../../../core/index.ts';
+import { SESSION_EXPIRY_SWEEP_BATCH_SIZE, hashSessionSecret } from '../../../../core/index.ts';
 import type {
     ISessionRepository,
     SessionDeleteExpiredOptions,
     SessionFindManyOptions,
     SessionOwner,
 } from '../../../../core/index.ts';
-import { SESSION_EXPIRY_SWEEP_BATCH_SIZE } from '../../../../core/index.ts';
 import {
     applyRealmScopeSelect,
     deleteInBatches,

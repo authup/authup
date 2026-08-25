@@ -4,7 +4,7 @@ The account console is the end-user self-service surface. It is a
 client-side single-page application (the `@authup/client-account-console`
 package) that `server-core` serves on the IdP origin at
 `<publicUrl>/account` by default. It works in every deployment, including
-headless ones without the admin console, and gives each of your
+ones that run with the admin console disabled, and gives each of your
 applications a stable "Manage account" link target.
 
 It covers:
@@ -46,8 +46,9 @@ password cannot be disconnected: it may be the only way into the account.
 Set a password first.
 
 Administrators see a user's linked accounts on the user detail page of the
-admin console (permissions `identity_provider_account_read` /
-`identity_provider_account_delete`); the API surface is
+[admin console](./configuration-client-admin-console.md) (permissions
+`identity_provider_account_read` / `identity_provider_account_delete`); the
+API surface is
 `GET /identity-provider-accounts` and `DELETE /identity-provider-accounts/:id`,
 self-scoped for callers without the read permission.
 

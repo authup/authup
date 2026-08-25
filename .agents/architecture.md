@@ -729,10 +729,11 @@ into the URL (the reset form asks for email/name).
 
 #### Auth Workflow UI (backend-served SSR pages) + Status Endpoint
 
-Authup can run headless (server-core without client-admin-console), so every auth
-workflow page is served by the SSR auth app (`apps/client-auth-console`,
-resolved and rendered by server-core — plan 083),
-not by client-admin-console:
+Every auth workflow page is served by the SSR auth app
+(`apps/client-auth-console`, resolved and rendered by server-core — plan
+083), never by the admin console, which is an ordinary OAuth2 client of the
+IdP (served by server-core too since plan 081, but with no privileged channel
+into it):
 
 - **Routes**: `/authorize`, `/register`, `/activate`, `/password-forgot`,
   `/password-reset` — each `GET` serves SSR HTML while `POST` on the same
@@ -1195,8 +1196,10 @@ Every realm auto-provisions two public OAuth2 clients (plan 079;
 name constants in `@authup/core-kit`):
 
 - **`admin-console`** (`CLIENT_ADMIN_CONSOLE_NAME`) — authup's own admin
-  console (`apps/client-admin-console`; its login sends `client_id=admin-console`,
-  runtime-overridable via `NUXT_PUBLIC_CLIENT_ID`).
+  console (`apps/client-admin-console`, served by server-core at
+  `<publicUrl>/admin` since plan 081; its server-side login kick sends
+  `client_id=admin-console`, and a standalone-hosted dist can inject another
+  client name through `window.__AUTHUP__.clientId`).
 - **`account-console`** (`CLIENT_ACCOUNT_CONSOLE_NAME`) — the account
   self-service surface served by server-core at `<publicUrl>/account`
   (plan 080; see *Account Console* below).
@@ -1284,7 +1287,10 @@ no new endpoint — the `/authorize` verifier already resolves clients via
   (auth is header-based only, and OAuth2 clients are registered at runtime on
   domains unknown at startup; an explicit allowlist can be set via the
   `middlewareCors` config options). In non-production,
-  `http://localhost:3000` is dev-seeded so client-admin-console works on first run.
+  `http://localhost:3000` is dev-seeded so the admin console's standalone
+  dev server (`npm run dev -w apps/client-admin-console`, vite on :3000)
+  works on first run; the served console at `<publicUrl>/admin` needs no
+  entry, since publicUrl's own origin is always in the set.
 - **Provisioning (`SystemClientProvisioner.ensureForRealm`)** is the single
   upsert mechanism — it loops `SYSTEM_CLIENT_DEFINITIONS` — run two ways and
   sharing the same factory so they can't drift:
@@ -1337,8 +1343,10 @@ a spinner until mounted anyway. server-core depends on the package at
 RUNTIME and serves its built `dist/` ("embedded by default, relocatable by
 choice"):
 
-- **Serving seam** (`adapters/http/ui/account-console/module.ts`, the plan-081 static-SPA
-  pilot): `AccountController` (`@DController('/account')`, `''` +
+- **Serving seam** (`adapters/http/ui/account-console/module.ts`, one
+  `defineStaticConsole` instance — the factory in
+  `adapters/http/ui/static-console/` that the admin console shares, see
+  *Admin Console* below): `AccountController` (`@DController('/account')`, `''` +
   `'/:page'` — client-side routing owns sub-paths, every route returns the
   same shell) calls
   `serveAccountConsolePage(event, { baseURL, features, trustedOrigins })`,
@@ -1692,18 +1700,138 @@ rather than trusted until `exp`.
   frustrate. A key would also have to be global, since the lookup resolves a
   session BY this value and the realm is unknown at that point. Hex SHA-256 is
   exactly the column's 64 characters.
-- **Stage-1 boundary.** `loggedIn`, `usePermissionCheck` and the socket
-  manager all read `accessToken` and stay false / disconnected in cookie
-  mode. The account console reads none of them; Stage 2 (the admin console
-  BFF) cannot proceed without re-deriving all three. The authentication hook
-  being inert means there is no automatic 401 teardown: the console's own
-  `capture()` 401 rule and the router guard's failed-resolve logout cover
-  it. A cache flush signs every console user out of a login in flight (the
+- **Stage 2 (plan 081, 2026-08-25) turned out to be one kit change.** Of
+  the three surfaces that read `accessToken`, only `usePermissionCheck`
+  mattered: its evaluator was already fed from `GET /sessions/@me/introspect`
+  (`commitSession` populates the memory provider tokenlessly), but its
+  recompute WATCH keyed on the token-derived `loggedIn`, which never flips
+  in cookie mode, so every verdict latched at its fail-closed `false`. It
+  now watches `status`, which flips in the same synchronous commit as the
+  permissions in both modes (pinned by
+  `test/unit/core/permission-check/cookie-mode.spec.ts`). `loggedIn` stays
+  `@deprecated` and unchanged (no admin-console consumer left since #3240;
+  its remaining kit consumer is `Authorize.vue`, a bearer-mode page). The
+  socket manager is dormant: `install()` gates it on `options.realtime`,
+  which no consumer sets, and server-core runs no socket.io server. The
+  authentication hook being inert means there is no automatic 401 teardown:
+  each console's own 401 rule and its router guard's failed-resolve logout
+  cover it. A cache flush signs every console user out of a login in flight (the
   session handle itself is durable). A browser that does not send Fetch
   Metadata can never authenticate: the intended fail-closed posture, and a
   support-visible cliff. Standalone cross-origin hosting stays on the
   JS-token path (cross-origin, so applicability fails there), so the two modes
   coexist behind one resolved condition.
+
+### Admin Console (`/admin`, plan 081)
+
+The admin console (`apps/client-admin-console`, `@authup/client-admin-console`)
+left Nuxt on 2026-08-25 and is the second static console server-core serves,
+in the account-console shape: a dist-only Vite/Vue SPA, `src/config.ts`
+resolving `window.__AUTHUP__` (`apiUrl`, `basePath` default `/admin`,
+`clientId` default `admin-console`, `cookieSession`, `features`) with the
+same capability-AND-applicability rule for cookie mode, `src/main.ts` the
+same bootstrap. What differs from the account console, and why:
+
+- **The serving seam is one factory for both.** `defineStaticConsole({
+  packageName, marker, viteBase })` (`adapters/http/ui/static-console/`)
+  returns `{ packageName, marker, setPackagePath, resolveDistPath, serve }`
+  with a PER-INSTANCE dist/html cache: the account module used module-level
+  slots, and a second console sharing them would serve one bundle's shell
+  for the other. `serve(event, { baseURL, config })` takes the already-built
+  config object, so what a console injects stays its own business (the
+  account console's request-reflected `ref`). `bindConsolePackages` reads
+  the marker off the console object (`assertStaticConsoleContract`), so the
+  serving side and the boot-time assert cannot drift. It imports
+  `useRequestTheme` from the middleware FILE, not the barrel: the barrel
+  reaches `assets.ts`, which imports the console modules, which call the
+  factory at load time, and through the barrel that cycle leaves the
+  function undefined.
+- **The login is one class for both.** `ConsoleLogin`
+  (`adapters/http/controllers/workflows/console-login/`) is the plan-088
+  kick + redemption lifted out of `AccountController`, parameterized by
+  `{ clientName, segment, refusalPath? }`: the login cookie is path-scoped
+  to `<base>/<segment>` (so two consoles keep separate logins in flight),
+  the callback URL and the landing URL derive from the segment, and a
+  refusal lands on `refusalPath` relative to the console root. The admin
+  console sets `refusalPath: 'login'`: its root is a logged-in page whose
+  guard would bounce to `/login` and drop the `?error=` marker on the way,
+  so `/admin/login?error=access_denied` is where the notice renders.
+  `AccountController` and `AdminController` (`@DController('/admin')`)
+  both delegate; the `console-session.spec.ts` matrix runs over both.
+- **The shell route is a wildcard.** The console's routes nest
+  (`/users/<id>/roles`), so `AdminController` declares `''` + `'/*page'`
+  (path-to-regexp v8 syntax; routup compiles it) where the account
+  controller's `/:page` matches one segment. `GET /admin/login` does double
+  duty on purpose: with a `realmId` it is the server-side kick, without one
+  it is the SPA's own login page (where the guard sends a signed-out visitor
+  and where a refused callback lands with its `?error=` marker; answering
+  that with the kick's "a realm is required" made every refusal a raw 400).
+  The segment is spelled ONCE, `ADMIN_CONSOLE_SEGMENT`
+  (`adapters/http/ui/admin-console/constants.ts`): the controller mount, the
+  login cookie scope, the callback URL, the asset mount and the vite base
+  all derive from it. Assets are served `immutable` for a year (every name
+  carries a content hash; a new build means new names), for both static
+  consoles. Config keys mirror the account console: `adminConsoleEnabled`
+  (`ADMIN_CONSOLE_ENABLED`, rides `StatusResponseFeatures.adminConsole`; off
+  means off on the SERVER too, the kick and the callback answer the shell
+  with the disabled notice instead of minting a pending login) and
+  `adminConsolePath` (`ADMIN_CONSOLE_PATH`, marker `<!--admin-config-->`,
+  and `bindConsolePackages` additionally requires the shell to reference
+  `/admin/assets/`, since a package built for another vite base serves and
+  then 404s every asset with no error anywhere).
+- **Route meta replaces `definePageMeta`.** `src/router.ts` is an explicit
+  table (one lazy import per page, the `pages/` tree unchanged under
+  `src/pages/`) carrying the former page meta as route `meta`
+  (`requireLoggedIn` / `requireLoggedOut` / `requirePermissions` /
+  `layout`, typed by a `RouteMeta` augmentation). `src/guard.ts`
+  (`createRoutingGuard({ store, config })`, mounted via `router.beforeEach`)
+  is the port of `client-web-nuxt`'s `RoutingInterceptor`: resolve, the
+  bearer-mode code exchange, then the three gates over `route.matched`, so
+  nested children inherit their parent's protection. Two cookie-mode rules
+  come from the account console: a failed or settled-`RESTORING` resolve
+  logs out with `revoke: false` (a transient failure is not an intent to
+  end the server session), and a `?code=` on a client route is never
+  exchanged (the server redeemed it). **The gates never call `logout()`**,
+  unlike the Nuxt interceptor they were ported from: in cookie mode that
+  call is `DELETE /sessions/@me` on the one row every surface on the origin
+  shares, so a Back press onto `/login` after signing in would have signed
+  the user out of the account console too. A signed-in visitor on a
+  logged-out-only route is sent home; a permission denial goes back where
+  the visitor came from, or home when that would loop (denied the route
+  they are on, or arriving from the login page). Chunk-load failures after
+  a redeploy (stale hashed imports) are recovered by `router.onError` /
+  the `vite:preloadError` event with a full load of the target. The post-login destination
+  (`/login?redirect=`) rides a single-use `sessionStorage` stash
+  (`src/redirect.ts`, `authup:admin:redirect`) written before the server
+  kick and popped by the guard on the way back, because the server callback
+  lands on the console root; the value is validated as a site-relative path
+  the same way the callback-URI form is. Standalone hosting keeps the
+  browser-side PKCE flow behind `!cookieSession` (the `redirect` then
+  rides the callback URI's own query as before, #3476).
+- **`<Suspense>` keeps the pages.** `src/App.vue` wraps the layout switch
+  (`route.meta.layout === 'auth'` → `src/layouts/auth.vue`, else
+  `default.vue`) in `<Suspense>` (with a spinner fallback), so the 12 detail
+  pages keep their `async setup()` (Nuxt wrapped every page in one). The
+  bundle's runtime asset URLs (a lazy chunk's stylesheet, the fonts a
+  stylesheet references) are chunk-relative via vite's `renderBuiltUrl` for
+  the `js` and `css` host types, because server-core rebases hrefs in
+  `index.html` only; `admin-pages.spec.ts` refuses the `/admin/` literal
+  in every built js/css file. Their record fetch is a
+  plain `ref(await ...)` in a try/catch that `router.replace`s back to the
+  collection on failure, with `v-if="entity"` on the page root; nested
+  `<RouterView :entity>` forwards attrs and listeners exactly as
+  `<NuxtPage>` did. There is no SSR and no hydration handoff any more: the
+  console renders like Keycloak's and Authentik's (spinner, then rows).
+- **What is gone with the process.** The `authup-admin-console` bin, the
+  nitro `.output`, `postbuild.mjs`, `@vuecs/nuxt` (color mode is the kit's
+  `createColorMode()`, locale `installLocale` over `createCookieRef`), and
+  every `NUXT_PUBLIC_*` / `API_URL` / `COOKIE_DOMAIN` / `CLIENT_ID` variable
+  (no successor: runtime config is injected by the serving side). The
+  `authup` launcher spawns server-core only and answers a
+  `client.admin-console` selector or config section with a warning;
+  `entrypoint.sh client/admin-console` exits 1 with a notice.
+  `@authup/client-web-nuxt` is untouched: it stays the Nuxt integration for
+  downstream apps (hub), which keep their own origin and the JS-token store.
 
 ### File Structure
 
@@ -1759,9 +1887,12 @@ adapters/http/controllers/workflows/
   password-forgot/module.ts         — PasswordForgotController → IPasswordRecoveryService (POST API + GET serves SSR page)
   password-reset/module.ts          — PasswordResetController → IPasswordRecoveryService (POST API + GET serves SSR page)
   status/module.ts                  — StatusController (GET / → version + feature flags)
-  account/module.ts                 — AccountController: serves the account console SPA shell AND owns its
-                                      server-side login (plan 088): GET /account/login (kick), /callback
-                                      (redemption + session cookie), GET+DELETE /sessions/@me
+  account/module.ts                 — AccountController: serves the account console SPA shell and declares
+                                      its login routes, GET /account/login (kick) + /callback (redemption)
+  admin/module.ts                   — AdminController: the same for the admin console at /admin (plan 081),
+                                      with a wildcard shell route for the console's nested routes
+  console-login/module.ts           — ConsoleLogin: the plan-088 kick + redemption both controllers delegate
+                                      to, parameterized by client name, path segment and refusal path
 
 adapters/http/ui/                   — one folder per served console + shared serving helpers
   shared/html.ts                    — readUIClientPreferences (locale/color-mode cookies), stampHtmlAttributes,
@@ -1775,7 +1906,11 @@ adapters/http/ui/                   — one folder per served console + shared s
   auth-console/resolve.ts           — resolveAuthConsolePackagePath/-DistPath (locter locateUp resolution of @authup/client-auth-console)
   auth-console/serve.ts             — serveWorkflowPage (workflow GET payload assembly + open-redirect guard)
   auth-console/http-client.ts       — createInternalUIHttpClient (SSR self-call loopback transport)
-  account-console/module.ts         — resolveAccountConsoleDistPath + serveAccountConsolePage (config marker injection)
+  static-console/module.ts          — defineStaticConsole({ packageName, marker, viteBase }): the per-console
+                                      serving closure (own dist/html cache; marker splice, attr stamping, asset
+                                      rebase, theme, headers) both static consoles are built on
+  account-console/module.ts         — accountConsole instance + serveAccountConsolePage (adds the validated ref)
+  admin-console/module.ts           — adminConsole instance + serveAdminConsolePage
   theme/contract/                   — what a theme IS: PORTABLE, no node/http imports (only validup+zod+errors),
                                       so a browser theme editor or a CLI validator can share it verbatim. This
                                       folder is the extraction boundary for the planned @authup/theme-kit.
@@ -1930,12 +2065,13 @@ middleware, and leaves both pages byte-identical.
   `UI_HTTP_CLIENT_FACTORY_STORE_KEY`), not module-scope state, so two
   applications in one process never share a theme.
 
-### Console substitution (`authConsolePath` / `accountConsolePath`)
+### Console substitution (`authConsolePath` / `accountConsolePath` / `adminConsolePath`)
 
-Theming cannot change markup. `authConsolePath` (`AUTH_CONSOLE_PATH`) and
-`accountConsolePath` (`ACCOUNT_CONSOLE_PATH`) point at package directories
-consulted BEFORE the locter `node_modules` walk, so replacing a console no
-longer means mounting over a workspace symlink.
+Theming cannot change markup. `authConsolePath` (`AUTH_CONSOLE_PATH`),
+`accountConsolePath` (`ACCOUNT_CONSOLE_PATH`) and `adminConsolePath`
+(`ADMIN_CONSOLE_PATH`) point at package directories consulted BEFORE the
+locter `node_modules` walk, so replacing a console no longer means mounting
+over a workspace symlink.
 
 `bindConsolePackages` (`adapters/http/ui/contract.ts`, called from
 `HTTPModule.setup` before any route mounts) asserts the contract — but
@@ -1948,9 +2084,10 @@ runtime value alongside `render()` (missing = version 1; version 2 added the
 federated callback's interstitial route and payload, version 3 the
 `federatedLogin` payload the page must redeem. Plan 094 stopped server-core
 rendering the interstitial route, but the floor only rises. The history lives
-in `src/contract.ts`); the account
-console's contract is the `<!--account-config-->` marker, whose absence
-silently degrades the SPA to same-origin API derivation. **Fail-closed**,
+in `src/contract.ts`); a static console's contract is its config marker
+(`<!--account-config-->`, `<!--admin-config-->`, read off the
+`defineStaticConsole` instance), whose absence silently degrades the SPA to
+same-origin API derivation. **Fail-closed**,
 unlike the theme: a replacement owns the prompt ladder, PKCE/`state`
 handling, MFA ordering and `redirectUriVerified` gating, so drift must stop
 the container rather than render subtly wrong auth pages.
@@ -2461,7 +2598,7 @@ Include authorization*.
 
 ## Deployment Topology & UI Boundary (plan 078)
 
-Two runtime services. **server-core is the IdP origin** — the OAuth2/OIDC
+One runtime service since plan 081. **server-core is the IdP origin** — the OAuth2/OIDC
 protocol surface plus the hosted SSR auth pages (`/authorize`, `/register`,
 `/activate`, `/password-forgot`, `/password-reset` and `/logout`).
 Those pages
@@ -2486,30 +2623,30 @@ standalone-hosting question stays rejected):
   pages are the render half of the API surface.
 - **Mail deep links** (`/activate?token=…`, `/password-reset?token=…`) land on
   these pages.
-- **Headless deployments** (server-core without client-admin-console) still need every
+- **Headless deployments** (`ADMIN_CONSOLE_ENABLED=false`) still need every
   auth workflow to be usable.
 
 This split is cohort-universal: Keycloak, Authentik, Zitadel, Casdoor and Dex
 all serve login/consent from the IdP origin.
 
-**client-admin-console is an ordinary OAuth2 RP** — an admin console authenticating via
-auth-code + PKCE against the per-realm public `admin-console` client (plan 079;
+**client-admin-console is an ordinary OAuth2 client of the IdP** — it
+authenticates against the per-realm public `admin-console` client (plan 079;
 downstream kit apps register their own clients — plan 082 removed the shared
-`web` client), with no privileged
-channel into server-core. It is deliberately NOT merged into server-core
-today. The recorded long-term endpoint — deferred until after the planned
-server+worker split — is folding the admin UI into server-core as a **static
-SPA**; any future consolidation discussion starts from
-`.agents/plans/078-runtime-topology-and-config.md`.
+`web` client) with no privileged channel into server-core, and since plan 081
+server-core SERVES it as a static SPA at `<publicUrl>/admin` (see *Admin
+Console*), the endpoint plan 078 recorded. Same-origin is what let plan 088
+Stage 2 apply the account console's cookie credential to it with no BFF.
 
-**Process topology:** containers with one service each (docker /
-docker-compose) are the production topology. The `authup` CLI is the
-bare-metal / quickstart **supervisor**: it spawns server-core and client-admin-console
-as child processes with full environment passthrough plus per-child
-`PORT`/`HOST` and `NUXT_PUBLIC_API_URL` overrides derived from the
-multi-section config file, forwards SIGINT/SIGTERM to the children, and exits
-with the first-failing child's exit code; `migration` / `healthcheck` forward
-to server-core only. The launcher knows nothing about the worker role below.
+**Process topology:** one container running `server/core start` (plus the
+optional `server/core worker`) is the production topology. The `authup` CLI is
+the bare-metal / quickstart **supervisor**: it spawns server-core as a child
+process with full environment passthrough plus a `PORT`/`HOST` override
+derived from the `server.core` config section (so an ambient `PORT` never
+decides the listen address), forwards SIGINT/SIGTERM, and exits with the
+child's exit code; `migration` / `healthcheck` forward to it. A
+`client.admin-console` selector or config section is accepted for an existing
+invocation's sake and answered with a warning. The launcher knows nothing
+about the worker role below.
 
 **The worker role (plans 095/096/097)** is the same binary and the same image,
 started as `authup-server worker` (container: `server/core worker`). It is
@@ -2539,10 +2676,12 @@ fallbacks) on every CLI command; lookup defaults to the process cwd,
 overridable via `--configDirectory` / `--configFile`, and environment
 variables always beat file values.
 
-**Unsupported:** sharing one `COOKIE_DOMAIN` between client-admin-console and the
-hosted auth pages — both surfaces embed the kit store under identical cookie
-names, so a widened cookie domain has the two apps clobbering each other's
-session cookies. The same-ORIGIN variant of this collision — a host
+**Unsupported:** sharing one cookie domain between a standalone-hosted
+console (or a downstream kit app on its own origin) and the hosted auth
+pages — both surfaces embed the kit store under identical cookie names, so a
+widened cookie domain has the two apps clobbering each other's session
+cookies. The served consoles are same-origin and hold no token cookies at
+all (cookie mode), so the question does not arise for them. The same-ORIGIN variant of this collision — a host
 application at `/` embedding authup under a sub-path — is defused by the
 consoles scoping their cookies to the base path (see *Account Console →
 Session cookies are scoped to the deployment base path*); the residual
@@ -2894,9 +3033,12 @@ returns no id_token) rather than clearing it; to keep that retain safe,
 mirroring `exchangeAuthorizationCode` — so a stale id_token can never survive
 onto a newly-authenticated user (plan 047.3). This gives every kit RP an
 `id_token_hint` to pass to the `end_session_endpoint` — without it they all
-degrade to the click-gated confirm page. `apps/client-admin-console/pages/logout.vue`
-uses it: the page deliberately does **not** set `REQUIRED_LOGGED_OUT` (that meta
-makes the routing interceptor run `store.logout()` before the page's setup,
+degrade to the click-gated confirm page. `apps/client-admin-console/src/pages/logout.vue`
+uses it on the standalone (JS-token) path; served by server-core the console
+is in cookie mode, holds no id_token, and signs out through
+`store.logout()` = `DELETE /sessions/@me` like the account console. The page
+deliberately does **not** carry `requireLoggedOut` route meta (that meta
+makes the routing guard run `store.logout()` before the page's setup,
 discarding the id_token), captures `idToken`/`realmId` on mount, runs the
 local-only `store.logout()`, then hard-redirects to
 `buildEndSessionURL({ baseURL, idTokenHint, realmId,
@@ -4056,12 +4198,12 @@ cases in `user.spec.ts`. When adding a per-row gate to a new
 `getMany`, wire `applyRealmScopeSelect` into its adapter with every column the
 gate reads.
 
-**UI:** three surfaces backed by the kit `<ASessions>` collection: the top-level admin pages `apps/client-admin-console/pages/sessions/` (list of every session the actor's realm reach permits, subject names via the gated `include=user,client` — the session schema's `relations.allowed` is `['realm', 'user', 'client']`, each include gated by the #3295 relations read gate on the target's read permission — plus a `/sessions/:id` detail page rendering the session's `auth_session_tokens` inventory through the kit `<ASessionTokens>` collection over `GET /session-tokens?filter[sessionId]=…`), `apps/client-account-console/src/pages/sessions.vue` (the actor's **own**
+**UI:** three surfaces backed by the kit `<ASessions>` collection: the top-level admin pages `apps/client-admin-console/src/pages/sessions/` (list of every session the actor's realm reach permits, subject names via the gated `include=user,client` — the session schema's `relations.allowed` is `['realm', 'user', 'client']`, each include gated by the #3295 relations read gate on the target's read permission — plus a `/sessions/:id` detail page rendering the session's `auth_session_tokens` inventory through the kit `<ASessionTokens>` collection over `GET /session-tokens?filter[sessionId]=…`), `apps/client-account-console/src/pages/sessions.vue` (the actor's **own**
 sessions, `filter: { userId }`, each session card expandable into its own
 `<ASessionTokens>` inventory — application, kind, created/expires, status;
 deliberately no per-token ip/user-agent, since server-side renderer refreshes
 stamp values like `node` that would read as an unknown device to an end
-user), and `apps/client-admin-console/pages/users/[id]/sessions.vue` (a `<VCTable>`
+user), and `apps/client-admin-console/src/pages/users/[id]/sessions.vue` (a `<VCTable>`
 page for an admin viewing a user's sessions; each row links to the
 `/sessions/:id` detail page). **Session-token reads carry a client SUMMARY
 unconditionally** (id / name / displayName, joined by the repository adapter —
@@ -4711,7 +4853,7 @@ Authenticators tab (`apps/client-account-console/src/pages/authenticators.vue`,
 `@me`; the sibling Password tab is a separate page,
 `apps/client-account-console/src/pages/password.vue`) and an admin
 Authenticators tab
-(`apps/client-admin-console/pages/users/[id]/authenticators.vue`, gated on
+(`apps/client-admin-console/src/pages/users/[id]/authenticators.vue`, gated on
 `USER_AUTHENTICATOR_READ`). i18n:
 `MFA_*` (`authupClient`) + `AUTHENTICATOR`/`MFA_SECURITY_*` (`authupApp`), ×4
 locales. Kit test `test/unit/components/workflows/mfa-challenge.spec.ts`.
@@ -4880,7 +5022,7 @@ hub lacks: a **closed taxonomy** (`EventName`/`EventScope` enums in
   auto-provisions via `Object.values(PermissionName)`:
   `admin` = `any`, `realm_admin` = `ownOrNull` (deliberately NOT in the OWN
   override list). Typed client: `client.event.getMany/getOne`.
-- **Admin UI:** `apps/client-admin-console/pages/events/` — a read-only list page
+- **Admin UI:** `apps/client-admin-console/src/pages/events/` — a read-only list page
   (`index.vue` + `index/index.vue`; kit collection `<AEvents>`
   (`EntityType.EVENT`, no server-side subscriber — the socket subscription is
   inert, same as sessions) rendering a `<VCTable>` with name/scope, ref,
@@ -5007,14 +5149,15 @@ integration are worth knowing before editing UI code:
 
 ### What the kit store persists (and what it deliberately does not)
 
-The store's cookies are the SSR transport, not a storage preference: the admin
-console is the one surface that reads them server-side
-(`client-web-nuxt`'s kit plugin wires `cookieGet` to Nuxt's `useCookie`, which
-parses the request header), so its routing interceptor can await
-`store.resolve()` during the render. The auth console passes no cookie
+The store's cookies are the SSR transport, not a storage preference: a Nuxt
+consumer on `@authup/client-web-nuxt` (hub; the admin console was one until
+plan 081) reads them server-side (the kit plugin wires `cookieGet` to Nuxt's
+`useCookie`, which parses the request header), so its routing interceptor can
+await `store.resolve()` during the render. The auth console passes no cookie
 functions, so its server-side `useCookies()` fallback finds no `document` and
-reads nothing; the account console never server-renders. `localStorage` cannot
-replace any of this, because the server never sees it.
+reads nothing; the account and admin consoles never server-render, and served
+by server-core they hold no token cookies at all (cookie mode). `localStorage`
+cannot replace any of this, because the server never sees it.
 
 Persisted: the three tokens, the access-token expire date, and
 `realm_management`. Everything else is derived by `resolve()`, which
@@ -5354,9 +5497,10 @@ owns one seam and stays framework-agnostic; each host supplies the bucket:
   loads at all**, because the response could not reach the client and firing it would
   only waste a round trip (the pre-#2773 behaviour: every collection fired a
   request during SSR whose result was discarded when the render flushed).
-- **Hosts.** `apps/client-admin-console` wires it in the `authup:kit` Nuxt plugin over
-  `nuxtApp.payload.data` (the same bucket `useAsyncData` transports through);
-  `apps/client-auth-console` wires it over `HydrationPayload.hydration`, which
+- **Hosts.** A Nuxt consumer on `@authup/client-web-nuxt` (hub; the admin
+  console was one until plan 081) gets it from the `authup:kit` Nuxt plugin
+  over `nuxtApp.payload.data` (the same bucket `useAsyncData` transports
+  through); `apps/client-auth-console` wires it over `HydrationPayload.hydration`, which
   works because `createWindowPayloadHTML(ctx.payload)` runs *after*
   `renderToString` (`apps/client-auth-console/src/server.ts`), so writes
   during the render still
@@ -5412,21 +5556,23 @@ owns one seam and stays framework-agnostic; each host supplies the bucket:
   across users. Pinned by *never adopts an existing entry while rendering on
   the server* in `entity-collection-hydration.spec.ts`. The payload is exactly
   as sensitive as the HTML it travels in, so an authenticated page must never
-  be served from a shared cache (no `swr` / `isr` route rules, which is why
-  client-admin-console sets none).
-- **Detail pages.** `apps/client-admin-console/pages/<entity>/[id].vue` fetch through
-  ``useAsyncData(`<entity>:${id}`, ...)`` rather than a bare `await` in
-  `setup()`, which is what made every record fetch run twice (once server-side,
-  once again on hydration). The `data` ref is cast to `Ref<Entity>` after the
-  not-found redirect, so the rest of each page is unchanged.
+  be served from a shared cache (no `swr` / `isr` route rules).
+- **The admin console no longer participates.** Since plan 081 it is a
+  client-only SPA: no server render, so the kit performs no server-side
+  loads for it and nothing is handed over. Its detail pages
+  (`apps/client-admin-console/src/pages/<entity>/[id].vue`) fetch their
+  record with a plain `ref(await ...)` in an `async setup()` under the
+  app-level `<Suspense>`; the `useAsyncData` dedupe this section used to
+  describe is moot without a server pass.
 
-Verified end to end in a browser (CDP): `/users` renders its rows server-side,
-the client issues **no** collection request on hydration, and Vue reports no
-hydration mismatch.
+Verified end to end in a browser (CDP) while the admin console was still
+server-rendered: `/users` rendered its rows server-side, the client issued
+**no** collection request on hydration, and Vue reported no hydration
+mismatch. That is the behaviour a downstream Nuxt consumer still gets.
 
 ### Table usage
 
-All 9 entity index pages (`apps/client-admin-console/pages/<entity>/index/index.vue`)
+All 9 entity index pages (`apps/client-admin-console/src/pages/<entity>/index/index.vue`)
 use `<VCTable>` directly with `:data="props.data"` + `:columns="columns"`.
 Per-cell rendering flows through the `#cell-<key>` template slots that
 `<VCTable>`'s auto-render path dispatches onto each `<VCTableCell>`
@@ -5476,14 +5622,14 @@ equivalents:
   typing for `cell-<key>` / `header-<key>`)
 - `useToast()` from bvnext → `useToast()` from `@vuecs/overlays`,
   via the thin wrapper in
-  `apps/client-admin-console/composables/toast.ts` that preserves the
+  `apps/client-admin-console/src/composables/toast.ts` that preserves the
   `toast.show('msg')` / `toast.show({ variant, body })` calling shape
 - `BOrchestrator` → `<VCToaster position="top-center" />`
-  mounted in `apps/client-admin-console/components/footer.vue`
+  mounted in `apps/client-admin-console/src/components/footer.vue`
 - `BDropdownItem` (opportunistic fallback in `<AEntityDelete>`) →
   `<VCDropdownMenuItem>` resolved via `app.component(...)` lookup
 - `createBootstrap` → not needed; `app.use(vuecs, ...)` configures
-  vuecs in `apps/client-admin-console/plugins/vuecs.ts` (the old
+  vuecs in `apps/client-admin-console/src/main.ts` (the old
   `plugins/bootstrap.ts` was deleted)
 
 ### Tailwind v4 migration
@@ -5499,9 +5645,9 @@ new `@authup/client-web-theme` package.
   `tailwindcss`, `@vuecs/design` (concrete OKLCH tokens),
   `@vuecs/theme-tailwind` (Tailwind ↔ vc-color rebind). Consumers register
   one theme: `app.use(vuecs, { themes: [authupTheme()] })`.
-- **Tailwind v4** — wired via `@tailwindcss/vite` in both
-  `apps/client-admin-console/nuxt.config.ts` (`vite.plugins`) and
-  `apps/client-auth-console/vite.config.ts`. v3 is not supported because
+- **Tailwind v4** — wired via `@tailwindcss/vite` in every console's
+  `vite.config.ts` (`apps/client-admin-console`, `apps/client-account-console`,
+  `apps/client-auth-console`). v3 is not supported because
   theme-tailwind uses `@theme` and `--color-*` rebinds.
 - **Bootstrap-compat layer — fully retired.** The `@layer components`
   block in `packages/client-web-theme/assets/css/index.css` used to
@@ -5594,9 +5740,9 @@ new `@authup/client-web-theme` package.
   - Browser minimums: Chrome 111+, Safari 16.4+, Firefox 128+. v4
     drops the older fallbacks v3 carried.
 - **Plugin install order** — the theme manager is still
-  first-install-wins; `apps/client-admin-console/plugins/vuecs.ts` keeps its
-  `name: 'vuecs'` declaration, and `vuecs-navigation.ts` still
-  `dependsOn: ['vuecs']`. Per-package plugins (`installForms`,
+  first-install-wins; the consoles sequence the installs by hand in their
+  bootstrap (`src/main.ts`), a Nuxt consumer keeps a `name: 'vuecs'`
+  plugin for its siblings to `dependsOn`. Per-package plugins (`installForms`,
   `installPagination`, ...) still install AFTER
   `app.use(vuecs, ...)`. The trap is unchanged from the
   theme-bootstrap days — only the consequence-text changes

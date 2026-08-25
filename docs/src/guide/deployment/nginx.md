@@ -5,9 +5,12 @@ we need to create a new file (e.g. `app`) in the directory `/etc/nginx/sites-ena
 ::: warning Info
 Don't forget to replace the placeholders with the actual values:
 - `[DOMAIN]` Domain name (e.g. app.example.com)
-- `[CLIENT_ADMIN_CONSOLE_PORT]`: Port of the admin console application.
 - `[SERVER_CORE_PORT]`: Port of the server core application.
 :::
+
+There is one upstream. `server/core` serves the API and both consoles (the
+admin console at `/admin`, the account console at `/account`), so nothing has
+to be routed by path.
 
 ```txt
 map $sent_http_content_type $expires {
@@ -35,19 +38,6 @@ server {
         proxy_set_header X-Real-IP          $remote_addr;
         proxy_set_header X-Forwarded-For    $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto  $scheme;
-        proxy_read_timeout          1m;
-        proxy_connect_timeout       1m;
-        proxy_pass                          http://127.0.0.1:[CLIENT_ADMIN_CONSOLE_PORT];
-    }
-    
-    location /api/ {
-        rewrite ^/api(/.*)$ $1 break;
-
-        proxy_redirect                      off;
-        proxy_set_header Host               $host;
-        proxy_set_header X-Real-IP          $remote_addr;
-        proxy_set_header X-Forwarded-For    $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto  $scheme;
         # Clear the client-certificate header so a public request can never
         # spoof it. Only a trusted mTLS location (see below) may set it.
         proxy_set_header X-Forwarded-Tls-Client-Cert "";
@@ -57,6 +47,33 @@ server {
     }
 }
 ```
+
+## Sub-path deployment
+
+Authup can live under a path prefix of a larger site. Strip the prefix in the
+proxy and tell authup its public address, so the consoles rebase their asset
+URLs and links onto it:
+
+```nginx
+location /auth/ {
+    rewrite ^/auth(/.*)$ $1 break;
+
+    proxy_set_header Host               $host;
+    proxy_set_header X-Real-IP          $remote_addr;
+    proxy_set_header X-Forwarded-For    $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto  $scheme;
+    proxy_set_header X-Forwarded-Tls-Client-Cert "";
+    proxy_pass                          http://127.0.0.1:[SERVER_CORE_PORT];
+}
+```
+
+```dotenv
+PUBLIC_URL=https://[DOMAIN]/auth
+```
+
+The consoles are then reachable at `https://[DOMAIN]/auth/admin` and
+`https://[DOMAIN]/auth/account`. Session cookies are scoped to the prefix, so
+an application of your own on the same origin is left alone.
 
 ## Certificate
 
@@ -122,7 +139,7 @@ server {
 If ordinary OAuth clients share the same hostname, `optional_no_ca` lets them
 connect without a certificate; Authup rejects only requests whose client or
 token configuration requires one. A separate mTLS hostname avoids browser
-certificate prompts on the normal UI origin and is published through
+certificate prompts on the normal console origin and is published through
 `mtls_endpoint_aliases` when `MTLS_PUBLIC_URL` is set.
 
 The Authup listener must remain private. Any other proxy location that reaches

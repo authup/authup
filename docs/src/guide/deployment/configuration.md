@@ -25,11 +25,15 @@ can be redirected with two global CLI flags:
 
 Two file naming styles are supported (formats: `.conf`, `.json`, `.yml`/`.yaml`, `.js`, `.ts`):
 
-- **Multi-section file** — `authup.conf`: one file for the whole stack, with options
-  namespaced per component (`server.core.*`, `client.admin-console.*`). This is the natural
-  companion of the `authup` quickstart CLI, which starts both services from one file.
-- **Per-component file** — `authup.server.core.conf` / `authup.client.admin-console.conf`:
-  the filename carries the namespace, so keys inside are flat.
+- **Multi-section file** (`authup.conf`): one file for the whole stack, with options
+  namespaced per component (`server.core.*`). This is the natural companion of the
+  `authup` quickstart CLI.
+- **Per-component file** (`authup.server.core.conf`): the filename carries the
+  namespace, so keys inside are flat.
+
+A `client.admin-console` section is no longer read: the admin console is served by
+`server/core` and has no configuration of its own. See
+[Admin Console](./configuration-client-admin-console).
 
 In `.conf` files, keys are the camelCase option names and dots express nesting:
 
@@ -38,8 +42,6 @@ In `.conf` files, keys are the camelCase option names and dots express nesting:
 ```dotenv [authup.conf]
 server.core.port=3001
 server.core.publicUrl=http://localhost:3001
-
-client.admin-console.port=3000
 
 # shared infrastructure sections (apply to server.core)
 db.type=postgres
@@ -66,4 +68,5 @@ expressed as flat strings — use the `.js`/`.ts` file variant for those.
 ## Component-Wise
 
 - [server/core](./configuration-server-core) This page describes the configuration of the main backend service.
-- [client/admin-console](./configuration-client-admin-console) This page describes the configuration of the main frontend service.
+- [Admin Console](./configuration-client-admin-console) This page describes the surface `server/core` serves at `/admin`, and how to host it standalone.
+- [Account Console](./account-console) This page describes the self-service surface `server/core` serves at `/account`.

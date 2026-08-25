@@ -18,6 +18,7 @@ import type * as Vite from 'vite';
 import type { ViteDevServer } from 'vite';
 import { PACKAGE_PATH } from '../../../../path.ts';
 import { resolveAccountConsoleDistPath } from '../../ui/account-console/index.ts';
+import { ADMIN_CONSOLE_SEGMENT, resolveAdminConsoleDistPath } from '../../ui/admin-console/index.ts';
 import { resolveAuthConsoleDistPath, resolveAuthConsolePackagePath } from '../../ui/auth-console/index.ts';
 import { THEME_ASSET_MOUNT_PATH, ThemeProvider, createThemeAssetsHandler } from '../../ui/theme/index.ts';
 import { registerThemeMiddleware } from './theme.ts';
@@ -43,14 +44,31 @@ export async function registerAssetsMiddleware(
     // /account/). Served in dev mode too — the bundle is prebuilt, not
     // vite-transformed. A missing bundle only disables the mount; the page
     // route reports the actionable error.
+    // Every file under a vite `assets/` output carries a content hash in its
+    // name, so a client may cache it for as long as it likes: a new build
+    // means new names. Without this the default `max-age=0, must-revalidate`
+    // re-requested all 140+ files on every full document load.
+    const immutable = {
+        fallthrough: false,
+        scan: false,
+        cacheMaxAge: 60 * 60 * 24 * 365,
+        cacheImmutable: true,
+    };
+
     const accountDistPath = resolveAccountConsoleDistPath();
     if (accountDistPath) {
         router.use('account/assets', createHandler(
             path.posix.join(accountDistPath, 'assets'),
-            {
-                fallthrough: false,
-                scan: false,
-            },
+            immutable,
+        ));
+    }
+
+    // The admin console SPA, same shape.
+    const adminDistPath = resolveAdminConsoleDistPath();
+    if (adminDistPath) {
+        router.use(`${ADMIN_CONSOLE_SEGMENT}/assets`, createHandler(
+            path.posix.join(adminDistPath, 'assets'),
+            immutable,
         ));
     }
 

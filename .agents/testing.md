@@ -316,18 +316,39 @@ The `authup` CLI is a process supervisor, so its suite is split in two:
 - **Unit** (`npm run test -w apps/authup`, config at `test/vitest.config.ts` like
   every other workspace): entrypoint resolution against fixture `node_modules`
   trees (bin-field reading, the resolution-preference regression, npx fallback),
-  the config-section → child-env mapping, and command routing (`migration` /
-  `healthcheck` must not boot client-admin-console).
+  the config-section → child-env mapping, and command routing (server-core is
+  the only child since plan 081; a `client.admin-console` selector or config
+  section is accepted and answered with a warning, never launched).
 - **Smoke** (`npm run test:smoke`): boots the built CLI's `start` against sqlite
-  on non-default ports, polls both children's endpoints, sends SIGTERM, asserts
-  both children exit and the CLI exits 0. `npm run test:smoke:packed` runs the
-  same assertions against `npm pack`ed tarballs installed into a temp project.
-  **The packed variant is the one that matters:** every launcher breakage found
-  in plan 078 (the ESM `__dirname` crash, the stale spawn path, and nitro's
-  symlinked module store being dropped by `npm pack`) reproduced ONLY from a
-  packed artifact — a workspace-dist run passes straight through all three.
-  Both variants run in CI (`tests-launcher` job); the packed one needs
-  `npm install --force` like every install in this repo.
+  on a non-default port, waits for server-core, asserts all THREE consoles are
+  served (`/logout`, `/account`, `/admin` each answer 200 with the injected
+  `window.__AUTHUP__`), sends SIGTERM, asserts the child exits and the CLI
+  exits 0. `npm run test:smoke:packed` runs the same assertions against
+  `npm pack`ed tarballs installed into a temp project. **The packed variant is
+  the one that matters:** every launcher breakage found in plan 078 (the ESM
+  `__dirname` crash, the stale spawn path, and nitro's symlinked module store
+  being dropped by `npm pack`) reproduced ONLY from a packed artifact — a
+  workspace-dist run passes straight through all three. Both variants run in
+  CI (`tests-launcher` job); the packed one needs `npm install --force` like
+  every install in this repo.
+
+## Console Tests (apps/client-admin-console, apps/client-account-console)
+
+Both static consoles carry a vitest suite (`npm run test -w apps/<console>`,
+config at `test/vitest.config.ts`, node environment). The admin console's
+`test/vitest.config.ts` registers `@vitejs/plugin-vue`, because its guard spec
+imports the kit (aliased to package source, which carries `.vue` files);
+`test/unit/config.spec.ts` pins the runtime-config contract (injected config,
+same-origin API derivation, the capability-AND-applicability rule behind
+`cookieSession`), `test/unit/guard.spec.ts` the routing guard (the login
+bounce with `redirect`, the three route-meta gates, the cookie-mode rules:
+`logout({ revoke: false })` on a failed or `RESTORING` resolve, never a code
+exchange). The server-side half, `/admin` serving and the cookie login
+round-trip for BOTH consoles, lives in server-core
+(`test/unit/http/controllers/workflows/admin-pages.spec.ts` and the
+`describe.each` over both consoles in
+`workflows/account/console-session.spec.ts`). Those specs need the built
+console dists, like the auth console specs need theirs.
 
 ## Code Coverage
 

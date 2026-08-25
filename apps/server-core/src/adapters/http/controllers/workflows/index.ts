@@ -7,8 +7,10 @@
 
 export * from './account/index.ts';
 export * from './activate/index.ts';
+export * from './admin/index.ts';
 export * from './authenticator-challenge/index.ts';
 export * from './authorize/index.ts';
+export * from './console-login/index.ts';
 export * from './jwks/index.ts';
 export * from './logout/index.ts';
 export * from './openid/index.ts';
