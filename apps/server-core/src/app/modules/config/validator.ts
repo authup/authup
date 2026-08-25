@@ -47,6 +47,7 @@ export class ConfigValidator extends Container<Config> {
             themeFragmentsEnabled: booleanValidator,
             authConsolePath: stringValidator,
             accountConsolePath: stringValidator,
+            adminConsolePath: stringValidator,
 
             logger: booleanValidator,
             db: createValidator(
@@ -110,6 +111,7 @@ export class ConfigValidator extends Container<Config> {
                 z.number().int().positive().max(USER_PASSWORD_MAX_LENGTH),
             ),
             accountConsoleEnabled: booleanValidator,
+            adminConsoleEnabled: booleanValidator,
 
             eventLogEnabled: booleanValidator,
             eventLogRetentionDays: nonNegativeNumberValidator,

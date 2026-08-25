@@ -105,6 +105,7 @@ import {
 import {
     AccountController,
     ActivateController,
+    AdminController,
     AuthenticatorChallengeController,
     AuthorizeController,
     JwkController,
@@ -214,6 +215,7 @@ export class HTTPControllerModule {
                 this.createAuthenticatorChallengeController(container),
                 this.createUserInfoController(container),
                 this.createAccountController(container),
+                this.createAdminController(container),
 
                 this.createStatusController(container),
 
@@ -475,6 +477,23 @@ export class HTTPControllerModule {
         return new StatusController({ options: { features: this.buildUIFeatures(config) } });
     }
 
+    createAdminController(container: IContainer) {
+        const config = container.resolve(ConfigInjectionKey);
+
+        return new AdminController({
+            options: {
+                baseURL: config.publicUrl,
+                features: this.buildUIFeatures(config),
+            },
+            loginStore: container.resolve(OAuth2InjectionToken.ConsoleLoginStore),
+            sessionRepository: container.resolve(AuthenticationInjectionKey.SessionRepository),
+            sessionManager: container.resolve(AuthenticationInjectionKey.SessionManager),
+            tokenVerifier: container.resolve(OAuth2InjectionToken.TokenVerifier),
+            tokenRevoker: container.resolve(OAuth2InjectionToken.TokenRevoker),
+            logger: container.resolve(LoggerInjectionKey),
+        });
+    }
+
     createAccountController(container: IContainer) {
         const config = container.resolve(ConfigInjectionKey);
 
@@ -500,6 +519,7 @@ export class HTTPControllerModule {
             passwordRecovery: config.passwordRecoveryEnabled,
             emailVerification: config.emailVerificationEnabled,
             accountConsole: config.accountConsoleEnabled,
+            adminConsole: config.adminConsoleEnabled,
         };
     }
 

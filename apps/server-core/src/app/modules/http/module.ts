@@ -71,6 +71,7 @@ export class HTTPModule implements IModule {
         await bindConsolePackages({
             authConsolePath: config.authConsolePath,
             accountConsolePath: config.accountConsolePath,
+            adminConsolePath: config.adminConsolePath,
         });
 
         this.registerUIHttpClient(container);

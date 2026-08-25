@@ -79,6 +79,11 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.accountConsolePath = accountConsolePath;
     }
 
+    const adminConsolePath = read(ConfigEnvironmentVariableName.ADMIN_CONSOLE_PATH);
+    if (adminConsolePath) {
+        options.adminConsolePath = adminConsolePath;
+    }
+
     // -------------------------------------------------------------
 
     if (hasEnvDataSourceOptions()) {
@@ -203,6 +208,11 @@ export function readConfigRawFromEnv() : ConfigInput {
     const accountConsoleEnabled = readBool(ConfigEnvironmentVariableName.ACCOUNT_CONSOLE_ENABLED);
     if (typeof accountConsoleEnabled !== 'undefined') {
         options.accountConsoleEnabled = accountConsoleEnabled;
+    }
+
+    const adminConsoleEnabled = readBool(ConfigEnvironmentVariableName.ADMIN_CONSOLE_ENABLED);
+    if (typeof adminConsoleEnabled !== 'undefined') {
+        options.adminConsoleEnabled = adminConsoleEnabled;
     }
 
     // ---------------------------------------------------------------

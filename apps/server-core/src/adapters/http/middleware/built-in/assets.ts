@@ -18,6 +18,7 @@ import type * as Vite from 'vite';
 import type { ViteDevServer } from 'vite';
 import { PACKAGE_PATH } from '../../../../path.ts';
 import { resolveAccountConsoleDistPath } from '../../ui/account-console/index.ts';
+import { resolveAdminConsoleDistPath } from '../../ui/admin-console/index.ts';
 import { resolveAuthConsoleDistPath, resolveAuthConsolePackagePath } from '../../ui/auth-console/index.ts';
 import { THEME_ASSET_MOUNT_PATH, ThemeProvider, createThemeAssetsHandler } from '../../ui/theme/index.ts';
 import { registerThemeMiddleware } from './theme.ts';
@@ -47,6 +48,18 @@ export async function registerAssetsMiddleware(
     if (accountDistPath) {
         router.use('account/assets', createHandler(
             path.posix.join(accountDistPath, 'assets'),
+            {
+                fallthrough: false,
+                scan: false,
+            },
+        ));
+    }
+
+    // The admin console SPA, same shape (its fixed vite base is /admin/).
+    const adminDistPath = resolveAdminConsoleDistPath();
+    if (adminDistPath) {
+        router.use('admin/assets', createHandler(
+            path.posix.join(adminDistPath, 'assets'),
             {
                 fallthrough: false,
                 scan: false,

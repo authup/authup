@@ -13,7 +13,10 @@ import path from 'node:path';
 import type { IAppEvent } from 'routup';
 import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
 import { PACKAGE_PATH } from '../../../../path.ts';
-import { useRequestTheme } from '../../middleware/index.ts';
+// The FILE, not the middleware barrel: the barrel reaches assets.ts, which
+// imports the console modules, which call defineStaticConsole at load time.
+// Through the barrel that is a cycle that leaves this function undefined.
+import { useRequestTheme } from '../../middleware/built-in/theme.ts';
 import { applyTheme } from '../theme/index.ts';
 import {
     applyUIPageHeaders,

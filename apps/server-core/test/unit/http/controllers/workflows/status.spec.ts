@@ -37,6 +37,7 @@ describe('src/http/controllers/workflows/status/*.ts', () => {
             passwordRecovery: true,
             emailVerification: true,
             accountConsole: true,
+            adminConsole: true,
         });
     });
 });

@@ -7,6 +7,7 @@
 
 export * from './account/index.ts';
 export * from './activate/index.ts';
+export * from './admin/index.ts';
 export * from './authenticator-challenge/index.ts';
 export * from './authorize/index.ts';
 export * from './console-login/index.ts';
