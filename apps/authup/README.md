@@ -49,7 +49,7 @@ when the server stops on its own, the CLI exits with its exit code.
 
 ```shell
 $ authup start                 # start server-core (which serves every console)
-$ authup start server.core     # the same; `client.admin-console` is accepted but warns
+$ authup start server.core     # the same; `client.admin-console` alone warns and starts nothing
 $ authup migration run         # forwarded to server-core only
 $ authup healthcheck           # forwarded to server-core only
 ```

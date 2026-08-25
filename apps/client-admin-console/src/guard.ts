@@ -218,26 +218,23 @@ export function createRoutingGuard(ctx: RoutingGuardContext) : RoutingGuard {
             };
         }
 
+        // The gates below never end the session. The Nuxt interceptor
+        // logged out here, which was a local teardown in bearer mode; in
+        // cookie mode `logout()` revokes the one `auth_sessions` row every
+        // surface on the origin shares, so a Back press onto `/login` after
+        // signing in would sign the user out of the account console too. A
+        // signed-in visitor on a logged-out-only page is simply sent home.
         if (hasMeta(to, LayoutKey.REQUIRED_LOGGED_OUT) && isAuthenticated()) {
-            await store.logout();
-
-            return undefined;
+            return { path: homeRoute };
         }
 
         if (hasMeta(to, LayoutKey.REQUIRED_PERMISSIONS) && !(await validatePermissions(to))) {
-            if (from.path === to.path) {
-                // Deliberately no `redirect`: the user was denied the route
-                // they are already on, so carrying it into the login would
-                // send them straight back into the same denial.
-                await store.logout();
-
-                return { path: loginRoute };
-            }
-
-            if (hasMeta(from, LayoutKey.REQUIRED_LOGGED_OUT)) {
-                await store.logout();
-
-                return backTo(from);
+            // Denied the route they are already on (a reload after a
+            // permission was withdrawn), or coming from a logged-out-only
+            // page: `backTo` would bounce straight back into the denial, so
+            // land on the home route instead.
+            if (from.path === to.path || hasMeta(from, LayoutKey.REQUIRED_LOGGED_OUT)) {
+                return { path: homeRoute };
             }
 
             // A just-completed login arrives from the callback route, whose

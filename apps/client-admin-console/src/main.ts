@@ -143,6 +143,34 @@ app.use(installTimeago, {
     },
 });
 
-router.isReady().then(() => {
-    app.mount('#app');
+// Every route is a lazy chunk, so a redeploy (new content hashes, the old
+// files gone) makes the next navigation's import() 404. Without a handler
+// vue-router aborts the navigation silently and the click does nothing; a
+// full load of the target picks up the new shell and its chunks instead.
+const isChunkLoadError = (error: unknown) => error instanceof Error &&
+    /dynamically imported module|Importing a module script failed|Unable to preload CSS/.test(error.message);
+
+router.onError((error, to) => {
+    if (isChunkLoadError(error)) {
+        window.location.assign(router.resolve(to).href);
+    }
 });
+
+// The same failure one level down: a chunk that loaded but whose own
+// dependency (a stylesheet) did not. Vite raises it as an event.
+window.addEventListener('vite:preloadError', (event) => {
+    event.preventDefault();
+    window.location.reload();
+});
+
+router.isReady()
+    .then(() => {
+        app.mount('#root');
+    })
+    .catch((error) => {
+        // The initial navigation rejected (most likely the very chunk error
+        // above on a stale tab). Surface it rather than leaving a blank page.
+        // eslint-disable-next-line no-console
+        console.error(error);
+        app.mount('#root');
+    });

@@ -6,10 +6,11 @@
  */
 
 import type { Store } from '@authup/client-web-kit';
-import { StoreAuthStatus } from '@authup/client-web-kit';
+import { StoreAuthStatus, saveAuthorizationRequest  } from '@authup/client-web-kit';
 import type { RouteLocationNormalized } from 'vue-router';
 import { ref } from 'vue';
 import {
+    beforeEach,
     describe,
     expect,
     it,
@@ -17,6 +18,7 @@ import {
 } from 'vitest';
 import { LayoutKey } from '../../src/config/layout';
 import { createRoutingGuard } from '../../src/guard';
+import { LOGIN_REDIRECT_STORAGE_KEY, saveLoginRedirect } from '../../src/redirect';
 
 type StoreStub = {
     status: ReturnType<typeof ref<StoreAuthStatus>>,
@@ -59,9 +61,11 @@ function createGuard(
     return { guard, store };
 }
 
-// No sessionStorage in this environment, so the saved authorization request
-// and the login-redirect stash both read as absent throughout.
 describe('src/guard', () => {
+    beforeEach(() => {
+        sessionStorage.clear();
+    });
+
     describe('login bounce', () => {
         it('should carry the attempted route as the redirect param', async () => {
             const { guard } = createGuard({
@@ -117,23 +121,6 @@ describe('src/guard', () => {
             expect(store.logout).toHaveBeenCalledWith({ revoke: false });
         });
 
-        // A settled resolve leaves the session complete or absent; RESTORING
-        // is a session this console cannot render (a non-user subject).
-        it('should treat a settled RESTORING session as a failed resolve', async () => {
-            const { guard, store } = createGuard({ status: ref(StoreAuthStatus.RESTORING) }, { cookieSession: true });
-
-            const result = await guard(
-                createRoute({
-                    path: '/users',
-                    matched: [{ meta: { [LayoutKey.REQUIRED_LOGGED_IN]: true } }] as never,
-                }),
-                createRoute({ path: '/' }),
-            );
-
-            expect(store.logout).toHaveBeenCalledWith({ revoke: false });
-            expect(result).toMatchObject({ path: '/login' });
-        });
-
         // The code is redeemed SERVER-side (`GET /admin/callback`), so a
         // `code` on a client route is noise, never a verifier to present.
         it('should never exchange a code', async () => {
@@ -146,19 +133,119 @@ describe('src/guard', () => {
 
             expect(store.exchangeAuthorizationCode).not.toHaveBeenCalled();
         });
+
+        // The server callback always lands on the console root, so the page
+        // the visitor asked for rides a single-use stash written before the
+        // kick. Query and hash survive; a second navigation finds nothing.
+        it('should land on the stashed destination after the server-side login', async () => {
+            const { guard } = createGuard({}, { cookieSession: true });
+
+            saveLoginRedirect('/users?page=2#row-7');
+
+            const result = await guard(createRoute({ path: '/' }), createRoute({ path: '/' }));
+            expect(result).toEqual({
+                path: '/users', 
+                query: { page: '2' }, 
+                hash: '#row-7', 
+            });
+
+            const again = await guard(createRoute({ path: '/' }), createRoute({ path: '/' }));
+            expect(again).toBeUndefined();
+        });
+
+        it.each([
+            'https://evil.test/steal',
+            '//evil.test/steal',
+            '/\\evil.test/steal',
+        ])('should refuse the stashed destination %s', async (value) => {
+            const { guard } = createGuard({}, { cookieSession: true });
+
+            // written raw: the stash is validated on the way OUT as well
+            sessionStorage.setItem(LOGIN_REDIRECT_STORAGE_KEY, value);
+
+            const result = await guard(createRoute({ path: '/' }), createRoute({ path: '/' }));
+            expect(result).toBeUndefined();
+            expect(sessionStorage.getItem(LOGIN_REDIRECT_STORAGE_KEY)).toBeNull();
+        });
+
+        it('should drop the stash when the session did not land', async () => {
+            const { guard } = createGuard({ status: ref(StoreAuthStatus.UNAUTHENTICATED) }, { cookieSession: true });
+
+            saveLoginRedirect('/users');
+
+            await guard(createRoute({ path: '/login' }), createRoute({ path: '/' }));
+            expect(sessionStorage.getItem(LOGIN_REDIRECT_STORAGE_KEY)).toBeNull();
+        });
     });
 
     describe('bearer mode', () => {
-        it('should exchange a code carried on a client route', async () => {
+        // The console client is public: without the saved verifier the
+        // exchange is refused, so the guard must present it together with the
+        // request's own client/realm binding.
+        it('should exchange a code with the saved PKCE request', async () => {
+            const { guard, store } = createGuard();
+
+            saveAuthorizationRequest({
+                state: 'the-state',
+                code_verifier: 'the-verifier',
+                redirect_uri: 'http://console.test/admin/login/callback?redirect=%2Fusers',
+                client_id: 'admin-console',
+                realm_id: 'realm-1',
+            });
+
+            const result = await guard(
+                createRoute({
+                    path: '/login/callback',
+                    query: {
+                        code: 'the-code',
+                        state: 'the-state',
+                        redirect: '/users',
+                    },
+                }),
+                createRoute({ path: '/' }),
+            );
+
+            expect(store.exchangeAuthorizationCode).toHaveBeenCalledWith('the-code', {
+                code_verifier: 'the-verifier',
+                redirect_uri: 'http://console.test/admin/login/callback?redirect=%2Fusers',
+                client_id: 'admin-console',
+                realm_id: 'realm-1',
+            });
+            expect(result).toMatchObject({ path: '/users' });
+        });
+
+        it('should refuse a code whose state does not match the saved request', async () => {
+            const { guard, store } = createGuard();
+
+            saveAuthorizationRequest({
+                state: 'the-state',
+                code_verifier: 'the-verifier',
+                redirect_uri: 'http://console.test/admin/login/callback',
+                client_id: 'admin-console',
+                realm_id: 'realm-1',
+            });
+
+            const result = await guard(
+                createRoute({ path: '/login/callback', query: { code: 'the-code', state: 'forged' } }),
+                createRoute({ path: '/' }),
+            );
+
+            expect(store.exchangeAuthorizationCode).not.toHaveBeenCalled();
+            // single use either way, and the params are stripped so a reload
+            // cannot replay the code
+            expect(result).toMatchObject({ path: '/login/callback', query: {} });
+        });
+
+        it('should exchange a bare code when no request was saved', async () => {
             const { guard, store } = createGuard();
 
             const result = await guard(
                 createRoute({
                     path: '/login/callback',
                     query: {
-                        code: 'the-code', 
-                        state: 'the-state', 
-                        redirect: '/users', 
+                        code: 'the-code',
+                        state: 'the-state',
+                        redirect: '/users',
                     },
                 }),
                 createRoute({ path: '/' }),
@@ -186,24 +273,26 @@ describe('src/guard', () => {
         });
     });
 
+    // The gates never end the session: in cookie mode `logout()` revokes the
+    // one auth_sessions row every surface on the origin shares.
     describe('gates', () => {
-        it('should log a logged-in visitor out of a logged-out-only route', async () => {
-            const { guard, store } = createGuard();
+        it('should send a signed-in visitor on a logged-out-only route home', async () => {
+            const { guard, store } = createGuard({}, { cookieSession: true });
 
             const result = await guard(
                 createRoute({
                     path: '/login',
                     matched: [{ meta: { [LayoutKey.REQUIRED_LOGGED_OUT]: true } }] as never,
                 }),
-                createRoute({ path: '/' }),
+                createRoute({ path: '/users' }),
             );
 
-            expect(store.logout).toHaveBeenCalled();
-            expect(result).toBeUndefined();
+            expect(store.logout).not.toHaveBeenCalled();
+            expect(result).toEqual({ path: '/' });
         });
 
         it('should send a denied visitor back where they came from', async () => {
-            const { guard } = createGuard({
+            const { guard, store } = createGuard({
                 permissionEvaluator: {
                     preEvaluateOneOf: vi.fn(async () => {
                         throw new Error('denied');
@@ -219,7 +308,37 @@ describe('src/guard', () => {
                 createRoute({ path: '/roles', query: { page: '2' } }),
             );
 
+            expect(store.logout).not.toHaveBeenCalled();
             expect(result).toMatchObject({ path: '/roles', query: { page: '2' } });
+        });
+
+        // Denied the route they are already on, or arriving from the login
+        // page: `backTo` would bounce straight back into the denial.
+        it.each([
+            createRoute({ path: '/users' }),
+            createRoute({
+                path: '/login',
+                matched: [{ meta: { [LayoutKey.REQUIRED_LOGGED_OUT]: true } }] as never,
+            }),
+        ])('should send a denied visitor home instead of looping (from %s)', async (from) => {
+            const { guard, store } = createGuard({
+                permissionEvaluator: {
+                    preEvaluateOneOf: vi.fn(async () => {
+                        throw new Error('denied');
+                    }),
+                },
+            });
+
+            const result = await guard(
+                createRoute({
+                    path: '/users',
+                    matched: [{ meta: { [LayoutKey.REQUIRED_PERMISSIONS]: ['user_read'] } }] as never,
+                }),
+                from,
+            );
+
+            expect(store.logout).not.toHaveBeenCalled();
+            expect(result).toEqual({ path: '/' });
         });
 
         it('should not send a denied visitor back to the callback route', async () => {

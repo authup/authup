@@ -81,6 +81,11 @@ export async function createCLIEntryPointCommand() {
                 consola.warn(warning);
             }
 
+            if (plan.packages.length === 0) {
+                consola.info('Nothing to start.');
+                process.exit(0);
+            }
+
             const configArgs : string[] = [];
             if (ctx.args.configFile) {
                 configArgs.push(`--configFile=${ctx.args.configFile}`);

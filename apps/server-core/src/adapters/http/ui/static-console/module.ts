@@ -117,6 +117,7 @@ export function defineStaticConsole(definition: StaticConsoleDefinition) : Stati
     return {
         packageName: definition.packageName,
         marker: definition.marker,
+        viteBase: definition.viteBase,
         setPackagePath(value: string | undefined) {
             overridePackagePath = value || undefined;
             cachedDistPath = undefined;

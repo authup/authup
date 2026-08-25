@@ -27,9 +27,12 @@ runs one process.
 - **Bare metal**: the command does not change. `authup start` starts
   `server/core` alone. `authup start client.admin-console` and a
   `client.admin-console` section in `authup.conf` are still parsed, print a
-  deprecation warning and start `server/core` (never a second process). Remove
-  them, and remove any second service unit that ran the console: two units
-  both running `authup start` would start two servers.
+  deprecation warning; `authup start client.admin-console` on its own exits
+  `0` having started nothing, so a leftover console unit stays harmless.
+  Remove them.
+- **`TRUSTED_ORIGINS`**: drop the console's former origin. It serves nothing
+  now, but the provisioner keeps re-asserting every listed origin into the
+  system clients' redirect allowlists on each boot.
 - **Reverse proxy**: collapse the two upstreams into one. The API and both
   consoles are served by the same listener, so a rule that routed `/` to the
   console port and `/api/` to the server port routes `/` to the server port
@@ -48,7 +51,8 @@ public URL, and the console's address derives from it.
 
 **New `server/core` options.** `ADMIN_CONSOLE_ENABLED` / `adminConsoleEnabled`
 (default `true`) serves the console; with it off the routes render a "not
-enabled" notice, so stale links do not dead-end. `ADMIN_CONSOLE_PATH` /
+enabled" notice (and the sign-in routes start no login), so stale links do
+not dead-end. `ADMIN_CONSOLE_PATH` /
 `adminConsolePath` substitutes the console package, the same contract as
 `ACCOUNT_CONSOLE_PATH`: a directory holding a built `dist/` whose
 `index.html` carries the `<!--admin-config-->` marker. The `features` block of

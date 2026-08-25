@@ -11,6 +11,7 @@ import {
     AWorkflowDisabledNotice, 
     createColorMode, 
 } from '@authup/client-web-kit';
+import { VCIcon } from '@vuecs/icon';
 import { computed, defineComponent } from 'vue';
 import { useRoute } from 'vue-router';
 import { injectAdminConsoleConfig } from './di';
@@ -24,6 +25,7 @@ export default defineComponent({
         AWorkflowDisabledNotice,
         AuthLayout,
         DefaultLayout,
+        VCIcon,
     },
     setup() {
         const config = injectAdminConsoleConfig();
@@ -55,6 +57,14 @@ export default defineComponent({
     -->
     <Suspense v-if="enabled">
         <component :is="layout" />
+        <template #fallback>
+            <div class="flex items-center justify-center min-h-screen">
+                <VCIcon
+                    name="fa6-solid:spinner"
+                    class="animate-spin text-2xl"
+                />
+            </div>
+        </template>
     </Suspense>
     <AAuthApp
         v-else

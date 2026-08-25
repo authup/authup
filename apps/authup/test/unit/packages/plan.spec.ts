@@ -35,10 +35,12 @@ describe('src/packages/plan', () => {
         expect(plan.warnings[0]).toMatch(/served by server-core/);
     });
 
-    it('should still start server-core when only the retired selector is given', () => {
+    // The old console unit of a two-unit deployment keeps running this; it
+    // must not become a second server with default credentials.
+    it('should launch nothing when only the retired selector is given', () => {
         const plan = resolveLaunchPlan('start', ['client.admin-console']);
 
-        expect(plan.packages).toEqual([PackageID.SERVER_CORE]);
+        expect(plan.packages).toEqual([]);
         expect(plan.warnings).toHaveLength(1);
     });
 

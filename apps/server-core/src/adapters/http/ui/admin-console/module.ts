@@ -8,6 +8,7 @@
 import { getURLBasePath } from '@authup/kit';
 import type { IAppEvent } from 'routup';
 import { defineStaticConsole } from '../static-console/index.ts';
+import { ADMIN_CONSOLE_SEGMENT } from './constants.ts';
 import type { AdminConsoleServeOptions } from './types.ts';
 
 /**
@@ -19,7 +20,7 @@ import type { AdminConsoleServeOptions } from './types.ts';
 export const adminConsole = defineStaticConsole({
     packageName: '@authup/client-admin-console',
     marker: '<!--admin-config-->',
-    viteBase: '/admin/',
+    viteBase: `/${ADMIN_CONSOLE_SEGMENT}/`,
 });
 
 /**
@@ -49,7 +50,7 @@ export function serveAdminConsolePage(
         baseURL: options.baseURL,
         config: {
             apiUrl: options.baseURL,
-            basePath: `${basePath}/admin`,
+            basePath: `${basePath}/${ADMIN_CONSOLE_SEGMENT}`,
             features: options.features,
             // This server implements the cookie-mode routes (/admin/login,
             // /admin/callback, /sessions/@me). A capability assertion, not a

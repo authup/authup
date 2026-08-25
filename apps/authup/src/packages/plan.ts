@@ -35,8 +35,15 @@ export function resolveLaunchPlan(command: string, rest: string[] = []) : Launch
                 }
             }
 
+            // Selectors named ONLY the retired package: launch nothing. The
+            // old console unit of a two-unit deployment must not turn into a
+            // second server (its own sqlite, its own master realm, default
+            // admin credentials) just because it kept running `authup start`.
+            const retiredOnly = tokens.length > 0 && warnings.length > 0 &&
+                !tokens.some((token) => normalizePackageID(token) === PackageID.SERVER_CORE);
+
             return {
-                packages: [PackageID.SERVER_CORE],
+                packages: retiredOnly ? [] : [PackageID.SERVER_CORE],
                 commandArgs: [LauncherCommand.START],
                 warnings,
             };

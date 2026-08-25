@@ -6,7 +6,7 @@
  */
 
 import { CLIENT_ADMIN_CONSOLE_NAME } from '@authup/core-kit';
-import { NotFoundError } from '@authup/errors';
+import { NotFoundError } from '@ebec/http';
 import { useRequestQuery } from '@routup/basic/query';
 import {
     DContext,
@@ -14,7 +14,7 @@ import {
     DGet,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
-import { serveAdminConsolePage } from '../../../ui/index.ts';
+import { ADMIN_CONSOLE_SEGMENT, serveAdminConsolePage } from '../../../ui/index.ts';
 import { ConsoleLogin } from '../console-login/index.ts';
 import type { AdminControllerContext, AdminControllerOptions } from './types.ts';
 
@@ -27,7 +27,7 @@ import type { AdminControllerContext, AdminControllerOptions } from './types.ts'
  * nest (`/users/<id>/roles`), so the shell route is a wildcard rather than
  * the account console's single segment.
  */
-@DController('/admin')
+@DController(`/${ADMIN_CONSOLE_SEGMENT}`)
 export class AdminController {
     protected options: AdminControllerOptions;
 
@@ -38,7 +38,7 @@ export class AdminController {
         this.consoleLogin = new ConsoleLogin(
             {
                 clientName: CLIENT_ADMIN_CONSOLE_NAME,
-                segment: 'admin',
+                segment: ADMIN_CONSOLE_SEGMENT,
                 // The page that renders the error marker: the console root is
                 // a logged-in page, whose guard would bounce to /login and
                 // drop the query.
@@ -72,7 +72,10 @@ export class AdminController {
     @DGet('/login', [])
     async login(@DContext() event: IAppEvent): Promise<Response | string> {
         const realmId = useRequestQuery(event, 'realmId');
-        if (typeof realmId !== 'string' || realmId.length === 0) {
+        // Disabled means disabled on the server too: the kick must not mint
+        // a pending login and a session for a surface that renders nothing
+        // but the notice. The shell (and the notice) is what a visitor gets.
+        if (typeof realmId !== 'string' || realmId.length === 0 || !this.options.features.adminConsole) {
             return this.render(event);
         }
 
@@ -80,7 +83,11 @@ export class AdminController {
     }
 
     @DGet('/callback', [])
-    async callback(@DContext() event: IAppEvent): Promise<Response> {
+    async callback(@DContext() event: IAppEvent): Promise<Response | string> {
+        if (!this.options.features.adminConsole) {
+            return this.render(event);
+        }
+
         return this.consoleLogin.callback(event);
     }
 
@@ -95,7 +102,7 @@ export class AdminController {
         // none, and an asset request would fall through to the shell. A 200
         // HTML answer for a module script is a blank console with no error
         // anywhere; a 404 says what is missing.
-        if (/^\/admin\/assets\//i.test(event.path)) {
+        if (event.path.toLowerCase().startsWith(`/${ADMIN_CONSOLE_SEGMENT}/assets/`)) {
             throw new NotFoundError();
         }
 

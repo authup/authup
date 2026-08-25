@@ -1761,11 +1761,24 @@ same bootstrap. What differs from the account console, and why:
 - **The shell route is a wildcard.** The console's routes nest
   (`/users/<id>/roles`), so `AdminController` declares `''` + `'/*page'`
   (path-to-regexp v8 syntax; routup compiles it) where the account
-  controller's `/:page` matches one segment. Assets mount at
-  `/admin/assets`; the bundle's vite base is `/admin/`. Config keys mirror
-  the account console: `adminConsoleEnabled` (`ADMIN_CONSOLE_ENABLED`, rides
-  `StatusResponseFeatures.adminConsole`) and `adminConsolePath`
-  (`ADMIN_CONSOLE_PATH`, marker `<!--admin-config-->`).
+  controller's `/:page` matches one segment. `GET /admin/login` does double
+  duty on purpose: with a `realmId` it is the server-side kick, without one
+  it is the SPA's own login page (where the guard sends a signed-out visitor
+  and where a refused callback lands with its `?error=` marker; answering
+  that with the kick's "a realm is required" made every refusal a raw 400).
+  The segment is spelled ONCE, `ADMIN_CONSOLE_SEGMENT`
+  (`adapters/http/ui/admin-console/constants.ts`): the controller mount, the
+  login cookie scope, the callback URL, the asset mount and the vite base
+  all derive from it. Assets are served `immutable` for a year (every name
+  carries a content hash; a new build means new names), for both static
+  consoles. Config keys mirror the account console: `adminConsoleEnabled`
+  (`ADMIN_CONSOLE_ENABLED`, rides `StatusResponseFeatures.adminConsole`; off
+  means off on the SERVER too, the kick and the callback answer the shell
+  with the disabled notice instead of minting a pending login) and
+  `adminConsolePath` (`ADMIN_CONSOLE_PATH`, marker `<!--admin-config-->`,
+  and `bindConsolePackages` additionally requires the shell to reference
+  `/admin/assets/`, since a package built for another vite base serves and
+  then 404s every asset with no error anywhere).
 - **Route meta replaces `definePageMeta`.** `src/router.ts` is an explicit
   table (one lazy import per page, the `pages/` tree unchanged under
   `src/pages/`) carrying the former page meta as route `meta`
@@ -1778,7 +1791,16 @@ same bootstrap. What differs from the account console, and why:
   come from the account console: a failed or settled-`RESTORING` resolve
   logs out with `revoke: false` (a transient failure is not an intent to
   end the server session), and a `?code=` on a client route is never
-  exchanged (the server redeemed it). The post-login destination
+  exchanged (the server redeemed it). **The gates never call `logout()`**,
+  unlike the Nuxt interceptor they were ported from: in cookie mode that
+  call is `DELETE /sessions/@me` on the one row every surface on the origin
+  shares, so a Back press onto `/login` after signing in would have signed
+  the user out of the account console too. A signed-in visitor on a
+  logged-out-only route is sent home; a permission denial goes back where
+  the visitor came from, or home when that would loop (denied the route
+  they are on, or arriving from the login page). Chunk-load failures after
+  a redeploy (stale hashed imports) are recovered by `router.onError` /
+  the `vite:preloadError` event with a full load of the target. The post-login destination
   (`/login?redirect=`) rides a single-use `sessionStorage` stash
   (`src/redirect.ts`, `authup:admin:redirect`) written before the server
   kick and popped by the guard on the way back, because the server callback
@@ -1788,8 +1810,13 @@ same bootstrap. What differs from the account console, and why:
   rides the callback URI's own query as before, #3476).
 - **`<Suspense>` keeps the pages.** `src/App.vue` wraps the layout switch
   (`route.meta.layout === 'auth'` → `src/layouts/auth.vue`, else
-  `default.vue`) in `<Suspense>`, so the 12 detail pages keep their
-  `async setup()` (Nuxt wrapped every page in one). Their record fetch is a
+  `default.vue`) in `<Suspense>` (with a spinner fallback), so the 12 detail
+  pages keep their `async setup()` (Nuxt wrapped every page in one). The
+  bundle's runtime asset URLs (a lazy chunk's stylesheet, the fonts a
+  stylesheet references) are chunk-relative via vite's `renderBuiltUrl` for
+  the `js` and `css` host types, because server-core rebases hrefs in
+  `index.html` only; `admin-pages.spec.ts` refuses the `/admin/` literal
+  in every built js/css file. Their record fetch is a
   plain `ref(await ...)` in a try/catch that `router.replace`s back to the
   collection on failure, with `v-if="entity"` on the page root; nested
   `<RouterView :entity>` forwards attrs and listeners exactly as

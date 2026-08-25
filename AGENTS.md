@@ -31,7 +31,8 @@ npm run lint:fix               # lint with auto-fix
 |------------------|---------------------|
 | `authup`         | apps/authup         |
 | `authup-server`  | apps/server-core    |
-| `authup-admin-console` | apps/client-admin-console |
+
+The consoles (`apps/client-admin-console`, `apps/client-account-console`, `apps/client-auth-console`) ship no binary: server-core serves their built `dist/`.
 
 ## Detailed Guides
 

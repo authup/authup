@@ -36,7 +36,10 @@ export default defineConfig({
         // never sees the ones inside the bundle, so those would 404 there
         // and the route would fail to load.
         renderBuiltUrl(filename, { hostType }) {
-            if (hostType === 'js') {
+            // The stylesheet's font `url()`s are the same case one level
+            // down. Only index.html keeps the absolute base: that is what
+            // server-core rebases.
+            if (hostType === 'js' || hostType === 'css') {
                 return { relative: true };
             }
 

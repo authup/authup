@@ -40,6 +40,7 @@ export type StaticConsoleServeOptions = {
 export type StaticConsole = {
     readonly packageName: string,
     readonly marker: string,
+    readonly viteBase: string,
     /**
      * Point the resolution at a substituted package instead of the
      * node_modules walk. Called once at boot.

@@ -29,6 +29,8 @@ export default defineConfig({
     },
     test: {
         include: ['test/unit/**/*.spec.ts'],
-        environment: 'node',
+        // happy-dom: the guard's sessionStorage stashes and the config's
+        // window reads are what the specs are for
+        environment: 'happy-dom',
     },
 });

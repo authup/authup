@@ -108,7 +108,7 @@ describe('src/http/controllers/workflows/admin (SPA shell)', () => {
         const distPath = resolveAdminConsoleDistPath() as string;
         const assets = path.join(distPath, 'assets');
 
-        for (const file of fs.readdirSync(assets).filter((name) => name.endsWith('.js'))) {
+        for (const file of fs.readdirSync(assets).filter((name) => /\.(js|css)$/.test(name))) {
             const content = fs.readFileSync(path.join(assets, file), 'utf-8');
             expect(content, file).not.toContain('"/admin/"');
             expect(content, file).not.toContain('`/admin/`');
@@ -122,5 +122,91 @@ describe('src/http/controllers/workflows/admin (SPA shell)', () => {
 
         const config = extractConfig(body);
         expect(Object.keys(config).sort()).toEqual(['apiUrl', 'basePath', 'cookieSession', 'features']);
+    });
+});
+
+describe('src/http/controllers/workflows/admin (disabled)', () => {
+    const suite = createTestApplication({
+        config: (config) => {
+            config.adminConsoleEnabled = false;
+        },
+    });
+
+    beforeAll(async () => {
+        await suite.setup();
+    });
+
+    afterAll(async () => {
+        await suite.teardown();
+    });
+
+    // The client half (App.vue rendering the disabled notice off this flag)
+    // is a v-if over the resolved config, pinned by the console's own
+    // config.spec.ts; the server half is the injected flag.
+    it('should inject the disabled flag', async () => {
+        const response = await httpRequest(suite, 'GET', '/admin/users');
+        expect(response.status).toEqual(200);
+
+        const config = extractConfig(await response.text());
+        expect(config.features.adminConsole).toEqual(false);
+    });
+
+    it('should report the flag on the status endpoint', async () => {
+        const response = await suite.client.status.get();
+
+        expect(response.features.adminConsole).toEqual(false);
+    });
+
+    // Disabled on the server too: the kick must not mint a pending login for
+    // a surface that renders nothing but the notice.
+    it('should not start a console login', async () => {
+        const kick = await httpRequest(suite, 'GET', '/admin/login?realmId=master', { redirect: 'manual' });
+        expect(kick.status).toEqual(200);
+        expect(kick.headers.get('content-type')).toContain('text/html');
+        expect(kick.headers.get('set-cookie')).toBeNull();
+
+        const callback = await httpRequest(suite, 'GET', '/admin/callback?code=x&state=y', {
+            redirect: 'manual',
+            headers: { 'sec-fetch-site': 'same-origin' },
+        });
+        expect(callback.status).toEqual(200);
+        expect(callback.headers.get('content-type')).toContain('text/html');
+    });
+});
+
+describe('src/http/controllers/workflows/admin (sub-path publicUrl)', () => {
+    const suite = createTestApplication({
+        config: (config) => {
+            config.publicUrl = 'http://localhost/auth';
+        },
+    });
+
+    beforeAll(async () => {
+        await suite.setup();
+    });
+
+    afterAll(async () => {
+        await suite.teardown();
+    });
+
+    // A prefix-stripping proxy in front: the shell's hrefs carry the prefix,
+    // the assets are still mounted under the bare segment, and everything a
+    // chunk resolves at runtime is relative to it (see the bundle spec).
+    it('should rebase the shell onto the prefix', async () => {
+        const response = await httpRequest(suite, 'GET', '/admin/users');
+        expect(response.status).toEqual(200);
+
+        const body = await response.text();
+        const config = extractConfig(body);
+        expect(config.basePath).toEqual('/auth/admin');
+        expect(config.apiUrl).toEqual('http://localhost/auth');
+
+        const match = body.match(/src="(\/auth\/admin\/assets\/[^"]+\.js)"/);
+        expect(match).toBeTruthy();
+        expect(body).not.toContain('"/admin/assets/');
+
+        const asset = await httpRequest(suite, 'GET', match![1].replace(/^\/auth/, ''));
+        expect(asset.status).toEqual(200);
+        expect(asset.headers.get('cache-control')).toContain('immutable');
     });
 });

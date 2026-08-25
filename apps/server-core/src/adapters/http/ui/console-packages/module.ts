@@ -141,4 +141,13 @@ function assertStaticConsoleContract(console: StaticConsole, packagePath: string
             `The console shell "${entry}" carries no ${console.marker} marker, so its runtime configuration cannot be injected.`,
         );
     }
+
+    // The serving side rebases asset hrefs from this fixed vite base and
+    // mounts the bundle's assets under it. A shell built with another base
+    // would serve and then 404 every asset: a blank console with no error.
+    if (!html.includes(`${console.viteBase}assets/`)) {
+        throw new AuthupError(
+            `The console shell "${entry}" references no ${console.viteBase}assets/ url, so the package was not built with the vite base "${console.viteBase}" this server serves it under.`,
+        );
+    }
 }

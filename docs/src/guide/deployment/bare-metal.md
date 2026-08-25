@@ -123,8 +123,8 @@ $ authup start server/core
 ::: warning `client.admin-console` no longer starts anything
 The admin console is served by `server/core` at `<publicUrl>/admin`. The CLI
 still accepts `authup start client.admin-console` and a `client.admin-console`
-section in the configuration file, but both only print a deprecation warning
-and start `server/core` like a bare `authup start`; remove them.
+section in the configuration file, but both only print a deprecation warning;
+a selector naming the console alone exits without starting anything. Remove them.
 See [Upgrading](./upgrading.md#the-admin-console-is-served-by-server-core).
 :::
 
