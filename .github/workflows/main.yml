@@ -253,9 +253,9 @@ jobs:
             -   name: Build
                 uses: ./.github/actions/build
 
-            -   name: Build client-admin-console server output
+            -   name: Build client-admin-console dist
                 run: |
-                    if [ ! -f apps/client-admin-console/.output/server/index.mjs ]; then
+                    if [ ! -f apps/client-admin-console/dist/index.html ]; then
                         npm run build --workspace=apps/client-admin-console
                     fi
 

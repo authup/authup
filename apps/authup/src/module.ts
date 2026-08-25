@@ -11,16 +11,11 @@ import consola from 'consola';
 import { read } from 'locter';
 import path from 'node:path';
 import process from 'node:process';
-import {
-    buildClientAdminConsoleEnv,
-    buildServerCoreEnv,
-    readLauncherConfig,
-} from './config';
+import { buildServerCoreEnv, readLauncherConfig } from './config';
 import { PACKAGE_DIRECTORY } from './constants';
 import {
     PACKAGE_BIN_NAME_MAP,
     PACKAGE_NAME_MAP,
-    PackageID,
     buildPackageProcessArgv,
     resolveLaunchPlan,
     resolvePackageEntrypoint,
@@ -50,7 +45,7 @@ export async function createCLIEntryPointCommand() {
             },
             package: {
                 type: 'positional',
-                description: 'The package(s) to target (client.admin-console, server.core) or arguments forwarded to the command.',
+                description: 'The package(s) to target (server.core) or arguments forwarded to the command.',
                 required: false,
             },
             configDirectory: {
@@ -82,6 +77,10 @@ export async function createCLIEntryPointCommand() {
                 file: ctx.args.configFile,
             });
 
+            for (const warning of [...plan.warnings, ...config.warnings]) {
+                consola.warn(warning);
+            }
+
             const configArgs : string[] = [];
             if (ctx.args.configFile) {
                 configArgs.push(`--configFile=${ctx.args.configFile}`);
@@ -102,19 +101,11 @@ export async function createCLIEntryPointCommand() {
                     pkg.version,
                 );
 
-                if (packageId === PackageID.SERVER_CORE) {
-                    children.push({
-                        id: packageId,
-                        ...buildPackageProcessArgv(entrypoint, [...plan.commandArgs, ...configArgs]),
-                        env: buildServerCoreEnv(config),
-                    });
-                } else {
-                    children.push({
-                        id: packageId,
-                        ...buildPackageProcessArgv(entrypoint, []),
-                        env: buildClientAdminConsoleEnv(config),
-                    });
-                }
+                children.push({
+                    id: packageId,
+                    ...buildPackageProcessArgv(entrypoint, [...plan.commandArgs, ...configArgs]),
+                    env: buildServerCoreEnv(config),
+                });
             }
 
             const exitCode = await superviseProcesses(children);

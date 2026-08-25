@@ -4,8 +4,9 @@
 [![main](https://github.com/authup/authup/actions/workflows/main.yml/badge.svg)](https://github.com/authup/authup/actions/workflows/main.yml)
 [![Known Vulnerabilities](https://snyk.io/test/github/authup/authup/badge.svg)](https://snyk.io/test/github/authup/authup)
 
-This package contains the CLI — a thin supervisor that boots the authup applications
-(`@authup/server-core`, `@authup/client-admin-console`) as child processes.
+This package contains the CLI: a thin supervisor that boots the authup server
+(`@authup/server-core`) as a child process. The server serves the admin console,
+the account console and the hosted auth pages itself.
 
 Authup is designed to be easy to use and flexible, with support for multiple authentication strategies.
 With Authup, developers can quickly and easily add authentication & authorization to their applications.
@@ -46,8 +47,8 @@ exits with that first application's exit code.
 ## Commands
 
 ```shell
-$ authup start                 # start server-core and client-admin-console
-$ authup start server.core     # start a subset (client.admin-console, server.core)
+$ authup start                 # start server-core (which serves every console)
+$ authup start server.core     # the same; `client.admin-console` is accepted but warns
 $ authup migration run         # forwarded to server-core only
 $ authup healthcheck           # forwarded to server-core only
 ```
@@ -61,23 +62,18 @@ Configuration is read from an `authup.conf` file (current working directory, or
 server.core.port=3001
 server.core.host=0.0.0.0
 server.core.publicUrl=http://localhost:3001
-
-client.admin-console.port=3000
-client.admin-console.host=0.0.0.0
-client.admin-console.apiUrl=http://localhost:3001
-client.admin-console.cookieDomain=example.com
 ```
 
 The `server.core` section is passed through to the server process
-(`--configFile`/`--configDirectory` are forwarded as well); the `client.admin-console`
-section is mapped onto the web application's environment
-(`PORT`, `HOST`, `NUXT_PUBLIC_API_URL`, `NUXT_PUBLIC_COOKIE_DOMAIN`).
-When `client.admin-console.apiUrl` is not set, it is derived from `server.core.publicUrl`.
+(`--configFile`/`--configDirectory` are forwarded as well). A
+`client.admin-console` section is read and answered with a warning: the admin
+console is served by server-core at `<publicUrl>/admin` and no longer runs as
+its own process.
 
-Both applications otherwise inherit the CLI's environment, with one deliberate
-exception: `PORT` and `HOST` are **always** set per application — from the
-sections above, or from the defaults shown there. Without that, a single
-ambient `PORT` (a PaaS injects one) would reach both applications and the
+The application otherwise inherits the CLI's environment, with one deliberate
+exception: `PORT` and `HOST` are **always** set, from the section above or
+from the defaults shown there. Without that, an ambient `PORT` (a PaaS
+injects one) would decide where the server listens and the
 second one would fail to bind.
 
 ## License
