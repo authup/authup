@@ -7,8 +7,15 @@
 
 import { parseArgs, runCommand } from 'citty';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import process from 'node:process';
+import {
+    describe,
+    expect,
+    it,
+    vi,
+} from 'vitest';
 import { CLI_CONFIG_ARGS } from '../../../src/cli/config';
 import { assertNoStrayPositionals, createCLIEntryPointCommand } from '../../../src/cli/module';
 import { PACKAGE_PATH } from '../../../src/path';
@@ -35,16 +42,24 @@ describe('src/cli/module', () => {
             { encoding: 'utf8' },
         ));
 
-        const command = await createCLIEntryPointCommand();
-        const meta = await (typeof command.meta === 'function' ?
-            command.meta() :
-            command.meta);
+        const directory = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'authup-cli-'));
+        const cwd = vi.spyOn(process, 'cwd').mockReturnValue(directory);
 
-        expect(meta).toEqual({
-            name: '@authup/server-core',
-            version: pkg.version,
-            description: pkg.description,
-        });
+        try {
+            const command = await createCLIEntryPointCommand();
+            const meta = await (typeof command.meta === 'function' ?
+                command.meta() :
+                command.meta);
+
+            expect(meta).toEqual({
+                name: '@authup/server-core',
+                version: pkg.version,
+                description: pkg.description,
+            });
+        } finally {
+            cwd.mockRestore();
+            await fs.promises.rm(directory, { recursive: true, force: true });
+        }
     });
 
     describe('assertNoStrayPositionals', () => {
