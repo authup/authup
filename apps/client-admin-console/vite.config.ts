@@ -28,6 +28,21 @@ export default defineConfig({
     // trusted origins outside production, so the login redirect is allowed
     // without any TRUSTED_ORIGINS configuration.
     server: { port: 3000 },
+    experimental: {
+        // Asset URLs that JavaScript resolves at RUNTIME (the preload helper
+        // fetching a lazy route's stylesheet) must be relative to the
+        // importing chunk, not the absolute `/admin/` base: server-core
+        // rebases the hrefs in index.html for a sub-path publicUrl, but it
+        // never sees the ones inside the bundle, so those would 404 there
+        // and the route would fail to load.
+        renderBuiltUrl(filename, { hostType }) {
+            if (hostType === 'js') {
+                return { relative: true };
+            }
+
+            return undefined;
+        },
+    },
     plugins: [
         vuePlugin(),
         tailwindcss(),

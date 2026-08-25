@@ -12,6 +12,9 @@ import {
     expect,
     it,
 } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
+import { resolveAdminConsoleDistPath } from '../../../../../src/adapters/http/ui/admin-console';
 import { httpRequest } from '../../../../utils';
 import { createTestApplication } from '../../../../app';
 
@@ -95,6 +98,21 @@ describe('src/http/controllers/workflows/admin (SPA shell)', () => {
         const response = await httpRequest(suite, 'GET', match![1]);
         expect(response.status).toEqual(200);
         expect(response.headers.get('content-type')).toContain('javascript');
+    });
+
+    // The shell's asset hrefs are rebased per request for a sub-path
+    // publicUrl; the URLs a lazy chunk resolves at runtime (its stylesheet,
+    // via vite's preload helper) are not, so they must be relative to the
+    // chunk rather than carry the absolute vite base.
+    it('should not bake the vite base into the bundle', () => {
+        const distPath = resolveAdminConsoleDistPath() as string;
+        const assets = path.join(distPath, 'assets');
+
+        for (const file of fs.readdirSync(assets).filter((name) => name.endsWith('.js'))) {
+            const content = fs.readFileSync(path.join(assets, file), 'utf-8');
+            expect(content, file).not.toContain('"/admin/"');
+            expect(content, file).not.toContain('`/admin/`');
+        }
     });
 
     it('should carry no server-rendered per-user state', async () => {
