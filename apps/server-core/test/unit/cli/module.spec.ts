@@ -5,8 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { describe, expect, it } from 'vitest';
-import { createCLIEntryPointCommand } from '../../../src/cli/module';
+import { parseArgs, runCommand } from 'citty';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import process from 'node:process';
+import {
+    describe,
+    expect,
+    it,
+    vi,
+} from 'vitest';
+import { CLI_CONFIG_ARGS } from '../../../src/cli/config';
+import { assertNoStrayPositionals, createCLIEntryPointCommand } from '../../../src/cli/module';
+import { PACKAGE_PATH } from '../../../src/path';
 
 describe('src/cli/module', () => {
     it('should register the worker subcommand', async () => {
@@ -22,5 +34,98 @@ describe('src/cli/module', () => {
             'start',
             'worker',
         ]);
+    });
+
+    it('should read the command meta from the package, not the cwd', async () => {
+        const pkg = JSON.parse(await fs.promises.readFile(
+            path.join(PACKAGE_PATH, 'package.json'),
+            { encoding: 'utf8' },
+        ));
+
+        const directory = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'authup-cli-'));
+        const cwd = vi.spyOn(process, 'cwd').mockReturnValue(directory);
+
+        try {
+            const command = await createCLIEntryPointCommand();
+            const meta = await (typeof command.meta === 'function' ?
+                command.meta() :
+                command.meta);
+
+            expect(meta).toEqual({
+                name: '@authup/server-core',
+                version: pkg.version,
+                description: pkg.description,
+            });
+        } finally {
+            cwd.mockRestore();
+            await fs.promises.rm(directory, { recursive: true, force: true });
+        }
+    });
+
+    describe('assertNoStrayPositionals', () => {
+        it('should refuse a stray positional on start', () => {
+            expect(() => assertNoStrayPositionals(parseArgs(
+                ['start', 'client.admin-console'],
+                CLI_CONFIG_ARGS,
+            ))).toThrow('Unexpected argument "client.admin-console" for command "start".');
+        });
+
+        it('should refuse a stray positional on worker', () => {
+            expect(() => assertNoStrayPositionals(parseArgs(
+                ['worker', 'client.admin-console'],
+                CLI_CONFIG_ARGS,
+            ))).toThrow('Unexpected argument "client.admin-console" for command "worker".');
+        });
+
+        it('should accept the space form of the config flags on start', () => {
+            expect(() => assertNoStrayPositionals(parseArgs(
+                ['start', '--configDirectory', '/etc/authup'],
+                CLI_CONFIG_ARGS,
+            ))).not.toThrow();
+
+            expect(() => assertNoStrayPositionals(parseArgs(
+                ['start', '--configFile', 'authup.conf'],
+                CLI_CONFIG_ARGS,
+            ))).not.toThrow();
+        });
+
+        it('should accept the equals form of the config flags on worker', () => {
+            expect(() => assertNoStrayPositionals(parseArgs(
+                ['worker', '--configDirectory=/etc/authup'],
+                CLI_CONFIG_ARGS,
+            ))).not.toThrow();
+        });
+
+        it('should keep the migration operation positional', () => {
+            expect(() => assertNoStrayPositionals(parseArgs(
+                ['migration', 'status'],
+                CLI_CONFIG_ARGS,
+            ))).not.toThrow();
+
+            expect(() => assertNoStrayPositionals(parseArgs(
+                ['migration', 'run', '--configDirectory', '/etc/authup'],
+                CLI_CONFIG_ARGS,
+            ))).not.toThrow();
+        });
+
+        it('should ignore a bare invocation', () => {
+            expect(() => assertNoStrayPositionals(parseArgs([], CLI_CONFIG_ARGS))).not.toThrow();
+        });
+    });
+
+    it('should refuse a stray positional on start before the subcommand runs', async () => {
+        const command = await createCLIEntryPointCommand();
+
+        await expect(runCommand(command, { rawArgs: ['start', 'client.admin-console'] }))
+            .rejects
+            .toThrow('Unexpected argument "client.admin-console" for command "start".');
+    });
+
+    it('should refuse a stray positional on worker before the subcommand runs', async () => {
+        const command = await createCLIEntryPointCommand();
+
+        await expect(runCommand(command, { rawArgs: ['worker', 'client.admin-console'] }))
+            .rejects
+            .toThrow('Unexpected argument "client.admin-console" for command "worker".');
     });
 });
