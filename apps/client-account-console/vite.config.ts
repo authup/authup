@@ -18,11 +18,11 @@ const repositoryRoot = path.resolve(__dirname, '..', '..');
 
 export default defineConfig({
     // The canonical mount point: server-core serves the bundle at
-    // `<publicUrl>/account` (rebasing asset hrefs per request when publicUrl
+    // `<publicUrl>/console/account` (rebasing asset hrefs per request when publicUrl
     // carries a sub-path), and a standalone host serves the dist under
-    // `/account` on its own origin. See src/config.ts for the runtime
+    // `/console/account` on its own origin. See src/config.ts for the runtime
     // configuration contract.
-    base: '/account/',
+    base: '/console/account/',
     plugins: [
         vuePlugin(),
         tailwindcss(),

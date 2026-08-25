@@ -339,16 +339,17 @@ export type Config = {
     passwordMinLength: number,
 
     /**
-     * Serve the account self-service surface (`/account`: profile, password,
-     * authenticators, sessions, applications). Operators with their own
-     * self-service portal can disable authup's.
+     * Serve the account self-service surface (`/console/account`: profile,
+     * password, authenticators, sessions, applications). Operators with their
+     * own self-service portal can disable authup's.
      * default: true
      */
     accountConsoleEnabled: boolean,
 
     /**
-     * Serve the admin console at `<publicUrl>/admin`. Off, the route answers
-     * with the disabled notice; a standalone-hosted console is unaffected.
+     * Serve the admin console at `<publicUrl>/console/admin`. Off, the route
+     * answers with the disabled notice; a standalone-hosted console is
+     * unaffected.
      * default: true
      */
     adminConsoleEnabled: boolean,

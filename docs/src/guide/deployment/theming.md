@@ -2,8 +2,8 @@
 
 Authup serves three consoles from the identity provider origin: the **auth
 console** (the login, consent, registration, activation, password and logout
-pages), the **admin console** at `/admin` and the **account console** at
-`/account`. All three can be rebranded from a directory you mount into the
+pages), the **admin console** at `/console/admin` and the **account console** at
+`/console/account`. All three can be rebranded from a directory you mount into the
 container. No image build, no rebuild of authup.
 
 ::: warning Experimental
@@ -460,7 +460,9 @@ different flow.
 **The auth console contract.** Your package must ship:
 
 - `dist/client/index.html` containing the `<!--preload-links-->` and
-  `<!--app-html-->` markers, built with vite `base: '/public/'`
+  `<!--app-html-->` markers, built with vite `base: '/console/auth/'` (the
+  assets then resolve under `/console/auth/assets/`, which is what server-core
+  mounts)
 - `dist/client/.vite/ssr-manifest.json` (`{}` is valid)
 - `dist/server/server.js` exporting `render(ctx)`, plus `CONTRACT_VERSION`
   once the contract moves past version 1 (omitting it means version 1)
@@ -476,7 +478,9 @@ The types are published in the package's `src/contract.ts`
 
 **The static console contracts** are smaller. Each of the two SPA bundles
 must ship `dist/index.html` carrying its configuration marker, plus
-`dist/assets/`:
+`dist/assets/`, built with the vite base authup mounts it under
+(`/console/admin/` and `/console/account/`): the shell's asset hrefs are
+absolute, so a bundle built for another base is served but loads nothing.
 
 | Console | Marker |
 |---|---|

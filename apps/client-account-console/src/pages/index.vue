@@ -167,7 +167,7 @@ export default defineComponent({
         // exchanges it with the saved PKCE parameters.
         //
         // In cookie mode the whole flow is server-side instead (plan 088):
-        // `GET /account/login` mints the PKCE pair and the state where only
+        // `GET /console/account/login` mints the PKCE pair and the state where only
         // the callback can read them, so no verifier and no token ever
         // reaches this JavaScript. The client-side path below stays for a
         // standalone host on a foreign origin, which can never present the

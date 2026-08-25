@@ -18,11 +18,11 @@ const repositoryRoot = path.resolve(__dirname, '..', '..');
 
 export default defineConfig({
     // The canonical mount point: server-core serves the bundle at
-    // `<publicUrl>/admin` (rebasing asset hrefs per request when publicUrl
+    // `<publicUrl>/console/admin` (rebasing asset hrefs per request when publicUrl
     // carries a sub-path), and a standalone host serves the dist under
-    // `/admin` on its own origin. See src/config.ts for the runtime
+    // `/console/admin` on its own origin. See src/config.ts for the runtime
     // configuration contract.
-    base: '/admin/',
+    base: '/console/admin/',
     // The standalone dev server (`npm run dev`, JS-token mode against
     // VITE_API_URL): port 3000 is the origin server-core seeds into the
     // trusted origins outside production, so the login redirect is allowed
@@ -31,7 +31,7 @@ export default defineConfig({
     experimental: {
         // Asset URLs that JavaScript resolves at RUNTIME (the preload helper
         // fetching a lazy route's stylesheet) must be relative to the
-        // importing chunk, not the absolute `/admin/` base: server-core
+        // importing chunk, not the absolute `/console/admin/` base: server-core
         // rebases the hrefs in index.html for a sub-path publicUrl, but it
         // never sees the ones inside the bundle, so those would 404 there
         // and the route would fail to load.

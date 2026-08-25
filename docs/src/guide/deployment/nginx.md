@@ -9,7 +9,7 @@ Don't forget to replace the placeholders with the actual values:
 :::
 
 There is one upstream. `server/core` serves the API and both consoles (the
-admin console at `/admin`, the account console at `/account`), so nothing has
+admin console at `/console/admin`, the account console at `/console/account`), so nothing has
 to be routed by path.
 
 ```txt
@@ -71,8 +71,8 @@ location /auth/ {
 PUBLIC_URL=https://[DOMAIN]/auth
 ```
 
-The consoles are then reachable at `https://[DOMAIN]/auth/admin` and
-`https://[DOMAIN]/auth/account`. Session cookies are scoped to the prefix, so
+The consoles are then reachable at `https://[DOMAIN]/auth/console/admin` and
+`https://[DOMAIN]/auth/console/account`. Session cookies are scoped to the prefix, so
 an application of your own on the same origin is left alone.
 
 ## Certificate

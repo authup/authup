@@ -151,6 +151,53 @@ async function assertConsoleServed(name, route, marker) {
     }
 
     log(`${name}: ${url} served the console shell.`);
+
+    return body;
+}
+
+/**
+ * Follow the first script asset a static console shell references.
+ *
+ * The vite base (`/console/admin/`, `/console/account/`, `/console/auth/`) is
+ * baked into the shell's `src` attributes as `<base>assets/<hash>.js`, and the
+ * server mounts the assets under its own constant for the same path. A dist built for another base is served
+ * without any error: the shell answers 200 with its stale hrefs and the
+ * browser renders a blank console. Fetching one href out of the shell and
+ * expecting JavaScript back is what proves the two agree.
+ */
+async function assertConsoleAssetServed(name, route, shell) {
+    const match = /<script[^>]+src="([^"]*\/assets\/[^"]+\.js)"/.exec(shell);
+    if (!match) {
+        throw fail(`${name}: the console shell references no script under assets/, so its entry cannot be located.`);
+    }
+
+    const url = new URL(match[1], new URL(route, SERVER_URL)).href;
+
+    let response;
+    try {
+        response = await fetch(url, { redirect: 'manual' });
+    } catch (e) {
+        throw fail(`${name}: ${url} could not be reached (${e.message}).`);
+    }
+
+    if (response.status !== 200) {
+        throw fail(`${name}: ${url} answered ${response.status}, expected 200. The console bundle was probably built for another base path than the server mounts it under.`);
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('javascript')) {
+        throw fail(`${name}: ${url} answered 200 with content type "${contentType}", expected JavaScript.`);
+    }
+
+    // Drain the body. The entry bundles are >1 MB; an undrained response
+    // leaves the socket mid-write, `server.close()` then waits for it, and
+    // the SIGTERM assertion below only passes through the 10s force-exit.
+    const body = await response.arrayBuffer();
+    if (body.byteLength === 0) {
+        throw fail(`${name}: ${url} answered 200 with an empty body.`);
+    }
+
+    log(`${name}: ${url} served the console entry script (${body.byteLength} bytes).`);
 }
 
 async function waitUntilReady(name, url, child) {
@@ -243,25 +290,43 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
         // All three consoles are RUNTIME dependencies of server-core, resolved
         // out of node_modules and served from their built dist. Probing the
         // root URL alone leaves that resolution untested.
-        await assertConsoleServed(
+        const authShell = await assertConsoleServed(
             `${name}/client-auth-console`,
             'logout',
             'window.__AUTHUP__',
+        );
+        // The auth console's PAGES stay on their protocol routes; only its
+        // assets moved under `/console/auth/assets/` (plan 099), so the same
+        // stale-base check applies to the script the SSR shell references.
+        await assertConsoleAssetServed(
+            `${name}/client-auth-console`,
+            'logout',
+            authShell,
         );
         // window.__AUTHUP__ rather than the shell markup: it only appears if
         // the `<!--account-config-->` marker was found and replaced, which is
         // that console's entire runtime contract. Without it the SPA silently
         // degrades to deriving its API URL from the origin.
-        await assertConsoleServed(
+        const accountShell = await assertConsoleServed(
             `${name}/client-account-console`,
-            'account',
+            'console/account',
             'window.__AUTHUP__',
         );
+        await assertConsoleAssetServed(
+            `${name}/client-account-console`,
+            'console/account',
+            accountShell,
+        );
         // The admin console (plan 081), same contract: `<!--admin-config-->`.
-        await assertConsoleServed(
+        const adminShell = await assertConsoleServed(
             `${name}/client-admin-console`,
-            'admin',
+            'console/admin',
             'window.__AUTHUP__',
+        );
+        await assertConsoleAssetServed(
+            `${name}/client-admin-console`,
+            'console/admin',
+            adminShell,
         );
 
         log(`${name}: sending SIGTERM.`);

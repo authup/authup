@@ -26,7 +26,8 @@ export function escapeHtml(value: string) : string {
  * served under.
  *
  * Built with the base path up front rather than via rebaseAssetURLs, which
- * only rewrites the fixed `/public/` and `/account/` vite bases.
+ * only rewrites the fixed console vite bases (`/console/auth/`,
+ * `/console/account/`, `/console/admin/`).
  */
 function buildAssetURL(assetPath: string, basePath: string) : string {
     const name = assetPath.slice(`${THEME_ASSETS_DIRECTORY_NAME}/`.length);

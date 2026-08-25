@@ -7,15 +7,15 @@
 
 import { getURLBasePath } from '@authup/kit';
 import type { IAppEvent } from 'routup';
+import { ADMIN_CONSOLE_SEGMENT } from '../constants.ts';
 import { defineStaticConsole } from '../static-console/index.ts';
-import { ADMIN_CONSOLE_SEGMENT } from './constants.ts';
 import type { AdminConsoleServeOptions } from './types.ts';
 
 /**
  * The admin console SPA (`@authup/client-admin-console`), served at
- * `<publicUrl>/admin` (plan 081). Same seam as the account console: the
- * config marker in the built `index.html` is its runtime contract, the
- * bundle's static assets ride the assets middleware (`/admin/assets`).
+ * `<publicUrl>/console/admin` (plan 081). Same seam as the account console:
+ * the config marker in the built `index.html` is its runtime contract, the
+ * bundle's static assets ride the assets middleware (`/console/admin/assets`).
  */
 export const adminConsole = defineStaticConsole({
     packageName: '@authup/client-admin-console',
@@ -52,9 +52,10 @@ export function serveAdminConsolePage(
             apiUrl: options.baseURL,
             basePath: `${basePath}/${ADMIN_CONSOLE_SEGMENT}`,
             features: options.features,
-            // This server implements the cookie-mode routes (/admin/login,
-            // /admin/callback, /sessions/@me). A capability assertion, not a
-            // setting: the console pairs it with its own same-origin check.
+            // This server implements the cookie-mode routes
+            // (/console/admin/login, /console/admin/callback, /sessions/@me).
+            // A capability assertion, not a setting: the console pairs it
+            // with its own same-origin check.
             cookieSession: true,
         },
     });

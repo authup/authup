@@ -192,8 +192,9 @@ describe('adapters/http/ui/theme', () => {
         });
 
         it('should prefix asset hrefs with the sub-path base', async () => {
-            // rebaseAssetURLs only rewrites the fixed /public/ and /account/
-            // vite bases, so /theme hrefs must be built prefixed.
+            // rebaseAssetURLs only rewrites the fixed console vite bases
+            // (/console/auth/, /console/account/), so /theme hrefs must
+            // be built prefixed.
             const head = buildThemeHead({
                 version: 1,
                 favicon: 'assets/favicon.svg',

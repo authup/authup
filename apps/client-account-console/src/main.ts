@@ -66,7 +66,7 @@ const pinia = createPinia();
 app.use(pinia);
 
 const router = createRouter({
-    // The base path is the mount point (default /account) — route paths
+    // The base path is the mount point (default /console/account): route paths
     // below are relative to it, so the app works embedded under a
     // publicUrl sub-path and on a standalone host alike.
     history: createWebHistory(config.basePath),
@@ -119,7 +119,7 @@ router.beforeEach(async (to) => {
         setAccountConsoleRef(recoveredRef);
     }
 
-    // Cookie mode redeems the code SERVER-side (`GET /account/callback`), so
+    // Cookie mode redeems the code SERVER-side (`GET /console/account/callback`), so
     // no code ever lands on this path and nothing here has a PKCE verifier to
     // present. The branch below is what keeps the same dist hostable on a
     // foreign origin, where the cookie can never be presented.

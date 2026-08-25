@@ -304,7 +304,7 @@ export default {
     passwordMinLength: 10,
 
     /**
-     * Serve the account self-service surface at `<publicUrl>/account`
+     * Serve the account self-service surface at `<publicUrl>/console/account`
      * (profile, password, authenticators, sessions, applications).
      * Disable it when you run your own self-service portal.
      * env: ACCOUNT_CONSOLE_ENABLED
@@ -313,7 +313,7 @@ export default {
     accountConsoleEnabled: true,
 
     /**
-     * Serve the admin console at `<publicUrl>/admin` (realms, clients,
+     * Serve the admin console at `<publicUrl>/console/admin` (realms, clients,
      * users, roles, permissions, policies, keys, sessions, events).
      * Disable it to administer the instance through the API alone.
      * env: ADMIN_CONSOLE_ENABLED

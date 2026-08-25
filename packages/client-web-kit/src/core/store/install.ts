@@ -70,7 +70,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
 
     // Written explicitly, because a cookie stored without a `Path` takes the
     // browser's default-path: the directory of the writing document. The
-    // account console at `/account` and the hosted auth pages at `/` are one
+    // account console at `/console/account` and the hosted auth pages at `/` are one
     // origin sharing one session under one set of cookie names, so the
     // implicit paths gave them two shadowing sets that expire independently.
     const cookiePath = options.cookiePath || COOKIE_PATH;
@@ -79,7 +79,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
      * Drop the copies written before the path was pinned.
      *
      * Those sit on the browser's default-path for the writing document
-     * (RFC 6265 5.1.4): `/account` for the account console. A pinned write
+     * (RFC 6265 5.1.4): `/console/account` for the account console. A pinned write
      * does not overwrite them, and they WIN the read, because
      * `document.cookie` lists the longer path first and the parser keeps the
      * first match. Hydration would then persist what they hold back onto the
@@ -91,9 +91,10 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
      * Cleared is every path a cookie could sit on and still reach this
      * document, which by the RFC 6265 5.2.4 path-match is each `/`-boundary
      * prefix of the current path PLUS that path itself. The last part is not
-     * redundant: `/account` serves the console too, and a copy written from
-     * `/account/password` sits on exactly `/account`, matching it. Only the
-     * store's own names are touched, and never on the pinned path.
+     * redundant: `/console/account` serves the console too, and a copy written
+     * from `/console/account/password` sits on exactly `/console/account`,
+     * matching it. Only the store's own names are touched, and never on the
+     * pinned path.
      */
     const dropShadowingCookies = () => {
         const pathname = typeof window === 'undefined' ?

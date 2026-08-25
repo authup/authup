@@ -13,8 +13,8 @@ Every realm automatically gets two built-in, public OAuth2 clients:
 
 | Name              | Used by                                                          |
 |-------------------|------------------------------------------------------------------|
-| `admin-console`   | Authup's [admin console](./configuration-client-admin-console.md), the administration surface served at `<publicUrl>/admin`: selecting a realm on its login screen redirects the browser to `/authorize?client_id=admin-console&realm_id=<id>` |
-| `account-console` | Authup's [account console](./account-console.md), the self-service surface served at `<publicUrl>/account`: its sign-in redirects the browser to `/authorize?client_id=account-console&realm_id=<id>` |
+| `admin-console`   | Authup's [admin console](./configuration-client-admin-console.md), the administration surface served at `<publicUrl>/console/admin`: selecting a realm on its login screen redirects the browser to `/authorize?client_id=admin-console&realm_id=<id>` |
+| `account-console` | Authup's [account console](./account-console.md), the self-service surface served at `<publicUrl>/console/account`: its sign-in redirects the browser to `/authorize?client_id=account-console&realm_id=<id>` |
 
 Both authenticate end users via the authorization-code flow with PKCE.
 Splitting them keeps concerns separate per application: sessions and audit
@@ -78,7 +78,7 @@ One more caveat: the gate evaluates identity data only (realm, identity
 type, time windows, compositions thereof); role-membership conditions are
 not expressible there yet. Regular users do not need the admin console —
 password, MFA, session and application self-service live on the
-[account console](./account-console.md) (`<publicUrl>/account`), so
+[account console](./account-console.md) (`<publicUrl>/console/account`), so
 restricting the admin console to your administrators is a reasonable
 default posture.
 :::

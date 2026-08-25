@@ -12,14 +12,14 @@ describe('core/oauth2/authorization-request', () => {
     describe('buildConsoleLoginURL', () => {
         it('should default to the account console', () => {
             expect(buildConsoleLoginURL({ baseURL: 'https://auth.example.com' }))
-                .toEqual('https://auth.example.com/account/login');
+                .toEqual('https://auth.example.com/console/account/login');
         });
 
         it('should carry a realm hint', () => {
             expect(buildConsoleLoginURL({
                 baseURL: 'https://auth.example.com',
                 realmId: 'master',
-            })).toEqual('https://auth.example.com/account/login?realmId=master');
+            })).toEqual('https://auth.example.com/console/account/login?realmId=master');
         });
 
         it('should address another console', () => {
@@ -28,15 +28,15 @@ describe('core/oauth2/authorization-request', () => {
             expect(buildConsoleLoginURL({
                 baseURL: 'https://auth.example.com',
                 console: 'admin',
-            })).toEqual('https://auth.example.com/admin/login');
+            })).toEqual('https://auth.example.com/console/admin/login');
         });
 
         it('should not double the separator on a trailing slash', () => {
             // publicUrl is normalized upstream, but a caller passing the raw
-            // value would otherwise emit `//account/login`, which is a
+            // value would otherwise emit `//console/account/login`, which is a
             // protocol-relative path once resolved.
             expect(buildConsoleLoginURL({ baseURL: 'https://auth.example.com/auth/' }))
-                .toEqual('https://auth.example.com/auth/account/login');
+                .toEqual('https://auth.example.com/auth/console/account/login');
         });
     });
 });

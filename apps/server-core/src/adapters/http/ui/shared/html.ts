@@ -119,8 +119,9 @@ export function applyUIPageHeaders(event: IAppEvent) : void {
 
 /**
  * Rewrite root-absolute asset references (script/link/preload tags emitted
- * with a fixed vite base, e.g. /public/ or /account/) so they carry the
- * path prefix under which authup is publicly served (e.g. /auth/public/...).
+ * with a fixed vite base, e.g. /console/auth/ or /console/account/)
+ * so they carry the path prefix under which authup is publicly served (e.g.
+ * /auth/console/auth/assets/...).
  * The reverse proxy is expected to strip the prefix before the request
  * reaches authup, so the assets middleware keeps serving at the fixed base.
  */

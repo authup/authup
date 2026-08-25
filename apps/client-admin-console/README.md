@@ -6,7 +6,7 @@
 
 This is the admin console for Authup, a flexible and secure authentication and
 authorization system: a client-only Vue SPA that `@authup/server-core` serves
-at `<publicUrl>/admin`. The package ships the built `dist/` only; there is no
+at `<publicUrl>/console/admin`. The package ships the built `dist/` only; there is no
 server process and no binary.
 
 ## Usage
@@ -17,7 +17,7 @@ console with its opaque session cookie. `ADMIN_CONSOLE_ENABLED=false` turns
 the route into a disabled notice; `ADMIN_CONSOLE_PATH` points server-core at a
 substituted package directory.
 
-Standalone hosting: serve `dist/` under a `/admin` base path on any static
+Standalone hosting: serve `dist/` under the `/console/admin` base path (or any other, injected as `basePath`) on any static
 host (every deep link must answer with `index.html`), inject the
 configuration by replacing the `<!--admin-config-->` marker in `index.html`
 with `<script>window.__AUTHUP__ = { apiUrl: 'https://auth.example.com' };</script>`
@@ -28,7 +28,7 @@ the browser-side authorization-code flow instead of the session cookie.
 ## Development
 
 ```shell
-VITE_API_URL=http://localhost:3001 npm run dev    # vite on http://localhost:3000/admin/
+VITE_API_URL=http://localhost:3001 npm run dev    # vite on http://localhost:3000/console/admin/
 npm run build                                       # dist/, what server-core serves
 npm run test
 ```

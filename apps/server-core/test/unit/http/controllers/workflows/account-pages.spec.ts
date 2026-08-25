@@ -33,7 +33,7 @@ describe('src/http/controllers/workflows/account (SPA shell)', () => {
     });
 
     it('should serve the account console shell with injected config', async () => {
-        const response = await httpRequest(suite, 'GET', '/account');
+        const response = await httpRequest(suite, 'GET', '/console/account');
         expect(response.status).toEqual(200);
         expect(response.headers.get('content-type')).toContain('text/html');
         expect(response.headers.get('content-security-policy')).toContain("frame-ancestors 'none'");
@@ -44,12 +44,12 @@ describe('src/http/controllers/workflows/account (SPA shell)', () => {
         const config = extractAccountConfig(body);
 
         expect(typeof config.apiUrl).toEqual('string');
-        expect(config.basePath).toEqual('/account');
+        expect(config.basePath).toEqual('/console/account');
         expect(config.features.accountConsole).toEqual(true);
     });
 
     it('should serve the same shell for sub-paths', async () => {
-        for (const path of ['/account/sessions', '/account/UNKNOWN']) {
+        for (const path of ['/console/account/sessions', '/console/account/UNKNOWN']) {
             const response = await httpRequest(suite, 'GET', path);
             expect(response.status).toEqual(200);
             expect(response.headers.get('content-type')).toContain('text/html');
@@ -57,9 +57,9 @@ describe('src/http/controllers/workflows/account (SPA shell)', () => {
     });
 
     it('should serve the bundle assets', async () => {
-        const shell = await (await httpRequest(suite, 'GET', '/account')).text();
+        const shell = await (await httpRequest(suite, 'GET', '/console/account')).text();
 
-        const match = shell.match(/src="(\/account\/assets\/[^"]+\.js)"/);
+        const match = shell.match(/src="(\/console\/account\/assets\/[^"]+\.js)"/);
         expect(match).toBeTruthy();
 
         const response = await httpRequest(suite, 'GET', match![1]);
@@ -74,7 +74,7 @@ describe('src/http/controllers/workflows/account (SPA shell)', () => {
         // hydration payload would carry config/data keys and fail the
         // exact-keys assertion below). Nothing actor-scoped can leak into a
         // (potentially cached) response body.
-        const body = await (await httpRequest(suite, 'GET', '/account/sessions')).text();
+        const body = await (await httpRequest(suite, 'GET', '/console/account/sessions')).text();
 
         expect(body.match(/window\.__AUTHUP__ =/g)).toHaveLength(1);
 
@@ -104,7 +104,7 @@ describe('src/http/controllers/workflows/account (SPA shell)', () => {
         const response = await httpRequest(
             suite,
             'GET',
-            '/account?ref=http%3A%2F%2Flocalhost%3A3000%2Fsettings',
+            '/console/account?ref=http%3A%2F%2Flocalhost%3A3000%2Fsettings',
         );
         expect(response.status).toEqual(200);
 
@@ -116,7 +116,7 @@ describe('src/http/controllers/workflows/account (SPA shell)', () => {
         const response = await httpRequest(
             suite,
             'GET',
-            '/account?ref=https%3A%2F%2Fevil.test%2Fx',
+            '/console/account?ref=https%3A%2F%2Fevil.test%2Fx',
         );
         expect(response.status).toEqual(200);
 
@@ -128,7 +128,7 @@ describe('src/http/controllers/workflows/account (SPA shell)', () => {
         const response = await httpRequest(
             suite,
             'GET',
-            '/account?ref=javascript%3Aalert(1)',
+            '/console/account?ref=javascript%3Aalert(1)',
         );
         expect(response.status).toEqual(200);
 
@@ -140,7 +140,7 @@ describe('src/http/controllers/workflows/account (SPA shell)', () => {
         const response = await httpRequest(
             suite,
             'GET',
-            '/account/sessions?ref=https%3A%2F%2Fevil.test%2Fx',
+            '/console/account/sessions?ref=https%3A%2F%2Fevil.test%2Fx',
         );
         expect(response.status).toEqual(200);
 
@@ -154,14 +154,14 @@ describe('src/http/controllers/workflows/account (SPA shell)', () => {
         const response = await httpRequest(
             suite,
             'GET',
-            `/account?ref=${encodeURIComponent("http://localhost:3000/$'$&$`")}`,
+            `/console/account?ref=${encodeURIComponent("http://localhost:3000/$'$&$`")}`,
         );
         expect(response.status).toEqual(200);
 
         const body = await response.text();
         // The payload must still be exactly one parseable JSON object.
         const config = extractAccountConfig(body);
-        expect(config.basePath).toEqual('/account');
+        expect(config.basePath).toEqual('/console/account');
     });
 });
 
@@ -184,7 +184,7 @@ describe('src/http/controllers/workflows/account (disabled)', () => {
     // flag) is a thin v-if over the resolved config — pinned by the account
     // app's own config.spec.ts, not exercisable from a server-core test.
     it('should inject the disabled flag', async () => {
-        const response = await httpRequest(suite, 'GET', '/account');
+        const response = await httpRequest(suite, 'GET', '/console/account');
         expect(response.status).toEqual(200);
 
         const config = extractAccountConfig(await response.text());
@@ -198,11 +198,11 @@ describe('src/http/controllers/workflows/account (disabled)', () => {
     });
 
     // The admin console's redirect stub maps `/settings` to PATH_MAP[''] = '/',
-    // producing `<apiUrl>/account/` WITH a trailing slash. Every other test
-    // here hits `/account` without one, so the route the stub actually emits
+    // producing `<apiUrl>/console/account/` WITH a trailing slash. Every other test
+    // here hits `/console/account` without one, so the route the stub actually emits
     // needs its own coverage.
-    it('should serve the shell for /account/ with a trailing slash', async () => {
-        const response = await httpRequest(suite, 'GET', '/account/');
+    it('should serve the shell for /console/account/ with a trailing slash', async () => {
+        const response = await httpRequest(suite, 'GET', '/console/account/');
         expect(response.status).toEqual(200);
         expect(response.headers.get('content-type')).toContain('text/html');
     });
@@ -211,7 +211,7 @@ describe('src/http/controllers/workflows/account (disabled)', () => {
         const response = await httpRequest(
             suite,
             'GET',
-            '/account/?ref=http%3A%2F%2Flocalhost%3A3000',
+            '/console/account/?ref=http%3A%2F%2Flocalhost%3A3000',
         );
         expect(response.status).toEqual(200);
 
@@ -221,11 +221,11 @@ describe('src/http/controllers/workflows/account (disabled)', () => {
 
     it('should serve every route the settings redirect maps onto', async () => {
         for (const path of [
-            '/account/',
-            '/account/password',
-            '/account/authenticators',
-            '/account/sessions',
-            '/account/applications',
+            '/console/account/',
+            '/console/account/password',
+            '/console/account/authenticators',
+            '/console/account/sessions',
+            '/console/account/applications',
         ]) {
             const response = await httpRequest(suite, 'GET', path);
             expect(response.status).toEqual(200);

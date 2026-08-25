@@ -321,8 +321,8 @@ The `authup` CLI is a process supervisor, so its suite is split in two:
   section is accepted and answered with a warning, never launched).
 - **Smoke** (`npm run test:smoke`): boots the built CLI's `start` against sqlite
   on a non-default port, waits for server-core, asserts all THREE consoles are
-  served (`/logout`, `/account`, `/admin` each answer 200 with the injected
-  `window.__AUTHUP__`), sends SIGTERM, asserts the child exits and the CLI
+  served (`/logout`, `/console/account`, `/console/admin` each answer 200 with the injected
+  `window.__AUTHUP__`, and the first script asset each static console shell references answers 200 as JavaScript, so a dist built for another base fails here instead of serving a blank console), sends SIGTERM, asserts the child exits and the CLI
   exits 0. `npm run test:smoke:packed` runs the same assertions against
   `npm pack`ed tarballs installed into a temp project. **The packed variant is
   the one that matters:** every launcher breakage found in plan 078 (the ESM
@@ -343,7 +343,7 @@ same-origin API derivation, the capability-AND-applicability rule behind
 `cookieSession`), `test/unit/guard.spec.ts` the routing guard (the login
 bounce with `redirect`, the three route-meta gates, the cookie-mode rules:
 `logout({ revoke: false })` on a failed or `RESTORING` resolve, never a code
-exchange). The server-side half, `/admin` serving and the cookie login
+exchange). The server-side half, `/console/admin` serving and the cookie login
 round-trip for BOTH consoles, lives in server-core
 (`test/unit/http/controllers/workflows/admin-pages.spec.ts` and the
 `describe.each` over both consoles in

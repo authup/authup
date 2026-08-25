@@ -81,7 +81,7 @@ describe('http/controllers/workflows/ui-pages-theme-fragment', () => {
     });
 
     it('should splice the fragment into the account console head', async () => {
-        const response = await httpRequest(suite, 'GET', '/account');
+        const response = await httpRequest(suite, 'GET', '/console/account');
         expect(response.status).toEqual(200);
 
         expect(await response.text()).toContain('<meta name="operator" content="acme">');

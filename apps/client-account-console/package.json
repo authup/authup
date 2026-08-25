@@ -3,7 +3,7 @@
     "version": "1.0.0-beta.63",
     "type": "module",
     "license": "AGPL-3.0-only",
-    "description": "Authup's account console: the end-user self-service SPA, served by server-core at /account and hostable standalone.",
+    "description": "Authup's account console: the end-user self-service SPA, served by server-core at /console/account and hostable standalone.",
     "files": [
         "dist"
     ],

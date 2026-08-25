@@ -18,7 +18,7 @@ export type AccountConsoleConfigInput = {
 
     /**
      * Path the app is served under (the vue-router history base).
-     * default: /account
+     * default: /console/account
      */
     basePath?: string,
 
@@ -33,9 +33,9 @@ export type AccountConsoleConfigInput = {
      * Two different facts gate cookie mode and only one of them is knowable
      * here. Whether the credential can be PRESENTED is a client-side question
      * (is the API this document's own origin?) and is derived below. Whether
-     * the server implements `/account/login|callback|session` at all is a
+     * the server implements `/console/account/login|callback|session` at all is a
      * server-side question, and a console dist newer than the server it talks
-     * to cannot answer it: it would navigate to `/account/login` and get a 404
+     * to cannot answer it: it would navigate to `/console/account/login` and get a 404
      * on a top-level navigation, which is unrecoverable. `serveAccountConsolePage`
      * sets this, so a server that serves the bundle vouches for the routes.
      */
@@ -77,6 +77,14 @@ declare global {
 }
 
 /**
+ * The mount server-core serves the console under. The API-prefix derivation
+ * strips this whole two-segment suffix: a base path ending in `/account`
+ * alone is a foreign layout, and stripping one segment of it would derive
+ * `<origin>/console` as the API and `/console` as the kit cookie path.
+ */
+const BASE_PATH_DEFAULT = '/console/account';
+
+/**
  * Resolve the runtime configuration.
  *
  * The serving side injects `window.__AUTHUP__` by replacing the
@@ -84,7 +92,7 @@ declare global {
  * request; a standalone host can inject its own script or rely on the
  * defaults). `VITE_API_URL` bakes an API URL in at build/dev time (the
  * dev-server affordance — see README.md). Everything degrades to
- * same-origin derivation: with a base path of `<prefix>/account`, the API
+ * same-origin derivation: with a base path of `<prefix>/console/account`, the API
  * URL defaults to `<origin><prefix>`.
  */
 export function resolveAccountConsoleConfig(
@@ -95,7 +103,7 @@ export function resolveAccountConsoleConfig(
         (typeof window !== 'undefined' ? window.__AUTHUP__ : undefined) ??
         {};
 
-    const basePath = normalizeBasePath(injected.basePath ?? '/account');
+    const basePath = normalizeBasePath(injected.basePath ?? BASE_PATH_DEFAULT);
     const origin = location?.origin ??
         (typeof window !== 'undefined' ? window.location.origin : '');
 
@@ -104,8 +112,8 @@ export function resolveAccountConsoleConfig(
         apiUrl = import.meta.env.VITE_API_URL;
     }
     if (!apiUrl) {
-        const prefix = basePath.endsWith('/account') ?
-            basePath.slice(0, -'/account'.length) :
+        const prefix = basePath.endsWith(BASE_PATH_DEFAULT) ?
+            basePath.slice(0, -BASE_PATH_DEFAULT.length) :
             '';
 
         apiUrl = `${origin}${prefix}`;
@@ -124,7 +132,7 @@ export function resolveAccountConsoleConfig(
         //
         // The injected half is the server vouching for the routes (see the
         // input field): without it a console dist newer than its server would
-        // navigate to a `/account/login` that does not exist. The derived half
+        // navigate to a `/console/account/login` that does not exist. The derived half
         // is this document checking it could present the credential at all:
         // it is `SameSite=Strict` and the server also demands
         // `Sec-Fetch-Site: same-origin`, so a foreign API means every request
@@ -132,7 +140,7 @@ export function resolveAccountConsoleConfig(
         // representable and silently fatal — the kick redirects, the cookie
         // lands on the API's origin, and the console loops back to sign-in
         // with no diagnostic. Together they are exactly the condition under
-        // which `${apiUrl}/account/login` is both a real route and a usable
+        // which `${apiUrl}/console/account/login` is both a real route and a usable
         // one, which is what makes the kick in `pages/index.vue` sound.
         cookieSession: injected.cookieSession === true &&
             isSameOriginApiUrl(apiUrl, origin),

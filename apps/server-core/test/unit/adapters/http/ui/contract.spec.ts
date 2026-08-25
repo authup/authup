@@ -120,7 +120,7 @@ describe('adapters/http/ui (console package contracts)', () => {
     describe('account console', () => {
         it('should accept a shell carrying the config marker', async () => {
             const root = createAccountConsolePackage(
-                `<html><head>${ACCOUNT_CONSOLE_CONFIG_MARKER}</head><body><script src="/account/assets/index.js"></script></body></html>`,
+                `<html><head>${ACCOUNT_CONSOLE_CONFIG_MARKER}</head><body><script src="/console/account/assets/index.js"></script></body></html>`,
             );
 
             await expect(bindConsolePackages({ accountConsolePath: root }))
@@ -136,12 +136,12 @@ describe('adapters/http/ui (console package contracts)', () => {
             );
 
             await expect(bindConsolePackages({ accountConsolePath: root }))
-                .rejects.toThrow(/not built with the vite base "\/account\/"/);
+                .rejects.toThrow(/not built with the vite base "\/console\/account\/"/);
         });
 
         it('should apply the same contract to the admin console', async () => {
             const root = createAccountConsolePackage(
-                '<html><head><!--admin-config--></head><body><script src="/admin/assets/index.js"></script></body></html>',
+                '<html><head><!--admin-config--></head><body><script src="/console/admin/assets/index.js"></script></body></html>',
             );
 
             await expect(bindConsolePackages({ adminConsolePath: root }))

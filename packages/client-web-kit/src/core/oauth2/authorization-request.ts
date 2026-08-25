@@ -167,6 +167,9 @@ export type BuildConsoleLoginURLContext = {
  * that the PKCE verifier is minted where JavaScript cannot see it, so the
  * browser is handed to the server rather than calling it. Hand-assembling the
  * string at the call site is what this replaces.
+ *
+ * Every served console sits under the shared `/console/<name>` mount, and its
+ * kick is that mount's `/login` route.
  */
 export function buildConsoleLoginURL(ctx: BuildConsoleLoginURLContext): string {
     const base = ctx.baseURL.replace(/\/+$/, '');
@@ -178,5 +181,5 @@ export function buildConsoleLoginURL(ctx: BuildConsoleLoginURLContext): string {
     }
 
     const qs = params.toString();
-    return `${base}/${target}/login${qs ? `?${qs}` : ''}`;
+    return `${base}/console/${target}/login${qs ? `?${qs}` : ''}`;
 }

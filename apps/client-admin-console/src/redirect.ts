@@ -46,7 +46,7 @@ export function resolveLoginRedirect(value: unknown) : string | undefined {
 /**
  * Carry the post-login destination across the cookie-mode round-trip.
  *
- * The server-side kick (`GET /admin/login`) lands the browser on the console
+ * The server-side kick (`GET /console/admin/login`) lands the browser on the console
  * root once the credential is issued, so the page the visitor asked for
  * rides this stash: written immediately before the kick, consumed by the
  * router guard on the way back. Single use, same tab, and a storage failure

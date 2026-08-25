@@ -32,6 +32,6 @@ export const PACKAGE_NAME_MAP : Record<LaunchablePackageID, `${PackageName}`> = 
 
 export const PACKAGE_BIN_NAME_MAP : Record<LaunchablePackageID, string> = { [PackageID.SERVER_CORE]: 'authup-server' };
 
-export const ADMIN_CONSOLE_SELECTOR_WARNING = `The "${PackageID.CLIENT_ADMIN_CONSOLE}" package is served by server-core at <publicUrl>/admin and no longer runs as a separate process; the selector is ignored.`;
+export const ADMIN_CONSOLE_SELECTOR_WARNING = `The "${PackageID.CLIENT_ADMIN_CONSOLE}" package is served by server-core at <publicUrl>/console/admin and no longer runs as a separate process; the selector is ignored.`;
 
-export const ADMIN_CONSOLE_SECTION_WARNING = `The "${PackageID.CLIENT_ADMIN_CONSOLE}" config section has no effect: the admin console is served by server-core at <publicUrl>/admin. Remove the section.`;
+export const ADMIN_CONSOLE_SECTION_WARNING = `The "${PackageID.CLIENT_ADMIN_CONSOLE}" config section has no effect: the admin console is served by server-core at <publicUrl>/console/admin. Remove the section.`;

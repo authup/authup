@@ -253,6 +253,15 @@ export default defineConfig({
                     ],
                 },
                 {
+                    text: 'Console Replicas',
+                    items: [
+                        {
+                            text: 'Overview',
+                            link: '/guide/deployment/console-replicas',
+                        },
+                    ],
+                },
+                {
                     text: 'Provisioning',
                     items: [
                         {

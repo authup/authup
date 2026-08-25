@@ -13,7 +13,7 @@ and [Python](../sdks/python/index) provide a way to interact with the architectu
 
 The server serves three web surfaces on its own origin: the hosted auth pages
 (login, consent, registration, password recovery), the account console at
-`/account` (end-user self-service) and the admin console at `/admin`
+`/console/account` (end-user self-service) and the admin console at `/console/admin`
 (management of realms, users, clients, roles and everything else the API
 holds). All three are Vue 3 applications built on the frontend components of
 the client package, which can also be used in a custom user interface.

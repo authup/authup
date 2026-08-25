@@ -23,9 +23,9 @@ import type { AdminControllerContext, AdminControllerOptions } from './types.ts'
  * 081) and owns its server-side login (plan 088): the shared
  * {@link ConsoleLogin} bound to the per-realm `admin-console` client.
  *
- * Client-side routing owns everything below /admin, and the console's routes
- * nest (`/users/<id>/roles`), so the shell route is a wildcard rather than
- * the account console's single segment.
+ * Client-side routing owns everything below /console/admin, and the console's
+ * routes nest (`/users/<id>/roles`), so the shell route is a wildcard rather
+ * than the account console's single segment.
  */
 @DController(`/${ADMIN_CONSOLE_SEGMENT}`)
 export class AdminController {
@@ -64,7 +64,7 @@ export class AdminController {
     /**
      * Two things share this URL. With a `realmId` it is the server-side kick;
      * without one it is the console's own login PAGE (the SPA route `/login`
-     * under the `/admin` base): where the guard sends a signed-out visitor,
+     * under the `/console/admin` base): where the guard sends a signed-out visitor,
      * where a refused callback lands with its `?error=` marker, and what a
      * reload of that address requests. Answering the page with the kick's
      * "a realm is required" error made every refusal a raw 400.

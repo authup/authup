@@ -53,8 +53,8 @@ Now all should be set up, and you are ready to go :tada:
 
 This will launch the following with default settings:
 - API: `http://localhost:3001/`
-- Admin console: `http://localhost:3001/admin`
-- Account console: `http://localhost:3001/account`
+- Admin console: `http://localhost:3001/console/admin`
+- Account console: `http://localhost:3001/console/account`
 
 ::: warning The `client/admin-console` service was retired
 The admin console used to be a second container. It is now served by

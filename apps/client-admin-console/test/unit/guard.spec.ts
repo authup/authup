@@ -121,7 +121,7 @@ describe('src/guard', () => {
             expect(store.logout).toHaveBeenCalledWith({ revoke: false });
         });
 
-        // The code is redeemed SERVER-side (`GET /admin/callback`), so a
+        // The code is redeemed SERVER-side (`GET /console/admin/callback`), so a
         // `code` on a client route is noise, never a verifier to present.
         it('should never exchange a code', async () => {
             const { guard, store } = createGuard({}, { cookieSession: true });
@@ -188,7 +188,7 @@ describe('src/guard', () => {
             saveAuthorizationRequest({
                 state: 'the-state',
                 code_verifier: 'the-verifier',
-                redirect_uri: 'http://console.test/admin/login/callback?redirect=%2Fusers',
+                redirect_uri: 'http://console.test/console/admin/login/callback?redirect=%2Fusers',
                 client_id: 'admin-console',
                 realm_id: 'realm-1',
             });
@@ -207,7 +207,7 @@ describe('src/guard', () => {
 
             expect(store.exchangeAuthorizationCode).toHaveBeenCalledWith('the-code', {
                 code_verifier: 'the-verifier',
-                redirect_uri: 'http://console.test/admin/login/callback?redirect=%2Fusers',
+                redirect_uri: 'http://console.test/console/admin/login/callback?redirect=%2Fusers',
                 client_id: 'admin-console',
                 realm_id: 'realm-1',
             });
@@ -220,7 +220,7 @@ describe('src/guard', () => {
             saveAuthorizationRequest({
                 state: 'the-state',
                 code_verifier: 'the-verifier',
-                redirect_uri: 'http://console.test/admin/login/callback',
+                redirect_uri: 'http://console.test/console/admin/login/callback',
                 client_id: 'admin-console',
                 realm_id: 'realm-1',
             });

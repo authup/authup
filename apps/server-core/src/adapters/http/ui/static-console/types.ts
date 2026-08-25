@@ -21,8 +21,9 @@ export type StaticConsoleDefinition = {
      */
     marker: string,
     /**
-     * The fixed vite `base` the bundle was built with (`/account/`). Asset
-     * hrefs are rebased from it onto the deployment base path per request.
+     * The fixed vite `base` the bundle was built with (`/console/account/`).
+     * Asset hrefs are rebased from it onto the deployment base path per
+     * request.
      */
     viteBase: string,
 };

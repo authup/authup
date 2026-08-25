@@ -32,5 +32,5 @@ export function useAccountConsoleURL(path = '/') : string {
     const normalized = path.startsWith('/') ? path : `/${path}`;
     const ref = encodeURIComponent(`${window.location.origin}${config.basePath}`);
 
-    return `${config.apiUrl}/account${normalized}?ref=${ref}`;
+    return `${config.apiUrl}/console/account${normalized}?ref=${ref}`;
 }

@@ -22,7 +22,8 @@ export type ConsoleLoginDefinition = {
      */
     clientName: string,
     /**
-     * The path segment the console is served under (`account`, `admin`). It
+     * The path the console is served under, relative to the deployment base
+     * path (`console/account`, `console/admin`; it may carry a slash). It
      * scopes the login cookie, builds the callback URL and names where the
      * browser lands once the credential is issued.
      */

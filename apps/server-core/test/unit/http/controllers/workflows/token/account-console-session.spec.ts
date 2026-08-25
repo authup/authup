@@ -146,7 +146,7 @@ describe('account-console session continuity (plan 080 work item 0)', () => {
         // 2) the account surface's kick: auth-code + PKCE against the
         //    per-realm public account-console client, then the public-client
         //    token exchange (PKCE, no secret)
-        const tokenResponse = await authorizeAndExchange(userClient, accountConsole, '/account');
+        const tokenResponse = await authorizeAndExchange(userClient, accountConsole, '/console/account');
 
         expect(tokenResponse.access_token).toBeDefined();
 
@@ -169,7 +169,7 @@ describe('account-console session continuity (plan 080 work item 0)', () => {
         expect(own[0].clientId).toBeNull();
     });
 
-    // Plan 086: the visitor arrives at /account with an admin-console session,
+    // Plan 086: the visitor arrives at /console/account with an admin-console session,
     // so the console forces a silent code flow against its OWN client. The
     // point of that flow is a token attributed to `account-console`. Without
     // per-token attribution the shell would render off an admin-console token
@@ -195,13 +195,13 @@ describe('account-console session continuity (plan 080 work item 0)', () => {
         );
         expect(decodeJwtPayload(adminGrant.access_token).session_id).toEqual(sessionId);
 
-        // 2) opening /account: the session's client is not `account-console`,
+        // 2) opening /console/account: the session's client is not `account-console`,
         //    so the console re-mints against its own client silently. The
         //    bearer is the one the shared IdP-origin cookie jar holds.
         const accountGrant = await authorizeAndExchange(
             bearerFor(adminGrant.access_token),
             accountConsole,
-            '/account',
+            '/console/account',
             OAuth2AuthorizationPrompt.NONE,
         );
         expect(decodeJwtPayload(accountGrant.access_token).session_id).toEqual(sessionId);
