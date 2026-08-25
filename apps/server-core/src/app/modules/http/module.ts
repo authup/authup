@@ -20,6 +20,7 @@ import type { IContainer } from 'eldin';
 import { MetricsInjectionKey, PromAuthFlowMetrics } from '../metrics/index.ts';
 import { HTTPControllerModule, HTTPMiddlewareModule } from './modules/index.ts';
 import { LoggerInjectionKey } from '../logger/index.ts';
+import type { HTTPModuleOptions } from './types.ts';
 
 export class HTTPModule implements IModule {
     readonly name: string;
@@ -34,10 +35,10 @@ export class HTTPModule implements IModule {
 
     protected uiHttpClientRegistered : boolean;
 
-    constructor() {
+    constructor(options: HTTPModuleOptions = {}) {
         this.name = ModuleName.HTTP;
         this.dependencies = [ModuleName.CONFIG, ModuleName.LOGGER, ModuleName.AUTHENTICATION, ModuleName.IDENTITY, ModuleName.OAUTH2];
-        this.controller = new HTTPControllerModule();
+        this.controller = new HTTPControllerModule(options);
         this.middleware = new HTTPMiddlewareModule();
         this.uiHttpClientRegistered = false;
     }

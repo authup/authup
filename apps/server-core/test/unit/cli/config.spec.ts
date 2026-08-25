@@ -109,6 +109,27 @@ describe('src/cli/config', () => {
             expect(config.port).toEqual(4030);
         });
 
+        it('should apply the overrides after env and file', async () => {
+            await fs.promises.writeFile(
+                path.join(directory, 'authup.server.core.conf'),
+                'adminConsoleEnabled=true\naccountConsoleEnabled=true\n',
+            );
+
+            process.env.PORT = '5078';
+
+            const module = createCLIConfigModule({ cwd: directory }, { accountConsoleEnabled: false });
+
+            const container = new Container();
+            await module.setup(container);
+
+            // the override beats the file AND the env; everything it does not
+            // name is read as before.
+            const config = container.resolve(ConfigInjectionKey);
+            expect(config.accountConsoleEnabled).toEqual(false);
+            expect(config.adminConsoleEnabled).toEqual(true);
+            expect(config.port).toEqual(5078);
+        });
+
         it('should let env win over the threaded file config', async () => {
             await fs.promises.writeFile(
                 path.join(directory, 'authup.server.core.conf'),

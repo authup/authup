@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { createCLIEntryPointCommand } from '../../../src/cli/module';
 
 describe('src/cli/module', () => {
-    it('should register the worker subcommand', async () => {
+    it('should register the long-running roles as subcommands', async () => {
         const command = await createCLIEntryPointCommand();
 
         const subCommands = await (typeof command.subCommands === 'function' ?
@@ -17,6 +17,7 @@ describe('src/cli/module', () => {
             command.subCommands);
 
         expect(Object.keys(subCommands || {})).toEqual([
+            'console',
             'healthcheck',
             'migration',
             'start',

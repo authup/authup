@@ -24,6 +24,7 @@ if [[ -z "${COMMAND}" || -z "${SERVICE}" ]]; then
     printf 'Examples:\n'
     printf '  server/core start\n    Start the server core service.\n'
     printf '  server/core worker\n    Start the server core background worker (no http listener).\n'
+    printf '  server/core console [admin|account]\n    Serve the consoles and the auth pages without the management API.\n'
     exit 0
 fi
 

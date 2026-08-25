@@ -172,9 +172,40 @@ import { CacheInjectionKey } from '../../cache/index.ts';
 import { LoggerInjectionKey } from '../../logger/index.ts';
 import { MailInjectionKey, MailTemplateRendererInjectionKey } from '../../mail/index.ts';
 import { MetricsInjectionKey } from '../../metrics/index.ts';
+import { ControllerKind } from '../constants.ts';
+import type { HTTPModuleOptions } from '../types.ts';
+import { classifyController } from './classification.ts';
 
 export class HTTPControllerModule {
+    protected options : HTTPModuleOptions;
+
+    constructor(options: HTTPModuleOptions = {}) {
+        this.options = options;
+    }
+
+    /**
+     * Mount the identity provider's surface and, unless `managementApi` is
+     * off, the management API on top (see `classification.ts` for the two
+     * lists). Every controller is still BUILT: the factories construct
+     * services over already-registered adapters and do no I/O, so filtering
+     * the built instances keeps one flat list a new controller is added to,
+     * and the classification is what decides where it ends up.
+     */
     async mount(router: App, container: IContainer): Promise<void> {
+        const controllers = await this.buildControllers(container);
+
+        router.use(decorators({ controllers: controllers.filter((controller) => this.isMounted(controller)) }));
+    }
+
+    protected isMounted(controller: object) : boolean {
+        if (classifyController(controller) === ControllerKind.IDP_SURFACE) {
+            return true;
+        }
+
+        return this.options.managementApi !== false;
+    }
+
+    async buildControllers(container: IContainer): Promise<object[]> {
         const eventController = this.createEventController(container);
         const realmController = this.createRealmController(container);
         const roleController = this.createRoleController(container);
@@ -201,52 +232,50 @@ export class HTTPControllerModule {
         const policyController = this.createPolicyController(container);
         const identityProviderRoleController = this.createIdentityProviderRoleController(container);
 
-        router.use(decorators({
-            controllers: [
-                this.createAuthorize(container),
-                this.createToken(container),
-                this.createJwkController(container),
-                this.createOpenIDController(container),
-                this.createActivateController(container),
-                this.createPasswordForgotController(container),
-                this.createPasswordResetController(container),
-                this.createRegisterController(container),
-                this.createLogoutController(container),
-                this.createAuthenticatorChallengeController(container),
-                this.createUserInfoController(container),
-                this.createAccountController(container),
-                this.createAdminController(container),
+        return [
+            this.createAuthorize(container),
+            this.createToken(container),
+            this.createJwkController(container),
+            this.createOpenIDController(container),
+            this.createActivateController(container),
+            this.createPasswordForgotController(container),
+            this.createPasswordResetController(container),
+            this.createRegisterController(container),
+            this.createLogoutController(container),
+            this.createAuthenticatorChallengeController(container),
+            this.createUserInfoController(container),
+            this.createAccountController(container),
+            this.createAdminController(container),
 
-                this.createStatusController(container),
+            this.createStatusController(container),
 
-                clientController,
-                clientPermissionController,
-                clientRoleController,
-                clientScopeController,
-                consentController,
-                eventController,
-                identityProviderAccountController,
-                identityProviderRoleController,
-                this.createIdentityProvider(container),
-                keyController,
-                trustAnchorController,
-                permissionController,
-                permissionPolicyController,
-                policyController,
-                realmController,
-                roleController,
-                roleAttributeController,
-                rolePermissionController,
-                scopeController,
-                sessionController,
-                sessionTokenController,
-                userController,
-                userAttributeController,
-                userAuthenticatorController,
-                userPermissionController,
-                userRoleController,
-            ],
-        }));
+            clientController,
+            clientPermissionController,
+            clientRoleController,
+            clientScopeController,
+            consentController,
+            eventController,
+            identityProviderAccountController,
+            identityProviderRoleController,
+            this.createIdentityProvider(container),
+            keyController,
+            trustAnchorController,
+            permissionController,
+            permissionPolicyController,
+            policyController,
+            realmController,
+            roleController,
+            roleAttributeController,
+            rolePermissionController,
+            scopeController,
+            sessionController,
+            sessionTokenController,
+            userController,
+            userAttributeController,
+            userAuthenticatorController,
+            userPermissionController,
+            userRoleController,
+        ];
     }
 
     // ----------------------------------------------------

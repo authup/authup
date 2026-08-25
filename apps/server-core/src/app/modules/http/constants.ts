@@ -29,3 +29,25 @@ export const HTTPInjectionKey : {
      */
     UIHttpClient: new TypedToken<IClient>('UIHttpClient'),
 } as const;
+
+/**
+ * What a mounted controller belongs to. Every controller is one or the
+ * other, never neither: `classifyController` throws for an unclassified one,
+ * so a controller added to the mount list has to be placed explicitly.
+ */
+export const ControllerKind = {
+    /**
+     * The identity provider's own surface: the OAuth2/OIDC protocol routes,
+     * the hosted auth pages and every endpoint those pages (and the console
+     * sign-in) call back on the replica serving them. Mounted by every role
+     * with a listener.
+     */
+    IDP_SURFACE: 'idpSurface',
+    /**
+     * The entity CRUD the admin console and API integrations drive. Mounted
+     * by `start`, left unmounted by the console role.
+     */
+    MANAGEMENT_API: 'managementApi',
+} as const;
+
+export type ControllerKind = typeof ControllerKind[keyof typeof ControllerKind];

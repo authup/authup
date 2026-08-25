@@ -8,6 +8,7 @@
 import {
     ApplicationBuilder,
     ConfigModule,
+    HTTPModule,
 } from '../../src/index.ts';
 import type { Config } from '../../src/index.ts';
 import { normalizeConfig } from '../../src/app/modules/config/normalize.ts';
@@ -44,6 +45,14 @@ async function buildTestConfig(alter?: (config: Config) => void): Promise<Config
 
 export type TestApplicationOptions = {
     config?: (config: Config) => void,
+    /**
+     * Mount the management API (default) or leave it unmounted, which is the
+     * console role's HTTP shape (`createConsoleApplication`): the suite's
+     * database module and the absent provisioning/components modules already
+     * match that preset, so this one option is what makes a console-role
+     * instance here.
+     */
+    managementApi?: boolean,
 };
 
 export function createTestApplication(options: TestApplicationOptions = {}) : TestHTTPApplication {
@@ -57,7 +66,7 @@ export function createTestApplication(options: TestApplicationOptions = {}) : Te
         .withAuthentication()
         .withIdentity()
         .withOAuth2()
-        .withHTTP()
+        .withHTTP(new HTTPModule({ managementApi: options.managementApi }))
         .buildModules();
 
     return new TestHTTPApplication({ modules });

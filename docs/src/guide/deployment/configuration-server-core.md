@@ -97,7 +97,9 @@ export default {
      * sweeps) in this process. Set false on API replicas once a dedicated
      * worker process runs them, and only then: with it false everywhere,
      * nothing sweeps. A worker started with `authup-server worker` forces
-     * them on regardless of this option. See the Worker guide.
+     * them on regardless of this option; a console replica started with
+     * `authup-server console` runs none regardless. See the Worker and
+     * Console Replicas guides.
      * env: COMPONENTS_ENABLED
      * default: true
      */
@@ -109,7 +111,9 @@ export default {
      * otherwise, so a replica never races a sibling for the same DDL. Run
      * `authup-server migration run` as a separate step instead; that command
      * is unaffected by this option. Ignored on SQLite, which ships no
-     * migrations and always synchronizes its schema. See the Worker guide.
+     * migrations and always synchronizes its schema. The `worker` and
+     * `console` roles never migrate whatever this says. See the Worker
+     * guide.
      * env: MIGRATION_ENABLED
      * default: true
      */
@@ -306,7 +310,9 @@ export default {
     /**
      * Serve the account self-service surface at `<publicUrl>/console/account`
      * (profile, password, authenticators, sessions, applications).
-     * Disable it when you run your own self-service portal.
+     * Disable it when you run your own self-service portal. A console
+     * replica started as `authup-server console account` forces it on and
+     * `console admin` forces it off (see the Console Replicas guide).
      * env: ACCOUNT_CONSOLE_ENABLED
      * default: true
      */
@@ -315,7 +321,9 @@ export default {
     /**
      * Serve the admin console at `<publicUrl>/console/admin` (realms, clients,
      * users, roles, permissions, policies, keys, sessions, events).
-     * Disable it to administer the instance through the API alone.
+     * Disable it to administer the instance through the API alone. A
+     * console replica started as `authup-server console admin` forces it on
+     * and `console account` forces it off (see the Console Replicas guide).
      * env: ADMIN_CONSOLE_ENABLED
      * default: true
      */

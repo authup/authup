@@ -2654,7 +2654,8 @@ Console*), the endpoint plan 078 recorded. Same-origin is what let plan 088
 Stage 2 apply the account console's cookie credential to it with no BFF.
 
 **Process topology:** one container running `server/core start` (plus the
-optional `server/core worker`) is the production topology. The `authup` CLI is
+optional `server/core worker`, and the optional `server/core console` set
+behind a `/console/**` proxy rule) is the production topology. The `authup` CLI is
 the bare-metal / quickstart **supervisor**: it spawns server-core as a child
 process with full environment passthrough plus a `PORT`/`HOST` override
 derived from the `server.core` config section (so an ambient `PORT` never
@@ -2709,9 +2710,76 @@ unconditional (a flag-off replica holding the dist still serves
 `/console/admin/assets/*`), and the auth pages plus `/console/auth/assets/*`
 are served by every replica, since no `authConsoleEnabled` exists by design
 (they are the issuance surface). `GET /` reports `features` per replica.
-The operator recipe is `docs/src/guide/deployment/console-replicas.md`; the
-`authup-server console [admin|account]` role (PR 1b) is sugar over the same
-two flags and additionally leaves the management API unmounted.
+The operator recipe is `docs/src/guide/deployment/console-replicas.md`.
+
+**The console role (plan 099 PR 1b)** is the same binary and image, started
+as `authup-server console [admin|account ...]` (container: `server/core
+console`): the IdP surface WITHOUT the management API. It is
+`createConsoleApplication()` in `app/factory.ts`: `createApplication` minus
+provisioning (the API replicas own the boot sync) and minus the components
+(a worker or the API replicas own the sweeps), with the worker's
+`verifySchemaOrSynchronize` migrate override (never migrates, verifies the
+chain; the sqlite fall-through creates the schema), and
+`HTTPModule({ managementApi: false })`. Mail and LDAP STAY: the workflow
+controllers resolve `MailInjectionKey` at mount and the password grant behind
+the hosted login needs LDAP. The role's identity is the isolation property:
+ANY request may land on a console replica and is answered like on `start`,
+EXCEPT a management-API route, which 404s (an admin-UI pod that cannot
+answer `/users` even when misrouted). "Minus management API" is an AUDITED
+controller set, not "drop every entity controller": the hosted pages
+self-call entity endpoints through the loopback client on the very replica
+rendering them, and the console sign-in redeems its code through `/token`
+the same way. The unit of exclusion is the controller (a dual-use one stays
+whole), and the audit is the two lists in
+`app/modules/http/modules/classification.ts`, `IDP_SURFACE_CONTROLLERS` and
+`MANAGEMENT_API_CONTROLLERS`. `HTTPControllerModule.mount` builds every
+controller (the factories construct services over registered adapters and
+do no I/O) and filters the instances by `classifyController`, which THROWS
+for a controller on neither list, so a controller added to the mount list
+without a classification fails the first request-serving boot;
+`test/unit/app/modules/http/classification.spec.ts` additionally walks the
+controllers barrel and fails when an exported controller class is on neither
+or both lists.
+
+| Controller | Role | Why |
+|---|---|---|
+| Authorize, Token, Jwk, OpenID, Logout, UserInfo | keep | the OAuth2/OIDC protocol surface; `ConsoleLogin.callback` redeems through the loopback `/token`; `/userinfo` is advertised by discovery |
+| Register, Activate, PasswordForgot, PasswordReset | keep | the workflow pages (GET html + POST json on one path) |
+| AuthenticatorChallenge | keep | the second factor on the authorize ladder and the MFA-pending ticket completion |
+| Account, Admin | keep | the console shells and their sign-in routes |
+| Status | keep | `GET /`, the image HEALTHCHECK |
+| Realm | keep | `/realms/:id/.well-known/openid-configuration` + `/realms/:id/jwks`, and the anonymous `GET /realms` the login form's realm picker and the consoles' realm choosers read; realm CRUD rides along |
+| IdentityProvider | keep | the anonymous provider list on the login page; `authorize-out` / `authorize-in` / `login-complete` / `link-request` / `link-confirm` |
+| Client | keep | the kit's `AAuthorize` reads `GET /clients/:id` when a host passes `clientId` instead of the SSR-trimmed `client` (the hosted page passes `client`, so this is a fallback path, but a hosted-page code path) |
+| ClientScope | keep | `AuthorizeScopes` reads `GET /client-scopes` when `scopesAvailable` is absent (same fallback shape) |
+| Consent | keep | the consent covering probe `GET /consents` before auto-consent |
+| Session | keep | `GET /sessions/@me/introspect` + `DELETE /sessions/@me`, what the consoles sign in and out with |
+| UserAuthenticator | keep | inline MFA enrollment on the authorize ladder (`/users/@me/authenticators`, `/confirm`, the recovery-code lookup) |
+| User | drop | `/users/@me` is read by no hosted page: the kit store derives the user from the introspection and the account console's profile form loads `/userinfo`; its profile SAVE (`POST /users/@me`) is an API call of a served SPA that the proxy's root rule sends to the API set |
+| IdentityProviderAccount, SessionToken | drop | the account console's connected-accounts and session-inventory pages: API calls of a served SPA, not self-calls |
+| Role, Permission, Policy, Scope, Key, TrustAnchor, Event | drop | entity CRUD |
+| ClientPermission, ClientRole, RolePermission, UserRole, UserPermission, PermissionPolicy, IdentityProviderRoleMapping, RoleAttribute, UserAttribute | drop | junction and attribute CRUD |
+
+The whole middleware chain stays (the authorization middleware is what
+resolves the cookie identity; the assets middleware serves every console's
+dist), and so does the `/docs` swagger mount, which on a console replica
+describes routes the replica 404s (ponytail: `middlewareSwagger=false`
+turns it off, a role-filtered document was not worth the seam). The CLI
+positionals are SUGAR over the two console flags, applied as
+`createCLIConfigModule(fs, overrides)` (spread over the normalized config,
+so they beat file and env): `console admin` forces admin on and account off,
+`console account` the inverse, `console admin account` both on, no positional
+leaves both as configured; `auth` is refused with a message (the auth pages
+are the issuance surface and ride every role), unknown names are refused.
+The subcommand declares `CLI_CONFIG_ARGS` itself, which is load-bearing:
+citty re-parses the tail after the subcommand name against the subcommand's
+own arg list, so without it `console admin --configDirectory <path>` would
+land `<path>` among the positionals and refuse it as an unknown console.
+The `GET /` `features` block reports the selection, so a console replica
+probed directly says what it was started with. Test surface:
+`createTestApplication({ managementApi: false })` (testing.md),
+`test/unit/http/console-role.spec.ts`, the console preset pin in
+`test/unit/app/factory.spec.ts`, `test/unit/cli/console.spec.ts`.
 
 **Configuration is layered:** server-core honors the confinity file family
 (`authup.conf` with a `server.core` section, or the per-component

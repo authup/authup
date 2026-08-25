@@ -105,6 +105,8 @@ Integration tests that spin up the full application (database, HTTP server). Tes
 - `suite.client` — a typed `@authup/core-http-kit` `Client` pointed at the running test server with admin Basic auth.
 - `suite.baseURL` — the `http://localhost:<random-port>` URL of the test server, useful for raw `fetch()` calls when the typed client doesn't fit (e.g., asserting on HTML response bodies).
 
+`createTestApplication(options)` takes `config` (a mutator over the normalized test config) and `managementApi` (default `true`). `managementApi: false` boots the console role's HTTP shape, `HTTPModule({ managementApi: false })`: the suite's database module and the absent provisioning/components modules already match `createConsoleApplication`'s preset, so that one option is what makes a console-role instance in a spec (`test/unit/http/console-role.spec.ts`; the module composition itself is pinned in `test/unit/app/factory.spec.ts`). On such an instance `suite.client` still carries admin Basic auth, but every entity route 404s, so a spec that needs a row the management API would have created writes it through `suite.dataSource` instead.
+
 ### HTTP test helpers
 
 `test/utils/` exports two helpers tuned for HTTP integration tests:

@@ -9,3 +9,9 @@ export type CLIConfigArgs = {
     configDirectory?: string,
     configFile?: string,
 };
+
+/**
+ * A console the `console` command can be told to serve. The auth console is
+ * deliberately absent: its pages are the issuance surface, not a console.
+ */
+export type CLIConsoleSelector = 'admin' | 'account';

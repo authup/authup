@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './console.ts';
 export * from './healthcheck.ts';
 export * from './migration.ts';
 export * from './shutdown.ts';

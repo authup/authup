@@ -17,6 +17,7 @@ import {
     DatabaseInjectionKey,
     LoggerInjectionKey,
     ModuleName,
+    createConsoleApplication,
     createWorkerApplication,
 } from '../../../src/app';
 import type { Config } from '../../../src/app';
@@ -89,6 +90,32 @@ describe('app/factory', () => {
         expect(names).not.toContain(ModuleName.MAIL);
         expect(names).not.toContain(ModuleName.OAUTH2);
         expect(names).not.toContain(ModuleName.IDENTITY);
+    });
+
+    it('should compose the console application from the request-serving modules minus provisioning and components', () => {
+        const app = createConsoleApplication({ config: new ConfigModule(buildWorkerConfig) });
+
+        const names = [...app.getStatus().keys()];
+
+        expect(names).toEqual([
+            ModuleName.CONFIG,
+            ModuleName.LOGGER,
+            ModuleName.CACHE,
+            ModuleName.MAIL,
+            ModuleName.RUNTIME,
+            ModuleName.DATABASE,
+            ModuleName.LDAP,
+            ModuleName.AUTHENTICATION,
+            ModuleName.IDENTITY,
+            ModuleName.OAUTH2,
+            ModuleName.HTTP,
+        ]);
+
+        // the API replicas own the boot sync and the sweeps; mail and ldap
+        // stay because the workflow controllers and the password grant need
+        // them.
+        expect(names).not.toContain(ModuleName.PROVISIONING);
+        expect(names).not.toContain(ModuleName.COMPONENTS);
     });
 
     it('should set up and tear down over a sqlite database', async () => {

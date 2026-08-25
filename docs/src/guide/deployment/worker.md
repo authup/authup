@@ -15,6 +15,11 @@ authup-server worker
 In a container that is `server/core worker`; on bare metal it is a second
 `authup-server` process next to the one running `start`.
 
+The worker is one of two roles the binary carries next to `start`. The other
+is `authup-server console`, which serves the consoles and the auth pages
+without the management API; see [Console Replicas](./console-replicas.md).
+Both never migrate and both leave provisioning to the API process.
+
 ## What it runs
 
 The worker process boots the background components and the modules they stand

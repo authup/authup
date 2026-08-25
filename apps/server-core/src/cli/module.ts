@@ -12,6 +12,7 @@ import process from 'node:process';
 import type { ConfigReadFsOptions } from '../app/index.ts';
 import { CLI_CONFIG_ARGS, applyCLIConfigArgs } from './config.ts';
 import {
+    defineCLIConsoleCommand,
     defineCLIHealthCheckCommand,
     defineCLIMigrationCommand,
     defineCLIStartCommand,
@@ -34,6 +35,7 @@ export async function createCLIEntryPointCommand() {
             description: pkg.description,
         },
         subCommands: {
+            console: defineCLIConsoleCommand(configFs),
             healthcheck: defineCLIHealthCheckCommand(configFs),
             migration: defineCLIMigrationCommand(configFs),
             start: defineCLIStartCommand(configFs),
