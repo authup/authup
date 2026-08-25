@@ -14,12 +14,10 @@ export const CLI_CONFIG_ARGS = {
     configDirectory: {
         type: 'string',
         description: 'Config directory path',
-        alias: 'cD',
     },
     configFile: {
         type: 'string',
         description: 'Name of one or more configuration files.',
-        alias: 'cF',
     },
 } satisfies ArgsDef;
 

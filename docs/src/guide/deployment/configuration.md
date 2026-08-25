@@ -20,8 +20,8 @@ Configuration files are discovered in the **current working directory** of the p
 Every CLI command (`start`, `migration`, `healthcheck`) honors them, and the lookup
 can be redirected with two global CLI flags:
 
-- `--configDirectory <path>` (alias `-cD`) — directory to search instead of the cwd.
-- `--configFile <path>` (alias `-cF`) — load one (or more) explicit file(s) instead of discovering.
+- `--configDirectory <path>`: directory to search instead of the cwd.
+- `--configFile <path>`: load one (or more) explicit file(s) instead of discovering.
 
 Two file naming styles are supported (formats: `.conf`, `.json`, `.yml`/`.yaml`, `.js`, `.ts`):
 
