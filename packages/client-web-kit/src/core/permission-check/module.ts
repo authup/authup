@@ -160,8 +160,13 @@ export function createPermissionCheckerReactiveFn(
 
         let removeListener: undefined | CallableFunction;
         onMounted(() => {
+            // `status`, not the token-derived `loggedIn`: a cookie session
+            // (plan 088) never holds an access token, so that flag never flips
+            // and the verdict would latch at its fail-closed default. Both
+            // flip in the same synchronous commit as the permissions, so bearer
+            // mode re-evaluates at the same instant it did before.
             removeListener = watch(
-                [storeRefs.loggedIn, resolveContext],
+                [storeRefs.status, resolveContext],
                 () => recompute(),
             );
         });
