@@ -12,10 +12,9 @@ code in that directory.
 | [apps/client-admin-console](apps/client-admin-console) (`@authup/client-admin-console`) | AGPL-3.0-only **or** commercial |
 | [apps/client-account-console](apps/client-account-console) (`@authup/client-account-console`) | AGPL-3.0-only **or** commercial |
 | [apps/client-auth-console](apps/client-auth-console) (`@authup/client-auth-console`) | AGPL-3.0-only **or** commercial |
-| [apps/authup](apps/authup) (`authup` CLI) | AGPL-3.0-only **or** commercial |
 | All packages under [packages/](packages) (`@authup/kit`, `@authup/core-kit`, `@authup/core-http-kit`, `@authup/access`, `@authup/errors`, `@authup/specs`, `@authup/i18n`, `@authup/server-kit`, `@authup/server-adapter-*`, `@authup/client-web-kit*`, `@authup/client-web-theme`, `@authup/client-web-nuxt`, ...) | Apache-2.0 |
 
-In short: **the Authup product (server, web client, CLI) is AGPL-3.0; everything you need to
+In short: **the Authup product (server and consoles) is AGPL-3.0; everything you need to
 integrate your own application with an Authup server stays permissively licensed (Apache-2.0).**
 
 ## What this means for you

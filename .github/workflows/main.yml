@@ -82,10 +82,6 @@ jobs:
                 run: |
                     npm run check:types --workspace=apps/server-core
 
-            -   name: Type-check tests (authup)
-                run: |
-                    npm run check:types --workspace=apps/authup
-
     tests:
         name: Test Packages
         needs: [build]
@@ -236,8 +232,8 @@ jobs:
                 working-directory: apps/server-core
                 run: npm run test:migration-latest
 
-    tests-launcher:
-        name: Test Launcher (smoke)
+    tests-smoke:
+        name: Test Smoke
         needs: [build]
         runs-on: ubuntu-latest
         steps:
@@ -259,10 +255,10 @@ jobs:
                         npm run build --workspace=apps/client-admin-console
                     fi
 
-            -   name: Run launcher smoke test (workspace dist)
+            -   name: Run smoke test (workspace dist)
                 run: |
-                    npm run test:smoke --workspace=apps/authup
+                    npm run test:smoke --workspace=apps/server-core
 
-            -   name: Run launcher smoke test (pack and install)
+            -   name: Run smoke test (pack and install)
                 run: |
-                    npm run test:smoke:packed --workspace=apps/authup
+                    npm run test:smoke:packed --workspace=apps/server-core

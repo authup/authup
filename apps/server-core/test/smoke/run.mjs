@@ -7,18 +7,20 @@
  */
 
 /**
- * Smoke test for the authup launcher CLI.
+ * Smoke test for the `authup-server` CLI.
  *
- * Default (workspace) variant: runs the built dist entry of apps/authup against
- * the built workspace artifacts of apps/server-core (dist/cli/index.mjs) and
- * boots it on an unusual port with a sqlite database, waits until it answers
- * HTTP 200 and serves all three consoles, then terminates the CLI with SIGTERM
- * and asserts a clean exit.
+ * Default (workspace) variant: runs the built dist entry of this package
+ * (dist/cli/index.mjs) on an unusual port with a sqlite database, waits until
+ * it answers HTTP 200 and serves all three consoles, then terminates it with
+ * SIGTERM and asserts a clean exit.
  *
- * --packed variant: npm-packs the workspaces into tarballs, installs them into
- * a fresh temp project, and runs the installed `authup` bin the same way. This
- * exercises the published-package layout (bin fields, files whitelists, ESM
- * entry) that the workspace variant cannot catch.
+ * --packed variant: npm-packs this package, the three console apps and every
+ * workspace under packages/ into tarballs, installs them into a fresh temp
+ * project, and runs the installed `authup-server` bin the same way. This is
+ * the only coverage in the repository for the PUBLISHED install layout (bin
+ * fields, files whitelists, ESM entry, the locter walk that resolves the
+ * console packages out of a flat node_modules). The workspace variant runs
+ * against a symlinked monorepo and cannot catch any of it.
  */
 
 import { spawn } from 'node:child_process';
@@ -29,9 +31,6 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 const SERVER_PORT = 4310;
-// Deliberately not the one above: seeded into the child's inherited
-// environment to prove the supervisor overrides PORT.
-const AMBIENT_PORT = 4312;
 const SERVER_URL = `http://127.0.0.1:${SERVER_PORT}/`;
 
 const READY_TIMEOUT_MS = 180_000;
@@ -67,6 +66,9 @@ function createTempDirectory(name) {
 function buildChildEnv(writableDirectory) {
     const env = { ...process.env };
 
+    // PORT / HOST are deliberately left unset: an environment variable beats
+    // the configuration file, so seeding either would decide where the server
+    // listens and the file's `server.core.port` would go untested.
     delete env.PORT;
     delete env.HOST;
     delete env.PUBLIC_URL;
@@ -83,18 +85,10 @@ function buildChildEnv(writableDirectory) {
     env.DB_TYPE = 'better-sqlite3';
     env.DB_DATABASE = path.join(writableDirectory, 'authup.sql');
 
-    // The child inherits this environment, so an ambient PORT/HOST must not
-    // decide where it listens (a PaaS injects one; the project Dockerfile
-    // sets PORT=3000). The supervisor is expected to override it: reverting
-    // that override makes server-core bind AMBIENT_PORT and this scenario
-    // fails on the readiness probe.
-    env.PORT = `${AMBIENT_PORT}`;
-    env.HOST = '0.0.0.0';
-
     return env;
 }
 
-function writeLauncherConfig(directory) {
+function writeConfig(directory) {
     fs.writeFileSync(path.join(directory, 'authup.conf'), [
         `server.core.port=${SERVER_PORT}`,
         'server.core.host=127.0.0.1',
@@ -120,12 +114,13 @@ async function probe(url) {
 /**
  * Assert that server-core can actually resolve and serve a console package.
  *
- * The `locateUpSync` walk that finds `@authup/client-auth-console` and
- * `@authup/client-account-console` exists specifically for the published
- * install layout, which only the packed scenario reproduces. Nothing else
- * exercises it: a resolution regression, or a tarball shipped without its
- * bundle (`npm pack` does not run `prepublishOnly`), degrades silently
- * because boot still succeeds and only the console routes break.
+ * The `locateUpSync` walk that finds `@authup/client-auth-console`,
+ * `@authup/client-account-console` and `@authup/client-admin-console` exists
+ * specifically for the published install layout, which only the packed
+ * scenario reproduces. Nothing else exercises it: a resolution regression, or
+ * a tarball shipped without its bundle (`npm pack` does not run
+ * `prepublishOnly`), degrades silently because boot still succeeds and only
+ * the console routes break.
  */
 async function assertConsoleServed(name, route, marker) {
     // SERVER_URL carries a trailing slash, so build the target with `new URL`
@@ -205,7 +200,7 @@ async function waitUntilReady(name, url, child) {
 
     while (Date.now() - startedAt < READY_TIMEOUT_MS) {
         if (child.exitCode !== null) {
-            throw fail(`${name}: launcher exited (code ${child.exitCode}) before ${url} became ready.`);
+            throw fail(`${name}: the server exited (code ${child.exitCode}) before ${url} became ready.`);
         }
 
         const status = await probe(url);
@@ -224,7 +219,7 @@ function waitForExit(child, timeoutMs) {
     return new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
             child.kill('SIGKILL');
-            reject(fail(`launcher did not exit within ${timeoutMs}ms after SIGTERM.`));
+            reject(fail(`the server did not exit within ${timeoutMs}ms after SIGTERM.`));
         }, timeoutMs);
 
         child.on('exit', (code, signal) => {
@@ -247,7 +242,7 @@ function run(command, args, options = {}) {
         });
 
         // The packed variant shells out to `npm pack` / `npm install`, which
-        // reach the registry — without a deadline a stalled request would hang
+        // reach the registry. Without a deadline a stalled request would hang
         // the CI job until the workflow-level timeout.
         const timeout = setTimeout(() => {
             child.kill('SIGKILL');
@@ -274,7 +269,7 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
     const tempDirectory = createTempDirectory(`authup-smoke-${name}`);
     const writableDirectory = path.join(tempDirectory, 'writable');
     fs.mkdirSync(writableDirectory, { recursive: true });
-    writeLauncherConfig(tempDirectory);
+    writeConfig(tempDirectory);
 
     log(`${name}: starting ${cliExec} ${cliArgs.join(' ')}`);
 
@@ -334,17 +329,17 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
 
         const { code, signal } = await waitForExit(child, EXIT_TIMEOUT_MS);
         if (code !== 0) {
-            throw fail(`${name}: launcher exited with code ${code} (signal ${signal}), expected 0.`);
+            throw fail(`${name}: the server exited with code ${code} (signal ${signal}), expected 0.`);
         }
 
         await sleep(500);
 
         const serverStatus = await probe(SERVER_URL);
         if (typeof serverStatus !== 'undefined') {
-            throw fail(`${name}: the child is still listening after shutdown (server: ${serverStatus}).`);
+            throw fail(`${name}: the server is still listening after shutdown (server: ${serverStatus}).`);
         }
 
-        log(`${name}: launcher exited cleanly, the child stopped.`);
+        log(`${name}: the server exited cleanly and stopped listening.`);
     } finally {
         if (child.exitCode === null) {
             child.kill('SIGTERM');
@@ -359,36 +354,31 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
 }
 
 async function executeWorkspaceScenario() {
-    const cliEntry = path.join(packageDirectory, 'dist', 'index.mjs');
-    assertFileExists(cliEntry, 'run: npm run build -w apps/authup');
-    assertFileExists(
-        path.join(repositoryDirectory, 'apps', 'server-core', 'dist', 'cli', 'index.mjs'),
-        'run: npm run build -w apps/server-core',
-    );
+    const cliEntry = path.join(packageDirectory, 'dist', 'cli', 'index.mjs');
+    assertFileExists(cliEntry, 'run: npm run build -w apps/server-core');
     assertFileExists(
         path.join(repositoryDirectory, 'apps', 'client-admin-console', 'dist', 'index.html'),
         'run: npm run build -w apps/client-admin-console',
     );
 
     // cwd apps/server-core: typeorm resolves nested workspace driver installs
-    // (better-sqlite3) via its process.cwd() fallback — a monorepo-hoisting
+    // (better-sqlite3) via its process.cwd() fallback, a monorepo-hoisting
     // quirk only; flat installs (the --packed variant) are unaffected.
     await executeScenario(
         'workspace',
         process.execPath,
         [cliEntry],
-        path.join(repositoryDirectory, 'apps', 'server-core'),
+        packageDirectory,
     );
 }
 
 function collectPackWorkspaces() {
     const workspaces = [
-        'apps/authup',
         'apps/server-core',
-        // server-core resolves the account console SPA bundle and the auth
-        // console SSR bundle from these packages at runtime — without their
-        // tarballs the packed install would try (and fail) to fetch them
-        // from the registry.
+        // server-core resolves the account console SPA bundle, the admin
+        // console SPA bundle and the auth console SSR bundle from these
+        // packages at runtime. Without their tarballs the packed install
+        // would try (and fail) to fetch them from the registry.
         'apps/client-account-console',
         'apps/client-auth-console',
         'apps/client-admin-console',
@@ -415,7 +405,7 @@ async function executePackedScenario() {
         const packStartedAt = Date.now();
         const packArgs = [
             'pack',
-            '--pack-destination', 
+            '--pack-destination',
             packDirectory,
             ...workspaces.flatMap((workspace) => ['-w', workspace]),
         ];
@@ -448,8 +438,8 @@ async function executePackedScenario() {
         ], { cwd: installDirectory });
         log(`packed: install took ${Math.round((Date.now() - installStartedAt) / 1000)}s.`);
 
-        const installedBin = path.join(installDirectory, 'node_modules', '.bin', 'authup');
-        assertFileExists(installedBin, 'the installed authup package exposes no bin');
+        const installedBin = path.join(installDirectory, 'node_modules', '.bin', 'authup-server');
+        assertFileExists(installedBin, 'the installed @authup/server-core package exposes no bin');
 
         await executeScenario(
             'packed',

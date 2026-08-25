@@ -1,6 +1,5 @@
 {
     ".": "1.0.0-beta.63",
-    "apps/authup": "1.0.0-beta.63",
     "apps/client-account-console": "1.0.0-beta.63",
     "apps/client-admin-console": "1.0.0-beta.63",
     "apps/client-auth-console": "1.0.0-beta.63",

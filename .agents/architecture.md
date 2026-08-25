@@ -1381,8 +1381,8 @@ choice"):
   nothing injected the app derives the API URL same-origin from its base
   path. Standalone hosting additionally needs the origin registered in
   `TRUSTED_ORIGINS` (drives the `account-console` client's
-  redirect/post-logout allowlists). The launcher never spawns it: no
-  binary, no process.
+  redirect/post-logout allowlists). No binary, no process: nothing starts
+  it, server-core serves the dist.
 - **`ref` back link:** an optional `ref` query parameter names the
   application the visitor came from. `serveAccountConsolePage` validates
   it against `getAppOrigins(config)` (each origin as an `<origin>/**`
@@ -1533,8 +1533,8 @@ choice"):
   actor-scoped can leak into a (potentially cached) response, pinned in
   `account-pages.spec.ts`.
 - **Packaging:** the package ships `dist/` only (`prepublishOnly` builds);
-  it is packed in the launcher's `test:smoke:packed` workspace list so the
-  packed server-core install resolves it from the tarball.
+  it is packed in server-core's `test:smoke:packed` workspace list so the
+  packed install resolves it from the tarball.
 - **Link surface:** `<publicUrl>/console/account` is the stable "Manage account"
   target; the admin console header links the user name to it.
 
@@ -1838,9 +1838,8 @@ same bootstrap. What differs from the account console, and why:
   nitro `.output`, `postbuild.mjs`, `@vuecs/nuxt` (color mode is the kit's
   `createColorMode()`, locale `installLocale` over `createCookieRef`), and
   every `NUXT_PUBLIC_*` / `API_URL` / `COOKIE_DOMAIN` / `CLIENT_ID` variable
-  (no successor: runtime config is injected by the serving side). The
-  `authup` launcher spawns server-core only and answers a
-  `client.admin-console` selector or config section with a warning;
+  (no successor: runtime config is injected by the serving side). A
+  `client.admin-console` config section is no longer read, and
   `entrypoint.sh client/admin-console` exits 1 with a notice.
   `@authup/client-web-nuxt` is untouched: it stays the Nuxt integration for
   downstream apps (hub), which keep their own origin and the JS-token store.
@@ -2655,15 +2654,16 @@ Stage 2 apply the account console's cookie credential to it with no BFF.
 
 **Process topology:** one container running `server/core start` (plus the
 optional `server/core worker`, and the optional `server/core console` set
-behind a `/console/**` proxy rule) is the production topology. The `authup` CLI is
-the bare-metal / quickstart **supervisor**: it spawns server-core as a child
-process with full environment passthrough plus a `PORT`/`HOST` override
-derived from the `server.core` config section (so an ambient `PORT` never
-decides the listen address), forwards SIGINT/SIGTERM, and exits with the
-child's exit code; `migration` / `healthcheck` forward to it. A
-`client.admin-console` selector or config section is accepted for an existing
-invocation's sake and answered with a warning. The launcher knows nothing
-about the worker role below.
+behind a `/console/**` proxy rule) is the production topology. Bare metal is
+the same service started from its own binary, `authup-server start`
+(`npx @authup/server-core start`); `authup-server` is a bin name, not a
+package name, so `npx authup-server` resolves nothing. The `authup` launcher
+that used to supervise it as a child process was retired (plan 099 idea 2)
+and the npm name goes to an install wizard in its own repository (plan 100).
+Two consequences carry over: `PORT` / `HOST` now follow the documented
+layering (an environment variable beats the file value, where the launcher
+always forced the file's value onto the child), and package selectors
+(`authup start server.core`) no longer exist.
 
 **The worker role (plans 095/096/097)** is the same binary and the same image,
 started as `authup-server worker` (container: `server/core worker`). It is

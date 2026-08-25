@@ -10,7 +10,7 @@ abstract: >-
   identity- and access-management with support for multiple authentication
   strategies and standard protocols — OAuth2.0, OpenID Connect and LDAP —
   alongside claim-, subject- and attribute-based authorization. The monorepo
-  bundles the core server service, a Nuxt web client, a command-line interface
+  bundles the core server service, the admin, account and auth consoles
   and a set of shared TypeScript client libraries and server adapters.
 type: software
 authors:
@@ -28,7 +28,7 @@ identifiers:
   - type: doi
     value: "10.5281/zenodo.20836542"
     description: "Concept DOI (all versions)"
-# Authup is dual-licensed: the applications (server-core, client-admin-console, authup CLI)
+# Authup is dual-licensed: the applications (server-core and the consoles)
 # under AGPL-3.0-only (+ commercial), all packages under Apache-2.0.
 license:
   - AGPL-3.0-only

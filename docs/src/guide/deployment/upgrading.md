@@ -66,6 +66,47 @@ starting a login, the way the admin console's routes did already. Before, a
 disabled account console still minted a pending login and a session cookie
 on a direct hit. No action needed.
 
+### The `authup` launcher package is retired
+
+The `authup` package was a small supervisor that spawned `server/core` as a
+child process. It is gone, and nothing replaces it: `server/core` is started
+from its own binary.
+
+| Was | Is |
+|---|---|
+| `npx authup@latest start` | `npx @authup/server-core@latest start` |
+| `authup start` | `authup-server start` |
+| `authup migration run\|status\|revert` | `authup-server migration run\|status\|revert` |
+| `authup healthcheck` | `authup-server healthcheck` |
+
+**Action required**, on bare-metal deployments only. Docker, Compose and Helm
+never used the launcher: the image entrypoint has always run `server/core`
+directly.
+
+- **Install `@authup/server-core`** instead of `authup`, and point the
+  project's `start` script at `authup-server start`. The binary name is
+  `authup-server`; there is no `npx authup-server` shortcut, because that is
+  not a package name. Use `npx @authup/server-core start`.
+- **The configuration file family is unchanged.** `authup.conf` with a
+  `server.core` section, `authup.server.core.conf`, the shared top-level
+  `db` / `redis` / `smtp` fallbacks and the `--configDirectory` /
+  `--configFile` flags all keep working. `server/core` reads them itself; it
+  always did.
+- **`PORT` and `HOST` precedence is inverted.** The launcher always set both
+  on the child from the configuration file, so an ambient `PORT` was ignored.
+  `server/core` applies the documented layering instead: an environment
+  variable beats the file value. A platform that injects `PORT` (Heroku, Fly,
+  Cloud Run, ...) now decides the listen port, and a deployment that relied
+  on the file winning must unset the ambient variable.
+- **Package selectors are gone.** `authup start server.core` and
+  `authup start client.admin-console` have no equivalent, and the latter
+  started nothing already.
+
+The `authup` name on npm is not abandoned. It will be republished from its
+own repository as a guided installer that writes the deployment files for
+you; the versions published from this monorepo (up to and including
+`1.0.0-beta.63`) stay the supervisor.
+
 ### The admin console is served by server-core
 
 The admin console is no longer a separate Nuxt server. It is a static
@@ -83,12 +124,10 @@ the way it serves the account console at `<publicUrl>/console/account` (the
 - **Helm**: the chart in the `authup/helm` repository still deploys an admin
   console workload, whose pods now crash-loop for the reason above. Remove or
   scale that workload to zero. A follow-up chart release drops it.
-- **Bare metal**: the command does not change. `authup start` starts
-  `server/core` alone. `authup start client.admin-console` and a
-  `client.admin-console` section in `authup.conf` are still parsed, print a
-  deprecation warning; `authup start client.admin-console` on its own exits
-  `0` having started nothing, so a leftover console unit stays harmless.
-  Remove them.
+- **Bare metal**: one command starts everything, `authup-server start`
+  (see the entry above on the retired `authup` launcher). A
+  `client.admin-console` section in `authup.conf` is no longer read; remove
+  it along with any unit that started the console on its own.
 - **`TRUSTED_ORIGINS`**: drop the console's former origin. It serves nothing
   now, but the provisioner keeps re-asserting every listed origin into the
   system clients' redirect allowlists on each boot.
@@ -427,7 +466,7 @@ writes the authorizing application there anymore.
 
 Two migrations apply. Both are safe to run on a populated database, and the
 round trip is verified in CI against MySQL and PostgreSQL, but the second one
-is not instant on a large instance. **Run `authup migration run` before the
+is not instant on a large instance. **Run `authup-server migration run` before the
 rolling restart** rather than letting the first pod apply it under traffic.
 
 - Index, unique and foreign-key names move onto the values TypeORM derives

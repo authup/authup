@@ -311,28 +311,47 @@ cache miss. Assertions about the seeded first render must NOT
 `await flushPromises()`: the point is the render the markup is hydrated
 against, before the async lookup settles.
 
-## Launcher Tests (apps/authup)
+## Smoke Tests (apps/server-core)
 
-The `authup` CLI is a process supervisor, so its suite is split in two:
+`test/smoke/run.mjs` boots the real `authup-server` binary end to end. It is
+not a vitest suite (the vitest include is `test/unit/**/*.spec.ts`, so the
+runner is invisible to it) and it runs in the `tests-smoke` CI job, in two
+scenarios:
 
-- **Unit** (`npm run test -w apps/authup`, config at `test/vitest.config.ts` like
-  every other workspace): entrypoint resolution against fixture `node_modules`
-  trees (bin-field reading, the resolution-preference regression, npx fallback),
-  the config-section → child-env mapping, and command routing (server-core is
-  the only child since plan 081; a `client.admin-console` selector or config
-  section is accepted and answered with a warning, never launched).
-- **Smoke** (`npm run test:smoke`): boots the built CLI's `start` against sqlite
-  on a non-default port, waits for server-core, asserts all THREE consoles are
-  served (`/logout`, `/console/account`, `/console/admin` each answer 200 with the injected
-  `window.__AUTHUP__`, and the first script asset each static console shell references answers 200 as JavaScript, so a dist built for another base fails here instead of serving a blank console), sends SIGTERM, asserts the child exits and the CLI
-  exits 0. `npm run test:smoke:packed` runs the same assertions against
-  `npm pack`ed tarballs installed into a temp project. **The packed variant is
-  the one that matters:** every launcher breakage found in plan 078 (the ESM
-  `__dirname` crash, the stale spawn path, and nitro's symlinked module store
-  being dropped by `npm pack`) reproduced ONLY from a packed artifact — a
-  workspace-dist run passes straight through all three. Both variants run in
-  CI (`tests-launcher` job); the packed one needs `npm install --force` like
-  every install in this repo.
+- **workspace** (`npm run test:smoke --workspace=apps/server-core`): spawns
+  the built `dist/cli/index.mjs` with `start` against sqlite on a non-default
+  port, from the package directory (typeorm resolves the nested
+  `better-sqlite3` install through its `process.cwd()` fallback, a
+  monorepo-hoisting quirk).
+- **packed** (`npm run test:smoke:packed --workspace=apps/server-core`):
+  `npm pack`s server-core, the three console apps and every workspace under
+  `packages/` into tarballs, installs them into a fresh temp project and runs
+  the installed `node_modules/.bin/authup-server`. It needs `npm install
+  --force` like every install in this repo.
+
+**The packed variant is the one that matters:** it is the ONLY coverage in
+the repository for the published install layout (bin fields, `files`
+whitelists, ESM entry, and the locter walk that resolves the console packages
+out of a flat `node_modules`). Every breakage found in plan 078 (the ESM
+`__dirname` crash, a stale spawn path, a symlinked module store dropped by
+`npm pack`) reproduced from a packed artifact only; a workspace-dist run
+passed straight through all three.
+
+Both scenarios assert the same things: the server answers `200`, all THREE
+consoles are served (`/logout`, `/console/account`, `/console/admin` each
+answer `200` carrying the injected `window.__AUTHUP__`), the first script
+asset each shell references answers `200` as JavaScript (so a dist built for
+another base fails here instead of serving a blank console), and a `SIGTERM`
+makes the process exit `0` and stop listening.
+
+Two properties of the runner are load-bearing and easy to undo. It writes an
+`authup.conf` naming `server.core.port` and passes `--configDirectory=<dir>`
+in the `=` form, and it seeds **no** `PORT` / `HOST` in the child
+environment: an environment variable beats the file value, so seeding either
+would decide the listen port and leave the file untested. It also drains
+every asset response body, because the entry bundles are over 1 MB and an
+undrained socket makes `server.close()` wait, which turns the clean-exit
+assertion into a 10 second force-exit.
 
 ## Console Tests (apps/client-admin-console, apps/client-account-console)
 

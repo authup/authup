@@ -5,7 +5,6 @@
     "packages": {
         ".": {"component": "root", "extra-files": ["CITATION.cff"]},
 
-        "apps/authup": {"component": "authup"},
         "apps/client-account-console": {"component": "client-account-console"},
         "apps/client-admin-console": {"component": "client-admin-console"},
         "apps/client-auth-console": {"component": "client-auth-console"},
@@ -42,7 +41,6 @@
             "components": [
                 "root",
 
-                "authup",
                 "client-account-console",
                 "client-admin-console",
                 "client-auth-console",

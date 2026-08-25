@@ -26,6 +26,8 @@
         "test:coverage": "cross-env NODE_ENV=test vitest run --config test/vitest.config.ts --coverage",
         "test:schema-drift": "node scripts/assert-schema-drift.mjs",
         "test:migration-latest": "node scripts/verify-latest-migration.mjs",
+        "test:smoke": "node test/smoke/run.mjs",
+        "test:smoke:packed": "node test/smoke/run.mjs --packed",
         "check:types": "tsc -p tsconfig.test.json"
     },
     "engines": {

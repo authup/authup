@@ -5,8 +5,8 @@ This section will help you to spin up Authup directly on the **host** system.
 ::: tip Production
 For production, the recommended topology is a **container** running the
 `server/core` service. See [Docker](./docker) and
-[Docker Compose](./docker-compose). The `authup` CLI described here is the
-quickstart / bare-metal path: a small supervisor around the same service.
+[Docker Compose](./docker-compose). The bare-metal path described here runs
+the very same service, started from its own binary.
 :::
 
 ## Requirements
@@ -36,19 +36,25 @@ $ npm init
 Add this package as dependency to the project.
 
 ```sh
-$ npm install authup --save
+$ npm install @authup/server-core --save
 ```
+
+The package ships one binary, `authup-server`.
 
 ## Step. 3: Configuration
 
 Follow the instructions for [configuring](./configuration.md) Authup using a
 configuration file or via environment variables.
 
-A configuration file is looked up in the directory the CLI is started from.
-Place it in the project root, or point the CLI elsewhere with
+A configuration file is looked up in the directory the command is started
+from. Place it in the project root, or point elsewhere with
 `--configDirectory <path>` / `--configFile <path>`. A multi-section
-`authup.conf` carries the settings under `server.core`; environment variables
-always override file values.
+`authup.conf` carries the settings under `server.core`; a per-component
+`authup.server.core.conf` carries them flat.
+
+**An environment variable always beats the file value**, `PORT` and `HOST`
+included. A platform that injects `PORT` therefore decides the listen port
+even when the file names one.
 
 ## Step. 4: Boot up
 
@@ -57,7 +63,7 @@ Add some scripts to `package.json`.
 ```json
 {
   "scripts": {
-      "start": "authup start"
+      "start": "authup-server start"
   }
 }
 ```
@@ -96,50 +102,41 @@ The consoles are served by that same process:
 - Admin console: `http://127.0.0.1:3001/console/admin`
 - Account console: `http://127.0.0.1:3001/console/account`
 
-## Supervisor behavior
+## Signals and exit codes
 
-`authup start` runs `server/core` as a **child process** and supervises it:
+`authup-server start` is the service itself, not a supervisor, so a process
+manager (systemd, PM2, ...) supervises it directly.
 
-- **Environment passthrough**: the supervisor's environment reaches the child
-  in full, so [server](./configuration-server-core) environment variables can
-  be set on the `authup` process itself. The exception is the overrides
-  below, which the supervisor always sets and which therefore win over an
-  inherited value.
-- **Overrides**: `PORT` and `HOST` are always set for the child, from the
-  `server.core` section of the configuration file or, when it names none,
-  from the defaults (`3001` and `0.0.0.0`).
-- **Signal forwarding**: `SIGINT`/`SIGTERM` are forwarded to the child, so
-  `Ctrl+C` and service managers (systemd, PM2, ...) shut the service down
-  cleanly.
-- **Exit code contract**: the supervisor exits with the child's exit code, so
-  a process manager can restart it.
+- `SIGINT` / `SIGTERM` tear the application down and exit `0` once the
+  teardown succeeded, and `1` when it fails.
+- A **second** signal while a teardown is already running exits `1`
+  immediately.
+- A teardown that has not finished after **10 seconds** is forced: the
+  process writes a line naming the timeout and exits `1`.
 
-The service can also be named explicitly:
-
-```shell
-$ authup start server/core
-```
-
-::: warning `client.admin-console` no longer starts anything
-The admin console is served by `server/core` at `<publicUrl>/console/admin`. The CLI
-still accepts `authup start client.admin-console` and a `client.admin-console`
-section in the configuration file, but both only print a deprecation warning;
-a selector naming the console alone exits without starting anything. Remove them.
-See [Upgrading](./upgrading.md#the-admin-console-is-served-by-server-core).
-:::
+The same contract applies to every long-running command, so `worker` and
+`console` answer a container stop exactly like `start` does.
 
 ## Other commands
 
-The `migration` and `healthcheck` commands are forwarded to `server/core`:
-
 ```shell
 # apply / inspect / undo database migrations
-$ authup migration run
-$ authup migration status
-$ authup migration revert
+$ authup-server migration run
+$ authup-server migration status
+$ authup-server migration revert
 
 # probe the running API
-$ authup healthcheck
+$ authup-server healthcheck
+
+# run the background sweeps alone, without an HTTP listener
+$ authup-server worker
+
+# serve the consoles alone, without the management API
+$ authup-server console
 ```
+
+See [Worker](./worker.md) for the background role and
+[Console Replicas](./console-replicas.md) for serving the consoles from their
+own replica set.
 
 All commands honor `--configDirectory` / `--configFile`.

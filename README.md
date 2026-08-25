@@ -73,11 +73,11 @@ That service also serves the admin console at http://localhost:3001/console/admi
 
 #### Bare Metal
 
-The easiest way to get the framework up and running, is by using the global CLI.
-Therefore, execute the following shell command.
+The easiest way to get the framework up and running, is by running the server
+package directly. Therefore, execute the following shell command.
 
 ```shell
-$ npx authup@latest start
+$ npx @authup/server-core@latest start
 ```
 
 To find out how to configure and set up the bare metal variant in detail, click here.
@@ -120,7 +120,6 @@ The repository contains the following runnable applications:
 
 | Name                              | Type        | Description                                                                                           |
 |-----------------------------------|-------------|-------------------------------------------------------------------------------------------------------|
-| [authup](apps/authup)             | CLI         | A command line interface for interacting with various applications and services within the ecosystem. |
 | [client-admin-console](apps/client-admin-console)     | Application | The admin console: a single-page application served by server-core at `/console/admin`. |
 | [server-core](apps/server-core)   | Service     | A service that forms the backbone of the server-side ecosystem.                                       |
 
@@ -197,7 +196,7 @@ Made with 💚
 
 Authup is dual-licensed:
 
-- The **applications** ([server-core](apps/server-core), [client-admin-console](apps/client-admin-console), [authup CLI](apps/authup))
+- The **applications** ([server-core](apps/server-core), [client-admin-console](apps/client-admin-console), [client-account-console](apps/client-account-console), [client-auth-console](apps/client-auth-console))
   are published under the [AGPL-3.0](./LICENSE) — free for research, education, non-profits, and
   open-source projects. A commercial license is available for organizations that cannot meet the
   AGPL's conditions.
