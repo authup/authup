@@ -1,7 +1,19 @@
 {
-    // https://v3.nuxtjs.org/concepts/typescript
-    "extends": "./.nuxt/tsconfig.json",
+    "extends": "../../tsconfig.json",
     "compilerOptions": {
-        "allowImportingTsExtensions": true
-    }
+        "ignoreDeprecations": "6.0",
+        "declaration": false,
+        "declarationMap": false,
+        "lib": [
+            "ESNext",
+            "DOM",
+            "DOM.Iterable"
+        ],
+        "jsx": "preserve"
+    },
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.vue",
+        "test/**/*.ts"
+    ]
 }
