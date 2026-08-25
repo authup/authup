@@ -43,8 +43,9 @@ are still resolved from their built `dist/`, so run `npm run build` once after p
 
 The backend also serves the admin console at `http://localhost:3001/admin` and
 the account console at `http://localhost:3001/account`, from the built bundle
-of each package. Build the admin console once (and again after changing it) to
-have that path work:
+of each package. Build the admin console BEFORE starting the backend (and
+restart the backend after rebuilding it): the asset mount is decided at boot,
+so a bundle built afterwards is not served until the next start.
 
 ```shell
 $ npm run build --workspace=apps/client-admin-console

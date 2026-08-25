@@ -65,6 +65,7 @@ One container runs the whole deployment. To start it with default settings on ht
 $ docker run \
   -v authup:/var/lib/authup \
   -p 3001:3000 \
+  -e PUBLIC_URL=http://localhost:3001 \
   authup/authup:latest server/core start
 ```
 

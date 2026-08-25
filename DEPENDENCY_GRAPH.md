@@ -112,6 +112,7 @@ graph TD
     %% Apps
     server-core --> access
     server-core --> client-account-console
+    server-core --> client-admin-console
     server-core --> client-auth-console
     server-core --> core-http-kit
     server-core --> core-kit
@@ -136,15 +137,15 @@ graph TD
     client-auth-console --> core-kit
     client-auth-console --> i18n
     client-auth-console --> kit
+    client-admin-console --> access
     client-admin-console --> client-web-kit
     client-admin-console --> client-web-kit-theme
-    client-admin-console --> client-web-nuxt
     client-admin-console --> client-web-theme
     client-admin-console --> core-http-kit
     client-admin-console --> core-kit
     client-admin-console --> i18n
     client-admin-console --> kit
-    authup --> client-admin-console
+    client-admin-console --> specs
     authup --> errors
     authup --> kit
     authup --> server-core

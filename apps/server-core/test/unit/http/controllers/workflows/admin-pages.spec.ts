@@ -67,6 +67,25 @@ describe('src/http/controllers/workflows/admin (SPA shell)', () => {
         }
     });
 
+    // The SPA owns /login (where the guard sends a signed-out visitor and
+    // where a refused callback lands with its ?error= marker); the same URL
+    // with a realmId is the server-side kick. Both must keep working.
+    it('should serve the shell for the console login page', async () => {
+        for (const path of ['/admin/login', '/admin/login?error=access_denied', '/admin/login?redirect=%2Fusers']) {
+            const response = await httpRequest(suite, 'GET', path);
+            expect(response.status).toEqual(200);
+            expect(response.headers.get('content-type')).toContain('text/html');
+        }
+
+        const kick = await httpRequest(suite, 'GET', '/admin/login?realmId=master', { redirect: 'manual' });
+        expect(kick.status).toEqual(302);
+    });
+
+    it('should answer 404 for a missing asset instead of the shell', async () => {
+        const response = await httpRequest(suite, 'GET', '/admin/assets/does-not-exist.js');
+        expect(response.status).toEqual(404);
+    });
+
     it('should serve the bundle assets', async () => {
         const shell = await (await httpRequest(suite, 'GET', '/admin')).text();
 

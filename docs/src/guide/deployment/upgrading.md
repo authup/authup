@@ -27,7 +27,9 @@ runs one process.
 - **Bare metal**: the command does not change. `authup start` starts
   `server/core` alone. `authup start client.admin-console` and a
   `client.admin-console` section in `authup.conf` are still parsed, print a
-  deprecation warning and launch nothing. Remove them.
+  deprecation warning and start `server/core` (never a second process). Remove
+  them, and remove any second service unit that ran the console: two units
+  both running `authup start` would start two servers.
 - **Reverse proxy**: collapse the two upstreams into one. The API and both
   consoles are served by the same listener, so a rule that routed `/` to the
   console port and `/api/` to the server port routes `/` to the server port

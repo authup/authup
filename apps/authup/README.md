@@ -33,16 +33,17 @@ Therefore, execute the following shell command.
 $ npx authup start
 ```
 
-This will launch the following applications with default settings:
-- Frontend Application: `http://localhost:3000/`
-- Backend Application: `http://localhost:3001/`
+This launches the server with default settings:
+- API: `http://localhost:3001/`
+- Admin console: `http://localhost:3001/admin`
+- Account console: `http://localhost:3001/account`
 
-Each application always receives its own `PORT`/`HOST` (see [Configuration](#configuration)),
-so an ambient `PORT` in the environment cannot reach both of them.
+The server always receives its `PORT`/`HOST` from the CLI (see
+[Configuration](#configuration)), so an ambient `PORT` in the environment
+cannot decide where it listens.
 
-The CLI forwards `SIGINT`/`SIGTERM` to both applications and exits `0` once they
-stop. When an application stops on its own, the CLI terminates the other one and
-exits with that first application's exit code.
+The CLI forwards `SIGINT`/`SIGTERM` to the server and exits `0` once it stops;
+when the server stops on its own, the CLI exits with its exit code.
 
 ## Commands
 

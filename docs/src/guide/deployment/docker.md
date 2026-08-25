@@ -41,8 +41,13 @@ One container runs the whole deployment. It serves the API and both consoles:
 docker run \
   -v authup:/var/lib/authup \
   -p 3001:3000 \
+  -e PUBLIC_URL=http://localhost:3001 \
   authup/authup:latest server/core start
 ```
+
+`PUBLIC_URL` is the address the browser reaches the container at. The
+consoles derive the API address from it, so with the port published as
+`3001` it must name `3001`, not the container-internal `3000`.
 
 Now all should be set up, and you are ready to go :tada:
 

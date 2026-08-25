@@ -174,8 +174,16 @@ export default defineComponent({
                 {{ translations.loginFailed }}
             </VCAlert>
 
+            <!--
+                A refused callback lands here with its error marker. The grid
+                auto-selects a lone realm, which would kick straight back into
+                the flow that was just refused (an accessPolicyId denial loops
+                forever on a single-realm deployment), so a refusal waits for
+                a click.
+            -->
             <ARealmGrid
                 ref="realmGrid"
+                :auto-select-single="!denied && !failed"
                 @select="handleSelect"
             />
         </div>

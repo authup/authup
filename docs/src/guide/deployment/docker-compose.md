@@ -42,6 +42,8 @@ services:
         #- ./writable:/var/lib/authup
       ports:
         - "3001:3000"
+      environment:
+        - PUBLIC_URL=http://localhost:3001
       command: server/core start
       networks:
           authup:
@@ -106,6 +108,7 @@ services:
     ports:
       - "3001:3000"
     environment:
+        - PUBLIC_URL=http://localhost:3001
         - USER_ADMIN_PASSWORD=test-password
     command: server/core start
 ```
@@ -141,6 +144,8 @@ services:
       - ./authup.server.core.conf:/usr/src/app/authup.server.core.conf
     ports:
       - "3001:3000"
+    environment:
+      - PUBLIC_URL=http://localhost:3001
     command: server/core start
 
 ```
@@ -171,6 +176,7 @@ services:
             - postgres
             - redis
         environment:
+            - PUBLIC_URL=http://localhost:3001
             - DB_TYPE=postgres
             - DB_HOST=postgres
             - DB_PORT=5432

@@ -6,6 +6,8 @@
  */
 
 import { CLIENT_ADMIN_CONSOLE_NAME } from '@authup/core-kit';
+import { NotFoundError } from '@authup/errors';
+import { useRequestQuery } from '@routup/basic/query';
 import {
     DContext,
     DController,
@@ -59,8 +61,21 @@ export class AdminController {
     // which matches everything and would swallow them.
     // ---------------------------------------------------------
 
+    /**
+     * Two things share this URL. With a `realmId` it is the server-side kick;
+     * without one it is the console's own login PAGE (the SPA route `/login`
+     * under the `/admin` base): where the guard sends a signed-out visitor,
+     * where a refused callback lands with its `?error=` marker, and what a
+     * reload of that address requests. Answering the page with the kick's
+     * "a realm is required" error made every refusal a raw 400.
+     */
     @DGet('/login', [])
-    async login(@DContext() event: IAppEvent): Promise<Response> {
+    async login(@DContext() event: IAppEvent): Promise<Response | string> {
+        const realmId = useRequestQuery(event, 'realmId');
+        if (typeof realmId !== 'string' || realmId.length === 0) {
+            return this.render(event);
+        }
+
         return this.consoleLogin.login(event);
     }
 
@@ -76,6 +91,14 @@ export class AdminController {
 
     @DGet('/*page', [])
     async servePage(@DContext() event: IAppEvent): Promise<string> {
+        // The assets mount is decided at boot: with no built bundle there is
+        // none, and an asset request would fall through to the shell. A 200
+        // HTML answer for a module script is a blank console with no error
+        // anywhere; a 404 says what is missing.
+        if (/^\/admin\/assets\//i.test(event.path)) {
+            throw new NotFoundError();
+        }
+
         return this.render(event);
     }
 
