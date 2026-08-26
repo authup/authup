@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PasswordResetPayload, PasswordResetResponse, StatusResponseFeatures } from '@authup/core-http-kit';
+import type { PasswordResetPayload, PasswordResetResponse } from '@authup/core-http-kit';
 import {
     DBody,
     DContext,
@@ -15,11 +15,10 @@ import {
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
 import type { IPasswordRecoveryService } from '../../../../../core/index.ts';
-import { serveWorkflowPage } from '../../../ui/index.ts';
+import { redirectToAuthConsole } from '../auth-console.ts';
 
 export type PasswordResetControllerOptions = {
-    baseURL: string,
-    features: StatusResponseFeatures,
+    authConsoleUrl: string,
 };
 
 export type PasswordResetControllerContext = {
@@ -38,15 +37,14 @@ export class PasswordResetController {
         this.service = ctx.service;
     }
 
+    /**
+     * The page renders in the auth console service; this hop carries the
+     * request's own parameters over to it. The POST below stays here:
+     * server-core keeps the protocol, the service keeps the render.
+     */
     @DGet('', [])
-    async serve(@DContext() event: IAppEvent): Promise<string> {
-        return serveWorkflowPage(event, {
-            url: '/password-reset',
-            baseURL: this.options.baseURL,
-            features: this.options.features,
-            realmAware: true,
-            tokenAware: true,
-        });
+    async serve(@DContext() event: IAppEvent): Promise<Response> {
+        return redirectToAuthConsole(event, this.options.authConsoleUrl, '/password-reset');
     }
 
     @DPost('', [])

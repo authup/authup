@@ -115,6 +115,15 @@ export const CONFIG_SCHEMA : ConfigSchema<Config, ConfigSchemaDerivedKey, Config
         env: ConfigEnvironmentVariableName.AUTH_CONSOLE_PATH,
         readEnv: readEnvString,
     },
+    authConsoleUrl: {
+        type: stringType,
+        default: '',
+        description: 'Where the auth console service (@authup/server-auth-console) is served, e.g. https://example.com/console/auth. ' +
+            'The hosted login, consent and workflow page GETs redirect there. An empty value derives it from publicUrl, which is the single-origin default.',
+        path: 'server.authConsole.url',
+        env: ConfigEnvironmentVariableName.AUTH_CONSOLE_URL,
+        readEnv: readEnvString,
+    },
     accountConsolePath: {
         type: stringType,
         default: '',

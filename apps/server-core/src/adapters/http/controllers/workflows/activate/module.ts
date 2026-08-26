@@ -13,14 +13,13 @@ import {
     DPost,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
-import type { ActivatePayload, StatusResponseFeatures } from '@authup/core-http-kit';
+import type { ActivatePayload } from '@authup/core-http-kit';
 import type { IRegistrationService } from '../../../../../core/index.ts';
-import { serveWorkflowPage } from '../../../ui/index.ts';
+import { redirectToAuthConsole } from '../auth-console.ts';
 import { ActivateRequestValidator } from './validator.ts';
 
 export type ActivateControllerOptions = {
-    baseURL: string,
-    features: StatusResponseFeatures,
+    authConsoleUrl: string,
 };
 
 export type ActivateControllerContext = {
@@ -39,14 +38,14 @@ export class ActivateController {
         this.service = ctx.service;
     }
 
+    /**
+     * The page renders in the auth console service; this hop carries the
+     * request's own parameters over to it. The POST below stays here:
+     * server-core keeps the protocol, the service keeps the render.
+     */
     @DGet('', [])
-    async serve(@DContext() event: IAppEvent): Promise<string> {
-        return serveWorkflowPage(event, {
-            url: '/activate',
-            baseURL: this.options.baseURL,
-            features: this.options.features,
-            tokenAware: true,
-        });
+    async serve(@DContext() event: IAppEvent): Promise<Response> {
+        return redirectToAuthConsole(event, this.options.authConsoleUrl, '/activate');
     }
 
     @DPost('', [])

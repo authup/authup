@@ -221,18 +221,11 @@ describe('src/http/controllers/workflows/authorize (info)', () => {
         expect(body.redirectUriVerified).toEqual(false);
     });
 
-    it('should answer the same context the page renders', async () => {
-        // the two routes read one builder; this fails if they ever stop
-        const query = buildQuery();
-
-        const info = await (await request(query)).json();
-
-        const page = await httpRequest(suite, 'GET', `/authorize?${query.toString()}`);
-        expect(page.status).toEqual(200);
-
-        const match = (await page.text()).match(/window\.__AUTHUP__ = (.+);/);
-        expect(match).toBeTruthy();
-
-        expect(JSON.parse(match![1]).data).toEqual(info);
-    });
+    // D2-1 guarded this endpoint against drifting from the page by
+    // comparing the two answers, because `serve()` and `info()` shared
+    // one builder. Since D2-2 the page renders in
+    // @authup/server-auth-console and `serve()` is a redirect, so the
+    // builder has exactly one caller and there is nothing left here to
+    // drift against. What replaced the guard is the service rendering
+    // from this endpoint and nothing else.
 });

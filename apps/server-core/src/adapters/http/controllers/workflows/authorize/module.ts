@@ -34,7 +34,7 @@ import {
 } from '@authup/specs';
 import { ForceUserLoggedInMiddleware } from '../../../middleware/index.ts';
 import { HTTPOAuth2Authorizer } from '../../../adapters/index.ts';
-import { renderAuthConsolePage } from '../../../ui/index.ts';
+import { redirectToAuthConsole } from '../auth-console.ts';
 import { readFromLocations } from '../../../request/index.ts';
 import type { IOAuth2AuthorizationCodeRequestVerifier } from '../../../../../core/index.ts';
 import { OAuth2AuthorizationCodeRequestValidator } from '../../../../../core/index.ts';
@@ -130,15 +130,15 @@ export class AuthorizeController {
         return this.buildAuthorizeInfo(event);
     }
 
+    /**
+     * The page renders in the auth console service, which reads its
+     * whole input back from `/info` above. server-core keeps the
+     * protocol: this GET is a stateless hop, and the POST that issues
+     * the code stays here.
+     */
     @DGet('', [])
-    async serve(@DContext() event: IAppEvent): Promise<string> {
-        return renderAuthConsolePage(event, {
-            url: '/authorize',
-            payload: {
-                config: { baseURL: this.options.baseURL },
-                data: await this.buildAuthorizeInfo(event),
-            },
-        });
+    async serve(@DContext() event: IAppEvent): Promise<Response> {
+        return redirectToAuthConsole(event, this.options.authConsoleUrl, '/authorize');
     }
 
     // ---------------------------------------------------------

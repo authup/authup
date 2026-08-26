@@ -20,6 +20,11 @@ import type {
 
 export type AuthorizeControllerOptions = {
     baseURL: string;
+    /**
+     * Where the auth console service renders the page this controller
+     * hands over to (plan 101 D2).
+     */
+    authConsoleUrl: string;
     features: StatusResponseFeatures;
     /**
      * Max age (seconds) a `prompt=login` request accepts before forcing re-auth

@@ -92,6 +92,13 @@ export type Config = {
      * default: '' (resolve @authup/client-auth-console from node_modules)
      */
     authConsolePath: string,
+    /**
+     * Where the auth console service is served, e.g.
+     * `https://example.com/console/auth`. The hosted page GETs redirect
+     * here: server-core owns the protocol, the service owns the render
+     * (plan 101 D2). Empty derives it from `publicUrl`.
+     */
+    authConsoleUrl: string,
 
     /**
      * Package directory of a substituted

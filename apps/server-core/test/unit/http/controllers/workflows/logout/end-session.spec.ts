@@ -111,6 +111,25 @@ describe('end-session (/logout)', () => {
         }
     };
 
+    /**
+     * The end-session work moved to a JSON call the rendered page makes
+     * (plan 101 D2). The browser bindings stay where OIDC put them and
+     * hand over to the console service, so the matrix below drives the
+     * POST, and the two forwarding cases are pinned separately.
+     */
+    const endSession = async (params: Record<string, string>) => {
+        const response = await httpRequest(suite, 'POST', '/logout', {
+            body: JSON.stringify(params),
+            headers: { 'Content-Type': 'application/json' },
+        });
+
+        expect(response.status).toEqual(200);
+        // a per-request answer about a session, never from a cache
+        expect(response.headers.get('cache-control')).toEqual('no-store');
+
+        return response.json();
+    };
+
     it('should revoke the session referenced by a verified id_token_hint', async () => {
         // NOTE: refresh tokens rotate (plan 016) — each refresh_token is
         // consumed by a single refreshSucceeds() call, so never probe the same
@@ -119,8 +138,12 @@ describe('end-session (/logout)', () => {
         const survivor = await mintTokens();
         expect(revoked.id_token).toBeDefined();
 
-        const response = await httpRequest(suite, 'GET', `/logout?id_token_hint=${revoked.id_token}`);
-        expect(response.status).toEqual(200);
+        const body = await endSession({ id_token_hint: revoked.id_token! });
+        expect(body.serverRevoked).toBe(true);
+        expect(body.hintVerified).toBe(true);
+        // the operands of the page's auto-clear gate
+        expect(body.hintSub).toBeTruthy();
+        expect(body.hintSubKind).toEqual('user');
 
         // the referenced session (and its refresh token) is gone
         expect(await refreshSucceeds(revoked.refresh_token!)).toBe(false);
@@ -128,110 +151,84 @@ describe('end-session (/logout)', () => {
         expect(await refreshSucceeds(survivor.refresh_token!)).toBe(true);
     });
 
-    it('should redirect back to the RP after revoking with a verified hint + validated redirect', async () => {
+    it('should answer the validated redirect after revoking with a verified hint', async () => {
         const tokens = await mintTokens();
         const state = generateOAuth2CodeVerifier();
 
-        const response = await httpRequest(
-            suite,
-            'GET',
-            `/logout?id_token_hint=${tokens.id_token}` +
-                `&post_logout_redirect_uri=${encodeURIComponent(POST_LOGOUT_URI)}&state=${state}`,
-            { redirect: 'manual' },
-        );
+        const body = await endSession({
+            id_token_hint: tokens.id_token!,
+            post_logout_redirect_uri: POST_LOGOUT_URI,
+            state,
+        });
 
-        expect(response.status).toBeGreaterThanOrEqual(300);
-        expect(response.status).toBeLessThan(400);
-        const location = response.headers.get('location') ?? '';
-        expect(location.startsWith(POST_LOGOUT_URI)).toBe(true);
-        // compare the decoded query value (state may contain URL-escaped chars)
-        expect(new URL(location).searchParams.get('state')).toEqual(state);
+        expect(body.serverRevoked).toBe(true);
+        expect(body.redirect.startsWith(POST_LOGOUT_URI)).toBe(true);
+        expect(new URL(body.redirect).searchParams.get('state')).toEqual(state);
         expect(await refreshSucceeds(tokens.refresh_token!)).toBe(false);
     });
 
     it('should still revoke with a valid hint when a cosmetic param is malformed', async () => {
-        // a malformed post_logout_redirect_uri (relative → fails the URL check)
-        // must NOT discard the valid id_token_hint and skip the revoke — the
-        // security-critical revoke is decoupled from cosmetic-param validity.
         const tokens = await mintTokens();
 
-        const response = await httpRequest(
-            suite,
-            'GET',
-            `/logout?id_token_hint=${tokens.id_token}&post_logout_redirect_uri=${encodeURIComponent('/not-an-absolute-url')}`,
-            { redirect: 'manual' },
-        );
+        const body = await endSession({
+            id_token_hint: tokens.id_token!,
+            post_logout_redirect_uri: 'not-a-url',
+        });
 
-        // the bad redirect is dropped (no 302), but the session IS revoked
-        expect(response.status).toEqual(200);
+        expect(body.serverRevoked).toBe(true);
         expect(await refreshSucceeds(tokens.refresh_token!)).toBe(false);
     });
 
     it('should still revoke with a valid hint when the realm hint is oversized (hint-only retry)', async () => {
-        // a malformed realm hint is cosmetic too — the revoke's subject and
-        // session come from the verified hint's claims, so the retry keeps
-        // ONLY the hint and the oversized realm_name is discarded.
         const tokens = await mintTokens();
 
-        const response = await httpRequest(
-            suite,
-            'GET',
-            `/logout?id_token_hint=${tokens.id_token}&realm_name=${'x'.repeat(400)}`,
-            { redirect: 'manual' },
-        );
+        const body = await endSession({
+            id_token_hint: tokens.id_token!,
+            realm_name: 'x'.repeat(5000),
+        });
 
-        expect(response.status).toEqual(200);
+        expect(body.serverRevoked).toBe(true);
         expect(await refreshSucceeds(tokens.refresh_token!)).toBe(false);
     });
 
     it('should still revoke with a valid hint when state is oversized (cosmetic-param decoupling)', async () => {
-        // the pre-fix behavior: an oversized state failed validation and the
-        // WHOLE request degraded to parameter-less — the valid hint was
-        // discarded and the revoke silently skipped.
         const tokens = await mintTokens();
 
-        const response = await httpRequest(
-            suite,
-            'GET',
-            `/logout?id_token_hint=${tokens.id_token}&state=${'x'.repeat(3000)}`,
-            { redirect: 'manual' },
-        );
+        const body = await endSession({
+            id_token_hint: tokens.id_token!,
+            state: 'x'.repeat(5000),
+        });
 
-        expect(response.status).toEqual(200);
+        expect(body.serverRevoked).toBe(true);
         expect(await refreshSucceeds(tokens.refresh_token!)).toBe(false);
     });
 
     it('should auto-revoke with a name-identified client_id (resolved via the verified hint realm, plan 047.B)', async () => {
-        // a name-form client_id is resolved to its client UUID — scoped by the
-        // VERIFIED hint's own realm claim when the request carries no realm
-        // hint — and the resolved UUID satisfies the aud cross-check.
         const tokens = await mintTokens();
 
-        const response = await httpRequest(
-            suite,
-            'GET',
-            `/logout?id_token_hint=${tokens.id_token}&client_id=${client.name}`,
-            { redirect: 'manual' },
-        );
+        const body = await endSession({
+            id_token_hint: tokens.id_token!,
+            client_id: client.name,
+        });
 
-        expect(response.status).toEqual(200);
+        expect(body.serverRevoked).toBe(true);
         expect(await refreshSucceeds(tokens.refresh_token!)).toBe(false);
     });
 
-    it('should NOT redirect a hint-less request — it renders the confirm page instead (no silent no-op logout)', async () => {
+    it('should report a hint-less request as unrevoked (no silent no-op logout)', async () => {
         // The defect this pins: a hint-less request with a validated
-        // post_logout_redirect_uri used to 302 straight back to the RP without
-        // revoking anything, so the RP treated a no-op as a successful logout.
-        const response = await httpRequest(
-            suite,
-            'GET',
-            `/logout?client_id=${client.id}&post_logout_redirect_uri=${encodeURIComponent(POST_LOGOUT_URI)}`,
-            { redirect: 'manual' },
-        );
+        // post_logout_redirect_uri must never read as a completed logout.
+        // The server bounced straight back to the RP before; now it answers
+        // serverRevoked=false, and the page navigates only after a human has
+        // clicked and its own sign-out has run.
+        const body = await endSession({
+            client_id: client.id,
+            post_logout_redirect_uri: POST_LOGOUT_URI,
+        });
 
-        expect(response.status).toEqual(200);
-        const contentType = response.headers.get('content-type') ?? '';
-        expect(contentType).toContain('text/html');
+        expect(body.serverRevoked).toBe(false);
+        expect(body.hintVerified).toBeFalsy();
+        expect(body.hintSub).toBeUndefined();
     });
 
     it('should NOT revoke when an access token is presented as id_token_hint (kind check)', async () => {
@@ -239,89 +236,99 @@ describe('end-session (/logout)', () => {
 
         // access tokens also carry session_id — accepting one as a hint would let
         // a leaked access token force a logout. The kind check rejects it.
-        const response = await httpRequest(suite, 'GET', `/logout?id_token_hint=${tokens.access_token}`);
-        expect(response.status).toEqual(200);
+        const body = await endSession({ id_token_hint: tokens.access_token });
 
+        expect(body.serverRevoked).toBe(false);
+        expect(body.hintSub).toBeUndefined();
         expect(await refreshSucceeds(tokens.refresh_token!)).toBe(true);
     });
 
     it('should NOT revoke when the id_token_hint is forged / unverifiable', async () => {
         const tokens = await mintTokens();
 
-        const response = await httpRequest(suite, 'GET', '/logout?id_token_hint=not.a.valid.jwt');
-        expect(response.status).toEqual(200);
+        const body = await endSession({ id_token_hint: 'not.a.valid.jwt' });
 
+        expect(body.serverRevoked).toBe(false);
         expect(await refreshSucceeds(tokens.refresh_token!)).toBe(true);
     });
 
-    it('should not redirect to an unregistered post_logout_redirect_uri', async () => {
+    it('should not answer an unregistered post_logout_redirect_uri', async () => {
         const tokens = await mintTokens();
 
-        const response = await httpRequest(
-            suite,
-            'GET',
-            `/logout?id_token_hint=${tokens.id_token}` +
-                `&post_logout_redirect_uri=${encodeURIComponent('https://attacker.example.com/steal')}`,
-            { redirect: 'manual' },
-        );
+        const body = await endSession({
+            id_token_hint: tokens.id_token!,
+            post_logout_redirect_uri: 'https://attacker.example.com/steal',
+        });
 
-        // unmatched redirect is dropped → the confirm page renders (200), not a
-        // 302 to the attacker origin
-        expect(response.status).toEqual(200);
-    });
-
-    it('should set the hardening headers on the confirm page', async () => {
-        const response = await httpRequest(suite, 'GET', '/logout');
-
-        expect(response.status).toEqual(200);
-        expect(response.headers.get('referrer-policy')).toEqual('no-referrer');
-        expect(response.headers.get('content-security-policy')).toContain("frame-ancestors 'none'");
-        expect(response.headers.get('x-frame-options')).toEqual('DENY');
+        // the unmatched uri is dropped, so the page has nowhere to navigate
+        expect(body.redirect).toBeUndefined();
+        expect(body.serverRevoked).toBe(true);
     });
 
     it('should resolve a name-identified client through a mixed-case realm hint (ingress canonicalization)', async () => {
-        const response = await httpRequest(
-            suite,
-            'GET',
-            `/logout?client_id=${client.name}` +
-                `&realm_name=${encodeURIComponent(` ${realm.name.toUpperCase()} `)}` +
-                `&post_logout_redirect_uri=${encodeURIComponent(POST_LOGOUT_URI)}`,
-        );
-
-        expect(response.status).toEqual(200);
+        const body = await endSession({
+            client_id: client.name,
+            realm_name: ` ${realm.name.toUpperCase()} `,
+            post_logout_redirect_uri: POST_LOGOUT_URI,
+        });
 
         // without the validator's trim().toLowerCase() the realm hint would fail
-        // closed → no client resolution → no validated redirect in the payload
-        const match = (await response.text()).match(/window\.__AUTHUP__ = (.+);/);
-        expect(match).toBeTruthy();
-        const payload = JSON.parse(match![1]);
-        expect(payload.data.client?.name).toEqual(client.name);
-        expect(payload.data.redirect).toEqual(POST_LOGOUT_URI);
+        // closed → no client resolution → no validated redirect
+        expect(body.clientName).toEqual(client.name);
+        expect(body.redirect).toEqual(POST_LOGOUT_URI);
     });
 
-    it('should drop everything when the id_token_hint ITSELF is malformed (no revoke, confirm page renders)', async () => {
+    it('should drop everything when the id_token_hint ITSELF is malformed (no revoke)', async () => {
         const tokens = await mintTokens();
 
         // an oversized id_token_hint (the revoke-critical field) fails BOTH
-        // validation stages → parameter-less confirm page, nothing revoked.
+        // validation stages → parameter-less answer, nothing revoked.
         // (A malformed *cosmetic* param, by contrast, keeps the revoke — see
         // the "should still revoke … when a cosmetic param is malformed" test.)
-        const response = await httpRequest(
-            suite,
-            'GET',
-            `/logout?id_token_hint=${tokens.id_token}${'x'.repeat(5000)}`,
-            { redirect: 'manual' },
-        );
+        const body = await endSession({ id_token_hint: `${tokens.id_token}${'x'.repeat(5000)}` });
 
-        expect(response.status).toEqual(200);
-        expect(response.headers.get('content-type') ?? '').toContain('text/html');
+        expect(body.serverRevoked).toBe(false);
         expect(await refreshSucceeds(tokens.refresh_token!)).toBe(true);
     });
 
-    it('should reach the discovery-advertised end_session_endpoint', async () => {
-        const config = await httpRequest(suite, 'GET', `/realms/${realm.name}/.well-known/openid-configuration`);
-        const body: { end_session_endpoint?: string } = await config.json();
-        expect(body.end_session_endpoint).toBeDefined();
-        expect(body.end_session_endpoint!.endsWith('/logout')).toBe(true);
+    it('should forward the GET binding to the auth console, carrying the request', async () => {
+        const response = await httpRequest(
+            suite,
+            'GET',
+            `/logout?client_id=${client.id}&post_logout_redirect_uri=${encodeURIComponent(POST_LOGOUT_URI)}`,
+            { redirect: 'manual' },
+        );
+
+        expect(response.status).toBeGreaterThanOrEqual(300);
+        expect(response.status).toBeLessThan(400);
+        // the hop reflects request parameters, so it must never be cached
+        expect(response.headers.get('cache-control')).toEqual('no-store');
+
+        const location = new URL(response.headers.get('location') ?? '');
+        expect(location.pathname.endsWith('/logout')).toBe(true);
+        expect(location.searchParams.get('client_id')).toEqual(client.id);
+        expect(location.searchParams.get('post_logout_redirect_uri')).toEqual(POST_LOGOUT_URI);
+    });
+
+    it('should forward the form_post binding too, and revoke nothing on the way', async () => {
+        // OIDC RP-Initiated Logout allows form_post on this endpoint, and it
+        // is a NAVIGATION like the GET. Only a JSON body means the console
+        // page is asking for the session to be ended.
+        const tokens = await mintTokens();
+
+        const response = await httpRequest(suite, 'POST', '/logout', {
+            form: { id_token_hint: tokens.id_token! },
+            redirect: 'manual',
+        });
+
+        expect(response.status).toBeGreaterThanOrEqual(300);
+        expect(response.status).toBeLessThan(400);
+
+        // a 302 turns the POST into a GET, so the body has to survive as query
+        const location = new URL(response.headers.get('location') ?? '');
+        expect(location.searchParams.get('id_token_hint')).toEqual(tokens.id_token);
+
+        // the hop itself decides nothing
+        expect(await refreshSucceeds(tokens.refresh_token!)).toBe(true);
     });
 });

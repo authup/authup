@@ -44,35 +44,37 @@ describe('http/controllers/workflows/docs-authorize-url', () => {
         await suite.teardown();
     });
 
-    it('should render the authorize page for the URL the theming guide documents', async () => {
+    // The page itself renders in the auth console service since plan 101
+    // D2-2, so what the guide's URL has to resolve to is the context the
+    // service renders it from. Same subject, one hop earlier.
+    it('should resolve the URL the theming guide documents', async () => {
         const response = await httpRequest(
             suite,
             'GET',
-            '/authorize?response_type=code&client_id=admin-console&realm_id=master&scope=openid&state=devstate&code_challenge=devchallenge&redirect_uri=http%3A%2F%2Flocalhost%3A3001%2F',
+            '/authorize/info?response_type=code&client_id=admin-console&realm_id=master&scope=openid&state=devstate&code_challenge=devchallenge&redirect_uri=http%3A%2F%2Flocalhost%3A3001%2F',
         );
 
         expect(response.status).toEqual(200);
 
-        const body = await response.text();
+        const body = await response.json();
 
-        // The payload is inlined as raw JSON in a <script>, so the error is
-        // NOT html-escaped. Asserting on an escaped form would pass for every
-        // possible response.
-        expect(body).toContain('window.__AUTHUP__');
-        expect(body).not.toContain('"error":');
+        expect(body.error).toBeUndefined();
+        expect(body.client).toBeDefined();
     });
 
     it('should reject the shape the guide used to document', async () => {
-        // A rejected request still answers 200 and still renders a document,
-        // which is why the assertion has to look inside the payload.
+        // A refused request still answers 200, carrying the refusal, which
+        // is why the assertion has to look inside the answer.
         const response = await httpRequest(
             suite,
             'GET',
-            '/authorize?response_type=code&client_id=admin-console',
+            '/authorize/info?response_type=code&client_id=admin-console',
         );
 
-        const body = await response.text();
+        expect(response.status).toEqual(200);
 
-        expect(body).toContain('"error":');
+        const body = await response.json();
+
+        expect(body.error).toBeDefined();
     });
 });

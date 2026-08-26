@@ -8,7 +8,7 @@
 import type { IOAuth2EndSessionService } from '../../../../../core/index.ts';
 
 export type LogoutControllerOptions = {
-    baseURL: string,
+    authConsoleUrl: string,
 };
 
 export type LogoutControllerContext = {

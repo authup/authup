@@ -69,8 +69,8 @@ describe('http/controllers/workflows/ui-pages-theme-fragment', () => {
         await suite.teardown();
     });
 
-    it('should splice the fragment into the auth console head', async () => {
-        const response = await httpRequest(suite, 'GET', '/register');
+    it('should splice the fragment into a served console head', async () => {
+        const response = await httpRequest(suite, 'GET', '/console/account');
         expect(response.status).toEqual(200);
 
         const body = await response.text();
@@ -89,7 +89,7 @@ describe('http/controllers/workflows/ui-pages-theme-fragment', () => {
 
     it('should place the fragment after the theme stylesheet', async () => {
         // So an operator can override anything the manifest emitted.
-        const response = await httpRequest(suite, 'GET', '/register');
+        const response = await httpRequest(suite, 'GET', '/console/account');
         const body = await response.text();
 
         expect(body.indexOf('href="/theme/theme.css"'))

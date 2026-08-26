@@ -129,6 +129,43 @@ export type AuthorizeInfo = {
     requestPath: string,
 };
 
+/**
+ * What `POST /logout` answers a JSON caller with (plan 101 D2).
+ *
+ * The end_session_endpoint keeps its two OIDC browser bindings, which
+ * redirect to wherever the auth console is served; this is the shape the
+ * rendered page gets when it asks for the session to be ended.
+ *
+ * The three hint fields are the operands of the page's auto-clear gate:
+ * it may tear the browser's own session down only when the server really
+ * revoked a session AND that session's subject is this browser's user.
+ * They are answered to the page's own request rather than carried in a
+ * URL for exactly that reason, since a URL-borne `hintSub` would be
+ * attacker-suppliable and the gate would decide nothing.
+ */
+export type EndSessionResponse = {
+    /**
+     * The client the hint or the request identified, for the page to name.
+     */
+    clientName?: string,
+    /**
+     * Whether the `id_token_hint` verified. Claims are reflected only when
+     * it did.
+     */
+    hintVerified?: boolean,
+    hintSub?: string,
+    hintSubKind?: string,
+    /**
+     * Whether a session was actually revoked here.
+     */
+    serverRevoked: boolean,
+    /**
+     * The validated `post_logout_redirect_uri`, `state` already applied.
+     * The page navigates it only after its own sign-out has run.
+     */
+    redirect?: string,
+};
+
 // ------------------------------------------------------------------
 
 export interface IOAuth2TokenAPI {
