@@ -31,9 +31,12 @@ case "${SERVICE}" in
     server/core)
         export HOST=0.0.0.0
         export PORT=3000
-        # The migrations glob is anchored on the server-core package path,
-        # so the cwd no longer has to be apps/server-core.
-        exec npm run cli --workspace=apps/authup -- "${COMMAND}" "$@"
+        # typeorm resolves a nested workspace driver install (better-sqlite3)
+        # through a process.cwd()/node_modules fallback and the lockfile nests
+        # it under apps/server-core, so the CLI runs from that directory. The
+        # cwd also keeps a relative DB_DATABASE resolving as before.
+        cd "${BASE_DIR}/apps/server-core"
+        exec node ../authup/dist/index.mjs "${COMMAND}" "$@"
         ;;
     # Retired: the admin console is served by server/core at <publicUrl>/console/admin
     # (plan 081). Exit non-zero on purpose: a container that terminates

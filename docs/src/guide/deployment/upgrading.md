@@ -54,11 +54,11 @@ exactly one service. A `client.admin-console` section in the configuration
 file is not read (it printed a deprecation warning before). Remove both.
 
 Two smaller things need no action. `authup migration run` finds its migration
-files wherever it is started from, so the working directory no longer has to be
-the installed server package. And signal handling reaches the server directly
-instead of being forwarded: `SIGINT`/`SIGTERM` tear the application down and
-exit with its outcome, a second signal exits immediately, and a teardown
-outlasting 10 seconds is forced.
+files wherever it is started from, so on a normal install the working directory
+no longer has to be the installed server package. And signal handling reaches
+the server directly instead of being forwarded: `SIGINT`/`SIGTERM` tear the
+application down and exit with its outcome, a second signal exits immediately,
+and a teardown outlasting 10 seconds is forced.
 
 ### The consoles moved under `/console`
 
