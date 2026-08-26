@@ -5,6 +5,7 @@
         "allowImportingTsExtensions": true,
         "paths": {
             "@authup/access": ["./packages/access/src"],
+            "@authup/server-config-kit": ["./packages/server-config-kit/src"],
             "@authup/server-kit": ["./packages/server-kit/src"],
             "@authup/server-test-kit": ["./packages/server-test-kit/src"],
             "@authup/kit": ["./packages/kit/src"],

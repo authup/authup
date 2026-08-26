@@ -60,7 +60,7 @@ Modules wire together adapters, ports, and core logic. Configure app startup, re
 
 | Folder                       | Responsibility                                                                                             |
 |------------------------------|------------------------------------------------------------------------------------------------------------|
-| app/modules/config           | Reads environment variables and configuration files                                                        |
+| app/modules/config           | Reads environment variables and configuration files. `registry.ts` declares every `Config` key once (zod type, default, description, env name + reader) and `@authup/server-config-kit` is the generic mechanism over it; the env reader, the validator, the static defaults and the `dist/config-schema.json` artifact all derive from the registry (plan 101 C-1) |
 | app/modules/database         | Implement repositories based on adapters/database typeorm (entities & repositories), bootstrap connections |
 | app/modules/http             | Configure and initialize controllers with concrete implementations                                         |
 | app/modules/authentication   | Authentication feature wiring                                                                              |
@@ -1290,9 +1290,10 @@ no new endpoint — the `/authorize` verifier already resolves clients via
   dedupe at config time), so `Config['trustedOrigins']` always holds full
   origins (no path) and `getAppOrigins` does not re-expand. Config validation
   runs through `ConfigValidator` (validup + zod,
-  `app/modules/config/validator.ts`; its `Record<keyof Config, ...>` validator
-  map is the compile-time exhaustiveness guard — an unmounted Config key fails
-  the build instead of being silently stripped), making
+  `app/modules/config/validator.ts`, whose container is `mountSchema` over
+  `CONFIG_SCHEMA` (`app/modules/config/registry.ts`); the registry's mapped `ConfigSchema` type is the
+  compile-time exhaustiveness guard: a Config key without an entry fails the
+  build instead of being silently stripped), making
   `parseConfig`/`normalizeConfig` async. `TRUSTED_ORIGINS` (env, comma-separated) is
   **security-sensitive**: every system client is `builtIn` (auto-consent) + `global`
   scope, so any allowlisted origin can obtain a full-permission user token.
@@ -2743,6 +2744,65 @@ and not registered yet: the CLI offers `start`, `worker`, `migration` and
 fallbacks) on every CLI command; lookup defaults to the process cwd,
 overridable via `--configDirectory` / `--configFile`, and environment
 variables always beat file values.
+
+**The config schema is one registry (plan 101 C-1).**
+`app/modules/config/registry.ts` declares every `Config` key once as a
+`ConfigSchemaEntry`: the zod `type`, the `default` (a static value, or a
+thunk for the two process-derived keys `env` and `rootPath`; `publicUrl` and
+`db` carry none, the first is derived from host and port in `normalizeConfig`,
+the second falls back to typeorm-extension's driver default), an
+operator-facing `description`, and for the 51 env-backed keys the
+`ConfigEnvironmentVariableName` plus a `readEnv` reader. The mapped
+`ConfigSchema` type is the exhaustiveness guard: a `Config` key with no
+entry fails the build. Four passes derive from the registry and nothing
+else may re-declare a key: `read/env.ts` is `readSchemaFromEnv` plus the
+untouched `DB_*` block (those names come from typeorm-extension and stay
+special-cased outside the registry), `validator.ts` is `mountSchema`,
+`normalizeConfig` spreads `buildSchemaDefaults(CONFIG_SCHEMA)` under the
+parsed input (path resolution and the cross-key invariants stay imperative
+there), and `json-schema.ts` is `buildSchemaJSONSchema`.
+
+**`@authup/server-config-kit` is the mechanism, and it carries no
+`@authup/*` dependency at all.** It holds the declaration types, the
+environment readers and those four passes, generic over any config type:
+server-core's `CONFIG_SCHEMA` is one instance of it, and the package sits
+at the foundation layer next to `kit` and `errors`. The dependency rule is
+the whole point rather than tidiness. The `@authup/server-console` and
+`@authup/server-auth-console` service packages must read config without
+depending on server-core, and putting the mechanism in `@authup/server-kit`
+instead would have made a static-file-serving console inherit native
+`@node-rs/bcrypt` and `@node-rs/jsonwebtoken` binaries, winston, redis, the
+socket.io emitter and `@rapiq/core`. `packages/server-config-kit/test/unit/dependencies.spec.ts`
+pins the dependency set, the successor of the portability guard the folder
+carried before the extraction.
+
+Each server package will own the registry of the keys it reads while
+`apps/authup` composes them into one `authup.yml` schema and loader (plan
+101 stage C, the D2-3 correction): a key two packages read is declared in
+both registries and the composer asserts the declarations agree, and
+cross-section invariants live in the composed normalize.
+
+**Env semantics are per entry, not per type**: the seven security toggles
+(`componentsEnabled`, `migrationEnabled`, `eventLogEnabled`,
+`eventLogEntityEnabled`, `loginAttemptThrottleEnabled`, `mfaEnabled`,
+`mfaRequired`) use the strict boolean reader that throws on a set-but-
+unrecognized value; every other boolean keeps envix's lenient `toBool`,
+which silently skips `yes`; `redis` / `smtp` read boolean-or-string;
+`trustProxy` keeps the raw string for `normalizeConfig` to canonicalize.
+A new key needs its reader chosen deliberately, not inferred from the zod
+type.
+
+`buildSchemaJSONSchema` renders a registry as JSON Schema draft-07 (zod's
+`toJSONSchema`, `unrepresentable: 'any'`, static defaults only, so a
+process-derived thunk is omitted, `x-authup-env` per property) and
+`scripts/emit-config-schema.mjs` writes server-core's to
+`dist/config-schema.json` at build (the last `build:server` step); the
+builder lives in TypeScript so the C-2 `authup config schema` command can
+reuse it in process. Keep `registry.ts` importable standalone: it reads
+`CERTIFICATE_SOURCES` and `EVENT_LOG_RETENTION_DAYS_DEFAULT` from their
+constants FILES, never the request or core barrels (the request barrel
+reaches the x509 module, which needs `reflect-metadata` at import time),
+so the emit script runs under plain node.
 
 **Unsupported:** sharing one cookie domain between a standalone-hosted
 console (or a downstream kit app on its own origin) and the hosted auth

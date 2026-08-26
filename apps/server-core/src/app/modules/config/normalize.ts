@@ -7,14 +7,13 @@
 
 import { read } from 'envix';
 import path from 'node:path';
-import process from 'node:process';
-import { USER_PASSWORD_MIN_LENGTH } from '@authup/core-kit';
 import { AuthupError } from '@authup/errors';
 import { EnvironmentName, base64ToArrayBuffer } from '@authup/kit';
-import { EVENT_LOG_RETENTION_DAYS_DEFAULT } from '../../../core/index.ts';
+import { buildSchemaDefaults } from '@authup/server-config-kit';
 import { toPublicHost } from '../../../utils/host.ts';
 import { expandToOrigins } from './origins.ts';
 import { parseConfig } from './parse.ts';
+import { CONFIG_SCHEMA } from './registry.ts';
 import { canonicalizeTrustProxy, canonicalizeTrustProxyListEntry } from './trust-proxy.ts';
 import type { Config, ConfigInput } from './types.ts';
 
@@ -68,86 +67,14 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
     }
 
     const config : Config = {
-        env,
-        rootPath: process.cwd(),
-        writableDirectoryPath: 'writable',
-        // '' = theming disabled. Deliberately NOT defaulted under
-        // writableDirectoryPath: that directory is process-writable, and
-        // pairing "process-writable" with "content injected into the login
-        // page" would turn any write primitive landing there into
-        // persistent branding control on the IdP origin.
-        themeDirectoryPath: '',
-        themeFragmentsEnabled: false,
-        authConsolePath: '',
-        accountConsolePath: '',
-        adminConsolePath: '',
-
-        logger: true,
-        redis: false,
-        smtp: false,
-
-        componentsEnabled: true,
-        migrationEnabled: true,
-
-        port,
-        host,
+        ...buildSchemaDefaults(CONFIG_SCHEMA),
         publicUrl,
-        mtlsPublicUrl: null,
-        certificateSource: 'disabled',
-        trustProxy: true,
-
-        middlewareBody: true,
-        middlewareCookie: true,
-        middlewareCors: true,
-        middlewarePrometheus: true,
-        middlewareQuery: true,
-        middlewareRateLimit: true,
-        middlewareSwagger: true,
-        tokenRefreshMaxAge: 259_200,
-        tokenAccessMaxAge: 900,
-        tokenRefreshGracePeriod: 0,
-        promptLoginMaxAge: 60,
-        endSessionHintGracePeriod: 0,
-        registrationEnabled: false,
-        emailVerificationEnabled: false,
-        passwordRecoveryEnabled: false,
-        passwordMinLength: USER_PASSWORD_MIN_LENGTH,
-        accountConsoleEnabled: true,
-        adminConsoleEnabled: true,
-
-        eventLogEnabled: true,
-        eventLogRetentionDays: EVENT_LOG_RETENTION_DAYS_DEFAULT,
-        eventLogEntityEnabled: true,
-        eventLogEntityRetentionDays: 7,
-        loginAttemptThrottleEnabled: false,
-        loginAttemptThreshold: 5,
-        loginAttemptWindow: 900,
-
-        secretsEncryptionKey: '',
-
-        mfaEnabled: false,
-        mfaRequired: false,
-        mfaFreshnessMaxAge: 60,
-        mfaTicketMaxAge: 600,
-
-        clientAuthBasic: false,
-        clientSystemEnabled: false,
-        clientSystemSecret: 'start123',
-        clientSystemSecretReset: false,
-
-        userAuthBasic: false,
-        userAdminEnabled: true,
-        userAdminPassword: 'start123',
-        userAdminPasswordReset: false,
-
-        permissions: [],
-        permissionsDefaultPolicyAssignment: true,
         ...parsed,
 
         // After the spread so the canonicalized + dev-seeded list wins over
         // the raw parsed list (parsed.trustedOrigins is merged in above).
         trustedOrigins,
-    };
+    } as Config;
 
     // After the spread, so a relative value supplied by any config surface
     // is resolved. Every consumer then receives an absolute path and none
