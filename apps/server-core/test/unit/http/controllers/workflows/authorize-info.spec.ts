@@ -178,7 +178,12 @@ describe('src/http/controllers/workflows/authorize (info)', () => {
         const body = await response.json();
 
         expect(body.error).toBeDefined();
-        expect(body.error.message).toBeTruthy();
+        // the declared shape: a message to render and a code to branch on.
+        // It is data, never an Error, so nothing else is guaranteed.
+        expect(typeof body.error.message).toEqual('string');
+        expect(typeof body.error.code).toEqual('string');
+        expect(body.error.name).toBeUndefined();
+        expect(body.error.stack).toBeUndefined();
         expect(body.client).toBeUndefined();
         expect(body.codeRequest).toBeUndefined();
         expect(body.redirectUriVerified).toEqual(false);

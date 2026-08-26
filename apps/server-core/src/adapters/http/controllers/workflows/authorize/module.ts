@@ -22,6 +22,7 @@ import type {
 } from '@authup/core-kit';
 import type {
     AuthorizeInfo,
+    AuthorizeInfoError,
     ClientSummary,
     RealmSummary,
 } from '@authup/core-http-kit';
@@ -157,7 +158,9 @@ export class AuthorizeController {
         // an unverified (pattern-less-client) redirect_uri.
         let redirectUriVerified = false;
 
-        let error : Error | undefined;
+        // A plain object, not an Error: it is spread onto the wire, where
+        // only data survives.
+        let error : AuthorizeInfoError | undefined;
 
         try {
             const merged = await readFromLocations(event, ['body', 'query']);

@@ -771,7 +771,15 @@ into it):
   parameter leading back to the page.
   The trimmed anonymous DTOs (`ClientSummary`, `RealmSummary`) moved from
   local `Pick` aliases in the controller into `@authup/core-http-kit`, since
-  a second consumer now types against them.
+  a second consumer now types against them. `error` is `AuthorizeInfoError`
+  and deliberately NOT `Error`: the value is `sanitizeError`'s own
+  attributes plus `message`, so an `instanceof Error` check against it is
+  always false and `name` / `stack` are absent. `code` is the discriminator
+  a renderer branches on, which is why it is declared rather than left to
+  the index signature. Note the client side still declares this one `Error`
+  (`authorize.vue`, the kit's `Authorize.vue`), as it does `client: Client`
+  against the five-field summary: both are casts over an untyped payload,
+  so nothing type-checks across the boundary and neither was swept here.
 - **Template splicing goes through `replaceTemplateMarker`** (never a bare
   `String.prototype.replace` with a string replacement). A string
   replacement expands `$&`, `` $` ``, `$'` and `$$` **in the replacement

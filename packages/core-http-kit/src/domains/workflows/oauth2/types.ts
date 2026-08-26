@@ -79,6 +79,22 @@ export type ClientSummary = Pick<Client, 'id' | 'name' | 'displayName' | 'builtI
 export type RealmSummary = Pick<Realm, 'id' | 'name' | 'displayName'>;
 
 /**
+ * A refusal as it travels: the sanitized error's own enumerable
+ * attributes plus its `message`, which an Error does not carry as one.
+ *
+ * It is NOT an `Error`. Nothing survives the JSON trip but data, so an
+ * `instanceof Error` check against it is always false, and `name` and
+ * `stack` are absent. `code` is the discriminator to branch on; the
+ * remaining attributes are whatever the error class carries (`issues`
+ * on a validation failure, `data` on an OAuth2 one).
+ */
+export type AuthorizeInfoError = {
+    message: string,
+    code?: string,
+    [key: string]: any,
+};
+
+/**
  * The complete render input of the hosted `/authorize` page: what the
  * code-request verifier resolved, plus the feature flags and the request
  * path the page hands to its register / password-forgot links.
@@ -89,11 +105,7 @@ export type RealmSummary = Pick<Realm, 'id' | 'name' | 'displayName'>;
  */
 export type AuthorizeInfo = {
     codeRequest?: OAuth2AuthorizationCodeRequest,
-    /**
-     * The refusal, serialized: the sanitized error plus its `message`
-     * (which an Error does not carry as an enumerable own property).
-     */
-    error?: Error,
+    error?: AuthorizeInfoError,
     client?: ClientSummary,
     scopes?: Scope[],
     realm?: RealmSummary,
