@@ -31,7 +31,9 @@ case "${SERVICE}" in
     server/core)
         export HOST=0.0.0.0
         export PORT=3000
-        exec npm run cli --workspace=apps/server-core -- "${COMMAND}" "$@"
+        # The migrations glob is anchored on the server-core package path,
+        # so the cwd no longer has to be apps/server-core.
+        exec npm run cli --workspace=apps/authup -- "${COMMAND}" "$@"
         ;;
     # Retired: the admin console is served by server/core at <publicUrl>/console/admin
     # (plan 081). Exit non-zero on purpose: a container that terminates
