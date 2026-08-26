@@ -7,13 +7,13 @@
  */
 
 /**
- * Smoke test for the authup launcher CLI.
+ * Smoke test for the authup CLI.
  *
- * Default (workspace) variant: runs the built dist entry of apps/authup against
- * the built workspace artifacts of apps/server-core (dist/cli/index.mjs) and
- * boots it on an unusual port with a sqlite database, waits until it answers
- * HTTP 200 and serves all three consoles, then terminates the CLI with SIGTERM
- * and asserts a clean exit.
+ * Default (workspace) variant: runs the built dist entry of apps/authup, which
+ * boots server-core in process out of the built workspace artifact of
+ * apps/server-core (dist/index.mjs), on an unusual port with a sqlite database,
+ * waits until it answers HTTP 200 and serves all three consoles, then
+ * terminates the CLI with SIGTERM and asserts a clean exit.
  *
  * --packed variant: npm-packs the workspaces into tarballs, installs them into
  * a fresh temp project, and runs the installed `authup` bin the same way. This
@@ -29,9 +29,6 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 const SERVER_PORT = 4310;
-// Deliberately not the one above: seeded into the child's inherited
-// environment to prove the supervisor overrides PORT.
-const AMBIENT_PORT = 4312;
 const SERVER_URL = `http://127.0.0.1:${SERVER_PORT}/`;
 
 const READY_TIMEOUT_MS = 180_000;
@@ -83,18 +80,16 @@ function buildChildEnv(writableDirectory) {
     env.DB_TYPE = 'better-sqlite3';
     env.DB_DATABASE = path.join(writableDirectory, 'authup.sql');
 
-    // The child inherits this environment, so an ambient PORT/HOST must not
-    // decide where it listens (a PaaS injects one; the project Dockerfile
-    // sets PORT=3000). The supervisor is expected to override it: reverting
-    // that override makes server-core bind AMBIENT_PORT and this scenario
-    // fails on the readiness probe.
-    env.PORT = `${AMBIENT_PORT}`;
+    // The environment beats the config file, so PORT has to name the port this
+    // scenario probes; the file written below agrees with it and additionally
+    // carries the publicUrl.
+    env.PORT = `${SERVER_PORT}`;
     env.HOST = '0.0.0.0';
 
     return env;
 }
 
-function writeLauncherConfig(directory) {
+function writeServerConfig(directory) {
     fs.writeFileSync(path.join(directory, 'authup.conf'), [
         `server.core.port=${SERVER_PORT}`,
         'server.core.host=127.0.0.1',
@@ -205,7 +200,7 @@ async function waitUntilReady(name, url, child) {
 
     while (Date.now() - startedAt < READY_TIMEOUT_MS) {
         if (child.exitCode !== null) {
-            throw fail(`${name}: launcher exited (code ${child.exitCode}) before ${url} became ready.`);
+            throw fail(`${name}: the CLI exited (code ${child.exitCode}) before ${url} became ready.`);
         }
 
         const status = await probe(url);
@@ -224,7 +219,7 @@ function waitForExit(child, timeoutMs) {
     return new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
             child.kill('SIGKILL');
-            reject(fail(`launcher did not exit within ${timeoutMs}ms after SIGTERM.`));
+            reject(fail(`the CLI did not exit within ${timeoutMs}ms after SIGTERM.`));
         }, timeoutMs);
 
         child.on('exit', (code, signal) => {
@@ -274,7 +269,7 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
     const tempDirectory = createTempDirectory(`authup-smoke-${name}`);
     const writableDirectory = path.join(tempDirectory, 'writable');
     fs.mkdirSync(writableDirectory, { recursive: true });
-    writeLauncherConfig(tempDirectory);
+    writeServerConfig(tempDirectory);
 
     log(`${name}: starting ${cliExec} ${cliArgs.join(' ')}`);
 
@@ -334,17 +329,17 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
 
         const { code, signal } = await waitForExit(child, EXIT_TIMEOUT_MS);
         if (code !== 0) {
-            throw fail(`${name}: launcher exited with code ${code} (signal ${signal}), expected 0.`);
+            throw fail(`${name}: the CLI exited with code ${code} (signal ${signal}), expected 0.`);
         }
 
         await sleep(500);
 
         const serverStatus = await probe(SERVER_URL);
         if (typeof serverStatus !== 'undefined') {
-            throw fail(`${name}: the child is still listening after shutdown (server: ${serverStatus}).`);
+            throw fail(`${name}: something is still listening after shutdown (server: ${serverStatus}).`);
         }
 
-        log(`${name}: launcher exited cleanly, the child stopped.`);
+        log(`${name}: the CLI exited cleanly and stopped listening.`);
     } finally {
         if (child.exitCode === null) {
             child.kill('SIGTERM');
@@ -362,7 +357,7 @@ async function executeWorkspaceScenario() {
     const cliEntry = path.join(packageDirectory, 'dist', 'index.mjs');
     assertFileExists(cliEntry, 'run: npm run build -w apps/authup');
     assertFileExists(
-        path.join(repositoryDirectory, 'apps', 'server-core', 'dist', 'cli', 'index.mjs'),
+        path.join(repositoryDirectory, 'apps', 'server-core', 'dist', 'index.mjs'),
         'run: npm run build -w apps/server-core',
     );
     assertFileExists(
