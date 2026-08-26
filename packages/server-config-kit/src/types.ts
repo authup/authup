@@ -27,6 +27,11 @@ export type ConfigSchemaEntry<
 > = {
     type: z.ZodType<T[K]>,
     description: string,
+    /**
+     * The absolute dotted location of the key in the configuration document.
+     * Absent means it is derived from the pass prefix and the key name.
+     */
+    path?: string,
 } & (K extends D ?
     { default?: undefined } :
     { default: T[K] | (() => T[K]) }
@@ -53,6 +58,7 @@ export type ConfigSchema<
 export type ConfigSchemaEntryInput<T, K extends keyof T> = {
     type: z.ZodType,
     description: string,
+    path?: string,
     default?: T[K] | (() => T[K]),
     env?: string,
     readEnv?: ConfigSchemaEnvReader
