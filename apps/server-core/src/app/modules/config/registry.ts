@@ -5,12 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    read,
-    toArray,
-    toBool,
-    toInt,
-} from 'envix';
+import { read } from 'envix';
 import process from 'node:process';
 import { USER_PASSWORD_MAX_LENGTH, USER_PASSWORD_MIN_LENGTH } from '@authup/core-kit';
 import { EnvironmentName, isObject } from '@authup/kit';
@@ -22,75 +17,18 @@ import { CERTIFICATE_SOURCES } from '../../../adapters/http/request/constants.ts
 import { EVENT_LOG_RETENTION_DAYS_DEFAULT } from '../../../core/entities/event/constants.ts';
 import { ConfigEnvironmentVariableName } from './constants.ts';
 import { expandToOrigins } from './origins.ts';
+import {
+    readEnvArray,
+    readEnvBool,
+    readEnvBoolOrString,
+    readEnvBoolStrict,
+    readEnvInt,
+    readEnvRaw,
+    readEnvString,
+} from './schema/index.ts';
+import type { ConfigSchema } from './schema/index.ts';
 import { isValidTrustProxyListEntry } from './trust-proxy.ts';
-import type { Config, ConfigSchema, ConfigSchemaEnvReader } from './types.ts';
-
-// ---------------------------------------------------------------
-// env readers
-// ---------------------------------------------------------------
-
-const BOOLEAN_TRUE_VALUES = new Set(['true', 't', '1', 'yes', 'y', 'on']);
-const BOOLEAN_FALSE_VALUES = new Set(['false', 'f', '0', 'no', 'n', 'off']);
-
-/**
- * An empty string is skipped, the key keeps its default.
- */
-const readEnvString : ConfigSchemaEnvReader = (raw) => (raw || undefined);
-
-/**
- * Lenient boolean: only true/t/1 and false/f/0 are recognized, anything
- * else is silently skipped.
- */
-const readEnvBool : ConfigSchemaEnvReader = (raw) => toBool(raw);
-
-/**
- * Boolean env reader that FAILS LOUD on a set-but-unrecognized value instead
- * of silently falling back to the default (envix's `readBool` swallows e.g.
- * `MFA_REQUIRED=yes`). Reserved for security-relevant toggles where a silent
- * default is a weakened posture. Returns `undefined` when the var is blank.
- */
-const readEnvBoolStrict : ConfigSchemaEnvReader = (raw, name) => {
-    if (raw.trim().length === 0) {
-        return undefined;
-    }
-
-    const normalized = raw.trim().toLowerCase();
-    if (BOOLEAN_TRUE_VALUES.has(normalized)) {
-        return true;
-    }
-    if (BOOLEAN_FALSE_VALUES.has(normalized)) {
-        return false;
-    }
-
-    throw new Error(`The environment variable ${name} must be a boolean value (received "${raw}").`);
-};
-
-const readEnvInt : ConfigSchemaEnvReader = (raw) => toInt(raw);
-
-/**
- * A comma-separated list; an empty list is skipped.
- */
-const readEnvArray : ConfigSchemaEnvReader = (raw) => {
-    const value = toArray(raw);
-    if (value && value.length > 0) {
-        return value;
-    }
-
-    return undefined;
-};
-
-/**
- * A boolean word switches the service on or off, anything else is a
- * connection string (an empty string included).
- */
-const readEnvBoolOrString : ConfigSchemaEnvReader = (raw) => toBool(raw) ?? raw;
-
-/**
- * The raw (untrimmed) string, skipped when blank. Canonicalized again in
- * normalizeConfig for every config surface; the env read keeps the raw
- * string, the shared canonicalizer decides.
- */
-const readEnvRaw : ConfigSchemaEnvReader = (raw) => (raw.trim().length > 0 ? raw : undefined);
+import type { Config, ConfigSchemaDerivedKey } from './types.ts';
 
 // ---------------------------------------------------------------
 // shared shapes
@@ -114,7 +52,7 @@ const serviceType = z.string()
  * The mapped ConfigSchema type is the compile-time exhaustiveness guard: a
  * Config key without an entry here fails the build.
  */
-export const CONFIG_SCHEMA : ConfigSchema = {
+export const CONFIG_SCHEMA : ConfigSchema<Config, ConfigSchemaDerivedKey, ConfigEnvironmentVariableName> = {
     env: {
         type: stringType,
         default: () => read('NODE_ENV', EnvironmentName.DEVELOPMENT),
@@ -573,23 +511,3 @@ export const CONFIG_SCHEMA : ConfigSchema = {
         readEnv: readEnvBool,
     },
 };
-
-/**
- * The static defaults of every key that carries one. A function-valued
- * default is called; the derived keys (publicUrl, db) are absent.
- */
-export function buildConfigDefaults() : Partial<Config> {
-    const defaults : Record<string, unknown> = {};
-
-    const keys = Object.keys(CONFIG_SCHEMA) as (keyof Config)[];
-    for (const key of keys) {
-        const value : unknown = CONFIG_SCHEMA[key].default;
-        if (typeof value === 'undefined') {
-            continue;
-        }
-
-        defaults[key] = typeof value === 'function' ? value() : value;
-    }
-
-    return defaults as Partial<Config>;
-}

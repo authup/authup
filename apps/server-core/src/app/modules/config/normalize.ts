@@ -12,7 +12,8 @@ import { EnvironmentName, base64ToArrayBuffer } from '@authup/kit';
 import { toPublicHost } from '../../../utils/host.ts';
 import { expandToOrigins } from './origins.ts';
 import { parseConfig } from './parse.ts';
-import { buildConfigDefaults } from './schema.ts';
+import { CONFIG_SCHEMA } from './registry.ts';
+import { buildSchemaDefaults } from './schema/index.ts';
 import { canonicalizeTrustProxy, canonicalizeTrustProxyListEntry } from './trust-proxy.ts';
 import type { Config, ConfigInput } from './types.ts';
 
@@ -66,7 +67,7 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
     }
 
     const config : Config = {
-        ...buildConfigDefaults(),
+        ...buildSchemaDefaults(CONFIG_SCHEMA),
         publicUrl,
         ...parsed,
 

@@ -5,17 +5,34 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ConfigEnvironmentVariableName } from '../../../src/app/modules/config/constants';
 import { buildConfigJSONSchema } from '../../../src/app/modules/config/json-schema';
 import { normalizeConfig } from '../../../src/app/modules/config/normalize';
-import { CONFIG_SCHEMA, buildConfigDefaults } from '../../../src/app/modules/config/schema';
+import { CONFIG_SCHEMA } from '../../../src/app/modules/config/registry';
+import { buildSchemaDefaults } from '../../../src/app/modules/config/schema';
 import type { Config } from '../../../src/app/modules/config/types';
-import { DIST_PATH } from '../../../src/path';
+import { DIST_PATH, SRC_PATH } from '../../../src/path';
 
 const CONFIG_KEYS = Object.keys(CONFIG_SCHEMA) as (keyof Config)[];
+
+function readSourceFilePaths(directoryPath: string) : string[] {
+    const output : string[] = [];
+
+    for (const entry of readdirSync(directoryPath, { withFileTypes: true })) {
+        const entryPath = path.join(directoryPath, entry.name);
+
+        if (entry.isDirectory()) {
+            output.push(...readSourceFilePaths(entryPath));
+        } else if (entry.name.endsWith('.ts')) {
+            output.push(entryPath);
+        }
+    }
+
+    return output;
+}
 
 function readEnv(key: keyof Config, raw: string) : unknown {
     const entry = CONFIG_SCHEMA[key];
@@ -26,7 +43,7 @@ function readEnv(key: keyof Config, raw: string) : unknown {
     return entry.readEnv(raw, entry.env);
 }
 
-describe('src/config/schema.ts', () => {
+describe('src/config/registry.ts + src/config/schema/*.ts', () => {
     describe('registry', () => {
         it('should map every environment variable name onto exactly one key', () => {
             const envNames : string[] = [];
@@ -50,7 +67,7 @@ describe('src/config/schema.ts', () => {
         });
 
         it('should build a default for every key except the derived ones', () => {
-            const defaults = buildConfigDefaults();
+            const defaults = buildSchemaDefaults(CONFIG_SCHEMA);
 
             for (const key of CONFIG_KEYS) {
                 if (key === 'publicUrl' || key === 'db') {
@@ -63,6 +80,42 @@ describe('src/config/schema.ts', () => {
 
             expect(defaults.env).toEqual(expect.any(String));
             expect(defaults.rootPath).toEqual(process.cwd());
+        });
+
+        it('should hand out a fresh array default per call', () => {
+            const first = buildSchemaDefaults(CONFIG_SCHEMA);
+            const second = buildSchemaDefaults(CONFIG_SCHEMA);
+
+            expect(first.permissions).toEqual(second.permissions);
+            expect(first.permissions).not.toBe(second.permissions);
+        });
+    });
+
+    describe('portability', () => {
+        it('should keep the schema mechanism free of relative imports leaving its folder', () => {
+            const directoryPath = path.join(SRC_PATH, 'app', 'modules', 'config', 'schema');
+            const filePaths = readSourceFilePaths(directoryPath);
+
+            expect(filePaths.length).toBeGreaterThan(0);
+
+            for (const filePath of filePaths) {
+                const content = readFileSync(filePath, 'utf8');
+                const fileName = path.relative(directoryPath, filePath);
+
+                // a re-export, a side-effect import and a dynamic import
+                // alike, in either quote style: D2 lifts this folder into a
+                // package on the strength of the guard, so a specifier must
+                // not escape it through a shape the expression misses.
+                const expression = /(?:from|import)\s*\(?\s*['"]([^'"]+)['"]/g;
+
+                let match = expression.exec(content);
+                while (match) {
+                    expect(`${fileName}: ${match[1]}`).toEqual(
+                        expect.not.stringMatching(/: \.\.\//),
+                    );
+                    match = expression.exec(content);
+                }
+            }
         });
     });
 
