@@ -149,5 +149,7 @@ $ authup healthcheck
 opens no port, so API replicas can hand them over; see
 [Worker](./worker.md).
 
-All commands honor `--configDirectory` / `--configFile`, and `migration` finds
-its migration files wherever it is started from.
+All commands honor `--configDirectory` / `--configFile` (except
+`migration generate`, a repository development tool that targets the local
+compose databases), and `migration` finds its migration files wherever it is
+started from.

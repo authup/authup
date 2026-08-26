@@ -2732,9 +2732,10 @@ unconditional (a flag-off replica holding the dist still serves
 `/console/admin/assets/*`), and the auth pages plus `/console/auth/assets/*`
 are served by every replica, since no `authConsoleEnabled` exists by design
 (they are the issuance surface). `GET /` reports `features` per replica.
-The operator recipe is `docs/src/guide/deployment/console-replicas.md`; the
-`authup console [admin|account]` role (PR 1b) is sugar over the same
-two flags and additionally leaves the management API unmounted.
+The operator recipe is `docs/src/guide/deployment/console-replicas.md`. An
+`authup console [admin|account|auth]` role is planned (plan 101, stage D2-3)
+and not registered yet: the CLI offers `start`, `worker`, `migration` and
+`healthcheck` only.
 
 **Configuration is layered:** server-core honors the confinity file family
 (`authup.conf` with a `server.core` section, or the per-component

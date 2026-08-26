@@ -23,6 +23,9 @@ lookup can be redirected with two global CLI flags:
 - `--configDirectory <path>`: directory to search instead of the cwd.
 - `--configFile <path>`: load one (or more) explicit file(s) instead of discovering.
 
+`migration generate` is the one exception: it is a development tool for a
+repository checkout, targets the local compose databases and ignores both flags.
+
 Two file naming styles are supported (formats: `.conf`, `.json`, `.yml`/`.yaml`, `.js`, `.ts`):
 
 - **Multi-section file** (`authup.conf`): one file for the whole stack, with options

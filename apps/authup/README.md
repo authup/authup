@@ -5,7 +5,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/authup/authup/badge.svg)](https://snyk.io/test/github/authup/authup)
 
 This package contains the operator CLI. It runs the authup server
-(`@authup/server-core`) **in its own process**: there is no child process and
+(`@authup/server-core`) **in the same process**: there is no child process and
 no supervisor, so signals, the exit code and the environment reach the server
 directly. The server serves the admin console, the account console and the
 hosted auth pages itself.
