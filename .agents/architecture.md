@@ -752,6 +752,26 @@ into it):
   console shares (Nuxt's `__NUXT__` model; each console is its own
   document, so the shapes never coexist — the account console injects its
   runtime config under the same name).
+- **`GET /authorize/info` answers that page's render input as JSON**
+  (`AuthorizeInfo` in `@authup/core-http-kit`, `client.authorize.getInfo()`;
+  plan 101 D2-1). `AuthorizeController.buildAuthorizeInfo(event)` is the ONE
+  producer, so the page and the endpoint cannot report different things:
+  `serve()` is now nothing but the render around it, and a spec asserts the
+  two answers are equal for one query. It is anonymous and
+  `Cache-Control: no-store` like the page GET, takes the page's own query
+  (`provider` and the closed `error` marker set included, since the answer
+  is derived from all of it), and a REFUSED request is a 200 carrying the
+  refusal under `error` rather than an error status. The page renders a
+  refusal, so a caller must be able to as well. The shape is deliberately
+  the complete `payload.data`, `federatedLogin` included, so the SSR
+  service D2-2 puts in front of it needs no contract bump;
+  `config.baseURL` is the only other render input and is that service's own
+  api url. `requestPath` is anchored on `/authorize` rather than on the
+  route that was called, because the page renders it as the `redirect`
+  parameter leading back to the page.
+  The trimmed anonymous DTOs (`ClientSummary`, `RealmSummary`) moved from
+  local `Pick` aliases in the controller into `@authup/core-http-kit`, since
+  a second consumer now types against them.
 - **Template splicing goes through `replaceTemplateMarker`** (never a bare
   `String.prototype.replace` with a string replacement). A string
   replacement expands `$&`, `` $` ``, `$'` and `$$` **in the replacement

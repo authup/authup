@@ -17,11 +17,14 @@ import type { IAppEvent } from 'routup';
 import { isUUID } from '@authup/kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
-    Client,
     OAuth2AuthorizationCodeRequest,
-    Realm,
     Scope,
 } from '@authup/core-kit';
+import type {
+    AuthorizeInfo,
+    ClientSummary,
+    RealmSummary,
+} from '@authup/core-http-kit';
 import {
     OAuth2AccessDeniedError,
     OAuth2ErrorCode,
@@ -36,9 +39,6 @@ import type { IOAuth2AuthorizationCodeRequestVerifier } from '../../../../../cor
 import { OAuth2AuthorizationCodeRequestValidator } from '../../../../../core/index.ts';
 import type { AuthorizeControllerContext, AuthorizeControllerOptions } from './types.ts';
 import { sanitizeError } from '../../../../../utils/index.ts';
-
-type RealmSummary = Pick<Realm, 'id' | 'name' | 'displayName'>;
-type ClientSummary = Pick<Client, 'id' | 'name' | 'displayName' | 'builtIn' | 'createdAt'>;
 
 @DController('/authorize')
 export class AuthorizeController {
@@ -114,8 +114,35 @@ export class AuthorizeController {
         }
     }
 
+    /**
+     * The page's render input as JSON, for a renderer that is not this
+     * process (plan 101 D2). Anonymous like the page GET, and answering
+     * the same query: a refused request is a 200 carrying the refusal,
+     * never an error status, so the caller renders what the page renders.
+     */
+    @DGet('/info', [])
+    async info(@DContext() event: IAppEvent): Promise<AuthorizeInfo> {
+        // The page inherits this from applyUIPageHeaders. A login context
+        // is per-request and must never be served from a cache.
+        event.response.headers.set('cache-control', 'no-store');
+
+        return this.buildAuthorizeInfo(event);
+    }
+
     @DGet('', [])
     async serve(@DContext() event: IAppEvent): Promise<string> {
+        return renderAuthConsolePage(event, {
+            url: '/authorize',
+            payload: {
+                config: { baseURL: this.options.baseURL },
+                data: await this.buildAuthorizeInfo(event),
+            },
+        });
+    }
+
+    // ---------------------------------------------------------
+
+    protected async buildAuthorizeInfo(event: IAppEvent): Promise<AuthorizeInfo> {
         let codeRequest : OAuth2AuthorizationCodeRequest | undefined;
 
         let client : ClientSummary | undefined;
@@ -211,23 +238,21 @@ export class AuthorizeController {
 
         const requestURL = new URL(event.request.url);
         requestURL.searchParams.delete('provider');
+        // Anchored on the page, never on the route that was called:
+        // `GET /authorize/info` answers the context of the same authorize
+        // request, and the value is rendered as a link back to the page.
+        requestURL.pathname = '/authorize';
 
-        return renderAuthConsolePage(event, {
-            url: '/authorize',
-            payload: {
-                config: { baseURL: this.options.baseURL },
-                data: {
-                    codeRequest,
-                    error,
-                    client,
-                    scopes,
-                    realm,
-                    redirectUriVerified,
-                    federatedLogin,
-                    features: this.options.features,
-                    requestPath: `${requestURL.pathname}${requestURL.search}`,
-                },
-            },
-        });
+        return {
+            codeRequest,
+            error,
+            client,
+            scopes,
+            realm,
+            redirectUriVerified,
+            federatedLogin,
+            features: this.options.features,
+            requestPath: `${requestURL.pathname}${requestURL.search}`,
+        };
     }
 }
