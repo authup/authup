@@ -31,9 +31,6 @@
     "engines": {
         "node": "^22.13.0 || ^23.5.0 || >=24.0.0"
     },
-    "bin": {
-        "authup-server": "dist/cli/index.mjs"
-    },
     "keywords": [
         "auth",
         "authentication",
