@@ -5,9 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { assertNoStrayPositionals } from '@authup/server-core';
 import { describe, expect, it } from 'vitest';
 import { createCLIEntryPointCommand } from '../../src/module.ts';
+
+type EntryPointCommand = Awaited<ReturnType<typeof createCLIEntryPointCommand>>;
+
+function createSetupContext(command: EntryPointCommand, positionals: string[]) {
+    return {
+        rawArgs: positionals,
+        args: {
+            _: positionals,
+            configDirectory: '',
+            configFile: '',
+        },
+        cmd: command,
+    };
+}
 
 describe('createCLIEntryPointCommand', () => {
     it('carries the authup meta and the four role commands', async () => {
@@ -17,10 +30,14 @@ describe('createCLIEntryPointCommand', () => {
             .toEqual(['healthcheck', 'migration', 'start', 'worker']);
     });
 
-    it('refuses stray positionals on start and worker', () => {
-        expect(() => assertNoStrayPositionals({ _: ['start', 'server.core'] }))
+    it('refuses stray positionals on start and worker but not on migration', async () => {
+        const command = await createCLIEntryPointCommand();
+
+        expect(() => command.setup?.(createSetupContext(command, ['start', 'server.core'])))
             .toThrow(/Unexpected argument/);
-        expect(() => assertNoStrayPositionals({ _: ['migration', 'run'] }))
+        expect(() => command.setup?.(createSetupContext(command, ['worker', 'server.core'])))
+            .toThrow(/Unexpected argument/);
+        expect(() => command.setup?.(createSetupContext(command, ['migration', 'run'])))
             .not.toThrow();
     });
 });
