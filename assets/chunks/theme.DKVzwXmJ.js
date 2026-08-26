@@ -5,8 +5,7 @@ docker run -d \\
   -p 3000:3000 \\
   -v authup:/var/lib/authup \\
   authup/authup:latest \\
-  server/core start`},{id:"configure",label:"2. Configure",snippet:`# authup.server.core.conf
-USER_ADMIN_NAME=admin
+  server/core start`},{id:"configure",label:"2. Configure",snippet:`# .env
 USER_ADMIN_PASSWORD=start123
 
 DB_TYPE=postgres
@@ -16,7 +15,7 @@ DB_USERNAME=authup
 DB_PASSWORD=secret
 DB_DATABASE=authup
 
-REDIS_URL=redis://redis:6379
+REDIS=redis://redis:6379
 PUBLIC_URL=https://auth.example.com`},{id:"use",label:"3. Use",snippet:`# Issue an access token
 curl -X POST https://auth.example.com/token \\
   -H "Content-Type: application/x-www-form-urlencoded" \\
@@ -26,7 +25,7 @@ curl -X POST https://auth.example.com/token \\
 
 # Call a protected resource
 curl https://auth.example.com/users \\
-  -H "Authorization: Bearer $ACCESS_TOKEN"`}],t=V("install"),a=V(!1),n=k(()=>{var r;return((r=e.find(l=>l.id===t.value))==null?void 0:r.snippet)??""});async function s(){try{typeof navigator<"u"&&navigator.clipboard&&(await navigator.clipboard.writeText(n.value),a.value=!0,setTimeout(()=>{a.value=!1},1500))}catch{}}return{tabs:e,active:t,copied:a,currentSnippet:n,copy:s}}}),Ii={class:"au-section"},Mi={class:"au-codetabs"},Ni={class:"au-codetabs__tabs",role:"tablist"},Ai=["aria-selected","onClick"],xi={class:"au-codetabs__pre"};function Ci(e,t,a,n,s,r){return o(),u("section",Ii,[t[1]||(t[1]=c("header",{class:"au-codetabs__header"},[c("h2",{class:"au-codetabs__title"},"From zero to issuing tokens in three steps"),c("p",{class:"au-codetabs__subtitle"}," Pull the image, point it at your database, and issue your first access token. ")],-1)),c("div",Mi,[c("div",Ni,[(o(!0),u(I,null,N(e.tabs,l=>(o(),u("button",{key:l.id,type:"button",role:"tab","aria-selected":e.active===l.id,class:w(["au-codetabs__tab",{"au-codetabs__tab--active":e.active===l.id}]),onClick:v=>e.active=l.id},P(l.label),11,Ai))),128)),c("button",{type:"button",class:"au-codetabs__copy",onClick:t[0]||(t[0]=(...l)=>e.copy&&e.copy(...l))},P(e.copied?"Copied":"Copy"),1)]),c("pre",xi,[c("code",null,P(e.currentSnippet),1)])])])}const Bi=_(wi,[["render",Ci],["__scopeId","data-v-337dfe5e"]]),Hi=p({name:"AuthupIntegrationSpotlight",setup(){return{snippet:`services:
+  -H "Authorization: Bearer $ACCESS_TOKEN"`}],t=V("install"),a=V(!1),n=k(()=>{var r;return((r=e.find(l=>l.id===t.value))==null?void 0:r.snippet)??""});async function s(){try{typeof navigator<"u"&&navigator.clipboard&&(await navigator.clipboard.writeText(n.value),a.value=!0,setTimeout(()=>{a.value=!1},1500))}catch{}}return{tabs:e,active:t,copied:a,currentSnippet:n,copy:s}}}),Ii={class:"au-section"},Mi={class:"au-codetabs"},Ni={class:"au-codetabs__tabs",role:"tablist"},Ai=["aria-selected","onClick"],xi={class:"au-codetabs__pre"};function Ci(e,t,a,n,s,r){return o(),u("section",Ii,[t[1]||(t[1]=c("header",{class:"au-codetabs__header"},[c("h2",{class:"au-codetabs__title"},"From zero to issuing tokens in three steps"),c("p",{class:"au-codetabs__subtitle"}," Pull the image, point it at your database, and issue your first access token. ")],-1)),c("div",Mi,[c("div",Ni,[(o(!0),u(I,null,N(e.tabs,l=>(o(),u("button",{key:l.id,type:"button",role:"tab","aria-selected":e.active===l.id,class:w(["au-codetabs__tab",{"au-codetabs__tab--active":e.active===l.id}]),onClick:v=>e.active=l.id},P(l.label),11,Ai))),128)),c("button",{type:"button",class:"au-codetabs__copy",onClick:t[0]||(t[0]=(...l)=>e.copy&&e.copy(...l))},P(e.copied?"Copied":"Copy"),1)]),c("pre",xi,[c("code",null,P(e.currentSnippet),1)])])])}const Bi=_(wi,[["render",Ci],["__scopeId","data-v-890714e5"]]),Hi=p({name:"AuthupIntegrationSpotlight",setup(){return{snippet:`services:
   server-core:
     image: authup/authup:latest
     restart: unless-stopped
@@ -35,21 +34,12 @@ curl https://auth.example.com/users \\
     ports:
       - "3001:3000"
     environment:
+      - PUBLIC_URL=http://localhost:3001
       - DB_TYPE=postgres
       - DB_HOST=postgres
-      - REDIS_URL=redis://redis:6379
+      - REDIS=redis://redis:6379
     command: server/core start
     depends_on: [postgres, redis]
-
-  client-admin-console:
-    image: authup/authup:latest
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      - NUXT_PUBLIC_API_URL=http://localhost:3001
-    command: client/admin-console start
-    depends_on: [server-core]
 
   postgres:
     image: postgres:16
@@ -62,4 +52,4 @@ curl https://auth.example.com/users \\
     image: redis:7
 
 volumes:
-  authup:`}}}),Ei={class:"au-section au-section--alt"},Di={class:"au-section-inner au-spotlight"},Oi={class:"au-spotlight__code"},Fi={class:"au-card-window"},Ui={class:"au-spotlight__pre"};function Ri(e,t,a,n,s,r){return o(),u("section",Ei,[c("div",Di,[t[1]||(t[1]=q('<div class="au-spotlight__copy" data-v-e090b7d9><span class="au-spotlight__eyebrow" data-v-e090b7d9>Flagship deployment</span><h2 class="au-spotlight__title" data-v-e090b7d9>One docker-compose.yml, full stack ready</h2><p class="au-spotlight__lede" data-v-e090b7d9> The reference deployment wires the server, the consent UI, PostgreSQL and Redis into a single compose file. Bring it up locally, point a reverse proxy at it in production. </p><ul class="au-spotlight__bullets" data-v-e090b7d9><li data-v-e090b7d9><span class="au-spotlight__bullet" aria-hidden="true" data-v-e090b7d9>✓</span> One Authup image provides all services via different entrypoint commands </li><li data-v-e090b7d9><span class="au-spotlight__bullet" aria-hidden="true" data-v-e090b7d9>✓</span> PostgreSQL or MySQL persisted in a named volume, Redis for session caching </li><li data-v-e090b7d9><span class="au-spotlight__bullet" aria-hidden="true" data-v-e090b7d9>✓</span> Configured via environment variables, a mounted <code data-v-e090b7d9>.conf</code> file, or both </li></ul><a class="au-spotlight__cta" href="/guide/deployment/docker-compose" data-v-e090b7d9> Read the Docker Compose guide → </a></div>',1)),c("div",Oi,[c("div",Fi,[t[0]||(t[0]=q('<div class="au-card-window__chrome" data-v-e090b7d9><span class="au-dot au-dot--r" data-v-e090b7d9></span><span class="au-dot au-dot--y" data-v-e090b7d9></span><span class="au-dot au-dot--g" data-v-e090b7d9></span><span class="au-card-window__title" data-v-e090b7d9>docker-compose.yml</span></div>',1)),c("pre",Ui,[c("code",null,P(e.snippet),1)])])])])])}const Gi=_(Hi,[["render",Ri],["__scopeId","data-v-e090b7d9"]]),Ki={extends:Zo,enhanceApp({app:e}){e.component("Hero",ci),e.component("FeatureGrid",_i),e.component("DeploymentShowcase",Ti),e.component("CodeTabs",Bi),e.component("IntegrationSpotlight",Gi)}};export{Ki as R,qi as V,ji as a,Wi as b};
+  authup:`}}}),Ei={class:"au-section au-section--alt"},Di={class:"au-section-inner au-spotlight"},Oi={class:"au-spotlight__code"},Fi={class:"au-card-window"},Ui={class:"au-spotlight__pre"};function Ri(e,t,a,n,s,r){return o(),u("section",Ei,[c("div",Di,[t[1]||(t[1]=q('<div class="au-spotlight__copy" data-v-92b6bcbf><span class="au-spotlight__eyebrow" data-v-92b6bcbf>Flagship deployment</span><h2 class="au-spotlight__title" data-v-92b6bcbf> One docker-compose.yml, full stack ready </h2><p class="au-spotlight__lede" data-v-92b6bcbf> The reference deployment wires the server, the consent UI, PostgreSQL and Redis into a single compose file. Bring it up locally, point a reverse proxy at it in production. </p><ul class="au-spotlight__bullets" data-v-92b6bcbf><li data-v-92b6bcbf><span class="au-spotlight__bullet" aria-hidden="true" data-v-92b6bcbf>✓</span> One Authup container serves the API, the login pages and both consoles </li><li data-v-92b6bcbf><span class="au-spotlight__bullet" aria-hidden="true" data-v-92b6bcbf>✓</span> PostgreSQL or MySQL persisted in a named volume, Redis for session caching </li><li data-v-92b6bcbf><span class="au-spotlight__bullet" aria-hidden="true" data-v-92b6bcbf>✓</span> Configured via environment variables, a mounted <code data-v-92b6bcbf>authup.yml</code> file, or both </li></ul><a class="au-spotlight__cta" href="/guide/deployment/docker-compose" data-v-92b6bcbf> Read the Docker Compose guide → </a></div>',1)),c("div",Oi,[c("div",Fi,[t[0]||(t[0]=q('<div class="au-card-window__chrome" data-v-92b6bcbf><span class="au-dot au-dot--r" data-v-92b6bcbf></span><span class="au-dot au-dot--y" data-v-92b6bcbf></span><span class="au-dot au-dot--g" data-v-92b6bcbf></span><span class="au-card-window__title" data-v-92b6bcbf>docker-compose.yml</span></div>',1)),c("pre",Ui,[c("code",null,P(e.snippet),1)])])])])])}const Gi=_(Hi,[["render",Ri],["__scopeId","data-v-92b6bcbf"]]),Ki={extends:Zo,enhanceApp({app:e}){e.component("Hero",ci),e.component("FeatureGrid",_i),e.component("DeploymentShowcase",Ti),e.component("CodeTabs",Bi),e.component("IntegrationSpotlight",Gi)}};export{Ki as R,qi as V,ji as a,Wi as b};
