@@ -29,7 +29,14 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 const SERVER_PORT = 4310;
-const SERVER_URL = `http://127.0.0.1:${SERVER_PORT}/`;
+const PUBLIC_URL = `http://127.0.0.1:${SERVER_PORT}`;
+const SERVER_URL = `${PUBLIC_URL}/`;
+
+// The port the config file names, deliberately not the one the environment
+// names. The environment beats the file (spec invariant 8), so the CLI has to
+// listen on SERVER_PORT; a regression that lets the file win moves the
+// listener here and the readiness probe never answers.
+const CONFIG_FILE_PORT = SERVER_PORT + 2;
 
 const READY_TIMEOUT_MS = 180_000;
 const EXIT_TIMEOUT_MS = 30_000;
@@ -80,11 +87,8 @@ function buildChildEnv(writableDirectory) {
     env.DB_TYPE = 'better-sqlite3';
     env.DB_DATABASE = path.join(writableDirectory, 'authup.sql');
 
-    // PORT names the port this scenario probes. The config file written below
-    // names the same one, so nothing here observes which source wins. Neither
-    // half of that contract is this runner's job: apps/server-core's
-    // test/unit/cli/config.spec.ts covers both against createCLIConfigModule,
-    // the module every role command in this CLI builds its config from.
+    // PORT and HOST name what the CLI has to listen on: the config file
+    // written below disagrees about both, and the environment wins.
     env.PORT = `${SERVER_PORT}`;
     env.HOST = '0.0.0.0';
 
@@ -92,10 +96,14 @@ function buildChildEnv(writableDirectory) {
 }
 
 function writeServerConfig(directory) {
+    // publicUrl is the one key only this file can supply (PUBLIC_URL is
+    // stripped from the child env, and the value server-core would derive from
+    // HOST/PORT reads http://localhost:<port> instead), so reading it back out
+    // of a served console shell is what proves the file was found and applied.
     fs.writeFileSync(path.join(directory, 'authup.conf'), [
-        `server.core.port=${SERVER_PORT}`,
+        `server.core.port=${CONFIG_FILE_PORT}`,
         'server.core.host=127.0.0.1',
-        `server.core.publicUrl=http://127.0.0.1:${SERVER_PORT}`,
+        `server.core.publicUrl=${PUBLIC_URL}`,
     ].join('\n'));
 }
 
@@ -195,6 +203,24 @@ async function assertConsoleAssetServed(name, route, shell) {
     }
 
     log(`${name}: ${url} served the console entry script (${body.byteLength} bytes).`);
+}
+
+/**
+ * Assert that the config file at `--configDirectory` reached server-core.
+ *
+ * The static consoles inject `apiUrl` from `config.publicUrl`, and this run
+ * sets publicUrl in the config file alone, so the value in the shell can only
+ * come from there. Without it the CLI would still boot on the port the
+ * environment names and every other assertion here would pass unchanged.
+ */
+function assertConfigFileApplied(name, shell) {
+    const marker = `"apiUrl":"${PUBLIC_URL}"`;
+
+    if (!shell.includes(marker)) {
+        throw fail(`${name}: the console config does not carry ${marker}, so authup.conf from --configDirectory was not applied.`);
+    }
+
+    log(`${name}: authup.conf was applied (publicUrl ${PUBLIC_URL}).`);
 }
 
 async function waitUntilReady(name, url, child) {
@@ -325,6 +351,10 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
             'console/admin',
             adminShell,
         );
+
+        // Readiness above already proved the environment beat the config file
+        // on the port; this proves the file was read at all.
+        assertConfigFileApplied(`${name}/config`, adminShell);
 
         log(`${name}: sending SIGTERM.`);
         child.kill('SIGTERM');
