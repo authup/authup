@@ -436,7 +436,7 @@ DB_TYPE=postgres DB_HOST=127.0.0.1 DB_PORT=5432 DB_USERNAME=postgres DB_PASSWORD
 
 It needs a built `dist` and a scratch database (it drops the target). It runs in the `tests-migrations` job as the final step, for both dialects, because it is the only gate that can certify a migration touching columns, constraints or rows — the empty round-trip above cannot. Run it locally too when authoring such a migration, rather than waiting for CI.
 
-The job pre-flights with a sanity check that the compiled migrations exist under `apps/server-core/dist/adapters/database/migrations/{mysql,postgres}/` — without this guard, running the CLI from the wrong working directory results in typeorm silently reporting "No migrations are pending" with exit code 0, masking the failure.
+The job pre-flights with a sanity check that the compiled migrations exist under `apps/server-core/dist/adapters/database/migrations/{mysql,postgres}/`. Without that guard a missing or partial build leaves typeorm silently reporting "No migrations are pending" with exit code 0, masking the failure. The working directory is no longer part of that failure mode: the glob is anchored on the package path (`SRC_PATH` / `DIST_PATH` from `apps/server-core/src/path.ts`), so `migration run` applies the chain from any cwd.
 
 Locally, run the same flow with a running compose stack:
 

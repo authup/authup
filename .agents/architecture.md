@@ -852,7 +852,14 @@ into it):
   `src/.../*.{ts,js,mjs}`, which typeorm `import()`s through the loader
   (verified: `cli-dev -- migration run` applies all 17 postgres migrations
   from `src/`); every documented migration workflow still runs from the
-  built CLI and CI pre-flights `dist/` for that reason.
+  built CLI and CI pre-flights `dist/` for that reason. Both arms are
+  anchored on the package path (`SRC_PATH` / `DIST_PATH` from
+  `src/path.ts`), never on the cwd, so `migration run` finds the chain
+  from any directory. `transformFilePath` cannot do that job: it rewrites
+  the `src` segment only when the whole string carries no `dist`
+  substring, so a package installed under a path such as
+  `/srv/my-dist-app/node_modules/@authup/server-core` would silently keep
+  the `src/` glob and report "No migrations are pending".
 - **Feature flags** ride the hydration payload (`data.features`,
   `StatusResponseFeatures` shape) — pages render the form when the
   workflow is enabled, otherwise a localized "disabled" notice (no 404:

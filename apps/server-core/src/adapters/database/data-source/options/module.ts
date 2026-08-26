@@ -6,12 +6,12 @@
  */
 
 import { AuthupError } from '@authup/errors';
+import path from 'node:path';
 import type { DataSourceOptions } from 'typeorm';
 import {
-    CodeTransformation, 
-    isCodeTransformation, 
-    readDataSourceOptionsFromEnv, 
-    transformFilePath,
+    CodeTransformation,
+    isCodeTransformation,
+    readDataSourceOptionsFromEnv,
 } from 'typeorm-extension';
 import {
     ClientEntity,
@@ -66,6 +66,7 @@ import {
     UserRoleSubscriber,
     UserSubscriber,
 } from '../../domains/index.ts';
+import { DIST_PATH, SRC_PATH } from '../../../../path.ts';
 
 export class DataSourceOptionsBuilder {
     buildWithEnv() {
@@ -182,10 +183,15 @@ export class DataSourceOptionsBuilder {
             options.type === 'mysql' ||
             options.type === 'postgres'
         ) {
-            let migrationPath = `src/adapters/database/migrations/${options.type}/*.{ts,js,mjs}`;
-            if (!isCodeTransformation(CodeTransformation.JUST_IN_TIME)) {
-                migrationPath = transformFilePath(migrationPath, './dist', './src');
-            }
+            const migrationRoot = isCodeTransformation(CodeTransformation.JUST_IN_TIME) ?
+                SRC_PATH :
+                DIST_PATH;
+            const migrationPath = [
+                migrationRoot.split(path.sep).join('/'),
+                'adapters/database/migrations',
+                options.type,
+                '*.{ts,js,mjs}',
+            ].join('/');
 
             Object.assign(options, {
                 migrations: [migrationPath],
