@@ -5,11 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ConfigEnvironmentVariableName } from '../../../src/app/modules/config/constants';
+import { buildConfigJSONSchema } from '../../../src/app/modules/config/json-schema';
 import { normalizeConfig } from '../../../src/app/modules/config/normalize';
 import { CONFIG_SCHEMA, buildConfigDefaults } from '../../../src/app/modules/config/schema';
 import type { Config } from '../../../src/app/modules/config/types';
+import { DIST_PATH } from '../../../src/path';
 
 const CONFIG_KEYS = Object.keys(CONFIG_SCHEMA) as (keyof Config)[];
 
@@ -143,6 +147,49 @@ describe('src/config/schema.ts', () => {
 
         it('should skip an empty string', () => {
             expect(readEnv('host', '')).toBeUndefined();
+        });
+    });
+
+    describe('buildConfigJSONSchema', () => {
+        const schema = buildConfigJSONSchema();
+        const properties = schema.properties as Record<string, Record<string, unknown>>;
+
+        it('should emit a draft-07 object schema with one property per registry key', () => {
+            expect(schema.$schema).toEqual('http://json-schema.org/draft-07/schema#');
+            expect(schema.type).toEqual('object');
+            expect(Object.keys(properties)).toEqual(CONFIG_KEYS);
+        });
+
+        it('should describe every property', () => {
+            for (const key of CONFIG_KEYS) {
+                expect(properties[key].description).toEqual(expect.any(String));
+                expect((properties[key].description as string).length).toBeGreaterThan(0);
+            }
+        });
+
+        it('should carry the env name and the static default, and omit a process-derived default', () => {
+            expect(properties.port['x-authup-env']).toEqual('PORT');
+            expect(properties.port.default).toEqual(3001);
+
+            expect(properties.rootPath).not.toHaveProperty('x-authup-env');
+            expect(properties.rootPath).not.toHaveProperty('default');
+        });
+
+        it('should represent an enum type', () => {
+            expect(properties.certificateSource.enum).toEqual(['disabled', 'standard', 'forwarded']);
+        });
+
+        it('should keep a derived key with an unrepresentable type', () => {
+            expect(properties.db).toBeDefined();
+            expect(properties.db.description).toEqual(expect.any(String));
+        });
+
+        it('should be published as dist/config-schema.json by the build', () => {
+            const filePath = path.join(DIST_PATH, 'config-schema.json');
+            expect(existsSync(filePath)).toEqual(true);
+
+            const artifact = JSON.parse(readFileSync(filePath, 'utf8')) as Record<string, unknown>;
+            expect(Object.keys(artifact.properties as Record<string, unknown>)).toEqual(CONFIG_KEYS);
         });
     });
 });
