@@ -60,7 +60,7 @@ Modules wire together adapters, ports, and core logic. Configure app startup, re
 
 | Folder                       | Responsibility                                                                                             |
 |------------------------------|------------------------------------------------------------------------------------------------------------|
-| app/modules/config           | Reads environment variables and configuration files. `registry.ts` declares every `Config` key once (zod type, default, description, env name + reader) and `schema/` is the generic mechanism over it; the env reader, the validator, the static defaults and the `dist/config-schema.json` artifact all derive from the registry (plan 101 C-1) |
+| app/modules/config           | Reads environment variables and configuration files. `registry.ts` declares every `Config` key once (zod type, default, description, env name + reader) and `@authup/server-config-kit` is the generic mechanism over it; the env reader, the validator, the static defaults and the `dist/config-schema.json` artifact all derive from the registry (plan 101 C-1) |
 | app/modules/database         | Implement repositories based on adapters/database typeorm (entities & repositories), bootstrap connections |
 | app/modules/http             | Configure and initialize controllers with concrete implementations                                         |
 | app/modules/authentication   | Authentication feature wiring                                                                              |
@@ -2762,20 +2762,25 @@ special-cased outside the registry), `validator.ts` is `mountSchema`,
 parsed input (path resolution and the cross-key invariants stay imperative
 there), and `json-schema.ts` is `buildSchemaJSONSchema`.
 
-**`config/schema/` is the mechanism, and it is deliberately portable.**
-It holds the declaration types, the environment readers and those four
-passes, generic over any config type: server-core's `CONFIG_SCHEMA` is one
-instance of it. No relative specifier may leave the folder (bare
-third-party specifiers and `./` siblings only), which is what makes it
-liftable into a package by a directory move, the same rule the theme
-`contract/` folder follows. That matters because each server package will
-own the registry of the keys it reads while `apps/authup` composes them
-into one `authup.yml` schema and loader (plan 101 stage C, the D2-3
-correction): a key two packages read is declared in both registries and
-the composer asserts the declarations agree, and cross-section invariants
-live in the composed normalize. `test/unit/config/schema.spec.ts` walks
-the folder and fails on a `../` specifier, dynamic and side-effect imports
-included.
+**`@authup/server-config-kit` is the mechanism, and it carries no
+`@authup/*` dependency at all.** It holds the declaration types, the
+environment readers and those four passes, generic over any config type:
+server-core's `CONFIG_SCHEMA` is one instance of it, and the package sits
+at the foundation layer next to `kit` and `errors`. The dependency rule is
+the whole point rather than tidiness. The `@authup/server-console` and
+`@authup/server-auth-console` service packages must read config without
+depending on server-core, and putting the mechanism in `@authup/server-kit`
+instead would have made a static-file-serving console inherit native
+`@node-rs/bcrypt` and `@node-rs/jsonwebtoken` binaries, winston, redis, the
+socket.io emitter and `@rapiq/core`. `packages/server-config-kit/test/unit/dependencies.spec.ts`
+pins the dependency set, the successor of the portability guard the folder
+carried before the extraction.
+
+Each server package will own the registry of the keys it reads while
+`apps/authup` composes them into one `authup.yml` schema and loader (plan
+101 stage C, the D2-3 correction): a key two packages read is declared in
+both registries and the composer asserts the declarations agree, and
+cross-section invariants live in the composed normalize.
 
 **Env semantics are per entry, not per type**: the seven security toggles
 (`componentsEnabled`, `migrationEnabled`, `eventLogEnabled`,
