@@ -51,13 +51,15 @@ server:
 ````
 :::
 
-`adminConsoleEnabled` (default `true`) turns the surface off. The routes then
+`server.adminConsole.enabled` / `ADMIN_CONSOLE_ENABLED` (default `true`) turns the
+surface off. The routes then
 serve a localized "not enabled" notice instead of the console, so stale links
 do not dead-end, and the sign-in routes (`/console/admin/login`, `/console/admin/callback`)
 answer the same notice instead of starting a login. The flag is also reported
 in the `features` block of the public status endpoint (`GET /`).
 
-`adminConsolePath` replaces the served package. It points at a directory
+`server.adminConsole.path` / `ADMIN_CONSOLE_PATH` replaces the served package. It
+points at a directory
 holding a built `dist/`, whose `index.html` must carry the
 `<!--admin-config-->` marker; the marker is checked at boot for a package you
 actually substituted. Empty resolves `@authup/client-admin-console` from

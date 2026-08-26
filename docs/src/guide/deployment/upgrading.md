@@ -14,9 +14,13 @@ The `.conf` file family is retired. One file is discovered now, `authup.yml` (or
 or under `--configDirectory`. `--configFile` still names one or more explicit
 files.
 
-`authup.conf` and `authup.server.core.conf` are **not read any more**, and a
-stray one is not an error: the server logs one warning at startup and boots on
-its defaults. That warning is the only outward sign, which is why it exists.
+`authup.conf` and `authup.server.core.conf` are **not read any more**. A stray
+one left in the discovery directory is not an error: the server logs one
+warning at startup and boots on its defaults. Naming one explicitly with
+`--configFile` is refused outright, because it would load and then silently
+drop every key that moved out of the `server.core` section, leaving the
+service on a derived issuer and an empty database while the rest of the file
+applied.
 
 Keys moved as well. Everything a service reads lives in that service's own
 section (`server.core` for `server/core`), and the deployment-wide options moved
@@ -48,9 +52,9 @@ top level.
 **Action required** for a deployment that uses a configuration file. Rewrite it as
 `authup.yml` per the table above; see [Configuration](./configuration.md) for the
 document layout. `authup config validate` reads the file and the environment and
-reports what does not hold, so a rewrite can be checked before it is deployed, and
-`authup config schema` prints the JSON Schema your editor can validate against
-while you type.
+reports what does not hold, a key left at its old location included, so a
+rewrite can be checked before it is deployed; `authup config schema` prints the
+JSON Schema your editor can validate against while you type.
 
 **No action** for a deployment configured through the environment. No environment
 variable name changed, so a `docker run -e`, a Compose `environment:` block, a Helm

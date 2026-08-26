@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { readSchemaFromFileTree } from '@authup/server-config-kit';
+import { findUnknownSchemaPaths, readSchemaFromFileTree } from '@authup/server-config-kit';
 import type { INamingScheme } from 'confinity';
 import { FSStore } from 'confinity';
 import fs from 'node:fs';
@@ -31,14 +31,22 @@ const NAMING : INamingScheme = {
     toName: () => '',
 };
 
-const RETIRED_FILE_PATTERN = /^authup\.(.+\.)?conf$/;
+const RETIRED_FILE_PATTERN = /\.conf$/;
+
+const RETIRED_FILE_HINT = `The authup.conf family is no longer read. Rewrite the configuration as ${CONFIG_FILE_NAME}.yml; the deployment-wide keys (publicUrl, db, redis, smtp, trustedOrigins, theme) moved out of the server.core section.`;
+
+let warnedAboutRetiredConfigFiles = false;
 
 /**
- * The `authup.conf` family stopped being read in favour of `authup.yml`. It is
- * the one upgrade step an operator cannot notice from the outside: the server
- * simply boots on its defaults, so say it once instead.
+ * A file left in the discovery directory is not read, which is invisible from
+ * the outside (the server simply boots on its defaults), so say it once. Once
+ * per process, since a command may read the document more than once.
  */
 function warnAboutRetiredConfigFiles(cwd?: string) {
+    if (warnedAboutRetiredConfigFiles) {
+        return;
+    }
+
     let entries : string[];
     try {
         entries = fs.readdirSync(cwd || process.cwd());
@@ -46,24 +54,48 @@ function warnAboutRetiredConfigFiles(cwd?: string) {
         return;
     }
 
-    const retired = entries.filter((entry) => RETIRED_FILE_PATTERN.test(entry));
+    const retired = entries.filter((entry) => RETIRED_FILE_PATTERN.test(entry) && entry.startsWith(`${CONFIG_FILE_NAME}.`));
     if (retired.length === 0) {
         return;
     }
 
+    warnedAboutRetiredConfigFiles = true;
+
     // eslint-disable-next-line no-console
-    console.warn(
-        `[authup] ${retired.join(', ')} is no longer read. Move the configuration to ${CONFIG_FILE_NAME}.yml.`,
-    );
+    console.warn(`[authup] ${retired.join(', ')} is not read. ${RETIRED_FILE_HINT}`);
 }
 
-export async function readConfigRawFromFS(options: ConfigReadFsOptions = {}) : Promise<ConfigInput> {
+/**
+ * A file the operator NAMED is a different case from one left lying around:
+ * it would load, and the keys that moved out of the server.core section would
+ * be dropped in silence. A configuration that is half applied is worse than
+ * none, since what it silently drops is the issuer, the database connection
+ * and the redirect allowlist, so refuse it instead of warning.
+ */
+function assertNoRetiredConfigFile(file: string | string[]) {
+    const files = Array.isArray(file) ? file : [file];
+
+    const retired = files.filter((entry) => RETIRED_FILE_PATTERN.test(entry));
+    if (retired.length === 0) {
+        return;
+    }
+
+    throw new Error(`${retired.join(', ')} can not be loaded. ${RETIRED_FILE_HINT}`);
+}
+
+/**
+ * The configuration document as it was written, before any key is resolved
+ * onto a Config key. `config validate` needs it to report what the read
+ * deliberately ignores.
+ */
+export async function readConfigFileTree(options: ConfigReadFsOptions = {}) : Promise<unknown> {
     const store = new FSStore({
         cwd: options.cwd,
         naming: NAMING,
     });
 
     if (options.file) {
+        assertNoRetiredConfigFile(options.file);
         await store.loadFile(options.file);
     } else {
         await store.load();
@@ -73,5 +105,23 @@ export async function readConfigRawFromFS(options: ConfigReadFsOptions = {}) : P
     // Read synchronously after the explicit load. `get` is asynchronous in
     // confinity v2, and a missing `await` would hand a Promise to code that
     // only checks whether it received an object.
-    return readSchemaFromFileTree(store.getSync(''), CONFIG_SCHEMA, { prefix: CONFIG_SECTION });
+    return store.getSync('');
+}
+
+export async function readConfigRawFromFS(options: ConfigReadFsOptions = {}) : Promise<ConfigInput> {
+    const tree = await readConfigFileTree(options);
+
+    return readSchemaFromFileTree(tree, CONFIG_SCHEMA, { prefix: CONFIG_SECTION });
+}
+
+/**
+ * The paths the configuration document holds that no Config key claims: a key
+ * left at a retired location, or a typo. The read itself is permissive (an
+ * unclaimed path is skipped, so a document written for a newer version still
+ * boots), which is exactly what makes the two indistinguishable at runtime.
+ */
+export async function findUnknownConfigFilePaths(options: ConfigReadFsOptions = {}) : Promise<string[]> {
+    const tree = await readConfigFileTree(options);
+
+    return findUnknownSchemaPaths(tree, CONFIG_SCHEMA, { prefix: CONFIG_SECTION });
 }

@@ -36,7 +36,11 @@ case "${SERVICE}" in
         # it under apps/server-core, so the CLI runs from that directory. The
         # cwd also keeps a relative DB_DATABASE resolving as before.
         cd "${BASE_DIR}/apps/server-core"
-        exec node ../authup/dist/index.mjs "${COMMAND}" "$@"
+        # The configuration file is looked up in the cwd, which the line above
+        # has just moved somewhere no operator would mount into. Name the image
+        # root explicitly, so /usr/src/app/authup.yml is what the documentation
+        # says it is.
+        exec node ../authup/dist/index.mjs --configDirectory "${BASE_DIR}" "${COMMAND}" "$@"
         ;;
     # Retired: the admin console is served by server/core at <publicUrl>/console/admin
     # (plan 081). Exit non-zero on purpose: a container that terminates

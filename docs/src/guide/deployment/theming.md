@@ -56,7 +56,7 @@ Deployment itself.
 
 ## Enabling it
 
-Point `themeDirectoryPath` (`THEME_DIRECTORY_PATH`) at the directory. Empty is
+Point `theme.directoryPath` (`THEME_DIRECTORY_PATH`) at the directory. Empty is
 the default and disables theming entirely.
 
 ```bash
@@ -236,7 +236,7 @@ The rest of this page is the reference for what you just used.
 ```
 
 `assets/` is a subdirectory on purpose. The HTTP mount root is
-`<themeDirectoryPath>/assets`, never the theme root, so `theme.json` is
+`<theme.directoryPath>/assets`, never the theme root, so `theme.json` is
 unreachable over HTTP by construction.
 
 Servable file types are `.css`, `.svg`, `.png`, `.jpg`, `.jpeg`, `.gif`,
@@ -439,9 +439,9 @@ or different copy, you replace the console package instead:
 
 | | |
 |---|---|
-| `authConsolePath` / `AUTH_CONSOLE_PATH` | package directory replacing `@authup/client-auth-console` |
-| `accountConsolePath` / `ACCOUNT_CONSOLE_PATH` | package directory replacing `@authup/client-account-console` |
-| `adminConsolePath` / `ADMIN_CONSOLE_PATH` | package directory replacing `@authup/client-admin-console` |
+| `server.authConsole.path` / `AUTH_CONSOLE_PATH` | package directory replacing `@authup/client-auth-console` |
+| `server.accountConsole.path` / `ACCOUNT_CONSOLE_PATH` | package directory replacing `@authup/client-account-console` |
+| `server.adminConsole.path` / `ADMIN_CONSOLE_PATH` | package directory replacing `@authup/client-admin-console` |
 
 Each points at a directory containing the built `dist/`. When set, it is used
 instead of resolving the packaged console from `node_modules`.

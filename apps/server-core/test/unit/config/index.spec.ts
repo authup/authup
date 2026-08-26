@@ -20,7 +20,11 @@ import { readConfig } from '../../../src/app/modules/config/helpers';
 import { normalizeConfig } from '../../../src/app/modules/config/normalize';
 import { expandToOrigins, getAppOrigins } from '../../../src/app/modules/config/origins';
 import { parseConfig } from '../../../src/app/modules/config/parse';
-import { readConfigRawFromEnv, readConfigRawFromFS } from '../../../src/app/modules/config/read';
+import {
+    findUnknownConfigFilePaths,
+    readConfigRawFromEnv,
+    readConfigRawFromFS,
+} from '../../../src/app/modules/config/read';
 
 describe('src/config/*.ts', () => {
     describe('getAppOrigins', () => {
@@ -478,6 +482,40 @@ describe('src/config/*.ts', () => {
             });
 
             expect(config.port).toEqual(4020);
+        });
+
+        it('should refuse an explicitly named retired conf file', async () => {
+            // it would load, and every key that moved out of server.core would
+            // be dropped in silence, leaving the service on a derived issuer
+            // and an empty database while the rest of the file applied.
+            await fs.promises.writeFile(
+                path.join(directory, 'legacy.conf'),
+                'server.core.port=4060\npublicUrl=https://idp.example.com\n',
+            );
+
+            await expect(readConfigRawFromFS({ cwd: directory, file: 'legacy.conf' }))
+                .rejects.toThrow(/authup\.yml/);
+        });
+
+        it('should report a key the document places where nothing reads it', async () => {
+            await fs.promises.writeFile(
+                path.join(directory, 'authup.yml'),
+                [
+                    'server:',
+                    '  core:',
+                    '    port: 4070',
+                    '    publicUrl: https://idp.example.com',
+                    '    typo: true',
+                    'x-anchors:',
+                    '  shared: 1',
+                    '',
+                ].join('\n'),
+            );
+
+            expect(await findUnknownConfigFilePaths({ cwd: directory })).toEqual([
+                'server.core.publicUrl',
+                'server.core.typo',
+            ]);
         });
 
         it('should ignore a retired conf file and say so once', async () => {

@@ -10,7 +10,12 @@ import { defineCommand } from 'citty';
 import process from 'node:process';
 import { isValidupError, stringifyPath } from 'validup';
 import type { ConfigReadFsOptions } from '../../app/index.ts';
-import { ConfigModule, buildConfigJSONSchema, readConfig } from '../../app/index.ts';
+import {
+    ConfigModule,
+    buildConfigJSONSchema,
+    findUnknownConfigFilePaths,
+    readConfig,
+} from '../../app/index.ts';
 import type { CLIConfigArgs } from './types.ts';
 
 export const CLI_CONFIG_ARGS = {
@@ -86,6 +91,19 @@ export function defineCLIConfigCommand(configFs: ConfigReadFsOptions = {}) {
                 },
                 async run() {
                     try {
+                        // Unknown paths first: a key left at a retired
+                        // location is the mistake this command exists for,
+                        // and the read that follows would say nothing about
+                        // it, since it skips what it does not claim.
+                        const unknown = await findUnknownConfigFilePaths(configFs);
+                        if (unknown.length > 0) {
+                            const paths = unknown.map((path) => `  ${path}`).join('\n');
+
+                            // eslint-disable-next-line no-console
+                            console.error(`The configuration file holds options that are not read.\n${paths}`);
+                            process.exit(1);
+                        }
+
                         await readConfig({ env: true, fs: configFs });
                     } catch (e) {
                         // eslint-disable-next-line no-console

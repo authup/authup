@@ -11,6 +11,7 @@ import type { ConfigSchemaInput } from '../../src';
 import {
     buildSchemaJSONSchema,
     composeSchemas,
+    findUnknownSchemaPaths,
     readEnvBoolOrString,
     readSchemaFromFileTree,
     resolveSchemaPath,
@@ -109,6 +110,33 @@ describe('readSchemaFromFileTree', () => {
         expect(readSchemaFromFileTree([], SCHEMA)).toEqual({});
     });
 
+    it('should not read an inherited value', () => {
+        // the guard that matters is not the `__proto__` PATH below (that walk
+        // dies on its next segment anyway), it is a key the document does not
+        // carry: without an own-property check a polluted Object.prototype
+        // answers for it and silently becomes the configured value.
+        const schema : ConfigSchemaInput<{ port: number }> = {
+            port: {
+                type: z.number(),
+                description: '',
+                path: 'server.core.port',
+            },
+        };
+
+        const prototype = Object.prototype as Record<string, unknown>;
+        prototype.port = 9999;
+        prototype.core = { port: 9999 };
+
+        try {
+            expect(readSchemaFromFileTree({ server: { core: {} } }, schema)).toEqual({});
+            expect(readSchemaFromFileTree({ server: {} }, schema)).toEqual({});
+            expect(readSchemaFromFileTree({ server: { core: { port: 1 } } }, schema)).toEqual({ port: 1 });
+        } finally {
+            delete prototype.port;
+            delete prototype.core;
+        }
+    });
+
     it('should not descend onto the prototype', () => {
         const schema : ConfigSchemaInput<{ polluted: string, name: string }> = {
             polluted: {
@@ -124,6 +152,56 @@ describe('readSchemaFromFileTree', () => {
         };
 
         expect(readSchemaFromFileTree({}, schema)).toEqual({});
+    });
+});
+
+describe('findUnknownSchemaPaths', () => {
+    it('should report a key at a path no entry claims', () => {
+        expect(findUnknownSchemaPaths({
+            publicUrl: 'https://idp.example.com',
+            server: {
+                core: {
+                    port: 3002,
+                    publicUrl: 'https://idp.example.com',
+                    typo: true,
+                },
+            },
+        }, SCHEMA, { prefix: 'server.core' })).toEqual([
+            'server.core.publicUrl',
+            'server.core.typo',
+        ]);
+    });
+
+    it('should report nothing for a document that only holds claimed paths', () => {
+        expect(findUnknownSchemaPaths({
+            publicUrl: 'https://idp.example.com',
+            server: {
+                core: { port: 3002 },
+                adminConsole: { enabled: false },
+            },
+        }, SCHEMA, { prefix: 'server.core' })).toEqual([]);
+    });
+
+    it('should not walk into the value of a claimed key', () => {
+        expect(findUnknownSchemaPaths({
+            trustedOrigins: ['https://app.example.com'],
+            server: { core: { port: 3002 } },
+        }, SCHEMA, { prefix: 'server.core' })).toEqual([]);
+    });
+
+    it('should report a whole section no entry reaches', () => {
+        expect(findUnknownSchemaPaths({ client: { adminConsole: { port: 3000 } } }, SCHEMA, { prefix: 'server.core' })).toEqual(['client']);
+    });
+
+    it('should never report an x- extension key', () => {
+        expect(findUnknownSchemaPaths({
+            'x-common': { anything: true },
+            server: { core: { 'x-anchor': 1 } },
+        }, SCHEMA, { prefix: 'server.core' })).toEqual([]);
+    });
+
+    it('should report nothing for a non object tree', () => {
+        expect(findUnknownSchemaPaths(undefined, SCHEMA)).toEqual([]);
     });
 });
 

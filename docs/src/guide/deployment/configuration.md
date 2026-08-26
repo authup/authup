@@ -101,6 +101,12 @@ the result and reports what does not hold: one line per issue, exit code `1`. A
 configuration that holds prints nothing and exits `0`. Both CLI flags apply, so a file
 can be checked before it is deployed.
 
+It reports an option the file places where nothing reads it, too. The server itself
+skips such a key in silence, so that a file written for a newer version still boots,
+which makes an option left at a retired location indistinguishable from one that was
+never set. A key prefixed `x-` is never reported, so a document shared with another
+tool can carry its own.
+
 `authup config schema` prints the JSON Schema (draft-07) document describing the file:
 every option at its place in the tree, with its description, its default and the name of
 its environment variable (`x-authup-env`). The same document ships in the server package

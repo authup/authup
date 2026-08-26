@@ -67,3 +67,64 @@ export function readSchemaFromFileTree<T>(
 
     return data as Partial<T>;
 }
+
+/**
+ * The dotted paths a parsed configuration document holds that no schema entry
+ * claims. Reading is deliberately permissive (an unclaimed path is skipped, so
+ * a document written for a newer version still boots), which leaves a key at a
+ * retired location indistinguishable from one that was never set. This is what
+ * a `config validate` command reports so the difference is visible.
+ *
+ * A path is walked no deeper than the schema does, so an option whose VALUE is
+ * an object (a logger setup, middleware options) contributes its own path, not
+ * its contents. A key prefixed `x-` is the established extension convention
+ * for a document meant to be read by more than one tool, so it is never
+ * reported.
+ */
+export function findUnknownSchemaPaths<T>(
+    tree: unknown,
+    schema: ConfigSchemaInput<T>,
+    options: { prefix?: string } = {},
+) : string[] {
+    if (!isRecord(tree)) {
+        return [];
+    }
+
+    const claimed = new Set<string>();
+    const traversed = new Set<string>();
+
+    const keys = Object.keys(schema) as (keyof T)[];
+    for (const key of keys) {
+        const path = resolveSchemaPath(key as string, schema[key], options.prefix);
+        claimed.add(path);
+
+        const segments = path.split('.');
+        for (let i = 1; i < segments.length; i++) {
+            traversed.add(segments.slice(0, i).join('.'));
+        }
+    }
+
+    const unknown : string[] = [];
+
+    const walk = (node: Record<string, unknown>, prefix: string) => {
+        for (const name of Object.keys(node)) {
+            const path = prefix ? `${prefix}.${name}` : name;
+
+            if (claimed.has(path) || name.startsWith('x-')) {
+                continue;
+            }
+
+            const value = node[name];
+            if (traversed.has(path) && isRecord(value)) {
+                walk(value, path);
+                continue;
+            }
+
+            unknown.push(path);
+        }
+    };
+
+    walk(tree, '');
+
+    return unknown;
+}
