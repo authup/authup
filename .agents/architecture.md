@@ -2738,12 +2738,18 @@ The operator recipe is `docs/src/guide/deployment/console-replicas.md`. An
 and not registered yet: the CLI offers `start`, `worker`, `migration` and
 `healthcheck` only.
 
-**Configuration is layered:** server-core honors the confinity file family
-(`authup.conf` with a `server.core` section, or the per-component
-`authup.server.core.conf`, plus shared top-level `db` / `redis` / `smtp`
-fallbacks) on every CLI command; lookup defaults to the process cwd,
-overridable via `--configDirectory` / `--configFile`, and environment
-variables always beat file values.
+**Configuration is layered:** server-core reads ONE file, `authup.yml`
+(plan 101 C-2, replacing the retired `authup.conf` family), on every CLI
+command; lookup defaults to the process cwd, overridable via
+`--configDirectory` / `--configFile`, and environment variables always beat
+file values. Discovery is narrowed to the root file name via a custom
+confinity `INamingScheme` (`read/fs.ts`): confinity's own convention also
+matches `authup.<name>.<ext>` and nests such a file under the name its
+filename carries, which with the whole document read as one tree would let
+a second file place keys at the document root. `.conf` is off the extension
+list, and a retired file left in the discovery directory is reported once
+on startup, because the failure is otherwise silent (the server simply
+boots on its defaults).
 
 **The config schema is one registry (plan 101 C-1).**
 `app/modules/config/registry.ts` declares every `Config` key once as a
@@ -2754,17 +2760,34 @@ the second falls back to typeorm-extension's driver default), an
 operator-facing `description`, and for the 51 env-backed keys the
 `ConfigEnvironmentVariableName` plus a `readEnv` reader. The mapped
 `ConfigSchema` type is the exhaustiveness guard: a `Config` key with no
-entry fails the build. Four passes derive from the registry and nothing
+entry fails the build. Five passes derive from the registry and nothing
 else may re-declare a key: `read/env.ts` is `readSchemaFromEnv` plus the
 untouched `DB_*` block (those names come from typeorm-extension and stay
-special-cased outside the registry), `validator.ts` is `mountSchema`,
+special-cased outside the registry), `read/fs.ts` is
+`readSchemaFromFileTree`, `validator.ts` is `mountSchema`,
 `normalizeConfig` spreads `buildSchemaDefaults(CONFIG_SCHEMA)` under the
 parsed input (path resolution and the cross-key invariants stay imperative
 there), and `json-schema.ts` is `buildSchemaJSONSchema`.
 
+**Where a key sits in `authup.yml` is one entry field, `path`.** It is the
+absolute dotted location in the document; an entry without one resolves
+through the reading pass's prefix, which for server-core is
+`CONFIG_SECTION` = `server.core`. So only the 14 keys that live OUTSIDE
+this service's section spell a path out: the deployment-wide values
+(`publicUrl`, `db`, `redis`, `smtp`, `trustedOrigins`, `env`, `rootPath`)
+plus `theme.directoryPath` / `theme.fragmentsEnabled`, and the per-console
+sections, whose member names drop the console prefix the config key carries
+(`adminConsoleEnabled` reads `server.adminConsole.enabled`,
+`ADMIN_CONSOLE_PATH` reads `server.adminConsole.path`). A section is per
+CONSOLE, never per implementation package, and no environment variable name
+changed, so env-driven deployments feel nothing. The JSON Schema artifact is
+emitted in that same nested shape, so an editor's
+`# yaml-language-server: $schema=` line validates the real document.
+
 **`@authup/server-config-kit` is the mechanism, and it carries no
 `@authup/*` dependency at all.** It holds the declaration types, the
-environment readers and those four passes, generic over any config type:
+environment readers, those five passes and the composer, generic over any
+config type:
 server-core's `CONFIG_SCHEMA` is one instance of it, and the package sits
 at the foundation layer next to `kit` and `errors`. The dependency rule is
 the whole point rather than tidiness. The `@authup/server-console` and
@@ -2778,9 +2801,15 @@ carried before the extraction.
 
 Each server package will own the registry of the keys it reads while
 `apps/authup` composes them into one `authup.yml` schema and loader (plan
-101 stage C, the D2-3 correction): a key two packages read is declared in
-both registries and the composer asserts the declarations agree, and
-cross-section invariants live in the composed normalize.
+101 stage C, the D2-3 correction). `composeSchemas` is that composer
+(shipped in C-2 with server-core's single registry as its only caller): it
+merges N `{ prefix, schema }` pairs into one schema whose every entry
+carries a RESOLVED absolute `path`, and refuses a key two registries
+declare with disagreeing path, environment variable or default, since the
+two packages would then read one configuration key differently. Zod types
+hold closures and are not value-comparable, so they are deliberately outside
+the agreement check. Cross-section invariants stay in `normalizeConfig`,
+next to the existing ones, rather than in the composer.
 
 **Env semantics are per entry, not per type**: the seven security toggles
 (`componentsEnabled`, `migrationEnabled`, `eventLogEnabled`,
@@ -2797,8 +2826,13 @@ type.
 process-derived thunk is omitted, `x-authup-env` per property) and
 `scripts/emit-config-schema.mjs` writes server-core's to
 `dist/config-schema.json` at build (the last `build:server` step); the
-builder lives in TypeScript so the C-2 `authup config schema` command can
-reuse it in process. Keep `registry.ts` importable standalone: it reads
+builder lives in TypeScript so the `authup config schema` command reuses it
+in process. That command and its sibling `authup config validate` (read the
+file and the environment, normalize, print every issue as
+`<path>: <message>` like the provisioning file loader, exit 1) are
+`defineCLIConfigCommand` in `apps/server-core/src/cli/commands/config.ts`:
+command bodies stay with the service, as every other CLI command does since
+D1, and `apps/authup` only mounts them. Keep `registry.ts` importable standalone: it reads
 `CERTIFICATE_SOURCES` and `EVENT_LOG_RETENTION_DAYS_DEFAULT` from their
 constants FILES, never the request or core barrels (the request barrel
 reaches the x509 module, which needs `reflect-metadata` at import time),

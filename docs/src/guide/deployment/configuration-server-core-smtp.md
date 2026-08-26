@@ -15,7 +15,7 @@ The environment variables in the .env file variant can also be provided via runt
 
 ::: code-group
 
-```typescript{3-18} [authup.server.core.ts]
+```typescript{3-18} [authup.ts]
 
 export default {
     // ...
@@ -39,17 +39,18 @@ export default {
 }
 ```
 
-```dotenv [authup.server.core.conf]
-smtp.host=127.0.0.1
-smtp.port=25
-smtp.user=
-smtp.password=
-smtp.ssl=false
-smtp.starttls=false
-smtp.from=no-reply@example.com
-smtp.fromDisplayName=Authup
-smtp.replyTo=contact@example.com
-smtp.replyToDisplayName=Authup
+```yaml [authup.yml]
+smtp:
+  host: 127.0.0.1
+  port: 25
+  user: ''
+  password: ''
+  ssl: false
+  starttls: false
+  from: no-reply@example.com
+  fromDisplayName: Authup
+  replyTo: contact@example.com
+  replyToDisplayName: Authup
 ```
 
 ```dotenv [.env]

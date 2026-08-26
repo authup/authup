@@ -64,7 +64,7 @@ docker run -d \\
             {
                 id: 'configure',
                 label: '2. Configure',
-                snippet: `# authup.server.core.conf
+                snippet: `# .env
 USER_ADMIN_NAME=admin
 USER_ADMIN_PASSWORD=start123
 

@@ -43,7 +43,7 @@ If you need markup, you are replacing the console rather than theming it. See
 [Replacing a console](#replacing-a-console) at the end of this page.
 
 ::: warning Trust boundary
-The theme directory is as sensitive as `authup.conf`. Its stylesheet is loaded
+The theme directory is as sensitive as `authup.yml`. Its stylesheet is loaded
 on the origin that holds your users' session cookies and renders the OAuth2
 consent screen, so arbitrary CSS there can restyle or cover the Allow and Deny
 buttons. Mount it read-only and never from a source a tenant or a

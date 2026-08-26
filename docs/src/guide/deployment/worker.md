@@ -61,8 +61,10 @@ side is where you switch them off:
 COMPONENTS_ENABLED=false
 ```
 
-```dotenv [authup.server.core.conf]
-componentsEnabled=false
+```yaml [authup.yml]
+server:
+  core:
+    componentsEnabled: false
 ```
 
 :::

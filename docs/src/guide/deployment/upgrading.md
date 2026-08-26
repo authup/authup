@@ -7,6 +7,55 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.62)
 
+### The configuration file is `authup.yml`
+
+The `.conf` file family is retired. One file is discovered now, `authup.yml` (or
+`.yaml`, `.json`, `.js`, `.mjs`, `.cjs`, `.ts`, `.mts`), in the working directory
+or under `--configDirectory`. `--configFile` still names one or more explicit
+files.
+
+`authup.conf` and `authup.server.core.conf` are **not read any more**, and a
+stray one is not an error: the server logs one warning at startup and boots on
+its defaults. That warning is the only outward sign, which is why it exists.
+
+Keys moved as well. Everything a service reads lives in that service's own
+section (`server.core` for `server/core`), and the deployment-wide options moved
+up to the top level:
+
+| Was | Is |
+|---|---|
+| `server.core.publicUrl` | `publicUrl` |
+| `server.core.db` | `db` |
+| `server.core.redis` | `redis` |
+| `server.core.smtp` | `smtp` |
+| `server.core.trustedOrigins` | `trustedOrigins` |
+| `server.core.themeDirectoryPath` | `theme.directoryPath` |
+| `server.core.themeFragmentsEnabled` | `theme.fragmentsEnabled` |
+| `server.core.adminConsoleEnabled` | `server.adminConsole.enabled` |
+| `server.core.adminConsolePath` | `server.adminConsole.path` |
+| `server.core.accountConsoleEnabled` | `server.accountConsole.enabled` |
+| `server.core.accountConsolePath` | `server.accountConsole.path` |
+| `server.core.authConsolePath` | `server.authConsole.path` |
+
+`env` and `rootPath` are top-level too. Every other option keeps its name under
+`server.core`.
+
+The shared-section walk is gone with the file family. `db`, `redis` and `smtp`
+used to be looked up at the top level, under `server.*` and under `server.core.*`,
+with the most specific declaration winning. Each has exactly one place now, the
+top level.
+
+**Action required** for a deployment that uses a configuration file. Rewrite it as
+`authup.yml` per the table above; see [Configuration](./configuration.md) for the
+document layout. `authup config validate` reads the file and the environment and
+reports what does not hold, so a rewrite can be checked before it is deployed, and
+`authup config schema` prints the JSON Schema your editor can validate against
+while you type.
+
+**No action** for a deployment configured through the environment. No environment
+variable name changed, so a `docker run -e`, a Compose `environment:` block, a Helm
+values file and a `.env` are all unaffected.
+
 ### `authup` is the only binary, and it runs the server in process
 
 The `authup-server` binary is retired. The `@authup/server-core` package ships
@@ -138,7 +187,7 @@ the way it serves the account console at `<publicUrl>/console/account` (the
   scale that workload to zero. A follow-up chart release drops it.
 - **Bare metal**: the command does not change. `authup start` starts
   `server/core` alone. `authup start client.admin-console` is refused and a
-  `client.admin-console` section in `authup.conf` is not read (see the entry
+  `client.admin-console` section of the configuration file is not read (see the entry
   above). Remove both.
 - **`TRUSTED_ORIGINS`**: drop the console's former origin. It serves nothing
   now, but the provisioner keeps re-asserting every listed origin into the

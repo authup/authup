@@ -19,7 +19,7 @@
                     </li>
                     <li>
                         <span class="au-spotlight__bullet" aria-hidden="true">✓</span>
-                        Configured via environment variables, a mounted <code>.conf</code> file, or both
+                        Configured via environment variables, a mounted <code>authup.yml</code> file, or both
                     </li>
                 </ul>
                 <a class="au-spotlight__cta" href="/guide/deployment/docker-compose">
