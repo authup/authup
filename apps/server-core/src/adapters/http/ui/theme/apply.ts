@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { injectHeadContent, stampDocumentTitle } from '../shared/index.ts';
+import { injectHeadContent, stampDocumentTitle } from '@authup/server-console-kit';
 import { escapeHtml } from './contract/index.ts';
 import type { IThemeProvider } from './types.ts';
 

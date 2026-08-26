@@ -15,7 +15,7 @@ import type { IThemeProvider, ThemeManifest } from '../../../../../src/adapters/
 import {
     injectHeadContent,
     stampDocumentTitle,
-} from '../../../../../src/adapters/http/ui/shared/index.ts';
+} from '@authup/server-console-kit';
 
 function createProvider(manifest: ThemeManifest | undefined) : IThemeProvider {
     return {

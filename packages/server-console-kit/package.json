@@ -1,0 +1,62 @@
+{
+    "name": "@authup/server-console-kit",
+    "type": "module",
+    "version": "1.0.0-beta.63",
+    "description": "The page-serving mechanism every authup console service shares: html shell stamping, security headers, asset rebasing and the template splice.",
+    "license": "Apache-2.0",
+    "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs"
+        }
+    },
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
+        "build:js": "tsdown",
+        "build": "rimraf ./dist && npm run build:js && npm run build:types",
+        "test": "cross-env NODE_ENV=test vitest run --config test/vitest.config.ts",
+        "test:coverage": "cross-env NODE_ENV=test vitest run --coverage"
+    },
+    "engines": {
+        "node": "^22.13.0 || ^23.5.0 || >=24.0.0"
+    },
+    "keywords": [
+        "auth",
+        "console",
+        "server",
+        "ssr"
+    ],
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/authup/authup.git",
+        "directory": "packages/server-console-kit"
+    },
+    "bugs": {
+        "url": "https://github.com/authup/authup/issues"
+    },
+    "homepage": "https://github.com/authup/authup#readme",
+    "peerDependencies": {
+        "routup": "^6.1.0"
+    },
+    "dependencies": {
+        "@routup/basic": "^3.0.0"
+    },
+    "devDependencies": {
+        "routup": "^6.1.0",
+        "vitest": "^4.0.14"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

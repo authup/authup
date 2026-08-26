@@ -25,7 +25,7 @@ import {
     replaceTemplateMarker,
     serializeInlineScriptJSON,
     stampHtmlAttributes,
-} from '../shared/index.ts';
+} from '@authup/server-console-kit';
 import type {
     StaticConsole,
     StaticConsoleDefinition,
